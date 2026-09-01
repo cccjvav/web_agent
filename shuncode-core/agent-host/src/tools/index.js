@@ -1,15 +1,16 @@
 const { applyPatch } = require('./patchEngine');
-const { readFile, readFiles, writeFile, listDir, grepSearch } = require('./fileOps');
+const { readFile, readFiles, writeFile, deleteFile, renameFile, listDir, grepSearch } = require('./fileOps');
 const { findFiles } = require('./findFiles');
-const { executeCommand, getCommandOutput, sendCommandInput, wait } = require('./executor');
+const { executeCommand, startCommand, getCommandOutput, cancelCommand, wait } = require('./executor');
 const { reportProgress, setTodos, getTaskState } = require('./progressTracker');
 const { runMultiModelConsensus } = require('./consensusEngine');
-const { lsp, getDiagnostics } = require('./lspStub');
 const eventBus = require('../utils/eventBus');
 const { remember, recall } = require('../models/memory');
 const { snapshot } = require('../mcp/session');
 const { ProtocolError } = require('../mcp/errors');
 const { clipJson } = require('../mcp/budget');
+const { gitStatus, gitDiff } = require('./gitOps');
+const { loadSkill } = require('./skills');
 
 function tool(def) {
   return def;
@@ -26,7 +27,7 @@ function getLogs({ maxLines = 50 } = {}) {
 
 function getCapabilities() {
   return {
-    tools: TOOLS.map((t) => ({ name: t.name, mode: t.mode, description: t.description })),
+    tools: getToolList().map((t) => ({ name: t.name, description: t.description })),
     session: snapshot()
   };
 }
@@ -168,6 +169,40 @@ const TOOLS = [
     handler: readFiles
   }),
   tool({
+    name: 'git_status',
+    aliases: [],
+    description: 'Read-only git status (branch + porcelain). Use instead of run_command git status.',
+    mode: ['ask', 'plan', 'code'],
+    inputSchema: { type: 'object', properties: {} },
+    handler: gitStatus
+  }),
+  tool({
+    name: 'git_diff',
+    aliases: [],
+    description: 'Read-only git diff. Optional filePath, staged, stat. Output is truncated.',
+    mode: ['ask', 'plan', 'code'],
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filePath: { type: 'string' },
+        staged: { type: 'boolean' },
+        stat: { type: 'boolean' }
+      }
+    },
+    handler: gitDiff
+  }),
+  tool({
+    name: 'load_skill',
+    aliases: [],
+    description: 'List or load a Skill from .shuncode/skills/<name>/SKILL.md. Omit name to list.',
+    mode: ['ask', 'plan', 'code'],
+    inputSchema: {
+      type: 'object',
+      properties: { name: { type: 'string' } }
+    },
+    handler: loadSkill
+  }),
+  tool({
     name: 'apply_patch',
     aliases: [],
     description: 'Atomic SEARCH/REPLACE patch. Pass expectedHash from read_files. STALE_FILE means re-read. Code mode only.',
@@ -200,9 +235,36 @@ const TOOLS = [
     handler: writeFile
   }),
   tool({
+    name: 'delete_file',
+    aliases: [],
+    description: 'Delete a file or empty directory inside the workspace. Code mode only.',
+    mode: ['code'],
+    inputSchema: {
+      type: 'object',
+      properties: { filePath: { type: 'string' } },
+      required: ['filePath']
+    },
+    handler: deleteFile
+  }),
+  tool({
+    name: 'rename_file',
+    aliases: ['move_file'],
+    description: 'Rename or move a path inside the workspace. Code mode only.',
+    mode: ['code'],
+    inputSchema: {
+      type: 'object',
+      properties: {
+        from: { type: 'string' },
+        to: { type: 'string' }
+      },
+      required: ['from', 'to']
+    },
+    handler: renameFile
+  }),
+  tool({
     name: 'run_command',
     aliases: ['execute_command'],
-    description: 'Run a workspace shell command (build/test). Hard timeout (timeoutSec, default 30). Destructive commands need confirm_dangerous=true. Code mode only.',
+    description: 'Run a command and wait. For tests/builds that may exceed a few seconds, prefer start_command. Destructive commands need confirm_dangerous=true. Code mode only.',
     mode: ['code'],
     inputSchema: {
       type: 'object',
@@ -217,69 +279,59 @@ const TOOLS = [
     handler: executeCommand
   }),
   tool({
-    name: 'get_command_output',
+    name: 'start_command',
     aliases: [],
-    description: 'Read captured stdout/stderr for execId after run_command. Prefer this over asking the model to remember logs.',
+    description: 'Start a workspace command and return execId immediately. Poll get_command_output using suggestedWaitMs. Code mode only.',
     mode: ['code'],
     inputSchema: {
       type: 'object',
       properties: {
+        command: { type: 'string' },
+        cwd: { type: 'string' },
+        timeoutSec: { type: 'number' },
+        confirm_dangerous: { type: 'boolean' }
+      },
+      required: ['command']
+    },
+    handler: startCommand
+  }),
+  tool({
+    name: 'get_command_output',
+    aliases: [],
+    description: 'Poll stdout/stderr for execId from start_command or run_command. Returns status running|done|timeout and suggestedWaitMs.',
+    mode: ['ask', 'plan', 'code'],
+    inputSchema: {
+      type: 'object',
+      properties: {
         execId: { type: 'number' },
-        commandId: { type: 'string' }
+        commandId: { type: 'string' },
+        tail: { type: 'number' }
       }
     },
     handler: getCommandOutput
   }),
   tool({
-    name: 'send_command_input',
+    name: 'cancel_command',
     aliases: [],
-    description: '向交互式命令继续输入（完整桌面版为持久 PTY）。',
+    description: 'SIGTERM a running start_command execId.',
     mode: ['code'],
     inputSchema: {
       type: 'object',
-      properties: {
-        execId: { type: 'number' },
-        input: { type: 'string' }
-      }
+      properties: { execId: { type: 'number' } },
+      required: ['execId']
     },
-    handler: sendCommandInput
+    handler: cancelCommand
   }),
   tool({
     name: 'wait',
     aliases: [],
-    description: 'Sleep up to 15s. Prefer get_task_status.suggestedWaitMs instead of tight loops.',
+    description: 'Sleep up to 15s. Prefer suggestedWaitMs from get_command_output / get_task_status.',
     mode: ['ask', 'plan', 'code'],
     inputSchema: {
       type: 'object',
       properties: { ms: { type: 'number' } }
     },
     handler: wait
-  }),
-  tool({
-    name: 'lsp',
-    aliases: [],
-    description: '符号、定义、引用、Hover 等语言服务能力（本主机为近似实现）。',
-    mode: ['ask', 'plan', 'code'],
-    inputSchema: {
-      type: 'object',
-      properties: {
-        action: { type: 'string' },
-        filePath: { type: 'string' },
-        query: { type: 'string' }
-      }
-    },
-    handler: lsp
-  }),
-  tool({
-    name: 'get_diagnostics',
-    aliases: [],
-    description: '读取当前诊断，包括未保存状态的近似检查。',
-    mode: ['ask', 'plan', 'code'],
-    inputSchema: {
-      type: 'object',
-      properties: { filePath: { type: 'string' } }
-    },
-    handler: getDiagnostics
   }),
   tool({
     name: 'report_progress',
@@ -350,7 +402,7 @@ async function callTool(name, args = {}, currentMode = null) {
     );
   }
   const input = args || {};
-  if (toolDef.name === 'run_command' && DANGEROUS_RE.test(String(input.command || ''))) {
+  if ((toolDef.name === 'run_command' || toolDef.name === 'start_command') && DANGEROUS_RE.test(String(input.command || ''))) {
     if (!input.confirm_dangerous) {
       throw new ProtocolError(
         'E_BAD_ARGS',

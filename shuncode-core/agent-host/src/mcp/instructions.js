@@ -7,16 +7,18 @@ You are connected to a local ShunCode agent-host. Tools edit the workspace on di
 Do not invent file contents or command output — call tools.
 
 ## Modes
-- Ask / Plan: read-only (list/search/read). Do not apply_patch or run_command.
-- Code: may apply_patch, write_file, run_command.
+- Ask / Plan: read-only. Use list/search/read, git_status, git_diff, load_skill. Do not apply_patch, write_file, delete_file, rename_file, or run/start_command.
+- Code: may patch, write, delete/rename, and run commands.
 If a tool returns E_BAD_ARGS about mode, tell the user to switch to Code.
 
 ## Workflow
 1. ping → get_capabilities if the session is new
-2. list_directory / search_files / read_files (always capture sha256 hash)
+2. git_status / list_directory / search_files / read_files (always capture sha256 hash)
 3. apply_patch with expectedHash from the last read (STALE_FILE means re-read)
-4. run_command for tests (e.g. npm test). On timeout use get_command_output(execId)
-5. report_progress / set_todos so the editor UI stays in sync
+4. Long work: start_command (e.g. npm test) → wait suggestedWaitMs → get_command_output(execId) until status=done
+5. Short one-liners may use run_command. Prefer delete_file/rename_file over shell rm/mv.
+6. report_progress / set_todos so the editor UI stays in sync
+7. load_skill when a Skill folder is relevant
 
 ## Output budget
 - One tool result is capped (~4k tokens). Prefer offset/limit, cursor, maxResults.

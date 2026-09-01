@@ -58,6 +58,46 @@ function readFile({ filePath, offset = 1, limit = 400 }) {
   };
 }
 
+function deleteFile({ filePath }) {
+  if (!filePath) throw new Error('delete_file requires filePath');
+  const fullPath = resolveSafePath(filePath);
+  const rel = path.relative(config.workspaceRoot, fullPath);
+  if (!rel || rel === '.') {
+    throw new Error('Refusing to delete the workspace root.');
+  }
+  if (!fs.existsSync(fullPath)) {
+    throw new Error(`File not found: "${filePath}"`);
+  }
+  const stat = fs.statSync(fullPath);
+  if (stat.isDirectory()) {
+    const leftover = fs.readdirSync(fullPath);
+    if (leftover.length) {
+      throw new Error(`Directory "${filePath}" is not empty. Delete files first.`);
+    }
+    fs.rmdirSync(fullPath);
+  } else {
+    fs.unlinkSync(fullPath);
+  }
+  eventBus.broadcast('file_deleted', { filePath: rel });
+  return { success: true, filePath: rel, type: stat.isDirectory() ? 'directory' : 'file' };
+}
+
+function renameFile({ from, to, filePath, dest }) {
+  const srcRel = from || filePath;
+  const destRel = to || dest;
+  if (!srcRel || !destRel) throw new Error('rename_file requires from and to');
+  const src = resolveSafePath(srcRel);
+  const dst = resolveSafePath(destRel);
+  if (!fs.existsSync(src)) throw new Error(`File not found: "${srcRel}"`);
+  if (fs.existsSync(dst)) throw new Error(`Destination already exists: "${destRel}"`);
+  fs.mkdirSync(path.dirname(dst), { recursive: true });
+  fs.renameSync(src, dst);
+  const fromOut = path.relative(config.workspaceRoot, src);
+  const toOut = path.relative(config.workspaceRoot, dst);
+  eventBus.broadcast('file_renamed', { from: fromOut, to: toOut });
+  return { success: true, from: fromOut, to: toOut };
+}
+
 function writeFile({ filePath, content }) {
   const fullPath = resolveSafePath(filePath);
   fs.mkdirSync(path.dirname(fullPath), { recursive: true });
@@ -172,6 +212,8 @@ module.exports = {
   readFile,
   readFiles,
   writeFile,
+  deleteFile,
+  renameFile,
   listDir,
   grepSearch
 };

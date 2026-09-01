@@ -34,7 +34,8 @@ function readResource(uri) {
           '- Tool results are clipped (~4k tokens). Use offset/limit/cursor.',
           '- Protocol errors are JSON-RPC `error`; execution failures are `isError: true` with `{code,msg}`.',
           '- Heartbeat: call ping; host treats 10s silence as a stale client.',
-          '- Long commands: run_command timeoutSec (default 30). Then get_command_output(execId).',
+          '- Long commands: start_command → poll get_command_output(execId) using suggestedWaitMs.',
+          '- git_status / git_diff are read-only. delete_file / rename_file stay inside the workspace.',
           '- apply_patch needs expectedHash from the last read_files hash.'
         ].join('\n')
       };

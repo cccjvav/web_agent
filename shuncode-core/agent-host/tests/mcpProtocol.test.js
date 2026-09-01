@@ -42,6 +42,9 @@ async function main() {
   assert.ok(tools.includes('ping'));
   assert.ok(tools.includes('remember'));
   assert.ok(tools.includes('get_task_status'));
+  assert.ok(tools.includes('git_status'));
+  assert.ok(tools.includes('start_command'));
+  assert.ok(!tools.includes('lsp'));
 
   const clipped = clipJson({ stdout: 'x'.repeat(20000), ok: true });
   assert.ok(clipped._truncated || clipped.stdout.length < 20000);

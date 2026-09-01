@@ -4,8 +4,8 @@ const { loadCustom } = require('../models/customizations');
 function systemPrompt(mode) {
   const lock =
     mode === 'code'
-      ? 'You may call apply_patch and run_command. Prefer apply_patch over write_file. Preflight the whole patch. On STALE_FILE, re-read then retry.'
-      : 'READ-ONLY. You must not call apply_patch, write_file, or run_command. Investigate with list_directory, find_files, search_files, read_files, lsp, get_diagnostics.';
+      ? 'You may call apply_patch, delete_file, rename_file, start_command, run_command. Prefer apply_patch over write_file. Prefer start_command for tests/builds. On STALE_FILE, re-read then retry.'
+      : 'READ-ONLY. You must not patch, write, delete, rename, or run commands. Investigate with list_directory, find_files, search_files, read_files, git_status, git_diff, load_skill.';
 
   return [
     'You are ShunCode, a local coding agent. Editor is Code-OSS; you run in agent-host, not the VS Code kernel.',

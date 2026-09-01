@@ -10,8 +10,10 @@ function computeHash(content) {
 }
 
 function resolveSafePath(relPath) {
-  const resolved = path.resolve(config.workspaceRoot, relPath);
-  if (!resolved.startsWith(config.workspaceRoot)) {
+  const root = path.resolve(config.workspaceRoot);
+  const resolved = path.resolve(root, String(relPath || '.'));
+  const rel = path.relative(root, resolved);
+  if (rel.startsWith('..') || path.isAbsolute(rel)) {
     throw new Error(`Security error: path "${relPath}" is outside workspace root.`);
   }
   return resolved;
