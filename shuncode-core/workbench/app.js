@@ -565,9 +565,16 @@
       $('#acct-pill').textContent = '登录';
       $('#acct-pill').className = 'status-pill stop';
     }
-    $('#sess-note').textContent = running
-      ? 'Bridge is running and waiting for the external MCP client.'
-      : 'Start the Bridge here, then connect the configured MCP URL from the external client.';
+    const sess = s.mcpSession;
+    if (sess && sess.latest) {
+      $('#sess-note').textContent = sess.alive
+        ? `MCP client ${sess.latest.key} · ${sess.latest.calls} calls · last seen ${sess.ageMs}ms ago`
+        : 'Last MCP client went quiet (>10s). Call ping or retry initialize.';
+    } else {
+      $('#sess-note').textContent = running
+        ? 'Bridge is running and waiting for the external MCP client.'
+        : 'Start the Bridge here, then connect the configured MCP URL from the external client.';
+    }
   }
 
   async function refreshStatus() {

@@ -14,7 +14,7 @@ function globToRegExp(glob) {
   return new RegExp(`^${escaped}$`);
 }
 
-function findFiles({ glob = '**/*', searchPath = '.', maxResults = 80 } = {}) {
+function findFiles({ glob = '**/*', searchPath = '.', maxResults = 40 } = {}) {
   const root = resolveSafePath(searchPath);
   if (!fs.existsSync(root)) {
     throw new Error(`Path not found: "${searchPath}"`);

@@ -9,6 +9,7 @@ const { runChat } = require('../agent/runChat');
 const store = require('../models/store');
 const { loadCustom, patchCustom } = require('../models/customizations');
 const eventBus = require('../utils/eventBus');
+const { snapshot: mcpSnapshot } = require('../mcp/session');
 
 const router = express.Router();
 
@@ -62,7 +63,8 @@ router.get('/status', (req, res) => {
       username: cfg.bridge.username,
       license: cfg.bridge.license,
       deviceAuthorized: cfg.bridge.deviceAuthorized
-    }
+    },
+    mcpSession: mcpSnapshot()
   });
 });
 

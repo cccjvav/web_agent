@@ -4,7 +4,7 @@ const { config } = require('../config');
 const { resolveSafePath, computeHash } = require('./patchEngine');
 const eventBus = require('../utils/eventBus');
 
-function readFiles({ filePath, paths, offset = 1, limit = 2000 } = {}) {
+function readFiles({ filePath, paths, offset = 1, limit = 400 } = {}) {
   const list = [];
   if (Array.isArray(paths) && paths.length) list.push(...paths);
   if (filePath) list.push(filePath);
@@ -23,7 +23,7 @@ function readFiles({ filePath, paths, offset = 1, limit = 2000 } = {}) {
   };
 }
 
-function readFile({ filePath, offset = 1, limit = 2000 }) {
+function readFile({ filePath, offset = 1, limit = 400 }) {
   const fullPath = resolveSafePath(filePath);
   if (!fs.existsSync(fullPath)) {
     throw new Error(`File not found: "${filePath}"`);
@@ -111,7 +111,7 @@ function listDir({ dirPath = '.', recursive = false, maxDepth = 3 }) {
   return { dirPath, items };
 }
 
-function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = false }) {
+function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = false, limit = 20, cursor = 0 } = {}) {
   const fullPath = resolveSafePath(searchPath);
   let pattern;
 
@@ -161,7 +161,11 @@ function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = 
     });
   }
 
-  return { query, totalMatches: matches.length, matches: matches.slice(0, 100) };
+  const pageSize = Math.min(100, Math.max(1, Number(limit) || 20));
+  const start = Math.max(0, Number(cursor) || 0);
+  const page = matches.slice(start, start + pageSize);
+  const nextCursor = start + page.length < matches.length ? start + page.length : null;
+  return { query, totalMatches: matches.length, matches: page, cursor: start, nextCursor };
 }
 
 module.exports = {
