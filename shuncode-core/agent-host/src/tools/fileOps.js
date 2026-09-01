@@ -4,6 +4,25 @@ const { config } = require('../config');
 const { resolveSafePath, computeHash } = require('./patchEngine');
 const eventBus = require('../utils/eventBus');
 
+function readFiles({ filePath, paths, offset = 1, limit = 2000 } = {}) {
+  const list = [];
+  if (Array.isArray(paths) && paths.length) list.push(...paths);
+  if (filePath) list.push(filePath);
+  if (!list.length) {
+    throw new Error('read_files requires filePath or paths[]');
+  }
+  if (list.length === 1) return readFile({ filePath: list[0], offset, limit });
+  return {
+    files: list.map((p) => {
+      try {
+        return readFile({ filePath: p, offset, limit });
+      } catch (err) {
+        return { filePath: p, error: err.message };
+      }
+    })
+  };
+}
+
 function readFile({ filePath, offset = 1, limit = 2000 }) {
   const fullPath = resolveSafePath(filePath);
   if (!fs.existsSync(fullPath)) {
@@ -147,6 +166,7 @@ function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = 
 
 module.exports = {
   readFile,
+  readFiles,
   writeFile,
   listDir,
   grepSearch

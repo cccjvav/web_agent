@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ShunCode</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="splash">
+    <div class="splash-mark">
+      <svg width="42" height="42" viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="#6d5efc"/>
+        <path d="M9 10.5 4.5 16 9 21.5M23 10.5 27.5 16 23 21.5M19.2 7.5 12.8 24.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="splash-name">ShunCode</div>
+    <div class="splash-tag">打辅助，不做替代</div>
+    <div class="splash-ver">0.6.9 · Code-OSS 载体 · 独立 agent-host</div>
+  </div>
+
+  <header id="titlebar">
+    <div class="tb-left">
+      <span class="tb-logo" title="ShunCode">
+        <svg width="16" height="16" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#6d5efc"/><path d="M9 10.5 4.5 16 9 21.5M23 10.5 27.5 16 23 21.5M19.2 7.5 12.8 24.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+      </span>
+      <span class="tb-product">ShunCode</span>
+      <nav class="tb-menu">
+        <button type="button">文件</button>
+        <button type="button">编辑</button>
+        <button type="button">查看</button>
+        <button type="button">终端</button>
+        <button type="button" id="btn-help">帮助</button>
+      </nav>
+    </div>
+    <div class="tb-center" id="window-title">workspace — ShunCode</div>
+    <div class="tb-right">
+      <span class="tb-ver">v0.6.9</span>
+    </div>
+  </header>
+
+  <div id="workbench">
+    <nav id="activitybar" aria-label="活动栏">
+      <button class="ab-btn active" data-view="chat" title="ShunCode Chat">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path d="m18 16 4-4-4-4M6 8l-4 4 4 4M14.5 4l-5 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      </button>
+      <button class="ab-btn" data-view="explorer" title="资源管理器">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 5h6l2 2h8v12H4z" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+      </button>
+      <button class="ab-btn" data-view="search" title="搜索">
+        <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      </button>
+      <button class="ab-btn" data-view="bridge" title="Bridge 模式">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M8 12h8M7 8H5a3 3 0 0 0 0 8h2M17 8h2a3 3 0 0 1 0 8h-2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      </button>
+      <div class="ab-spacer"></div>
+      <button class="ab-btn" data-view="settings" title="配置模型">
+        <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 3.5v2.2M12 18.3V20.5M4.9 7.05l1.7 1.2M17.4 15.75l1.7 1.2M3.5 12h2.2M18.3 12H20.5M4.9 16.95l1.7-1.2M17.4 8.25l1.7-1.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      </button>
+    </nav>
+
+    <aside id="sidebar">
+      <section class="side-view" id="view-chat">
+        <div class="side-head">
+          <span>SHUNCODE CHAT</span>
+          <select id="model-select" title="模型"></select>
+        </div>
+        <div class="mode-switch" id="mode-switch">
+          <button class="mode-btn" data-mode="ask">Ask<span>只读</span></button>
+          <button class="mode-btn active" data-mode="plan">Plan<span>博弈</span></button>
+          <button class="mode-btn" data-mode="code">Code<span>可写</span></button>
+        </div>
+        <div id="chat-stream" class="chat-stream"></div>
+        <div class="chat-compose">
+          <div class="chips" id="chips">
+            <button type="button" data-mode="ask" data-text="诊断这个工作区的测试失败">诊断测试失败</button>
+            <button type="button" data-mode="plan" data-text="对 calculator 除以零缺陷做多模型博弈">多模型博弈</button>
+            <button type="button" data-mode="code" data-text="按已对齐方案修复除零并运行 npm test">一键修复并验证</button>
+          </div>
+          <div class="composer">
+            <textarea id="chat-input" rows="2" placeholder="向 ShunCode 描述任务… Plan 下空输入发送 = 开新分支"></textarea>
+            <button type="button" id="btn-send" title="发送">↵</button>
+          </div>
+          <div class="compose-hint" id="mode-hint">Plan：只读出方案。意见一致再切 Code。</div>
+        </div>
+      </section>
+
+      <section class="side-view hidden" id="view-explorer">
+        <div class="side-head"><span>资源管理器</span><button type="button" id="btn-refresh-tree" class="ghost">刷新</button></div>
+        <div class="side-sub">WORKSPACE</div>
+        <div id="file-tree" class="file-tree"></div>
+      </section>
+
+      <section class="side-view hidden" id="view-search">
+        <div class="side-head"><span>搜索</span></div>
+        <div class="pad">
+          <input id="search-q" class="field" placeholder="在工作区搜索…" />
+          <button type="button" id="btn-search" class="btn primary block">搜索</button>
+          <div id="search-results" class="search-results"></div>
+        </div>
+      </section>
+
+      <section class="side-view hidden" id="view-bridge">
+        <div class="side-head"><span>BRIDGE</span><span id="bridge-pill" class="pill off">未启动</span></div>
+        <div class="bridge-scroll">
+          <div class="card">
+            <div class="card-k">账号与授权</div>
+            <div id="bridge-account" class="muted">加载中…</div>
+            <div class="install-id">安装 ID <code id="install-id">—</code></div>
+            <p class="tiny">Chat 模式不用登录。启动隧道才需要授权。本复现已预置演示授权（永久顺）。</p>
+          </div>
+          <div class="card">
+            <div class="card-k">连接设置</div>
+            <label class="field-label">隧道</label>
+            <select id="tunnel-select" class="field">
+              <option value="cloudflare">Cloudflare Quick Tunnel（默认）</option>
+              <option value="cloudflare-named">Cloudflare Named Tunnel</option>
+              <option value="ngrok">ngrok 开发域名</option>
+            </select>
+            <div class="row-btns">
+              <button type="button" id="btn-bridge-start" class="btn primary">启动 Bridge</button>
+              <button type="button" id="btn-bridge-stop" class="btn">停止</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-k">Streamable HTTP MCP</div>
+            <div class="url-box" id="mcp-url">—</div>
+            <div class="row-btns">
+              <button type="button" id="btn-copy-url" class="btn">复制地址</button>
+              <button type="button" id="btn-copy-prompt" class="btn primary">复制提示词</button>
+              <button type="button" id="btn-reset-secret" class="btn danger">重置</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-k">任务进度</div>
+            <div class="prog-row"><span id="task-step">等待调度</span><span id="task-pct">0%</span></div>
+            <div class="prog-bar"><i id="task-bar"></i></div>
+            <ul id="todo-list" class="todos"></ul>
+          </div>
+          <div class="card">
+            <div class="card-k">快速打开 · 内置入口</div>
+            <div class="clients" id="client-grid"></div>
+            <p class="tiny">名单不是全部。支持自定义 MCP 的按官方方式填；否则新开对话把提示词整段发出去。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="side-view hidden" id="view-settings">
+        <div class="side-head"><span>配置模型</span></div>
+        <div class="pad">
+          <p class="tiny">属于 Chat 模式，和 Bridge 登录、买套餐无关。协议：Chat Completions / Responses / Anthropic / Codex。</p>
+          <label class="field-label">显示名</label>
+          <input id="m-name" class="field" value="自定义 API" />
+          <label class="field-label">Base URL</label>
+          <input id="m-base" class="field" placeholder="https://api.openai.com/v1" />
+          <label class="field-label">API Key</label>
+          <input id="m-key" class="field" type="password" placeholder="sk-…" />
+          <label class="field-label">模型 ID</label>
+          <input id="m-id" class="field" placeholder="gpt-4.1" />
+          <button type="button" id="btn-save-model" class="btn primary block">保存并启用</button>
+          <button type="button" id="btn-use-builtin" class="btn block">改回内置 Demo Agent</button>
+          <p class="tiny" id="model-status"></p>
+        </div>
+      </section>
+    </aside>
+
+    <div id="sash" title="拖动调整侧栏"></div>
+
+    <div id="center">
+      <div id="tabs"></div>
+      <div id="editor-wrap">
+        <div id="editor"></div>
+        <textarea id="editor-fallback" class="hidden" spellcheck="false"></textarea>
+      </div>
+      <div id="panel">
+        <div class="panel-head">
+          <button class="tab-on">终端</button>
+          <button type="button" id="btn-clear-term" class="ghost">清空</button>
+        </div>
+        <div id="terminal" class="terminal"></div>
+        <form id="term-form">
+          <span class="prompt">$</span>
+          <input id="term-input" autocomplete="off" placeholder="在工作区执行命令（Code 权限）" />
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer id="statusbar">
+    <div class="sb-left">
+      <span id="sb-bridge" class="sb-item accent">ShunCode · agent-host :48271</span>
+      <span id="sb-mode" class="sb-item">PLAN</span>
+    </div>
+    <div class="sb-right">
+      <span class="sb-item" id="sb-file">欢迎</span>
+      <span class="sb-item">UTF-8</span>
+      <span class="sb-item">Ln 1, Col 1</span>
+    </div>
+  </footer>
+
+  <div id="toast" hidden></div>
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -4,6 +4,7 @@ const { config } = require('../config');
 const eventBus = require('../utils/eventBus');
 
 let commandSequence = 0;
+const commandStore = new Map();
 
 function executeCommand({ command, cwd = '.', timeoutSec = 30 }) {
   return new Promise((resolve, reject) => {
@@ -91,11 +92,40 @@ function executeCommand({ command, cwd = '.', timeoutSec = 30 }) {
       };
 
       eventBus.broadcast('command_finished', result);
+      commandStore.set(String(execId), result);
       resolve(result);
     });
   });
 }
 
+function getCommandOutput({ execId, commandId } = {}) {
+  const id = String(execId || commandId || commandSequence);
+  const result = commandStore.get(id);
+  if (!result) {
+    return { execId: id, found: false, message: 'No command output for this id yet.' };
+  }
+  return { found: true, ...result };
+}
+
+function sendCommandInput({ execId, input } = {}) {
+  return {
+    ok: false,
+    execId,
+    message: 'Interactive PTY input is available in the full ShunCode desktop build. This host captured the last command as a one-shot process.',
+    input
+  };
+}
+
+function wait({ ms = 800 } = {}) {
+  const delay = Math.min(15000, Math.max(0, Number(ms) || 800));
+  return new Promise((resolve) => {
+    setTimeout(() => resolve({ waitedMs: delay }), delay);
+  });
+}
+
 module.exports = {
-  executeCommand
+  executeCommand,
+  getCommandOutput,
+  sendCommandInput,
+  wait
 };

@@ -70,7 +70,11 @@ async function applyPatch({ filePath, patch, expectedHash = null, dryRun = false
   const currentHash = computeHash(currentContent);
 
   if (expectedHash && currentHash !== expectedHash && !currentHash.startsWith(expectedHash)) {
-    throw new Error(`Hash mismatch conflict: Expected hash ${expectedHash}, current is ${currentHash.substring(0, 12)}.`);
+    const err = new Error(
+      `STALE_FILE: file changed since last read. Re-run read_files for a fresh sha256. expected=${expectedHash} current=${currentHash}`
+    );
+    err.code = 'STALE_FILE';
+    throw err;
   }
 
   let patchedContent = currentContent;

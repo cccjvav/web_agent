@@ -1,15 +1,23 @@
 const path = require('path');
 const crypto = require('crypto');
 
+const workspaceRoot = path.resolve(
+  process.env.WORKSPACE_ROOT || path.join(__dirname, '../../../workspace')
+);
+
 const config = {
   port: parseInt(process.env.AGENT_HOST_PORT || '48271', 10),
+  workbenchPort: parseInt(process.env.WORKBENCH_PORT || '3000', 10),
   host: '0.0.0.0',
-  workspaceRoot: process.env.WORKSPACE_ROOT || path.resolve('/home/user/workspace'),
+  workspaceRoot,
   secretKey: crypto.randomBytes(12).toString('hex'),
   version: '0.6.9',
   serverName: 'ShunCode-AgentHost',
-  tunnelProvider: 'quick',
-  publicTunnelUrl: null
+  productName: 'ShunCode',
+  tunnelProvider: 'cloudflare',
+  publicTunnelUrl: null,
+  bridgeRunning: false,
+  installId: crypto.randomBytes(8).toString('hex')
 };
 
 function generateNewSecret() {
