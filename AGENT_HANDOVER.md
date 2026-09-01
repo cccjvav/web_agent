@@ -20,6 +20,8 @@ ShunCode 是一款基于 **Code-OSS 载体** 与 **独立 `agent-host` 进程** 
 
 ---
 
+> **现行启动：** Windows 用根目录 `run-shuncode.cmd`（只启 `shuncode-core/agent-host` + `workbench`）。不要 `cd shuncode-repro`，也不要指望 `bin/code-server-dist` 能直接跑。目录职责见 [组件说明.md](./组件说明.md)。
+
 ### 2. 仓库目录导航
 
 ```

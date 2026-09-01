@@ -4,6 +4,17 @@
 
 **Windows 用户请先读 [使用指南.md](./使用指南.md)**（安装、CMD、自己的仓库、ChatGPT Bridge 全在里面）。
 
+**GitHub 上每个文件夹是干什么的：** 请读 **[组件说明.md](./组件说明.md)**。
+
+简要对照：
+
+| 目录 | 现在用不用 | 职责 |
+|---|---|---|
+| `shuncode-core/` | **现行主程序** | 工作台 UI + 独立 agent-host（MCP / 工具 / 隧道） |
+| `workspace/` | 默认演示工作区 | 计算器示例；`.shuncode` 在这里，不在仓库根 |
+| `shuncode-repro/` | 不用 | 更早一版纯 Bridge 原型 |
+| `bin/code-server-dist/` | 不用 | 第三方 code-server 4.135.0 切片（Code-OSS 载体），现行启动不拉起 |
+
 - 右侧 **Chat**：Ask / Plan / Code，只改本机，不需要隧道
 - **Bridge**：把同一套工具变成 MCP，给 ChatGPT / Arena 用；在自己电脑上需要 cloudflared
 

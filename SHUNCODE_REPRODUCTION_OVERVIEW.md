@@ -1,5 +1,9 @@
 # ShunCode 深度全面复现系统 (Code-OSS 载体 + 独立 agent-host)
 
+> **阅读提示（2026-09）：** 本文是早期架构草稿。  
+> **现行默认启动不再拉起 `bin/code-server-dist`。** Windows 用 `run-shuncode.cmd`，UI 是 `shuncode-core/workbench/`，MCP 在 `agent-host`。  
+> 每个 GitHub 目录的现行职责以 **[组件说明.md](./组件说明.md)** 为准。`shuncode-repro/` 是更早的 Bridge 原型，不要当主程序。
+
 本复现项目严格按照 ShunCode 官方架构白皮书及技术实现构建，完整复刻了 **“以 Code-OSS 为编辑器载体，模型推理与工具循环跑在独立进程 `agent-host`，不硬编码写入 VS Code 内核”** 的设计。
 
 ---

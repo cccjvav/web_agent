@@ -1,5 +1,12 @@
 # ShunCode Bridge Host (Core Reproduction)
 
+> **中文说明（先读这个）**  
+> 这是仓库里 **第一代、已冻结的 Bridge Host 原型**：一个 Node 进程同时提供简易网页控制台和 MCP（默认端口 **3000**，工作区是本目录下的 `workspace_demo/`）。  
+> **现行产品不在这里。** Windows 请回到仓库根目录运行 `run-shuncode.cmd`，代码在 `shuncode-core/`。  
+> 本目录不会被启动脚本调用。完整对比见根目录 [组件说明.md](../组件说明.md) 第 1.1 节。
+
+---
+
 This project is a complete, runnable reproduction of the **ShunCode Bridge Architecture & Workspace Engine**. It transforms your local project workspace into a secure, standard **Streamable HTTP MCP (Model Context Protocol) Server**, allowing remote AI Agents (e.g. ChatGPT Plus, Arena.ai, Manus, Qwen, Trae) to command your machine through a browser while keeping all code read/write and test execution local.
 
 ---
