@@ -11,6 +11,7 @@ const { clipJson } = require('../src/mcp/budget');
 const { handleRpc } = require('../src/mcp/server');
 const { callTool, getToolList } = require('../src/tools');
 const { publicError, ProtocolError } = require('../src/mcp/errors');
+const { getBootstrapPrompt, CONNECT_LINE } = require('../src/mcp/instructions');
 
 function req(method, params, extra = {}) {
   return {
@@ -39,7 +40,17 @@ async function main() {
   const proto = await handleRpc(req('resources/read', { uri: 'shuncode://protocol' }));
   assert.ok(proto.contents[0].text.includes('Streamable HTTP'));
 
+  assert.strictEqual(
+    CONNECT_LINE,
+    '快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。'
+  );
+  assert.strictEqual(
+    getBootstrapPrompt('https://example.trycloudflare.com/mcp/abc'),
+    `https://example.trycloudflare.com/mcp/abc\n\n${CONNECT_LINE}`
+  );
+
   const tools = getToolList().map((t) => t.name);
+  assert.strictEqual(tools.length, 24);
   assert.ok(tools.includes('ping'));
   assert.ok(tools.includes('remember'));
   assert.ok(tools.includes('get_task_status'));

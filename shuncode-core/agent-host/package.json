@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/index.js",
-    "test": "node tests/patchEngine.test.js && node tests/mcpProtocol.test.js && node tests/workspaceTools.test.js && node tests/tunnel.test.js"
+    "test": "node tests/patchEngine.test.js && node tests/mcpProtocol.test.js && node tests/workspaceTools.test.js && node tests/tunnel.test.js && node tests/httpSmoke.test.js && node tests/codeServerNotRunnable.test.js"
   },
   "keywords": [],
   "author": "",
