@@ -122,6 +122,27 @@
           </div>
           <div id="browser-page"></div>
         </div>
+        <div id="agent-pane" class="hidden">
+          <div class="agent-head">智能体窗口 · Ask / Plan / Code</div>
+          <div id="agent-stream" class="chat-stream"></div>
+          <div class="chat-compose">
+            <div class="composer-box">
+              <textarea id="agent-input" rows="2" placeholder="描述要构建的内容"></textarea>
+              <div class="composer-tools">
+                <select id="agent-mode" class="mini-sel">
+                  <option value="ask">Ask</option>
+                  <option value="plan" selected>Plan</option>
+                  <option value="code">Code</option>
+                </select>
+                <button type="button" id="btn-agent-send" class="send-arr">↑</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="diff-pane" class="hidden">
+          <div class="diff-head" id="diff-title">Diff</div>
+          <pre id="diff-body" class="diff-body"></pre>
+        </div>
       </div>
       <div id="panel" class="hidden">
         <div class="panel-head">
@@ -228,7 +249,7 @@
           <p class="hint">描述你的偏好和约定，以串联智能体、技能和指令。</p>
           <div class="pref-row">
             <input id="pref-input" class="ms-input" placeholder="偏好简洁的提交、全面的审查和经过测试的代码。" />
-            <button type="button" class="send-arr">↑</button>
+            <button type="button" class="send-arr" id="btn-save-pref">↑</button>
           </div>
           <div class="card-grid">
             <article><h4>智能体</h4><p>定义具有专属角色、工具访问权限和特定任务指令的自定义智能体。</p><button type="button" class="vs-btn" data-page="agents">新建...</button></article>
@@ -245,32 +266,71 @@
         <div class="page hidden" id="page-agents">
           <h2>智能体</h2>
           <p class="lead">定义具有专属角色、工具访问权限和特定任务指令的自定义智能体。</p>
-          <button type="button" class="vs-btn">新建...</button>
+          <div id="agents-list"></div>
+          <label class="field-label">名称</label>
+          <input id="ag-name" class="ms-input" placeholder="安全审查智能体" />
+          <label class="field-label">角色与指令</label>
+          <textarea id="ag-role" class="ms-input tall" placeholder="只读检查密钥泄露与危险命令。"></textarea>
+          <button type="button" id="btn-add-agent" class="vs-btn primary">新建</button>
         </div>
         <div class="page hidden" id="page-skills">
           <h2>技能</h2>
           <p class="lead">Skills 本质上是文件夹。把路径给 AI 就会用。Bridge 也支持。</p>
           <div id="skills-list"></div>
+          <label class="field-label">新建 Skill 名称</label>
+          <input id="sk-name" class="ms-input" placeholder="release" />
+          <label class="field-label">SKILL.md</label>
+          <textarea id="sk-body" class="ms-input tall" placeholder="# Skill: release"></textarea>
+          <button type="button" id="btn-add-skill" class="vs-btn primary">新建</button>
         </div>
         <div class="page hidden" id="page-instructions">
           <h2>指令</h2>
-          <p class="lead">始终生效的指令，引导工作区里的 AI 行为。</p>
+          <p class="lead">始终生效的指令，引导工作区里的 AI 行为。会写入 .shuncode/instructions.md。</p>
           <textarea class="ms-input tall" id="instr-text" placeholder="例如：提交信息用中文；改动必须带测试。"></textarea>
+          <button type="button" id="btn-save-instr" class="vs-btn primary">保存指令</button>
         </div>
         <div class="page hidden" id="page-prompts">
           <h2>提示</h2>
           <p class="lead">可复用提示词，在对话中插入。</p>
+          <div id="prompts-list"></div>
+          <label class="field-label">名称</label>
+          <input id="pr-name" class="ms-input" placeholder="写提交说明" />
+          <label class="field-label">内容</label>
+          <textarea id="pr-body" class="ms-input tall"></textarea>
+          <button type="button" id="btn-add-prompt" class="vs-btn primary">新建</button>
         </div>
         <div class="page hidden" id="page-hooks">
           <h2>挂钩</h2>
           <p class="lead">由保存文件或运行任务等事件触发的自动操作。</p>
+          <div id="hooks-list"></div>
+          <label class="field-label">事件</label>
+          <select id="hk-event" class="ms-input">
+            <option value="onSave">保存文件时</option>
+            <option value="onTask">运行任务时</option>
+          </select>
+          <label class="field-label">命令</label>
+          <input id="hk-cmd" class="ms-input" placeholder="npm test" />
+          <button type="button" id="btn-add-hook" class="vs-btn primary">新建</button>
         </div>
         <div class="page hidden" id="page-mcp">
           <h2>MCP 服务器</h2>
           <p class="lead">Chat 模式才能外接 MCP。Bridge 无法调用这里配置的 MCP。</p>
           <p class="hint">两边的「MCP」方向相反：这里是你去连别人的工具；Bridge 是你把自己变成 MCP。</p>
+          <div id="mcps-list"></div>
+          <label class="field-label">名称</label>
+          <input id="mcp-name" class="ms-input" placeholder="filesystem" />
+          <label class="field-label">URL</label>
+          <input id="mcp-endpoint" class="ms-input" placeholder="http://127.0.0.1:3100/mcp" />
+          <button type="button" id="btn-add-mcp" class="vs-btn primary">添加</button>
         </div>
-        <div class="page hidden" id="page-plugins"><h2>插件</h2><p class="lead">安装和管理智能体插件。</p></div>
+        <div class="page hidden" id="page-plugins">
+          <h2>插件</h2>
+          <p class="lead">安装和管理智能体插件，以添加更多工具、技能和集成。</p>
+          <div id="plugins-list"></div>
+          <p class="hint">本复现不连接插件市场，可登记本地插件名作为工作区备注。</p>
+          <input id="pl-name" class="ms-input" placeholder="插件名" />
+          <button type="button" id="btn-add-plugin" class="vs-btn">登记</button>
+        </div>
         <div class="page hidden" id="page-api">
           <h2>API Provider</h2>
           <p class="lead">本地 Chat 模式要先有可用的模型。和 Bridge 登录、买套餐无关。</p>
@@ -291,13 +351,15 @@
         <div class="page hidden" id="page-codex">
           <h2>Codex</h2>
           <p class="lead">通过 auth.openai.com 的 OAuth 登录，复用 ~/.codex/auth.json。本复现提供入口示意。</p>
-          <button type="button" class="vs-btn">登录 Codex 账号</button>
+          <p class="hint" id="codex-status">尚未登录</p>
+          <button type="button" id="btn-codex" class="vs-btn">登录 Codex 账号</button>
         </div>
         <div class="page hidden" id="page-multimodel">
           <h2>多模型博弈</h2>
           <p class="lead">核心理念：多模型意见一致，再行动。只在 Plan 里分支，各分支看不见彼此的回答。</p>
           <label class="chk"><input type="checkbox" id="mm-enabled" checked /> 启用多模型博弈</label>
           <p class="hint">空输入才是分支发送。合并默认可做只读核对。分歧大时不自动执行。</p>
+          <button type="button" id="btn-save-mm" class="vs-btn primary">保存</button>
         </div>
 
         <div class="page hidden" id="page-bridge">
@@ -364,6 +426,8 @@
               <div>
                 <div class="t-name">Cloudflare Named Tunnel <em>固定地址</em></div>
                 <p class="hint">长期给各设备用同一个主机名。需 Tunnel Token 与 Published application。</p>
+                <input id="named-domain" class="ms-input" placeholder="mcp.example.com" />
+                <input id="named-token" class="ms-input" type="password" placeholder="Tunnel Token（安全存储，不进 settings.json）" />
               </div>
             </label>
             <label class="tunnel-card">
@@ -378,6 +442,7 @@
           <details class="block">
             <summary>快速打开</summary>
             <p class="hint">列表里没有的站点，填名称和 https:// 地址后添加。点击仍在内置浏览器打开。</p>
+            <div id="ql-list"></div>
             <div class="pref-row">
               <input id="ql-name" class="ms-input" placeholder="名称" />
               <input id="ql-url" class="ms-input" placeholder="https://" />
@@ -394,9 +459,18 @@
     </div>
   </div>
 
+  <div id="file-menu" class="dropdown hidden">
+    <button type="button" data-act="new">新建文件</button>
+    <button type="button" data-act="open">打开文件...</button>
+    <button type="button" data-act="save">保存</button>
+    <hr />
+    <button type="button" data-act="welcome">打开欢迎页</button>
+    <button type="button" data-act="custom">智能体自定义设置...</button>
+  </div>
   <div id="manage-menu" class="hidden">
     <button type="button" id="menu-custom">智能体自定义设置...</button>
     <button type="button" id="menu-api">API Provider...</button>
+    <button type="button" id="menu-bridge">Bridge...</button>
   </div>
   <div id="toast" hidden></div>
   <script src="/app.js"></script>

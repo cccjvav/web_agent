@@ -1,6 +1,7 @@
 const { callTool } = require('../tools');
 const { runMultiModelConsensus } = require('../tools/consensusEngine');
 const { load } = require('../models/store');
+const { loadCustom } = require('../models/customizations');
 const { runOpenAI } = require('./openai');
 
 function sleep(ms) {
@@ -195,7 +196,12 @@ async function runBuiltin({ mode, message, emit }) {
   await safeTool(emit, 'get_diagnostics', { filePath: 'src/calculator.js' }, mode);
 
   if (mode === 'ask') {
-    emit('message', { text: buildAskAnswer(text, { tree, src, tests }) });
+    const custom = loadCustom();
+    let answer = buildAskAnswer(text, { tree, src, tests });
+    if (custom.instructions) {
+      answer += `\n\n_工作区指令已加载（${custom.instructions.slice(0, 80)}${custom.instructions.length > 80 ? '…' : ''}）。_`;
+    }
+    emit('message', { text: answer });
     return;
   }
 

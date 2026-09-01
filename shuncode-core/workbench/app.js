@@ -25,7 +25,9 @@
     editor: null,
     dirty: {},
     stats: { calls: 0, fail: 0, totalMs: 0 },
-    loggedIn: true
+    loggedIn: true,
+    custom: null,
+    stayOnBridge: false
   };
 
   function toast(text) {
@@ -103,11 +105,14 @@
     const t = state.tabs.find((x) => x.id === id);
     $('#welcome').classList.toggle('hidden', !t || t.kind !== 'welcome');
     $('#browser').classList.toggle('hidden', !t || t.kind !== 'browser');
+    $('#agent-pane').classList.toggle('hidden', !t || t.kind !== 'agent');
+    $('#diff-pane').classList.toggle('hidden', !t || t.kind !== 'diff');
     const showEditor = t && t.kind === 'file';
     if (state.editor) $('#editor').classList.toggle('hidden', !showEditor);
     else $('#editor-fallback').classList.toggle('hidden', !showEditor);
     if (showEditor) applyEditor(t);
     if (t && t.kind === 'browser') renderBrowser(t);
+    if (t && t.kind === 'diff') paintDiff(t);
     paintTabs();
   }
 
@@ -116,6 +121,40 @@
     state.tabs = state.tabs.filter((t) => t.id !== id);
     if (state.activeTab === id) activateTab(state.tabs[state.tabs.length - 1].id);
     else paintTabs();
+  }
+
+  function openAgentWindow() {
+    let tab = state.tabs.find((t) => t.id === 'agent');
+    if (!tab) {
+      tab = { id: 'agent', title: '智能体', kind: 'agent' };
+      state.tabs.push(tab);
+    }
+    setRight('chat');
+    activateTab('agent');
+    paintChat();
+  }
+
+  function openDiff(filePath, diff) {
+    const id = 'diff:' + filePath;
+    let tab = state.tabs.find((t) => t.id === id);
+    if (!tab) {
+      tab = { id, title: filePath.split('/').pop() + ' (diff)', kind: 'diff', path: filePath, diff };
+      state.tabs.push(tab);
+    } else {
+      tab.diff = diff;
+    }
+    activateTab(id);
+  }
+
+  function paintDiff(tab) {
+    $('#diff-title').textContent = tab.path || 'Diff';
+    const lines = String(tab.diff || '').split('\n');
+    $('#diff-body').innerHTML = lines.map((line) => {
+      const cls = line.startsWith('+') && !line.startsWith('+++') ? 'diff-add'
+        : line.startsWith('-') && !line.startsWith('---') ? 'diff-del'
+          : line.startsWith('@@') ? 'diff-hunk' : '';
+      return `<div class="${cls}">${escapeHtml(line) || ' '}</div>`;
+    }).join('');
   }
 
   function ensureWelcome() {
@@ -159,7 +198,10 @@
     if (!items) return '';
     return items.map((it) => {
       if (it.type === 'directory') {
-        return `<div class="tree-item dir" style="padding-left:${8 + depth * 12}px">▸ ${escapeHtml(it.name)}</div>${treeHtml(it.children || [], depth + 1)}`;
+        return `<div class="tree-dir">
+          <div class="tree-item dir" data-dir="1" style="padding-left:${8 + depth * 12}px"><span class="chev">▾</span>${escapeHtml(it.name)}</div>
+          <div class="tree-kids">${treeHtml(it.children || [], depth + 1)}</div>
+        </div>`;
       }
       return `<div class="tree-item" data-path="${escapeHtml(it.path)}" style="padding-left:${8 + depth * 12}px">${escapeHtml(it.name)}</div>`;
     }).join('');
@@ -171,6 +213,17 @@
     const box = $('#file-tree');
     box.innerHTML = treeHtml(data.items || []);
     box.onclick = (e) => {
+      const dir = e.target.closest('.tree-item.dir');
+      if (dir) {
+        const kids = dir.parentElement && dir.parentElement.querySelector(':scope > .tree-kids');
+        if (kids) {
+          const hide = kids.style.display === 'none';
+          kids.style.display = hide ? '' : 'none';
+          const chev = dir.querySelector('.chev');
+          if (chev) chev.textContent = hide ? '▾' : '▸';
+        }
+        return;
+      }
       const item = e.target.closest('.tree-item[data-path]');
       if (item) openFile(item.dataset.path);
     };
@@ -189,21 +242,26 @@
       <div class="bubble">💬</div>
       <h3>使用智能体构建</h3>
       <p>AI 答复可能不准确。</p>
-      <p style="margin-top:10px"><a id="gen-instr">生成智能体指令</a> 以将 AI 载入代码库。</p>
+      <p style="margin-top:10px"><a class="gen-instr">生成智能体指令</a> 以将 AI 载入代码库。</p>
     </div>`;
   }
 
   function paintChat() {
-    const box = $('#chat-stream');
-    if (!state.messages.length) {
-      box.innerHTML = emptyChat();
-      const a = $('#gen-instr');
-      if (a) a.onclick = () => openModal('instructions');
-      return;
-    }
-    box.innerHTML = '';
-    state.messages.forEach((m) => box.appendChild(renderMsg(m)));
-    box.scrollTop = box.scrollHeight;
+    const paint = (box) => {
+      if (!box) return;
+      if (!state.messages.length) {
+        box.innerHTML = emptyChat();
+        box.querySelectorAll('.gen-instr').forEach((a) => {
+          a.onclick = () => openModal('instructions');
+        });
+        return;
+      }
+      box.innerHTML = '';
+      state.messages.forEach((m) => box.appendChild(renderMsg(m)));
+      box.scrollTop = box.scrollHeight;
+    };
+    paint($('#chat-stream'));
+    paint($('#agent-stream'));
   }
 
   function summarizeTool(result) {
@@ -266,19 +324,25 @@
 
   function pushMsg(m) {
     state.messages.push(m);
-    const box = $('#chat-stream');
-    if (box.querySelector('.chat-empty')) box.innerHTML = '';
-    box.appendChild(renderMsg(m));
-    box.scrollTop = box.scrollHeight;
+    [$('#chat-stream'), $('#agent-stream')].filter(Boolean).forEach((box) => {
+      if (box.querySelector('.chat-empty')) box.innerHTML = '';
+      box.appendChild(renderMsg(m));
+      box.scrollTop = box.scrollHeight;
+    });
   }
 
-  async function sendChat(text) {
+  async function sendChat(text, opts = {}) {
     if (state.sending) return;
-    const message = text != null ? text : $('#chat-input').value;
-    if (text == null) $('#chat-input').value = '';
-    state.mode = $('#mode-select').value;
+    const message = text != null ? text : ($('#chat-input').value || ($('#agent-input') && $('#agent-input').value) || '');
+    if (text == null) {
+      $('#chat-input').value = '';
+      if ($('#agent-input')) $('#agent-input').value = '';
+    }
+    state.mode = ($('#agent-pane') && !$('#agent-pane').classList.contains('hidden') && $('#agent-mode'))
+      ? $('#agent-mode').value
+      : $('#mode-select').value;
     state.sending = true;
-    setRight('chat');
+    if (!opts.stayOnBridge) setRight('chat');
     if (message) {
       pushMsg({ kind: 'user', text: message });
       state.history.push({ role: 'user', content: message });
@@ -335,6 +399,7 @@
             if (state.activeTab === tab.id) applyEditor(tab);
           });
         }
+        if (ev.result.diff) openDiff(p, ev.result.diff);
       }
     } else if (ev.type === 'consensus') pushMsg({ kind: 'consensus', result: ev.result });
     else if (ev.type === 'message') pushMsg({ kind: 'assistant', text: ev.text });
@@ -385,6 +450,16 @@
         <div class="arena-gh"><span>Connect your GitHub <small style="color:#3b6fd4">NEW</small></span><button type="button">Connect</button></div>
       </div>`;
       $('#arena-send').onclick = () => arenaConnect($('#arena-input').value);
+    } else if (tab.site === 'chatgpt') {
+      page.innerHTML = `<div class="gpt">
+        <div class="gpt-top">ChatGPT</div>
+        <h1>有什么可以帮忙的？</h1>
+        <div class="gpt-card">
+          <textarea id="gpt-input">${escapeHtml(prompt)}</textarea>
+          <div style="display:flex"><button type="button" class="gpt-send" id="gpt-send">↑</button></div>
+        </div>
+      </div>`;
+      $('#gpt-send').onclick = () => arenaConnect($('#gpt-input').value);
     } else {
       page.innerHTML = `<div class="generic-site">
         <h2>在 ShunCode 内置浏览器中打开 ${escapeHtml(tab.title)}</h2>
@@ -398,29 +473,26 @@
   async function arenaConnect(text) {
     setRight('bridge');
     $('#sess-dot').classList.add('on');
-    $('#sess-note').textContent = 'MCP session connected from Arena mock client.';
+    $('#sess-note').textContent = 'MCP session connected from the built-in browser.';
     toast('已用提示词连接本机 MCP');
+    try {
+      const secret = state.status && state.status.secretKey;
+      await fetch(`/mcp/${secret}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { clientInfo: { name: 'Arena' } } })
+      });
+      await fetch(`/mcp/${secret}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} })
+      });
+      logBridgeTool({ name: 'tools/list', ok: true, result: { tools: (state.status.tools || []).map((t) => t.name) } });
+    } catch (e) { toast(e.message); }
     const extra = (text || '').replace(promptText(), '').trim();
-    if (extra) {
-      setRight('chat');
-      $('#mode-select').value = 'code';
-      sendChat(extra);
-    } else {
-      try {
-        const secret = state.status && state.status.secretKey;
-        await fetch(`/mcp/${secret}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { clientInfo: { name: 'Arena' } } })
-        });
-        await fetch(`/mcp/${secret}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} })
-        });
-        logBridgeTool({ name: 'tools/list', ok: true, result: { tools: (state.status.tools || []).map((t) => t.name) } });
-      } catch (e) { toast(e.message); }
-    }
+    const task = extra || '按已对齐方案修复除零并运行 npm test';
+    $('#mode-select').value = 'code';
+    sendChat(task, { stayOnBridge: true });
   }
 
   async function openSite(key) {
@@ -510,6 +582,75 @@
     if (cur) sel.value = cur;
   }
 
+  function rowList(items, render, empty) {
+    if (!items || !items.length) return `<p class="hint">${empty}</p>`;
+    return items.map(render).join('');
+  }
+
+  function paintCustom() {
+    const c = state.custom || {};
+    $('#instr-text').value = c.instructions || '';
+    if ($('#pref-input') && c.preference) $('#pref-input').value = c.preference;
+    $('#agents-list').innerHTML = rowList(c.agents, (a) =>
+      `<div class="list-row"><div><strong>${escapeHtml(a.name)}</strong><div class="hint">${escapeHtml(a.role || '')}</div></div></div>`,
+    '还没有自定义智能体');
+    $('#prompts-list').innerHTML = rowList(c.prompts, (p) =>
+      `<div class="list-row"><div><strong>${escapeHtml(p.name)}</strong></div><button type="button" data-insert="${escapeHtml(p.content)}">插入对话</button></div>`,
+    '还没有提示');
+    $('#prompts-list').onclick = (e) => {
+      const b = e.target.closest('[data-insert]');
+      if (!b) return;
+      $('#chat-input').value = b.dataset.insert;
+      closeModal();
+      setRight('chat');
+    };
+    $('#hooks-list').innerHTML = rowList(c.hooks, (h) =>
+      `<div class="list-row"><span>${escapeHtml(h.event)} → ${escapeHtml(h.command)}</span></div>`,
+    '还没有挂钩');
+    $('#mcps-list').innerHTML = rowList(c.mcpServers, (s) =>
+      `<div class="list-row"><span>${escapeHtml(s.name)} · ${escapeHtml(s.url)}</span></div>`,
+    '尚未添加 Chat 模式 MCP');
+    $('#plugins-list').innerHTML = rowList(c.plugins, (p) =>
+      `<div class="list-row"><span>${escapeHtml(p.name || p)}</span></div>`,
+    '未登记插件');
+    $('#ql-list').innerHTML = rowList(c.quickLinks, (l) =>
+      `<div class="list-row"><span>${escapeHtml(l.name)}</span><button type="button" data-open-url="${escapeHtml(l.url)}">${escapeHtml(l.url)}</button></div>`,
+    '还没有自定义站点');
+    $('#ql-list').onclick = (e) => {
+      const b = e.target.closest('[data-open-url]');
+      if (!b) return;
+      const url = b.dataset.openUrl;
+      const id = 'browser:custom:' + url;
+      let tab = state.tabs.find((t) => t.id === id);
+      if (!tab) {
+        tab = { id, title: b.textContent || url, kind: 'browser', site: 'custom', url };
+        state.tabs.push(tab);
+      }
+      closeModal();
+      activateTab(id);
+    };
+    $('#codex-status').textContent = (c.codex && c.codex.loggedIn) ? `已登录 ${c.codex.account}` : '尚未登录';
+    if (typeof c.multiModelEnabled === 'boolean') $('#mm-enabled').checked = c.multiModelEnabled;
+  }
+
+  async function loadCustomizations() {
+    const res = await fetch('/api/customizations');
+    state.custom = await res.json();
+    paintCustom();
+  }
+
+  async function saveCustom(partial) {
+    const res = await fetch('/api/customizations', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...state.custom, ...partial })
+    });
+    const data = await res.json();
+    state.custom = data.customizations;
+    paintCustom();
+    return state.custom;
+  }
+
   async function loadSkills() {
     const res = await fetch('/api/skills');
     const data = await res.json();
@@ -542,11 +683,29 @@
       e.stopPropagation();
       $('#manage-menu').classList.toggle('hidden');
     };
-    document.addEventListener('click', () => $('#manage-menu').classList.add('hidden'));
+    document.addEventListener('click', () => {
+      $('#manage-menu').classList.add('hidden');
+      $('#file-menu').classList.add('hidden');
+    });
     $('#menu-custom').onclick = () => openModal('overview');
     $('#menu-api').onclick = () => openModal('api');
-    $('#btn-agent-window').onclick = () => openModal('overview');
+    $('#menu-bridge').onclick = () => openModal('bridge');
+    $('#btn-agent-window').onclick = () => openAgentWindow();
     $('#walk-basics').onclick = () => openModal('overview');
+    $('[data-menu="file"]').onclick = (e) => {
+      e.stopPropagation();
+      $('#file-menu').classList.toggle('hidden');
+    };
+    $('#file-menu').onclick = (e) => {
+      const b = e.target.closest('[data-act]');
+      if (!b) return;
+      $('#file-menu').classList.add('hidden');
+      if (b.dataset.act === 'new') $('#lnk-new-file').click();
+      if (b.dataset.act === 'open') $('#activitybar [data-left="explorer"]').click();
+      if (b.dataset.act === 'save') saveActive();
+      if (b.dataset.act === 'welcome') ensureWelcome();
+      if (b.dataset.act === 'custom') openModal('overview');
+    };
     $('#modal-close').onclick = closeModal;
     $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
     $$('.nav-item').forEach((b) => { b.onclick = () => showPage(b.dataset.page); });
@@ -555,8 +714,19 @@
     $('#rb-chat-tab').onclick = () => setRight('chat');
     $('#rb-bridge-tab').onclick = () => setRight('bridge');
     $('#btn-send').onclick = () => sendChat();
+    $('#btn-agent-send').onclick = () => {
+      const t = $('#agent-input').value;
+      $('#mode-select').value = $('#agent-mode').value;
+      sendChat(t);
+    };
     $('#chat-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+    });
+    $('#agent-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        $('#btn-agent-send').click();
+      }
     });
     $('#mode-select').onchange = () => { state.mode = $('#mode-select').value; };
     $('#chips').onclick = (e) => {
@@ -589,12 +759,92 @@
     $$('.open-site').forEach((b) => {
       b.onclick = () => openSite(b.dataset.site);
     });
-    $('#btn-gh-login').onclick = () => {
+    $('#btn-gh-login').onclick = async () => {
+      await fetch('/api/bridge/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: 'github', username: 'demo' })
+      });
       state.loggedIn = true;
       paintBridge();
       toast('已使用 GitHub 登录（演示）');
     };
     $('#btn-refresh-auth').onclick = () => { paintBridge(); toast('已刷新授权'); };
+
+    $('#btn-add-agent').onclick = async () => {
+      const agents = [...((state.custom && state.custom.agents) || []), {
+        id: Date.now().toString(36),
+        name: $('#ag-name').value || '未命名',
+        role: $('#ag-role').value
+      }];
+      await saveCustom({ agents });
+      toast('已新建智能体');
+    };
+    $('#btn-add-skill').onclick = async () => {
+      await fetch('/api/skills', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: $('#sk-name').value, content: $('#sk-body').value })
+      });
+      await loadSkills();
+      toast('已创建 Skill 文件夹');
+    };
+    $('#btn-save-instr').onclick = async () => {
+      await saveCustom({ instructions: $('#instr-text').value });
+      toast('指令已保存到 .shuncode/instructions.md');
+    };
+    $('#btn-add-prompt').onclick = async () => {
+      const prompts = [...((state.custom && state.custom.prompts) || []), {
+        id: Date.now().toString(36),
+        name: $('#pr-name').value || '提示',
+        content: $('#pr-body').value
+      }];
+      await saveCustom({ prompts });
+    };
+    $('#btn-add-hook').onclick = async () => {
+      const hooks = [...((state.custom && state.custom.hooks) || []), {
+        event: $('#hk-event').value,
+        command: $('#hk-cmd').value
+      }];
+      await saveCustom({ hooks });
+    };
+    $('#btn-add-mcp').onclick = async () => {
+      const mcpServers = [...((state.custom && state.custom.mcpServers) || []), {
+        name: $('#mcp-name').value,
+        url: $('#mcp-endpoint').value
+      }];
+      await saveCustom({ mcpServers });
+    };
+    $('#btn-add-plugin').onclick = async () => {
+      const plugins = [...((state.custom && state.custom.plugins) || []), { name: $('#pl-name').value }];
+      await saveCustom({ plugins });
+    };
+    $('#btn-add-link').onclick = async () => {
+      const quickLinks = [...((state.custom && state.custom.quickLinks) || []), {
+        name: $('#ql-name').value,
+        url: $('#ql-url').value
+      }];
+      await saveCustom({ quickLinks });
+    };
+    $('#btn-codex').onclick = async () => {
+      await saveCustom({ codex: { loggedIn: true, account: 'codex-demo' } });
+      toast('已模拟 Codex 登录');
+    };
+    $('#btn-save-mm').onclick = async () => {
+      await fetch('/api/models', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ multiModel: { enabled: $('#mm-enabled').checked } })
+      });
+      toast('已保存多模型设置');
+    };
+    $('#btn-save-pref').onclick = async () => {
+      await saveCustom({
+        preference: $('#pref-input').value,
+        instructions: $('#instr-text').value || $('#pref-input').value
+      });
+      toast('已写入偏好');
+    };
 
     $('#btn-save-model').onclick = async () => {
       await fetch('/api/models', {
@@ -756,7 +1006,7 @@
     paintTabs();
     paintChat();
     termLine('ShunCode terminal ready.', 'info');
-    await Promise.all([refreshStatus(), loadTree(), loadSkills(), loadMonaco()]);
+    await Promise.all([refreshStatus(), loadTree(), loadSkills(), loadCustomizations(), loadMonaco()]);
     connectWs();
     activateTab('welcome');
   }

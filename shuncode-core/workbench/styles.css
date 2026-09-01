@@ -341,6 +341,43 @@ details.block summary { cursor: pointer; }
   padding: 8px 12px; border-radius: 6px; font-size: 12px; z-index: 50;
 }
 
+#agent-pane, #diff-pane { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--bg); }
+#agent-pane.hidden, #diff-pane.hidden { display: none !important; }
+.agent-head, .diff-head { padding: 8px 14px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text2); }
+.diff-body { margin: 0; flex: 1; overflow: auto; padding: 12px 16px; font-family: var(--mono); font-size: 12px; line-height: 1.45; }
+.diff-add { background: #1c3329; color: #89d185; }
+.diff-del { background: #3b1d1d; color: #f14c4c; }
+.diff-hunk { color: #9cdcfe; }
+
+.dropdown {
+  position: fixed; top: 30px; left: 8px; background: #252526; border: 1px solid #333;
+  border-radius: 6px; min-width: 220px; z-index: 40; padding: 4px;
+}
+.dropdown button {
+  display: block; width: 100%; text-align: left; background: none; border: 0; padding: 6px 10px; font-size: 13px; border-radius: 4px;
+}
+.dropdown button:hover { background: #04395e; }
+.dropdown hr { border: 0; border-top: 1px solid #333; margin: 4px 0; }
+
+.tree-dir .tree-kids { }
+.tree-item .chev { display: inline-block; width: 12px; color: var(--mute); }
+.list-row { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid #333; font-size: 13px; }
+.list-row button { background: none; border: 0; color: var(--link); font-size: 12px; }
+
+.gpt {
+  min-height: 100%; background: #212121; color: #ececec; display: flex; flex-direction: column; align-items: center; padding: 24px 16px;
+  font-family: var(--font);
+}
+.gpt-top { width: min(760px, 100%); color: #aaa; font-size: 13px; }
+.gpt h1 { font-weight: 500; font-size: 28px; margin: 80px 0 24px; }
+.gpt-card {
+  width: min(760px, 100%); background: #2f2f2f; border-radius: 24px; padding: 14px 16px;
+}
+.gpt-card textarea {
+  width: 100%; border: 0; background: transparent; color: #fff; min-height: 88px; resize: none; outline: none; font-size: 15px;
+}
+.gpt-send { margin-left: auto; width: 32px; height: 32px; border: 0; border-radius: 50%; background: #fff; color: #111; }
+
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: #424242; }
 ::-webkit-scrollbar-track { background: transparent; }

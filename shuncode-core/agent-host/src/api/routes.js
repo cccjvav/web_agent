@@ -7,6 +7,7 @@ const { getTaskState, resetTaskState } = require('../tools/progressTracker');
 const { resolveSafePath, computeHash } = require('../tools/patchEngine');
 const { runChat } = require('../agent/runChat');
 const store = require('../models/store');
+const { loadCustom, patchCustom } = require('../models/customizations');
 const eventBus = require('../utils/eventBus');
 
 const router = express.Router();
@@ -242,6 +243,51 @@ router.post('/models', (req, res) => {
 
 router.get('/logs', (req, res) => {
   res.json({ logs: eventBus.getRecentLogs(80) });
+});
+
+router.get('/customizations', (req, res) => {
+  res.json(loadCustom());
+});
+
+router.put('/customizations', (req, res) => {
+  const body = req.body || {};
+  const next = patchCustom(body);
+  res.json({ success: true, customizations: next });
+});
+
+router.post('/skills', (req, res) => {
+  const name = String((req.body && req.body.name) || '')
+    .trim()
+    .replace(/[^\w\-]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 40);
+  if (!name) return res.status(400).json({ error: 'name required' });
+  const content = String((req.body && req.body.content) || `# Skill: ${name}\n\n把路径告诉模型就会用。\n`);
+  const dir = path.join(config.workspaceRoot, '.shuncode', 'skills', name);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'SKILL.md'), content, 'utf8');
+  res.json({ success: true, path: path.relative(config.workspaceRoot, dir) });
+});
+
+router.post('/bridge/login', (req, res) => {
+  const provider = (req.body && req.body.provider) || 'github';
+  const username = (req.body && req.body.username) || 'demo';
+  store.patch({
+    bridge: {
+      loggedIn: true,
+      provider,
+      username,
+      license: '永久顺',
+      deviceAuthorized: true
+    }
+  });
+  res.json({ success: true, username, provider });
+});
+
+router.post('/bridge/logout', (req, res) => {
+  store.patch({ bridge: { loggedIn: false, username: '', deviceAuthorized: false } });
+  config.bridgeRunning = false;
+  res.json({ success: true });
 });
 
 module.exports = router;

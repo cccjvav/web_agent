@@ -1,4 +1,5 @@
 const { callTool, getToolList } = require('../tools');
+const { loadCustom } = require('../models/customizations');
 
 function systemPrompt(mode) {
   const lock =
@@ -13,7 +14,8 @@ function systemPrompt(mode) {
     'Reply in the same language as the user. Be concise. After tools, give a short conclusion.',
     mode === 'plan'
       ? 'Plan mode: produce a concrete plan. Do not modify the repo. Mention that Code mode is required to apply changes.'
-      : ''
+      : '',
+    loadCustom().instructions ? `Workspace instructions:\n${loadCustom().instructions}` : ''
   ]
     .filter(Boolean)
     .join('\n');

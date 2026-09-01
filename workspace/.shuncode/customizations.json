@@ -1,0 +1,28 @@
+{
+  "preference": "",
+  "instructions": "提交说明用中文。改动尽量走 apply_patch。Ask/Plan 只读，Code 才写文件。改动必须带测试。",
+  "agents": [
+    {
+      "id": "default",
+      "name": "默认编程智能体",
+      "role": "在 Ask / Plan / Code 下使用工作区工具，意见一致再行动。"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "diagnose",
+      "name": "诊断测试失败",
+      "content": "只读探查工作区测试失败的原因，不要改文件。"
+    }
+  ],
+  "hooks": [],
+  "mcpServers": [],
+  "plugins": [],
+  "quickLinks": [],
+  "voice": "",
+  "dictation": "",
+  "codex": {
+    "loggedIn": false,
+    "account": ""
+  }
+}
