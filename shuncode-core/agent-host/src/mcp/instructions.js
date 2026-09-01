@@ -1,10 +1,19 @@
 const { loadCustom } = require('../models/customizations');
 const { config } = require('../config');
 
+const CONNECT_LINE = '快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。';
+
+function getBootstrapPrompt(mcpUrl) {
+  return `${mcpUrl || ''}\n\n${CONNECT_LINE}`;
+}
+
 const SERVER_INSTRUCTIONS = `# ShunCode Bridge MCP
 
 You are connected to a local ShunCode agent-host. Tools edit the workspace on disk.
 Do not invent file contents or command output — call tools.
+
+If this text is missing from your system prompt (common for some web MCP clients),
+read resource shuncode://instructions and then call tools/list.
 
 ## Modes
 - Ask / Plan: read-only. Use list/search/read, git_status, git_diff, load_skill. Do not apply_patch, write_file, delete_file, rename_file, or run/start_command.
@@ -48,4 +57,4 @@ function getInstructions() {
   return [SERVER_INSTRUCTIONS.trim(), ...extra].join('\n\n');
 }
 
-module.exports = { getInstructions, SERVER_INSTRUCTIONS };
+module.exports = { getInstructions, SERVER_INSTRUCTIONS, getBootstrapPrompt, CONNECT_LINE };

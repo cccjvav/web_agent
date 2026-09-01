@@ -3,7 +3,7 @@ const { getToolList, callTool } = require('../tools');
 const { config } = require('../config');
 const { loadCustom } = require('../models/customizations');
 const eventBus = require('../utils/eventBus');
-const { getInstructions } = require('./instructions');
+const { getInstructions, getBootstrapPrompt } = require('./instructions');
 const { listResources, readResource } = require('./resources');
 const { clipJson, clipText } = require('./budget');
 const { ProtocolError, publicError } = require('./errors');
@@ -23,13 +23,24 @@ function validateSecret(req, res, next) {
   next();
 }
 
+function builtinPrompts() {
+  return [
+    {
+      name: 'connect',
+      title: '连接本机 ShunCode',
+      description: 'Handshake: treat initialize.instructions as rules, then tools/list.'
+    }
+  ];
+}
+
 function promptsFromCustom() {
   const custom = loadCustom();
-  return (custom.prompts || []).map((p) => ({
+  const user = (custom.prompts || []).map((p) => ({
     name: p.id || p.name,
     title: p.name,
     description: (p.content || '').slice(0, 120)
   }));
+  return [...builtinPrompts(), ...user];
 }
 
 async function handleRpc(req) {
@@ -120,6 +131,22 @@ async function handleRpc(req) {
 
     case 'prompts/get': {
       const name = params && params.name;
+      if (name === 'connect') {
+        return {
+          description: '连接本机 ShunCode',
+          messages: [{
+            role: 'user',
+            content: {
+              type: 'text',
+              text: [
+                getBootstrapPrompt('(this MCP server)'),
+                '',
+                'Follow initialize.instructions (also at shuncode://instructions). Call tools/list, then ping.'
+              ].join('\n')
+            }
+          }]
+        };
+      }
       const custom = loadCustom();
       const prompt = (custom.prompts || []).find((p) => p.id === name || p.name === name);
       if (!prompt) throw new ProtocolError('E_NOT_FOUND', `Unknown prompt ${name}`);
@@ -142,6 +169,7 @@ router.get('/:secret', validateSecret, (req, res) => {
     workspace: config.workspaceRoot,
     tools: getToolList().map((t) => t.name),
     resources: listResources().map((r) => r.uri),
+    instructions: getInstructions(),
     session: snapshot()
   });
 });

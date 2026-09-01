@@ -5,8 +5,10 @@ const { getTaskState } = require('../tools/progressTracker');
 const { recall } = require('../models/memory');
 const { snapshot } = require('./session');
 const eventBus = require('../utils/eventBus');
+const { getInstructions } = require('./instructions');
 
 const RESOURCE_DEFS = [
+  { uri: 'shuncode://instructions', name: 'Instructions', mimeType: 'text/markdown', description: 'Full server + workspace instructions (same payload as initialize.instructions).' },
   { uri: 'shuncode://protocol', name: 'Protocol', mimeType: 'text/markdown', description: 'How to call this MCP host.' },
   { uri: 'shuncode://capabilities', name: 'Capabilities', mimeType: 'text/plain', description: 'Registered tools and modes.' },
   { uri: 'shuncode://config', name: 'Config', mimeType: 'text/plain', description: 'Host config without secrets.' },

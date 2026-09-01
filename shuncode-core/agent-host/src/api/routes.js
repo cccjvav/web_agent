@@ -10,6 +10,7 @@ const store = require('../models/store');
 const { loadCustom, patchCustom } = require('../models/customizations');
 const eventBus = require('../utils/eventBus');
 const { snapshot: mcpSnapshot } = require('../mcp/session');
+const { getBootstrapPrompt } = require('../mcp/instructions');
 
 const router = express.Router();
 
@@ -26,7 +27,7 @@ function mcpInfo(req) {
     secretKey: config.secretKey,
     mcpPath,
     mcpUrl: `${origin}${mcpPath}`,
-    prompt: `${origin}${mcpPath}\n\n快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。`
+    prompt: getBootstrapPrompt(`${origin}${mcpPath}`)
   };
 }
 

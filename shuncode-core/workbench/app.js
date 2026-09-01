@@ -487,7 +487,13 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} })
       });
+      await fetch(`/mcp/${secret}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'resources/read', params: { uri: 'shuncode://instructions' } })
+      });
       logBridgeTool({ name: 'tools/list', ok: true, result: { tools: (state.status.tools || []).map((t) => t.name) } });
+      logBridgeTool({ name: 'resources/read', ok: true, result: { uri: 'shuncode://instructions' } });
     } catch (e) { toast(e.message); }
     const extra = (text || '').replace(promptText(), '').trim();
     const task = extra || '按已对齐方案修复除零并运行 npm test';

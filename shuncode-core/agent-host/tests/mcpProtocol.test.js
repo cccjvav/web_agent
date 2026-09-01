@@ -23,6 +23,7 @@ function req(method, params, extra = {}) {
 async function main() {
   const init = await handleRpc(req('initialize', { clientInfo: { name: 'test-client' } }));
   assert.ok(init.instructions && init.instructions.includes('ShunCode Bridge MCP'));
+  assert.ok(init.instructions.includes('shuncode://instructions'));
   assert.ok(init.capabilities.resources);
   assert.ok(init.capabilities.prompts);
   assert.ok(init.serverInfo.name);
@@ -72,7 +73,9 @@ async function main() {
   assert.ok(recalled.text.includes('calculator divide'));
 
   const promptList = await handleRpc(req('prompts/list'));
-  assert.ok(Array.isArray(promptList.prompts));
+  assert.ok(promptList.prompts.some((p) => p.name === 'connect'));
+  const connect = await handleRpc(req('prompts/get', { name: 'connect' }));
+  assert.ok(connect.messages[0].content.text.includes('快速连接这个 MCP'));
 
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('mcp protocol tests passed');
