@@ -4,6 +4,8 @@ node_modules/
 
 # Binary apps and caches
 code-server-app/
+bin/code-server-runtime/*
+!bin/code-server-runtime/package.json
 .cache/
 .local/
 *.tar.gz

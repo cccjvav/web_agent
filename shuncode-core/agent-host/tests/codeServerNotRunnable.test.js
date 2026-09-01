@@ -22,4 +22,8 @@ const launchers = [
 assert.ok(!/code-server/i.test(launchers), 'run-shuncode must not start code-server');
 assert.ok(/agent-host/.test(launchers));
 
+const runner = path.join(repoRoot, 'shuncode-core/scripts/run-code-oss.js');
+assert.ok(fs.existsSync(runner), 'VS Code web launcher should exist');
+assert.ok(fs.existsSync(path.join(repoRoot, 'run-shuncode-vscode.cmd')));
+
 console.log('code-server layout is not a runnable product path');

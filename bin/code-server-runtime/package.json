@@ -1,0 +1,8 @@
+{
+  "name": "shuncode-code-server-runtime",
+  "private": true,
+  "description": "Official npm code-server 4.135.0, downloaded on first run. Do not use the incomplete git slice in lib/code-server-4.135.0.",
+  "dependencies": {
+    "code-server": "4.135.0"
+  }
+}

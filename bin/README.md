@@ -8,7 +8,9 @@ bin/code-server-dist/lib/code-server-4.135.0/
 
 官方 ShunCode 用 **Code-OSS / VS Code Web** 当编辑器外壳，模型与工具在独立 `agent-host`。本目录就是按那个架构放进来的载体。
 
-**这不是本项目的第二种运行方式，也不可用。** 不要写、也不要执行「启动 code-server」的步骤。
+`lib/code-server-4.135.0/` 这份 **Git 切片不能启动**。
+
+第二种跑法请用仓库根目录 **`run-shuncode-vscode.cmd`**，它把官方 npm 包装到并列的 `bin/code-server-runtime/`。见 [网页VSCode使用指南.md](../网页VSCode使用指南.md)。
 
 Windows 请只用仓库根目录的 `run-shuncode.cmd`。浏览器打开的是 `shuncode-core/workbench/`。
 

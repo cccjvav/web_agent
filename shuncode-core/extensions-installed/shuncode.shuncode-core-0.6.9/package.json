@@ -1,16 +1,26 @@
 {
   "name": "shuncode-core",
   "displayName": "ShunCode AI Agent & Bridge",
-  "description": "ShunCode Core Extension with Ask/Plan/Code, Multi-Model Consensus, and Bridge MCP Server integration.",
+  "description": "ShunCode Chat / Bridge sidebar. Talks to the local agent-host MCP process.",
   "version": "0.6.9",
   "publisher": "shuncode",
   "engines": {
     "vscode": "^1.75.0"
   },
-  "categories": ["Programming Languages", "Other"],
+  "categories": ["Other"],
   "activationEvents": ["*"],
   "main": "./extension.js",
   "contributes": {
+    "configuration": {
+      "title": "ShunCode",
+      "properties": {
+        "shuncode.agentHostUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:48271",
+          "description": "agent-host 根地址（MCP /api 与 /mcp）。Windows 本机保持默认即可。"
+        }
+      }
+    },
     "viewsContainers": {
       "activitybar": [
         {
@@ -42,10 +52,6 @@
       {
         "command": "shuncode.resetSecret",
         "title": "ShunCode: 重置 Bridge Secret"
-      },
-      {
-        "command": "shuncode.runTests",
-        "title": "ShunCode: 运行工作区测试"
       }
     ]
   }

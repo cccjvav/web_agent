@@ -13,7 +13,8 @@
 | `shuncode-core/` | **现行主程序** | 工作台 UI + 独立 agent-host（MCP / 工具 / 隧道） |
 | `workspace/` | 默认演示工作区 | 计算器示例；`.shuncode` 在这里，不在仓库根 |
 | `shuncode-repro/` | 不用 | 更早一版纯 Bridge 原型 |
-| `bin/code-server-dist/` | **不能当第二种跑法** | 残缺的 code-server 4.135.0 切片（缺 `out/`），启动脚本不调用它 |
+| `bin/code-server-dist/` | 不要启动 | Git 里的残缺切片 |
+| `run-shuncode-vscode.cmd` | 第二种跑法 | 浏览器里真 VS Code + ShunCode 侧栏，见 [网页VSCode使用指南.md](./网页VSCode使用指南.md) |
 | `shuncode-core/agent-host/tests/` | 产品测试 | `run-tests.cmd`；不必在仓库根再放 `tests/` |
 
 - 右侧 **Chat**：Ask / Plan / Code，只改本机，不需要隧道
@@ -35,6 +36,12 @@ run-shuncode.cmd D:\code\my-app
 ```
 
 让 ChatGPT 改这个仓库：先 `winget install --id Cloudflare.cloudflared`，再在工作台 **启动 Bridge** → **复制提示词**。细节见使用指南第 6 节。
+
+网页里打开真正的 VS Code：
+
+```bat
+run-shuncode-vscode.cmd
+```
 
 验证实现：
 

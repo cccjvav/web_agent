@@ -9,7 +9,8 @@
 | `workspaceTools.test.js` | git 只读、skills、删/改名、Ask 模式锁、路径逃逸、`start_command` |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
 | `httpSmoke.test.js` | 真起进程：`/health`、工作台 HTML、MCP 401、initialize、tools/list、ping |
-| `codeServerNotRunnable.test.js` | 断言 `bin/code-server-dist` **缺运行文件**，且启动脚本不调用它 |
+| `codeServerNotRunnable.test.js` | 断言 Git 切片缺运行文件；`run-shuncode-vscode.cmd` 存在 |
+| `skipWorkbench.test.js` | `SHUNCODE_SKIP_WORKBENCH=1` 不占用工作台端口 |
 
 仓库根目录 Windows：`run-tests.cmd`  
 其它环境：`cd shuncode-core/agent-host && npm test`

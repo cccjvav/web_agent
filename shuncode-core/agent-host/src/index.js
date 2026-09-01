@@ -81,16 +81,27 @@ function listenOrExit(server, port, label) {
   server.listen(port, config.host);
 }
 
-listenOrExit(uiServer, config.workbenchPort, '工作台 UI');
-uiServer.on('listening', () => {
+const skipWorkbench = process.env.SHUNCODE_SKIP_WORKBENCH === '1';
+
+if (!skipWorkbench) {
+  listenOrExit(uiServer, config.workbenchPort, '工作台 UI');
+  uiServer.on('listening', () => {
+    console.log('===========================================================');
+    console.log(` ${config.productName} ${config.version}  workbench + agent-host`);
+    console.log(`  UI        http://127.0.0.1:${config.workbenchPort}`);
+    console.log(`  MCP       http://127.0.0.1:${config.port}/mcp/${config.secretKey}`);
+    console.log('  Bridge    启动后走 cloudflared Quick Tunnel（需本机已安装 cloudflared）');
+    console.log(`  Workspace ${config.workspaceRoot}`);
+    console.log('===========================================================');
+  });
+} else {
   console.log('===========================================================');
-  console.log(` ${config.productName} ${config.version}  workbench + agent-host`);
-  console.log(`  UI        http://127.0.0.1:${config.workbenchPort}`);
+  console.log(` ${config.productName} ${config.version}  agent-host (网页 VS Code 模式)`);
+  console.log('  UI        由 code-server 提供，本进程不占用 3000');
   console.log(`  MCP       http://127.0.0.1:${config.port}/mcp/${config.secretKey}`);
-  console.log('  Bridge    启动后走 cloudflared Quick Tunnel（需本机已安装 cloudflared）');
   console.log(`  Workspace ${config.workspaceRoot}`);
   console.log('===========================================================');
-});
+}
 listenOrExit(mcpServer, config.port, 'MCP');
 mcpServer.on('listening', () => {
   console.log(`agent-host MCP/API listening on ${config.host}:${config.port}`);
