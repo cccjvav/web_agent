@@ -1,0 +1,9 @@
+{
+  "name": "shuncode-workspace-target",
+  "version": "1.0.0",
+  "description": "Live workspace inside ShunCode Editor",
+  "main": "src/calculator.js",
+  "scripts": {
+    "test": "node tests/calculator.test.js"
+  }
+}

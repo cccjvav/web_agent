@@ -1,0 +1,52 @@
+{
+  "name": "shuncode-core",
+  "displayName": "ShunCode AI Agent & Bridge",
+  "description": "ShunCode Core Extension with Ask/Plan/Code, Multi-Model Consensus, and Bridge MCP Server integration.",
+  "version": "0.6.9",
+  "publisher": "shuncode",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": ["Programming Languages", "Other"],
+  "activationEvents": ["*"],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "shuncode-sidebar",
+          "title": "ShunCode",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "shuncode-sidebar": [
+        {
+          "type": "webview",
+          "id": "shuncode.chatView",
+          "name": "ShunCode Chat & Agent"
+        },
+        {
+          "type": "webview",
+          "id": "shuncode.bridgeView",
+          "name": "Bridge 模式 (远程指挥台)"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "shuncode.openBridge",
+        "title": "ShunCode: 打开 Bridge 面板"
+      },
+      {
+        "command": "shuncode.resetSecret",
+        "title": "ShunCode: 重置 Bridge Secret"
+      },
+      {
+        "command": "shuncode.runTests",
+        "title": "ShunCode: 运行工作区测试"
+      }
+    ]
+  }
+}

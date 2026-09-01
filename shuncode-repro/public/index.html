@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShunCode Bridge Host & Studio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          ShunCode Bridge Host
+        </div>
+        <span class="badge-version">v0.6.9 (Core Repro)</span>
+      </div>
+
+      <div class="header-status">
+        <div class="status-pill" id="bridge-status-pill">
+          <span class="status-dot"></span>
+          <span id="bridge-status-text">Bridge Online (MCP Active)</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-danger btn-sm" id="btn-rotate-secret" title="重置MCP Secret，使旧链接立即失效">
+          🔄 重置 Secret
+        </button>
+        <button class="btn btn-primary btn-sm" id="btn-copy-prompt" title="一键复制给 ChatGPT / Arena / Manus 的连接提示词">
+          📋 复制 Agent 提示词
+        </button>
+        <button class="btn btn-success btn-sm" id="btn-run-tests" title="在本地工作区执行测试套件 (npm test)">
+          ▶️ 本地执行测试
+        </button>
+      </div>
+    </header>
+
+    <!-- Main 3-column Layout -->
+    <div class="main-workspace">
+      <!-- Left Panel: Bridge Control & Workspace Explorer -->
+      <aside class="panel">
+        <div class="panel-header">
+          <span>Bridge 隧道与连接</span>
+        </div>
+        <div class="panel-body">
+          <!-- Bridge Endpoint Card -->
+          <div class="widget-card">
+            <div class="widget-title">
+              <span>Streamable MCP 地址</span>
+              <button class="btn btn-sm" id="btn-copy-url">复制 URL</button>
+            </div>
+            <div class="url-box" id="mcp-url-display">
+              http://127.0.0.1:3000/mcp/...
+            </div>
+            <div class="prompt-template-box" id="prompt-template-preview">
+              <div style="font-size: 11px; color: #818cf8; margin-bottom: 4px; font-weight: 600;">标准提示词模版 (第一句发送)：</div>
+              <p style="font-family: var(--font-mono); font-size: 11px; white-space: pre-wrap;" id="prompt-text-preview"></p>
+            </div>
+          </div>
+
+          <!-- File Explorer -->
+          <div class="widget-card" style="margin-top: 14px;">
+            <div class="widget-title">
+              <span>📁 工作区目录 (workspace_demo)</span>
+              <button class="btn btn-sm" id="btn-refresh-files">刷新</button>
+            </div>
+            <ul class="file-tree" id="file-tree-container">
+              <li class="file-item">加载中...</li>
+            </ul>
+          </div>
+
+          <!-- Registered Tools -->
+          <div class="widget-card">
+            <div class="widget-title">
+              <span>🛠️ 暴露给外部 Agent 的内置工具</span>
+            </div>
+            <div id="tools-badge-container">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Panel: Tabs (Live Stream / Code Editor / Diff Inspector / Simulator) -->
+      <main class="center-panel">
+        <div class="tabs-bar">
+          <button class="tab-btn active" data-tab="tab-stream">
+            ⚡ 远端 Agent 调用流
+          </button>
+          <button class="tab-btn" data-tab="tab-editor">
+            📝 本地代码编辑器
+          </button>
+          <button class="tab-btn" data-tab="tab-diff">
+            🔍 补丁 Diff 审阅
+          </button>
+          <button class="tab-btn" data-tab="tab-simulator">
+            🧪 Agent 模拟测试台
+          </button>
+        </div>
+
+        <!-- Tab 1: Live Stream of MCP Calls -->
+        <div class="tab-content active" id="tab-stream">
+          <div class="panel-header" style="background-color: var(--bg-secondary);">
+            <span>实时工具调用与通信日志 (Live Stream)</span>
+            <button class="btn btn-sm" id="btn-clear-logs">清屏</button>
+          </div>
+          <div class="activity-list" id="activity-stream-list">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Tab 2: Code Editor -->
+        <div class="tab-content" id="tab-editor">
+          <div class="editor-container">
+            <div class="editor-toolbar">
+              <span id="current-editing-file" style="font-family: var(--font-mono); font-weight: 600;">未选择文件</span>
+              <div>
+                <button class="btn btn-primary btn-sm" id="btn-save-file">💾 保存修改</button>
+              </div>
+            </div>
+            <textarea class="code-textarea" id="code-editor-area" placeholder="在左侧点击文件查看和编辑内容..."></textarea>
+          </div>
+        </div>
+
+        <!-- Tab 3: Diff Inspector -->
+        <div class="tab-content" id="tab-diff">
+          <div class="panel-header" style="background-color: var(--bg-secondary);">
+            <span id="diff-file-title">最近的 apply_patch 变更</span>
+          </div>
+          <div class="diff-viewer" id="diff-content-area">
+            <p style="color: var(--text-muted);">暂无补丁应用记录。当外部 Agent 调用 apply_patch 时，此处将展示高亮 Diff。</p>
+          </div>
+        </div>
+
+        <!-- Tab 4: Simulator & Testing Sandbox -->
+        <div class="tab-content" id="tab-simulator">
+          <div class="simulator-pane">
+            <h3 style="margin-bottom: 8px;">🧪 Agent 工具调用模拟台 (Simulator)</h3>
+            <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px;">
+              无需打开外部 ChatGPT/Arena 窗口，在此可直接向本地 MCP Server 发送指令，验证 <code>apply_patch</code>、<code>execute_command</code>、<code>report_progress</code> 的全流程效果。
+            </p>
+
+            <div class="form-group">
+              <label>预设自动化场景测试：</label>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn btn-sm" id="sim-btn-diagnose">1. 运行测试并定位 Bug</button>
+                <button class="btn btn-sm" id="sim-btn-apply-fix">2. 应用 apply_patch 修复 Bug</button>
+                <button class="btn btn-sm" id="sim-btn-verify">3. 再次运行验证 (Green)</button>
+                <button class="btn btn-sm btn-primary" id="sim-btn-full-flow">🚀 一键执行完整闭环修 Bug 演示</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>手动选择工具调用：</label>
+              <select class="form-control" id="sim-tool-select">
+                <option value="read_file">read_file (读取文件)</option>
+                <option value="apply_patch">apply_patch (原子打补丁)</option>
+                <option value="execute_command">execute_command (执行本地命令)</option>
+                <option value="report_progress">report_progress (汇报进度)</option>
+                <option value="set_todos">set_todos (更新 TODO)</option>
+                <option value="grep_search">grep_search (代码正则检索)</option>
+                <option value="list_dir">list_dir (扫描目录)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>调用参数 (JSON Arguments)：</label>
+              <textarea class="form-control" id="sim-args-input" rows="6" style="font-family: var(--font-mono); font-size: 12px;"></textarea>
+            </div>
+
+            <button class="btn btn-primary" id="btn-run-sim-call">⚡ 执行 MCP 工具调用</button>
+
+            <div style="margin-top: 16px;">
+              <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">响应结果 (MCP JSON Response)：</label>
+              <pre class="terminal-window" id="sim-result-area" style="height: 180px; margin-top: 6px;"></pre>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Right Panel: Terminal Output & Task Progress Board -->
+      <aside class="panel">
+        <div class="panel-header">
+          <span>任务协同与终端</span>
+        </div>
+        <div class="panel-body">
+          <!-- Task Progress Card -->
+          <div class="progress-card">
+            <div class="widget-title">
+              <span>Agent 任务进度看板</span>
+              <button class="btn btn-sm" id="btn-reset-task">重置</button>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted);">
+              <span id="task-step-label">等待任务接入...</span>
+              <span id="task-percent-label" style="font-weight: 700; color: #fff;">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="task-progress-bar"></div>
+            </div>
+            <div id="task-last-message" style="font-size: 11px; color: #a5b4fc; margin-top: 4px;">
+              系统就绪，等待远端 Agent 调度。
+            </div>
+
+            <!-- TODOs checklist -->
+            <ul class="todo-list" id="todo-list-container">
+              <li class="todo-item">
+                <span class="todo-checkbox">⏳</span>
+                <span>等待远端 Agent 通过 <code>set_todos</code> 下发任务分解...</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Live Terminal Output -->
+          <div class="widget-card" style="margin-top: 14px;">
+            <div class="widget-title">
+              <span>💻 本地终端执行流 (Terminal Output)</span>
+              <button class="btn btn-sm" id="btn-clear-terminal">清空</button>
+            </div>
+            <div class="terminal-window" id="terminal-stream-box">
+              <div class="stream-item stream-info">[$] ShunCode Terminal Watcher ready.</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Toast message -->
+  <div class="toast" id="toast-notify">已复制到剪贴板</div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+.npm/
+
+# Binary apps and caches
+code-server-app/
+.cache/
+.local/
+*.tar.gz
+*.tmp.*
+
+# Build artifacts
+dist/
+build/
+out/
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
