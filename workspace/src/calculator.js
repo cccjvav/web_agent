@@ -15,8 +15,9 @@ function multiply(a, b) {
 }
 
 function divide(a, b) {
-  // BUG to be fixed by ShunCode Agent (apply_patch):
-  // Needs division by zero guard!
+  if (b === 0) {
+    throw new Error('Cannot divide by zero');
+  }
   return a / b;
 }
 
