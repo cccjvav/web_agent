@@ -1,4 +1,4 @@
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const path = require('path');
 const { config } = require('../config');
 const eventBus = require('../utils/eventBus');
@@ -7,6 +7,17 @@ let commandSequence = 0;
 const commandStore = new Map();
 const children = new Map();
 const MAX_CAPTURE = 200 * 1024;
+
+function killChild(child, force = false) {
+  if (!child || !child.pid) return;
+  if (process.platform === 'win32') {
+    try {
+      spawnSync('taskkill', ['/pid', String(child.pid), '/t', force ? '/f' : '/f'], { windowsHide: true });
+    } catch (_) {}
+    return;
+  }
+  try { child.kill(force ? 'SIGKILL' : 'SIGTERM'); } catch (_) {}
+}
 
 function workingDirFrom(cwd) {
   const workingDir = path.resolve(config.workspaceRoot, cwd || '.');
@@ -60,21 +71,23 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
     timestamp: new Date().toISOString()
   });
 
-  const shell = process.platform === 'win32' ? 'powershell.exe' : '/bin/bash';
-  const args = process.platform === 'win32' ? ['-Command', command] : ['-c', command];
+  const win = process.platform === 'win32';
+  const shell = win ? 'powershell.exe' : '/bin/bash';
+  const args = win
+    ? ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', command]
+    : ['-c', command];
   const child = spawn(shell, args, {
     cwd: workingDir,
+    windowsHide: true,
     env: { ...process.env, CI: 'true', TERM: 'xterm-256color', FORCE_COLOR: '1' }
   });
   children.set(String(execId), child);
 
   const timer = setTimeout(() => {
     rec.isTimeout = true;
-    try { child.kill('SIGTERM'); } catch (_) {}
+    killChild(child);
     setTimeout(() => {
-      if (children.has(String(execId))) {
-        try { child.kill('SIGKILL'); } catch (_) {}
-      }
+      if (children.has(String(execId))) killChild(child, true);
     }, 2000);
   }, timeoutMs);
 
@@ -155,7 +168,7 @@ function cancelCommand({ execId } = {}) {
   if (rec.status !== 'running' || !child) {
     return { execId: rec.execId, status: rec.status, cancelled: false, message: 'Command is not running.' };
   }
-  try { child.kill('SIGTERM'); } catch (_) {}
+  killChild(child, true);
   rec.status = 'cancelled';
   return { execId: rec.execId, cancelled: true, status: 'cancelled' };
 }

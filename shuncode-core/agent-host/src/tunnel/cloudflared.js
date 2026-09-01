@@ -69,9 +69,12 @@ function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) {
   const target = `http://127.0.0.1:${port}`;
   return new Promise((resolve, reject) => {
     const args = ['tunnel', '--url', target, '--no-autoupdate'];
+    const isWin = process.platform === 'win32';
+    const needShell = isWin && /\.(cmd|bat)$/i.test(bin);
     const proc = spawn(bin, args, {
       windowsHide: true,
-      stdio: ['ignore', 'pipe', 'pipe']
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: needShell
     });
     child = proc;
     let buf = '';

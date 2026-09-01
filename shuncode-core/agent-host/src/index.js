@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const fs = require('fs');
 const path = require('path');
 const { WebSocketServer } = require('ws');
 const cors = require('cors');
@@ -10,6 +11,14 @@ const eventBus = require('./utils/eventBus');
 const store = require('./models/store');
 
 persistIdentity(store);
+
+if (!fs.existsSync(config.workspaceRoot)) {
+  if (process.env.WORKSPACE_ROOT) {
+    console.error(`WORKSPACE_ROOT 不存在: ${config.workspaceRoot}`);
+    process.exit(1);
+  }
+  fs.mkdirSync(config.workspaceRoot, { recursive: true });
+}
 
 const app = express();
 app.disable('x-powered-by');
@@ -60,17 +69,30 @@ const mcpServer = http.createServer(app);
 attachWss(uiServer);
 attachWss(mcpServer);
 
-uiServer.listen(config.workbenchPort, config.host, () => {
+function listenOrExit(server, port, label) {
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`端口 ${port} 已被占用（${label}）。关掉占用该端口的程序后重试。`);
+      process.exit(1);
+    }
+    console.error(err);
+    process.exit(1);
+  });
+  server.listen(port, config.host);
+}
+
+listenOrExit(uiServer, config.workbenchPort, '工作台 UI');
+uiServer.on('listening', () => {
   console.log('===========================================================');
   console.log(` ${config.productName} ${config.version}  workbench + agent-host`);
-  console.log(`  UI        http://${config.host}:${config.workbenchPort}`);
+  console.log(`  UI        http://127.0.0.1:${config.workbenchPort}`);
   console.log(`  MCP       http://127.0.0.1:${config.port}/mcp/${config.secretKey}`);
   console.log('  Bridge    启动后走 cloudflared Quick Tunnel（需本机已安装 cloudflared）');
   console.log(`  Workspace ${config.workspaceRoot}`);
   console.log('===========================================================');
 });
-
-mcpServer.listen(config.port, config.host, () => {
+listenOrExit(mcpServer, config.port, 'MCP');
+mcpServer.on('listening', () => {
   console.log(`agent-host MCP/API listening on ${config.host}:${config.port}`);
 });
 

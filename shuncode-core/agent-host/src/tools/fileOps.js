@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
-const { resolveSafePath, computeHash } = require('./patchEngine');
+const { resolveSafePath, computeHash, toPosixRel } = require('./patchEngine');
 const eventBus = require('../utils/eventBus');
 
 function readFiles({ filePath, paths, offset = 1, limit = 400 } = {}) {
@@ -61,7 +61,7 @@ function readFile({ filePath, offset = 1, limit = 400 }) {
 function deleteFile({ filePath }) {
   if (!filePath) throw new Error('delete_file requires filePath');
   const fullPath = resolveSafePath(filePath);
-  const rel = path.relative(config.workspaceRoot, fullPath);
+  const rel = toPosixRel(path.relative(config.workspaceRoot, fullPath));
   if (!rel || rel === '.') {
     throw new Error('Refusing to delete the workspace root.');
   }
@@ -92,8 +92,8 @@ function renameFile({ from, to, filePath, dest }) {
   if (fs.existsSync(dst)) throw new Error(`Destination already exists: "${destRel}"`);
   fs.mkdirSync(path.dirname(dst), { recursive: true });
   fs.renameSync(src, dst);
-  const fromOut = path.relative(config.workspaceRoot, src);
-  const toOut = path.relative(config.workspaceRoot, dst);
+  const fromOut = toPosixRel(path.relative(config.workspaceRoot, src));
+  const toOut = toPosixRel(path.relative(config.workspaceRoot, dst));
   eventBus.broadcast('file_renamed', { from: fromOut, to: toOut });
   return { success: true, from: fromOut, to: toOut };
 }
@@ -131,7 +131,7 @@ function listDir({ dirPath = '.', recursive = false, maxDepth = 3 }) {
       }
 
       const itemFullPath = path.join(currentPath, entry.name);
-      const relPath = path.relative(config.workspaceRoot, itemFullPath);
+      const relPath = toPosixRel(path.relative(config.workspaceRoot, itemFullPath));
 
       if (entry.isDirectory()) {
         const item = { name: entry.name, path: relPath, type: 'directory' };
@@ -175,7 +175,7 @@ function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = 
         try {
           const content = fs.readFileSync(fullItemPath, 'utf8');
           const lines = content.split(/\r?\n/);
-          const relPath = path.relative(config.workspaceRoot, fullItemPath);
+          const relPath = toPosixRel(path.relative(config.workspaceRoot, fullItemPath));
           lines.forEach((line, idx) => {
             if (pattern.test(line)) {
               matches.push({ file: relPath, line: idx + 1, content: line.trim() });
@@ -192,7 +192,7 @@ function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = 
   } else {
     const content = fs.readFileSync(fullPath, 'utf8');
     const lines = content.split(/\r?\n/);
-    const relPath = path.relative(config.workspaceRoot, fullPath);
+    const relPath = toPosixRel(path.relative(config.workspaceRoot, fullPath));
     lines.forEach((line, idx) => {
       if (pattern.test(line)) {
         matches.push({ file: relPath, line: idx + 1, content: line.trim() });

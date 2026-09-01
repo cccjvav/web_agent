@@ -9,11 +9,17 @@ function computeHash(content) {
   return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
 }
 
+function toPosixRel(p) {
+  return String(p || '').replace(/\\/g, '/');
+}
+
 function resolveSafePath(relPath) {
   const root = path.resolve(config.workspaceRoot);
-  const resolved = path.resolve(root, String(relPath || '.'));
+  const incoming = String(relPath || '.').replace(/[/\\]+/g, path.sep);
+  const resolved = path.resolve(root, incoming);
   const rel = path.relative(root, resolved);
-  if (rel.startsWith('..') || path.isAbsolute(rel)) {
+  const posix = toPosixRel(rel);
+  if (posix === '..' || posix.startsWith('../') || path.isAbsolute(rel)) {
     throw new Error(`Security error: path "${relPath}" is outside workspace root.`);
   }
   return resolved;
@@ -150,5 +156,6 @@ async function applyPatch({ filePath, patch, expectedHash = null, dryRun = false
 module.exports = {
   applyPatch,
   computeHash,
-  resolveSafePath
+  resolveSafePath,
+  toPosixRel
 };
