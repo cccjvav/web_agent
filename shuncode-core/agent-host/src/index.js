@@ -3,10 +3,13 @@ const http = require('http');
 const path = require('path');
 const { WebSocketServer } = require('ws');
 const cors = require('cors');
-const { config } = require('./config');
+const { config, persistIdentity } = require('./config');
 const mcpRouter = require('./mcp/server');
 const apiRouter = require('./api/routes');
 const eventBus = require('./utils/eventBus');
+const store = require('./models/store');
+
+persistIdentity(store);
 
 const app = express();
 app.disable('x-powered-by');
@@ -61,7 +64,8 @@ uiServer.listen(config.workbenchPort, config.host, () => {
   console.log('===========================================================');
   console.log(` ${config.productName} ${config.version}  workbench + agent-host`);
   console.log(`  UI        http://${config.host}:${config.workbenchPort}`);
-  console.log(`  MCP       http://${config.host}:${config.port}/mcp/${config.secretKey}`);
+  console.log(`  MCP       http://127.0.0.1:${config.port}/mcp/${config.secretKey}`);
+  console.log('  Bridge    启动后走 cloudflared Quick Tunnel（需本机已安装 cloudflared）');
   console.log(`  Workspace ${config.workspaceRoot}`);
   console.log('===========================================================');
 });

@@ -25,7 +25,16 @@ function generateNewSecret() {
   return config.secretKey;
 }
 
+function persistIdentity(store) {
+  const saved = store.load();
+  if (saved.secretKey) config.secretKey = saved.secretKey;
+  else store.patch({ secretKey: config.secretKey });
+  if (saved.installId) config.installId = saved.installId;
+  else store.patch({ installId: config.installId });
+}
+
 module.exports = {
   config,
-  generateNewSecret
+  generateNewSecret,
+  persistIdentity
 };

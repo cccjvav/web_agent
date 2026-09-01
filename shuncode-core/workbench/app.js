@@ -530,6 +530,7 @@
     });
     const data = await res.json();
     if (!data.success) { toast(data.error || '无法启动'); return false; }
+    if (data.note) toast(data.note.slice(0, 180));
     await refreshStatus();
     $('#mcp-banner').classList.remove('hidden');
     try { await navigator.clipboard.writeText(state.status.mcpUrl); } catch (_) {}
@@ -557,8 +558,11 @@
       : '启动 Bridge 后将自动生成 Cloudflare 临时 MCP 地址。';
     $('#sb-bridge').textContent = running ? 'Bridge 运行中' : 'Bridge 已停止';
     $('#install-id').textContent = s.installId || '—';
+    const tun = s.tunnel || {};
     $('#conn-label').textContent = running
-      ? 'Cloudflare Quick Tunnel 已就绪 · 重启后临时地址会变化'
+      ? (tun.url
+        ? `Cloudflare Quick Tunnel 已就绪 · ${String(tun.url).replace(/^https?:\/\//, '')}`
+        : '未找到 cloudflared 时，MCP 走当前页面源（仅本预览可用）')
       : '正在检查隧道设置…';
     $('#conn-pill').textContent = running ? '已就绪' : '检查中';
     $('#conn-pill').className = 'status-pill ' + (running ? 'ok' : '');

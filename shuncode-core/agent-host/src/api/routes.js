@@ -11,6 +11,7 @@ const { loadCustom, patchCustom } = require('../models/customizations');
 const eventBus = require('../utils/eventBus');
 const { snapshot: mcpSnapshot } = require('../mcp/session');
 const { getBootstrapPrompt } = require('../mcp/instructions');
+const tunnel = require('../tunnel/cloudflared');
 
 const router = express.Router();
 
@@ -20,14 +21,20 @@ function publicOrigin(req) {
   return `${proto}://${host}`;
 }
 
+function mcpOrigin(req) {
+  if (config.publicTunnelUrl) return String(config.publicTunnelUrl).replace(/\/$/, '');
+  return publicOrigin(req);
+}
+
 function mcpInfo(req) {
-  const origin = publicOrigin(req);
+  const origin = mcpOrigin(req);
   const mcpPath = `/mcp/${config.secretKey}`;
   return {
     secretKey: config.secretKey,
     mcpPath,
     mcpUrl: `${origin}${mcpPath}`,
-    prompt: getBootstrapPrompt(`${origin}${mcpPath}`)
+    prompt: getBootstrapPrompt(`${origin}${mcpPath}`),
+    tunnel: tunnel.snapshot()
   };
 }
 
@@ -289,6 +296,7 @@ router.post('/bridge/login', (req, res) => {
 
 router.post('/bridge/logout', (req, res) => {
   store.patch({ bridge: { loggedIn: false, username: '', deviceAuthorized: false } });
+  tunnel.stopTunnel();
   config.bridgeRunning = false;
   res.json({ success: true });
 });
