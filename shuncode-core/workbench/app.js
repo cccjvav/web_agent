@@ -227,10 +227,16 @@
       const item = e.target.closest('.tree-item[data-path]');
       if (item) openFile(item.dataset.path);
     };
-    $('#recent-list').innerHTML = `
-      <button type="button" data-open="README.md">workspace <span class="path">/workspace</span></button>
-      <button type="button" data-open="src/calculator.js">calculator.js <span class="path">src/calculator.js</span></button>
-    `;
+    const files = [];
+    (function walk(items) {
+      for (const it of items || []) {
+        if (it.type === 'file') files.push(it);
+        if (it.children) walk(it.children);
+      }
+    })(data.items || []);
+    $('#recent-list').innerHTML = files.slice(0, 6).map((f) =>
+      `<button type="button" data-open="${escapeHtml(f.path)}">${escapeHtml(f.name)} <span class="path">${escapeHtml(f.path)}</span></button>`
+    ).join('') || '<p class="hint">工作区还没有文件</p>';
     $('#recent-list').onclick = (e) => {
       const b = e.target.closest('button[data-open]');
       if (b) openFile(b.dataset.open);
@@ -277,12 +283,14 @@
     if (m.kind === 'user') { wrap.className = 'msg user'; wrap.textContent = m.text; return wrap; }
     if (m.kind === 'status') { wrap.className = 'status-line'; wrap.textContent = m.text; return wrap; }
     if (m.kind === 'tool') {
-      wrap.className = 'tool-card';
       const ok = m.ok !== false && !m.error;
-      wrap.innerHTML = `<header><span>${escapeHtml(m.name)}</span><span>${ok ? 'ok' : 'err'}</span></header><pre>${escapeHtml(JSON.stringify(m.error ? { error: m.error } : summarizeTool(m.result), null, 2))}</pre>`;
+      wrap.className = 'tool-card' + (ok ? '' : ' fail');
+      const right = ok ? `${m.durationMs || 0} ms` : 'Failed';
+      const title = m.label || m.name;
+      wrap.innerHTML = `<header><span>${escapeHtml(title)}</span><span class="dur">${escapeHtml(right)}</span></header><pre>${escapeHtml(JSON.stringify(m.error ? { error: m.error } : summarizeTool(m.result), null, 2))}</pre>`;
       wrap.querySelector('header').onclick = () => {
         const pre = wrap.querySelector('pre');
-        pre.style.display = pre.style.display === 'none' ? 'block' : 'none';
+        pre.style.display = pre.style.display === 'none' || !pre.style.display ? 'block' : 'none';
       };
       return wrap;
     }
@@ -311,9 +319,8 @@
         if (b) show(Number(b.dataset.i));
       };
       $('.adopt', wrap).onclick = () => {
-        $('#mode-select').value = 'code';
-        state.mode = 'code';
-        sendChat('按已对齐方案修复除零并运行 npm test');
+        setAgentMode('code');
+        sendChat('按已对齐方案执行：搜相关文件、read_files、apply_patch、再跑测试');
       };
       return wrap;
     }
@@ -338,11 +345,12 @@
       $('#chat-input').value = '';
       if ($('#agent-input')) $('#agent-input').value = '';
     }
-    state.mode = ($('#agent-pane') && !$('#agent-pane').classList.contains('hidden') && $('#agent-mode'))
-      ? $('#agent-mode').value
-      : $('#mode-select').value;
+    const fromAgent = $('#agent-pane') && !$('#agent-pane').classList.contains('hidden') && $('#agent-mode');
+    setAgentMode(fromAgent ? $('#agent-mode').value : ($('#mode-select').value || state.mode));
     state.sending = true;
+    state.stayOnBridge = !!opts.stayOnBridge;
     if (!opts.stayOnBridge) setRight('chat');
+    const history = state.history.slice(-12);
     if (message) {
       pushMsg({ kind: 'user', text: message });
       state.history.push({ role: 'user', content: message });
@@ -351,7 +359,7 @@
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: state.mode, message: message || '', history: state.history.slice(-12) })
+        body: JSON.stringify({ mode: state.mode, message: message || '', history })
       });
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -409,13 +417,50 @@
   function logBridgeTool(ev) {
     state.stats.calls += 1;
     if (ev.ok === false || ev.error) state.stats.fail += 1;
+    if (ev.durationMs) state.stats.totalMs += ev.durationMs;
     paintStats();
+    const wait = $('#bridge-wait');
+    if (wait) wait.classList.add('hidden');
     const log = $('#bridge-log');
     const row = document.createElement('div');
-    row.className = 'tool-card';
-    row.innerHTML = `<header><span>${escapeHtml(ev.name)}</span><span>${ev.ok === false ? 'fail' : 'ok'}</span></header>`;
+    const ok = ev.ok !== false && !ev.error;
+    row.className = 'tool-card' + (ok ? '' : ' fail');
+    const right = ok ? `${ev.durationMs || 0} ms` : 'Failed';
+    row.innerHTML = `<header><span>${escapeHtml(ev.label || ev.name)}</span><span class="dur">${escapeHtml(right)}</span></header>`;
     log.appendChild(row);
+    log.scrollTop = log.scrollHeight;
     $('#sess-note').textContent = 'Remote MCP client is calling local tools.';
+  }
+
+  function paintTodos(todos) {
+    const list = todos || [];
+    const done = list.filter((t) => t.status === 'completed').length;
+    ['chat', 'bridge'].forEach((prefix) => {
+      const box = $(`#${prefix}-tasks`);
+      if (!box) return;
+      box.classList.toggle('hidden', !list.length);
+      const count = $(`#${prefix}-task-count`);
+      if (count) count.textContent = `${done}/${list.length}`;
+      const ul = $(`#${prefix}-todo-list`);
+      if (ul) {
+        ul.innerHTML = list.map((t) => {
+          const mark = t.status === 'completed' ? '☑' : t.status === 'in_progress' ? '▶' : '☐';
+          return `<li class="${escapeHtml(t.status || '')}"><span class="box">${mark}</span>${escapeHtml(t.title)}</li>`;
+        }).join('');
+      }
+    });
+  }
+
+  function agentLabel(mode) {
+    return mode === 'ask' ? 'ShunCode Ask' : mode === 'code' ? 'ShunCode Code' : 'ShunCode Plan';
+  }
+
+  function setAgentMode(mode) {
+    state.mode = mode;
+    $('#mode-select').value = mode;
+    if ($('#agent-mode')) $('#agent-mode').value = mode;
+    const btn = $('#btn-agent-pick');
+    if (btn) btn.textContent = agentLabel(mode) + ' ▾';
   }
 
   function paintStats() {
@@ -496,8 +541,8 @@
       logBridgeTool({ name: 'resources/read', ok: true, result: { uri: 'shuncode://instructions' } });
     } catch (e) { toast(e.message); }
     const extra = (text || '').replace(promptText(), '').trim();
-    const task = extra || '按已对齐方案修复除零并运行 npm test';
-    $('#mode-select').value = 'code';
+    const task = extra || '搜相关文件、读源码、必要时打补丁，再跑测试';
+    setAgentMode('code');
     sendChat(task, { stayOnBridge: true });
   }
 
@@ -597,6 +642,8 @@
       `<option value="${escapeHtml(m.id)}" ${m.id === state.status.activeModelId ? 'selected' : ''}>${escapeHtml(m.name)}</option>`
     ).join('');
     if (cur) sel.value = cur;
+    paintProviderTable();
+    if (state.status && state.status.taskState) paintTodos(state.status.taskState.todos || []);
   }
 
   function rowList(items, render, empty) {
@@ -648,6 +695,52 @@
     };
     $('#codex-status').textContent = (c.codex && c.codex.loggedIn) ? `已登录 ${c.codex.account}` : '尚未登录';
     if (typeof c.multiModelEnabled === 'boolean') $('#mm-enabled').checked = c.multiModelEnabled;
+    const mm = (state.status && state.status.multiModel) || {};
+    if ($('#mm-enabled') && typeof mm.enabled === 'boolean') $('#mm-enabled').checked = mm.enabled;
+    if ($('#mm-merge') && mm.mergeModel) $('#mm-merge').value = mm.mergeModel;
+    if ($('#mm-think') && mm.thinkLevel) $('#mm-think').value = mm.thinkLevel;
+    if ($('#mm-readonly') && typeof mm.mergeAllowsRead === 'boolean') $('#mm-readonly').checked = mm.mergeAllowsRead;
+    if ($('#mm-branches') && mm.maxBranches) $('#mm-branches').value = mm.maxBranches;
+  }
+
+  function paintProviderTable() {
+    const box = $('#provider-table');
+    if (!box) return;
+    const models = ((state.status && state.status.models) || []).filter((m) => m.protocol !== 'builtin');
+    if (!models.length) {
+      box.innerHTML = '<p class="hint">还没有添加 API。Test 通过后点 Add API 会在此列出模型。</p>';
+      return;
+    }
+    const groups = {};
+    models.forEach((m) => {
+      const g = m.group || 'custom';
+      (groups[g] = groups[g] || []).push(m);
+    });
+    box.innerHTML = Object.keys(groups).map((g) => {
+      const rows = groups[g].map((m) => {
+        const caps = (m.caps || []).map((c) => `<span class="cap-pill">${escapeHtml(c)}</span>`).join('') || '—';
+        const checked = m.id === (state.status && state.status.activeModelId) ? 'checked' : '';
+        return `<tr>
+          <td><label><input type="radio" name="active-model" value="${escapeHtml(m.id)}" ${checked} /> ${escapeHtml(m.name || m.modelId)}</label></td>
+          <td>${escapeHtml(m.contextSize || '—')}</td>
+          <td>${caps}</td>
+          <td>${escapeHtml(m.pricing || '')}</td>
+        </tr>`;
+      }).join('');
+      return `<div class="model-group"><h4>${escapeHtml(g)}</h4>
+        <table class="model-table"><thead><tr><th>名称</th><th>上下文大小</th><th>功能</th><th>定价</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>`;
+    }).join('');
+    box.querySelectorAll('input[name="active-model"]').forEach((r) => {
+      r.onchange = async () => {
+        await fetch('/api/models', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ activeModelId: r.value })
+        });
+        await refreshStatus();
+      };
+    });
   }
 
   async function loadCustomizations() {
@@ -703,7 +796,30 @@
     document.addEventListener('click', () => {
       $('#manage-menu').classList.add('hidden');
       $('#file-menu').classList.add('hidden');
+      const ap = $('#agent-pick-menu');
+      if (ap) ap.classList.add('hidden');
     });
+    $('#btn-agent-pick').onclick = (e) => {
+      e.stopPropagation();
+      const menu = $('#agent-pick-menu');
+      const btn = $('#btn-agent-pick');
+      const r = btn.getBoundingClientRect();
+      menu.style.top = (r.bottom + 4) + 'px';
+      menu.style.left = r.left + 'px';
+      menu.classList.toggle('hidden');
+    };
+    $('#agent-pick-menu').onclick = (e) => {
+      e.stopPropagation();
+      const b = e.target.closest('[data-mode]');
+      if (b) {
+        setAgentMode(b.dataset.mode);
+        $('#agent-pick-menu').classList.add('hidden');
+      }
+    };
+    $('#menu-custom-from-agent').onclick = () => {
+      $('#agent-pick-menu').classList.add('hidden');
+      openModal('agents');
+    };
     $('#menu-custom').onclick = () => openModal('overview');
     $('#menu-api').onclick = () => openModal('api');
     $('#menu-bridge').onclick = () => openModal('bridge');
@@ -733,7 +849,7 @@
     $('#btn-send').onclick = () => sendChat();
     $('#btn-agent-send').onclick = () => {
       const t = $('#agent-input').value;
-      $('#mode-select').value = $('#agent-mode').value;
+      setAgentMode($('#agent-mode').value);
       sendChat(t);
     };
     $('#chat-input').addEventListener('keydown', (e) => {
@@ -745,12 +861,11 @@
         $('#btn-agent-send').click();
       }
     });
-    $('#mode-select').onchange = () => { state.mode = $('#mode-select').value; };
+    $('#mode-select').onchange = () => setAgentMode($('#mode-select').value);
     $('#chips').onclick = (e) => {
       const b = e.target.closest('button');
       if (!b) return;
-      $('#mode-select').value = b.dataset.mode;
-      state.mode = b.dataset.mode;
+      setAgentMode(b.dataset.mode);
       sendChat(b.dataset.text);
     };
 
@@ -851,9 +966,18 @@
       await fetch('/api/models', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ multiModel: { enabled: $('#mm-enabled').checked } })
+        body: JSON.stringify({
+          multiModel: {
+            enabled: $('#mm-enabled').checked,
+            mergeModel: $('#mm-merge').value,
+            thinkLevel: $('#mm-think').value,
+            mergeAllowsRead: $('#mm-readonly').checked,
+            maxBranches: Number($('#mm-branches').value) || 3
+          }
+        })
       });
       toast('已保存多模型设置');
+      await refreshStatus();
     };
     $('#btn-save-pref').onclick = async () => {
       await saveCustom({
@@ -863,28 +987,69 @@
       toast('已写入偏好');
     };
 
+    async function probeProvider() {
+      const baseUrl = $('#m-base').value.trim();
+      const apiKey = $('#m-key').value.trim();
+      const res = await fetch('/api/providers/probe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ baseUrl, apiKey })
+      });
+      return res.json();
+    }
+    $('#btn-test-api').onclick = async () => {
+      $('#model-status').textContent = 'Testing…';
+      const data = await probeProvider();
+      $('#model-status').textContent = data.success
+        ? `OK · 发现 ${data.models.length} 个模型`
+        : ('失败：' + (data.error || '无法连接'));
+    };
     $('#btn-save-model').onclick = async () => {
+      const baseUrl = $('#m-base').value.trim();
+      const apiKey = $('#m-key').value.trim();
+      const manualId = $('#m-id').value.trim();
+      $('#model-status').textContent = 'Adding provider and loading models...';
+      const data = await probeProvider();
+      let discovered = data.success ? data.models : [];
+      if (!discovered.length && manualId) {
+        discovered = [{ id: manualId, name: manualId, group: 'custom', contextSize: '1.3M', caps: ['工具'], pricing: '' }];
+      }
+      if (!discovered.length) {
+        $('#model-status').textContent = '失败：' + (data.error || '没有模型。可手动填模型 ID 后再 Add API。');
+        return;
+      }
+      const group = discovered[0].group || 'custom';
+      $('#model-status').textContent = `Adding ${group} and loading models...`;
+      const builtin = ((state.status && state.status.models) || []).find((m) => m.id === 'builtin') || {
+        id: 'builtin', name: '内置探索 Agent', protocol: 'builtin', baseUrl: '', apiKey: '', modelId: 'shuncode-explore'
+      };
+      const models = [
+        { ...builtin, apiKey: '' },
+        ...discovered.map((m) => ({
+          id: `${group}-${m.id}`.replace(/[^\w.-]+/g, '-'),
+          name: m.name || m.id,
+          protocol: 'chat.completions',
+          baseUrl,
+          apiKey,
+          modelId: m.id,
+          group,
+          contextSize: m.contextSize,
+          caps: m.caps,
+          pricing: m.pricing || ''
+        }))
+      ];
+      const firstChat = models.find((m) => m.protocol !== 'builtin' && !/video|image/i.test(m.modelId || '')) || models[1];
       await fetch('/api/models', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          activeModelId: 'custom',
-          model: {
-            id: 'custom',
-            name: $('#m-name').value || '自定义 API',
-            protocol: 'chat.completions',
-            baseUrl: $('#m-base').value.trim(),
-            apiKey: $('#m-key').value.trim(),
-            modelId: $('#m-id').value.trim()
-          }
-        })
+        body: JSON.stringify({ activeModelId: firstChat.id, models })
       });
-      $('#model-status').textContent = '已保存。Chat 将走该兼容 OpenAI 的接口。';
+      $('#model-status').textContent = `已添加 ${group} · ${discovered.length} 个模型。Chat 将走该兼容 OpenAI 的接口。`;
       await refreshStatus();
     };
     $('#btn-use-builtin').onclick = async () => {
       await fetch('/api/models', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ activeModelId: 'builtin' }) });
-      $('#model-status').textContent = '已改回内置 Demo Agent。';
+      $('#model-status').textContent = '已改回内置探索 Agent。';
       await refreshStatus();
     };
 
@@ -985,8 +1150,16 @@
           termLine(msg.payload.chunk, msg.payload.stream === 'stderr' ? 'err' : '');
         }
         if (msg.type === 'file_patched') loadTree();
+        if (msg.type === 'todos_updated') paintTodos((msg.payload && msg.payload.todos) || []);
         if (msg.type === 'tool_call_end') {
-          state.stats.totalMs += (msg.payload && msg.payload.durationMs) || 0;
+          const p = msg.payload || {};
+          logBridgeTool({
+            name: p.tool,
+            ok: p.success,
+            durationMs: p.durationMs,
+            result: p.result,
+            error: p.error
+          });
         }
       };
     } catch (_) {}

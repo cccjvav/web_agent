@@ -113,6 +113,8 @@ async function main() {
     assert.strictEqual(page.status, 200);
     assert.ok(page.raw.includes('ShunCode'));
     assert.ok(page.raw.includes('编辑进化') || page.raw.includes('CHAT'));
+    assert.ok(page.raw.includes('Add API'));
+    assert.ok(page.raw.includes('ShunCode Plan') || page.raw.includes('btn-agent-pick'));
 
     const status = await request('GET', `http://127.0.0.1:${mcpPort}/api/status`);
     assert.strictEqual(status.status, 200);

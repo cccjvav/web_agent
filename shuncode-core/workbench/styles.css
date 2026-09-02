@@ -203,7 +203,24 @@ u { text-decoration: none; }
 .status-line { font-size: 12px; color: var(--link); margin-bottom: 6px; }
 .tool-card { background: #141414; border: 1px solid #333; border-radius: 6px; margin-bottom: 8px; font-size: 12px; }
 .tool-card header { display: flex; justify-content: space-between; padding: 6px 8px; color: #9cdcfe; cursor: pointer; }
-.tool-card pre { margin: 0; padding: 8px; border-top: 1px solid #333; max-height: 120px; overflow: auto; font-family: var(--mono); font-size: 11px; color: #999; white-space: pre-wrap; }
+.tool-card header .dur { color: var(--mute); font-size: 11px; }
+.tool-card.fail { border-color: #5a2d2d; }
+.tool-card.fail header { color: #f14c4c; }
+.tool-card.fail header .dur { color: #f14c4c; }
+.tool-card pre { margin: 0; padding: 8px; border-top: 1px solid #333; max-height: 120px; overflow: auto; font-family: var(--mono); font-size: 11px; color: #999; white-space: pre-wrap; display: none; }
+.task-box { border-top: 1px solid var(--border); padding: 8px 12px; background: #1a1a1a; }
+.task-h { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .06em; color: var(--text2); margin-bottom: 6px; }
+.task-box ul { list-style: none; margin: 0; padding: 0; }
+.task-box li { font-size: 12px; color: var(--text); padding: 3px 0; display: flex; gap: 8px; }
+.task-box li.completed { color: var(--mute); text-decoration: line-through; }
+.task-box li .box { color: var(--link); width: 14px; }
+.agent-pick { cursor: pointer; }
+.model-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
+.model-table th, .model-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #333; }
+.model-table th { color: var(--mute); font-weight: 500; }
+.model-group { margin-top: 16px; }
+.model-group h4 { margin: 0 0 6px; font-size: 13px; color: #fff; }
+.cap-pill { display: inline-block; border: 1px solid #3c3c3c; border-radius: 99px; padding: 1px 8px; font-size: 11px; margin-right: 4px; color: var(--text2); }
 .consensus { border: 1px solid #3d6ea8; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
 .consensus h3 { margin: 0 0 8px; font-size: 12px; color: #9cdcfe; display: flex; justify-content: space-between; }
 .branch-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }

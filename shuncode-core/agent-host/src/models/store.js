@@ -16,15 +16,17 @@ function defaults() {
     models: [
       {
         id: 'builtin',
-        name: '内置 Demo Agent',
+        name: '内置探索 Agent',
         protocol: 'builtin',
         baseUrl: '',
         apiKey: '',
-        modelId: 'shuncode-demo'
+        modelId: 'shuncode-explore'
       }
     ],
     multiModel: {
       enabled: true,
+      mergeModel: 'auto',
+      thinkLevel: 'high',
       maxBranches: 3,
       mergeAllowsRead: true
     },

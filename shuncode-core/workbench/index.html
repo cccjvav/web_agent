@@ -164,17 +164,22 @@
       </div>
       <div id="right-chat" class="rb-body">
         <div id="chat-stream" class="chat-stream"></div>
+        <div id="chat-tasks" class="task-box hidden">
+          <div class="task-h"><span>Tasks</span><span id="chat-task-count">0/0</span></div>
+          <ul id="chat-todo-list"></ul>
+        </div>
         <div class="chat-compose">
           <div class="chips" id="chips">
-            <button type="button" data-mode="ask" data-text="诊断这个工作区的测试失败">诊断测试失败</button>
-            <button type="button" data-mode="plan" data-text="对 calculator 除以零缺陷做多模型博弈">多模型博弈</button>
-            <button type="button" data-mode="code" data-text="按已对齐方案修复除零并运行 npm test">修复并验证</button>
+            <button type="button" data-mode="ask" data-text="分析当前项目实现了什么功能">分析项目</button>
+            <button type="button" data-mode="plan" data-text="针对当前工作区制定可执行修改计划">制定计划</button>
+            <button type="button" data-mode="code" data-text="搜相关文件、读源码、必要时打补丁，再跑测试">搜读补丁再测</button>
           </div>
           <div class="composer-box">
             <textarea id="chat-input" rows="2" placeholder="描述要构建的内容"></textarea>
             <div class="composer-tools">
               <button type="button" class="icon-btn" title="附加">+</button>
-              <select id="mode-select" class="mini-sel">
+              <button type="button" id="btn-agent-pick" class="mini-sel agent-pick">ShunCode Plan ▾</button>
+              <select id="mode-select" class="hidden">
                 <option value="ask">Ask</option>
                 <option value="plan" selected>Plan</option>
                 <option value="code">Code</option>
@@ -186,10 +191,14 @@
         </div>
       </div>
       <div id="right-bridge" class="rb-body hidden">
-        <div class="bridge-wait">
+        <div class="bridge-wait" id="bridge-wait">
           <div class="wait-ico">✦</div>
           <h3>Waiting for the remote Agent</h3>
           <p>Tool calls made by the connected MCP client will appear here. Input stays in the external client.</p>
+        </div>
+        <div id="bridge-tasks" class="task-box hidden">
+          <div class="task-h"><span>Tasks</span><span id="bridge-task-count">0/0</span></div>
+          <ul id="bridge-todo-list"></ul>
         </div>
         <div id="bridge-log" class="bridge-log"></div>
         <div class="mcp-session">
@@ -332,21 +341,22 @@
           <button type="button" id="btn-add-plugin" class="vs-btn">登记</button>
         </div>
         <div class="page hidden" id="page-api">
-          <h2>API Provider</h2>
-          <p class="lead">本地 Chat 模式要先有可用的模型。和 Bridge 登录、买套餐无关。</p>
-          <label class="field-label">显示名</label>
-          <input id="m-name" class="ms-input" value="自定义 API" />
-          <label class="field-label">Base URL</label>
-          <input id="m-base" class="ms-input" placeholder="https://api.openai.com/v1" />
+          <h2>Add API Provider</h2>
+          <p class="lead">连接 OpenAI 兼容接口。填 Endpoint 和 Key 后点 Test 探测模型，再 Add API 写入本地密钥存储。</p>
+          <label class="field-label">API Endpoint URL</label>
+          <input id="m-base" class="ms-input" placeholder="https://api.example.com/v1" />
           <label class="field-label">API Key</label>
           <input id="m-key" class="ms-input" type="password" placeholder="sk-…" />
-          <label class="field-label">模型 ID</label>
-          <input id="m-id" class="ms-input" placeholder="gpt-4.1" />
+          <input id="m-name" type="hidden" value="自定义 API" />
+          <input id="m-id" class="ms-input" placeholder="可选：手动指定模型 ID（探测失败时用）" style="margin-top:8px" />
           <div class="row-btns">
-            <button type="button" id="btn-save-model" class="vs-btn primary">保存并启用</button>
-            <button type="button" id="btn-use-builtin" class="vs-btn">改回内置 Demo Agent</button>
+            <button type="button" id="btn-test-api" class="vs-btn">Test</button>
+            <button type="button" id="btn-save-model" class="vs-btn primary">Add API</button>
+            <button type="button" id="btn-use-builtin" class="vs-btn">改回内置探索 Agent</button>
           </div>
           <p class="hint" id="model-status"></p>
+          <p class="hint">The API key is kept in secure secret storage and never written to settings.json.</p>
+          <div id="provider-table"></div>
         </div>
         <div class="page hidden" id="page-codex">
           <h2>Codex</h2>
@@ -356,9 +366,23 @@
         </div>
         <div class="page hidden" id="page-multimodel">
           <h2>多模型博弈</h2>
-          <p class="lead">核心理念：多模型意见一致，再行动。只在 Plan 里分支，各分支看不见彼此的回答。</p>
+          <p class="lead">核心理念：多模型意见一致，再行动。只在 Plan 里分支，各分支从同一起点独立作答，彼此看不见对方。</p>
           <label class="chk"><input type="checkbox" id="mm-enabled" checked /> 启用多模型博弈</label>
-          <p class="hint">空输入才是分支发送。合并默认可做只读核对。分歧大时不自动执行。</p>
+          <label class="field-label">合并主模型</label>
+          <select id="mm-merge" class="ms-input">
+            <option value="auto">自动（架构/安全/编码三分支后合并）</option>
+            <option value="active">当前 Chat 选用的模型</option>
+          </select>
+          <label class="field-label">合并思考强度</label>
+          <select id="mm-think" class="ms-input">
+            <option value="low">低</option>
+            <option value="medium">中</option>
+            <option value="high" selected>高</option>
+          </select>
+          <label class="chk" style="margin-top:12px"><input type="checkbox" id="mm-readonly" checked /> 合并时允许只读文件验证</label>
+          <label class="field-label">每回合最大分支数</label>
+          <input id="mm-branches" class="ms-input" type="number" min="2" max="5" value="3" />
+          <p class="hint">空输入才是分支发送。分歧大时不自动执行补丁。</p>
           <button type="button" id="btn-save-mm" class="vs-btn primary">保存</button>
         </div>
 

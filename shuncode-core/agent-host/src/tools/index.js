@@ -353,7 +353,7 @@ const TOOLS = [
     name: 'set_todos',
     aliases: [],
     description: '更新任务分解，在本地 UI 显示。',
-    mode: ['plan', 'code'],
+    mode: ['ask', 'plan', 'code'],
     inputSchema: {
       type: 'object',
       properties: {

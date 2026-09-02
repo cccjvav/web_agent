@@ -11,6 +11,7 @@
 | `httpSmoke.test.js` | 真起进程：`/health`、工作台 HTML、MCP 401、initialize、tools/list、ping |
 | `codeServerNotRunnable.test.js` | 断言 Git 切片缺运行文件；`run-shuncode-vscode.cmd` 存在 |
 | `skipWorkbench.test.js` | `SHUNCODE_SKIP_WORKBENCH=1` 不占用工作台端口 |
+| `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；不依赖 calculator.js；不调用 get_diagnostics |
 
 仓库根目录 Windows：`run-tests.cmd`  
 其它环境：`cd shuncode-core/agent-host && npm test`

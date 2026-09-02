@@ -6,6 +6,7 @@ const { getToolList, callTool, runMultiModelConsensus } = require('../tools');
 const { getTaskState, resetTaskState } = require('../tools/progressTracker');
 const { resolveSafePath, computeHash } = require('../tools/patchEngine');
 const { runChat } = require('../agent/runChat');
+const { listRemoteModels } = require('../agent/providers');
 const store = require('../models/store');
 const { loadCustom, patchCustom } = require('../models/customizations');
 const eventBus = require('../utils/eventBus');
@@ -225,6 +226,16 @@ router.get('/skills', (req, res) => {
     }
   }
   res.json({ skills });
+});
+
+router.post('/providers/probe', async (req, res) => {
+  const body = req.body || {};
+  try {
+    const models = await listRemoteModels(body.baseUrl, body.apiKey);
+    res.json({ success: true, models });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
 });
 
 router.get('/models', (req, res) => {

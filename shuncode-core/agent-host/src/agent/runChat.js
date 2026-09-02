@@ -1,278 +1,382 @@
+const path = require('path');
+const { config } = require('../config');
 const { callTool } = require('../tools');
 const { runMultiModelConsensus } = require('../tools/consensusEngine');
-const { load } = require('../models/store');
-const { loadCustom } = require('../models/customizations');
 const { runOpenAI } = require('./openai');
+const store = require('../models/store');
 
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
+const SKIP_DIRS = new Set(['node_modules', '.git', '.cache', 'dist', 'build', '.local', 'bin']);
+
+function flattenDir(items, acc = []) {
+  for (const it of items || []) {
+    acc.push(it);
+    if (it.children) flattenDir(it.children, acc);
+  }
+  return acc;
 }
 
-function looksLikeFix(text) {
-  return /除以零|divide by zero|修.?bug|测试失败|failure|calculator|修复|一键修|守卫|divide/i.test(
-    text || ''
-  );
+function countFiles(items) {
+  return flattenDir(items).filter((it) => it.type === 'file').length;
 }
 
-function wantsTestsOnly(text) {
-  return /^(跑测试|运行测试|npm test|pytest|再测一次)/i.test((text || '').trim());
+function toolLabel(name, result, ok) {
+  if (!ok) {
+    if (name === 'list_directory' || name === 'list_dir') return 'Explored .';
+    if (name === 'read_files' || name === 'read_file') return 'Read files';
+    return name;
+  }
+  if (name === 'list_directory' || name === 'list_dir') {
+    const n = countFiles(result && result.items);
+    return n ? `Explored ${result.dirPath || '.'}` : `Explored ${result.dirPath || '.'}`;
+  }
+  if (name === 'find_files') {
+    const n = (result && (result.total ?? result.files?.length)) || 0;
+    return `Found ${n} files`;
+  }
+  if (name === 'search_files' || name === 'grep_search') {
+    const n = (result && result.totalMatches) || 0;
+    return `Found ${n} files`;
+  }
+  if (name === 'read_files' || name === 'read_file') {
+    if (result && Array.isArray(result.files)) return `Read ${result.files.length} files`;
+    if (result && result.filePath) return `Read ${result.filePath}`;
+    return 'Read files';
+  }
+  if (name === 'run_command' || name === 'execute_command') {
+    return result && result.command ? result.command : 'Run command';
+  }
+  if (name === 'apply_patch') return result && result.filePath ? `Patched ${result.filePath}` : 'apply_patch';
+  if (name === 'git_status') return 'git status';
+  if (name === 'set_todos') return 'Tasks';
+  return name;
 }
 
-function wantsCommand(text) {
-  return /^(npm |git |ls |node |python |pnpm |yarn )/i.test((text || '').trim());
-}
-
-async function safeTool(emit, name, args, mode) {
+async function timedTool(emit, mode, name, args) {
+  const t0 = Date.now();
   try {
     const result = await callTool(name, args, mode);
-    emit('tool', { name, args, result, ok: true });
-    return result;
+    const durationMs = Date.now() - t0;
+    if (emit) {
+      emit('tool', {
+        name,
+        args,
+        result,
+        ok: true,
+        durationMs,
+        label: toolLabel(name, result, true)
+      });
+    }
+    return { ok: true, result, durationMs };
   } catch (err) {
-    emit('tool', { name, args, error: err.message, ok: false });
-    return null;
+    const durationMs = Date.now() - t0;
+    if (emit) {
+      emit('tool', {
+        name,
+        args,
+        error: err.message,
+        ok: false,
+        durationMs,
+        label: toolLabel(name, null, false)
+      });
+    }
+    return { ok: false, error: err.message, durationMs };
   }
 }
 
-function extractRaw(readResult) {
-  if (!readResult || !readResult.content) return '';
-  return readResult.content
+function keywordsFrom(message) {
+  const stop = new Set([
+    'the', 'and', 'for', 'with', 'this', 'that', 'from', 'into', 'please',
+    '分析', '当前', '项目', '实现', '什么', '功能', '修复', '一下', '帮我',
+    '请', '一下', '怎么', '如何', '一个', '这个', '那个'
+  ]);
+  return String(message || '')
+    .split(/[\s,，。！？!?;；:：/\\()[\]{}'"`]+/)
+    .map((w) => w.trim())
+    .filter((w) => w.length >= 2 && !stop.has(w.toLowerCase()))
+    .slice(0, 6);
+}
+
+function pickExisting(relPaths) {
+  const fs = require('fs');
+  const found = [];
+  for (const rel of relPaths) {
+    const full = path.join(config.workspaceRoot, rel);
+    if (fs.existsSync(full) && fs.statSync(full).isFile()) found.push(rel.replace(/\\/g, '/'));
+  }
+  return found;
+}
+
+function detectTestCommand() {
+  const fs = require('fs');
+  const root = config.workspaceRoot;
+  const pkgPath = path.join(root, 'package.json');
+  if (fs.existsSync(pkgPath)) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      if (pkg.scripts && pkg.scripts.test) return { cmd: 'npm test', kind: 'npm' };
+    } catch {
+      /* ignore */
+    }
+  }
+  if (fs.existsSync(path.join(root, 'pyproject.toml')) || fs.existsSync(path.join(root, 'pytest.ini'))) {
+    return { cmd: 'python -m pytest -q', kind: 'pytest' };
+  }
+  if (fs.existsSync(path.join(root, 'Cargo.toml'))) return { cmd: 'cargo test', kind: 'cargo' };
+  if (fs.existsSync(path.join(root, 'go.mod'))) return { cmd: 'go test ./...', kind: 'go' };
+  const testsDir = path.join(root, 'tests');
+  if (fs.existsSync(testsDir)) return { cmd: 'npm test', kind: 'guess' };
+  return null;
+}
+
+function extractPatch(message) {
+  const m = String(message || '').match(/<<<<<<< SEARCH[\s\S]*?>>>>>>> REPLACE/);
+  return m ? m[0] : null;
+}
+
+function extractWriteIntent(message) {
+  const fence = String(message || '').match(/```(?:[\w.+-]+)?\n([\s\S]*?)```/);
+  const file = String(message || '').match(/(?:写入|创建|write|create)\s+[`"]?([\w./\\-]+\.\w+)[`"]?/i);
+  if (file && fence) return { filePath: file[1].replace(/\\/g, '/'), content: fence[1] };
+  return null;
+}
+
+function clip(text, n = 1400) {
+  const s = String(text || '');
+  return s.length > n ? `${s.slice(0, n)}\n…` : s;
+}
+
+function stripLineNumbers(content) {
+  return String(content || '')
     .split('\n')
     .map((line) => line.replace(/^\d+:\s?/, ''))
     .join('\n');
 }
 
-function buildAskAnswer(text, ctx) {
-  const q = (text || '').trim();
-  const src = extractRaw(ctx.src);
-  const tests = extractRaw(ctx.tests);
-  const hasGuard = /Cannot divide by zero/.test(src);
-  const files = (ctx.tree && ctx.tree.items) || [];
-  const fileNames = files.map((f) => (f.path || f.name)).join('、');
+async function explore(emit, mode, message) {
+  const facts = { files: [], readme: '', pkg: '', testCmd: 'npm test', testOutput: '' };
 
-  if (/是什么|干什么|介绍|项目|workspace/i.test(q)) {
-    return [
-      '**【ASK · 只读】** 这是挂在 ShunCode 里的演示工作区 `workspace`。',
-      '',
-      `- 清单：${fileNames || 'package.json、src/calculator.js、tests/calculator.test.js'}`,
-      '- 目标模块：四则运算 + 幂',
-      '- 测试：`npm test`（5 个用例，含除零）',
-      '',
-      'Chat 模式不用登录、不用买 Bridge。Ask 只读；要对齐方案用 Plan；改仓库切 Code。'
-    ].join('\n');
+  const listed = await timedTool(emit, mode, 'list_directory', { dirPath: '.', recursive: true, maxDepth: 3 });
+  if (listed.ok) {
+    facts.files = flattenDir(listed.result.items)
+      .filter((it) => it.type === 'file')
+      .map((it) => it.path)
+      .slice(0, 80);
   }
 
-  if (/skill/i.test(q)) {
-    return [
-      '**【ASK · 只读】** Skills 本质上是文件夹。把路径告诉模型就会用，不局限当前工作区。',
-      '本机示例：`.shuncode/skills/fix-tests/`。Bridge 也能用 Skills，因为对面同样能读文件。',
-      'MCP 外接工具只在 Chat 模式；不要和 Bridge 对外提供的 MCP 入口搞混。'
-    ].join('\n');
+  await timedTool(emit, mode, 'git_status', {});
+
+  const found = await timedTool(emit, mode, 'find_files', {
+    glob: '**/*',
+    searchPath: '.',
+    maxResults: 100
+  });
+  if (found.ok && found.result.files) {
+    for (const f of found.result.files) {
+      if (!facts.files.includes(f)) facts.files.push(f);
+    }
   }
 
-  if (/bridge|mcp|隧道/i.test(q)) {
-    return [
-      '**【ASK · 只读】** 两条路不要混：',
-      '- Chat：本机对话框，模型跑在 agent-host，自己填 Key。',
-      '- Bridge：把本机工作区变成 Streamable HTTP MCP，让 ChatGPT / Arena / Trae 等在浏览器里指挥这台机器。',
-      '读写发生在本机。地址带秘密路径，泄露了就重置。'
-    ].join('\n');
+  const keys = keywordsFrom(message);
+  if (keys.length) {
+    await timedTool(emit, mode, 'search_files', {
+      query: keys.slice(0, 3).join('|'),
+      isRegex: true,
+      searchPath: '.',
+      limit: 30
+    });
   }
 
-  const divideHint = hasGuard
-    ? '`divide` 已经有除零守卫，测试应能通过。'
-    : '`src/calculator.js` 的 `divide(a, b)` 直接 `return a / b`，而 `tests/calculator.test.js` 要求除零抛出 `Cannot divide by zero`。这就是当前失败点。';
-
-  if (!q || looksLikeFix(q) || /测试|诊断|bug|错/i.test(q)) {
-    return [
-      '**【ASK · 只读问答】** 已用 `list_directory` / `read_files` / `get_diagnostics` 探查，没有改文件，也没有跑终端。',
-      '',
-      divideHint,
-      '',
-      hasGuard
-        ? '若要复核，切到 **Code** 执行 `npm test`。'
-        : '下一步：切到 **Plan** 做多模型博弈（意见一致再行动），再切 **Code** 调用 `apply_patch`。Ask 模式锁死写操作与终端。'
-    ].join('\n');
+  const candidates = [
+    'README.md',
+    'readme.md',
+    'README.zh-CN.md',
+    'package.json',
+    'pyproject.toml',
+    'Cargo.toml',
+    'go.mod'
+  ];
+  const toRead = pickExisting(candidates);
+  for (const f of facts.files) {
+    if (toRead.length >= 6) break;
+    if (!toRead.includes(f) && !SKIP_DIRS.has(f.split('/')[0])) toRead.push(f);
   }
 
+  if (toRead.length) {
+    const read = await timedTool(emit, mode, 'read_files', { paths: toRead.slice(0, 6), limit: 120 });
+    if (read.ok) {
+      const files = read.result.files ? read.result.files : [read.result];
+      for (const file of files) {
+        if (!file || file.error) continue;
+        const body = stripLineNumbers(file.content);
+        if (/readme/i.test(file.filePath)) facts.readme = body;
+        if (/package\.json$/i.test(file.filePath)) facts.pkg = body;
+      }
+    }
+  }
+
+  const test = detectTestCommand();
+  if (test) facts.testCmd = test.cmd;
+  return facts;
+}
+
+function summarizeAsk(message, facts) {
+  const tree = facts.files.slice(0, 30).map((f) => `- ${f}`).join('\n') || '- （工作区几乎是空的）';
   return [
-    `**【ASK · 只读】** 已查看工作区。${divideHint}`,
+    `工作区：\`${config.workspaceRoot}\``,
     '',
-    `针对「${q}」：我只能检索与解释。若要改代码请切 Code；若要多模型对齐请切 Plan。`,
-    tests ? '测试文件已读取，可在对话里继续问具体函数。' : ''
+    `你问的是：${message}`,
+    '',
+    '**当前能看到的文件**',
+    tree,
+    facts.files.length > 30 ? `- …共 ${facts.files.length} 个文件` : '',
+    '',
+    facts.readme ? `**README**\n${clip(facts.readme, 800)}` : '',
+    facts.pkg ? `**package.json / 清单**\n\`\`\`json\n${clip(facts.pkg, 600)}\n\`\`\`` : '',
+    '',
+    facts.testCmd ? `探测到的测试命令：\`${facts.testCmd}\`` : '没有探测到标准测试命令。',
+    '',
+    '这是只读 Ask：没有改文件。要落地补丁切到 **ShunCode Code**（配置 API Key 后走模型工具循环；没 Key 时会跑测试并尝试应用你消息里的补丁）。'
   ]
-    .filter(Boolean)
+    .filter((line) => line !== '')
     .join('\n');
 }
 
-async function executeCalculatorFix(emit) {
-  await callTool(
-    'report_progress',
-    { message: '读取目标文件', percentage: 15, stepName: 'read_files' },
-    'code'
-  );
-  const read = await safeTool(emit, 'read_files', { filePath: 'src/calculator.js' }, 'code');
-  const hash = read && read.hash;
+async function runBuiltin(payload, emit) {
+  const mode = payload.mode || 'ask';
+  const message = payload.message || '';
 
-  const src = extractRaw(read);
-  if (/Cannot divide by zero/.test(src)) {
-    await callTool('report_progress', { message: '守卫已存在，直接验证', percentage: 60, stepName: 'run_command' }, 'code');
-    const testRes = await safeTool(emit, 'run_command', { command: 'npm test' }, 'code');
-    emit('message', {
-      text: `CODE：divide 已有除零守卫。\`npm test\` 退出码 ${testRes ? testRes.exitCode : '?'}。`
-    });
-    return;
-  }
-
-  const patch = `<<<<<<< SEARCH
-function divide(a, b) {
-  // BUG to be fixed by ShunCode Agent (apply_patch):
-  // Needs division by zero guard!
-  return a / b;
-}
-=======
-function divide(a, b) {
-  if (b === 0) {
-    throw new Error('Cannot divide by zero');
-  }
-  return a / b;
-}
->>>>>>> REPLACE`;
-
-  await callTool('report_progress', { message: '预检并写入补丁', percentage: 45, stepName: 'apply_patch' }, 'code');
-  const patchRes = await safeTool(
-    emit,
-    'apply_patch',
-    { filePath: 'src/calculator.js', patch, expectedHash: hash },
-    'code'
-  );
-  if (!patchRes) {
-    emit('message', { text: 'apply_patch 失败。若提示 STALE_FILE，请再读一次文件后重试。' });
-    return;
-  }
-
-  await callTool('report_progress', { message: '回归测试', percentage: 75, stepName: 'run_command' }, 'code');
-  const testRes = await safeTool(emit, 'run_command', { command: 'npm test' }, 'code');
-  const ok = testRes && testRes.exitCode === 0;
-  await callTool(
-    'set_todos',
-    {
-      todos: [
-        { id: '1', title: '捕获失败用例', status: 'completed' },
-        { id: '2', title: '读取 calculator.js', status: 'completed' },
-        { id: '3', title: 'apply_patch 除零守卫', status: 'completed' },
-        { id: '4', title: 'npm test 回归', status: ok ? 'completed' : 'failed' }
-      ]
-    },
-    'code'
-  );
-  await callTool(
-    'report_progress',
-    { message: ok ? '全部通过' : '测试仍失败', percentage: 100, stepName: 'done' },
-    'code'
-  );
-
-  emit('message', {
-    text: ok
-      ? '🎉 **CODE 完成**。`apply_patch` 已为 `divide` 加上除零守卫（整包预检，失败不会半写入），本地 `npm test` **5/5 PASS**。'
-      : `补丁已写入，但测试未全绿。退出码 ${testRes ? testRes.exitCode : 'n/a'}。请查看终端输出。`
+  await timedTool(emit, mode, 'set_todos', {
+    todos: [
+      { id: '1', title: '扫描项目结构与关键入口', status: 'in_progress' },
+      { id: '2', title: '阅读核心模块', status: 'pending' },
+      { id: '3', title: mode === 'ask' ? '汇总功能说明' : '验证 / 补丁', status: 'pending' }
+    ]
   });
-}
 
-async function runBuiltin({ mode, message, emit }) {
-  const text = (message || '').trim();
-  emit('status', {
-    text:
-      mode === 'ask'
-        ? 'Ask：只读探查工作区…'
-        : mode === 'plan'
-          ? 'Plan：只读对齐方案，不会改仓库…'
-          : 'Code：解锁 apply_patch 与终端…'
+  if (emit) emit('status', { text: 'Explored .' });
+  const facts = await explore(emit, mode, message);
+
+  await timedTool(emit, mode, 'set_todos', {
+    todos: [
+      { id: '1', title: '扫描项目结构与关键入口', status: 'completed' },
+      { id: '2', title: '阅读核心模块', status: 'completed' },
+      {
+        id: '3',
+        title: mode === 'code' ? `运行 ${facts.testCmd}` : '汇总',
+        status: 'in_progress'
+      }
+    ]
   });
-  await sleep(160);
-
-  const tree = await safeTool(emit, 'list_directory', { dirPath: '.', recursive: true, maxDepth: 4 }, mode);
-  const src = await safeTool(emit, 'read_files', { filePath: 'src/calculator.js' }, mode);
-  const tests = await safeTool(emit, 'read_files', { filePath: 'tests/calculator.test.js' }, mode);
-  await safeTool(emit, 'get_diagnostics', { filePath: 'src/calculator.js' }, mode);
-
-  if (mode === 'ask') {
-    const custom = loadCustom();
-    let answer = buildAskAnswer(text, { tree, src, tests });
-    if (custom.instructions) {
-      answer += `\n\n_工作区指令已加载（${custom.instructions.slice(0, 80)}${custom.instructions.length > 80 ? '…' : ''}）。_`;
-    }
-    emit('message', { text: answer });
-    return;
-  }
 
   if (mode === 'plan') {
+    const mm = store.load().multiModel || {};
+    if (mm.enabled === false) {
+      if (emit) {
+        emit('message', {
+          text: [
+            `计划（未开多模型博弈）：${message}`,
+            '',
+            summarizeAsk(message, facts),
+            '',
+            '下一步切到 **ShunCode Code** 再改文件。'
+          ].join('\n')
+        });
+      }
+      return;
+    }
     const consensus = await runMultiModelConsensus({
-      taskDescription: text || '修复 calculator 除以零缺陷',
+      taskDescription: message,
+      facts,
       emit
     });
-    emit('consensus', { result: consensus });
-    await safeTool(emit, 'set_todos', { todos: consensus.unifiedActionPlan }, 'plan');
-    emit('message', {
-      text: [
-        consensus.summary,
-        '',
-        '**规则**：各分支互不可见；只有被采纳的那条进入后续上下文；没对齐之前仓库不动。',
-        '切到 **Code** 后才会调用 `apply_patch`。'
-      ].join('\n')
+    await timedTool(emit, 'plan', 'set_todos', { todos: consensus.unifiedActionPlan });
+    if (emit) {
+      emit('consensus', { result: consensus });
+      emit('message', {
+        text: [
+          consensus.canonical,
+          '',
+          consensus.summary,
+          '',
+          '下一步切到 **ShunCode Code** 执行补丁。配置了 API Provider 时会走模型工具循环。'
+        ].join('\n')
+      });
+    }
+    return;
+  }
+
+  if (mode === 'ask') {
+    await timedTool(emit, 'ask', 'set_todos', {
+      todos: [
+        { id: '1', title: '扫描项目结构与关键入口', status: 'completed' },
+        { id: '2', title: '阅读核心模块', status: 'completed' },
+        { id: '3', title: '汇总功能说明', status: 'completed' }
+      ]
     });
+    if (emit) emit('message', { text: summarizeAsk(message, facts) });
     return;
   }
 
-  if (wantsTestsOnly(text)) {
-    const r = await safeTool(emit, 'run_command', { command: 'npm test' }, 'code');
-    emit('message', {
-      text: r
-        ? `测试结束，退出码 **${r.exitCode}**（${r.durationMs}ms）。`
-        : '命令未能执行。'
-    });
-    return;
+  const write = extractWriteIntent(message);
+  if (write) {
+    await timedTool(emit, 'code', 'write_file', write);
   }
 
-  if (wantsCommand(text)) {
-    const r = await safeTool(emit, 'run_command', { command: text.trim() }, 'code');
-    emit('message', {
-      text: r ? `已在工作区执行。退出码 ${r.exitCode}。` : '命令失败。'
-    });
-    return;
-  }
-
-  if (!text || looksLikeFix(text) || /执行|动手|按方案|补丁/i.test(text)) {
-    await executeCalculatorFix(emit);
-    return;
-  }
-
-  emit('message', {
-    text: [
-      'CODE 已解锁写工具。我可以：',
-      '- 修复 calculator 除零并跑 `npm test`',
-      '- 直接执行工作区命令（以 `npm ` / `git ` 开头的消息）',
-      '',
-      `当前消息「${text}」没有匹配到自动补丁。可以说「修复除零并验证」，或切换到自定义 API 让模型自由规划。`
-    ].join('\n')
-  });
-}
-
-async function runChat({ mode, message, history = [], emit }) {
-  mode = String(mode || 'ask').toLowerCase();
-  if (!['ask', 'plan', 'code'].includes(mode)) mode = 'ask';
-
-  const cfg = load();
-  const custom = (cfg.models || []).find((m) => m.id === cfg.activeModelId && m.id !== 'builtin');
-  if (custom && custom.apiKey && custom.baseUrl) {
-    try {
-      await runOpenAI({ mode, message, history, emit, model: custom });
-      return;
-    } catch (err) {
-      emit('status', { text: `自定义模型失败，回退内置 Agent：${err.message}` });
+  const patch = extractPatch(message);
+  if (patch) {
+    const fileMatch = String(message).match(/(?:file|文件)\s*[:=]?\s*[`"]?([\w./\\-]+\.\w+)/i);
+    const target = fileMatch ? fileMatch[1] : facts.files[0];
+    if (target) {
+      const hashed = await timedTool(emit, 'code', 'read_files', { filePath: target, limit: 400 });
+      if (hashed.ok && hashed.result.hash) {
+        await timedTool(emit, 'code', 'apply_patch', {
+          filePath: target,
+          expectedHash: hashed.result.hash,
+          patch
+        });
+      }
     }
   }
 
-  await runBuiltin({ mode, message, emit });
+  const test = detectTestCommand();
+  if (test) {
+    const ran = await timedTool(emit, 'code', 'run_command', { command: test.cmd, timeoutSec: 60 });
+    facts.testOutput = ran.ok
+      ? `${ran.result.stdout || ''}\n${ran.result.stderr || ''}`
+      : ran.error || '';
+  }
+
+  await timedTool(emit, 'code', 'set_todos', {
+    todos: [
+      { id: '1', title: '扫描项目结构与关键入口', status: 'completed' },
+      { id: '2', title: '阅读核心模块', status: 'completed' },
+      { id: '3', title: test ? `运行 ${test.cmd}` : '没有测试命令', status: 'completed' }
+    ]
+  });
+
+  const lines = [
+    `工作区：\`${config.workspaceRoot}\``,
+    '',
+    write ? `已写入 \`${write.filePath}\`。` : '',
+    patch ? '已尝试应用消息里的 SEARCH/REPLACE 补丁。' : '',
+    test
+      ? `已运行 \`${test.cmd}\`。输出摘要：\n\`\`\`\n${clip(facts.testOutput, 1200)}\n\`\`\``
+      : '没有探测到 package.json / pytest / cargo / go 测试命令。',
+    '',
+    '内置循环没有大模型：它会搜、读、跑测试，并应用你消息里给出的补丁。',
+    '要让模型自己决定改哪几行，到设置 → API Provider 填 Endpoint 和 Key，再发同一条任务。'
+  ].filter(Boolean);
+
+  if (emit) emit('message', { text: lines.join('\n') });
+}
+
+async function runChat(payload, emit) {
+  const cfg = store.load();
+  const active = (cfg.models || []).find((m) => m.id === cfg.activeModelId);
+  if (active && active.apiKey && active.baseUrl && active.modelId) {
+    return runOpenAI({ ...payload, model: active, emit });
+  }
+  return runBuiltin(payload, emit);
 }
 
 module.exports = { runChat };

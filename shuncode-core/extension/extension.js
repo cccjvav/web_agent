@@ -126,6 +126,10 @@ function activate(context) {
 }
 
 class ChatView {
+  constructor() {
+    this.history = [];
+  }
+
   resolveWebviewView(webviewView) {
     this._view = webviewView;
     webviewView.webview.options = { enableScripts: true };
@@ -134,12 +138,19 @@ class ChatView {
       if (msg.type !== 'send') return;
       const { mode, text } = msg;
       this._view.webview.postMessage({ type: 'user', text });
+      const history = this.history.slice(-12);
+      this.history.push({ role: 'user', content: text });
+      let assistantText = '';
       try {
         await postNdjson(
           `${agentHostUrl()}/api/chat`,
-          { mode, message: text, history: [] },
-          (ev) => this._view.webview.postMessage({ type: 'event', ev })
+          { mode, message: text, history },
+          (ev) => {
+            this._view.webview.postMessage({ type: 'event', ev });
+            if (ev && ev.type === 'message' && ev.text) assistantText += ev.text;
+          }
         );
+        if (assistantText) this.history.push({ role: 'assistant', content: assistantText });
       } catch (err) {
         this._view.webview.postMessage({
           type: 'event',
@@ -195,28 +206,38 @@ function chatHtml() {
   return `<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <style>
-body{margin:0;font:12px/1.45 system-ui;background:#1e1e2e;color:#f0f0f8;height:100vh;display:flex;flex-direction:column}
-.modes{display:flex;gap:4px;padding:8px;background:#181824}
-.modes button{flex:1;border:0;background:#28283d;color:#9898b0;padding:6px;border-radius:4px;cursor:pointer}
-.modes button.on{background:#6366f1;color:#fff}
+body{margin:0;font:12px/1.45 system-ui;background:#1e1e1e;color:#ccc;height:100vh;display:flex;flex-direction:column}
+.modes{display:flex;gap:4px;padding:8px;background:#181818}
+.modes button{flex:1;border:0;background:#2d2d2d;color:#bbb;padding:6px;border-radius:4px;cursor:pointer}
+.modes button.on{background:#0e639c;color:#fff}
 #log{flex:1;overflow:auto;padding:10px}
 .msg{margin:0 0 8px;padding:8px 10px;border-radius:8px;white-space:pre-wrap}
-.user{background:#3b3b54;margin-left:18%}
-.bot{background:#28283d;border:1px solid #3f3f5a}
-.tool{font-family:ui-monospace,monospace;font-size:11px;color:#34d399;border:1px solid #10b981;padding:6px;border-radius:4px;margin:0 0 8px}
-.foot{padding:8px;background:#181824;display:flex;gap:6px}
-input{flex:1;background:#28283d;border:1px solid #3f3f5a;color:#fff;padding:8px;border-radius:6px}
-button.send{background:#6366f1;color:#fff;border:0;padding:0 12px;border-radius:6px;cursor:pointer}
+.user{background:#2a2a2a;margin-left:12%}
+.bot{background:#222;border:1px solid #333}
+.tool{font-family:ui-monospace,monospace;font-size:11px;color:#9cdcfe;border:1px solid #333;padding:6px 8px;border-radius:6px;margin:0 0 8px;display:flex;justify-content:space-between}
+.tool.fail{color:#f14c4c;border-color:#5a2d2d}
+#tasks{display:none;border-top:1px solid #333;padding:8px 10px;background:#1a1a1a}
+#tasks h4{margin:0 0 6px;font-size:11px;letter-spacing:.06em;color:#bbb;display:flex;justify-content:space-between}
+#tasks li{list-style:none;margin:0;padding:2px 0}
+#task-list{margin:0;padding:0}
+.foot{padding:8px;background:#181818}
+.composer{border:1px solid #3c3c3c;border-radius:8px;padding:6px}
+input{width:100%;background:transparent;border:0;color:#fff;padding:6px;outline:none}
+.row{display:flex;gap:6px;align-items:center;margin-top:4px}
+button.send{margin-left:auto;background:#2d2d2d;color:#ddd;border:0;width:28px;height:28px;border-radius:6px;cursor:pointer}
 </style></head><body>
 <div class="modes">
-  <button data-m="ask">ASK 只读</button>
-  <button data-m="plan" class="on">PLAN</button>
-  <button data-m="code">CODE 可写</button>
+  <button data-m="ask">ShunCode Ask</button>
+  <button data-m="plan" class="on">ShunCode Plan</button>
+  <button data-m="code">ShunCode Code</button>
 </div>
-<div id="log"><div class="msg bot">ShunCode 侧栏已接到本机 agent-host。Ask 只读，Code 可 apply_patch / 跑命令。</div></div>
+<div id="log"><div class="msg bot">使用智能体构建。Ask 只读摸清任意工作区；Plan 多模型博弈；Code 搜-读-补丁-再测。填了 API Key 会走模型工具循环。</div></div>
+<div id="tasks"><h4><span>Tasks</span><span id="task-count">0/0</span></h4><ul id="task-list"></ul></div>
 <div class="foot">
-  <input id="q" placeholder="描述要构建的内容">
-  <button class="send" id="go">发送</button>
+  <div class="composer">
+    <input id="q" placeholder="描述要构建的内容">
+    <div class="row"><button class="send" id="go">↑</button></div>
+  </div>
 </div>
 <script>
 const vscode = acquireVsCodeApi();
@@ -227,6 +248,14 @@ document.querySelectorAll('.modes button').forEach(b => b.onclick = () => {
 });
 const log = document.getElementById('log');
 function add(cls, text){ const d=document.createElement('div'); d.className=cls; d.textContent=text; log.appendChild(d); log.scrollTop=log.scrollHeight; }
+function paintTasks(todos){
+  const list = todos || [];
+  const box = document.getElementById('tasks');
+  box.style.display = list.length ? 'block' : 'none';
+  const done = list.filter(t => t.status === 'completed').length;
+  document.getElementById('task-count').textContent = done + '/' + list.length;
+  document.getElementById('task-list').innerHTML = list.map(t => '<li>' + (t.status==='completed'?'☑ ':t.status==='in_progress'?'▶ ':'☐ ') + (t.title||'') + '</li>').join('');
+}
 document.getElementById('go').onclick = () => {
   const t = document.getElementById('q').value.trim(); if(!t) return;
   document.getElementById('q').value='';
@@ -239,7 +268,11 @@ window.addEventListener('message', e => {
   if (m.type==='event') {
     const ev = m.ev || {};
     if (ev.type==='status') add('msg bot', ev.text || '');
-    else if (ev.type==='tool') add('tool', '工具 ' + (ev.name||'') + (ev.ok===false?' 失败':' ok'));
+    else if (ev.type==='tool') {
+      const ok = ev.ok !== false && !ev.error;
+      add('tool' + (ok ? '' : ' fail'), (ev.label || ev.name || 'tool') + '   ' + (ok ? ((ev.durationMs||0) + ' ms') : 'Failed'));
+      if (ev.name === 'set_todos' && ev.result && ev.result.todos) paintTasks(ev.result.todos);
+    }
     else if (ev.type==='message') add('msg bot', ev.text || '');
     else if (ev.type==='error') add('msg bot', '错误: ' + (ev.message||''));
     else if (ev.type==='consensus') add('msg bot', (ev.result && (ev.result.summary||ev.result.canonical)) || '多模型博弈完成');
@@ -252,12 +285,15 @@ function bridgeHtml() {
   return `<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <style>
-body{margin:0;padding:12px;font:12px/1.4 system-ui;background:#1e1e2e;color:#f0f0f8}
-.pill{display:inline-block;padding:3px 10px;border-radius:12px;margin-bottom:10px;border:1px solid #10b981;color:#10b981}
-.card{background:#28283d;border:1px solid #3f3f5a;border-radius:8px;padding:10px;margin-bottom:10px}
-.url{word-break:break-all;font-family:ui-monospace,monospace;color:#818cf8;background:#141420;padding:8px;border-radius:4px}
-button{background:#6366f1;color:#fff;border:0;padding:7px 10px;border-radius:4px;cursor:pointer;margin:4px 4px 0 0}
-.hint{color:#9898b0}
+body{margin:0;padding:12px;font:12px/1.4 system-ui;background:#1e1e1e;color:#ccc}
+.pill{display:inline-block;padding:3px 10px;border-radius:12px;margin-bottom:10px;border:1px solid #4fc1ff;color:#4fc1ff}
+.card{background:#252526;border:1px solid #333;border-radius:8px;padding:10px;margin-bottom:10px}
+.url{word-break:break-all;font-family:ui-monospace,monospace;color:#9cdcfe;background:#111;padding:8px;border-radius:4px}
+button{background:#0e639c;color:#fff;border:0;padding:7px 10px;border-radius:4px;cursor:pointer;margin:4px 4px 0 0}
+.hint{color:#6e6e6e}
+.tool{font-family:ui-monospace,monospace;font-size:11px;color:#9cdcfe;border:1px solid #333;padding:6px 8px;border-radius:6px;margin:0 0 6px;display:flex;justify-content:space-between}
+#tasks h4{margin:0 0 6px;font-size:11px;display:flex;justify-content:space-between}
+#task-list{margin:0;padding:0;list-style:none}
 </style></head><body>
 <div class="pill" id="pill">检查中…</div>
 <div class="card">
@@ -268,6 +304,11 @@ button{background:#6366f1;color:#fff;border:0;padding:7px 10px;border-radius:4px
   <button id="copy">复制提示词</button>
   <button id="reset">重置密钥</button>
 </div>
+<div class="card" id="tasks" style="display:none">
+  <h4><span>Tasks</span><span id="task-count">0/0</span></h4>
+  <ul id="task-list"></ul>
+</div>
+<div class="card" id="stream"></div>
 <p class="hint" id="hint">启动后等 trycloudflare.com，再把提示词整段贴进 ChatGPT / Arena 第一句。</p>
 <script>
 const vscode = acquireVsCodeApi();
@@ -280,11 +321,29 @@ document.getElementById('copy').onclick = () => {
   vscode.postMessage({ type:'copy', text: url });
 };
 document.getElementById('reset').onclick = () => vscode.postMessage({ type:'reset' });
+function paintTasks(todos){
+  const list = todos || [];
+  document.getElementById('tasks').style.display = list.length ? 'block' : 'none';
+  const done = list.filter(t => t.status === 'completed').length;
+  document.getElementById('task-count').textContent = done + '/' + list.length;
+  document.getElementById('task-list').innerHTML = list.map(t => '<li>' + (t.status==='completed'?'☑ ':'☐ ') + (t.title||'') + '</li>').join('');
+}
+function paintLogs(logs){
+  const box = document.getElementById('stream');
+  const tools = (logs || []).filter(l => l.type === 'tool_call_end').slice(0, 12);
+  box.innerHTML = tools.map(l => {
+    const p = l.payload || {};
+    const ok = p.success !== false;
+    return '<div class="tool"><span>' + (p.tool||'') + '</span><span>' + (ok ? ((p.durationMs||0)+' ms') : 'Failed') + '</span></div>';
+  }).join('') || '<p class="hint">Waiting for the remote Agent</p>';
+}
 window.addEventListener('message', e => {
   if (e.data.type !== 'status') return;
   status = e.data.status || {};
   document.getElementById('url').textContent = status.mcpUrl || status.error || '—';
   document.getElementById('pill').textContent = status.error ? ('离线 ' + status.error) : (status.bridgeRunning ? 'Bridge 运行中' : '已连接 agent-host');
+  paintTasks(status.taskState && status.taskState.todos);
+  paintLogs(status.recentLogs);
 });
 setInterval(() => vscode.postMessage({ type:'refresh' }), 4000);
 vscode.postMessage({ type:'refresh' });

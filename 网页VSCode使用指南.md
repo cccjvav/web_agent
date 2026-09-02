@@ -40,7 +40,7 @@ run-shuncode-vscode.cmd D:\code\my-app
 浏览器打开：**http://127.0.0.1:3000**  
 左侧活动栏最上方（或扩展图标附近）点 **ShunCode**：
 
-- **ShunCode Chat & Agent**：Ask / Plan / Code，请求打到本机 `:48271/api/chat`
+- **ShunCode Chat & Agent**：ShunCode Ask / Plan / Code，请求打到本机 `:48271/api/chat`（对当前打开的文件夹搜-读-补丁-再测，不写死计算器）
 - **Bridge 模式**：启动 Bridge、复制提示词（内容与截图 5 那两行一致）
 
 工作区就是你传入的文件夹，VS Code 资源管理器、编辑器、搜索都是真的。

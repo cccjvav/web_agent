@@ -1,5 +1,21 @@
 const { callTool, getToolList } = require('../tools');
 const { loadCustom } = require('../models/customizations');
+const { config } = require('../config');
+
+function toolLabel(name, result, ok) {
+  if (!ok) return name;
+  if (name === 'find_files') return `Found ${(result && (result.total ?? result.files?.length)) || 0} files`;
+  if (name === 'search_files' || name === 'grep_search') {
+    return `Found ${(result && result.totalMatches) || 0} files`;
+  }
+  if (name === 'read_files' || name === 'read_file') {
+    if (result && Array.isArray(result.files)) return `Read ${result.files.length} files`;
+    if (result && result.filePath) return `Read ${result.filePath}`;
+    return 'Read files';
+  }
+  if (name === 'list_directory' || name === 'list_dir') return `Explored ${(result && result.dirPath) || '.'}`;
+  return name;
+}
 
 function systemPrompt(mode) {
   const lock =
@@ -9,7 +25,10 @@ function systemPrompt(mode) {
 
   return [
     'You are ShunCode, a local coding agent. Editor is Code-OSS; you run in agent-host, not the VS Code kernel.',
+    `Workspace root: ${config.workspaceRoot}`,
     `Current mode: ${mode.toUpperCase()}. ${lock}`,
+    'Loop: search/find → read_files (keep sha256) → apply_patch → run_command or start_command for tests.',
+    'Do not assume any particular file exists (including calculator.js). Inspect THIS workspace.',
     'Search first, then read only the needed files. Use sha256 from read_files when patching.',
     'Reply in the same language as the user. Be concise. After tools, give a short conclusion.',
     mode === 'plan'
@@ -82,16 +101,19 @@ async function runOpenAI({ mode, message, history = [], emit, model }) {
           args = {};
         }
         emit('status', { text: `调用 ${name}…` });
+        const t0 = Date.now();
         try {
           const result = await callTool(name, args, mode);
-          emit('tool', { name, args, result, ok: true });
+          const durationMs = Date.now() - t0;
+          emit('tool', { name, args, result, ok: true, durationMs, label: toolLabel(name, result, true) });
           messages.push({
             role: 'tool',
             tool_call_id: tc.id,
             content: JSON.stringify(result).slice(0, 12000)
           });
         } catch (err) {
-          emit('tool', { name, args, error: err.message, ok: false });
+          const durationMs = Date.now() - t0;
+          emit('tool', { name, args, error: err.message, ok: false, durationMs, label: toolLabel(name, null, false) });
           messages.push({
             role: 'tool',
             tool_call_id: tc.id,
