@@ -1,6 +1,8 @@
 const { config } = require('../config');
 const { getToolList } = require('../tools');
 const { loadCustom } = require('../models/customizations');
+const { formatWorkspaceContext } = require('../models/profile');
+const { listSkills } = require('../tools/skills');
 const { getTaskState } = require('../tools/progressTracker');
 const { recall } = require('../models/memory');
 const { snapshot } = require('./session');
@@ -13,7 +15,8 @@ const RESOURCE_DEFS = [
   { uri: 'shuncode://capabilities', name: 'Capabilities', mimeType: 'text/plain', description: 'Registered tools and modes.' },
   { uri: 'shuncode://config', name: 'Config', mimeType: 'text/plain', description: 'Host config without secrets.' },
   { uri: 'shuncode://workspace', name: 'Workspace', mimeType: 'text/plain', description: 'Workspace root and task state.' },
-  { uri: 'shuncode://memory', name: 'Memory', mimeType: 'text/markdown', description: 'Persisted agent notes.' }
+  { uri: 'shuncode://memory', name: 'Memory', mimeType: 'text/markdown', description: 'Persisted agent notes.' },
+  { uri: 'shuncode://profile', name: 'Profile', mimeType: 'text/markdown', description: 'Environment preference, tech stack, and skills catalog.' }
 ];
 
 function listResources() {
@@ -22,6 +25,14 @@ function listResources() {
 
 function readResource(uri) {
   switch (uri) {
+    case 'shuncode://instructions':
+      return { uri, mimeType: 'text/markdown', text: getInstructions() };
+    case 'shuncode://profile':
+      return {
+        uri,
+        mimeType: 'text/markdown',
+        text: formatWorkspaceContext(loadCustom(), listSkills())
+      };
     case 'shuncode://protocol':
       return {
         uri,

@@ -108,6 +108,10 @@ function pickExisting(relPaths) {
 
 function detectTestCommand() {
   const fs = require('fs');
+  const { loadCustom } = require('../models/customizations');
+  const { resolveTechStack } = require('../models/profile');
+  const declared = resolveTechStack(loadCustom()).testCommand;
+  if (declared) return { cmd: declared, kind: 'declared' };
   const root = config.workspaceRoot;
   const pkgPath = path.join(root, 'package.json');
   if (fs.existsSync(pkgPath)) {

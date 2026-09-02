@@ -378,6 +378,10 @@ details.block summary { cursor: pointer; }
 
 .tree-dir .tree-kids { }
 .tree-item .chev { display: inline-block; width: 12px; color: var(--mute); }
+.guide-steps {
+  margin: 8px 0 12px; padding-left: 20px; color: var(--text2); font-size: 13px; line-height: 1.55;
+}
+.guide-steps li { margin: 4px 0; }
 .list-row { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid #333; font-size: 13px; }
 .list-row button { background: none; border: 0; color: var(--link); font-size: 12px; }
 

@@ -1,6 +1,8 @@
 const { callTool, getToolList } = require('../tools');
 const { loadCustom } = require('../models/customizations');
 const { config } = require('../config');
+const { formatWorkspaceContext, resolveEnvironment } = require('../models/profile');
+const { listSkills } = require('../tools/skills');
 
 function toolLabel(name, result, ok) {
   if (!ok) return name;
@@ -23,6 +25,14 @@ function systemPrompt(mode) {
       ? 'You may call apply_patch, delete_file, rename_file, start_command, run_command. Prefer apply_patch over write_file. Prefer start_command for tests/builds. On STALE_FILE, re-read then retry.'
       : 'READ-ONLY. You must not patch, write, delete, rename, or run commands. Investigate with list_directory, find_files, search_files, read_files, git_status, git_diff, load_skill.';
 
+  const custom = loadCustom();
+  const env = resolveEnvironment(custom);
+  const reply =
+    env.replyLanguage === 'follow-user'
+      ? 'Reply in the same language as the user.'
+      : env.replyLanguage === 'en'
+        ? 'Reply in English.'
+        : '用中文回复。';
   return [
     'You are ShunCode, a local coding agent. Editor is Code-OSS; you run in agent-host, not the VS Code kernel.',
     `Workspace root: ${config.workspaceRoot}`,
@@ -30,11 +40,15 @@ function systemPrompt(mode) {
     'Loop: search/find → read_files (keep sha256) → apply_patch → run_command or start_command for tests.',
     'Do not assume any particular file exists (including calculator.js). Inspect THIS workspace.',
     'Search first, then read only the needed files. Use sha256 from read_files when patching.',
-    'Reply in the same language as the user. Be concise. After tools, give a short conclusion.',
+    `${reply} Be concise. After tools, give a short conclusion.`,
+    env.shell === 'powershell' || env.os === 'windows'
+      ? 'This machine is Windows. Prefer PowerShell; do not assume bash.'
+      : `Shell is ${env.shell}.`,
     mode === 'plan'
       ? 'Plan mode: produce a concrete plan. Do not modify the repo. Mention that Code mode is required to apply changes.'
       : '',
-    loadCustom().instructions ? `Workspace instructions:\n${loadCustom().instructions}` : ''
+    custom.instructions ? `Workspace instructions:\n${custom.instructions}` : '',
+    formatWorkspaceContext(custom, listSkills())
   ]
     .filter(Boolean)
     .join('\n');

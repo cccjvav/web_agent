@@ -117,6 +117,9 @@ async function main() {
     assert.ok(page.raw.includes('btn-agent-pick'));
     assert.ok(page.raw.includes('agent-pick-menu'));
     assert.ok(page.raw.includes('ShunCode Code'));
+    assert.ok(page.raw.includes('环境偏好'));
+    assert.ok(page.raw.includes('技术栈'));
+    assert.ok(page.raw.includes('技能引导'));
 
     const status = await request('GET', `http://127.0.0.1:${mcpPort}/api/status`);
     assert.strictEqual(status.status, 200);

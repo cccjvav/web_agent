@@ -237,6 +237,8 @@
       <aside class="modal-nav">
         <div class="modal-nav-title">本地 的智能体自定义设置</div>
         <button type="button" class="nav-item on" data-page="overview">概述</button>
+        <button type="button" class="nav-item" data-page="env">环境偏好</button>
+        <button type="button" class="nav-item" data-page="stack">技术栈</button>
         <button type="button" class="nav-item" data-page="agents">智能体</button>
         <button type="button" class="nav-item" data-page="skills">技能 <em id="cnt-skills"></em></button>
         <button type="button" class="nav-item" data-page="instructions">指令</button>
@@ -261,8 +263,10 @@
             <button type="button" class="send-arr" id="btn-save-pref">↑</button>
           </div>
           <div class="card-grid">
+            <article><h4>环境偏好</h4><p>操作系统、Shell、回复语言、提交说明。Chat 和 Bridge 都会读。</p><button type="button" class="vs-btn" data-page="env">配置...</button></article>
+            <article><h4>技术栈</h4><p>声明语言、框架、包管理和测试命令，避免 Agent 猜错项目。</p><button type="button" class="vs-btn" data-page="stack">声明...</button></article>
             <article><h4>智能体</h4><p>定义具有专属角色、工具访问权限和特定任务指令的自定义智能体。</p><button type="button" class="vs-btn" data-page="agents">新建...</button></article>
-            <article><h4>技能</h4><p>创建可重用的技能文件，提供特定领域知识和工作流。</p><button type="button" class="vs-btn" data-page="skills">新建...</button></article>
+            <article><h4>技能</h4><p>创建可重用的技能文件，提供特定领域知识和工作流。</p><button type="button" class="vs-btn" data-page="skills">引导...</button></article>
             <article><h4>指令</h4><p>设置始终生效的指令，在整个工作区或用户配置文件中引导 AI 行为。</p><button type="button" class="vs-btn" data-page="instructions">新建...</button></article>
             <article><h4>挂钩</h4><p>配置由保存文件或运行任务等事件触发的自动操作。</p><button type="button" class="vs-btn" data-page="hooks">新建...</button></article>
             <article><h4>MCP 服务器</h4><p>连接外部工具服务器，通过自定义工具和数据源扩展 AI 功能。</p><button type="button" class="vs-btn" data-page="mcp">浏览...</button></article>
@@ -283,14 +287,30 @@
           <button type="button" id="btn-add-agent" class="vs-btn primary">新建</button>
         </div>
         <div class="page hidden" id="page-skills">
-          <h2>技能</h2>
-          <p class="lead">Skills 本质上是文件夹。把路径给 AI 就会用。Bridge 也支持。</p>
+          <h2>技能引导</h2>
+          <p class="lead">Skills 本质上是文件夹：<code>.shuncode/skills/名字/SKILL.md</code>。把路径给 AI 就会用。Bridge 也支持，不必拷进当前项目。</p>
+          <ol class="guide-steps">
+            <li><strong>起名</strong>：小写、连字符，只做一件事（如 <code>fix-tests</code>）。</li>
+            <li><strong>写何时使用</strong>：模型靠这段描述决定要不要 <code>load_skill</code>。</li>
+            <li><strong>写步骤</strong>：Ask 只读、Code 才能打补丁。点新建后即可在 Chat 里说「按 fix-tests 做」。</li>
+          </ol>
+          <p class="hint">模板会填好三步，你改几个字就能用。</p>
+          <div class="row-btns" id="skill-templates">
+            <button type="button" class="vs-btn" data-tpl="fix-tests">修测试</button>
+            <button type="button" class="vs-btn" data-tpl="review">代码审查</button>
+            <button type="button" class="vs-btn" data-tpl="release">发版</button>
+          </div>
           <div id="skills-list"></div>
-          <label class="field-label">新建 Skill 名称</label>
-          <input id="sk-name" class="ms-input" placeholder="release" />
-          <label class="field-label">SKILL.md</label>
-          <textarea id="sk-body" class="ms-input tall" placeholder="# Skill: release"></textarea>
-          <button type="button" id="btn-add-skill" class="vs-btn primary">新建</button>
+          <label class="field-label">1. 名称</label>
+          <input id="sk-name" class="ms-input" placeholder="fix-tests" />
+          <label class="field-label">2. 何时使用</label>
+          <textarea id="sk-when" class="ms-input" placeholder="用户提到测试失败、红灯、回归时使用。"></textarea>
+          <label class="field-label">3. 步骤</label>
+          <textarea id="sk-steps" class="ms-input tall" placeholder="1. search_files 找失败用例&#10;2. read_files 取 sha256&#10;3. Code 模式 apply_patch&#10;4. 跑测试命令"></textarea>
+          <label class="field-label">SKILL.md 预览（可再改）</label>
+          <textarea id="sk-body" class="ms-input tall" placeholder="# Skill: …"></textarea>
+          <button type="button" id="btn-add-skill" class="vs-btn primary">新建 Skill 文件夹</button>
+          <p class="hint">对话里也可以说「按 D:\skills\release 这份 Skill 发版」，不必先拷进工作区。</p>
         </div>
         <div class="page hidden" id="page-instructions">
           <h2>指令</h2>

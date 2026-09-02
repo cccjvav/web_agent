@@ -1,5 +1,7 @@
 const { loadCustom } = require('../models/customizations');
 const { config } = require('../config');
+const { formatWorkspaceContext } = require('../models/profile');
+const { listSkills } = require('../tools/skills');
 
 const CONNECT_LINE = '快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。';
 
@@ -52,7 +54,7 @@ function getInstructions() {
   const custom = loadCustom();
   const extra = [];
   if (custom.instructions) extra.push(`## Workspace instructions\n${custom.instructions}`);
-  if (custom.preference) extra.push(`## Preference\n${custom.preference}`);
+  extra.push(formatWorkspaceContext(custom, listSkills()));
   extra.push(`## Workspace root\n${config.workspaceRoot}`);
   return [SERVER_INSTRUCTIONS.trim(), ...extra].join('\n\n');
 }

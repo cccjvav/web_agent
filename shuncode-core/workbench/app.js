@@ -248,7 +248,12 @@
       <div class="bubble">💬</div>
       <h3>使用智能体构建</h3>
       <p>AI 答复可能不准确。</p>
-      <p style="margin-top:10px"><a class="gen-instr">生成智能体指令</a> 以将 AI 载入代码库。</p>
+      <p style="margin-top:10px">
+        <a class="gen-instr" data-page="instructions">生成智能体指令</a> ·
+        <a class="gen-instr" data-page="env">环境偏好</a> ·
+        <a class="gen-instr" data-page="stack">技术栈</a> ·
+        <a class="gen-instr" data-page="skills">技能引导</a>
+      </p>
     </div>`;
   }
 
@@ -258,7 +263,7 @@
       if (!state.messages.length) {
         box.innerHTML = emptyChat();
         box.querySelectorAll('.gen-instr').forEach((a) => {
-          a.onclick = () => openModal('instructions');
+          a.onclick = () => openModal(a.dataset.page || 'instructions');
         });
         return;
       }
@@ -665,7 +670,19 @@
   function paintCustom() {
     const c = state.custom || {};
     $('#instr-text').value = c.instructions || '';
-    if ($('#pref-input') && c.preference) $('#pref-input').value = c.preference;
+    if ($('#pref-input')) $('#pref-input').value = c.preference || '';
+    const env = c.environment || {};
+    if ($('#env-os')) $('#env-os').value = env.os || 'auto';
+    if ($('#env-shell')) $('#env-shell').value = env.shell || 'auto';
+    if ($('#env-reply')) $('#env-reply').value = env.replyLanguage || 'zh-CN';
+    if ($('#env-commit')) $('#env-commit').value = env.commitLanguage || 'zh-CN';
+    if ($('#env-notes')) $('#env-notes').value = env.notes || '';
+    const st = c.techStack || {};
+    if ($('#st-lang')) $('#st-lang').value = st.languages || '';
+    if ($('#st-fw')) $('#st-fw').value = st.frameworks || '';
+    if ($('#st-pm')) $('#st-pm').value = st.packageManager || '';
+    if ($('#st-test')) $('#st-test').value = st.testCommand || '';
+    if ($('#st-notes')) $('#st-notes').value = st.notes || '';
     $('#agents-list').innerHTML = rowList(c.agents, (a) =>
       `<div class="list-row"><div><strong>${escapeHtml(a.name)}</strong><div class="hint">${escapeHtml(a.role || '')}</div></div></div>`,
     '还没有自定义智能体');
@@ -923,14 +940,119 @@
       await saveCustom({ agents });
       toast('已新建智能体');
     };
+    function skillMarkdown(name, when, steps) {
+      const n = (name || 'untitled').trim() || 'untitled';
+      return [
+        '---',
+        `name: ${n}`,
+        `description: ${(when || n).replace(/\n/g, ' ').slice(0, 200)}`,
+        '---',
+        '',
+        `# Skill: ${n}`,
+        '',
+        '## 何时使用',
+        when || '任务匹配时使用。',
+        '',
+        '## 步骤',
+        steps || '1. load_skill 读完本文件\n2. 按说明调用工具',
+        ''
+      ].join('\n');
+    }
+    const SKILL_TPL = {
+      'fix-tests': {
+        name: 'fix-tests',
+        when: '用户提到测试失败、红灯、回归、除以零时使用。',
+        steps: '1. Ask：search_files / read_files，不要改文件。\n2. Code：read_files 取 sha256，apply_patch 修失败用例。\n3. 跑工作区声明的测试命令，确认通过。'
+      },
+      review: {
+        name: 'review',
+        when: '用户要求审查、找风险、看 diff 时使用。只读。',
+        steps: '1. git_diff / git_status。\n2. 读改动文件。\n3. 列出风险与建议，不要 apply_patch。'
+      },
+      release: {
+        name: 'release',
+        when: '用户要发版、打 tag、写 changelog 时使用。',
+        steps: '1. 读 package.json 版本与测试命令。\n2. 先跑测试。\n3. 按仓库惯例写 changelog，不要改无关文件。'
+      }
+    };
+    function fillSkillPreview() {
+      if (!$('#sk-body') || $('#sk-body').dataset.dirty === '1') return;
+      $('#sk-body').value = skillMarkdown($('#sk-name').value, $('#sk-when').value, $('#sk-steps').value);
+    }
+    ['sk-name', 'sk-when', 'sk-steps'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', fillSkillPreview);
+    });
+    if ($('#sk-body')) {
+      $('#sk-body').addEventListener('input', () => { $('#sk-body').dataset.dirty = '1'; });
+    }
+    if ($('#skill-templates')) {
+      $('#skill-templates').onclick = (e) => {
+        const b = e.target.closest('[data-tpl]');
+        if (!b) return;
+        const tpl = SKILL_TPL[b.dataset.tpl];
+        if (!tpl) return;
+        $('#sk-name').value = tpl.name;
+        $('#sk-when').value = tpl.when;
+        $('#sk-steps').value = tpl.steps;
+        if ($('#sk-body')) $('#sk-body').dataset.dirty = '';
+        fillSkillPreview();
+      };
+    }
     $('#btn-add-skill').onclick = async () => {
+      const name = $('#sk-name').value;
+      const content = $('#sk-body').value || skillMarkdown(name, $('#sk-when').value, $('#sk-steps').value);
       await fetch('/api/skills', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: $('#sk-name').value, content: $('#sk-body').value })
+        body: JSON.stringify({ name, content })
       });
       await loadSkills();
       toast('已创建 Skill 文件夹');
+    };
+    $('#btn-detect-env').onclick = async () => {
+      const res = await fetch('/api/profile/detect');
+      const data = await res.json();
+      const env = data.environment || {};
+      $('#env-os').value = env.os || 'auto';
+      $('#env-shell').value = env.shell || 'auto';
+      $('#env-status').textContent = `探测到 ${env.os} / ${env.shell}`;
+    };
+    $('#btn-save-env').onclick = async () => {
+      await saveCustom({
+        environment: {
+          os: $('#env-os').value,
+          shell: $('#env-shell').value,
+          replyLanguage: $('#env-reply').value,
+          commitLanguage: $('#env-commit').value,
+          notes: $('#env-notes').value
+        }
+      });
+      $('#env-status').textContent = '已写入 .shuncode/preference.md';
+      toast('已保存环境偏好');
+    };
+    $('#btn-detect-stack').onclick = async () => {
+      const res = await fetch('/api/profile/detect');
+      const data = await res.json();
+      const st = data.techStack || {};
+      $('#st-lang').value = st.languages || '';
+      $('#st-fw').value = st.frameworks || '';
+      $('#st-pm').value = st.packageManager || '';
+      $('#st-test').value = st.testCommand || '';
+      $('#stack-status').textContent = st.languages || st.testCommand ? '已填入探测结果，确认后保存。' : '工作区没有识别到常见清单文件。';
+    };
+    $('#btn-save-stack').onclick = async () => {
+      await saveCustom({
+        techStack: {
+          languages: $('#st-lang').value,
+          frameworks: $('#st-fw').value,
+          packageManager: $('#st-pm').value,
+          testCommand: $('#st-test').value,
+          notes: $('#st-notes').value
+        }
+      });
+      $('#stack-status').textContent = '已写入 .shuncode/tech-stack.md';
+      toast('已保存技术栈');
     };
     $('#btn-save-instr').onclick = async () => {
       await saveCustom({ instructions: $('#instr-text').value });

@@ -36,6 +36,7 @@ async function main() {
   const uris = listed.resources.map((r) => r.uri);
   assert.ok(uris.includes('shuncode://protocol'));
   assert.ok(uris.includes('shuncode://memory'));
+  assert.ok(uris.includes('shuncode://profile'));
 
   const proto = await handleRpc(req('resources/read', { uri: 'shuncode://protocol' }));
   assert.ok(proto.contents[0].text.includes('Streamable HTTP'));

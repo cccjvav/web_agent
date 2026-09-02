@@ -9,6 +9,8 @@ const { runChat } = require('../agent/runChat');
 const { listRemoteModels } = require('../agent/providers');
 const store = require('../models/store');
 const { loadCustom, patchCustom } = require('../models/customizations');
+const { detectEnvironment, detectTechStack } = require('../models/profile');
+const { listSkills } = require('../tools/skills');
 const eventBus = require('../utils/eventBus');
 const { snapshot: mcpSnapshot } = require('../mcp/session');
 const { getBootstrapPrompt } = require('../mcp/instructions');
@@ -264,6 +266,14 @@ router.post('/models', (req, res) => {
 
 router.get('/logs', (req, res) => {
   res.json({ logs: eventBus.getRecentLogs(80) });
+});
+
+router.get('/profile/detect', (req, res) => {
+  res.json({
+    environment: detectEnvironment(),
+    techStack: detectTechStack(),
+    skills: listSkills()
+  });
 });
 
 router.get('/customizations', (req, res) => {

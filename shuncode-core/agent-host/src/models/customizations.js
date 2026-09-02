@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
+const { markdownPreference, markdownTechStack } = require('./profile');
 
 function file() {
   return path.join(config.workspaceRoot, '.shuncode', 'customizations.json');
@@ -9,6 +10,20 @@ function file() {
 function defaults() {
   return {
     preference: '',
+    environment: {
+      os: 'auto',
+      shell: 'auto',
+      replyLanguage: 'zh-CN',
+      commitLanguage: 'zh-CN',
+      notes: ''
+    },
+    techStack: {
+      languages: '',
+      frameworks: '',
+      packageManager: '',
+      testCommand: '',
+      notes: ''
+    },
     instructions: '提交说明用中文。改动尽量走 apply_patch。Ask/Plan 只读，Code 才写文件。',
     agents: [
       {
@@ -37,19 +52,29 @@ function defaults() {
 function loadCustom() {
   try {
     const raw = JSON.parse(fs.readFileSync(file(), 'utf8'));
-    return { ...defaults(), ...raw };
+    const base = defaults();
+    return {
+      ...base,
+      ...raw,
+      environment: { ...base.environment, ...(raw.environment || {}) },
+      techStack: { ...base.techStack, ...(raw.techStack || {}) }
+    };
   } catch {
     return defaults();
   }
 }
 
 function saveCustom(next) {
+  const merged = { ...defaults(), ...next };
+  if (next && next.environment) merged.environment = { ...defaults().environment, ...next.environment };
+  if (next && next.techStack) merged.techStack = { ...defaults().techStack, ...next.techStack };
   const dir = path.dirname(file());
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(file(), JSON.stringify(next, null, 2), 'utf8');
-  const instr = path.join(dir, 'instructions.md');
-  fs.writeFileSync(instr, next.instructions || '', 'utf8');
-  return next;
+  fs.writeFileSync(file(), JSON.stringify(merged, null, 2), 'utf8');
+  fs.writeFileSync(path.join(dir, 'instructions.md'), merged.instructions || '', 'utf8');
+  fs.writeFileSync(path.join(dir, 'preference.md'), markdownPreference(merged), 'utf8');
+  fs.writeFileSync(path.join(dir, 'tech-stack.md'), markdownTechStack(merged), 'utf8');
+  return merged;
 }
 
 function patchCustom(partial) {

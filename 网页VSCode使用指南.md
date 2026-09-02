@@ -55,6 +55,8 @@ run-shuncode-vscode.cmd D:\code\my-app
 
 GitHub Copilot 自己的 Ask/Edit/Agent 下拉是 Copilot 扩展私有 UI，第三方扩展开不进去。若你同时装了 Copilot，请用 **`@shuncode`** 或左侧 **ShunCode** 侧栏，不要指望 Copilot 的 Agent 下拉里出现 ShunCode。
 
+齿轮 → **智能体自定义设置** 里可填 **环境偏好**、**技术栈**，并用 **技能引导** 建 `SKILL.md`。这些会写进工作区 `.shuncode/`，原生 Chat `@shuncode` 和 Bridge 都会带上。
+
 工作区就是你传入的文件夹，VS Code 资源管理器、编辑器、搜索都是真的。
 
 停止：启动窗口 **Ctrl+C**。
