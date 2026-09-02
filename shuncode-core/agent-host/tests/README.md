@@ -9,7 +9,7 @@
 | `workspaceTools.test.js` | git 只读、skills、删/改名、Ask 模式锁、路径逃逸、`start_command` |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
 | `httpSmoke.test.js` | 真起进程：`/health`、工作台 HTML、MCP 401、initialize、tools/list、ping |
-| `codeServerNotRunnable.test.js` | 断言 Git 切片缺运行文件；`run-shuncode-vscode.cmd` 存在 |
+| `codeServerNotRunnable.test.js` | Git 不内嵌 code-server-dist；vscode 入口走 npm runtime |
 | `skipWorkbench.test.js` | `SHUNCODE_SKIP_WORKBENCH=1` 不占用工作台端口 |
 | `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；不依赖 calculator.js；不调用 get_diagnostics |
 | `chatMode.test.js` | VS Code Chat `@shuncode` 默认 Agent（code）；`/ask` `/plan` 切换 |

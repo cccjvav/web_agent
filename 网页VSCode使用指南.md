@@ -11,7 +11,7 @@
 | 改文件的引擎 | 同一套 MCP 工具 | 同一套 |
 | 同时开两个 | **不要**（抢 3000） | **不要** |
 
-官方 [coder/code-server](https://github.com/coder/code-server) **不发布 Windows 安装包**。本仓库也不去修补 Git 里那份残缺的 `bin/code-server-dist/lib/code-server-4.135.0/`（缺编译结果）。  
+官方 [coder/code-server](https://github.com/coder/code-server) **不发布 Windows 安装包**。Git 里也不再内嵌 code-server。  
 **做法：** 第一次启动时用 **npm** 下载完整的 `code-server@4.135.0`（带 `out/`），装到 `bin/code-server-runtime/`（不进 Git）。Node 22 LTS 可以跑，尽管上游标注 Node 24。
 
 ---
@@ -64,7 +64,6 @@ GitHub Copilot 自己的 Ask/Edit/Agent 下拉是 Copilot 扩展私有 UI，第�
 ### 不要做的事
 
 - 不要和 `run-shuncode.cmd` 同时开。
-- 不要去执行 `bin\code-server-dist\lib\code-server-4.135.0\bin\code-server`（那份是残缺切片）。
 - 不要把 MCP 地址发到公开地方。
 
 ### 集成终端
@@ -126,7 +125,6 @@ wsl --install
 | `shuncode-core/scripts/run-code-oss.js` | 先 ensure，再同时拉起 agent-host + code-server |
 | `shuncode-core/scripts/ensure-code-server.js` | 从 npm 安装到 `bin/code-server-runtime/` |
 | `bin/code-server-runtime/` | **完整可运行** 的 code-server（Git 忽略内容） |
-| `bin/code-server-dist/lib/code-server-4.135.0/` | **不可运行** 的对照切片，不要启动 |
 | `shuncode-core/extension/` | 插件源码 |
 | `shuncode-core/extensions-installed/` | code-server `--extensions-dir` |
 
