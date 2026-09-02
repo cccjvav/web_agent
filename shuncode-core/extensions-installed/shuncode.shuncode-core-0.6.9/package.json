@@ -1,14 +1,14 @@
 {
   "name": "shuncode-core",
   "displayName": "ShunCode AI Agent & Bridge",
-  "description": "ShunCode Chat / Bridge sidebar. Talks to the local agent-host MCP process.",
+  "description": "ShunCode Chat / Agent / Bridge. Talks to the local agent-host process.",
   "version": "0.6.9",
   "publisher": "shuncode",
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.90.0"
   },
-  "categories": ["Other"],
-  "activationEvents": ["*"],
+  "categories": ["Other", "Chat"],
+  "activationEvents": ["*", "onChatParticipant:shuncode.agent"],
   "main": "./extension.js",
   "contributes": {
     "configuration": {
@@ -21,6 +21,21 @@
         }
       }
     },
+    "chatParticipants": [
+      {
+        "id": "shuncode.agent",
+        "fullName": "ShunCode",
+        "name": "shuncode",
+        "description": "对本机工作区搜、读、打补丁、跑测试（Ask / Plan / Agent）",
+        "isSticky": true,
+        "isDefault": true,
+        "commands": [
+          { "name": "ask", "description": "只读探查，不改文件" },
+          { "name": "plan", "description": "多模型博弈出方案，不改文件" },
+          { "name": "code", "description": "Agent：搜-读-补丁-再测" }
+        ]
+      }
+    ],
     "viewsContainers": {
       "activitybar": [
         {
@@ -48,6 +63,10 @@
       {
         "command": "shuncode.openBridge",
         "title": "ShunCode: 打开 Bridge 面板"
+      },
+      {
+        "command": "shuncode.openAgentChat",
+        "title": "ShunCode: 打开 Agent Chat"
       },
       {
         "command": "shuncode.resetSecret",

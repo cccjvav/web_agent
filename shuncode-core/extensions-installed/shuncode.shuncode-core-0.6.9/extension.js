@@ -1,6 +1,7 @@
 const vscode = require('vscode');
 const http = require('http');
 const https = require('https');
+const path = require('path');
 
 function agentHostUrl() {
   const fromCfg = vscode.workspace.getConfiguration('shuncode').get('agentHostUrl');
@@ -83,6 +84,95 @@ function postNdjson(url, body, onEvent) {
   });
 }
 
+function modeFromChatRequest(request) {
+  const cmd = String((request && request.command) || '').toLowerCase();
+  if (cmd === 'ask' || cmd === 'plan' || cmd === 'code') return cmd;
+  const prompt = String((request && request.prompt) || '');
+  if (/^\s*\/ask\b/i.test(prompt)) return 'ask';
+  if (/^\s*\/plan\b/i.test(prompt)) return 'plan';
+  if (/^\s*\/code\b/i.test(prompt)) return 'code';
+  return 'code';
+}
+
+function historyFromChatContext(context) {
+  const out = [];
+  for (const turn of (context && context.history) || []) {
+    if (turn.prompt) out.push({ role: 'user', content: String(turn.prompt) });
+    const parts = turn.response || [];
+    const text = parts
+      .map((p) => {
+        if (!p) return '';
+        if (typeof p.value === 'string') return p.value;
+        if (p.value && typeof p.value.value === 'string') return p.value.value;
+        return '';
+      })
+      .join('');
+    if (text) out.push({ role: 'assistant', content: text });
+  }
+  return out.slice(-12);
+}
+
+function revealWorkspaceFile(rel) {
+  const folder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0];
+  if (!folder || !rel) return;
+  const uri = vscode.Uri.joinPath(folder.uri, String(rel).replace(/\\/g, '/'));
+  vscode.workspace.openTextDocument(uri).then(
+    (doc) => vscode.window.showTextDocument(doc, { preview: true, preserveFocus: true }),
+    () => {}
+  );
+}
+
+function registerChatParticipant(context) {
+  if (!vscode.chat || typeof vscode.chat.createChatParticipant !== 'function') return;
+  try {
+  const handler = async (request, chatContext, stream, token) => {
+    const mode = modeFromChatRequest(request);
+    const message = String(request.prompt || '').replace(/^\s*\/(ask|plan|code)\b/i, '').trim();
+    if (!message) {
+      stream.markdown(
+        '当前是 **Agent** 模式（对应 ShunCode Code）：会对工作区搜、读、必要时打补丁并跑测试。\n\n' +
+          '- `/ask` 只读\n- `/plan` 多模型博弈\n- `/code` 或直接发任务 = Agent\n\n描述要构建或修复的内容即可。'
+      );
+      return;
+    }
+    stream.progress(mode === 'code' ? 'Agent 正在搜-读-补丁-再测…' : `ShunCode ${mode}…`);
+    try {
+      await postNdjson(
+        `${agentHostUrl()}/api/chat`,
+        { mode, message, history: historyFromChatContext(chatContext) },
+        (ev) => {
+          if (token.isCancellationRequested) return;
+          if (ev.type === 'status' && ev.text) stream.progress(ev.text);
+          else if (ev.type === 'tool') {
+            const ok = ev.ok !== false && !ev.error;
+            const right = ok ? `${ev.durationMs || 0} ms` : 'Failed';
+            stream.markdown(`\n\n- **${ev.label || ev.name}** · ${right}\n`);
+            if (ev.name === 'apply_patch' && ev.result && ev.result.filePath) {
+              revealWorkspaceFile(ev.result.filePath);
+              const folder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0];
+              if (folder && typeof stream.reference === 'function') {
+                try { stream.reference(vscode.Uri.joinPath(folder.uri, ev.result.filePath)); } catch (_) {}
+              }
+            }
+          } else if (ev.type === 'message' && ev.text) stream.markdown(ev.text);
+          else if (ev.type === 'error') stream.markdown(`错误：${ev.message}`);
+          else if (ev.type === 'consensus' && ev.result) {
+            stream.markdown(`\n\n**多模型博弈** ${ev.result.agreementRate || ''}\n\n${ev.result.canonical || ev.result.summary || ''}\n`);
+          }
+        }
+      );
+    } catch (err) {
+      stream.markdown(`连不上 agent-host：${err.message}\n\n确认 \`run-shuncode-vscode\` 已启动 :48271。`);
+    }
+  };
+  const participant = vscode.chat.createChatParticipant('shuncode.agent', handler);
+  participant.iconPath = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'icon.svg'));
+  context.subscriptions.push(participant);
+  } catch (err) {
+    console.warn('ShunCode chat participant not registered:', err && err.message);
+  }
+}
+
 function activate(context) {
   const chat = new ChatView();
   const bridge = new BridgeView();
@@ -91,8 +181,10 @@ function activate(context) {
     vscode.window.registerWebviewViewProvider('shuncode.bridgeView', bridge)
   );
 
+  registerChatParticipant(context);
+
   const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  statusBar.command = 'shuncode.openBridge';
+  statusBar.command = 'shuncode.openAgentChat';
   statusBar.show();
   context.subscriptions.push(statusBar);
 
@@ -100,7 +192,7 @@ function activate(context) {
     try {
       const r = await requestJson('GET', `${agentHostUrl()}/api/status`);
       const running = r.json && r.json.bridgeRunning;
-      statusBar.text = running ? '$(zap) ShunCode Bridge 运行中' : '$(zap) ShunCode 已连接';
+      statusBar.text = running ? '$(zap) ShunCode Bridge 运行中' : '$(hubot) ShunCode Agent';
     } catch {
       statusBar.text = '$(warning) ShunCode 未连接 48271';
     }
@@ -112,6 +204,16 @@ function activate(context) {
   context.subscriptions.push(
     vscode.commands.registerCommand('shuncode.openBridge', () => {
       vscode.commands.executeCommand('workbench.view.extension.shuncode-sidebar');
+    }),
+    vscode.commands.registerCommand('shuncode.openAgentChat', async () => {
+      try {
+        await vscode.commands.executeCommand('workbench.action.chat.open', {
+          query: '@shuncode ',
+          isPartialQuery: true
+        });
+      } catch {
+        vscode.commands.executeCommand('workbench.view.extension.shuncode-sidebar');
+      }
     }),
     vscode.commands.registerCommand('shuncode.resetSecret', async () => {
       try {
@@ -135,6 +237,10 @@ class ChatView {
     webviewView.webview.options = { enableScripts: true };
     webviewView.webview.html = chatHtml();
     webviewView.webview.onDidReceiveMessage(async (msg) => {
+      if (msg.type === 'openNative') {
+        vscode.commands.executeCommand('shuncode.openAgentChat');
+        return;
+      }
       if (msg.type !== 'send') return;
       const { mode, text } = msg;
       this._view.webview.postMessage({ type: 'user', text });
@@ -148,6 +254,9 @@ class ChatView {
           (ev) => {
             this._view.webview.postMessage({ type: 'event', ev });
             if (ev && ev.type === 'message' && ev.text) assistantText += ev.text;
+            if (ev && ev.type === 'tool' && ev.name === 'apply_patch' && ev.result && ev.result.filePath) {
+              revealWorkspaceFile(ev.result.filePath);
+            }
           }
         );
         if (assistantText) this.history.push({ role: 'assistant', content: assistantText });
@@ -207,51 +316,80 @@ function chatHtml() {
 <html><head><meta charset="UTF-8">
 <style>
 body{margin:0;font:12px/1.45 system-ui;background:#1e1e1e;color:#ccc;height:100vh;display:flex;flex-direction:column}
-.modes{display:flex;gap:4px;padding:8px;background:#181818}
-.modes button{flex:1;border:0;background:#2d2d2d;color:#bbb;padding:6px;border-radius:4px;cursor:pointer}
-.modes button.on{background:#0e639c;color:#fff}
-#log{flex:1;overflow:auto;padding:10px}
+#log{flex:1;overflow:auto;padding:12px}
+.empty{text-align:center;padding:36px 16px 8px;color:#bbb}
+.empty h3{margin:0 0 8px;font-size:14px;color:#ddd}
+.empty p{margin:0;color:#6e6e6e;font-size:12px;line-height:1.5}
+.empty a{color:#3794ff;cursor:pointer}
 .msg{margin:0 0 8px;padding:8px 10px;border-radius:8px;white-space:pre-wrap}
-.user{background:#2a2a2a;margin-left:12%}
+.user{background:#2a2a2a;margin-left:8%}
 .bot{background:#222;border:1px solid #333}
 .tool{font-family:ui-monospace,monospace;font-size:11px;color:#9cdcfe;border:1px solid #333;padding:6px 8px;border-radius:6px;margin:0 0 8px;display:flex;justify-content:space-between}
 .tool.fail{color:#f14c4c;border-color:#5a2d2d}
 #tasks{display:none;border-top:1px solid #333;padding:8px 10px;background:#1a1a1a}
 #tasks h4{margin:0 0 6px;font-size:11px;letter-spacing:.06em;color:#bbb;display:flex;justify-content:space-between}
-#tasks li{list-style:none;margin:0;padding:2px 0}
-#task-list{margin:0;padding:0}
-.foot{padding:8px;background:#181818}
-.composer{border:1px solid #3c3c3c;border-radius:8px;padding:6px}
-input{width:100%;background:transparent;border:0;color:#fff;padding:6px;outline:none}
-.row{display:flex;gap:6px;align-items:center;margin-top:4px}
-button.send{margin-left:auto;background:#2d2d2d;color:#ddd;border:0;width:28px;height:28px;border-radius:6px;cursor:pointer}
+#task-list{margin:0;padding:0;list-style:none}
+.foot{padding:8px;background:#181818;border-top:1px solid #2b2b2b}
+.composer{border:1px solid #3c3c3c;border-radius:8px;padding:8px;background:#1f1f1f}
+textarea{width:100%;background:transparent;border:0;color:#fff;padding:4px 0;outline:none;resize:none;min-height:40px;font:13px/1.4 system-ui}
+.row{display:flex;gap:6px;align-items:center;margin-top:6px;position:relative}
+.agent-btn{background:#2d2d2d;border:1px solid #3c3c3c;color:#ddd;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer}
+.menu{display:none;position:absolute;bottom:32px;left:28px;background:#252526;border:1px solid #333;border-radius:6px;min-width:200px;z-index:5;padding:4px}
+.menu.on{display:block}
+.menu button{display:block;width:100%;text-align:left;background:none;border:0;color:#ccc;padding:7px 10px;font-size:12px;border-radius:4px;cursor:pointer}
+.menu button:hover,.menu button.on{background:#04395e;color:#fff}
+.menu .hint{padding:4px 10px;font-size:10px;color:#6e6e6e}
+button.send{margin-left:auto;background:#0e639c;color:#fff;border:0;width:28px;height:28px;border-radius:6px;cursor:pointer}
 </style></head><body>
-<div class="modes">
-  <button data-m="ask">ShunCode Ask</button>
-  <button data-m="plan" class="on">ShunCode Plan</button>
-  <button data-m="code">ShunCode Code</button>
+<div id="log">
+  <div class="empty">
+    <h3>使用智能体构建</h3>
+    <p>当前是 <b>Agent</b>（ShunCode Code）：直接对工作区搜、读、改、测。</p>
+    <p style="margin-top:8px">也可点 Agent 切到 Ask / Plan。或打开 <a id="open-native">VS Code Chat · @shuncode</a></p>
+  </div>
 </div>
-<div id="log"><div class="msg bot">使用智能体构建。Ask 只读摸清任意工作区；Plan 多模型博弈；Code 搜-读-补丁-再测。填了 API Key 会走模型工具循环。</div></div>
 <div id="tasks"><h4><span>Tasks</span><span id="task-count">0/0</span></h4><ul id="task-list"></ul></div>
 <div class="foot">
   <div class="composer">
-    <input id="q" placeholder="描述要构建的内容">
-    <div class="row"><button class="send" id="go">↑</button></div>
+    <textarea id="q" rows="2" placeholder="描述要构建的内容"></textarea>
+    <div class="row">
+      <span>+</span>
+      <button type="button" class="agent-btn" id="agent">Agent · ShunCode Code ▾</button>
+      <div class="menu" id="menu">
+        <div class="hint">和 Copilot 侧栏一样，先选模式再发任务</div>
+        <button data-m="ask">ShunCode Ask · 只读</button>
+        <button data-m="plan">ShunCode Plan · 博弈</button>
+        <button data-m="code" class="on">ShunCode Code · Agent</button>
+      </div>
+      <button class="send" id="go">↑</button>
+    </div>
   </div>
 </div>
 <script>
 const vscode = acquireVsCodeApi();
-let mode = 'plan';
-document.querySelectorAll('.modes button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('.modes button').forEach(x => x.classList.remove('on'));
-  b.classList.add('on'); mode = b.dataset.m;
-});
+let mode = 'code';
+const labels = { ask: 'Agent · ShunCode Ask ▾', plan: 'Agent · ShunCode Plan ▾', code: 'Agent · ShunCode Code ▾' };
+const menu = document.getElementById('menu');
+document.getElementById('agent').onclick = (e) => { e.stopPropagation(); menu.classList.toggle('on'); };
+document.addEventListener('click', () => menu.classList.remove('on'));
+menu.onclick = (e) => {
+  e.stopPropagation();
+  const b = e.target.closest('[data-m]');
+  if (!b) return;
+  mode = b.dataset.m;
+  menu.querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.m === mode));
+  document.getElementById('agent').textContent = labels[mode];
+  menu.classList.remove('on');
+};
 const log = document.getElementById('log');
-function add(cls, text){ const d=document.createElement('div'); d.className=cls; d.textContent=text; log.appendChild(d); log.scrollTop=log.scrollHeight; }
+function add(cls, text){
+  const empty = log.querySelector('.empty');
+  if (empty) empty.remove();
+  const d=document.createElement('div'); d.className=cls; d.textContent=text; log.appendChild(d); log.scrollTop=log.scrollHeight;
+}
 function paintTasks(todos){
   const list = todos || [];
-  const box = document.getElementById('tasks');
-  box.style.display = list.length ? 'block' : 'none';
+  document.getElementById('tasks').style.display = list.length ? 'block' : 'none';
   const done = list.filter(t => t.status === 'completed').length;
   document.getElementById('task-count').textContent = done + '/' + list.length;
   document.getElementById('task-list').innerHTML = list.map(t => '<li>' + (t.status==='completed'?'☑ ':t.status==='in_progress'?'▶ ':'☐ ') + (t.title||'') + '</li>').join('');
@@ -261,7 +399,8 @@ document.getElementById('go').onclick = () => {
   document.getElementById('q').value='';
   vscode.postMessage({ type:'send', mode, text:t });
 };
-document.getElementById('q').onkeydown = e => { if(e.key==='Enter') document.getElementById('go').click(); };
+document.getElementById('q').onkeydown = e => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); document.getElementById('go').click(); } };
+document.getElementById('open-native').onclick = () => vscode.postMessage({ type:'openNative' });
 window.addEventListener('message', e => {
   const m = e.data;
   if (m.type==='user') add('msg user', m.text);
@@ -350,4 +489,4 @@ vscode.postMessage({ type:'refresh' });
 </script></body></html>`;
 }
 
-module.exports = { activate, deactivate: () => {} };
+module.exports = { activate, deactivate: () => {}, modeFromChatRequest };

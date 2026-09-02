@@ -40,8 +40,20 @@ run-shuncode-vscode.cmd D:\code\my-app
 浏览器打开：**http://127.0.0.1:3000**  
 左侧活动栏最上方（或扩展图标附近）点 **ShunCode**：
 
-- **ShunCode Chat & Agent**：ShunCode Ask / Plan / Code，请求打到本机 `:48271/api/chat`（对当前打开的文件夹搜-读-补丁-再测，不写死计算器）
+- **ShunCode Chat & Agent**（侧栏，像 Copilot）：输入框下 **Agent ▾** 默认 **ShunCode Code**。发任务就会对当前文件夹搜、读、改、测。
+- **VS Code 原生 Chat**（和 Copilot 同一个 Chat 面板）：打开 Chat，输入 `@shuncode` 后发任务。`/ask` 只读，`/plan` 博弈，默认就是 Agent（`/code`）。打补丁后会在编辑器里打开文件。命令 **ShunCode: 打开 Agent Chat** 或点状态栏也会打开这块。
 - **Bridge 模式**：启动 Bridge、复制提示词（内容与截图 5 那两行一致）
+
+### Chat 里的 Agent（对照 Copilot）
+
+侧载的 GitHub Copilot 在 **原生 Chat** 输入框上有 Ask / Edit / **Agent** 下拉：Agent 会自己搜文件、改多文件、跑终端。本仓库不依赖 Copilot 本体，对等能力在两处：
+
+1. **原生 Chat `@shuncode`**（插件 `chatParticipants`，`isDefault`）。不写 slash 就是 **Agent / Code**。`/ask`、`/plan`、`/code` 对应 Copilot 的只读 / 方案 / 动手。工具轨迹会写成 Chat 消息；`apply_patch` 后在编辑器打开该文件。
+2. **活动栏 ShunCode 侧栏** 输入框下的 **Agent · ShunCode Code ▾**，同一套 Ask / Plan / Code。
+
+两边都打本机 `http://127.0.0.1:48271/api/chat`。填了 API Key 会走模型工具循环；没 Key 时内置探索 Agent 仍会搜、读、必要时打补丁并跑测试。
+
+GitHub Copilot 自己的 Ask/Edit/Agent 下拉是 Copilot 扩展私有 UI，第三方扩展开不进去。若你同时装了 Copilot，请用 **`@shuncode`** 或左侧 **ShunCode** 侧栏，不要指望 Copilot 的 Agent 下拉里出现 ShunCode。
 
 工作区就是你传入的文件夹，VS Code 资源管理器、编辑器、搜索都是真的。
 

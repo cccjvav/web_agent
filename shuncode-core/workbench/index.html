@@ -123,7 +123,7 @@
           <div id="browser-page"></div>
         </div>
         <div id="agent-pane" class="hidden">
-          <div class="agent-head">智能体窗口 · Ask / Plan / Code</div>
+          <div class="agent-head">智能体窗口 · Agent（Ask / Plan / Code）</div>
           <div id="agent-stream" class="chat-stream"></div>
           <div class="chat-compose">
             <div class="composer-box">
@@ -131,8 +131,8 @@
               <div class="composer-tools">
                 <select id="agent-mode" class="mini-sel">
                   <option value="ask">Ask</option>
-                  <option value="plan" selected>Plan</option>
-                  <option value="code">Code</option>
+                  <option value="plan">Plan</option>
+                  <option value="code" selected>Code</option>
                 </select>
                 <button type="button" id="btn-agent-send" class="send-arr">↑</button>
               </div>
@@ -178,11 +178,11 @@
             <textarea id="chat-input" rows="2" placeholder="描述要构建的内容"></textarea>
             <div class="composer-tools">
               <button type="button" class="icon-btn" title="附加">+</button>
-              <button type="button" id="btn-agent-pick" class="mini-sel agent-pick">ShunCode Plan ▾</button>
+              <button type="button" id="btn-agent-pick" class="mini-sel agent-pick">Agent · ShunCode Code ▾</button>
               <select id="mode-select" class="hidden">
                 <option value="ask">Ask</option>
-                <option value="plan" selected>Plan</option>
-                <option value="code">Code</option>
+                <option value="plan">Plan</option>
+                <option value="code" selected>Code</option>
               </select>
               <select id="model-select" class="mini-sel"></select>
               <button type="button" id="btn-send" class="send-arr" title="发送">↑</button>
@@ -496,6 +496,13 @@
     <button type="button" id="menu-custom">智能体自定义设置...</button>
     <button type="button" id="menu-api">API Provider...</button>
     <button type="button" id="menu-bridge">Bridge...</button>
+  </div>
+  <div id="agent-pick-menu" class="dropdown hidden">
+    <button type="button" data-mode="ask">ShunCode Ask · 只读</button>
+    <button type="button" data-mode="plan">ShunCode Plan · 博弈</button>
+    <button type="button" data-mode="code">ShunCode Code · Agent</button>
+    <hr />
+    <button type="button" id="menu-custom-from-agent">配置自定义智能体...</button>
   </div>
   <div id="toast" hidden></div>
   <script src="/app.js"></script>

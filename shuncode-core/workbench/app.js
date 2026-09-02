@@ -13,7 +13,7 @@
   };
 
   const state = {
-    mode: 'plan',
+    mode: 'code',
     status: null,
     messages: [],
     history: [],
@@ -391,8 +391,18 @@
   function handleEvent(ev) {
     if (ev.type === 'status') pushMsg({ kind: 'status', text: ev.text });
     else if (ev.type === 'tool') {
-      pushMsg({ kind: 'tool', name: ev.name, args: ev.args, result: ev.result, error: ev.error, ok: ev.ok });
-      logBridgeTool(ev);
+      pushMsg({
+        kind: 'tool',
+        name: ev.name,
+        args: ev.args,
+        result: ev.result,
+        error: ev.error,
+        ok: ev.ok,
+        durationMs: ev.durationMs,
+        label: ev.label
+      });
+      if (state.stayOnBridge) logBridgeTool(ev);
+      if (ev.name === 'set_todos' && ev.result && ev.result.todos) paintTodos(ev.result.todos);
       if (ev.name === 'run_command' || ev.name === 'execute_command') {
         const r = ev.result || {};
         if (r.stdout) termLine(r.stdout);
@@ -452,7 +462,8 @@
   }
 
   function agentLabel(mode) {
-    return mode === 'ask' ? 'ShunCode Ask' : mode === 'code' ? 'ShunCode Code' : 'ShunCode Plan';
+    const name = mode === 'ask' ? 'ShunCode Ask' : mode === 'code' ? 'ShunCode Code' : 'ShunCode Plan';
+    return 'Agent · ' + name;
   }
 
   function setAgentMode(mode) {
@@ -1193,6 +1204,7 @@
 
   async function boot() {
     bind();
+    setAgentMode('code');
     paintTabs();
     paintChat();
     termLine('ShunCode terminal ready.', 'info');
