@@ -5,10 +5,10 @@
 | 文件 | 覆盖 |
 |---|---|
 | `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、冲突、grep |
-| `mcpProtocol.test.js` | `initialize.instructions`、资源、24 个工具、危险命令、memory、connect 提示词原文 |
+| `mcpProtocol.test.js` | `initialize.instructions`、资源、**25** 个工具、危险命令、memory、connect 提示词、DeepSeek 客户端配方 |
 | `workspaceTools.test.js` | git 只读、skills、删/改名、Ask 模式锁、路径逃逸、`start_command` |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
-| `httpSmoke.test.js` | 真起进程：`/health`、工作台 HTML、MCP 401、initialize、tools/list、ping |
+| `httpSmoke.test.js` | 真起进程：`/health`、工作台 HTML、MCP 401、initialize、tools/list、ping、DeepSeek 按钮 |
 | `codeServerNotRunnable.test.js` | Git 不内嵌 code-server-dist；vscode 入口走 npm runtime |
 | `skipWorkbench.test.js` | `SHUNCODE_SKIP_WORKBENCH=1` 不占用工作台端口 |
 | `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；不依赖 calculator.js；不调用 get_diagnostics |
