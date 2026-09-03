@@ -1,0 +1,95 @@
+# 文档审查报告（第四阶段）
+
+对照第一～三阶段生成的子文件夹 `README.md` 与根目录 [`总览.md`](./总览.md) 做覆盖率、链接、格式检查。本报告不是产品使用指南。
+
+审查日期：2026-09-03。分支：`arena/01a05d84-web-agent`。
+
+---
+
+## 1. 规模
+
+| 项 | 数量 |
+|---|---|
+| 含 `README.md` 的目录（含仓库根产品首页） | **20** |
+| 其中逆向说明书（目录内行级 README，不含根首页） | **19** |
+| 根目录补充说明书（不是文件夹 README） | [`启动脚本说明.md`](./启动脚本说明.md)、[`总览.md`](./总览.md)、本文件 |
+| 被至少一份说明书点名的代码/配置文件 | **92** |
+| 按扩展名 | `.js` 67、`.json` 8、`.cmd` 4、`.sh` 3、`.svg` 3、`.html` 2、`.css` 2、`.yaml` 1、`.gitignore` 1、`.gitattributes` 1 |
+| [`总览.md`](./总览.md) 内 Markdown 链接 | **54**，相对路径全部能解析到文件（`./` 正确，无误用 `../`） |
+
+未计入：`node_modules/`、`package-lock.json`、`image-search/`（gitignore）、`bin/code-server-runtime/` 里下载出来的 code-server 源码（只说明书占位 `package.json`）。
+
+---
+
+## 2. 覆盖率检查
+
+对照仓库内代码树（`.js` / `.html` / `.css` / `.json` / `.cmd` / `.sh` / `.svg` / `.yaml` / `.gitignore` / `.gitattributes`）：
+
+**第四阶段补漏之前缺 2 个文件：**
+
+| 文件 | 处理 |
+|---|---|
+| `.config/code-server/config.yaml` | 新建 [`.config/code-server/README.md`](./.config/code-server/README.md)；`run-code-oss.js` 以 `--config` 传入 |
+| `.gitattributes` | 写入 [`启动脚本说明.md`](./启动脚本说明.md)（根目录不能覆盖产品 `README.md`） |
+
+补完后：**92 / 92 均被至少一份 README 或 `启动脚本说明.md` 提及。**
+
+故意不单独再拆的：
+
+| 路径 | 原因 |
+|---|---|
+| `shuncode-repro/src/**` 等子目录 | 整树已在 [`shuncode-repro/README.md`](./shuncode-repro/README.md)；冻结，不复制第二份 |
+| `extensions-installed/*.js` | 是 `extension/` 的拷贝，行级见 [`extension/README.md`](./shuncode-core/extension/README.md) |
+| 根 `README.md` | GitHub 首页，不改成行级模板 |
+
+工作区 Skill 文本（`workspace/.shuncode/skills/*/SKILL.md`）不是代码，已在 [`workspace/README.md`](./workspace/README.md) 说明。
+
+---
+
+## 3. 链接有效性（`总览.md`）
+
+脚本解析全部 Markdown 链接（方括号标题 + 圆括号相对路径）：
+
+- 子模块「查看详情」均为 `./shuncode-core/.../README.md` 或 `./workspace/README.md` 等，**没有**写成 `../`（`总览.md` 在仓库根，`./` 正确）。
+- 快速导航锚点指向各 README 的 `### 📄 文件名` 标题；GitHub slug 一般为 `文件名xxxjs`。若渲染器去不掉 emoji，点标题仍可在该文件内搜索文件名。
+- 外部链接仅 `https://nodejs.org/`。
+
+其它已生成目录 README 内的相对链接同样解析，无死链。
+
+---
+
+## 4. 格式
+
+- 子文件夹 README 的函数/类已用 **Function \`name\`** / **Class \`name\`**。
+- 第四阶段把 [`总览.md`](./总览.md)、[`启动脚本说明.md`](./启动脚本说明.md) 里无语言标记的 ASCII 流程图改成 ` ```text `。Install/Run 命令块保持 ` ```bat ` / ` ```bash `；总图为 ` ```mermaid `。
+- 仓库无 Python 服务，没有 ` ```python ` 需求。JSON Key 表用 Markdown 表格而不是未标记代码块。
+- 产品指南（`使用指南.md`、`组件说明.md`、`技术实现.md`）里仍有少量无语言标记的示意图，那些不是第一阶段行级 README，本阶段未整篇重排。
+
+---
+
+## 5. 文件夹清单（逆向 README）
+
+| 文件夹 | 说明书 |
+|---|---|
+| `shuncode-core/` | [README](./shuncode-core/README.md) |
+| `shuncode-core/agent-host/` | [README](./shuncode-core/agent-host/README.md) |
+| `…/src/` | [README](./shuncode-core/agent-host/src/README.md) |
+| `…/src/mcp/` | [README](./shuncode-core/agent-host/src/mcp/README.md) |
+| `…/src/tools/` | [README](./shuncode-core/agent-host/src/tools/README.md) |
+| `…/src/agent/` | [README](./shuncode-core/agent-host/src/agent/README.md) |
+| `…/src/models/` | [README](./shuncode-core/agent-host/src/models/README.md) |
+| `…/src/api/` | [README](./shuncode-core/agent-host/src/api/README.md) |
+| `…/src/tunnel/` | [README](./shuncode-core/agent-host/src/tunnel/README.md) |
+| `…/src/utils/` | [README](./shuncode-core/agent-host/src/utils/README.md) |
+| `…/tests/` | [README](./shuncode-core/agent-host/tests/README.md) |
+| `shuncode-core/workbench/` | [README](./shuncode-core/workbench/README.md) |
+| `shuncode-core/extension/` | [README](./shuncode-core/extension/README.md) |
+| `shuncode-core/extensions-installed/` | [README](./shuncode-core/extensions-installed/README.md) |
+| `shuncode-core/scripts/` | [README](./shuncode-core/scripts/README.md) |
+| `workspace/` | [README](./workspace/README.md) |
+| `bin/` | [README](./bin/README.md) |
+| `shuncode-repro/` | [README](./shuncode-repro/README.md) |
+| `.config/code-server/` | [README](./.config/code-server/README.md) |
+| 仓库根脚本 | [启动脚本说明.md](./启动脚本说明.md) |
+
+知识图谱：[总览.md](./总览.md)。产品怎么跑：[README.md](./README.md)、[使用指南.md](./使用指南.md)。
