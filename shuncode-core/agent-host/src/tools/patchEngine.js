@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const { config } = require('../config');
 const eventBus = require('../utils/eventBus');
 const { createUnifiedDiff } = require('../utils/diff');
+const { assertNotSensitive } = require('./sensitive');
 
 function computeHash(content) {
   return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
@@ -22,6 +23,7 @@ function resolveSafePath(relPath) {
   if (posix === '..' || posix.startsWith('../') || path.isAbsolute(rel)) {
     throw new Error(`Security error: path "${relPath}" is outside workspace root.`);
   }
+  if (posix && posix !== '.') assertNotSensitive(posix);
   return resolved;
 }
 

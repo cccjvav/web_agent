@@ -17,8 +17,8 @@
 | `run-shuncode-vscode.cmd` | 第二种跑法 | 浏览器里真 VS Code + ShunCode 侧栏，见 [网页VSCode使用指南.md](./网页VSCode使用指南.md) |
 | `shuncode-core/agent-host/tests/` | 产品测试 | `run-tests.cmd`；不必在仓库根再放 `tests/` |
 
-- 右侧 **Chat**：输入框 **Agent ▾** 默认 **Code**（像 Copilot Agent：搜-读-改-测），只改本机，不需要隧道
-- **Bridge**：把同一套工具变成 MCP，给 ChatGPT / Arena 用；在自己电脑上需要 cloudflared
+- 右侧 **Chat**：输入框 **Agent ▾** 默认 **Code**（像 Copilot Agent：搜-读-改-测），只改本机，不需要隧道，不需要 Plus
+- **Bridge**：同一套工具变成 MCP。Arena 等网页栏贴 URL 即可；ChatGPT 免费普通聊天通常调不了 MCP；Plus 开发者模式可用 OAuth 连接器
 
 ## Windows 最快开始
 

@@ -120,12 +120,16 @@ async function main() {
     assert.ok(page.raw.includes('环境偏好'));
     assert.ok(page.raw.includes('技术栈'));
     assert.ok(page.raw.includes('技能引导'));
+    assert.ok(page.raw.includes('怎么连到本机仓库'));
+    assert.ok(page.raw.includes('无需 Plus') || page.raw.includes('不需要 Plus'));
 
     const status = await request('GET', `http://127.0.0.1:${mcpPort}/api/status`);
     assert.strictEqual(status.status, 200);
     assert.ok(status.json.secretKey);
     assert.ok(status.json.prompt.includes('快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。'));
-    assert.ok(Array.isArray(status.json.tools) && status.json.tools.length === 24);
+    assert.ok(Array.isArray(status.json.tools) && status.json.tools.length === 25);
+    assert.ok(Array.isArray(status.json.clients) && status.json.clients.some((c) => c.id === 'arena' && !c.needsPlus));
+    assert.ok(status.json.mcpCanonicalUrl && status.json.mcpCanonicalUrl.endsWith('/mcp'));
 
     const secret = status.json.secretKey;
     const denied = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/not-a-real-secret`, {
@@ -156,7 +160,20 @@ async function main() {
     const names = listed.json.result.tools.map((t) => t.name);
     assert.ok(names.includes('apply_patch'));
     assert.ok(names.includes('start_command'));
-    assert.strictEqual(names.length, 24);
+    assert.ok(names.includes('workspace_info'));
+    assert.strictEqual(names.length, 25);
+
+    const bare = await request('POST', `http://127.0.0.1:${mcpPort}/mcp`, {
+      jsonrpc: '2.0',
+      id: 9,
+      method: 'initialize',
+      params: {}
+    });
+    assert.strictEqual(bare.status, 401);
+
+    const meta = await request('GET', `http://127.0.0.1:${mcpPort}/.well-known/oauth-authorization-server`);
+    assert.strictEqual(meta.status, 200);
+    assert.ok(meta.json.authorization_endpoint);
 
     const ping = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/${secret}`, {
       jsonrpc: '2.0',

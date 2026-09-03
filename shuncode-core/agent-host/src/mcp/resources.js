@@ -8,6 +8,7 @@ const { recall } = require('../models/memory');
 const { snapshot } = require('./session');
 const eventBus = require('../utils/eventBus');
 const { getInstructions } = require('./instructions');
+const { listClients } = require('./clients');
 
 const RESOURCE_DEFS = [
   { uri: 'shuncode://instructions', name: 'Instructions', mimeType: 'text/markdown', description: 'Full server + workspace instructions (same payload as initialize.instructions).' },
@@ -16,7 +17,8 @@ const RESOURCE_DEFS = [
   { uri: 'shuncode://config', name: 'Config', mimeType: 'text/plain', description: 'Host config without secrets.' },
   { uri: 'shuncode://workspace', name: 'Workspace', mimeType: 'text/plain', description: 'Workspace root and task state.' },
   { uri: 'shuncode://memory', name: 'Memory', mimeType: 'text/markdown', description: 'Persisted agent notes.' },
-  { uri: 'shuncode://profile', name: 'Profile', mimeType: 'text/markdown', description: 'Environment preference, tech stack, and skills catalog.' }
+  { uri: 'shuncode://profile', name: 'Profile', mimeType: 'text/markdown', description: 'Environment preference, tech stack, and skills catalog.' },
+  { uri: 'shuncode://clients', name: 'Clients', mimeType: 'text/markdown', description: 'How web agents connect. ChatGPT Plus is optional.' }
 ];
 
 function listResources() {
@@ -40,9 +42,9 @@ function readResource(uri) {
         text: [
           '# ShunCode MCP',
           '',
-          '- Transport: Streamable HTTP JSON-RPC 2.0 at `/mcp/<secret>`',
-          '- initialize → tools/list → tools/call',
-          '- resources: shuncode://protocol|capabilities|config|workspace|memory',
+          '- Transport: Streamable HTTP JSON-RPC 2.0. Paste-URL clients use `/mcp/<secret>`; OAuth clients use `/mcp` + Bearer.',
+          '- initialize → workspace_info → tools/list → tools/call',
+          '- resources: shuncode://protocol|capabilities|config|workspace|memory|profile|clients',
           '- prompts: workspace customizations',
           '- Tool results are clipped (~4k tokens). Use offset/limit/cursor.',
           '- Protocol errors are JSON-RPC `error`; execution failures are `isError: true` with `{code,msg}`.',
@@ -93,6 +95,17 @@ function readResource(uri) {
     case 'shuncode://memory': {
       const mem = recall({ limit: 80 });
       return { uri, mimeType: 'text/markdown', text: mem.text };
+    }
+    case 'shuncode://clients': {
+      const rows = listClients({ mcpUrl: '(mcp url)', mcpCanonicalUrl: '(origin)/mcp' });
+      const text = [
+        '# Connecting web agents',
+        '',
+        'This host is not ChatGPT-only. Free users should use local Chat or a web agent that can call MCP (Arena, etc.).',
+        '',
+        ...rows.map((c) => `- **${c.name}**: ${c.summary} (Plus=${c.needsPlus ? 'yes' : 'no'}, tunnel=${c.needsTunnel ? 'yes' : 'no'})`)
+      ].join('\n');
+      return { uri, mimeType: 'text/markdown', text };
     }
     default:
       return null;

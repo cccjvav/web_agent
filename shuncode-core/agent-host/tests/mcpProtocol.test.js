@@ -37,6 +37,7 @@ async function main() {
   assert.ok(uris.includes('shuncode://protocol'));
   assert.ok(uris.includes('shuncode://memory'));
   assert.ok(uris.includes('shuncode://profile'));
+  assert.ok(uris.includes('shuncode://clients'));
 
   const proto = await handleRpc(req('resources/read', { uri: 'shuncode://protocol' }));
   assert.ok(proto.contents[0].text.includes('Streamable HTTP'));
@@ -51,8 +52,9 @@ async function main() {
   );
 
   const tools = getToolList().map((t) => t.name);
-  assert.strictEqual(tools.length, 24);
+  assert.strictEqual(tools.length, 25);
   assert.ok(tools.includes('ping'));
+  assert.ok(tools.includes('workspace_info'));
   assert.ok(tools.includes('remember'));
   assert.ok(tools.includes('get_task_status'));
   assert.ok(tools.includes('git_status'));
@@ -88,6 +90,16 @@ async function main() {
   assert.ok(promptList.prompts.some((p) => p.name === 'connect'));
   const connect = await handleRpc(req('prompts/get', { name: 'connect' }));
   assert.ok(connect.messages[0].content.text.includes('快速连接这个 MCP'));
+
+  const clientsDoc = await handleRpc(req('resources/read', { uri: 'shuncode://clients' }));
+  assert.ok(clientsDoc.contents[0].text.includes('无需') || clientsDoc.contents[0].text.includes('Plus=no') || clientsDoc.contents[0].text.includes('not ChatGPT-only'));
+
+  const { listClients } = require('../src/mcp/clients');
+  const catalog = listClients({ mcpUrl: 'https://x.trycloudflare.com/mcp/abc', mcpCanonicalUrl: 'https://x.trycloudflare.com/mcp' });
+  assert.ok(catalog.some((c) => c.id === 'chat' && c.needsPlus === false && c.needsTunnel === false));
+  assert.ok(catalog.some((c) => c.id === 'arena' && c.supportsMcp && !c.needsPlus));
+  assert.ok(catalog.some((c) => c.id === 'chatgpt-free' && c.connectMode === 'unsupported-mcp'));
+  assert.ok(catalog.some((c) => c.id === 'chatgpt-plus' && c.needsPlus));
 
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('mcp protocol tests passed');

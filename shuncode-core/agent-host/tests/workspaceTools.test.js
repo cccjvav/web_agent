@@ -82,6 +82,35 @@ async function main() {
   }
   assert.ok(escaped);
 
+  fs.writeFileSync(path.join(tmp, '.env'), 'SECRET=1\n');
+  fs.writeFileSync(path.join(tmp, '.env.example'), 'SECRET=\n');
+  fs.mkdirSync(path.join(tmp, '.shuncode'), { recursive: true });
+  fs.writeFileSync(path.join(tmp, '.shuncode', 'config.json'), '{"secretKey":"nope"}\n');
+  let forbidden = false;
+  try {
+    await callTool('read_files', { filePath: '.env' }, 'ask');
+  } catch (err) {
+    forbidden = /SENSITIVE|FORBIDDEN/i.test(err.message);
+  }
+  assert.ok(forbidden, '.env must be blocked');
+  let cfgDenied = false;
+  try {
+    await callTool('read_files', { filePath: '.shuncode/config.json' }, 'ask');
+  } catch (err) {
+    cfgDenied = /SENSITIVE|FORBIDDEN/i.test(err.message);
+  }
+  assert.ok(cfgDenied, 'MCP secret file must be blocked');
+  const example = await callTool('read_files', { filePath: '.env.example' }, 'ask');
+  assert.ok(String(example.content).includes('SECRET='));
+  const dirList = await callTool('list_directory', { dirPath: '.' }, 'ask');
+  const dirNames = (dirList.items || []).map((i) => i.name);
+  assert.ok(!dirNames.includes('.env'));
+  assert.ok(dirNames.includes('.env.example'));
+
+  const info = await callTool('workspace_info', {}, 'ask');
+  assert.ok(info.root === tmp);
+  assert.ok(Array.isArray(info.topLevel));
+
   const started = await callTool('start_command', { command: 'echo async-ok' }, 'code');
   assert.ok(started.execId);
   assert.strictEqual(started.status, 'running');

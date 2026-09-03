@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
 const { resolveSafePath } = require('./patchEngine');
+const { isHidden } = require('./sensitive');
 
 function globToRegExp(glob) {
   const g = String(glob || '**/*').replace(/\\/g, '/');
@@ -31,9 +32,9 @@ function findFiles({ glob = '**/*', searchPath = '.', maxResults = 40 } = {}) {
       return;
     }
     for (const entry of entries) {
-      if (['node_modules', '.git', '.cache', 'dist', 'build'].includes(entry.name)) continue;
       const full = path.join(dir, entry.name);
       const rel = path.relative(config.workspaceRoot, full).split(path.sep).join('/');
+      if (isHidden(rel)) continue;
       if (entry.isDirectory()) {
         walk(full);
       } else if (re.test(rel) || re.test(entry.name) || glob === '**/*') {

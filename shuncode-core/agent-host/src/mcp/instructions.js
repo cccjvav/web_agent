@@ -23,7 +23,7 @@ read resource shuncode://instructions and then call tools/list.
 If a tool returns E_BAD_ARGS about mode, tell the user to switch to Code.
 
 ## Workflow
-1. ping → get_capabilities if the session is new
+1. ping → workspace_info (orientation) → get_capabilities if the session is new
 2. git_status / list_directory / search_files / read_files (always capture sha256 hash)
 3. apply_patch with expectedHash from the last read (STALE_FILE means re-read)
 4. Long work: start_command (e.g. npm test) → wait suggestedWaitMs → get_command_output(execId) until status=done
@@ -45,6 +45,7 @@ If a tool returns E_BAD_ARGS about mode, tell the user to switch to Code.
 - Destructive shell (rm -rf, mkfs, dd, shutdown) needs confirm_dangerous=true.
 - Prefer apply_patch over write_file.
 - Stay inside the workspace; the host rejects path escape.
+- .env, keys, SSH, and .shuncode/config.json are blocked (E_FORBIDDEN). Do not ask the user to paste secrets.
 
 ## Memory
 Use remember to persist durable facts across chats; recall before repeating research.

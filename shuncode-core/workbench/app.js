@@ -27,7 +27,8 @@
     stats: { calls: 0, fail: 0, totalMs: 0 },
     loggedIn: true,
     custom: null,
-    stayOnBridge: false
+    stayOnBridge: false,
+    selectedClient: 'arena'
   };
 
   function toast(text) {
@@ -488,9 +489,50 @@
     $('#stat-avg').textContent = (s.calls ? Math.round(s.totalMs / s.calls) : 0) + ' ms';
   }
 
+  function selectedClientInfo() {
+    const list = (state.status && state.status.clients) || [];
+    return list.find((c) => c.id === state.selectedClient) || list.find((c) => c.id === 'arena') || null;
+  }
+
   function promptText() {
     const s = state.status || {};
+    const c = selectedClientInfo();
+    if (c && c.prompt) return c.prompt;
     return s.prompt || `${s.mcpUrl || ''}\n\n快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。`;
+  }
+
+  function paintClients() {
+    const box = $('#client-cards');
+    const detail = $('#client-detail');
+    if (!box) return;
+    const list = (state.status && state.status.clients) || [];
+    box.innerHTML = list.map((c) => {
+      const plus = c.needsPlus ? '<span class="badge warn">要 Plus</span>' : '<span class="badge ok">无需 Plus</span>';
+      const on = c.id === state.selectedClient ? ' on' : '';
+      return `<button type="button" class="client-card${on}" data-client="${escapeHtml(c.id)}">
+        <strong>${escapeHtml(c.name)}${plus}</strong>
+        <p>${escapeHtml(c.summary)}</p>
+      </button>`;
+    }).join('');
+    box.querySelectorAll('[data-client]').forEach((b) => {
+      b.onclick = () => {
+        state.selectedClient = b.dataset.client;
+        paintClients();
+      };
+    });
+    const c = selectedClientInfo();
+    if (detail && c) {
+      detail.innerHTML = `<ol>${(c.steps || []).map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ol>`;
+    }
+    const pair = state.status && state.status.pairing;
+    const line = $('#pairing-line');
+    if (line) {
+      if (pair && pair.code && state.status.bridgeRunning) {
+        line.textContent = `OAuth 配对码 ${pair.code}（约 ${pair.expiresInSec}s 有效，仅 ChatGPT Plus 连接器需要）`;
+      } else {
+        line.textContent = '配对码会在启动 Bridge 后出现，只给 ChatGPT Plus 连接器 OAuth 用。';
+      }
+    }
   }
 
   function renderBrowser(tab) {
@@ -619,6 +661,7 @@
       : '启动 Bridge 后将自动生成 Cloudflare 临时 MCP 地址。';
     $('#sb-bridge').textContent = running ? 'Bridge 运行中' : 'Bridge 已停止';
     $('#install-id').textContent = s.installId || '—';
+    paintClients();
     const tun = s.tunnel || {};
     $('#conn-label').textContent = running
       ? (tun.url

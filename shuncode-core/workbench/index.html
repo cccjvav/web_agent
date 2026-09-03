@@ -410,11 +410,18 @@
           <div class="br-head">
             <div>
               <h2>ShunCode Bridge</h2>
-              <p class="lead">将当前工作区工具连接到 ChatGPT 或其他远程 MCP 客户端。</p>
-              <p class="hint" id="bridge-sub">启动 Bridge 后将自动生成 Cloudflare 临时 MCP 地址。</p>
+              <p class="lead">把当前工作区变成 MCP，给<strong>任意</strong>能调工具的网页 Agent 用。不绑死 ChatGPT，也不需要 Plus。</p>
+              <p class="hint" id="bridge-sub">本机 Chat 随时可用。网页 Agent 要先启动 Bridge 拿到公网地址。</p>
             </div>
             <span id="bridge-pill" class="status-pill stop">已停止</span>
           </div>
+          <section class="block" id="client-recipes">
+            <div class="block-h">怎么连到本机仓库</div>
+            <p class="hint">免费路径：本机 Chat（无隧道）或 Arena 等支持 MCP 的网页栏。ChatGPT 普通免费聊天加不了连接器。</p>
+            <div id="client-cards" class="client-cards"></div>
+            <div id="client-detail" class="client-detail"></div>
+            <p class="hint" id="pairing-line">配对码会在启动 Bridge 后出现，只给 ChatGPT Plus 连接器 OAuth 用。</p>
+          </section>
           <div id="mcp-block" class="hidden">
             <label class="field-label">MCP 地址</label>
             <div class="mcp-row">
@@ -434,7 +441,7 @@
             <button type="button" class="vs-btn open-site" data-site="manus" title="在 ShunCode 内置浏览器中打开 manus.im">打开 Manus</button>
             <button type="button" class="vs-btn open-site" data-site="shunova" title="在 ShunCode 内置浏览器中打开 shunova.cc">打开 Shunova</button>
           </div>
-          <p class="hint" id="prompt-hint">在自己电脑上要先安装 cloudflared，再点启动 Bridge，等地址变成 trycloudflare.com 后复制提示词，整段贴进 ChatGPT 第一句。规则在 initialize.instructions；网页客户端若没吃到，可读 shuncode://instructions。</p>
+          <p class="hint" id="prompt-hint">网页 Agent：先装 cloudflared，启动 Bridge，等 trycloudflare.com，再按上面选中的客户端复制提示词。本机 Chat 不必走这一步。规则在 initialize.instructions；客户端若没吃到，可读 shuncode://instructions。</p>
           <p class="warn-line">⚠ Bridge 可以编辑文件并运行终端命令。请勿公开 MCP 地址。</p>
 
           <section class="block">

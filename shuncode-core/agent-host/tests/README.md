@@ -14,6 +14,7 @@
 | `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；不依赖 calculator.js；不调用 get_diagnostics |
 | `chatMode.test.js` | VS Code Chat `@shuncode` 默认 Agent（code）；`/ask` `/plan` 切换 |
 | `profile.test.js` | 环境偏好 / 技术栈写入 `.shuncode`，并进入 Chat / MCP 指令 |
+| `oauth.test.js` | OAuth 发现、配对、PKCE、Bearer `/mcp`、SSE |
 
 仓库根目录 Windows：`run-tests.cmd`  
 其它环境：`cd shuncode-core/agent-host && npm test`

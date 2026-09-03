@@ -28,6 +28,7 @@ function classifyToolError(err) {
   if (/Patch conflict/.test(msg)) return new ExecutionError('E_CONFLICT', msg);
   if (/not found|No such file/i.test(msg)) return new ExecutionError('E_NOT_FOUND', msg);
   if (/timeout|isTimeout/i.test(msg)) return new ExecutionError('E_TIMEOUT', msg);
+  if (/ACCESS_DENIED_SENSITIVE_FILE|E_FORBIDDEN/i.test(msg)) return new ExecutionError('E_FORBIDDEN', msg);
   if (/confirm_dangerous/i.test(msg)) return new ProtocolError('E_BAD_ARGS', msg);
   return new ExecutionError('E_INTERNAL', msg);
 }

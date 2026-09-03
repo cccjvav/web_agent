@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const { getToolList, callTool } = require('../tools');
 const { config } = require('../config');
 const { loadCustom } = require('../models/customizations');
@@ -8,19 +9,58 @@ const { listResources, readResource } = require('./resources');
 const { clipJson, clipText } = require('./budget');
 const { ProtocolError, publicError } = require('./errors');
 const { touch, snapshot } = require('./session');
+const oauth = require('./oauth');
 
 const router = express.Router();
+const SUPPORTED_PROTOCOL = ['2024-11-05', '2025-03-26', '2025-06-18'];
 
-function validateSecret(req, res, next) {
-  const secret = req.params.secret || req.headers['x-mcp-secret'] || req.query.secret;
-  if (!secret || secret !== config.secretKey) {
-    return res.status(401).json({
-      jsonrpc: '2.0',
-      error: { code: -32000, message: 'Unauthorized: Invalid ShunCode MCP secret.' },
-      id: req.body ? req.body.id : null
-    });
-  }
+function extractToken(req) {
+  const auth = req.headers.authorization || '';
+  if (/^Bearer\s+/i.test(auth)) return auth.replace(/^Bearer\s+/i, '').trim();
+  if (req.params && req.params.secret) return req.params.secret;
+  if (req.headers['x-mcp-secret']) return String(req.headers['x-mcp-secret']);
+  if (req.query && req.query.secret) return String(req.query.secret);
+  return '';
+}
+
+function isAuthorized(req) {
+  return Boolean(oauth.verifyAccessToken(extractToken(req)));
+}
+
+function rejectUnauthorized(req, res) {
+  const origin = oauth.requestOrigin(req);
+  res.setHeader('WWW-Authenticate', oauth.wwwAuthenticate(origin));
+  return res.status(401).json({
+    jsonrpc: '2.0',
+    error: { code: -32000, message: 'Unauthorized: provide Bearer token, /mcp/<secret>, or complete OAuth pairing.' },
+    id: req.body ? req.body.id : null
+  });
+}
+
+function requireAuth(req, res, next) {
+  if (!isAuthorized(req)) return rejectUnauthorized(req, res);
   next();
+}
+
+function wantsSse(req) {
+  return String(req.headers.accept || '').includes('text/event-stream');
+}
+
+function sessionIdFor(req) {
+  return req.headers['mcp-session-id'] || crypto.randomBytes(8).toString('hex');
+}
+
+function sendJsonRpc(req, res, payload, httpStatus = 200) {
+  const sid = sessionIdFor(req);
+  res.setHeader('Mcp-Session-Id', sid);
+  if (wantsSse(req)) {
+    res.status(httpStatus);
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.write(`event: message\ndata: ${JSON.stringify(payload)}\n\n`);
+    return res.end();
+  }
+  return res.status(httpStatus).json(payload);
 }
 
 function builtinPrompts() {
@@ -43,6 +83,12 @@ function promptsFromCustom() {
   return [...builtinPrompts(), ...user];
 }
 
+function pickProtocol(params) {
+  const asked = params && params.protocolVersion;
+  if (asked && SUPPORTED_PROTOCOL.includes(asked)) return asked;
+  return '2025-03-26';
+}
+
 async function handleRpc(req) {
   const { id, method, params } = req.body || {};
   switch (method) {
@@ -51,7 +97,7 @@ async function handleRpc(req) {
       touch(req, { clientInfo, key: `${clientInfo.name}@${req.ip || 'local'}` });
       eventBus.broadcast('agent_connected', { clientInfo, ip: req.ip });
       return {
-        protocolVersion: '2024-11-05',
+        protocolVersion: pickProtocol(params),
         capabilities: {
           tools: { listChanged: true },
           resources: { listChanged: true },
@@ -161,8 +207,8 @@ async function handleRpc(req) {
   }
 }
 
-router.get('/:secret', validateSecret, (req, res) => {
-  res.json({
+function hostStatus() {
+  return {
     status: 'online',
     server: config.serverName,
     version: config.version,
@@ -170,18 +216,20 @@ router.get('/:secret', validateSecret, (req, res) => {
     tools: getToolList().map((t) => t.name),
     resources: listResources().map((r) => r.uri),
     instructions: getInstructions(),
-    session: snapshot()
-  });
-});
+    session: snapshot(),
+    transports: ['streamable-http', 'sse'],
+    auth: ['url-secret', 'bearer', 'oauth']
+  };
+}
 
-router.post('/:secret', validateSecret, async (req, res) => {
+async function handlePost(req, res) {
   const { jsonrpc, id, method } = req.body || {};
   if (jsonrpc !== '2.0') {
-    return res.status(400).json({
+    return sendJsonRpc(req, res, {
       jsonrpc: '2.0',
       error: { code: -32600, message: 'Invalid Request: jsonrpc must be "2.0"' },
       id: id || null
-    });
+    }, 400);
   }
 
   try {
@@ -189,19 +237,41 @@ router.post('/:secret', validateSecret, async (req, res) => {
     if (method && String(method).startsWith('notifications/')) {
       return res.status(204).end();
     }
-    return res.json({ jsonrpc: '2.0', id, result });
+    return sendJsonRpc(req, res, { jsonrpc: '2.0', id, result });
   } catch (err) {
     const info = publicError(err);
     const http = info.code === 'E_UNKNOWN_CMD' ? 404 : 200;
     const rpcCode = err.rpcCode || (info.code === 'E_UNKNOWN_CMD' ? -32601 : info.layer === 'protocol' ? -32602 : -32603);
-    return res.status(http).json({
+    return sendJsonRpc(req, res, {
       jsonrpc: '2.0',
       id: id || null,
       error: { code: rpcCode, message: `[${info.layer}] ${info.code}: ${info.msg}`, data: info }
-    });
+    }, http);
   }
-});
+}
+
+function handleGet(req, res) {
+  if (wantsSse(req)) {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Mcp-Session-Id', sessionIdFor(req));
+    res.write('event: endpoint\ndata: /mcp\n\n');
+    const timer = setInterval(() => {
+      try { res.write(': ping\n\n'); } catch (_) {}
+    }, 15000);
+    req.on('close', () => clearInterval(timer));
+    return;
+  }
+  res.json(hostStatus());
+}
+
+router.get('/', requireAuth, handleGet);
+router.post('/', requireAuth, handlePost);
+router.get('/:secret', requireAuth, handleGet);
+router.post('/:secret', requireAuth, handlePost);
 
 module.exports = router;
 module.exports.handleRpc = handleRpc;
 module.exports.promptsFromCustom = promptsFromCustom;
+module.exports.isAuthorized = isAuthorized;
+module.exports.rejectUnauthorized = rejectUnauthorized;

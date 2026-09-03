@@ -11,6 +11,7 @@ const { ProtocolError } = require('../mcp/errors');
 const { clipJson } = require('../mcp/budget');
 const { gitStatus, gitDiff } = require('./gitOps');
 const { loadSkill } = require('./skills');
+const { workspaceInfo } = require('./workspaceInfo');
 
 function tool(def) {
   return def;
@@ -52,6 +53,14 @@ const TOOLS = [
     mode: ['ask', 'plan', 'code'],
     inputSchema: { type: 'object', properties: {} },
     handler: pingHost
+  }),
+  tool({
+    name: 'workspace_info',
+    aliases: [],
+    description: 'Orientation: workspace root, git branch, tech stack, skills, top-level names. Call this before listing the whole tree.',
+    mode: ['ask', 'plan', 'code'],
+    inputSchema: { type: 'object', properties: {} },
+    handler: workspaceInfo
   }),
   tool({
     name: 'get_capabilities',

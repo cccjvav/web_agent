@@ -382,6 +382,18 @@ details.block summary { cursor: pointer; }
   margin: 8px 0 12px; padding-left: 20px; color: var(--text2); font-size: 13px; line-height: 1.55;
 }
 .guide-steps li { margin: 4px 0; }
+.client-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+.client-card {
+  text-align: left; background: #1f1f1f; border: 1px solid #333; border-radius: 8px; padding: 10px; color: var(--text);
+}
+.client-card.on { border-color: #0e639c; background: #1a2a38; }
+.client-card strong { display: block; color: #fff; font-size: 13px; margin-bottom: 4px; }
+.client-card p { margin: 0; font-size: 11px; color: var(--mute); line-height: 1.4; }
+.badge { display: inline-block; font-size: 10px; border-radius: 99px; padding: 1px 6px; margin-left: 6px; border: 1px solid #3c3c3c; color: var(--text2); }
+.badge.ok { border-color: var(--green); color: var(--green); }
+.badge.warn { border-color: var(--warn); color: var(--warn); }
+.client-detail { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.client-detail ol { margin: 6px 0 0; padding-left: 18px; }
 .list-row { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid #333; font-size: 13px; }
 .list-row button { background: none; border: 0; color: var(--link); font-size: 12px; }
 

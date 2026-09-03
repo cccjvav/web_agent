@@ -14,6 +14,8 @@ const { listSkills } = require('../tools/skills');
 const eventBus = require('../utils/eventBus');
 const { snapshot: mcpSnapshot } = require('../mcp/session');
 const { getBootstrapPrompt } = require('../mcp/instructions');
+const { listClients } = require('../mcp/clients');
+const oauth = require('../mcp/oauth');
 const tunnel = require('../tunnel/cloudflared');
 
 const router = express.Router();
@@ -32,11 +34,17 @@ function mcpOrigin(req) {
 function mcpInfo(req) {
   const origin = mcpOrigin(req);
   const mcpPath = `/mcp/${config.secretKey}`;
+  const mcpUrl = `${origin}${mcpPath}`;
+  const mcpCanonicalUrl = `${origin}/mcp`;
+  const urls = { mcpUrl, mcpCanonicalUrl };
   return {
     secretKey: config.secretKey,
     mcpPath,
-    mcpUrl: `${origin}${mcpPath}`,
-    prompt: getBootstrapPrompt(`${origin}${mcpPath}`),
+    mcpUrl,
+    mcpCanonicalUrl,
+    prompt: getBootstrapPrompt(mcpUrl),
+    clients: listClients(urls),
+    pairing: oauth.snapshotPairing(),
     tunnel: tunnel.snapshot()
   };
 }
@@ -82,6 +90,7 @@ router.get('/status', (req, res) => {
 router.post('/bridge/reset-secret', (req, res) => {
   const oldSecret = config.secretKey;
   generateNewSecret();
+  oauth.revokeAll();
   eventBus.broadcast('secret_rotated', { oldSecret, newSecret: config.secretKey });
   res.json({ success: true, ...mcpInfo(req) });
 });
@@ -95,6 +104,7 @@ router.post('/bridge/start', (req, res) => {
   store.patch({ bridge: { tunnelProvider: provider } });
   config.bridgeRunning = true;
   config.tunnelProvider = provider;
+  oauth.ensurePairing();
   eventBus.broadcast('bridge_started', { provider });
   res.json({
     success: true,

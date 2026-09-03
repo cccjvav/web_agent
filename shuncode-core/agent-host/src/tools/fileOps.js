@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
 const { resolveSafePath, computeHash, toPosixRel } = require('./patchEngine');
+const { isHidden } = require('./sensitive');
 const eventBus = require('../utils/eventBus');
 
 function readFiles({ filePath, paths, offset = 1, limit = 400 } = {}) {
@@ -126,12 +127,9 @@ function listDir({ dirPath = '.', recursive = false, maxDepth = 3 }) {
     const results = [];
 
     for (const entry of entries) {
-      if (['node_modules', '.git', '.cache', 'dist', 'build', '.local'].includes(entry.name)) {
-        continue;
-      }
-
       const itemFullPath = path.join(currentPath, entry.name);
       const relPath = toPosixRel(path.relative(config.workspaceRoot, itemFullPath));
+      if (isHidden(relPath)) continue;
 
       if (entry.isDirectory()) {
         const item = { name: entry.name, path: relPath, type: 'directory' };
@@ -167,8 +165,9 @@ function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = 
   function searchInDir(dir) {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
-      if (['node_modules', '.git', '.cache', 'dist'].includes(entry.name)) continue;
       const fullItemPath = path.join(dir, entry.name);
+      const relHidden = toPosixRel(path.relative(config.workspaceRoot, fullItemPath));
+      if (isHidden(relHidden)) continue;
       if (entry.isDirectory()) {
         searchInDir(fullItemPath);
       } else if (entry.isFile()) {
