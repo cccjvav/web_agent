@@ -98,6 +98,11 @@ async function main() {
   const catalog = listClients({ mcpUrl: 'https://x.trycloudflare.com/mcp/abc', mcpCanonicalUrl: 'https://x.trycloudflare.com/mcp' });
   assert.ok(catalog.some((c) => c.id === 'chat' && c.needsPlus === false && c.needsTunnel === false));
   assert.ok(catalog.some((c) => c.id === 'arena' && c.supportsMcp && !c.needsPlus));
+  const deepseek = catalog.find((c) => c.id === 'deepseek');
+  assert.ok(deepseek && deepseek.connectMode === 'extension-http' && deepseek.supportsMcp && !deepseek.needsPlus);
+  assert.strictEqual(deepseek.prompt, 'https://x.trycloudflare.com/mcp/abc');
+  assert.strictEqual(deepseek.extensionId, 'kdmpkkahkhdmdhfkdihkopikgcocbpbf');
+  assert.ok(deepseek.steps.some((s) => /不要装 deepseek-pp-shell-host/.test(s)));
   assert.ok(catalog.some((c) => c.id === 'chatgpt-free' && c.connectMode === 'unsupported-mcp'));
   assert.ok(catalog.some((c) => c.id === 'chatgpt-plus' && c.needsPlus));
 

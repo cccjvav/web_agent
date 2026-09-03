@@ -82,7 +82,7 @@ Chat / Bridge / 编辑文件不受影响。
 
 1. 已安装 cloudflared（`check-env.cmd`）
 2. 侧栏 Bridge → **启动 Bridge**，等到 `https://….trycloudflare.com/mcp/…`
-3. **复制提示词**，整段作为 ChatGPT / Arena **新对话第一句**
+3. **Arena 类：** **复制提示词**，整段作为新对话第一句。**DeepSeek 网页：** 把 MCP 地址填进本机 Chrome/Edge 的 DeepSeek++ 侧边栏，见 [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md)
 
 密钥仍在工作区 `.shuncode\config.json`。Quick Tunnel 域名每次启动都会变。
 

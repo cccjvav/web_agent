@@ -33,6 +33,26 @@ const CLIENTS = [
     ]
   },
   {
+    id: 'deepseek',
+    name: 'DeepSeek 网页',
+    url: 'https://chat.deepseek.com/',
+    needsPlus: false,
+    needsTunnel: true,
+    supportsMcp: true,
+    connectMode: 'extension-http',
+    extensionId: 'kdmpkkahkhdmdhfkdihkopikgcocbpbf',
+    storeUrl: 'https://chromewebstore.google.com/detail/deepseek++/kdmpkkahkhdmdhfkdihkopikgcocbpbf',
+    summary: 'DeepSeek 网页自己调不了 MCP。用第三方扩展 DeepSeek++ 当手，把我们的 Streamable HTTP 填进侧边栏。无需 Plus。改磁盘走本机 agent-host，不必装扩展自带的 Shell Native Host。',
+    steps: [
+      '用 Chrome 或 Edge 打开 Chrome 网上应用店，安装 DeepSeek++（扩展 ID kdmpkkahkhdmdhfkdihkopikgcocbpbf）。不是 DeepSeek 官方产品',
+      '启动 Bridge，等到地址变成 https://….trycloudflare.com/mcp/…',
+      '点「复制」得到这一行 MCP 地址（带密钥），不要发到公开地方',
+      '本机浏览器打开 https://chat.deepseek.com/ ，点 DeepSeek++ 侧边栏 → MCP',
+      '添加远程服务，传输选 Streamable HTTP，URL 填刚复制的地址。不要装 deepseek-pp-shell-host',
+      '新开 DeepSeek 对话下任务。右侧 BRIDGE 应出现工具调用'
+    ]
+  },
+  {
     id: 'generic',
     name: '其它网页 Agent',
     url: null,
@@ -93,6 +113,8 @@ function hydrateClient(client, urls) {
       `MCP 规范地址（给连接器用）：${canonical}`,
       '认证：OAuth。在本机工作台看配对码，不要把密钥贴到聊天里。'
     ].join('\n');
+  } else if (client.connectMode === 'extension-http') {
+    prompt = mcpUrl;
   } else if (client.connectMode === 'unsupported-mcp') {
     prompt = '';
   }

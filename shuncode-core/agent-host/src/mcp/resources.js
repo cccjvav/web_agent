@@ -101,7 +101,7 @@ function readResource(uri) {
       const text = [
         '# Connecting web agents',
         '',
-        'This host is not ChatGPT-only. Free users should use local Chat or a web agent that can call MCP (Arena, etc.).',
+        'This host is not ChatGPT-only. Free users should use local Chat, a web agent that can call MCP (Arena, etc.), or DeepSeek Web via the DeepSeek++ extension (Streamable HTTP).',
         '',
         ...rows.map((c) => `- **${c.name}**: ${c.summary} (Plus=${c.needsPlus ? 'yes' : 'no'}, tunnel=${c.needsTunnel ? 'yes' : 'no'})`)
       ].join('\n');

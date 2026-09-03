@@ -5,6 +5,7 @@
   const SITES = {
     chatgpt: { name: 'ChatGPT', url: 'https://chatgpt.com/' },
     arena: { name: 'Arena', url: 'https://arena.ai/agent' },
+    deepseek: { name: 'DeepSeek', url: 'https://chat.deepseek.com/' },
     workbuddy: { name: 'WorkBuddy', url: 'https://www.workbuddy.cn/app' },
     trae: { name: 'Trae', url: 'https://work.trae.cn/' },
     qwen: { name: 'Qwen', url: 'https://qwenwork.cn/app/chat' },
@@ -563,6 +564,18 @@
         </div>
       </div>`;
       $('#gpt-send').onclick = () => arenaConnect($('#gpt-input').value);
+    } else if (tab.site === 'deepseek') {
+      const mcp = (state.status && state.status.mcpUrl) || prompt || '';
+      const store = 'https://chromewebstore.google.com/detail/deepseek++/kdmpkkahkhdmdhfkdihkopikgcocbpbf';
+      page.innerHTML = `<div class="generic-site">
+        <h2>DeepSeek 网页要用 DeepSeek++ 当手</h2>
+        <p>chat.deepseek.com 自己调不了 MCP。工作台内置浏览器也跑不了扩展。请用本机 <strong>Chrome 或 Edge</strong> 装 DeepSeek++，把下面这一行填进扩展侧边栏 MCP（传输选 Streamable HTTP）。</p>
+        <p>扩展不是 DeepSeek 官方产品。改磁盘走本机 agent-host，<strong>不要</strong>再装 <code>deepseek-pp-shell-host</code>。</p>
+        <p><a href="${escapeHtml(store)}" target="_blank" rel="noopener">Chrome 网上应用店安装 DeepSeek++</a>
+          · <a href="https://chat.deepseek.com/" target="_blank" rel="noopener">在本机浏览器打开 chat.deepseek.com</a></p>
+        <p class="hint">MCP 地址（带密钥，只填进扩展，不要发到公开地方）：</p>
+        <div class="prompt-box">${escapeHtml(mcp)}</div>
+      </div>`;
     } else {
       page.innerHTML = `<div class="generic-site">
         <h2>在 ShunCode 内置浏览器中打开 ${escapeHtml(tab.title)}</h2>
@@ -952,7 +965,10 @@
     };
     $('#btn-copy-prompt').onclick = async () => {
       await navigator.clipboard.writeText(promptText());
-      toast('已复制提示词，请整段作为第一句发出');
+      const c = selectedClientInfo();
+      toast(c && c.connectMode === 'extension-http'
+        ? '已复制 MCP 地址，填进 DeepSeek++ 侧边栏（Streamable HTTP）'
+        : '已复制提示词，请整段作为第一句发出');
     };
     $('#btn-reset-secret').onclick = async () => {
       await fetch('/api/bridge/reset-secret', { method: 'POST' });

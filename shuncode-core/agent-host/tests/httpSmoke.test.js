@@ -122,6 +122,8 @@ async function main() {
     assert.ok(page.raw.includes('技能引导'));
     assert.ok(page.raw.includes('怎么连到本机仓库'));
     assert.ok(page.raw.includes('无需 Plus') || page.raw.includes('不需要 Plus'));
+    assert.ok(page.raw.includes('打开 DeepSeek'));
+    assert.ok(page.raw.includes('data-site="deepseek"'));
 
     const status = await request('GET', `http://127.0.0.1:${mcpPort}/api/status`);
     assert.strictEqual(status.status, 200);
@@ -129,6 +131,7 @@ async function main() {
     assert.ok(status.json.prompt.includes('快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。'));
     assert.ok(Array.isArray(status.json.tools) && status.json.tools.length === 25);
     assert.ok(Array.isArray(status.json.clients) && status.json.clients.some((c) => c.id === 'arena' && !c.needsPlus));
+    assert.ok(status.json.clients.some((c) => c.id === 'deepseek' && c.connectMode === 'extension-http' && !c.needsPlus && c.supportsMcp));
     assert.ok(status.json.mcpCanonicalUrl && status.json.mcpCanonicalUrl.endsWith('/mcp'));
 
     const secret = status.json.secretKey;
