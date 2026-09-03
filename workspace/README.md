@@ -114,6 +114,17 @@
 
 ---
 
+### 📄 文件名：`.shuncode/skills/docs-sync/SKILL.md`
+
+- **文件职责：** 仓库级「功能改完必须同步改说明书」约定，以 Skill 形式给 `load_skill` 读。不是可执行 JS。不要再在仓库根放 `文档约定.md`。
+- **内容结构：**
+  - L1–L7：标题「文档同步」；触发词：新功能 / 改工具 MCP 路由 工作台 测试 / 说明书 / README / 四阶段 / 文档约定。写明默认 `workspace/` 沙箱进不去仓库其它目录。
+  - L9–L11 **Ask：** 只读 `list_directory` → `search_files` → `read_files`；禁止 `apply_patch` / `write_file` / `run_command`。
+  - L13–L15 **Plan：** 列出要改的说明书路径，不改仓库。
+  - L17–L29 **Code：** 按改动类型点名对应夹 README / `总览.md` / `DOCUMENTATION_SUMMARY.md`；根 `README.md` 不改成行级模板；`shuncode-repro/` 冻结。禁止杜撰、禁止为对齐文档改 `CONNECT_LINE`、禁止提交 dist。提交前 `npm test` 绿。
+
+---
+
 ## 3. 执行逻辑流（仅本目录）
 
 1. agent-host 启动时 `workspaceRoot` 默认为本目录。
