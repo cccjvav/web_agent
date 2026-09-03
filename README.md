@@ -4,14 +4,14 @@
 
 **Windows 用户请先读 [使用指南.md](./使用指南.md)**（安装、CMD、自己的仓库、Bridge 全在里面）。DeepSeek 网页另见 [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md)。
 
-**GitHub 上每个文件夹是干什么的：** 请读 **[组件说明.md](./组件说明.md)**。
+**GitHub 上这套东西怎么跑、文件夹是谁：** 请读 **[组件说明.md](./组件说明.md)**。
 
 | 文档 | 读它当… |
 |---|---|
 | [使用指南.md](./使用指南.md) | Windows + CMD 从安装到 Bridge |
 | [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md) | DeepSeek 网页 + DeepSeek++（不 fork 扩展） |
 | [网页VSCode使用指南.md](./网页VSCode使用指南.md) | 浏览器里真 VS Code |
-| [组件说明.md](./组件说明.md) | 每个目录干什么 |
+| [组件说明.md](./组件说明.md) | 整条工作流、怎么跑、为什么这样装、每个目录是谁 |
 | [测试说明.md](./测试说明.md) | 怎么跑测试、测了什么 |
 
 简要对照：

@@ -9,4 +9,4 @@
 | `extension/` | VS Code 插件：侧栏 Chat/Bridge + 原生 Chat `@shuncode`（默认 Agent） |
 | `extensions-installed/` | 供 `code-server --extensions-dir` 的已安装副本 |
 
-Windows 操作见根目录 [使用指南.md](../使用指南.md)。每个文件夹的详细职责见 [组件说明.md](../组件说明.md)。测试见 `agent-host/tests/` 与 [测试说明.md](../测试说明.md)。
+Windows 操作见根目录 [使用指南.md](../使用指南.md)。整条工作流和每个文件夹是谁，见 [组件说明.md](../组件说明.md)。测试见 `agent-host/tests/` 与 [测试说明.md](../测试说明.md)。
