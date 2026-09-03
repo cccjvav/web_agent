@@ -43,7 +43,8 @@ function getTaskStatus() {
   };
 }
 
-const DANGEROUS_RE = /\b(rm\s+-rf|rm\s+-fr|mkfs\b|dd\s+if=|shutdown\b|reboot\b)\b/i;
+const DANGEROUS_RE =
+  /\b(rm\s+-rf|rm\s+-fr|mkfs\b|dd\s+if=|shutdown\b|reboot\b|git\s+reset\s+--hard|git\s+checkout\s+--|git\s+clean\s+-f|format\s+[a-z]:|del\s+\/s|rd\s+\/s|rmdir\s+\/s|Remove-Item\s+-Recurse|drop\s+database)\b/i;
 
 const TOOLS = [
   tool({
@@ -180,7 +181,7 @@ const TOOLS = [
   tool({
     name: 'git_status',
     aliases: [],
-    description: 'Read-only git status (branch + porcelain). Use instead of run_command git status.',
+    description: 'Read-only git status (branch + porcelain). If the folder is not a git repo or git is missing, returns {ok:true, available:false, git:false} — do not git init unless the user asked.',
     mode: ['ask', 'plan', 'code'],
     inputSchema: { type: 'object', properties: {} },
     handler: gitStatus
@@ -188,7 +189,7 @@ const TOOLS = [
   tool({
     name: 'git_diff',
     aliases: [],
-    description: 'Read-only git diff. Optional filePath, staged, stat. Output is truncated.',
+    description: 'Read-only git diff. Optional filePath, staged, stat. Output is truncated. Same available:false shape as git_status when git is missing.',
     mode: ['ask', 'plan', 'code'],
     inputSchema: {
       type: 'object',
@@ -214,7 +215,7 @@ const TOOLS = [
   tool({
     name: 'apply_patch',
     aliases: [],
-    description: 'Atomic SEARCH/REPLACE patch. Pass expectedHash from read_files. STALE_FILE means re-read. Code mode only.',
+    description: 'Atomic SEARCH/REPLACE patch. Existing files require expectedHash from the last read_files (HASH_REQUIRED otherwise). New files may omit it. dryRun may omit the hash. STALE_FILE means re-read. Code mode only.',
     mode: ['code'],
     inputSchema: {
       type: 'object',
@@ -231,26 +232,34 @@ const TOOLS = [
   tool({
     name: 'write_file',
     aliases: [],
-    description: 'Overwrite or create a file. Prefer apply_patch. Code mode only.',
+    description: 'Create a file, or overwrite one only with confirm_overwrite=true. Prefer apply_patch for existing files. Code mode only.',
     mode: ['code'],
     inputSchema: {
       type: 'object',
       properties: {
         filePath: { type: 'string' },
-        content: { type: 'string' }
+        content: { type: 'string' },
+        expectedHash: { type: 'string', description: 'Optional sha256 of the current file when overwriting.' },
+        confirm_overwrite: { type: 'boolean', description: 'Required when the path already exists.' }
       },
       required: ['filePath', 'content']
     },
-    handler: writeFile
+    handler: (args) => writeFile({
+      ...args,
+      confirmOverwrite: args.confirmOverwrite || args.confirm_overwrite
+    })
   }),
   tool({
     name: 'delete_file',
     aliases: [],
-    description: 'Delete a file or empty directory inside the workspace. Code mode only.',
+    description: 'Delete a file or empty directory inside the workspace. Requires confirm=true. Code mode only.',
     mode: ['code'],
     inputSchema: {
       type: 'object',
-      properties: { filePath: { type: 'string' } },
+      properties: {
+        filePath: { type: 'string' },
+        confirm: { type: 'boolean', description: 'Must be true after you listed the path.' }
+      },
       required: ['filePath']
     },
     handler: deleteFile
@@ -402,7 +411,10 @@ function getToolList(currentMode = null) {
 async function callTool(name, args = {}, currentMode = null) {
   const toolDef = toolRegistry.get(name);
   if (!toolDef) {
-    throw new ProtocolError('E_UNKNOWN_CMD', `Unknown tool: "${name}".`);
+    throw new ProtocolError(
+      'E_UNKNOWN_CMD',
+      `Unknown tool: "${name}". Available: ${TOOLS.map((t) => t.name).join(', ')}.`
+    );
   }
   if (currentMode && !toolDef.mode.includes(currentMode)) {
     throw new ProtocolError(

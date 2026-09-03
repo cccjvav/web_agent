@@ -77,9 +77,18 @@ async function main() {
   try {
     await callTool('not_a_tool', {});
   } catch (err) {
-    unknown = err instanceof ProtocolError && err.code === 'E_UNKNOWN_CMD';
+    unknown = err instanceof ProtocolError && err.code === 'E_UNKNOWN_CMD' && /Available:/.test(err.message);
   }
   assert.ok(unknown);
+
+  let gitHard = false;
+  try {
+    await callTool('run_command', { command: 'git reset --hard' }, 'code');
+  } catch (err) {
+    const info = publicError(err);
+    gitHard = info.code === 'E_BAD_ARGS' && /confirm_dangerous/.test(info.msg);
+  }
+  assert.ok(gitHard, 'git reset --hard must require confirm_dangerous');
 
   const mem = await callTool('remember', { text: 'calculator divide throws on zero' });
   assert.ok(mem.ok);

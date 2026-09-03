@@ -5,6 +5,7 @@ const { config } = require('../config');
 const eventBus = require('../utils/eventBus');
 const { createUnifiedDiff } = require('../utils/diff');
 const { assertNotSensitive } = require('./sensitive');
+const { ProtocolError } = require('../mcp/errors');
 
 function computeHash(content) {
   return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
@@ -78,6 +79,13 @@ async function applyPatch({ filePath, patch, expectedHash = null, dryRun = false
 
   const currentContent = fs.readFileSync(fullPath, 'utf8');
   const currentHash = computeHash(currentContent);
+
+  if (!expectedHash && !dryRun) {
+    throw new ProtocolError(
+      'E_BAD_ARGS',
+      `HASH_REQUIRED ${filePath}: pass expectedHash from the last read_files (sha256) before patching an existing file. New files may omit it. dryRun may omit it.`
+    );
+  }
 
   if (expectedHash && currentHash !== expectedHash && !currentHash.startsWith(expectedHash)) {
     const err = new Error(

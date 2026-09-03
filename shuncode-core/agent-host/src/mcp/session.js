@@ -40,4 +40,9 @@ function snapshot() {
   };
 }
 
-module.exports = { touch, snapshot, sessionKey };
+function reset() {
+  sessions.clear();
+  return snapshot();
+}
+
+module.exports = { touch, snapshot, sessionKey, reset };

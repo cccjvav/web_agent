@@ -36,6 +36,14 @@ async function main() {
   assert.ok(!names.includes('get_diagnostics'));
   assert.ok(!names.includes('send_command_input'));
 
+  const noGit = await callTool('git_status', {}, 'ask');
+  assert.strictEqual(noGit.ok, true);
+  assert.strictEqual(noGit.available, false);
+  assert.strictEqual(noGit.git, false);
+  const noDiff = await callTool('git_diff', { filePath: 'keep.txt' }, 'plan');
+  assert.strictEqual(noDiff.available, false);
+  assert.strictEqual(noDiff.git, false);
+
   spawnSync('git', ['init'], { cwd: tmp, encoding: 'utf8' });
   spawnSync('git', ['config', 'user.email', 't@t'], { cwd: tmp });
   spawnSync('git', ['config', 'user.name', 't'], { cwd: tmp });
@@ -57,9 +65,32 @@ async function main() {
   assert.ok(loaded.found && loaded.content.includes('Do the demo'));
 
   fs.writeFileSync(path.join(tmp, 'gone.txt'), 'x');
-  const del = await callTool('delete_file', { filePath: 'gone.txt' }, 'code');
+  let deleteBlocked = false;
+  try {
+    await callTool('delete_file', { filePath: 'gone.txt' }, 'code');
+  } catch (err) {
+    deleteBlocked = err instanceof ProtocolError && /confirm=true/.test(err.message);
+  }
+  assert.ok(deleteBlocked, 'delete_file must require confirm=true');
+  const del = await callTool('delete_file', { filePath: 'gone.txt', confirm: true }, 'code');
   assert.ok(del.success);
   assert.ok(!fs.existsSync(path.join(tmp, 'gone.txt')));
+
+  let overwriteBlocked = false;
+  try {
+    await callTool('write_file', { filePath: 'keep.txt', content: 'nope' }, 'code');
+  } catch (err) {
+    overwriteBlocked = err instanceof ProtocolError && /confirm_overwrite/.test(err.message);
+  }
+  assert.ok(overwriteBlocked, 'write_file must require confirm_overwrite on existing files');
+  const created = await callTool('write_file', { filePath: 'fresh.txt', content: 'z' }, 'code');
+  assert.ok(created.success);
+  const overwritten = await callTool(
+    'write_file',
+    { filePath: 'fresh.txt', content: 'zz', confirm_overwrite: true },
+    'code'
+  );
+  assert.ok(overwritten.success);
 
   fs.writeFileSync(path.join(tmp, 'old.txt'), 'y');
   const moved = await callTool('rename_file', { from: 'old.txt', to: 'new.txt' }, 'code');
@@ -76,7 +107,7 @@ async function main() {
 
   let escaped = false;
   try {
-    await callTool('delete_file', { filePath: '../outside.txt' }, 'code');
+    await callTool('delete_file', { filePath: '../outside.txt', confirm: true }, 'code');
   } catch (err) {
     escaped = /outside workspace/i.test(err.message);
   }

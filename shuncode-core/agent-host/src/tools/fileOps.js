@@ -4,6 +4,7 @@ const { config } = require('../config');
 const { resolveSafePath, computeHash, toPosixRel } = require('./patchEngine');
 const { isHidden } = require('./sensitive');
 const eventBus = require('../utils/eventBus');
+const { ProtocolError, ExecutionError } = require('../mcp/errors');
 
 function readFiles({ filePath, paths, offset = 1, limit = 400 } = {}) {
   const list = [];
@@ -59,12 +60,18 @@ function readFile({ filePath, offset = 1, limit = 400 }) {
   };
 }
 
-function deleteFile({ filePath }) {
+function deleteFile({ filePath, confirm = false }) {
   if (!filePath) throw new Error('delete_file requires filePath');
   const fullPath = resolveSafePath(filePath);
   const rel = toPosixRel(path.relative(config.workspaceRoot, fullPath));
   if (!rel || rel === '.') {
     throw new Error('Refusing to delete the workspace root.');
+  }
+  if (!confirm) {
+    throw new ProtocolError(
+      'E_BAD_ARGS',
+      `Delete blocked for ${filePath}: pass confirm=true after listing the path.`
+    );
   }
   if (!fs.existsSync(fullPath)) {
     throw new Error(`File not found: "${filePath}"`);
@@ -99,8 +106,25 @@ function renameFile({ from, to, filePath, dest }) {
   return { success: true, from: fromOut, to: toOut };
 }
 
-function writeFile({ filePath, content }) {
+function writeFile({ filePath, content, expectedHash, confirmOverwrite = false, confirm_overwrite = false }) {
   const fullPath = resolveSafePath(filePath);
+  const exists = fs.existsSync(fullPath);
+  const overwriteOk = Boolean(confirmOverwrite || confirm_overwrite);
+  if (exists && !overwriteOk) {
+    throw new ProtocolError(
+      'E_BAD_ARGS',
+      `Overwrite blocked for ${filePath}: pass confirm_overwrite=true after reading the file. Prefer apply_patch for existing files.`
+    );
+  }
+  if (exists && expectedHash) {
+    const current = fs.readFileSync(fullPath, 'utf8');
+    if (computeHash(current) !== expectedHash) {
+      throw new ExecutionError(
+        'E_STALE_FILE',
+        `STALE_FILE ${filePath}: expectedHash ${expectedHash} does not match. Re-read the file.`
+      );
+    }
+  }
   fs.mkdirSync(path.dirname(fullPath), { recursive: true });
   fs.writeFileSync(fullPath, content, 'utf8');
   const hash = computeHash(content);

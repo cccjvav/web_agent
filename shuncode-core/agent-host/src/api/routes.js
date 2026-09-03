@@ -12,7 +12,7 @@ const { loadCustom, patchCustom } = require('../models/customizations');
 const { detectEnvironment, detectTechStack } = require('../models/profile');
 const { listSkills } = require('../tools/skills');
 const eventBus = require('../utils/eventBus');
-const { snapshot: mcpSnapshot } = require('../mcp/session');
+const { snapshot: mcpSnapshot, reset: mcpReset } = require('../mcp/session');
 const { getBootstrapPrompt } = require('../mcp/instructions');
 const { listClients } = require('../mcp/clients');
 const oauth = require('../mcp/oauth');
@@ -119,6 +119,12 @@ router.post('/bridge/stop', (req, res) => {
   config.bridgeRunning = false;
   eventBus.broadcast('bridge_stopped', {});
   res.json({ success: true, running: false });
+});
+
+router.post('/bridge/reset-round', (req, res) => {
+  const mcpSession = mcpReset();
+  eventBus.broadcast('bridge_round_reset', {});
+  res.json({ success: true, mcpSession });
 });
 
 router.post('/consensus/run', async (req, res) => {

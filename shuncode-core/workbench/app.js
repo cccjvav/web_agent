@@ -490,6 +490,20 @@
     $('#stat-avg').textContent = (s.calls ? Math.round(s.totalMs / s.calls) : 0) + ' ms';
   }
 
+  async function resetRound() {
+    try {
+      await fetch('/api/bridge/reset-round', { method: 'POST' });
+    } catch (_) {}
+    state.stats = { calls: 0, fail: 0, totalMs: 0 };
+    paintStats();
+    const log = $('#bridge-log');
+    if (log) log.innerHTML = '';
+    const wait = $('#bridge-wait');
+    if (wait) wait.classList.remove('hidden');
+    await refreshStatus();
+    toast('已清除本轮 MCP 统计');
+  }
+
   function selectedClientInfo() {
     const list = (state.status && state.status.clients) || [];
     return list.find((c) => c.id === state.selectedClient) || list.find((c) => c.id === 'arena') || null;
@@ -958,6 +972,7 @@
       else await startBridge();
     };
     $('#btn-stop-bridge-rb').onclick = stopBridge;
+    if ($('#btn-reset-round')) $('#btn-reset-round').onclick = resetRound;
     $('#btn-copy-url').onclick = async () => {
       await navigator.clipboard.writeText((state.status || {}).mcpUrl || '');
       $('#mcp-banner').classList.remove('hidden');

@@ -45,10 +45,27 @@ async function main() {
   }
   assert.ok(stale, 'expected STALE_FILE');
 
+  let needHash = false;
+  try {
+    await applyPatch({
+      filePath: 'sample.js',
+      patch: `<<<<<<< SEARCH
+  return Number(a) + Number(b);
+=======
+  return a + b;
+>>>>>>> REPLACE`
+    });
+  } catch (err) {
+    needHash = /HASH_REQUIRED/.test(err.message);
+  }
+  assert.ok(needHash, 'expected HASH_REQUIRED when patching an existing file without expectedHash');
+
+  const afterRead = readFile({ filePath: 'sample.js' });
   let conflict = false;
   try {
     await applyPatch({
       filePath: 'sample.js',
+      expectedHash: afterRead.hash,
       patch: `<<<<<<< SEARCH
 not in file
 =======

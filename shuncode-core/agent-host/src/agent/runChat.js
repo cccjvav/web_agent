@@ -323,7 +323,7 @@ async function runBuiltin(payload, emit) {
 
   const write = extractWriteIntent(message);
   if (write) {
-    await timedTool(emit, 'code', 'write_file', write);
+    await timedTool(emit, 'code', 'write_file', { ...write, confirm_overwrite: true });
   }
 
   const patch = extractPatch(message);

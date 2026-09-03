@@ -124,6 +124,7 @@ async function main() {
     assert.ok(page.raw.includes('无需 Plus') || page.raw.includes('不需要 Plus'));
     assert.ok(page.raw.includes('打开 DeepSeek'));
     assert.ok(page.raw.includes('data-site="deepseek"'));
+    assert.ok(page.raw.includes('清除本轮统计'));
 
     const status = await request('GET', `http://127.0.0.1:${mcpPort}/api/status`);
     assert.strictEqual(status.status, 200);
@@ -187,6 +188,12 @@ async function main() {
     assert.strictEqual(ping.status, 200);
     assert.strictEqual(ping.json.result.isError, false);
     assert.ok(ping.json.result.content[0].text.includes('"ok": true') || ping.json.result.content[0].text.includes('"ok":true'));
+
+    const resetRound = await request('POST', `http://127.0.0.1:${mcpPort}/api/bridge/reset-round`, {});
+    assert.strictEqual(resetRound.status, 200);
+    assert.strictEqual(resetRound.json.success, true);
+    assert.ok(resetRound.json.mcpSession);
+    assert.strictEqual(resetRound.json.mcpSession.clients, 0);
 
     log += 'httpSmoke finished\n';
     console.log('http smoke tests passed');
