@@ -38,25 +38,27 @@
     - 行为：L3 `super(message)`；L4–L7 设 `name='ProtocolError'`、`layer='protocol'`、`code`、`detail || {}`。
   - **Class `ExecutionError`（L11–L19）**
     - 与上相同，但 L14–L15 `name='ExecutionError'`、`layer='execution'`。
-  - **Function `classifyToolError(err)`（L21–L34）**
+  - **Function `classifyToolError(err)`（L21–L36）**
     - 输入：任意 thrown 值。返回：已分类的 Error。
     - L22：已经是上述两类 → 原样返回。
     - L23：取出 `err.message`，否则把 `err` 转字符串。
-    - L24–L33：**按顺序第一次命中即返回**（后面的正则不会再跑）：
+    - L24–L35：**按顺序第一次命中即返回**（后面的正则不会再跑）：
       - L24 `Unknown tool` → `E_UNKNOWN_CMD`（协议）
       - L25 `locked in` 或 `Ask/Plan are read-only` → `E_BAD_ARGS`
       - L26 `requires ` 或 `required` → `E_BAD_ARGS`
-      - L27 `STALE_FILE` → `E_STALE_FILE`（执行）
-      - L28 `Patch conflict` → `E_CONFLICT`
-      - L29 `not found` / `No such file` → `E_NOT_FOUND`
-      - L30 `timeout` / `isTimeout` → `E_TIMEOUT`
-      - L31 `ACCESS_DENIED_SENSITIVE_FILE` / `E_FORBIDDEN` → `E_FORBIDDEN`
-      - L32 `confirm_dangerous` → `E_BAD_ARGS`（协议）
-      - L33 其它 → `E_INTERNAL`（执行）
-  - **Function `publicError(err)`（L36–L44）**
-    - 返回 `{ layer, code, msg, detail }`，给 MCP 正文或 JSON-RPC `data`。
+      - L27 `HASH_REQUIRED` → `E_BAD_ARGS`（协议；`apply_patch` 没 hash 时已是 `ProtocolError`，这条兜底裸 Error）
+      - L28 `STALE_FILE` → `E_STALE_FILE`（执行）
+      - L29 `Patch conflict` → `E_CONFLICT`
+      - L30 `GIT_UNAVAILABLE` 或 `not a git repository` → `E_NOT_READY`（执行；现行 `git_status`/`git_diff` 多数情况已收成 `available:false`，不会走到这里）
+      - L31 `not found` / `No such file` → `E_NOT_FOUND`
+      - L32 `timeout` / `isTimeout` → `E_TIMEOUT`
+      - L33 `ACCESS_DENIED_SENSITIVE_FILE` / `E_FORBIDDEN` → `E_FORBIDDEN`
+      - L34 `confirm_dangerous` / `confirm_overwrite` / `confirm=true` → `E_BAD_ARGS`（协议）
+      - L35 其它 → `E_INTERNAL`（执行）
+  - **Function `publicError(err)`（L38–L46）**
+    - 返回 `{ layer, code, msg, detail }`，给 MCP 正文或 JSON-RPC `data`。`detail` 常含 `currentHash` / `retryHint`。
 
-- **关键变量/常量：** 无模块级配置。导出见 L46。
+- **关键变量/常量：** 无模块级配置。导出见 L48。
 
 ---
 
@@ -80,8 +82,9 @@
     - 无输入。L30 按 `lastSeen` 字符串降序。
     - L31–L32：最新一条的年龄毫秒；没有 latest 则 `ageMs=null`。
     - L33–L40：`staleAfterMs` 写死 10000；`alive` 当 latest 存在且年龄 &lt; 10s；`sessions` 最多 8 条。
+  - **Function `reset()`（L43–L46）** — `sessions.clear()` 后返回 `snapshot()`。被 `POST /api/bridge/reset-round` 调用。
 
-- **关键变量：** L1 `sessions = new Map()`，整个进程一份。
+- **关键变量：** L1 `sessions = new Map()`，整个进程一份。导出 L48：`touch` / `snapshot` / `sessionKey` / `reset`。
 
 ---
 
@@ -119,16 +122,16 @@
   - **Function `getBootstrapPrompt(mcpUrl)`（L8–L10）**
     - 输入：`mcpUrl` 字符串（可空）。
     - 返回：URL + 空行 + `CONNECT_LINE`。Arena 等 paste-url 客户端当第一句。
-  - **Function `getInstructions()`（L56–L62）**
-    - 无参数。L57 `loadCustom()`。
-    - L59：若 `custom.instructions` 真值，追加 `## Workspace instructions`。
-    - L60：追加 `formatWorkspaceContext`（环境/技术栈/skills）。
-    - L61：追加工作区根路径。
-    - L62：`SERVER_INSTRUCTIONS.trim()` 与 extra 用 `\n\n` 拼接。
+  - **Function `getInstructions()`（L57–L64）**
+    - 无参数。L58 `loadCustom()`。
+    - L60：若 `custom.instructions` 真值，追加 `## Workspace instructions`。
+    - L61：追加 `formatWorkspaceContext`（环境/技术栈/skills）。
+    - L62：追加工作区根路径。
+    - L63：`SERVER_INSTRUCTIONS.trim()` 与 extra 用 `\n\n` 拼接。
 
 - **关键变量/常量：**
   - L6 `CONNECT_LINE`：固定一句中文（测试锁原文，改一字会红）。
-  - L12–L54 `SERVER_INSTRUCTIONS`：Ask/Plan 只读、Code 可写、工作流 1–7、输出预算、错误分层、安全、memory。这是 `initialize.instructions` 的主体。
+  - L12–L55 `SERVER_INSTRUCTIONS`：Ask/Plan 只读、Code 可写、工作流 1–7（含 git `available:false`、读后可省略 `expectedHash`、HASH_REQUIRED 带 `currentHash`）、输出预算、`tools/call` 失败是 MCP `isError` 文本（不是传输崩溃）、别名 `bash`/`cat`/`path`、安全（`confirm_dangerous` / `confirm_overwrite` / `confirm=true`）、memory。这是 `initialize.instructions` 的主体。模板字符串里**不能**写 `{layer,code,msg,detail}` 这种花括号，会当成 JS 插值炸掉。
 
 ---
 
@@ -179,7 +182,7 @@
     - 输入：字符串 URI。未知 → L110–L111 返回 `null`（由 `server.js` 转成 `E_NOT_FOUND`）。
     - L32–L33 `shuncode://instructions`：`getInstructions()`。
     - L34–L39 `profile`：`formatWorkspaceContext(loadCustom(), listSkills())`。
-    - L40–L57 `protocol`：写死的传输/错误/心跳/补丁要点（markdown 数组 join）。
+    - L38–L58 `protocol`：写死的传输/错误/心跳/补丁要点（markdown 数组 join）。含：`tools/call` 失败是 `isError: true`；JSON-RPC `error` 只给坏 jsonrpc / 未知 method / 缺 `params.name`；`git_status` 在普通文件夹返回 `available:false`；`apply_patch` 复用上次 `read_files` 的 sha256；`path`/`bash`/`cat`/`grep`/`ls` 别名。
     - L58–L65 `capabilities`：`getToolList()` 拼 `tools N` + 每行 name/description。
     - L66–L80 `config`：server/version/workspace/`bridgeRunning`/tunnel/`installId`/客户端数；L78 **明文 `secret omitted`，不输出密钥**。
     - L81–L93 `workspace`：root、用户 instructions、任务状态、最近 5 条 event 的 type。
@@ -292,41 +295,41 @@
     - L64：否则普通 JSON。
   - **Function `builtinPrompts()`（L67–L75）** — 仅一项 `name:'connect'`。
   - **Function `promptsFromCustom()`（L77–L85）** — 内置 + `custom.prompts`（description 截 120 字）。
-  - **Function `pickProtocol(params)`（L87–L91）** — 客户端要的版本在支持列表里就用，否则 `'2025-03-26'`。
-  - **Function `handleRpc(req)`（L93–L218）** — 见下方 method 分支。
-  - **Function `hostStatus()`（L220–L233）** — GET 非 SSE 的主机摘要（含完整 instructions、transports、auth 三种）。
-  - **Function `handlePost(req, res)`（L235–L260）**
-    - L237–L243：`jsonrpc !== '2.0'` → 400、RPC `-32600`。
-    - L245–L250：`handleRpc`；method 以 `notifications/` 开头 → **HTTP 204 无 body**。
-    - L251–L259：catch：`E_UNKNOWN_CMD` → HTTP 404 且 rpc `-32601`；其它协议 `-32602`；否则 `-32603` 或 `err.rpcCode`。
-  - **Function `handleGet(req, res)`（L262–L276）**
-    - L263–L273：SSE → 先写 `event: endpoint` `data: /mcp`，每 15s `: ping`，close 清 interval。
-    - L275：否则 `hostStatus()` JSON。
+  - **Function `pickProtocol(params)`（L86–L90）** — 客户端要的版本在支持列表里就用，否则 `'2025-03-26'`。
+  - **Function `handleRpc(req)`（L92–L203）** — 见下方 method 分支。
+  - **Function `hostStatus()`（L205–L218）** — GET 非 SSE 的主机摘要（含完整 instructions、transports、auth 三种）。
+  - **Function `handlePost(req, res)`（L220–L246）**
+    - L222–L228：`jsonrpc !== '2.0'` → 400、RPC `-32600`。
+    - L230–L235：`handleRpc`；method 以 `notifications/` 开头 → **HTTP 204 无 body**。
+    - L236–L245：catch：`E_UNKNOWN_CMD` → HTTP 404 且 rpc `-32601`；其它协议 `-32602`；否则 `-32603` 或 `err.rpcCode`。**工具失败不会进这里**：`tools/call` 自己 `return { isError:true }`。
+  - **Function `handleGet(req, res)`（L248–L261）**
+    - L249–L258：SSE → 先写 `event: endpoint` `data: /mcp`，每 15s `: ping`，close 清 interval。
+    - L260：否则 `hostStatus()` JSON。
 
   **`handleRpc` 的 method 分支：**
 
   | 行 | method | 做什么 |
   |---|---|---|
-  | L96–L113 | `initialize` | L97 默认 client 名 `External-Agent`；L98 `touch`；L99 broadcast `agent_connected`；返回 protocol、capabilities、serverInfo、**`instructions: getInstructions()`** |
-  | L115–L118 | `notifications/initialized`、`notifications/cancelled`、`logging/setLevel` | 返回 `{}` |
-  | L120–L129 | `ping` | `touch incCall`，busy 写死 `false` |
-  | L131–L133 | `tools/list` | `getToolList()` **不传 mode**（列表含 Code-only 工具） |
-  | L135–L170 | `tools/call` | 见下 |
-  | L172–L173 | `resources/list` | `listResources()` |
-  | L175–L180 | `resources/read` | 未知 uri 抛 `E_NOT_FOUND` |
-  | L182–L183 | `prompts/list` | `promptsFromCustom()` |
-  | L185–L213 | `prompts/get` | `connect` 走 bootstrap；否则 custom.prompts；没有抛 `E_NOT_FOUND` |
-  | L215–L216 | default | `E_UNKNOWN_CMD` |
+  | L95–L110 | `initialize` | L96 默认 client 名 `External-Agent`；L97 `touch`；L98 broadcast `agent_connected`；返回 protocol、capabilities、serverInfo、**`instructions: getInstructions()`** |
+  | L112–L115 | `notifications/initialized`、`notifications/cancelled`、`logging/setLevel` | 返回 `{}` |
+  | L117–L126 | `ping` | `touch incCall`，busy 写死 `false` |
+  | L128–L130 | `tools/list` | `getToolList()` **不传 mode**（列表含 Code-only 工具） |
+  | L132–L158 | `tools/call` | 见下 |
+  | L160–L161 | `resources/list` | `listResources()` |
+  | L163–L168 | `resources/read` | 未知 uri 抛 `E_NOT_FOUND` |
+  | L170–L171 | `prompts/list` | `promptsFromCustom()` |
+  | L173–L198 | `prompts/get` | `connect` 走 bootstrap；否则 custom.prompts；没有抛 `E_NOT_FOUND` |
+  | L200–L201 | default | `E_UNKNOWN_CMD`（未知 **method**，仍是 JSON-RPC error） |
 
-  **`tools/call` 细节（L135–L170）：**
-  - L137：无 `name` → 抛 `E_BAD_ARGS`。
-  - L138：broadcast `tool_call_start`，source `'Bridge-Remote'`。
-  - L141：**`callTool(name, toolArgs || {})` 不传第三参 mode** → `../tools` 里模式锁不生效。
-  - L142：再 `clipJson`。
-  - L147–L151：成功 → MCP `content[{type:text}]`，`isError:false`。
-  - L152–L169：`catch` → `publicError`；协议层包装 `rpcCode=-32602` 再 throw；执行层返回 `isError:true` 文本。
+  **`tools/call` 细节（L132–L158）：**
+  - L134：无 `name` → 抛 `E_BAD_ARGS`（这才会变成 JSON-RPC error）。
+  - L135：broadcast `tool_call_start`，source `'Bridge-Remote'`。
+  - L138：**`callTool(name, toolArgs || {})` 不传第三参 mode** → `../tools` 里模式锁不生效。
+  - L139：再 `clipJson`。
+  - L144–L147：成功 → MCP `content[{type:text}]`，`isError:false`。
+  - L148–L156：`catch` → `publicError`；`incFail`；**始终** `return { content:[{type:text, text: JSON.stringify(info)}], isError:true }`。未知工具名、HASH_REQUIRED、STALE_FILE 都走这条，网页 Agent 把它当工具结果而不是传输崩溃。
 
-- **路由（L278–L281）：** `GET/POST /` 与 `GET/POST /:secret` 均 `requireAuth` 后进 handleGet/handlePost。挂到 app 上后即 `/mcp` 与 `/mcp/:secret`。
+- **路由（L263–L266）：** `GET/POST /` 与 `GET/POST /:secret` 均 `requireAuth` 后进 handleGet/handlePost。挂到 app 上后即 `/mcp` 与 `/mcp/:secret`。
 
 - **关键变量：** L14 `router`；L15 `SUPPORTED_PROTOCOL = ['2024-11-05','2025-03-26','2025-06-18']`。
 
@@ -339,18 +342,18 @@
 1. **OAuth 发现 / 配对（匿名，不进 `server.js`）**  
    客户端 GET `oauth.js` 的 `/.well-known/…`（L313–L321）拿元数据 → POST `/oauth/register`（L325–L333）拿到 `client_id` → 浏览器 GET `/oauth/authorize`（L335–L339，`ensurePairing`）看到配对页 HTML → 用户填工作台配对码 → POST `completeAuthorize`（L341–L349）→ 302 带回一次性 code → POST `/oauth/token` + PKCE（L351–L356）得到 Bearer。
 
-2. **MCP 请求进 `server.js` 路由（L278–L281）**  
+2. **MCP 请求进 `server.js` 路由（L263–L266）**  
    `requireAuth` → `extractToken`（路径密钥 / Bearer / 头 / query）→ `oauth.verifyAccessToken`（L166 认 URL 密钥，或认 access token）。失败则 401 + `WWW-Authenticate`。
 
 3. **GET**  
-   - `Accept: text/event-stream` → SSE 通道（L262–L273）。  
+   - `Accept: text/event-stream` → SSE 通道（L248–L258）。  
    - 否则 `hostStatus()`，其中 `instructions` 来自 `instructions.js`。
 
 4. **POST JSON-RPC**  
    `handlePost` 校验 `jsonrpc==='2.0'` → `handleRpc`：
    - `initialize`：`session.touch` + `instructions.getInstructions()`（读 customizations / profile / skills）。
    - `tools/list`：出本目录，调 `../tools.getToolList()`。
-   - `tools/call`：出本目录，调 `../tools.callTool`（真正改盘）；回来用 `budget.clipJson` / `clipText`；失败用 `errors.publicError` 分层；全程 `eventBus.broadcast`（目录外）给工作台。
+   - `tools/call`：出本目录，调 `../tools.callTool`（真正改盘）；回来用 `budget.clipJson` / `clipText`；**工具失败回 MCP `isError:true` 文本**（`publicError` 的 layer/code/msg/detail），不升级成 JSON-RPC `error`；全程 `eventBus.broadcast`（目录外）给工作台。
    - `resources/*`：留在 `resources.js`（只读说明书 / 状态，不写盘）。
    - `prompts/*`：`instructions` + `customizations`。
    - `notifications/*`：空对象，HTTP 204。

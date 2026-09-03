@@ -45,20 +45,34 @@ async function main() {
   }
   assert.ok(stale, 'expected STALE_FILE');
 
-  let needHash = false;
-  try {
-    await applyPatch({
-      filePath: 'sample.js',
-      patch: `<<<<<<< SEARCH
+  const fromCache = await applyPatch({
+    filePath: 'sample.js',
+    patch: `<<<<<<< SEARCH
   return Number(a) + Number(b);
 =======
-  return a + b;
+  return a - b;
+>>>>>>> REPLACE`
+  });
+  assert.strictEqual(fromCache.success, true, 'apply_patch without expectedHash should reuse last-read/patched hash');
+
+  fs.writeFileSync(path.join(tmp, 'orphan.js'), 'module.exports = 1;\n', 'utf8');
+  let needHash = false;
+  let hashDetail = null;
+  try {
+    await applyPatch({
+      filePath: 'orphan.js',
+      patch: `<<<<<<< SEARCH
+module.exports = 1;
+=======
+module.exports = 2;
 >>>>>>> REPLACE`
     });
   } catch (err) {
     needHash = /HASH_REQUIRED/.test(err.message);
+    hashDetail = err.detail && err.detail.currentHash;
   }
-  assert.ok(needHash, 'expected HASH_REQUIRED when patching an existing file without expectedHash');
+  assert.ok(needHash, 'expected HASH_REQUIRED when the file was never read');
+  assert.ok(hashDetail, 'HASH_REQUIRED should include currentHash in detail');
 
   const afterRead = readFile({ filePath: 'sample.js' });
   let conflict = false;
@@ -77,7 +91,7 @@ x
   }
   assert.ok(conflict);
 
-  const grep = grepSearch({ query: 'Number', searchPath: '.' });
+  const grep = grepSearch({ query: 'function add', searchPath: '.' });
   assert.ok(grep.totalMatches >= 1);
 
   fs.rmSync(tmp, { recursive: true, force: true });

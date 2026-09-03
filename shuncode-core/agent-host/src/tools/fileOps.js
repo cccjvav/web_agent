@@ -5,6 +5,7 @@ const { resolveSafePath, computeHash, toPosixRel } = require('./patchEngine');
 const { isHidden } = require('./sensitive');
 const eventBus = require('../utils/eventBus');
 const { ProtocolError, ExecutionError } = require('../mcp/errors');
+const { rememberHash, recalledHash, forgetHash } = require('./readCache');
 
 function readFiles({ filePath, paths, offset = 1, limit = 400 } = {}) {
   const list = [];
@@ -49,6 +50,7 @@ function readFile({ filePath, offset = 1, limit = 400 }) {
     .join('\n');
 
   eventBus.broadcast('file_read', { filePath, totalLines: allLines.length, offset, limit, hash });
+  rememberHash(filePath, hash);
 
   return {
     filePath,
@@ -70,7 +72,8 @@ function deleteFile({ filePath, confirm = false }) {
   if (!confirm) {
     throw new ProtocolError(
       'E_BAD_ARGS',
-      `Delete blocked for ${filePath}: pass confirm=true after listing the path.`
+      `Delete blocked for ${filePath}: pass confirm=true after listing the path.`,
+      { filePath, retryHint: `Retry delete_file with { filePath: ${JSON.stringify(filePath)}, confirm: true }` }
     );
   }
   if (!fs.existsSync(fullPath)) {
@@ -87,6 +90,8 @@ function deleteFile({ filePath, confirm = false }) {
     fs.unlinkSync(fullPath);
   }
   eventBus.broadcast('file_deleted', { filePath: rel });
+  forgetHash(rel);
+  forgetHash(filePath);
   return { success: true, filePath: rel, type: stat.isDirectory() ? 'directory' : 'file' };
 }
 
@@ -109,19 +114,30 @@ function renameFile({ from, to, filePath, dest }) {
 function writeFile({ filePath, content, expectedHash, confirmOverwrite = false, confirm_overwrite = false }) {
   const fullPath = resolveSafePath(filePath);
   const exists = fs.existsSync(fullPath);
-  const overwriteOk = Boolean(confirmOverwrite || confirm_overwrite);
-  if (exists && !overwriteOk) {
-    throw new ProtocolError(
-      'E_BAD_ARGS',
-      `Overwrite blocked for ${filePath}: pass confirm_overwrite=true after reading the file. Prefer apply_patch for existing files.`
-    );
-  }
-  if (exists && expectedHash) {
+  let overwriteOk = Boolean(confirmOverwrite || confirm_overwrite);
+  let currentHash = null;
+  if (exists) {
     const current = fs.readFileSync(fullPath, 'utf8');
-    if (computeHash(current) !== expectedHash) {
+    currentHash = computeHash(current);
+    const remembered = recalledHash(filePath);
+    if (!overwriteOk && expectedHash && expectedHash === currentHash) overwriteOk = true;
+    if (!overwriteOk && remembered && remembered === currentHash) overwriteOk = true;
+    if (!overwriteOk) {
+      throw new ProtocolError(
+        'E_BAD_ARGS',
+        `Overwrite blocked for ${filePath}: pass confirm_overwrite=true after reading the file. Prefer apply_patch for existing files.`,
+        {
+          filePath,
+          currentHash,
+          retryHint: `Retry write_file with confirm_overwrite=true, or apply_patch with expectedHash=${currentHash}`
+        }
+      );
+    }
+    if (expectedHash && expectedHash !== currentHash) {
       throw new ExecutionError(
         'E_STALE_FILE',
-        `STALE_FILE ${filePath}: expectedHash ${expectedHash} does not match. Re-read the file.`
+        `STALE_FILE ${filePath}: expectedHash ${expectedHash} does not match. Re-read the file.`,
+        { filePath, currentHash, retryHint: `Re-run read_files then retry. currentHash=${currentHash}` }
       );
     }
   }
@@ -130,6 +146,7 @@ function writeFile({ filePath, content, expectedHash, confirmOverwrite = false, 
   const hash = computeHash(content);
 
   eventBus.broadcast('file_written', { filePath, hash, size: content.length });
+  rememberHash(filePath, hash);
 
   return {
     success: true,

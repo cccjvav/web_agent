@@ -47,11 +47,13 @@ function readResource(uri) {
           '- resources: shuncode://protocol|capabilities|config|workspace|memory|profile|clients',
           '- prompts: workspace customizations',
           '- Tool results are clipped (~4k tokens). Use offset/limit/cursor.',
-          '- Protocol errors are JSON-RPC `error`; execution failures are `isError: true` with `{code,msg}`.',
+          '- tools/call failures (wrong args, HASH_REQUIRED, confirm, missing files) are MCP `isError: true` with `{layer,code,msg,detail}`. Retry using detail.retryHint / detail.currentHash.',
+          '- JSON-RPC `error` is for bad jsonrpc / unknown method / missing tools/call name, not for a failed tool.',
           '- Heartbeat: call ping; host treats 10s silence as a stale client.',
           '- Long commands: start_command → poll get_command_output(execId) using suggestedWaitMs.',
-          '- git_status / git_diff are read-only. delete_file / rename_file stay inside the workspace.',
-          '- apply_patch needs expectedHash from the last read_files hash.'
+          '- git_status / git_diff are read-only. Plain folders return available:false instead of throwing.',
+          '- apply_patch reuses the last read_files sha256 for that path; otherwise pass expectedHash. HASH_REQUIRED includes currentHash.',
+          '- Argument aliases: path/file_path → filePath; cmd → command; bash/cat/grep/ls map to run_command/read_files/search_files/list_directory.'
         ].join('\n')
       };
     case 'shuncode://capabilities': {

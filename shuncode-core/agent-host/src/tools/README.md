@@ -8,7 +8,7 @@
 
 ## 1. 模块概述
 
-- **定位：** 工具注册表 + 路径沙箱 + 补丁 / 读写 / grep / git / 命令执行 / 进度 / Plan 博弈文案。
+- **定位：** 工具注册表 + 路径沙箱 + 补丁 / 读写 / grep / git / 命令执行 / 进度 / Plan 博弈文案。`normalize.js` 把网页 Agent 的别名收成正式名；`readCache.js` 记住最近一次读/写的 sha256，让 `apply_patch` 可以不带 `expectedHash`。
 - **依赖的兄弟模块：**
   - `../config`：工作区根。
   - `../utils/eventBus`、`../utils/diff`：广播与 unified diff。
@@ -25,52 +25,55 @@
 - **文件职责：** 登记约 25 个工具名，做模式锁和危险命令闸，然后把调用派到本目录其它文件。
 - **核心类/函数清单：**
 
-  - **Function `tool(def)`（L16–L18）** — 输入工具定义对象，原样返回（无变换）。
-  - **Function `pingHost()`（L20–L22）** — 无参。返回 `{ ok, ts, ...snapshot() }`。
-  - **Function `getLogs({ maxLines=50 })`（L24–L27）** — `maxLines` clamp 到 1–200；返回 `{ logs, count }`。
-  - **Function `getCapabilities()`（L29–L34）** — 工具名+描述 + session snapshot。
-  - **Function `getTaskStatus()`（L36–L44）** — 展开 `getTaskState()`；`status==='in_progress'` 时 `suggestedWaitMs=2000`，`etaSeconds = max(1, round((100-progress)/10))`，否则两者为 0。
-  - **Const `TOOLS`（L48–L386）** — 每项含 `name` / `aliases` / `description` / `mode` / `inputSchema` / `handler`。名称行号：
+  - **Function `tool(def)`（L17–L19）** — 输入工具定义对象，原样返回（无变换）。
+  - **Function `pingHost()`（L21–L23）** — 无参。返回 `{ ok, ts, ...snapshot() }`。
+  - **Function `getLogs({ maxLines=50 })`（L25–L28）** — `maxLines` clamp 到 1–200；返回 `{ logs, count }`。
+  - **Function `getCapabilities()`（L30–L35）** — 工具名+描述 + session snapshot。
+  - **Function `getTaskStatus()`（L37–L45）** — 展开 `getTaskState()`；`status==='in_progress'` 时 `suggestedWaitMs=2000`，`etaSeconds = max(1, round((100-progress)/10))`，否则两者为 0。
+  - **Const `TOOLS`（L50–L394）** — 每项含 `name` / `aliases` / `description` / `mode` / `inputSchema` / `handler`。名称行号（`name:` 所在行）：
 
     | 行 | name | mode | handler |
     |---|---|---|---|
-    | L50 | ping | ask,plan,code | pingHost |
-    | L58 | workspace_info | 同上 | workspaceInfo |
-    | L66 | get_capabilities | 同上 | getCapabilities |
-    | L74 | get_logs | 同上 | getLogs |
-    | L85 | get_task_status | 同上 | getTaskStatus |
-    | L93 | remember | 同上 | remember |
-    | L105 | recall | 同上 | recall |
-    | L116 | list_directory（alias list_dir） | 同上 | listDir |
-    | L131 | find_files | 同上 | findFiles |
-    | L146 | search_files（alias grep_search） | 同上 | grepSearch |
-    | L165 | read_files（alias read_file） | 同上 | readFiles |
-    | L181 | git_status | 同上 | gitStatus |
-    | L189 | git_diff | 同上 | gitDiff |
-    | L204 | load_skill | 同上 | loadSkill |
-    | L215 | apply_patch | **code** | applyPatch |
-    | L232 | write_file | **code** | writeFile |
-    | L247 | delete_file | **code** | deleteFile |
-    | L259 | rename_file（alias move_file） | **code** | renameFile |
-    | L274 | run_command（alias execute_command） | **code** | executeCommand |
-    | L291 | start_command | **code** | startCommand |
-    | L308 | get_command_output | ask,plan,code | getCommandOutput |
-    | L323 | cancel_command | **code** | cancelCommand |
-    | L335 | wait | ask,plan,code | wait |
-    | L346 | report_progress | **plan,code** | reportProgress |
-    | L362 | set_todos | ask,plan,code | setTodos |
+    | L52 | ping | ask,plan,code | pingHost |
+    | L60 | workspace_info | 同上 | workspaceInfo |
+    | L68 | get_capabilities | 同上 | getCapabilities |
+    | L76 | get_logs | 同上 | getLogs |
+    | L87 | get_task_status | 同上 | getTaskStatus |
+    | L95 | remember | 同上 | remember |
+    | L107 | recall | 同上 | recall |
+    | L118 | list_directory（alias list_dir） | 同上 | listDir |
+    | L133 | find_files | 同上 | findFiles |
+    | L148 | search_files（alias grep_search） | 同上 | grepSearch |
+    | L167 | read_files（alias read_file） | 同上 | readFiles |
+    | L183 | git_status | 同上 | gitStatus |
+    | L191 | git_diff | 同上 | gitDiff |
+    | L206 | load_skill | 同上 | loadSkill |
+    | L217 | apply_patch | **code** | applyPatch |
+    | L234 | write_file | **code** | writeFile |
+    | L254 | delete_file | **code** | deleteFile |
+    | L269 | rename_file（alias move_file） | **code** | renameFile |
+    | L284 | run_command（alias execute_command） | **code** | executeCommand |
+    | L301 | start_command | **code** | startCommand |
+    | L318 | get_command_output | ask,plan,code | getCommandOutput |
+    | L333 | cancel_command | **code** | cancelCommand |
+    | L345 | wait | ask,plan,code | wait |
+    | L356 | report_progress | **plan,code** | reportProgress |
+    | L372 | set_todos | ask,plan,code | setTodos |
 
-  - **L388–L394** — 把 name 与 aliases 写入 `toolRegistry` Map。
-  - **Function `getToolList(currentMode=null)`（L396–L400）** — mode 假则全部；真则 `t.mode.includes(currentMode)`。映射为 `{ name, description, inputSchema }`（不含 handler）。
-  - **Function `callTool(name, args={}, currentMode=null)`（L402–L430）**
-    - L403–L405：未知名 → `ProtocolError E_UNKNOWN_CMD`。
-    - L406–L411：`currentMode` 真且不在该工具 mode 列表 → `E_BAD_ARGS`（Ask/Plan 只读文案）。**`currentMode` 为 null 时跳过。**
-    - L413–L420：工具名为 `run_command` 或 `start_command` 且命令匹配 `DANGEROUS_RE` 且无 `confirm_dangerous` → `E_BAD_ARGS`。
-    - L421：`await handler(input)`。
-    - L422–L425：`result.isTimeout` 则打 `E_TIMEOUT`、`suggestedWaitMs=0`。
-    - L426：`clipJson(result)` 后返回。
+  - **L396–L402** — 把 name 与 aliases 写入 `toolRegistry` Map。
+  - **Function `getToolList(currentMode=null)`（L406–L410）** — mode 假则全部；真则 `t.mode.includes(currentMode)`。映射为 `{ name, description, inputSchema }`（不含 handler）。
+  - **Function `callTool(name, args={}, currentMode=null)`（L412–L444）**
+    - L413：`resolveToolName(name)`（`normalize.js`：`bash`→`run_command`、`cat`→`read_files` 等）。
+    - L414：registry 先查 resolved 再查原名。
+    - L415–L421：未知名 → `ProtocolError E_UNKNOWN_CMD`，消息含 Available 列表，`detail.retryHint` 提示可用别名。
+    - L422–L427：`currentMode` 真且不在该工具 mode 列表 → `E_BAD_ARGS`（Ask/Plan 只读文案）。**`currentMode` 为 null 时跳过（远程 MCP）。**
+    - L428：`normalizeToolArgs(toolDef.name, args)`（snake_case、`path`→`filePath`、`"true"`→布尔）。
+    - L429–L437：工具名为 `run_command` 或 `start_command` 且命令匹配 `DANGEROUS_RE` 且无 `confirm_dangerous` → `E_BAD_ARGS` + retryHint。
+    - L438：`await handler(input)`。
+    - L439–L442：`result.isTimeout` 则打 `E_TIMEOUT`、`suggestedWaitMs=0`。
+    - L443：`clipJson(result)` 后返回。
 
-- **关键变量：** L46 `DANGEROUS_RE` 匹配 `rm -rf` / `rm -fr` / `mkfs` / `dd if=` / `shutdown` / `reboot`（i 标志、词边界）。
+- **关键变量：** L47–L48 `DANGEROUS_RE` 匹配 `rm -rf` / `rm -fr` / `mkfs` / `dd if=` / `shutdown` / `reboot` / `git reset --hard` / `git checkout --` / `git clean -f` / `format x:` / `del /s` / `rd /s` / `Remove-Item -Recurse` / `drop database`（i 标志）。
 
 ---
 
@@ -79,22 +82,24 @@
 - **文件职责：** 工作区路径沙箱、sha256、SEARCH/REPLACE（或 unified diff / 整文件覆盖）写盘。
 - **核心类/函数清单：**
 
-  - **Function `computeHash(content)`（L9–L11）** — sha256 hex，utf8。
-  - **Function `toPosixRel(p)`（L13–L15）** — 反斜杠改 `/`。
-  - **Function `resolveSafePath(relPath)`（L17–L28）**
-    - L18–L21：相对 `config.workspaceRoot` 解析。
-    - L22–L24：posix 为 `..`、以 `../` 开头、或 `rel` 绝对路径 → 抛 Security error。
-    - L25：posix 非空且不是 `.` → `assertNotSensitive`。
-    - L26：返回绝对路径。
-  - **Function `parseSearchReplaceBlocks(patchText)`（L30–L41）** — 正则 `<<<<< SEARCH` … `=====` … `>>>>> REPLACE`，收集 `{ search, replace }`。
-  - **Function `applyPatch({ filePath, patch, expectedHash=null, dryRun=false })`（L43–L157）**
-    - L44：`resolveSafePath`。
-    - **文件不存在 L46–L74：** 解析 blocks；若第一块 search trim 为空则用 replace 当新内容，否则整段 `patch`。`dryRun` 只返回成功。否则 mkdir + write；broadcast `file_patched`；返回 `isNewFile` + newHash。
-    - **文件存在 L76–L157：** 读全文算 hash。L80–L86：传了 expectedHash 且既不等于也不当前缀 → 抛 `STALE_FILE`。
-    - L88–L112 有 blocks：统一 `\n`；`includes(search)` 则 replace 第一处；否则 trim 后再试；再失败抛 Patch conflict。
-    - L113–L122 无 blocks：以 `--- ` 开头且含 `@@` → `jsdiff.applyPatch`，`false` 则抛；否则整段覆盖。
-    - L124–L131 `dryRun` 返回 diff 不写盘。
-    - L133–L156：写 `.tmp.${Date.now()}` 再 `renameSync`；broadcast；返回 newHash + diff。
+  - **Function `computeHash(content)`（L11–L13）** — sha256 hex，utf8。
+  - **Function `toPosixRel(p)`（L15–L17）** — 反斜杠改 `/`。
+  - **Function `resolveSafePath(relPath)`（L19–L30）**
+    - L20–L23：相对 `config.workspaceRoot` 解析。
+    - L24–L26：posix 为 `..`、以 `../` 开头、或 `rel` 绝对路径 → 抛 Security error。
+    - L27：posix 非空且不是 `.` → `assertNotSensitive`。
+    - L28：返回绝对路径。
+  - **Function `parseSearchReplaceBlocks(patchText)`（L32–L43）** — 正则 `<<<<< SEARCH` … `=====` … `>>>>> REPLACE`，收集 `{ search, replace }`。
+  - **Function `applyPatch({ filePath, patch, expectedHash=null, dryRun=false })`（L45–L177）**
+    - L46：`resolveSafePath`。
+    - **文件不存在 L48–L81：** 解析 blocks；若第一块 search trim 为空则用 replace 当新内容，否则整段 `patch`。`dryRun` 只返回成功。否则 mkdir + write；broadcast `file_patched`；`rememberHash`；返回 `isNewFile` + newHash。
+    - **文件存在 L83–L176：** 读全文算 `currentHash`。L85–L88：没传 `expectedHash` 则用 `recalledHash(filePath)`（上次 `read_files` / 成功补丁记下的 sha256）。
+    - L90–L100：仍无 hash 且非 `dryRun` → `ProtocolError E_BAD_ARGS`，消息 `HASH_REQUIRED`，`detail.currentHash` + `retryHint`。
+    - L102–L108：传了 expectedHash 且既不等于也不当前缀 → `ExecutionError E_STALE_FILE`，detail 含 currentHash。
+    - L113–L130 有 blocks：统一 `\n`；`includes(search)` 则 replace 第一处；否则 trim 后再试；再失败抛 Patch conflict。
+    - L131–L141 无 blocks：以 `--- ` 开头且含 `@@` → `jsdiff.applyPatch`，`false` 则抛；否则整段覆盖。
+    - L146–L153 `dryRun` 返回 diff 不写盘。
+    - L155–L175：写 `.tmp.${Date.now()}` 再 `renameSync`；`rememberHash`；broadcast；返回 newHash + diff。
 
 ---
 
@@ -112,6 +117,25 @@
   - **Function `grepSearch`（L152–L211）** — 编正则（非 regex 则转义）；非法正则抛。目录递归；文件 try 读，catch 空。分页 `limit` 1–100，`nextCursor` 或 null。
 
 ---
+
+### 📄 文件名：`normalize.js`
+
+- **文件职责：** 网页 Agent 常发的别名参数 / 工具名，收成 handler 认识的字段。只被 `index.js` `callTool` 调用。
+- **核心类/函数清单：**
+  - **Const `TOOL_NAME_ALIASES`（L1–L19）** — `bash|shell|exec|execute`→`run_command`；`str_replace|search_replace|replace_in_file|edit_file`→`apply_patch`；`cat|read`→`read_files`；`ls`→`list_directory`；`grep`→`search_files`；`glob`→`find_files`；`write|create_file`→`write_file`；`rm`→`delete_file`；`mv`→`rename_file`。
+  - **Function `isTruthy(v)`（L21–L25）** — `true` / `1` / 字符串 `true|yes|1`（i）为真。
+  - **Function `firstDefined(obj, keys)`（L27–L32）** — 第一个非 null 且非 `''` 的键。
+  - **Function `resolveToolName(name)`（L34–L41）** — trim；查表（原样与小写）；否则原名。
+  - **Function `normalizeToolArgs(toolName, args)`（L43–L145）** — 浅拷贝；先把 snake_case 填到 camelCase；再按工具名把 `path`/`file`/`cmd`/`pattern` 等收到 `filePath`/`dirPath`/`command`/`query`/`patch`；写/删/危险命令的 confirm 走 `isTruthy`。
+
+### 📄 文件名：`readCache.js`
+
+- **文件职责：** 进程内 `Map`：posix 路径 → 最近一次读/补丁/写入的 sha256。`POST /api/bridge/reset-round` 会 `resetHashes()`。
+- **核心类/函数清单：**
+  - **Function `norm(filePath)`（L3–L5）** — `\\`→`/`，去掉前导 `./`。
+  - **Function `rememberHash(filePath, hash)`（L7–L11）** — 空路径或空 hash 直接 return。
+  - **Function `recalledHash(filePath)`（L13–L15）** — 没有则 `null`。
+  - **Function `forgetHash(filePath)`（L17–L19）** / **`resetHashes()`（L21–L23）** — 删一条 / `Map.clear`。
 
 ### 📄 文件名：`sensitive.js`
 
@@ -152,9 +176,10 @@
 
 ### 📄 文件名：`gitOps.js`
 
-- **Function `git`（L7–L27）** — `spawnSync git -c color.ui=never`，cwd 工作区，timeout 默认 8s。启动失败 `E_INTERNAL`；非 0：匹配 not a git repository → `E_NOT_READY`，否则 `E_INTERNAL` 截 800 字。
-- **Function `gitStatus`（L29–L48）** — porcelain v1 -b；第一行正则取 branch，失败 `'HEAD'`；其余最多 80 条。
-- **Function `gitDiff`（L50–L70）** — staged → `--cached`；stat → `--stat`；有 filePath 则 resolveSafePath 后相对路径。输出 cap：stat 80 行否则 200。
+- **Function `notGitResult(extra={})`（L7–L20）** — `{ ok:true, available:false, git:false, branch:null, dirty:false, files:[], summary:'', truncated:false, hint:… }` 再 spread extra。hint 写明不要擅自 `git init`。
+- **Function `git`（L22–L57）** — `spawnSync git -c color.ui=never`，cwd 工作区，timeout 默认 8s。启动失败：ENOENT/`not found` → `Error` `code='GIT_UNAVAILABLE'`，其它 `E_INTERNAL`。非 0：status 127 / not a git repository / command not found → `GIT_UNAVAILABLE`；否则 `E_INTERNAL` 截 800 字。
+- **Function `gitStatus`（L59–L88）** — try porcelain v1 -b；成功 `{ ok, available:true, git:true, branch, dirty, summary, files≤80, truncated }`。catch 仅 `GIT_UNAVAILABLE` → `notGitResult()`，其它再抛。
+- **Function `gitDiff`（L90–L118）** — staged → `--cached`；stat → `--stat`；有 filePath 则 resolveSafePath 后相对路径。输出 cap：stat 80 行否则 200。同样把 `GIT_UNAVAILABLE` 收成 `notGitResult`。
 
 ---
 
@@ -198,9 +223,10 @@
 
 ## 3. 执行逻辑流
 
-1. 调用方 `callTool(name, args, mode?)`（`index.js` L402）。
-2. 查 registry → 可选模式锁 → 可选危险命令闸。
-3. handler 进入具体文件：读走 `fileOps`/`findFiles`/`gitOps`/`skills`/`workspaceInfo`/`memory`；写走 `patchEngine`/`fileOps.writeFile`；命令走 `executor`。
+1. 调用方 `callTool(name, args, mode?)`（`index.js` L412）。
+2. `resolveToolName` → 查 registry → 可选模式锁 → `normalizeToolArgs` → 可选危险命令闸。
+3. handler 进入具体文件：读走 `fileOps`/`findFiles`/`gitOps`/`skills`/`workspaceInfo`/`memory`；写走 `patchEngine`/`fileOps.writeFile`；命令走 `executor`。读/补丁成功会 `rememberHash`。
 4. 所有写路径先 `resolveSafePath` → `assertNotSensitive`。
 5. 结果经 `clipJson` 返回；副作用经 `eventBus.broadcast` 到工作台。
 6. 远程 MCP 不传 mode，锁不生效；本机 Chat 传 ask/plan/code。
+7. 不是 git 仓库时 `git_status`/`git_diff` 返回 `available:false`，不抛。

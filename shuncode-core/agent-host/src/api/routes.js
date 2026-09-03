@@ -13,6 +13,7 @@ const { detectEnvironment, detectTechStack } = require('../models/profile');
 const { listSkills } = require('../tools/skills');
 const eventBus = require('../utils/eventBus');
 const { snapshot: mcpSnapshot, reset: mcpReset } = require('../mcp/session');
+const { resetHashes } = require('../tools/readCache');
 const { getBootstrapPrompt } = require('../mcp/instructions');
 const { listClients } = require('../mcp/clients');
 const oauth = require('../mcp/oauth');
@@ -123,6 +124,7 @@ router.post('/bridge/stop', (req, res) => {
 
 router.post('/bridge/reset-round', (req, res) => {
   const mcpSession = mcpReset();
+  resetHashes();
   eventBus.broadcast('bridge_round_reset', {});
   res.json({ success: true, mcpSession });
 });

@@ -12,6 +12,7 @@ const { clipJson } = require('../mcp/budget');
 const { gitStatus, gitDiff } = require('./gitOps');
 const { loadSkill } = require('./skills');
 const { workspaceInfo } = require('./workspaceInfo');
+const { resolveToolName, normalizeToolArgs } = require('./normalize');
 
 function tool(def) {
   return def;
@@ -215,7 +216,7 @@ const TOOLS = [
   tool({
     name: 'apply_patch',
     aliases: [],
-    description: 'Atomic SEARCH/REPLACE patch. Existing files require expectedHash from the last read_files (HASH_REQUIRED otherwise). New files may omit it. dryRun may omit the hash. STALE_FILE means re-read. Code mode only.',
+    description: 'Atomic SEARCH/REPLACE patch. Prefer expectedHash from the last read_files. If you just read the same path, the host reuses that sha256. HASH_REQUIRED returns currentHash in detail for an immediate retry. New files / dryRun may omit the hash. STALE_FILE means re-read. Code mode only.',
     mode: ['code'],
     inputSchema: {
       type: 'object',
@@ -232,7 +233,7 @@ const TOOLS = [
   tool({
     name: 'write_file',
     aliases: [],
-    description: 'Create a file, or overwrite one only with confirm_overwrite=true. Prefer apply_patch for existing files. Code mode only.',
+    description: 'Create a file. Overwrite is allowed with confirm_overwrite=true, or when expectedHash / the last read_files hash still matches. Prefer apply_patch for existing files. Code mode only.',
     mode: ['code'],
     inputSchema: {
       type: 'object',
@@ -409,11 +410,13 @@ function getToolList(currentMode = null) {
 }
 
 async function callTool(name, args = {}, currentMode = null) {
-  const toolDef = toolRegistry.get(name);
+  const resolved = resolveToolName(name);
+  const toolDef = toolRegistry.get(resolved) || toolRegistry.get(name);
   if (!toolDef) {
     throw new ProtocolError(
       'E_UNKNOWN_CMD',
-      `Unknown tool: "${name}". Available: ${TOOLS.map((t) => t.name).join(', ')}.`
+      `Unknown tool: "${name}". Available: ${TOOLS.map((t) => t.name).join(', ')}.`,
+      { retryHint: 'Call tools/list and use one of the Available names (aliases like bash→run_command, cat→read_files are also accepted).' }
     );
   }
   if (currentMode && !toolDef.mode.includes(currentMode)) {
@@ -422,12 +425,13 @@ async function callTool(name, args = {}, currentMode = null) {
       `Tool "${toolDef.name}" is locked in ${String(currentMode).toUpperCase()} mode. Ask/Plan are read-only; switch to CODE to apply_patch or run_command.`
     );
   }
-  const input = args || {};
+  const input = normalizeToolArgs(toolDef.name, args || {});
   if ((toolDef.name === 'run_command' || toolDef.name === 'start_command') && DANGEROUS_RE.test(String(input.command || ''))) {
     if (!input.confirm_dangerous) {
       throw new ProtocolError(
         'E_BAD_ARGS',
-        'Destructive command blocked. Pass confirm_dangerous=true if you really mean it.'
+        'Destructive command blocked. Pass confirm_dangerous=true if you really mean it.',
+        { retryHint: 'Retry the same command with confirm_dangerous=true only if the user asked for this destructive action.' }
       );
     }
   }

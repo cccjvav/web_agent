@@ -5,7 +5,8 @@ const { config } = require('../config');
 const eventBus = require('../utils/eventBus');
 const { createUnifiedDiff } = require('../utils/diff');
 const { assertNotSensitive } = require('./sensitive');
-const { ProtocolError } = require('../mcp/errors');
+const { ProtocolError, ExecutionError } = require('../mcp/errors');
+const { rememberHash, recalledHash } = require('./readCache');
 
 function computeHash(content) {
   return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
@@ -68,31 +69,42 @@ async function applyPatch({ filePath, patch, expectedHash = null, dryRun = false
       newHash: computeHash(newContent)
     });
 
+    const newHash = computeHash(newContent);
+    rememberHash(filePath, newHash);
     return {
       success: true,
       isNewFile: true,
       filePath,
-      newHash: computeHash(newContent),
+      newHash,
       diffSummary: `+${diffInfo.additions} -0`
     };
   }
 
   const currentContent = fs.readFileSync(fullPath, 'utf8');
   const currentHash = computeHash(currentContent);
+  if (!expectedHash) {
+    const remembered = recalledHash(filePath);
+    if (remembered) expectedHash = remembered;
+  }
 
   if (!expectedHash && !dryRun) {
     throw new ProtocolError(
       'E_BAD_ARGS',
-      `HASH_REQUIRED ${filePath}: pass expectedHash from the last read_files (sha256) before patching an existing file. New files may omit it. dryRun may omit it.`
+      `HASH_REQUIRED ${filePath}: pass expectedHash from the last read_files (sha256) before patching an existing file. New files may omit it. dryRun may omit it.`,
+      {
+        filePath,
+        currentHash,
+        retryHint: `Retry apply_patch with expectedHash=${currentHash}`
+      }
     );
   }
 
   if (expectedHash && currentHash !== expectedHash && !currentHash.startsWith(expectedHash)) {
-    const err = new Error(
-      `STALE_FILE: file changed since last read. Re-run read_files for a fresh sha256. expected=${expectedHash} current=${currentHash}`
+    throw new ExecutionError(
+      'E_STALE_FILE',
+      `STALE_FILE: file changed since last read. Re-run read_files for a fresh sha256. expected=${expectedHash} current=${currentHash}`,
+      { filePath, expectedHash, currentHash, retryHint: `Re-run read_files then apply_patch with expectedHash=${currentHash}` }
     );
-    err.code = 'STALE_FILE';
-    throw err;
   }
 
   let patchedContent = currentContent;
@@ -145,6 +157,7 @@ async function applyPatch({ filePath, patch, expectedHash = null, dryRun = false
   fs.renameSync(tempPath, fullPath);
 
   const newHash = computeHash(patchedContent);
+  rememberHash(filePath, newHash);
 
   eventBus.broadcast('file_patched', {
     filePath,

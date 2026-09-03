@@ -142,6 +142,22 @@ async function main() {
   assert.ok(info.root === tmp);
   assert.ok(Array.isArray(info.topLevel));
 
+  const viaPath = await callTool('read_files', { path: 'keep.txt' }, 'ask');
+  assert.ok(viaPath.hash);
+  const viaAliasWrite = await callTool('write_file', { path: 'keep.txt', content: 'from-read-cache\n' }, 'code');
+  assert.ok(viaAliasWrite.success);
+  assert.ok(fs.readFileSync(path.join(tmp, 'keep.txt'), 'utf8').includes('from-read-cache'));
+
+  fs.writeFileSync(path.join(tmp, 'gone2.txt'), 'x');
+  const delStr = await callTool('delete_file', { path: 'gone2.txt', confirm: 'true' }, 'code');
+  assert.ok(delStr.success);
+
+  const echoed = await callTool('bash', { cmd: 'echo alias-ok' }, 'code');
+  assert.ok(String(echoed.stdout).includes('alias-ok'));
+
+  const listedPath = await callTool('ls', { path: '.' }, 'ask');
+  assert.ok(Array.isArray(listedPath.items));
+
   const started = await callTool('start_command', { command: 'echo async-ok' }, 'code');
   assert.ok(started.execId);
   assert.strictEqual(started.status, 'running');

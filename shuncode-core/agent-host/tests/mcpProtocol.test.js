@@ -90,6 +90,14 @@ async function main() {
   }
   assert.ok(gitHard, 'git reset --hard must require confirm_dangerous');
 
+  fs.writeFileSync(path.join(tmp, 'note.txt'), 'hello\n');
+  const viaPath = await callTool('cat', { path: 'note.txt' });
+  assert.ok(viaPath.hash && String(viaPath.content).includes('hello'));
+
+  const unknownRpc = await handleRpc(req('tools/call', { name: 'not_a_tool', arguments: {} }));
+  assert.strictEqual(unknownRpc.isError, true);
+  assert.ok(String(unknownRpc.content[0].text).includes('Available'));
+
   const mem = await callTool('remember', { text: 'calculator divide throws on zero' });
   assert.ok(mem.ok);
   const recalled = await callTool('recall', { limit: 20 });

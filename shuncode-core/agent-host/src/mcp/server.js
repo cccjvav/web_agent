@@ -150,11 +150,6 @@ async function handleRpc(req) {
         const info = publicError(err);
         touch(req, { incCall: true, incFail: true });
         eventBus.broadcast('tool_call_end', { tool: name, success: false, durationMs, error: info });
-        if (info.layer === 'protocol') {
-          const error = new ProtocolError(info.code, info.msg, info.detail);
-          error.rpcCode = -32602;
-          throw error;
-        }
         return {
           content: [{ type: 'text', text: JSON.stringify(info, null, 2) }],
           isError: true

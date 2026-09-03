@@ -9,7 +9,7 @@
 ## 1. 模块概述
 
 - **定位：** 给人点的按钮的后端：状态、Chat 流、文件树、自定义设置、启停 Bridge、探测模型。
-- **依赖：** `../config`、`../tools`、`../agent/runChat`、`../agent/providers`、`../models/*`、`../mcp/session`、`../mcp/instructions`、`../mcp/clients`、`../mcp/oauth`、`../tunnel/cloudflared`、`../utils/eventBus`、`../tools/patchEngine`。
+- **依赖：** `../config`、`../tools`、`../tools/readCache`（`resetHashes`）、`../agent/runChat`、`../agent/providers`、`../models/*`、`../mcp/session`（含 `reset`）、`../mcp/instructions`、`../mcp/clients`、`../mcp/oauth`、`../tunnel/cloudflared`、`../utils/eventBus`、`../tools/patchEngine`。
 - **谁调用：** `../index.js` `app.use('/api', apiRouter)`；浏览器 `workbench/app.js` 与 `extension/extension.js` fetch 这些路径。
 
 ---
@@ -63,5 +63,6 @@
 1. 工作台 boot → GET `/status` 填 Bridge 卡与模型下拉。
 2. CHAT 发送 → POST `/chat` → `runChat` → 工具经 `callTool`。
 3. 点启动 Bridge → POST `/bridge/start` 只改内存标志与配对码；MCP URL 由 `mcpOrigin` 决定（有隧道 URL 用它，否则当前页面 Host）。
-4. 设置页表单 → PUT `/customizations` 或 POST `/models`。
-5. 插件侧栏与工作台打同一组路径。
+4. 点「清除本轮统计」→ POST `/bridge/reset-round` → 清 MCP session 计数与 `readCache` 哈希。
+5. 设置页表单 → PUT `/customizations` 或 POST `/models`。
+6. 插件侧栏与工作台打同一组路径。

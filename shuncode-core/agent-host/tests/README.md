@@ -10,9 +10,9 @@
 
 | 文件 | 覆盖 |
 |---|---|
-| `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、冲突、grep |
-| `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令、memory、connect 提示词、DeepSeek 客户端配方 |
-| `workspaceTools.test.js` | git 只读、skills、删/改名、Ask 锁、路径逃逸、敏感文件、`start_command` |
+| `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、grep |
+| `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek 客户端配方 |
+| `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command` |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
 | `httpSmoke.test.js` | 真起进程：health、工作台 HTML、MCP 401、initialize、tools/list、ping |
 | `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime |
@@ -36,17 +36,19 @@
 
 ### 📄 文件名：`patchEngine.test.js`
 
-- **文件职责：** 临时工作区测补丁成功、过期 hash、冲突、grep。
+- **文件职责：** 临时工作区测补丁成功、过期 hash、读缓存、orphan `HASH_REQUIRED`、冲突、grep。
 - **顶部：** L1–L10 `assert`/`fs`/`os`/`path`；`config`；`applyPatch`/`computeHash`；`readFile`/`grepSearch`；`mkdtempSync` 后改 `config.workspaceRoot`。
-- **Function `main`（L12–L67）**
+- **Function `main`（L12–L99）**
   - L13：写 `sample.js`，内容含 `return a + b`。
   - L15–L17：`readFile` 必须有 `hash`，正文含原 return。
-  - L19–L29：带 `expectedHash` 的 SEARCH/REPLACE 改成 `Number(a)+Number(b)`，磁盘出现 `Number(a)`。
-  - L31–L44：再用**旧** hash 打补丁；catch 消息须匹配 `STALE_FILE`。
-  - L46–L59：SEARCH 不在文件中 → 消息匹配 `Patch conflict`。
-  - L61–L62：`grepSearch({ query:'Number', searchPath:'.' })`，`totalMatches >= 1`。
-  - L64：删临时目录。L66：打印 passed。
-- L69–L72：`main().catch` → 打印并 `exit(1)`。
+  - L19–L30：带 `expectedHash` 的 SEARCH/REPLACE 改成 `Number(a)+Number(b)`，磁盘出现 `Number(a)`。
+  - L32–L46：再用**旧** hash 打补丁；catch 消息须匹配 `STALE_FILE`。
+  - L48–L56：不传 `expectedHash` 仍成功（复用上次 read/补丁的缓存）。
+  - L58–L75：磁盘直接写 `orphan.js`（**从未** `readFile`）再补丁 → `HASH_REQUIRED` 且 `err.detail.currentHash` 有值。
+  - L77–L92：SEARCH 不在文件中 → 消息匹配 `Patch conflict`。
+  - L94–L95：`grepSearch({ query:'function add', searchPath:'.' })`，`totalMatches >= 1`。
+  - L97：删临时目录。L98：打印 passed。
+- L101–L104：`main().catch` → 打印并 `exit(1)`。
 
 ---
 
@@ -54,7 +56,7 @@
 
 - **文件职责：** 不启 HTTP，直接 `handleRpc` / `callTool` 锁协议与客户端配方。
 - **Function `req`（L16–L22）** — 造假 Express 请求：`ip='127.0.0.1'`，`body={ jsonrpc:'2.0', id:1, method, params }`，可 `...extra`。
-- **Function `main`（L24–L110）**
+- **Function `main`（L24–L128）**
   - L25–L30：`initialize` 的 `instructions` 含 `ShunCode Bridge MCP` 与 `shuncode://instructions`；有 `capabilities.resources` / `prompts`；有 `serverInfo.name`。
   - L32–L33：`ping.ok === true`。
   - L35–L44：`resources/list` 的 uri 含 protocol / memory / profile / clients；`resources/read` protocol 正文含 `Streamable HTTP`。
@@ -62,12 +64,15 @@
   - L55–L62：`getToolList().length === 25`；含 ping / workspace_info / remember / get_task_status / git_status / start_command；**不含** `lsp`。
   - L64–L65：`clipJson` 2 万字符 stdout → `_truncated` 或 stdout 变短。
   - L67–L74：`run_command` `rm -rf ...` 无 `confirm_dangerous` → `publicError.code === 'E_BAD_ARGS'` 且消息含该字段。
-  - L76–L82：未知工具 → `ProtocolError` 且 `E_UNKNOWN_CMD`。
-  - L84–L87：`remember` 后 `recall` 能读回文本。
-  - L89–L92：`prompts/list` 含 `connect`；`prompts/get` 正文含「快速连接这个 MCP」。
-  - L94–L95：`shuncode://clients` 文本含 `无需` 或 `Plus=no` 或 `not ChatGPT-only`。
-  - L97–L107：`listClients`：`chat` 无需 Plus、无需隧道；`arena` 支持 MCP 且无需 Plus；`deepseek` 的 `connectMode==='extension-http'`、`prompt` **只有 URL**、`extensionId` 为 `kdmpkkahkhdmdhfkdihkopikgcocbpbf`、步骤含「不要装 deepseek-pp-shell-host」；`chatgpt-free` 为 `unsupported-mcp`；`chatgpt-plus` `needsPlus`。
-  - L109：删 tmp。
+  - L76–L82：未知工具 → `ProtocolError` 且 `E_UNKNOWN_CMD`，消息含 `Available:`。
+  - L84–L91：`git reset --hard` 同样要 `confirm_dangerous`。
+  - L93–L95：`cat` + `{ path:'note.txt' }` 能读到 hash 与 hello。
+  - L97–L99：`handleRpc('tools/call', 未知名)` → **`isError === true`**，正文含 Available（不是 JSON-RPC throw）。
+  - L101–L104：`remember` 后 `recall` 能读回文本。
+  - L106–L109：`prompts/list` 含 `connect`；`prompts/get` 正文含「快速连接这个 MCP」。
+  - L111–L112：`shuncode://clients` 文本含 `无需` 或 `Plus=no` 或 `not ChatGPT-only`。
+  - L114–L124：`listClients`：`chat` 无需 Plus、无需隧道；`arena` 支持 MCP 且无需 Plus；`deepseek` 的 `connectMode==='extension-http'`、`prompt` **只有 URL**、`extensionId` 为 `kdmpkkahkhdmdhfkdihkopikgcocbpbf`、步骤含「不要装 deepseek-pp-shell-host」；`chatgpt-free` 为 `unsupported-mcp`；`chatgpt-plus` `needsPlus`。
+  - L126：删 tmp。
 
 ---
 

@@ -25,7 +25,7 @@ If a tool returns E_BAD_ARGS about mode, tell the user to switch to Code.
 ## Workflow
 1. ping → workspace_info (orientation) → get_capabilities if the session is new
 2. git_status / list_directory / search_files / read_files (always capture sha256 hash). git_status may return available:false in a plain folder — do not git init unless asked.
-3. apply_patch with expectedHash from the last read (HASH_REQUIRED if omitted on an existing file; STALE_FILE means re-read)
+3. apply_patch. If you just read_files that path, the host reuses the sha256. Otherwise pass expectedHash. HASH_REQUIRED / STALE_FILE include currentHash in detail — retry once with that hash. Do not stop the loop.
 4. Long work: start_command (e.g. npm test) → wait suggestedWaitMs → get_command_output(execId) until status=done
 5. Short one-liners may use run_command. Prefer delete_file/rename_file over shell rm/mv.
 6. report_progress / set_todos so the editor UI stays in sync
@@ -37,13 +37,15 @@ If a tool returns E_BAD_ARGS about mode, tell the user to switch to Code.
 - Do not paste entire logs back; summarize and keep execId.
 
 ## Errors
-- Protocol (E_UNKNOWN_CMD / E_BAD_ARGS): you called wrong. Fix arguments.
+- tools/call failures come back as MCP isError text with layer, code, msg, and detail. Read detail.retryHint / detail.currentHash and retry. Do not treat this as a transport crash.
+- Protocol (E_UNKNOWN_CMD / E_BAD_ARGS): you called wrong. Fix arguments. Unknown names list Available; bash/cat/grep/ls map to run_command/read_files/search_files/list_directory.
 - Execution (E_NOT_FOUND / E_STALE_FILE / E_TIMEOUT / E_CONFLICT / E_NOT_READY): workspace or command failed.
 - get_logs for recent host events. get_task_status for progress + suggestedWaitMs.
+- path / file_path / file are accepted as filePath. confirm / confirm_overwrite / confirm_dangerous accept true/1/"true".
 
 ## Safety
 - Destructive shell (rm -rf, mkfs, dd, shutdown, git reset --hard, Remove-Item -Recurse) needs confirm_dangerous=true.
-- Prefer apply_patch over write_file. Overwriting with write_file needs confirm_overwrite=true.
+- Prefer apply_patch over write_file. Overwrite write_file is allowed if confirm_overwrite=true or the last-read hash still matches.
 - delete_file needs confirm=true after you have listed the path.
 - Stay inside the workspace; the host rejects path escape.
 - .env, keys, SSH, and .shuncode/config.json are blocked (E_FORBIDDEN). Do not ask the user to paste secrets.

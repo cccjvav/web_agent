@@ -23,25 +23,25 @@
 - **文件职责：** DOM 骨架。逻辑全在 `app.js`。
 - **DOM 结构区块：**
   - L3–L8：charset、viewport、title、favicon、`/styles.css`。
-  - L10–L27 **标题栏 `#titlebar`：** 文件/编辑/选择/查看/转到/运行菜单（多数按钮无 JS）；`#menu-term` 终端、`#menu-help` 帮助；中间 `#window-title`。
-  - L29–L62 **活动栏 `#activitybar`：** `data-left=explorer|search` 有 JS；SCM/调试/扩展按钮无 handler；底栏 `#btn-account` 无登录实现、`#btn-manage` 打开管理菜单。
-  - L64–L80 **左侧栏 `#sidebar`：** 默认 `collapsed`。`#left-explorer` 文件树；`#left-search` 搜索框。
-  - L82–L178 **中间 `#center`：**
-    - L83 `#tabs` 标签条。
-    - L85–L123 `#welcome` 欢迎页：新建/打开文件/打开文件夹（后两个只点开资源管理器）；「连接到」「生成新工作区」无 handler；`#recent-list`；`#walk-basics` 打开设置；`#btn-agent-window`。
-    - L124–L125 Monaco `#editor` 与 fallback textarea。
-    - L126–L135 `#browser` 内置假浏览器（地址栏、`#browser-page`）。
-    - L136–L155 `#agent-pane` 智能体窗口（独立输入框与 Ask/Plan/Code）。
-    - L156–L159 `#diff-pane` 补丁对比。
-    - L160–L177 `#panel` 终端，默认 hidden。
-  - L180–L247 **右侧 `#rightbar`：**
-    - L181–L184 CHAT / BRIDGE 页签。
-    - L185–L216 `#right-chat`：流、Tasks、chips 快捷句、`#chat-input`、`#btn-agent-pick`、隐藏 `#mode-select`、`#model-select`、发送。
-    - L217–L246 `#right-bridge`：等待文案、任务、log、MCP session 统计、Stop Bridge。
-  - L249–L259 `#statusbar`。
-  - L261–L512 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/多模型）。L479–L511 Bridge 页含客户端卡片、复制 URL/提示词、打开各站点、GitHub 登录演示、隧道 radio（cloudflare 默认；named/ngrok 输入框 **无对应 JS 去 spawn**）。
-  - L514–L534 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`。
-  - L535–L536 `#toast`；L537 加载 `/app.js`。
+  - L11–L28 **标题栏 `#titlebar`：** 文件/编辑/选择/查看/转到/运行菜单（多数按钮无 JS）；`#menu-term` 终端、`#menu-help` 帮助；中间 `#window-title`。
+  - L31–L54 **活动栏 `#activitybar`：** `data-left=explorer|search` 有 JS；SCM/调试/扩展按钮无 handler；底栏 `#btn-account` 无登录实现、`#btn-manage` 打开管理菜单。
+  - L56–L70 **左侧栏 `#sidebar`：** 默认 `collapsed`。`#left-explorer` 文件树；`#left-search` 搜索框。
+  - L72–L157 **中间 `#center`：**
+    - L73 `#tabs` 标签条。
+    - L75–L112 `#welcome` 欢迎页：新建/打开文件/打开文件夹（后两个只点开资源管理器）；「连接到」「生成新工作区」无 handler；`#recent-list`；`#walk-basics` 打开设置；`#btn-agent-window`。
+    - L113–L114 Monaco `#editor` 与 fallback textarea。
+    - L115–L123 `#browser` 内置假浏览器（地址栏、`#browser-page`）。
+    - L125–L140 `#agent-pane` 智能体窗口（独立输入框与 Ask/Plan/Code）。
+    - L142–L145 `#diff-pane` 补丁对比。
+    - L147–L157 `#panel` 终端，默认 hidden。
+  - L160–L223 **右侧 `#rightbar`：**
+    - L161–L164 CHAT / BRIDGE 页签。
+    - L165–L192 `#right-chat`：流、Tasks、chips 快捷句、`#chat-input`、`#btn-agent-pick`、隐藏 `#mode-select`、`#model-select`、发送。
+    - L193–L222 `#right-bridge`：等待文案、任务、log、MCP session。L204–L221 `.mcp-session`：`#btn-reset-round`（清除本轮统计）、`#btn-stop-bridge-rb`、`#stat-calls` / `#stat-avg` / `#stat-fail` / `#stat-ok`。
+  - L226–L235 `#statusbar`。
+  - L238–L516 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/多模型）。Bridge 页含客户端卡片、复制 URL/提示词、打开各站点、GitHub 登录演示、隧道 radio（cloudflare 默认；named/ngrok 输入框 **无对应 JS 去 spawn**）。L511 `#btn-reset-secret`。
+  - L518–L537 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`。
+  - L538 `#toast`；L539 加载 `/app.js`。
 
 ---
 
@@ -123,4 +123,5 @@
 4. 启动 Bridge → POST `/api/bridge/start` → `paintBridge` 显示 mcpUrl（来自 status，不一定是 trycloudflare）。
 5. 复制提示词读 `clients[].prompt`（hydrate 在服务端）。
 6. `/ws` 把远程 MCP 工具调用画到 BRIDGE。
-7. 内置「打开 Arena」只是本机演示：先打本机 `/mcp`，再走 `/api/chat`。
+7. 「清除本轮统计」→ POST `/api/bridge/reset-round`（清 session 计数 + 读哈希缓存）并清空右侧 log。
+8. 内置「打开 Arena」只是本机演示：先打本机 `/mcp`，再走 `/api/chat`。
