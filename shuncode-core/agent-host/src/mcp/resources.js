@@ -52,7 +52,8 @@ function readResource(uri) {
           '- Heartbeat: call ping; host treats 10s silence as a stale client.',
           '- Long commands: start_command → poll get_command_output(execId) using suggestedWaitMs.',
           '- git_status / git_diff are read-only. Plain folders return available:false instead of throwing.',
-          '- apply_patch reuses the last read_files sha256 for that path; otherwise pass expectedHash. HASH_REQUIRED includes currentHash.',
+          '- apply_patch reuses the last read_files sha256 for that path (persisted under .shuncode/read-hashes.json); otherwise pass expectedHash. HASH_REQUIRED includes currentHash.',
+          '- Remote tools/call defaults to Code mode. Pass params._meta.mode=ask|plan|code to switch. Local Chat sends the UI mode on /api/chat.',
           '- Argument aliases: path/file_path → filePath; cmd → command; bash/cat/grep/ls map to run_command/read_files/search_files/list_directory.'
         ].join('\n')
       };

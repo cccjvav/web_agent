@@ -122,7 +122,7 @@
   - **Function `getBootstrapPrompt(mcpUrl)`（L8–L10）**
     - 输入：`mcpUrl` 字符串（可空）。
     - 返回：URL + 空行 + `CONNECT_LINE`。Arena 等 paste-url 客户端当第一句。
-  - **Function `getInstructions()`（L57–L64）**
+  - **Function `getInstructions()`（L59–L66）**
     - 无参数。L58 `loadCustom()`。
     - L60：若 `custom.instructions` 真值，追加 `## Workspace instructions`。
     - L61：追加 `formatWorkspaceContext`（环境/技术栈/skills）。
@@ -296,40 +296,41 @@
   - **Function `builtinPrompts()`（L67–L75）** — 仅一项 `name:'connect'`。
   - **Function `promptsFromCustom()`（L77–L85）** — 内置 + `custom.prompts`（description 截 120 字）。
   - **Function `pickProtocol(params)`（L86–L90）** — 客户端要的版本在支持列表里就用，否则 `'2025-03-26'`。
-  - **Function `handleRpc(req)`（L92–L203）** — 见下方 method 分支。
-  - **Function `hostStatus()`（L205–L218）** — GET 非 SSE 的主机摘要（含完整 instructions、transports、auth 三种）。
-  - **Function `handlePost(req, res)`（L220–L246）**
-    - L222–L228：`jsonrpc !== '2.0'` → 400、RPC `-32600`。
-    - L230–L235：`handleRpc`；method 以 `notifications/` 开头 → **HTTP 204 无 body**。
-    - L236–L245：catch：`E_UNKNOWN_CMD` → HTTP 404 且 rpc `-32601`；其它协议 `-32602`；否则 `-32603` 或 `err.rpcCode`。**工具失败不会进这里**：`tools/call` 自己 `return { isError:true }`。
-  - **Function `handleGet(req, res)`（L248–L261）**
-    - L249–L258：SSE → 先写 `event: endpoint` `data: /mcp`，每 15s `: ping`，close 清 interval。
-    - L260：否则 `hostStatus()` JSON。
+  - **Function `remoteToolMode(params)`（L92–L97）** — 读 `params._meta.mode` 或 `_meta.shuncodeMode`；仅 `ask|plan|code`；缺省 **`'code'`**。
+  - **Function `handleRpc(req)`（L99–L210）** — 见下方 method 分支。
+  - **Function `hostStatus()`（L212–L225）** — GET 非 SSE 的主机摘要（含完整 instructions、transports、auth 三种）。
+  - **Function `handlePost(req, res)`（L227–L253）**
+    - L229–L235：`jsonrpc !== '2.0'` → 400、RPC `-32600`。
+    - L237–L242：`handleRpc`；method 以 `notifications/` 开头 → **HTTP 204 无 body**。
+    - L243–L252：catch：`E_UNKNOWN_CMD` → HTTP 404 且 rpc `-32601`；其它协议 `-32602`；否则 `-32603` 或 `err.rpcCode`。**工具失败不会进这里**：`tools/call` 自己 `return { isError:true }`。
+  - **Function `handleGet(req, res)`（L255–L268）**
+    - L256–L265：SSE → 先写 `event: endpoint` `data: /mcp`，每 15s `: ping`，close 清 interval。
+    - L267：否则 `hostStatus()` JSON。
 
   **`handleRpc` 的 method 分支：**
 
   | 行 | method | 做什么 |
   |---|---|---|
-  | L95–L110 | `initialize` | L96 默认 client 名 `External-Agent`；L97 `touch`；L98 broadcast `agent_connected`；返回 protocol、capabilities、serverInfo、**`instructions: getInstructions()`** |
-  | L112–L115 | `notifications/initialized`、`notifications/cancelled`、`logging/setLevel` | 返回 `{}` |
-  | L117–L126 | `ping` | `touch incCall`，busy 写死 `false` |
-  | L128–L130 | `tools/list` | `getToolList()` **不传 mode**（列表含 Code-only 工具） |
-  | L132–L158 | `tools/call` | 见下 |
-  | L160–L161 | `resources/list` | `listResources()` |
-  | L163–L168 | `resources/read` | 未知 uri 抛 `E_NOT_FOUND` |
-  | L170–L171 | `prompts/list` | `promptsFromCustom()` |
-  | L173–L198 | `prompts/get` | `connect` 走 bootstrap；否则 custom.prompts；没有抛 `E_NOT_FOUND` |
-  | L200–L201 | default | `E_UNKNOWN_CMD`（未知 **method**，仍是 JSON-RPC error） |
+  | L102–L117 | `initialize` | L103 默认 client 名 `External-Agent`；L104 `touch`；L105 broadcast `agent_connected`；返回 protocol、capabilities、serverInfo、**`instructions: getInstructions()`** |
+  | L119–L122 | `notifications/initialized`、`notifications/cancelled`、`logging/setLevel` | 返回 `{}` |
+  | L124–L133 | `ping` | `touch incCall`，busy 写死 `false` |
+  | L135–L137 | `tools/list` | `getToolList()` **不传 mode**（列表含 Code-only 工具） |
+  | L139–L165 | `tools/call` | 见下 |
+  | L167–L168 | `resources/list` | `listResources()` |
+  | L170–L175 | `resources/read` | 未知 uri 抛 `E_NOT_FOUND` |
+  | L177–L178 | `prompts/list` | `promptsFromCustom()` |
+  | L180–L205 | `prompts/get` | `connect` 走 bootstrap；否则 custom.prompts；没有抛 `E_NOT_FOUND` |
+  | L207–L208 | default | `E_UNKNOWN_CMD`（未知 **method**，仍是 JSON-RPC error） |
 
-  **`tools/call` 细节（L132–L158）：**
-  - L134：无 `name` → 抛 `E_BAD_ARGS`（这才会变成 JSON-RPC error）。
-  - L135：broadcast `tool_call_start`，source `'Bridge-Remote'`。
-  - L138：**`callTool(name, toolArgs || {})` 不传第三参 mode** → `../tools` 里模式锁不生效。
-  - L139：再 `clipJson`。
-  - L144–L147：成功 → MCP `content[{type:text}]`，`isError:false`。
-  - L148–L156：`catch` → `publicError`；`incFail`；**始终** `return { content:[{type:text, text: JSON.stringify(info)}], isError:true }`。未知工具名、HASH_REQUIRED、STALE_FILE 都走这条，网页 Agent 把它当工具结果而不是传输崩溃。
+  **`tools/call` 细节（L139–L165）：**
+  - L141：无 `name` → 抛 `E_BAD_ARGS`（这才会变成 JSON-RPC error）。
+  - L142：broadcast `tool_call_start`，source `'Bridge-Remote'`。
+  - L145：**`callTool(name, toolArgs || {}, remoteToolMode(params))`** — 默认 Code；`_meta.mode=ask|plan` 时模式锁生效。
+  - L146：再 `clipJson`。
+  - L151–L154：成功 → MCP `content[{type:text}]`，`isError:false`。
+  - L155–L163：`catch` → `publicError`；`incFail`；**始终** `return { content:[{type:text, text: JSON.stringify(info)}], isError:true }`。未知工具名、HASH_REQUIRED、STALE_FILE 都走这条，网页 Agent 把它当工具结果而不是传输崩溃。
 
-- **路由（L263–L266）：** `GET/POST /` 与 `GET/POST /:secret` 均 `requireAuth` 后进 handleGet/handlePost。挂到 app 上后即 `/mcp` 与 `/mcp/:secret`。
+- **路由（L270–L273）：** `GET/POST /` 与 `GET/POST /:secret` 均 `requireAuth` 后进 handleGet/handlePost。挂到 app 上后即 `/mcp` 与 `/mcp/:secret`。
 
 - **关键变量：** L14 `router`；L15 `SUPPORTED_PROTOCOL = ['2024-11-05','2025-03-26','2025-06-18']`。
 
@@ -342,11 +343,11 @@
 1. **OAuth 发现 / 配对（匿名，不进 `server.js`）**  
    客户端 GET `oauth.js` 的 `/.well-known/…`（L313–L321）拿元数据 → POST `/oauth/register`（L325–L333）拿到 `client_id` → 浏览器 GET `/oauth/authorize`（L335–L339，`ensurePairing`）看到配对页 HTML → 用户填工作台配对码 → POST `completeAuthorize`（L341–L349）→ 302 带回一次性 code → POST `/oauth/token` + PKCE（L351–L356）得到 Bearer。
 
-2. **MCP 请求进 `server.js` 路由（L263–L266）**  
+2. **MCP 请求进 `server.js` 路由（L270–L273）**  
    `requireAuth` → `extractToken`（路径密钥 / Bearer / 头 / query）→ `oauth.verifyAccessToken`（L166 认 URL 密钥，或认 access token）。失败则 401 + `WWW-Authenticate`。
 
 3. **GET**  
-   - `Accept: text/event-stream` → SSE 通道（L248–L258）。  
+   - `Accept: text/event-stream` → SSE 通道（L255–L265）。  
    - 否则 `hostStatus()`，其中 `instructions` 来自 `instructions.js`。
 
 4. **POST JSON-RPC**  
@@ -361,7 +362,7 @@
 5. **工作台卡片（不经 JSON-RPC）**  
    `../api/routes.js` 调 `clients.listClients` + `instructions.getBootstrapPrompt` + `oauth.snapshotPairing`，把 hydrate 后的 `prompt` 交给用户复制。DeepSeek 卡只有一行 URL；Arena 卡是 URL + `CONNECT_LINE`。
 
-**本目录没有的事（避免误读）：** 不 spawn cloudflared；不实现 `apply_patch`；远程 `tools/call` 不传入 Ask/Plan/Code。那些分别在 `../tunnel/`、`../tools/`、`server.js` L141。
+**本目录没有的事（避免误读）：** 不 spawn cloudflared；不实现 `apply_patch`。远程 `tools/call` 默认 Code，可用 `params._meta.mode` 切 Ask/Plan。
 
 ---
 

@@ -14,7 +14,7 @@
   - `../utils/eventBus`、`../utils/diff`：广播与 unified diff。
   - `../mcp/errors`、`../mcp/budget`、`../mcp/session`：错误分类、截断、心跳快照。
   - `../models/memory`、`../models/customizations`、`../models/profile`：记忆与工作区画像。
-- **谁调用本模块：** `../mcp/server.js`（远程，`callTool` 不传 mode）、`../agent/*`、`../api/routes.js`（传 Ask/Plan/Code）。
+- **谁调用本模块：** `../mcp/server.js`（远程，`callTool` 第三参默认 `'code'`，或 `params._meta.mode`）、`../agent/*`、`../api/routes.js`（传 Ask/Plan/Code）。
 
 ---
 
@@ -66,7 +66,7 @@
     - L413：`resolveToolName(name)`（`normalize.js`：`bash`→`run_command`、`cat`→`read_files` 等）。
     - L414：registry 先查 resolved 再查原名。
     - L415–L421：未知名 → `ProtocolError E_UNKNOWN_CMD`，消息含 Available 列表，`detail.retryHint` 提示可用别名。
-    - L422–L427：`currentMode` 真且不在该工具 mode 列表 → `E_BAD_ARGS`（Ask/Plan 只读文案）。**`currentMode` 为 null 时跳过（远程 MCP）。**
+    - L422–L427：`currentMode` 真且不在该工具 mode 列表 → `E_BAD_ARGS`（Ask/Plan 只读文案）。远程 MCP 默认传入 `'code'`（见 `mcp/server.remoteToolMode`）；本机 Chat 传入 UI 模式。
     - L428：`normalizeToolArgs(toolDef.name, args)`（snake_case、`path`→`filePath`、`"true"`→布尔）。
     - L429–L437：工具名为 `run_command` 或 `start_command` 且命令匹配 `DANGEROUS_RE` 且无 `confirm_dangerous` → `E_BAD_ARGS` + retryHint。
     - L438：`await handler(input)`。
@@ -130,12 +130,15 @@
 
 ### 📄 文件名：`readCache.js`
 
-- **文件职责：** 进程内 `Map`：posix 路径 → 最近一次读/补丁/写入的 sha256。`POST /api/bridge/reset-round` 会 `resetHashes()`。
+- **文件职责：** posix 路径 → 最近一次读/补丁/写入的 sha256。落盘 `.shuncode/read-hashes.json`（最多 400 条）。`POST /api/bridge/reset-round` 会 `resetHashes()`（清 Map 并删文件）。
 - **核心类/函数清单：**
-  - **Function `norm(filePath)`（L3–L5）** — `\\`→`/`，去掉前导 `./`。
-  - **Function `rememberHash(filePath, hash)`（L7–L11）** — 空路径或空 hash 直接 return。
-  - **Function `recalledHash(filePath)`（L13–L15）** — 没有则 `null`。
-  - **Function `forgetHash(filePath)`（L17–L19）** / **`resetHashes()`（L21–L23）** — 删一条 / `Map.clear`。
+  - **Function `norm(filePath)`（L9–L11）** — 反斜杠改 `/`，去掉前导 `./`。
+  - **Function `hashFile()`（L13–L15）** — `<workspace>/.shuncode/read-hashes.json`。
+  - **Function `ensureLoaded()`（L17–L29）** — 按 `workspaceRoot` 懒加载；坏 JSON / 缺文件当空表。
+  - **Function `persist()`（L31–L38）** — mkdir 后写 JSON；失败 catch 空。
+  - **Function `rememberHash(filePath, hash)`（L40–L51）** — 空路径或空 hash return；更新后超过 400 删最老；`persist`。
+  - **Function `recalledHash(filePath)`（L53–L56）** — 没有则 `null`。
+  - **Function `forgetHash(filePath)`（L58–L62）** / **`resetHashes()`（L64–L68）** — 删一条并 persist / 清空并 `unlinkSync`。
 
 ### 📄 文件名：`sensitive.js`
 

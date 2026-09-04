@@ -110,7 +110,12 @@
 
 ### 📄 文件名：`.shuncode/skills/review/SKILL.md`
 
-- **文件职责：** 最短 Skill。L1 标题 `Skill: review`；L2「做 code review。」
+- **文件职责：** 代码审查 Skill（`load_skill` 可读）。默认只读。
+- **内容结构：**
+  - L1–L3：标题与触发词（审查 / code review / 找风险 / 看 diff / 合并前检查）。
+  - L5–L7 **Ask：** `git_status` → `git_diff` → `list_directory` → `search_files` → `read_files`；禁止 patch / write / run_command。
+  - L9–L11 **Plan：** 列出风险，不改仓库。
+  - L13–L21 **Code：** 用户明确说要修才动手；`workspace_info` → git 或目录 → `read_files` → 按文件写严重/建议/风格 → 需要时 `apply_patch` 再跑测试。不是 git 仓库时 `available:false`，不要 `git init`。
 
 ---
 

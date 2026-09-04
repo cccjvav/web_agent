@@ -20,12 +20,13 @@ read resource shuncode://instructions and then call tools/list.
 ## Modes
 - Ask / Plan: read-only. Use list/search/read, git_status, git_diff, load_skill. Do not apply_patch, write_file, delete_file, rename_file, or run/start_command.
 - Code: may patch, write, delete/rename, and run commands.
+Remote MCP tools/call defaults to Code. Optional params._meta.mode of ask|plan|code switches the lock. Local Chat passes the UI mode separately.
 If a tool returns E_BAD_ARGS about mode, tell the user to switch to Code.
 
 ## Workflow
 1. ping → workspace_info (orientation) → get_capabilities if the session is new
 2. git_status / list_directory / search_files / read_files (always capture sha256 hash). git_status may return available:false in a plain folder — do not git init unless asked.
-3. apply_patch. If you just read_files that path, the host reuses the sha256. Otherwise pass expectedHash. HASH_REQUIRED / STALE_FILE include currentHash in detail — retry once with that hash. Do not stop the loop.
+3. apply_patch. If you just read_files that path, the host reuses the sha256 (kept in .shuncode/read-hashes.json across host restarts until reset-round). Otherwise pass expectedHash. HASH_REQUIRED / STALE_FILE include currentHash in detail — retry once with that hash. Do not stop the loop.
 4. Long work: start_command (e.g. npm test) → wait suggestedWaitMs → get_command_output(execId) until status=done
 5. Short one-liners may use run_command. Prefer delete_file/rename_file over shell rm/mv.
 6. report_progress / set_todos so the editor UI stays in sync

@@ -22,6 +22,9 @@ const config = {
 
 function generateNewSecret() {
   config.secretKey = crypto.randomBytes(12).toString('hex');
+  try {
+    require('./models/store').patch({ secretKey: config.secretKey });
+  } catch (_) {}
   return config.secretKey;
 }
 

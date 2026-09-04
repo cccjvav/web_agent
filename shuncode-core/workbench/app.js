@@ -1040,8 +1040,8 @@
       },
       review: {
         name: 'review',
-        when: '用户要求审查、找风险、看 diff 时使用。只读。',
-        steps: '1. git_diff / git_status。\n2. 读改动文件。\n3. 列出风险与建议，不要 apply_patch。'
+        when: '用户要求审查、找风险、看 diff、合并前检查时使用。默认只读。',
+        steps: '1. workspace_info → git_status / git_diff（available:false 时改用 list_directory，不要 git init）。\n2. read_files 打开改动文件。\n3. 按文件列出严重/建议/风格，给路径+原因+改法。未经用户要求不要 apply_patch。'
       },
       release: {
         name: 'release',

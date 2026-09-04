@@ -89,6 +89,13 @@ function pickProtocol(params) {
   return '2025-03-26';
 }
 
+function remoteToolMode(params) {
+  const meta = (params && params._meta) || {};
+  const raw = String(meta.mode || meta.shuncodeMode || 'code').toLowerCase();
+  if (raw === 'ask' || raw === 'plan' || raw === 'code') return raw;
+  return 'code';
+}
+
 async function handleRpc(req) {
   const { id, method, params } = req.body || {};
   switch (method) {
@@ -135,7 +142,7 @@ async function handleRpc(req) {
       eventBus.broadcast('tool_call_start', { tool: name, args: toolArgs, source: 'Bridge-Remote' });
       const started = Date.now();
       try {
-        const result = await callTool(name, toolArgs || {});
+        const result = await callTool(name, toolArgs || {}, remoteToolMode(params));
         const clipped = clipJson(result);
         const durationMs = Date.now() - started;
         touch(req, { incCall: true });

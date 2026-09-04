@@ -13,6 +13,7 @@
 | `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、grep |
 | `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek 客户端配方 |
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command` |
+| `hostPersist.test.js` | `generateNewSecret` 写入 `config.json`；`read-hashes.json` 跨 require 仍能 recalledHash；`resetHashes` 删文件 |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
 | `bridgeTunnel.test.js` | stub `startQuickTunnel`/`stopTunnel`：cloudflare 启动后 mcpUrl 含 trycloudflare；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
 | `httpSmoke.test.js` | 真起进程：health、工作台 HTML、MCP 401、initialize、tools/list、ping |
@@ -69,6 +70,7 @@
   - L84–L91：`git reset --hard` 同样要 `confirm_dangerous`。
   - L93–L95：`cat` + `{ path:'note.txt' }` 能读到 hash 与 hello。
   - L97–L99：`handleRpc('tools/call', 未知名)` → **`isError === true`**，正文含 Available（不是 JSON-RPC throw）。
+  - L101–L110：`_meta.mode:'ask'` 调 `apply_patch` → `isError`，正文含 locked/Ask/CODE；无 `_meta` 的 `ping` 成功。
   - L101–L104：`remember` 后 `recall` 能读回文本。
   - L106–L109：`prompts/list` 含 `connect`；`prompts/get` 正文含「快速连接这个 MCP」。
   - L111–L112：`shuncode://clients` 文本含 `无需` 或 `Plus=no` 或 `not ChatGPT-only`。
@@ -102,6 +104,19 @@
 - L10：`parseTunnelUrl(sample)` 严格等于该 URL。
 - L11：无 URL 文本 → `null`。
 - L12：打印 passed。无 `main()`。
+
+---
+
+### 📄 文件名：`hostPersist.test.js`
+
+- **文件职责：** 密钥落盘与读哈希缓存跨重启。
+- **Function `main`（L13–L41）** — 同步。
+  - L14–L17：`generateNewSecret()` 后 `store.load().secretKey` 等于内存。
+  - L19–L22：把内存 secret 改成 `deadbeefdead` 再 `persistIdentity`，应回到磁盘值。
+  - L24–L29：`rememberHash` 写出 `.shuncode/read-hashes.json`。
+  - L31–L33：`delete require.cache` 后再 require，仍能 `recalledHash`。
+  - L35–L37：`resetHashes` 后内存与文件都空。
+- L43：直接 `main()`。
 
 ---
 
@@ -223,7 +238,7 @@
 
 ## 3. 执行逻辑流（仅本目录）
 
-1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → tunnel → **bridgeTunnel** → httpSmoke → codeServerNotRunnable → skipWorkbench → runChat → chatMode → profile → oauth。
+1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **hostPersist** → tunnel → **bridgeTunnel** → httpSmoke → codeServerNotRunnable → skipWorkbench → runChat → chatMode → profile → oauth。
 2. 单文件：改 `config.workspaceRoot` 指向 tmp → require 被测模块 → assert → 删 tmp。`tunnel` / `chatMode` / `codeServerNotRunnable` 不改工作区。`bridgeTunnel` 改 tmp 工作区并 stub 隧道导出。
 3. 启进程的测试 spawn `src/index.js`，结束必须杀子进程。
 4. 失败路径：有 `main()` 的文件走 `main().catch` → `exit(1)`；`profile.test.js` 同步抛错由 Node 非 0 退出；CMD 的 `run-tests.cmd` 据此 pause。

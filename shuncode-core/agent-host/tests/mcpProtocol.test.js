@@ -98,6 +98,18 @@ async function main() {
   assert.strictEqual(unknownRpc.isError, true);
   assert.ok(String(unknownRpc.content[0].text).includes('Available'));
 
+  const askLocked = await handleRpc(req('tools/call', {
+    name: 'apply_patch',
+    arguments: { filePath: 'note.txt', patch: 'x' },
+    _meta: { mode: 'ask' }
+  }));
+  assert.strictEqual(askLocked.isError, true);
+  assert.ok(/locked in ASK|Ask\/Plan are read-only|switch to CODE/i.test(askLocked.content[0].text));
+
+  const remotePing = await handleRpc(req('tools/call', { name: 'ping', arguments: {} }));
+  assert.strictEqual(remotePing.isError, false);
+  assert.ok(String(remotePing.content[0].text).includes('"ok": true') || String(remotePing.content[0].text).includes('"ok":true'));
+
   const mem = await callTool('remember', { text: 'calculator divide throws on zero' });
   assert.ok(mem.ok);
   const recalled = await callTool('recall', { limit: 20 });

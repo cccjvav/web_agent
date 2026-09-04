@@ -23,6 +23,7 @@ Thumbs.db
 
 # Local secrets / model keys
 workspace/.shuncode/config.json
+workspace/.shuncode/read-hashes.json
 
 # Rewritten on launch with a machine-absolute path
 shuncode-core/extensions-installed/extensions.json

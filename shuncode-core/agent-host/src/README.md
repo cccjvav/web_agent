@@ -24,11 +24,11 @@
   - **模块加载（L1–L21）**
     - L4–L6：`workspaceRoot = path.resolve(process.env.WORKSPACE_ROOT || …/workspace)`。
     - L8–L21 `config` 对象，见 Key 表。
-  - **Function `generateNewSecret()`（L23–L26）** — 12 字节 hex 写入 `config.secretKey` 并返回。**不写磁盘。**
-  - **Function `persistIdentity(store)`（L28–L33）**
-    - L29：`store.load()`。
-    - L30–L31：有 `saved.secretKey` 则覆盖内存，否则 `store.patch({ secretKey })`。
-    - L32–L33：`installId` 同样。
+  - **Function `generateNewSecret()`（L23–L29）** — 12 字节 hex 写入 `config.secretKey`；lazy `require('./models/store').patch({ secretKey })` 落盘（失败 catch 空）。返回新值。
+  - **Function `persistIdentity(store)`（L31–L37）**
+    - L32：`store.load()`。
+    - L33–L34：有 `saved.secretKey` 则覆盖内存，否则 `store.patch({ secretKey })`。
+    - L35–L36：`installId` 同样。
 
 - **关键变量 `config` Key：**
 

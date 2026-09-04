@@ -28,7 +28,7 @@
 - **路由（逐步，含分支）：**
 
   - **GET `/status`（L53–L89）** — 拼 online、端口、workspace、tools、taskState、logs 40 条、bridgeRunning、mcpInfo 展开、models（apiKey 变成 `hasKey` 布尔）、activeModelId、multiModel、bridgeAccount、mcpSession。无鉴权。
-  - **POST `/bridge/reset-secret`（L91–L97）** — `generateNewSecret()` → `oauth.revokeAll()` → broadcast `secret_rotated`。**不** `store.patch({ secretKey })`。
+  - **POST `/bridge/reset-secret`（L91–L97）** — `generateNewSecret()`（内存 + `.shuncode/config.json`）→ `oauth.revokeAll()` → broadcast `secret_rotated`。
   - **POST `/bridge/start`（L99–L139）**
     - L101–L103：`!loggedIn || !deviceAuthorized` → **403**。
     - L104–L108：记下 tunnelProvider，patch store，`config.bridgeRunning=true`。
