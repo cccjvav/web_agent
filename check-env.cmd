@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 setlocal
-echo === ShunCode Windows 环境检查 ===
+echo === Web Agent Windows 环境检查 ===
 echo.
 where node >nul 2>&1 && (for /f "tokens=*" %%i in ('node -v') do echo Node.js     %%i) || echo Node.js     未安装  https://nodejs.org/
 where npm >nul 2>&1 && (for /f "tokens=*" %%i in ('npm -v') do echo npm         %%i) || echo npm         未安装

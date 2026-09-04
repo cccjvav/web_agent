@@ -34,31 +34,31 @@
 
 补完后：**92 / 92 均被至少一份 README 或 `启动脚本说明.md` 提及。**
 
-Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./shuncode-core/agent-host/src/tools/README.md)：
+Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./webagent-core/agent-host/src/tools/README.md)：
 
 | 文件 | 处理 |
 |---|---|
-| `shuncode-core/agent-host/src/tools/normalize.js` | 工具名/参数别名 |
-| `shuncode-core/agent-host/src/tools/readCache.js` | 读文件 sha256 进程内缓存 |
+| `webagent-core/agent-host/src/tools/normalize.js` | 工具名/参数别名 |
+| `webagent-core/agent-host/src/tools/readCache.js` | 读文件 sha256 进程内缓存 |
 
 之后又新增测试：
 
 | 文件 | 处理 |
 |---|---|
-| `shuncode-core/agent-host/tests/bridgeTunnel.test.js` | stub 隧道接到 `/bridge/start` |
-| `shuncode-core/agent-host/tests/hostPersist.test.js` | secretKey 写入 config.json；read-hashes.json 跨重启 |
+| `webagent-core/agent-host/tests/bridgeTunnel.test.js` | stub 隧道接到 `/bridge/start` |
+| `webagent-core/agent-host/tests/hostPersist.test.js` | secretKey 写入 config.json；read-hashes.json 跨重启 |
 
-现：**103 / 103**。工作台把原来的单文件 `app.js` IIFE 拆成 `js/state.js`、`js/dom.js`、`js/tabs.js`、`js/chat.js`、`js/bridge.js`、`js/settings.js`、`js/bind.js`（+7），均写入 [`workbench/README.md`](./shuncode-core/workbench/README.md)。仓库级约定是 Skill [`docs-sync`](./workspace/.shuncode/skills/docs-sync/SKILL.md)（`load_skill` 名 `docs-sync`），不是仓库根 `文档约定.md`。该 Skill 还要求：动到「为什么这样装」时按四层写法改根目录 [`架构导读.md`](./架构导读.md)（产品文，不计入上面的代码文件数）。
+现：**103 / 103**。工作台把原来的单文件 `app.js` IIFE 拆成 `js/state.js`、`js/dom.js`、`js/tabs.js`、`js/chat.js`、`js/bridge.js`、`js/settings.js`、`js/bind.js`（+7），均写入 [`workbench/README.md`](./webagent-core/workbench/README.md)。仓库级约定是 Skill [`docs-sync`](./workspace/.webagent/skills/docs-sync/SKILL.md)（`load_skill` 名 `docs-sync`），不是仓库根 `文档约定.md`。该 Skill 还要求：动到「为什么这样装」时按四层写法改根目录 [`架构导读.md`](./架构导读.md)（产品文，不计入上面的代码文件数）。
 
 故意不单独再拆的：
 
 | 路径 | 原因 |
 |---|---|
-| `shuncode-repro/src/**` 等子目录 | 整树已在 [`shuncode-repro/README.md`](./shuncode-repro/README.md)；冻结，不复制第二份 |
-| `extensions-installed/*.js` | 是 `extension/` 的拷贝，行级见 [`extension/README.md`](./shuncode-core/extension/README.md) |
+| `webagent-repro/src/**` 等子目录 | 整树已在 [`webagent-repro/README.md`](./webagent-repro/README.md)；冻结，不复制第二份 |
+| `extensions-installed/*.js` | 是 `extension/` 的拷贝，行级见 [`extension/README.md`](./webagent-core/extension/README.md) |
 | 根 `README.md` | GitHub 首页，不改成行级模板 |
 
-工作区 Skill 文本（`workspace/.shuncode/skills/*/SKILL.md`）不是代码，已在 [`workspace/README.md`](./workspace/README.md) 说明。
+工作区 Skill 文本（`workspace/.webagent/skills/*/SKILL.md`）不是代码，已在 [`workspace/README.md`](./workspace/README.md) 说明。
 
 ---
 
@@ -66,7 +66,7 @@ Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./s
 
 脚本解析全部 Markdown 链接（方括号标题 + 圆括号相对路径）：
 
-- 子模块「查看详情」均为 `./shuncode-core/.../README.md` 或 `./workspace/README.md` 等，**没有**写成 `../`（`总览.md` 在仓库根，`./` 正确）。
+- 子模块「查看详情」均为 `./webagent-core/.../README.md` 或 `./workspace/README.md` 等，**没有**写成 `../`（`总览.md` 在仓库根，`./` 正确）。
 - 快速导航锚点指向各 README 的 `### 📄 文件名` 标题；GitHub slug 一般为 `文件名xxxjs`。若渲染器去不掉 emoji，点标题仍可在该文件内搜索文件名。
 - 外部链接仅 `https://nodejs.org/`。
 
@@ -87,24 +87,24 @@ Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./s
 
 | 文件夹 | 说明书 |
 |---|---|
-| `shuncode-core/` | [README](./shuncode-core/README.md) |
-| `shuncode-core/agent-host/` | [README](./shuncode-core/agent-host/README.md) |
-| `…/src/` | [README](./shuncode-core/agent-host/src/README.md) |
-| `…/src/mcp/` | [README](./shuncode-core/agent-host/src/mcp/README.md) |
-| `…/src/tools/` | [README](./shuncode-core/agent-host/src/tools/README.md) |
-| `…/src/agent/` | [README](./shuncode-core/agent-host/src/agent/README.md) |
-| `…/src/models/` | [README](./shuncode-core/agent-host/src/models/README.md) |
-| `…/src/api/` | [README](./shuncode-core/agent-host/src/api/README.md) |
-| `…/src/tunnel/` | [README](./shuncode-core/agent-host/src/tunnel/README.md) |
-| `…/src/utils/` | [README](./shuncode-core/agent-host/src/utils/README.md) |
-| `…/tests/` | [README](./shuncode-core/agent-host/tests/README.md) |
-| `shuncode-core/workbench/` | [README](./shuncode-core/workbench/README.md) |
-| `shuncode-core/extension/` | [README](./shuncode-core/extension/README.md) |
-| `shuncode-core/extensions-installed/` | [README](./shuncode-core/extensions-installed/README.md) |
-| `shuncode-core/scripts/` | [README](./shuncode-core/scripts/README.md) |
+| `webagent-core/` | [README](./webagent-core/README.md) |
+| `webagent-core/agent-host/` | [README](./webagent-core/agent-host/README.md) |
+| `…/src/` | [README](./webagent-core/agent-host/src/README.md) |
+| `…/src/mcp/` | [README](./webagent-core/agent-host/src/mcp/README.md) |
+| `…/src/tools/` | [README](./webagent-core/agent-host/src/tools/README.md) |
+| `…/src/agent/` | [README](./webagent-core/agent-host/src/agent/README.md) |
+| `…/src/models/` | [README](./webagent-core/agent-host/src/models/README.md) |
+| `…/src/api/` | [README](./webagent-core/agent-host/src/api/README.md) |
+| `…/src/tunnel/` | [README](./webagent-core/agent-host/src/tunnel/README.md) |
+| `…/src/utils/` | [README](./webagent-core/agent-host/src/utils/README.md) |
+| `…/tests/` | [README](./webagent-core/agent-host/tests/README.md) |
+| `webagent-core/workbench/` | [README](./webagent-core/workbench/README.md) |
+| `webagent-core/extension/` | [README](./webagent-core/extension/README.md) |
+| `webagent-core/extensions-installed/` | [README](./webagent-core/extensions-installed/README.md) |
+| `webagent-core/scripts/` | [README](./webagent-core/scripts/README.md) |
 | `workspace/` | [README](./workspace/README.md) |
 | `bin/` | [README](./bin/README.md) |
-| `shuncode-repro/` | [README](./shuncode-repro/README.md) |
+| `webagent-repro/` | [README](./webagent-repro/README.md) |
 | `.config/code-server/` | [README](./.config/code-server/README.md) |
 | 仓库根脚本 | [启动脚本说明.md](./启动脚本说明.md) |
 

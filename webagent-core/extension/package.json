@@ -1,0 +1,77 @@
+{
+  "name": "webagent-core",
+  "displayName": "Web Agent & Bridge",
+  "description": "Web Agent Chat / Agent / Bridge. Talks to the local agent-host process.",
+  "version": "0.6.9",
+  "publisher": "webagent",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Other", "Chat"],
+  "activationEvents": ["*", "onChatParticipant:webagent.agent"],
+  "main": "./extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Web Agent",
+      "properties": {
+        "webagent.agentHostUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:48271",
+          "description": "agent-host 根地址（MCP /api 与 /mcp）。Windows 本机保持默认即可。"
+        }
+      }
+    },
+    "chatParticipants": [
+      {
+        "id": "webagent.agent",
+        "fullName": "Web Agent",
+        "name": "webagent",
+        "description": "对本机工作区搜、读、打补丁、跑测试（Ask / Plan / Agent）",
+        "isSticky": true,
+        "isDefault": true,
+        "commands": [
+          { "name": "ask", "description": "只读探查，不改文件" },
+          { "name": "plan", "description": "多模型博弈出方案，不改文件" },
+          { "name": "code", "description": "Agent：搜-读-补丁-再测" }
+        ]
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "webagent-sidebar",
+          "title": "Web Agent",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "webagent-sidebar": [
+        {
+          "type": "webview",
+          "id": "webagent.chatView",
+          "name": "Web Agent Chat & Agent"
+        },
+        {
+          "type": "webview",
+          "id": "webagent.bridgeView",
+          "name": "Bridge 模式 (远程指挥台)"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "webagent.openBridge",
+        "title": "Web Agent: 打开 Bridge 面板"
+      },
+      {
+        "command": "webagent.openAgentChat",
+        "title": "Web Agent: 打开 Agent Chat"
+      },
+      {
+        "command": "webagent.resetSecret",
+        "title": "Web Agent: 重置 Bridge Secret"
+      }
+    ]
+  }
+}

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>欢迎 — Web Agent</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header id="titlebar">
+    <div class="tb-left">
+      <nav class="tb-menu">
+        <button type="button" data-menu="file">文件(<u>F</u>)</button>
+        <button type="button" data-menu="edit">编辑(<u>E</u>)</button>
+        <button type="button">选择(<u>S</u>)</button>
+        <button type="button">查看(<u>V</u>)</button>
+        <button type="button">转到(<u>G</u>)</button>
+        <button type="button">运行(<u>R</u>)</button>
+        <button type="button" id="menu-term">终端(<u>T</u>)</button>
+        <button type="button" id="menu-help">帮助(<u>H</u>)</button>
+      </nav>
+    </div>
+    <div class="tb-center">
+      <div class="tb-search" id="window-title">欢迎</div>
+    </div>
+    <div class="tb-right"></div>
+  </header>
+
+  <div id="workbench">
+    <nav id="activitybar">
+      <button class="ab-btn" data-left="explorer" title="资源管理器">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 5h6l2 2h8v12H4z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      </button>
+      <button class="ab-btn" data-left="search" title="搜索">
+        <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="11" cy="11" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m16 16 4.2 4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+      <button class="ab-btn" title="源代码管理">
+        <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="6" cy="18" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="6" cy="6" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="18" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 8.2v7.6M8.2 6h5.2c2 0 2.6.8 2.6 2.4V12" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      </button>
+      <button class="ab-btn" title="运行和调试">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M8 5.5v13l11-6.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="ab-btn" title="扩展">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M7 3.5h4.5v6H17.5v4.5H11.5v6H7V3.5zM17.5 9.5H21v9.5h-7.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      </button>
+      <div class="ab-spacer"></div>
+      <button class="ab-btn" id="btn-account" title="帐户">
+        <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 19c1.4-3 4-4.5 7-4.5s5.6 1.5 7 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+      <button class="ab-btn" id="btn-manage" title="管理">
+        <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 3.6v2M12 18.4v2M4.9 7.1l1.6 1.1M17.5 15.8l1.6 1.1M3.6 12h2M18.4 12h2M4.9 16.9l1.6-1.1M17.5 8.2l1.6-1.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </nav>
+
+    <aside id="sidebar" class="collapsed">
+      <section class="side-view" id="left-explorer">
+        <div class="side-title">资源管理器</div>
+        <div class="side-workspace">WORKSPACE</div>
+        <div id="file-tree" class="file-tree"></div>
+      </section>
+      <section class="side-view hidden" id="left-search">
+        <div class="side-title">搜索</div>
+        <div class="side-pad">
+          <input id="search-q" class="ms-input" placeholder="搜索" />
+          <button type="button" id="btn-search" class="vs-btn block">搜索</button>
+          <div id="search-results"></div>
+        </div>
+      </section>
+    </aside>
+
+    <div id="center">
+      <div id="tabs"></div>
+      <div id="editor-wrap">
+        <div id="welcome">
+          <div class="welcome-grid">
+            <div>
+              <h1>Web Agent</h1>
+              <p class="sub">编辑进化</p>
+              <h3>启动</h3>
+              <div class="start-links">
+                <button type="button" id="lnk-new-file"><span class="codicon">📄</span>新建文件...</button>
+                <button type="button" id="lnk-open-file"><span class="codicon">📝</span>打开文件...</button>
+                <button type="button" id="lnk-open-folder"><span class="codicon">📁</span>打开文件夹...</button>
+                <button type="button"><span class="codicon">🔗</span>连接到...</button>
+                <button type="button"><span class="codicon">✨</span>生成新工作区...</button>
+              </div>
+              <h3>最近</h3>
+              <div class="recent" id="recent-list"></div>
+            </div>
+            <div>
+              <h3>演练</h3>
+              <div class="walk-card">
+                <div class="walk-ico">★</div>
+                <div>
+                  <div class="walk-title">开始使用 VS Code</div>
+                  <div class="walk-desc">自定义编辑器、了解基础知识并开始编码</div>
+                </div>
+              </div>
+              <div class="walk-card" id="walk-basics">
+                <div class="walk-ico">💡</div>
+                <div>
+                  <div class="walk-title">了解基础知识</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="welcome-bottom">
+            <button type="button" class="agent-window-btn" id="btn-agent-window">试用新的智能体窗口</button>
+            <label class="chk"><input type="checkbox" checked /> 启动时显示欢迎页</label>
+          </div>
+        </div>
+        <div id="editor" class="hidden"></div>
+        <textarea id="editor-fallback" class="hidden" spellcheck="false"></textarea>
+        <div id="browser" class="hidden">
+          <div class="browser-bar">
+            <button type="button" id="br-back" title="后退">←</button>
+            <button type="button" id="br-fwd" title="前进">→</button>
+            <button type="button" id="br-reload" title="刷新">↻</button>
+            <input id="br-url" spellcheck="false" />
+            <button type="button" id="br-go" class="vs-btn">转到</button>
+          </div>
+          <div id="browser-page"></div>
+        </div>
+        <div id="agent-pane" class="hidden">
+          <div class="agent-head">智能体窗口 · Agent（Ask / Plan / Code）</div>
+          <div id="agent-stream" class="chat-stream"></div>
+          <div class="chat-compose">
+            <div class="composer-box">
+              <textarea id="agent-input" rows="2" placeholder="描述要构建的内容"></textarea>
+              <div class="composer-tools">
+                <select id="agent-mode" class="mini-sel">
+                  <option value="ask">Ask</option>
+                  <option value="plan">Plan</option>
+                  <option value="code" selected>Code</option>
+                </select>
+                <button type="button" id="btn-agent-send" class="send-arr">↑</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="diff-pane" class="hidden">
+          <div class="diff-head" id="diff-title">Diff</div>
+          <pre id="diff-body" class="diff-body"></pre>
+        </div>
+      </div>
+      <div id="panel" class="hidden">
+        <div class="panel-head">
+          <span>终端</span>
+          <button type="button" id="btn-clear-term" class="ghost">清空</button>
+        </div>
+        <div id="terminal" class="terminal"></div>
+        <form id="term-form">
+          <span class="prompt">$</span>
+          <input id="term-input" autocomplete="off" placeholder="在工作区执行命令" />
+        </form>
+      </div>
+    </div>
+
+    <aside id="rightbar">
+      <div class="rb-head">
+        <button type="button" id="rb-chat-tab" class="on">CHAT</button>
+        <button type="button" id="rb-bridge-tab">BRIDGE</button>
+      </div>
+      <div id="right-chat" class="rb-body">
+        <div id="chat-stream" class="chat-stream"></div>
+        <div id="chat-tasks" class="task-box hidden">
+          <div class="task-h"><span>Tasks</span><span id="chat-task-count">0/0</span></div>
+          <ul id="chat-todo-list"></ul>
+        </div>
+        <div class="chat-compose">
+          <div class="chips" id="chips">
+            <button type="button" data-mode="ask" data-text="分析当前项目实现了什么功能">分析项目</button>
+            <button type="button" data-mode="plan" data-text="针对当前工作区制定可执行修改计划">制定计划</button>
+            <button type="button" data-mode="code" data-text="搜相关文件、读源码、必要时打补丁，再跑测试">搜读补丁再测</button>
+          </div>
+          <div class="composer-box">
+            <textarea id="chat-input" rows="2" placeholder="描述要构建的内容"></textarea>
+            <div class="composer-tools">
+              <button type="button" class="icon-btn" title="附加">+</button>
+              <button type="button" id="btn-agent-pick" class="mini-sel agent-pick">Agent · Web Agent Code ▾</button>
+              <select id="mode-select" class="hidden">
+                <option value="ask">Ask</option>
+                <option value="plan">Plan</option>
+                <option value="code" selected>Code</option>
+              </select>
+              <select id="model-select" class="mini-sel"></select>
+              <button type="button" id="btn-send" class="send-arr" title="发送">↑</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="right-bridge" class="rb-body hidden">
+        <div class="bridge-wait" id="bridge-wait">
+          <div class="wait-ico">✦</div>
+          <h3>Waiting for the remote Agent</h3>
+          <p>Tool calls made by the connected MCP client will appear here. Input stays in the external client.</p>
+        </div>
+        <div id="bridge-tasks" class="task-box hidden">
+          <div class="task-h"><span>Tasks</span><span id="bridge-task-count">0/0</span></div>
+          <ul id="bridge-todo-list"></ul>
+        </div>
+        <div id="bridge-log" class="bridge-log"></div>
+        <div class="mcp-session">
+          <div class="sess-top">
+            <span class="dot" id="sess-dot"></span>
+            <strong>MCP session</strong>
+            <span class="sess-actions">
+              <button type="button" id="btn-reset-round" class="vs-btn">清除本轮统计</button>
+              <button type="button" id="btn-stop-bridge-rb" class="vs-btn">Stop Bridge</button>
+            </span>
+          </div>
+          <p class="sess-note" id="sess-note">Start the Bridge here, then connect the configured MCP URL from the external client.</p>
+          <div class="sess-grid">
+            <div><span id="stat-calls">0</span><label>Tool calls</label></div>
+            <div><span id="stat-avg">0 ms</span><label>Average response</label></div>
+            <div><span id="stat-fail">0</span><label>Failures</label></div>
+            <div><span id="stat-ok">100%</span><label>Success rate</label></div>
+          </div>
+          <p class="tiny">Streamable HTTP</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer id="statusbar">
+    <div class="sb-left">
+      <span class="sb-item">0 ⚠ 0</span>
+      <span class="sb-item" id="sb-bridge">Bridge 已停止</span>
+    </div>
+    <div class="sb-right">
+      <span class="sb-item" id="sb-file">欢迎</span>
+      <span class="sb-item">UTF-8</span>
+      <span class="sb-item">Ln 1, Col 1</span>
+    </div>
+  </footer>
+
+  <div id="modal" class="hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <aside class="modal-nav">
+        <div class="modal-nav-title">本地 的智能体自定义设置</div>
+        <button type="button" class="nav-item on" data-page="overview">概述</button>
+        <button type="button" class="nav-item" data-page="env">环境偏好</button>
+        <button type="button" class="nav-item" data-page="stack">技术栈</button>
+        <button type="button" class="nav-item" data-page="agents">智能体</button>
+        <button type="button" class="nav-item" data-page="skills">技能 <em id="cnt-skills"></em></button>
+        <button type="button" class="nav-item" data-page="instructions">指令</button>
+        <button type="button" class="nav-item" data-page="prompts">提示</button>
+        <button type="button" class="nav-item" data-page="hooks">挂钩</button>
+        <button type="button" class="nav-item" data-page="mcp">MCP 服务器</button>
+        <button type="button" class="nav-item" data-page="bridge">Bridge</button>
+        <button type="button" class="nav-item" data-page="plugins">插件</button>
+        <button type="button" class="nav-item" data-page="api">API Provider</button>
+        <button type="button" class="nav-item" data-page="codex">Codex</button>
+        <button type="button" class="nav-item" data-page="multimodel">多模型博弈</button>
+      </aside>
+      <div class="modal-main">
+        <button type="button" class="modal-close" id="modal-close" title="关闭">✕</button>
+        <div class="page" id="page-overview">
+          <h2>本地 的智能体自定义设置</h2>
+          <p class="lead">定制智能体在项目中的工作方式。为整个团队配置工作区自定义，或创建跨项目跟随你的个人自定义。</p>
+          <label class="field-label">自定义智能体</label>
+          <p class="hint">描述你的偏好和约定，以串联智能体、技能和指令。</p>
+          <div class="pref-row">
+            <input id="pref-input" class="ms-input" placeholder="偏好简洁的提交、全面的审查和经过测试的代码。" />
+            <button type="button" class="send-arr" id="btn-save-pref">↑</button>
+          </div>
+          <div class="card-grid">
+            <article><h4>环境偏好</h4><p>操作系统、Shell、回复语言、提交说明。Chat 和 Bridge 都会读。</p><button type="button" class="vs-btn" data-page="env">配置...</button></article>
+            <article><h4>技术栈</h4><p>声明语言、框架、包管理和测试命令，避免 Agent 猜错项目。</p><button type="button" class="vs-btn" data-page="stack">声明...</button></article>
+            <article><h4>智能体</h4><p>定义具有专属角色、工具访问权限和特定任务指令的自定义智能体。</p><button type="button" class="vs-btn" data-page="agents">新建...</button></article>
+            <article><h4>技能</h4><p>创建可重用的技能文件，提供特定领域知识和工作流。</p><button type="button" class="vs-btn" data-page="skills">引导...</button></article>
+            <article><h4>指令</h4><p>设置始终生效的指令，在整个工作区或用户配置文件中引导 AI 行为。</p><button type="button" class="vs-btn" data-page="instructions">新建...</button></article>
+            <article><h4>挂钩</h4><p>配置由保存文件或运行任务等事件触发的自动操作。</p><button type="button" class="vs-btn" data-page="hooks">新建...</button></article>
+            <article><h4>MCP 服务器</h4><p>连接外部工具服务器，通过自定义工具和数据源扩展 AI 功能。</p><button type="button" class="vs-btn" data-page="mcp">浏览...</button></article>
+            <article><h4>插件</h4><p>安装和管理智能体插件，以添加更多工具、技能和集成。</p><button type="button" class="vs-btn" data-page="plugins">浏览...</button></article>
+            <article><h4>Voice Mode Instructions</h4><p>Customize Voice Mode behavior and terminology with voice.md.</p><button type="button" class="vs-btn">Configure...</button></article>
+            <article><h4>Dictation Instructions</h4><p>Customize Dictation terminology and transcript formatting with dictation.md.</p><button type="button" class="vs-btn">Configure...</button></article>
+          </div>
+        </div>
+
+        <div class="page hidden" id="page-agents">
+          <h2>智能体</h2>
+          <p class="lead">定义具有专属角色、工具访问权限和特定任务指令的自定义智能体。</p>
+          <div id="agents-list"></div>
+          <label class="field-label">名称</label>
+          <input id="ag-name" class="ms-input" placeholder="安全审查智能体" />
+          <label class="field-label">角色与指令</label>
+          <textarea id="ag-role" class="ms-input tall" placeholder="只读检查密钥泄露与危险命令。"></textarea>
+          <button type="button" id="btn-add-agent" class="vs-btn primary">新建</button>
+        </div>
+        <div class="page hidden" id="page-skills">
+          <h2>技能引导</h2>
+          <p class="lead">Skills 本质上是文件夹：<code>.webagent/skills/名字/SKILL.md</code>。把路径给 AI 就会用。Bridge 也支持，不必拷进当前项目。</p>
+          <ol class="guide-steps">
+            <li><strong>起名</strong>：小写、连字符，只做一件事（如 <code>fix-tests</code>）。</li>
+            <li><strong>写何时使用</strong>：模型靠这段描述决定要不要 <code>load_skill</code>。</li>
+            <li><strong>写步骤</strong>：Ask 只读、Code 才能打补丁。点新建后即可在 Chat 里说「按 fix-tests 做」。</li>
+          </ol>
+          <p class="hint">模板会填好三步，你改几个字就能用。</p>
+          <div class="row-btns" id="skill-templates">
+            <button type="button" class="vs-btn" data-tpl="fix-tests">修测试</button>
+            <button type="button" class="vs-btn" data-tpl="review">代码审查</button>
+            <button type="button" class="vs-btn" data-tpl="release">发版</button>
+          </div>
+          <div id="skills-list"></div>
+          <label class="field-label">1. 名称</label>
+          <input id="sk-name" class="ms-input" placeholder="fix-tests" />
+          <label class="field-label">2. 何时使用</label>
+          <textarea id="sk-when" class="ms-input" placeholder="用户提到测试失败、红灯、回归时使用。"></textarea>
+          <label class="field-label">3. 步骤</label>
+          <textarea id="sk-steps" class="ms-input tall" placeholder="1. search_files 找失败用例&#10;2. read_files 取 sha256&#10;3. Code 模式 apply_patch&#10;4. 跑测试命令"></textarea>
+          <label class="field-label">SKILL.md 预览（可再改）</label>
+          <textarea id="sk-body" class="ms-input tall" placeholder="# Skill: …"></textarea>
+          <button type="button" id="btn-add-skill" class="vs-btn primary">新建 Skill 文件夹</button>
+          <p class="hint">对话里也可以说「按 D:\skills\release 这份 Skill 发版」，不必先拷进工作区。</p>
+        </div>
+        <div class="page hidden" id="page-instructions">
+          <h2>指令</h2>
+          <p class="lead">始终生效的工作区指令，写入 .webagent/instructions.md。本地 Chat 会读它；远程网页 Agent 连上 Bridge 时，会拼进 MCP initialize.instructions。</p>
+          <textarea class="ms-input tall" id="instr-text" placeholder="例如：提交信息用中文；改动必须带测试。"></textarea>
+          <button type="button" id="btn-save-instr" class="vs-btn primary">保存指令</button>
+        </div>
+        <div class="page hidden" id="page-prompts">
+          <h2>提示</h2>
+          <p class="lead">可复用提示词，在对话中插入。</p>
+          <div id="prompts-list"></div>
+          <label class="field-label">名称</label>
+          <input id="pr-name" class="ms-input" placeholder="写提交说明" />
+          <label class="field-label">内容</label>
+          <textarea id="pr-body" class="ms-input tall"></textarea>
+          <button type="button" id="btn-add-prompt" class="vs-btn primary">新建</button>
+        </div>
+        <div class="page hidden" id="page-hooks">
+          <h2>挂钩</h2>
+          <p class="lead">由保存文件或运行任务等事件触发的自动操作。</p>
+          <div id="hooks-list"></div>
+          <label class="field-label">事件</label>
+          <select id="hk-event" class="ms-input">
+            <option value="onSave">保存文件时</option>
+            <option value="onTask">运行任务时</option>
+          </select>
+          <label class="field-label">命令</label>
+          <input id="hk-cmd" class="ms-input" placeholder="npm test" />
+          <button type="button" id="btn-add-hook" class="vs-btn primary">新建</button>
+        </div>
+        <div class="page hidden" id="page-mcp">
+          <h2>MCP 服务器</h2>
+          <p class="lead">Chat 模式才能外接 MCP。Bridge 无法调用这里配置的 MCP。</p>
+          <p class="hint">两边的「MCP」方向相反：这里是你去连别人的工具；Bridge 是你把自己变成 MCP。</p>
+          <div id="mcps-list"></div>
+          <label class="field-label">名称</label>
+          <input id="mcp-name" class="ms-input" placeholder="filesystem" />
+          <label class="field-label">URL</label>
+          <input id="mcp-endpoint" class="ms-input" placeholder="http://127.0.0.1:3100/mcp" />
+          <button type="button" id="btn-add-mcp" class="vs-btn primary">添加</button>
+        </div>
+        <div class="page hidden" id="page-plugins">
+          <h2>插件</h2>
+          <p class="lead">安装和管理智能体插件，以添加更多工具、技能和集成。</p>
+          <div id="plugins-list"></div>
+          <p class="hint">本工作台不连接插件市场，可登记本地插件名作为工作区备注。</p>
+          <input id="pl-name" class="ms-input" placeholder="插件名" />
+          <button type="button" id="btn-add-plugin" class="vs-btn">登记</button>
+        </div>
+        <div class="page hidden" id="page-api">
+          <h2>Add API Provider</h2>
+          <p class="lead">连接 OpenAI 兼容接口。填 Endpoint 和 Key 后点 Test 探测模型，再 Add API 写入本地密钥存储。</p>
+          <label class="field-label">API Endpoint URL</label>
+          <input id="m-base" class="ms-input" placeholder="https://api.example.com/v1" />
+          <label class="field-label">API Key</label>
+          <input id="m-key" class="ms-input" type="password" placeholder="sk-…" />
+          <input id="m-name" type="hidden" value="自定义 API" />
+          <input id="m-id" class="ms-input" placeholder="可选：手动指定模型 ID（探测失败时用）" style="margin-top:8px" />
+          <div class="row-btns">
+            <button type="button" id="btn-test-api" class="vs-btn">Test</button>
+            <button type="button" id="btn-save-model" class="vs-btn primary">Add API</button>
+            <button type="button" id="btn-use-builtin" class="vs-btn">改回内置探索 Agent</button>
+          </div>
+          <p class="hint" id="model-status"></p>
+          <p class="hint">The API key is kept in secure secret storage and never written to settings.json.</p>
+          <div id="provider-table"></div>
+        </div>
+        <div class="page hidden" id="page-codex">
+          <h2>Codex</h2>
+          <p class="lead">通过 auth.openai.com 的 OAuth 登录，复用 ~/.codex/auth.json。这里只提供入口示意。</p>
+          <p class="hint" id="codex-status">尚未登录</p>
+          <button type="button" id="btn-codex" class="vs-btn">登录 Codex 账号</button>
+        </div>
+        <div class="page hidden" id="page-multimodel">
+          <h2>多模型博弈</h2>
+          <p class="lead">核心理念：多模型意见一致，再行动。只在 Plan 里分支，各分支从同一起点独立作答，彼此看不见对方。</p>
+          <label class="chk"><input type="checkbox" id="mm-enabled" checked /> 启用多模型博弈</label>
+          <label class="field-label">合并主模型</label>
+          <select id="mm-merge" class="ms-input">
+            <option value="auto">自动（架构/安全/编码三分支后合并）</option>
+            <option value="active">当前 Chat 选用的模型</option>
+          </select>
+          <label class="field-label">合并思考强度</label>
+          <select id="mm-think" class="ms-input">
+            <option value="low">低</option>
+            <option value="medium">中</option>
+            <option value="high" selected>高</option>
+          </select>
+          <label class="chk" style="margin-top:12px"><input type="checkbox" id="mm-readonly" checked /> 合并时允许只读文件验证</label>
+          <label class="field-label">每回合最大分支数</label>
+          <input id="mm-branches" class="ms-input" type="number" min="2" max="5" value="3" />
+          <p class="hint">空输入才是分支发送。分歧大时不自动执行补丁。</p>
+          <button type="button" id="btn-save-mm" class="vs-btn primary">保存</button>
+        </div>
+
+        <div class="page hidden" id="page-bridge">
+          <div class="br-head">
+            <div>
+              <h2>Web Agent Bridge</h2>
+              <p class="lead">把当前工作区变成 MCP，给<strong>任意</strong>能调工具的网页 Agent 用。不绑死 ChatGPT，也不需要 Plus。</p>
+              <p class="hint" id="bridge-sub">本机 Chat 随时可用。网页 Agent 要先启动 Bridge 拿到公网地址。</p>
+            </div>
+            <span id="bridge-pill" class="status-pill stop">已停止</span>
+          </div>
+          <section class="block" id="client-recipes">
+            <div class="block-h">怎么连到本机仓库</div>
+            <p class="hint">免费路径：本机 Chat（无隧道）、Arena 等支持 MCP 的网页栏，或 DeepSeek 网页 + DeepSeek++。ChatGPT 普通免费聊天加不了连接器。</p>
+            <div id="client-cards" class="client-cards"></div>
+            <div id="client-detail" class="client-detail"></div>
+            <p class="hint" id="pairing-line">配对码会在启动 Bridge 后出现，只给 ChatGPT Plus 连接器 OAuth 用。</p>
+          </section>
+          <div id="mcp-block" class="hidden">
+            <label class="field-label">MCP 地址</label>
+            <div class="mcp-row">
+              <div class="url-box" id="mcp-url">—</div>
+              <button type="button" id="btn-copy-url" class="vs-btn">复制</button>
+            </div>
+            <div id="mcp-banner" class="banner hidden">临时 MCP 地址已复制。每次 Bridge 重启后，请在 ChatGPT 中替换 MCP 地址。</div>
+          </div>
+          <div class="btn-wrap" id="bridge-actions">
+            <button type="button" id="btn-bridge-toggle" class="vs-btn primary">启动 Bridge</button>
+            <button type="button" id="btn-copy-prompt" class="vs-btn">复制提示词</button>
+            <button type="button" class="vs-btn open-site" data-site="chatgpt" title="在 Web Agent 内置浏览器中打开 chatgpt.com">打开 ChatGPT</button>
+            <button type="button" class="vs-btn open-site" data-site="arena" title="在 Web Agent 内置浏览器中打开 arena.ai">打开 Arena</button>
+            <button type="button" class="vs-btn open-site" data-site="deepseek" title="在本机 Chrome/Edge 打开 chat.deepseek.com，用 DeepSeek++ 连 Bridge">打开 DeepSeek</button>
+            <button type="button" class="vs-btn open-site" data-site="workbuddy" title="在 Web Agent 内置浏览器中打开 workbuddy.cn">打开 WorkBuddy</button>
+            <button type="button" class="vs-btn open-site" data-site="trae" title="在 Web Agent 内置浏览器中打开 work.trae.cn">打开 Trae</button>
+            <button type="button" class="vs-btn open-site" data-site="qwen" title="在 Web Agent 内置浏览器中打开 qwenwork.cn">打开 Qwen</button>
+            <button type="button" class="vs-btn open-site" data-site="manus" title="在 Web Agent 内置浏览器中打开 manus.im">打开 Manus</button>
+            <button type="button" class="vs-btn open-site" data-site="shunova" title="在 Web Agent 内置浏览器中打开 shunova.cc">打开 Shunova</button>
+          </div>
+          <p class="hint" id="prompt-hint">网页 Agent：先装 cloudflared，启动 Bridge，等 trycloudflare.com，再按上面选中的客户端复制提示词。本机 Chat 不必走这一步。规则在 initialize.instructions；客户端若没吃到，可读 webagent://instructions。</p>
+          <p class="warn-line">⚠ Bridge 可以编辑文件并运行终端命令。请勿公开 MCP 地址。</p>
+
+          <section class="block">
+            <div class="block-h">
+              <div>账号与授权 <span id="acct-label" class="mute">尚未连接 GitHub 账号</span></div>
+              <span id="acct-pill" class="status-pill stop">登录</span>
+            </div>
+            <div class="row-btns">
+              <button type="button" id="btn-gh-login" class="vs-btn">使用 GitHub 登录</button>
+              <button type="button" id="btn-refresh-auth" class="vs-btn">刷新登录状态</button>
+            </div>
+            <p class="hint">安装 ID <code id="install-id">—</code></p>
+          </section>
+
+          <section class="block">
+            <div class="block-h">
+              <div>连接设置 <span id="conn-label" class="mute">正在检查隧道设置…</span></div>
+              <span id="conn-pill" class="status-pill">检查中</span>
+            </div>
+            <div class="tunnel-title">隧道模式</div>
+            <label class="tunnel-card on">
+              <input type="radio" name="tunnel" value="cloudflare" checked />
+              <div>
+                <div class="t-name">Cloudflare Quick Tunnel（无需账号或域名） <em>默认 · 零配置</em></div>
+                <ul>
+                  <li>地址：临时地址，重启后变化</li>
+                  <li>限制：官方未列出每月请求额度；最多 200 个并发请求；无 SLA</li>
+                  <li>配置：只需安装 cloudflared，无需账号或域名</li>
+                </ul>
+              </div>
+            </label>
+            <label class="tunnel-card">
+              <input type="radio" name="tunnel" value="cloudflare-named" />
+              <div>
+                <div class="t-name">Cloudflare Named Tunnel <em>固定地址</em></div>
+                <p class="hint">长期给各设备用同一个主机名。需 Tunnel Token 与 Published application。</p>
+                <input id="named-domain" class="ms-input" placeholder="mcp.example.com" />
+                <input id="named-token" class="ms-input" type="password" placeholder="Tunnel Token（安全存储，不进 settings.json）" />
+              </div>
+            </label>
+            <label class="tunnel-card">
+              <input type="radio" name="tunnel" value="ngrok" />
+              <div>
+                <div class="t-name">ngrok 开发域名 <em>固定地址</em></div>
+                <p class="hint">账号分配的开发域名重启后可复用。</p>
+              </div>
+            </label>
+          </section>
+
+          <details class="block">
+            <summary>快速打开</summary>
+            <p class="hint">列表里没有的站点，填名称和 https:// 地址后添加。点击仍在内置浏览器打开。</p>
+            <div id="ql-list"></div>
+            <div class="pref-row">
+              <input id="ql-name" class="ms-input" placeholder="名称" />
+              <input id="ql-url" class="ms-input" placeholder="https://" />
+              <button type="button" id="btn-add-link" class="vs-btn">添加</button>
+            </div>
+          </details>
+          <details class="block">
+            <summary>高级设置</summary>
+            <p class="hint">随 Web Agent 启动 Bridge、重置 MCP 地址、startupTimeoutMs。</p>
+            <button type="button" id="btn-reset-secret" class="vs-btn">重置 MCP 地址</button>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="file-menu" class="dropdown hidden">
+    <button type="button" data-act="new">新建文件</button>
+    <button type="button" data-act="open">打开文件...</button>
+    <button type="button" data-act="save">保存</button>
+    <hr />
+    <button type="button" data-act="welcome">打开欢迎页</button>
+    <button type="button" data-act="custom">智能体自定义设置...</button>
+  </div>
+  <div id="manage-menu" class="hidden">
+    <button type="button" id="menu-custom">智能体自定义设置...</button>
+    <button type="button" id="menu-api">API Provider...</button>
+    <button type="button" id="menu-bridge">Bridge...</button>
+  </div>
+  <div id="agent-pick-menu" class="dropdown hidden">
+    <button type="button" data-mode="ask">Web Agent Ask · 只读</button>
+    <button type="button" data-mode="plan">Web Agent Plan · 博弈</button>
+    <button type="button" data-mode="code">Web Agent Code · Agent</button>
+    <hr />
+    <button type="button" id="menu-custom-from-agent">配置自定义智能体...</button>
+  </div>
+  <div id="toast" hidden></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

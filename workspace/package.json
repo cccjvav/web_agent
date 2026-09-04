@@ -1,7 +1,7 @@
 {
-  "name": "shuncode-workspace-target",
+  "name": "webagent-workspace-target",
   "version": "1.0.0",
-  "description": "Live workspace inside ShunCode Editor",
+  "description": "Live workspace inside Web Agent Editor",
   "main": "src/calculator.js",
   "scripts": {
     "test": "node tests/calculator.test.js"

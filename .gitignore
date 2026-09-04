@@ -22,11 +22,11 @@ out/
 Thumbs.db
 
 # Local secrets / model keys
-workspace/.shuncode/config.json
-workspace/.shuncode/read-hashes.json
+workspace/.webagent/config.json
+workspace/.webagent/read-hashes.json
 
 # Rewritten on launch with a machine-absolute path
-shuncode-core/extensions-installed/extensions.json
+webagent-core/extensions-installed/extensions.json
 
 # Local screenshot dumps (never part of the product)
 image-search/

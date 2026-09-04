@@ -1,11 +1,11 @@
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions
-title ShunCode tests
+title Web Agent tests
 cd /d "%~dp0"
 
 echo ===========================================================
-echo   ShunCode  运行产品测试  ^(Windows CMD^)
+echo   Web Agent  运行产品测试  ^(Windows CMD^)
 echo ===========================================================
 echo.
 
@@ -16,7 +16,7 @@ if errorlevel 1 (
   exit /b 1
 )
 
-cd /d "%~dp0shuncode-core\agent-host"
+cd /d "%~dp0webagent-core\agent-host"
 if not exist "node_modules\express" (
   echo 正在安装依赖 npm install ...
   call npm install --no-audit --no-fund
@@ -28,7 +28,7 @@ if not exist "node_modules\express" (
 )
 
 echo.
-echo 测试目录: shuncode-core\agent-host\tests
+echo 测试目录: webagent-core\agent-host\tests
 echo.
 call npm test
 set "ERR=%ERRORLEVEL%"

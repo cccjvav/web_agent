@@ -1,7 +1,7 @@
 const assert = require('assert');
 const { add, subtract, multiply, divide, power } = require('../src/calculator');
 
-console.log('🚀 Running ShunCode Workspace Test Suite...');
+console.log('🚀 Running Web Agent Workspace Test Suite...');
 console.log('----------------------------------------------------');
 
 let passed = 0;

@@ -1,10 +1,10 @@
 # 网页 VS Code（code-server）使用指南
 
-这是本仓库的 **第二条运行方式**：浏览器里打开 **真正的 VS Code**，左侧活动栏有 **ShunCode** 插件，插件连本机 `agent-host`。ChatGPT / Arena 改磁盘仍然走 Bridge + cloudflared，和第一种方式相同。
+这是本仓库的 **第二条运行方式**：浏览器里打开 **真正的 VS Code**，左侧活动栏有 **Web Agent** 插件，插件连本机 `agent-host`。ChatGPT / Arena 改磁盘仍然走 Bridge + cloudflared，和第一种方式相同。
 
 | | 方式 A：自绘工作台 | 方式 B：网页 VS Code |
 |---|---|---|
-| 启动 | `run-shuncode.cmd` | `run-shuncode-vscode.cmd` |
+| 启动 | `run-webagent.cmd` | `run-webagent-vscode.cmd` |
 | 浏览器里看到 | 仿 VS Code 的工作台 | **官方 code-server / Code-OSS** |
 | 端口 3000 | 工作台 UI | code-server |
 | 端口 48271 | agent-host MCP | 同样 |
@@ -18,17 +18,17 @@
 
 ## 1. Windows（CMD）
 
-已能运行 `run-shuncode.cmd` 的前提下（Node LTS + npm）：
+已能运行 `run-webagent.cmd` 的前提下（Node LTS + npm）：
 
 ```bat
 cd /d D:\code\web_agent
-run-shuncode-vscode.cmd
+run-webagent-vscode.cmd
 ```
 
 挂自己的仓库：
 
 ```bat
-run-shuncode-vscode.cmd D:\code\my-app
+run-webagent-vscode.cmd D:\code\my-app
 ```
 
 第一次会：
@@ -38,24 +38,24 @@ run-shuncode-vscode.cmd D:\code\my-app
 3. 启动 code-server 监听 **http://127.0.0.1:3000**
 
 浏览器打开：**http://127.0.0.1:3000**  
-左侧活动栏最上方（或扩展图标附近）点 **ShunCode**：
+左侧活动栏最上方（或扩展图标附近）点 **Web Agent**：
 
-- **ShunCode Chat & Agent**（侧栏，像 Copilot）：输入框下 **Agent ▾** 默认 **ShunCode Code**。发任务就会对当前文件夹搜、读、改、测。
-- **VS Code 原生 Chat**（和 Copilot 同一个 Chat 面板）：打开 Chat，输入 `@shuncode` 后发任务。`/ask` 只读，`/plan` 博弈，默认就是 Agent（`/code`）。打补丁后会在编辑器里打开文件。命令 **ShunCode: 打开 Agent Chat** 或点状态栏也会打开这块。
+- **Web Agent Chat & Agent**（侧栏，像 Copilot）：输入框下 **Agent ▾** 默认 **Web Agent Code**。发任务就会对当前文件夹搜、读、改、测。
+- **VS Code 原生 Chat**（和 Copilot 同一个 Chat 面板）：打开 Chat，输入 `@webagent` 后发任务。`/ask` 只读，`/plan` 博弈，默认就是 Agent（`/code`）。打补丁后会在编辑器里打开文件。命令 **Web Agent: 打开 Agent Chat** 或点状态栏也会打开这块。
 - **Bridge 模式**：启动 Bridge、复制提示词（内容与截图 5 那两行一致）
 
 ### Chat 里的 Agent（对照 Copilot）
 
 侧载的 GitHub Copilot 在 **原生 Chat** 输入框上有 Ask / Edit / **Agent** 下拉：Agent 会自己搜文件、改多文件、跑终端。本仓库不依赖 Copilot 本体，对等能力在两处：
 
-1. **原生 Chat `@shuncode`**（插件 `chatParticipants`，`isDefault`）。不写 slash 就是 **Agent / Code**。`/ask`、`/plan`、`/code` 对应 Copilot 的只读 / 方案 / 动手。工具轨迹会写成 Chat 消息；`apply_patch` 后在编辑器打开该文件。
-2. **活动栏 ShunCode 侧栏** 输入框下的 **Agent · ShunCode Code ▾**，同一套 Ask / Plan / Code。
+1. **原生 Chat `@webagent`**（插件 `chatParticipants`，`isDefault`）。不写 slash 就是 **Agent / Code**。`/ask`、`/plan`、`/code` 对应 Copilot 的只读 / 方案 / 动手。工具轨迹会写成 Chat 消息；`apply_patch` 后在编辑器打开该文件。
+2. **活动栏 Web Agent 侧栏** 输入框下的 **Agent · Web Agent Code ▾**，同一套 Ask / Plan / Code。
 
 两边都打本机 `http://127.0.0.1:48271/api/chat`。填了 API Key 会走模型工具循环；没 Key 时内置探索 Agent 仍会搜、读、必要时打补丁并跑测试。
 
-GitHub Copilot 自己的 Ask/Edit/Agent 下拉是 Copilot 扩展私有 UI，第三方扩展开不进去。若你同时装了 Copilot，请用 **`@shuncode`** 或左侧 **ShunCode** 侧栏，不要指望 Copilot 的 Agent 下拉里出现 ShunCode。
+GitHub Copilot 自己的 Ask/Edit/Agent 下拉是 Copilot 扩展私有 UI，第三方扩展开不进去。若你同时装了 Copilot，请用 **`@webagent`** 或左侧 **Web Agent** 侧栏，不要指望 Copilot 的 Agent 下拉里出现 Web Agent。
 
-齿轮 → **智能体自定义设置** 里可填 **环境偏好**、**技术栈**，并用 **技能引导** 建 `SKILL.md`。这些会写进工作区 `.shuncode/`，原生 Chat `@shuncode` 和 Bridge 都会带上。
+齿轮 → **智能体自定义设置** 里可填 **环境偏好**、**技术栈**，并用 **技能引导** 建 `SKILL.md`。这些会写进工作区 `.webagent/`，原生 Chat `@webagent` 和 Bridge 都会带上。
 
 工作区就是你传入的文件夹，VS Code 资源管理器、编辑器、搜索都是真的。
 
@@ -63,7 +63,7 @@ GitHub Copilot 自己的 Ask/Edit/Agent 下拉是 Copilot 扩展私有 UI，第�
 
 ### 不要做的事
 
-- 不要和 `run-shuncode.cmd` 同时开。
+- 不要和 `run-webagent.cmd` 同时开。
 - 不要把 MCP 地址发到公开地方。
 
 ### 集成终端
@@ -84,22 +84,22 @@ Chat / Bridge / 编辑文件不受影响。
 2. 侧栏 Bridge → **启动 Bridge**，等到 `https://….trycloudflare.com/mcp/…`
 3. **Arena 类：** **复制提示词**，整段作为新对话第一句。**DeepSeek 网页：** 把 MCP 地址填进本机 Chrome/Edge 的 DeepSeek++ 侧边栏，见 [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md)
 
-密钥仍在工作区 `.shuncode\config.json`。Quick Tunnel 域名每次启动都会变。
+密钥仍在工作区 `.webagent\config.json`。Quick Tunnel 域名每次启动都会变。
 
 ---
 
 ## 3. Linux / macOS
 
 ```bash
-chmod +x run-shuncode-vscode.sh
-./run-shuncode-vscode.sh
-./run-shuncode-vscode.sh /path/to/my-app
+chmod +x run-webagent-vscode.sh
+./run-webagent-vscode.sh
+./run-webagent-vscode.sh /path/to/my-app
 ```
 
 同样需要 npm 网络。也可用环境变量 `CODE_SERVER_PATH` 以外的端口：
 
 ```bash
-CODE_SERVER_PORT=3000 AGENT_HOST_PORT=48271 ./run-shuncode-vscode.sh
+CODE_SERVER_PORT=3000 AGENT_HOST_PORT=48271 ./run-webagent-vscode.sh
 ```
 
 ---
@@ -112,7 +112,7 @@ CODE_SERVER_PORT=3000 AGENT_HOST_PORT=48271 ./run-shuncode-vscode.sh
 wsl --install
 ```
 
-新开 WSL 终端，把仓库放到 Linux 文件系统（例如 `~/web_agent`），再执行 `./run-shuncode-vscode.sh`。  
+新开 WSL 终端，把仓库放到 Linux 文件系统（例如 `~/web_agent`），再执行 `./run-webagent-vscode.sh`。  
 浏览器仍用 Windows 打开 http://127.0.0.1:3000（WSL 会转发）。
 
 ---
@@ -121,12 +121,12 @@ wsl --install
 
 | 路径 | 角色 |
 |---|---|
-| `run-shuncode-vscode.cmd` / `.sh` | 本方式入口 |
-| `shuncode-core/scripts/run-code-oss.js` | 先 ensure，再同时拉起 agent-host + code-server |
-| `shuncode-core/scripts/ensure-code-server.js` | 从 npm 安装到 `bin/code-server-runtime/` |
+| `run-webagent-vscode.cmd` / `.sh` | 本方式入口 |
+| `webagent-core/scripts/run-code-oss.js` | 先 ensure，再同时拉起 agent-host + code-server |
+| `webagent-core/scripts/ensure-code-server.js` | 从 npm 安装到 `bin/code-server-runtime/` |
 | `bin/code-server-runtime/` | **完整可运行** 的 code-server（Git 忽略内容） |
-| `shuncode-core/extension/` | 插件源码 |
-| `shuncode-core/extensions-installed/` | code-server `--extensions-dir` |
+| `webagent-core/extension/` | 插件源码 |
+| `webagent-core/extensions-installed/` | code-server `--extensions-dir` |
 
 ---
 
@@ -136,17 +136,17 @@ wsl --install
 检查能否访问 registry.npmjs.org。可用国内镜像后再跑一次启动脚本。
 
 **端口 3000 被占用**  
-关掉 `run-shuncode.cmd` 或其它占用。或：
+关掉 `run-webagent.cmd` 或其它占用。或：
 
 ```bat
 set CODE_SERVER_PORT=8080
-run-shuncode-vscode.cmd
+run-webagent-vscode.cmd
 ```
 
 然后打开 http://127.0.0.1:8080
 
-**侧栏没有 ShunCode**  
-看启动窗口是否复制了插件；刷新浏览器。扩展目录是 `shuncode-core\extensions-installed`。
+**侧栏没有 Web Agent**  
+看启动窗口是否复制了插件；刷新浏览器。扩展目录是 `webagent-core\extensions-installed`。
 
 **Chat 提示连不上 48271**  
 agent-host 没起来。看黑色窗口报错；防火墙是否拦了 Node。
@@ -161,5 +161,5 @@ agent-host 没起来。看黑色窗口报错；防火墙是否拦了 Node。
 
 ## 7. 和方式 A 怎么选
 
-- 只想让 ChatGPT 改本机仓库、界面够用：继续 **`run-shuncode.cmd`**
-- 想要浏览器里完整 VS Code（语法高亮、多文件、插件生态）+ 同一套 Bridge：**`run-shuncode-vscode.cmd`**
+- 只想让 ChatGPT 改本机仓库、界面够用：继续 **`run-webagent.cmd`**
+- 想要浏览器里完整 VS Code（语法高亮、多文件、插件生态）+ 同一套 Bridge：**`run-webagent-vscode.cmd`**

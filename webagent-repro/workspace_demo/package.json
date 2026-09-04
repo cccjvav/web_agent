@@ -1,0 +1,12 @@
+{
+  "name": "webagent-demo-project",
+  "version": "1.0.0",
+  "description": "Demo workspace for Web Agent Bridge testing",
+  "main": "src/calculator.js",
+  "scripts": {
+    "test": "node tests/calculator.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

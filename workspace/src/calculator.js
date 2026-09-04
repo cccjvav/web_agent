@@ -1,5 +1,5 @@
 /**
- * Calculator Core Module - ShunCode Code-OSS Carrier Demo
+ * Calculator Core Module - Web Agent Code-OSS Carrier Demo
  */
 
 function add(a, b) {

@@ -1,6 +1,6 @@
 # 网页 Chat Plus（多网站扩展）使用指南
 
-不少网页 AI（ChatGPT、Gemini、DeepSeek、豆包、通义……）**自己调不了 MCP**。社区扩展 **Chat Plus**（[aiguicai/Chat-Plus](https://github.com/aiguicai/Chat-Plus)）用站点适配器当手：模型只负责想，扩展拦截工具调用，打到本仓库的 ShunCode Bridge（Streamable HTTP），真正读写磁盘的仍是本机 `agent-host`。
+不少网页 AI（ChatGPT、Gemini、DeepSeek、豆包、通义……）**自己调不了 MCP**。社区扩展 **Chat Plus**（[aiguicai/Chat-Plus](https://github.com/aiguicai/Chat-Plus)）用站点适配器当手：模型只负责想，扩展拦截工具调用，打到本仓库的 Web Agent Bridge（Streamable HTTP），真正读写磁盘的仍是本机 `agent-host`。
 
 本仓库把它写成**配套路径**（从 GitHub 编译、加载、把 MCP URL 填进扩展）。**不**把扩展源码拷进 Git，也**不** fork。许可证是 **GPL v3 或更新**，拷进本仓库会传染许可证。
 
@@ -21,7 +21,7 @@
 
 ## 1. 从 GitHub 编译并加载（Windows CMD）
 
-扩展**不在** Chrome 商店。需要本机已有 **Git** 和 **Node.js / npm**（跑 ShunCode 本来就要）。仓库根目录：
+扩展**不在** Chrome 商店。需要本机已有 **Git** 和 **Node.js / npm**（跑 Web Agent 本来就要）。仓库根目录：
 
 ```bat
 check-env.cmd
@@ -58,9 +58,9 @@ npm run build:chrome
 
 ### 不要做的安装
 
-**不要**再克隆或运行 [aiguicai/MCP-Gateway](https://github.com/aiguicai/MCP-Gateway) 来「转」我们的服务。本项目读盘、打补丁、跑命令已经由 `run-shuncode.cmd` 拉起的 agent-host 负责。
+**不要**再克隆或运行 [aiguicai/MCP-Gateway](https://github.com/aiguicai/MCP-Gateway) 来「转」我们的服务。本项目读盘、打补丁、跑命令已经由 `run-webagent.cmd` 拉起的 agent-host 负责。
 
-本仓库也**不会**把 Chat-Plus 源码放进 `shuncode-core/`。升级扩展请回上游 Git 拉新再 `npm run build:chrome`。
+本仓库也**不会**把 Chat-Plus 源码放进 `webagent-core/`。升级扩展请回上游 Git 拉新再 `npm run build:chrome`。
 
 ---
 
@@ -82,7 +82,7 @@ winget install --id Cloudflare.cloudflared
 
 ```bat
 cd /d D:\code\web_agent
-run-shuncode.cmd D:\code\my-app
+run-webagent.cmd D:\code\my-app
 ```
 
 把路径换成你的。浏览器打开 http://127.0.0.1:3000 → 齿轮 → **Bridge** → **启动 Bridge**，等到地址变成：
@@ -118,7 +118,7 @@ SSE 作为备选（本仓库 GET `/mcp` 也认 `text/event-stream`）；主路�
 
 扩展会：识别模型打出的工具标记 → 调我们的 MCP → 把结果写回**同一条**会话，模型再继续。
 
-回到 ShunCode，右侧切到 **BRIDGE**，应能看到工具调用。磁盘上的文件会变。确认启动窗口里 `Workspace` 打印的是你以为的那个目录。
+回到 Web Agent，右侧切到 **BRIDGE**，应能看到工具调用。磁盘上的文件会变。确认启动窗口里 `Workspace` 打印的是你以为的那个目录。
 
 Quick Tunnel 的域名每次「启动 Bridge」都会变，必须回扩展里改 URL。不要把这条地址发到群里。
 
@@ -146,7 +146,7 @@ Quick Tunnel 的域名每次「启动 Bridge」都会变，必须回扩展里改
 
 **网页只空谈、BRIDGE 没有调用**  \\n模型没有走工具，或扩展没拦到标记。新开对话；确认当前页已启用工具。不要把 URL 只贴在聊天框里当普通文字（那不是连接方式）。
 
-**改到了文件，但不是你的仓库**  \\n看 `run-shuncode.cmd` 窗口的 `Workspace` 行。要用 `run-shuncode.cmd D:\\code\\my-app` 挂自己的目录。
+**改到了文件，但不是你的仓库**  \\n看 `run-webagent.cmd` 窗口的 `Workspace` 行。要用 `run-webagent.cmd D:\\code\\my-app` 挂自己的目录。
 
 **误装了 MCP-Gateway**  \\n停掉它。连我们的 Bridge 用不到。不要指望靠它代替 agent-host。
 

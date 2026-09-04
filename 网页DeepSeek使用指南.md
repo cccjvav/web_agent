@@ -1,6 +1,6 @@
 # 网页 DeepSeek（DeepSeek++）使用指南
 
-DeepSeek 网页（[chat.deepseek.com](https://chat.deepseek.com/)）**不能原生调用 MCP**。要让它改你电脑上的仓库，需要第三方浏览器扩展 **DeepSeek++** 当手：模型只负责想，扩展拦截工具调用，打到本仓库的 ShunCode Bridge（Streamable HTTP），真正读写磁盘的仍是本机 `agent-host`。
+DeepSeek 网页（[chat.deepseek.com](https://chat.deepseek.com/)）**不能原生调用 MCP**。要让它改你电脑上的仓库，需要第三方浏览器扩展 **DeepSeek++** 当手：模型只负责想，扩展拦截工具调用，打到本仓库的 Web Agent Bridge（Streamable HTTP），真正读写磁盘的仍是本机 `agent-host`。
 
 本仓库把它写成**配套路径**（安装、浏览器、把 MCP URL 填进扩展）。**不**把扩展源码拷进 Git，也**不** fork [zhu1090093659/deepseek-pp](https://github.com/zhu1090093659/deepseek-pp)。
 
@@ -51,9 +51,9 @@ Edge 可以装 Chrome 网上应用店的扩展：
 npx deepseek-pp-shell-host install --browser chrome --extension-id kdmpkkahkhdmdhfkdihkopikgcocbpbf
 ```
 
-那是给扩展本机文件/Shell 用的 Native Host。本项目读盘、打补丁、跑命令已经由 `run-shuncode.cmd` 拉起的 agent-host 负责。再装一层只会多一个本机命令通道，和 MCP 无关。
+那是给扩展本机文件/Shell 用的 Native Host。本项目读盘、打补丁、跑命令已经由 `run-webagent.cmd` 拉起的 agent-host 负责。再装一层只会多一个本机命令通道，和 MCP 无关。
 
-本仓库也**不会**把扩展源码放进 `shuncode-core/`。升级扩展请走商店或上游 GitHub。
+本仓库也**不会**把扩展源码放进 `webagent-core/`。升级扩展请走商店或上游 GitHub。
 
 ---
 
@@ -75,7 +75,7 @@ winget install --id Cloudflare.cloudflared
 
 ```bat
 cd /d D:\code\web_agent
-run-shuncode.cmd D:\code\my-app
+run-webagent.cmd D:\code\my-app
 ```
 
 把路径换成你的。浏览器打开 http://127.0.0.1:3000 → 齿轮 → **Bridge** → **启动 Bridge**，等到地址变成：
@@ -111,7 +111,7 @@ SSE 作为备选；本仓库主路径是 Streamable HTTP。不要用扩展的「
 
 扩展会：识别模型打出的工具标记 → 调我们的 MCP → 把结果写回**同一条** DeepSeek 会话，模型再继续。
 
-回到 ShunCode，右侧切到 **BRIDGE**，应能看到工具调用。磁盘上的文件会变。确认启动窗口里 `Workspace` 打印的是你以为的那个目录。
+回到 Web Agent，右侧切到 **BRIDGE**，应能看到工具调用。磁盘上的文件会变。确认启动窗口里 `Workspace` 打印的是你以为的那个目录。
 
 Quick Tunnel 的域名每次「启动 Bridge」都会变，必须回扩展里改 URL。不要把这条地址发到群里。
 
@@ -137,7 +137,7 @@ Quick Tunnel 的域名每次「启动 Bridge」都会变，必须回扩展里改
 
 **DeepSeek 只空谈、BRIDGE 没有调用**  \n模型没有走工具，或扩展没拦到标记。新开对话；确认扩展未关掉「MCP 工具执行」。不要把 URL 只贴在聊天框里当普通文字（那不是连接方式）。
 
-**改到了文件，但不是你的仓库**  \n看 `run-shuncode.cmd` 窗口的 `Workspace` 行。要用 `run-shuncode.cmd D:\code\my-app` 挂自己的目录。
+**改到了文件，但不是你的仓库**  \n看 `run-webagent.cmd` 窗口的 `Workspace` 行。要用 `run-webagent.cmd D:\code\my-app` 挂自己的目录。
 
 **误装了 Shell Native Host**  \n不影响我们的 MCP。可以不管。不要指望靠它代替 Bridge。
 

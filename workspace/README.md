@@ -2,16 +2,16 @@
 
 当前处理目标：`workspace/`
 
-这是 `run-shuncode.cmd` **默认**挂上的本机项目（`WORKSPACE_ROOT` 未指定时 = 仓库根 `workspace\`）。Chat / Bridge / 网页 Agent 改的就是这里的磁盘。不是 MCP 服务器源码。
+这是 `run-webagent.cmd` **默认**挂上的本机项目（`WORKSPACE_ROOT` 未指定时 = 仓库根 `workspace\`）。Chat / Bridge / 网页 Agent 改的就是这里的磁盘。不是 MCP 服务器源码。
 
-无 Python。代码：`src/calculator.js`、`tests/calculator.test.js`；配置：`package.json`、`.shuncode/customizations.json`。
+无 Python。代码：`src/calculator.js`、`tests/calculator.test.js`；配置：`package.json`、`.webagent/customizations.json`。
 
 ---
 
 ## 1. 模块概述
 
 - **定位：** 演示工作区（计算器）。用来验证搜-读-补丁-再测，不是产品进程。
-- **兄弟依赖：** **没有 require 产品代码。** 反过来：`agent-host` 的 `config.workspaceRoot` 默认指向本目录；`load_skill` 读 `.shuncode/skills/`；`getInstructions` 会拼 `customizations.json` / `instructions.md`。
+- **兄弟依赖：** **没有 require 产品代码。** 反过来：`agent-host` 的 `config.workspaceRoot` 默认指向本目录；`load_skill` 读 `.webagent/skills/`；`getInstructions` 会拼 `customizations.json` / `instructions.md`。
 - **谁调用：** 用户在工作台或 MCP 工具里读写；`npm test` 在本目录跑计算器测试。
 
 ---
@@ -25,9 +25,9 @@
 
   | Key | 用途 | 取值 |
   |---|---|---|
-  | `name` | 包名 | `shuncode-workspace-target` |
+  | `name` | 包名 | `webagent-workspace-target` |
   | `version` | 版本 | `1.0.0` |
-  | `description` | 说明 | `Live workspace inside ShunCode Editor` |
+  | `description` | 说明 | `Live workspace inside Web Agent Editor` |
   | `main` | 入口字段 | `src/calculator.js` |
   | `scripts.test` | `npm test` | `node tests/calculator.test.js` |
 
@@ -68,9 +68,9 @@
 
 ---
 
-### 📄 文件名：`.shuncode/customizations.json`
+### 📄 文件名：`.webagent/customizations.json`
 
-- **文件职责：** 工作区自定义（`src/models/customizations.js` 会读）。Git **跟踪**本文件；`.gitignore` 只忽略 `workspace/.shuncode/config.json`（MCP 密钥，本树当前无该文件）。
+- **文件职责：** 工作区自定义（`src/models/customizations.js` 会读）。Git **跟踪**本文件；`.gitignore` 只忽略 `workspace/.webagent/config.json`（MCP 密钥，本树当前无该文件）。
 - **每一个 Key：**
 
   | Key | 用途 | 当前取值 |
@@ -90,13 +90,13 @@
 
 ---
 
-### 📄 文件名：`.shuncode/instructions.md`
+### 📄 文件名：`.webagent/instructions.md`
 
 - **文件职责：** 与 `customizations.instructions` 同一句话的 markdown 副本（1 行，无函数）。
 
 ---
 
-### 📄 文件名：`.shuncode/skills/fix-tests/SKILL.md`
+### 📄 文件名：`.webagent/skills/fix-tests/SKILL.md`
 
 - **文件职责：** 给模型的 Skill 文本（`load_skill` 可读）。不是可执行 JS。
 - **内容结构：**
@@ -108,7 +108,7 @@
 
 ---
 
-### 📄 文件名：`.shuncode/skills/review/SKILL.md`
+### 📄 文件名：`.webagent/skills/review/SKILL.md`
 
 - **文件职责：** 代码审查 Skill（`load_skill` 可读）。默认只读。
 - **内容结构：**
@@ -119,14 +119,14 @@
 
 ---
 
-### 📄 文件名：`.shuncode/skills/docs-sync/SKILL.md`
+### 📄 文件名：`.webagent/skills/docs-sync/SKILL.md`
 
 - **文件职责：** 仓库级「功能改完必须同步改说明书」约定，以 Skill 形式给 `load_skill` 读。不是可执行 JS。不要再在仓库根放 `文档约定.md`。动到设计理由时还要改根目录 `架构导读.md`（四层：人话 → 比喻 → 文件落地 → 行业叫法）。
 - **内容结构：**
   - L1–L14：标题「文档同步」；触发词含新功能 / 改工具 MCP 路由 工作台 测试 / 说明书 / README / 四阶段 / 文档约定 / 架构 / 导读 / 为什么这样装。四层写法说明。默认 `workspace/` 沙箱进不去仓库其它目录。
   - L16–L18 **Ask：** 只读 `list_directory` → `search_files` → `read_files`（含根 `架构导读.md`）；禁止 `apply_patch` / `write_file` / `run_command`。
   - L20–L22 **Plan：** 列出要改的说明书路径（含是否动导读），不改仓库。
-  - L24–L33 **Code：** 按改动类型点名对应夹 README / `总览.md` / `DOCUMENTATION_SUMMARY.md`；第 8 条：架构/数据流/钥匙隧道/新工单入口改 `架构导读.md` 对应小节。根 `README.md` 不改成行级模板；`shuncode-repro/` 冻结。
+  - L24–L33 **Code：** 按改动类型点名对应夹 README / `总览.md` / `DOCUMENTATION_SUMMARY.md`；第 8 条：架构/数据流/钥匙隧道/新工单入口改 `架构导读.md` 对应小节。根 `README.md` 不改成行级模板；`webagent-repro/` 冻结。
   - L35：禁止杜撰、禁止为对齐文档改 `CONNECT_LINE`、禁止提交 dist。
   - L37：提交前 `npm test` 绿；动过设计理由则导读能对上新代码。
 
@@ -135,7 +135,7 @@
 ## 3. 执行逻辑流（仅本目录）
 
 1. agent-host 启动时 `workspaceRoot` 默认为本目录。
-2. MCP / Chat 工具的相对路径都相对这里：`src/calculator.js`、`tests/`、`.shuncode/`。
+2. MCP / Chat 工具的相对路径都相对这里：`src/calculator.js`、`tests/`、`.webagent/`。
 3. 用户或 Agent 执行 `npm test` → `tests/calculator.test.js` 调 `src/calculator.js`。
-4. `load_skill` 扫描 `.shuncode/skills/*/SKILL.md`；`getInstructions` 拼 `customizations.json` 的 instructions。
-5. 换工作区：`run-shuncode.cmd D:\code\my-repo`，就不再用本演示树。
+4. `load_skill` 扫描 `.webagent/skills/*/SKILL.md`；`getInstructions` 拼 `customizations.json` 的 instructions。
+5. 换工作区：`run-webagent.cmd D:\code\my-repo`，就不再用本演示树。

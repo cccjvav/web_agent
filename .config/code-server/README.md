@@ -8,9 +8,9 @@
 
 ## 1. 模块概述
 
-- **定位：** code-server 的 `--config` 文件。`shuncode-core/scripts/run-code-oss.js` L116 拼出本路径，L139–L140 以 `--config` 传入。
-- **兄弟依赖：** 只被 `run-code-oss.js` 读取。自绘工作台 `run-shuncode.cmd` **不读**本文件。
-- **谁调用：** `run-shuncode-vscode.cmd` → `run-code-oss.js` → code-server 进程。
+- **定位：** code-server 的 `--config` 文件。`webagent-core/scripts/run-code-oss.js` L116 拼出本路径，L139–L140 以 `--config` 传入。
+- **兄弟依赖：** 只被 `run-code-oss.js` 读取。自绘工作台 `run-webagent.cmd` **不读**本文件。
+- **谁调用：** `run-webagent-vscode.cmd` → `run-code-oss.js` → code-server 进程。
 
 ---
 
@@ -29,7 +29,7 @@
   | `disable-telemetry` | 关遥测 | `true` |
   | `disable-update-check` | 关更新检查 | `true` |
 
-命令行还会加 `--disable-workspace-trust`、`--trusted-origins *`、`--app-name ShunCode`（见 `run-code-oss.js` L120–L147），不写在本 yaml 里。
+命令行还会加 `--disable-workspace-trust`、`--trusted-origins *`、`--app-name Web Agent`（见 `run-code-oss.js` L120–L147），不写在本 yaml 里。
 
 ---
 

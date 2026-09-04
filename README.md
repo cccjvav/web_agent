@@ -1,6 +1,8 @@
-# ShunCode 复现工作台
+# Web Agent
 
-对照官方文档 [docs.shuncode.top](https://docs.shuncode.top/docs/intro/) 的本地可运行版本。
+本机工作台 + 独立 agent-host。网页 AI 通过 MCP 改你电脑上的仓库。
+
+同类产品的公开文档可参考 [docs.shuncode.top](https://docs.shuncode.top/docs/intro/)。
 
 **Windows 用户请先读 [使用指南.md](./使用指南.md)**（安装、CMD、自己的仓库、Bridge 全在里面）。DeepSeek 网页另见 [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md)。多个网页 AI 用 Chat Plus 另见 [网页ChatPlus使用指南.md](./网页ChatPlus使用指南.md)。
 
@@ -23,12 +25,12 @@
 
 | 目录 | 现在用不用 | 职责 |
 |---|---|---|
-| `shuncode-core/` | **现行主程序** | 工作台 UI + 独立 agent-host（MCP / 工具 / 隧道） |
-| `workspace/` | 默认演示工作区 | 计算器示例；`.shuncode`（含 `docs-sync` 等 Skill）在这里，不在仓库根 |
-| `shuncode-repro/` | 不用 | 更早一版纯 Bridge 原型 |
+| `webagent-core/` | **现行主程序** | 工作台 UI + 独立 agent-host（MCP / 工具 / 隧道） |
+| `workspace/` | 默认演示工作区 | 计算器示例；`.webagent`（含 `docs-sync` 等 Skill）在这里，不在仓库根 |
+| `webagent-repro/` | 不用 | 更早一版纯 Bridge 原型 |
 | `bin/code-server-runtime/` | 第二种跑法下载到这里 | npm 完整 code-server，不进 Git |
-| `run-shuncode-vscode.cmd` | 第二种跑法 | 浏览器里真 VS Code + ShunCode 侧栏，见 [网页VSCode使用指南.md](./网页VSCode使用指南.md) |
-| `shuncode-core/agent-host/tests/` | 产品测试 | `run-tests.cmd`；不必在仓库根再放 `tests/` |
+| `run-webagent-vscode.cmd` | 第二种跑法 | 浏览器里真 VS Code + Web Agent 侧栏，见 [网页VSCode使用指南.md](./网页VSCode使用指南.md) |
+| `webagent-core/agent-host/tests/` | 产品测试 | `run-tests.cmd`；不必在仓库根再放 `tests/` |
 
 - 右侧 **Chat**：输入框 **Agent ▾** 默认 **Code**（像 Copilot Agent：搜-读-改-测），只改本机，不需要隧道，不需要 Plus
 - **Bridge**：同一套工具变成 MCP。Arena 等网页栏贴 URL 即可；**DeepSeek 网页**要装 DeepSeek++（不 fork 进本仓库），把 Streamable HTTP 填进扩展；**多个网页 AI**（ChatGPT / Gemini / 豆包 / 通义等）可从 GitHub 编译 Chat Plus，同样填 Streamable HTTP，不必装 MCP-Gateway；ChatGPT 免费普通聊天**不装扩展**时通常调不了 MCP；Plus 开发者模式可用 OAuth 连接器
@@ -37,7 +39,7 @@
 
 ```bat
 check-env.cmd
-run-shuncode.cmd
+run-webagent.cmd
 ```
 
 浏览器打开 http://127.0.0.1:3000
@@ -45,7 +47,7 @@ run-shuncode.cmd
 挂你自己的仓库：
 
 ```bat
-run-shuncode.cmd D:\code\my-app
+run-webagent.cmd D:\code\my-app
 ```
 
 让网页 Agent 改这个仓库：先 `winget install --id Cloudflare.cloudflared`，再在工作台 **启动 Bridge**。Arena 复制提示词；DeepSeek 把 MCP 地址填进 DeepSeek++；多个网页用 Chat Plus。细节见使用指南第 6 节。
@@ -53,7 +55,7 @@ run-shuncode.cmd D:\code\my-app
 网页里打开真正的 VS Code：
 
 ```bat
-run-shuncode-vscode.cmd
+run-webagent-vscode.cmd
 ```
 
 验证实现：
@@ -67,5 +69,5 @@ run-tests.cmd
 ## 其它环境
 
 ```bash
-./run-shuncode.sh
+./run-webagent.sh
 ```
