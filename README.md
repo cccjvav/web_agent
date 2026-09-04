@@ -2,7 +2,7 @@
 
 对照官方文档 [docs.shuncode.top](https://docs.shuncode.top/docs/intro/) 的本地可运行版本。
 
-**Windows 用户请先读 [使用指南.md](./使用指南.md)**（安装、CMD、自己的仓库、Bridge 全在里面）。DeepSeek 网页另见 [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md)。
+**Windows 用户请先读 [使用指南.md](./使用指南.md)**（安装、CMD、自己的仓库、Bridge 全在里面）。DeepSeek 网页另见 [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md)。多个网页 AI 用 Chat Plus 另见 [网页ChatPlus使用指南.md](./网页ChatPlus使用指南.md)。
 
 **GitHub 上这套东西怎么跑、文件夹是谁：** 请读 **[组件说明.md](./组件说明.md)**。从没写过这种程序、想先用人话搞懂「为什么」： **[架构导读.md](./架构导读.md)**。
 
@@ -11,6 +11,7 @@
 | [使用指南.md](./使用指南.md) | Windows + CMD 从安装到 Bridge |
 | [架构导读.md](./架构导读.md) | 人话 → 比喻 → 文件落地 → 行业叫法（为什么这样装） |
 | [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md) | DeepSeek 网页 + DeepSeek++（不 fork 扩展） |
+| [网页ChatPlus使用指南.md](./网页ChatPlus使用指南.md) | 多网站 Chat Plus（不 fork、不装 MCP-Gateway） |
 | [网页VSCode使用指南.md](./网页VSCode使用指南.md) | 浏览器里真 VS Code |
 | [组件说明.md](./组件说明.md) | 整条工作流、怎么跑、为什么这样装、每个目录是谁 |
 | [技术实现.md](./技术实现.md) | 对着源码逐步直译：每个函数拆步骤，if/try 不漏；不杜撰未实现的逻辑 |
@@ -30,7 +31,7 @@
 | `shuncode-core/agent-host/tests/` | 产品测试 | `run-tests.cmd`；不必在仓库根再放 `tests/` |
 
 - 右侧 **Chat**：输入框 **Agent ▾** 默认 **Code**（像 Copilot Agent：搜-读-改-测），只改本机，不需要隧道，不需要 Plus
-- **Bridge**：同一套工具变成 MCP。Arena 等网页栏贴 URL 即可；**DeepSeek 网页**要装 DeepSeek++（不 fork 进本仓库），把 Streamable HTTP 填进扩展；ChatGPT 免费普通聊天通常调不了 MCP；Plus 开发者模式可用 OAuth 连接器
+- **Bridge**：同一套工具变成 MCP。Arena 等网页栏贴 URL 即可；**DeepSeek 网页**要装 DeepSeek++（不 fork 进本仓库），把 Streamable HTTP 填进扩展；**多个网页 AI**（ChatGPT / Gemini / 豆包 / 通义等）可从 GitHub 编译 Chat Plus，同样填 Streamable HTTP，不必装 MCP-Gateway；ChatGPT 免费普通聊天**不装扩展**时通常调不了 MCP；Plus 开发者模式可用 OAuth 连接器
 
 ## Windows 最快开始
 
@@ -47,7 +48,7 @@ run-shuncode.cmd
 run-shuncode.cmd D:\code\my-app
 ```
 
-让网页 Agent 改这个仓库：先 `winget install --id Cloudflare.cloudflared`，再在工作台 **启动 Bridge**。Arena 复制提示词；DeepSeek 把 MCP 地址填进 DeepSeek++。细节见使用指南第 6 节。
+让网页 Agent 改这个仓库：先 `winget install --id Cloudflare.cloudflared`，再在工作台 **启动 Bridge**。Arena 复制提示词；DeepSeek 把 MCP 地址填进 DeepSeek++；多个网页用 Chat Plus。细节见使用指南第 6 节。
 
 网页里打开真正的 VS Code：
 

@@ -108,4 +108,4 @@ Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./s
 | `.config/code-server/` | [README](./.config/code-server/README.md) |
 | 仓库根脚本 | [启动脚本说明.md](./启动脚本说明.md) |
 
-知识图谱：[总览.md](./总览.md)。产品怎么跑：[README.md](./README.md)、[使用指南.md](./使用指南.md)。人话架构：[架构导读.md](./架构导读.md)。
+知识图谱：[总览.md](./总览.md)。产品怎么跑：[README.md](./README.md)、[使用指南.md](./使用指南.md)。人话架构：[架构导读.md](./架构导读.md)。DeepSeek 扩展：[网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md)。多网站 Chat Plus：[网页ChatPlus使用指南.md](./网页ChatPlus使用指南.md)。

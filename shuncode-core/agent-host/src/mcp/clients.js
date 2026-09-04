@@ -53,6 +53,25 @@ const CLIENTS = [
     ]
   },
   {
+    id: 'chat-plus',
+    name: 'Chat Plus 扩展（多网站）',
+    url: 'https://github.com/aiguicai/Chat-Plus',
+    needsPlus: false,
+    needsTunnel: true,
+    supportsMcp: true,
+    connectMode: 'extension-http',
+    repoUrl: 'https://github.com/aiguicai/Chat-Plus',
+    summary: '社区扩展，适配 ChatGPT / Gemini / DeepSeek / 豆包 / 通义 / Arena 等多个网页。把我们的 Streamable HTTP 填进扩展即可。无需 Plus，不必装 MCP-Gateway。GPL，不拷进本仓库。',
+    steps: [
+      '用 Git 克隆 https://github.com/aiguicai/Chat-Plus ，在该目录 npm install 后 npm run build:chrome。Chrome/Edge 开发者模式加载 dist/chrome。不是各家 AI 官方产品，许可证 GPL v3',
+      '启动 Bridge，等到地址变成 https://….trycloudflare.com/mcp/…',
+      '点「复制」得到这一行 MCP 地址（带密钥），不要发到公开地方',
+      '打开 Chat Plus 侧边栏，添加 MCP 服务：传输选 Streamable HTTP，URL 填刚复制的地址。不要再装 aiguicai/MCP-Gateway',
+      '打开已适配的网页（ChatGPT、Gemini、DeepSeek、豆包、通义、Arena 等），给当前页启用工具',
+      '新开对话下任务。右侧 BRIDGE 应出现工具调用'
+    ]
+  },
+  {
     id: 'generic',
     name: '其它网页 Agent',
     url: null,
@@ -77,8 +96,8 @@ const CLIENTS = [
     connectMode: 'unsupported-mcp',
     summary: '普通免费聊天栏加不了自定义 MCP 连接器，贴 URL 通常也不会真去调工具。',
     steps: [
-      '不要指望免费 ChatGPT 普通对话改你的磁盘',
-      '用本机 Chat（无需账号）或 Arena / 其它支持 MCP 的网页 Agent',
+      '不要指望免费 ChatGPT 普通对话原生改你的磁盘',
+      '用本机 Chat（无需账号）、Arena、DeepSeek++，或装 Chat Plus 扩展当手（见网页ChatPlus使用指南.md）',
       '若该对话明确带 Agent/开发者模式且能加连接器，按「ChatGPT Plus」那张卡片'
     ]
   },

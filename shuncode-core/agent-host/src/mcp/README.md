@@ -8,7 +8,7 @@
 
 ## 1. 模块概述
 
-- **定位：** agent-host 的 **MCP 协议门面**。把本机工具暴露成 Streamable HTTP JSON-RPC 2.0（兼 SSE），给 Arena / DeepSeek++ / ChatGPT 连接器等网页端调用。本目录**不改磁盘**：改文件发生在兄弟模块 `../tools/`。
+- **定位：** agent-host 的 **MCP 协议门面**。把本机工具暴露成 Streamable HTTP JSON-RPC 2.0（兼 SSE），给 Arena / DeepSeek++ / Chat Plus / ChatGPT 连接器等网页端调用。本目录**不改磁盘**：改文件发生在兄弟模块 `../tools/`。
 - **在进程中的挂载（由 `../index.js` 完成，不在本目录）：** `app.use(oauth.router)` 在前（匿名发现文档 + 配对页），然后 `app.use('/mcp', mcpRouter)`（`server.js` 导出的 Express Router）。
 
 **它调用的兄弟模块：**
@@ -140,26 +140,26 @@
 - **文件职责：** 工作台 Bridge 页「怎么连」卡片的**数据**，不是 MCP 协议实现。`server.js` 的 JSON-RPC **不读取**本文件。
 - **核心类/函数清单：**
 
-  - **Function `hydrateClient(client, urls)`（L117–L139）**
+  - **Function `hydrateClient(client, urls)`（L136–L158）**
     - 输入：`CLIENTS` 里的一项；`urls.mcpUrl` / `urls.mcpCanonicalUrl`。
-    - L118–L119：canonical 缺省把 `/mcp/<secret>` 收成 `/mcp`。
-    - L121–L131 按 `connectMode` 设 `prompt`：
+    - L137–L138：canonical 缺省把 `/mcp/<secret>` 收成 `/mcp`。
+    - L140–L150 按 `connectMode` 设 `prompt`：
       - `paste-url` → `getBootstrapPrompt(mcpUrl)`（URL + CONNECT_LINE）
       - `oauth-connector` → 规范地址两行，不含长期密钥
-      - `extension-http` → **只有** `mcpUrl` 一行（DeepSeek++ URL 框）
+      - `extension-http` → **只有** `mcpUrl` 一行（DeepSeek++ / Chat Plus URL 框）
       - `unsupported-mcp` → 空串
       - 其它（含 `local-chat`）→ `prompt` 保持 `''`
-    - L132–L138：oauth 模式对外 `mcpUrl` 改成 canonical；附 `connectLine`。
-  - **Function `listClients(urls = {})`（L141–L143）**
-    - 返回 6 张卡全部 hydrate。
-  - **Function `getClient(id, urls = {})`（L145–L148）**
+    - L151–L157：oauth 模式对外 `mcpUrl` 改成 canonical；附 `connectLine`。
+  - **Function `listClients(urls = {})`（L160–L162）**
+    - 返回 **7** 张卡全部 hydrate。
+  - **Function `getClient(id, urls = {})`（L164–L167）**
     - 找不到 id 则 **回落到 `CLIENTS[1]`（arena）**。
 
-- **关键变量 `CLIENTS`（L3–L115）——每项 Key：**
+- **关键变量 `CLIENTS`（L3–L133）——每项 Key：**
 
   | Key | 含义 | 取值 |
   |---|---|---|
-  | `id` | 卡片主键 | `chat` / `arena` / `deepseek` / `generic` / `chatgpt-free` / `chatgpt-plus` |
+  | `id` | 卡片主键 | `chat` / `arena` / `deepseek` / `chat-plus` / `generic` / `chatgpt-free` / `chatgpt-plus` |
   | `name` | UI 标题 | 中文名 |
   | `url` | 打开的网站；本机 Chat / generic 为 `null` | URL 或 null |
   | `needsPlus` | 是否必须付费档 | 仅 `chatgpt-plus` 为 `true` |
@@ -168,6 +168,7 @@
   | `connectMode` | hydrate 分支 | 见上 |
   | `summary` / `steps` | UI 文案 | 字符串 / 字符串数组 |
   | `extensionId` / `storeUrl` | 仅 DeepSeek 项 | CWS 扩展 ID 与商店 URL |
+  | `repoUrl` | 仅 Chat Plus 项 | `https://github.com/aiguicai/Chat-Plus` |
 
 ---
 
@@ -195,7 +196,7 @@
 
 ### 📄 文件名：`oauth.js`
 
-- **文件职责：** OAuth 2.1 子集（动态注册 + 授权码 + PKCE S256 + 本机配对码）。给 ChatGPT Plus 连接器。Arena / DeepSeek++ **不走本文件的授权码流程**，但 `verifyAccessToken` 同时认 URL 密钥。
+- **文件职责：** OAuth 2.1 子集（动态注册 + 授权码 + PKCE S256 + 本机配对码）。给 ChatGPT Plus 连接器。Arena / DeepSeek++ / Chat Plus **不走本文件的授权码流程**，但 `verifyAccessToken` 同时认 URL 密钥。
 - **存储：** L7–L10 四个内存 `Map`；L17 `pairing`。进程退出全丢。
 
 - **核心类/函数清单：**

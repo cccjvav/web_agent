@@ -11,7 +11,7 @@
 | 文件 | 覆盖 |
 |---|---|
 | `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、grep |
-| `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek 客户端配方 |
+| `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek / Chat Plus 客户端配方 |
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command` |
 | `hostPersist.test.js` | `generateNewSecret` 写入 `config.json`；`read-hashes.json` 跨 require 仍能 recalledHash；`resetHashes` 删文件 |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
@@ -58,7 +58,7 @@
 
 - **文件职责：** 不启 HTTP，直接 `handleRpc` / `callTool` 锁协议与客户端配方。
 - **Function `req`（L16–L22）** — 造假 Express 请求：`ip='127.0.0.1'`，`body={ jsonrpc:'2.0', id:1, method, params }`，可 `...extra`。
-- **Function `main`（L24–L128）**
+- **Function `main`（L24–L144）**
   - L25–L30：`initialize` 的 `instructions` 含 `ShunCode Bridge MCP` 与 `shuncode://instructions`；有 `capabilities.resources` / `prompts`；有 `serverInfo.name`。
   - L32–L33：`ping.ok === true`。
   - L35–L44：`resources/list` 的 uri 含 protocol / memory / profile / clients；`resources/read` protocol 正文含 `Streamable HTTP`。
@@ -74,8 +74,8 @@
   - L101–L104：`remember` 后 `recall` 能读回文本。
   - L106–L109：`prompts/list` 含 `connect`；`prompts/get` 正文含「快速连接这个 MCP」。
   - L111–L112：`shuncode://clients` 文本含 `无需` 或 `Plus=no` 或 `not ChatGPT-only`。
-  - L114–L124：`listClients`：`chat` 无需 Plus、无需隧道；`arena` 支持 MCP 且无需 Plus；`deepseek` 的 `connectMode==='extension-http'`、`prompt` **只有 URL**、`extensionId` 为 `kdmpkkahkhdmdhfkdihkopikgcocbpbf`、步骤含「不要装 deepseek-pp-shell-host」；`chatgpt-free` 为 `unsupported-mcp`；`chatgpt-plus` `needsPlus`。
-  - L126：删 tmp。
+  - L114–L139：`listClients`：`chat` 无需 Plus、无需隧道；`arena` 支持 MCP 且无需 Plus；`deepseek` 的 `connectMode==='extension-http'`、`prompt` **只有 URL**、`extensionId` 为 `kdmpkkahkhdmdhfkdihkopikgcocbpbf`、步骤含「不要装 deepseek-pp-shell-host」；`chat-plus` 同样 `extension-http`、`prompt` 只有 URL、`repoUrl` 为 `https://github.com/aiguicai/Chat-Plus`、步骤含「不要再装 aiguicai/MCP-Gateway」；`chatgpt-free` 为 `unsupported-mcp`；`chatgpt-plus` `needsPlus`。
+  - L141：删 tmp。
 
 ---
 
@@ -145,12 +145,12 @@
 - **Function `request`（L13–L46）** — Node `http.request`，body 有则 JSON；响应 try `JSON.parse`。
 - **Function `waitHealth`（L48–L65）** — 轮询 GET 直到 200 或超时。
 - **Function `stop`（L67–L76）** — win32 `taskkill /t /f`，否则 SIGTERM。
-- **Function `main`（L78–L216）**
+- **Function `main`（L78–L217）**
   - L79–L86：spawn `src/index.js`，env 设 `WORKSPACE_ROOT=tmp`、`WORKBENCH_PORT`、`AGENT_HOST_PORT`。
   - L108–L110：health JSON `ok` 且 `product==='ShunCode'`。
   - L112–L128：GET `/` HTML 必须含：`ShunCode`；`编辑进化` 或 `CHAT`；`Add API`；`btn-agent-pick`；`agent-pick-menu`；`ShunCode Code`；`环境偏好`；`技术栈`；`技能引导`；`怎么连到本机仓库`；`无需 Plus` 或 `不需要 Plus`；`打开 DeepSeek`；`data-site="deepseek"`；`type="module"` 与 `/app.js`。
   - L130–L135：GET `/app.js` 含 `from './js/state.js'`；GET `/js/state.js` 含 `export const state`。
-  - L137–L144：GET **mcp 端口** `/api/status`：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===25`；clients 含 arena（无需 Plus）与 deepseek（`extension-http`、支持 MCP、无需 Plus）；`mcpCanonicalUrl` 以 `/mcp` 结尾。
+  - L137–L145：GET **mcp 端口** `/api/status`：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===25`；clients 含 arena（无需 Plus）、deepseek（`extension-http`、支持 MCP、无需 Plus）与 chat-plus（同样 `extension-http`，`repoUrl` 为 Chat-Plus GitHub）；`mcpCanonicalUrl` 以 `/mcp` 结尾。
   - L146–L152：错误 secret POST initialize → 401。
   - L154–L162：正确 secret initialize 200，instructions 含 Bridge MCP 与 `shuncode://instructions`。
   - L164–L175：tools/list 25 个且含 apply_patch / start_command / workspace_info。

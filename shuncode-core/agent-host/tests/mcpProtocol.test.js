@@ -132,6 +132,11 @@ async function main() {
   assert.strictEqual(deepseek.prompt, 'https://x.trycloudflare.com/mcp/abc');
   assert.strictEqual(deepseek.extensionId, 'kdmpkkahkhdmdhfkdihkopikgcocbpbf');
   assert.ok(deepseek.steps.some((s) => /不要装 deepseek-pp-shell-host/.test(s)));
+  const chatPlus = catalog.find((c) => c.id === 'chat-plus');
+  assert.ok(chatPlus && chatPlus.connectMode === 'extension-http' && chatPlus.supportsMcp && !chatPlus.needsPlus);
+  assert.strictEqual(chatPlus.prompt, 'https://x.trycloudflare.com/mcp/abc');
+  assert.strictEqual(chatPlus.repoUrl, 'https://github.com/aiguicai/Chat-Plus');
+  assert.ok(chatPlus.steps.some((s) => /不要再装 aiguicai\/MCP-Gateway/.test(s)));
   assert.ok(catalog.some((c) => c.id === 'chatgpt-free' && c.connectMode === 'unsupported-mcp'));
   assert.ok(catalog.some((c) => c.id === 'chatgpt-plus' && c.needsPlus));
 
