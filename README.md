@@ -22,7 +22,7 @@
 | 目录 | 现在用不用 | 职责 |
 |---|---|---|
 | `shuncode-core/` | **现行主程序** | 工作台 UI + 独立 agent-host（MCP / 工具 / 隧道） |
-| `workspace/` | 默认演示工作区 | 计算器示例；`.shuncode` 在这里，不在仓库根 |
+| `workspace/` | 默认演示工作区 | 计算器示例；`.shuncode`（含 `docs-sync` 等 Skill）在这里，不在仓库根 |
 | `shuncode-repro/` | 不用 | 更早一版纯 Bridge 原型 |
 | `bin/code-server-runtime/` | 第二种跑法下载到这里 | npm 完整 code-server，不进 Git |
 | `run-shuncode-vscode.cmd` | 第二种跑法 | 浏览器里真 VS Code + ShunCode 侧栏，见 [网页VSCode使用指南.md](./网页VSCode使用指南.md) |
