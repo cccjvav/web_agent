@@ -4,7 +4,7 @@
 
 浏览器里的自绘工作台。静态文件由 `../agent-host/src/index.js` 用 `express.static` 挂出。本目录 **不直接 fs**；所有读写经 `/api/*` 与 `/ws`。
 
-文件：`index.html`、`app.js`、`styles.css`、`favicon.svg`。
+文件：`index.html`、`app.js`（入口）、`js/*.js`（按职责拆开的交互）、`styles.css`、`favicon.svg`。无打包；浏览器原生 ES module。
 
 ---
 
@@ -20,7 +20,7 @@
 
 ### 📄 文件名：`index.html`
 
-- **文件职责：** DOM 骨架。逻辑全在 `app.js`。
+- **文件职责：** DOM 骨架。逻辑在 `app.js` + `js/*.js`。
 - **DOM 结构区块：**
   - L3–L8：charset、viewport、title、favicon、`/styles.css`。
   - L11–L28 **标题栏 `#titlebar`：** 文件/编辑/选择/查看/转到/运行菜单（多数按钮无 JS）；`#menu-term` 终端、`#menu-help` 帮助；中间 `#window-title`。
@@ -41,51 +41,94 @@
   - L226–L235 `#statusbar`。
   - L238–L516 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/多模型）。Bridge 页含客户端卡片、复制 URL/提示词、打开各站点、GitHub 登录演示、隧道 radio（cloudflare 默认；named/ngrok 输入框 **无对应 JS 去 spawn**）。L511 `#btn-reset-secret`。
   - L518–L537 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`。
-  - L538 `#toast`；L539 加载 `/app.js`。
+  - L538 `#toast`；L539 `<script type="module" src="/app.js">`（原生 ES module，无打包）。
+
+跨模块调用走 `js/state.js` 的 `ui` 袋（避免 import 环），**不改** `/api` 与按钮行为。
 
 ---
 
 ### 📄 文件名：`app.js`
 
-- **文件职责：** 全部交互。IIFE（L1–L1398）。
-- **关键变量 `state`（L16–L32）：** `mode:'code'`、`status`、`messages`、`history`、`sending`、`tabs`（初始 welcome）、`activeTab`、`files`、`monaco`/`editor`、`dirty`、`stats`、`loggedIn:true`、`custom`、`stayOnBridge:false`、`selectedClient:'arena'`。
-- **关键常量 `SITES`（L5–L14）：** chatgpt/arena/deepseek/workbuddy/trae/qwen/manus/shunova 的外链。
-- **核心函数（行级）：**
+- **文件职责：** 工作台入口。import `js/*.js` 后 `boot`。71 行。
+- **Function `connectWs`（L9–L32）** — `ws(s)://location.host/ws`；`command_output` → `ui.termLine`；`file_patched` → `ui.loadTree`；`todos_updated` → `ui.paintTodos`；`tool_call_end` → `ui.logBridgeTool`。
+- **Function `loadMonaco`（L34–L58）** — jsDelivr monaco 0.52.2；`window.monaco.editor.create`；onerror 或 7s 超时。
+- **Function `boot`（L60–L69）** — `ui.bind`、默认 code、并行 refresh/tree/skills/custom/monaco、WS、welcome。L71 `boot().catch(console.error)`。
 
-  - L35–L41 `toast` — 显示 2.2s。
-  - L43–L47 `escapeHtml` — 五字符。
-  - L49–L59 `renderMd` — 先 escape 再极简 fence/inline/bold/标题/列表/`<br>`。
-  - L61–L68 `termLine` — 终端追加。
-  - L70–L79 模态开关与 `showPage`（nav-item / `.page` 的 hidden）。
-  - L81–L86 `setRight` — chat/bridge 页签。
-  - L88–L103 `paintTabs` — 点标题 activate，点 ✕ close。
-  - L105–L119 `activateTab` — 按 kind 显示 welcome/browser/agent/diff/file。
-  - L121–L126 `closeTab` — 只剩 1 个 tab 则 return。
-  - L128–L137 `openAgentWindow` — 没有则加 agent tab，切右侧 chat。
-  - L139–L160 `openDiff` / `paintDiff` — `+` 非 `+++` 绿，`-` 非 `---` 红，`@@` hunk。
-  - L162–L167 `ensureWelcome`。
-  - L169–L179 `openFile` — GET `/api/files/content`；`!ok` toast。
-  - L181–L197 `langFor` / `applyEditor` — 有 monaco 则 setModel，否则 textarea。
-  - L199–L246 `treeHtml` / `loadTree` — GET `/api/files/tree`；点目录折叠；点文件打开；recent 最多 6。
-  - L248–L337 `emptyChat` / `paintChat` / `summarizeTool` / `renderMsg` — user/status/tool（点 header 显隐 pre）/consensus（采纳则切 code 并 sendChat 固定句）/assistant。
-  - L339–L346 `pushMsg`。
-  - L348–L396 `sendChat` — sending 则 return；可从两输入框取值；`stayOnBridge`；POST `/api/chat` 读 NDJSON；parse 失败 continue；finally refresh+loadTree。
-  - L398–L432 `handleEvent` — tool 时可选 logBridgeTool；set_todos 画任务；run_command 进终端；apply_patch 刷新 tab 并 openDiff。
-  - L434–L492 `logBridgeTool` / `paintTodos` / `agentLabel` / `setAgentMode` / `paintStats`。
-  - L493–L537 `selectedClientInfo` / `promptText` / `paintClients` — 无 c.prompt 则拼 CONNECT_LINE；配对码仅 `pair.code && bridgeRunning`。
-  - L539–L587 `renderBrowser` — arena/chatgpt 仿页发 `arenaConnect`；deepseek **不调 MCP**，展示商店与 mcpUrl；其它外链+prompt。
-  - L589–L618 `arenaConnect` — 对本机 `/mcp/${secret}` 发 initialize/tools/list/resources/read；再 `sendChat(..., { stayOnBridge:true })`。**不是云上 Arena。**
-  - L620–L638 `openSite` — bridge 未运行则 startBridge；try 复制 prompt；开 browser tab。
-  - L640–L705 `startBridge` / `stopBridge` / `paintBridge` — POST start/stop；按 `s.tunnel.url` 显示隧道或「走当前页面源」。
-  - L707–L719 `refreshStatus` — GET `/api/status`。
-  - L721–L856 `paintCustom` / `paintProviderTable` / load/save customizations / `loadSkills`。
-  - L858–L1320 `bind` — 活动栏、菜单、发送、Enter、Bridge、复制（extension-http toast 不同）、reset-secret、GitHub 登录演示、各 saveCustom、技能模板、probe/Add API（排除 modelId 匹配 video|image 当默认）、终端 `POST /api/tool/call` run_command mode code、搜索 search_files mode ask、Ctrl/Cmd+S。
-    - L1002–L1018 闭包内 `skillMarkdown`；L1019–L1036 `SKILL_TPL`（fix-tests/review/release）；L1037–L1040 `fillSkillPreview` 在 dirty 时不覆盖。
-    - L1182–L1188 `probeProvider`。
-  - L1322–L1333 `saveActive` — 仅 file tab PUT content。
-  - L1335–L1358 `connectWs` — `ws(s)://location.host/ws`；command_output / file_patched / todos_updated / tool_call_end。
-  - L1360–L1384 `loadMonaco` — jsDelivr 0.52.2；onerror 或 7s 超时。
-  - L1386–L1394 `boot` — bind、默认 code、并行 refresh/tree/skills/custom/monaco、WS、welcome。L1396 `boot().catch(console.error)`。
+---
+
+### 📄 文件名：`js/state.js`
+
+- **文件职责：** `$` / `$$`、外链 `SITES`、共享 `state`、空对象 `ui`。无函数。L1–L35。
+- **`state` 初值：** `mode:'code'`、`tabs` 仅 welcome、`stats`、`loggedIn:true`、`selectedClient:'arena'`、`stayOnBridge:false`。
+- **`SITES`：** chatgpt/arena/deepseek/workbuddy/trae/qwen/manus/shunova 的外链。
+
+---
+
+### 📄 文件名：`js/dom.js`
+
+- **文件职责：** toast / 转义 / 极简 markdown / 终端行 / 模态 / 右侧页签。
+- **Function `toast`（L3–L9）** — 显示 2.2s。
+- **Function `escapeHtml`（L11–L15）** — 五字符。
+- **Function `renderMd`（L17–L27）** — escape 后再 fence/inline/bold/标题/列表/`<br>`。
+- **Function `termLine`（L29–L36）**。
+- **Function `openModal` / `closeModal` / `showPage`（L38–L47）**。
+- **Function `setRight`（L49–L54）** — chat/bridge。
+
+---
+
+### 📄 文件名：`js/tabs.js`
+
+- **文件职责：** 标签、文件树、打开文件、Monaco/fallback、保存。
+- **Function `paintTabs`（L4–L19）** / **`activateTab`（L21–L35）** — kind=welcome/browser/agent/diff/file；browser 调 `ui.renderBrowser`。
+- **Function `closeTab`（L37–L42）** — 只剩 1 个则 return。
+- **Function `openAgentWindow`（L44–L53）** / **`openDiff`（L55–L65）** / **`paintDiff`（L67–L76）** — `+` 非 `+++` 绿。
+- **Function `ensureWelcome`（L78–L83）**。
+- **Function `openFile`（L85–L95）** — GET `/api/files/content`。
+- **Function `langFor`（L97–L104）** / **`applyEditor`（L106–L113）** — `window.monaco`。
+- **Function `treeHtml`（L115–L126）** / **`loadTree`（L128–L162）** — GET `/api/files/tree`；recent 最多 6。
+- **Function `saveActive`（L163–L174）** — 仅 file tab PUT。
+
+---
+
+### 📄 文件名：`js/chat.js`
+
+- **文件职责：** 本机 CHAT 流。
+- **Function `emptyChat`（L4–L16）** / **`paintChat`（L18–L34）**。
+- **Function `summarizeTool`（L36–L42）** / **`renderMsg`（L44–L93）** — user/status/tool/consensus（采纳则 `ui.setAgentMode('code')` 并 `ui.sendChat` 固定句）/assistant。
+- **Function `pushMsg`（L95–L102）**。
+- **Function `sendChat`（L104–L152）** — POST `/api/chat` NDJSON；parse 失败 continue；finally `ui.refreshStatus` + `ui.loadTree`。
+- **Function `handleEvent`（L154–L188）** — tool 可 `ui.logBridgeTool`；set_todos；run_command 进终端；apply_patch 刷新并 `ui.openDiff`。
+- **Function `paintTodos`（L190–L207）** / **`agentLabel`（L209–L212）** / **`setAgentMode`（L214–L220）**。
+
+---
+
+### 📄 文件名：`js/bridge.js`
+
+- **文件职责：** Bridge 启停、客户端卡、内置假浏览器。**不是云上 Arena。**
+- **Function `logBridgeTool`（L4–L20）** / **`paintStats`（L22–L29）** / **`resetRound`（L31–L43）** — POST `/api/bridge/reset-round`。
+- **Function `selectedClientInfo`（L45–L48）** / **`promptText`（L50–L55）** / **`paintClients`（L57–L89）** — 无 prompt 则拼 CONNECT_LINE；配对码仅 `pair.code && bridgeRunning`。
+- **Function `renderBrowser`（L91–L139）** — arena/chatgpt 走 `arenaConnect`；deepseek **不调 MCP**。
+- **Function `arenaConnect`（L141–L170）** — 本机 `/mcp/${secret}` initialize/tools/list/resources/read，再 `ui.sendChat(..., { stayOnBridge:true })`。
+- **Function `openSite`（L172–L190）**。
+- **Function `startBridge`（L192–L208）** / **`stopBridge`（L210–L214）** / **`paintBridge`（L216–L257）** — POST start/stop；按 `s.tunnel.url` 显示隧道或「走当前页面源」。
+- **Function `refreshStatus`（L259–L271）** — GET `/api/status`。
+
+---
+
+### 📄 文件名：`js/settings.js`
+
+- **文件职责：** 自定义设置、API Provider 表、skills 列表。
+- **Function `rowList`（L4–L7）** / **`paintCustom`（L9–L71）**。
+- **Function `paintProviderTable`（L73–L111）** — radio 改 `activeModelId`。
+- **Function `loadCustomizations`（L113–L117）** / **`saveCustom`（L119–L129）** — GET/PUT `/api/customizations`。
+- **Function `loadSkills`（L131–L139）** — GET `/api/skills`。
+
+---
+
+### 📄 文件名：`js/bind.js`
+
+- **文件职责：** 全部 DOM 事件。闭包内 `skillMarkdown` / `SKILL_TPL` / `fillSkillPreview` / `probeProvider`（不导出）。
+- **Function `bind`（L4–L467）** — 活动栏、菜单、发送、Enter、Bridge、复制（extension-http toast 不同）、reset-secret、GitHub 登录演示、各 `ui.saveCustom`、技能模板、probe/Add API（排除 modelId 匹配 video|image 当默认）、终端 `POST /api/tool/call` `run_command` mode code、搜索 `search_files` mode ask、Ctrl/Cmd+S。
 
 ---
 
@@ -117,7 +160,7 @@
 
 ## 3. 执行逻辑流
 
-1. 浏览器 GET `/` → SPA 回退 `index.html` → 加载 css/js。
+1. 浏览器 GET `/` → SPA 回退 `index.html` → `type=module` 加载 `/app.js` → import `js/*.js`。
 2. `boot` 拉 `/api/status`、文件树、skills、customizations，尝试 Monaco。
 3. 用户 CHAT → `sendChat` → NDJSON `/api/chat` → `handleEvent` 画卡。
 4. 启动 Bridge → POST `/api/bridge/start`（cloudflare 会 `await startQuickTunnel`）→ toast `note` → `paintBridge` 按 `s.tunnel.url` 显示 Quick Tunnel 或「走当前页面源」。

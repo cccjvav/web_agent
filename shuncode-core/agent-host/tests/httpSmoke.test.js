@@ -125,6 +125,14 @@ async function main() {
     assert.ok(page.raw.includes('打开 DeepSeek'));
     assert.ok(page.raw.includes('data-site="deepseek"'));
     assert.ok(page.raw.includes('清除本轮统计'));
+    assert.ok(page.raw.includes('type="module"') && page.raw.includes('/app.js'));
+
+    const appJs = await request('GET', `http://127.0.0.1:${workbenchPort}/app.js`);
+    assert.strictEqual(appJs.status, 200);
+    assert.ok(appJs.raw.includes("from './js/state.js'"));
+    const stateJs = await request('GET', `http://127.0.0.1:${workbenchPort}/js/state.js`);
+    assert.strictEqual(stateJs.status, 200);
+    assert.ok(stateJs.raw.includes('export const state'));
 
     const status = await request('GET', `http://127.0.0.1:${mcpPort}/api/status`);
     assert.strictEqual(status.status, 200);

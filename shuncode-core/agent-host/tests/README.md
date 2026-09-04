@@ -16,7 +16,7 @@
 | `hostPersist.test.js` | `generateNewSecret` 写入 `config.json`；`read-hashes.json` 跨 require 仍能 recalledHash；`resetHashes` 删文件 |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
 | `bridgeTunnel.test.js` | stub `startQuickTunnel`/`stopTunnel`：cloudflare 启动后 mcpUrl 含 trycloudflare；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
-| `httpSmoke.test.js` | 真起进程：health、工作台 HTML、MCP 401、initialize、tools/list、ping |
+| `httpSmoke.test.js` | 真起进程：health、工作台 HTML、`/app.js` 与 `/js/state.js` 模块、MCP 401、initialize、tools/list、ping |
 | `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime |
 | `skipWorkbench.test.js` | `SHUNCODE_SKIP_WORKBENCH=1` 不占用工作台端口 |
 | `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；不依赖 calculator.js |
@@ -145,18 +145,19 @@
 - **Function `request`（L13–L46）** — Node `http.request`，body 有则 JSON；响应 try `JSON.parse`。
 - **Function `waitHealth`（L48–L65）** — 轮询 GET 直到 200 或超时。
 - **Function `stop`（L67–L76）** — win32 `taskkill /t /f`，否则 SIGTERM。
-- **Function `main`（L78–L201）**
+- **Function `main`（L78–L216）**
   - L79–L86：spawn `src/index.js`，env 设 `WORKSPACE_ROOT=tmp`、`WORKBENCH_PORT`、`AGENT_HOST_PORT`。
   - L108–L110：health JSON `ok` 且 `product==='ShunCode'`。
-  - L112–L126：GET `/` HTML 必须含：`ShunCode`；`编辑进化` 或 `CHAT`；`Add API`；`btn-agent-pick`；`agent-pick-menu`；`ShunCode Code`；`环境偏好`；`技术栈`；`技能引导`；`怎么连到本机仓库`；`无需 Plus` 或 `不需要 Plus`；`打开 DeepSeek`；`data-site="deepseek"`。
-  - L128–L135：GET **mcp 端口** `/api/status`：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===25`；clients 含 arena（无需 Plus）与 deepseek（`extension-http`、支持 MCP、无需 Plus）；`mcpCanonicalUrl` 以 `/mcp` 结尾。
-  - L138–L144：错误 secret POST initialize → 401。
-  - L146–L154：正确 secret initialize 200，instructions 含 Bridge MCP 与 `shuncode://instructions`。
-  - L156–L167：tools/list 25 个且含 apply_patch / start_command / workspace_info。
-  - L169–L175：`POST /mcp` 无密钥 → 401。
-  - L177–L179：GET `/.well-known/oauth-authorization-server` 200，有 `authorization_endpoint`。
-  - L181–L189：tools/call ping 成功，`isError===false`，正文含 `"ok": true`。
-  - L196–L199：finally `stop` 子进程，等 300ms，删 tmp。
+  - L112–L128：GET `/` HTML 必须含：`ShunCode`；`编辑进化` 或 `CHAT`；`Add API`；`btn-agent-pick`；`agent-pick-menu`；`ShunCode Code`；`环境偏好`；`技术栈`；`技能引导`；`怎么连到本机仓库`；`无需 Plus` 或 `不需要 Plus`；`打开 DeepSeek`；`data-site="deepseek"`；`type="module"` 与 `/app.js`。
+  - L130–L135：GET `/app.js` 含 `from './js/state.js'`；GET `/js/state.js` 含 `export const state`。
+  - L137–L144：GET **mcp 端口** `/api/status`：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===25`；clients 含 arena（无需 Plus）与 deepseek（`extension-http`、支持 MCP、无需 Plus）；`mcpCanonicalUrl` 以 `/mcp` 结尾。
+  - L146–L152：错误 secret POST initialize → 401。
+  - L154–L162：正确 secret initialize 200，instructions 含 Bridge MCP 与 `shuncode://instructions`。
+  - L164–L175：tools/list 25 个且含 apply_patch / start_command / workspace_info。
+  - L177–L183：`POST /mcp` 无密钥 → 401。
+  - L185–L187：GET `/.well-known/oauth-authorization-server` 200，有 `authorization_endpoint`。
+  - L189–L197：tools/call ping 成功，`isError===false`，正文含 `"ok": true`。
+  - L204–L207：finally `stop` 子进程，等 300ms，删 tmp。
 
 ---
 
