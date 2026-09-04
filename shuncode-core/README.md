@@ -22,7 +22,7 @@
 | `scripts/` | 网页 VS Code：下载 code-server 并双进程启动 | `scripts/README.md` |
 | `extensions-installed/` | `code-server --extensions-dir` 的已安装副本 | `extensions-installed/README.md` |
 
-Windows 操作见根目录 [使用指南.md](../使用指南.md)。工作流见 [组件说明.md](../组件说明.md)。测试见 `agent-host/tests/` 与 [测试说明.md](../测试说明.md)。
+Windows 操作见根目录 [使用指南.md](../使用指南.md)。工作流见 [组件说明.md](../组件说明.md)。人话架构见 [架构导读.md](../架构导读.md)。测试见 `agent-host/tests/` 与 [测试说明.md](../测试说明.md)。
 
 ---
 

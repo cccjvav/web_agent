@@ -121,12 +121,14 @@
 
 ### 📄 文件名：`.shuncode/skills/docs-sync/SKILL.md`
 
-- **文件职责：** 仓库级「功能改完必须同步改说明书」约定，以 Skill 形式给 `load_skill` 读。不是可执行 JS。不要再在仓库根放 `文档约定.md`。
+- **文件职责：** 仓库级「功能改完必须同步改说明书」约定，以 Skill 形式给 `load_skill` 读。不是可执行 JS。不要再在仓库根放 `文档约定.md`。动到设计理由时还要改根目录 `架构导读.md`（四层：人话 → 比喻 → 文件落地 → 行业叫法）。
 - **内容结构：**
-  - L1–L7：标题「文档同步」；触发词：新功能 / 改工具 MCP 路由 工作台 测试 / 说明书 / README / 四阶段 / 文档约定。写明默认 `workspace/` 沙箱进不去仓库其它目录。
-  - L9–L11 **Ask：** 只读 `list_directory` → `search_files` → `read_files`；禁止 `apply_patch` / `write_file` / `run_command`。
-  - L13–L15 **Plan：** 列出要改的说明书路径，不改仓库。
-  - L17–L29 **Code：** 按改动类型点名对应夹 README / `总览.md` / `DOCUMENTATION_SUMMARY.md`；根 `README.md` 不改成行级模板；`shuncode-repro/` 冻结。禁止杜撰、禁止为对齐文档改 `CONNECT_LINE`、禁止提交 dist。提交前 `npm test` 绿。
+  - L1–L14：标题「文档同步」；触发词含新功能 / 改工具 MCP 路由 工作台 测试 / 说明书 / README / 四阶段 / 文档约定 / 架构 / 导读 / 为什么这样装。四层写法说明。默认 `workspace/` 沙箱进不去仓库其它目录。
+  - L16–L18 **Ask：** 只读 `list_directory` → `search_files` → `read_files`（含根 `架构导读.md`）；禁止 `apply_patch` / `write_file` / `run_command`。
+  - L20–L22 **Plan：** 列出要改的说明书路径（含是否动导读），不改仓库。
+  - L24–L33 **Code：** 按改动类型点名对应夹 README / `总览.md` / `DOCUMENTATION_SUMMARY.md`；第 8 条：架构/数据流/钥匙隧道/新工单入口改 `架构导读.md` 对应小节。根 `README.md` 不改成行级模板；`shuncode-repro/` 冻结。
+  - L35：禁止杜撰、禁止为对齐文档改 `CONNECT_LINE`、禁止提交 dist。
+  - L37：提交前 `npm test` 绿；动过设计理由则导读能对上新代码。
 
 ---
 

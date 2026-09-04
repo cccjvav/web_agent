@@ -12,10 +12,10 @@
 |---|---|
 | 含 `README.md` 的目录（含仓库根产品首页） | **20** |
 | 其中逆向说明书（目录内行级 README，不含根首页） | **19** |
-| 根目录补充说明书（不是文件夹 README） | [`启动脚本说明.md`](./启动脚本说明.md)、[`总览.md`](./总览.md)、本文件 |
+| 根目录补充说明书（不是文件夹 README） | [`启动脚本说明.md`](./启动脚本说明.md)、[`总览.md`](./总览.md)、[`架构导读.md`](./架构导读.md)、本文件 |
 | 被至少一份说明书点名的代码/配置文件 | **96** |
 | 按扩展名 | `.js` 71、`.json` 8、`.cmd` 4、`.sh` 3、`.svg` 3、`.html` 2、`.css` 2、`.yaml` 1、`.gitignore` 1、`.gitattributes` 1 |
-| [`总览.md`](./总览.md) 内 Markdown 链接 | **57**，相对路径全部能解析到文件（`./` 正确，无误用 `../`） |
+| [`总览.md`](./总览.md) 内 Markdown 链接 | **60**，相对路径全部能解析到文件（`./` 正确，无误用 `../`） |
 
 未计入：`node_modules/`、`package-lock.json`、`image-search/`（gitignore）、`bin/code-server-runtime/` 里下载出来的 code-server 源码（只说明书占位 `package.json`）。
 
@@ -48,7 +48,7 @@ Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./s
 | `shuncode-core/agent-host/tests/bridgeTunnel.test.js` | stub 隧道接到 `/bridge/start` |
 | `shuncode-core/agent-host/tests/hostPersist.test.js` | secretKey 写入 config.json；read-hashes.json 跨重启 |
 
-现：**96 / 96**。仓库级约定是 Skill [`docs-sync`](./workspace/.shuncode/skills/docs-sync/SKILL.md)（`load_skill` 名 `docs-sync`），不是仓库根 markdown。
+现：**96 / 96**。仓库级约定是 Skill [`docs-sync`](./workspace/.shuncode/skills/docs-sync/SKILL.md)（`load_skill` 名 `docs-sync`），不是仓库根 `文档约定.md`。该 Skill 还要求：动到「为什么这样装」时按四层写法改根目录 [`架构导读.md`](./架构导读.md)（产品文，不计入上面的代码文件数）。
 
 故意不单独再拆的：
 
@@ -79,7 +79,7 @@ Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./s
 - 子文件夹 README 的函数/类已用 **Function \`name\`** / **Class \`name\`**。
 - 第四阶段把 [`总览.md`](./总览.md)、[`启动脚本说明.md`](./启动脚本说明.md) 里无语言标记的 ASCII 流程图改成 ` ```text `。Install/Run 命令块保持 ` ```bat ` / ` ```bash `；总图为 ` ```mermaid `。
 - 仓库无 Python 服务，没有 ` ```python ` 需求。JSON Key 表用 Markdown 表格而不是未标记代码块。
-- 产品指南（`使用指南.md`、`组件说明.md`、`技术实现.md`）里仍有少量无语言标记的示意图，那些不是第一阶段行级 README，本阶段未整篇重排。
+- 产品指南（`使用指南.md`、`组件说明.md`、`技术实现.md`、`架构导读.md`）里仍有少量无语言标记的示意图，那些不是第一阶段行级 README，本阶段未整篇重排。
 
 ---
 
@@ -108,4 +108,4 @@ Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./s
 | `.config/code-server/` | [README](./.config/code-server/README.md) |
 | 仓库根脚本 | [启动脚本说明.md](./启动脚本说明.md) |
 
-知识图谱：[总览.md](./总览.md)。产品怎么跑：[README.md](./README.md)、[使用指南.md](./使用指南.md)。
+知识图谱：[总览.md](./总览.md)。产品怎么跑：[README.md](./README.md)、[使用指南.md](./使用指南.md)。人话架构：[架构导读.md](./架构导读.md)。
