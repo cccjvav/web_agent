@@ -14,6 +14,7 @@
 | `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek 客户端配方 |
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command` |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
+| `bridgeTunnel.test.js` | stub `startQuickTunnel`/`stopTunnel`：cloudflare 启动后 mcpUrl 含 trycloudflare；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
 | `httpSmoke.test.js` | 真起进程：health、工作台 HTML、MCP 401、initialize、tools/list、ping |
 | `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime |
 | `skipWorkbench.test.js` | `SHUNCODE_SKIP_WORKBENCH=1` 不占用工作台端口 |
@@ -101,6 +102,24 @@
 - L10：`parseTunnelUrl(sample)` 严格等于该 URL。
 - L11：无 URL 文本 → `null`。
 - L12：打印 passed。无 `main()`。
+
+---
+
+### 📄 文件名：`bridgeTunnel.test.js`
+
+- **文件职责：** 测 REST 接线，**不** spawn cloudflared、不等 25s。替换 `cloudflared.js` 上同对象导出的 `startQuickTunnel` / `stopTunnel`（routes 已 require 该对象）。
+- **Function `request`（L16–L45）** — 对已 listen 的 server 发 HTTP，body 有则 JSON。
+- **Function `main`（L47–L123）**
+  - L48–L61：保存原函数；stub start 写 `config.publicTunnelUrl`；stub stop 清 URL。
+  - L63–L68：express 挂 `/api`，`listen(0)`。
+  - L71–L79：`store.patch` 已登录；`POST /api/bridge/start` `{ tunnelProvider:'cloudflare' }` → 200、`startCalls===1`、mcpUrl 含 trycloudflare、note 含「Quick Tunnel 已就绪」、`tunnelError===null`。
+  - L81–L83：`GET /api/status` mcpUrl 仍含 trycloudflare，`bridgeRunning`。
+  - L85–L88：`POST /api/bridge/stop` → `stopCalls>=1`、`publicTunnelUrl===null`。
+  - L90–L103：stub start throw `E_NO_CLOUDFLARED` → 仍 200、`success`、有 `tunnelError`、note 含「当前页面源」、mcpUrl **不含** trycloudflare。
+  - L105–L109：`tunnelProvider:'named'` → 200 且 **不**调 `startQuickTunnel`，note 含「未启动 Quick Tunnel」。
+  - L111–L113：未登录 → **403**。
+  - L114–L121：finally 还原导出、关 server、删 tmp。
+- L125–L128：`main().catch` → `exit(1)`。
 
 ---
 
@@ -204,7 +223,7 @@
 
 ## 3. 执行逻辑流（仅本目录）
 
-1. `npm test` 按文件名顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → tunnel → httpSmoke → codeServerNotRunnable → skipWorkbench → runChat → chatMode → profile → oauth。
-2. 单文件：改 `config.workspaceRoot` 指向 tmp → require 被测模块 → assert → 删 tmp。`tunnel` / `chatMode` / `codeServerNotRunnable` 不改工作区。
+1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → tunnel → **bridgeTunnel** → httpSmoke → codeServerNotRunnable → skipWorkbench → runChat → chatMode → profile → oauth。
+2. 单文件：改 `config.workspaceRoot` 指向 tmp → require 被测模块 → assert → 删 tmp。`tunnel` / `chatMode` / `codeServerNotRunnable` 不改工作区。`bridgeTunnel` 改 tmp 工作区并 stub 隧道导出。
 3. 启进程的测试 spawn `src/index.js`，结束必须杀子进程。
 4. 失败路径：有 `main()` 的文件走 `main().catch` → `exit(1)`；`profile.test.js` 同步抛错由 Node 非 0 退出；CMD 的 `run-tests.cmd` 据此 pause。

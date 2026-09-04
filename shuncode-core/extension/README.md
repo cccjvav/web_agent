@@ -81,5 +81,5 @@ VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@shunco
 1. `run-code-oss.js` → `syncExtension` 拷贝本目录并写 `extensions.json`（绝对路径）。
 2. code-server 激活 → `activate` 注册侧栏与 `@shuncode`。
 3. 用户发消息 → `postNdjson('/api/chat')` → 与工作台同一套 `runChat`/`callTool`。
-4. Bridge 按钮 → `/api/bridge/start|stop`，与工作台同一缺口（start 不 spawn cloudflared）。
+4. Bridge 按钮 → `/api/bridge/start|stop`：start 在 cloudflare 下 `await startQuickTunnel`；失败仍 200，MCP 走当前 Host。stop 调 `stopTunnel`。
 5. 默认模式 Code（Agent），与 Copilot 侧栏 Agent 对齐。

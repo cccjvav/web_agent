@@ -13,8 +13,8 @@
 | 含 `README.md` 的目录（含仓库根产品首页） | **20** |
 | 其中逆向说明书（目录内行级 README，不含根首页） | **19** |
 | 根目录补充说明书（不是文件夹 README） | [`启动脚本说明.md`](./启动脚本说明.md)、[`总览.md`](./总览.md)、本文件 |
-| 被至少一份说明书点名的代码/配置文件 | **94** |
-| 按扩展名 | `.js` 69、`.json` 8、`.cmd` 4、`.sh` 3、`.svg` 3、`.html` 2、`.css` 2、`.yaml` 1、`.gitignore` 1、`.gitattributes` 1 |
+| 被至少一份说明书点名的代码/配置文件 | **95** |
+| 按扩展名 | `.js` 70、`.json` 8、`.cmd` 4、`.sh` 3、`.svg` 3、`.html` 2、`.css` 2、`.yaml` 1、`.gitignore` 1、`.gitattributes` 1 |
 | [`总览.md`](./总览.md) 内 Markdown 链接 | **57**，相对路径全部能解析到文件（`./` 正确，无误用 `../`） |
 
 未计入：`node_modules/`、`package-lock.json`、`image-search/`（gitignore）、`bin/code-server-runtime/` 里下载出来的 code-server 源码（只说明书占位 `package.json`）。

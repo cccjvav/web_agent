@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/index.js",
-    "test": "node tests/patchEngine.test.js && node tests/mcpProtocol.test.js && node tests/workspaceTools.test.js && node tests/tunnel.test.js && node tests/httpSmoke.test.js && node tests/codeServerNotRunnable.test.js && node tests/skipWorkbench.test.js && node tests/runChat.test.js && node tests/chatMode.test.js && node tests/profile.test.js && node tests/oauth.test.js"
+    "test": "node tests/patchEngine.test.js && node tests/mcpProtocol.test.js && node tests/workspaceTools.test.js && node tests/tunnel.test.js && node tests/bridgeTunnel.test.js && node tests/httpSmoke.test.js && node tests/codeServerNotRunnable.test.js && node tests/skipWorkbench.test.js && node tests/runChat.test.js && node tests/chatMode.test.js && node tests/profile.test.js && node tests/oauth.test.js"
   },
   "keywords": [],
   "author": "",

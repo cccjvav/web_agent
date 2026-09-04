@@ -24,6 +24,6 @@
 6. `agent-host/tests/*.test.js` 新断言或新文件 → `tests/README.md`；`package.json` 的 `scripts.test` 若加文件也要写进去。
 7. 根 `README.md` **不要**改成行级模板。`shuncode-repro/` 冻结：不在那里再拆一套子 README，也不要为了文档去改它的 JS。
 
-禁止：写源码里没有的调用、路由、环境变量、工具名；把指南口吻（「应该会开隧道」）写成实现（`POST /bridge/start` **没有** `startQuickTunnel`）；为对齐文档去改 `CONNECT_LINE` 或其它测试锁死的字符串，除非测试一起改；提交 `bin/code-server-dist/`、`node_modules/`、`image-search/`。
+禁止：写源码里没有的调用、路由、环境变量、工具名；把指南口吻写成实现（例如 Named / ngrok 下拉**没有** spawn，不要写成已经开了那些隧道）；为对齐文档去改 `CONNECT_LINE` 或其它测试锁死的字符串，除非测试一起改；提交 `bin/code-server-dist/`、`node_modules/`、`image-search/`。
 
 提交前：`cd shuncode-core/agent-host && npm test`（或仓库根 `run-tests.cmd`）绿；新代码文件能在至少一份 README 里搜到文件名；`总览.md` 若新增「查看详情」链接，必须是 `./` 相对路径且目标存在。

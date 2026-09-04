@@ -96,7 +96,7 @@ router.post('/bridge/reset-secret', (req, res) => {
   res.json({ success: true, ...mcpInfo(req) });
 });
 
-router.post('/bridge/start', (req, res) => {
+router.post('/bridge/start', async (req, res) => {
   const cfg = store.load();
   if (!cfg.bridge.loggedIn || !cfg.bridge.deviceAuthorized) {
     return res.status(403).json({ success: false, error: '需要先登录并确认当前设备已授权。Chat 模式不受影响。' });
@@ -106,20 +106,43 @@ router.post('/bridge/start', (req, res) => {
   config.bridgeRunning = true;
   config.tunnelProvider = provider;
   oauth.ensurePairing();
-  eventBus.broadcast('bridge_started', { provider });
+
+  let tunnelError = null;
+  if (provider === 'cloudflare') {
+    try {
+      await tunnel.startQuickTunnel({ port: config.port });
+    } catch (err) {
+      tunnelError = err && err.message ? err.message : String(err);
+    }
+  }
+
+  const info = mcpInfo(req);
+  const tunnelUrl = info.tunnel && info.tunnel.url;
+  let note;
+  if (tunnelUrl) {
+    note = `Quick Tunnel 已就绪：${tunnelUrl}`;
+  } else if (tunnelError) {
+    note = `${tunnelError} MCP 暂走当前页面源（本机预览可用）。`;
+  } else {
+    note = '未启动 Quick Tunnel（仅 cloudflare 会拉起 cloudflared）。MCP 走当前页面源。';
+  }
+
+  eventBus.broadcast('bridge_started', { provider, tunnelUrl: tunnelUrl || null, tunnelError });
   res.json({
     success: true,
     running: true,
     provider,
-    note: '本复现环境将 MCP 挂在同一预览域名上（无需 cloudflared）。桌面版可选 Quick / Named / ngrok 三种隧道。',
-    ...mcpInfo(req)
+    tunnelError,
+    note,
+    ...info
   });
 });
 
 router.post('/bridge/stop', (req, res) => {
+  tunnel.stopTunnel();
   config.bridgeRunning = false;
   eventBus.broadcast('bridge_stopped', {});
-  res.json({ success: true, running: false });
+  res.json({ success: true, running: false, ...mcpInfo(req) });
 });
 
 router.post('/bridge/reset-round', (req, res) => {

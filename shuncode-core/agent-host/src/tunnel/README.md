@@ -10,8 +10,7 @@
 
 - **定位：** 把本机 `config.port`（默认 48271）映射成临时 HTTPS，让云上网页 Agent 能打进来。
 - **依赖：** `../config`、`../utils/eventBus`。
-- **谁调用：** `../api/routes.js` **require 本模块**，在 `/status` 里暴露 `tunnel.snapshot()`，在 `/bridge/logout` 调 `stopTunnel`。  
-  **源码事实：`POST /bridge/start` 当前不调用 `startQuickTunnel`。** 因此桌面上点「启动 Bridge」不会因为本文件而自动出现 trycloudflare.com。本文件仍是完整实现，测试会解析 URL。
+- **谁调用：** `../api/routes.js`：`/status` 暴露 `tunnel.snapshot()`；**`POST /bridge/start` 在 `tunnelProvider==='cloudflare'` 时 `await startQuickTunnel({ port: config.port })`**（失败记下 `tunnelError`，Bridge 仍 200）；`/bridge/stop` 与 `/bridge/logout` 调 `stopTunnel`。Named / ngrok 不 spawn。
 
 ---
 
@@ -52,4 +51,4 @@
 1. 有人调用 `startQuickTunnel` → 找二进制 → spawn → 扫日志 → 写下 `config.publicTunnelUrl`。
 2. 之后 `mcp/oauth.requestOrigin` 与 `api/routes.mcpOrigin` 会优先用该 URL，MCP 地址变成 `https://….trycloudflare.com/mcp/<secret>`。
 3. `stopTunnel` 或进程退出清掉 URL。
-4. **当前产品按钮路径：** start 路由不进入第 1 步；logout 会进入 `stopTunnel`。
+4. **产品按钮路径：** `POST /bridge/start`（cloudflare）进入第 1 步；`/bridge/stop` 与 logout 进入 `stopTunnel`。无二进制或超时 → 路由 catch，MCP 仍走当前 Host。

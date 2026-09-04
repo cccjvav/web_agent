@@ -120,7 +120,7 @@
 1. 浏览器 GET `/` → SPA 回退 `index.html` → 加载 css/js。
 2. `boot` 拉 `/api/status`、文件树、skills、customizations，尝试 Monaco。
 3. 用户 CHAT → `sendChat` → NDJSON `/api/chat` → `handleEvent` 画卡。
-4. 启动 Bridge → POST `/api/bridge/start` → `paintBridge` 显示 mcpUrl（来自 status，不一定是 trycloudflare）。
+4. 启动 Bridge → POST `/api/bridge/start`（cloudflare 会 `await startQuickTunnel`）→ toast `note` → `paintBridge` 按 `s.tunnel.url` 显示 Quick Tunnel 或「走当前页面源」。
 5. 复制提示词读 `clients[].prompt`（hydrate 在服务端）。
 6. `/ws` 把远程 MCP 工具调用画到 BRIDGE。
 7. 「清除本轮统计」→ POST `/api/bridge/reset-round`（清 session 计数 + 读哈希缓存）并清空右侧 log。
