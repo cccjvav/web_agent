@@ -10,8 +10,8 @@
 
 | 项 | 数量 |
 |---|---|
-| 含 `README.md` 的目录（含仓库根产品首页） | **20** |
-| 其中逆向说明书（目录内行级 README，不含根首页） | **19** |
+| 含 `README.md` 的目录（含仓库根产品首页） | **21** |
+| 其中逆向说明书（目录内行级 README，不含根首页） | **20** |
 | 根目录补充说明书（不是文件夹 README） | [`启动脚本说明.md`](./启动脚本说明.md)、[`总览.md`](./总览.md)、[`架构导读.md`](./架构导读.md)、本文件 |
 | 被至少一份说明书点名的代码/配置文件 | **103** |
 | 按扩展名 | `.js` 78、`.json` 8、`.cmd` 4、`.sh` 3、`.svg` 3、`.html` 2、`.css` 2、`.yaml` 1、`.gitignore` 1、`.gitattributes` 1 |
@@ -107,5 +107,6 @@ Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./w
 | `webagent-repro/` | [README](./webagent-repro/README.md) |
 | `.config/code-server/` | [README](./.config/code-server/README.md) |
 | 仓库根脚本 | [启动脚本说明.md](./启动脚本说明.md) |
+| `docs-site/` | [README](./docs-site/README.md)（导读可视化，不是产品运行时） |
 
 知识图谱：[总览.md](./总览.md)。产品怎么跑：[README.md](./README.md)、[使用指南.md](./使用指南.md)。人话架构：[架构导读.md](./架构导读.md)。DeepSeek 扩展：[网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md)。多网站 Chat Plus：[网页ChatPlus使用指南.md](./网页ChatPlus使用指南.md)。

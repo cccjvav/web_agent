@@ -12,6 +12,7 @@
 |---|---|
 | [使用指南.md](./使用指南.md) | Windows + CMD 从安装到 Bridge |
 | [架构导读.md](./架构导读.md) | 人话 → 比喻 → 文件落地 → 行业叫法（为什么这样装） |
+| [docs-site/](./docs-site/) | 同一套导读/直译的可视化 HTML（`node docs-site/serve.js` → http://127.0.0.1:4173/） |
 | [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md) | DeepSeek 网页 + DeepSeek++（不 fork 扩展） |
 | [网页ChatPlus使用指南.md](./网页ChatPlus使用指南.md) | 多网站 Chat Plus（不 fork、不装 MCP-Gateway） |
 | [网页VSCode使用指南.md](./网页VSCode使用指南.md) | 浏览器里真 VS Code |

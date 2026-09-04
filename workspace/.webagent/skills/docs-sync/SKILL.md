@@ -30,7 +30,7 @@
 5. `workbench/index.html` 或 `app.js` 按钮/统计 → `workbench/README.md`。
 6. `agent-host/tests/*.test.js` 新断言或新文件 → `tests/README.md`；`package.json` 的 `scripts.test` 若加文件也要写进去。
 7. 根 `README.md` **不要**改成行级模板。`webagent-repro/` 冻结：不在那里再拆一套子 README，也不要为了文档去改它的 JS。
-8. 架构 / 数据流 / 工作区边界 / 钥匙与隧道 / 新工单入口 / 「为什么这样装」变了 → 改根目录 `架构导读.md` 对应小节（仍四层：人话 → 比喻 → 文件落地 → 行业叫法）。新实现若只加函数、不改变「电脑上同时活着谁」，可只改该夹 README，但导读第 11 节「不要写成已经接上」若会误导必须改。交叉入口：根 `README.md` 文档表、`总览.md` 第 4 节、`组件说明.md` 第 8 节，新增产品文档时挂上链接。
+8. 架构 / 数据流 / 工作区边界 / 钥匙与隧道 / 新工单入口 / 「为什么这样装」变了 → 改根目录 `架构导读.md` 对应小节（仍四层：人话 → 比喻 → 文件落地 → 行业叫法）。新实现若只加函数、不改变「电脑上同时活着谁」，可只改该夹 README，但导读第 11 节「不要写成已经接上」若会误导必须改。交叉入口：根 `README.md` 文档表、`总览.md` 第 4 节、`组件说明.md` 第 8 节，新增产品文档时挂上链接。可视化页 `docs-site/` 只呈现这些 Markdown：改导读或行级 README 后跑 `node docs-site/build.js` 或重启 `node docs-site/serve.js`，不要在 `content.js` 里手写实现。
 
 禁止：写源码里没有的调用、路由、环境变量、工具名；把指南口吻写成实现（例如 Named / ngrok 下拉**没有** spawn，不要写成已经开了那些隧道）；为对齐文档去改 `CONNECT_LINE` 或其它测试锁死的字符串，除非测试一起改；提交 `bin/code-server-dist/`、`node_modules/`、`image-search/`。
 
