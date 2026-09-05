@@ -24,7 +24,7 @@
   - **Function `clipStr` / `sanitizePayload`（L12–L41）** — 字符串截 4000 并替换 `ghp_` / `github_pat_` / `sk-` / `Bearer …`；对象键 `apiKey|token|password|secret|secretKey|authorization|access_token|refresh_token|pat` 整值改 `[redacted]`；`diff|patch|content|chunk|stdout|stderr|args|body` 截 500。深度 6、键 40、数组 40。
   - **Class `BridgeEventBus`（L43–L85）**
     - **constructor** — `wsClients` Set；`logs=[]`；`maxLogs=500`。
-    - **Method `addWsClient(ws)`** — 加入 Set；`close` 时 delete。
+    - **Method `addWsClient(ws)`** — 已有 ≥32 路则 `close(1013)` 返回 false；否则加入 Set，30 分钟空闲 `close(1001)`。
     - **Method `broadcast(type, payload={})`（L58–L80）**
       - 日志和 WebSocket 用 `sanitizePayload(payload)`；进程内 `this.emit(type, payload)` 仍是原对象。
       - `logs.unshift`；超过 maxLogs 则 `pop`。

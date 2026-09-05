@@ -80,7 +80,7 @@ function attachWss(server) {
       try { ws.close(1008, 'local only'); } catch (_) {}
       return;
     }
-    eventBus.addWsClient(ws);
+    if (!eventBus.addWsClient(ws)) return;
     ws.send(
       JSON.stringify({
         type: 'connected',

@@ -98,10 +98,9 @@ router.get('/status', (req, res) => {
 });
 
 router.post('/bridge/reset-secret', (req, res) => {
-  const oldSecret = config.secretKey;
   generateNewSecret();
   oauth.revokeAll();
-  eventBus.broadcast('secret_rotated', { oldSecret, newSecret: config.secretKey });
+  eventBus.broadcast('secret_rotated', { rotated: true });
   res.json({ success: true, ...mcpInfo(req) });
 });
 

@@ -5,8 +5,10 @@ const MAX_FIELD = 500;
 const MAX_KEYS = 40;
 const MAX_ARR = 40;
 const MAX_DEPTH = 6;
-const CLIP_KEYS = /^(diff|patch|content|chunk|stdout|stderr|args|body)$/i;
-const SECRET_KEYS = /^(apiKey|token|password|secret|secretKey|authorization|access_token|refresh_token|pat)$/i;
+const CLIP_KEYS = /^(diff|patch|content|chunk|stdout|stderr|args|body|command)$/i;
+const SECRET_KEYS = /^(apiKey|token|password|secret|secretKey|authorization|access_token|refresh_token|pat|oldSecret|newSecret)$/i;
+const MAX_WS = 32;
+const WS_IDLE_MS = 30 * 60 * 1000;
 const SECRET_RE = /(ghp_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9_-]{16,}|Bearer\s+[A-Za-z0-9._\-+=/]{8,})/gi;
 
 function clipStr(s, max = MAX_STR) {
@@ -49,10 +51,20 @@ class BridgeEventBus extends EventEmitter {
   }
 
   addWsClient(ws) {
+    if (this.wsClients.size >= MAX_WS) {
+      try { ws.close(1013, 'too many sockets'); } catch (_) {}
+      return false;
+    }
     this.wsClients.add(ws);
+    const idle = setTimeout(() => {
+      try { ws.close(1001, 'idle'); } catch (_) {}
+    }, WS_IDLE_MS);
+    if (idle.unref) idle.unref();
     ws.on('close', () => {
+      clearTimeout(idle);
       this.wsClients.delete(ws);
     });
+    return true;
   }
 
   broadcast(type, payload = {}) {

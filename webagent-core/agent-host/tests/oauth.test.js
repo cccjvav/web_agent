@@ -139,6 +139,73 @@ async function main() {
     assert.strictEqual(viaBearer.json.result.isError, false);
     assert.ok(viaBearer.json.result.content[0].text.includes(tmp) || viaBearer.json.result.content[0].text.includes('root'));
 
+    const sid = secretOk.headers['mcp-session-id'];
+    assert.ok(sid, 'initialize must issue Mcp-Session-Id');
+    const reuse = await request(server, 'POST', `/mcp/${config.secretKey}`, {
+      body: { jsonrpc: '2.0', id: 20, method: 'ping', params: {} },
+      headers: { 'Mcp-Session-Id': sid }
+    });
+    assert.strictEqual(reuse.status, 200);
+    assert.strictEqual(reuse.headers['mcp-session-id'], sid);
+
+    const unknownSid = await request(server, 'POST', `/mcp/${config.secretKey}`, {
+      body: { jsonrpc: '2.0', id: 21, method: 'ping', params: {} },
+      headers: { 'Mcp-Session-Id': 'deadbeefdeadbeefdeadbeefdeadbeef' }
+    });
+    assert.strictEqual(unknownSid.status, 404);
+
+    const deleted = await request(server, 'DELETE', `/mcp/${config.secretKey}`, {
+      headers: { 'Mcp-Session-Id': sid }
+    });
+    assert.strictEqual(deleted.status, 204);
+    const afterDelete = await request(server, 'POST', `/mcp/${config.secretKey}`, {
+      body: { jsonrpc: '2.0', id: 22, method: 'ping', params: {} },
+      headers: { 'Mcp-Session-Id': sid }
+    });
+    assert.strictEqual(afterDelete.status, 404);
+
+    const sseGet = await new Promise((resolve, reject) => {
+      const addr = server.address();
+      const req = http.request(
+        {
+          hostname: '127.0.0.1',
+          port: addr.port,
+          path: `/mcp/${config.secretKey}`,
+          method: 'GET',
+          headers: { Accept: 'text/event-stream' }
+        },
+        (res) => {
+          let raw = '';
+          res.on('data', (c) => {
+            raw += c.toString();
+            if (raw.includes('event: endpoint')) {
+              req.destroy();
+              resolve({ status: res.statusCode, headers: res.headers, raw });
+            }
+          });
+        }
+      );
+      req.on('error', (err) => {
+        if (err && err.code === 'ECONNRESET') return;
+        reject(err);
+      });
+      req.setTimeout(3000, () => {
+        req.destroy();
+        reject(new Error('sse get timeout'));
+      });
+      req.end();
+    });
+    assert.strictEqual(sseGet.status, 200);
+    assert.ok(sseGet.raw.includes(`data: /mcp/${config.secretKey}`));
+
+    let lastReg = null;
+    for (let i = 0; i < 21; i++) {
+      lastReg = await request(server, 'POST', '/oauth/register', {
+        body: { redirect_uris: ['http://127.0.0.1/cb'] }
+      });
+    }
+    assert.strictEqual(lastReg.status, 429);
+
     oauth.revokeAll();
     const afterRevoke = await request(server, 'POST', '/mcp', {
       body: { jsonrpc: '2.0', id: 4, method: 'ping', params: {} },

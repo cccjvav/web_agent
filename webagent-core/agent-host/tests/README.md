@@ -15,7 +15,7 @@
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command`、`cancel_command` 终态保持 cancelled、持久 hash 不能单独覆盖 |
 | `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝 |
 | `hostPersist.test.js` | `generateNewSecret` 写入 `config.json`；旧盘 `永久顺`/假 `github`/`demo` 迁成 `local-demo`；带 `githubId` 的 octocat **留下**；`usage.json` 进 gitignore；`read-hashes.json` 跨 require 仍能 recalledHash，**sessionHash 为空**；`resetHashes` 删文件 |
-| `eventBus.test.js` | 日志脱敏 `ghp_` / `sk-` / `Bearer`；长 chunk 截断；普通字段留下 |
+| `eventBus.test.js` | 日志脱敏 `ghp_` / `sk-` / `Bearer` / `oldSecret`；长 chunk 截断；普通字段留下 |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
 | `bridgeTunnel.test.js` | stub `startQuickTunnel`/`stopTunnel`：cloudflare 启动后 mcpUrl 含 trycloudflare；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
 | `apiFiles.test.js` | `PUT /api/files/content` 走 `write_file`：普通文件写入、`.env` 拒绝、越界拒绝、错 hash 409、`POST /api/skills` |
@@ -33,7 +33,7 @@
 | `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；Plan 首轮一支、空发第二支、过早 merge、再 merge `agreementRate==null`；第二参 emit 与 `payload.emit` |
 | `chatMode.test.js` | `@webagent` 默认 Agent=code；`/ask` `/plan` |
 | `profile.test.js` | 环境偏好 / 技术栈写入 `.webagent`，进入指令 |
-| `oauth.test.js` | OAuth 发现、配对、PKCE、Bearer `/mcp`、SSE |
+| `oauth.test.js` | OAuth 发现、配对、PKCE、Bearer `/mcp`、SSE、session 复用/未知 404/`DELETE`、SSE endpoint 含密钥路径、注册限速 429 |
 
 ---
 
@@ -313,7 +313,7 @@
 
 ### 📄 文件名：`oauth.test.js`
 
-- **文件职责：** 真 listen 随机端口：发现文档、401、URL 密钥 initialize、SSE ping、PKCE 发 token、Bearer tools/call、revoke 后 401。
+- **文件职责：** 真 listen 随机端口：发现文档、401、URL 密钥 initialize、SSE ping、PKCE 发 token、Bearer tools/call、`Mcp-Session-Id` 复用/未知 404/`DELETE`、SSE GET endpoint 含 `/mcp/<secret>`、第 21 次 register 429、revoke 后 401。
 - **Function `request`（L16–L47）** — 相对已 listen 的 server；`json=true` 发 JSON，否则 urlencoded。
 - **Function `main`（L49–L153）**
   - L50–L57：express 挂 `oauth.router` + `/mcp`；`listen(0)`。

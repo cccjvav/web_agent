@@ -1,4 +1,9 @@
+const crypto = require('crypto');
+
 const sessions = new Map();
+const httpSessions = new Map();
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+const MAX_HTTP_SESSIONS = 200;
 
 function sessionKey(req) {
   const ip = (req && (req.ip || req.headers && req.headers['x-forwarded-for'])) || 'local';
@@ -36,13 +41,63 @@ function snapshot() {
     alive: Boolean(latest && ageMs != null && ageMs < 10000),
     ageMs,
     latest,
-    sessions: list.slice(0, 8)
+    sessions: list.slice(0, 8),
+    httpSessions: httpSessions.size
   };
+}
+
+function pruneHttpSessions() {
+  const now = Date.now();
+  for (const [id, rec] of httpSessions) {
+    if (now - rec.lastSeen > SESSION_TTL_MS) httpSessions.delete(id);
+  }
+}
+
+function createHttpSession(extra = {}) {
+  pruneHttpSessions();
+  while (httpSessions.size >= MAX_HTTP_SESSIONS) {
+    let oldestId = null;
+    let oldestSeen = Infinity;
+    for (const [id, rec] of httpSessions) {
+      if (rec.lastSeen < oldestSeen) {
+        oldestSeen = rec.lastSeen;
+        oldestId = id;
+      }
+    }
+    if (!oldestId) break;
+    httpSessions.delete(oldestId);
+  }
+  const id = crypto.randomBytes(16).toString('hex');
+  httpSessions.set(id, { id, createdAt: Date.now(), lastSeen: Date.now(), ...extra });
+  return id;
+}
+
+function touchHttpSession(id) {
+  if (!id) return null;
+  pruneHttpSessions();
+  const rec = httpSessions.get(id);
+  if (!rec) return null;
+  rec.lastSeen = Date.now();
+  return rec;
+}
+
+function destroyHttpSession(id) {
+  if (!id) return false;
+  return httpSessions.delete(id);
 }
 
 function reset() {
   sessions.clear();
+  httpSessions.clear();
   return snapshot();
 }
 
-module.exports = { touch, snapshot, sessionKey, reset };
+module.exports = {
+  touch,
+  snapshot,
+  sessionKey,
+  reset,
+  createHttpSession,
+  touchHttpSession,
+  destroyHttpSession
+};

@@ -1,5 +1,4 @@
 const express = require('express');
-const crypto = require('crypto');
 const { getToolList, callTool } = require('../tools');
 const { config } = require('../config');
 const { loadCustom } = require('../models/customizations');
@@ -8,7 +7,7 @@ const { getInstructions, getBootstrapPrompt } = require('./instructions');
 const { listResources, readResource } = require('./resources');
 const { clipJson, clipText } = require('./budget');
 const { ProtocolError, publicError } = require('./errors');
-const { touch, snapshot } = require('./session');
+const { touch, snapshot, createHttpSession, touchHttpSession, destroyHttpSession } = require('./session');
 const oauth = require('./oauth');
 const tracker = require('../usage/tracker');
 
@@ -47,13 +46,46 @@ function wantsSse(req) {
   return String(req.headers.accept || '').includes('text/event-stream');
 }
 
-function sessionIdFor(req) {
-  return req.headers['mcp-session-id'] || crypto.randomBytes(8).toString('hex');
+const MAX_SSE = 32;
+const SSE_IDLE_MS = 10 * 60 * 1000;
+let sseOpen = 0;
+
+function incomingSessionId(req) {
+  return String((req.headers && req.headers['mcp-session-id']) || '').trim() || null;
+}
+
+function bindHttpSession(req, { createIfMissing = false } = {}) {
+  const incoming = incomingSessionId(req);
+  if (incoming) {
+    if (touchHttpSession(incoming)) {
+      req.mcpSessionId = incoming;
+      return { ok: true };
+    }
+    if (createIfMissing) {
+      req.mcpSessionId = createHttpSession({ replaced: incoming });
+      return { ok: true };
+    }
+    return { ok: false };
+  }
+  if (createIfMissing) req.mcpSessionId = createHttpSession();
+  return { ok: true };
+}
+
+function mcpEndpointPath(req) {
+  if (req.params && req.params.secret) return `/mcp/${req.params.secret}`;
+  return '/mcp';
+}
+
+function rejectUnknownSession(req, res) {
+  return res.status(404).json({
+    jsonrpc: '2.0',
+    error: { code: -32001, message: 'Session not found. Call initialize again, or omit Mcp-Session-Id.' },
+    id: req.body && req.body.id != null ? req.body.id : null
+  });
 }
 
 function sendJsonRpc(req, res, payload, httpStatus = 200) {
-  const sid = sessionIdFor(req);
-  res.setHeader('Mcp-Session-Id', sid);
+  if (req.mcpSessionId) res.setHeader('Mcp-Session-Id', req.mcpSessionId);
   if (wantsSse(req)) {
     res.status(httpStatus);
     res.setHeader('Content-Type', 'text/event-stream');
@@ -229,6 +261,10 @@ function hostStatus() {
 
 async function handlePost(req, res) {
   const { jsonrpc, id, method } = req.body || {};
+  const isInit = method === 'initialize';
+  const bound = bindHttpSession(req, { createIfMissing: isInit });
+  if (!bound.ok) return rejectUnknownSession(req, res);
+
   if (jsonrpc !== '2.0') {
     return sendJsonRpc(req, res, {
       jsonrpc: '2.0',
@@ -256,24 +292,49 @@ async function handlePost(req, res) {
 }
 
 function handleGet(req, res) {
+  const bound = bindHttpSession(req, { createIfMissing: wantsSse(req) });
+  if (!bound.ok) return rejectUnknownSession(req, res);
+
   if (wantsSse(req)) {
+    if (sseOpen >= MAX_SSE) {
+      return res.status(503).json({ error: 'too many SSE connections' });
+    }
+    sseOpen += 1;
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Mcp-Session-Id', sessionIdFor(req));
-    res.write('event: endpoint\ndata: /mcp\n\n');
+    if (req.mcpSessionId) res.setHeader('Mcp-Session-Id', req.mcpSessionId);
+    res.write(`event: endpoint\ndata: ${mcpEndpointPath(req)}\n\n`);
     const timer = setInterval(() => {
       try { res.write(': ping\n\n'); } catch (_) {}
     }, 15000);
-    req.on('close', () => clearInterval(timer));
+    if (timer.unref) timer.unref();
+    const idle = setTimeout(() => {
+      try { res.end(); } catch (_) {}
+    }, SSE_IDLE_MS);
+    if (idle.unref) idle.unref();
+    req.on('close', () => {
+      sseOpen = Math.max(0, sseOpen - 1);
+      clearInterval(timer);
+      clearTimeout(idle);
+    });
     return;
   }
+  if (req.mcpSessionId) res.setHeader('Mcp-Session-Id', req.mcpSessionId);
   res.json(hostStatus());
+}
+
+function handleDelete(req, res) {
+  const incoming = incomingSessionId(req);
+  if (incoming) destroyHttpSession(incoming);
+  return res.status(204).end();
 }
 
 router.get('/', requireAuth, handleGet);
 router.post('/', requireAuth, handlePost);
+router.delete('/', requireAuth, handleDelete);
 router.get('/:secret', requireAuth, handleGet);
 router.post('/:secret', requireAuth, handlePost);
+router.delete('/:secret', requireAuth, handleDelete);
 
 module.exports = router;
 module.exports.handleRpc = handleRpc;

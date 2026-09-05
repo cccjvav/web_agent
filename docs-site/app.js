@@ -40,10 +40,10 @@
           <span class="dot ${p.id === 'map' || p.id === 'guide' ? 'kitchen' : p.id === 'impl' ? 'shop' : 'remote'}"></span>
           ${p.label}
         </button>`).join('')}
-      <div class="sec">正文仍在仓库根</div>
-      <a class="item" href="../架构导读.md">架构导读.md</a>
-      <a class="item" href="../技术实现.md">技术实现.md</a>
-      <a class="item" href="../总览.md">总览.md</a>
+      <div class="sec">正文（站内，已嵌入）</div>
+      <a class="item" href="#/guide">架构导读</a>
+      <a class="item" href="#/impl">技术实现</a>
+      <a class="item" href="#/graph">总览</a>
     `;
     $('#q').addEventListener('input', onSearch);
     $$('.nav [data-go]').forEach((btn) => btn.addEventListener('click', () => go(btn.dataset.go)));

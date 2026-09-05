@@ -40,7 +40,7 @@ node docs-site/serve.js
 |---|---|
 | `index.html` / `styles.css` / `app.js` | 壳 |
 | `build.js` | 把 Markdown 打成 `content.js`（无 npm 依赖） |
-| `serve.js` | 先 build，再在 `0.0.0.0:4173` 提供静态页 |
+| `serve.js` | 先 build，再在 `0.0.0.0:4173` 提供静态页。侧栏链到 `#/guide` 等站内 hash，**不**链 `../架构导读.md`（那个路径 404） |
 | `content.js` | 生成物；不要手改 |
 
 改导读或行级 README 后：再执行一次 `node docs-site/build.js` 或重启 `serve.js`。

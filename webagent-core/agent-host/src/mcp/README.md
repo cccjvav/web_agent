@@ -78,13 +78,13 @@
     - L11–L16：没有旧记录则新建 `connectedAt`、`calls:0`、`fail:0`。
     - L17–L24：覆盖 extra；**始终**刷新 `lastSeen`；仅当 `incCall`/`incFail` 为真才 +1；`busy = Boolean(extra.busy)`（没传则为 false）。
     - L25–L26：写回 Map，返回 `next`。
-  - **Function `snapshot()`（L29–L41）**
-    - 无输入。L30 按 `lastSeen` 字符串降序。
-    - L31–L32：最新一条的年龄毫秒；没有 latest 则 `ageMs=null`。
-    - L33–L40：`staleAfterMs` 写死 10000；`alive` 当 latest 存在且年龄 &lt; 10s；`sessions` 最多 8 条。
-  - **Function `reset()`（L43–L46）** — `sessions.clear()` 后返回 `snapshot()`。被 `POST /api/bridge/reset-round` 调用。
+  - **Function `snapshot()`（L34–L47）**
+    - 无输入。按 `lastSeen` 字符串降序。
+    - `staleAfterMs` 写死 10000；`alive` 当 latest 存在且年龄 &lt; 10s；`sessions` 最多 8 条。附 `httpSessions` 数量。
+  - **Function `createHttpSession` / `touchHttpSession` / `destroyHttpSession`（L56–L87）** — Streamable HTTP 的 `Mcp-Session-Id` 表（内存，24h TTL，最多 200）。未知 id 的后续请求由 `server.js` 回 404。
+  - **Function `reset()`（L89–L93）** — 清心跳表 **和** HTTP session 表。被 `POST /api/bridge/reset-round` 调用。
 
-- **关键变量：** L1 `sessions = new Map()`，整个进程一份。导出 L48：`touch` / `snapshot` / `sessionKey` / `reset`。
+- **关键变量：** L1 心跳 `sessions`；L4 HTTP `httpSessions`。导出含 `touch` / `snapshot` / `sessionKey` / `reset` / HTTP session 三个函数。
 
 ---
 
@@ -246,8 +246,9 @@
     - L284–L293 `refresh_token`：无效/过期 400；删旧双 token；再发一对。
     - L294–L296 其它 grant → 400。
   - **Function `tokenResponse(issued)`（L299–L306）** — Bearer、expires_in 秒、refresh、scope `mcp`。
-  - **Function `sendError(res, err)`（L308–L311）** — `status || 500`；400 时 `error=invalid_request` 否则 `server_error`。
-  - **Function `registerHandler`（L325–L331）** — try 201 + `registerClient`；catch `sendError`。
+  - **Function `sendError(res, err)`（L331–L335）** — `status || 500`；429 时 `slow_down`，400 时 `invalid_request`，否则 `server_error`。
+  - **Function `rateLimit(key, max, windowMs)`（L315–L329）** — 内存滑窗。注册每 IP 每分钟 20；token 每 IP 每分钟 60。超限 429 `slow_down`。
+  - **Function `registerHandler`（L347–L353）** — 先限速再 201 + `registerClient`；catch `sendError`。
 
 - **路由（L313–L365）：**
 
@@ -259,7 +260,7 @@
   | L332–L333 | POST | `/oauth/register` 与 `/register` | 动态注册 |
   | L335–L339 | GET | `/oauth/authorize` | `ensurePairing` + HTML |
   | L341–L349 | POST | `/oauth/authorize` | try 302；catch 用错误重绘 HTML |
-  | L351–L356 | POST | `/oauth/token` | `handleToken` |
+  | L375–L382 | POST | `/oauth/token` | 每 IP 每分钟 60 次；`handleToken` |
   | L358–L365 | POST | `/oauth/revoke` | 从两个 token Map delete，**始终 200** `{ revoked:true }` |
 
 - **内嵌 HTML DOM（`authorizeHtml` L185–L218）：**
@@ -289,24 +290,27 @@
   - **Function `rejectUnauthorized(req, res)`（L30–L38）** — 设 `WWW-Authenticate`，401 JSON-RPC `-32000`。
   - **Function `requireAuth`（L40–L43）** — 未授权则 reject，否则 `next()`。
   - **Function `wantsSse(req)`（L45–L47）** — `Accept` 含 `text/event-stream`。
-  - **Function `sessionIdFor(req)`（L49–L51）** — 头 `mcp-session-id` 或随机 8 字节 hex。
-  - **Function `sendJsonRpc(req, res, payload, httpStatus=200)`（L53–L65）**
-    - L54–L55：回写 `Mcp-Session-Id`。
-    - L56–L62：SSE 则 `event: message` + data 后 end。
-    - L64：否则普通 JSON。
+  - **Function `bindHttpSession(req, { createIfMissing })`（L57–L72）** — 有 `Mcp-Session-Id` 则必须已登记（initialize 可换新）；无头且 `createIfMissing`（initialize / SSE GET）才发新 id。简单 HTTP 客户端不带头仍可调用。
+  - **Function `sendJsonRpc(req, res, payload, httpStatus=200)`（L87–L97）**
+    - 若本次有 session 才回写 `Mcp-Session-Id`。
+    - SSE 则 `event: message` + data 后 end。
+    - 否则普通 JSON。
   - **Function `builtinPrompts()`（L67–L75）** — 仅一项 `name:'connect'`。
   - **Function `promptsFromCustom()`（L77–L85）** — 内置 + `custom.prompts`（description 截 120 字）。
   - **Function `pickProtocol(params)`（L86–L90）** — 客户端要的版本在支持列表里就用，否则 `'2025-03-26'`。
   - **Function `remoteToolMode(params)`（L92–L97）** — 读 `params._meta.mode` 或 `_meta.webagentMode`；仅 `ask|plan|code`；缺省 **`'code'`**。
   - **Function `handleRpc(req)`（L99–L210）** — 见下方 method 分支。
   - **Function `hostStatus()`（L212–L225）** — GET 非 SSE 的主机摘要（含完整 instructions、transports、auth 三种）。
-  - **Function `handlePost(req, res)`（L227–L253）**
-    - L229–L235：`jsonrpc !== '2.0'` → 400、RPC `-32600`。
+  - **Function `handlePost(req, res)`（L263–L292）**
+    - 先 `bindHttpSession`：`initialize` 才发新 sid；未知头且非 initialize → 404。
+    - `jsonrpc !== '2.0'` → 400、RPC `-32600`。
     - L237–L242：`handleRpc`；method 以 `notifications/` 开头 → **HTTP 204 无 body**。
     - L243–L252：catch：`E_UNKNOWN_CMD` → HTTP 404 且 rpc `-32601`；其它协议 `-32602`；否则 `-32603` 或 `err.rpcCode`。**工具失败不会进这里**：`tools/call` 自己 `return { isError:true }`。
-  - **Function `handleGet(req, res)`（L255–L268）**
-    - L256–L265：SSE → 先写 `event: endpoint` `data: /mcp`，每 15s `: ping`，close 清 interval。
-    - L267：否则 `hostStatus()` JSON。
+  - **Function `handleGet(req, res)`（L294–L324）**
+    - SSE：最多 32 路；`event: endpoint` 的 data 是 `/mcp/<secret>` 或 `/mcp`（跟这次 URL 一致）；10 分钟空闲结束；每 15s `: ping`。
+    - 未知 session 头 → 404。
+    - 否则 `hostStatus()` JSON。
+  - **Function `handleDelete`（L326–L330）** — 删掉该 `Mcp-Session-Id`，204。
 
   **`handleRpc` 的 method 分支：**
 
@@ -331,7 +335,7 @@
   - L151–L154：成功 → MCP `content[{type:text}]`，`isError:false`。
   - L155–L163：`catch` → `publicError`；`incFail`；**始终** `return { content:[{type:text, text: JSON.stringify(info)}], isError:true }`。未知工具名、HASH_REQUIRED、STALE_FILE 都走这条，网页 Agent 把它当工具结果而不是传输崩溃。
 
-- **路由（L270–L273）：** `GET/POST /` 与 `GET/POST /:secret` 均 `requireAuth` 后进 handleGet/handlePost。挂到 app 上后即 `/mcp` 与 `/mcp/:secret`。
+- **路由（L332–L337）：** `GET/POST/DELETE /` 与 `GET/POST/DELETE /:secret` 均 `requireAuth`。挂到 app 上后即 `/mcp` 与 `/mcp/:secret`。
 
 - **关键变量：** L14 `router`；L15 `SUPPORTED_PROTOCOL = ['2024-11-05','2025-03-26','2025-06-18']`。
 
@@ -344,15 +348,15 @@
 1. **OAuth 发现 / 配对（匿名，不进 `server.js`）**  
    客户端 GET `oauth.js` 的 `/.well-known/…`（L313–L321）拿元数据 → POST `/oauth/register`（L325–L333）拿到 `client_id` → 浏览器 GET `/oauth/authorize`（L335–L339，`ensurePairing`）看到配对页 HTML → 用户填工作台配对码 → POST `completeAuthorize`（L341–L349）→ 302 带回一次性 code → POST `/oauth/token` + PKCE（L351–L356）得到 Bearer。
 
-2. **MCP 请求进 `server.js` 路由（L270–L273）**  
-   `requireAuth` → `extractToken`（路径密钥 / Bearer / 头 / query）→ `oauth.verifyAccessToken`（L166 认 URL 密钥，或认 access token）。失败则 401 + `WWW-Authenticate`。
+2. **MCP 请求进 `server.js` 路由（L332–L337）**  
+   `requireAuth` → `extractToken`（路径密钥 / Bearer / 头 / query）→ `oauth.verifyAccessToken`（认 URL 密钥，或认 access token）。失败则 401 + `WWW-Authenticate`。
 
 3. **GET**  
-   - `Accept: text/event-stream` → SSE 通道（L255–L265）。  
+   - `Accept: text/event-stream` → SSE 通道（最多 32 路；endpoint 带回 `/mcp/<secret>`）。  
    - 否则 `hostStatus()`，其中 `instructions` 来自 `instructions.js`。
 
 4. **POST JSON-RPC**  
-   `handlePost` 校验 `jsonrpc==='2.0'` → `handleRpc`：
+   `handlePost` 绑定 session，再校验 `jsonrpc==='2.0'` → `handleRpc`：
    - `initialize`：`session.touch` + `instructions.getInstructions()`（读 customizations / profile / skills）。
    - `tools/list`：出本目录，调 `../tools.getToolList()`。
    - `tools/call`：出本目录，调 `../tools.callTool`（真正改盘）；回来用 `budget.clipJson` / `clipText`；**工具失败回 MCP `isError:true` 文本**（`publicError` 的 layer/code/msg/detail），不升级成 JSON-RPC `error`；全程 `eventBus.broadcast`（目录外）给工作台。

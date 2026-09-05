@@ -180,6 +180,7 @@ function revokeAll() {
   accessTokens.clear();
   refreshTokens.clear();
   pairing = null;
+  rateHits.clear();
 }
 
 function authorizeHtml(query, error) {
@@ -303,9 +304,34 @@ function tokenResponse(issued) {
   };
 }
 
+const rateHits = new Map();
+
+function clientIp(req) {
+  return String((req && (req.ip || (req.headers && req.headers['x-forwarded-for']))) || 'local')
+    .split(',')[0]
+    .trim();
+}
+
+function rateLimit(key, max, windowMs) {
+  const t = now();
+  const rec = rateHits.get(key) || { n: 0, start: t };
+  if (t - rec.start > windowMs) {
+    rec.n = 0;
+    rec.start = t;
+  }
+  rec.n += 1;
+  rateHits.set(key, rec);
+  if (rec.n > max) {
+    const err = new Error('too many requests');
+    err.status = 429;
+    throw err;
+  }
+}
+
 function sendError(res, err) {
   const status = err.status || 500;
-  res.status(status).json({ error: status === 400 ? 'invalid_request' : 'server_error', error_description: err.message });
+  const error = status === 429 ? 'slow_down' : status === 400 ? 'invalid_request' : 'server_error';
+  res.status(status).json({ error, error_description: err.message });
 }
 
 router.get('/.well-known/oauth-authorization-server', (req, res) => {
@@ -320,6 +346,7 @@ router.get('/.well-known/oauth-protected-resource/mcp', (req, res) => {
 
 function registerHandler(req, res) {
   try {
+    rateLimit(`reg:${clientIp(req)}`, 20, 60 * 1000);
     res.status(201).json(registerClient(req.body || {}));
   } catch (err) {
     sendError(res, err);
@@ -347,6 +374,7 @@ router.post('/oauth/authorize', (req, res) => {
 
 router.post('/oauth/token', (req, res) => {
   try {
+    rateLimit(`tok:${clientIp(req)}`, 60, 60 * 1000);
     res.json(handleToken(req.body || {}));
   } catch (err) {
     sendError(res, err);
