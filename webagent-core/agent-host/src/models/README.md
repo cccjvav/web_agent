@@ -23,15 +23,17 @@
 
   - **Function `dir`（L8–L10）** / **`storePath`（L12–L14）** — `.webagent` 与其中 `config.json`。
   - **Function `defaults`（L16–L50）** — 见下方 Key。
-  - **Function `normalizeBridge`（L52–L58）** — 旧盘 `永久顺` / `github` / `demo` 收成 `local-demo`。
-  - **Function `load`（L60–L73）** — try 读 JSON 与 defaults 浅合并；`models` 非非空数组则用默认；`bridge` 走 `normalizeBridge`。**catch 返回 defaults，不抛。**
-  - **Function `restrictFileMode`（L75–L79）** — `chmod 0600`；失败 catch 空（Windows 可能无效）。
-  - **Function `lineCovers` / `alreadyIgnored`（L85–L99）** — 根或嵌套 `.gitignore` 是否已覆盖 `.webagent/config.json` 等。
-  - **Function `ensureNestedIgnore`（L105–L121）** — 写 `.webagent/.gitignore`（`config.json`、`read-hashes.json`），已有则不重复。
-  - **Function `ensureWorkspaceGitignore`（L123–L141）** — 仅当工作区根有 `.git` 时，往**该仓库** `.gitignore` 追加上述两行。不是 git 仓库则跳过。
-  - **Function `protectWorkspaceSecrets`（L143–L149）** — 嵌套 ignore + 工作区 ignore + 已有 `config.json` 则 chmod。失败 catch 空。
-  - **Function `save`（L151–L157）** — mkdir + 美化 JSON + chmod + `protectWorkspaceSecrets`。
-  - **Function `patch`（L159–L169）** — load 后浅合并；bridge 深一层后 `normalizeBridge`；multiModel 深一层；`models` 仅当 `partial.models` 真才替换。
+  - **Function `clampBranches(n)`（L52–L56）** — 非有限 → 4；否则 round 后夹到 2–8。
+  - **Function `normalizeMultiModel(mm)`（L58–L66）** — 与 defaults 合并后 clamp `maxBranches`；`enabled`/`mergeAllowsRead` 非布尔则 true；`mergeModel` 空则 `'auto'`；`thinkLevel` 空则 `'high'`。
+  - **Function `normalizeBridge`（L68–L74）** — 旧盘 `永久顺` / `github` / `demo` 收成 `local-demo`。
+  - **Function `load`（L76–L89）** — try 读 JSON 与 defaults 浅合并；`models` 非非空数组则用默认；`bridge` 走 `normalizeBridge`；`multiModel` 走 `normalizeMultiModel`。**catch 返回 defaults，不抛。**
+  - **Function `restrictFileMode`（L91–L95）** — `chmod 0600`；失败 catch 空（Windows 可能无效）。
+  - **Function `lineCovers` / `alreadyIgnored`（L101–L115）** — 根或嵌套 `.gitignore` 是否已覆盖 `.webagent/config.json` 等。
+  - **Function `ensureNestedIgnore`（L121–L137）** — 写 `.webagent/.gitignore`（`config.json`、`read-hashes.json`），已有则不重复。
+  - **Function `ensureWorkspaceGitignore`（L139–L157）** — 仅当工作区根有 `.git` 时，往**该仓库** `.gitignore` 追加上述两行。不是 git 仓库则跳过。
+  - **Function `protectWorkspaceSecrets`（L159–L165）** — 嵌套 ignore + 工作区 ignore + 已有 `config.json` 则 chmod。失败 catch 空。
+  - **Function `save`（L167–L178）** — 先 `normalizeBridge` + `normalizeMultiModel`，再 mkdir + 美化 JSON + chmod + `protectWorkspaceSecrets`。
+  - **Function `patch`（L180–L190）** — load 后浅合并；bridge 深一层后 `normalizeBridge`；multiModel 走 `normalizeMultiModel`；`models` 仅当 `partial.models` 真才替换。
 
 - **关键变量 `defaults()` 的 JSON Key：**
 
@@ -40,11 +42,11 @@
   | `activeModelId` | 当前 Chat 模型 | 默认 `'builtin'` |
   | `models[]` | 模型列表 | 默认一条 builtin：`id/name/protocol/baseUrl/apiKey/modelId` |
   | `models[].protocol` | 协议 | `'builtin'` 或工作台写入的 `'chat.completions'` |
-  | `multiModel.enabled` | Plan 是否跑内置检查清单 | 默认 `true` |
-  | `multiModel.mergeModel` | 合并主模型 | 默认 `'auto'` |
-  | `multiModel.thinkLevel` | 思考强度 | 默认 `'high'` |
-  | `multiModel.maxBranches` | 最大分支 | 默认 `3` |
-  | `multiModel.mergeAllowsRead` | 合并时只读验证 | 默认 `true` |
+  | `multiModel.enabled` | Plan 是否开多模型分支（false 则单次草案） | 默认 `true` |
+  | `multiModel.mergeModel` | 合并主模型 id；`'auto'`/`'active'` = 当前对话模型 | 默认 `'auto'` |
+  | `multiModel.thinkLevel` | 思考强度（映射 temperature） | 默认 `'high'` |
+  | `multiModel.maxBranches` | 每回合最大分支（clamp 2–8） | 默认 `4` |
+  | `multiModel.mergeAllowsRead` | 合并时只读文件验证 | 默认 `true` |
   | `bridge.loggedIn` | 演示登录 | 默认 `true`（否则 `/bridge/start` 403） |
   | `bridge.deviceAuthorized` | 设备授权 | 默认 `true` |
   | `bridge.provider` / `username` / `license` | 本机演示授权（**不是** GitHub） | `'local-demo'` / `'local'` / `'local-demo'` |

@@ -56,7 +56,7 @@ run-webagent-vscode.cmd
 左侧活动栏最上方（或扩展图标附近）点 **Web Agent**：
 
 - **Web Agent Chat & Agent**（侧栏，像 Copilot）：输入框下 **Agent ▾** 默认 **Web Agent Code**。发任务就会对当前文件夹搜、读、改、测。
-- **VS Code 原生 Chat**（和 Copilot 同一个 Chat 面板）：打开 Chat，输入 `@webagent` 后发任务。`/ask` 只读，`/plan` 内置检查清单（不调用多个模型），默认就是 Agent（`/code`）。打补丁后会在编辑器里打开文件。命令 **Web Agent: 打开 Agent Chat** 或点状态栏也会打开这块。
+- **VS Code 原生 Chat**（和 Copilot 同一个 Chat 面板）：打开 Chat，输入 `@webagent` 后发任务。`/ask` 只读，`/plan` 多模型分支（换模型后再发同一任务；没 Key 是本机草案），默认就是 Agent（`/code`）。打补丁后会在编辑器里打开文件。命令 **Web Agent: 打开 Agent Chat** 或点状态栏也会打开这块。
 - **Bridge 模式**：启动 Bridge、复制提示词（内容与截图 5 那两行一致）
 
 ### Chat 里的 Agent（对照 Copilot）

@@ -245,6 +245,10 @@ u { text-decoration: none; }
 .send-arr {
   margin-left: auto; width: 28px; height: 28px; border: 0; border-radius: 6px; background: #2d2d2d; color: #ddd;
 }
+.plan-badge {
+  flex: none; font-size: 11px; color: #9cdcfe; border: 1px solid #3d6ea8; border-radius: 99px; padding: 1px 8px; white-space: nowrap;
+}
+#btn-plan-merge { font-size: 11px; padding: 2px 8px; }
 
 .bridge-wait { padding: 36px 20px 12px; text-align: center; }
 .wait-ico { font-size: 28px; margin-bottom: 8px; }

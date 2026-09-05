@@ -28,7 +28,8 @@ export const state = {
   loggedIn: true,
   custom: null,
   stayOnBridge: false,
-  selectedClient: 'arena'
+  selectedClient: 'arena',
+  planRound: null
 };
 
 /** Filled by sibling modules; call through here to avoid import cycles. */

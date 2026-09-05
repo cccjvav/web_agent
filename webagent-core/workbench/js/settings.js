@@ -64,7 +64,15 @@ export function paintCustom() {
   if (typeof c.multiModelEnabled === 'boolean') $('#mm-enabled').checked = c.multiModelEnabled;
   const mm = (state.status && state.status.multiModel) || {};
   if ($('#mm-enabled') && typeof mm.enabled === 'boolean') $('#mm-enabled').checked = mm.enabled;
-  if ($('#mm-merge') && mm.mergeModel) $('#mm-merge').value = mm.mergeModel;
+  const mergeSel = $('#mm-merge');
+  if (mergeSel) {
+    const models = (state.status && state.status.models) || [];
+    const extras = models.map((m) =>
+      `<option value="${escapeHtml(m.id)}">${escapeHtml(m.name || m.modelId || m.id)}</option>`
+    ).join('');
+    mergeSel.innerHTML = `<option value="active">用当前对话模型</option><option value="auto">用当前对话模型</option>${extras}`;
+    if (mm.mergeModel) mergeSel.value = mm.mergeModel;
+  }
   if ($('#mm-think') && mm.thinkLevel) $('#mm-think').value = mm.thinkLevel;
   if ($('#mm-readonly') && typeof mm.mergeAllowsRead === 'boolean') $('#mm-readonly').checked = mm.mergeAllowsRead;
   if ($('#mm-branches') && mm.maxBranches) $('#mm-branches').value = mm.maxBranches;

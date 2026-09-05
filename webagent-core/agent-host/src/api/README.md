@@ -9,7 +9,7 @@
 ## 1. 模块概述
 
 - **定位：** 给人点的按钮的后端：状态、Chat 流、文件树、自定义设置、启停 Bridge、探测模型。
-- **依赖：** `../config`、`../tools`、`../tools/readCache`（`resetHashes`、`rememberHash`）、`../agent/runChat`、`../agent/providers`、`../models/*`、`../mcp/session`（含 `reset`）、`../mcp/instructions`、`../mcp/clients`、`../mcp/oauth`、`../tunnel/cloudflared`、`../utils/eventBus`、`../tools/patchEngine`。
+- **依赖：** `../config`、`../tools`、`../tools/readCache`（`resetHashes`、`rememberHash`）、`../tools/planRound`、`../agent/runChat`、`../agent/providers`、`../models/*`、`../mcp/session`（含 `reset`）、`../mcp/instructions`、`../mcp/clients`、`../mcp/oauth`、`../tunnel/cloudflared`、`../utils/eventBus`、`../tools/patchEngine`。
 - **谁调用：** `../index.js`：`uiApp.use('/api', apiRouter)`；`mcpApp.use('/api', rejectUnlessLocalControl, apiRouter)`（隧道/公网 Host 打 48271 的 `/api` 得 404）。浏览器工作台走 **3000**；VS Code 插件走本机 `127.0.0.1:48271`。
 
 ---
@@ -27,7 +27,7 @@
 
 - **路由（逐步，含分支）：**
 
-  - **GET `/status`（L53–L89）** — 拼 online、端口、workspace、tools、taskState、logs 40 条、bridgeRunning、mcpInfo 展开、models（apiKey 变成 `hasKey` 布尔）、activeModelId、multiModel、bridgeAccount、mcpSession。无鉴权。
+  - **GET `/status`（L54–L91）** — 拼 online、端口、workspace、tools、taskState、logs 40 条、bridgeRunning、mcpInfo 展开、models（apiKey 变成 `hasKey` 布尔）、activeModelId、multiModel、**`planRound: planRound.snapshot()`**、bridgeAccount、mcpSession。无鉴权。
   - **POST `/bridge/reset-secret`（L91–L97）** — `generateNewSecret()`（内存 + `.webagent/config.json`）→ `oauth.revokeAll()` → broadcast `secret_rotated`。
   - **POST `/bridge/start`（L99–L139）**
     - L101–L103：`!loggedIn || !deviceAuthorized` → **403**（文案：需要先点本机演示授权；源码没有接 GitHub OAuth。Chat 不受影响）。
@@ -40,7 +40,7 @@
   - **POST `/bridge/reset-round`（L148–L153）** — `mcpReset()` + `resetHashes()` + broadcast `bridge_round_reset`。
   - **POST `/consensus/run`（L155–L163）** — `runMultiModelConsensus`；catch 500。
   - **POST `/tool/call`（L165–L176）** — body `{ name, arguments, mode='code' }`；broadcast 后 `callTool(..., mode)`；失败 400。
-  - **POST `/chat`（L178–L200）** — NDJSON、`X-Accel-Buffering: no`、flushHeaders。emit 写一行 JSON。try `runChat({ mode, message, history, emit })` 后 emit `done`；catch emit `error`；最后 `res.end()`。`runChat` 必须从 payload 取出 emit，否则内置/OpenAI 路径都没有事件流。
+  - **POST `/chat`（L180–L202）** — NDJSON、`X-Accel-Buffering: no`、flushHeaders。emit 写一行 JSON。try `runChat({ mode, message, history, modelId, thinkLevel, planAction, emit })` 后 emit `done`；catch emit `error`；最后 `res.end()`。`runChat` 必须从 payload 取出 emit，否则内置/OpenAI 路径都没有事件流。
   - **POST `/tasks/reset`（L202–L204）** — `resetTaskState()`。
   - **GET `/files/tree`（L206–L213）** — `callTool('list_directory', { recursive:true, maxDepth:5 }, 'ask')`。
   - **GET `/files/content`（L215–L234）** — query.path → resolveSafePath；不存在或目录 404；否则全文+hash，并 `rememberHash`。

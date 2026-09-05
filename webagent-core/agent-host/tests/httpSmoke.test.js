@@ -134,6 +134,9 @@ async function main() {
     assert.ok(page.raw.includes('id="btn-detect-stack"'));
     assert.ok(page.raw.includes('本机演示授权'));
     assert.ok(page.raw.includes('不是 GitHub'));
+    assert.ok(page.raw.includes('多模型博弈'));
+    assert.ok(page.raw.includes('btn-plan-merge'));
+    assert.ok(page.raw.includes('think-select'));
     assert.ok(!page.raw.includes('永久顺'));
     assert.ok(!page.raw.includes('使用 GitHub 登录'));
     assert.ok(page.raw.includes('type="module"') && page.raw.includes('/app.js'));
@@ -157,6 +160,9 @@ async function main() {
     assert.strictEqual(status.json.bridgeAccount.loggedIn, true);
     assert.strictEqual(status.json.bridgeAccount.provider, 'local-demo');
     assert.strictEqual(status.json.bridgeAccount.license, 'local-demo');
+    assert.ok(status.json.planRound && status.json.planRound.active === false);
+    assert.ok(status.json.multiModel);
+    assert.strictEqual(status.json.multiModel.maxBranches, 4);
 
     const secret = status.json.secretKey;
     const denied = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/not-a-real-secret`, {
@@ -293,6 +299,47 @@ async function main() {
     assert.ok(events.some((e) => e.type === 'tool' && e.name === 'list_directory'));
     assert.ok(events.some((e) => e.type === 'message' && e.text));
     assert.ok(events.some((e) => e.type === 'done'));
+
+    function ndjson(raw) {
+      return String(raw || '')
+        .split('\n')
+        .filter((line) => line.trim())
+        .map((line) => { try { return JSON.parse(line); } catch { return null; } })
+        .filter(Boolean);
+    }
+
+    const planStart = await request('POST', `http://127.0.0.1:${workbenchPort}/api/chat`, {
+      mode: 'plan',
+      message: '针对当前工作区制定修改计划',
+      thinkLevel: 'low'
+    });
+    assert.strictEqual(planStart.status, 200);
+    const planStartEv = ndjson(planStart.raw);
+    assert.ok(!planStartEv.some((e) => e.type === 'consensus'));
+    const started = planStartEv.find((e) => e.type === 'planRound');
+    assert.ok(started && started.round && started.round.branches.length === 1);
+
+    const planBranch = await request('POST', `http://127.0.0.1:${workbenchPort}/api/chat`, {
+      mode: 'plan',
+      message: '',
+      planAction: 'branch',
+      thinkLevel: 'low'
+    });
+    const planBranchEv = ndjson(planBranch.raw);
+    const branched = planBranchEv.find((e) => e.type === 'planRound');
+    assert.ok(branched && branched.round.branches.length === 2);
+    assert.ok(branched.round.canMerge);
+    assert.ok(!planBranchEv.some((e) => e.type === 'consensus'));
+
+    const planMerge = await request('POST', `http://127.0.0.1:${workbenchPort}/api/chat`, {
+      mode: 'plan',
+      message: '',
+      planAction: 'merge'
+    });
+    const planMergeEv = ndjson(planMerge.raw);
+    const consensus = planMergeEv.find((e) => e.type === 'consensus');
+    assert.ok(consensus && consensus.result && consensus.result.simulated === true);
+    assert.ok(consensus.result.agreementRate == null);
 
     log += 'httpSmoke finished\n';
     console.log('http smoke tests passed');

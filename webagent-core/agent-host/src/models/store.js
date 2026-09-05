@@ -30,7 +30,7 @@ function defaults() {
       enabled: true,
       mergeModel: 'auto',
       thinkLevel: 'high',
-      maxBranches: 3,
+      maxBranches: 4,
       mergeAllowsRead: true
     },
     bridge: {
@@ -49,6 +49,22 @@ function defaults() {
   };
 }
 
+function clampBranches(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return 4;
+  return Math.min(8, Math.max(2, Math.round(v)));
+}
+
+function normalizeMultiModel(mm) {
+  const next = { ...defaults().multiModel, ...(mm || {}) };
+  next.maxBranches = clampBranches(next.maxBranches);
+  if (typeof next.enabled !== 'boolean') next.enabled = true;
+  if (typeof next.mergeAllowsRead !== 'boolean') next.mergeAllowsRead = true;
+  next.mergeModel = next.mergeModel || 'auto';
+  next.thinkLevel = next.thinkLevel || 'high';
+  return next;
+}
+
 function normalizeBridge(bridge) {
   const b = { ...defaults().bridge, ...(bridge || {}) };
   if (b.license === '永久顺') b.license = 'local-demo';
@@ -65,7 +81,7 @@ function load() {
       ...raw,
       models: Array.isArray(raw.models) && raw.models.length ? raw.models : defaults().models,
       bridge: normalizeBridge(raw.bridge),
-      multiModel: { ...defaults().multiModel, ...(raw.multiModel || {}) }
+      multiModel: normalizeMultiModel(raw.multiModel)
     };
   } catch {
     return defaults();
@@ -149,11 +165,16 @@ function protectWorkspaceSecrets() {
 }
 
 function save(next) {
+  const cfg = {
+    ...next,
+    bridge: normalizeBridge(next && next.bridge),
+    multiModel: normalizeMultiModel(next && next.multiModel)
+  };
   fs.mkdirSync(dir(), { recursive: true });
-  fs.writeFileSync(storePath(), JSON.stringify(next, null, 2), 'utf8');
+  fs.writeFileSync(storePath(), JSON.stringify(cfg, null, 2), 'utf8');
   restrictFileMode(storePath());
   protectWorkspaceSecrets();
-  return next;
+  return cfg;
 }
 
 function patch(partial) {

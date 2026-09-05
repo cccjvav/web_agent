@@ -184,7 +184,14 @@
                 <option value="plan">Plan</option>
                 <option value="code" selected>Code</option>
               </select>
-              <select id="model-select" class="mini-sel"></select>
+              <select id="model-select" class="mini-sel" title="作答模型"></select>
+              <select id="think-select" class="mini-sel" title="思考强度">
+                <option value="low">思考 低</option>
+                <option value="medium">思考 中</option>
+                <option value="high" selected>思考 高</option>
+              </select>
+              <span id="plan-badge" class="plan-badge hidden">分支 0/4</span>
+              <button type="button" id="btn-plan-merge" class="vs-btn hidden" title="用合并主模型总结各分支">总结</button>
               <button type="button" id="btn-send" class="send-arr" title="发送">↑</button>
             </div>
           </div>
@@ -252,7 +259,7 @@
         <button type="button" class="nav-item" data-page="plugins">插件</button>
         <button type="button" class="nav-item" data-page="api">API Provider</button>
         <button type="button" class="nav-item" data-page="codex">Codex</button>
-        <button type="button" class="nav-item" data-page="multimodel">Plan 检查清单</button>
+        <button type="button" class="nav-item" data-page="multimodel">多模型博弈</button>
       </aside>
       <div class="modal-main">
         <button type="button" class="modal-close" id="modal-close" title="关闭">✕</button>
@@ -442,13 +449,13 @@
           <button type="button" id="btn-codex" class="vs-btn">登录 Codex 账号</button>
         </div>
         <div class="page hidden" id="page-multimodel">
-          <h2>Plan 检查清单</h2>
-          <p class="lead">Plan 模式给出架构 / 安全 / 编码三份<strong>写死的</strong>检查项，<strong>不调用</strong>任何大模型。下面「合并主模型 / 思考强度」只保存在本地，当前源码不会拿去请求模型。</p>
-          <label class="chk"><input type="checkbox" id="mm-enabled" checked /> 启用内置检查清单</label>
+          <h2>多模型博弈</h2>
+          <p class="lead">Plan 下：选模型 + 思考强度发任务。不重打任务，换模型后空发送 = 新分支（串行）。满额如「分支 3/4」。至少两支即可点总结，不必跑满。总结走下面的合并主模型。没填 API Key 时分支是本机草案，总结是原文拼接，不会假装已经调了远程模型，也没有假的 97% 投票。</p>
+          <label class="chk"><input type="checkbox" id="mm-enabled" checked /> 启用多模型博弈</label>
           <label class="field-label">合并主模型</label>
           <select id="mm-merge" class="ms-input">
-            <option value="auto">自动（架构/安全/编码三分支后合并）</option>
-            <option value="active">当前 Chat 选用的模型</option>
+            <option value="active">用当前对话模型</option>
+            <option value="auto">用当前对话模型</option>
           </select>
           <label class="field-label">合并思考强度</label>
           <select id="mm-think" class="ms-input">
@@ -456,10 +463,10 @@
             <option value="medium">中</option>
             <option value="high" selected>高</option>
           </select>
-          <label class="chk" style="margin-top:12px"><input type="checkbox" id="mm-readonly" checked /> 合并时允许只读文件验证</label>
-          <label class="field-label">每回合最大分支数</label>
-          <input id="mm-branches" class="ms-input" type="number" min="2" max="5" value="3" />
-          <p class="hint">空输入才是分支发送。分歧大时不自动执行补丁。</p>
+          <label class="chk" style="margin-top:12px"><input type="checkbox" id="mm-readonly" checked /> 合并时只读文件验证</label>
+          <label class="field-label">每回合最大分支</label>
+          <input id="mm-branches" class="ms-input" type="number" min="2" max="8" value="4" />
+          <p class="hint">2–8，默认 4。Composer 里换模型后空发送开新分支；≥2 支可点「总结」。</p>
           <button type="button" id="btn-save-mm" class="vs-btn primary">保存</button>
         </div>
 
@@ -584,7 +591,7 @@
   </div>
   <div id="agent-pick-menu" class="dropdown hidden">
     <button type="button" data-mode="ask">Web Agent Ask · 只读</button>
-    <button type="button" data-mode="plan">Web Agent Plan · 清单</button>
+    <button type="button" data-mode="plan">Web Agent Plan · 分支</button>
     <button type="button" data-mode="code">Web Agent Code · Agent</button>
     <hr />
     <button type="button" id="menu-custom-from-agent">配置自定义智能体...</button>

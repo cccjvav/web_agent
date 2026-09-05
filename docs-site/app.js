@@ -118,7 +118,7 @@
           <button type="button" class="chip" data-path="c">C 网页 VS Code</button>
         </div>
         <div id="path-flow"></div>
-        <p class="faint" style="margin-top:12px">Named / ngrok 下拉源码里不 spawn。Plan 三模型不打真实 HTTP。不要把愿望写成已经接上。</p>
+        <p class="faint" style="margin-top:12px">Named / ngrok 下拉源码里不 spawn。Plan 没 Key 时是本机草案，不假装 97%。不要把愿望写成已经接上。</p>
       </div>
       <div class="hero-grid" style="margin-top:18px">
         <div class="card">
@@ -138,7 +138,7 @@
             <li>网页 VS Code 默认要登录口令，trusted-origins 不再是 *</li>
             <li>工作台保存走 write_file，写不进 .env，错 hash 会 409</li>
             <li>挂别人的 Git 仓库时，MCP 密钥和 API Key 会自动 gitignore</li>
-            <li>Plan 是内置检查清单，不调用多个模型，没有假 97%</li>
+            <li>Plan 没 Key 时是本机草案/拼接；有 Key 才调模型。没有假 97%</li>
             <li>Bridge「登录」是本机演示授权，不是 GitHub OAuth，没有「永久顺」</li>
           </ul>
         </div>

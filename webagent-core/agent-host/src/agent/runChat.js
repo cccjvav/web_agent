@@ -1,7 +1,8 @@
 const path = require('path');
 const { config } = require('../config');
 const { callTool } = require('../tools');
-const { runMultiModelConsensus } = require('../tools/consensusEngine');
+const { draftLocalBranch, mergeLocalBranches } = require('../tools/consensusEngine');
+const planRound = require('../tools/planRound');
 const { runOpenAI } = require('./openai');
 const store = require('../models/store');
 
@@ -273,36 +274,12 @@ async function runBuiltin(payload, emit) {
   });
 
   if (mode === 'plan') {
-    const mm = store.load().multiModel || {};
-    if (mm.enabled === false) {
-      if (emit) {
-        emit('message', {
-          text: [
-            `计划（未开内置检查清单）：${message}`,
-            '',
-            summarizeAsk(message, facts),
-            '',
-            '下一步切到 **Web Agent Code** 再改文件。'
-          ].join('\n')
-        });
-      }
-      return;
-    }
-    const consensus = await runMultiModelConsensus({
-      taskDescription: message,
-      facts,
-      emit
-    });
-    await timedTool(emit, 'plan', 'set_todos', { todos: consensus.unifiedActionPlan });
     if (emit) {
-      emit('consensus', { result: consensus });
       emit('message', {
         text: [
-          consensus.canonical,
+          summarizeAsk(message, facts),
           '',
-          consensus.summary,
-          '',
-          '下一步切到 **Web Agent Code** 执行补丁。配置了 API Provider 时会走模型工具循环。'
+          '下一步切到 **Web Agent Code** 再改文件。多模型分支请走 Plan 入口（换模型后空发送）。'
         ].join('\n')
       });
     }
@@ -374,14 +351,247 @@ async function runBuiltin(payload, emit) {
   if (emit) emit('message', { text: lines.join('\n') });
 }
 
+function capturingEmit(emit) {
+  let text = '';
+  const wrap = (type, data = {}) => {
+    if (type === 'message') {
+      text = data.text || '';
+      return;
+    }
+    if (typeof emit === 'function') emit(type, data);
+  };
+  wrap.captured = () => text;
+  return wrap;
+}
+
+function pickModel(cfg, id) {
+  const models = cfg.models || [];
+  if (id) {
+    const hit = models.find((m) => m.id === id);
+    if (hit) return hit;
+  }
+  return models.find((m) => m.id === cfg.activeModelId) || models[0];
+}
+
+function canCallModel(m) {
+  return Boolean(m && m.apiKey && m.baseUrl && m.modelId && m.protocol !== 'builtin');
+}
+
+function resolvePlanAction(payload, mm) {
+  const explicit = payload.planAction;
+  if (explicit === 'merge' || explicit === 'branch' || explicit === 'start' || explicit === 'reset') {
+    return explicit;
+  }
+  if (mm.enabled === false) return 'single';
+  const msg = String(payload.message || '').trim();
+  const live = planRound.current();
+  if (!msg && live && live.branches.length && !live.merged) return 'branch';
+  return 'start';
+}
+
+async function runPlanBranch({ emit, model, thinkLevel, task, history }) {
+  if (canCallModel(model)) {
+    const cap = capturingEmit(emit);
+    const out = await runOpenAI({
+      mode: 'plan',
+      message: task,
+      history: history || [],
+      emit: cap,
+      model,
+      thinkLevel,
+      allowTools: true
+    });
+    return {
+      answer: (out && out.text) || cap.captured() || '',
+      simulated: false
+    };
+  }
+  const live = planRound.current();
+  let facts = live && live.facts;
+  if (!facts) {
+    await timedTool(emit, 'plan', 'set_todos', {
+      todos: [
+        { id: '1', title: '扫描项目结构', status: 'in_progress' },
+        { id: '2', title: '写只读方案', status: 'pending' }
+      ]
+    });
+    facts = await explore(emit, 'plan', task);
+    if (live) live.facts = facts;
+  }
+  const draft = draftLocalBranch({
+    taskDescription: task,
+    facts,
+    modelName: (model && (model.name || model.modelId)) || '内置探索',
+    thinkLevel,
+    index: live ? live.branches.length + 1 : 1
+  });
+  if (live) live.facts = facts;
+  return { answer: draft.answer, simulated: true, facts, focus: draft.focus };
+}
+
+async function addLiveBranch({ emit, model, thinkLevel, history, task }) {
+  const live = planRound.current();
+  const t = task || (live && live.task);
+  const n = live ? live.branches.length + 1 : 1;
+  const max = live ? live.maxBranches : 4;
+  if (emit) {
+    emit('status', {
+      text: `${(model && (model.name || model.modelId)) || '内置'} · 分支 ${n}/${max}`
+    });
+  }
+  const out = await runPlanBranch({ emit, model, thinkLevel, task: t, history });
+  if (out.facts && live) live.facts = out.facts;
+  return planRound.addBranch({
+    modelId: model && model.id,
+    modelName: (model && (model.name || model.modelId)) || '内置探索',
+    thinkLevel,
+    simulated: out.simulated,
+    focus: out.focus,
+    answer: out.answer
+  });
+}
+
+function emitRound(emit, rec) {
+  const snap = planRound.snapshot();
+  if (!emit) return;
+  emit('planRound', { round: snap });
+  emit('message', {
+    text: rec.answer,
+    branch: {
+      index: rec.index,
+      max: snap.maxBranches,
+      modelName: rec.modelName,
+      simulated: rec.simulated
+    }
+  });
+}
+
+async function runPlanRound(payload, emit, cfg) {
+  const mm = cfg.multiModel || {};
+  const thinkLevel = payload.thinkLevel || mm.thinkLevel || 'high';
+  const model = pickModel(cfg, payload.modelId);
+  const action = resolvePlanAction(payload, mm);
+
+  if (action === 'single') {
+    const task = String(payload.message || '').trim() || '评估当前工作区并给出可执行方案';
+    const out = await runPlanBranch({ emit, model, thinkLevel, task, history: payload.history });
+    if (emit) emit('message', { text: out.answer });
+    return;
+  }
+
+  try {
+    if (action === 'reset') {
+      planRound.reset();
+      if (emit) {
+        emit('planRound', { round: planRound.snapshot() });
+        emit('message', { text: '已清空本轮多模型分支。' });
+      }
+      return;
+    }
+
+    if (action === 'merge') {
+      const live = planRound.current();
+      if (!live || live.branches.length < 2) {
+        if (emit) emit('error', { message: '至少两个分支才能总结。换模型后空发送再作答一次。' });
+        return;
+      }
+      const mergeId = mm.mergeModel === 'auto' ? 'active' : mm.mergeModel || 'active';
+      const mergeModel = mergeId === 'active' ? pickModel(cfg, cfg.activeModelId) : pickModel(cfg, mergeId);
+      let result;
+      if (canCallModel(mergeModel)) {
+        const pack = live.branches
+          .map((b, i) => `### 分支 ${i + 1} · ${b.modelName}\n\n${b.answer}`)
+          .join('\n\n');
+        const extra =
+          mm.mergeAllowsRead === false
+            ? 'Do not call tools. Unify the branch plans from the user message only.'
+            : 'You may read files only if branches disagree or lack evidence. Do not modify the repo.';
+        const cap = capturingEmit(emit);
+        const out = await runOpenAI({
+          mode: 'plan',
+          message: `任务：${live.task}\n\n${pack}\n\n请统一整理共识、分歧与可执行步骤。不要改文件。`,
+          history: [],
+          emit: cap,
+          model: mergeModel,
+          thinkLevel: mm.thinkLevel || thinkLevel,
+          allowTools: mm.mergeAllowsRead !== false,
+          extraSystem: extra
+        });
+        result = {
+          simulated: false,
+          consensusReached: false,
+          agreementRate: null,
+          participants: live.branches.map((b) => ({
+            id: b.id,
+            model: b.modelName,
+            focus: b.thinkLevel,
+            answer: b.answer
+          })),
+          unifiedActionPlan: [{ id: '1', title: '按合并方案切 Code 执行', status: 'pending' }],
+          disagreements: [],
+          canonical: (out && out.text) || cap.captured() || '',
+          summary: `合并主模型 ${mergeModel.name || mergeModel.modelId} 读了 ${live.branches.length} 个分支。`
+        };
+      } else {
+        result = mergeLocalBranches({
+          taskDescription: live.task,
+          branches: live.branches,
+          facts: live.facts || {}
+        });
+      }
+      planRound.markMerged(result);
+      await timedTool(emit, 'plan', 'set_todos', { todos: result.unifiedActionPlan || [] });
+      if (emit) {
+        emit('planRound', { round: planRound.snapshot() });
+        emit('consensus', { result });
+        emit('message', { text: [result.canonical, '', result.summary].filter(Boolean).join('\n') });
+      }
+      return;
+    }
+
+    if (action === 'branch') {
+      const rec = await addLiveBranch({ emit, model, thinkLevel, history: payload.history });
+      emitRound(emit, rec);
+      return;
+    }
+
+    const task = String(payload.message || '').trim();
+    planRound.start({
+      task,
+      maxBranches: mm.maxBranches,
+      mergeModelId: mm.mergeModel,
+      thinkLevel
+    });
+    const rec = await addLiveBranch({ emit, model, thinkLevel, history: payload.history, task });
+    emitRound(emit, rec);
+  } catch (err) {
+    if (emit) emit('error', { message: err.message });
+  }
+}
+
 async function runChat(payload = {}, emit) {
   const send = typeof emit === 'function' ? emit : payload.emit;
   const cfg = store.load();
-  const active = (cfg.models || []).find((m) => m.id === cfg.activeModelId);
-  if (active && active.apiKey && active.baseUrl && active.modelId) {
-    return runOpenAI({ ...payload, model: active, emit: send });
+  const mode = payload.mode || 'agent';
+  if (mode === 'plan') {
+    return runPlanRound(payload, send, cfg);
+  }
+  const active = pickModel(cfg, payload.modelId);
+  if (canCallModel(active)) {
+    try {
+      return await runOpenAI({
+        mode,
+        message: payload.message,
+        history: payload.history || [],
+        emit: send,
+        model: active,
+        thinkLevel: payload.thinkLevel
+      });
+    } catch (err) {
+      if (send) send('error', { message: `模型调用失败，改走内置探索：${err.message}` });
+    }
   }
   return runBuiltin(payload, send);
 }
 
-module.exports = { runChat };
+module.exports = { runChat, planRound };

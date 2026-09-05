@@ -20,11 +20,12 @@
 | `apiFiles.test.js` | `PUT /api/files/content` 走 `write_file`：普通文件写入、`.env` 拒绝、越界拒绝、错 hash 409、`POST /api/skills` |
 | `localControl.test.js` | 回环 / Cloudflare 头 / trycloudflare Host 是否算本机控制面 |
 | `corsAllow.test.js` | MCP Origin 白名单；外站 Origin/Referer 打 `/api` 拒绝 |
-| `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`、本机演示授权、不得含永久顺）、模块脚本、MCP 401、initialize、tools/list、ping、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、本机 `POST /api/chat` NDJSON |
+| `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`、多模型博弈、总结钮、本机演示授权、不得含永久顺）、模块脚本、MCP 401、initialize、tools/list、ping、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、本机 `POST /api/chat` NDJSON（Ask + Plan 分支再总结） |
 | `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime；不写死 `--auth none` / `trusted-origins *` |
 | `codeServerAuth.test.js` | 口令落盘复用；`CODE_SERVER_PASSWORD`；`CODE_SERVER_AUTH=none`；trusted-origins 仅本机 |
 | `skipWorkbench.test.js` | `WEBAGENT_SKIP_WORKBENCH=1` 不占用工作台端口 |
-| `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；第二参 emit 与 `payload.emit` 两条路径 |
+| `planRound.test.js` | 回合 clamp、空任务/满额/过早总结错误码 |
+| `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；Plan 首轮一支、空发第二支、过早 merge、再 merge `agreementRate==null`；第二参 emit 与 `payload.emit` |
 | `chatMode.test.js` | `@webagent` 默认 Agent=code；`/ask` `/plan` |
 | `profile.test.js` | 环境偏好 / 技术栈写入 `.webagent`，进入指令 |
 | `oauth.test.js` | OAuth 发现、配对、PKCE、Bearer `/mcp`、SSE |
@@ -205,7 +206,7 @@
 - **Function `main`（L81–257）**
   - L82–89：spawn `src/index.js`，env 设 `WORKSPACE_ROOT=tmp`、`WORKBENCH_PORT`、`AGENT_HOST_PORT`。
   - L111–113：health JSON `ok` 且 `product==='Web Agent'`。
-  - L115–139：GET `/` HTML 必须含：`Web Agent`；`编辑进化` 或 `CHAT`；`Add API`；`btn-agent-pick`；`agent-pick-menu`；`Web Agent Code`；`环境偏好`；`技术栈`；`技能引导`；`怎么连到本机仓库`；`无需 Plus` 或 `不需要 Plus`；`打开 DeepSeek`；`data-site="deepseek"`；`id="page-env"` / `btn-detect-env` / `page-stack` / `btn-detect-stack`；`本机演示授权` 与 `不是 GitHub`；不得含 `永久顺` / `使用 GitHub 登录`；`type="module"` 与 `/app.js`。
+  - L115–139：GET `/` HTML 必须含：`Web Agent`；`编辑进化` 或 `CHAT`；`Add API`；`btn-agent-pick`；`agent-pick-menu`；`Web Agent Code`；`环境偏好`；`技术栈`；`技能引导`；`怎么连到本机仓库`；`无需 Plus` 或 `不需要 Plus`；`打开 DeepSeek`；`data-site="deepseek"`；`id="page-env"` / `btn-detect-env` / `page-stack` / `btn-detect-stack`；`本机演示授权` 与 `不是 GitHub`；含 `多模型博弈`、`btn-plan-merge`、`think-select`；不得含 `永久顺` / `使用 GitHub 登录`；`type="module"` 与 `/app.js`。status 含 `planRound.active===false` 与 `multiModel.maxBranches===4`。末尾再 POST Plan start/branch/merge，首轮无 consensus、两支可总结、`agreementRate==null`。
   - L137–142：GET `/app.js` 含 `from './js/state.js'`；GET `/js/state.js` 含 `export const state`。
   - L148–160：GET **mcp 端口** `/api/status`（本机无隧道头）：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===25`；clients 含 arena（无需 Plus）、deepseek（`extension-http`、支持 MCP、无需 Plus）与 chat-plus；`mcpCanonicalUrl` 以 `/mcp` 结尾；`bridgeAccount.license/provider` 为 `local-demo` 且 `loggedIn`。
   - L154–160：错误 secret POST initialize → 401。
@@ -254,17 +255,28 @@
 
 ---
 
+### 📄 文件名：`planRound.test.js`
+
+- **文件职责：** 不启 HTTP，直接测回合状态机。
+- L15–L19：`clampMax` undefined→4、1→2、99→8；reset 后 `active:false`。
+- 空任务 `E_PLAN_NO_TASK`；无回合 `addBranch` → `E_PLAN_NO_ROUND`。
+- start max=3 后一支：`canBranch` 真、`canMerge` 假；两支可总结；第三支后满额 `E_PLAN_FULL`；merge 后再加 `E_PLAN_MERGED`。
+- 一支就 `markMerged` → `E_PLAN_NEED_TWO`。
+
 ### 📄 文件名：`runChat.test.js`
 
-- **文件职责：** 内置 Chat 对**任意**临时工作区搜-读-测；不依赖 calculator.js；不调 get_diagnostics；同时锁第二参 emit 与 `payload.emit`。
+- **文件职责：** 内置 Chat 对**任意**临时工作区搜-读-测；不依赖 calculator.js；不调 get_diagnostics；锁 Plan 分支/总结；同时锁第二参 emit 与 `payload.emit`。
 - **Function `collect`（L12–L16）** — `{ events, emit }`，emit 把 `{type,...data}` 推进数组。
-- **Function `main`（L18–L85）**
+- **Function `main`（L18–L115）**
   - L19–L34：写 README（标题 Widget）、`src/app.js` greet、`package.json` scripts.test、`tests/app.test.js`。
   - L36–L46 **ask「分析当前项目」：** 第二参 `ask.emit`；工具含 list_directory / find_files / read_files；禁止 diagnostics / apply_patch；message 匹配 README|Widget|app.js；整段事件 JSON **不含** `calculator.js`；有 label 匹配 `Found N files`。
-  - L48–L55 **plan：** `consensus.result.simulated === true` 且 `consensusReached === false`；无 97%；无 calculator.js；有 `set_todos`。
-  - L55–L61 **code「跑测试」：** 有 `run_command` 且 `ok`；message 含 `npm test` 或 `ok`。
-  - L63–L70 **payload.emit：** `runChat({ mode:'ask', message, emit })` 无第二参，仍须有 `list_directory` 与 `message`。
-  - L72–L81 **code 写入 notes.md + 围栏：** 磁盘出现该文件且含 `hello from agent`。
+  - L48–L59 **plan start：** 无 `consensus`；`planRound.branches.length===1`；status 含 `分支 1/`；message.branch.index===1 且 `simulated:true`；有 `set_todos`。
+  - L61–L66 **planAction branch：** 两支、`canMerge`、仍无 consensus。
+  - L68–L73 **一支就 merge：** error 含「至少两个」。
+  - L75–L83 **两支再 merge：** `simulated:true`，`consensusReached===false`，`agreementRate == null`，participants 长度 2。**不要**用 `/97%/` 扫整段 JSON（本机拼接文案含「这不是假的 97% 投票」）。
+  - L85–L91 **code「跑测试」：** 有 `run_command` 且 `ok`；message 含 `npm test` 或 `ok`。
+  - L93–L100 **payload.emit：** `runChat({ mode:'ask', message, emit })` 无第二参，仍须有 `list_directory` 与 `message`。
+  - L102–L111 **code 写入 notes.md + 围栏：** 磁盘出现该文件且含 `hello from agent`。
 
 ### 📄 文件名：`chatMode.test.js`
 
@@ -307,7 +319,7 @@
 
 ## 3. 执行逻辑流（仅本目录）
 
-1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **sandbox** → **hostPersist** → tunnel → **bridgeTunnel** → **apiFiles** → **localControl** → **corsAllow** → httpSmoke → codeServerNotRunnable → **codeServerAuth** → skipWorkbench → runChat → chatMode → profile → oauth。
+1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **sandbox** → **hostPersist** → tunnel → **bridgeTunnel** → **apiFiles** → **localControl** → **corsAllow** → httpSmoke → codeServerNotRunnable → **codeServerAuth** → skipWorkbench → **planRound** → runChat → chatMode → profile → oauth。
 2. 单文件：改 `config.workspaceRoot` 指向 tmp → require 被测模块 → assert → 删 tmp。`tunnel` / `chatMode` / `codeServerNotRunnable` 不改工作区。`bridgeTunnel` 改 tmp 工作区并 stub 隧道导出。
 3. 启进程的测试 spawn `src/index.js`，结束必须杀子进程。
 4. 失败路径：有 `main()` 的文件走 `main().catch` → `exit(1)`；`profile.test.js` 同步抛错由 Node 非 0 退出；CMD 的 `run-tests.cmd` 据此 pause。

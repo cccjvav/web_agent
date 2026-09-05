@@ -36,12 +36,12 @@
     - L147–L157 `#panel` 终端，默认 hidden。
   - L160–L223 **右侧 `#rightbar`：**
     - L161–L164 CHAT / BRIDGE 页签。
-    - L165–L192 `#right-chat`：流、Tasks、chips 快捷句、`#chat-input`、`#btn-agent-pick`、隐藏 `#mode-select`、`#model-select`、发送。
+    - L165–L197 `#right-chat`：流、Tasks、chips、`#chat-input`、`#btn-agent-pick`、隐藏 `#mode-select`、`#model-select`、`#think-select`、`#plan-badge`、`#btn-plan-merge`（总结）、发送。
     - L193–L222 `#right-bridge`：等待文案、任务、log、MCP session。L204–L221 `.mcp-session`：`#btn-reset-round`（清除本轮统计）、`#btn-stop-bridge-rb`、`#stat-calls` / `#stat-avg` / `#stat-fail` / `#stat-ok`。
   - L226–L235 `#statusbar`。
-  - L238–L569 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/多模型）。**`#page-env` / `#page-stack` 有完整表单**（`#btn-detect-env`、`#btn-save-env`、`#btn-detect-stack`、`#btn-save-stack`）。Bridge 页含客户端卡片、复制 URL/提示词、打开各站点、**本机演示授权**（按钮 id 仍是 `#btn-gh-login`，文案写不是 GitHub）、隧道 radio（cloudflare 默认；named/ngrok 输入框 **无对应 JS 去 spawn**）。警告文案写明隧道不转发 `/api`。`#btn-reset-secret` 在高级设置。
-  - L518–L537 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`。
-  - L538 `#toast`；L539 `<script type="module" src="/app.js">`（原生 ES module，无打包）。
+  - L238–L575 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/**多模型博弈** `#page-multimodel`）。**`#page-env` / `#page-stack` 有完整表单**。`#page-multimodel`：启用、合并主模型（从已配置选 / 当前对话模型）、合并思考、合并时只读验证、每回合最大分支 2–8 默认 4。Bridge 页含客户端卡片、复制 URL/提示词、打开各站点、**本机演示授权**（按钮 id 仍是 `#btn-gh-login`，文案写不是 GitHub）、隧道 radio（cloudflare 默认；named/ngrok 输入框 **无对应 JS 去 spawn**）。警告文案写明隧道不转发 `/api`。`#btn-reset-secret` 在高级设置。
+  - L577–L596 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`（Plan 文案「分支」）。
+  - L597 `#toast`；L598 `<script type="module" src="/app.js">`（原生 ES module，无打包）。
 
 跨模块调用走 `js/state.js` 的 `ui` 袋（避免 import 环），**不改** `/api` 与按钮行为。
 
@@ -59,7 +59,7 @@
 ### 📄 文件名：`js/state.js`
 
 - **文件职责：** `$` / `$$`、外链 `SITES`、共享 `state`、空对象 `ui`。无函数。L1–L35。
-- **`state` 初值：** `mode:'code'`、`tabs` 仅 welcome、`stats`、`loggedIn:true`、`selectedClient:'arena'`、`stayOnBridge:false`。
+- **`state` 初值：** `mode:'code'`、`tabs` 仅 welcome、`stats`、`loggedIn:true`、`selectedClient:'arena'`、`stayOnBridge:false`、`planRound:null`。
 - **`SITES`：** chatgpt/arena/deepseek/workbuddy/trae/qwen/manus/shunova 的外链。
 
 ---
@@ -94,11 +94,12 @@
 
 - **文件职责：** 本机 CHAT 流。
 - **Function `emptyChat`（L4–L16）** / **`paintChat`（L18–L34）**。
-- **Function `summarizeTool`（L36–L42）** / **`renderMsg`（L44–L93）** — user/status/tool/consensus（采纳则 `ui.setAgentMode('code')` 并 `ui.sendChat` 固定句）/assistant。
-- **Function `pushMsg`（L95–L102）**。
-- **Function `sendChat`（L104–L152）** — POST `/api/chat` NDJSON；parse 失败 continue；finally `ui.refreshStatus` + `ui.loadTree`。
-- **Function `handleEvent`（L154–L188）** — tool 可 `ui.logBridgeTool`；set_todos；run_command 进终端；apply_patch 刷新并 `ui.openDiff`。
-- **Function `paintTodos`（L190–L207）** / **`agentLabel`（L209–L212）** / **`setAgentMode`（L214–L220）**。
+- **Function `summarizeTool`（L36–L42）** / **`renderMsg`（L44–L94）** — user/status/tool/consensus（标题「多模型总结」；采纳则 `ui.setAgentMode('code')` 并 `ui.sendChat` 固定句）/assistant。
+- **Function `pushMsg`（L96–L103）**。
+- **Function `paintPlanComposer`（L105–L123）** — Plan 时显示 `分支 n/max`；`canMerge` 才显示总结钮。
+- **Function `sendChat`（L125–L199）** — Ask/Code 空输入直接 return；Plan 空输入仅 `canBranch` 时当 `planAction:'branch'`；`planAction:'merge'` 不重打任务。POST `/api/chat` 带 `modelId`/`thinkLevel`/`planAction`。parse 失败 continue；finally `ui.refreshStatus` + `ui.loadTree`。
+- **Function `handleEvent`（L201–L242）** — tool 可 `ui.logBridgeTool`；`planRound` 写入 `state.planRound`；message 可附分支徽章。
+- **Function `paintTodos`（L244–L261）** / **`agentLabel`（L263–L266）** / **`setAgentMode`（L268–L275）** — 切模式后 `paintPlanComposer`。
 
 ---
 
@@ -111,14 +112,14 @@
 - **Function `arenaConnect`（L141–L170）** — 本机 `/mcp/${secret}` initialize/tools/list/resources/read，再 `ui.sendChat(..., { stayOnBridge:true })`。
 - **Function `openSite`（L172–L190）**。
 - **Function `startBridge`（L192–L208）** / **`stopBridge`（L210–L214）** / **`paintBridge`（L216–L259）** — POST start/stop；按 `s.tunnel.url` 显示隧道或「走当前页面源」；`bridgeAccount.loggedIn` 同步本地；文案「本机演示授权（不是 GitHub 登录）」。
-- **Function `refreshStatus`（L261–L273）** — GET `/api/status`。
+- **Function `refreshStatus`（L261–L280）** — GET `/api/status`；填 `#model-select`；同步 `state.planRound` 并 `ui.paintPlanComposer`；未触摸过的 `#think-select` 跟 `multiModel.thinkLevel`。
 
 ---
 
 ### 📄 文件名：`js/settings.js`
 
 - **文件职责：** 自定义设置、API Provider 表、skills 列表。
-- **Function `rowList`（L4–L7）** / **`paintCustom`（L9–L71）**。
+- **Function `rowList`（L4–L7）** / **`paintCustom`（L9–L79）** — `#mm-merge` 用当前对话模型 + 已配置模型列表。
 - **Function `paintProviderTable`（L73–L111）** — radio 改 `activeModelId`。
 - **Function `loadCustomizations`（L113–L117）** / **`saveCustom`（L119–L129）** — GET/PUT `/api/customizations`。
 - **Function `loadSkills`（L131–L139）** — GET `/api/skills`。
@@ -129,7 +130,7 @@
 
 - **文件职责：** 全部 DOM 事件。闭包内 `skillMarkdown` / `SKILL_TPL` / `fillSkillPreview` / `probeProvider`（不导出）。
 - **Function `onClick(id, handler)`（L4–8）** — 节点不存在则跳过，避免 `null.onclick` 把整个 `boot` 打断。
-- **Function `bind`（L10–L475）** — 活动栏、菜单、发送、Enter、Bridge、复制（extension-http toast 不同）、reset-secret、本机演示授权（POST `/api/bridge/login`，不是 GitHub）、各 `ui.saveCustom`、技能模板、环境/技术栈探测与保存（`onClick` 守卫）、probe/Add API（排除 modelId 匹配 video|image 当默认）、终端 `POST /api/tool/call` `run_command` mode code、搜索 `search_files` mode ask、Ctrl/Cmd+S。
+- **Function `bind`（L10–L492）** — 活动栏、菜单、发送、`#btn-plan-merge`（`planAction:'merge'`）、`#model-select` onchange POST `/api/models` `{ activeModelId }`、`#think-select` 标记 touched、Enter、Bridge、复制、reset-secret、本机演示授权、各 `ui.saveCustom`、技能模板、环境/技术栈、probe/Add API、保存多模型博弈（`maxBranches` 默认 4）、终端 `POST /api/tool/call` `run_command` mode code、搜索 `search_files` mode ask、Ctrl/Cmd+S。
 
 ---
 

@@ -8,7 +8,7 @@
 
 ## 1. 模块概述
 
-- **定位：** 工具注册表 + 路径沙箱 + 补丁 / 读写 / grep / git / 命令执行 / 进度 / Plan 内置检查清单。`normalize.js` 把网页 Agent 的别名收成正式名；`readCache.js` 记住最近一次读/写的 sha256，让 `apply_patch` 可以不带 `expectedHash`。
+- **定位：** 工具注册表 + 路径沙箱 + 补丁 / 读写 / grep / git / 命令执行 / 进度 / Plan 多模型回合（`planRound.js`）与本机草案/拼接（`consensusEngine.js`）。`normalize.js` 把网页 Agent 的别名收成正式名；`readCache.js` 记住最近一次读/写的 sha256，让 `apply_patch` 可以不带 `expectedHash`。
 - **依赖的兄弟模块：**
   - `../config`：工作区根。
   - `../utils/eventBus`、`../utils/diff`：广播与 unified diff。
@@ -218,11 +218,27 @@
 
 ---
 
+### 📄 文件名：`planRound.js`
+
+- **文件职责：** 内存里的 **一次 Plan 多模型回合**（进程级单例，不落盘）。串行分支、满额拒绝、≥2 才能总结。不调 HTTP。
+- **Function `clampMax(n)`（L5–L9）** — 非有限数 → 4；否则 round 后夹到 2–8。
+- **Function `previewOf(text)`（L11–L14）** — 空白压成空格，超 160 加省略号。
+- **Function `snapshot()`（L16–L48）** — 无回合：`active:false`、空 branches、`canBranch/canMerge` 假。有回合：`canBranch` = 已有 ≥1 支且未满且未合并；`canMerge` = ≥2 且未合并；branches 只带 preview。
+- **Function `reset()`（L50–L53）** — `round=null`，返回 snapshot。
+- **Function `start({ task, maxBranches, mergeModelId, thinkLevel })`（L55–L72）** — task trim 空 → `Error` `code='E_PLAN_NO_TASK'`。否则覆盖 `round`，broadcast `plan_round_started`。
+- **Function `current()`（L74–L76）** — 内部对象或 `null`。
+- **Function `addBranch(branch)`（L78–L109）** — 无回合 `E_PLAN_NO_ROUND`；已合并 `E_PLAN_MERGED`；已满 `E_PLAN_FULL`。记下 index/model/thinkLevel/`simulated`/answer，broadcast `plan_branch`。
+- **Function `markMerged(result)`（L111–L125）** — 无回合 `E_PLAN_NO_ROUND`；`<2` 支 `E_PLAN_NEED_TWO`。`round.merged = result`，broadcast `plan_merged`。
+- **Function `branches()`（L127–L129）** — 拷贝数组或 `[]`。
+
 ### 📄 文件名：`consensusEngine.js`
 
-- **文件职责：** Plan 模式三份**写死**检查项。**不请求任何 LLM HTTP。** `simulated:true`；`consensusReached:false`；`agreementRate:null`。
-- **Function `sleep`（L3–L5）** / **`clip`（L7–L10）** — 截到 n（默认 900）。
-- **Function `runMultiModelConsensus`（L15–L101）** — 从 facts 取 files/readme/pkg/test；broadcast `consensus_started`（`simulated:true`）；sleep 200 三次构造架构/安全/编码清单，有 emit 则发 status/branch；sleep 180；拼 unifiedActionPlan；broadcast `consensus_finished`。
+- **文件职责：** **没有 API Key** 时的本机单支草案 + 原文拼接。不请求 LLM HTTP。`simulated:true`；`consensusReached:false`；`agreementRate:null`（**没有**假 97%）。有 Key 时的真分支/合并在 `../agent/runChat.js` 调 `runOpenAI`。
+- **Function `clip`（L3–L6）** — 截到 n（默认 900）。
+- **Function `localPlanText`（L8–L25）** — 用 facts 的文件/README/清单拼一段中文草案，并写明「这是本机内置探索」。
+- **Function `draftLocalBranch`（L27–L39）** — 返回 `{ simulated:true, answer, modelName, thinkLevel, focus:'本机只读摸底' }`。
+- **Function `mergeLocalBranches`（L41–L77）** — 把各支 `answer` 原文拼进 canonical；summary 写「不是假的 97% 投票」；broadcast `consensus_finished`。
+- **Function `runMultiModelConsensus`（L78–L88）** — 无活回合时出一份本机草案再 `mergeLocalBranches`（单支）。给 `POST /consensus/run` 用。
 
 ---
 

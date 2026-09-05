@@ -6,6 +6,7 @@ const { getToolList, callTool, runMultiModelConsensus } = require('../tools');
 const { getTaskState, resetTaskState } = require('../tools/progressTracker');
 const { resolveSafePath, computeHash } = require('../tools/patchEngine');
 const { runChat } = require('../agent/runChat');
+const planRound = require('../tools/planRound');
 const { listRemoteModels } = require('../agent/providers');
 const store = require('../models/store');
 const { loadCustom, patchCustom } = require('../models/customizations');
@@ -77,6 +78,7 @@ router.get('/status', (req, res) => {
     })),
     activeModelId: cfg.activeModelId,
     multiModel: cfg.multiModel,
+    planRound: planRound.snapshot(),
     bridgeAccount: {
       loggedIn: cfg.bridge.loggedIn,
       provider: cfg.bridge.provider,
@@ -190,6 +192,9 @@ router.post('/chat', async (req, res) => {
       mode: req.body && req.body.mode,
       message: req.body && req.body.message,
       history: (req.body && req.body.history) || [],
+      modelId: req.body && req.body.modelId,
+      thinkLevel: req.body && req.body.thinkLevel,
+      planAction: req.body && req.body.planAction,
       emit
     });
     emit('done', {});

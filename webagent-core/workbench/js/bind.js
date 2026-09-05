@@ -83,6 +83,24 @@ export function bind() {
   $('#rb-chat-tab').onclick = () => ui.setRight('chat');
   $('#rb-bridge-tab').onclick = () => ui.setRight('bridge');
   $('#btn-send').onclick = () => ui.sendChat();
+  if ($('#btn-plan-merge')) {
+    $('#btn-plan-merge').onclick = () => ui.sendChat('', { planAction: 'merge' });
+  }
+  if ($('#think-select')) {
+    $('#think-select').onchange = () => { $('#think-select').dataset.touched = '1'; };
+  }
+  if ($('#model-select')) {
+    $('#model-select').onchange = async () => {
+      const id = $('#model-select').value;
+      if (!id) return;
+      await fetch('/api/models', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activeModelId: id })
+      });
+      if (state.status) state.status.activeModelId = id;
+    };
+  }
   $('#btn-agent-send').onclick = () => {
     const t = $('#agent-input').value;
     ui.setAgentMode($('#agent-mode').value);
@@ -319,11 +337,11 @@ export function bind() {
           mergeModel: $('#mm-merge').value,
           thinkLevel: $('#mm-think').value,
           mergeAllowsRead: $('#mm-readonly').checked,
-          maxBranches: Number($('#mm-branches').value) || 3
+          maxBranches: Number($('#mm-branches').value) || 4
         }
       })
     });
-    ui.toast('已保存 Plan 检查清单开关');
+    ui.toast('已保存多模型博弈设置');
     await ui.refreshStatus();
   };
   $('#btn-save-pref').onclick = async () => {

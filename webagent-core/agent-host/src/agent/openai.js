@@ -54,20 +54,39 @@ function systemPrompt(mode) {
     .join('\n');
 }
 
-async function runOpenAI({ mode, message, history = [], emit, model }) {
+function temperatureFor(level) {
+  if (level === 'low') return 0.1;
+  if (level === 'medium') return 0.4;
+  return 0.7;
+}
+
+async function runOpenAI({
+  mode,
+  message,
+  history = [],
+  emit,
+  model,
+  thinkLevel,
+  allowTools = true,
+  extraSystem
+} = {}) {
+  const send = typeof emit === 'function' ? emit : () => {};
   const base = String(model.baseUrl || '').replace(/\/$/, '');
   if (!base) throw new Error('baseUrl 为空');
-  const tools = getToolList(mode).map((t) => ({
-    type: 'function',
-    function: {
-      name: t.name,
-      description: t.description,
-      parameters: t.inputSchema || { type: 'object', properties: {} }
-    }
-  }));
+  const tools = allowTools
+    ? getToolList(mode).map((t) => ({
+      type: 'function',
+      function: {
+        name: t.name,
+        description: t.description,
+        parameters: t.inputSchema || { type: 'object', properties: {} }
+      }
+    }))
+    : undefined;
 
+  const sys = [systemPrompt(mode), extraSystem].filter(Boolean).join('\n\n');
   const messages = [
-    { role: 'system', content: systemPrompt(mode) },
+    { role: 'system', content: sys },
     ...history
       .filter((h) => h && h.content && (h.role === 'user' || h.role === 'assistant'))
       .slice(-12)
@@ -75,21 +94,25 @@ async function runOpenAI({ mode, message, history = [], emit, model }) {
     { role: 'user', content: message || '' }
   ];
 
+  const bodyBase = {
+    model: model.modelId,
+    messages,
+    temperature: temperatureFor(thinkLevel)
+  };
+  if (tools && tools.length) {
+    bodyBase.tools = tools;
+    bodyBase.tool_choice = 'auto';
+  }
+
   for (let step = 0; step < 10; step++) {
-    emit('status', { text: step === 0 ? `请求 ${model.modelId || 'model'}…` : '模型继续调用工具…' });
+    send('status', { text: step === 0 ? `请求 ${model.modelId || 'model'}…` : '模型继续调用工具…' });
     const resp = await fetch(`${base}/chat/completions`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${model.apiKey}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        model: model.modelId,
-        messages,
-        tools,
-        tool_choice: 'auto',
-        temperature: 0.2
-      })
+      body: JSON.stringify({ ...bodyBase, messages })
     });
     const raw = await resp.text();
     if (!resp.ok) {
@@ -114,12 +137,12 @@ async function runOpenAI({ mode, message, history = [], emit, model }) {
         } catch {
           args = {};
         }
-        emit('status', { text: `调用 ${name}…` });
+        send('status', { text: `调用 ${name}…` });
         const t0 = Date.now();
         try {
           const result = await callTool(name, args, mode);
           const durationMs = Date.now() - t0;
-          emit('tool', { name, args, result, ok: true, durationMs, label: toolLabel(name, result, true) });
+          send('tool', { name, args, result, ok: true, durationMs, label: toolLabel(name, result, true) });
           messages.push({
             role: 'tool',
             tool_call_id: tc.id,
@@ -127,7 +150,7 @@ async function runOpenAI({ mode, message, history = [], emit, model }) {
           });
         } catch (err) {
           const durationMs = Date.now() - t0;
-          emit('tool', { name, args, error: err.message, ok: false, durationMs, label: toolLabel(name, null, false) });
+          send('tool', { name, args, error: err.message, ok: false, durationMs, label: toolLabel(name, null, false) });
           messages.push({
             role: 'tool',
             tool_call_id: tc.id,
@@ -138,10 +161,13 @@ async function runOpenAI({ mode, message, history = [], emit, model }) {
       continue;
     }
 
-    emit('message', { text: msg.content || '（无文本输出）' });
-    return;
+    const text = msg.content || '（无文本输出）';
+    send('message', { text });
+    return { text };
   }
-  emit('message', { text: '已达到最大工具轮次。' });
+  const text = '已达到最大工具轮次。';
+  send('message', { text });
+  return { text };
 }
 
-module.exports = { runOpenAI, systemPrompt };
+module.exports = { runOpenAI, systemPrompt, temperatureFor };

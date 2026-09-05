@@ -61,11 +61,12 @@ export function renderMsg(m) {
     wrap.className = 'consensus';
     const r = m.result || {};
     const parts = r.participants || [];
-    wrap.innerHTML = `<h3><span>内置检查清单</span><span>${r.simulated === false ? '' : '不调用模型'}</span></h3>
-      <div class="branch-tabs">${['合并', ...parts.map((p) => p.id || p.model)].map((lab, i) =>
+    const tag = r.simulated === false ? '合并主模型' : '本机拼接 · 未调模型';
+    wrap.innerHTML = `<h3><span>多模型总结</span><span>${escapeHtml(tag)}</span></h3>
+      <div class="branch-tabs">${['合并', ...parts.map((p) => p.model || p.id)].map((lab, i) =>
         `<button type="button" data-i="${i}" class="${i === 0 ? 'on' : ''}">${escapeHtml(lab)}</button>`).join('')}</div>
       <div class="branch-body"></div>
-      <button type="button" class="adopt">按检查清单切到 Code 执行</button>`;
+      <button type="button" class="adopt">按总结切到 Code 执行</button>`;
     const body = $('.branch-body', wrap);
     const show = (i) => {
       $$('.branch-tabs button', wrap).forEach((b, idx) => b.classList.toggle('on', idx === i));
@@ -101,6 +102,26 @@ export function pushMsg(m) {
   });
 }
 
+export function paintPlanComposer() {
+  const round = state.planRound || {};
+  const plan = state.mode === 'plan';
+  const n = (round.branches && round.branches.length) || 0;
+  const max = round.maxBranches || 4;
+  const badge = $('#plan-badge');
+  if (badge) {
+    badge.classList.toggle('hidden', !(plan && round.active));
+    if (plan && round.active) badge.textContent = `分支 ${n}/${max}`;
+  }
+  const merge = $('#btn-plan-merge');
+  if (merge) merge.classList.toggle('hidden', !(plan && round.canMerge));
+  const input = $('#chat-input');
+  if (input) {
+    input.placeholder = plan
+      ? '输入任务后发送。换模型再空发 = 新分支。'
+      : '描述要构建的内容';
+  }
+}
+
 export async function sendChat(text, opts = {}) {
   if (state.sending) return;
   const message = text != null ? text : ($('#chat-input').value || ($('#agent-input') && $('#agent-input').value) || '');
@@ -110,19 +131,45 @@ export async function sendChat(text, opts = {}) {
   }
   const fromAgent = $('#agent-pane') && !$('#agent-pane').classList.contains('hidden') && $('#agent-mode');
   ui.setAgentMode(fromAgent ? $('#agent-mode').value : ($('#mode-select').value || state.mode));
+  const empty = !String(message || '').trim();
+  const round = state.planRound || {};
+  let planAction = opts.planAction || null;
+  if (empty && planAction !== 'merge') {
+    if (state.mode === 'plan' && (planAction === 'branch' || round.canBranch)) {
+      planAction = 'branch';
+    } else if (state.mode === 'plan') {
+      ui.toast('先输入任务再发。已有分支时可换模型后空发送。');
+      return;
+    } else {
+      return;
+    }
+  }
   state.sending = true;
   state.stayOnBridge = !!opts.stayOnBridge;
   if (!opts.stayOnBridge) ui.setRight('chat');
   const history = state.history.slice(-12);
-  if (message) {
+  if (planAction === 'merge') {
+    pushMsg({ kind: 'status', text: '正在用合并主模型总结各分支…' });
+  } else if (String(message || '').trim()) {
     pushMsg({ kind: 'user', text: message });
     state.history.push({ role: 'user', content: message });
-  } else pushMsg({ kind: 'user', text: '（空输入 · 分支作答）' });
+  } else {
+    pushMsg({ kind: 'user', text: '（空输入 · 新分支）' });
+  }
+  const modelId = ($('#model-select') && $('#model-select').value) || (state.status && state.status.activeModelId);
+  const thinkLevel = ($('#think-select') && $('#think-select').value) || 'high';
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: state.mode, message: message || '', history })
+      body: JSON.stringify({
+        mode: state.mode,
+        message: String(message || '').trim(),
+        history,
+        modelId,
+        thinkLevel,
+        planAction: planAction || undefined
+      })
     });
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -183,8 +230,15 @@ export function handleEvent(ev) {
       if (ev.result.diff) ui.openDiff(p, ev.result.diff);
     }
   } else if (ev.type === 'consensus') pushMsg({ kind: 'consensus', result: ev.result });
-  else if (ev.type === 'message') pushMsg({ kind: 'assistant', text: ev.text });
-  else if (ev.type === 'error') pushMsg({ kind: 'assistant', text: '错误：' + ev.message });
+  else if (ev.type === 'planRound') {
+    state.planRound = ev.round;
+    paintPlanComposer();
+  } else if (ev.type === 'message') {
+    const extra = ev.branch
+      ? `\n\n*${ev.branch.modelName || ''} · 分支 ${ev.branch.index}/${ev.branch.max}${ev.branch.simulated ? ' · 本机草案' : ''}*`
+      : '';
+    pushMsg({ kind: 'assistant', text: (ev.text || '') + extra });
+  } else if (ev.type === 'error') pushMsg({ kind: 'assistant', text: '错误：' + ev.message });
 }
 
 export function paintTodos(todos) {
@@ -217,6 +271,7 @@ export function setAgentMode(mode) {
   if ($('#agent-mode')) $('#agent-mode').value = mode;
   const btn = $('#btn-agent-pick');
   if (btn) btn.textContent = agentLabel(mode) + ' ▾';
+  paintPlanComposer();
 }
 
 ui.emptyChat = emptyChat;
@@ -225,6 +280,7 @@ ui.summarizeTool = summarizeTool;
 ui.renderMsg = renderMsg;
 ui.pushMsg = pushMsg;
 ui.sendChat = sendChat;
+ui.paintPlanComposer = paintPlanComposer;
 ui.handleEvent = handleEvent;
 ui.paintTodos = paintTodos;
 ui.agentLabel = agentLabel;

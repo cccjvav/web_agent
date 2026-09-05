@@ -56,11 +56,11 @@ VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@webage
   - **Function `modeFromChatRequest(request)`（L87–L95）** — `request.command` 小写 ask/plan/code；否则 prompt 以 `/ask|/plan|/code` 开头；**都不匹配 → `'code'`**。
   - **Function `historyFromChatContext`（L97–L113）** — 最多 12 轮 user/assistant。
   - **Function `revealWorkspaceFile(rel)`（L115–L123）** — 无 folder 或 rel 则 return；打开失败 catch 空。
-  - **Function `registerChatParticipant`（L125–L174）** — 无 `createChatParticipant` 则 return。handler：空 message 输出模式说明；否则 `postNdjson /api/chat`。status→progress；tool→markdown，apply_patch 成功 reveal + `stream.reference`；message/error/consensus。catch 提示连不上 48271。外层 try/catch warn，不抛给 activate。
+  - **Function `registerChatParticipant`（L125–L174）** — 无 `createChatParticipant` 则 return。handler：空 message 输出模式说明（`/plan` 写多模型分支，没 Key 是本机草案）；否则 `postNdjson /api/chat`。status→progress；tool→markdown，apply_patch 成功 reveal + `stream.reference`；message/error/consensus（标题「多模型总结」）。catch 提示连不上 48271。外层 try/catch warn，不抛给 activate。
   - **Function `activate`（L176–L228）** — 注册 ChatView、BridgeView；Chat 参与者；状态栏每 5s GET `/api/status`（运行中 / Agent / 未连接）。命令：打开侧栏；`openAgentChat` 试原生 Chat query `@webagent `，失败侧栏；resetSecret POST reset-secret。
   - **Class `ChatView`（L230–L271）** — webview scripts 开。`openNative` → 命令。`send`：history 12，postNdjson，事件转 webview；apply_patch reveal；assistantText 非空才进 history。
   - **Class `BridgeView`（L273–L312）** — start POST `{ tunnelProvider:'cloudflare' }`；stop/copy/reset；refresh GET status。catch 弹 ErrorMessage。
-  - **Function `chatHtml`（L314–L421）** — 完整 HTML。内嵌脚本：默认 `mode='code'`；Agent 菜单切 ask/plan/code；Enter 发送；set_todos 画任务。DOM：`#log` 空态、`#tasks`、textarea `#q`、`#agent` 按钮、`#menu`、`#go`。
+  - **Function `chatHtml`（L314–L421）** — 完整 HTML。内嵌脚本：默认 `mode='code'`；Agent 菜单切 ask/plan/code；Enter 发送；set_todos 画任务。Agent 菜单 Plan 文案「分支」。DOM：`#log` 空态、`#tasks`、textarea `#q`、`#agent` 按钮、`#menu`、`#go`。
   - **Function `bridgeHtml`（L423–L490）** — 启动/停止/复制/重置。4s refresh。copy 用 `status.prompt` 或 mcpUrl+CONNECT。DOM：`#pill`、`#url`、按钮、`#tasks`、`#stream`。
 
   内嵌 `chatHtml` 脚本函数：L385 `add`、L390 `paintTasks`。  

@@ -268,6 +268,11 @@ export async function refreshStatus() {
     `<option value="${escapeHtml(m.id)}" ${m.id === state.status.activeModelId ? 'selected' : ''}>${escapeHtml(m.name)}</option>`
   ).join('');
   if (cur) sel.value = cur;
+  if (state.status.planRound) state.planRound = state.status.planRound;
+  if (ui.paintPlanComposer) ui.paintPlanComposer();
+  const think = $('#think-select');
+  const mm = state.status.multiModel || {};
+  if (think && mm.thinkLevel && !think.dataset.touched) think.value = mm.thinkLevel;
   ui.paintProviderTable();
   if (state.status && state.status.taskState) ui.paintTodos(state.status.taskState.todos || []);
 }
