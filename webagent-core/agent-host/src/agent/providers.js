@@ -5,19 +5,24 @@ function normalizeBase(url) {
     .replace(/\/chat\/completions$/i, '');
 }
 
-function guessCaps(id) {
-  const s = String(id || '').toLowerCase();
-  const caps = ['工具'];
-  if (/vision|image|gpt-4o|flash|pro/.test(s)) caps.push('视觉');
-  if (/video/.test(s)) caps.push('视频');
-  return caps;
+function probeCaps(m) {
+  if (!m || typeof m !== 'object') return [];
+  if (Array.isArray(m.capabilities) && m.capabilities.length) return m.capabilities.map(String);
+  if (Array.isArray(m.supported_features) && m.supported_features.length) return m.supported_features.map(String);
+  if (Array.isArray(m.caps) && m.caps.length) return m.caps.map(String);
+  return [];
 }
 
-function guessContext(id) {
-  const s = String(id || '').toLowerCase();
-  if (/video|image/.test(s)) return '1.3M';
-  if (/mini|haiku|lite/.test(s)) return '128K';
-  return '1.3M';
+function probeContext(m) {
+  if (!m || typeof m !== 'object') return '';
+  const n = m.context_length || m.context_window || m.max_model_len || m.contextSize;
+  if (n == null || n === '') return '';
+  if (typeof n === 'number' && Number.isFinite(n)) {
+    if (n >= 1000000) return `${(n / 1000000).toFixed(1).replace(/\.0$/, '')}M`;
+    if (n >= 1000) return `${Math.round(n / 1000)}K`;
+    return String(n);
+  }
+  return String(n);
 }
 
 async function listRemoteModels(baseUrl, apiKey) {
@@ -55,11 +60,11 @@ async function listRemoteModels(baseUrl, apiKey) {
       id,
       name: id,
       group: host,
-      contextSize: guessContext(id),
-      caps: guessCaps(id),
+      contextSize: probeContext(m),
+      caps: probeCaps(m),
       pricing: m.pricing || ''
     };
   });
 }
 
-module.exports = { listRemoteModels, normalizeBase };
+module.exports = { listRemoteModels, normalizeBase, probeCaps, probeContext };

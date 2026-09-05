@@ -136,6 +136,12 @@ async function main() {
     assert.ok(page.raw.includes('不是 GitHub'));
     assert.ok(page.raw.includes('GitHub 验证'));
     assert.ok(page.raw.includes('验证令牌'));
+    assert.ok(page.raw.includes('没有接 OpenAI Codex'));
+    assert.ok(page.raw.includes('不会自动执行'));
+    assert.ok(page.raw.includes('没有插件市场'));
+    assert.ok(page.raw.includes('Named Tunnel'));
+    assert.ok(page.raw.includes('未实现'));
+    assert.ok(page.raw.includes('.webagent/config.json'));
     assert.ok(page.raw.includes('多模型博弈'));
     assert.ok(page.raw.includes('btn-plan-merge'));
     assert.ok(page.raw.includes('think-select'));

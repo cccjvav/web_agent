@@ -60,7 +60,9 @@ export function paintCustom() {
     ui.closeModal();
     ui.activateTab(id);
   };
-  $('#codex-status').textContent = (c.codex && c.codex.loggedIn) ? `已登录 ${c.codex.account}` : '尚未登录';
+  if ($('#codex-status')) {
+    $('#codex-status').textContent = '未实现。不会读写 ~/.codex/auth.json。';
+  }
   if (typeof c.multiModelEnabled === 'boolean') $('#mm-enabled').checked = c.multiModelEnabled;
   const mm = (state.status && state.status.multiModel) || {};
   if ($('#mm-enabled') && typeof mm.enabled === 'boolean') $('#mm-enabled').checked = mm.enabled;

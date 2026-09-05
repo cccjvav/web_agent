@@ -278,11 +278,11 @@
             <article><h4>智能体</h4><p>定义具有专属角色、工具访问权限和特定任务指令的自定义智能体。</p><button type="button" class="vs-btn" data-page="agents">新建...</button></article>
             <article><h4>技能</h4><p>创建可重用的技能文件，提供特定领域知识和工作流。</p><button type="button" class="vs-btn" data-page="skills">引导...</button></article>
             <article><h4>指令</h4><p>设置始终生效的指令，在整个工作区或用户配置文件中引导 AI 行为。</p><button type="button" class="vs-btn" data-page="instructions">新建...</button></article>
-            <article><h4>挂钩</h4><p>配置由保存文件或运行任务等事件触发的自动操作。</p><button type="button" class="vs-btn" data-page="hooks">新建...</button></article>
+            <article><h4>挂钩</h4><p>只把命令记在工作区里。保存文件或跑任务时不会自动执行。</p><button type="button" class="vs-btn" data-page="hooks">新建...</button></article>
             <article><h4>MCP 服务器</h4><p>连接外部工具服务器，通过自定义工具和数据源扩展 AI 功能。</p><button type="button" class="vs-btn" data-page="mcp">浏览...</button></article>
-            <article><h4>插件</h4><p>安装和管理智能体插件，以添加更多工具、技能和集成。</p><button type="button" class="vs-btn" data-page="plugins">浏览...</button></article>
-            <article><h4>Voice Mode Instructions</h4><p>Customize Voice Mode behavior and terminology with voice.md.</p><button type="button" class="vs-btn">Configure...</button></article>
-            <article><h4>Dictation Instructions</h4><p>Customize Dictation terminology and transcript formatting with dictation.md.</p><button type="button" class="vs-btn">Configure...</button></article>
+            <article><h4>插件</h4><p>没有插件市场，也不会加载插件代码。这里只是工作区备注。</p><button type="button" class="vs-btn" data-page="plugins">浏览...</button></article>
+            <article><h4>Voice Mode Instructions</h4><p>本工作台没有语音模式，也不会读写 voice.md。</p><button type="button" class="vs-btn" disabled>未实现</button></article>
+            <article><h4>Dictation Instructions</h4><p>本工作台没有听写，也不会读写 dictation.md。</p><button type="button" class="vs-btn" disabled>未实现</button></article>
           </div>
         </div>
         <div class="page hidden" id="page-env">
@@ -394,7 +394,7 @@
         </div>
         <div class="page hidden" id="page-hooks">
           <h2>挂钩</h2>
-          <p class="lead">由保存文件或运行任务等事件触发的自动操作。</p>
+          <p class="lead">这里只把命令记在工作区自定义里，保存文件或跑任务时<strong>不会</strong>自动执行。</p>
           <div id="hooks-list"></div>
           <label class="field-label">事件</label>
           <select id="hk-event" class="ms-input">
@@ -418,9 +418,9 @@
         </div>
         <div class="page hidden" id="page-plugins">
           <h2>插件</h2>
-          <p class="lead">安装和管理智能体插件，以添加更多工具、技能和集成。</p>
+          <p class="lead">没有插件市场，也不会加载插件代码。这里只是工作区备注。</p>
           <div id="plugins-list"></div>
-          <p class="hint">本工作台不连接插件市场，可登记本地插件名作为工作区备注。</p>
+          <p class="hint">登记的名字不会被 Chat 或 Bridge 调用。</p>
           <input id="pl-name" class="ms-input" placeholder="插件名" />
           <button type="button" id="btn-add-plugin" class="vs-btn">登记</button>
         </div>
@@ -439,14 +439,14 @@
             <button type="button" id="btn-use-builtin" class="vs-btn">改回内置探索 Agent</button>
           </div>
           <p class="hint" id="model-status"></p>
-          <p class="hint">The API key is kept in secure secret storage and never written to settings.json.</p>
+          <p class="hint">API Key 写在工作区 <code>.webagent/config.json</code>（已 gitignore，权限 0600），不是系统钥匙串，也不是 VS Code secret storage。</p>
           <div id="provider-table"></div>
         </div>
         <div class="page hidden" id="page-codex">
           <h2>Codex</h2>
-          <p class="lead">通过 auth.openai.com 的 OAuth 登录，复用 ~/.codex/auth.json。这里只提供入口示意。</p>
-          <p class="hint" id="codex-status">尚未登录</p>
-          <button type="button" id="btn-codex" class="vs-btn">登录 Codex 账号</button>
+          <p class="lead">本工作台没有接 OpenAI Codex OAuth，也不会读写 ~/.codex/auth.json。</p>
+          <p class="hint" id="codex-status">未实现。Chat 请用 API Provider 填兼容 OpenAI 的 Endpoint。</p>
+          <button type="button" id="btn-codex" class="vs-btn" disabled>登录 Codex 账号（未实现）</button>
         </div>
         <div class="page hidden" id="page-multimodel">
           <h2>多模型博弈</h2>
@@ -553,17 +553,17 @@
             <label class="tunnel-card">
               <input type="radio" name="tunnel" value="cloudflare-named" />
               <div>
-                <div class="t-name">Cloudflare Named Tunnel <em>固定地址</em></div>
-                <p class="hint">长期给各设备用同一个主机名。需 Tunnel Token 与 Published application。</p>
+                <div class="t-name">Cloudflare Named Tunnel <em>未实现</em></div>
+                <p class="hint">界面可以填主机名，但启动 Bridge 时不会拉起 Named Tunnel（仍只会走 Quick Tunnel 或当前页面源）。</p>
                 <input id="named-domain" class="ms-input" placeholder="mcp.example.com" />
-                <input id="named-token" class="ms-input" type="password" placeholder="Tunnel Token（安全存储，不进 settings.json）" />
+                <input id="named-token" class="ms-input" type="password" placeholder="Tunnel Token（不会被使用）" />
               </div>
             </label>
             <label class="tunnel-card">
               <input type="radio" name="tunnel" value="ngrok" />
               <div>
-                <div class="t-name">ngrok 开发域名 <em>固定地址</em></div>
-                <p class="hint">账号分配的开发域名重启后可复用。</p>
+                <div class="t-name">ngrok 开发域名 <em>未实现</em></div>
+                <p class="hint">选中后不会调用 ngrok。目前只有 Cloudflare Quick Tunnel 会真正拉起 cloudflared。</p>
               </div>
             </label>
           </section>

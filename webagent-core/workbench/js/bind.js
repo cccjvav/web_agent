@@ -374,10 +374,11 @@ export function bind() {
     }];
     await ui.saveCustom({ quickLinks });
   };
-  $('#btn-codex').onclick = async () => {
-    await ui.saveCustom({ codex: { loggedIn: true, account: 'codex-demo' } });
-    ui.toast('已模拟 Codex 登录');
-  };
+  if ($('#btn-codex')) {
+    $('#btn-codex').onclick = () => {
+      ui.toast('Codex OAuth 未实现，不会假装已登录');
+    };
+  }
   $('#btn-save-mm').onclick = async () => {
     await fetch('/api/models', {
       method: 'POST',
@@ -428,7 +429,7 @@ export function bind() {
     const data = await probeProvider();
     let discovered = data.success ? data.models : [];
     if (!discovered.length && manualId) {
-      discovered = [{ id: manualId, name: manualId, group: 'custom', contextSize: '1.3M', caps: ['工具'], pricing: '' }];
+      discovered = [{ id: manualId, name: manualId, group: 'custom', contextSize: '', caps: [], pricing: '' }];
     }
     if (!discovered.length) {
       $('#model-status').textContent = '失败：' + (data.error || '没有模型。可手动填模型 ID 后再 Add API。');
