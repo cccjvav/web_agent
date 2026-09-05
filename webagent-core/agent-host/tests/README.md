@@ -18,7 +18,8 @@
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
 | `bridgeTunnel.test.js` | stub `startQuickTunnel`/`stopTunnel`：cloudflare 启动后 mcpUrl 含 trycloudflare；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
 | `localControl.test.js` | 回环 / Cloudflare 头 / trycloudflare Host 是否算本机控制面 |
-| `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`）、模块脚本、MCP 401、initialize、tools/list、ping、隧道头打 `/api` 得 404、本机 `POST /api/chat` NDJSON |
+| `corsAllow.test.js` | MCP Origin 白名单；外站 Origin/Referer 打 `/api` 拒绝 |
+| `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`）、模块脚本、MCP 401、initialize、tools/list、ping、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、本机 `POST /api/chat` NDJSON |
 | `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime |
 | `skipWorkbench.test.js` | `WEBAGENT_SKIP_WORKBENCH=1` 不占用工作台端口 |
 | `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；第二参 emit 与 `payload.emit` 两条路径 |
@@ -161,6 +162,17 @@
 
 ---
 
+### 📄 文件名：`corsAllow.test.js`
+
+- **文件职责：** 不启 HTTP，断言 Origin 白名单与 `/api` 跨站闸。
+- L11–L15：本机 Origin / 扩展协议为真；聊天站不是 loopback。
+- L17–L25：无 Origin、DeepSeek / ChatGPT / Gemini / Arena、扩展、本机 → MCP 放行；`https://evil.example` 拒绝。
+- L28–L31：`/api` 只放行无 Origin 或本机 Origin。
+- L33–L39：`WEBAGENT_CORS_ORIGINS` 追加 `doubao` / `tongyi` 后 MCP 放行，evil 仍拒绝。
+- L54–L90：`rejectCrossSiteApi`：evil Origin / evil Referer → 404；本机 Origin 与无头 → `next()`。
+
+---
+
 ### 📄 文件名：`httpSmoke.test.js`
 
 - **文件职责：** 真起 `src/index.js`，打工作台 HTML、MCP status/401/initialize/tools/list/ping、OAuth 发现、隧道头挡 `/api`、工作台口 Chat NDJSON。
@@ -183,7 +195,8 @@
   - L207–211：本机 `POST /api/bridge/reset-round` 仍 200。
   - L214–223：带 `cf-ray` 的 mcp 口 `/api/status`、`/api/chat`、`/api/tool/call` 以及 `Host: *.trycloudflare.com` 的 `/api/status` 都 **404**，正文不含 secret。
   - L225–231：同一组隧道头 `POST /mcp/<secret>` initialize 仍 200。
-  - L233–234：mcp 口 GET `/` 正文不得含 `btn-agent-pick`（没有工作台静态）。
+  - L233–270：`Origin: https://evil.example` 打 mcp `/api/status` 与工作台 `reset-round` 都 404；本机 Origin 的 `/api/status` 200；OPTIONS `/mcp` 对 evil 无 ACAO，对 `chat.deepseek.com` 与 DeepSeek++ 扩展 Origin 回相同 ACAO。
+  - L272–273：mcp 口 GET `/` 正文不得含 `btn-agent-pick`（没有工作台静态）。
   - L236–249：**工作台口** `POST /api/chat` NDJSON 必须有 `tool`（`list_directory`）、`message`、`done`。
   - L259–262：finally `stop` 子进程，等 300ms，删 tmp。
 
@@ -264,7 +277,7 @@
 
 ## 3. 执行逻辑流（仅本目录）
 
-1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **sandbox** → **hostPersist** → tunnel → **bridgeTunnel** → **localControl** → httpSmoke → codeServerNotRunnable → skipWorkbench → runChat → chatMode → profile → oauth。
+1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **sandbox** → **hostPersist** → tunnel → **bridgeTunnel** → **localControl** → **corsAllow** → httpSmoke → codeServerNotRunnable → skipWorkbench → runChat → chatMode → profile → oauth。
 2. 单文件：改 `config.workspaceRoot` 指向 tmp → require 被测模块 → assert → 删 tmp。`tunnel` / `chatMode` / `codeServerNotRunnable` 不改工作区。`bridgeTunnel` 改 tmp 工作区并 stub 隧道导出。
 3. 启进程的测试 spawn `src/index.js`，结束必须杀子进程。
 4. 失败路径：有 `main()` 的文件走 `main().catch` → `exit(1)`；`profile.test.js` 同步抛错由 Node 非 0 退出；CMD 的 `run-tests.cmd` 据此 pause。

@@ -3,7 +3,6 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { WebSocketServer } = require('ws');
-const cors = require('cors');
 const { config, persistIdentity } = require('./config');
 const mcpRouter = require('./mcp/server');
 const oauth = require('./mcp/oauth');
@@ -11,6 +10,7 @@ const apiRouter = require('./api/routes');
 const eventBus = require('./utils/eventBus');
 const store = require('./models/store');
 const { rejectUnlessLocalControl, isLocalControlPlane } = require('./utils/localControl');
+const { mcpCors, rejectCrossSiteApi } = require('./utils/corsAllow');
 
 persistIdentity(store);
 
@@ -60,16 +60,16 @@ function mountWorkbench(app) {
 const uiApp = express();
 applyCommon(uiApp);
 mountHealth(uiApp);
-uiApp.use('/api', rejectUnlessLocalControl, apiRouter);
+uiApp.use('/api', rejectUnlessLocalControl, rejectCrossSiteApi, apiRouter);
 mountWorkbench(uiApp);
 
 const mcpApp = express();
 applyCommon(mcpApp);
-mcpApp.use(cors());
+mcpApp.use(mcpCors());
 mountHealth(mcpApp);
 mcpApp.use(oauth.router);
 mcpApp.use('/mcp', mcpRouter);
-mcpApp.use('/api', rejectUnlessLocalControl, apiRouter);
+mcpApp.use('/api', rejectUnlessLocalControl, rejectCrossSiteApi, apiRouter);
 
 function attachWss(server) {
   const wss = new WebSocketServer({ server, path: '/ws' });

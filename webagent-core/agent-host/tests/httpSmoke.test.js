@@ -38,7 +38,7 @@ function request(method, url, body, extraHeaders) {
           } catch {
             json = null;
           }
-          resolve({ status: res.statusCode, raw, json });
+          resolve({ status: res.statusCode, headers: res.headers, raw, json });
         });
       }
     );
@@ -229,6 +229,44 @@ async function main() {
       params: { clientInfo: { name: 'tunnel-smoke' } }
     }, tunnelHeaders);
     assert.strictEqual(tunneledInit.status, 200);
+
+    const evilApi = await request('GET', `http://127.0.0.1:${mcpPort}/api/status`, undefined, {
+      Origin: 'https://evil.example'
+    });
+    assert.strictEqual(evilApi.status, 404);
+    assert.ok(!String(evilApi.raw || '').includes(secret));
+
+    const localOriginApi = await request('GET', `http://127.0.0.1:${mcpPort}/api/status`, undefined, {
+      Origin: 'http://127.0.0.1:3000'
+    });
+    assert.strictEqual(localOriginApi.status, 200);
+    assert.ok(localOriginApi.json.secretKey);
+
+    const evilUi = await request('POST', `http://127.0.0.1:${workbenchPort}/api/bridge/reset-round`, {}, {
+      Origin: 'https://evil.example'
+    });
+    assert.strictEqual(evilUi.status, 404);
+
+    const preflightBad = await request('OPTIONS', `http://127.0.0.1:${mcpPort}/mcp/${secret}`, undefined, {
+      Origin: 'https://evil.example',
+      'Access-Control-Request-Method': 'POST'
+    });
+    assert.ok(!preflightBad.headers['access-control-allow-origin']);
+
+    const preflightPage = await request('OPTIONS', `http://127.0.0.1:${mcpPort}/mcp/${secret}`, undefined, {
+      Origin: 'https://chat.deepseek.com',
+      'Access-Control-Request-Method': 'POST'
+    });
+    assert.strictEqual(preflightPage.headers['access-control-allow-origin'], 'https://chat.deepseek.com');
+
+    const preflightExt = await request('OPTIONS', `http://127.0.0.1:${mcpPort}/mcp/${secret}`, undefined, {
+      Origin: 'chrome-extension://kdmpkkahkhdmdhfkdihkopikgcocbpbf',
+      'Access-Control-Request-Method': 'POST'
+    });
+    assert.strictEqual(
+      preflightExt.headers['access-control-allow-origin'],
+      'chrome-extension://kdmpkkahkhdmdhfkdihkopikgcocbpbf'
+    );
 
     const mcpRoot = await request('GET', `http://127.0.0.1:${mcpPort}/`);
     assert.ok(!(mcpRoot.raw || '').includes('btn-agent-pick'));

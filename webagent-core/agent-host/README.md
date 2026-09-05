@@ -27,12 +27,12 @@
   | `version` | npm 版本 | `1.0.0`（展示用产品版本在 `src/config.js` 的 `0.6.9`，不是这个字段） |
   | `main` | Node 默认入口字段 | `index.js`（**本目录根没有该文件**；真正启动走 `scripts.start`） |
   | `scripts.start` | `npm start` | `node src/index.js` |
-  | `scripts.test` | `npm test` | 11 个 `tests/*.test.js` 用 `&&` 串联，顺序：patchEngine → mcpProtocol → workspaceTools → tunnel → httpSmoke → codeServerNotRunnable → skipWorkbench → runChat → chatMode → profile → oauth。任一非 0 即停。 |
+  | `scripts.test` | `npm test` | 16 个 `tests/*.test.js` 用 `&&` 串联，顺序见 [`tests/README.md`](./tests/README.md)。任一非 0 即停。 |
   | `keywords` | npm 关键词 | `[]` |
   | `author` | 作者 | `""` |
   | `license` | 许可证 | `ISC` |
   | `description` | 简介 | `""` |
-  | `dependencies.cors` | CORS 中间件 | `^2.8.6`（`src/index.js` 使用） |
+  | `dependencies.cors` | CORS 中间件 | `^2.8.6`（`src/utils/corsAllow.js` 的白名单，不再全开） |
   | `dependencies.diff` | jsdiff | `^9.0.0`（`src/utils/diff.js`、`tools/patchEngine.js`） |
   | `dependencies.express` | HTTP | `^5.2.1` |
   | `dependencies.ws` | WebSocket | `^8.21.3`（`src/index.js` 的 `/ws`） |
