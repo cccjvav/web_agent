@@ -10,6 +10,7 @@ const { clipJson, clipText } = require('./budget');
 const { ProtocolError, publicError } = require('./errors');
 const { touch, snapshot } = require('./session');
 const oauth = require('./oauth');
+const tracker = require('../usage/tracker');
 
 const router = express.Router();
 const SUPPORTED_PROTOCOL = ['2024-11-05', '2025-03-26', '2025-06-18'];
@@ -146,6 +147,7 @@ async function handleRpc(req) {
         const clipped = clipJson(result);
         const durationMs = Date.now() - started;
         touch(req, { incCall: true });
+        tracker.record({ ok: true });
         eventBus.broadcast('tool_call_end', { tool: name, success: true, durationMs, truncated: Boolean(clipped && clipped._truncated) });
         const text = typeof clipped === 'string' ? clipped : JSON.stringify(clipped, null, 2);
         return {
@@ -156,6 +158,7 @@ async function handleRpc(req) {
         const durationMs = Date.now() - started;
         const info = publicError(err);
         touch(req, { incCall: true, incFail: true });
+        tracker.record({ ok: false });
         eventBus.broadcast('tool_call_end', { tool: name, success: false, durationMs, error: info });
         return {
           content: [{ type: 'text', text: JSON.stringify(info, null, 2) }],

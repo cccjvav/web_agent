@@ -22,6 +22,15 @@ function main() {
   assert.strictEqual(migrated.bridge.license, 'local-demo');
   assert.strictEqual(migrated.bridge.provider, 'local-demo');
 
+  store.save({
+    ...store.defaults(),
+    bridge: { ...store.defaults().bridge, provider: 'github', username: 'octocat', githubId: '1' }
+  });
+  const realGh = store.load();
+  assert.strictEqual(realGh.bridge.provider, 'github');
+  assert.strictEqual(realGh.bridge.username, 'octocat');
+  assert.strictEqual(realGh.bridge.githubId, '1');
+
   const first = generateNewSecret();
   const disk = store.load();
   assert.strictEqual(disk.secretKey, first);
@@ -48,6 +57,7 @@ function main() {
   const nestedText = fs.readFileSync(nested, 'utf8');
   assert.ok(/config\.json/.test(nestedText));
   assert.ok(/read-hashes\.json/.test(nestedText));
+  assert.ok(nestedText.includes('usage.json'));
   if (process.platform !== 'win32') {
     assert.strictEqual(fs.statSync(path.join(tmp, '.webagent', 'config.json')).mode & 0o777, 0o600);
   }
@@ -63,6 +73,7 @@ function main() {
   const gi = fs.readFileSync(path.join(tmp, '.gitignore'), 'utf8');
   assert.ok(gi.includes('.webagent/config.json'));
   assert.ok(gi.includes('.webagent/read-hashes.json'));
+  assert.ok(gi.includes('.webagent/usage.json'));
   const ignored = spawnSync('git', ['check-ignore', '-q', '.webagent/config.json'], { cwd: tmp });
   assert.strictEqual(ignored.status, 0);
   store.protectWorkspaceSecrets();
@@ -71,6 +82,7 @@ function main() {
 
   const rootGi = fs.readFileSync(path.join(__dirname, '../../../.gitignore'), 'utf8');
   assert.ok(rootGi.includes('**/.webagent/config.json'));
+  assert.ok(rootGi.includes('**/.webagent/usage.json'));
 
   resetHashes();
   assert.strictEqual(recalledHash('src/app.js'), null);

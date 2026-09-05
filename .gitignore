@@ -24,6 +24,10 @@ Thumbs.db
 # Local secrets / model keys (any workspace path, not only ./workspace)
 **/.webagent/config.json
 **/.webagent/read-hashes.json
+**/.webagent/usage.json
+
+# Admin host local token + reports
+webagent-core/admin-host/data/
 
 # Rewritten on launch with a machine-absolute path
 webagent-core/extensions-installed/extensions.json

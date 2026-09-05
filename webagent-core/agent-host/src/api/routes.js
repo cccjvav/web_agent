@@ -19,6 +19,8 @@ const { getBootstrapPrompt } = require('../mcp/instructions');
 const { listClients } = require('../mcp/clients');
 const oauth = require('../mcp/oauth');
 const tunnel = require('../tunnel/cloudflared');
+const github = require('../auth/github');
+const tracker = require('../usage/tracker');
 
 const router = express.Router();
 
@@ -83,9 +85,14 @@ router.get('/status', (req, res) => {
       loggedIn: cfg.bridge.loggedIn,
       provider: cfg.bridge.provider,
       username: cfg.bridge.username,
+      githubId: cfg.bridge.githubId || '',
       license: cfg.bridge.license,
       deviceAuthorized: cfg.bridge.deviceAuthorized
     },
+    githubAuth: {
+      deviceAvailable: github.deviceAvailable()
+    },
+    usage: tracker.snapshot(),
     mcpSession: mcpSnapshot()
   });
 });
@@ -101,7 +108,7 @@ router.post('/bridge/reset-secret', (req, res) => {
 router.post('/bridge/start', async (req, res) => {
   const cfg = store.load();
   if (!cfg.bridge.loggedIn || !cfg.bridge.deviceAuthorized) {
-    return res.status(403).json({ success: false, error: '需要先点本机演示授权。Chat 不受影响。源码没有接 GitHub OAuth。' });
+    return res.status(403).json({ success: false, error: '需要先点本机演示授权或完成 GitHub 验证。Chat 不受影响。' });
   }
   const provider = (req.body && req.body.tunnelProvider) || cfg.bridge.tunnelProvider || 'cloudflare';
   store.patch({ bridge: { tunnelProvider: provider } });
@@ -364,6 +371,7 @@ router.post('/bridge/login', (req, res) => {
       loggedIn: true,
       provider: 'local-demo',
       username: 'local',
+      githubId: '',
       license: 'local-demo',
       deviceAuthorized: true
     }
@@ -371,8 +379,49 @@ router.post('/bridge/login', (req, res) => {
   res.json({ success: true, demo: true, provider: 'local-demo', username: 'local' });
 });
 
+router.post('/bridge/token', async (req, res) => {
+  try {
+    const out = await github.loginWithToken((req.body && req.body.token) || '');
+    res.json(out);
+  } catch (err) {
+    res.status(err.status || 400).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/bridge/device', async (req, res) => {
+  try {
+    const out = await github.startDeviceLogin();
+    res.json({ success: true, ...out });
+  } catch (err) {
+    res.status(err.status || 400).json({ success: false, error: err.message, code: err.code });
+  }
+});
+
+router.post('/bridge/device/poll', async (req, res) => {
+  try {
+    const out = await github.pollDeviceLogin();
+    res.json(out);
+  } catch (err) {
+    res.status(err.status || 400).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/bridge/github/clear', (req, res) => {
+  github.clearGithubKeepDemo();
+  res.json({ success: true, provider: 'local-demo', username: 'local' });
+});
+
 router.post('/bridge/logout', (req, res) => {
-  store.patch({ bridge: { loggedIn: false, username: '', deviceAuthorized: false } });
+  github.resetPending();
+  store.patch({
+    bridge: {
+      loggedIn: false,
+      username: '',
+      githubId: '',
+      deviceAuthorized: false,
+      provider: 'local-demo'
+    }
+  });
   tunnel.stopTunnel();
   config.bridgeRunning = false;
   res.json({ success: true });

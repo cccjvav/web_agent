@@ -237,7 +237,11 @@ export function paintBridge() {
   $('#conn-pill').className = 'status-pill ' + (running ? 'ok' : '');
   const acct = s.bridgeAccount || {};
   if (typeof acct.loggedIn === 'boolean') state.loggedIn = acct.loggedIn;
-  if (state.loggedIn) {
+  if (acct.provider === 'github' && acct.username) {
+    $('#acct-label').textContent = 'GitHub @' + String(acct.username).replace(/^@/, '');
+    $('#acct-pill').textContent = 'GitHub';
+    $('#acct-pill').className = 'status-pill ok';
+  } else if (state.loggedIn) {
     $('#acct-label').textContent = '本机演示授权（不是 GitHub 登录）';
     $('#acct-pill').textContent = '演示';
     $('#acct-pill').className = 'status-pill ok';
@@ -245,6 +249,17 @@ export function paintBridge() {
     $('#acct-label').textContent = '尚未完成本机演示授权';
     $('#acct-pill').textContent = '未授权';
     $('#acct-pill').className = 'status-pill stop';
+  }
+  const gh = s.githubAuth || {};
+  if ($('#btn-gh-device')) $('#btn-gh-device').disabled = !gh.deviceAvailable;
+  if ($('#gh-device-hint') && !gh.deviceAvailable) {
+    $('#gh-device-hint').textContent = '未设置 WEBAGENT_GITHUB_CLIENT_ID 时设备码不可用，请用令牌。';
+  }
+  if ($('#usage-line') && s.usage) {
+    const u = s.usage;
+    const rate = u.successRate == null ? '—' : (u.successRate + '%');
+    $('#usage-line').textContent = `今日 Bridge 工具调用 ${u.toolCalls || 0}，成功率 ${rate}`
+      + (u.telemetryConfigured ? '（已配置上报）' : '（未配置 WEBAGENT_TELEMETRY_URL，不上报）');
   }
   const sess = s.mcpSession;
   if (sess && sess.latest) {

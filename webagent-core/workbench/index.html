@@ -518,7 +518,19 @@
               <button type="button" id="btn-gh-login" class="vs-btn">本机演示授权</button>
               <button type="button" id="btn-refresh-auth" class="vs-btn">刷新状态</button>
             </div>
-            <p class="hint">源码没有接 GitHub OAuth。这个开关只挡住未授权时的 Bridge 启动；Chat 不受影响。安装 ID <code id="install-id">—</code></p>
+            <p class="hint">Chat 不需要 GitHub。Bridge 可用本机演示授权，或下面用 GitHub 验证身份（可选，用来在使用统计里显示用户名）。安装 ID <code id="install-id">—</code></p>
+            <div class="block-h" style="margin-top:12px">GitHub 验证（可选）</div>
+            <p class="hint">令牌只发给 api.github.com 校验用户名，<strong>不会</strong>写入 config.json。需要 <code>read:user</code>。</p>
+            <div class="pref-row">
+              <input id="gh-token" class="ms-input" type="password" placeholder="ghp_… 或 github_pat_…" autocomplete="off" />
+              <button type="button" id="btn-gh-token" class="vs-btn">验证令牌</button>
+            </div>
+            <div class="row-btns" id="gh-device-row">
+              <button type="button" id="btn-gh-device" class="vs-btn">用 GitHub 设备码</button>
+              <button type="button" id="btn-gh-clear" class="vs-btn">清除 GitHub 身份</button>
+            </div>
+            <p class="hint" id="gh-device-hint">未设置 WEBAGENT_GITHUB_CLIENT_ID 时设备码不可用，请用令牌。</p>
+            <p class="hint" id="usage-line"></p>
           </section>
 
           <section class="block">

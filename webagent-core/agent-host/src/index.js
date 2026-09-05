@@ -11,8 +11,10 @@ const eventBus = require('./utils/eventBus');
 const store = require('./models/store');
 const { rejectUnlessLocalControl, isLocalControlPlane } = require('./utils/localControl');
 const { mcpCors, rejectCrossSiteApi } = require('./utils/corsAllow');
+const tracker = require('./usage/tracker');
 
 persistIdentity(store);
+tracker.startReporter();
 
 if (!fs.existsSync(config.workspaceRoot)) {
   if (process.env.WORKSPACE_ROOT) {

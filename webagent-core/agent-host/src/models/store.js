@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
 
-const SECRET_REL = ['.webagent/config.json', '.webagent/read-hashes.json'];
-const NESTED_NAMES = ['config.json', 'read-hashes.json'];
+const SECRET_REL = ['.webagent/config.json', '.webagent/read-hashes.json', '.webagent/usage.json'];
+const NESTED_NAMES = ['config.json', 'read-hashes.json', 'usage.json'];
 
 function dir() {
   return path.join(config.workspaceRoot, '.webagent');
@@ -37,6 +37,7 @@ function defaults() {
       loggedIn: true,
       provider: 'local-demo',
       username: 'local',
+      githubId: '',
       license: 'local-demo',
       deviceAuthorized: true,
       tunnelProvider: 'cloudflare',
@@ -65,11 +66,26 @@ function normalizeMultiModel(mm) {
   return next;
 }
 
+function isFakeGithub(b) {
+  if (String(b.provider || '') !== 'github') return false;
+  if (String(b.githubId || '').trim()) return false;
+  const u = String(b.username || '').trim().toLowerCase();
+  return !u || u === 'demo' || u === 'local';
+}
+
 function normalizeBridge(bridge) {
   const b = { ...defaults().bridge, ...(bridge || {}) };
   if (b.license === '永久顺') b.license = 'local-demo';
-  if (b.provider === 'github') b.provider = 'local-demo';
+  if (isFakeGithub(b)) {
+    b.provider = 'local-demo';
+    if (!b.username || b.username === 'demo') b.username = 'local';
+    b.githubId = '';
+  }
   if (b.username === 'demo' && b.provider === 'local-demo') b.username = 'local';
+  if (b.provider === 'github') {
+    b.loggedIn = true;
+    b.deviceAuthorized = true;
+  }
   return b;
 }
 
@@ -189,4 +205,8 @@ function patch(partial) {
   return save(next);
 }
 
-module.exports = { load, save, patch, defaults, protectWorkspaceSecrets };
+function reset() {
+  return save(defaults());
+}
+
+module.exports = { load, save, patch, defaults, protectWorkspaceSecrets, reset, isFakeGithub };

@@ -134,6 +134,8 @@ async function main() {
     assert.ok(page.raw.includes('id="btn-detect-stack"'));
     assert.ok(page.raw.includes('本机演示授权'));
     assert.ok(page.raw.includes('不是 GitHub'));
+    assert.ok(page.raw.includes('GitHub 验证'));
+    assert.ok(page.raw.includes('验证令牌'));
     assert.ok(page.raw.includes('多模型博弈'));
     assert.ok(page.raw.includes('btn-plan-merge'));
     assert.ok(page.raw.includes('think-select'));
@@ -218,11 +220,21 @@ async function main() {
     assert.strictEqual(ping.json.result.isError, false);
     assert.ok(ping.json.result.content[0].text.includes('"ok": true') || ping.json.result.content[0].text.includes('"ok":true'));
 
+    const usagePath = path.join(tmp, '.webagent', 'usage.json');
+    assert.ok(fs.existsSync(usagePath));
+    const usageBefore = JSON.parse(fs.readFileSync(usagePath, 'utf8'));
+    assert.ok(usageBefore.toolCalls >= 1);
+
+    const badToken = await request('POST', `http://127.0.0.1:${mcpPort}/api/bridge/token`, { token: '' });
+    assert.strictEqual(badToken.status, 400);
+
     const resetRound = await request('POST', `http://127.0.0.1:${mcpPort}/api/bridge/reset-round`, {});
     assert.strictEqual(resetRound.status, 200);
     assert.strictEqual(resetRound.json.success, true);
     assert.ok(resetRound.json.mcpSession);
     assert.strictEqual(resetRound.json.mcpSession.clients, 0);
+    const usageAfter = JSON.parse(fs.readFileSync(usagePath, 'utf8'));
+    assert.ok(usageAfter.toolCalls >= usageBefore.toolCalls);
 
     const tunnelHeaders = { 'cf-ray': 'smoke-test', 'cf-connecting-ip': '203.0.113.8' };
     const blockedStatus = await request('GET', `http://127.0.0.1:${mcpPort}/api/status`, undefined, tunnelHeaders);

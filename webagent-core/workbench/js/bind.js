@@ -159,6 +159,57 @@ export function bind() {
     await ui.refreshStatus();
     ui.toast('已打开本机演示授权（不是 GitHub）');
   };
+  if ($('#btn-gh-token')) {
+    $('#btn-gh-token').onclick = async () => {
+      const token = ($('#gh-token') && $('#gh-token').value) || '';
+      const res = await fetch('/api/bridge/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
+      const data = await res.json();
+      if ($('#gh-token')) $('#gh-token').value = '';
+      if (!data.success) { ui.toast(data.error || '验证失败'); return; }
+      await ui.refreshStatus();
+      ui.toast('已验证 GitHub @' + data.username);
+    };
+  }
+  if ($('#btn-gh-device')) {
+    $('#btn-gh-device').onclick = async () => {
+      const res = await fetch('/api/bridge/device', { method: 'POST' });
+      const data = await res.json();
+      if (!data.success) {
+        ui.toast(data.error || '无法开始设备码登录');
+        return;
+      }
+      if ($('#gh-device-hint')) {
+        $('#gh-device-hint').textContent = `在 ${data.verificationUri} 输入 ${data.userCode}`;
+      }
+      ui.toast('设备码 ' + data.userCode);
+      const tick = async () => {
+        const poll = await fetch('/api/bridge/device/poll', { method: 'POST' });
+        const out = await poll.json();
+        if (out.done) {
+          await ui.refreshStatus();
+          ui.toast('已验证 GitHub @' + out.username);
+          return;
+        }
+        if (out.pending) {
+          setTimeout(tick, 5000);
+          return;
+        }
+        ui.toast(out.error || '设备码登录结束');
+      };
+      setTimeout(tick, (Number(data.interval) || 5) * 1000);
+    };
+  }
+  if ($('#btn-gh-clear')) {
+    $('#btn-gh-clear').onclick = async () => {
+      await fetch('/api/bridge/github/clear', { method: 'POST' });
+      await ui.refreshStatus();
+      ui.toast('已清除 GitHub 身份，仍保留本机演示授权');
+    };
+  }
   $('#btn-refresh-auth').onclick = () => { ui.paintBridge(); ui.toast('已刷新状态'); };
 
   $('#btn-add-agent').onclick = async () => {
