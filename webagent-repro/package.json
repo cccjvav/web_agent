@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node -e \"console.error('ARCHIVED: webagent-repro is a frozen prototype. Use run-webagent.cmd'); process.exit(1)\"",
     "test": "node tests/patchEngine.test.js"
   },
   "keywords": [],

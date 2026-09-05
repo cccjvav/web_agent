@@ -5,6 +5,7 @@ const path = require('path');
 const { config } = require('../src/config');
 const { applyPatch, computeHash } = require('../src/tools/patchEngine');
 const { readFile, grepSearch } = require('../src/tools/fileOps');
+const { findFiles } = require('../src/tools/findFiles');
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-patch-'));
 config.workspaceRoot = tmp;
@@ -93,6 +94,19 @@ x
 
   const grep = grepSearch({ query: 'function add', searchPath: '.' });
   assert.ok(grep.totalMatches >= 1);
+
+  let nested = false;
+  try {
+    grepSearch({ query: '(a+)+', isRegex: true, searchPath: '.' });
+  } catch (err) {
+    nested = err.code === 'E_BAD_ARGS' || /ReDoS|nested/i.test(err.message);
+  }
+  assert.ok(nested, 'nested regex quantifiers must be rejected');
+
+  for (let i = 0; i < 5; i++) fs.writeFileSync(path.join(tmp, `cap${i}.txt`), 'x');
+  const found = findFiles({ glob: 'cap*.txt', maxResults: 3 });
+  assert.strictEqual(found.files.length, 3);
+  assert.strictEqual(found.truncated, true);
 
   fs.writeFileSync(path.join(tmp, 'huge.txt'), Buffer.alloc(2 * 1024 * 1024, 0x61));
   fs.writeFileSync(path.join(tmp, 'needle.txt'), 'UNIQUE_TOKEN_XYZ\n', 'utf8');

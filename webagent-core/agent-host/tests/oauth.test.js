@@ -108,7 +108,7 @@ async function main() {
     const code = redir.searchParams.get('code');
     assert.ok(code);
 
-    const tokens = oauth.handleToken({
+    let tokens = oauth.handleToken({
       grant_type: 'authorization_code',
       code,
       client_id: registered.client_id,
@@ -116,6 +116,49 @@ async function main() {
       code_verifier: verifier
     });
     assert.ok(tokens.access_token.startsWith('scat_'));
+    assert.ok(tokens.refresh_token.startsWith('scrt_'));
+
+    const rotated = oauth.handleToken({
+      grant_type: 'refresh_token',
+      refresh_token: tokens.refresh_token,
+      client_id: registered.client_id
+    });
+    assert.ok(rotated.access_token.startsWith('scat_'));
+    assert.notStrictEqual(rotated.refresh_token, tokens.refresh_token);
+    assert.ok(!oauth.verifyAccessToken(tokens.access_token));
+    assert.ok(oauth.verifyAccessToken(rotated.access_token));
+
+    let replay = false;
+    try {
+      oauth.handleToken({
+        grant_type: 'refresh_token',
+        refresh_token: tokens.refresh_token,
+        client_id: registered.client_id
+      });
+    } catch (err) {
+      replay = /replay/i.test(err.message);
+    }
+    assert.ok(replay, 'reusing a spent refresh token must fail');
+    assert.ok(!oauth.verifyAccessToken(rotated.access_token), 'replay must revoke the rotated family');
+
+    const verifier2 = crypto.randomBytes(32).toString('base64url');
+    const challenge2 = oauth.s256(verifier2);
+    const pairing2 = oauth.issuePairing();
+    const redirect2 = oauth.completeAuthorize({
+      client_id: registered.client_id,
+      redirect_uri: 'http://127.0.0.1/cb',
+      pairing_code: pairing2.code,
+      code_challenge: challenge2,
+      code_challenge_method: 'S256'
+    });
+    const code2 = new URL(redirect2).searchParams.get('code');
+    tokens = oauth.handleToken({
+      grant_type: 'authorization_code',
+      code: code2,
+      client_id: registered.client_id,
+      redirect_uri: 'http://127.0.0.1/cb',
+      code_verifier: verifier2
+    });
 
     let pkceFailed = false;
     try {

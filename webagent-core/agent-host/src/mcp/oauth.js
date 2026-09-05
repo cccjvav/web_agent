@@ -8,11 +8,13 @@ const clients = new Map();
 const authCodes = new Map();
 const accessTokens = new Map();
 const refreshTokens = new Map();
+const spentRefresh = new Map();
 
 const PAIRING_TTL_MS = 5 * 60 * 1000;
 const CODE_TTL_MS = 5 * 60 * 1000;
 const ACCESS_TTL_MS = 60 * 60 * 1000;
 const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const MAX_CLIENTS = 80;
 
 let pairing = null;
 
@@ -115,7 +117,50 @@ function wwwAuthenticate(origin) {
   return `Bearer realm="Web Agent", resource_metadata="${origin}/.well-known/oauth-protected-resource"`;
 }
 
+function pruneExpiredTokens() {
+  const t = now();
+  for (const [tok, rec] of accessTokens) {
+    if (rec.accessExp < t) accessTokens.delete(tok);
+  }
+  for (const [tok, rec] of refreshTokens) {
+    if (rec.refreshExp < t) refreshTokens.delete(tok);
+  }
+  for (const [tok, rec] of spentRefresh) {
+    if (t - rec.at > REFRESH_TTL_MS) spentRefresh.delete(tok);
+  }
+  for (const [code, rec] of authCodes) {
+    if (rec.exp < t) authCodes.delete(code);
+  }
+}
+
+function revokeClientTokens(clientId) {
+  for (const [tok, rec] of accessTokens) {
+    if (rec.clientId === clientId) accessTokens.delete(tok);
+  }
+  for (const [tok, rec] of refreshTokens) {
+    if (rec.clientId === clientId) refreshTokens.delete(tok);
+  }
+}
+
+function pruneClients() {
+  pruneExpiredTokens();
+  while (clients.size >= MAX_CLIENTS) {
+    let oldestId = null;
+    let oldest = Infinity;
+    for (const [id, rec] of clients) {
+      if (rec.createdAt < oldest) {
+        oldest = rec.createdAt;
+        oldestId = id;
+      }
+    }
+    if (!oldestId) break;
+    revokeClientTokens(oldestId);
+    clients.delete(oldestId);
+  }
+}
+
 function registerClient(body = {}) {
+  pruneClients();
   const redirectUris = Array.isArray(body.redirect_uris) ? body.redirect_uris.filter(Boolean) : [];
   if (!redirectUris.length) {
     const err = new Error('redirect_uris required');
@@ -165,6 +210,7 @@ function issueAccess(clientId) {
 function verifyAccessToken(token) {
   if (!token) return null;
   if (token === config.secretKey) return { kind: 'secret', clientId: 'url-secret' };
+  pruneExpiredTokens();
   const rec = accessTokens.get(token);
   if (!rec) return null;
   if (rec.accessExp < now()) {
@@ -179,6 +225,7 @@ function revokeAll() {
   authCodes.clear();
   accessTokens.clear();
   refreshTokens.clear();
+  spentRefresh.clear();
   pairing = null;
   rateHits.clear();
 }
@@ -250,6 +297,7 @@ function completeAuthorize(body) {
 }
 
 function handleToken(body = {}) {
+  pruneExpiredTokens();
   const grant = body.grant_type;
   if (grant === 'authorization_code') {
     const rec = authCodes.get(body.code);
@@ -278,12 +326,26 @@ function handleToken(body = {}) {
     return tokenResponse(issued);
   }
   if (grant === 'refresh_token') {
-    const rec = refreshTokens.get(body.refresh_token);
+    const presented = body.refresh_token;
+    const rec = refreshTokens.get(presented);
     if (!rec || rec.refreshExp < now()) {
+      const spent = spentRefresh.get(presented);
+      if (spent) {
+        revokeClientTokens(spent.clientId);
+        const replay = new Error('refresh_token replay detected; tokens for this client were revoked');
+        replay.status = 400;
+        throw replay;
+      }
       const err = new Error('invalid refresh_token');
       err.status = 400;
       throw err;
     }
+    if (body.client_id && rec.clientId !== body.client_id) {
+      const err = new Error('client_id mismatch');
+      err.status = 400;
+      throw err;
+    }
+    spentRefresh.set(rec.refresh, { clientId: rec.clientId, at: now() });
     accessTokens.delete(rec.access);
     refreshTokens.delete(rec.refresh);
     const issued = issueAccess(rec.clientId);

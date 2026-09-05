@@ -221,9 +221,10 @@
   - **Function `authorizationServerMetadata(origin)`（L90–L102）** — 发现文档对象（issuer、authorize/token/register/revoke、S256、grant 类型）。
   - **Function `protectedResourceMetadata(origin)`（L104–L110）** — `resource` 为 `${origin}/mcp`。
   - **Function `wwwAuthenticate(origin)`（L112–L114）** — `Bearer realm=…` 指向 protected-resource 元数据。
-  - **Function `registerClient(body = {})`（L116–L142）**
-    - L117–L121：`redirect_uris` 必须是非空数组，否则 400。
-    - L122–L141：生成 `sccid_` / `sccsec_`，存 Map，返回注册结果。
+  - **Function `pruneExpiredTokens` / `revokeClientTokens` / `pruneClients`（L120–L160）** — 清过期 code/token；客户端最多 80，满则删最旧并吊销其 token。
+  - **Function `registerClient(body = {})`（L162–L189）**
+    - 先 `pruneClients`。`redirect_uris` 必须是非空数组，否则 400。
+    - 生成 `sccid_` / `sccsec_`，存 Map，返回注册结果。
   - **Function `s256(verifier)`（L144–L146）** — SHA-256 `base64url`。
   - **Function `issueAccess(clientId)`（L148–L162）** — 发 `scat_` / `scrt_`，写入两个 token Map。
   - **Function `verifyAccessToken(token)`（L164–L175）**
@@ -243,8 +244,8 @@
     - L251–L256：302 目标 URL 带 `code`，有 `state` 则带上。
   - **Function `handleToken(body = {})`（L259–L297）**
     - L261–L283 `authorization_code`：code 无效/过期 400；**先 delete code**；client_id / redirect_uri 不符 400；无 verifier 或 PKCE 失败 400；然后 `issueAccess`。
-    - L284–L293 `refresh_token`：无效/过期 400；删旧双 token；再发一对。
-    - L294–L296 其它 grant → 400。
+    - `refresh_token`：轮换（旧 refresh 进 `spentRefresh`）；**再拿已用过的 refresh → 吊销该 client 全部 token**（重放检测）。可选 `client_id` 必须一致。
+    - 其它 grant → 400。
   - **Function `tokenResponse(issued)`（L299–L306）** — Bearer、expires_in 秒、refresh、scope `mcp`。
   - **Function `sendError(res, err)`（L331–L335）** — `status || 500`；429 时 `slow_down`，400 时 `invalid_request`，否则 `server_error`。
   - **Function `rateLimit(key, max, windowMs)`（L315–L329）** — 内存滑窗。注册每 IP 每分钟 20；token 每 IP 每分钟 60。超限 429 `slow_down`。

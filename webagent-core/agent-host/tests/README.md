@@ -10,7 +10,7 @@
 
 | 文件 | 覆盖 |
 |---|---|
-| `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、CRLF 保留、SEARCH 多处拒绝、`occurrence` 指定第几处、grep 跳过大文件、新建拒绝 unified diff、空 SEARCH 建新文件 |
+| `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、CRLF 保留、SEARCH 多处拒绝、`occurrence` 指定第几处、grep 跳过大文件、嵌套正则拒绝、find_files `truncated`、新建拒绝 unified diff、空 SEARCH 建新文件 |
 | `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek / Chat Plus 客户端配方 |
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command`、`cancel_command` 终态保持 cancelled、持久 hash 不能单独覆盖 |
 | `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝 |
@@ -33,7 +33,7 @@
 | `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；Plan 首轮一支、空发第二支、过早 merge、再 merge `agreementRate==null`；第二参 emit 与 `payload.emit` |
 | `chatMode.test.js` | `@webagent` 默认 Agent=code；`/ask` `/plan` |
 | `profile.test.js` | 环境偏好 / 技术栈写入 `.webagent`，进入指令 |
-| `oauth.test.js` | OAuth 发现、配对、PKCE、Bearer `/mcp`、SSE、session 复用/未知 404/`DELETE`、SSE endpoint 含密钥路径、注册限速 429 |
+| `oauth.test.js` | OAuth 发现、配对、PKCE、Bearer `/mcp`、SSE、session 复用/未知 404/`DELETE`、SSE endpoint 含密钥路径、注册限速 429、refresh 轮换与重放吊销 |
 
 ---
 
@@ -313,7 +313,7 @@
 
 ### 📄 文件名：`oauth.test.js`
 
-- **文件职责：** 真 listen 随机端口：发现文档、401、URL 密钥 initialize、SSE ping、PKCE 发 token、Bearer tools/call、`Mcp-Session-Id` 复用/未知 404/`DELETE`、SSE GET endpoint 含 `/mcp/<secret>`、第 21 次 register 429、revoke 后 401。
+- **文件职责：** 真 listen 随机端口：发现文档、401、URL 密钥 initialize、SSE ping、PKCE 发 token、refresh 轮换与重放吊销、Bearer tools/call、`Mcp-Session-Id` 复用/未知 404/`DELETE`、SSE GET endpoint 含 `/mcp/<secret>`、第 21 次 register 429、revoke 后 401。
 - **Function `request`（L16–L47）** — 相对已 listen 的 server；`json=true` 发 JSON，否则 urlencoded。
 - **Function `main`（L49–L153）**
   - L50–L57：express 挂 `oauth.router` + `/mcp`；`listen(0)`。

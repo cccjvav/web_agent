@@ -1,13 +1,35 @@
 const { spawn, spawnSync } = require('child_process');
+const crypto = require('crypto');
 const path = require('path');
 const { config } = require('../config');
 const eventBus = require('../utils/eventBus');
 const { resolveSafePath } = require('./patchEngine');
+const { ProtocolError } = require('../mcp/errors');
 
-let commandSequence = 0;
+let lastExecId = '';
 const commandStore = new Map();
 const children = new Map();
 const MAX_CAPTURE = 200 * 1024;
+const MAX_RUNNING = 8;
+const MAX_COMMANDS = 40;
+
+function countRunning() {
+  let n = 0;
+  for (const rec of commandStore.values()) {
+    if (rec.status === 'running') n += 1;
+  }
+  return n;
+}
+
+function pruneCommands() {
+  if (commandStore.size < MAX_COMMANDS) return;
+  for (const [id, rec] of commandStore) {
+    if (rec.status === 'running') continue;
+    commandStore.delete(id);
+    children.delete(id);
+    if (commandStore.size < MAX_COMMANDS) return;
+  }
+}
 
 function killChild(child, force = false) {
   if (!child || !child.pid) return;
@@ -53,7 +75,12 @@ function publicRecord(rec, tail) {
 }
 
 function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
-  const execId = ++commandSequence;
+  if (countRunning() >= MAX_RUNNING) {
+    throw new ProtocolError('E_BAD_ARGS', `Too many running commands (max ${MAX_RUNNING}). Cancel or wait.`);
+  }
+  pruneCommands();
+  const execId = crypto.randomBytes(8).toString('hex');
+  lastExecId = execId;
   const workingDir = workingDirFrom(cwd);
   const timeoutMs = Math.max(1000, (timeoutSec || 30) * 1000);
   const startTime = Date.now();
@@ -159,7 +186,7 @@ function startCommand(opts) {
 }
 
 function getCommandOutput({ execId, commandId, tail } = {}) {
-  const id = String(execId || commandId || commandSequence);
+  const id = String(execId || commandId || lastExecId);
   const rec = commandStore.get(id);
   if (!rec) {
     return { execId: id, found: false, message: 'No command with this execId yet.' };

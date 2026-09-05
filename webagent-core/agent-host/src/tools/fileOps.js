@@ -12,6 +12,15 @@ const MAX_GREP_REGEX = 120;
 const MAX_GREP_FILE_BYTES = 1.5 * 1024 * 1024;
 const MAX_GREP_SCAN_FILES = 800;
 const MAX_GREP_COLLECT = 2000;
+const MAX_GREP_SCAN_BYTES = 8 * 1024 * 1024;
+
+function isUnsafeRegex(src) {
+  const s = String(src || '');
+  if (/[+*]{2,}/.test(s)) return true;
+  if (/(\([^)]*[+*{?][^)]*\))[+*{?]/.test(s)) return true;
+  if (/(\.[*+]){3,}/.test(s)) return true;
+  return false;
+}
 
 function readFiles({ filePath, paths, offset = 1, limit = 400 } = {}) {
   const list = [];
@@ -205,10 +214,12 @@ function listDir({ dirPath = '.', recursive = false, maxDepth = 3 }) {
   return { dirPath, items };
 }
 
-function grepFile(fullItemPath, pattern, matches) {
+function grepFile(fullItemPath, pattern, matches, budget) {
   const relPath = toPosixRel(path.relative(config.workspaceRoot, fullItemPath));
   const stat = fs.statSync(fullItemPath);
   if (stat.size > MAX_GREP_FILE_BYTES) return 'large';
+  if (budget.bytes + stat.size > MAX_GREP_SCAN_BYTES) return 'budget';
+  budget.bytes += stat.size;
   const buf = fs.readFileSync(fullItemPath);
   if (buf.includes(0)) return 'binary';
   const lines = buf.toString('utf8').split(/\r?\n/);
@@ -239,6 +250,12 @@ function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = 
       `regex query is too long (${q.length} > ${MAX_GREP_REGEX}).`
     );
   }
+  if (isRegex && isUnsafeRegex(q)) {
+    throw new ProtocolError(
+      'E_BAD_ARGS',
+      'regex looks nested or overlapping (ReDoS). Use a simpler pattern.'
+    );
+  }
 
   const fullPath = resolveSafePath(searchPath);
   let pattern;
@@ -256,10 +273,12 @@ function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = 
   let skippedLarge = 0;
   let skippedBinary = 0;
   let truncated = false;
+  const budget = { bytes: 0 };
 
   function noteSkip(kind) {
     if (kind === 'large') skippedLarge += 1;
     else if (kind === 'binary') skippedBinary += 1;
+    else if (kind === 'budget') truncated = true;
   }
 
   function searchInDir(dir) {
@@ -286,7 +305,7 @@ function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = 
         }
         scannedFiles += 1;
         try {
-          noteSkip(grepFile(fullItemPath, pattern, matches));
+          noteSkip(grepFile(fullItemPath, pattern, matches, budget));
         } catch (_) {}
         if (matches.length >= MAX_GREP_COLLECT) truncated = true;
       }
@@ -299,7 +318,7 @@ function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = 
   } else {
     scannedFiles = 1;
     try {
-      noteSkip(grepFile(fullPath, pattern, matches));
+      noteSkip(grepFile(fullPath, pattern, matches, budget));
     } catch (_) {}
   }
 

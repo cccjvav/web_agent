@@ -22,9 +22,14 @@ function findFiles({ glob = '**/*', searchPath = '.', maxResults = 40 } = {}) {
   }
   const re = globToRegExp(glob);
   const files = [];
+  let truncated = false;
+  const cap = Math.max(1, Math.min(200, Number(maxResults) || 40));
 
   function walk(dir) {
-    if (files.length >= maxResults) return;
+    if (files.length >= cap) {
+      truncated = true;
+      return;
+    }
     let entries;
     try {
       entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -44,7 +49,10 @@ function findFiles({ glob = '**/*', searchPath = '.', maxResults = 40 } = {}) {
           files.push(rel);
         }
       }
-      if (files.length >= maxResults) return;
+      if (files.length >= cap) {
+        truncated = true;
+        return;
+      }
     }
   }
 
@@ -52,7 +60,7 @@ function findFiles({ glob = '**/*', searchPath = '.', maxResults = 40 } = {}) {
   if (stat.isDirectory()) walk(root);
   else files.push(path.relative(config.workspaceRoot, root).split(path.sep).join('/'));
 
-  return { glob, searchPath, total: files.length, files };
+  return { glob, searchPath, total: files.length, files, truncated };
 }
 
 module.exports = { findFiles };

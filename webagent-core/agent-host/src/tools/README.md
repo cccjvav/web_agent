@@ -115,7 +115,7 @@
   - **Function `writeFile`（L120–L170）** — `resolveSafePath`（含敏感拦截）。已存在则要 `confirm_overwrite`、匹配的 `expectedHash`，或**本进程** `sessionHash` 仍等于当前 sha256。磁盘上的 `read-hashes.json`（上次进程留下的）**不能**单独放行覆盖。hash 不符 → `E_STALE_FILE`。写 `.tmp.${Date.now()}` 再 `renameSync`。broadcast `file_written`；`rememberHash`。
   - **Function `listDir`（L172–L206）** — 内嵌 `scan`：depth 超 `maxDepth` 返回 []；真实路径在工作区外或 **符号链接** skip；`isHidden` skip；目录仅 `recursive && currentDepth < maxDepth` 才扫 children。
   - **Function `grepFile`（L208–L223）** — 单文件：`>1.5MB` 记 large；含 NUL 记 binary；否则按行匹配，命中 content 截 400 字。
-  - **Function `grepSearch`（L225–L321）** — 空 query / 超 200 字 / regex 超 120 字 → `E_BAD_ARGS`。编正则（非 regex 则转义）；非法正则抛。最多扫 800 个文件、收集 2000 条；跳过大文件和二进制。分页 `limit` 1–100。返回 `scannedFiles` / `skippedLarge` / `skippedBinary` / `truncated`。
+  - **Function `grepSearch`（L236–L340）** — 空 query / 超 200 字 / regex 超 120 字 / 嵌套量词（ReDoS）→ `E_BAD_ARGS`。编正则（非 regex 则转义）；非法正则抛。最多扫 800 个文件、收集 2000 条、合计约 8MB；跳过大文件和二进制。分页 `limit` 1–100。返回 `scannedFiles` / `skippedLarge` / `skippedBinary` / `truncated`。
 
 ---
 
@@ -167,7 +167,7 @@
   - **Function `killChild`（L12–L26）** — 无 pid return。win32 `taskkill /pid /t /f`。非 Windows 先 `process.kill(-pid)` 杀**进程组**，失败再 `child.kill`。
   - **Function `workingDirFrom`（L28–L34）** — 走 `resolveSafePath`（含真实路径），逃出工作区抛 outside workspace。
   - **Function `publicRecord`（L31–L48）** — stdout/stderr 截尾；running 时带 `suggestedWaitMs` 与 poll hint。
-  - **Function `startProcess`（L55–L140）** — `execId` 自增；timeout 至少 1s；broadcast `command_started`；spawn PowerShell 或 bash；非 Windows `detached:true` 以便杀进程组；超时 kill 再 2s force；stdout/stderr 环形 200KB；error reject；close 时若不是 `cancelled` 则 status `timeout` 或 `done`。返回 `{ rec, done }`。
+  - **Function `startProcess`（L77–L166）** — `execId` 为 16 位 hex（不是自增序号）；同时 running 最多 8 条，已结束记录最多留 40。timeout 至少 1s；broadcast `command_started`；spawn PowerShell 或 bash；非 Windows `detached:true` 以便杀进程组；超时 kill 再 2s force；stdout/stderr 环形 200KB；error reject；close 时若不是 `cancelled` 则 status `timeout` 或 `done`。返回 `{ rec, done }`。
   - **Function `executeCommand`（L134–L137）** — 返回 `done`（等到结束）。
   - **Function `startCommand`（L139–L152）** — 不等待；`done.catch` 标 error；立即返回 execId + running。
   - **Function `getCommandOutput`（L154–L161）** — id = execId 或 commandId 或最新序号；没有 rec → found false。
@@ -175,7 +175,7 @@
   - **Function `sendCommandInput`（L176–L183）** — **恒定** `{ ok:false }`，无 PTY。
   - **Function `wait`（L185–L189）** — ms clamp 0–15000。
 
-- **关键变量：** L6–L9 `commandSequence`、`commandStore`、`children`、`MAX_CAPTURE=200*1024`。
+- **关键变量：** `lastExecId`、`commandStore`、`children`、`MAX_CAPTURE=200*1024`、`MAX_RUNNING=8`、`MAX_COMMANDS=40`。
 
 ---
 
@@ -191,7 +191,7 @@
 ### 📄 文件名：`findFiles.js`
 
 - **Function `globToRegExp`（L7–L16）** — 默认 `**/*`；`**`→`.*`，`*`→`[^/]*`。
-- **Function `findFiles`（L18–L54）** — 起点不存在抛。内嵌 `walk`：readdir 失败 return；hidden skip；满 `maxResults`（默认 40）停止。`glob==='**/*'` 时文件都收。起点是文件则只 push 自己。
+- **Function `findFiles`（L18–L64）** — 起点不存在抛。内嵌 `walk`：readdir 失败 return；hidden skip；满 `maxResults`（默认 40，夹到 1–200）停止并 `truncated:true`。`glob==='**/*'` 时文件都收。起点是文件则只 push 自己。
 
 ---
 

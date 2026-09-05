@@ -159,7 +159,7 @@ async function main() {
   assert.ok(Array.isArray(listedPath.items));
 
   const started = await callTool('start_command', { command: 'echo async-ok' }, 'code');
-  assert.ok(started.execId);
+  assert.ok(/^[0-9a-f]{16}$/.test(String(started.execId)), 'execId must be a random hex id');
   assert.strictEqual(started.status, 'running');
   const finished = await pollOutput(started.execId);
   assert.ok(['done', 'timeout'].includes(finished.status));
