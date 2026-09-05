@@ -55,7 +55,7 @@
   | `bridge.githubId` | GitHub 数字 id；假 github 迁走时清空 | 默认 `''` |
   | `bridge.tunnelProvider` | 隧道种类 | 默认 `'cloudflare'` |
   | `bridge.persistentMode` | 持久隧道标记 | 默认 `false`（本目录不消费它去 spawn） |
-  | `bridge.ngrokDomain` / `namedDomain` / `namedPort` / `quickLinks` | UI 字段 | 空串 / 48271 / `[]` |
+  | `bridge.ngrokDomain` / `ngrokToken` / `namedDomain` / `namedToken` / `namedPort` / `quickLinks` | 隧道 UI；Token 只在启动时写入，**不**进 `/status` | 空串 / 48271 / `[]` |
 
   另外 `persistIdentity` 会往该文件写入 `secretKey`、`installId`（不在 defaults 函数里，由 config 补上）。
 

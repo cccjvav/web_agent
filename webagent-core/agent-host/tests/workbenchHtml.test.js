@@ -26,7 +26,11 @@ for (const id of required) {
 assert.ok(html.includes('本机演示授权'));
 assert.ok(html.includes('id="named-domain"'));
 assert.ok(html.includes('id="named-token"'));
+assert.ok(html.includes('id="ngrok-domain"'));
+assert.ok(html.includes('id="ngrok-token"'));
 assert.ok(html.includes('cloudflared tunnel run --token'));
+assert.ok(html.includes('ngrok http'));
+assert.ok(!/ngrok 开发域名[\s\S]{0,80}未实现/.test(html));
 assert.ok(!html.includes('不会被使用'));
 assert.ok(!html.includes('使用 GitHub 登录'));
 assert.ok(!html.includes('永久顺'));

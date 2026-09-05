@@ -141,6 +141,8 @@ async function main() {
     assert.ok(page.raw.includes('没有插件市场'));
     assert.ok(page.raw.includes('Named Tunnel'));
     assert.ok(page.raw.includes('cloudflared tunnel run --token'));
+    assert.ok(page.raw.includes('ngrok http'));
+    assert.ok(page.raw.includes('id="ngrok-token"'));
     assert.ok(!page.raw.includes('不会被使用'));
     assert.ok(page.raw.includes('未实现'));
     assert.ok(page.raw.includes('.webagent/config.json'));

@@ -15,19 +15,19 @@
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command`、`cancel_command` 终态保持 cancelled、持久 hash 不能单独覆盖 |
 | `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝；UNC / 盘符路径拒绝；Windows 上再测 junction |
 | `hostPersist.test.js` | `config.version` 等于插件 `package.json`；`generateNewSecret` 写入 `config.json`；旧盘 `永久顺`/假 `github`/`demo` 迁成 `local-demo`；带 `githubId` 的 octocat **留下**；`usage.json` 进 gitignore；`read-hashes.json` 跨 require 仍能 recalledHash，**sessionHash 为空**；`resetHashes` 删文件 |
-| `eventBus.test.js` | 日志脱敏 `ghp_` / `sk-` / `Bearer` / `oldSecret` / `namedToken`；长 chunk 截断；普通字段留下 |
-| `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com`；`canonicalNamedUrl`；缺主机名/Token 在 spawn 前拒绝 |
-| `bridgeTunnel.test.js` | stub `startQuickTunnel`/`startNamedTunnel`/`stopTunnel`：cloudflare 启动后 mcpUrl 含 trycloudflare；Named 成功走自定义主机名且响应不含 Token；缺字段仍 200；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
+| `eventBus.test.js` | 日志脱敏 `ghp_` / `sk-` / `Bearer` / `oldSecret` / `namedToken` / `ngrokToken`；长 chunk 截断；普通字段留下 |
+| `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com`；`canonicalNamedUrl`；`parseNgrokUrl`；缺主机名/Token/Authtoken 在 spawn 前拒绝 |
+| `bridgeTunnel.test.js` | stub Quick/Named/ngrok：cloudflare 启动后 mcpUrl 含 trycloudflare；Named / ngrok 成功走自定义主机名且响应不含 Token；缺字段仍 200；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
 | `apiFiles.test.js` | `PUT /api/files/content` 走 `write_file`：普通文件写入、`.env` 拒绝、越界拒绝、错 hash 409、`POST /api/skills` |
-| `localControl.test.js` | 回环 / Cloudflare 头 / trycloudflare Host / Named `publicTunnelUrl` Host 是否算本机控制面 |
+| `localControl.test.js` | 回环 / Cloudflare 头 / trycloudflare Host / ngrok Host / Named `publicTunnelUrl` Host 是否算本机控制面 |
 | `corsAllow.test.js` | MCP Origin 白名单；外站 Origin/Referer 打 `/api` 拒绝 |
 | `githubAuth.test.js` | PAT 空令牌 400；假 fetch 校验 octocat；设备码 grant_type 含 `device_code`；无 client_id → `E_NO_GITHUB_APP` |
 | `usageTracker.test.js` | `record` 写 `.webagent/usage.json`；成功率；`reportNow` POST Bearer |
 | `adminHost.test.js` | 无 Bearer 401；有令牌 ingest；HTML 含 `@alice` / 未绑定 GitHub |
 | `providers.test.js` | `gpt-4o` 无接口字段时 caps/context 为空；声明了 `capabilities`/`context_window` 才填 |
-| `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`、多模型博弈、总结钮、本机演示授权、**GitHub 验证** / **验证令牌**、Named Tunnel `tunnel run --token`、Codex/挂钩/插件/ngrok 未实现、不得含「不会被使用」/永久顺 / 「使用 GitHub 登录」）、模块脚本、MCP 401、initialize、tools/list、ping、**ping 后有 usage.json 且 reset-round 不清它**、`/status.tools` 无 inputSchema、远程 `get_logs` 无 args/chunk/patch、空 token 400、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、本机 `POST /api/chat` NDJSON（Ask + Plan 分支再总结） |
+| `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`、多模型博弈、总结钮、本机演示授权、**GitHub 验证** / **验证令牌**、Named Tunnel `tunnel run --token`、`ngrok http`、Codex/挂钩/插件未实现、不得含「不会被使用」/永久顺 / 「使用 GitHub 登录」）、模块脚本、MCP 401、initialize、tools/list、ping、**ping 后有 usage.json 且 reset-round 不清它**、`/status.tools` 无 inputSchema、远程 `get_logs` 无 args/chunk/patch、空 token 400、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、本机 `POST /api/chat` NDJSON（Ask + Plan 分支再总结） |
 | `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime；不写死 `--auth none` / `trusted-origins *` / `--disable-workspace-trust`；`syncExtension` 读插件 `package.json` 版本、不写死 `webagent.webagent-core-0.6.9`；`run-webagent.sh` 接受 `$1` 并检查 node；`run-webagent-vscode.sh` 检查 node 且不 mkdir；runtime 包名 `webagent-code-server-runtime` |
-| `workbenchHtml.test.js` | 工作台 HTML 含 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login / named-domain / named-token 等）；不得含「不会被使用」/「使用 GitHub 登录」 |
+| `workbenchHtml.test.js` | 工作台 HTML 含 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login / named-domain / named-token / ngrok-domain / ngrok-token 等）；含 `ngrok http`；不得含「不会被使用」/「使用 GitHub 登录」 |
 | `docsSite.test.js` | 跑 `docs-site/build.js` 后，提交的 `content.js` 与生成结果一致（忽略当天 `builtAt`） |
 | `codeServerAuth.test.js` | 口令落盘复用；`CODE_SERVER_PASSWORD`；`CODE_SERVER_AUTH=none`；trusted-origins 仅本机 |
 | `skipWorkbench.test.js` | `WEBAGENT_SKIP_WORKBENCH=1` 不占用工作台端口 |
@@ -128,13 +128,14 @@
 
 ### 📄 文件名：`tunnel.test.js`
 
-- **文件职责：** 测日志解析和 Named 字段校验，不 spawn cloudflared。
+- **文件职责：** 测日志解析和 Named / ngrok 字段校验，不 spawn 二进制。
 - L4–L9：样例日志含 `https://random-words-ab12.trycloudflare.com`。
 - L10：`parseTunnelUrl(sample)` 严格等于该 URL。
 - L11：无 URL 文本 → `null`。
 - L12–L15：`canonicalNamedUrl` 去协议/路径/端口；空串与 `localhost` → `null`。
-- L17–L26：`startNamedTunnel` 缺主机名 `E_NAMED_HOSTNAME`、缺 Token `E_NAMED_TOKEN`（spawn 之前）。
-- L27：打印 passed。
+- L18–L25：`parseNgrokUrl` 认 `url=`、JSON `"url"`、`Forwarding`；无 URL → `null`。
+- L31–L47：`startNamedTunnel` 缺主机名 `E_NAMED_HOSTNAME`、缺 Token `E_NAMED_TOKEN`；`startNgrokTunnel` 缺 Authtoken `E_NGROK_TOKEN`、坏主机名 `E_NGROK_HOSTNAME`（spawn 之前）。测前删 `NGROK_AUTHTOKEN`。
+- L48：打印 passed。
 
 ---
 
@@ -158,20 +159,20 @@
 
 ### 📄 文件名：`bridgeTunnel.test.js`
 
-- **文件职责：** 测 REST 接线，**不** spawn cloudflared、不等 25s。替换 `cloudflared.js` 上同对象导出的 `startQuickTunnel` / `startNamedTunnel` / `stopTunnel`（routes 已 require 该对象）。
-- **Function `request`（L16–L45）** — 对已 listen 的 server 发 HTTP，body 有则 JSON。
-- **Function `main`（L47–L157）**
-  - L48–L70：保存原函数；stub Quick start 写 `config.publicTunnelUrl`；Named 默认转调原函数（缺字段会在 spawn 前拒绝）；stub stop 清 URL。
-  - L72–L77：express 挂 `/api`，`listen(0)`。
-  - L80–L88：`store.patch` 已登录；`POST /api/bridge/start` `{ tunnelProvider:'cloudflare' }` → 200、`startCalls===1`、mcpUrl 含 trycloudflare、note 含「Quick Tunnel 已就绪」、`tunnelError===null`。
-  - L90–L92：`GET /api/status` mcpUrl 仍含 trycloudflare，`bridgeRunning`。
-  - L94–L97：`POST /api/bridge/stop` → `stopCalls>=1`、`publicTunnelUrl===null`。
-  - L99–L112：stub start throw `E_NO_CLOUDFLARED` → 仍 200、`success`、有 `tunnelError`、note 含「当前页面源」、mcpUrl **不含** trycloudflare。
-  - L114–L121：`tunnelProvider:'named'` 无主机名 → 200、**不**调 `startQuickTunnel`、调 `startNamedTunnel`、有 `tunnelError`（主机名/Token）。
-  - L123–L145：stub Named 成功 → mcpUrl 含 `mcp.example.com`、note「Named Tunnel 已就绪」、JSON **不含** Token、`/status.namedDomain` 有主机名。
-  - L147–L149：未登录 → **403**。
-  - L150–L157：finally 还原导出、关 server、删 tmp。
-- L163–L166：`main().catch` → `exit(1)`。
+- **文件职责：** 测 REST 接线，**不** spawn 二进制、不等 25s。替换 `cloudflared.js` / `ngrok.js` 上同对象导出的 start/stop（routes 已 require 该对象）。
+- **Function `request`（L17–L46）** — 对已 listen 的 server 发 HTTP，body 有则 JSON。
+- **Function `main`（L48–L205）**
+  - L49–L77：保存原函数；stub Quick start 写 `config.publicTunnelUrl`；Named / ngrok 默认转调原函数（缺字段会在 spawn 前拒绝）；stub stop 清 URL。
+  - L79–L84：express 挂 `/api`，`listen(0)`。
+  - L87–L95：已登录；cloudflare start → 200、mcpUrl 含 trycloudflare、note「Quick Tunnel 已就绪」。
+  - L97–L112：`E_NO_CLOUDFLARED` 仍 200，走当前 Host。
+  - L114–L121：`named` 无主机名 → 200、调 `startNamedTunnel`、有 `tunnelError`。
+  - L123–L145：stub Named 成功 → mcpUrl 含 `mcp.example.com`、JSON **不含** Token。
+  - L147–L157：`ngrok` 无 Authtoken → 200、调 `startNgrokTunnel`、有 `tunnelError`。
+  - L159–L180：stub ngrok 成功 → mcpUrl 含 `mcp.ngrok-free.app`、note「ngrok 已就绪」、JSON **不含** Authtoken、`/status.ngrokDomain` 有主机名。
+  - L182–L184：未登录 → **403**。
+  - L185–L194：finally 还原导出、关 server、删 tmp。
+- L208–L211：`main().catch` → `exit(1)`。
 
 ---
 
@@ -265,7 +266,7 @@
 
 ### 📄 文件名：`workbenchHtml.test.js`
 
-- **文件职责：** 不启 HTTP。读 `workbench/index.html`，锁 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login / named-domain / named-token 等），含 `cloudflared tunnel run --token`，不得含「不会被使用」/「使用 GitHub 登录」或「永久顺」。
+- **文件职责：** 不启 HTTP。读 `workbench/index.html`，锁 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login / named-domain / named-token / ngrok-domain / ngrok-token 等），含 `cloudflared tunnel run --token` 与 `ngrok http`，不得含「不会被使用」/「使用 GitHub 登录」或「永久顺」。
 
 ### 📄 文件名：`docsSite.test.js`
 

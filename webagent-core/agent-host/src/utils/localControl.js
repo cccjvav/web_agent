@@ -38,7 +38,7 @@ function isPublicHost(req) {
   if (!name) return false;
   if (name === 'localhost' || name === '127.0.0.1' || name === '::1') return false;
   if (name.endsWith('.trycloudflare.com')) return true;
-  if (name.endsWith('.ngrok-free.app') || name.endsWith('.ngrok.io') || name.endsWith('.ngrok.app')) return true;
+  if (name.endsWith('.ngrok-free.app') || name.endsWith('.ngrok.io') || name.endsWith('.ngrok.app') || name.endsWith('.ngrok.dev')) return true;
   const pub = publicTunnelHost();
   if (pub && name === pub) return true;
   return false;

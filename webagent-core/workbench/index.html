@@ -506,7 +506,7 @@
             <button type="button" class="vs-btn open-site" data-site="manus" title="在 Web Agent 内置浏览器中打开 manus.im">打开 Manus</button>
             <button type="button" class="vs-btn open-site" data-site="shunova" title="在 Web Agent 内置浏览器中打开 shunova.cc">打开 Shunova</button>
           </div>
-          <p class="hint" id="prompt-hint">网页 Agent：先装 cloudflared。Quick Tunnel 等 trycloudflare.com；Named Tunnel 填主机名和 Token，并在 Cloudflare 把 Public Hostname 指到 http://127.0.0.1:48271。再按上面选中的客户端复制提示词。本机 Chat 不必走这一步。规则在 initialize.instructions；客户端若没吃到，可读 webagent://instructions。</p>
+          <p class="hint" id="prompt-hint">网页 Agent：Quick Tunnel / Named Tunnel 先装 cloudflared；ngrok 先装 ngrok 并填 Authtoken。逐步说明见仓库根「隧道使用指南.md」。再按上面选中的客户端复制提示词。本机 Chat 不必走这一步。规则在 initialize.instructions；客户端若没吃到，可读 webagent://instructions。</p>
           <p class="warn-line">⚠ Bridge 可以编辑文件并运行终端命令。请勿公开 MCP 地址。</p>
 
           <section class="block">
@@ -562,8 +562,10 @@
             <label class="tunnel-card">
               <input type="radio" name="tunnel" value="ngrok" />
               <div>
-                <div class="t-name">ngrok 开发域名 <em>未实现</em></div>
-                <p class="hint">选中后不会调用 ngrok。目前只有 Cloudflare Quick Tunnel 和 Named Tunnel 会拉起 cloudflared。</p>
+                <div class="t-name">ngrok</div>
+                <p class="hint">启动后会跑 ngrok http 127.0.0.1:48271。Authtoken 必填（也可事先设 NGROK_AUTHTOKEN）。域名可留空用随机地址，或填预留主机名（如 mcp.ngrok-free.app）。</p>
+                <input id="ngrok-domain" class="ms-input" placeholder="可选：mcp.ngrok-free.app" />
+                <input id="ngrok-token" class="ms-input" type="password" placeholder="ngrok Authtoken" autocomplete="off" />
               </div>
             </label>
           </section>

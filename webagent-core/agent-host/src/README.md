@@ -43,7 +43,7 @@
   | `version` | 展示版本 | `productVersion()`：读 `webagent-core/extension/package.json`，读失败回退 `'0.6.9'` |
   | `serverName` / `productName` | MCP serverInfo / 日志 | `WebAgent-AgentHost` / `Web Agent` |
   | `tunnelProvider` | 隧道种类标签 | 默认 `'cloudflare'` |
-  | `publicTunnelUrl` | Quick Tunnel URL | 默认 `null`，由 tunnel 模块成功时写入 |
+  | `publicTunnelUrl` | 当前隧道公网 URL（Quick / Named / ngrok） | 默认 `null`，由 tunnel 模块成功时写入 |
   | `bridgeRunning` | Bridge 开关 | 默认 `false`，由 `/api/bridge/start` 置 true |
   | `installId` | 安装 ID | 8 字节 hex，可被磁盘覆盖 |
 

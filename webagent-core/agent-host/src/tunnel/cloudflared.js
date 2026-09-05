@@ -47,6 +47,10 @@ function installHint() {
 }
 
 function stopTunnel() {
+  try {
+    const ngrok = require('./ngrok');
+    if (typeof ngrok.stopNgrok === 'function') ngrok.stopNgrok();
+  } catch (_) {}
   if (child && !child.killed) {
     try { child.kill('SIGTERM'); } catch (_) {}
     setTimeout(() => {
@@ -208,10 +212,13 @@ function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) {
 }
 
 function snapshot() {
+  let extra = { running: false, binary: null, url: null };
+  try { extra = require('./ngrok').snapshot(); } catch (_) {}
+  const cfRunning = Boolean(child && !child.killed);
   return {
-    binary: findCloudflared(),
-    url: quickUrl || config.publicTunnelUrl,
-    running: Boolean(child && !child.killed)
+    binary: cfRunning ? findCloudflared() : (extra.running ? extra.binary : findCloudflared() || extra.binary),
+    url: quickUrl || extra.url || config.publicTunnelUrl,
+    running: cfRunning || extra.running
   };
 }
 

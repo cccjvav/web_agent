@@ -21,7 +21,7 @@
 - **文件职责：** 单例 EventEmitter + WebSocket 扇出 + 环形日志。
 - **核心类/函数清单：**
 
-  - **Function `clipStr` / `sanitizePayload`（L12–L41）** — 字符串截 4000 并替换 `ghp_` / `github_pat_` / `sk-` / `Bearer …`；对象键 `apiKey|token|password|secret|secretKey|authorization|access_token|refresh_token|pat|namedToken` 整值改 `[redacted]`；`diff|patch|content|chunk|stdout|stderr|args|body` 截 500。深度 6、键 40、数组 40。
+  - **Function `clipStr` / `sanitizePayload`（L12–L41）** — 字符串截 4000 并替换 `ghp_` / `github_pat_` / `sk-` / `Bearer …`；对象键 `apiKey|token|password|secret|secretKey|authorization|access_token|refresh_token|pat|namedToken|ngrokToken|authtoken` 整值改 `[redacted]`；`diff|patch|content|chunk|stdout|stderr|args|body` 截 500。深度 6、键 40、数组 40。
   - **Class `BridgeEventBus`（L43–L85）**
     - **constructor** — `wsClients` Set；`logs=[]`；`maxLogs=500`。
     - **Method `addWsClient(ws)`** — 已有 ≥32 路则 `close(1013)` 返回 false；否则加入 Set，30 分钟空闲 `close(1001)`。
@@ -79,7 +79,7 @@
 
 1. `index.js` `attachWss`：浏览器连 3000 的 `/ws` → `addWsClient`，并立即收到 `connected`（**不含** secretKey）。mcp 端口不挂 WebSocket。
 2. mcpApp 先 `mcpCors()`：浏览器预检只给扩展和名单里的聊天站回 `Access-Control-Allow-Origin`。
-3. 两套 app 的 `/api` 先过 `rejectUnlessLocalControl`：Cloudflare 头、`*.trycloudflare.com` Host、或当前 Named Tunnel 主机名 → 404；本机回环 `next()`。再过 `rejectCrossSiteApi`：`https://evil.example` 这类 Origin 同样 404。无 Origin 的 Node 插件 / 测试仍通。
+3. 两套 app 的 `/api` 先过 `rejectUnlessLocalControl`：Cloudflare 头、`*.trycloudflare.com` / ngrok Host、或当前 `publicTunnelUrl` 主机名 → 404；本机回环 `next()`。再过 `rejectCrossSiteApi`：`https://evil.example` 这类 Origin 同样 404。无 Origin 的 Node 插件 / 测试仍通。
 4. 工具/MCP 调用 `broadcast` → 写入 logs + 推到所有打开的工作台。
 5. 工作台 `connectWs` 根据 type 刷新终端、文件树、BRIDGE 工具卡、todos。
 6. `patchEngine` 写盘后用 `createUnifiedDiff` 把 diff 放进 broadcast payload，工作台可开 diff 页。

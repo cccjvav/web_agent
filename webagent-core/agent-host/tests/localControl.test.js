@@ -25,6 +25,8 @@ assert.strictEqual(isTunnelRequest(req({ headers: { 'cf-connecting-ip': '1.1.1.1
 assert.strictEqual(isTunnelRequest(req()), false);
 
 assert.strictEqual(isPublicHost(req({ host: 'random-words.trycloudflare.com' })), true);
+assert.strictEqual(isPublicHost(req({ host: 'abc.ngrok-free.app' })), true);
+assert.strictEqual(isPublicHost(req({ host: 'foo.ngrok.dev' })), true);
 assert.strictEqual(isPublicHost(req({ host: '127.0.0.1:48271' })), false);
 assert.strictEqual(isPublicHost(req({ host: 'localhost:3000' })), false);
 assert.strictEqual(isPublicHost(req({ host: 'mcp.example.com' })), false);

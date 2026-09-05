@@ -43,6 +43,7 @@ function defaults() {
       tunnelProvider: 'cloudflare',
       persistentMode: false,
       ngrokDomain: '',
+      ngrokToken: '',
       namedDomain: '',
       namedToken: '',
       namedPort: 48271,

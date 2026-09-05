@@ -196,6 +196,10 @@ export async function startBridge() {
     body.namedDomain = ($('#named-domain') && $('#named-domain').value) || '';
     body.namedToken = ($('#named-token') && $('#named-token').value) || '';
   }
+  if (provider === 'ngrok') {
+    body.ngrokDomain = ($('#ngrok-domain') && $('#ngrok-domain').value) || '';
+    body.ngrokToken = ($('#ngrok-token') && $('#ngrok-token').value) || '';
+  }
   const res = await fetch('/api/bridge/start', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -228,22 +232,27 @@ export function paintBridge() {
   $('#mcp-url').textContent = s.mcpUrl || '—';
   $('#bridge-sub').textContent = running
     ? `远程端点已开启 · ${state.stats.calls} 个活动请求`
-    : '启动 Bridge 后：Quick Tunnel 给临时 trycloudflare 地址；Named Tunnel 用你填的主机名。';
+    : '启动 Bridge 后：Quick Tunnel 给临时 trycloudflare 地址；Named Tunnel / ngrok 用你填的主机名。';
   $('#sb-bridge').textContent = running ? 'Bridge 运行中' : 'Bridge 已停止';
   $('#install-id').textContent = s.installId || '—';
   const nd = $('#named-domain');
   if (nd && s.namedDomain && !nd.value) nd.value = s.namedDomain;
+  const ngd = $('#ngrok-domain');
+  if (ngd && s.ngrokDomain && !ngd.value) ngd.value = s.ngrokDomain;
   const radios = $$('input[name="tunnel"]');
   const tp = s.tunnelProvider === 'named' ? 'cloudflare-named' : s.tunnelProvider;
   if (radios && tp) radios.forEach((r) => { r.checked = r.value === tp; });
   ui.paintClients();
   const tun = s.tunnel || {};
   const host = tun.url ? String(tun.url).replace(/^https?:\/\//, '') : '';
-  const namedReady = tun.url && !String(tun.url).includes('trycloudflare.com');
+  const urlText = String(tun.url || '');
+  let kind = 'Cloudflare Quick Tunnel';
+  if (tp === 'ngrok' || /\.ngrok/i.test(urlText)) kind = 'ngrok';
+  else if (tp === 'cloudflare-named' || tp === 'named' || (urlText && !urlText.includes('trycloudflare.com'))) kind = 'Named Tunnel';
   $('#conn-label').textContent = running
     ? (tun.url
-      ? `${namedReady ? 'Named Tunnel' : 'Cloudflare Quick Tunnel'} 已就绪 · ${host}`
-      : '未找到 cloudflared 或隧道未就绪时，MCP 走当前页面源（仅本预览可用）')
+      ? `${kind} 已就绪 · ${host}`
+      : '未找到隧道程序或隧道未就绪时，MCP 走当前页面源（仅本预览可用）')
     : '正在检查隧道设置…';
   $('#conn-pill').textContent = running ? '已就绪' : '检查中';
   $('#conn-pill').className = 'status-pill ' + (running ? 'ok' : '');

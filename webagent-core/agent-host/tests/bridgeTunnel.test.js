@@ -10,6 +10,7 @@ const { config } = require('../src/config');
 config.workspaceRoot = tmp;
 
 const tunnel = require('../src/tunnel/cloudflared');
+const ngrok = require('../src/tunnel/ngrok');
 const apiRouter = require('../src/api/routes');
 const store = require('../src/models/store');
 
@@ -48,10 +49,13 @@ async function main() {
   const origStart = tunnel.startQuickTunnel;
   const origNamed = tunnel.startNamedTunnel;
   const origStop = tunnel.stopTunnel;
+  const origNgrok = ngrok.startNgrokTunnel;
   let startCalls = 0;
   let namedCalls = 0;
+  let ngrokCalls = 0;
   let stopCalls = 0;
   let lastNamed = null;
+  let lastNgrok = null;
 
   tunnel.startQuickTunnel = async () => {
     startCalls += 1;
@@ -66,6 +70,11 @@ async function main() {
   tunnel.stopTunnel = () => {
     stopCalls += 1;
     config.publicTunnelUrl = null;
+  };
+  ngrok.startNgrokTunnel = async (opts) => {
+    ngrokCalls += 1;
+    lastNgrok = opts;
+    return origNgrok(opts);
   };
 
   const app = express();
@@ -145,6 +154,43 @@ async function main() {
     assert.strictEqual(namedStatus.json.namedDomain, 'mcp.example.com');
     assert.ok(!JSON.stringify(namedStatus.json).includes('eyJtest-token-not-for-logs'));
 
+    startCalls = 0;
+    namedCalls = 0;
+    ngrokCalls = 0;
+    const ngrokMissing = await request(server, 'POST', '/api/bridge/start', { tunnelProvider: 'ngrok' });
+    assert.strictEqual(ngrokMissing.status, 200);
+    assert.strictEqual(startCalls, 0);
+    assert.strictEqual(namedCalls, 0);
+    assert.ok(ngrokCalls >= 1);
+    assert.ok(ngrokMissing.json.tunnelError);
+    assert.ok(/Authtoken|ngrok|Token/i.test(String(ngrokMissing.json.tunnelError)));
+    assert.ok(!String(ngrokMissing.json.mcpUrl).includes('trycloudflare.com'));
+
+    ngrokCalls = 0;
+    lastNgrok = null;
+    ngrok.startNgrokTunnel = async (opts) => {
+      ngrokCalls += 1;
+      lastNgrok = opts;
+      config.publicTunnelUrl = 'https://mcp.ngrok-free.app';
+      return { url: config.publicTunnelUrl, binary: 'stub', target: `http://127.0.0.1:${config.port}`, ngrok: true };
+    };
+    const ngrokOk = await request(server, 'POST', '/api/bridge/start', {
+      tunnelProvider: 'ngrok',
+      ngrokDomain: 'mcp.ngrok-free.app',
+      ngrokToken: 'ngrok_test_token_must_hide'
+    });
+    assert.strictEqual(ngrokOk.status, 200);
+    assert.strictEqual(ngrokCalls, 1);
+    assert.strictEqual(lastNgrok.hostname, 'mcp.ngrok-free.app');
+    assert.strictEqual(lastNgrok.token, 'ngrok_test_token_must_hide');
+    assert.ok(String(ngrokOk.json.mcpUrl).includes('mcp.ngrok-free.app'));
+    assert.ok(String(ngrokOk.json.note).includes('ngrok 已就绪'));
+    assert.ok(!String(JSON.stringify(ngrokOk.json)).includes('ngrok_test_token_must_hide'));
+    assert.strictEqual(ngrokOk.json.tunnelError, null);
+    const ngrokStatus = await request(server, 'GET', '/api/status');
+    assert.strictEqual(ngrokStatus.json.ngrokDomain, 'mcp.ngrok-free.app');
+    assert.ok(!JSON.stringify(ngrokStatus.json).includes('ngrok_test_token_must_hide'));
+
     store.patch({ bridge: { loggedIn: false, deviceAuthorized: false } });
     const denied = await request(server, 'POST', '/api/bridge/start', { tunnelProvider: 'cloudflare' });
     assert.strictEqual(denied.status, 403);
@@ -152,6 +198,7 @@ async function main() {
     tunnel.startQuickTunnel = origStart;
     tunnel.startNamedTunnel = origNamed;
     tunnel.stopTunnel = origStop;
+    ngrok.startNgrokTunnel = origNgrok;
     config.publicTunnelUrl = null;
     config.bridgeRunning = false;
     await new Promise((r) => server.close(r));

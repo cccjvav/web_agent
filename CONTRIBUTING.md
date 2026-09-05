@@ -20,7 +20,7 @@ npm test
 ## 不要做的
 
 - 把演示钮改回「使用 GitHub 登录」，或把 Plan 改回假 97%
-- 假装 ngrok / Codex OAuth 已经接上；Named Tunnel 缺 Token 时不要写成已经开了 Quick Tunnel
+- 假装 Codex OAuth 已经接上；Named / ngrok 缺 Token 时不要写成已经开了 Quick Tunnel
 - 从 `/api/status` 拿掉 `secretKey`（工作台靠它拼 MCP 地址）
 - 提交 `node_modules/`、`bin/code-server-runtime/` 里下载的包、`image-search/`
 

@@ -118,7 +118,7 @@
           <button type="button" class="chip" data-path="c">C 网页 VS Code</button>
         </div>
         <div id="path-flow"></div>
-        <p class="faint" style="margin-top:12px">Named / ngrok 下拉源码里不 spawn。Plan 没 Key 时是本机草案，不假装 97%。不要把愿望写成已经接上。</p>
+        <p class="faint" style="margin-top:12px">Named / ngrok 会 spawn（要 Token / Authtoken）。Plan 没 Key 时是本机草案，不假装 97%。不要把愿望写成已经接上。</p>
       </div>
       <div class="hero-grid" style="margin-top:18px">
         <div class="card">

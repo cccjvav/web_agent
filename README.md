@@ -13,6 +13,7 @@ GitHub 默认分支 `main` 目前仍是更早的原型快照。现行工作台�
 | 文档 | 读它当… |
 |---|---|
 | [使用指南.md](./使用指南.md) | Windows + CMD 从安装到 Bridge |
+| [隧道使用指南.md](./隧道使用指南.md) | Quick Tunnel / Named Tunnel / ngrok 逐步（CMD） |
 | [架构导读.md](./架构导读.md) | 人话 → 比喻 → 文件落地 → 行业叫法（为什么这样装） |
 | [docs-site/](./docs-site/) | 同一套导读/直译的可视化 HTML（`node docs-site/serve.js` → http://127.0.0.1:4173/） |
 | [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md) | DeepSeek 网页 + DeepSeek++（不 fork 扩展） |
@@ -56,7 +57,7 @@ run-webagent.cmd
 run-webagent.cmd D:\code\my-app
 ```
 
-让网页 Agent 改这个仓库：先 `winget install --id Cloudflare.cloudflared`，再在工作台 **启动 Bridge**。Arena 复制提示词；DeepSeek 把 MCP 地址填进 DeepSeek++；多个网页用 Chat Plus；ChatGPT 走设置里的自制插件，不要把地址贴进聊天栏。细节见使用指南第 6 节。
+让网页 Agent 改这个仓库：先装一种隧道（默认 `winget install --id Cloudflare.cloudflared`；也可用 ngrok），再在工作台 **启动 Bridge**。逐步填法见 [隧道使用指南.md](./隧道使用指南.md)。Arena 复制提示词；DeepSeek 把 MCP 地址填进 DeepSeek++；多个网页用 Chat Plus；ChatGPT 走设置里的自制插件，不要把地址贴进聊天栏。细节见使用指南第 6 节。
 
 网页里打开真正的 VS Code：
 
