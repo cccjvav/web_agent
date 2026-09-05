@@ -25,11 +25,11 @@
     - L4–L6：`workspaceRoot = path.resolve(process.env.WORKSPACE_ROOT || …/workspace)`。
     - L8–L21 `config` 对象，见 Key 表。
   - **Function `generateNewSecret()`（L23–L29）** — 12 字节 hex 写入 `config.secretKey`；lazy `require('./models/store').patch({ secretKey })` 落盘（失败 catch 空）。返回新值。
-  - **Function `persistIdentity(store)`（L31–L40）**
+  - **Function `persistIdentity(store)`（L32–L44）**
     - L32：`store.load()`。
     - L33–L34：有 `saved.secretKey` 则覆盖内存，否则 `store.patch({ secretKey })`。
     - L35–L36：`installId` 同样。
-    - L37–L39：调用 `store.protectWorkspaceSecrets()`（gitignore + chmod）；失败 catch 空。
+    - L38–L43：调用 `store.protectWorkspaceSecrets()`（gitignore + chmod），再 `warnTrackedSecrets()`（Git 已跟踪密钥文件则 stderr 警告）；失败 catch 空。
 
 - **关键变量 `config` Key：**
 
@@ -72,7 +72,7 @@
   - **双服务器（L98–141）**
     - L98–100：`uiServer = createServer(uiApp)`，`mcpServer = createServer(mcpApp)`；**只**给 uiServer attachWss。
     - L114：`skipWorkbench = WEBAGENT_SKIP_WORKBENCH === '1'`。
-    - L116–128：非 skip 则 listen 3000 并打印 UI/MCP/**Bind**，以及「公网只收 /mcp 与 OAuth」。
+    - L116–128：非 skip 则 listen 3000 并打印 UI/MCP/**Bind**、三种隧道、以及「公网只收 /mcp 与 OAuth」。
     - L129–136：skip 则打印「不占用 3000」，并说明 `/api` 仅本机回环。
     - L138–141：无论 skip 都 listen `config.port`（48271）。
 

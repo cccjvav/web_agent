@@ -38,6 +38,9 @@ function persistIdentity(store) {
   try {
     if (typeof store.protectWorkspaceSecrets === 'function') store.protectWorkspaceSecrets();
   } catch (_) {}
+  try {
+    if (typeof store.warnTrackedSecrets === 'function') store.warnTrackedSecrets();
+  } catch (_) {}
 }
 
 module.exports = {

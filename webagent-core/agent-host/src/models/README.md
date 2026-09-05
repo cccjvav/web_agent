@@ -21,21 +21,23 @@
 - **文件职责：** 读写 `<工作区>/.webagent/config.json`。
 - **核心类/函数清单：**
 
-  - **Function `dir`（L8–L10）** / **`storePath`（L12–L14）** — `.webagent` 与其中 `config.json`。
-  - **Function `defaults`（L16–L52）** — 见下方 Key。含 `bridge.githubId: ''`、`bridge.namedToken: ''`。
-  - **Function `clampBranches(n)`（L53–L57）** — 非有限 → 4；否则 round 后夹到 2–8。
-  - **Function `normalizeMultiModel(mm)`（L59–L67）** — 与 defaults 合并后 clamp `maxBranches`；`enabled`/`mergeAllowsRead` 非布尔则 true；`mergeModel` 空则 `'auto'`；`thinkLevel` 空则 `'high'`。
-  - **Function `isFakeGithub(b)`（L69–L74）** — `provider==='github'` 且没有 `githubId`，且 username 空/`demo`/`local`。
-  - **Function `normalizeBridge`（L76–L90）** — 旧盘 `永久顺` → `local-demo`；**假** github（`isFakeGithub`）收成 `local-demo`；`username==='demo'` 且已是 local-demo → `'local'`。带 `githubId` 的真 GitHub **留下**，并强制 `loggedIn`/`deviceAuthorized`。
-  - **Function `load`（L92–L105）** — try 读 JSON 与 defaults 浅合并；`models` 非非空数组则用默认；`bridge` 走 `normalizeBridge`；`multiModel` 走 `normalizeMultiModel`。**catch 返回 defaults，不抛。**
-  - **Function `restrictFileMode`（L107–L111）** — `chmod 0600`；失败 catch 空（Windows 可能无效）。
-  - **Function `lineCovers` / `alreadyIgnored`（L117–L131）** — 根或嵌套 `.gitignore` 是否已覆盖 `.webagent/config.json` 等。
-  - **Function `ensureNestedIgnore`（L137–L153）** — 写 `.webagent/.gitignore`（`config.json`、`read-hashes.json`、`usage.json`），已有则不重复。
-  - **Function `ensureWorkspaceGitignore`（L155–L173）** — 仅当工作区根有 `.git` 时，往**该仓库** `.gitignore` 追加上述三行。不是 git 仓库则跳过。
-  - **Function `protectWorkspaceSecrets`（L175–L181）** — 嵌套 ignore + 工作区 ignore + 已有 `config.json` 则 chmod。失败 catch 空。
-  - **Function `save`（L183–L194）** — 先 `normalizeBridge` + `normalizeMultiModel`，再 mkdir + 美化 JSON + chmod + `protectWorkspaceSecrets`。
-  - **Function `patch`（L196–L206）** — load 后浅合并；bridge 深一层后 `normalizeBridge`；multiModel 走 `normalizeMultiModel`；`models` 仅当 `partial.models` 真才替换。
-  - **Function `reset`（L208–L210）** — `save(defaults())`。测试用。
+  - **Function `dir`（L9–L11）** / **`storePath`（L13–L15）** — `.webagent` 与其中 `config.json`。
+  - **Function `defaults`（L17–L54）** — 见下方 Key。含 `bridge.githubId: ''`、`bridge.namedToken: ''`。
+  - **Function `clampBranches(n)`（L56–L60）** — 非有限 → 4；否则 round 后夹到 2–8。
+  - **Function `normalizeMultiModel(mm)`（L62–L70）** — 与 defaults 合并后 clamp `maxBranches`；`enabled`/`mergeAllowsRead` 非布尔则 true；`mergeModel` 空则 `'auto'`；`thinkLevel` 空则 `'high'`。
+  - **Function `isFakeGithub(b)`（L72–L77）** — `provider==='github'` 且没有 `githubId`，且 username 空/`demo`/`local`。
+  - **Function `normalizeBridge`（L79–L93）** — 旧盘 `永久顺` → `local-demo`；**假** github（`isFakeGithub`）收成 `local-demo`；`username==='demo'` 且已是 local-demo → `'local'`。带 `githubId` 的真 GitHub **留下**，并强制 `loggedIn`/`deviceAuthorized`。
+  - **Function `load`（L95–L108）** — try 读 JSON 与 defaults 浅合并；`models` 非非空数组则用默认；`bridge` 走 `normalizeBridge`；`multiModel` 走 `normalizeMultiModel`。**catch 返回 defaults，不抛。**
+  - **Function `restrictFileMode`（L110–L114）** — `chmod 0600`；失败 catch 空（Windows 可能无效）。
+  - **Function `lineCovers` / `alreadyIgnored`（L120–L134）** — 根或嵌套 `.gitignore` 是否已覆盖 `.webagent/config.json` 等。
+  - **Function `ensureNestedIgnore`（L140–L156）** — 写 `.webagent/.gitignore`（`config.json`、`read-hashes.json`、`usage.json`），已有则不重复。
+  - **Function `ensureWorkspaceGitignore`（L158–L176）** — 仅当工作区根有 `.git` 时，往**该仓库** `.gitignore` 追加上述三行。不是 git 仓库则跳过。
+  - **Function `protectWorkspaceSecrets`（L178–L184）** — 嵌套 ignore + 工作区 ignore + 已有 `config.json` 则 chmod。失败 catch 空。
+  - **Function `trackedSecretFiles`（L186–L204）** — 工作区是 git 时 `git ls-files` 那三份密钥文件。gitignore **挡不住已经 add/提交的**。git 没有或失败 → `[]`。
+  - **Function `warnTrackedSecrets(log)`（L206–L214）** — 有跟踪则 `console.warn`（或传入的 log）提示 `git rm --cached`。启动 `persistIdentity` 会调。
+  - **Function `save`（L216–L227）** — 先 `normalizeBridge` + `normalizeMultiModel`，再 mkdir + 美化 JSON + chmod + `protectWorkspaceSecrets`。
+  - **Function `patch`（L229–L239）** — load 后浅合并；bridge 深一层后 `normalizeBridge`；multiModel 走 `normalizeMultiModel`；`models` 仅当 `partial.models` 真才替换。
+  - **Function `reset`（L241–L243）** — `save(defaults())`。测试用。
 
 - **关键变量 `defaults()` 的 JSON Key：**
 

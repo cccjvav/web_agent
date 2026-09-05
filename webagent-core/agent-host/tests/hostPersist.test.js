@@ -81,6 +81,17 @@ function main() {
   assert.ok(gi.includes('.webagent/usage.json'));
   const ignored = spawnSync('git', ['check-ignore', '-q', '.webagent/config.json'], { cwd: tmp });
   assert.strictEqual(ignored.status, 0);
+  assert.deepStrictEqual(store.trackedSecretFiles(), []);
+  const forceAdd = spawnSync('git', ['add', '-f', '--', '.webagent/config.json'], { cwd: tmp, encoding: 'utf8' });
+  assert.strictEqual(forceAdd.status, 0, forceAdd.stderr || forceAdd.stdout);
+  const tracked = store.trackedSecretFiles();
+  assert.ok(tracked.some((rel) => rel.replace(/\\/g, '/') === '.webagent/config.json'), tracked.join(','));
+  const warns = [];
+  store.warnTrackedSecrets((msg) => warns.push(String(msg)));
+  assert.ok(warns.length === 1);
+  assert.ok(/git rm --cached/.test(warns[0]));
+  spawnSync('git', ['rm', '-f', '--cached', '--', '.webagent/config.json'], { cwd: tmp });
+  assert.deepStrictEqual(store.trackedSecretFiles(), []);
   store.protectWorkspaceSecrets();
   const gi2 = fs.readFileSync(path.join(tmp, '.gitignore'), 'utf8');
   assert.strictEqual(gi2.split('.webagent/config.json').length - 1, 1);

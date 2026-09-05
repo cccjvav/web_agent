@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 const { config } = require('../config');
 
 const SECRET_REL = ['.webagent/config.json', '.webagent/read-hashes.json', '.webagent/usage.json'];
@@ -182,6 +183,36 @@ function protectWorkspaceSecrets() {
   } catch (_) {}
 }
 
+function trackedSecretFiles() {
+  try {
+    const gitDir = path.join(config.workspaceRoot, '.git');
+    if (!fs.existsSync(gitDir)) return [];
+    const r = spawnSync('git', ['ls-files', '-z', '--', ...SECRET_REL], {
+      cwd: config.workspaceRoot,
+      encoding: 'utf8',
+      windowsHide: true,
+      timeout: 4000
+    });
+    if (!r || r.status !== 0) return [];
+    return String(r.stdout || '')
+      .split('\0')
+      .map((s) => s.trim().replace(/\\/g, '/'))
+      .filter(Boolean);
+  } catch (_) {
+    return [];
+  }
+}
+
+function warnTrackedSecrets(log) {
+  const hits = trackedSecretFiles();
+  if (!hits.length) return hits;
+  const write = typeof log === 'function' ? log : console.warn;
+  write(
+    `警告：工作区 Git 仍跟踪 ${hits.join('、')}。gitignore 挡不住已经提交的文件。请 git rm --cached -- ${hits.join(' ')} ，不要把 MCP 密钥或 API Key 推进仓库。`
+  );
+  return hits;
+}
+
 function save(next) {
   const cfg = {
     ...next,
@@ -211,4 +242,14 @@ function reset() {
   return save(defaults());
 }
 
-module.exports = { load, save, patch, defaults, protectWorkspaceSecrets, reset, isFakeGithub };
+module.exports = {
+  load,
+  save,
+  patch,
+  defaults,
+  protectWorkspaceSecrets,
+  trackedSecretFiles,
+  warnTrackedSecrets,
+  reset,
+  isFakeGithub
+};

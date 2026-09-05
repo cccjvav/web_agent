@@ -14,7 +14,7 @@
 | `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、**远程 `confirm_dangerous` 仍 `E_FORBIDDEN`**、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek / Chat Plus / ChatGPT 聊天栏与自制插件配方、`get_logs` 不含 args/chunk/result/patch |
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command`、`cancel_command` 终态保持 cancelled、持久 hash 不能单独覆盖 |
 | `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝；UNC / 盘符路径拒绝；Windows 上再测 junction |
-| `hostPersist.test.js` | `config.version` 等于插件 `package.json`；`generateNewSecret` 写入 `config.json`；旧盘 `永久顺`/假 `github`/`demo` 迁成 `local-demo`；带 `githubId` 的 octocat **留下**；`usage.json` 进 gitignore；`read-hashes.json` 跨 require 仍能 recalledHash，**sessionHash 为空**；`resetHashes` 删文件 |
+| `hostPersist.test.js` | `config.version` 等于插件 `package.json`；`generateNewSecret` 写入 `config.json`；旧盘 `永久顺`/假 `github`/`demo` 迁成 `local-demo`；带 `githubId` 的 octocat **留下**；`usage.json` 进 gitignore；强制 `git add -f` 后 `trackedSecretFiles` 能发现并警告；`read-hashes.json` 跨 require 仍能 recalledHash，**sessionHash 为空**；`resetHashes` 删文件 |
 | `eventBus.test.js` | 日志脱敏 `ghp_` / `sk-` / `Bearer` / `oldSecret` / `namedToken` / `ngrokToken`；长 chunk 截断；普通字段留下 |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com`；`canonicalNamedUrl`；`parseNgrokUrl`；缺主机名/Token/Authtoken 在 spawn 前拒绝 |
 | `bridgeTunnel.test.js` | stub Quick/Named/ngrok：cloudflare 启动后 mcpUrl 含 trycloudflare；Named / ngrok 成功走自定义主机名且响应不含 Token；缺字段仍 200；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
@@ -150,7 +150,7 @@
   - L43–L45：`delete require.cache` 后再 require，仍能 `recalledHash`；`sessionHash` 为 `null`。
   - L47–L54：`.webagent/.gitignore` 含 config.json 与 read-hashes.json；非 Windows 时 config.json mode `0600`。
   - L56–L59：删掉嵌套 gitignore 后再 `persistIdentity` 会写回；无 `.git` 时不写工作区根 `.gitignore`。
-  - L61–L71：`git init` 后 `protectWorkspaceSecrets` 追加仓库根 ignore；`git check-ignore` 命中；再调一次不重复。
+  - L61–L83：`git init` 后 `protectWorkspaceSecrets` 追加仓库根 ignore；`git check-ignore` 命中；`trackedSecretFiles` 为空；`git add -f` 后能发现并 `warnTrackedSecrets`；`git rm --cached` 后再空；再调 protect 不重复 ignore。
   - L73–L74：本仓库根 `.gitignore` 含 `**/.webagent/config.json`。
   - L76–L78：`resetHashes` 后内存与文件都空。
 - L84：直接 `main()`。
