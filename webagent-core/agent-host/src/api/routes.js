@@ -35,6 +35,21 @@ function mcpOrigin(req) {
   return publicOrigin(req);
 }
 
+function recentToolLogs(limit = 12) {
+  return eventBus.getRecentLogs(40)
+    .filter((e) => e.type === 'tool_call_end')
+    .slice(0, Math.max(1, Math.min(40, Number(limit) || 12)))
+    .map((e) => ({
+      type: e.type,
+      timestamp: e.timestamp,
+      payload: {
+        tool: e.payload && e.payload.tool,
+        success: e.payload && e.payload.success,
+        durationMs: e.payload && e.payload.durationMs
+      }
+    }));
+}
+
 function mcpInfo(req) {
   const origin = mcpOrigin(req);
   const mcpPath = `/mcp/${config.secretKey}`;
@@ -66,7 +81,7 @@ router.get('/status', (req, res) => {
     installId: config.installId,
     tools: getToolList(),
     taskState: getTaskState(),
-    recentLogs: eventBus.getRecentLogs(40),
+    recentLogs: recentToolLogs(12),
     bridgeRunning: config.bridgeRunning,
     tunnelProvider: cfg.bridge.tunnelProvider,
     ...mcpInfo(req),

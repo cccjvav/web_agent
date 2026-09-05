@@ -16,6 +16,16 @@ const mainLaunchers = [
 assert.ok(!/code-server/i.test(mainLaunchers), 'run-webagent must not start code-server');
 assert.ok(/agent-host/.test(mainLaunchers));
 
+const sh = fs.readFileSync(path.join(repoRoot, 'run-webagent.sh'), 'utf8');
+assert.ok(/\$1/.test(sh), 'sh must accept a workspace path like the .cmd');
+assert.ok(/command -v node/.test(sh), 'sh must check that node is installed');
+assert.ok(/mkdir/.test(sh), 'sh must mkdir the default workspace');
+assert.ok(/does not exist/.test(sh), 'sh must refuse a missing custom workspace');
+
+const runtimePkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'bin/code-server-runtime/package.json'), 'utf8'));
+assert.strictEqual(runtimePkg.name, 'webagent-code-server-runtime');
+assert.ok(!/shuncode/i.test(JSON.stringify(runtimePkg)));
+
 assert.ok(fs.existsSync(path.join(repoRoot, 'run-webagent-vscode.cmd')));
 assert.ok(fs.existsSync(path.join(repoRoot, 'webagent-core/scripts/run-code-oss.js')));
 assert.ok(ensure.includes('bin/code-server-runtime'));

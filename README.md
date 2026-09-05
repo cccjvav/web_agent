@@ -4,6 +4,8 @@
 
 同类产品的公开文档可参考 [docs.shuncode.top](https://docs.shuncode.top/docs/intro/)。
 
+GitHub 默认分支 `main` 目前仍是更早的原型快照。现行工作台与 agent-host 在本仓库正在开发的工作分支上（还没有单独的 release）。请以你检出的分支和根目录 `run-webagent.cmd` 为准。
+
 **Windows 用户请先读 [使用指南.md](./使用指南.md)**（安装、CMD、自己的仓库、Bridge 全在里面）。DeepSeek 网页另见 [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md)。多个网页 AI 用 Chat Plus 另见 [网页ChatPlus使用指南.md](./网页ChatPlus使用指南.md)。
 
 **GitHub 上这套东西怎么跑、文件夹是谁：** 请读 **[组件说明.md](./组件说明.md)**。从没写过这种程序、想先用人话搞懂「为什么」： **[架构导读.md](./架构导读.md)**。
@@ -71,4 +73,7 @@ run-tests.cmd
 
 ```bash
 ./run-webagent.sh
+./run-webagent.sh /path/to/my-app
 ```
+
+bash 入口与 `.cmd` 一样：缺 Node/npm 会退出；默认 `workspace/` 不存在则创建；自定义路径必须已经存在。

@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-exec "$ROOT/run-webagent.sh"
+exec "$ROOT/run-webagent.sh" "$@"

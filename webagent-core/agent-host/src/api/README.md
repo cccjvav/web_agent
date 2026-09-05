@@ -23,11 +23,12 @@
 
   - **Function `publicOrigin(req)`（L27–L31）** — proto/host 来自转发头或 `req`，fallback host 用 `workbenchPort`。
   - **Function `mcpOrigin(req)`（L33–L36）** — 有 `config.publicTunnelUrl` 用它（去尾 `/`），否则 `publicOrigin`。
-  - **Function `mcpInfo(req)`（L38–L54）** — 拼 `/mcp/${secretKey}`、canonical `/mcp`、bootstrap prompt、`listClients`、pairing、`tunnel.snapshot()`。
+  - **Function `recentToolLogs(limit=12)`（L38–L51）** — `getRecentLogs(40)` 里只留 `tool_call_end`，最多 12 条；payload 只含 `tool` / `success` / `durationMs`。
+  - **Function `mcpInfo(req)`（L53–L69）** — 拼 `/mcp/${secretKey}`、canonical `/mcp`、bootstrap prompt、`listClients`、pairing、`tunnel.snapshot()`。
 
 - **路由（逐步，含分支）：**
 
-  - **GET `/status`（L56–L98）** — 拼 online、端口、workspace、tools、taskState、logs 40 条、bridgeRunning、mcpInfo 展开、models（apiKey 变成 `hasKey` 布尔）、activeModelId、multiModel、**`planRound: planRound.snapshot()`**、bridgeAccount（含 `githubId`）、**`githubAuth.deviceAvailable`**、**`usage: tracker.snapshot()`**、mcpSession。无鉴权。
+  - **GET `/status`（L71–L113）** — 拼 online、端口、workspace、tools、taskState、**`recentLogs: recentToolLogs(12)`**、bridgeRunning、mcpInfo 展开、models（apiKey 变成 `hasKey` 布尔）、activeModelId、multiModel、**`planRound: planRound.snapshot()`**、bridgeAccount（含 `githubId`）、**`githubAuth.deviceAvailable`**、**`usage: tracker.snapshot()`**、mcpSession。无鉴权。字段 `recentLogs` 仍在，但是工具名摘要，不是补丁全文。
   - **POST `/bridge/reset-secret`（L100–L106）** — `generateNewSecret()`（内存 + `.webagent/config.json`）→ `oauth.revokeAll()` → broadcast `secret_rotated`（不含新旧密钥）。
   - **POST `/bridge/start`（L108–L148）**
     - L110–L112：`!loggedIn || !deviceAuthorized` → **403**（文案：需要先点本机演示授权或完成 GitHub 验证。Chat 不受影响）。
@@ -49,7 +50,7 @@
   - **POST `/providers/probe`（L283–L291）** — `listRemoteModels`；失败 400。
   - **GET `/models`（L293–L300）** — apiKey 显示 `••••` 或 `''`。
   - **POST `/models`（L302–L315）** — 可改 activeModelId；可整表 models；可 upsert `body.model`；可合并 multiModel；然后 **`store.save(cfg)` 整份**。
-  - **GET `/logs`（L317–L319）** — 80 条。
+  - **GET `/logs`（L343–L345）** — 80 条脱敏全文（本机控制面；不是 `/status` 那种摘要）。
   - **GET `/profile/detect`（L321–L327）** — detectEnvironment + detectTechStack + listSkills。
   - **GET `/customizations`（L329–L331）** / **PUT（L333–L337）** — load / patchCustom。
   - **POST `/skills`（L339–L354）** — name 清洗：非单词变 `-`，去首尾 `-`，最长 40；空 400。默认 content 模板。`callTool('write_file')` 写 `.webagent/skills/<name>/SKILL.md`。

@@ -118,7 +118,7 @@
 - **文件职责：** `.webagent/memory/YYYY-MM-DD.md` 追加备忘。
 - **Function `memoryDir`（L5–L7）** / **`dayFile`（L9–L12）** — day 缺省 ISO 日期。
 - **Function `remember`（L14–L22）** — text trim 空 → `{ ok:false, error:'text required' }`。存在则 append；否则先写 `# 日期`。换行压成空格。
-- **Function `recall`（L24–L38）** — 指定 day 只读一天；否则所有 `.md` sort reverse。拼接超 8000 字 break。再按行 `slice(0, max(5,limit))`。空则 `'(empty memory)'`。
+- **Function `recall`（L24–L57）** — 指定 day 只读一天；否则所有 `.md` sort reverse。只收集 `^\\s*-\\s` 条目（标题不算）。`limit` 夹到 1–200（默认 40），满额或正文超 8000 字则 `truncated:true`。空则 `'(empty memory)'`。返回 `{ files, text, count, truncated }`。
 
 ---
 

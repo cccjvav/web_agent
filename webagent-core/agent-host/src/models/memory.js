@@ -23,18 +23,36 @@ function remember({ text, day } = {}) {
 
 function recall({ limit = 40, day } = {}) {
   fs.mkdirSync(memoryDir(), { recursive: true });
+  const cap = Math.max(1, Math.min(200, Number(limit) || 40));
   const files = day
     ? [dayFile(day)]
     : fs.readdirSync(memoryDir()).filter((f) => f.endsWith('.md')).sort().reverse().map((f) => path.join(memoryDir(), f));
-  const chunks = [];
+  const bullets = [];
+  let truncated = false;
   for (const file of files) {
     if (!fs.existsSync(file)) continue;
-    chunks.push(`## ${path.basename(file)}\n${fs.readFileSync(file, 'utf8')}`);
-    if (chunks.join('\n').length > 8000) break;
+    const body = fs.readFileSync(file, 'utf8');
+    for (const line of body.split('\n')) {
+      if (!/^\s*-\s/.test(line)) continue;
+      if (bullets.length >= cap) {
+        truncated = true;
+        break;
+      }
+      bullets.push(line.trim());
+    }
+    if (truncated) break;
   }
-  const text = chunks.join('\n\n') || '(empty memory)';
-  const lines = text.split('\n').slice(0, Math.max(5, limit));
-  return { files: files.map((f) => path.relative(config.workspaceRoot, f)), text: lines.join('\n') };
+  let text = bullets.join('\n') || '(empty memory)';
+  if (text.length > 8000) {
+    text = `${text.slice(0, 7920)}\n…`;
+    truncated = true;
+  }
+  return {
+    files: files.map((f) => path.relative(config.workspaceRoot, f)),
+    text,
+    count: bullets.length,
+    truncated
+  };
 }
 
 module.exports = { remember, recall, memoryDir };

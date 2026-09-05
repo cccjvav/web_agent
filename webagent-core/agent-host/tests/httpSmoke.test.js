@@ -226,6 +226,16 @@ async function main() {
     assert.strictEqual(ping.json.result.isError, false);
     assert.ok(ping.json.result.content[0].text.includes('"ok": true') || ping.json.result.content[0].text.includes('"ok":true'));
 
+    const afterPing = await request('GET', `http://127.0.0.1:${mcpPort}/api/status`);
+    assert.ok(Array.isArray(afterPing.json.recentLogs));
+    assert.ok(afterPing.json.recentLogs.some((e) => e.type === 'tool_call_end' && e.payload && e.payload.tool === 'ping'));
+    for (const e of afterPing.json.recentLogs) {
+      const keys = Object.keys((e && e.payload) || {});
+      for (const k of keys) {
+        assert.ok(['tool', 'success', 'durationMs'].includes(k), `status recentLogs extra field ${k}`);
+      }
+    }
+
     const usagePath = path.join(tmp, '.webagent', 'usage.json');
     assert.ok(fs.existsSync(usagePath));
     const usageBefore = JSON.parse(fs.readFileSync(usagePath, 'utf8'));

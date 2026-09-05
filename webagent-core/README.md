@@ -35,7 +35,7 @@ Windows 操作见根目录 [使用指南.md](../使用指南.md)。工作流见 
   - L1：shebang `#!/bin/bash`
   - L2：`set -e`，命令失败即退出
   - L3：`ROOT` = 本脚本所在目录的上一级（仓库根）
-  - L4：`exec "$ROOT/run-webagent.sh"` 替换当前进程，参数不转发（本文件无 `"$@"`）
+  - L4：`exec "$ROOT/run-webagent.sh" "$@"` 替换当前进程，把工作区路径等参数转给根脚本
 - **关键变量：** 无配置常量。无函数。
 
 无 `.py` / `.js` / `.html` / `.json` 位于本层。

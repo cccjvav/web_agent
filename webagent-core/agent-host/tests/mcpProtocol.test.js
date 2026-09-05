@@ -132,6 +132,14 @@ async function main() {
   assert.ok(mem.ok);
   const recalled = await callTool('recall', { limit: 20 });
   assert.ok(recalled.text.includes('calculator divide'));
+  assert.ok(!recalled.text.includes('## '));
+  for (let i = 0; i < 5; i += 1) {
+    await callTool('remember', { text: `memory-item-${i}` });
+  }
+  const capped = await callTool('recall', { limit: 3 });
+  assert.strictEqual(capped.count, 3);
+  assert.strictEqual(capped.truncated, true);
+  assert.strictEqual(capped.text.split('\n').filter((l) => l.startsWith('- ')).length, 3);
 
   const promptList = await handleRpc(req('prompts/list'));
   assert.ok(promptList.prompts.some((p) => p.name === 'connect'));

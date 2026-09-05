@@ -66,7 +66,7 @@
 
   function renderMap() {
     $('.main').innerHTML = `
-      ${pageChrome('本机车间，云上只下工单', '代码不出门。网页 AI 只能填工单；真正改磁盘的是你电脑上的 agent-host。')}
+      ${pageChrome('本机车间，云上只下工单', '仓库不整包上传。网页只填工单；真正改磁盘的是你电脑上的 agent-host。开了隧道后，拿到 MCP 地址等于拿到施工证。')}
       <div class="hero-grid">
         <div class="card">
           <h3>电脑上同时活着谁</h3>
