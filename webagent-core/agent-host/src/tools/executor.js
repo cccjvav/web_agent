@@ -110,9 +110,9 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
     child.on('error', (err) => {
       clearTimeout(timer);
       children.delete(String(execId));
-      rec.status = 'error';
       rec.durationMs = Date.now() - startTime;
       rec.stderr += err.message;
+      if (rec.status === 'running') rec.status = 'error';
       eventBus.broadcast('command_finished', { execId, command, error: err.message, durationMs: rec.durationMs });
       reject(new Error(`Failed to start command: ${err.message}`));
     });
@@ -122,15 +122,14 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
       rec.exitCode = code;
       rec.signal = signal;
       rec.durationMs = Date.now() - startTime;
-      if (rec.status !== 'cancelled') {
-        rec.status = rec.isTimeout ? 'timeout' : 'done';
-      }
+      if (rec.status === 'running') rec.status = rec.isTimeout ? 'timeout' : 'done';
       eventBus.broadcast('command_finished', {
         execId,
         command,
         exitCode: code,
         durationMs: rec.durationMs,
-        isTimeout: rec.isTimeout
+        isTimeout: rec.isTimeout,
+        status: rec.status
       });
       resolve(publicRecord(rec));
     });
@@ -147,7 +146,7 @@ function executeCommand(opts) {
 function startCommand(opts) {
   const { rec, done } = startProcess(opts || {});
   done.catch((err) => {
-    rec.status = 'error';
+    if (rec.status === 'running') rec.status = 'error';
     rec.stderr = `${rec.stderr || ''}${err.message}`;
   });
   return {
@@ -173,11 +172,11 @@ function cancelCommand({ execId } = {}) {
   const rec = commandStore.get(id);
   const child = children.get(id);
   if (!rec) return { execId: id, found: false };
-  if (rec.status !== 'running' || !child) {
+  if (rec.status !== 'running') {
     return { execId: rec.execId, status: rec.status, cancelled: false, message: 'Command is not running.' };
   }
-  killChild(child, true);
   rec.status = 'cancelled';
+  if (child) killChild(child, true);
   return { execId: rec.execId, cancelled: true, status: 'cancelled' };
 }
 

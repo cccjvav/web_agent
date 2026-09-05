@@ -46,7 +46,8 @@ Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./w
 | 文件 | 处理 |
 |---|---|
 | `webagent-core/agent-host/tests/bridgeTunnel.test.js` | stub 隧道接到 `/bridge/start` |
-| `webagent-core/agent-host/tests/hostPersist.test.js` | secretKey 写入 config.json；read-hashes.json 跨重启 |
+| `webagent-core/agent-host/tests/hostPersist.test.js` | secretKey 写入 config.json；read-hashes.json 跨重启（sessionHash 不跨进程） |
+| `webagent-core/agent-host/tests/eventBus.test.js` | 日志脱敏与截断 |
 | `webagent-core/agent-host/src/utils/localControl.js` | 本机控制面闸：隧道头 / 公网 Host 挡 48271 `/api` |
 | `webagent-core/agent-host/tests/localControl.test.js` | 回环 / CF 头 / trycloudflare Host |
 

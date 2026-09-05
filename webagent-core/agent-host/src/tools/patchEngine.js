@@ -106,9 +106,16 @@ function resolveSafePath(relPath) {
   return resolved;
 }
 
+function looksLikeUnifiedDiff(text) {
+  const start = String(text || '').replace(/^\uFEFF/, '').replace(/^\s+/, '').slice(0, 400);
+  if (start.startsWith('diff --git ')) return true;
+  if (/^--- [^\n]+\r?\n\+\+\+ /m.test(start) && /@@/.test(String(text || ''))) return true;
+  return false;
+}
+
 function parseSearchReplaceBlocks(patchText) {
   const blocks = [];
-  const regex = /<{5,}\s*SEARCH\r?\n([\s\S]*?)\r?\n={5,}\r?\n([\s\S]*?)\r?\n>{5,}\s*REPLACE/g;
+  const regex = /<{5,}\s*SEARCH\r?\n([\s\S]*?)\r?\n?={5,}\r?\n([\s\S]*?)\r?\n>{5,}\s*REPLACE/g;
   let match;
   while ((match = regex.exec(patchText)) !== null) {
     blocks.push({
@@ -169,10 +176,19 @@ async function applyPatch({ filePath, patch, expectedHash = null, dryRun = false
 
   if (!fs.existsSync(fullPath)) {
     const blocks = parseSearchReplaceBlocks(patch);
-    let newContent = patch;
-    if (blocks.length > 0 && blocks[0].search.trim() === '') {
-      newContent = blocks[0].replace;
+    const emptySearchNew = blocks.length > 0 && String(blocks[0].search).trim() === '';
+    if (looksLikeUnifiedDiff(patch) && !emptySearchNew) {
+      throw new ProtocolError(
+        'E_BAD_ARGS',
+        `New file ${filePath}: this looks like a unified diff. Use SEARCH/REPLACE with an empty SEARCH, or pass the file body — do not paste a unified diff as the new file.`,
+        {
+          filePath,
+          retryHint: 'Retry apply_patch with <<<<<<< SEARCH\\n=======\\n<body>\\n>>>>>>> REPLACE, or write_file with the file body.'
+        }
+      );
     }
+    let newContent = patch;
+    if (emptySearchNew) newContent = blocks[0].replace;
 
     if (dryRun) {
       return { success: true, isNewFile: true, filePath, message: 'Dry run check passed (New file)' };

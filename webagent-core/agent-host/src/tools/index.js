@@ -234,7 +234,7 @@ const TOOLS = [
   tool({
     name: 'write_file',
     aliases: [],
-    description: 'Create a file. Overwrite is allowed with confirm_overwrite=true, or when expectedHash / the last read_files hash still matches. Prefer apply_patch for existing files. Code mode only.',
+    description: 'Create a file. Overwrite is allowed with confirm_overwrite=true, or when expectedHash / a read_files hash from this process still matches. A hash left on disk from a previous run is not enough. Prefer apply_patch for existing files. Code mode only.',
     mode: ['code'],
     inputSchema: {
       type: 'object',

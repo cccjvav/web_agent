@@ -5,7 +5,13 @@ const { resolveSafePath, isInsideWorkspace, computeHash, toPosixRel } = require(
 const { isHidden } = require('./sensitive');
 const eventBus = require('../utils/eventBus');
 const { ProtocolError, ExecutionError } = require('../mcp/errors');
-const { rememberHash, recalledHash, forgetHash } = require('./readCache');
+const { rememberHash, sessionHash, forgetHash } = require('./readCache');
+
+const MAX_GREP_QUERY = 200;
+const MAX_GREP_REGEX = 120;
+const MAX_GREP_FILE_BYTES = 1.5 * 1024 * 1024;
+const MAX_GREP_SCAN_FILES = 800;
+const MAX_GREP_COLLECT = 2000;
 
 function readFiles({ filePath, paths, offset = 1, limit = 400 } = {}) {
   const list = [];
@@ -119,9 +125,9 @@ function writeFile({ filePath, content, expectedHash, confirmOverwrite = false, 
   if (exists) {
     const current = fs.readFileSync(fullPath, 'utf8');
     currentHash = computeHash(current);
-    const remembered = recalledHash(filePath);
+    const seenThisSession = sessionHash(filePath);
     if (!overwriteOk && expectedHash && expectedHash === currentHash) overwriteOk = true;
-    if (!overwriteOk && remembered && remembered === currentHash) overwriteOk = true;
+    if (!overwriteOk && seenThisSession && seenThisSession === currentHash) overwriteOk = true;
     if (!overwriteOk) {
       throw new ProtocolError(
         'E_BAD_ARGS',
@@ -199,22 +205,73 @@ function listDir({ dirPath = '.', recursive = false, maxDepth = 3 }) {
   return { dirPath, items };
 }
 
+function grepFile(fullItemPath, pattern, matches) {
+  const relPath = toPosixRel(path.relative(config.workspaceRoot, fullItemPath));
+  const stat = fs.statSync(fullItemPath);
+  if (stat.size > MAX_GREP_FILE_BYTES) return 'large';
+  const buf = fs.readFileSync(fullItemPath);
+  if (buf.includes(0)) return 'binary';
+  const lines = buf.toString('utf8').split(/\r?\n/);
+  for (let idx = 0; idx < lines.length; idx++) {
+    if (matches.length >= MAX_GREP_COLLECT) return 'ok';
+    if (pattern.test(lines[idx])) {
+      matches.push({ file: relPath, line: idx + 1, content: lines[idx].trim().slice(0, 400) });
+      pattern.lastIndex = 0;
+    }
+  }
+  return 'ok';
+}
+
 function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = false, limit = 20, cursor = 0 } = {}) {
+  const q = String(query == null ? '' : query);
+  if (!q) {
+    throw new ProtocolError('E_BAD_ARGS', 'search_files requires a non-empty query.');
+  }
+  if (q.length > MAX_GREP_QUERY) {
+    throw new ProtocolError(
+      'E_BAD_ARGS',
+      `query is too long (${q.length} > ${MAX_GREP_QUERY}). Narrow the pattern.`
+    );
+  }
+  if (isRegex && q.length > MAX_GREP_REGEX) {
+    throw new ProtocolError(
+      'E_BAD_ARGS',
+      `regex query is too long (${q.length} > ${MAX_GREP_REGEX}).`
+    );
+  }
+
   const fullPath = resolveSafePath(searchPath);
   let pattern;
-
   try {
     const flags = caseSensitive ? 'g' : 'gi';
-    pattern = isRegex ? new RegExp(query, flags) : new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+    pattern = isRegex
+      ? new RegExp(q, flags)
+      : new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
   } catch (err) {
     throw new Error(`Invalid regex pattern: ${err.message}`);
   }
 
   const matches = [];
+  let scannedFiles = 0;
+  let skippedLarge = 0;
+  let skippedBinary = 0;
+  let truncated = false;
+
+  function noteSkip(kind) {
+    if (kind === 'large') skippedLarge += 1;
+    else if (kind === 'binary') skippedBinary += 1;
+  }
 
   function searchInDir(dir) {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    if (truncated) return;
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch (_) {
+      return;
+    }
     for (const entry of entries) {
+      if (truncated) return;
       const fullItemPath = path.join(dir, entry.name);
       if (!isInsideWorkspace(fullItemPath)) continue;
       const relHidden = toPosixRel(path.relative(config.workspaceRoot, fullItemPath));
@@ -223,40 +280,44 @@ function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = 
       if (entry.isDirectory()) {
         searchInDir(fullItemPath);
       } else if (entry.isFile()) {
+        if (scannedFiles >= MAX_GREP_SCAN_FILES || matches.length >= MAX_GREP_COLLECT) {
+          truncated = true;
+          return;
+        }
+        scannedFiles += 1;
         try {
-          const content = fs.readFileSync(fullItemPath, 'utf8');
-          const lines = content.split(/\r?\n/);
-          const relPath = toPosixRel(path.relative(config.workspaceRoot, fullItemPath));
-          lines.forEach((line, idx) => {
-            if (pattern.test(line)) {
-              matches.push({ file: relPath, line: idx + 1, content: line.trim() });
-              pattern.lastIndex = 0;
-            }
-          });
-        } catch (e) {}
+          noteSkip(grepFile(fullItemPath, pattern, matches));
+        } catch (_) {}
+        if (matches.length >= MAX_GREP_COLLECT) truncated = true;
       }
     }
   }
 
-  if (fs.statSync(fullPath).isDirectory()) {
+  const startStat = fs.statSync(fullPath);
+  if (startStat.isDirectory()) {
     searchInDir(fullPath);
   } else {
-    const content = fs.readFileSync(fullPath, 'utf8');
-    const lines = content.split(/\r?\n/);
-    const relPath = toPosixRel(path.relative(config.workspaceRoot, fullPath));
-    lines.forEach((line, idx) => {
-      if (pattern.test(line)) {
-        matches.push({ file: relPath, line: idx + 1, content: line.trim() });
-        pattern.lastIndex = 0;
-      }
-    });
+    scannedFiles = 1;
+    try {
+      noteSkip(grepFile(fullPath, pattern, matches));
+    } catch (_) {}
   }
 
   const pageSize = Math.min(100, Math.max(1, Number(limit) || 20));
   const start = Math.max(0, Number(cursor) || 0);
   const page = matches.slice(start, start + pageSize);
   const nextCursor = start + page.length < matches.length ? start + page.length : null;
-  return { query, totalMatches: matches.length, matches: page, cursor: start, nextCursor };
+  return {
+    query: q,
+    totalMatches: matches.length,
+    matches: page,
+    cursor: start,
+    nextCursor,
+    scannedFiles,
+    skippedLarge,
+    skippedBinary,
+    truncated
+  };
 }
 
 module.exports = {

@@ -165,6 +165,40 @@ async function main() {
   assert.ok(['done', 'timeout'].includes(finished.status));
   assert.ok(String(finished.stdout).includes('async-ok'));
 
+  const sleepy = await callTool(
+    'start_command',
+    { command: 'node -e "setTimeout(()=>{}, 20000)"', timeoutSec: 25 },
+    'code'
+  );
+  const cancelled = await callTool('cancel_command', { execId: sleepy.execId }, 'code');
+  assert.strictEqual(cancelled.cancelled, true);
+  assert.strictEqual(cancelled.status, 'cancelled');
+  assert.strictEqual(
+    (await callTool('get_command_output', { execId: sleepy.execId })).status,
+    'cancelled'
+  );
+  await new Promise((r) => setTimeout(r, 250));
+  assert.strictEqual(
+    (await callTool('get_command_output', { execId: sleepy.execId })).status,
+    'cancelled',
+    'close must not overwrite cancelled with done'
+  );
+
+  const { rememberHash, clearSession, sessionHash } = require('../src/tools/readCache');
+  const { computeHash } = require('../src/tools/patchEngine');
+  fs.writeFileSync(path.join(tmp, 'persist-only.txt'), 'old-body\n');
+  rememberHash('persist-only.txt', computeHash('old-body\n'));
+  clearSession();
+  assert.strictEqual(sessionHash('persist-only.txt'), null);
+  let persistBlocked = false;
+  try {
+    await callTool('write_file', { filePath: 'persist-only.txt', content: 'hijack\n' }, 'code');
+  } catch (err) {
+    persistBlocked = err instanceof ProtocolError && /confirm_overwrite/.test(err.message);
+  }
+  assert.ok(persistBlocked, 'disk hash from a previous run must not unlock write_file');
+  assert.strictEqual(fs.readFileSync(path.join(tmp, 'persist-only.txt'), 'utf8'), 'old-body\n');
+
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('workspace tool tests passed');
 }

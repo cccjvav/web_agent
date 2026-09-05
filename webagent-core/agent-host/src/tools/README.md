@@ -93,10 +93,11 @@
     - L64：返回**逻辑**绝对路径（写新文件用；读/写会再被真实路径检查拦住）。
   - **Function `detectEol` / `toLf` / `applyEol`（L19–L31）** — 有 `\r\n` 则整文件按 CRLF 写回；匹配在 LF 上进行。
   - **Function `countOccurrences` / `replaceOccurrence`（L33–L59）** — 非重叠计数；按 1-based `occurrence` 替换一处。
-  - **Function `parseSearchReplaceBlocks(patchText)`（L109–L120）** — 正则 `<<<<< SEARCH` … `=====` … `>>>>> REPLACE`，收集 `{ search, replace }`。
-  - **Function `applySearchBlocks`（L122–L165）** — 已有文件：SEARCH 必须命中 1 次，否则 `E_CONFLICT`（可传 `occurrence`）；空 SEARCH 拒；写回原换行。
-  - **Function `applyPatch({ filePath, patch, expectedHash=null, dryRun=false, occurrence })`（L167–L282）**
-    - **文件不存在：** 第一块 search trim 为空则用 replace 当新内容，否则整段 `patch`。不改调用方给的换行。
+  - **Function `looksLikeUnifiedDiff(text)`（L109–L114）** — 去 BOM/前导空白后，开头是 `diff --git `，或开头像 `--- …` + `+++ ` 且全文含 `@@`。
+  - **Function `parseSearchReplaceBlocks(patchText)`（L116–L127）** — 正则 `<<<<< SEARCH` … `=====` … `>>>>> REPLACE`；SEARCH 与 `=======` 之间的换行可省略（空 SEARCH 新建）。收集 `{ search, replace }`。
+  - **Function `applySearchBlocks`（L129–L172）** — 已有文件：SEARCH 必须命中 1 次，否则 `E_CONFLICT`（可传 `occurrence`）；空 SEARCH 拒；写回原换行。
+  - **Function `applyPatch({ filePath, patch, expectedHash=null, dryRun=false, occurrence })`（L174–L298）**
+    - **文件不存在：** 若整段像 unified diff 且第一块不是空 SEARCH → `E_BAD_ARGS`（禁止把 diff 当新文件正文）。第一块 search trim 为空则用 replace 当新内容，否则整段 `patch`。不改调用方给的换行。
     - **文件存在：** 没 hash 且非 dryRun → `HASH_REQUIRED`；hash 不符 → `STALE_FILE`。有 blocks 走 `applySearchBlocks`；unified diff / 整段覆盖后仍 `applyEol` 回原 CRLF/LF。
     - 写 `.tmp.${Date.now()}` 再 `renameSync`。
 
@@ -111,9 +112,10 @@
   - **Function `readFile`（L27–L60）** — 不存在抛；目录抛去用 list_dir。全文 hash；默认 offset=1 limit=400；内容格式 `行号: 文本`。broadcast `file_read`。
   - **Function `deleteFile`（L62–L84）** — 无 path 抛。相对路径空或 `.` 拒绝删根。不存在抛。非空目录抛。目录 `rmdirSync`，文件 `unlinkSync`。broadcast `file_deleted`。
   - **Function `renameFile`（L86–L100）** — `from||filePath` 与 `to||dest` 缺一抛。源不存在 / 目标已存在抛。mkdir 父目录后 rename。broadcast `file_renamed`。
-  - **Function `writeFile`（L114–L164）** — `resolveSafePath`（含敏感拦截）。已存在则要 `confirm_overwrite` 或 remembered/expected hash；hash 不符 → `E_STALE_FILE`。写 `.tmp.${Date.now()}` 再 `renameSync`。broadcast `file_written`；`rememberHash`。
-  - **Function `listDir`（L166–L200）** — 内嵌 `scan`：depth 超 `maxDepth` 返回 []；真实路径在工作区外或 **符号链接** skip；`isHidden` skip；目录仅 `recursive && currentDepth < maxDepth` 才扫 children。
-  - **Function `grepSearch`（L202–L259）** — 编正则（非 regex 则转义）；非法正则抛。目录递归时同样跳过工作区外与符号链接。分页 `limit` 1–100，`nextCursor` 或 null。
+  - **Function `writeFile`（L120–L170）** — `resolveSafePath`（含敏感拦截）。已存在则要 `confirm_overwrite`、匹配的 `expectedHash`，或**本进程** `sessionHash` 仍等于当前 sha256。磁盘上的 `read-hashes.json`（上次进程留下的）**不能**单独放行覆盖。hash 不符 → `E_STALE_FILE`。写 `.tmp.${Date.now()}` 再 `renameSync`。broadcast `file_written`；`rememberHash`。
+  - **Function `listDir`（L172–L206）** — 内嵌 `scan`：depth 超 `maxDepth` 返回 []；真实路径在工作区外或 **符号链接** skip；`isHidden` skip；目录仅 `recursive && currentDepth < maxDepth` 才扫 children。
+  - **Function `grepFile`（L208–L223）** — 单文件：`>1.5MB` 记 large；含 NUL 记 binary；否则按行匹配，命中 content 截 400 字。
+  - **Function `grepSearch`（L225–L321）** — 空 query / 超 200 字 / regex 超 120 字 → `E_BAD_ARGS`。编正则（非 regex 则转义）；非法正则抛。最多扫 800 个文件、收集 2000 条；跳过大文件和二进制。分页 `limit` 1–100。返回 `scannedFiles` / `skippedLarge` / `skippedBinary` / `truncated`。
 
 ---
 
@@ -135,9 +137,10 @@
   - **Function `hashFile()`（L13–L15）** — `<workspace>/.webagent/read-hashes.json`。
   - **Function `ensureLoaded()`（L17–L29）** — 按 `workspaceRoot` 懒加载；坏 JSON / 缺文件当空表。
   - **Function `persist()`（L31–L38）** — mkdir 后写 JSON；失败 catch 空。
-  - **Function `rememberHash(filePath, hash)`（L40–L51）** — 空路径或空 hash return；更新后超过 400 删最老；`persist`。
-  - **Function `recalledHash(filePath)`（L53–L56）** — 没有则 `null`。
-  - **Function `forgetHash(filePath)`（L58–L62）** / **`resetHashes()`（L64–L68）** — 删一条并 persist / 清空并 `unlinkSync`。
+  - **Function `rememberHash(filePath, hash)`（L42–L54）** — 空路径或空 hash return；写入持久表 **和** 本进程 `session` Map；超过 400 删最老；`persist`。换工作区根会清空 session。
+  - **Function `recalledHash(filePath)`（L56–L59）** — 持久表；没有则 `null`。给 `apply_patch` 跨重启复用。
+  - **Function `sessionHash(filePath)`（L61–L64）** — 只看本进程读/写过的路径。重启或 `clearSession` 后为 `null`。给 `write_file` 覆盖确认。
+  - **Function `forgetHash(filePath)`（L66–L72）** / **`clearSession()`（L74–L76）** / **`resetHashes()`（L78–L83）** — 删一条并 persist / 只清 session / 清空两表并 `unlinkSync`。
 
 ### 📄 文件名：`sensitive.js`
 

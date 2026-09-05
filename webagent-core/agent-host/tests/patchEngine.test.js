@@ -94,6 +94,38 @@ x
   const grep = grepSearch({ query: 'function add', searchPath: '.' });
   assert.ok(grep.totalMatches >= 1);
 
+  fs.writeFileSync(path.join(tmp, 'huge.txt'), Buffer.alloc(2 * 1024 * 1024, 0x61));
+  fs.writeFileSync(path.join(tmp, 'needle.txt'), 'UNIQUE_TOKEN_XYZ\n', 'utf8');
+  fs.writeFileSync(path.join(tmp, 'binary.dat'), Buffer.from([0, 1, 2, 65, 66]));
+  const capped = grepSearch({ query: 'UNIQUE_TOKEN_XYZ', searchPath: '.' });
+  assert.ok(capped.totalMatches >= 1);
+  assert.ok(capped.skippedLarge >= 1, 'files over 1.5MB must be skipped');
+  const binHit = grepSearch({ query: 'AB', searchPath: 'binary.dat' });
+  assert.ok(binHit.skippedBinary >= 1 || binHit.totalMatches === 0);
+
+  let unifiedBlocked = false;
+  try {
+    await applyPatch({
+      filePath: 'from-diff.js',
+      patch: '--- a/from-diff.js\n+++ b/from-diff.js\n@@ -0,0 +1 @@\n+oops\n'
+    });
+  } catch (err) {
+    unifiedBlocked = /unified diff/i.test(err.message);
+  }
+  assert.ok(unifiedBlocked, 'new files must refuse a unified diff body');
+  assert.ok(!fs.existsSync(path.join(tmp, 'from-diff.js')));
+
+  const created = await applyPatch({
+    filePath: 'brand-new.js',
+    patch: '<<<<<<< SEARCH\n=======\nmodule.exports = 1;\n>>>>>>> REPLACE'
+  });
+  assert.strictEqual(created.isNewFile, true);
+  assert.ok(fs.readFileSync(path.join(tmp, 'brand-new.js'), 'utf8').includes('module.exports = 1;'));
+
+  const raw = await applyPatch({ filePath: 'raw-new.js', patch: 'hello body\n' });
+  assert.strictEqual(raw.isNewFile, true);
+  assert.strictEqual(fs.readFileSync(path.join(tmp, 'raw-new.js'), 'utf8'), 'hello body\n');
+
   fs.writeFileSync(path.join(tmp, 'win.js'), 'function add(a, b) {\r\n  return a + b;\r\n}\r\n', 'utf8');
   const winRead = readFile({ filePath: 'win.js' });
   const winPatched = await applyPatch({

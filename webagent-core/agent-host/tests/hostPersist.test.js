@@ -9,7 +9,7 @@ const { config, generateNewSecret, persistIdentity } = require('../src/config');
 config.workspaceRoot = tmp;
 
 const store = require('../src/models/store');
-const { rememberHash, recalledHash, resetHashes } = require('../src/tools/readCache');
+const { rememberHash, recalledHash, sessionHash, resetHashes } = require('../src/tools/readCache');
 
 function main() {
   assert.strictEqual(store.defaults().bridge.license, 'local-demo');
@@ -43,6 +43,7 @@ function main() {
 
   rememberHash('src/app.js', 'abc123def');
   assert.strictEqual(recalledHash('src/app.js'), 'abc123def');
+  assert.strictEqual(sessionHash('src/app.js'), 'abc123def');
   const hashPath = path.join(tmp, '.webagent', 'read-hashes.json');
   assert.ok(fs.existsSync(hashPath));
   const saved = JSON.parse(fs.readFileSync(hashPath, 'utf8'));
@@ -51,6 +52,7 @@ function main() {
   delete require.cache[require.resolve('../src/tools/readCache')];
   const rc2 = require('../src/tools/readCache');
   assert.strictEqual(rc2.recalledHash('src/app.js'), 'abc123def');
+  assert.strictEqual(rc2.sessionHash('src/app.js'), null, 'session hashes must not survive a process restart');
 
   const nested = path.join(tmp, '.webagent', '.gitignore');
   assert.ok(fs.existsSync(nested));

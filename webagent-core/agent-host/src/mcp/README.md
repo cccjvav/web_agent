@@ -131,7 +131,7 @@
 
 - **关键变量/常量：**
   - L6 `CONNECT_LINE`：固定一句中文（测试锁原文，改一字会红）。
-  - L12–L55 `SERVER_INSTRUCTIONS`：Ask/Plan 只读、Code 可写、工作流 1–7（含 git `available:false`、读后可省略 `expectedHash`、HASH_REQUIRED 带 `currentHash`）、输出预算、`tools/call` 失败是 MCP `isError` 文本（不是传输崩溃）、别名 `bash`/`cat`/`path`、安全（`confirm_dangerous` / `confirm_overwrite` / `confirm=true`）、memory。这是 `initialize.instructions` 的主体。模板字符串里**不能**写 `{layer,code,msg,detail}` 这种花括号，会当成 JS 插值炸掉。
+  - L12–L55 `SERVER_INSTRUCTIONS`：Ask/Plan 只读、Code 可写、工作流 1–7（含 git `available:false`、读后可省略 `expectedHash`、HASH_REQUIRED 带 `currentHash`）、输出预算、`tools/call` 失败是 MCP `isError` 文本（不是传输崩溃）、别名 `bash`/`cat`/`path`、安全（`confirm_dangerous` / `confirm_overwrite` / `confirm=true`；`write_file` 覆盖只认本进程读过的 hash；新建不要 unified diff）、memory。这是 `initialize.instructions` 的主体。模板字符串里**不能**写 `{layer,code,msg,detail}` 这种花括号，会当成 JS 插值炸掉。
 
 ---
 

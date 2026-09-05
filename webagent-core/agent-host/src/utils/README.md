@@ -21,17 +21,17 @@
 - **文件职责：** 单例 EventEmitter + WebSocket 扇出 + 环形日志。
 - **核心类/函数清单：**
 
-  - **Class `BridgeEventBus`（L3–L44）**
-    - **constructor（L4–L8）** — `wsClients` Set；`logs=[]`；`maxLogs=500`。
-    - **Method `addWsClient(ws)`（L10–L15）** — 加入 Set；`close` 时 delete。
-    - **Method `broadcast(type, payload={})`（L17–L40）**
-      - L18–L22：造 `{ type, timestamp ISO, payload }`。
-      - L24–L27：`logs.unshift`；超过 maxLogs 则 `pop`。
-      - L29–L37：对每个 ws，`readyState === 1` 才 `try send`，catch 空。
-      - L39：`this.emit(type, payload)` 给进程内监听者。
-    - **Method `getRecentLogs(limit=50)`（L42–L44）** — `logs.slice(0, limit)`。
+  - **Function `clipStr` / `sanitizePayload`（L12–L41）** — 字符串截 4000 并替换 `ghp_` / `github_pat_` / `sk-` / `Bearer …`；对象键 `apiKey|token|password|secret|secretKey|authorization|access_token|refresh_token|pat` 整值改 `[redacted]`；`diff|patch|content|chunk|stdout|stderr|args|body` 截 500。深度 6、键 40、数组 40。
+  - **Class `BridgeEventBus`（L43–L85）**
+    - **constructor** — `wsClients` Set；`logs=[]`；`maxLogs=500`。
+    - **Method `addWsClient(ws)`** — 加入 Set；`close` 时 delete。
+    - **Method `broadcast(type, payload={})`（L58–L80）**
+      - 日志和 WebSocket 用 `sanitizePayload(payload)`；进程内 `this.emit(type, payload)` 仍是原对象。
+      - `logs.unshift`；超过 maxLogs 则 `pop`。
+      - 对每个 ws，`readyState === 1` 才 `try send`，catch 空。
+    - **Method `getRecentLogs(limit=50)`（L82–L84）** — `logs.slice(0, limit)`（已脱敏）。
 
-- **关键变量：** L46 `const eventBus = new BridgeEventBus()`，L47 `module.exports = eventBus`（单例，不是类）。
+- **关键变量：** L87 `const eventBus = new BridgeEventBus()`，L88–L89 `module.exports = eventBus` 并挂 `sanitizePayload`（单例，不是类）。
 
 ---
 

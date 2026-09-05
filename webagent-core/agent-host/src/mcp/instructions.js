@@ -46,7 +46,7 @@ If a tool returns E_BAD_ARGS about mode, tell the user to switch to Code.
 
 ## Safety
 - Destructive shell (rm -rf, mkfs, dd, shutdown, git reset --hard, Remove-Item -Recurse) needs confirm_dangerous=true.
-- Prefer apply_patch over write_file. Overwrite write_file is allowed if confirm_overwrite=true or the last-read hash still matches.
+- Prefer apply_patch over write_file. Overwrite write_file is allowed if confirm_overwrite=true, expectedHash matches, or you read_files that path in this host process. A hash left on disk from a previous run is not enough. New files: empty SEARCH or the file body — not a unified diff.
 - delete_file needs confirm=true after you have listed the path.
 - Stay inside the workspace; the host rejects path escape.
 - .env, keys, SSH, and .webagent/config.json are blocked (E_FORBIDDEN). Do not ask the user to paste secrets.

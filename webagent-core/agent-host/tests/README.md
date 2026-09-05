@@ -10,11 +10,12 @@
 
 | 文件 | 覆盖 |
 |---|---|
-| `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、CRLF 保留、SEARCH 多处拒绝、`occurrence` 指定第几处、grep |
+| `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、CRLF 保留、SEARCH 多处拒绝、`occurrence` 指定第几处、grep 跳过大文件、新建拒绝 unified diff、空 SEARCH 建新文件 |
 | `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek / Chat Plus 客户端配方 |
-| `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command` |
+| `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command`、`cancel_command` 终态保持 cancelled、持久 hash 不能单独覆盖 |
 | `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝 |
-| `hostPersist.test.js` | `generateNewSecret` 写入 `config.json`；旧盘 `永久顺`/假 `github`/`demo` 迁成 `local-demo`；带 `githubId` 的 octocat **留下**；`usage.json` 进 gitignore；`read-hashes.json` 跨 require 仍能 recalledHash；`resetHashes` 删文件 |
+| `hostPersist.test.js` | `generateNewSecret` 写入 `config.json`；旧盘 `永久顺`/假 `github`/`demo` 迁成 `local-demo`；带 `githubId` 的 octocat **留下**；`usage.json` 进 gitignore；`read-hashes.json` 跨 require 仍能 recalledHash，**sessionHash 为空**；`resetHashes` 删文件 |
+| `eventBus.test.js` | 日志脱敏 `ghp_` / `sk-` / `Bearer`；长 chunk 截断；普通字段留下 |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
 | `bridgeTunnel.test.js` | stub `startQuickTunnel`/`stopTunnel`：cloudflare 启动后 mcpUrl 含 trycloudflare；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
 | `apiFiles.test.js` | `PUT /api/files/content` 走 `write_file`：普通文件写入、`.env` 拒绝、越界拒绝、错 hash 409、`POST /api/skills` |
@@ -48,7 +49,7 @@
 
 ### 📄 文件名：`patchEngine.test.js`
 
-- **文件职责：** 临时工作区测补丁成功、过期 hash、读缓存、orphan `HASH_REQUIRED`、冲突、grep。
+- **文件职责：** 临时工作区测补丁成功、过期 hash、读缓存、orphan `HASH_REQUIRED`、冲突、grep、新建拒绝 unified diff。
 - **顶部：** L1–L10 `assert`/`fs`/`os`/`path`；`config`；`applyPatch`/`computeHash`；`readFile`/`grepSearch`；`mkdtempSync` 后改 `config.workspaceRoot`。
 - **Function `main`（L12–L99）**
   - L13：写 `sample.js`，内容含 `return a + b`。
@@ -60,7 +61,8 @@
   - L77–L92：SEARCH 不在文件中 → 消息匹配 `Patch conflict`。
   - L94–L95：`grepSearch({ query:'function add', searchPath:'.' })`，`totalMatches >= 1`。
   - 另测：CRLF 文件打 LF 的 SEARCH 后仍是 `\r\n`；两处相同 SEARCH 拒绝；`occurrence:2` 只改第二处。
-  - L97：删临时目录。L98：打印 passed。
+  - 另测：2MB 文件 `skippedLarge`；新建路径若 patch 是 unified diff 则拒绝且不写盘；空 SEARCH 与纯正文可建新文件。
+  - 删临时目录后打印 passed。
 - L101–L104：`main().catch` → 打印并 `exit(1)`。
 
 ---
@@ -106,6 +108,8 @@
   - L85–L107：`.env` 与 `.webagent/config.json` 走 `read_files` 被拒（SENSITIVE|FORBIDDEN）；`.env.example` 可读；`list_directory` 不出现 `.env`。
   - L109–L111：`workspace_info.root === tmp`。
   - L113–L117：`start_command` `echo async-ok`，poll 后 status 为 done/timeout，stdout 含该字符串。
+  - 另测：`start_command` 长 sleep 后 `cancel_command`，立即与 250ms 后 `get_command_output` 都是 `cancelled`。
+  - 另测：只 `rememberHash` + `clearSession` 后 `write_file` 仍要 `confirm_overwrite`。
 
 ---
 
@@ -136,7 +140,7 @@
   - L26–L29：`generateNewSecret()` 后 `store.load().secretKey` 等于内存。
   - L31–L34：把内存 secret 改成 `deadbeefdead` 再 `persistIdentity`，应回到磁盘值。
   - L36–L41：`rememberHash` 写出 `.webagent/read-hashes.json`。
-  - L43–L45：`delete require.cache` 后再 require，仍能 `recalledHash`。
+  - L43–L45：`delete require.cache` 后再 require，仍能 `recalledHash`；`sessionHash` 为 `null`。
   - L47–L54：`.webagent/.gitignore` 含 config.json 与 read-hashes.json；非 Windows 时 config.json mode `0600`。
   - L56–L59：删掉嵌套 gitignore 后再 `persistIdentity` 会写回；无 `.git` 时不写工作区根 `.gitignore`。
   - L61–L71：`git init` 后 `protectWorkspaceSecrets` 追加仓库根 ignore；`git check-ignore` 命中；再调一次不重复。
@@ -189,6 +193,10 @@
 - L30–33：默认本机为真；带 Cloudflare 头、trycloudflare Host、或 `10.0.0.8` 为假。
 
 ---
+
+### 📄 文件名：`eventBus.test.js`
+
+- **文件职责：** 不启 HTTP。broadcast 带 token / apiKey / 超长 chunk 后，`getRecentLogs` 不得出现原文，须含 `[redacted]`，普通字段留下。
 
 ### 📄 文件名：`corsAllow.test.js`
 
