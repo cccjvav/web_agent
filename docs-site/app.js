@@ -135,6 +135,7 @@
             <li>隧道带 Cloudflare 头时 48271 /api 404，不下发 secretKey</li>
             <li>默认只听 127.0.0.1；符号链接不能指到工作区外</li>
             <li>MCP CORS 白名单；外站 Origin 不能打本机 /api</li>
+            <li>网页 VS Code 默认要登录口令，trusted-origins 不再是 *</li>
           </ul>
         </div>
       </div>

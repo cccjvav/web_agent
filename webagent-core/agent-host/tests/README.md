@@ -20,7 +20,8 @@
 | `localControl.test.js` | 回环 / Cloudflare 头 / trycloudflare Host 是否算本机控制面 |
 | `corsAllow.test.js` | MCP Origin 白名单；外站 Origin/Referer 打 `/api` 拒绝 |
 | `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`）、模块脚本、MCP 401、initialize、tools/list、ping、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、本机 `POST /api/chat` NDJSON |
-| `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime |
+| `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime；不写死 `--auth none` / `trusted-origins *` |
+| `codeServerAuth.test.js` | 口令落盘复用；`CODE_SERVER_PASSWORD`；`CODE_SERVER_AUTH=none`；trusted-origins 仅本机 |
 | `skipWorkbench.test.js` | `WEBAGENT_SKIP_WORKBENCH=1` 不占用工作台端口 |
 | `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；第二参 emit 与 `payload.emit` 两条路径 |
 | `chatMode.test.js` | `@webagent` 默认 Agent=code；`/ask` `/plan` |
@@ -207,8 +208,16 @@
 - L6–L8：读 `ensure-code-server.js` 与 `run-code-oss.js` 原文。
 - L10：`bin/code-server-dist` 不存在。
 - L12–L17：拼接 `run-webagent.cmd` + `.sh`，正则 **不得** 匹配 `code-server`；必须匹配 `agent-host`。
-- L19–L25：`run-webagent-vscode.cmd` 与 `run-code-oss.js` 存在；ensure 含 `bin/code-server-runtime`，且含 `code-server@4.135.0` 或 `\'code-server\': VERSION`；ensure/runner 都不含 `code-server-dist`。
+- L19–L28：`run-webagent-vscode.cmd` 与 `run-code-oss.js` 存在；ensure 含 `bin/code-server-runtime`，且含 `code-server@4.135.0` 或 `'code-server': VERSION`；ensure/runner 都不含 `code-server-dist`；runner `require('./codeServerAuth')`；不得写死 `'--auth', 'none'` 与 `trusted-origins *`。
 - 无 async `main`。
+
+### 📄 文件名：`codeServerAuth.test.js`
+
+- **文件职责：** 测 `scripts/codeServerAuth.js`，不 spawn code-server。
+- L10–L11：`trustedOrigins(3000/8080)` 只有 127.0.0.1 与 localhost。
+- L13–L20：空 env 生成口令并写入 tmp/`webagent-password`；再调一次同一串。
+- L22–L24：`CODE_SERVER_PASSWORD` 覆盖文件。
+- L26–L28：`CODE_SERVER_AUTH=none` → `mode:'none'`、password null。
 
 ---
 
@@ -277,7 +286,7 @@
 
 ## 3. 执行逻辑流（仅本目录）
 
-1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **sandbox** → **hostPersist** → tunnel → **bridgeTunnel** → **localControl** → **corsAllow** → httpSmoke → codeServerNotRunnable → skipWorkbench → runChat → chatMode → profile → oauth。
+1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **sandbox** → **hostPersist** → tunnel → **bridgeTunnel** → **localControl** → **corsAllow** → httpSmoke → codeServerNotRunnable → **codeServerAuth** → skipWorkbench → runChat → chatMode → profile → oauth。
 2. 单文件：改 `config.workspaceRoot` 指向 tmp → require 被测模块 → assert → 删 tmp。`tunnel` / `chatMode` / `codeServerNotRunnable` 不改工作区。`bridgeTunnel` 改 tmp 工作区并 stub 隧道导出。
 3. 启进程的测试 spawn `src/index.js`，结束必须杀子进程。
 4. 失败路径：有 `main()` 的文件走 `main().catch` → `exit(1)`；`profile.test.js` 同步抛错由 Node 非 0 退出；CMD 的 `run-tests.cmd` 据此 pause。

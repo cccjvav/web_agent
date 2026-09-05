@@ -13,8 +13,8 @@
 | 含 `README.md` 的目录（含仓库根产品首页） | **21** |
 | 其中逆向说明书（目录内行级 README，不含根首页） | **20** |
 | 根目录补充说明书（不是文件夹 README） | [`启动脚本说明.md`](./启动脚本说明.md)、[`总览.md`](./总览.md)、[`架构导读.md`](./架构导读.md)、本文件 |
-| 被至少一份说明书点名的代码/配置文件 | **108** |
-| 按扩展名 | `.js` 83、`.json` 8、`.cmd` 4、`.sh` 3、`.svg` 3、`.html` 2、`.css` 2、`.yaml` 1、`.gitignore` 1、`.gitattributes` 1 |
+| 被至少一份说明书点名的代码/配置文件 | **110** |
+| 按扩展名 | `.js` 85、`.json` 8、`.cmd` 4、`.sh` 3、`.svg` 3、`.html` 2、`.css` 2、`.yaml` 1、`.gitignore` 1、`.gitattributes` 1 |
 | [`总览.md`](./总览.md) 内 Markdown 链接 | **60**，相对路径全部能解析到文件（`./` 正确，无误用 `../`） |
 
 未计入：`node_modules/`、`package-lock.json`、`image-search/`（gitignore）、`bin/code-server-runtime/` 里下载出来的 code-server 源码（只说明书占位 `package.json`）。
@@ -50,7 +50,7 @@ Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./w
 | `webagent-core/agent-host/src/utils/localControl.js` | 本机控制面闸：隧道头 / 公网 Host 挡 48271 `/api` |
 | `webagent-core/agent-host/tests/localControl.test.js` | 回环 / CF 头 / trycloudflare Host |
 
-现：**108 / 108**。工作台把原来的单文件 `app.js` IIFE 拆成 `js/state.js`、`js/dom.js`、`js/tabs.js`、`js/chat.js`、`js/bridge.js`、`js/settings.js`、`js/bind.js`（+7），均写入 [`workbench/README.md`](./webagent-core/workbench/README.md)。P0 后又加 `src/utils/localControl.js` 与 `tests/localControl.test.js`。P1 加 `tests/sandbox.test.js`（真实路径沙箱）、`src/utils/corsAllow.js` 与 `tests/corsAllow.test.js`（MCP CORS 白名单）。仓库级约定是 Skill [`docs-sync`](./workspace/.webagent/skills/docs-sync/SKILL.md)（`load_skill` 名 `docs-sync`），不是仓库根 `文档约定.md`。该 Skill 还要求：动到「为什么这样装」时按四层写法改根目录 [`架构导读.md`](./架构导读.md)（产品文，不计入上面的代码文件数）。
+现：**110 / 110**。工作台把原来的单文件 `app.js` IIFE 拆成 `js/state.js`、`js/dom.js`、`js/tabs.js`、`js/chat.js`、`js/bridge.js`、`js/settings.js`、`js/bind.js`（+7），均写入 [`workbench/README.md`](./webagent-core/workbench/README.md)。P0 后又加 `src/utils/localControl.js` 与 `tests/localControl.test.js`。P1 加 `tests/sandbox.test.js`、`src/utils/corsAllow.js` 与 `tests/corsAllow.test.js`、`scripts/codeServerAuth.js` 与 `tests/codeServerAuth.test.js`（网页 VS Code 默认要口令）。仓库级约定是 Skill [`docs-sync`](./workspace/.webagent/skills/docs-sync/SKILL.md)（`load_skill` 名 `docs-sync`），不是仓库根 `文档约定.md`。该 Skill 还要求：动到「为什么这样装」时按四层写法改根目录 [`架构导读.md`](./架构导读.md)（产品文，不计入上面的代码文件数）。
 
 故意不单独再拆的：
 

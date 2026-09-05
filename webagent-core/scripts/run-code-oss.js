@@ -3,6 +3,7 @@ const fs = require('fs');
 const http = require('http');
 const { spawn } = require('child_process');
 const { ensure, syncExtension, repoRoot } = require('./ensure-code-server');
+const { resolveAuth, trustedOrigins } = require('./codeServerAuth');
 
 const workspace = path.resolve(
   process.argv[2] || process.env.WORKSPACE_ROOT || path.join(repoRoot, 'workspace')
@@ -115,18 +116,19 @@ async function main() {
   const userData = path.join(repoRoot, '.local/share/code-server');
   const configFile = path.join(repoRoot, '.config/code-server/config.yaml');
   fs.mkdirSync(userData, { recursive: true });
+  const auth = resolveAuth({ userData, env: process.env });
 
   const csArgs = [
     entry,
     '--auth',
-    'none',
+    auth.mode,
     '--bind-addr',
     `${process.env.WEBAGENT_BIND || '127.0.0.1'}:${codePort}`,
     '--disable-telemetry',
     '--disable-update-check',
     '--disable-workspace-trust',
     '--trusted-origins',
-    '*',
+    trustedOrigins(codePort),
     '--app-name',
     'Web Agent',
     '--user-data-dir',
@@ -139,13 +141,21 @@ async function main() {
   ];
 
   console.log(`  VS Code   http://127.0.0.1:${codePort}`);
+  if (auth.mode === 'password') {
+    console.log(`  登录密码  ${auth.password}`);
+    console.log(`            存在 ${auth.passwordFile}`);
+    console.log('            自定：set CODE_SERVER_PASSWORD=…    关掉登录：set CODE_SERVER_AUTH=none');
+  } else {
+    console.log('  登录      已关（CODE_SERVER_AUTH=none）');
+  }
   console.log(`  MCP       http://127.0.0.1:${mcpPort}/mcp/…`);
   console.log(`  Workspace ${workspace}`);
   console.log('  侧栏点 Web Agent 图标打开 Chat / Bridge（连本机 agent-host）');
   console.log('  停止: Ctrl+C');
   console.log('===========================================================');
 
-  const cs = run(process.execPath, csArgs, { cwd: path.dirname(entry) });
+  const csEnv = auth.mode === 'password' ? { PASSWORD: auth.password } : {};
+  const cs = run(process.execPath, csArgs, { cwd: path.dirname(entry), env: csEnv });
   children.push(cs);
   cs.on('exit', (code) => {
     stop();

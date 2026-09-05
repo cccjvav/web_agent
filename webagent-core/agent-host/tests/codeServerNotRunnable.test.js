@@ -22,5 +22,9 @@ assert.ok(ensure.includes('bin/code-server-runtime'));
 assert.ok(ensure.includes('code-server@4.135.0') || ensure.includes("'code-server': VERSION"));
 assert.ok(!ensure.includes('code-server-dist'));
 assert.ok(!runner.includes('code-server-dist'));
+assert.ok(runner.includes("require('./codeServerAuth')"));
+assert.ok(!/'--auth',\s*'none'/.test(runner), 'auth none must not be hardcoded');
+assert.ok(!runner.includes("'--trusted-origins',\n    '*'"));
+assert.ok(runner.includes('trustedOrigins('));
 
 console.log('vscode launcher uses npm runtime, not a vendored dist');

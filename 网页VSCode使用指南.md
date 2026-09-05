@@ -35,9 +35,24 @@ run-webagent-vscode.cmd D:\code\my-app
 
 1. `npm install code-server@4.135.0`（约 50MB 包 + VS Code 依赖，需要能访问 npm）
 2. 启动 agent-host（**不**占用 3000）
-3. 启动 code-server 监听 **http://127.0.0.1:3000**
+3. 启动 code-server 监听 **http://127.0.0.1:3000**（要登录）
 
 浏览器打开：**http://127.0.0.1:3000**  
+启动窗口会打印 **登录密码**（也写在仓库 `.local\\share\\code-server\\webagent-password`，该目录不进 Git）。下次启动还是同一串，除非你改 `CODE_SERVER_PASSWORD` 或删掉那个文件。
+
+自定密码、或不要登录页：
+
+```bat
+set CODE_SERVER_PASSWORD=你自己的口令
+run-webagent-vscode.cmd
+```
+
+```bat
+set CODE_SERVER_AUTH=none
+run-webagent-vscode.cmd
+```
+
+`none` 只应在本机、且你清楚谁能打开浏览器时用。  
 左侧活动栏最上方（或扩展图标附近）点 **Web Agent**：
 
 - **Web Agent Chat & Agent**（侧栏，像 Copilot）：输入框下 **Agent ▾** 默认 **Web Agent Code**。发任务就会对当前文件夹搜、读、改、测。
@@ -65,6 +80,7 @@ GitHub Copilot 自己的 Ask/Edit/Agent 下拉是 Copilot 扩展私有 UI，第�
 
 - 不要和 `run-webagent.cmd` 同时开。
 - 不要把 MCP 地址发到公开地方。
+- 不要把启动窗口里的 code-server 密码发到群里。
 
 ### 集成终端
 
@@ -153,6 +169,9 @@ agent-host 没起来。看黑色窗口报错；防火墙是否拦了 Node。
 
 **VS Code 终端打不开**  
 见上文「集成终端」。用 Chat CODE 模式跑命令。
+
+**打开 3000 要密码**  
+看启动窗口「登录密码」那一行，或打开 `.local\\share\\code-server\\webagent-password`。
 
 **页面提示 Node 版本**  
 忽略 engines 警告即可。本仓库用 `--ignore-scripts` + Node 22 已验证能打开工作台。
