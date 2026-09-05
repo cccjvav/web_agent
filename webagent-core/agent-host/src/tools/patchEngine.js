@@ -12,6 +12,10 @@ function computeHash(content) {
   return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
 }
 
+function tempSibling(fullPath) {
+  return `${fullPath}.tmp.${process.pid}.${Date.now()}.${crypto.randomBytes(4).toString('hex')}`;
+}
+
 function toPosixRel(p) {
   return String(p || '').replace(/\\/g, '/');
 }
@@ -319,7 +323,7 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
     };
   }
 
-  const tempPath = `${fullPath}.tmp.${Date.now()}`;
+  const tempPath = tempSibling(fullPath);
   fs.writeFileSync(tempPath, patchedContent, 'utf8');
   fs.renameSync(tempPath, fullPath);
 
@@ -346,6 +350,7 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
 module.exports = {
   applyPatch,
   computeHash,
+  tempSibling,
   resolveSafePath,
   isInsideWorkspace,
   toPosixRel,

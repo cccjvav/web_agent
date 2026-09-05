@@ -4,7 +4,7 @@
 
 VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@webagent`。工具实现仍在 agent-host，本目录只做 HTTP 客户端 + webview HTML 字符串。
 
-文件：`extension.js`、`package.json`、`resources/icon.svg`。
+文件：`extension.js`、`modeFromChatRequest.js`、`package.json`、`resources/icon.svg`。
 
 ---
 
@@ -28,7 +28,7 @@ VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@webage
   | `name` | npm/插件 id 段 | `webagent-core` |
   | `displayName` | 市场显示名 | `Web Agent & Bridge` |
   | `description` | 简介 | 说明连本地 agent-host |
-  | `version` | 版本 | `0.6.9`（与 syncExtension 目标目录名一致） |
+  | `version` | 版本 | 当前 `0.6.9`（`syncExtension` 读这个字段拼目标目录名） |
   | `publisher` | 发布者 | `webagent` |
   | `engines.vscode` | 最低 VS Code | `^1.90.0` |
   | `categories` | 分类 | Other、Chat |
@@ -52,21 +52,25 @@ VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@webage
 
   - **Function `agentHostUrl()`（L6–L9）** — 配置 `webagent.agentHostUrl` 或 env `WEBAGENT_AGENT_HOST_URL` 或默认 48271，去尾 `/`。
   - **Function `requestJson(method, url, body)`（L11–L43）** — 按协议选 http/https。结束 try JSON.parse；失败 `{ json:null, raw }`。`req.on('error', reject)`。
-  - **Function `postNdjson(url, body, onEvent)`（L45–L85）** — **只用 `http.request`**（https URL 不会走 https 模块）。按行 parse，失败忽略；结束处理残余 buf。
-  - **Function `modeFromChatRequest(request)`（L87–L95）** — `request.command` 小写 ask/plan/code；否则 prompt 以 `/ask|/plan|/code` 开头；**都不匹配 → `'code'`**。
-  - **Function `historyFromChatContext`（L97–L113）** — 最多 12 轮 user/assistant。
-  - **Function `revealWorkspaceFile(rel)`（L115–L123）** — 无 folder 或 rel 则 return；打开失败 catch 空。
-  - **Function `registerChatParticipant`（L125–L174）** — 无 `createChatParticipant` 则 return。handler：空 message 输出模式说明（`/plan` 写多模型分支，没 Key 是本机草案）；否则 `postNdjson /api/chat`。status→progress；tool→markdown，apply_patch 成功 reveal + `stream.reference`；message/error/consensus（标题「多模型总结」）。catch 提示连不上 48271。外层 try/catch warn，不抛给 activate。
-  - **Function `activate`（L176–L228）** — 注册 ChatView、BridgeView；Chat 参与者；状态栏每 5s GET `/api/status`（运行中 / Agent / 未连接）。命令：打开侧栏；`openAgentChat` 试原生 Chat query `@webagent `，失败侧栏；resetSecret POST reset-secret。
-  - **Class `ChatView`（L230–L271）** — webview scripts 开。`openNative` → 命令。`send`：history 12，postNdjson，事件转 webview；apply_patch reveal；assistantText 非空才进 history。
-  - **Class `BridgeView`（L273–L312）** — start POST `{ tunnelProvider:'cloudflare' }`；stop/copy/reset；refresh GET status。catch 弹 ErrorMessage。
-  - **Function `chatHtml`（L314–L421）** — 完整 HTML。内嵌脚本：默认 `mode='code'`；Agent 菜单切 ask/plan/code；Enter 发送；set_todos 画任务。Agent 菜单 Plan 文案「分支」。DOM：`#log` 空态、`#tasks`、textarea `#q`、`#agent` 按钮、`#menu`、`#go`。
-  - **Function `bridgeHtml`（L423–L490）** — 启动/停止/复制/重置。4s refresh。copy 用 `status.prompt` 或 mcpUrl+CONNECT。DOM：`#pill`、`#url`、按钮、`#tasks`、`#stream`。
+  - **Function `postNdjson(url, body, onEvent)`（L46–L87）** — 按协议选 `http`/`https`（与 `requestJson` 相同）。按行 parse，失败忽略；结束处理残余 buf。
+  - **Function `historyFromChatContext`（L89–L105）** — 最多 12 轮 user/assistant。
+  - **Function `revealWorkspaceFile(rel)`（L107–L115）** — 无 folder 或 rel 则 return；打开失败 catch 空。
+  - **Function `registerChatParticipant`（L117–L166）** — 无 `createChatParticipant` 则 return。handler：空 message 输出模式说明（`/plan` 写多模型分支，没 Key 是本机草案）；否则 `postNdjson /api/chat`。status→progress；tool→markdown，apply_patch 成功 reveal + `stream.reference`；message/error/consensus（标题「多模型总结」）。catch 提示连不上 48271。外层 try/catch warn，不抛给 activate。
+  - **Function `activate`（L168–L220）** — 注册 ChatView、BridgeView；Chat 参与者；状态栏每 5s GET `/api/status`（运行中 / Agent / 未连接）。命令：打开侧栏；`openAgentChat` 试原生 Chat query `@webagent `，失败侧栏；resetSecret POST reset-secret。
+  - **Class `ChatView`（L222–L263）** — webview scripts 开。`openNative` → 命令。`send`：history 12，postNdjson，事件转 webview；apply_patch reveal；assistantText 非空才进 history。
+  - **Class `BridgeView`（L265–L304）** — start POST `{ tunnelProvider:'cloudflare' }`；stop/copy/reset；refresh GET status。catch 弹 ErrorMessage。
+  - **Function `chatHtml`（L306–L413）** — 完整 HTML。内嵌脚本：默认 `mode='code'`；Agent 菜单切 ask/plan/code；Enter 发送；set_todos 画任务。Agent 菜单 Plan 文案「分支」。DOM：`#log` 空态、`#tasks`、textarea `#q`、`#agent` 按钮、`#menu`、`#go`。
+  - **Function `bridgeHtml`（L415–L482）** — 启动/停止/复制/重置。4s refresh。copy 用 `status.prompt` 或 mcpUrl+CONNECT。DOM：`#pill`、`#url`、按钮、`#tasks`、`#stream`。
 
-  内嵌 `chatHtml` 脚本函数：L385 `add`、L390 `paintTasks`。  
-  内嵌 `bridgeHtml` 脚本：L463 `paintTasks`、L470 `paintLogs`（只画 `tool_call_end` 最多 12 条）。
+  内嵌 `chatHtml` 脚本函数：L377 `add`、L382 `paintTasks`。  
+  内嵌 `bridgeHtml` 脚本：L455 `paintTasks`、L462 `paintLogs`（只画 `tool_call_end` 最多 12 条）。
 
-- **导出（L492）：** `{ activate, deactivate: () => {}, modeFromChatRequest }`。`deactivate` 空函数。
+- **导出（L484）：** `{ activate, deactivate: () => {}, modeFromChatRequest }`。`deactivate` 空函数。`modeFromChatRequest` 来自同目录 `./modeFromChatRequest`。
+
+### 📄 文件名：`modeFromChatRequest.js`
+
+- **文件职责：** 把 VS Code Chat 请求收成 ask/plan/code。无 `vscode` 依赖，测试可直接 require。
+- **Function `modeFromChatRequest(request)`（L1–L9）** — `request.command` 小写 ask/plan/code；否则 prompt 以 `/ask|/plan|/code` 开头；**都不匹配 → `'code'`**。
 
 ---
 

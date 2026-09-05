@@ -108,6 +108,13 @@ x
   assert.strictEqual(found.files.length, 3);
   assert.strictEqual(found.truncated, true);
 
+  const exactDir = path.join(tmp, 'exact-cap');
+  fs.mkdirSync(exactDir);
+  for (let i = 0; i < 3; i++) fs.writeFileSync(path.join(exactDir, `e${i}.txt`), 'x');
+  const exact = findFiles({ glob: 'e*.txt', searchPath: 'exact-cap', maxResults: 3 });
+  assert.strictEqual(exact.files.length, 3);
+  assert.strictEqual(exact.truncated, false, 'hitting the cap after the last file is not truncation');
+
   fs.writeFileSync(path.join(tmp, 'huge.txt'), Buffer.alloc(2 * 1024 * 1024, 0x61));
   fs.writeFileSync(path.join(tmp, 'needle.txt'), 'UNIQUE_TOKEN_XYZ\n', 'utf8');
   fs.writeFileSync(path.join(tmp, 'binary.dat'), Buffer.from([0, 1, 2, 65, 66]));

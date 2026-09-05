@@ -2,6 +2,7 @@ const vscode = require('vscode');
 const http = require('http');
 const https = require('https');
 const path = require('path');
+const { modeFromChatRequest } = require('./modeFromChatRequest');
 
 function agentHostUrl() {
   const fromCfg = vscode.workspace.getConfiguration('webagent').get('agentHostUrl');
@@ -45,12 +46,13 @@ function requestJson(method, url, body) {
 function postNdjson(url, body, onEvent) {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
+    const lib = u.protocol === 'https:' ? https : http;
     const payload = JSON.stringify(body);
-    const req = http.request(
+    const req = lib.request(
       {
         hostname: u.hostname,
         port: u.port,
-        path: u.pathname,
+        path: u.pathname + u.search,
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
       },
@@ -82,16 +84,6 @@ function postNdjson(url, body, onEvent) {
     req.write(payload);
     req.end();
   });
-}
-
-function modeFromChatRequest(request) {
-  const cmd = String((request && request.command) || '').toLowerCase();
-  if (cmd === 'ask' || cmd === 'plan' || cmd === 'code') return cmd;
-  const prompt = String((request && request.prompt) || '');
-  if (/^\s*\/ask\b/i.test(prompt)) return 'ask';
-  if (/^\s*\/plan\b/i.test(prompt)) return 'plan';
-  if (/^\s*\/code\b/i.test(prompt)) return 'code';
-  return 'code';
 }
 
 function historyFromChatContext(context) {

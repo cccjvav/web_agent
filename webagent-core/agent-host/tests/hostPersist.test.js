@@ -12,6 +12,9 @@ const store = require('../src/models/store');
 const { rememberHash, recalledHash, sessionHash, resetHashes } = require('../src/tools/readCache');
 
 function main() {
+  const extPkg = require('../../extension/package.json');
+  assert.strictEqual(config.version, extPkg.version);
+
   assert.strictEqual(store.defaults().bridge.license, 'local-demo');
   assert.strictEqual(store.defaults().bridge.provider, 'local-demo');
   store.save({

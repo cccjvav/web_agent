@@ -33,7 +33,6 @@ function detectTechStack(workspaceRoot) {
   const frameworks = [];
   let packageManager = '';
   let testCommand = '';
-  const notes = [];
 
   const pkg = exists(root, 'package.json') ? readJson(path.join(root, 'package.json')) : null;
   if (pkg) {
@@ -71,7 +70,7 @@ function detectTechStack(workspaceRoot) {
     frameworks: uniq(frameworks).join(', '),
     packageManager,
     testCommand,
-    notes: notes.join('\n')
+    notes: ''
   };
 }
 

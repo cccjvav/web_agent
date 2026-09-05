@@ -2,7 +2,7 @@
 
 当前处理目标：`webagent-core/agent-host/src/`
 
-本 README 只覆盖**本目录直接文件** `config.js`、`index.js`。子目录各有自己的 README：`mcp/`、`tools/`、`agent/`、`models/`、`api/`、`auth/`、`usage/`、`tunnel/`、`utils/`。管理页在仓库 `webagent-core/admin-host/`（**另一进程**，默认 4174）。
+本 README 只覆盖**本目录直接文件** `config.js`、`index.js`、`extensionVersion.js`。子目录各有自己的 README：`mcp/`、`tools/`、`agent/`、`models/`、`api/`、`auth/`、`usage/`、`tunnel/`、`utils/`。管理页在仓库 `webagent-core/admin-host/`（**另一进程**，默认 4174）。
 
 ---
 
@@ -40,7 +40,7 @@
   | `host` | listen 地址 | `WEBAGENT_BIND` 或 **`'127.0.0.1'`**（不再默认听所有网卡） |
   | `workspaceRoot` | 工具允许读写的根 | 环境变量或仓库 `workspace/` |
   | `secretKey` | URL 密钥 | 先随机 12 字节 hex，随即可能被 persistIdentity 换成磁盘值 |
-  | `version` | 展示版本 | `'0.6.9'` |
+  | `version` | 展示版本 | `productVersion()`：读 `webagent-core/extension/package.json`，读失败回退 `'0.6.9'` |
   | `serverName` / `productName` | MCP serverInfo / 日志 | `WebAgent-AgentHost` / `Web Agent` |
   | `tunnelProvider` | 隧道种类标签 | 默认 `'cloudflare'` |
   | `publicTunnelUrl` | Quick Tunnel URL | 默认 `null`，由 tunnel 模块成功时写入 |
@@ -77,6 +77,11 @@
     - L138–141：无论 skip 都 listen `config.port`（48271）。
 
 - **关键变量：** L43 `workbenchDir`；L62 `uiApp`；L68 `mcpApp`；L98–99 两个 Server。导出 `{ uiApp, mcpApp, uiServer, mcpServer }`（L143）。
+
+### 📄 文件名：`extensionVersion.js`
+
+- **文件职责：** 产品展示版本只来自插件清单，避免 `config.js` 再写死一份。
+- **Function `productVersion()`（L1–L7）** — `require('../../extension/package.json').version`；catch 或空则 `'0.6.9'`。
 
 ---
 

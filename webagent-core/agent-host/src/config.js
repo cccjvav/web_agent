@@ -1,5 +1,6 @@
 const path = require('path');
 const crypto = require('crypto');
+const { productVersion } = require('./extensionVersion');
 
 const workspaceRoot = path.resolve(
   process.env.WORKSPACE_ROOT || path.join(__dirname, '../../../workspace')
@@ -11,7 +12,7 @@ const config = {
   host: process.env.WEBAGENT_BIND || '127.0.0.1',
   workspaceRoot,
   secretKey: crypto.randomBytes(12).toString('hex'),
-  version: '0.6.9',
+  version: productVersion(),
   serverName: 'WebAgent-AgentHost',
   productName: 'Web Agent',
   tunnelProvider: 'cloudflare',

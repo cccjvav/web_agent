@@ -3,21 +3,7 @@ const { loadCustom } = require('../models/customizations');
 const { config } = require('../config');
 const { formatWorkspaceContext, resolveEnvironment } = require('../models/profile');
 const { listSkills } = require('../tools/skills');
-
-function toolLabel(name, result, ok) {
-  if (!ok) return name;
-  if (name === 'find_files') return `Found ${(result && (result.total ?? result.files?.length)) || 0} files`;
-  if (name === 'search_files' || name === 'grep_search') {
-    return `Found ${(result && result.totalMatches) || 0} files`;
-  }
-  if (name === 'read_files' || name === 'read_file') {
-    if (result && Array.isArray(result.files)) return `Read ${result.files.length} files`;
-    if (result && result.filePath) return `Read ${result.filePath}`;
-    return 'Read files';
-  }
-  if (name === 'list_directory' || name === 'list_dir') return `Explored ${(result && result.dirPath) || '.'}`;
-  return name;
-}
+const { toolLabel } = require('./toolLabel');
 
 function systemPrompt(mode) {
   const lock =

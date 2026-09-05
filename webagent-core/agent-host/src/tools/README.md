@@ -83,7 +83,8 @@
 - **核心类/函数清单：**
 
   - **Function `computeHash(content)`（L11–L13）** — sha256 hex，utf8。
-  - **Function `toPosixRel(p)`（L15–L17）** — 反斜杠改 `/`。
+  - **Function `tempSibling(fullPath)`（L15–L17）** — `.tmp.${pid}.${Date.now()}.${4字节hex}`，避免同毫秒撞名。
+  - **Function `toPosixRel(p)`（L19–L21）** — 反斜杠改 `/`。
   - **Function `existingAncestor` / `realPathOrJoin` / `isInsideWorkspace`（L19–L49）** — 沿父目录找到已存在的节点再 `realpathSync`，挡住 **symlink / junction** 指到工作区外。
   - **Function `resolveSafePath(relPath)`**
     - 先拒 UNC（`//server/share`）、Windows 盘符（`C:\…`）、`\\?\` 设备路径。
@@ -101,7 +102,7 @@
   - **Function `applyPatch({ filePath, patch, expectedHash=null, dryRun=false, occurrence })`（L174–L298）**
     - **文件不存在：** 若整段像 unified diff 且第一块不是空 SEARCH → `E_BAD_ARGS`（禁止把 diff 当新文件正文）。第一块 search trim 为空则用 replace 当新内容，否则整段 `patch`。不改调用方给的换行。
     - **文件存在：** 没 hash 且非 dryRun → `HASH_REQUIRED`；hash 不符 → `STALE_FILE`。有 blocks 走 `applySearchBlocks`；unified diff / 整段覆盖后仍 `applyEol` 回原 CRLF/LF。
-    - 写 `.tmp.${Date.now()}` 再 `renameSync`。
+    - 写 `tempSibling` 再 `renameSync`。
 
 ---
 
@@ -114,7 +115,7 @@
   - **Function `readFile`（L27–L60）** — 不存在抛；目录抛去用 list_dir。全文 hash；默认 offset=1 limit=400；内容格式 `行号: 文本`。broadcast `file_read`。
   - **Function `deleteFile`（L62–L84）** — 无 path 抛。相对路径空或 `.` 拒绝删根。不存在抛。非空目录抛。目录 `rmdirSync`，文件 `unlinkSync`。broadcast `file_deleted`。
   - **Function `renameFile`（L86–L100）** — `from||filePath` 与 `to||dest` 缺一抛。源不存在 / 目标已存在抛。mkdir 父目录后 rename。broadcast `file_renamed`。
-  - **Function `writeFile`（L120–L170）** — `resolveSafePath`（含敏感拦截）。已存在则要 `confirm_overwrite`、匹配的 `expectedHash`，或**本进程** `sessionHash` 仍等于当前 sha256。磁盘上的 `read-hashes.json`（上次进程留下的）**不能**单独放行覆盖。hash 不符 → `E_STALE_FILE`。写 `.tmp.${Date.now()}` 再 `renameSync`。broadcast `file_written`；`rememberHash`。
+  - **Function `writeFile`（L139–L193）** — `resolveSafePath`（含敏感拦截）。已存在则要 `confirm_overwrite`、匹配的 `expectedHash`，或**本进程** `sessionHash` 仍等于当前 sha256。磁盘上的 `read-hashes.json`（上次进程留下的）**不能**单独放行覆盖。hash 不符 → `E_STALE_FILE`。写 `tempSibling` 再 `renameSync`。broadcast `file_written`；`rememberHash`。
   - **Function `listDir`（L172–L206）** — 内嵌 `scan`：depth 超 `maxDepth` 返回 []；真实路径在工作区外或 **符号链接** skip；`isHidden` skip；目录仅 `recursive && currentDepth < maxDepth` 才扫 children。
   - **Function `grepFile`（L208–L223）** — 单文件：`>1.5MB` 记 large；含 NUL 记 binary；否则按行匹配，命中 content 截 400 字。
   - **Function `grepSearch`（L236–L340）** — 空 query / 超 200 字 / regex 超 120 字 / 嵌套量词（ReDoS）→ `E_BAD_ARGS`。编正则（非 regex 则转义）；非法正则抛。最多扫 800 个文件、收集 2000 条、合计约 8MB；跳过大文件和二进制。分页 `limit` 1–100。返回 `scannedFiles` / `skippedLarge` / `skippedBinary` / `truncated`。
@@ -194,7 +195,7 @@
 ### 📄 文件名：`findFiles.js`
 
 - **Function `globToRegExp`（L7–L16）** — 默认 `**/*`；`**`→`.*`，`*`→`[^/]*`。
-- **Function `findFiles`（L18–L64）** — 起点不存在抛。内嵌 `walk`：readdir 失败 return；hidden skip；满 `maxResults`（默认 40，夹到 1–200）停止并 `truncated:true`。`glob==='**/*'` 时文件都收。起点是文件则只 push 自己。
+- **Function `findFiles`（L18–L59）** — 起点不存在抛。内嵌 `walk`：readdir 失败 return；hidden skip。命中文件时若已满 `maxResults`（默认 40，夹到 1–200）才 `truncated:true` 并停；恰好收满 cap 且没有下一条不算截断。`glob==='**/*'` 时文件都收。起点是文件则只 push 自己。
 
 ---
 

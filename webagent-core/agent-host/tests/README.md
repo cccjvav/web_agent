@@ -10,11 +10,11 @@
 
 | 文件 | 覆盖 |
 |---|---|
-| `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、CRLF 保留、SEARCH 多处拒绝、`occurrence` 指定第几处、grep 跳过大文件、嵌套正则拒绝、find_files `truncated`、新建拒绝 unified diff、空 SEARCH 建新文件、**同一文件并发补丁一个成功一个 STALE** |
+| `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、CRLF 保留、SEARCH 多处拒绝、`occurrence` 指定第几处、grep 跳过大文件、嵌套正则拒绝、find_files 超额 `truncated`、**恰好 cap 条不算截断**、新建拒绝 unified diff、空 SEARCH 建新文件、**同一文件并发补丁一个成功一个 STALE** |
 | `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、**远程 `confirm_dangerous` 仍 `E_FORBIDDEN`**、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek / Chat Plus 客户端配方、`get_logs` 不含 args/chunk/result/patch |
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command`、`cancel_command` 终态保持 cancelled、持久 hash 不能单独覆盖 |
 | `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝；UNC / 盘符路径拒绝；Windows 上再测 junction |
-| `hostPersist.test.js` | `generateNewSecret` 写入 `config.json`；旧盘 `永久顺`/假 `github`/`demo` 迁成 `local-demo`；带 `githubId` 的 octocat **留下**；`usage.json` 进 gitignore；`read-hashes.json` 跨 require 仍能 recalledHash，**sessionHash 为空**；`resetHashes` 删文件 |
+| `hostPersist.test.js` | `config.version` 等于插件 `package.json`；`generateNewSecret` 写入 `config.json`；旧盘 `永久顺`/假 `github`/`demo` 迁成 `local-demo`；带 `githubId` 的 octocat **留下**；`usage.json` 进 gitignore；`read-hashes.json` 跨 require 仍能 recalledHash，**sessionHash 为空**；`resetHashes` 删文件 |
 | `eventBus.test.js` | 日志脱敏 `ghp_` / `sk-` / `Bearer` / `oldSecret`；长 chunk 截断；普通字段留下 |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
 | `bridgeTunnel.test.js` | stub `startQuickTunnel`/`stopTunnel`：cloudflare 启动后 mcpUrl 含 trycloudflare；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
@@ -26,14 +26,15 @@
 | `adminHost.test.js` | 无 Bearer 401；有令牌 ingest；HTML 含 `@alice` / 未绑定 GitHub |
 | `providers.test.js` | `gpt-4o` 无接口字段时 caps/context 为空；声明了 `capabilities`/`context_window` 才填 |
 | `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`、多模型博弈、总结钮、本机演示授权、**GitHub 验证** / **验证令牌**、Codex/挂钩/插件未实现、不得含永久顺 / 「使用 GitHub 登录」）、模块脚本、MCP 401、initialize、tools/list、ping、**ping 后有 usage.json 且 reset-round 不清它**、`/status.tools` 无 inputSchema、远程 `get_logs` 无 args/chunk/patch、空 token 400、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、本机 `POST /api/chat` NDJSON（Ask + Plan 分支再总结） |
-| `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime；不写死 `--auth none` / `trusted-origins *` / `--disable-workspace-trust`；`run-webagent.sh` 接受 `$1` 并检查 node；`run-webagent-vscode.sh` 检查 node 且不 mkdir；runtime 包名 `webagent-code-server-runtime` |
+| `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime；不写死 `--auth none` / `trusted-origins *` / `--disable-workspace-trust`；`syncExtension` 读插件 `package.json` 版本、不写死 `webagent.webagent-core-0.6.9`；`run-webagent.sh` 接受 `$1` 并检查 node；`run-webagent-vscode.sh` 检查 node 且不 mkdir；runtime 包名 `webagent-code-server-runtime` |
 | `workbenchHtml.test.js` | 工作台 HTML 含 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login 等）；不得含「使用 GitHub 登录」 |
 | `docsSite.test.js` | 跑 `docs-site/build.js` 后，提交的 `content.js` 与生成结果一致（忽略当天 `builtAt`） |
 | `codeServerAuth.test.js` | 口令落盘复用；`CODE_SERVER_PASSWORD`；`CODE_SERVER_AUTH=none`；trusted-origins 仅本机 |
 | `skipWorkbench.test.js` | `WEBAGENT_SKIP_WORKBENCH=1` 不占用工作台端口 |
 | `planRound.test.js` | 回合 clamp、空任务/满额/过早总结错误码 |
 | `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；Plan 首轮一支、空发第二支、过早 merge、再 merge `agreementRate==null`；第二参 emit 与 `payload.emit` |
-| `chatMode.test.js` | `@webagent` 默认 Agent=code；`/ask` `/plan` |
+| `chatMode.test.js` | `@webagent` 默认 Agent=code；`/ask` `/plan`（直接 require 插件 `modeFromChatRequest.js`） |
+| `toolLabel.test.js` | 共用短标签：Explored / Found N files / Found N matches / Read / Patched |
 | `profile.test.js` | 环境偏好 / 技术栈写入 `.webagent`，进入指令 |
 | `oauth.test.js` | OAuth 发现、配对、PKCE、Bearer `/mcp`、SSE、session 复用/未知 404/`DELETE`、SSE endpoint 含密钥路径、注册限速 429、refresh 轮换与重放吊销 |
 
@@ -305,9 +306,12 @@
 
 ### 📄 文件名：`chatMode.test.js`
 
-- **文件职责：** **复制**插件里的 `modeFromChatRequest` 逻辑并断言默认 Agent=code（本文件不 `require` extension.js）。
-- **Function `modeFromChatRequest`（L3–L11）** — `request.command` 小写若为 ask/plan/code 则用之；否则看 `prompt` 是否 `/ask|/plan|/code` 前缀；否则 `'code'`。
-- L13–L17：command ask/plan、`/ask 这是什么`、普通「修复测试」、空对象 → 分别 ask/plan/ask/code/code。
+- **文件职责：** 直接 `require('../../extension/modeFromChatRequest')`（不加载 `extension.js`，因此不需要 `vscode`）。
+- L3–L9：command ask/plan、`/ask 这是什么`、普通「修复测试」、空对象 → 分别 ask/plan/ask/code/code。
+
+### 📄 文件名：`toolLabel.test.js`
+
+- **文件职责：** 单测 `src/agent/toolLabel.js`。list / find_files / search_files / read / apply_patch 成功标签；list 失败仍是 `Explored .`。
 
 ---
 
@@ -344,7 +348,7 @@
 
 ## 3. 执行逻辑流（仅本目录）
 
-1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **sandbox** → **hostPersist** → tunnel → **bridgeTunnel** → **apiFiles** → **localControl** → **corsAllow** → **githubAuth** → **usageTracker** → **adminHost** → **providers** → httpSmoke → codeServerNotRunnable → **codeServerAuth** → skipWorkbench → **planRound** → runChat → chatMode → profile → oauth → **docsSite** → **workbenchHtml**。
+1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **sandbox** → **hostPersist** → tunnel → **bridgeTunnel** → **apiFiles** → **localControl** → **corsAllow** → **githubAuth** → **usageTracker** → **adminHost** → **providers** → httpSmoke → codeServerNotRunnable → **codeServerAuth** → skipWorkbench → **planRound** → runChat → chatMode → **toolLabel** → profile → oauth → **docsSite** → **workbenchHtml**。
 2. 单文件：改 `config.workspaceRoot` 指向 tmp → require 被测模块 → assert → 删 tmp。`tunnel` / `chatMode` / `codeServerNotRunnable` 不改工作区。`bridgeTunnel` 改 tmp 工作区并 stub 隧道导出。
 3. 启进程的测试 spawn `src/index.js`，结束必须杀子进程。
 4. 失败路径：有 `main()` 的文件走 `main().catch` → `exit(1)`；`profile.test.js` 同步抛错由 Node 非 0 退出；CMD 的 `run-tests.cmd` 据此 pause。

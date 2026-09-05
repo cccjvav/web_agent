@@ -35,6 +35,8 @@ assert.ok(fs.existsSync(path.join(repoRoot, 'run-webagent-vscode.cmd')));
 assert.ok(fs.existsSync(path.join(repoRoot, 'webagent-core/scripts/run-code-oss.js')));
 assert.ok(ensure.includes('bin/code-server-runtime'));
 assert.ok(ensure.includes('code-server@4.135.0') || ensure.includes("'code-server': VERSION"));
+assert.ok(ensure.includes('extension/package.json'), 'syncExtension must read the extension version');
+assert.ok(!ensure.includes('webagent.webagent-core-0.6.9'), 'do not hardcode the extension dest folder');
 assert.ok(!ensure.includes('code-server-dist'));
 assert.ok(!runner.includes('code-server-dist'));
 assert.ok(runner.includes("require('./codeServerAuth')"));

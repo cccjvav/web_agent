@@ -4,6 +4,7 @@ const { callTool } = require('../tools');
 const { draftLocalBranch, mergeLocalBranches } = require('../tools/consensusEngine');
 const planRound = require('../tools/planRound');
 const { runOpenAI } = require('./openai');
+const { toolLabel } = require('./toolLabel');
 const store = require('../models/store');
 
 const SKIP_DIRS = new Set(['node_modules', '.git', '.cache', 'dist', 'build', '.local', 'bin']);
@@ -14,42 +15,6 @@ function flattenDir(items, acc = []) {
     if (it.children) flattenDir(it.children, acc);
   }
   return acc;
-}
-
-function countFiles(items) {
-  return flattenDir(items).filter((it) => it.type === 'file').length;
-}
-
-function toolLabel(name, result, ok) {
-  if (!ok) {
-    if (name === 'list_directory' || name === 'list_dir') return 'Explored .';
-    if (name === 'read_files' || name === 'read_file') return 'Read files';
-    return name;
-  }
-  if (name === 'list_directory' || name === 'list_dir') {
-    const n = countFiles(result && result.items);
-    return n ? `Explored ${result.dirPath || '.'}` : `Explored ${result.dirPath || '.'}`;
-  }
-  if (name === 'find_files') {
-    const n = (result && (result.total ?? result.files?.length)) || 0;
-    return `Found ${n} files`;
-  }
-  if (name === 'search_files' || name === 'grep_search') {
-    const n = (result && result.totalMatches) || 0;
-    return `Found ${n} files`;
-  }
-  if (name === 'read_files' || name === 'read_file') {
-    if (result && Array.isArray(result.files)) return `Read ${result.files.length} files`;
-    if (result && result.filePath) return `Read ${result.filePath}`;
-    return 'Read files';
-  }
-  if (name === 'run_command' || name === 'execute_command') {
-    return result && result.command ? result.command : 'Run command';
-  }
-  if (name === 'apply_patch') return result && result.filePath ? `Patched ${result.filePath}` : 'apply_patch';
-  if (name === 'git_status') return 'git status';
-  if (name === 'set_todos') return 'Tasks';
-  return name;
 }
 
 async function timedTool(emit, mode, name, args) {
@@ -111,25 +76,13 @@ function detectTestCommand() {
   const fs = require('fs');
   const { loadCustom } = require('../models/customizations');
   const { resolveTechStack } = require('../models/profile');
-  const declared = resolveTechStack(loadCustom()).testCommand;
-  if (declared) return { cmd: declared, kind: 'declared' };
-  const root = config.workspaceRoot;
-  const pkgPath = path.join(root, 'package.json');
-  if (fs.existsSync(pkgPath)) {
-    try {
-      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-      if (pkg.scripts && pkg.scripts.test) return { cmd: 'npm test', kind: 'npm' };
-    } catch {
-      /* ignore */
-    }
+  const stack = resolveTechStack(loadCustom());
+  if (stack.testCommand) return { cmd: stack.testCommand, kind: 'declared' };
+  const testsDir = path.join(config.workspaceRoot, 'tests');
+  if (fs.existsSync(testsDir)) {
+    const pm = stack.packageManager || 'npm';
+    return { cmd: `${pm} test`, kind: 'guess' };
   }
-  if (fs.existsSync(path.join(root, 'pyproject.toml')) || fs.existsSync(path.join(root, 'pytest.ini'))) {
-    return { cmd: 'python -m pytest -q', kind: 'pytest' };
-  }
-  if (fs.existsSync(path.join(root, 'Cargo.toml'))) return { cmd: 'cargo test', kind: 'cargo' };
-  if (fs.existsSync(path.join(root, 'go.mod'))) return { cmd: 'go test ./...', kind: 'go' };
-  const testsDir = path.join(root, 'tests');
-  if (fs.existsSync(testsDir)) return { cmd: 'npm test', kind: 'guess' };
   return null;
 }
 

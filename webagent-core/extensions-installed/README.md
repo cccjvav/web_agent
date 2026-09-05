@@ -6,7 +6,7 @@
 
 **不要在本目录改 JS。** 改 `../extension/extension.js` / `package.json`，再跑 vscode 入口即可覆盖副本。
 
-无 Python。本层无手写源码；副本文件与 `../extension/` 相同（`extension.js`、`package.json`、`resources/icon.svg`）。
+无 Python。本层无手写源码；副本文件与 `../extension/` 相同（`extension.js`、`modeFromChatRequest.js`、`package.json`、`resources/icon.svg`）。
 
 ---
 
@@ -29,6 +29,10 @@
 ### 📄 文件名：`webagent.webagent-core-0.6.9/extension.js`
 
 - **文件职责：** `activate` 等函数的副本。以 `../extension/extension.js` 为准。
+
+### 📄 文件名：`webagent.webagent-core-0.6.9/modeFromChatRequest.js`
+
+- **文件职责：** Chat 模式解析副本。以 `../extension/modeFromChatRequest.js` 为准。`extension.js` 会 `require('./modeFromChatRequest')`。
 
 ### 📄 文件名：`webagent.webagent-core-0.6.9/resources/icon.svg`
 

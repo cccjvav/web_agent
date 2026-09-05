@@ -29,7 +29,8 @@
   - **Function `vscodeDirFromEntry(entry)`（L35–L37）** — `dirname(entry)/../../lib/vscode`。
   - **Function `ensureVscodeDeps(entry)`（L39–L48）** — 已有 `@microsoft/1ds-core-js` 则 return；无 package.json 抛「包不完整」；否则 npm install `--omit=dev --ignore-scripts`。
   - **Function `ensure()`（L50–L81）** — mkdir runtimeRoot；无 entry 则写私有 package.json（只依赖 code-server）并 npm install `code-server@VERSION`；仍无 entry 抛错；`ensureVscodeDeps`；返回 entry。
-  - **Function `syncExtension()`（L83–L117）** — 拷 `package.json`、`extension.js` 到 `extensions-installed/webagent.webagent-core-0.6.9/`；有 icon 则拷；写 `extensions.json`，`location.path` 为本机绝对路径（正斜杠）。
+  - **Function `extensionVersion()`（L83–L90）** — 读 `webagent-core/extension/package.json` 的 `version`；读失败回退 `'0.6.9'`。
+  - **Function `syncExtension()`（L92–L127）** — 目标目录 `extensions-installed/webagent.webagent-core-${version}/`；拷源目录里的 `package.json` 与所有 `.js`（含 `modeFromChatRequest.js`）；有 icon 则拷；写 `extensions.json`，`location.path` 为本机绝对路径（正斜杠）。
 
 - **关键变量：**
   - L5 `VERSION = '4.135.0'`

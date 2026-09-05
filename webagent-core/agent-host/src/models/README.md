@@ -103,7 +103,7 @@
     - L51–L55：Python 清单 → pytest 命令（仅当 testCommand 仍空）。
     - L56–L64：Cargo.toml / go.mod 同样仅当字段仍空。
     - L65：index.html 且不含 HTML → 加 HTML。
-    - L67–L75：uniq join。`notes` 数组从未 push，恒空串。
+    - L67–L75：uniq join。探测结果 `notes` 恒空串（用户备注走 `stack.notes`）。
   - **Function `resolveEnvironment`（L78–L88）** — os/shell 仅当用户值存在且不是 `'auto'` 才覆盖；语言用 `||`。
   - **Function `resolveTechStack`（L90–L100）** — 各字段 `stack.xxx || detected.xxx`。
   - **Function `languageLabel`（L102–L107）** — zh-CN/zh→中文；en→English；follow-user→跟随用户。

@@ -26,10 +26,7 @@ function findFiles({ glob = '**/*', searchPath = '.', maxResults = 40 } = {}) {
   const cap = Math.max(1, Math.min(200, Number(maxResults) || 40));
 
   function walk(dir) {
-    if (files.length >= cap) {
-      truncated = true;
-      return;
-    }
+    if (truncated) return;
     let entries;
     try {
       entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -37,6 +34,7 @@ function findFiles({ glob = '**/*', searchPath = '.', maxResults = 40 } = {}) {
       return;
     }
     for (const entry of entries) {
+      if (truncated) return;
       const full = path.join(dir, entry.name);
       if (!isInsideWorkspace(full)) continue;
       const rel = path.relative(config.workspaceRoot, full).split(path.sep).join('/');
@@ -44,14 +42,12 @@ function findFiles({ glob = '**/*', searchPath = '.', maxResults = 40 } = {}) {
       if (entry.isSymbolicLink && entry.isSymbolicLink()) continue;
       if (entry.isDirectory()) {
         walk(full);
-      } else if (re.test(rel) || re.test(entry.name) || glob === '**/*') {
-        if (glob === '**/*' || re.test(rel) || re.test(entry.name)) {
-          files.push(rel);
+      } else if (glob === '**/*' || re.test(rel) || re.test(entry.name)) {
+        if (files.length >= cap) {
+          truncated = true;
+          return;
         }
-      }
-      if (files.length >= cap) {
-        truncated = true;
-        return;
+        files.push(rel);
       }
     }
   }
