@@ -235,13 +235,15 @@ export function paintBridge() {
     : '正在检查隧道设置…';
   $('#conn-pill').textContent = running ? '已就绪' : '检查中';
   $('#conn-pill').className = 'status-pill ' + (running ? 'ok' : '');
+  const acct = s.bridgeAccount || {};
+  if (typeof acct.loggedIn === 'boolean') state.loggedIn = acct.loggedIn;
   if (state.loggedIn) {
-    $('#acct-label').textContent = 'GitHub @demo · 永久顺 · 当前设备已授权';
-    $('#acct-pill').textContent = '已授权';
+    $('#acct-label').textContent = '本机演示授权（不是 GitHub 登录）';
+    $('#acct-pill').textContent = '演示';
     $('#acct-pill').className = 'status-pill ok';
   } else {
-    $('#acct-label').textContent = '尚未连接 GitHub 账号';
-    $('#acct-pill').textContent = '登录';
+    $('#acct-label').textContent = '尚未完成本机演示授权';
+    $('#acct-pill').textContent = '未授权';
     $('#acct-pill').className = 'status-pill stop';
   }
   const sess = s.mcpSession;

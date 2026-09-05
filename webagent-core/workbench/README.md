@@ -39,7 +39,7 @@
     - L165–L192 `#right-chat`：流、Tasks、chips 快捷句、`#chat-input`、`#btn-agent-pick`、隐藏 `#mode-select`、`#model-select`、发送。
     - L193–L222 `#right-bridge`：等待文案、任务、log、MCP session。L204–L221 `.mcp-session`：`#btn-reset-round`（清除本轮统计）、`#btn-stop-bridge-rb`、`#stat-calls` / `#stat-avg` / `#stat-fail` / `#stat-ok`。
   - L226–L235 `#statusbar`。
-  - L238–L569 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/多模型）。**`#page-env` / `#page-stack` 有完整表单**（`#btn-detect-env`、`#btn-save-env`、`#btn-detect-stack`、`#btn-save-stack`）。Bridge 页含客户端卡片、复制 URL/提示词、打开各站点、GitHub 登录演示、隧道 radio（cloudflare 默认；named/ngrok 输入框 **无对应 JS 去 spawn**）。警告文案写明隧道不转发 `/api`。`#btn-reset-secret` 在高级设置。
+  - L238–L569 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/多模型）。**`#page-env` / `#page-stack` 有完整表单**（`#btn-detect-env`、`#btn-save-env`、`#btn-detect-stack`、`#btn-save-stack`）。Bridge 页含客户端卡片、复制 URL/提示词、打开各站点、**本机演示授权**（按钮 id 仍是 `#btn-gh-login`，文案写不是 GitHub）、隧道 radio（cloudflare 默认；named/ngrok 输入框 **无对应 JS 去 spawn**）。警告文案写明隧道不转发 `/api`。`#btn-reset-secret` 在高级设置。
   - L518–L537 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`。
   - L538 `#toast`；L539 `<script type="module" src="/app.js">`（原生 ES module，无打包）。
 
@@ -110,8 +110,8 @@
 - **Function `renderBrowser`（L91–L139）** — arena/chatgpt 走 `arenaConnect`；deepseek **不调 MCP**。
 - **Function `arenaConnect`（L141–L170）** — 本机 `/mcp/${secret}` initialize/tools/list/resources/read，再 `ui.sendChat(..., { stayOnBridge:true })`。
 - **Function `openSite`（L172–L190）**。
-- **Function `startBridge`（L192–L208）** / **`stopBridge`（L210–L214）** / **`paintBridge`（L216–L257）** — POST start/stop；按 `s.tunnel.url` 显示隧道或「走当前页面源」。
-- **Function `refreshStatus`（L259–L271）** — GET `/api/status`。
+- **Function `startBridge`（L192–L208）** / **`stopBridge`（L210–L214）** / **`paintBridge`（L216–L259）** — POST start/stop；按 `s.tunnel.url` 显示隧道或「走当前页面源」；`bridgeAccount.loggedIn` 同步本地；文案「本机演示授权（不是 GitHub 登录）」。
+- **Function `refreshStatus`（L261–L273）** — GET `/api/status`。
 
 ---
 
@@ -129,7 +129,7 @@
 
 - **文件职责：** 全部 DOM 事件。闭包内 `skillMarkdown` / `SKILL_TPL` / `fillSkillPreview` / `probeProvider`（不导出）。
 - **Function `onClick(id, handler)`（L4–8）** — 节点不存在则跳过，避免 `null.onclick` 把整个 `boot` 打断。
-- **Function `bind`（L10–L475）** — 活动栏、菜单、发送、Enter、Bridge、复制（extension-http toast 不同）、reset-secret、GitHub 登录演示、各 `ui.saveCustom`、技能模板、环境/技术栈探测与保存（`onClick` 守卫）、probe/Add API（排除 modelId 匹配 video|image 当默认）、终端 `POST /api/tool/call` `run_command` mode code、搜索 `search_files` mode ask、Ctrl/Cmd+S。
+- **Function `bind`（L10–L475）** — 活动栏、菜单、发送、Enter、Bridge、复制（extension-http toast 不同）、reset-secret、本机演示授权（POST `/api/bridge/login`，不是 GitHub）、各 `ui.saveCustom`、技能模板、环境/技术栈探测与保存（`onClick` 守卫）、probe/Add API（排除 modelId 匹配 video|image 当默认）、终端 `POST /api/tool/call` `run_command` mode code、搜索 `search_files` mode ask、Ctrl/Cmd+S。
 
 ---
 

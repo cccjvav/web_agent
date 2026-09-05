@@ -99,7 +99,7 @@ router.post('/bridge/reset-secret', (req, res) => {
 router.post('/bridge/start', async (req, res) => {
   const cfg = store.load();
   if (!cfg.bridge.loggedIn || !cfg.bridge.deviceAuthorized) {
-    return res.status(403).json({ success: false, error: '需要先登录并确认当前设备已授权。Chat 模式不受影响。' });
+    return res.status(403).json({ success: false, error: '需要先点本机演示授权。Chat 不受影响。源码没有接 GitHub OAuth。' });
   }
   const provider = (req.body && req.body.tunnelProvider) || cfg.bridge.tunnelProvider || 'cloudflare';
   store.patch({ bridge: { tunnelProvider: provider } });
@@ -354,18 +354,16 @@ router.post('/skills', async (req, res) => {
 });
 
 router.post('/bridge/login', (req, res) => {
-  const provider = (req.body && req.body.provider) || 'github';
-  const username = (req.body && req.body.username) || 'demo';
   store.patch({
     bridge: {
       loggedIn: true,
-      provider,
-      username,
-      license: '永久顺',
+      provider: 'local-demo',
+      username: 'local',
+      license: 'local-demo',
       deviceAuthorized: true
     }
   });
-  res.json({ success: true, username, provider });
+  res.json({ success: true, demo: true, provider: 'local-demo', username: 'local' });
 });
 
 router.post('/bridge/logout', (req, res) => {

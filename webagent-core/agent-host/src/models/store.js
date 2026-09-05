@@ -35,9 +35,9 @@ function defaults() {
     },
     bridge: {
       loggedIn: true,
-      provider: 'github',
-      username: 'demo',
-      license: '永久顺',
+      provider: 'local-demo',
+      username: 'local',
+      license: 'local-demo',
       deviceAuthorized: true,
       tunnelProvider: 'cloudflare',
       persistentMode: false,
@@ -49,6 +49,14 @@ function defaults() {
   };
 }
 
+function normalizeBridge(bridge) {
+  const b = { ...defaults().bridge, ...(bridge || {}) };
+  if (b.license === '永久顺') b.license = 'local-demo';
+  if (b.provider === 'github') b.provider = 'local-demo';
+  if (b.username === 'demo' && b.provider === 'local-demo') b.username = 'local';
+  return b;
+}
+
 function load() {
   try {
     const raw = JSON.parse(fs.readFileSync(storePath(), 'utf8'));
@@ -56,7 +64,7 @@ function load() {
       ...defaults(),
       ...raw,
       models: Array.isArray(raw.models) && raw.models.length ? raw.models : defaults().models,
-      bridge: { ...defaults().bridge, ...(raw.bridge || {}) },
+      bridge: normalizeBridge(raw.bridge),
       multiModel: { ...defaults().multiModel, ...(raw.multiModel || {}) }
     };
   } catch {
@@ -153,7 +161,7 @@ function patch(partial) {
   const next = {
     ...current,
     ...partial,
-    bridge: { ...current.bridge, ...(partial.bridge || {}) },
+    bridge: normalizeBridge({ ...current.bridge, ...(partial.bridge || {}) }),
     multiModel: { ...current.multiModel, ...(partial.multiModel || {}) },
     models: partial.models || current.models
   };

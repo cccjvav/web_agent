@@ -14,13 +14,13 @@
 | `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek / Chat Plus 客户端配方 |
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command` |
 | `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝 |
-| `hostPersist.test.js` | `generateNewSecret` 写入 `config.json`；`read-hashes.json` 跨 require 仍能 recalledHash；`resetHashes` 删文件；`.webagent/.gitignore`；git 仓库补根 ignore |
+| `hostPersist.test.js` | `generateNewSecret` 写入 `config.json`；旧盘 `永久顺`/`github` 迁成 `local-demo`；`read-hashes.json` 跨 require 仍能 recalledHash；`resetHashes` 删文件；`.webagent/.gitignore`；git 仓库补根 ignore |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
 | `bridgeTunnel.test.js` | stub `startQuickTunnel`/`stopTunnel`：cloudflare 启动后 mcpUrl 含 trycloudflare；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
 | `apiFiles.test.js` | `PUT /api/files/content` 走 `write_file`：普通文件写入、`.env` 拒绝、越界拒绝、错 hash 409、`POST /api/skills` |
 | `localControl.test.js` | 回环 / Cloudflare 头 / trycloudflare Host 是否算本机控制面 |
 | `corsAllow.test.js` | MCP Origin 白名单；外站 Origin/Referer 打 `/api` 拒绝 |
-| `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`）、模块脚本、MCP 401、initialize、tools/list、ping、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、本机 `POST /api/chat` NDJSON |
+| `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`、本机演示授权、不得含永久顺）、模块脚本、MCP 401、initialize、tools/list、ping、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、本机 `POST /api/chat` NDJSON |
 | `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime；不写死 `--auth none` / `trusted-origins *` |
 | `codeServerAuth.test.js` | 口令落盘复用；`CODE_SERVER_PASSWORD`；`CODE_SERVER_AUTH=none`；trusted-origins 仅本机 |
 | `skipWorkbench.test.js` | `WEBAGENT_SKIP_WORKBENCH=1` 不占用工作台端口 |
@@ -125,17 +125,18 @@
 ### 📄 文件名：`hostPersist.test.js`
 
 - **文件职责：** 密钥落盘与读哈希缓存跨重启。
-- **Function `main`（L14–L71）** — 同步。
-  - L15–L18：`generateNewSecret()` 后 `store.load().secretKey` 等于内存。
-  - L20–L23：把内存 secret 改成 `deadbeefdead` 再 `persistIdentity`，应回到磁盘值。
-  - L25–L30：`rememberHash` 写出 `.webagent/read-hashes.json`。
-  - L32–L34：`delete require.cache` 后再 require，仍能 `recalledHash`。
-  - L36–L43：`.webagent/.gitignore` 含 config.json 与 read-hashes.json；非 Windows 时 config.json mode `0600`。
-  - L45–L48：删掉嵌套 gitignore 后再 `persistIdentity` 会写回；无 `.git` 时不写工作区根 `.gitignore`。
-  - L50–L60：`git init` 后 `protectWorkspaceSecrets` 追加仓库根 ignore；`git check-ignore` 命中；再调一次不重复。
-  - L62–L63：本仓库根 `.gitignore` 含 `**/.webagent/config.json`。
-  - L65–L67：`resetHashes` 后内存与文件都空。
-- L73：直接 `main()`。
+- **Function `main`（L14–L82）** — 同步。
+  - L15–L24：defaults 的 license/provider 是 `local-demo`；磁盘写成 `永久顺`/`github`/`demo` 后再 `load` 应收成 `local-demo`。
+  - L26–L29：`generateNewSecret()` 后 `store.load().secretKey` 等于内存。
+  - L31–L34：把内存 secret 改成 `deadbeefdead` 再 `persistIdentity`，应回到磁盘值。
+  - L36–L41：`rememberHash` 写出 `.webagent/read-hashes.json`。
+  - L43–L45：`delete require.cache` 后再 require，仍能 `recalledHash`。
+  - L47–L54：`.webagent/.gitignore` 含 config.json 与 read-hashes.json；非 Windows 时 config.json mode `0600`。
+  - L56–L59：删掉嵌套 gitignore 后再 `persistIdentity` 会写回；无 `.git` 时不写工作区根 `.gitignore`。
+  - L61–L71：`git init` 后 `protectWorkspaceSecrets` 追加仓库根 ignore；`git check-ignore` 命中；再调一次不重复。
+  - L73–L74：本仓库根 `.gitignore` 含 `**/.webagent/config.json`。
+  - L76–L78：`resetHashes` 后内存与文件都空。
+- L84：直接 `main()`。
 
 ---
 
@@ -204,9 +205,9 @@
 - **Function `main`（L81–257）**
   - L82–89：spawn `src/index.js`，env 设 `WORKSPACE_ROOT=tmp`、`WORKBENCH_PORT`、`AGENT_HOST_PORT`。
   - L111–113：health JSON `ok` 且 `product==='Web Agent'`。
-  - L115–135：GET `/` HTML 必须含：`Web Agent`；`编辑进化` 或 `CHAT`；`Add API`；`btn-agent-pick`；`agent-pick-menu`；`Web Agent Code`；`环境偏好`；`技术栈`；`技能引导`；`怎么连到本机仓库`；`无需 Plus` 或 `不需要 Plus`；`打开 DeepSeek`；`data-site="deepseek"`；`id="page-env"` / `btn-detect-env` / `page-stack` / `btn-detect-stack`；`type="module"` 与 `/app.js`。
+  - L115–139：GET `/` HTML 必须含：`Web Agent`；`编辑进化` 或 `CHAT`；`Add API`；`btn-agent-pick`；`agent-pick-menu`；`Web Agent Code`；`环境偏好`；`技术栈`；`技能引导`；`怎么连到本机仓库`；`无需 Plus` 或 `不需要 Plus`；`打开 DeepSeek`；`data-site="deepseek"`；`id="page-env"` / `btn-detect-env` / `page-stack` / `btn-detect-stack`；`本机演示授权` 与 `不是 GitHub`；不得含 `永久顺` / `使用 GitHub 登录`；`type="module"` 与 `/app.js`。
   - L137–142：GET `/app.js` 含 `from './js/state.js'`；GET `/js/state.js` 含 `export const state`。
-  - L144–152：GET **mcp 端口** `/api/status`（本机无隧道头）：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===25`；clients 含 arena（无需 Plus）、deepseek（`extension-http`、支持 MCP、无需 Plus）与 chat-plus；`mcpCanonicalUrl` 以 `/mcp` 结尾。
+  - L148–160：GET **mcp 端口** `/api/status`（本机无隧道头）：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===25`；clients 含 arena（无需 Plus）、deepseek（`extension-http`、支持 MCP、无需 Plus）与 chat-plus；`mcpCanonicalUrl` 以 `/mcp` 结尾；`bridgeAccount.license/provider` 为 `local-demo` 且 `loggedIn`。
   - L154–160：错误 secret POST initialize → 401。
   - L162–170：正确 secret initialize 200，instructions 含 Bridge MCP 与 `webagent://instructions`。
   - L172–183：tools/list 25 个且含 apply_patch / start_command / workspace_info。

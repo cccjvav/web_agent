@@ -132,6 +132,10 @@ async function main() {
     assert.ok(page.raw.includes('id="btn-detect-env"'));
     assert.ok(page.raw.includes('id="page-stack"'));
     assert.ok(page.raw.includes('id="btn-detect-stack"'));
+    assert.ok(page.raw.includes('本机演示授权'));
+    assert.ok(page.raw.includes('不是 GitHub'));
+    assert.ok(!page.raw.includes('永久顺'));
+    assert.ok(!page.raw.includes('使用 GitHub 登录'));
     assert.ok(page.raw.includes('type="module"') && page.raw.includes('/app.js'));
 
     const appJs = await request('GET', `http://127.0.0.1:${workbenchPort}/app.js`);
@@ -150,6 +154,9 @@ async function main() {
     assert.ok(status.json.clients.some((c) => c.id === 'deepseek' && c.connectMode === 'extension-http' && !c.needsPlus && c.supportsMcp));
     assert.ok(status.json.clients.some((c) => c.id === 'chat-plus' && c.connectMode === 'extension-http' && !c.needsPlus && c.supportsMcp && c.repoUrl === 'https://github.com/aiguicai/Chat-Plus'));
     assert.ok(status.json.mcpCanonicalUrl && status.json.mcpCanonicalUrl.endsWith('/mcp'));
+    assert.strictEqual(status.json.bridgeAccount.loggedIn, true);
+    assert.strictEqual(status.json.bridgeAccount.provider, 'local-demo');
+    assert.strictEqual(status.json.bridgeAccount.license, 'local-demo');
 
     const secret = status.json.secretKey;
     const denied = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/not-a-real-secret`, {

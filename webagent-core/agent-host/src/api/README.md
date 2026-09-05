@@ -30,7 +30,7 @@
   - **GET `/status`（L53–L89）** — 拼 online、端口、workspace、tools、taskState、logs 40 条、bridgeRunning、mcpInfo 展开、models（apiKey 变成 `hasKey` 布尔）、activeModelId、multiModel、bridgeAccount、mcpSession。无鉴权。
   - **POST `/bridge/reset-secret`（L91–L97）** — `generateNewSecret()`（内存 + `.webagent/config.json`）→ `oauth.revokeAll()` → broadcast `secret_rotated`。
   - **POST `/bridge/start`（L99–L139）**
-    - L101–L103：`!loggedIn || !deviceAuthorized` → **403**。
+    - L101–L103：`!loggedIn || !deviceAuthorized` → **403**（文案：需要先点本机演示授权；源码没有接 GitHub OAuth。Chat 不受影响）。
     - L104–L108：记下 tunnelProvider，patch store，`config.bridgeRunning=true`。
     - L108：`oauth.ensurePairing()`。
     - L111–L117：`provider === 'cloudflare'` 时 **`await tunnel.startQuickTunnel({ port: config.port })`**。失败（无二进制、超时、spawn 错）记下 `tunnelError`，**不**把整个 Bridge 判失败。
@@ -53,7 +53,7 @@
   - **GET `/profile/detect`（L321–L327）** — detectEnvironment + detectTechStack + listSkills。
   - **GET `/customizations`（L329–L331）** / **PUT（L333–L337）** — load / patchCustom。
   - **POST `/skills`（L339–L354）** — name 清洗：非单词变 `-`，去首尾 `-`，最长 40；空 400。默认 content 模板。`callTool('write_file')` 写 `.webagent/skills/<name>/SKILL.md`。
-  - **POST `/bridge/login`（L356–L369）** — 默认 github/demo，patch loggedIn true、永久顺、deviceAuthorized true。
+  - **POST `/bridge/login`（L356–L368）** — 本机演示授权：`provider/license=local-demo`，`loggedIn` 与 `deviceAuthorized` true。**不**请求 GitHub。
   - **POST `/bridge/logout`（L371–L377）** — loggedIn false；**`tunnel.stopTunnel()`**；`bridgeRunning=false`。
 
 - **关键变量：** L22 `router = express.Router()`。

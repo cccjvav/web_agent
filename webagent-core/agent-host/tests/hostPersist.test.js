@@ -12,6 +12,16 @@ const store = require('../src/models/store');
 const { rememberHash, recalledHash, resetHashes } = require('../src/tools/readCache');
 
 function main() {
+  assert.strictEqual(store.defaults().bridge.license, 'local-demo');
+  assert.strictEqual(store.defaults().bridge.provider, 'local-demo');
+  store.save({
+    ...store.defaults(),
+    bridge: { ...store.defaults().bridge, license: '永久顺', provider: 'github', username: 'demo' }
+  });
+  const migrated = store.load();
+  assert.strictEqual(migrated.bridge.license, 'local-demo');
+  assert.strictEqual(migrated.bridge.provider, 'local-demo');
+
   const first = generateNewSecret();
   const disk = store.load();
   assert.strictEqual(disk.secretKey, first);

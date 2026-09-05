@@ -139,6 +139,7 @@
             <li>工作台保存走 write_file，写不进 .env，错 hash 会 409</li>
             <li>挂别人的 Git 仓库时，MCP 密钥和 API Key 会自动 gitignore</li>
             <li>Plan 是内置检查清单，不调用多个模型，没有假 97%</li>
+            <li>Bridge「登录」是本机演示授权，不是 GitHub OAuth，没有「永久顺」</li>
           </ul>
         </div>
       </div>

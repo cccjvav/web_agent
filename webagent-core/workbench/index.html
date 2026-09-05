@@ -504,14 +504,14 @@
 
           <section class="block">
             <div class="block-h">
-              <div>账号与授权 <span id="acct-label" class="mute">尚未连接 GitHub 账号</span></div>
-              <span id="acct-pill" class="status-pill stop">登录</span>
+              <div>本机授权 <span id="acct-label" class="mute">本机演示授权（不是 GitHub 登录）</span></div>
+              <span id="acct-pill" class="status-pill ok">演示</span>
             </div>
             <div class="row-btns">
-              <button type="button" id="btn-gh-login" class="vs-btn">使用 GitHub 登录</button>
-              <button type="button" id="btn-refresh-auth" class="vs-btn">刷新登录状态</button>
+              <button type="button" id="btn-gh-login" class="vs-btn">本机演示授权</button>
+              <button type="button" id="btn-refresh-auth" class="vs-btn">刷新状态</button>
             </div>
-            <p class="hint">安装 ID <code id="install-id">—</code></p>
+            <p class="hint">源码没有接 GitHub OAuth。这个开关只挡住未授权时的 Bridge 启动；Chat 不受影响。安装 ID <code id="install-id">—</code></p>
           </section>
 
           <section class="block">

@@ -135,13 +135,13 @@ export function bind() {
     await fetch('/api/bridge/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ provider: 'github', username: 'demo' })
+      body: JSON.stringify({})
     });
     state.loggedIn = true;
-    ui.paintBridge();
-    ui.toast('已使用 GitHub 登录（演示）');
+    await ui.refreshStatus();
+    ui.toast('已打开本机演示授权（不是 GitHub）');
   };
-  $('#btn-refresh-auth').onclick = () => { ui.paintBridge(); ui.toast('已刷新授权'); };
+  $('#btn-refresh-auth').onclick = () => { ui.paintBridge(); ui.toast('已刷新状态'); };
 
   $('#btn-add-agent').onclick = async () => {
     const agents = [...((state.custom && state.custom.agents) || []), {
