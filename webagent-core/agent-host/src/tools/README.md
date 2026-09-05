@@ -114,9 +114,9 @@
   - **Function `readFile`（L27–L60）** — 不存在抛；目录抛去用 list_dir。全文 hash；默认 offset=1 limit=400；内容格式 `行号: 文本`。broadcast `file_read`。
   - **Function `deleteFile`（L62–L84）** — 无 path 抛。相对路径空或 `.` 拒绝删根。不存在抛。非空目录抛。目录 `rmdirSync`，文件 `unlinkSync`。broadcast `file_deleted`。
   - **Function `renameFile`（L86–L100）** — `from||filePath` 与 `to||dest` 缺一抛。源不存在 / 目标已存在抛。mkdir 父目录后 rename。broadcast `file_renamed`。
-  - **Function `writeFile`（L102–L116）** — mkdir + writeFileSync，无哈希预检。broadcast `file_written`。
-  - **Function `listDir`（L159–L193）** — 内嵌 `scan`：depth 超 `maxDepth` 返回 []；真实路径在工作区外或 **符号链接** skip；`isHidden` skip；目录仅 `recursive && currentDepth < maxDepth` 才扫 children。
-  - **Function `grepSearch`（L195–L252）** — 编正则（非 regex 则转义）；非法正则抛。目录递归时同样跳过工作区外与符号链接。分页 `limit` 1–100，`nextCursor` 或 null。
+  - **Function `writeFile`（L114–L164）** — `resolveSafePath`（含敏感拦截）。已存在则要 `confirm_overwrite` 或 remembered/expected hash；hash 不符 → `E_STALE_FILE`。写 `.tmp.${Date.now()}` 再 `renameSync`。broadcast `file_written`；`rememberHash`。
+  - **Function `listDir`（L166–L200）** — 内嵌 `scan`：depth 超 `maxDepth` 返回 []；真实路径在工作区外或 **符号链接** skip；`isHidden` skip；目录仅 `recursive && currentDepth < maxDepth` 才扫 children。
+  - **Function `grepSearch`（L202–L259）** — 编正则（非 regex 则转义）；非法正则抛。目录递归时同样跳过工作区外与符号链接。分页 `limit` 1–100，`nextCursor` 或 null。
 
 ---
 

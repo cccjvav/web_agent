@@ -9,7 +9,7 @@
 ## 1. 模块概述
 
 - **定位：** 给人点的按钮的后端：状态、Chat 流、文件树、自定义设置、启停 Bridge、探测模型。
-- **依赖：** `../config`、`../tools`、`../tools/readCache`（`resetHashes`）、`../agent/runChat`、`../agent/providers`、`../models/*`、`../mcp/session`（含 `reset`）、`../mcp/instructions`、`../mcp/clients`、`../mcp/oauth`、`../tunnel/cloudflared`、`../utils/eventBus`、`../tools/patchEngine`。
+- **依赖：** `../config`、`../tools`、`../tools/readCache`（`resetHashes`、`rememberHash`）、`../agent/runChat`、`../agent/providers`、`../models/*`、`../mcp/session`（含 `reset`）、`../mcp/instructions`、`../mcp/clients`、`../mcp/oauth`、`../tunnel/cloudflared`、`../utils/eventBus`、`../tools/patchEngine`。
 - **谁调用：** `../index.js`：`uiApp.use('/api', apiRouter)`；`mcpApp.use('/api', rejectUnlessLocalControl, apiRouter)`（隧道/公网 Host 打 48271 的 `/api` 得 404）。浏览器工作台走 **3000**；VS Code 插件走本机 `127.0.0.1:48271`。
 
 ---
@@ -43,18 +43,18 @@
   - **POST `/chat`（L178–L200）** — NDJSON、`X-Accel-Buffering: no`、flushHeaders。emit 写一行 JSON。try `runChat({ mode, message, history, emit })` 后 emit `done`；catch emit `error`；最后 `res.end()`。`runChat` 必须从 payload 取出 emit，否则内置/OpenAI 路径都没有事件流。
   - **POST `/tasks/reset`（L202–L204）** — `resetTaskState()`。
   - **GET `/files/tree`（L206–L213）** — `callTool('list_directory', { recursive:true, maxDepth:5 }, 'ask')`。
-  - **GET `/files/content`（L215–L232）** — query.path → resolveSafePath；不存在或目录 404；否则全文+hash。
-  - **PUT `/files/content`（L234–L249）** — path 与 string content 必须；mkdir+write；broadcast。
-  - **GET `/skills`（L251–L272）** — 扫两个 skills 根，有 SKILL.md 则 preview 400 字（不要求 isDirectory 检查，与 `tools/skills.listSkills` 略不同）。
-  - **POST `/providers/probe`（L274–L282）** — `listRemoteModels`；失败 400。
-  - **GET `/models`（L284–L291）** — apiKey 显示 `••••` 或 `''`。
-  - **POST `/models`（L293–L306）** — 可改 activeModelId；可整表 models；可 upsert `body.model`；可合并 multiModel；然后 **`store.save(cfg)` 整份**。
-  - **GET `/logs`（L308–L310）** — 80 条。
-  - **GET `/profile/detect`（L312–L318）** — detectEnvironment + detectTechStack + listSkills。
-  - **GET `/customizations`（L320–L322）** / **PUT（L324–L328）** — load / patchCustom。
-  - **POST `/skills`（L330–L342）** — name 清洗：非单词变 `-`，去首尾 `-`，最长 40；空 400。默认 content 模板。写 `.webagent/skills/<name>/SKILL.md`。
-  - **POST `/bridge/login`（L344–L357）** — 默认 github/demo，patch loggedIn true、永久顺、deviceAuthorized true。
-  - **POST `/bridge/logout`（L359–L365）** — loggedIn false；**`tunnel.stopTunnel()`**；`bridgeRunning=false`。
+  - **GET `/files/content`（L215–L234）** — query.path → resolveSafePath；不存在或目录 404；否则全文+hash，并 `rememberHash`。
+  - **PUT `/files/content`（L236–L258）** — path 与 string content 必须；`callTool('write_file', { confirm_overwrite:true, expectedHash? }, 'code')`。敏感路径 / 逃出工作区 400；`STALE_FILE` 409。不直接 `writeFileSync`。
+  - **GET `/skills`（L260–L281）** — 扫两个 skills 根，有 SKILL.md 则 preview 400 字（不要求 isDirectory 检查，与 `tools/skills.listSkills` 略不同）。
+  - **POST `/providers/probe`（L283–L291）** — `listRemoteModels`；失败 400。
+  - **GET `/models`（L293–L300）** — apiKey 显示 `••••` 或 `''`。
+  - **POST `/models`（L302–L315）** — 可改 activeModelId；可整表 models；可 upsert `body.model`；可合并 multiModel；然后 **`store.save(cfg)` 整份**。
+  - **GET `/logs`（L317–L319）** — 80 条。
+  - **GET `/profile/detect`（L321–L327）** — detectEnvironment + detectTechStack + listSkills。
+  - **GET `/customizations`（L329–L331）** / **PUT（L333–L337）** — load / patchCustom。
+  - **POST `/skills`（L339–L354）** — name 清洗：非单词变 `-`，去首尾 `-`，最长 40；空 400。默认 content 模板。`callTool('write_file')` 写 `.webagent/skills/<name>/SKILL.md`。
+  - **POST `/bridge/login`（L356–L369）** — 默认 github/demo，patch loggedIn true、永久顺、deviceAuthorized true。
+  - **POST `/bridge/logout`（L371–L377）** — loggedIn false；**`tunnel.stopTunnel()`**；`bridgeRunning=false`。
 
 - **关键变量：** L22 `router = express.Router()`。
 

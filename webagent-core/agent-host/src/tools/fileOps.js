@@ -142,7 +142,14 @@ function writeFile({ filePath, content, expectedHash, confirmOverwrite = false, 
     }
   }
   fs.mkdirSync(path.dirname(fullPath), { recursive: true });
-  fs.writeFileSync(fullPath, content, 'utf8');
+  const tmpPath = `${fullPath}.tmp.${Date.now()}`;
+  fs.writeFileSync(tmpPath, content, 'utf8');
+  try {
+    fs.renameSync(tmpPath, fullPath);
+  } catch (err) {
+    try { fs.unlinkSync(tmpPath); } catch (_) {}
+    throw err;
+  }
   const hash = computeHash(content);
 
   eventBus.broadcast('file_written', { filePath, hash, size: content.length });

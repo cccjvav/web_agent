@@ -13,7 +13,7 @@ const { detectEnvironment, detectTechStack } = require('../models/profile');
 const { listSkills } = require('../tools/skills');
 const eventBus = require('../utils/eventBus');
 const { snapshot: mcpSnapshot, reset: mcpReset } = require('../mcp/session');
-const { resetHashes } = require('../tools/readCache');
+const { resetHashes, rememberHash } = require('../tools/readCache');
 const { getBootstrapPrompt } = require('../mcp/instructions');
 const { listClients } = require('../mcp/clients');
 const oauth = require('../mcp/oauth');
@@ -220,10 +220,12 @@ router.get('/files/content', (req, res) => {
       return res.status(404).json({ error: 'not found' });
     }
     const content = fs.readFileSync(full, 'utf8');
+    const hash = computeHash(content);
+    rememberHash(filePath, hash);
     res.json({
       path: filePath,
       content,
-      hash: computeHash(content),
+      hash,
       size: content.length
     });
   } catch (err) {
@@ -231,20 +233,27 @@ router.get('/files/content', (req, res) => {
   }
 });
 
-router.put('/files/content', (req, res) => {
+router.put('/files/content', async (req, res) => {
   try {
     const filePath = req.body && req.body.path;
     const content = req.body && req.body.content;
     if (!filePath || typeof content !== 'string') {
       return res.status(400).json({ error: 'path and content required' });
     }
-    const full = resolveSafePath(filePath);
-    fs.mkdirSync(path.dirname(full), { recursive: true });
-    fs.writeFileSync(full, content, 'utf8');
-    eventBus.broadcast('file_written', { filePath, hash: computeHash(content) });
-    res.json({ success: true, path: filePath, hash: computeHash(content) });
+    const result = await callTool('write_file', {
+      filePath,
+      content,
+      confirm_overwrite: true,
+      expectedHash: req.body.expectedHash || undefined
+    }, 'code');
+    res.json({ success: true, path: filePath, hash: result.hash });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    const stale = err.code === 'E_STALE_FILE' || /STALE_FILE/.test(String(err.message || ''));
+    res.status(stale ? 409 : 400).json({
+      error: err.message,
+      code: err.code,
+      detail: err.detail
+    });
   }
 });
 
@@ -327,7 +336,7 @@ router.put('/customizations', (req, res) => {
   res.json({ success: true, customizations: next });
 });
 
-router.post('/skills', (req, res) => {
+router.post('/skills', async (req, res) => {
   const name = String((req.body && req.body.name) || '')
     .trim()
     .replace(/[^\w\-]+/g, '-')
@@ -335,10 +344,13 @@ router.post('/skills', (req, res) => {
     .slice(0, 40);
   if (!name) return res.status(400).json({ error: 'name required' });
   const content = String((req.body && req.body.content) || `# Skill: ${name}\n\n把路径告诉模型就会用。\n`);
-  const dir = path.join(config.workspaceRoot, '.webagent', 'skills', name);
-  fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(path.join(dir, 'SKILL.md'), content, 'utf8');
-  res.json({ success: true, path: path.relative(config.workspaceRoot, dir) });
+  const filePath = `.webagent/skills/${name}/SKILL.md`;
+  try {
+    await callTool('write_file', { filePath, content, confirm_overwrite: true }, 'code');
+    res.json({ success: true, path: `.webagent/skills/${name}` });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 router.post('/bridge/login', (req, res) => {

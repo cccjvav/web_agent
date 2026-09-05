@@ -17,6 +17,7 @@
 | `hostPersist.test.js` | `generateNewSecret` 写入 `config.json`；`read-hashes.json` 跨 require 仍能 recalledHash；`resetHashes` 删文件 |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
 | `bridgeTunnel.test.js` | stub `startQuickTunnel`/`stopTunnel`：cloudflare 启动后 mcpUrl 含 trycloudflare；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
+| `apiFiles.test.js` | `PUT /api/files/content` 走 `write_file`：普通文件写入、`.env` 拒绝、越界拒绝、错 hash 409、`POST /api/skills` |
 | `localControl.test.js` | 回环 / Cloudflare 头 / trycloudflare Host 是否算本机控制面 |
 | `corsAllow.test.js` | MCP Origin 白名单；外站 Origin/Referer 打 `/api` 拒绝 |
 | `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`）、模块脚本、MCP 401、initialize、tools/list、ping、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、本机 `POST /api/chat` NDJSON |
@@ -149,6 +150,21 @@
   - L111–L113：未登录 → **403**。
   - L114–L121：finally 还原导出、关 server、删 tmp。
 - L125–L128：`main().catch` → `exit(1)`。
+
+---
+
+### 📄 文件名：`apiFiles.test.js`
+
+- **文件职责：** 挂 `apiRouter`，测工作台写路径走 `write_file`（沙箱 / 敏感 / 原子写），不启完整 `index.js`。
+- **Function `request`（L14–L45）** — 对已 listen 的 server 发 HTTP，body 有则 JSON。
+- **Function `main`（L46–L104）**
+  - L55–L62：`PUT /api/files/content` `notes.md` → 200、磁盘内容正确、无残留 `.tmp.`。
+  - L64–L69：写 `.env` 被拒，磁盘无该文件。
+  - L71–L75：`../outside.txt` 匹配 outside workspace。
+  - L77–L82：已有文件带错 `expectedHash` → 409 `STALE_FILE`，磁盘仍旧内容。
+  - L84–L88：`POST /api/skills` 写出 `.webagent/skills/demo-skill/SKILL.md`。
+  - L90–L93：`GET /api/files/content` 仍返回全文 + hash。
+- L106–L109：`main().catch` → `exit(1)`。
 
 ---
 
@@ -286,7 +302,7 @@
 
 ## 3. 执行逻辑流（仅本目录）
 
-1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **sandbox** → **hostPersist** → tunnel → **bridgeTunnel** → **localControl** → **corsAllow** → httpSmoke → codeServerNotRunnable → **codeServerAuth** → skipWorkbench → runChat → chatMode → profile → oauth。
+1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **sandbox** → **hostPersist** → tunnel → **bridgeTunnel** → **apiFiles** → **localControl** → **corsAllow** → httpSmoke → codeServerNotRunnable → **codeServerAuth** → skipWorkbench → runChat → chatMode → profile → oauth。
 2. 单文件：改 `config.workspaceRoot` 指向 tmp → require 被测模块 → assert → 删 tmp。`tunnel` / `chatMode` / `codeServerNotRunnable` 不改工作区。`bridgeTunnel` 改 tmp 工作区并 stub 隧道导出。
 3. 启进程的测试 spawn `src/index.js`，结束必须杀子进程。
 4. 失败路径：有 `main()` 的文件走 `main().catch` → `exit(1)`；`profile.test.js` 同步抛错由 Node 非 0 退出；CMD 的 `run-tests.cmd` 据此 pause。
