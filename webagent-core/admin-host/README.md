@@ -46,3 +46,25 @@ macOS / Linux：
 - `POST /api/report`：必须 `Authorization: Bearer <令牌>`。
 
 不要把令牌写进仓库。`admin-host/data/` 已在 `.gitignore`。
+
+主工作台 `src/index.js` **不会** `listen` 4174。docs-site 可视化页默认 4173，不要和本进程搞混。
+
+---
+
+## 文件级（`app.js` / `index.js`）
+
+当前处理目标：`webagent-core/admin-host/`。无 Express，只用 `http.createServer`。
+
+### 📄 文件名：`app.js`
+
+- **Function `defaultDataDir`（L6–L9）** — `WEBAGENT_ADMIN_DATA` 或本夹 `data/`。
+- **Function `ensureToken(dataDir)`（L19–L34）** — 环境变量优先；否则读/写 `admin-token.txt`（chmod 0600）。
+- **Function `ingest(dataDir, body)`（L54–L83）** — 无 `installId` 抛 400。按 installId+day 去重后追加。
+- **Function `rankDay(rows, day)`（L85–L111）** — 同一 GitHub 用户或同一 installId 留最新一条；按 toolCalls 降序。
+- **Function `renderPage`（L121–L182）** — HTML 排行榜；无 GitHub 显示「未绑定 GitHub」+ installId。
+- **Function `createHandler({ dataDir, token })`（L207–L250）** — GET `/` HTML；GET `/health`；GET `/api/stats`；POST `/api/report` 要 Bearer；其它 404。
+- **Function `createServer(opts={})`（L252–L258）** — 返回 `{ server, handler, dataDir, token }`。
+
+### 📄 文件名：`index.js`
+
+L1–L14：`WEBAGENT_ADMIN_PORT` 默认 4174，`listen(port, '0.0.0.0')`。打印本机 URL 与数据目录。未设 `WEBAGENT_ADMIN_TOKEN` 时提示令牌文件路径。

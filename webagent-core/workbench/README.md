@@ -39,7 +39,7 @@
     - L165–L197 `#right-chat`：流、Tasks、chips、`#chat-input`、`#btn-agent-pick`、隐藏 `#mode-select`、`#model-select`、`#think-select`、`#plan-badge`、`#btn-plan-merge`（总结）、发送。
     - L193–L222 `#right-bridge`：等待文案、任务、log、MCP session。L204–L221 `.mcp-session`：`#btn-reset-round`（清除本轮统计）、`#btn-stop-bridge-rb`、`#stat-calls` / `#stat-avg` / `#stat-fail` / `#stat-ok`。
   - L226–L235 `#statusbar`。
-  - L238–L575 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/**多模型博弈** `#page-multimodel`）。**`#page-env` / `#page-stack` 有完整表单**。`#page-multimodel`：启用、合并主模型（从已配置选 / 当前对话模型）、合并思考、合并时只读验证、每回合最大分支 2–8 默认 4。Bridge 页含客户端卡片、复制 URL/提示词、打开各站点、**本机演示授权**（按钮 id 仍是 `#btn-gh-login`，文案写不是 GitHub）、隧道 radio（cloudflare 默认；named/ngrok 输入框 **无对应 JS 去 spawn**）。警告文案写明隧道不转发 `/api`。`#btn-reset-secret` 在高级设置。
+  - L238–L590 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/**多模型博弈** `#page-multimodel`）。**`#page-env` / `#page-stack` 有完整表单**。挂钩/插件/Voice/Dictation **标明不会执行或未实现**。Codex 页写「没有接 OpenAI Codex OAuth」，按钮 disabled。API Key 提示写 `.webagent/config.json`，不是钥匙串。`#page-multimodel`：启用、合并主模型、合并思考、合并时只读验证、每回合最大分支 2–8 默认 4。Bridge 页含客户端卡片、复制 URL/提示词、打开各站点、**本机演示授权**（`#btn-gh-login`，文案写不是 GitHub）以及 **GitHub 验证**（`#btn-gh-token` / `#btn-gh-device` / `#btn-gh-clear`）。隧道 radio：cloudflare 默认；named/ngrok 标 **未实现**，启动仍不会 spawn。`#btn-reset-secret` 在高级设置。
   - L577–L596 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`（Plan 文案「分支」）。
   - L597 `#toast`；L598 `<script type="module" src="/app.js">`（原生 ES module，无打包）。
 
@@ -111,15 +111,15 @@
 - **Function `renderBrowser`（L91–L139）** — arena/chatgpt 走 `arenaConnect`；deepseek **不调 MCP**。
 - **Function `arenaConnect`（L141–L170）** — 本机 `/mcp/${secret}` initialize/tools/list/resources/read，再 `ui.sendChat(..., { stayOnBridge:true })`。
 - **Function `openSite`（L172–L190）**。
-- **Function `startBridge`（L192–L208）** / **`stopBridge`（L210–L214）** / **`paintBridge`（L216–L259）** — POST start/stop；按 `s.tunnel.url` 显示隧道或「走当前页面源」；`bridgeAccount.loggedIn` 同步本地；文案「本机演示授权（不是 GitHub 登录）」。
-- **Function `refreshStatus`（L261–L280）** — GET `/api/status`；填 `#model-select`；同步 `state.planRound` 并 `ui.paintPlanComposer`；未触摸过的 `#think-select` 跟 `multiModel.thinkLevel`。
+- **Function `startBridge`（L192–L208）** / **`stopBridge`（L210–L214）** / **`paintBridge`（L216–L276）** — POST start/stop；按 `s.tunnel.url` 显示隧道或「走当前页面源」；`provider==='github'` 显示 `GitHub @用户名`，否则「本机演示授权（不是 GitHub 登录）」；刷新设备码按钮 disabled 与今日 usage 行。
+- **Function `refreshStatus`（L278–L297）** — GET `/api/status`；填 `#model-select`；同步 `state.planRound` 并 `ui.paintPlanComposer`；未触摸过的 `#think-select` 跟 `multiModel.thinkLevel`。
 
 ---
 
 ### 📄 文件名：`js/settings.js`
 
 - **文件职责：** 自定义设置、API Provider 表、skills 列表。
-- **Function `rowList`（L4–L7）** / **`paintCustom`（L9–L79）** — `#mm-merge` 用当前对话模型 + 已配置模型列表。
+- **Function `rowList`（L4–L7）** / **`paintCustom`（L9–L82）** — `#mm-merge` 用当前对话模型 + 已配置模型列表。`#codex-status` 恒写未实现，不读 `c.codex.loggedIn`。
 - **Function `paintProviderTable`（L73–L111）** — radio 改 `activeModelId`。
 - **Function `loadCustomizations`（L113–L117）** / **`saveCustom`（L119–L129）** — GET/PUT `/api/customizations`。
 - **Function `loadSkills`（L131–L139）** — GET `/api/skills`。
@@ -130,7 +130,7 @@
 
 - **文件职责：** 全部 DOM 事件。闭包内 `skillMarkdown` / `SKILL_TPL` / `fillSkillPreview` / `probeProvider`（不导出）。
 - **Function `onClick(id, handler)`（L4–8）** — 节点不存在则跳过，避免 `null.onclick` 把整个 `boot` 打断。
-- **Function `bind`（L10–L492）** — 活动栏、菜单、发送、`#btn-plan-merge`（`planAction:'merge'`）、`#model-select` onchange POST `/api/models` `{ activeModelId }`、`#think-select` 标记 touched、Enter、Bridge、复制、reset-secret、本机演示授权、各 `ui.saveCustom`、技能模板、环境/技术栈、probe/Add API、保存多模型博弈（`maxBranches` 默认 4）、终端 `POST /api/tool/call` `run_command` mode code、搜索 `search_files` mode ask、Ctrl/Cmd+S。
+- **Function `bind`（L10–L547）** — 活动栏、菜单、发送、`#btn-plan-merge`（`planAction:'merge'`）、`#model-select` onchange POST `/api/models` `{ activeModelId }`、`#think-select` 标记 touched、Enter、Bridge、复制、reset-secret、本机演示授权、**验证令牌** `/bridge/token`、设备码 `/bridge/device`+poll、清除 GitHub `/bridge/github/clear`、各 `ui.saveCustom`、技能模板、环境/技术栈、probe/Add API（手动 id 时 caps/context 空，不猜 1.3M）、Codex 钮 toast「未实现，不会假装已登录」、保存多模型博弈（`maxBranches` 默认 4）、终端 `POST /api/tool/call` `run_command` mode code、搜索 `search_files` mode ask、Ctrl/Cmd+S。
 
 ---
 

@@ -9,7 +9,7 @@
 ## 1. 模块概述
 
 - **定位：** 给人点的按钮的后端：状态、Chat 流、文件树、自定义设置、启停 Bridge、探测模型。
-- **依赖：** `../config`、`../tools`、`../tools/readCache`（`resetHashes`、`rememberHash`）、`../tools/planRound`、`../agent/runChat`、`../agent/providers`、`../models/*`、`../mcp/session`（含 `reset`）、`../mcp/instructions`、`../mcp/clients`、`../mcp/oauth`、`../tunnel/cloudflared`、`../utils/eventBus`、`../tools/patchEngine`。
+- **依赖：** `../config`、`../tools`、`../tools/readCache`（`resetHashes`、`rememberHash`）、`../tools/planRound`、`../agent/runChat`、`../agent/providers`、`../models/*`、`../mcp/session`（含 `reset`）、`../mcp/instructions`、`../mcp/clients`、`../mcp/oauth`、`../tunnel/cloudflared`、`../auth/github`、`../usage/tracker`、`../utils/eventBus`、`../tools/patchEngine`。
 - **谁调用：** `../index.js`：`uiApp.use('/api', apiRouter)`；`mcpApp.use('/api', rejectUnlessLocalControl, apiRouter)`（隧道/公网 Host 打 48271 的 `/api` 得 404）。浏览器工作台走 **3000**；VS Code 插件走本机 `127.0.0.1:48271`。
 
 ---
@@ -21,16 +21,16 @@
 - **文件职责：** 注册全部 `/api/*` 路由。
 - **核心类/函数清单：**
 
-  - **Function `publicOrigin(req)`（L24–L28）** — proto/host 来自转发头或 `req`，fallback host 用 `workbenchPort`。
-  - **Function `mcpOrigin(req)`（L30–L33）** — 有 `config.publicTunnelUrl` 用它（去尾 `/`），否则 `publicOrigin`。
-  - **Function `mcpInfo(req)`（L35–L51）** — 拼 `/mcp/${secretKey}`、canonical `/mcp`、bootstrap prompt、`listClients`、pairing、`tunnel.snapshot()`。
+  - **Function `publicOrigin(req)`（L27–L31）** — proto/host 来自转发头或 `req`，fallback host 用 `workbenchPort`。
+  - **Function `mcpOrigin(req)`（L33–L36）** — 有 `config.publicTunnelUrl` 用它（去尾 `/`），否则 `publicOrigin`。
+  - **Function `mcpInfo(req)`（L38–L54）** — 拼 `/mcp/${secretKey}`、canonical `/mcp`、bootstrap prompt、`listClients`、pairing、`tunnel.snapshot()`。
 
 - **路由（逐步，含分支）：**
 
-  - **GET `/status`（L54–L91）** — 拼 online、端口、workspace、tools、taskState、logs 40 条、bridgeRunning、mcpInfo 展开、models（apiKey 变成 `hasKey` 布尔）、activeModelId、multiModel、**`planRound: planRound.snapshot()`**、bridgeAccount、mcpSession。无鉴权。
-  - **POST `/bridge/reset-secret`（L91–L97）** — `generateNewSecret()`（内存 + `.webagent/config.json`）→ `oauth.revokeAll()` → broadcast `secret_rotated`。
-  - **POST `/bridge/start`（L99–L139）**
-    - L101–L103：`!loggedIn || !deviceAuthorized` → **403**（文案：需要先点本机演示授权；源码没有接 GitHub OAuth。Chat 不受影响）。
+  - **GET `/status`（L56–L98）** — 拼 online、端口、workspace、tools、taskState、logs 40 条、bridgeRunning、mcpInfo 展开、models（apiKey 变成 `hasKey` 布尔）、activeModelId、multiModel、**`planRound: planRound.snapshot()`**、bridgeAccount（含 `githubId`）、**`githubAuth.deviceAvailable`**、**`usage: tracker.snapshot()`**、mcpSession。无鉴权。
+  - **POST `/bridge/reset-secret`（L100–L106）** — `generateNewSecret()`（内存 + `.webagent/config.json`）→ `oauth.revokeAll()` → broadcast `secret_rotated`。
+  - **POST `/bridge/start`（L108–L148）**
+    - L110–L112：`!loggedIn || !deviceAuthorized` → **403**（文案：需要先点本机演示授权或完成 GitHub 验证。Chat 不受影响）。
     - L104–L108：记下 tunnelProvider，patch store，`config.bridgeRunning=true`。
     - L108：`oauth.ensurePairing()`。
     - L111–L117：`provider === 'cloudflare'` 时 **`await tunnel.startQuickTunnel({ port: config.port })`**。失败（无二进制、超时、spawn 错）记下 `tunnelError`，**不**把整个 Bridge 判失败。
@@ -53,8 +53,13 @@
   - **GET `/profile/detect`（L321–L327）** — detectEnvironment + detectTechStack + listSkills。
   - **GET `/customizations`（L329–L331）** / **PUT（L333–L337）** — load / patchCustom。
   - **POST `/skills`（L339–L354）** — name 清洗：非单词变 `-`，去首尾 `-`，最长 40；空 400。默认 content 模板。`callTool('write_file')` 写 `.webagent/skills/<name>/SKILL.md`。
-  - **POST `/bridge/login`（L356–L368）** — 本机演示授权：`provider/license=local-demo`，`loggedIn` 与 `deviceAuthorized` true。**不**请求 GitHub。
-  - **POST `/bridge/logout`（L371–L377）** — loggedIn false；**`tunnel.stopTunnel()`**；`bridgeRunning=false`。
+  - **POST `/bridge/login`（L368–L380）** — 本机演示授权：`provider/license=local-demo`，`loggedIn` 与 `deviceAuthorized` true，清空 `githubId`。**不**请求 GitHub。按钮文案仍是「本机演示授权」，**不是**「使用 GitHub 登录」。
+  - **POST `/bridge/token`（L382–L389）** — `github.loginWithToken(body.token)`。空令牌 400。成功只写入用户名/`githubId`，**不**把 PAT 写入 config.json。
+  - **POST `/bridge/device`（L391–L398）** — `startDeviceLogin`。无 `WEBAGENT_GITHUB_CLIENT_ID` → 400 `E_NO_GITHUB_APP`。
+  - **POST `/bridge/device/poll`（L400–L407）** — `pollDeviceLogin`。grant_type 在 github.js 里写死为 `urn:ietf:params:oauth:grant-type:device_code`。
+  - **POST `/bridge/github/clear`（L409–L412）** — `clearGithubKeepDemo()`，仍保留演示授权。
+  - **POST `/bridge/logout`（L414–L428）** — `github.resetPending()`；loggedIn false、清空 githubId；**`tunnel.stopTunnel()`**；`bridgeRunning=false`。
+  - **POST `/bridge/reset-round` 不清 `usage.json`。**
 
 - **关键变量：** L22 `router = express.Router()`。
 

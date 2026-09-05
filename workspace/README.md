@@ -70,7 +70,7 @@
 
 ### 📄 文件名：`.webagent/customizations.json`
 
-- **文件职责：** 工作区自定义（`src/models/customizations.js` 会读）。Git **跟踪**本文件；`.gitignore` 只忽略 `workspace/.webagent/config.json`（MCP 密钥，本树当前无该文件）。
+- **文件职责：** 工作区自定义（`src/models/customizations.js` 会读）。Git **跟踪**本文件；`.gitignore` 忽略 `**/.webagent/config.json`、`read-hashes.json`、`usage.json`（MCP 密钥 / 读缓存 / 日用量，本树当前无这些文件）。
 - **每一个 Key：**
 
   | Key | 用途 | 当前取值 |

@@ -97,15 +97,15 @@
 - **核心类/函数清单：**
 
   - **Function `normalizeBase`（L1–L6）** — trim，去尾 `/`，再去掉尾部 `/chat/completions`。
-  - **Function `guessCaps`（L8–L14）** — 恒含 `'工具'`；vision|image|gpt-4o|flash|pro 加视觉；video 加视频。
-  - **Function `guessContext`（L16–L21）** — video|image → 1.3M；mini|haiku|lite → 128K；否则 1.3M。
-  - **Function `listRemoteModels`（L23–L63）**
-    - L24–L26：无 base / 无 key 抛中文错误。
-    - L27–L35：GET `/models` Bearer；`!ok` 抛 HTTP + 正文前 200。
-    - L37–L41：非 JSON 抛。
-    - L42–L43：`data.data` 数组，否则 `data` 是数组，否则 `[]`；空则抛。
-    - L44–L50：hostname 去 `api.` 取第一段当 group。
-    - L51–L62：映射 id/name/group/contextSize/caps/pricing。
+  - **Function `probeCaps(m)`（L8–L14）** — 只用接口字段 `capabilities` / `supported_features` / `caps`。都没有 → `[]`。**不**用模型 id 猜「视觉」。
+  - **Function `probeContext(m)`（L16–L26）** — `context_length` / `context_window` / `max_model_len` / `contextSize`。数字 ≥1e6 → `nM`；≥1000 → `nK`；没有 → `''`。
+  - **Function `listRemoteModels`（L28–L68）**
+    - L29–L31：无 base / 无 key 抛中文错误。
+    - L32–L40：GET `/models` Bearer；`!ok` 抛 HTTP + 正文前 200。
+    - L42–L46：非 JSON 抛。
+    - L47–L48：`data.data` 数组，否则 `data` 是数组，否则 `[]`；空则抛。
+    - L49–L55：hostname 去 `api.` 取第一段当 group。
+    - L56–L67：映射 id/name/group/`probeContext`/`probeCaps`/pricing。
 
 ---
 

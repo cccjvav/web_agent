@@ -22,18 +22,20 @@
 - **核心类/函数清单：**
 
   - **Function `dir`（L8–L10）** / **`storePath`（L12–L14）** — `.webagent` 与其中 `config.json`。
-  - **Function `defaults`（L16–L50）** — 见下方 Key。
-  - **Function `clampBranches(n)`（L52–L56）** — 非有限 → 4；否则 round 后夹到 2–8。
-  - **Function `normalizeMultiModel(mm)`（L58–L66）** — 与 defaults 合并后 clamp `maxBranches`；`enabled`/`mergeAllowsRead` 非布尔则 true；`mergeModel` 空则 `'auto'`；`thinkLevel` 空则 `'high'`。
-  - **Function `normalizeBridge`（L68–L74）** — 旧盘 `永久顺` / `github` / `demo` 收成 `local-demo`。
-  - **Function `load`（L76–L89）** — try 读 JSON 与 defaults 浅合并；`models` 非非空数组则用默认；`bridge` 走 `normalizeBridge`；`multiModel` 走 `normalizeMultiModel`。**catch 返回 defaults，不抛。**
-  - **Function `restrictFileMode`（L91–L95）** — `chmod 0600`；失败 catch 空（Windows 可能无效）。
-  - **Function `lineCovers` / `alreadyIgnored`（L101–L115）** — 根或嵌套 `.gitignore` 是否已覆盖 `.webagent/config.json` 等。
-  - **Function `ensureNestedIgnore`（L121–L137）** — 写 `.webagent/.gitignore`（`config.json`、`read-hashes.json`），已有则不重复。
-  - **Function `ensureWorkspaceGitignore`（L139–L157）** — 仅当工作区根有 `.git` 时，往**该仓库** `.gitignore` 追加上述两行。不是 git 仓库则跳过。
-  - **Function `protectWorkspaceSecrets`（L159–L165）** — 嵌套 ignore + 工作区 ignore + 已有 `config.json` 则 chmod。失败 catch 空。
-  - **Function `save`（L167–L178）** — 先 `normalizeBridge` + `normalizeMultiModel`，再 mkdir + 美化 JSON + chmod + `protectWorkspaceSecrets`。
-  - **Function `patch`（L180–L190）** — load 后浅合并；bridge 深一层后 `normalizeBridge`；multiModel 走 `normalizeMultiModel`；`models` 仅当 `partial.models` 真才替换。
+  - **Function `defaults`（L16–L51）** — 见下方 Key。含 `bridge.githubId: ''`。
+  - **Function `clampBranches(n)`（L53–L57）** — 非有限 → 4；否则 round 后夹到 2–8。
+  - **Function `normalizeMultiModel(mm)`（L59–L67）** — 与 defaults 合并后 clamp `maxBranches`；`enabled`/`mergeAllowsRead` 非布尔则 true；`mergeModel` 空则 `'auto'`；`thinkLevel` 空则 `'high'`。
+  - **Function `isFakeGithub(b)`（L69–L74）** — `provider==='github'` 且没有 `githubId`，且 username 空/`demo`/`local`。
+  - **Function `normalizeBridge`（L76–L90）** — 旧盘 `永久顺` → `local-demo`；**假** github（`isFakeGithub`）收成 `local-demo`；`username==='demo'` 且已是 local-demo → `'local'`。带 `githubId` 的真 GitHub **留下**，并强制 `loggedIn`/`deviceAuthorized`。
+  - **Function `load`（L92–L105）** — try 读 JSON 与 defaults 浅合并；`models` 非非空数组则用默认；`bridge` 走 `normalizeBridge`；`multiModel` 走 `normalizeMultiModel`。**catch 返回 defaults，不抛。**
+  - **Function `restrictFileMode`（L107–L111）** — `chmod 0600`；失败 catch 空（Windows 可能无效）。
+  - **Function `lineCovers` / `alreadyIgnored`（L117–L131）** — 根或嵌套 `.gitignore` 是否已覆盖 `.webagent/config.json` 等。
+  - **Function `ensureNestedIgnore`（L137–L153）** — 写 `.webagent/.gitignore`（`config.json`、`read-hashes.json`、`usage.json`），已有则不重复。
+  - **Function `ensureWorkspaceGitignore`（L155–L173）** — 仅当工作区根有 `.git` 时，往**该仓库** `.gitignore` 追加上述三行。不是 git 仓库则跳过。
+  - **Function `protectWorkspaceSecrets`（L175–L181）** — 嵌套 ignore + 工作区 ignore + 已有 `config.json` 则 chmod。失败 catch 空。
+  - **Function `save`（L183–L194）** — 先 `normalizeBridge` + `normalizeMultiModel`，再 mkdir + 美化 JSON + chmod + `protectWorkspaceSecrets`。
+  - **Function `patch`（L196–L206）** — load 后浅合并；bridge 深一层后 `normalizeBridge`；multiModel 走 `normalizeMultiModel`；`models` 仅当 `partial.models` 真才替换。
+  - **Function `reset`（L208–L210）** — `save(defaults())`。测试用。
 
 - **关键变量 `defaults()` 的 JSON Key：**
 
@@ -49,7 +51,8 @@
   | `multiModel.mergeAllowsRead` | 合并时只读文件验证 | 默认 `true` |
   | `bridge.loggedIn` | 演示登录 | 默认 `true`（否则 `/bridge/start` 403） |
   | `bridge.deviceAuthorized` | 设备授权 | 默认 `true` |
-  | `bridge.provider` / `username` / `license` | 本机演示授权（**不是** GitHub） | `'local-demo'` / `'local'` / `'local-demo'` |
+  | `bridge.provider` / `username` / `license` | 默认本机演示授权；验证 GitHub 后可为 `'github'` | `'local-demo'` / `'local'` / `'local-demo'` |
+  | `bridge.githubId` | GitHub 数字 id；假 github 迁走时清空 | 默认 `''` |
   | `bridge.tunnelProvider` | 隧道种类 | 默认 `'cloudflare'` |
   | `bridge.persistentMode` | 持久隧道标记 | 默认 `false`（本目录不消费它去 spawn） |
   | `bridge.ngrokDomain` / `namedDomain` / `namedPort` / `quickLinks` | UI 字段 | 空串 / 48271 / `[]` |

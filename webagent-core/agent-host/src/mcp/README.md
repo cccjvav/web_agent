@@ -323,7 +323,7 @@
   | L180–L205 | `prompts/get` | `connect` 走 bootstrap；否则 custom.prompts；没有抛 `E_NOT_FOUND` |
   | L207–L208 | default | `E_UNKNOWN_CMD`（未知 **method**，仍是 JSON-RPC error） |
 
-  **`tools/call` 细节（L139–L165）：**
+  **`tools/call` 细节（L140–L174）：成功 `tracker.record({ ok:true })`，catch `tracker.record({ ok:false })`。只记 Bridge MCP，不记本机 Chat。`reset-round` 不清 usage.json。**
   - L141：无 `name` → 抛 `E_BAD_ARGS`（这才会变成 JSON-RPC error）。
   - L142：broadcast `tool_call_start`，source `'Bridge-Remote'`。
   - L145：**`callTool(name, toolArgs || {}, remoteToolMode(params))`** — 默认 Code；`_meta.mode=ask|plan` 时模式锁生效。
