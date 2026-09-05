@@ -35,6 +35,10 @@ function mcpOrigin(req) {
   return publicOrigin(req);
 }
 
+function isNamedTunnelProvider(provider) {
+  return provider === 'cloudflare-named' || provider === 'named';
+}
+
 function recentToolLogs(limit = 12) {
   return eventBus.getRecentLogs(40)
     .filter((e) => e.type === 'tool_call_end')
@@ -84,6 +88,7 @@ router.get('/status', (req, res) => {
     recentLogs: recentToolLogs(12),
     bridgeRunning: config.bridgeRunning,
     tunnelProvider: cfg.bridge.tunnelProvider,
+    namedDomain: cfg.bridge.namedDomain || '',
     ...mcpInfo(req),
     models: cfg.models.map((m) => ({
       id: m.id,
@@ -124,8 +129,15 @@ router.post('/bridge/start', async (req, res) => {
   if (!cfg.bridge.loggedIn || !cfg.bridge.deviceAuthorized) {
     return res.status(403).json({ success: false, error: '需要先点本机演示授权或完成 GitHub 验证。Chat 不受影响。' });
   }
-  const provider = (req.body && req.body.tunnelProvider) || cfg.bridge.tunnelProvider || 'cloudflare';
-  store.patch({ bridge: { tunnelProvider: provider } });
+  const body = req.body || {};
+  const provider = body.tunnelProvider || cfg.bridge.tunnelProvider || 'cloudflare';
+  const named = isNamedTunnelProvider(provider);
+  const namedDomain = String(body.namedDomain != null ? body.namedDomain : (cfg.bridge.namedDomain || '')).trim();
+  const bodyToken = String(body.namedToken || '').trim();
+  const namedToken = bodyToken || String(cfg.bridge.namedToken || '').trim();
+  const bridgePatch = { tunnelProvider: provider, namedDomain };
+  if (bodyToken) bridgePatch.namedToken = bodyToken;
+  store.patch({ bridge: bridgePatch });
   config.bridgeRunning = true;
   config.tunnelProvider = provider;
   oauth.ensurePairing();
@@ -137,17 +149,29 @@ router.post('/bridge/start', async (req, res) => {
     } catch (err) {
       tunnelError = err && err.message ? err.message : String(err);
     }
+  } else if (named) {
+    try {
+      await tunnel.startNamedTunnel({
+        hostname: namedDomain,
+        token: namedToken,
+        port: config.port
+      });
+    } catch (err) {
+      tunnelError = err && err.message ? err.message : String(err);
+    }
   }
 
   const info = mcpInfo(req);
   const tunnelUrl = info.tunnel && info.tunnel.url;
   let note;
   if (tunnelUrl) {
-    note = `Quick Tunnel 已就绪：${tunnelUrl}`;
+    note = named ? `Named Tunnel 已就绪：${tunnelUrl}` : `Quick Tunnel 已就绪：${tunnelUrl}`;
   } else if (tunnelError) {
     note = `${tunnelError} MCP 暂走当前页面源（本机预览可用）。`;
+  } else if (named) {
+    note = '未启动 Named Tunnel。MCP 走当前页面源。';
   } else {
-    note = '未启动 Quick Tunnel（仅 cloudflare 会拉起 cloudflared）。MCP 走当前页面源。';
+    note = '未启动 Quick Tunnel（仅 cloudflare / Named Tunnel 会拉起 cloudflared）。MCP 走当前页面源。';
   }
 
   eventBus.broadcast('bridge_started', { provider, tunnelUrl: tunnelUrl || null, tunnelError });

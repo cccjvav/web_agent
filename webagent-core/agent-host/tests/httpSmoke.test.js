@@ -140,6 +140,8 @@ async function main() {
     assert.ok(page.raw.includes('不会自动执行'));
     assert.ok(page.raw.includes('没有插件市场'));
     assert.ok(page.raw.includes('Named Tunnel'));
+    assert.ok(page.raw.includes('cloudflared tunnel run --token'));
+    assert.ok(!page.raw.includes('不会被使用'));
     assert.ok(page.raw.includes('未实现'));
     assert.ok(page.raw.includes('.webagent/config.json'));
     assert.ok(page.raw.includes('多模型博弈'));

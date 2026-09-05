@@ -6,7 +6,7 @@ const MAX_KEYS = 40;
 const MAX_ARR = 40;
 const MAX_DEPTH = 6;
 const CLIP_KEYS = /^(diff|patch|content|chunk|stdout|stderr|args|body|command)$/i;
-const SECRET_KEYS = /^(apiKey|token|password|secret|secretKey|authorization|access_token|refresh_token|pat|oldSecret|newSecret)$/i;
+const SECRET_KEYS = /^(apiKey|token|password|secret|secretKey|authorization|access_token|refresh_token|pat|oldSecret|newSecret|namedToken)$/i;
 const MAX_WS = 32;
 const WS_IDLE_MS = 30 * 60 * 1000;
 const SECRET_RE = /(ghp_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9_-]{16,}|Bearer\s+[A-Za-z0-9._\-+=/]{8,})/gi;

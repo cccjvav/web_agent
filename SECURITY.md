@@ -4,7 +4,7 @@
 
 ## Bridge / 隧道
 
-点「启动 Bridge」并装了 cloudflared 之后，会给 48271 办一张临时公网门牌（`*.trycloudflare.com`）。
+点「启动 Bridge」并装了 cloudflared 之后，会给 48271 办一张公网门牌：默认是临时的 `*.trycloudflare.com`；选 Named Tunnel 则是你在 Cloudflare 登记的主机名。
 
 拿到完整 MCP 地址（`/mcp/<密钥>`）的人可以：
 
@@ -12,7 +12,7 @@
 - 打补丁、跑**非破坏性**命令（Windows 上是 PowerShell；`rm -rf` / `git push` / `curl | sh` 一类即使带 `confirm_dangerous` 也会被远程拒绝，只能在本机 Chat 确认）
 - 在你这台电脑上执行 Code 模式允许的其它工具
 
-**不要**把 `trycloudflare.com/mcp/...` 发到群、Issue、截图网盘。域名每次启动都会变，旧地址作废，但当次有效期内等同施工证。
+**不要**把 `trycloudflare.com/mcp/...` 或 Named 的 `https://你的域名/mcp/...` 发到群、Issue、截图网盘。Quick Tunnel 域名每次启动都会变，旧地址作废，但当次有效期内等同施工证。Named 的 Tunnel Token 不要贴进聊天或日志。
 
 公网请求打 `/api` 或 `/ws` 会 404；本机 Chat 走 3000，不经过隧道。CORS 白名单**不是**门卡，URL 里的密钥仍要保管。
 

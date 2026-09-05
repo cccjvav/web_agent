@@ -4,6 +4,7 @@ const eventBus = require('../src/utils/eventBus');
 eventBus.broadcast('tool_result', {
   apiKey: 'sk-abcdefghijklmnopqrstuvwxyz',
   token: 'ghp_abcdefghijklmnopqrstuvwxyz0123',
+  namedToken: 'eyJnamed-tunnel-token-must-hide',
   oldSecret: 'should-not-leak',
   note: 'plain',
   chunk: `Bearer abcdefghijklmnop ${'x'.repeat(2000)}`
@@ -20,7 +21,9 @@ const latest = logs.find((e) => e.type === 'tool_result');
 assert.ok(latest);
 assert.strictEqual(latest.payload.note, 'plain');
 assert.strictEqual(latest.payload.apiKey, '[redacted]');
+assert.strictEqual(latest.payload.namedToken, '[redacted]');
 assert.strictEqual(latest.payload.oldSecret, '[redacted]');
 assert.ok(!blob.includes('should-not-leak'));
+assert.ok(!blob.includes('eyJnamed-tunnel-token-must-hide'));
 
 console.log('eventBus tests passed');

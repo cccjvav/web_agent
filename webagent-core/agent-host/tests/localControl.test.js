@@ -1,4 +1,5 @@
 const assert = require('assert');
+const { config } = require('../src/config');
 const {
   isLoopbackAddress,
   isTunnelRequest,
@@ -26,6 +27,12 @@ assert.strictEqual(isTunnelRequest(req()), false);
 assert.strictEqual(isPublicHost(req({ host: 'random-words.trycloudflare.com' })), true);
 assert.strictEqual(isPublicHost(req({ host: '127.0.0.1:48271' })), false);
 assert.strictEqual(isPublicHost(req({ host: 'localhost:3000' })), false);
+assert.strictEqual(isPublicHost(req({ host: 'mcp.example.com' })), false);
+const origPub = config.publicTunnelUrl;
+config.publicTunnelUrl = 'https://mcp.example.com';
+assert.strictEqual(isPublicHost(req({ host: 'mcp.example.com' })), true);
+assert.strictEqual(isLocalControlPlane(req({ host: 'mcp.example.com' })), false);
+config.publicTunnelUrl = origPub;
 
 assert.strictEqual(isLocalControlPlane(req()), true);
 assert.strictEqual(isLocalControlPlane(req({ headers: { 'cf-ray': 'abc' } })), false);

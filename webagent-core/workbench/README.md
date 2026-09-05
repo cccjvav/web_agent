@@ -39,7 +39,7 @@
     - L165–L197 `#right-chat`：流、Tasks、chips、`#chat-input`、`#btn-agent-pick`、隐藏 `#mode-select`、`#model-select`、`#think-select`、`#plan-badge`、`#btn-plan-merge`（总结）、发送。
     - L193–L222 `#right-bridge`：等待文案、任务、log、MCP session。L204–L221 `.mcp-session`：`#btn-reset-round`（清除本轮统计）、`#btn-stop-bridge-rb`、`#stat-calls` / `#stat-avg` / `#stat-fail` / `#stat-ok`。
   - L226–L235 `#statusbar`。
-  - L238–L590 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/**多模型博弈** `#page-multimodel`）。**`#page-env` / `#page-stack` 有完整表单**。挂钩/插件/Voice/Dictation **标明不会执行或未实现**。Codex 页写「没有接 OpenAI Codex OAuth」，按钮 disabled。API Key 提示写 `.webagent/config.json`，不是钥匙串。`#page-multimodel`：启用、合并主模型、合并思考、合并时只读验证、每回合最大分支 2–8 默认 4。Bridge 页含客户端卡片、复制 URL/提示词、打开各站点、**本机演示授权**（`#btn-gh-login`，文案写不是 GitHub）以及 **GitHub 验证**（`#btn-gh-token` / `#btn-gh-device` / `#btn-gh-clear`）。隧道 radio：cloudflare 默认；named/ngrok 标 **未实现**，启动仍不会 spawn。`#btn-reset-secret` 在高级设置。
+  - L238–L590 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/**多模型博弈** `#page-multimodel`）。**`#page-env` / `#page-stack` 有完整表单**。挂钩/插件/Voice/Dictation **标明不会执行或未实现**。Codex 页写「没有接 OpenAI Codex OAuth」，按钮 disabled。API Key 提示写 `.webagent/config.json`，不是钥匙串。`#page-multimodel`：启用、合并主模型、合并思考、合并时只读验证、每回合最大分支 2–8 默认 4。Bridge 页含客户端卡片、复制 URL/提示词、打开各站点、**本机演示授权**（`#btn-gh-login`，文案写不是 GitHub）以及 **GitHub 验证**（`#btn-gh-token` / `#btn-gh-device` / `#btn-gh-clear`）。隧道 radio：cloudflare 默认会拉 Quick Tunnel；**Named Tunnel** 填 `#named-domain` / `#named-token` 后启动会 `tunnel run --token`；**ngrok 标未实现**，不会 spawn。`#btn-reset-secret` 在高级设置。
   - L577–L596 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`（Plan 文案「分支」）。
   - L597 `#toast`；L598 `<script type="module" src="/app.js">`（原生 ES module，无打包）。
 
@@ -111,8 +111,8 @@
 - **Function `renderBrowser`（L91–L139）** — arena/chatgpt 走 `arenaConnect`；deepseek **不调 MCP**。
 - **Function `arenaConnect`（L141–L170）** — 本机 `/mcp/${secret}` initialize/tools/list/resources/read，再 `ui.sendChat(..., { stayOnBridge:true })`。
 - **Function `openSite`（L172–L190）**。
-- **Function `startBridge`（L192–L208）** / **`stopBridge`（L210–L214）** / **`paintBridge`（L216–L276）** — POST start/stop；按 `s.tunnel.url` 显示隧道或「走当前页面源」；`provider==='github'` 显示 `GitHub @用户名`，否则「本机演示授权（不是 GitHub 登录）」；刷新设备码按钮 disabled 与今日 usage 行。
-- **Function `refreshStatus`（L278–L297）** — GET `/api/status`；填 `#model-select`；同步 `state.planRound` 并 `ui.paintPlanComposer`；未触摸过的 `#think-select` 跟 `multiModel.thinkLevel`。
+- **Function `startBridge`（L192–L213）** / **`stopBridge`（L215–L219）** / **`paintBridge`（L221–L286）** — POST start：radio=`cloudflare-named` 时带上 `#named-domain` / `#named-token`；按 `s.tunnel.url` 显示 Quick Tunnel、Named Tunnel 或「走当前页面源」；空的主机名框用 `s.namedDomain` 填；`provider==='github'` 显示 `GitHub @用户名`，否则「本机演示授权（不是 GitHub 登录）」；刷新设备码按钮 disabled 与今日 usage 行。
+- **Function `refreshStatus`（L288–L307）** — GET `/api/status`；填 `#model-select`；同步 `state.planRound` 并 `ui.paintPlanComposer`；未触摸过的 `#think-select` 跟 `multiModel.thinkLevel`。
 
 ---
 
@@ -165,7 +165,7 @@
 1. 浏览器 GET `/` → SPA 回退 `index.html` → `type=module` 加载 `/app.js` → import `js/*.js`。
 2. `boot` 拉 `/api/status`、文件树、skills、customizations，尝试 Monaco。
 3. 用户 CHAT → `sendChat` → NDJSON `/api/chat` → `handleEvent` 画卡。
-4. 启动 Bridge → POST `/api/bridge/start`（cloudflare 会 `await startQuickTunnel`）→ toast `note` → `paintBridge` 按 `s.tunnel.url` 显示 Quick Tunnel 或「走当前页面源」。
+4. 启动 Bridge → POST `/api/bridge/start`（cloudflare 会 `await startQuickTunnel`；Named 会 `await startNamedTunnel` 并带主机名/Token）→ toast `note` → `paintBridge` 按 `s.tunnel.url` 显示 Quick Tunnel、Named Tunnel 或「走当前页面源」。
 5. 复制提示词读 `clients[].prompt`（hydrate 在服务端）。
 6. `/ws` 把远程 MCP 工具调用画到 BRIDGE。
 7. 「清除本轮统计」→ POST `/api/bridge/reset-round`（清 session 计数 + 读哈希缓存）并清空右侧 log。

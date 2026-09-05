@@ -58,6 +58,92 @@ function stopTunnel() {
   config.publicTunnelUrl = null;
 }
 
+function canonicalNamedUrl(hostname) {
+  let h = String(hostname || '').trim().toLowerCase();
+  h = h.replace(/^https?:\/\//, '');
+  h = h.split('/')[0];
+  h = h.replace(/:\d+$/, '').replace(/^\[|\]$/g, '');
+  if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(h)) return null;
+  return `https://${h}`;
+}
+
+const NAMED_READY_RE = /Registered tunnel connection|\bconnIndex=/i;
+
+function startNamedTunnel({ hostname, token, port = config.port, timeoutMs = 25000 } = {}) {
+  const url = canonicalNamedUrl(hostname);
+  if (!url) {
+    const err = new Error('Named Tunnel 需要主机名，例如 mcp.example.com。');
+    err.code = 'E_NAMED_HOSTNAME';
+    return Promise.reject(err);
+  }
+  const tok = String(token || '').trim();
+  if (!tok) {
+    const err = new Error('Named Tunnel 需要 Tunnel Token（Cloudflare Zero Trust 控制台复制）。');
+    err.code = 'E_NAMED_TOKEN';
+    return Promise.reject(err);
+  }
+  stopTunnel();
+  const bin = findCloudflared();
+  if (!bin) {
+    const err = new Error(installHint());
+    err.code = 'E_NO_CLOUDFLARED';
+    return Promise.reject(err);
+  }
+  const target = `http://127.0.0.1:${port}`;
+  return new Promise((resolve, reject) => {
+    const args = ['tunnel', '--no-autoupdate', 'run', '--token', tok];
+    const isWin = process.platform === 'win32';
+    const needShell = isWin && /\.(cmd|bat)$/i.test(bin);
+    const proc = spawn(bin, args, {
+      windowsHide: true,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: needShell
+    });
+    child = proc;
+    let buf = '';
+    let settled = false;
+
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      stopTunnel();
+      reject(new Error('cloudflared Named Tunnel 已启动但 25 秒内没有连上 Cloudflare。请确认 Token、Public Hostname 指到 ' + target + '，以及本机网络。'));
+    }, timeoutMs);
+
+    const onData = (chunk) => {
+      const text = chunk.toString();
+      buf += text;
+      const safe = tok ? text.split(tok).join('[token]') : text;
+      eventBus.broadcast('tunnel_log', { chunk: safe.slice(0, 400) });
+      if (NAMED_READY_RE.test(buf) && !settled) {
+        settled = true;
+        clearTimeout(timer);
+        quickUrl = url;
+        config.publicTunnelUrl = url;
+        eventBus.broadcast('tunnel_ready', { url, target, named: true });
+        resolve({ url, binary: bin, target, named: true });
+      }
+    };
+
+    proc.stdout.on('data', onData);
+    proc.stderr.on('data', onData);
+    proc.on('error', (err) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      child = null;
+      reject(new Error(`无法启动 cloudflared: ${err.message}`));
+    });
+    proc.on('exit', (code) => {
+      child = null;
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      reject(new Error(`cloudflared 退出（code ${code}）。${installHint()}`));
+    });
+  });
+}
+
 function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) {
   stopTunnel();
   const bin = findCloudflared();
@@ -135,9 +221,11 @@ process.on('SIGTERM', () => { stopTunnel(); process.exit(0); });
 
 module.exports = {
   parseTunnelUrl,
+  canonicalNamedUrl,
   findCloudflared,
   installHint,
   startQuickTunnel,
+  startNamedTunnel,
   stopTunnel,
   snapshot
 };

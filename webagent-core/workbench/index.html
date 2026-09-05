@@ -506,7 +506,7 @@
             <button type="button" class="vs-btn open-site" data-site="manus" title="在 Web Agent 内置浏览器中打开 manus.im">打开 Manus</button>
             <button type="button" class="vs-btn open-site" data-site="shunova" title="在 Web Agent 内置浏览器中打开 shunova.cc">打开 Shunova</button>
           </div>
-          <p class="hint" id="prompt-hint">网页 Agent：先装 cloudflared，启动 Bridge，等 trycloudflare.com，再按上面选中的客户端复制提示词。本机 Chat 不必走这一步。规则在 initialize.instructions；客户端若没吃到，可读 webagent://instructions。</p>
+          <p class="hint" id="prompt-hint">网页 Agent：先装 cloudflared。Quick Tunnel 等 trycloudflare.com；Named Tunnel 填主机名和 Token，并在 Cloudflare 把 Public Hostname 指到 http://127.0.0.1:48271。再按上面选中的客户端复制提示词。本机 Chat 不必走这一步。规则在 initialize.instructions；客户端若没吃到，可读 webagent://instructions。</p>
           <p class="warn-line">⚠ Bridge 可以编辑文件并运行终端命令。请勿公开 MCP 地址。</p>
 
           <section class="block">
@@ -553,17 +553,17 @@
             <label class="tunnel-card">
               <input type="radio" name="tunnel" value="cloudflare-named" />
               <div>
-                <div class="t-name">Cloudflare Named Tunnel <em>未实现</em></div>
-                <p class="hint">界面可以填主机名，但启动 Bridge 时不会拉起 Named Tunnel（仍只会走 Quick Tunnel 或当前页面源）。</p>
+                <div class="t-name">Cloudflare Named Tunnel</div>
+                <p class="hint">在 Cloudflare Zero Trust 建隧道，Public Hostname 指到 http://127.0.0.1:48271。填主机名和 Tunnel Token 后启动 Bridge，会跑 cloudflared tunnel run --token。</p>
                 <input id="named-domain" class="ms-input" placeholder="mcp.example.com" />
-                <input id="named-token" class="ms-input" type="password" placeholder="Tunnel Token（不会被使用）" />
+                <input id="named-token" class="ms-input" type="password" placeholder="Tunnel Token" autocomplete="off" />
               </div>
             </label>
             <label class="tunnel-card">
               <input type="radio" name="tunnel" value="ngrok" />
               <div>
                 <div class="t-name">ngrok 开发域名 <em>未实现</em></div>
-                <p class="hint">选中后不会调用 ngrok。目前只有 Cloudflare Quick Tunnel 会真正拉起 cloudflared。</p>
+                <p class="hint">选中后不会调用 ngrok。目前只有 Cloudflare Quick Tunnel 和 Named Tunnel 会拉起 cloudflared。</p>
               </div>
             </label>
           </section>

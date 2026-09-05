@@ -9,7 +9,7 @@
 ## 1. 模块概述
 
 - **定位：** 跨 MCP / Chat / 命令执行的广播通道；补丁成功后生成 unified diff 给 UI；mcp 端口上的 `/api` 只允许本机回环；浏览器跨域只放行扩展和已知聊天站。
-- **依赖：** Node `events`；npm 包 `diff`、`cors`（仅 `corsAllow.js`）。`localControl.js` 无第三方依赖。
+- **依赖：** Node `events`；npm 包 `diff`、`cors`（仅 `corsAllow.js`）。`localControl.js` 读 `../config`（看当前 `publicTunnelUrl` 的 Host），无第三方依赖。
 - **谁调用：** `../index.js` 把 `/ws` 客户端交给 eventBus，并把 `rejectUnlessLocalControl` + `rejectCrossSiteApi` 挂在两套 app 的 `/api` 前；`mcpCors()` 挂在 mcpApp；几乎所有工具与 `mcp/server.js`、`api/routes.js` broadcast；`patchEngine` 调 `createUnifiedDiff`。
 
 ---
@@ -21,7 +21,7 @@
 - **文件职责：** 单例 EventEmitter + WebSocket 扇出 + 环形日志。
 - **核心类/函数清单：**
 
-  - **Function `clipStr` / `sanitizePayload`（L12–L41）** — 字符串截 4000 并替换 `ghp_` / `github_pat_` / `sk-` / `Bearer …`；对象键 `apiKey|token|password|secret|secretKey|authorization|access_token|refresh_token|pat` 整值改 `[redacted]`；`diff|patch|content|chunk|stdout|stderr|args|body` 截 500。深度 6、键 40、数组 40。
+  - **Function `clipStr` / `sanitizePayload`（L12–L41）** — 字符串截 4000 并替换 `ghp_` / `github_pat_` / `sk-` / `Bearer …`；对象键 `apiKey|token|password|secret|secretKey|authorization|access_token|refresh_token|pat|namedToken` 整值改 `[redacted]`；`diff|patch|content|chunk|stdout|stderr|args|body` 截 500。深度 6、键 40、数组 40。
   - **Class `BridgeEventBus`（L43–L85）**
     - **constructor** — `wsClients` Set；`logs=[]`；`maxLogs=500`。
     - **Method `addWsClient(ws)`** — 已有 ≥32 路则 `close(1013)` 返回 false；否则加入 Set，30 分钟空闲 `close(1001)`。
@@ -48,12 +48,13 @@
 ### 📄 文件名：`localControl.js`
 
 - **文件职责：** 判断请求是不是本机控制面。隧道/公网 Host 打 `/api` 得 404。
-- **Function `isLoopbackAddress(addr)`（L1–L7）** — `127.0.0.1` / `::1` / `::ffff:127.0.0.1` / `localhost`。
-- **Function `isTunnelRequest(req)`（L9–L18）** — 头 `cf-ray` / `cf-connecting-ip` / `cf-visitor` / `cf-ew-via` / `cdn-loop`。
-- **Function `hostName(req)`（L20–L26）** — `Host` 去端口、去 IPv6 方括号。
-- **Function `isPublicHost(req)`（L28–L35）** — `*.trycloudflare.com` 或 ngrok 域名。
-- **Function `isLocalControlPlane(req)`（L37–L42）** — 隧道头或公网 Host → 假；否则看 `socket.remoteAddress` 是否回环。
-- **Function `rejectUnlessLocalControl(req, res, next)`（L44–L47）** — 本机 `next()`，否则 404 `{ error:'not found' }`。
+- **Function `isLoopbackAddress(addr)`（L3–L9）** — `127.0.0.1` / `::1` / `::ffff:127.0.0.1` / `localhost`。
+- **Function `isTunnelRequest(req)`（L11–L20）** — 头 `cf-ray` / `cf-connecting-ip` / `cf-visitor` / `cf-ew-via` / `cdn-loop`。
+- **Function `hostName(req)`（L22–L28）** — `Host` 去端口、去 IPv6 方括号。
+- **Function `publicTunnelHost()`（L30–L34）** — 从 `config.publicTunnelUrl` 取出主机名（无则空串）。
+- **Function `isPublicHost(req)`（L36–L45）** — `*.trycloudflare.com`、ngrok 域名，或当前 `publicTunnelUrl` 的 Host（Named Tunnel 自定义域名）。
+- **Function `isLocalControlPlane(req)`（L47–L52）** — 隧道头或公网 Host → 假；否则看 `socket.remoteAddress` 是否回环。
+- **Function `rejectUnlessLocalControl(req, res, next)`（L54–L57）** — 本机 `next()`，否则 404 `{ error:'not found' }`。
 
 ---
 
@@ -78,7 +79,7 @@
 
 1. `index.js` `attachWss`：浏览器连 3000 的 `/ws` → `addWsClient`，并立即收到 `connected`（**不含** secretKey）。mcp 端口不挂 WebSocket。
 2. mcpApp 先 `mcpCors()`：浏览器预检只给扩展和名单里的聊天站回 `Access-Control-Allow-Origin`。
-3. 两套 app 的 `/api` 先过 `rejectUnlessLocalControl`：Cloudflare 头或 `*.trycloudflare.com` Host → 404；本机回环 `next()`。再过 `rejectCrossSiteApi`：`https://evil.example` 这类 Origin 同样 404。无 Origin 的 Node 插件 / 测试仍通。
+3. 两套 app 的 `/api` 先过 `rejectUnlessLocalControl`：Cloudflare 头、`*.trycloudflare.com` Host、或当前 Named Tunnel 主机名 → 404；本机回环 `next()`。再过 `rejectCrossSiteApi`：`https://evil.example` 这类 Origin 同样 404。无 Origin 的 Node 插件 / 测试仍通。
 4. 工具/MCP 调用 `broadcast` → 写入 logs + 推到所有打开的工作台。
 5. 工作台 `connectWs` 根据 type 刷新终端、文件树、BRIDGE 工具卡、todos。
 6. `patchEngine` 写盘后用 `createUnifiedDiff` 把 diff 放进 broadcast payload，工作台可开 diff 页。

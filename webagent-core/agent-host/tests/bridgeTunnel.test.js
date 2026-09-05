@@ -46,14 +46,22 @@ function request(server, method, urlPath, body) {
 
 async function main() {
   const origStart = tunnel.startQuickTunnel;
+  const origNamed = tunnel.startNamedTunnel;
   const origStop = tunnel.stopTunnel;
   let startCalls = 0;
+  let namedCalls = 0;
   let stopCalls = 0;
+  let lastNamed = null;
 
   tunnel.startQuickTunnel = async () => {
     startCalls += 1;
     config.publicTunnelUrl = 'https://random-words-ab12.trycloudflare.com';
     return { url: config.publicTunnelUrl, binary: 'stub', target: `http://127.0.0.1:${config.port}` };
+  };
+  tunnel.startNamedTunnel = async (opts) => {
+    namedCalls += 1;
+    lastNamed = opts;
+    return origNamed(opts);
   };
   tunnel.stopTunnel = () => {
     stopCalls += 1;
@@ -103,16 +111,46 @@ async function main() {
     assert.ok(!String(fallback.json.mcpUrl).includes('trycloudflare.com'));
 
     startCalls = 0;
-    const named = await request(server, 'POST', '/api/bridge/start', { tunnelProvider: 'named' });
-    assert.strictEqual(named.status, 200);
+    namedCalls = 0;
+    const namedMissing = await request(server, 'POST', '/api/bridge/start', { tunnelProvider: 'named' });
+    assert.strictEqual(namedMissing.status, 200);
     assert.strictEqual(startCalls, 0);
-    assert.ok(String(named.json.note).includes('未启动 Quick Tunnel'));
+    assert.ok(namedCalls >= 1);
+    assert.ok(namedMissing.json.tunnelError);
+    assert.ok(/主机名|Token|Named/.test(String(namedMissing.json.tunnelError)));
+    assert.ok(!String(namedMissing.json.mcpUrl).includes('trycloudflare.com'));
+
+    namedCalls = 0;
+    lastNamed = null;
+    tunnel.startNamedTunnel = async (opts) => {
+      namedCalls += 1;
+      lastNamed = opts;
+      config.publicTunnelUrl = 'https://mcp.example.com';
+      return { url: config.publicTunnelUrl, binary: 'stub', target: `http://127.0.0.1:${config.port}`, named: true };
+    };
+    const namedOk = await request(server, 'POST', '/api/bridge/start', {
+      tunnelProvider: 'cloudflare-named',
+      namedDomain: 'mcp.example.com',
+      namedToken: 'eyJtest-token-not-for-logs'
+    });
+    assert.strictEqual(namedOk.status, 200);
+    assert.strictEqual(namedCalls, 1);
+    assert.strictEqual(lastNamed.hostname, 'mcp.example.com');
+    assert.strictEqual(lastNamed.token, 'eyJtest-token-not-for-logs');
+    assert.ok(String(namedOk.json.mcpUrl).includes('mcp.example.com'));
+    assert.ok(String(namedOk.json.note).includes('Named Tunnel 已就绪'));
+    assert.ok(!String(JSON.stringify(namedOk.json)).includes('eyJtest-token-not-for-logs'));
+    assert.strictEqual(namedOk.json.tunnelError, null);
+    const namedStatus = await request(server, 'GET', '/api/status');
+    assert.strictEqual(namedStatus.json.namedDomain, 'mcp.example.com');
+    assert.ok(!JSON.stringify(namedStatus.json).includes('eyJtest-token-not-for-logs'));
 
     store.patch({ bridge: { loggedIn: false, deviceAuthorized: false } });
     const denied = await request(server, 'POST', '/api/bridge/start', { tunnelProvider: 'cloudflare' });
     assert.strictEqual(denied.status, 403);
   } finally {
     tunnel.startQuickTunnel = origStart;
+    tunnel.startNamedTunnel = origNamed;
     tunnel.stopTunnel = origStop;
     config.publicTunnelUrl = null;
     config.bridgeRunning = false;

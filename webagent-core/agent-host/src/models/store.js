@@ -44,6 +44,7 @@ function defaults() {
       persistentMode: false,
       ngrokDomain: '',
       namedDomain: '',
+      namedToken: '',
       namedPort: 48271,
       quickLinks: []
     }

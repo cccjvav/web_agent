@@ -22,7 +22,7 @@
 - **核心类/函数清单：**
 
   - **Function `dir`（L8–L10）** / **`storePath`（L12–L14）** — `.webagent` 与其中 `config.json`。
-  - **Function `defaults`（L16–L51）** — 见下方 Key。含 `bridge.githubId: ''`。
+  - **Function `defaults`（L16–L52）** — 见下方 Key。含 `bridge.githubId: ''`、`bridge.namedToken: ''`。
   - **Function `clampBranches(n)`（L53–L57）** — 非有限 → 4；否则 round 后夹到 2–8。
   - **Function `normalizeMultiModel(mm)`（L59–L67）** — 与 defaults 合并后 clamp `maxBranches`；`enabled`/`mergeAllowsRead` 非布尔则 true；`mergeModel` 空则 `'auto'`；`thinkLevel` 空则 `'high'`。
   - **Function `isFakeGithub(b)`（L69–L74）** — `provider==='github'` 且没有 `githubId`，且 username 空/`demo`/`local`。

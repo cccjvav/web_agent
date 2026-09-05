@@ -23,22 +23,22 @@
 
   - **Function `publicOrigin(req)`（L27–L31）** — proto/host 来自转发头或 `req`，fallback host 用 `workbenchPort`。
   - **Function `mcpOrigin(req)`（L33–L36）** — 有 `config.publicTunnelUrl` 用它（去尾 `/`），否则 `publicOrigin`。
-  - **Function `recentToolLogs(limit=12)`（L38–L51）** — `getRecentLogs(40)` 里只留 `tool_call_end`，最多 12 条；payload 只含 `tool` / `success` / `durationMs`。
-  - **Function `mcpInfo(req)`（L53–L69）** — 拼 `/mcp/${secretKey}`、canonical `/mcp`、bootstrap prompt、`listClients`、pairing、`tunnel.snapshot()`。
+  - **Function `isNamedTunnelProvider(provider)`（L38–L40）** — `cloudflare-named` 或 `named` 为真。
+  - **Function `recentToolLogs(limit=12)`（L42–L55）** — `getRecentLogs(40)` 里只留 `tool_call_end`，最多 12 条；payload 只含 `tool` / `success` / `durationMs`。
+  - **Function `mcpInfo(req)`（L57–L73）** — 拼 `/mcp/${secretKey}`、canonical `/mcp`、bootstrap prompt、`listClients`、pairing、`tunnel.snapshot()`。不含 Token。
 
 - **路由（逐步，含分支）：**
 
-  - **GET `/status`（L71–L113）** — 拼 online、端口、workspace、**tools 只含 name/description（无 inputSchema）**、taskState、**`recentLogs: recentToolLogs(12)`**、bridgeRunning、mcpInfo 展开、models（apiKey 变成 `hasKey` 布尔）、activeModelId、multiModel、**`planRound: planRound.snapshot()`**、bridgeAccount（含 `githubId`）、**`githubAuth.deviceAvailable`**、**`usage: tracker.snapshot()`**、mcpSession。无鉴权。`recentLogs` 仍在，但是工具名摘要。
-  - **POST `/bridge/reset-secret`（L100–L106）** — `generateNewSecret()`（内存 + `.webagent/config.json`）→ `oauth.revokeAll()` → broadcast `secret_rotated`（不含新旧密钥）。
-  - **POST `/bridge/start`（L108–L148）**
-    - L110–L112：`!loggedIn || !deviceAuthorized` → **403**（文案：需要先点本机演示授权或完成 GitHub 验证。Chat 不受影响）。
-    - L104–L108：记下 tunnelProvider，patch store，`config.bridgeRunning=true`。
-    - L108：`oauth.ensurePairing()`。
-    - L111–L117：`provider === 'cloudflare'` 时 **`await tunnel.startQuickTunnel({ port: config.port })`**。失败（无二进制、超时、spawn 错）记下 `tunnelError`，**不**把整个 Bridge 判失败。
-    - L119–L138：broadcast + json。有 `tunnel.url` → note「Quick Tunnel 已就绪」；否则 note 带错误或「走当前页面源」，`mcpOrigin` 仍用 Host。
-    - Named / ngrok **不** spawn（源码没有对应实现）。
-  - **POST `/bridge/stop`（L141–L146）** — **`tunnel.stopTunnel()`**，`bridgeRunning=false`，broadcast，json 带 mcpInfo。
-  - **POST `/bridge/reset-round`（L148–L153）** — `mcpReset()` + `resetHashes()` + broadcast `bridge_round_reset`。
+  - **GET `/status`（L75–L118）** — 拼 online、端口、workspace、**tools 只含 name/description（无 inputSchema）**、taskState、**`recentLogs: recentToolLogs(12)`**、bridgeRunning、`tunnelProvider`、**`namedDomain`（主机名，不含 Token）**、mcpInfo 展开、models（apiKey 变成 `hasKey` 布尔）、activeModelId、multiModel、**`planRound: planRound.snapshot()`**、bridgeAccount（含 `githubId`）、**`githubAuth.deviceAvailable`**、**`usage: tracker.snapshot()`**、mcpSession。无鉴权。`recentLogs` 仍在，但是工具名摘要。
+  - **POST `/bridge/reset-secret`（L120–L125）** — `generateNewSecret()`（内存 + `.webagent/config.json`）→ `oauth.revokeAll()` → broadcast `secret_rotated`（不含新旧密钥）。
+  - **POST `/bridge/start`（L127–L186）**
+    - L129–L131：`!loggedIn || !deviceAuthorized` → **403**（文案：需要先点本机演示授权或完成 GitHub 验证。Chat 不受影响）。
+    - L132–L141：记下 tunnelProvider；Named 收下 `namedDomain` / `namedToken`（Token 只在 body 非空时写入 store）；`config.bridgeRunning=true`。
+    - L143：`oauth.ensurePairing()`。
+    - L146–L162：`provider === 'cloudflare'` 时 **`await tunnel.startQuickTunnel({ port: config.port })`**；`cloudflare-named` / `named` 时 **`await tunnel.startNamedTunnel({ hostname, token, port })`**。失败（无二进制、缺主机名/Token、超时、spawn 错）记下 `tunnelError`，**不**把整个 Bridge 判失败。ngrok 不 spawn。
+    - L164–L185：broadcast + json。有 `tunnel.url` → note「Quick Tunnel 已就绪」或「Named Tunnel 已就绪」；否则 note 带错误或「走当前页面源」，`mcpOrigin` 仍用 Host。响应 **不含** Token。
+  - **POST `/bridge/stop`（L188–L193）** — **`tunnel.stopTunnel()`**，`bridgeRunning=false`，broadcast，json 带 mcpInfo。
+  - **POST `/bridge/reset-round`（L195–L200）** — `mcpReset()` + `resetHashes()` + broadcast `bridge_round_reset`。
   - **POST `/consensus/run`（L155–L163）** — `runMultiModelConsensus`；catch 500。
   - **POST `/tool/call`（L165–L176）** — body `{ name, arguments, mode='code' }`；broadcast 后 `callTool(..., mode)`；失败 400。
   - **POST `/chat`（L180–L202）** — NDJSON、`X-Accel-Buffering: no`、flushHeaders。emit 写一行 JSON。try `runChat({ mode, message, history, modelId, thinkLevel, planAction, emit })` 后 emit `done`；catch emit `error`；最后 `res.end()`。`runChat` 必须从 payload 取出 emit，否则内置/OpenAI 路径都没有事件流。
@@ -70,7 +70,7 @@
 
 1. 工作台 boot → GET `/status` 填 Bridge 卡与模型下拉。
 2. CHAT 发送 → POST `/chat` → `runChat` → 工具经 `callTool`。
-3. 点启动 Bridge → POST `/bridge/start`：登录校验后置 `bridgeRunning`、配对码；`tunnelProvider==='cloudflare'` 时 `await startQuickTunnel`。成功则 `mcpOrigin` 用 trycloudflare 公网 URL；失败仍 200，MCP 走当前页面 Host。
+3. 点启动 Bridge → POST `/bridge/start`：登录校验后置 `bridgeRunning`、配对码；`tunnelProvider==='cloudflare'` 时 `await startQuickTunnel`；`cloudflare-named` / `named` 时 `await startNamedTunnel`（要主机名 + Token）。成功则 `mcpOrigin` 用 trycloudflare 或 `https://<hostname>`；失败仍 200，MCP 走当前页面 Host。ngrok 不 spawn。
 4. 点停止 Bridge → POST `/bridge/stop` → `stopTunnel()` 清子进程与 `publicTunnelUrl`。
 5. 点「清除本轮统计」→ POST `/bridge/reset-round` → 清 MCP session 计数与 `readCache` 哈希。
 6. 设置页表单 → PUT `/customizations` 或 POST `/models`。

@@ -1,3 +1,5 @@
+const { config } = require('../config');
+
 function isLoopbackAddress(addr) {
   const a = String(addr || '').trim().toLowerCase();
   if (!a) return false;
@@ -25,12 +27,20 @@ function hostName(req) {
   return host.replace(/:\d+$/, '').replace(/^\[|\]$/g, '');
 }
 
+function publicTunnelHost() {
+  const raw = String((config && config.publicTunnelUrl) || '').trim().toLowerCase();
+  if (!raw) return '';
+  return raw.replace(/^https?:\/\//, '').split('/')[0].replace(/:\d+$/, '').replace(/^\[|\]$/g, '');
+}
+
 function isPublicHost(req) {
   const name = hostName(req);
   if (!name) return false;
   if (name === 'localhost' || name === '127.0.0.1' || name === '::1') return false;
   if (name.endsWith('.trycloudflare.com')) return true;
   if (name.endsWith('.ngrok-free.app') || name.endsWith('.ngrok.io') || name.endsWith('.ngrok.app')) return true;
+  const pub = publicTunnelHost();
+  if (pub && name === pub) return true;
   return false;
 }
 

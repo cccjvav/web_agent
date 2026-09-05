@@ -191,10 +191,15 @@ export async function openSite(key) {
 
 export async function startBridge() {
   const provider = ($('input[name="tunnel"]:checked') || {}).value || 'cloudflare';
+  const body = { tunnelProvider: provider };
+  if (provider === 'cloudflare-named' || provider === 'named') {
+    body.namedDomain = ($('#named-domain') && $('#named-domain').value) || '';
+    body.namedToken = ($('#named-token') && $('#named-token').value) || '';
+  }
   const res = await fetch('/api/bridge/start', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ tunnelProvider: provider })
+    body: JSON.stringify(body)
   });
   const data = await res.json();
   if (!data.success) { ui.toast(data.error || '无法启动'); return false; }
@@ -223,15 +228,22 @@ export function paintBridge() {
   $('#mcp-url').textContent = s.mcpUrl || '—';
   $('#bridge-sub').textContent = running
     ? `远程端点已开启 · ${state.stats.calls} 个活动请求`
-    : '启动 Bridge 后将自动生成 Cloudflare 临时 MCP 地址。';
+    : '启动 Bridge 后：Quick Tunnel 给临时 trycloudflare 地址；Named Tunnel 用你填的主机名。';
   $('#sb-bridge').textContent = running ? 'Bridge 运行中' : 'Bridge 已停止';
   $('#install-id').textContent = s.installId || '—';
+  const nd = $('#named-domain');
+  if (nd && s.namedDomain && !nd.value) nd.value = s.namedDomain;
+  const radios = $$('input[name="tunnel"]');
+  const tp = s.tunnelProvider === 'named' ? 'cloudflare-named' : s.tunnelProvider;
+  if (radios && tp) radios.forEach((r) => { r.checked = r.value === tp; });
   ui.paintClients();
   const tun = s.tunnel || {};
+  const host = tun.url ? String(tun.url).replace(/^https?:\/\//, '') : '';
+  const namedReady = tun.url && !String(tun.url).includes('trycloudflare.com');
   $('#conn-label').textContent = running
     ? (tun.url
-      ? `Cloudflare Quick Tunnel 已就绪 · ${String(tun.url).replace(/^https?:\/\//, '')}`
-      : '未找到 cloudflared 时，MCP 走当前页面源（仅本预览可用）')
+      ? `${namedReady ? 'Named Tunnel' : 'Cloudflare Quick Tunnel'} 已就绪 · ${host}`
+      : '未找到 cloudflared 或隧道未就绪时，MCP 走当前页面源（仅本预览可用）')
     : '正在检查隧道设置…';
   $('#conn-pill').textContent = running ? '已就绪' : '检查中';
   $('#conn-pill').className = 'status-pill ' + (running ? 'ok' : '');
