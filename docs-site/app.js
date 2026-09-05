@@ -137,6 +137,7 @@
             <li>MCP CORS 白名单；外站 Origin 不能打本机 /api</li>
             <li>网页 VS Code 默认要登录口令，trusted-origins 不再是 *</li>
             <li>工作台保存走 write_file，写不进 .env，错 hash 会 409</li>
+            <li>挂别人的 Git 仓库时，MCP 密钥和 API Key 会自动 gitignore</li>
           </ul>
         </div>
       </div>

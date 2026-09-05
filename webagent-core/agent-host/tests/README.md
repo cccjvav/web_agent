@@ -14,7 +14,7 @@
 | `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek / Chat Plus 客户端配方 |
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command` |
 | `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝 |
-| `hostPersist.test.js` | `generateNewSecret` 写入 `config.json`；`read-hashes.json` 跨 require 仍能 recalledHash；`resetHashes` 删文件 |
+| `hostPersist.test.js` | `generateNewSecret` 写入 `config.json`；`read-hashes.json` 跨 require 仍能 recalledHash；`resetHashes` 删文件；`.webagent/.gitignore`；git 仓库补根 ignore |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
 | `bridgeTunnel.test.js` | stub `startQuickTunnel`/`stopTunnel`：cloudflare 启动后 mcpUrl 含 trycloudflare；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
 | `apiFiles.test.js` | `PUT /api/files/content` 走 `write_file`：普通文件写入、`.env` 拒绝、越界拒绝、错 hash 409、`POST /api/skills` |
@@ -125,13 +125,17 @@
 ### 📄 文件名：`hostPersist.test.js`
 
 - **文件职责：** 密钥落盘与读哈希缓存跨重启。
-- **Function `main`（L13–L41）** — 同步。
-  - L14–L17：`generateNewSecret()` 后 `store.load().secretKey` 等于内存。
-  - L19–L22：把内存 secret 改成 `deadbeefdead` 再 `persistIdentity`，应回到磁盘值。
-  - L24–L29：`rememberHash` 写出 `.webagent/read-hashes.json`。
-  - L31–L33：`delete require.cache` 后再 require，仍能 `recalledHash`。
-  - L35–L37：`resetHashes` 后内存与文件都空。
-- L43：直接 `main()`。
+- **Function `main`（L14–L71）** — 同步。
+  - L15–L18：`generateNewSecret()` 后 `store.load().secretKey` 等于内存。
+  - L20–L23：把内存 secret 改成 `deadbeefdead` 再 `persistIdentity`，应回到磁盘值。
+  - L25–L30：`rememberHash` 写出 `.webagent/read-hashes.json`。
+  - L32–L34：`delete require.cache` 后再 require，仍能 `recalledHash`。
+  - L36–L43：`.webagent/.gitignore` 含 config.json 与 read-hashes.json；非 Windows 时 config.json mode `0600`。
+  - L45–L48：删掉嵌套 gitignore 后再 `persistIdentity` 会写回；无 `.git` 时不写工作区根 `.gitignore`。
+  - L50–L60：`git init` 后 `protectWorkspaceSecrets` 追加仓库根 ignore；`git check-ignore` 命中；再调一次不重复。
+  - L62–L63：本仓库根 `.gitignore` 含 `**/.webagent/config.json`。
+  - L65–L67：`resetHashes` 后内存与文件都空。
+- L73：直接 `main()`。
 
 ---
 

@@ -25,10 +25,11 @@
     - L4–L6：`workspaceRoot = path.resolve(process.env.WORKSPACE_ROOT || …/workspace)`。
     - L8–L21 `config` 对象，见 Key 表。
   - **Function `generateNewSecret()`（L23–L29）** — 12 字节 hex 写入 `config.secretKey`；lazy `require('./models/store').patch({ secretKey })` 落盘（失败 catch 空）。返回新值。
-  - **Function `persistIdentity(store)`（L31–L37）**
+  - **Function `persistIdentity(store)`（L31–L40）**
     - L32：`store.load()`。
     - L33–L34：有 `saved.secretKey` 则覆盖内存，否则 `store.patch({ secretKey })`。
     - L35–L36：`installId` 同样。
+    - L37–L39：调用 `store.protectWorkspaceSecrets()`（gitignore + chmod）；失败 catch 空。
 
 - **关键变量 `config` Key：**
 

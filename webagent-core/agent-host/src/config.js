@@ -34,6 +34,9 @@ function persistIdentity(store) {
   else store.patch({ secretKey: config.secretKey });
   if (saved.installId) config.installId = saved.installId;
   else store.patch({ installId: config.installId });
+  try {
+    if (typeof store.protectWorkspaceSecrets === 'function') store.protectWorkspaceSecrets();
+  } catch (_) {}
 }
 
 module.exports = {

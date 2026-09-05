@@ -21,11 +21,16 @@
 - **文件职责：** 读写 `<工作区>/.webagent/config.json`。
 - **核心类/函数清单：**
 
-  - **Function `dir`（L5–L7）** / **`storePath`（L9–L11）** — `.webagent` 与其中 `config.json`。
-  - **Function `defaults`（L13–L47）** — 见下方 Key。
-  - **Function `load`（L49–L62）** — try 读 JSON 与 defaults 浅合并；`models` 非非空数组则用默认；`bridge`/`multiModel` 再与默认合并。**catch 返回 defaults，不抛。**
-  - **Function `save`（L64–L68）** — mkdir + 美化 JSON。
-  - **Function `patch`（L70–L80）** — load 后浅合并；bridge/multiModel 深一层；`models` 仅当 `partial.models` 真才替换。
+  - **Function `dir`（L8–L10）** / **`storePath`（L12–L14）** — `.webagent` 与其中 `config.json`。
+  - **Function `defaults`（L16–L50）** — 见下方 Key。
+  - **Function `load`（L52–L65）** — try 读 JSON 与 defaults 浅合并；`models` 非非空数组则用默认；`bridge`/`multiModel` 再与默认合并。**catch 返回 defaults，不抛。**
+  - **Function `restrictFileMode`（L67–L71）** — `chmod 0600`；失败 catch 空（Windows 可能无效）。
+  - **Function `lineCovers` / `alreadyIgnored`（L77–L91）** — 根或嵌套 `.gitignore` 是否已覆盖 `.webagent/config.json` 等。
+  - **Function `ensureNestedIgnore`（L97–L113）** — 写 `.webagent/.gitignore`（`config.json`、`read-hashes.json`），已有则不重复。
+  - **Function `ensureWorkspaceGitignore`（L115–L133）** — 仅当工作区根有 `.git` 时，往**该仓库** `.gitignore` 追加上述两行。不是 git 仓库则跳过。
+  - **Function `protectWorkspaceSecrets`（L135–L141）** — 嵌套 ignore + 工作区 ignore + 已有 `config.json` 则 chmod。失败 catch 空。
+  - **Function `save`（L143–L149）** — mkdir + 美化 JSON + chmod + `protectWorkspaceSecrets`。
+  - **Function `patch`（L151–L161）** — load 后浅合并；bridge/multiModel 深一层；`models` 仅当 `partial.models` 真才替换。
 
 - **关键变量 `defaults()` 的 JSON Key：**
 
@@ -113,7 +118,7 @@
 
 ## 3. 执行逻辑流
 
-1. 进程启动：`config.persistIdentity(store)` 从 `config.json` 取回 secret/installId，没有则 patch 进去。
+1. 进程启动：`config.persistIdentity(store)` 从 `config.json` 取回 secret/installId，没有则 patch 进去；然后 `protectWorkspaceSecrets`（密钥仍在工作区，但 git 忽略）。
 2. 工作台设置页 PUT `/api/customizations` → `saveCustom` 写 json+md。
 3. MCP `initialize` / Chat systemPrompt 读 `loadCustom` + `formatWorkspaceContext`。
 4. 工具 remember/recall 只碰 `memory/`。

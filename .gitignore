@@ -21,9 +21,9 @@ out/
 .DS_Store
 Thumbs.db
 
-# Local secrets / model keys
-workspace/.webagent/config.json
-workspace/.webagent/read-hashes.json
+# Local secrets / model keys (any workspace path, not only ./workspace)
+**/.webagent/config.json
+**/.webagent/read-hashes.json
 
 # Rewritten on launch with a machine-absolute path
 webagent-core/extensions-installed/extensions.json
