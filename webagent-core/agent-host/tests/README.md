@@ -10,7 +10,7 @@
 
 | 文件 | 覆盖 |
 |---|---|
-| `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、grep |
+| `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、CRLF 保留、SEARCH 多处拒绝、`occurrence` 指定第几处、grep |
 | `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek / Chat Plus 客户端配方 |
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command` |
 | `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝 |
@@ -55,6 +55,7 @@
   - L58–L75：磁盘直接写 `orphan.js`（**从未** `readFile`）再补丁 → `HASH_REQUIRED` 且 `err.detail.currentHash` 有值。
   - L77–L92：SEARCH 不在文件中 → 消息匹配 `Patch conflict`。
   - L94–L95：`grepSearch({ query:'function add', searchPath:'.' })`，`totalMatches >= 1`。
+  - 另测：CRLF 文件打 LF 的 SEARCH 后仍是 `\r\n`；两处相同 SEARCH 拒绝；`occurrence:2` 只改第二处。
   - L97：删临时目录。L98：打印 passed。
 - L101–L104：`main().catch` → 打印并 `exit(1)`。
 

@@ -91,17 +91,14 @@
     - L60–L62：`isInsideWorkspace` 为假（真实路径跑出工作区）同样抛。
     - L63：posix 非空且不是 `.` → `assertNotSensitive`。
     - L64：返回**逻辑**绝对路径（写新文件用；读/写会再被真实路径检查拦住）。
-  - **Function `parseSearchReplaceBlocks(patchText)`（L32–L43）** — 正则 `<<<<< SEARCH` … `=====` … `>>>>> REPLACE`，收集 `{ search, replace }`。
-  - **Function `applyPatch({ filePath, patch, expectedHash=null, dryRun=false })`（L80–L212）**
-    - L46：`resolveSafePath`。
-    - **文件不存在 L48–L81：** 解析 blocks；若第一块 search trim 为空则用 replace 当新内容，否则整段 `patch`。`dryRun` 只返回成功。否则 mkdir + write；broadcast `file_patched`；`rememberHash`；返回 `isNewFile` + newHash。
-    - **文件存在 L83–L176：** 读全文算 `currentHash`。L85–L88：没传 `expectedHash` 则用 `recalledHash(filePath)`（上次 `read_files` / 成功补丁记下的 sha256）。
-    - L90–L100：仍无 hash 且非 `dryRun` → `ProtocolError E_BAD_ARGS`，消息 `HASH_REQUIRED`，`detail.currentHash` + `retryHint`。
-    - L102–L108：传了 expectedHash 且既不等于也不当前缀 → `ExecutionError E_STALE_FILE`，detail 含 currentHash。
-    - L113–L130 有 blocks：统一 `\n`；`includes(search)` 则 replace 第一处；否则 trim 后再试；再失败抛 Patch conflict。
-    - L131–L141 无 blocks：以 `--- ` 开头且含 `@@` → `jsdiff.applyPatch`，`false` 则抛；否则整段覆盖。
-    - L146–L153 `dryRun` 返回 diff 不写盘。
-    - L155–L175：写 `.tmp.${Date.now()}` 再 `renameSync`；`rememberHash`；broadcast；返回 newHash + diff。
+  - **Function `detectEol` / `toLf` / `applyEol`（L19–L31）** — 有 `\r\n` 则整文件按 CRLF 写回；匹配在 LF 上进行。
+  - **Function `countOccurrences` / `replaceOccurrence`（L33–L59）** — 非重叠计数；按 1-based `occurrence` 替换一处。
+  - **Function `parseSearchReplaceBlocks(patchText)`（L109–L120）** — 正则 `<<<<< SEARCH` … `=====` … `>>>>> REPLACE`，收集 `{ search, replace }`。
+  - **Function `applySearchBlocks`（L122–L165）** — 已有文件：SEARCH 必须命中 1 次，否则 `E_CONFLICT`（可传 `occurrence`）；空 SEARCH 拒；写回原换行。
+  - **Function `applyPatch({ filePath, patch, expectedHash=null, dryRun=false, occurrence })`（L167–L282）**
+    - **文件不存在：** 第一块 search trim 为空则用 replace 当新内容，否则整段 `patch`。不改调用方给的换行。
+    - **文件存在：** 没 hash 且非 dryRun → `HASH_REQUIRED`；hash 不符 → `STALE_FILE`。有 blocks 走 `applySearchBlocks`；unified diff / 整段覆盖后仍 `applyEol` 回原 CRLF/LF。
+    - 写 `.tmp.${Date.now()}` 再 `renameSync`。
 
 ---
 

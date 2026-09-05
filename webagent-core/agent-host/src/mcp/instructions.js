@@ -26,7 +26,7 @@ If a tool returns E_BAD_ARGS about mode, tell the user to switch to Code.
 ## Workflow
 1. ping → workspace_info (orientation) → get_capabilities if the session is new
 2. git_status / list_directory / search_files / read_files (always capture sha256 hash). git_status may return available:false in a plain folder — do not git init unless asked.
-3. apply_patch. If you just read_files that path, the host reuses the sha256 (kept in .webagent/read-hashes.json across host restarts until reset-round). Otherwise pass expectedHash. HASH_REQUIRED / STALE_FILE include currentHash in detail — retry once with that hash. Do not stop the loop.
+3. apply_patch. If you just read_files that path, the host reuses the sha256 (kept in .webagent/read-hashes.json across host restarts until reset-round). Otherwise pass expectedHash. HASH_REQUIRED / STALE_FILE include currentHash in detail — retry once with that hash. Do not stop the loop. SEARCH must match once; if it appears more than once pass occurrence (1-based). The host keeps the file line endings (CRLF on Windows).
 4. Long work: start_command (e.g. npm test) → wait suggestedWaitMs → get_command_output(execId) until status=done
 5. Short one-liners may use run_command. Prefer delete_file/rename_file over shell rm/mv.
 6. report_progress / set_todos so the editor UI stays in sync

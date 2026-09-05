@@ -94,6 +94,57 @@ x
   const grep = grepSearch({ query: 'function add', searchPath: '.' });
   assert.ok(grep.totalMatches >= 1);
 
+  fs.writeFileSync(path.join(tmp, 'win.js'), 'function add(a, b) {\r\n  return a + b;\r\n}\r\n', 'utf8');
+  const winRead = readFile({ filePath: 'win.js' });
+  const winPatched = await applyPatch({
+    filePath: 'win.js',
+    expectedHash: winRead.hash,
+    patch: `<<<<<<< SEARCH
+  return a + b;
+=======
+  return Number(a) + Number(b);
+>>>>>>> REPLACE`
+  });
+  assert.strictEqual(winPatched.success, true);
+  const winAfter = fs.readFileSync(path.join(tmp, 'win.js'), 'utf8');
+  assert.ok(winAfter.includes('Number(a)'));
+  assert.ok(winAfter.includes('\r\n'), 'Windows files must keep CRLF');
+  assert.strictEqual(winAfter.includes('\n') && !winAfter.includes('\r\n'), false);
+  assert.ok(!/[^\r]\n/.test(winAfter.replace(/\r\n/g, '')), 'no leftover lone LF after stripping CRLF pairs');
+  assert.strictEqual(winAfter, 'function add(a, b) {\r\n  return Number(a) + Number(b);\r\n}\r\n');
+
+  fs.writeFileSync(path.join(tmp, 'dup.js'), 'x = 1;\nx = 1;\n', 'utf8');
+  const dupRead = readFile({ filePath: 'dup.js' });
+  let multi = false;
+  try {
+    await applyPatch({
+      filePath: 'dup.js',
+      expectedHash: dupRead.hash,
+      patch: `<<<<<<< SEARCH
+x = 1;
+=======
+x = 2;
+>>>>>>> REPLACE`
+    });
+  } catch (err) {
+    multi = /matched 2 times/.test(err.message);
+  }
+  assert.ok(multi, 'duplicate SEARCH must refuse');
+  assert.strictEqual(fs.readFileSync(path.join(tmp, 'dup.js'), 'utf8'), 'x = 1;\nx = 1;\n');
+
+  const second = await applyPatch({
+    filePath: 'dup.js',
+    expectedHash: dupRead.hash,
+    occurrence: 2,
+    patch: `<<<<<<< SEARCH
+x = 1;
+=======
+x = 2;
+>>>>>>> REPLACE`
+  });
+  assert.strictEqual(second.success, true);
+  assert.strictEqual(fs.readFileSync(path.join(tmp, 'dup.js'), 'utf8'), 'x = 1;\nx = 2;\n');
+
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('patchEngine tests passed');
 }

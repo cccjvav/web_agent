@@ -16,6 +16,48 @@ function toPosixRel(p) {
   return String(p || '').replace(/\\/g, '/');
 }
 
+function detectEol(text) {
+  return String(text || '').includes('\r\n') ? '\r\n' : '\n';
+}
+
+function toLf(text) {
+  return String(text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
+
+function applyEol(text, eol) {
+  const lf = toLf(text);
+  if (eol === '\r\n') return lf.replace(/\n/g, '\r\n');
+  return lf;
+}
+
+function countOccurrences(haystack, needle) {
+  if (!needle) return 0;
+  let n = 0;
+  let from = 0;
+  while (from <= haystack.length - needle.length) {
+    const i = haystack.indexOf(needle, from);
+    if (i < 0) break;
+    n += 1;
+    from = i + needle.length;
+  }
+  return n;
+}
+
+function replaceOccurrence(haystack, needle, replacement, occurrence) {
+  let seen = 0;
+  let from = 0;
+  while (from <= haystack.length - needle.length) {
+    const i = haystack.indexOf(needle, from);
+    if (i < 0) break;
+    seen += 1;
+    if (seen === occurrence) {
+      return haystack.slice(0, i) + replacement + haystack.slice(i + needle.length);
+    }
+    from = i + needle.length;
+  }
+  return haystack;
+}
+
 function existingAncestor(absPath) {
   let cur = path.resolve(absPath);
   for (;;) {
@@ -77,7 +119,52 @@ function parseSearchReplaceBlocks(patchText) {
   return blocks;
 }
 
-async function applyPatch({ filePath, patch, expectedHash = null, dryRun = false }) {
+function applySearchBlocks(currentContent, blocks, { filePath, occurrence } = {}) {
+  const eol = detectEol(currentContent);
+  let patchedLf = toLf(currentContent);
+  const occRaw = Number(occurrence);
+  const occ = Number.isFinite(occRaw) && occRaw >= 1 ? Math.round(occRaw) : null;
+
+  for (let i = 0; i < blocks.length; i++) {
+    const searchLf = toLf(blocks[i].search);
+    const replaceLf = toLf(blocks[i].replace);
+    let needle = searchLf;
+    let replacement = replaceLf;
+    let n = countOccurrences(patchedLf, needle);
+    if (n === 0 && searchLf.trim()) {
+      needle = searchLf.trim();
+      replacement = replaceLf.trim();
+      n = countOccurrences(patchedLf, needle);
+    }
+    if (!needle) {
+      throw new ProtocolError(
+        'E_BAD_ARGS',
+        `Patch conflict: SEARCH block #${i + 1} is empty; existing files need a unique SEARCH.`,
+        { filePath, block: i + 1 }
+      );
+    }
+    if (n === 0) {
+      throw new Error(`Patch conflict: SEARCH block #${i + 1} could not be found in "${filePath}".`);
+    }
+    if (occ == null && n > 1) {
+      throw new ExecutionError(
+        'E_CONFLICT',
+        `Patch conflict: SEARCH block #${i + 1} matched ${n} times in "${filePath}". Make the SEARCH unique, or pass occurrence (1-based).`,
+        { filePath, block: i + 1, matches: n }
+      );
+    }
+    const which = occ == null ? 1 : occ;
+    if (which > n) {
+      throw new Error(
+        `Patch conflict: SEARCH block #${i + 1} matched ${n} times in "${filePath}", occurrence=${which} is out of range.`
+      );
+    }
+    patchedLf = replaceOccurrence(patchedLf, needle, replacement, which);
+  }
+  return applyEol(patchedLf, eol);
+}
+
+async function applyPatch({ filePath, patch, expectedHash = null, dryRun = false, occurrence } = {}) {
   const fullPath = resolveSafePath(filePath);
 
   if (!fs.existsSync(fullPath)) {
@@ -144,36 +231,19 @@ async function applyPatch({ filePath, patch, expectedHash = null, dryRun = false
 
   let patchedContent = currentContent;
   const blocks = parseSearchReplaceBlocks(patch);
+  const eol = detectEol(currentContent);
 
   if (blocks.length > 0) {
-    for (let i = 0; i < blocks.length; i++) {
-      const { search, replace } = blocks[i];
-      const normalizedCurrent = patchedContent.replace(/\r\n/g, '\n');
-      const normalizedSearch = search.replace(/\r\n/g, '\n');
-      const normalizedReplace = replace.replace(/\r\n/g, '\n');
-
-      if (!normalizedCurrent.includes(normalizedSearch)) {
-        const trimmedSearch = normalizedSearch.trim();
-        if (trimmedSearch && normalizedCurrent.includes(trimmedSearch)) {
-          patchedContent = normalizedCurrent.replace(trimmedSearch, normalizedReplace.trim());
-        } else {
-          throw new Error(`Patch conflict: SEARCH block #${i + 1} could not be found in "${filePath}".`);
-        }
-      } else {
-        patchedContent = normalizedCurrent.replace(normalizedSearch, normalizedReplace);
-      }
+    patchedContent = applySearchBlocks(currentContent, blocks, { filePath, occurrence });
+  } else if (patch.startsWith('--- ') && patch.includes('@@')) {
+    const jsdiff = require('diff');
+    const applied = jsdiff.applyPatch(toLf(currentContent), toLf(patch));
+    if (applied === false) {
+      throw new Error(`Unified diff failed to apply cleanly to "${filePath}".`);
     }
+    patchedContent = applyEol(applied, eol);
   } else {
-    if (patch.startsWith('--- ') && patch.includes('@@')) {
-      const jsdiff = require('diff');
-      const applied = jsdiff.applyPatch(currentContent, patch);
-      if (applied === false) {
-        throw new Error(`Unified diff failed to apply cleanly to "${filePath}".`);
-      }
-      patchedContent = applied;
-    } else {
-      patchedContent = patch;
-    }
+    patchedContent = applyEol(patch, eol);
   }
 
   const diffInfo = createUnifiedDiff(filePath, currentContent, patchedContent);
@@ -216,5 +286,7 @@ module.exports = {
   computeHash,
   resolveSafePath,
   isInsideWorkspace,
-  toPosixRel
+  toPosixRel,
+  detectEol,
+  countOccurrences
 };
