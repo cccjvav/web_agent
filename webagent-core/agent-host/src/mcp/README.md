@@ -331,7 +331,7 @@
   **`tools/call` 细节（L140–L174）：成功 `tracker.record({ ok:true })`，catch `tracker.record({ ok:false })`。只记 Bridge MCP，不记本机 Chat。`reset-round` 不清 usage.json。**
   - L141：无 `name` → 抛 `E_BAD_ARGS`（这才会变成 JSON-RPC error）。
   - L142：broadcast `tool_call_start`，source `'Bridge-Remote'`。
-  - L145：**`callTool(name, toolArgs || {}, remoteToolMode(params))`** — 默认 Code；`_meta.mode=ask|plan` 时模式锁生效。
+  - **`callTool(name, toolArgs || {}, remoteToolMode(params), { remote: true })`** — 默认 Code；`_meta.mode=ask|plan` 时模式锁生效。远程破坏性命令 `E_FORBIDDEN`。
   - L146：再 `clipJson`。
   - L151–L154：成功 → MCP `content[{type:text}]`，`isError:false`。
   - L155–L163：`catch` → `publicError`；`incFail`；**始终** `return { content:[{type:text, text: JSON.stringify(info)}], isError:true }`。未知工具名、HASH_REQUIRED、STALE_FILE 都走这条，网页 Agent 把它当工具结果而不是传输崩溃。

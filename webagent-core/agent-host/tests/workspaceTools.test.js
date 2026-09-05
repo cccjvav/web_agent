@@ -199,6 +199,15 @@ async function main() {
   assert.ok(persistBlocked, 'disk hash from a previous run must not unlock write_file');
   assert.strictEqual(fs.readFileSync(path.join(tmp, 'persist-only.txt'), 'utf8'), 'old-body\n');
 
+  process.env.OPENAI_API_KEY = 'sk-test-should-not-leak';
+  const probe = process.platform === 'win32'
+    ? 'echo $env:OPENAI_API_KEY'
+    : 'printenv OPENAI_API_KEY || true';
+  const envOut = await callTool('run_command', { command: probe }, 'code');
+  const envBlob = `${envOut.stdout || ''}${envOut.stderr || ''}`;
+  assert.ok(!envBlob.includes('sk-test-should-not-leak'), 'child env must not inherit API keys');
+  delete process.env.OPENAI_API_KEY;
+
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('workspace tool tests passed');
 }

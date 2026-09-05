@@ -62,13 +62,13 @@
 
   - **L396–L402** — 把 name 与 aliases 写入 `toolRegistry` Map。
   - **Function `getToolList(currentMode=null)`（L406–L410）** — mode 假则全部；真则 `t.mode.includes(currentMode)`。映射为 `{ name, description, inputSchema }`（不含 handler）。
-  - **Function `callTool(name, args={}, currentMode=null)`（L412–L444）**
+  - **Function `callTool(name, args={}, currentMode=null, opts={})`**
     - L413：`resolveToolName(name)`（`normalize.js`：`bash`→`run_command`、`cat`→`read_files` 等）。
     - L414：registry 先查 resolved 再查原名。
     - L415–L421：未知名 → `ProtocolError E_UNKNOWN_CMD`，消息含 Available 列表，`detail.retryHint` 提示可用别名。
     - L422–L427：`currentMode` 真且不在该工具 mode 列表 → `E_BAD_ARGS`（Ask/Plan 只读文案）。远程 MCP 默认传入 `'code'`（见 `mcp/server.remoteToolMode`）；本机 Chat 传入 UI 模式。
     - L428：`normalizeToolArgs(toolDef.name, args)`（snake_case、`path`→`filePath`、`"true"`→布尔）。
-    - L429–L437：工具名为 `run_command` 或 `start_command` 且命令匹配 `DANGEROUS_RE` 且无 `confirm_dangerous` → `E_BAD_ARGS` + retryHint。闸包括 `rm -rf`、`git push`、`curl … | sh`、`iex` / `iwr`、关机格式化等。
+    - 工具名为 `run_command` 或 `start_command` 且命令匹配 `DANGEROUS_RE`：`opts.remote` 真 → **`E_FORBIDDEN`**（即使带了 `confirm_dangerous`）；本机无 `confirm_dangerous` → `E_BAD_ARGS`。远程还会把 `timeoutSec` 夹到最多 60。闸包括 `rm -rf`、`git push`、`curl … | sh`、`iex` / `iwr`、关机格式化等。
     - L438：`await handler(input)`。
     - L439–L442：`result.isTimeout` 则打 `E_TIMEOUT`、`suggestedWaitMs=0`。
     - L443：`clipJson(result)` 后返回。
@@ -85,12 +85,14 @@
   - **Function `computeHash(content)`（L11–L13）** — sha256 hex，utf8。
   - **Function `toPosixRel(p)`（L15–L17）** — 反斜杠改 `/`。
   - **Function `existingAncestor` / `realPathOrJoin` / `isInsideWorkspace`（L19–L49）** — 沿父目录找到已存在的节点再 `realpathSync`，挡住 **symlink / junction** 指到工作区外。
-  - **Function `resolveSafePath(relPath)`（L51–L65）**
-    - L53–L55：相对 `config.workspaceRoot` 解析。
-    - L57–L59：posix 为 `..`、以 `../` 开头、或 `rel` 绝对路径 → 抛 Security error。
-    - L60–L62：`isInsideWorkspace` 为假（真实路径跑出工作区）同样抛。
-    - L63：posix 非空且不是 `.` → `assertNotSensitive`。
-    - L64：返回**逻辑**绝对路径（写新文件用；读/写会再被真实路径检查拦住）。
+  - **Function `resolveSafePath(relPath)`**
+    - 先拒 UNC（`//server/share`）、Windows 盘符（`C:\…`）、`\\?\` 设备路径。
+    - 相对 `config.workspaceRoot` 解析。
+    - posix 为 `..`、以 `../` 开头、或 `rel` 绝对路径 → 抛 Security error。
+    - `isInsideWorkspace` 为假（真实路径跑出工作区，含 symlink / junction）同样抛。
+    - posix 非空且不是 `.` → `assertNotSensitive`。
+    - 返回**逻辑**绝对路径。
+  - **Function `withWriteLock(paths, fn)`** — 按路径排队。同一文件上的 `apply_patch` / `write_file` / `delete_file` / `rename_file` 串行；后到的若哈希过期会 `STALE_FILE`。
   - **Function `detectEol` / `toLf` / `applyEol`（L19–L31）** — 有 `\r\n` 则整文件按 CRLF 写回；匹配在 LF 上进行。
   - **Function `countOccurrences` / `replaceOccurrence`（L33–L59）** — 非重叠计数；按 1-based `occurrence` 替换一处。
   - **Function `looksLikeUnifiedDiff(text)`（L109–L114）** — 去 BOM/前导空白后，开头是 `diff --git `，或开头像 `--- …` + `+++ ` 且全文含 `@@`。
@@ -167,7 +169,8 @@
   - **Function `killChild`（L12–L26）** — 无 pid return。win32 `taskkill /pid /t /f`。非 Windows 先 `process.kill(-pid)` 杀**进程组**，失败再 `child.kill`。
   - **Function `workingDirFrom`（L28–L34）** — 走 `resolveSafePath`（含真实路径），逃出工作区抛 outside workspace。
   - **Function `publicRecord`（L31–L48）** — stdout/stderr 截尾；running 时带 `suggestedWaitMs` 与 poll hint。
-  - **Function `startProcess`（L77–L166）** — `execId` 为 16 位 hex（不是自增序号）；同时 running 最多 8 条，已结束记录最多留 40。timeout 至少 1s；broadcast `command_started`；spawn PowerShell 或 bash；非 Windows `detached:true` 以便杀进程组；超时 kill 再 2s force；timeout 与 force-kill 的 `setTimeout` 都 `unref()`；stdout/stderr 环形 200KB；error reject；close 时若不是 `cancelled` 则 status `timeout` 或 `done`。返回 `{ rec, done }`。
+  - **Function `scrubEnv(base)`** — 拷贝环境后删掉名字像 API Key / token / secret / password 的变量，避免命令子进程读到宿主密钥。
+  - **Function `startProcess`** — `execId` 为 16 位 hex；同时 running 最多 8 条，已结束最多留 40。timeout 至少 1s；spawn 时 `env` 走 `scrubEnv(process.env)` 再加 `CI`/`TERM`/`FORCE_COLOR`；非 Windows `detached:true`；超时 kill 再 2s force，定时器 `unref()`。返回 `{ rec, done }`。
   - **Function `executeCommand`（L134–L137）** — 返回 `done`（等到结束）。
   - **Function `startCommand`（L139–L152）** — 不等待；`done.catch` 标 error；立即返回 execId + running。
   - **Function `getCommandOutput`（L154–L161）** — id = execId 或 commandId 或最新序号；没有 rec → found false。

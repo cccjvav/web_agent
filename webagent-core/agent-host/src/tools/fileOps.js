@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
-const { resolveSafePath, isInsideWorkspace, computeHash, toPosixRel } = require('./patchEngine');
+const { resolveSafePath, isInsideWorkspace, computeHash, toPosixRel, withWriteLock } = require('./patchEngine');
 const { isHidden } = require('./sensitive');
 const eventBus = require('../utils/eventBus');
 const { ProtocolError, ExecutionError } = require('../mcp/errors');
@@ -77,7 +77,11 @@ function readFile({ filePath, offset = 1, limit = 400 }) {
   };
 }
 
-function deleteFile({ filePath, confirm = false }) {
+function deleteFile(opts = {}) {
+  return withWriteLock(opts.filePath, () => deleteFileBody(opts));
+}
+
+function deleteFileBody({ filePath, confirm = false }) {
   if (!filePath) throw new Error('delete_file requires filePath');
   const fullPath = resolveSafePath(filePath);
   const rel = toPosixRel(path.relative(config.workspaceRoot, fullPath));
@@ -110,7 +114,13 @@ function deleteFile({ filePath, confirm = false }) {
   return { success: true, filePath: rel, type: stat.isDirectory() ? 'directory' : 'file' };
 }
 
-function renameFile({ from, to, filePath, dest }) {
+function renameFile(opts = {}) {
+  const srcRel = opts.from || opts.filePath;
+  const destRel = opts.to || opts.dest;
+  return withWriteLock([srcRel, destRel], () => renameFileBody(opts));
+}
+
+function renameFileBody({ from, to, filePath, dest }) {
   const srcRel = from || filePath;
   const destRel = to || dest;
   if (!srcRel || !destRel) throw new Error('rename_file requires from and to');
@@ -126,7 +136,11 @@ function renameFile({ from, to, filePath, dest }) {
   return { success: true, from: fromOut, to: toOut };
 }
 
-function writeFile({ filePath, content, expectedHash, confirmOverwrite = false, confirm_overwrite = false }) {
+function writeFile(opts = {}) {
+  return withWriteLock(opts.filePath, () => writeFileBody(opts));
+}
+
+function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = false, confirm_overwrite = false }) {
   const fullPath = resolveSafePath(filePath);
   const exists = fs.existsSync(fullPath);
   let overwriteOk = Boolean(confirmOverwrite || confirm_overwrite);

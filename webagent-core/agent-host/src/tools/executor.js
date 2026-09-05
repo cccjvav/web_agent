@@ -55,6 +55,16 @@ function workingDirFrom(cwd) {
   }
 }
 
+function scrubEnv(base) {
+  const out = { ...base };
+  for (const key of Object.keys(out)) {
+    if (/(?:api[_-]?key|access[_-]?token|secret|password|credential|private[_-]?key)|^(?:github_token|gh_token|npm_token)$/i.test(key)) {
+      delete out[key];
+    }
+  }
+  return out;
+}
+
 function publicRecord(rec, tail) {
   const limit = Math.min(MAX_CAPTURE, Math.max(500, Number(tail) || 8000));
   const running = rec.status === 'running';
@@ -112,7 +122,7 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
     cwd: workingDir,
     windowsHide: true,
     detached: process.platform !== 'win32',
-    env: { ...process.env, CI: 'true', TERM: 'xterm-256color', FORCE_COLOR: '1' }
+    env: { ...scrubEnv(process.env), CI: 'true', TERM: 'xterm-256color', FORCE_COLOR: '1' }
   });
   children.set(String(execId), child);
 
@@ -231,5 +241,6 @@ module.exports = {
   getCommandOutput,
   cancelCommand,
   sendCommandInput,
-  wait
+  wait,
+  scrubEnv
 };

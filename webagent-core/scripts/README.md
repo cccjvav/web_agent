@@ -66,7 +66,7 @@
     - L97–L113：`run(process.execPath, ['src/index.js'], { cwd: agentHostDir, env: WORKSPACE_ROOT, AGENT_HOST_PORT, WEBAGENT_SKIP_WORKBENCH:'1' })`。agent exit 真值则 stop 并 exit。
     - L115：`waitHealth(http://127.0.0.1:${mcpPort}/health, 15000)`。
     - L117–L120：`userData` = 仓库根 `.local/share/code-server`（mkdir）；`configFile` = 仓库根 [`.config/code-server/config.yaml`](../../.config/code-server/README.md)；`resolveAuth`。
-    - L122–L148：code-server 参数：`--auth` 为 `password`（或 `CODE_SERVER_AUTH=none`）、`--bind-addr ${WEBAGENT_BIND||127.0.0.1}:${codePort}`、关遥测/更新/workspace-trust、`--trusted-origins` 仅本机 http 源、`--app-name Web Agent`、`--user-data-dir`、`--extensions-dir`、`--config`、最后一项 workspace 路径。
+    - code-server 参数：`--auth` 为 `password`（或 `CODE_SERVER_AUTH=none`）、`--bind-addr ${WEBAGENT_BIND||127.0.0.1}:${codePort}`、关遥测/更新、`--trusted-origins` 仅本机 http 源、**默认不关 workspace-trust**、`--app-name Web Agent`、`--user-data-dir`、`--extensions-dir`、`--config`、最后一项 workspace 路径。
     - L150–L162：打印 VS Code URL；password 模式打印口令与文件路径。
     - L164–L168：spawn 时 password 模式把 `PASSWORD` 传给 code-server；退出则 stop 并 `exit(code||0)`。
   - L168–L171：`main().catch` 打印 message，exit 1。

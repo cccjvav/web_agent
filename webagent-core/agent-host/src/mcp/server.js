@@ -175,7 +175,7 @@ async function handleRpc(req) {
       eventBus.broadcast('tool_call_start', { tool: name, args: toolArgs, source: 'Bridge-Remote' });
       const started = Date.now();
       try {
-        const result = await callTool(name, toolArgs || {}, remoteToolMode(params));
+        const result = await callTool(name, toolArgs || {}, remoteToolMode(params), { remote: true });
         const clipped = clipJson(result);
         const durationMs = Date.now() - started;
         touch(req, { incCall: true });

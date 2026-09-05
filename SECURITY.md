@@ -9,8 +9,8 @@
 拿到完整 MCP 地址（`/mcp/<密钥>`）的人可以：
 
 - 读工作区里未标敏感的文件
-- 打补丁、跑命令（Windows 上是 PowerShell）
-- 在你这台电脑上执行 Code 模式允许的工具
+- 打补丁、跑**非破坏性**命令（Windows 上是 PowerShell；`rm -rf` / `git push` / `curl | sh` 一类即使带 `confirm_dangerous` 也会被远程拒绝，只能在本机 Chat 确认）
+- 在你这台电脑上执行 Code 模式允许的其它工具
 
 **不要**把 `trycloudflare.com/mcp/...` 发到群、Issue、截图网盘。域名每次启动都会变，旧地址作废，但当次有效期内等同施工证。
 

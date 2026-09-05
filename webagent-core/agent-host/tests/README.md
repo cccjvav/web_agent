@@ -10,10 +10,10 @@
 
 | 文件 | 覆盖 |
 |---|---|
-| `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、CRLF 保留、SEARCH 多处拒绝、`occurrence` 指定第几处、grep 跳过大文件、嵌套正则拒绝、find_files `truncated`、新建拒绝 unified diff、空 SEARCH 建新文件 |
-| `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek / Chat Plus 客户端配方、`get_logs` 不含 args/chunk/result/patch |
+| `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、CRLF 保留、SEARCH 多处拒绝、`occurrence` 指定第几处、grep 跳过大文件、嵌套正则拒绝、find_files `truncated`、新建拒绝 unified diff、空 SEARCH 建新文件、**同一文件并发补丁一个成功一个 STALE** |
+| `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、**远程 `confirm_dangerous` 仍 `E_FORBIDDEN`**、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek / Chat Plus 客户端配方、`get_logs` 不含 args/chunk/result/patch |
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command`、`cancel_command` 终态保持 cancelled、持久 hash 不能单独覆盖 |
-| `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝 |
+| `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝；UNC / 盘符路径拒绝；Windows 上再测 junction |
 | `hostPersist.test.js` | `generateNewSecret` 写入 `config.json`；旧盘 `永久顺`/假 `github`/`demo` 迁成 `local-demo`；带 `githubId` 的 octocat **留下**；`usage.json` 进 gitignore；`read-hashes.json` 跨 require 仍能 recalledHash，**sessionHash 为空**；`resetHashes` 删文件 |
 | `eventBus.test.js` | 日志脱敏 `ghp_` / `sk-` / `Bearer` / `oldSecret`；长 chunk 截断；普通字段留下 |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
@@ -26,7 +26,7 @@
 | `adminHost.test.js` | 无 Bearer 401；有令牌 ingest；HTML 含 `@alice` / 未绑定 GitHub |
 | `providers.test.js` | `gpt-4o` 无接口字段时 caps/context 为空；声明了 `capabilities`/`context_window` 才填 |
 | `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`、多模型博弈、总结钮、本机演示授权、**GitHub 验证** / **验证令牌**、Codex/挂钩/插件未实现、不得含永久顺 / 「使用 GitHub 登录」）、模块脚本、MCP 401、initialize、tools/list、ping、**ping 后有 usage.json 且 reset-round 不清它**、`/status.tools` 无 inputSchema、远程 `get_logs` 无 args/chunk/patch、空 token 400、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、本机 `POST /api/chat` NDJSON（Ask + Plan 分支再总结） |
-| `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime；不写死 `--auth none` / `trusted-origins *`；`run-webagent.sh` 接受 `$1` 并检查 node；`run-webagent-vscode.sh` 检查 node 且不 mkdir；runtime 包名 `webagent-code-server-runtime` |
+| `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime；不写死 `--auth none` / `trusted-origins *` / `--disable-workspace-trust`；`run-webagent.sh` 接受 `$1` 并检查 node；`run-webagent-vscode.sh` 检查 node 且不 mkdir；runtime 包名 `webagent-code-server-runtime` |
 | `workbenchHtml.test.js` | 工作台 HTML 含 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login 等）；不得含「使用 GitHub 登录」 |
 | `docsSite.test.js` | 跑 `docs-site/build.js` 后，提交的 `content.js` 与生成结果一致（忽略当天 `builtAt`） |
 | `codeServerAuth.test.js` | 口令落盘复用；`CODE_SERVER_PASSWORD`；`CODE_SERVER_AUTH=none`；trusted-origins 仅本机 |

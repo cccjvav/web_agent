@@ -41,5 +41,6 @@ assert.ok(runner.includes("require('./codeServerAuth')"));
 assert.ok(!/'--auth',\s*'none'/.test(runner), 'auth none must not be hardcoded');
 assert.ok(!runner.includes("'--trusted-origins',\n    '*'"));
 assert.ok(runner.includes('trustedOrigins('));
+assert.ok(!runner.includes('--disable-workspace-trust'), 'workspace trust must stay on by default');
 
 console.log('vscode launcher uses npm runtime, not a vendored dist');

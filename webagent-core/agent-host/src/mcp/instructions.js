@@ -45,7 +45,7 @@ If a tool returns E_BAD_ARGS about mode, tell the user to switch to Code.
 - path / file_path / file are accepted as filePath. confirm / confirm_overwrite / confirm_dangerous accept true/1/"true".
 
 ## Safety
-- Destructive shell (rm -rf, mkfs, dd, shutdown, git reset --hard, Remove-Item -Recurse) needs confirm_dangerous=true.
+- Destructive shell (rm -rf, mkfs, dd, shutdown, git reset --hard, Remove-Item -Recurse) needs confirm_dangerous=true on local Chat. Remote MCP rejects those commands even with that flag (E_FORBIDDEN).
 - Prefer apply_patch over write_file. Overwrite write_file is allowed if confirm_overwrite=true, expectedHash matches, or you read_files that path in this host process. A hash left on disk from a previous run is not enough. New files: empty SEARCH or the file body — not a unified diff.
 - delete_file needs confirm=true after you have listed the path.
 - Stay inside the workspace; the host rejects path escape.

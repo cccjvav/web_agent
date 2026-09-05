@@ -26,6 +26,16 @@ async function main() {
   assert.ok(isInsideWorkspace(path.join(tmp, 'inside.txt')));
   assert.ok(!isInsideWorkspace(path.join(tmp, '..', 'nope.txt')));
 
+  for (const p of ['//server/share/secret.txt', '\\\\server\\share\\secret.txt', 'C:\\\\Windows\\\\notepad.exe', '\\\\?\\C:\\Windows\\x']) {
+    let forbidden = false;
+    try {
+      resolveSafePath(p);
+    } catch (err) {
+      forbidden = /outside workspace/i.test(err.message);
+    }
+    assert.ok(forbidden, `UNC/drive path must be rejected: ${p}`);
+  }
+
   const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-outside-'));
   fs.writeFileSync(path.join(outside, 'secret.txt'), 'LEAK\n');
 
@@ -57,6 +67,20 @@ async function main() {
     const listed = await callTool('list_directory', { dirPath: '.', recursive: true, maxDepth: 3 }, 'ask');
     const names = JSON.stringify(listed);
     assert.ok(!/secret\.txt/.test(names), 'list_directory must not walk outside via symlink');
+  }
+
+  if (process.platform === 'win32') {
+    const junctionDest = path.join(tmp, 'junction-leak');
+    try {
+      fs.symlinkSync(outside, junctionDest, 'junction');
+      let junctionEscaped = false;
+      try {
+        resolveSafePath('junction-leak/secret.txt');
+      } catch (err) {
+        junctionEscaped = /outside workspace/i.test(err.message);
+      }
+      assert.ok(junctionEscaped, 'Windows junction into an outside directory must be rejected');
+    } catch (_) {}
   }
 
   fs.rmSync(outside, { recursive: true, force: true });

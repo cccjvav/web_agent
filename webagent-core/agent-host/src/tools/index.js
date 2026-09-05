@@ -294,7 +294,7 @@ const TOOLS = [
   tool({
     name: 'run_command',
     aliases: ['execute_command'],
-    description: 'Run a command and wait. For tests/builds that may exceed a few seconds, prefer start_command. Destructive commands need confirm_dangerous=true. Code mode only.',
+    description: 'Run a command and wait. For tests/builds that may exceed a few seconds, prefer start_command. Destructive commands need confirm_dangerous=true on local Chat; remote MCP rejects them even with that flag. Code mode only.',
     mode: ['code'],
     inputSchema: {
       type: 'object',
@@ -420,7 +420,7 @@ function getToolList(currentMode = null) {
     .map(({ name, description, inputSchema }) => ({ name, description, inputSchema }));
 }
 
-async function callTool(name, args = {}, currentMode = null) {
+async function callTool(name, args = {}, currentMode = null, opts = {}) {
   const resolved = resolveToolName(name);
   const toolDef = toolRegistry.get(resolved) || toolRegistry.get(name);
   if (!toolDef) {
@@ -437,7 +437,15 @@ async function callTool(name, args = {}, currentMode = null) {
     );
   }
   const input = normalizeToolArgs(toolDef.name, args || {});
+  const remote = Boolean(opts && opts.remote);
   if ((toolDef.name === 'run_command' || toolDef.name === 'start_command') && DANGEROUS_RE.test(String(input.command || ''))) {
+    if (remote) {
+      throw new ProtocolError(
+        'E_FORBIDDEN',
+        'Destructive commands are blocked on remote MCP. Run them from local Chat if you really mean it.',
+        { retryHint: 'Use the local workbench Chat in Code mode, or pick a non-destructive command.' }
+      );
+    }
     if (!input.confirm_dangerous) {
       throw new ProtocolError(
         'E_BAD_ARGS',
@@ -445,6 +453,10 @@ async function callTool(name, args = {}, currentMode = null) {
         { retryHint: 'Retry the same command with confirm_dangerous=true only if the user asked for this destructive action.' }
       );
     }
+  }
+  if (remote && (toolDef.name === 'run_command' || toolDef.name === 'start_command')) {
+    const t = Number(input.timeoutSec);
+    input.timeoutSec = Math.min(60, Number.isFinite(t) && t > 0 ? t : 30);
   }
   const result = await toolDef.handler(input);
   if (result && result.isTimeout) {

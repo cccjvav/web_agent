@@ -191,6 +191,21 @@ x = 2;
   assert.strictEqual(second.success, true);
   assert.strictEqual(fs.readFileSync(path.join(tmp, 'dup.js'), 'utf8'), 'x = 1;\nx = 2;\n');
 
+  fs.writeFileSync(path.join(tmp, 'race.js'), 'value = 1;\n', 'utf8');
+  const raceRead = readFile({ filePath: 'race.js' });
+  const patchA = `<<<<<<< SEARCH\nvalue = 1;\n=======\nvalue = 2;\n>>>>>>> REPLACE`;
+  const patchB = `<<<<<<< SEARCH\nvalue = 1;\n=======\nvalue = 3;\n>>>>>>> REPLACE`;
+  const raced = await Promise.allSettled([
+    applyPatch({ filePath: 'race.js', expectedHash: raceRead.hash, patch: patchA }),
+    applyPatch({ filePath: 'race.js', expectedHash: raceRead.hash, patch: patchB })
+  ]);
+  const ok = raced.filter((r) => r.status === 'fulfilled' && r.value && r.value.success);
+  const staleRace = raced.filter((r) => r.status === 'rejected' && /STALE_FILE/.test(r.reason && r.reason.message));
+  assert.strictEqual(ok.length, 1, 'exactly one concurrent patch on the same file should win');
+  assert.strictEqual(staleRace.length, 1, 'the loser must see STALE_FILE');
+  const raceAfter = fs.readFileSync(path.join(tmp, 'race.js'), 'utf8');
+  assert.ok(raceAfter === 'value = 2;\n' || raceAfter === 'value = 3;\n');
+
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('patchEngine tests passed');
 }

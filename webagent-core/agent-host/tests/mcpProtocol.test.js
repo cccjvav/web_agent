@@ -108,6 +108,13 @@ async function main() {
   }
   assert.ok(pipedShell, 'curl piped to sh must require confirm_dangerous');
 
+  const remoteDanger = await handleRpc(req('tools/call', {
+    name: 'run_command',
+    arguments: { command: 'rm -rf /tmp/nope', confirm_dangerous: true }
+  }));
+  assert.strictEqual(remoteDanger.isError, true);
+  assert.ok(/E_FORBIDDEN|remote MCP|Destructive commands are blocked on remote/i.test(remoteDanger.content[0].text));
+
   fs.writeFileSync(path.join(tmp, 'note.txt'), 'hello\n');
   const viaPath = await callTool('cat', { path: 'note.txt' });
   assert.ok(viaPath.hash && String(viaPath.content).includes('hello'));

@@ -16,6 +16,44 @@ function toPosixRel(p) {
   return String(p || '').replace(/\\/g, '/');
 }
 
+const writeLocks = new Map();
+
+function writeLockKey(filePath) {
+  return toPosixRel(String(filePath || '')).replace(/^\.\//, '') || '.';
+}
+
+function lockOne(key, fn) {
+  const prev = writeLocks.get(key) || Promise.resolve();
+  let release;
+  const held = new Promise((resolve) => {
+    release = resolve;
+  });
+  const tail = prev.then(() => held, () => held);
+  writeLocks.set(key, tail);
+  return Promise.resolve(prev).catch(() => {}).then(async () => {
+    try {
+      return await fn();
+    } finally {
+      release();
+      if (writeLocks.get(key) === tail) writeLocks.delete(key);
+    }
+  });
+}
+
+function withWriteLock(paths, fn) {
+  const keys = [...new Set((Array.isArray(paths) ? paths : [paths]).map(writeLockKey))].sort();
+  return keys.reduceRight((next, key) => () => lockOne(key, next), fn)();
+}
+
+function looksLikeUncOrDrive(relPath) {
+  const raw = String(relPath || '');
+  if (raw.includes('\0')) return true;
+  const posix = raw.replace(/\\/g, '/');
+  if (/^[a-zA-Z]:/.test(raw) || /^[a-zA-Z]:/.test(posix)) return true;
+  if (posix.startsWith('//')) return true;
+  return false;
+}
+
 function detectEol(text) {
   return String(text || '').includes('\r\n') ? '\r\n' : '\n';
 }
@@ -91,6 +129,9 @@ function isInsideWorkspace(absPath) {
 }
 
 function resolveSafePath(relPath) {
+  if (looksLikeUncOrDrive(relPath)) {
+    throw new Error(`Security error: path "${relPath}" is outside workspace root.`);
+  }
   const root = path.resolve(config.workspaceRoot);
   const incoming = String(relPath || '.').replace(/[/\\]+/g, path.sep);
   const resolved = path.resolve(root, incoming);
@@ -171,7 +212,11 @@ function applySearchBlocks(currentContent, blocks, { filePath, occurrence } = {}
   return applyEol(patchedLf, eol);
 }
 
-async function applyPatch({ filePath, patch, expectedHash = null, dryRun = false, occurrence } = {}) {
+async function applyPatch(opts = {}) {
+  return withWriteLock(opts.filePath, () => applyPatchBody(opts));
+}
+
+async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = false, occurrence } = {}) {
   const fullPath = resolveSafePath(filePath);
 
   if (!fs.existsSync(fullPath)) {
@@ -194,6 +239,7 @@ async function applyPatch({ filePath, patch, expectedHash = null, dryRun = false
       return { success: true, isNewFile: true, filePath, message: 'Dry run check passed (New file)' };
     }
 
+    await Promise.resolve();
     fs.mkdirSync(path.dirname(fullPath), { recursive: true });
     fs.writeFileSync(fullPath, newContent, 'utf8');
 
@@ -304,5 +350,6 @@ module.exports = {
   isInsideWorkspace,
   toPosixRel,
   detectEol,
-  countOccurrences
+  countOccurrences,
+  withWriteLock
 };
