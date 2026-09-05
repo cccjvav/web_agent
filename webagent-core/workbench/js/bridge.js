@@ -81,9 +81,9 @@ export function paintClients() {
   const line = $('#pairing-line');
   if (line) {
     if (pair && pair.code && state.status.bridgeRunning) {
-      line.textContent = `OAuth 配对码 ${pair.code}（约 ${pair.expiresInSec}s 有效，仅 ChatGPT Plus 连接器需要）`;
+      line.textContent = `OAuth 配对码 ${pair.code}（约 ${pair.expiresInSec}s 有效，仅 ChatGPT 自制 MCP 插件需要）`;
     } else {
-      line.textContent = '配对码会在启动 Bridge 后出现，只给 ChatGPT Plus 连接器 OAuth 用。';
+      line.textContent = '配对码会在启动 Bridge 后出现，只给 ChatGPT 自制 MCP 插件 OAuth 用。';
     }
   }
 }

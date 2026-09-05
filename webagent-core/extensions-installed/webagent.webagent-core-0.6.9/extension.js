@@ -440,7 +440,7 @@ button{background:#0e639c;color:#fff;border:0;padding:7px 10px;border-radius:4px
   <ul id="task-list"></ul>
 </div>
 <div class="card" id="stream"></div>
-<p class="hint" id="hint">启动后等 trycloudflare.com，再把提示词整段贴进 ChatGPT / Arena 第一句。</p>
+<p class="hint" id="hint">启动后等 trycloudflare.com。Arena：把提示词整段当第一句。ChatGPT：不要贴进聊天栏，走设置里的自制 MCP 插件。</p>
 <script>
 const vscode = acquireVsCodeApi();
 let status = {};

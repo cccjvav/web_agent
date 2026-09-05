@@ -88,35 +88,36 @@ const CLIENTS = [
   },
   {
     id: 'chatgpt-free',
-    name: 'ChatGPT 免费聊天栏',
+    name: 'ChatGPT 聊天栏（贴链接不行）',
     url: 'https://chatgpt.com/',
     needsPlus: false,
     needsTunnel: true,
     supportsMcp: false,
     connectMode: 'unsupported-mcp',
-    summary: '普通免费聊天栏加不了自定义 MCP 连接器，贴 URL 通常也不会真去调工具。',
+    summary: '聊天栏里直接贴 MCP 地址、让它「登录」，免费和更高级账号都不会去调工具。要对接着自制 MCP 插件那张卡，或 Chat Plus 扩展当手。',
     steps: [
-      '不要指望免费 ChatGPT 普通对话原生改你的磁盘',
-      '用本机 Chat（无需账号）、Arena、DeepSeek++，或装 Chat Plus 扩展当手（见网页ChatPlus使用指南.md）',
-      '若该对话明确带 Agent/开发者模式且能加连接器，按「ChatGPT Plus」那张卡片'
+      '不要把 trycloudflare.com/mcp/… 贴进 ChatGPT 输入框当第一句',
+      '任何档位的普通聊天栏都不会因此去连本机 MCP',
+      '要对接着「ChatGPT 自制 MCP 插件」：设置里新建插件，服务器 URL + OAuth',
+      '也可以装 Chat Plus 扩展当手（见网页ChatPlus使用指南.md），或改用本机 Chat / Arena / DeepSeek++'
     ]
   },
   {
     id: 'chatgpt-plus',
-    name: 'ChatGPT Plus 开发者模式',
-    url: 'https://chatgpt.com/',
-    needsPlus: true,
+    name: 'ChatGPT 自制 MCP 插件',
+    url: 'https://chatgpt.com/plugins',
+    needsPlus: false,
     needsTunnel: true,
     supportsMcp: true,
     connectMode: 'oauth-connector',
-    summary: '可选。Plus/Pro 在设置里开开发者模式，加 MCP 连接器。用 OAuth 配对，URL 里不带长期密钥。',
+    summary: 'ChatGPT 设置里的自制插件/连接器会调 MCP。服务器 URL 填规范地址 /mcp（不要带密钥），身份验证选 OAuth，配对码只出现在本机 Bridge 页。不是把链接贴进聊天栏。',
     steps: [
-      '启动 Bridge，记下配对码（只显示在本机）',
-      'ChatGPT 设置 → 应用 → 高级 → 开发者模式',
-      '新建连接器，MCP URL 填「规范地址」/mcp（不要把密钥写进 URL）',
-      '授权方式选 OAuth；浏览器打开配对页，输入本机配对码',
-      '权限选允许所有操作，否则补丁和命令会被 ChatGPT 拦下',
-      '免费账号没有这一步'
+      '启动 Bridge，记下本机配对码（不要发到公开地方）',
+      'ChatGPT 设置 → 账户安全与登录 → 打开开发者模式',
+      '设置 → 插件 → 新建插件（或打开 https://chatgpt.com/plugins ）',
+      '连接选「服务器 URL」。填规范地址 https://….trycloudflare.com/mcp（不要把密钥写进 URL）。表单示例有时写 /sse；本机 GET /mcp 在 Accept: text/event-stream 时就是 SSE',
+      '身份验证选 OAuth；勾选自定义 MCP 风险确认后创建。浏览器打开配对页，输入本机配对码',
+      '插件权限选允许操作，否则补丁和命令会被 ChatGPT 拦下'
     ]
   }
 ];

@@ -179,8 +179,14 @@ async function main() {
   assert.strictEqual(chatPlus.prompt, 'https://x.trycloudflare.com/mcp/abc');
   assert.strictEqual(chatPlus.repoUrl, 'https://github.com/aiguicai/Chat-Plus');
   assert.ok(chatPlus.steps.some((s) => /不要再装 aiguicai\/MCP-Gateway/.test(s)));
-  assert.ok(catalog.some((c) => c.id === 'chatgpt-free' && c.connectMode === 'unsupported-mcp'));
-  assert.ok(catalog.some((c) => c.id === 'chatgpt-plus' && c.needsPlus));
+  const gptBar = catalog.find((c) => c.id === 'chatgpt-free');
+  assert.ok(gptBar && gptBar.connectMode === 'unsupported-mcp' && gptBar.supportsMcp === false);
+  assert.ok(gptBar.steps.some((s) => /贴进 ChatGPT 输入框/.test(s)));
+  const gptPlugin = catalog.find((c) => c.id === 'chatgpt-plus');
+  assert.ok(gptPlugin && gptPlugin.connectMode === 'oauth-connector' && gptPlugin.supportsMcp && !gptPlugin.needsPlus);
+  assert.strictEqual(gptPlugin.prompt.split('\n')[0], 'MCP 规范地址（给连接器用）：https://x.trycloudflare.com/mcp');
+  assert.ok(gptPlugin.steps.some((s) => /开发者模式/.test(s)));
+  assert.ok(gptPlugin.steps.some((s) => /新建插件/.test(s)));
 
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('mcp protocol tests passed');

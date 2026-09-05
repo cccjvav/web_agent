@@ -20,7 +20,7 @@
 
 MCP 密钥和模型 API Key 写在工作区 `.webagent/config.json`（尽量 `chmod 0600`，并 gitignore）。不是系统钥匙串。GitHub PAT 不会写入该文件。
 
-ChatGPT Plus 连接器用的 OAuth access / refresh **只在内存**。关掉 `run-webagent` 进程后要重新配对。
+ChatGPT 自制 MCP 插件用的 OAuth access / refresh **只在内存**。关掉 `run-webagent` 进程后要重新配对。
 
 ## 报告漏洞
 

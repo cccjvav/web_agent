@@ -8,7 +8,7 @@
 
 ## 1. 模块概述
 
-- **定位：** agent-host 的 **MCP 协议门面**。把本机工具暴露成 Streamable HTTP JSON-RPC 2.0（兼 SSE），给 Arena / DeepSeek++ / Chat Plus / ChatGPT 连接器等网页端调用。本目录**不改磁盘**：改文件发生在兄弟模块 `../tools/`。
+- **定位：** agent-host 的 **MCP 协议门面**。把本机工具暴露成 Streamable HTTP JSON-RPC 2.0（兼 SSE），给 Arena / DeepSeek++ / Chat Plus / ChatGPT 自制插件等网页端调用。本目录**不改磁盘**：改文件发生在兄弟模块 `../tools/`。
 - **在进程中的挂载（由 `../index.js` 完成，不在本目录）：** `app.use(oauth.router)` 在前（匿名发现文档 + 配对页），然后 `app.use('/mcp', mcpRouter)`（`server.js` 导出的 Express Router）。
 
 **它调用的兄弟模块：**
@@ -162,7 +162,7 @@
   | `id` | 卡片主键 | `chat` / `arena` / `deepseek` / `chat-plus` / `generic` / `chatgpt-free` / `chatgpt-plus` |
   | `name` | UI 标题 | 中文名 |
   | `url` | 打开的网站；本机 Chat / generic 为 `null` | URL 或 null |
-  | `needsPlus` | 是否必须付费档 | 仅 `chatgpt-plus` 为 `true` |
+  | `needsPlus` | 是否必须付费档 | 现行 7 张卡均为 `false`（ChatGPT 自制插件不绑 Plus） |
   | `needsTunnel` | 是否需要公网隧道 | 仅 `chat` 为 `false` |
   | `supportsMcp` | 该端会不会真调 MCP | `chat` 与 `chatgpt-free` 为 `false` |
   | `connectMode` | hydrate 分支 | 见上 |
@@ -196,7 +196,7 @@
 
 ### 📄 文件名：`oauth.js`
 
-- **文件职责：** OAuth 2.1 子集（动态注册 + 授权码 + PKCE S256 + 本机配对码）。给 ChatGPT Plus 连接器。Arena / DeepSeek++ / Chat Plus **不走本文件的授权码流程**，但 `verifyAccessToken` 同时认 URL 密钥。
+- **文件职责：** OAuth 2.1 子集（动态注册 + 授权码 + PKCE S256 + 本机配对码）。给 ChatGPT 自制 MCP 插件。Arena / DeepSeek++ / Chat Plus **不走本文件的授权码流程**，但 `verifyAccessToken` 同时认 URL 密钥。聊天栏贴链接也不走这里。
 - **存储：** L7–L10 四个内存 `Map`；L17 `pairing`。进程退出全丢。
 
 - **核心类/函数清单：**
@@ -366,7 +366,7 @@
    - `notifications/*`：空对象，HTTP 204。
 
 5. **工作台卡片（不经 JSON-RPC）**  
-   `../api/routes.js` 调 `clients.listClients` + `instructions.getBootstrapPrompt` + `oauth.snapshotPairing`，把 hydrate 后的 `prompt` 交给用户复制。DeepSeek 卡只有一行 URL；Arena 卡是 URL + `CONNECT_LINE`。
+   `../api/routes.js` 调 `clients.listClients` + `instructions.getBootstrapPrompt` + `oauth.snapshotPairing`，把 hydrate 后的 `prompt` 交给用户复制。DeepSeek / Chat Plus 卡只有一行 URL；Arena 卡是 URL + `CONNECT_LINE`；ChatGPT 自制插件卡是规范 `/mcp` 两行（OAuth）；聊天栏卡 `prompt` 为空。
 
 **本目录没有的事（避免误读）：** 不 spawn cloudflared；不实现 `apply_patch`。远程 `tools/call` 默认 Code，可用 `params._meta.mode` 切 Ask/Plan。
 

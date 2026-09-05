@@ -474,17 +474,17 @@
           <div class="br-head">
             <div>
               <h2>Web Agent Bridge</h2>
-              <p class="lead">把当前工作区变成 MCP，给<strong>任意</strong>能调工具的网页 Agent 用。不绑死 ChatGPT，也不需要 Plus。</p>
+              <p class="lead">把当前工作区变成 MCP，给<strong>任意</strong>能调工具的网页 Agent 用。不绑死 ChatGPT，也不需要 Plus。ChatGPT 聊天栏贴链接不行；要对接着设置里的自制 MCP 插件。</p>
               <p class="hint" id="bridge-sub">本机 Chat 随时可用。网页 Agent 要先启动 Bridge 拿到公网地址。</p>
             </div>
             <span id="bridge-pill" class="status-pill stop">已停止</span>
           </div>
           <section class="block" id="client-recipes">
             <div class="block-h">怎么连到本机仓库</div>
-            <p class="hint">免费路径：本机 Chat（无隧道）、Arena 等支持 MCP 的网页栏，或 DeepSeek 网页 + DeepSeek++。ChatGPT 普通免费聊天加不了连接器。</p>
+            <p class="hint">本机 Chat（无隧道）、Arena 贴 URL、DeepSeek++ / Chat Plus 填扩展。ChatGPT：不要把地址贴进聊天栏；设置 → 插件 → 新建，服务器 URL + OAuth。</p>
             <div id="client-cards" class="client-cards"></div>
             <div id="client-detail" class="client-detail"></div>
-            <p class="hint" id="pairing-line">配对码会在启动 Bridge 后出现，只给 ChatGPT Plus 连接器 OAuth 用。</p>
+            <p class="hint" id="pairing-line">配对码会在启动 Bridge 后出现，只给 ChatGPT 自制 MCP 插件的 OAuth 用。</p>
           </section>
           <div id="mcp-block" class="hidden">
             <label class="field-label">MCP 地址</label>

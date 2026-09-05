@@ -125,7 +125,7 @@ Quick Tunnel 的域名每次「启动 Bridge」都会变，必须回扩展里改
 | Arena 等能把 URL 当工具后端的网页栏 | 复制「URL + 那句连接说明」当第一句 |
 | **DeepSeek 网页** | **本页：DeepSeek++ + Streamable HTTP** |
 | 多个网页 AI（含 ChatGPT / Gemini / 豆包） | [网页ChatPlus使用指南.md](./网页ChatPlus使用指南.md)（源码编译，不必 MCP-Gateway） |
-| ChatGPT 免费普通聊天（不装扩展） | 通常加不了 MCP，不要只把 URL 贴进聊天框 |
+| ChatGPT 聊天栏（贴链接） | 任何档位都不会因此去连 MCP。要对接着自制插件或 Chat Plus |
 
 ---
 

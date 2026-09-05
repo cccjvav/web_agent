@@ -8,7 +8,7 @@
 
 | | 说明 |
 |---|---|
-| 要不要 ChatGPT / 各家 Plus | **不要**（扩展往网页里塞工具，不是官方连接器） |
+| 要不要 ChatGPT / 各家 Plus | **不要**（扩展往网页里塞工具，不是 ChatGPT 自制插件那条 OAuth） |
 | 要不要隧道 | **要**（和 Arena 一样，云上的网页才能打到你家电脑） |
 | 浏览器 | **Chrome 或 Edge**（推荐）。上游也出 Firefox 包 |
 | 改磁盘的程序 | 本仓库 `agent-host`，不是 MCP-Gateway，也不是 DeepSeek++ 的 Shell |
@@ -122,7 +122,7 @@ SSE 作为备选（本仓库 GET `/mcp` 也认 `text/event-stream`）；主路�
 
 Quick Tunnel 的域名每次「启动 Bridge」都会变，必须回扩展里改 URL。不要把这条地址发到群里。
 
-这**不是** ChatGPT Plus 官方开发者模式连接器。免费 ChatGPT 普通栏本身仍然加不了 MCP；是扩展在页面里当手。官方连接器见工作台 **ChatGPT Plus** 卡片（OAuth，规范地址 `/mcp`）。
+这**不是** ChatGPT 设置里的自制 MCP 插件。ChatGPT 聊天栏贴链接仍然不会连 MCP（任何档位）；是扩展在页面里当手。自制插件见工作台 **ChatGPT 自制 MCP 插件** 卡片（OAuth，规范地址 `/mcp`）。
 
 ---
 
@@ -134,7 +134,7 @@ Quick Tunnel 的域名每次「启动 Bridge」都会变，必须回扩展里改
 | Arena 等能把 URL 当工具后端的网页栏 | 复制「URL + 那句连接说明」当第一句（可以不装扩展） |
 | **多个网页 AI**（ChatGPT / Gemini / 豆包 / 通义 / DeepSeek…） | **本页：Chat Plus + Streamable HTTP** |
 | 只连 DeepSeek 网页 | [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md)（商店装 DeepSeek++）或本页 |
-| ChatGPT 免费普通聊天（不装扩展） | 通常加不了 MCP，不要只把 URL 贴进聊天框 |
+| ChatGPT 聊天栏（贴链接） | 任何档位都不会因此去连 MCP。要对接着自制插件，或本页 Chat Plus |
 
 ---
 

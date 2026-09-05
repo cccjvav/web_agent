@@ -18,7 +18,7 @@ const RESOURCE_DEFS = [
   { uri: 'webagent://workspace', name: 'Workspace', mimeType: 'text/plain', description: 'Workspace root and task state.' },
   { uri: 'webagent://memory', name: 'Memory', mimeType: 'text/markdown', description: 'Persisted agent notes.' },
   { uri: 'webagent://profile', name: 'Profile', mimeType: 'text/markdown', description: 'Environment preference, tech stack, and skills catalog.' },
-  { uri: 'webagent://clients', name: 'Clients', mimeType: 'text/markdown', description: 'How web agents connect. ChatGPT Plus is optional.' }
+  { uri: 'webagent://clients', name: 'Clients', mimeType: 'text/markdown', description: 'How web agents connect. ChatGPT chat-bar paste is not MCP; use a homemade plugin or another client.' }
 ];
 
 function listResources() {
@@ -104,7 +104,7 @@ function readResource(uri) {
       const text = [
         '# Connecting web agents',
         '',
-        'This host is not ChatGPT-only. Free users should use local Chat, a web agent that can call MCP (Arena, etc.), or DeepSeek Web via the DeepSeek++ extension (Streamable HTTP).',
+        'This host is not ChatGPT-only. Pasting the MCP URL into the ChatGPT chat box does not connect (any plan). ChatGPT homemade plugins / connectors can, via OAuth + canonical /mcp. Also: local Chat, Arena, DeepSeek++, Chat Plus.',
         '',
         ...rows.map((c) => `- **${c.name}**: ${c.summary} (Plus=${c.needsPlus ? 'yes' : 'no'}, tunnel=${c.needsTunnel ? 'yes' : 'no'})`)
       ].join('\n');

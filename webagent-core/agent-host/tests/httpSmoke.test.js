@@ -165,6 +165,8 @@ async function main() {
     assert.ok(Array.isArray(status.json.clients) && status.json.clients.some((c) => c.id === 'arena' && !c.needsPlus));
     assert.ok(status.json.clients.some((c) => c.id === 'deepseek' && c.connectMode === 'extension-http' && !c.needsPlus && c.supportsMcp));
     assert.ok(status.json.clients.some((c) => c.id === 'chat-plus' && c.connectMode === 'extension-http' && !c.needsPlus && c.supportsMcp && c.repoUrl === 'https://github.com/aiguicai/Chat-Plus'));
+    assert.ok(status.json.clients.some((c) => c.id === 'chatgpt-free' && c.connectMode === 'unsupported-mcp' && !c.supportsMcp));
+    assert.ok(status.json.clients.some((c) => c.id === 'chatgpt-plus' && c.connectMode === 'oauth-connector' && !c.needsPlus && c.supportsMcp));
     assert.ok(status.json.mcpCanonicalUrl && status.json.mcpCanonicalUrl.endsWith('/mcp'));
     assert.strictEqual(status.json.bridgeAccount.loggedIn, true);
     assert.strictEqual(status.json.bridgeAccount.provider, 'local-demo');
