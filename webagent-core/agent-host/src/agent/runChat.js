@@ -374,13 +374,14 @@ async function runBuiltin(payload, emit) {
   if (emit) emit('message', { text: lines.join('\n') });
 }
 
-async function runChat(payload, emit) {
+async function runChat(payload = {}, emit) {
+  const send = typeof emit === 'function' ? emit : payload.emit;
   const cfg = store.load();
   const active = (cfg.models || []).find((m) => m.id === cfg.activeModelId);
   if (active && active.apiKey && active.baseUrl && active.modelId) {
-    return runOpenAI({ ...payload, model: active, emit });
+    return runOpenAI({ ...payload, model: active, emit: send });
   }
-  return runBuiltin(payload, emit);
+  return runBuiltin(payload, send);
 }
 
 module.exports = { runChat };

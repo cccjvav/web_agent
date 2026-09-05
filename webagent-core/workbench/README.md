@@ -39,7 +39,7 @@
     - L165–L192 `#right-chat`：流、Tasks、chips 快捷句、`#chat-input`、`#btn-agent-pick`、隐藏 `#mode-select`、`#model-select`、发送。
     - L193–L222 `#right-bridge`：等待文案、任务、log、MCP session。L204–L221 `.mcp-session`：`#btn-reset-round`（清除本轮统计）、`#btn-stop-bridge-rb`、`#stat-calls` / `#stat-avg` / `#stat-fail` / `#stat-ok`。
   - L226–L235 `#statusbar`。
-  - L238–L516 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/多模型）。Bridge 页含客户端卡片、复制 URL/提示词、打开各站点、GitHub 登录演示、隧道 radio（cloudflare 默认；named/ngrok 输入框 **无对应 JS 去 spawn**）。L511 `#btn-reset-secret`。
+  - L238–L569 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/多模型）。**`#page-env` / `#page-stack` 有完整表单**（`#btn-detect-env`、`#btn-save-env`、`#btn-detect-stack`、`#btn-save-stack`）。Bridge 页含客户端卡片、复制 URL/提示词、打开各站点、GitHub 登录演示、隧道 radio（cloudflare 默认；named/ngrok 输入框 **无对应 JS 去 spawn**）。警告文案写明隧道不转发 `/api`。`#btn-reset-secret` 在高级设置。
   - L518–L537 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`。
   - L538 `#toast`；L539 `<script type="module" src="/app.js">`（原生 ES module，无打包）。
 
@@ -128,7 +128,8 @@
 ### 📄 文件名：`js/bind.js`
 
 - **文件职责：** 全部 DOM 事件。闭包内 `skillMarkdown` / `SKILL_TPL` / `fillSkillPreview` / `probeProvider`（不导出）。
-- **Function `bind`（L4–L467）** — 活动栏、菜单、发送、Enter、Bridge、复制（extension-http toast 不同）、reset-secret、GitHub 登录演示、各 `ui.saveCustom`、技能模板、probe/Add API（排除 modelId 匹配 video|image 当默认）、终端 `POST /api/tool/call` `run_command` mode code、搜索 `search_files` mode ask、Ctrl/Cmd+S。
+- **Function `onClick(id, handler)`（L4–8）** — 节点不存在则跳过，避免 `null.onclick` 把整个 `boot` 打断。
+- **Function `bind`（L10–L475）** — 活动栏、菜单、发送、Enter、Bridge、复制（extension-http toast 不同）、reset-secret、GitHub 登录演示、各 `ui.saveCustom`、技能模板、环境/技术栈探测与保存（`onClick` 守卫）、probe/Add API（排除 modelId 匹配 video|image 当默认）、终端 `POST /api/tool/call` `run_command` mode code、搜索 `search_files` mode ask、Ctrl/Cmd+S。
 
 ---
 

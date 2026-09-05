@@ -16,10 +16,11 @@
 | `hostPersist.test.js` | `generateNewSecret` 写入 `config.json`；`read-hashes.json` 跨 require 仍能 recalledHash；`resetHashes` 删文件 |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com` |
 | `bridgeTunnel.test.js` | stub `startQuickTunnel`/`stopTunnel`：cloudflare 启动后 mcpUrl 含 trycloudflare；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
-| `httpSmoke.test.js` | 真起进程：health、工作台 HTML、`/app.js` 与 `/js/state.js` 模块、MCP 401、initialize、tools/list、ping |
+| `localControl.test.js` | 回环 / Cloudflare 头 / trycloudflare Host 是否算本机控制面 |
+| `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`）、模块脚本、MCP 401、initialize、tools/list、ping、隧道头打 `/api` 得 404、本机 `POST /api/chat` NDJSON |
 | `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime |
 | `skipWorkbench.test.js` | `WEBAGENT_SKIP_WORKBENCH=1` 不占用工作台端口 |
-| `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；不依赖 calculator.js |
+| `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；第二参 emit 与 `payload.emit` 两条路径 |
 | `chatMode.test.js` | `@webagent` 默认 Agent=code；`/ask` `/plan` |
 | `profile.test.js` | 环境偏好 / 技术栈写入 `.webagent`，进入指令 |
 | `oauth.test.js` | OAuth 发现、配对、PKCE、Bearer `/mcp`、SSE |
@@ -138,28 +139,42 @@
 
 ---
 
-### 📄 文件名：`httpSmoke.test.js`
+### 📄 文件名：`localControl.test.js`
 
-- **文件职责：** 真起 `src/index.js`，打工作台 HTML、MCP status/401/initialize/tools/list/ping、OAuth 发现。
-- **顶部 L8–L11：** tmp；`hostDir`；随机 `workbenchPort`（18000+）、`mcpPort`（20000+）。
-- **Function `request`（L13–L46）** — Node `http.request`，body 有则 JSON；响应 try `JSON.parse`。
-- **Function `waitHealth`（L48–L65）** — 轮询 GET 直到 200 或超时。
-- **Function `stop`（L67–L76）** — win32 `taskkill /t /f`，否则 SIGTERM。
-- **Function `main`（L78–L217）**
-  - L79–L86：spawn `src/index.js`，env 设 `WORKSPACE_ROOT=tmp`、`WORKBENCH_PORT`、`AGENT_HOST_PORT`。
-  - L108–L110：health JSON `ok` 且 `product==='Web Agent'`。
-  - L112–L128：GET `/` HTML 必须含：`Web Agent`；`编辑进化` 或 `CHAT`；`Add API`；`btn-agent-pick`；`agent-pick-menu`；`Web Agent Code`；`环境偏好`；`技术栈`；`技能引导`；`怎么连到本机仓库`；`无需 Plus` 或 `不需要 Plus`；`打开 DeepSeek`；`data-site="deepseek"`；`type="module"` 与 `/app.js`。
-  - L130–L135：GET `/app.js` 含 `from './js/state.js'`；GET `/js/state.js` 含 `export const state`。
-  - L137–L145：GET **mcp 端口** `/api/status`：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===25`；clients 含 arena（无需 Plus）、deepseek（`extension-http`、支持 MCP、无需 Plus）与 chat-plus（同样 `extension-http`，`repoUrl` 为 Chat-Plus GitHub）；`mcpCanonicalUrl` 以 `/mcp` 结尾。
-  - L146–L152：错误 secret POST initialize → 401。
-  - L154–L162：正确 secret initialize 200，instructions 含 Bridge MCP 与 `webagent://instructions`。
-  - L164–L175：tools/list 25 个且含 apply_patch / start_command / workspace_info。
-  - L177–L183：`POST /mcp` 无密钥 → 401。
-  - L185–L187：GET `/.well-known/oauth-authorization-server` 200，有 `authorization_endpoint`。
-  - L189–L197：tools/call ping 成功，`isError===false`，正文含 `"ok": true`。
-  - L204–L207：finally `stop` 子进程，等 300ms，删 tmp。
+- **文件职责：** 不启 HTTP，直接断言 `isLoopbackAddress` / `isTunnelRequest` / `isPublicHost` / `isLocalControlPlane`。
+- **Function `req`（L9–15）** — 造假 Express 请求：默认 `ip=127.0.0.1`、`Host=127.0.0.1:48271`，可叠 headers。
+- L17–20：回环地址为真，`192.168.1.8` 为假。
+- L22–24：`cf-ray` / `cf-connecting-ip` 为隧道；无头不是。
+- L26–28：`*.trycloudflare.com` 为公网 Host；`127.0.0.1` / `localhost` 不是。
+- L30–33：默认本机为真；带 Cloudflare 头、trycloudflare Host、或 `10.0.0.8` 为假。
 
 ---
+
+### 📄 文件名：`httpSmoke.test.js`
+
+- **文件职责：** 真起 `src/index.js`，打工作台 HTML、MCP status/401/initialize/tools/list/ping、OAuth 发现、隧道头挡 `/api`、工作台口 Chat NDJSON。
+- **顶部 L8–L11：** tmp；`hostDir`；随机 `workbenchPort`（18000+）、`mcpPort`（20000+）。
+- **Function `request`（L13–49）** — Node `http.request`，body 有则 JSON；第四参 `extraHeaders` 叠进请求头。
+- **Function `waitHealth`（L51–68）** — 轮询 GET 直到 200 或超时。
+- **Function `stop`（L70–79）** — win32 `taskkill /t /f`，否则 SIGTERM。
+- **Function `main`（L81–257）**
+  - L82–89：spawn `src/index.js`，env 设 `WORKSPACE_ROOT=tmp`、`WORKBENCH_PORT`、`AGENT_HOST_PORT`。
+  - L111–113：health JSON `ok` 且 `product==='Web Agent'`。
+  - L115–135：GET `/` HTML 必须含：`Web Agent`；`编辑进化` 或 `CHAT`；`Add API`；`btn-agent-pick`；`agent-pick-menu`；`Web Agent Code`；`环境偏好`；`技术栈`；`技能引导`；`怎么连到本机仓库`；`无需 Plus` 或 `不需要 Plus`；`打开 DeepSeek`；`data-site="deepseek"`；`id="page-env"` / `btn-detect-env` / `page-stack` / `btn-detect-stack`；`type="module"` 与 `/app.js`。
+  - L137–142：GET `/app.js` 含 `from './js/state.js'`；GET `/js/state.js` 含 `export const state`。
+  - L144–152：GET **mcp 端口** `/api/status`（本机无隧道头）：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===25`；clients 含 arena（无需 Plus）、deepseek（`extension-http`、支持 MCP、无需 Plus）与 chat-plus；`mcpCanonicalUrl` 以 `/mcp` 结尾。
+  - L154–160：错误 secret POST initialize → 401。
+  - L162–170：正确 secret initialize 200，instructions 含 Bridge MCP 与 `webagent://instructions`。
+  - L172–183：tools/list 25 个且含 apply_patch / start_command / workspace_info。
+  - L185–191：`POST /mcp` 无密钥 → 401。
+  - L193–195：GET `/.well-known/oauth-authorization-server` 200，有 `authorization_endpoint`。
+  - L197–205：tools/call ping 成功，`isError===false`。
+  - L207–211：本机 `POST /api/bridge/reset-round` 仍 200。
+  - L214–223：带 `cf-ray` 的 mcp 口 `/api/status`、`/api/chat`、`/api/tool/call` 以及 `Host: *.trycloudflare.com` 的 `/api/status` 都 **404**，正文不含 secret。
+  - L225–231：同一组隧道头 `POST /mcp/<secret>` initialize 仍 200。
+  - L233–234：mcp 口 GET `/` 正文不得含 `btn-agent-pick`（没有工作台静态）。
+  - L236–249：**工作台口** `POST /api/chat` NDJSON 必须有 `tool`（`list_directory`）、`message`、`done`。
+  - L259–262：finally `stop` 子进程，等 300ms，删 tmp。
 
 ### 📄 文件名：`codeServerNotRunnable.test.js`
 
@@ -187,16 +202,15 @@
 
 ### 📄 文件名：`runChat.test.js`
 
-- **文件职责：** 内置 Chat 对**任意**临时工作区搜-读-测；不依赖 calculator.js；不调 get_diagnostics。
+- **文件职责：** 内置 Chat 对**任意**临时工作区搜-读-测；不依赖 calculator.js；不调 get_diagnostics；同时锁第二参 emit 与 `payload.emit`。
 - **Function `collect`（L12–L16）** — `{ events, emit }`，emit 把 `{type,...data}` 推进数组。
-- **Function `main`（L18–L75）**
+- **Function `main`（L18–L85）**
   - L19–L34：写 README（标题 Widget）、`src/app.js` greet、`package.json` scripts.test、`tests/app.test.js`。
-  - L36–L46 **ask「分析当前项目」：** 工具含 list_directory / find_files / read_files；禁止 diagnostics / apply_patch；message 匹配 README|Widget|app.js；整段事件 JSON **不含** `calculator.js`；有 label 匹配 `Found N files`。
+  - L36–L46 **ask「分析当前项目」：** 第二参 `ask.emit`；工具含 list_directory / find_files / read_files；禁止 diagnostics / apply_patch；message 匹配 README|Widget|app.js；整段事件 JSON **不含** `calculator.js`；有 label 匹配 `Found N files`。
   - L48–L53 **plan：** 有 `consensus.result.consensusReached`；无 calculator.js；有 `set_todos`。
   - L55–L61 **code「跑测试」：** 有 `run_command` 且 `ok`；message 含 `npm test` 或 `ok`。
-  - L63–L71 **code 写入 notes.md + 围栏：** 磁盘出现该文件且含 `hello from agent`。
-
----
+  - L63–L70 **payload.emit：** `runChat({ mode:'ask', message, emit })` 无第二参，仍须有 `list_directory` 与 `message`。
+  - L72–L81 **code 写入 notes.md + 围栏：** 磁盘出现该文件且含 `hello from agent`。
 
 ### 📄 文件名：`chatMode.test.js`
 
@@ -239,7 +253,7 @@
 
 ## 3. 执行逻辑流（仅本目录）
 
-1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **hostPersist** → tunnel → **bridgeTunnel** → httpSmoke → codeServerNotRunnable → skipWorkbench → runChat → chatMode → profile → oauth。
+1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **hostPersist** → tunnel → **bridgeTunnel** → **localControl** → httpSmoke → codeServerNotRunnable → skipWorkbench → runChat → chatMode → profile → oauth。
 2. 单文件：改 `config.workspaceRoot` 指向 tmp → require 被测模块 → assert → 删 tmp。`tunnel` / `chatMode` / `codeServerNotRunnable` 不改工作区。`bridgeTunnel` 改 tmp 工作区并 stub 隧道导出。
 3. 启进程的测试 spawn `src/index.js`，结束必须杀子进程。
 4. 失败路径：有 `main()` 的文件走 `main().catch` → `exit(1)`；`profile.test.js` 同步抛错由 Node 非 0 退出；CMD 的 `run-tests.cmd` 据此 pause。

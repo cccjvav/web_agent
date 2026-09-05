@@ -10,19 +10,22 @@ const hostDir = path.resolve(__dirname, '..');
 const workbenchPort = 18000 + Math.floor(Math.random() * 2000);
 const mcpPort = 20000 + Math.floor(Math.random() * 2000);
 
-function request(method, url, body) {
+function request(method, url, body, extraHeaders) {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
     const payload = body === undefined ? null : JSON.stringify(body);
+    const headers = { ...(extraHeaders || {}) };
+    if (payload) {
+      headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+      headers['Content-Length'] = Buffer.byteLength(payload);
+    }
     const req = http.request(
       {
         hostname: u.hostname,
         port: u.port,
         path: u.pathname + u.search,
         method,
-        headers: payload
-          ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
-          : {}
+        headers
       },
       (res) => {
         const chunks = [];
@@ -125,6 +128,10 @@ async function main() {
     assert.ok(page.raw.includes('打开 DeepSeek'));
     assert.ok(page.raw.includes('data-site="deepseek"'));
     assert.ok(page.raw.includes('清除本轮统计'));
+    assert.ok(page.raw.includes('id="page-env"'));
+    assert.ok(page.raw.includes('id="btn-detect-env"'));
+    assert.ok(page.raw.includes('id="page-stack"'));
+    assert.ok(page.raw.includes('id="btn-detect-stack"'));
     assert.ok(page.raw.includes('type="module"') && page.raw.includes('/app.js'));
 
     const appJs = await request('GET', `http://127.0.0.1:${workbenchPort}/app.js`);
@@ -203,6 +210,44 @@ async function main() {
     assert.strictEqual(resetRound.json.success, true);
     assert.ok(resetRound.json.mcpSession);
     assert.strictEqual(resetRound.json.mcpSession.clients, 0);
+
+    const tunnelHeaders = { 'cf-ray': 'smoke-test', 'cf-connecting-ip': '203.0.113.8' };
+    const blockedStatus = await request('GET', `http://127.0.0.1:${mcpPort}/api/status`, undefined, tunnelHeaders);
+    assert.strictEqual(blockedStatus.status, 404);
+    assert.ok(!String(blockedStatus.raw || '').includes(secret));
+    const blockedChat = await request('POST', `http://127.0.0.1:${mcpPort}/api/chat`, { mode: 'ask', message: 'hi' }, tunnelHeaders);
+    assert.strictEqual(blockedChat.status, 404);
+    const blockedTool = await request('POST', `http://127.0.0.1:${mcpPort}/api/tool/call`, { name: 'ping', arguments: {} }, tunnelHeaders);
+    assert.strictEqual(blockedTool.status, 404);
+    const blockedHost = await request('GET', `http://127.0.0.1:${mcpPort}/api/status`, undefined, { Host: 'random-words.trycloudflare.com' });
+    assert.strictEqual(blockedHost.status, 404);
+
+    const tunneledInit = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/${secret}`, {
+      jsonrpc: '2.0',
+      id: 11,
+      method: 'initialize',
+      params: { clientInfo: { name: 'tunnel-smoke' } }
+    }, tunnelHeaders);
+    assert.strictEqual(tunneledInit.status, 200);
+
+    const mcpRoot = await request('GET', `http://127.0.0.1:${mcpPort}/`);
+    assert.ok(!(mcpRoot.raw || '').includes('btn-agent-pick'));
+
+    const chat = await request('POST', `http://127.0.0.1:${workbenchPort}/api/chat`, {
+      mode: 'ask',
+      message: '分析当前项目实现了什么功能'
+    });
+    assert.strictEqual(chat.status, 200);
+    const events = String(chat.raw || '')
+      .split('\n')
+      .filter((line) => line.trim())
+      .map((line) => {
+        try { return JSON.parse(line); } catch { return null; }
+      })
+      .filter(Boolean);
+    assert.ok(events.some((e) => e.type === 'tool' && e.name === 'list_directory'));
+    assert.ok(events.some((e) => e.type === 'message' && e.text));
+    assert.ok(events.some((e) => e.type === 'done'));
 
     log += 'httpSmoke finished\n';
     console.log('http smoke tests passed');

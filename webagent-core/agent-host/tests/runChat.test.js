@@ -60,6 +60,15 @@ async function main() {
   const codeMsg = code.events.find((e) => e.type === 'message');
   assert.ok(codeMsg && /npm test|ok/i.test(codeMsg.text));
 
+  const viaPayload = collect();
+  await runChat({
+    mode: 'ask',
+    message: '分析当前项目实现了什么功能',
+    emit: viaPayload.emit
+  });
+  assert.ok(viaPayload.events.some((e) => e.type === 'tool' && e.name === 'list_directory'));
+  assert.ok(viaPayload.events.some((e) => e.type === 'message'));
+
   const write = collect();
   await runChat(
     {

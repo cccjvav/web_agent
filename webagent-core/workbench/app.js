@@ -58,7 +58,11 @@ function loadMonaco() {
 }
 
 async function boot() {
-  ui.bind();
+  try {
+    ui.bind();
+  } catch (err) {
+    console.error('bind failed', err);
+  }
   ui.setAgentMode('code');
   ui.paintTabs();
   ui.paintChat();

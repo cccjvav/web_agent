@@ -2,15 +2,15 @@
 
 当前处理目标：`webagent-core/agent-host/src/utils/`
 
-进程内事件总线与 diff 辅助。无 `.json` / `.html`。
+进程内事件总线、diff 辅助、以及「这是不是本机控制面」闸门。无 `.json` / `.html`。
 
 ---
 
 ## 1. 模块概述
 
-- **定位：** 跨 MCP / Chat / 命令执行的广播通道；补丁成功后生成 unified diff 给 UI。
-- **依赖：** Node `events`；npm 包 `diff`。
-- **谁调用：** `../index.js` 把 `/ws` 客户端交给 eventBus；几乎所有工具与 `mcp/server.js`、`api/routes.js` broadcast；`patchEngine` 调 `createUnifiedDiff`。
+- **定位：** 跨 MCP / Chat / 命令执行的广播通道；补丁成功后生成 unified diff 给 UI；mcp 端口上的 `/api` 只允许本机回环。
+- **依赖：** Node `events`；npm 包 `diff`。`localControl.js` 无第三方依赖。
+- **谁调用：** `../index.js` 把 `/ws` 客户端交给 eventBus，并把 `rejectUnlessLocalControl` 挂在 mcpApp 的 `/api` 前；几乎所有工具与 `mcp/server.js`、`api/routes.js` broadcast；`patchEngine` 调 `createUnifiedDiff`。
 
 ---
 
@@ -47,7 +47,8 @@
 
 ## 3. 执行逻辑流
 
-1. `index.js` `attachWss`：浏览器连 `/ws` → `addWsClient`，并立即收到 `connected`（含 secretKey）。
-2. 工具/MCP 调用 `broadcast` → 写入 logs + 推到所有打开的工作台。
-3. 工作台 `connectWs` 根据 type 刷新终端、文件树、BRIDGE 工具卡、todos。
-4. `patchEngine` 写盘后用 `createUnifiedDiff` 把 diff 放进 broadcast payload，工作台可开 diff 页。
+1. `index.js` `attachWss`：浏览器连 3000 的 `/ws` → `addWsClient`，并立即收到 `connected`（**不含** secretKey）。mcp 端口不挂 WebSocket。
+2. mcpApp 的 `/api` 先过 `rejectUnlessLocalControl`：Cloudflare 头或 `*.trycloudflare.com` Host → 404；本机回环 `next()`。
+3. 工具/MCP 调用 `broadcast` → 写入 logs + 推到所有打开的工作台。
+4. 工作台 `connectWs` 根据 type 刷新终端、文件树、BRIDGE 工具卡、todos。
+5. `patchEngine` 写盘后用 `createUnifiedDiff` 把 diff 放进 broadcast payload，工作台可开 diff 页。

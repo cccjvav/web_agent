@@ -8,7 +8,7 @@
 
 ## 1. 模块概述
 
-- **定位：** 进程入口与全局单例配置。`index.js` 组装 Express、开两个 HTTP 端口、挂静态工作台 / MCP / API / OAuth / WebSocket。
+- **定位：** 进程入口与全局单例配置。`index.js` 组装**两套** Express（店堂 UI 与后厨 MCP）、开两个 HTTP 端口。
 - **依赖：** 本目录几乎所有子模块；npm：`express`、`ws`、`cors`。
 - **谁调用：** `run-webagent.cmd` / `.sh` 执行 `node src/index.js`；`scripts/run-code-oss.js` 同样启动并设 `WEBAGENT_SKIP_WORKBENCH=1`。
 
@@ -50,26 +50,28 @@
 
 ### 📄 文件名：`index.js`
 
-- **文件职责：** 创建 app、两个 `http.Server`、可选跳过 3000。
+- **文件职责：** 创建 **uiApp / mcpApp** 两套 Express、两个 `http.Server`、可选跳过 3000。隧道打在 48271 时公网只应碰到 MCP/OAuth；`/api` 在 mcpApp 上要过 `rejectUnlessLocalControl`。
 - **核心类/函数清单：**
 
-  - **顶层启动（L1–L56）**
+  - **顶层启动（L1–L23）**
     - L15：`persistIdentity(store)`。
     - L17–L23：工作区不存在且设了 `WORKSPACE_ROOT` → 打印错误 `exit(1)`；未设环境变量 → `mkdirSync`。
-    - L25–L32：关 x-powered-by、cors、所有响应 `Cache-Control: no-store`、json 20mb、urlencoded。
-    - L34–L38：静态 `../../workbench`；**先** `oauth.router`，再 `/mcp`，再 `/api`。
-    - L40–L42：`GET /health` → `{ ok, product, version }`。
-    - L44–L56 SPA 回退：非 GET → next；path 以 `/api` `/mcp` `/ws` `/oauth` `/.well-known` 开头或恰好 `/register` → next；有扩展名 → next；否则 `index.html`。
-  - **Function `attachWss(server)`（L58–L76）** — `WebSocketServer` path `/ws`；连接时 `eventBus.addWsClient`，立刻 send `type:'connected'`，payload 含 **secretKey**。
-  - **Function `listenOrExit(server, port, label)`（L82–L92）** — `error.code==='EADDRINUSE'` 打印占用后 `exit(1)`；其它 error 同样退出；`listen(port, config.host)`。
-  - **双服务器（L78–L80, L94–L117）**
-    - L78–L80：`uiServer` 与 `mcpServer` 都是 `http.createServer(app)`，各自 attachWss。
-    - L94：`skipWorkbench = WEBAGENT_SKIP_WORKBENCH === '1'`。
-    - L96–L105：非 skip 则 listen 3000 并打印 UI/MCP/Workspace。
-    - L106–L112：skip 则打印「不占用 3000」。
-    - L113–L117：无论 skip 都 listen `config.port`（48271）。
+  - **Function `applyCommon(app)`（L25–33）** — 关 x-powered-by、所有响应 `Cache-Control: no-store`、json 20mb、urlencoded。**不再**给两套 app 共用无条件 `cors()`。
+  - **Function `mountHealth(app)`（L35–39）** — `GET /health` → `{ ok, product, version }`。
+  - **Function `mountWorkbench(app)`（L43–57）** — 静态 `../../workbench`；SPA 回退：非 GET → next；path 以 `/api` `/mcp` `/ws` `/oauth` `/.well-known` 开头或恰好 `/register` → next；有扩展名 → next；否则 `index.html`。
+  - **两套 app（L60–72）**
+    - L60–64 `uiApp`：health、`/api`（无隧道闸）、工作台静态 + SPA。**没有** cors、**没有** `/mcp`。
+    - L66–72 `mcpApp`：`cors()`（浏览器扩展跨域调 MCP）、health、`oauth.router`、`/mcp`、`/api` 先 `rejectUnlessLocalControl` 再 `apiRouter`。**没有**静态工作台、**没有** SPA。
+  - **Function `attachWss(server)`（L74–90）** — `WebSocketServer` path `/ws`；连接时 `eventBus.addWsClient`，立刻 send `type:'connected'`，payload 只含 `serverName`、`version`（**不含 secretKey**）。
+  - **Function `listenOrExit(server, port, label)`（L96–106）** — `error.code==='EADDRINUSE'` 打印占用后 `exit(1)`；其它 error 同样退出；`listen(port, config.host)`。
+  - **双服务器（L92–134）**
+    - L92–94：`uiServer = createServer(uiApp)`，`mcpServer = createServer(mcpApp)`；**只**给 uiServer attachWss。
+    - L108：`skipWorkbench = WEBAGENT_SKIP_WORKBENCH === '1'`。
+    - L110–121：非 skip 则 listen 3000 并打印 UI/MCP，以及「公网只收 /mcp 与 OAuth」。
+    - L122–129：skip 则打印「不占用 3000」，并说明 `/api` 仅本机回环。
+    - L131–134：无论 skip 都 listen `config.port`（48271）。
 
-- **关键变量：** L24 `app`；L34 `workbenchDir`；L78–L80 两个 Server。导出 `{ app, uiServer, mcpServer }`（L119）。
+- **关键变量：** L41 `workbenchDir`；L60 `uiApp`；L66 `mcpApp`；L92–93 两个 Server。导出 `{ uiApp, mcpApp, uiServer, mcpServer }`（L136）。
 
 ---
 
@@ -77,7 +79,7 @@
 
 1. CMD/`node src/index.js` 加载 `config`（随机 secret）→ `persistIdentity` 可能换成磁盘密钥。
 2. 确保工作区目录。
-3. 同一套 Express：静态 UI + OAuth 发现 + `/mcp` + `/api` + `/health` + SPA。
-4. 两个 listen：给人看的 3000（可跳过）与 MCP/API 的 48271。
-5. 浏览器打开 3000 拿到 workbench；Chat 走 `/api`；网页 Agent 走 `/mcp`（可能经隧道）。
-6. `/ws` 把工具事件推回 UI。
+3. 两套 Express：`uiApp`（3000：工作台 + `/api` + `/ws`）与 `mcpApp`（48271：`/mcp` + OAuth + 本机才能打的 `/api`）。
+4. 两个 listen：给人看的 3000（可跳过）与 MCP 的 48271。
+5. 浏览器打开 3000 拿到 workbench；Chat 走 3000 的 `/api`；网页 Agent 走 `/mcp`（可能经隧道）。VS Code 插件仍打本机 `127.0.0.1:48271/api`（无 Cloudflare 头）。
+6. `/ws` 只挂在 3000，把工具事件推回 UI；连接消息**不下发** secretKey。

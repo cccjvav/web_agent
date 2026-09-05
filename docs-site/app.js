@@ -70,7 +70,7 @@
       <div class="hero-grid">
         <div class="card">
           <h3>电脑上同时活着谁</h3>
-          <p class="muted" style="margin-top:0">同一套 Express，两扇门。点一层可跳到导读对应节。</p>
+          <p class="muted" style="margin-top:0">同一进程、两套 Express、两扇门。点一层可跳到导读对应节。</p>
           <div class="arch">
             <div class="layer remote" data-jump="#/guide/临时门牌隧道">
               <div class="tag">远端</div>
@@ -89,7 +89,7 @@
               </div>
               <span class="port">:48271</span>
             </div>
-            <div class="connector">↓ 同一进程 · /api · /ws</div>
+            <div class="connector">↓ 同一进程 · 店堂 3000 的 /api · /ws；后厨公网只收 /mcp</div>
             <div class="layer shop" data-jump="#/guide/三条路一把扳手">
               <div class="tag">店堂</div>
               <div>
@@ -132,6 +132,7 @@
             <li>远程 tools/call 默认 Code</li>
             <li><code>sendCommandInput</code> 恒定失败，没有 PTY</li>
             <li>工作台 arenaConnect 打的是本机 /mcp，不是云上 Arena</li>
+            <li>隧道带 Cloudflare 头时 48271 /api 404，不下发 secretKey</li>
           </ul>
         </div>
       </div>
@@ -148,14 +149,14 @@
   const PATHS = {
     a: [
       ['你', '工作台右侧 CHAT'],
-      ['js/chat.js', 'POST /api/chat'],
+      ['js/chat.js', 'POST :3000 /api/chat'],
       ['runChat.js', '无 Key → runBuiltin'],
       ['callTool', 'Ask 只读 / Code 可写'],
       ['磁盘', '工作区文件变了']
     ],
     b: [
       ['云上聊天栏', 'HTTPS 工单'],
-      ['trycloudflare', '/mcp/<密钥> 或 Bearer'],
+      ['trycloudflare', '/mcp/<密钥>；公网 /api 404'],
       ['mcp/server.js', 'requireAuth → handleRpc'],
       ['callTool', '默认 code'],
       ['磁盘', 'BRIDGE 经 /ws 出卡片']

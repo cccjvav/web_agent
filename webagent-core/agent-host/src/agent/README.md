@@ -48,7 +48,7 @@
     - L279–L311 **`mode==='plan'`：** `multiModel.enabled === false` → emit 未开博弈文本并 **return**；否则 `runMultiModelConsensus`，写 todos，emit consensus + message，return。
     - L313–L325 **`mode==='ask'`：** todos completed，emit summarizeAsk，return。
     - L327 起视为 **code**：有 writeIntent → write_file；有 patch → 从消息匹配文件或 `facts.files[0]`，read_files 取 hash 再 apply_patch；detectTestCommand 有则 run_command timeout 60；最后 emit 摘要（写明内置没有大模型）。
-  - **Function `runChat`（L377–L384）** — `store.load()` 找 active 模型；**若** `apiKey && baseUrl && modelId` 都真 → `runOpenAI`；**否则** `runBuiltin`。
+  - **Function `runChat`（L377–L385）** — `emit` 可以是第二参，也可以是 `payload.emit`（HTTP `POST /api/chat` 把函数放进对象里）。`store.load()` 找 active 模型；**若** `apiKey && baseUrl && modelId` 都真 → `runOpenAI({ ...payload, emit: send })`；**否则** `runBuiltin(payload, send)`。两种调用都要把 `send` 传下去，否则工作台收不到 tool/message。
 
 - **关键变量：** L8 `SKIP_DIRS` = node_modules/.git/.cache/dist/build/.local/bin。
 
@@ -98,8 +98,8 @@
 
 ## 3. 执行逻辑流
 
-1. `routes.js` `POST /chat` 打开 NDJSON，把 `emit` 传给 `runChat`。
-2. `runChat` 看 store 里当前模型是否同时有 Key、Endpoint、modelId。
+1. `routes.js` `POST /chat` 打开 NDJSON，调用 `runChat({ mode, message, history, emit })`（emit 在对象里）。
+2. `runChat` 取出 `send = 第二参或 payload.emit`，看 store 里当前模型是否同时有 Key、Endpoint、modelId。
 3. 有 → `openai.runOpenAI`：systemPrompt（含 mode 锁）→ 最多 10 次 completions → 每次 tool_calls 进 `callTool(..., mode)`。
 4. 无 → `runBuiltin`：explore 只读 → Ask 摘要 / Plan 进 consensusEngine（或关闭时跳过）/ Code 解析消息里的补丁或围栏再测。
 5. 每步 `timedTool`/`emit('tool')` 被工作台或 VS Code 插件画成工具卡。

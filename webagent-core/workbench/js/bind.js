@@ -1,6 +1,12 @@
 import { $, $$, state, ui } from './state.js';
 import { escapeHtml } from './dom.js';
 
+function onClick(id, handler) {
+  const node = $(id);
+  if (!node) return;
+  node.onclick = handler;
+}
+
 export function bind() {
   $$('#activitybar [data-left]').forEach((b) => {
     b.onclick = () => {
@@ -216,50 +222,52 @@ export function bind() {
     await ui.loadSkills();
     ui.toast('已创建 Skill 文件夹');
   };
-  $('#btn-detect-env').onclick = async () => {
+  onClick('#btn-detect-env', async () => {
     const res = await fetch('/api/profile/detect');
     const data = await res.json();
     const env = data.environment || {};
-    $('#env-os').value = env.os || 'auto';
-    $('#env-shell').value = env.shell || 'auto';
-    $('#env-status').textContent = `探测到 ${env.os} / ${env.shell}`;
-  };
-  $('#btn-save-env').onclick = async () => {
+    if ($('#env-os')) $('#env-os').value = env.os || 'auto';
+    if ($('#env-shell')) $('#env-shell').value = env.shell || 'auto';
+    if ($('#env-status')) $('#env-status').textContent = `探测到 ${env.os} / ${env.shell}`;
+  });
+  onClick('#btn-save-env', async () => {
     await ui.saveCustom({
       environment: {
-        os: $('#env-os').value,
-        shell: $('#env-shell').value,
-        replyLanguage: $('#env-reply').value,
-        commitLanguage: $('#env-commit').value,
-        notes: $('#env-notes').value
+        os: $('#env-os') ? $('#env-os').value : 'auto',
+        shell: $('#env-shell') ? $('#env-shell').value : 'auto',
+        replyLanguage: $('#env-reply') ? $('#env-reply').value : 'zh-CN',
+        commitLanguage: $('#env-commit') ? $('#env-commit').value : 'zh-CN',
+        notes: $('#env-notes') ? $('#env-notes').value : ''
       }
     });
-    $('#env-status').textContent = '已写入 .webagent/preference.md';
+    if ($('#env-status')) $('#env-status').textContent = '已写入 .webagent/preference.md';
     ui.toast('已保存环境偏好');
-  };
-  $('#btn-detect-stack').onclick = async () => {
+  });
+  onClick('#btn-detect-stack', async () => {
     const res = await fetch('/api/profile/detect');
     const data = await res.json();
     const st = data.techStack || {};
-    $('#st-lang').value = st.languages || '';
-    $('#st-fw').value = st.frameworks || '';
-    $('#st-pm').value = st.packageManager || '';
-    $('#st-test').value = st.testCommand || '';
-    $('#stack-status').textContent = st.languages || st.testCommand ? '已填入探测结果，确认后保存。' : '工作区没有识别到常见清单文件。';
-  };
-  $('#btn-save-stack').onclick = async () => {
+    if ($('#st-lang')) $('#st-lang').value = st.languages || '';
+    if ($('#st-fw')) $('#st-fw').value = st.frameworks || '';
+    if ($('#st-pm')) $('#st-pm').value = st.packageManager || '';
+    if ($('#st-test')) $('#st-test').value = st.testCommand || '';
+    if ($('#stack-status')) {
+      $('#stack-status').textContent = st.languages || st.testCommand ? '已填入探测结果，确认后保存。' : '工作区没有识别到常见清单文件。';
+    }
+  });
+  onClick('#btn-save-stack', async () => {
     await ui.saveCustom({
       techStack: {
-        languages: $('#st-lang').value,
-        frameworks: $('#st-fw').value,
-        packageManager: $('#st-pm').value,
-        testCommand: $('#st-test').value,
-        notes: $('#st-notes').value
+        languages: $('#st-lang') ? $('#st-lang').value : '',
+        frameworks: $('#st-fw') ? $('#st-fw').value : '',
+        packageManager: $('#st-pm') ? $('#st-pm').value : '',
+        testCommand: $('#st-test') ? $('#st-test').value : '',
+        notes: $('#st-notes') ? $('#st-notes').value : ''
       }
     });
-    $('#stack-status').textContent = '已写入 .webagent/tech-stack.md';
+    if ($('#stack-status')) $('#stack-status').textContent = '已写入 .webagent/tech-stack.md';
     ui.toast('已保存技术栈');
-  };
+  });
   $('#btn-save-instr').onclick = async () => {
     await ui.saveCustom({ instructions: $('#instr-text').value });
     ui.toast('指令已保存到 .webagent/instructions.md');
