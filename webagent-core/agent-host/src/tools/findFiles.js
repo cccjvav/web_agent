@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
-const { resolveSafePath } = require('./patchEngine');
+const { resolveSafePath, isInsideWorkspace } = require('./patchEngine');
 const { isHidden } = require('./sensitive');
 
 function globToRegExp(glob) {
@@ -33,8 +33,10 @@ function findFiles({ glob = '**/*', searchPath = '.', maxResults = 40 } = {}) {
     }
     for (const entry of entries) {
       const full = path.join(dir, entry.name);
+      if (!isInsideWorkspace(full)) continue;
       const rel = path.relative(config.workspaceRoot, full).split(path.sep).join('/');
       if (isHidden(rel)) continue;
+      if (entry.isSymbolicLink && entry.isSymbolicLink()) continue;
       if (entry.isDirectory()) {
         walk(full);
       } else if (re.test(rel) || re.test(entry.name) || glob === '**/*') {

@@ -68,12 +68,12 @@
     - L415–L421：未知名 → `ProtocolError E_UNKNOWN_CMD`，消息含 Available 列表，`detail.retryHint` 提示可用别名。
     - L422–L427：`currentMode` 真且不在该工具 mode 列表 → `E_BAD_ARGS`（Ask/Plan 只读文案）。远程 MCP 默认传入 `'code'`（见 `mcp/server.remoteToolMode`）；本机 Chat 传入 UI 模式。
     - L428：`normalizeToolArgs(toolDef.name, args)`（snake_case、`path`→`filePath`、`"true"`→布尔）。
-    - L429–L437：工具名为 `run_command` 或 `start_command` 且命令匹配 `DANGEROUS_RE` 且无 `confirm_dangerous` → `E_BAD_ARGS` + retryHint。
+    - L429–L437：工具名为 `run_command` 或 `start_command` 且命令匹配 `DANGEROUS_RE` 且无 `confirm_dangerous` → `E_BAD_ARGS` + retryHint。闸包括 `rm -rf`、`git push`、`curl … | sh`、`iex` / `iwr`、关机格式化等。
     - L438：`await handler(input)`。
     - L439–L442：`result.isTimeout` 则打 `E_TIMEOUT`、`suggestedWaitMs=0`。
     - L443：`clipJson(result)` 后返回。
 
-- **关键变量：** L47–L48 `DANGEROUS_RE` 匹配 `rm -rf` / `rm -fr` / `mkfs` / `dd if=` / `shutdown` / `reboot` / `git reset --hard` / `git checkout --` / `git clean -f` / `format x:` / `del /s` / `rd /s` / `Remove-Item -Recurse` / `drop database`（i 标志）。
+- **关键变量：** L47–L48 `DANGEROUS_RE`（i 标志）匹配 `rm -rf` / `mkfs` / `dd if=` / `shutdown` / `reboot` / `halt` / `poweroff` / **`git push`** / `git reset --hard` / `git checkout --` / `git clean -f` / `format x:` / `del /s` / `rd /s` / `Remove-Item -Recurse` / `drop database` / `Invoke-Expression` / `iex` / `iwr` / `Start-Process` / **`curl|wget` 管道进 shell** / `powershell -enc` / `certutil -urlcache` / `bitsadmin` / `reg add` / `net user` / `schtasks`。
 
 ---
 
@@ -84,13 +84,15 @@
 
   - **Function `computeHash(content)`（L11–L13）** — sha256 hex，utf8。
   - **Function `toPosixRel(p)`（L15–L17）** — 反斜杠改 `/`。
-  - **Function `resolveSafePath(relPath)`（L19–L30）**
-    - L20–L23：相对 `config.workspaceRoot` 解析。
-    - L24–L26：posix 为 `..`、以 `../` 开头、或 `rel` 绝对路径 → 抛 Security error。
-    - L27：posix 非空且不是 `.` → `assertNotSensitive`。
-    - L28：返回绝对路径。
+  - **Function `existingAncestor` / `realPathOrJoin` / `isInsideWorkspace`（L19–L49）** — 沿父目录找到已存在的节点再 `realpathSync`，挡住 **symlink / junction** 指到工作区外。
+  - **Function `resolveSafePath(relPath)`（L51–L65）**
+    - L53–L55：相对 `config.workspaceRoot` 解析。
+    - L57–L59：posix 为 `..`、以 `../` 开头、或 `rel` 绝对路径 → 抛 Security error。
+    - L60–L62：`isInsideWorkspace` 为假（真实路径跑出工作区）同样抛。
+    - L63：posix 非空且不是 `.` → `assertNotSensitive`。
+    - L64：返回**逻辑**绝对路径（写新文件用；读/写会再被真实路径检查拦住）。
   - **Function `parseSearchReplaceBlocks(patchText)`（L32–L43）** — 正则 `<<<<< SEARCH` … `=====` … `>>>>> REPLACE`，收集 `{ search, replace }`。
-  - **Function `applyPatch({ filePath, patch, expectedHash=null, dryRun=false })`（L45–L177）**
+  - **Function `applyPatch({ filePath, patch, expectedHash=null, dryRun=false })`（L80–L212）**
     - L46：`resolveSafePath`。
     - **文件不存在 L48–L81：** 解析 blocks；若第一块 search trim 为空则用 replace 当新内容，否则整段 `patch`。`dryRun` 只返回成功。否则 mkdir + write；broadcast `file_patched`；`rememberHash`；返回 `isNewFile` + newHash。
     - **文件存在 L83–L176：** 读全文算 `currentHash`。L85–L88：没传 `expectedHash` 则用 `recalledHash(filePath)`（上次 `read_files` / 成功补丁记下的 sha256）。
@@ -113,8 +115,8 @@
   - **Function `deleteFile`（L62–L84）** — 无 path 抛。相对路径空或 `.` 拒绝删根。不存在抛。非空目录抛。目录 `rmdirSync`，文件 `unlinkSync`。broadcast `file_deleted`。
   - **Function `renameFile`（L86–L100）** — `from||filePath` 与 `to||dest` 缺一抛。源不存在 / 目标已存在抛。mkdir 父目录后 rename。broadcast `file_renamed`。
   - **Function `writeFile`（L102–L116）** — mkdir + writeFileSync，无哈希预检。broadcast `file_written`。
-  - **Function `listDir`（L118–L150）** — 内嵌 `scan`：depth 超 `maxDepth` 返回 []；`isHidden` skip；目录仅 `recursive && currentDepth < maxDepth` 才扫 children。从 depth=1 开始。
-  - **Function `grepSearch`（L152–L211）** — 编正则（非 regex 则转义）；非法正则抛。目录递归；文件 try 读，catch 空。分页 `limit` 1–100，`nextCursor` 或 null。
+  - **Function `listDir`（L159–L193）** — 内嵌 `scan`：depth 超 `maxDepth` 返回 []；真实路径在工作区外或 **符号链接** skip；`isHidden` skip；目录仅 `recursive && currentDepth < maxDepth` 才扫 children。
+  - **Function `grepSearch`（L195–L252）** — 编正则（非 regex 则转义）；非法正则抛。目录递归时同样跳过工作区外与符号链接。分页 `limit` 1–100，`nextCursor` 或 null。
 
 ---
 
@@ -162,10 +164,10 @@
 - **文件职责：** 在工作区跑 shell。Windows 走 PowerShell，其它 bash。
 - **核心类/函数清单：**
 
-  - **Function `killChild`（L11–L20）** — 无 pid return。win32 恒 `taskkill /pid /t /f`（force 两支都是 `/f`）。非 Windows SIGKILL/SIGTERM。catch 空。
-  - **Function `workingDirFrom`（L22–L29）** — cwd 解析后 relative 以 `..` 开头或绝对 → 抛 outside workspace。
+  - **Function `killChild`（L12–L26）** — 无 pid return。win32 `taskkill /pid /t /f`。非 Windows 先 `process.kill(-pid)` 杀**进程组**，失败再 `child.kill`。
+  - **Function `workingDirFrom`（L28–L34）** — 走 `resolveSafePath`（含真实路径），逃出工作区抛 outside workspace。
   - **Function `publicRecord`（L31–L48）** — stdout/stderr 截尾；running 时带 `suggestedWaitMs` 与 poll hint。
-  - **Function `startProcess`（L50–L132）** — `execId` 自增；timeout 至少 1s；broadcast `command_started`；spawn PowerShell 或 bash；超时 kill 再 2s force；stdout/stderr 环形 200KB；error reject；close 时 status `timeout` 或 `done`。返回 `{ rec, done }`。
+  - **Function `startProcess`（L55–L140）** — `execId` 自增；timeout 至少 1s；broadcast `command_started`；spawn PowerShell 或 bash；非 Windows `detached:true` 以便杀进程组；超时 kill 再 2s force；stdout/stderr 环形 200KB；error reject；close 时若不是 `cancelled` 则 status `timeout` 或 `done`。返回 `{ rec, done }`。
   - **Function `executeCommand`（L134–L137）** — 返回 `done`（等到结束）。
   - **Function `startCommand`（L139–L152）** — 不等待；`done.catch` 标 error；立即返回 execId + running。
   - **Function `getCommandOutput`（L154–L161）** — id = execId 或 commandId 或最新序号；没有 rec → found false。

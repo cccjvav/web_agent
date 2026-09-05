@@ -8,7 +8,7 @@ const workspaceRoot = path.resolve(
 const config = {
   port: parseInt(process.env.AGENT_HOST_PORT || '48271', 10),
   workbenchPort: parseInt(process.env.WORKBENCH_PORT || '3000', 10),
-  host: '0.0.0.0',
+  host: process.env.WEBAGENT_BIND || '127.0.0.1',
   workspaceRoot,
   secretKey: crypto.randomBytes(12).toString('hex'),
   version: '0.6.9',

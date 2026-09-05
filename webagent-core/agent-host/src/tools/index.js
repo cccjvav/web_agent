@@ -45,7 +45,7 @@ function getTaskStatus() {
 }
 
 const DANGEROUS_RE =
-  /\b(rm\s+-rf|rm\s+-fr|mkfs\b|dd\s+if=|shutdown\b|reboot\b|git\s+reset\s+--hard|git\s+checkout\s+--|git\s+clean\s+-f|format\s+[a-z]:|del\s+\/s|rd\s+\/s|rmdir\s+\/s|Remove-Item\s+-Recurse|drop\s+database)\b/i;
+  /\b(rm\s+-rf|rm\s+-fr|mkfs\b|dd\s+if=|shutdown\b|reboot\b|halt\b|poweroff\b|git\s+push\b|git\s+reset\s+--hard|git\s+checkout\s+--|git\s+clean\s+-f|format\s+[a-z]:|del\s+\/s|rd\s+\/s|rmdir\s+\/s|Remove-Item\s+-Recurse|drop\s+database|Invoke-Expression\b|\biex\b|Invoke-WebRequest\b|\biwr\b|Start-Process\b|curl\b[\s\S]*\|\s*(?:sh|bash|zsh|powershell|pwsh|cmd)|wget\b[\s\S]*\|\s*(?:sh|bash|zsh)|powershell[^\n]*-enc(?:odedcommand)?|certutil\b[\s\S]*-urlcache|bitsadmin\b|reg\s+add\b|net\s+user\b|schtasks\b)\b/i;
 
 const TOOLS = [
   tool({

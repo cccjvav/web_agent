@@ -55,7 +55,7 @@
     - L96–L112：`run(process.execPath, ['src/index.js'], { cwd: agentHostDir, env: WORKSPACE_ROOT, AGENT_HOST_PORT, WEBAGENT_SKIP_WORKBENCH:'1' })`。agent exit 真值则 stop 并 exit。
     - L114：`waitHealth(http://127.0.0.1:${mcpPort}/health, 15000)`。
     - L115–L117：`userData` = 仓库根 `.local/share/code-server`（mkdir）；`configFile` = 仓库根 [`.config/code-server/config.yaml`](../../.config/code-server/README.md)。
-    - L120–L147：code-server 参数：`--auth none`、`--bind-addr 0.0.0.0:${codePort}`、关遥测/更新/workspace-trust、`--trusted-origins *`、`--app-name Web Agent`、`--user-data-dir`、`--extensions-dir`、`--config` 指向上述 yaml、最后一项 workspace 路径。
+    - L120–L147：code-server 参数：`--auth none`、`--bind-addr ${WEBAGENT_BIND||127.0.0.1}:${codePort}`、关遥测/更新/workspace-trust、`--trusted-origins *`、`--app-name Web Agent`、`--user-data-dir`、`--extensions-dir`、`--config` 指向上述 yaml、最后一项 workspace 路径。
     - L149–L153：code-server 退出则 stop 并 `exit(code||0)`。
   - L156–L159：`main().catch` 打印 message，exit 1。
 

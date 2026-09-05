@@ -36,7 +36,7 @@
   |---|---|---|
   | `port` | MCP/API 端口 | `AGENT_HOST_PORT` 或 `48271` |
   | `workbenchPort` | UI 端口 | `WORKBENCH_PORT` 或 `3000` |
-  | `host` | listen 地址 | 写死 `'0.0.0.0'` |
+  | `host` | listen 地址 | `WEBAGENT_BIND` 或 **`'127.0.0.1'`**（不再默认听所有网卡） |
   | `workspaceRoot` | 工具允许读写的根 | 环境变量或仓库 `workspace/` |
   | `secretKey` | URL 密钥 | 先随机 12 字节 hex，随即可能被 persistIdentity 换成磁盘值 |
   | `version` | 展示版本 | `'0.6.9'` |
@@ -60,18 +60,18 @@
   - **Function `mountHealth(app)`（L35–39）** — `GET /health` → `{ ok, product, version }`。
   - **Function `mountWorkbench(app)`（L43–57）** — 静态 `../../workbench`；SPA 回退：非 GET → next；path 以 `/api` `/mcp` `/ws` `/oauth` `/.well-known` 开头或恰好 `/register` → next；有扩展名 → next；否则 `index.html`。
   - **两套 app（L60–72）**
-    - L60–64 `uiApp`：health、`/api`（无隧道闸）、工作台静态 + SPA。**没有** cors、**没有** `/mcp`。
+    - L60–64 `uiApp`：health、`/api` 先 `rejectUnlessLocalControl`、工作台静态 + SPA。**没有** cors、**没有** `/mcp`。
     - L66–72 `mcpApp`：`cors()`（浏览器扩展跨域调 MCP）、health、`oauth.router`、`/mcp`、`/api` 先 `rejectUnlessLocalControl` 再 `apiRouter`。**没有**静态工作台、**没有** SPA。
-  - **Function `attachWss(server)`（L74–90）** — `WebSocketServer` path `/ws`；连接时 `eventBus.addWsClient`，立刻 send `type:'connected'`，payload 只含 `serverName`、`version`（**不含 secretKey**）。
-  - **Function `listenOrExit(server, port, label)`（L96–106）** — `error.code==='EADDRINUSE'` 打印占用后 `exit(1)`；其它 error 同样退出；`listen(port, config.host)`。
-  - **双服务器（L92–134）**
-    - L92–94：`uiServer = createServer(uiApp)`，`mcpServer = createServer(mcpApp)`；**只**给 uiServer attachWss。
-    - L108：`skipWorkbench = WEBAGENT_SKIP_WORKBENCH === '1'`。
-    - L110–121：非 skip 则 listen 3000 并打印 UI/MCP，以及「公网只收 /mcp 与 OAuth」。
-    - L122–129：skip 则打印「不占用 3000」，并说明 `/api` 仅本机回环。
-    - L131–134：无论 skip 都 listen `config.port`（48271）。
+  - **Function `attachWss(server)`（L74–94）** — `WebSocketServer` path `/ws`；**非本机控制面直接 close(1008)**；否则 `addWsClient`，立刻 send `type:'connected'`，payload 只含 `serverName`、`version`（**不含 secretKey**）。
+  - **Function `listenOrExit(server, port, label)`（L100–110）** — `error.code==='EADDRINUSE'` 打印占用后 `exit(1)`；其它 error 同样退出；`listen(port, config.host)`（默认 127.0.0.1）。
+  - **双服务器（L96–139）**
+    - L96–98：`uiServer = createServer(uiApp)`，`mcpServer = createServer(mcpApp)`；**只**给 uiServer attachWss。
+    - L112：`skipWorkbench = WEBAGENT_SKIP_WORKBENCH === '1'`。
+    - L114–126：非 skip 则 listen 3000 并打印 UI/MCP/**Bind**，以及「公网只收 /mcp 与 OAuth」。
+    - L127–134：skip 则打印「不占用 3000」，并说明 `/api` 仅本机回环。
+    - L136–139：无论 skip 都 listen `config.port`（48271）。
 
-- **关键变量：** L41 `workbenchDir`；L60 `uiApp`；L66 `mcpApp`；L92–93 两个 Server。导出 `{ uiApp, mcpApp, uiServer, mcpServer }`（L136）。
+- **关键变量：** L41 `workbenchDir`；L60 `uiApp`；L66 `mcpApp`；L96–97 两个 Server。导出 `{ uiApp, mcpApp, uiServer, mcpServer }`（L141）。
 
 ---
 

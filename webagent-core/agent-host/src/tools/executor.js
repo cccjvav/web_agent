@@ -2,6 +2,7 @@ const { spawn, spawnSync } = require('child_process');
 const path = require('path');
 const { config } = require('../config');
 const eventBus = require('../utils/eventBus');
+const { resolveSafePath } = require('./patchEngine');
 
 let commandSequence = 0;
 const commandStore = new Map();
@@ -12,20 +13,24 @@ function killChild(child, force = false) {
   if (!child || !child.pid) return;
   if (process.platform === 'win32') {
     try {
-      spawnSync('taskkill', ['/pid', String(child.pid), '/t', force ? '/f' : '/f'], { windowsHide: true });
+      spawnSync('taskkill', ['/pid', String(child.pid), '/t', '/f'], { windowsHide: true });
     } catch (_) {}
     return;
   }
-  try { child.kill(force ? 'SIGKILL' : 'SIGTERM'); } catch (_) {}
+  const sig = force ? 'SIGKILL' : 'SIGTERM';
+  try {
+    process.kill(-child.pid, sig);
+  } catch (_) {
+    try { child.kill(sig); } catch (_) {}
+  }
 }
 
 function workingDirFrom(cwd) {
-  const workingDir = path.resolve(config.workspaceRoot, cwd || '.');
-  const rel = path.relative(config.workspaceRoot, workingDir);
-  if (rel.startsWith('..') || path.isAbsolute(rel)) {
+  try {
+    return resolveSafePath(cwd || '.');
+  } catch (err) {
     throw new Error(`cwd "${cwd}" is outside workspace root.`);
   }
-  return workingDir;
 }
 
 function publicRecord(rec, tail) {
@@ -79,6 +84,7 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
   const child = spawn(shell, args, {
     cwd: workingDir,
     windowsHide: true,
+    detached: process.platform !== 'win32',
     env: { ...process.env, CI: 'true', TERM: 'xterm-256color', FORCE_COLOR: '1' }
   });
   children.set(String(execId), child);
@@ -113,10 +119,12 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
     child.on('close', (code, signal) => {
       clearTimeout(timer);
       children.delete(String(execId));
-      rec.status = rec.isTimeout ? 'timeout' : 'done';
       rec.exitCode = code;
       rec.signal = signal;
       rec.durationMs = Date.now() - startTime;
+      if (rec.status !== 'cancelled') {
+        rec.status = rec.isTimeout ? 'timeout' : 'done';
+      }
       eventBus.broadcast('command_finished', {
         execId,
         command,

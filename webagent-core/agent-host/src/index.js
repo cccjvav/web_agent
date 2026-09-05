@@ -10,7 +10,7 @@ const oauth = require('./mcp/oauth');
 const apiRouter = require('./api/routes');
 const eventBus = require('./utils/eventBus');
 const store = require('./models/store');
-const { rejectUnlessLocalControl } = require('./utils/localControl');
+const { rejectUnlessLocalControl, isLocalControlPlane } = require('./utils/localControl');
 
 persistIdentity(store);
 
@@ -60,7 +60,7 @@ function mountWorkbench(app) {
 const uiApp = express();
 applyCommon(uiApp);
 mountHealth(uiApp);
-uiApp.use('/api', apiRouter);
+uiApp.use('/api', rejectUnlessLocalControl, apiRouter);
 mountWorkbench(uiApp);
 
 const mcpApp = express();
@@ -73,7 +73,11 @@ mcpApp.use('/api', rejectUnlessLocalControl, apiRouter);
 
 function attachWss(server) {
   const wss = new WebSocketServer({ server, path: '/ws' });
-  wss.on('connection', (ws) => {
+  wss.on('connection', (ws, req) => {
+    if (!isLocalControlPlane(req)) {
+      try { ws.close(1008, 'local only'); } catch (_) {}
+      return;
+    }
     eventBus.addWsClient(ws);
     ws.send(
       JSON.stringify({
@@ -114,8 +118,9 @@ if (!skipWorkbench) {
     console.log(` ${config.productName} ${config.version}  workbench + agent-host`);
     console.log(`  UI        http://127.0.0.1:${config.workbenchPort}`);
     console.log(`  MCP       http://127.0.0.1:${config.port}/mcp/${config.secretKey}`);
+    console.log(`  Bind      ${config.host}（默认只听本机；WEBAGENT_BIND=0.0.0.0 才听所有网卡）`);
     console.log('  Bridge    启动后走 cloudflared Quick Tunnel（需本机已安装 cloudflared）');
-    console.log('            公网只收 /mcp 与 OAuth 发现文档；/api 与 /ws 留在本机');
+    console.log('            公网只收 /mcp 与 OAuth 发现文档；/api 与 /ws 仅本机回环');
     console.log(`  Workspace ${config.workspaceRoot}`);
     console.log('===========================================================');
   });

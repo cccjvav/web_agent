@@ -133,6 +133,7 @@
             <li><code>sendCommandInput</code> 恒定失败，没有 PTY</li>
             <li>工作台 arenaConnect 打的是本机 /mcp，不是云上 Arena</li>
             <li>隧道带 Cloudflare 头时 48271 /api 404，不下发 secretKey</li>
+            <li>默认只听 127.0.0.1；符号链接不能指到工作区外</li>
           </ul>
         </div>
       </div>

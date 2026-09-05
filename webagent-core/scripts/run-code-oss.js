@@ -121,7 +121,7 @@ async function main() {
     '--auth',
     'none',
     '--bind-addr',
-    `0.0.0.0:${codePort}`,
+    `${process.env.WEBAGENT_BIND || '127.0.0.1'}:${codePort}`,
     '--disable-telemetry',
     '--disable-update-check',
     '--disable-workspace-trust',

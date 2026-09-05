@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
-const { resolveSafePath, computeHash, toPosixRel } = require('./patchEngine');
+const { resolveSafePath, isInsideWorkspace, computeHash, toPosixRel } = require('./patchEngine');
 const { isHidden } = require('./sensitive');
 const eventBus = require('../utils/eventBus');
 const { ProtocolError, ExecutionError } = require('../mcp/errors');
@@ -169,8 +169,10 @@ function listDir({ dirPath = '.', recursive = false, maxDepth = 3 }) {
 
     for (const entry of entries) {
       const itemFullPath = path.join(currentPath, entry.name);
+      if (!isInsideWorkspace(itemFullPath)) continue;
       const relPath = toPosixRel(path.relative(config.workspaceRoot, itemFullPath));
       if (isHidden(relPath)) continue;
+      if (entry.isSymbolicLink && entry.isSymbolicLink()) continue;
 
       if (entry.isDirectory()) {
         const item = { name: entry.name, path: relPath, type: 'directory' };
@@ -207,8 +209,10 @@ function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = 
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
       const fullItemPath = path.join(dir, entry.name);
+      if (!isInsideWorkspace(fullItemPath)) continue;
       const relHidden = toPosixRel(path.relative(config.workspaceRoot, fullItemPath));
       if (isHidden(relHidden)) continue;
+      if (entry.isSymbolicLink && entry.isSymbolicLink()) continue;
       if (entry.isDirectory()) {
         searchInDir(fullItemPath);
       } else if (entry.isFile()) {

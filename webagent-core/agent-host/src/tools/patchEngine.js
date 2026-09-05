@@ -16,6 +16,38 @@ function toPosixRel(p) {
   return String(p || '').replace(/\\/g, '/');
 }
 
+function existingAncestor(absPath) {
+  let cur = path.resolve(absPath);
+  for (;;) {
+    try {
+      fs.lstatSync(cur);
+      return cur;
+    } catch (err) {
+      if (err && err.code !== 'ENOENT') throw err;
+      const parent = path.dirname(cur);
+      if (parent === cur) return cur;
+      cur = parent;
+    }
+  }
+}
+
+function realPathOrJoin(absPath) {
+  const abs = path.resolve(absPath);
+  const ancestor = existingAncestor(abs);
+  const realAncestor = fs.existsSync(ancestor) ? fs.realpathSync(ancestor) : ancestor;
+  if (ancestor === abs) return realAncestor;
+  return path.resolve(realAncestor, path.relative(ancestor, abs));
+}
+
+function isInsideWorkspace(absPath) {
+  const root = realPathOrJoin(path.resolve(config.workspaceRoot));
+  const real = realPathOrJoin(absPath);
+  const rel = path.relative(root, real);
+  const posix = toPosixRel(rel);
+  if (!posix || posix === '.') return true;
+  return !(posix === '..' || posix.startsWith('../') || path.isAbsolute(rel));
+}
+
 function resolveSafePath(relPath) {
   const root = path.resolve(config.workspaceRoot);
   const incoming = String(relPath || '.').replace(/[/\\]+/g, path.sep);
@@ -23,6 +55,9 @@ function resolveSafePath(relPath) {
   const rel = path.relative(root, resolved);
   const posix = toPosixRel(rel);
   if (posix === '..' || posix.startsWith('../') || path.isAbsolute(rel)) {
+    throw new Error(`Security error: path "${relPath}" is outside workspace root.`);
+  }
+  if (!isInsideWorkspace(resolved)) {
     throw new Error(`Security error: path "${relPath}" is outside workspace root.`);
   }
   if (posix && posix !== '.') assertNotSensitive(posix);
@@ -180,5 +215,6 @@ module.exports = {
   applyPatch,
   computeHash,
   resolveSafePath,
+  isInsideWorkspace,
   toPosixRel
 };
