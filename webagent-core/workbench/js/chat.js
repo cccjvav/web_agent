@@ -61,11 +61,11 @@ export function renderMsg(m) {
     wrap.className = 'consensus';
     const r = m.result || {};
     const parts = r.participants || [];
-    wrap.innerHTML = `<h3><span>多模型博弈 · 意见一致再行动</span><span>${escapeHtml(r.agreementRate || '')}</span></h3>
+    wrap.innerHTML = `<h3><span>内置检查清单</span><span>${r.simulated === false ? '' : '不调用模型'}</span></h3>
       <div class="branch-tabs">${['合并', ...parts.map((p) => p.id || p.model)].map((lab, i) =>
         `<button type="button" data-i="${i}" class="${i === 0 ? 'on' : ''}">${escapeHtml(lab)}</button>`).join('')}</div>
       <div class="branch-body"></div>
-      <button type="button" class="adopt">采纳共识并切到 Code 执行</button>`;
+      <button type="button" class="adopt">按检查清单切到 Code 执行</button>`;
     const body = $('.branch-body', wrap);
     const show = (i) => {
       $$('.branch-tabs button', wrap).forEach((b, idx) => b.classList.toggle('on', idx === i));

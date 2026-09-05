@@ -278,7 +278,7 @@ async function runBuiltin(payload, emit) {
       if (emit) {
         emit('message', {
           text: [
-            `计划（未开多模型博弈）：${message}`,
+            `计划（未开内置检查清单）：${message}`,
             '',
             summarizeAsk(message, facts),
             '',

@@ -260,7 +260,7 @@
 - **Function `main`（L18–L85）**
   - L19–L34：写 README（标题 Widget）、`src/app.js` greet、`package.json` scripts.test、`tests/app.test.js`。
   - L36–L46 **ask「分析当前项目」：** 第二参 `ask.emit`；工具含 list_directory / find_files / read_files；禁止 diagnostics / apply_patch；message 匹配 README|Widget|app.js；整段事件 JSON **不含** `calculator.js`；有 label 匹配 `Found N files`。
-  - L48–L53 **plan：** 有 `consensus.result.consensusReached`；无 calculator.js；有 `set_todos`。
+  - L48–L55 **plan：** `consensus.result.simulated === true` 且 `consensusReached === false`；无 97%；无 calculator.js；有 `set_todos`。
   - L55–L61 **code「跑测试」：** 有 `run_command` 且 `ok`；message 含 `npm test` 或 `ok`。
   - L63–L70 **payload.emit：** `runChat({ mode:'ask', message, emit })` 无第二参，仍须有 `list_directory` 与 `message`。
   - L72–L81 **code 写入 notes.md + 围栏：** 磁盘出现该文件且含 `hello from agent`。

@@ -39,7 +39,7 @@
   | `activeModelId` | 当前 Chat 模型 | 默认 `'builtin'` |
   | `models[]` | 模型列表 | 默认一条 builtin：`id/name/protocol/baseUrl/apiKey/modelId` |
   | `models[].protocol` | 协议 | `'builtin'` 或工作台写入的 `'chat.completions'` |
-  | `multiModel.enabled` | Plan 是否走博弈 | 默认 `true` |
+  | `multiModel.enabled` | Plan 是否跑内置检查清单 | 默认 `true` |
   | `multiModel.mergeModel` | 合并主模型 | 默认 `'auto'` |
   | `multiModel.thinkLevel` | 思考强度 | 默认 `'high'` |
   | `multiModel.maxBranches` | 最大分支 | 默认 `3` |

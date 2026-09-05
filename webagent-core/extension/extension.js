@@ -131,7 +131,7 @@ function registerChatParticipant(context) {
     if (!message) {
       stream.markdown(
         '当前是 **Agent** 模式（对应 Web Agent Code）：会对工作区搜、读、必要时打补丁并跑测试。\n\n' +
-          '- `/ask` 只读\n- `/plan` 多模型博弈\n- `/code` 或直接发任务 = Agent\n\n描述要构建或修复的内容即可。'
+          '- `/ask` 只读\n- `/plan` 内置检查清单（不调用多个模型）\n- `/code` 或直接发任务 = Agent\n\n描述要构建或修复的内容即可。'
       );
       return;
     }
@@ -157,7 +157,7 @@ function registerChatParticipant(context) {
           } else if (ev.type === 'message' && ev.text) stream.markdown(ev.text);
           else if (ev.type === 'error') stream.markdown(`错误：${ev.message}`);
           else if (ev.type === 'consensus' && ev.result) {
-            stream.markdown(`\n\n**多模型博弈** ${ev.result.agreementRate || ''}\n\n${ev.result.canonical || ev.result.summary || ''}\n`);
+            stream.markdown(`\n\n**内置检查清单**${ev.result.simulated === false ? '' : '（不调用模型）'}\n\n${ev.result.canonical || ev.result.summary || ''}\n`);
           }
         }
       );
@@ -358,7 +358,7 @@ button.send{margin-left:auto;background:#0e639c;color:#fff;border:0;width:28px;h
       <div class="menu" id="menu">
         <div class="hint">和 Copilot 侧栏一样，先选模式再发任务</div>
         <button data-m="ask">Web Agent Ask · 只读</button>
-        <button data-m="plan">Web Agent Plan · 博弈</button>
+        <button data-m="plan">Web Agent Plan · 清单</button>
         <button data-m="code" class="on">Web Agent Code · Agent</button>
       </div>
       <button class="send" id="go">↑</button>
@@ -414,7 +414,7 @@ window.addEventListener('message', e => {
     }
     else if (ev.type==='message') add('msg bot', ev.text || '');
     else if (ev.type==='error') add('msg bot', '错误: ' + (ev.message||''));
-    else if (ev.type==='consensus') add('msg bot', (ev.result && (ev.result.summary||ev.result.canonical)) || '多模型博弈完成');
+    else if (ev.type==='consensus') add('msg bot', (ev.result && (ev.result.summary||ev.result.canonical)) || '内置检查清单');
   }
 });
 </script></body></html>`;

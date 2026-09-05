@@ -323,7 +323,7 @@ export function bind() {
         }
       })
     });
-    ui.toast('已保存多模型设置');
+    ui.toast('已保存 Plan 检查清单开关');
     await ui.refreshStatus();
   };
   $('#btn-save-pref').onclick = async () => {

@@ -10,8 +10,7 @@ function clip(text, n = 900) {
 }
 
 /**
- * Plan-mode multi-model consensus.
- * Branches start from the same snapshot and cannot see each other.
+ * Plan-mode static checklist. Does not call any model HTTP.
  */
 async function runMultiModelConsensus({ taskDescription, facts = {}, emit } = {}) {
   const task = taskDescription || '评估当前工作区并给出可执行方案';
@@ -24,17 +23,17 @@ async function runMultiModelConsensus({ taskDescription, facts = {}, emit } = {}
 
   eventBus.broadcast('consensus_started', {
     task,
-    models: ['Model-A Architecture', 'Model-B Security', 'Model-C Coder']
+    simulated: true,
+    models: ['checklist-architecture', 'checklist-security', 'checklist-coder']
   });
 
-  if (emit) emit('status', { text: '模型 A（架构）从同一起点独立作答…' });
+  if (emit) emit('status', { text: '内置检查清单 · 架构（不调用模型）…' });
   await sleep(200);
   const planA = {
     id: 'A',
-    model: '模型 A · 架构',
+    model: '清单 A · 架构',
     focus: '模块边界与最小改动',
-    verdict: 'Approved',
-    confidence: 0.94,
+    verdict: 'checklist',
     answer: [
       `任务：${task}`,
       `同一起点看到的文件：${fileHint}`,
@@ -47,30 +46,28 @@ async function runMultiModelConsensus({ taskDescription, facts = {}, emit } = {}
   };
   if (emit) emit('branch', { branch: planA });
 
-  if (emit) emit('status', { text: '模型 B（安全边界）从同一起点独立作答（看不见 A）…' });
+  if (emit) emit('status', { text: '内置检查清单 · 安全（不调用模型）…' });
   await sleep(200);
   const planB = {
     id: 'B',
-    model: '模型 B · 安全边界',
+    model: '清单 B · 安全边界',
     focus: '密钥、路径逃逸、危险命令',
-    verdict: 'Approved with condition',
-    confidence: 0.96,
+    verdict: 'checklist',
     answer: [
-      '独立判断：补丁必须呆在工作区内；rm -rf / mkfs 一类命令要 confirm_dangerous。',
+      '补丁必须呆在工作区内；rm -rf / mkfs 一类命令要 confirm_dangerous。',
       '写入用 apply_patch + expectedHash；STALE_FILE 就重新 read_files。',
       tests ? `测试输出片段：\n${tests}` : `验证命令按探测结果使用 \`${testCmd}\`。`
     ].join('\n')
   };
   if (emit) emit('branch', { branch: planB });
 
-  if (emit) emit('status', { text: '模型 C（编码）从同一起点独立作答（看不见 A/B）…' });
+  if (emit) emit('status', { text: '内置检查清单 · 编码（不调用模型）…' });
   await sleep(200);
   const planC = {
     id: 'C',
-    model: '模型 C · 编码',
+    model: '清单 C · 编码',
     focus: '搜-读-补丁-再测',
-    verdict: 'Approved',
-    confidence: 0.95,
+    verdict: 'checklist',
     answer: [
       '工作流：search_files / find_files → read_files（记下 sha256）→ apply_patch → 测试命令。',
       `测试命令：\`${testCmd}\`。失败则只针对报错文件再读，不要扩大改动面。`,
@@ -79,7 +76,7 @@ async function runMultiModelConsensus({ taskDescription, facts = {}, emit } = {}
   };
   if (emit) emit('branch', { branch: planC });
 
-  if (emit) emit('status', { text: '合并模型阅读全部分支，只读核对仓库事实…' });
+  if (emit) emit('status', { text: '汇总三份检查项（仍不调用模型）…' });
   await sleep(180);
 
   const unifiedActionPlan = [
@@ -89,13 +86,14 @@ async function runMultiModelConsensus({ taskDescription, facts = {}, emit } = {}
   ];
 
   const result = {
-    consensusReached: true,
-    agreementRate: '97%',
+    simulated: true,
+    consensusReached: false,
+    agreementRate: null,
     participants: [planA, planB, planC],
     unifiedActionPlan,
     disagreements: [],
-    canonical: `共识：针对「${task}」先只读摸清仓库，再最小补丁，最后 ${testCmd}。没对齐之前不改文件。`,
-    summary: '多模型博弈完成：架构 / 安全 / 编码从同一起点独立作答，对「搜-读-补丁-再测」达成一致。仓库尚未改动。'
+    canonical: `内置检查清单（不是多模型投票）：针对「${task}」先只读摸清仓库，再最小补丁，最后 ${testCmd}。没看完清单之前不改文件。`,
+    summary: '这是源码写死的架构 / 安全 / 编码三份检查项，不请求任何大模型 HTTP。仓库尚未改动。'
   };
 
   eventBus.broadcast('consensus_finished', result);

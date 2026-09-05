@@ -48,7 +48,9 @@ async function main() {
   const plan = collect();
   await runChat({ mode: 'plan', message: '针对当前工作区制定修改计划' }, plan.emit);
   const consensus = plan.events.find((e) => e.type === 'consensus');
-  assert.ok(consensus && consensus.result && consensus.result.consensusReached);
+  assert.ok(consensus && consensus.result && consensus.result.simulated === true);
+  assert.strictEqual(consensus.result.consensusReached, false);
+  assert.ok(!consensus.result.agreementRate);
   assert.ok(!/calculator\.js/.test(JSON.stringify(plan.events)));
   assert.ok(plan.events.some((e) => e.type === 'tool' && e.name === 'set_todos'));
 

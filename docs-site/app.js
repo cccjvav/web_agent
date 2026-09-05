@@ -138,6 +138,7 @@
             <li>网页 VS Code 默认要登录口令，trusted-origins 不再是 *</li>
             <li>工作台保存走 write_file，写不进 .env，错 hash 会 409</li>
             <li>挂别人的 Git 仓库时，MCP 密钥和 API Key 会自动 gitignore</li>
+            <li>Plan 是内置检查清单，不调用多个模型，没有假 97%</li>
           </ul>
         </div>
       </div>

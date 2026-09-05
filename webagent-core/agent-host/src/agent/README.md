@@ -45,7 +45,7 @@
     - L252–L260：set_todos 三条。
     - L262–L263：`facts = explore(...)`。
     - L265–L277：更新 todos。
-    - L279–L311 **`mode==='plan'`：** `multiModel.enabled === false` → emit 未开博弈文本并 **return**；否则 `runMultiModelConsensus`，写 todos，emit consensus + message，return。
+    - L279–L311 **`mode==='plan'`：** `multiModel.enabled === false` → emit 未开内置检查清单文本并 **return**；否则 `runMultiModelConsensus`（`simulated:true`），写 todos，emit consensus + message，return。
     - L313–L325 **`mode==='ask'`：** todos completed，emit summarizeAsk，return。
     - L327 起视为 **code**：有 writeIntent → write_file；有 patch → 从消息匹配文件或 `facts.files[0]`，read_files 取 hash 再 apply_patch；detectTestCommand 有则 run_command timeout 60；最后 emit 摘要（写明内置没有大模型）。
   - **Function `runChat`（L377–L385）** — `emit` 可以是第二参，也可以是 `payload.emit`（HTTP `POST /api/chat` 把函数放进对象里）。`store.load()` 找 active 模型；**若** `apiKey && baseUrl && modelId` 都真 → `runOpenAI({ ...payload, emit: send })`；**否则** `runBuiltin(payload, send)`。两种调用都要把 `send` 传下去，否则工作台收不到 tool/message。

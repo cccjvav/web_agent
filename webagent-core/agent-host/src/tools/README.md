@@ -8,7 +8,7 @@
 
 ## 1. 模块概述
 
-- **定位：** 工具注册表 + 路径沙箱 + 补丁 / 读写 / grep / git / 命令执行 / 进度 / Plan 博弈文案。`normalize.js` 把网页 Agent 的别名收成正式名；`readCache.js` 记住最近一次读/写的 sha256，让 `apply_patch` 可以不带 `expectedHash`。
+- **定位：** 工具注册表 + 路径沙箱 + 补丁 / 读写 / grep / git / 命令执行 / 进度 / Plan 内置检查清单。`normalize.js` 把网页 Agent 的别名收成正式名；`readCache.js` 记住最近一次读/写的 sha256，让 `apply_patch` 可以不带 `expectedHash`。
 - **依赖的兄弟模块：**
   - `../config`：工作区根。
   - `../utils/eventBus`、`../utils/diff`：广播与 unified diff。
@@ -220,9 +220,9 @@
 
 ### 📄 文件名：`consensusEngine.js`
 
-- **文件职责：** Plan 模式三分支文案。**不请求任何 LLM HTTP。** `consensusReached` / `agreementRate:'97%'` / `disagreements:[]` 写死。
+- **文件职责：** Plan 模式三份**写死**检查项。**不请求任何 LLM HTTP。** `simulated:true`；`consensusReached:false`；`agreementRate:null`。
 - **Function `sleep`（L3–L5）** / **`clip`（L7–L10）** — 截到 n（默认 900）。
-- **Function `runMultiModelConsensus`（L16–L102）** — 从 facts 取 files/readme/pkg/test；broadcast `consensus_started`；sleep 200 三次构造 planA/B/C（架构/安全/编码），有 emit 则发 status/branch；sleep 180；拼 unifiedActionPlan 三条 pending；broadcast `consensus_finished`。
+- **Function `runMultiModelConsensus`（L15–L101）** — 从 facts 取 files/readme/pkg/test；broadcast `consensus_started`（`simulated:true`）；sleep 200 三次构造架构/安全/编码清单，有 emit 则发 status/branch；sleep 180；拼 unifiedActionPlan；broadcast `consensus_finished`。
 
 ---
 
