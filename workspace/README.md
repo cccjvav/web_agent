@@ -132,6 +132,17 @@
 
 ---
 
+### 📄 文件名：`.webagent/skills/commit-now/SKILL.md`
+
+- **文件职责：** 教训：未提交的改动会随沙盒 `reset` 丢掉。测绿就 commit+push 当前分支，不要攒大包，也不要等全部修复结束才写 Skill。
+- **内容结构：**
+  - 标题「测绿就提交」；触发词含及时提交 / 不要攒 / 补回来 / 沙盒丢了未提交。
+  - **Ask：** 只读 `git status` / diff。
+  - **Plan：** 列出这一小包文件。
+  - **Code：** npm test 绿 → add（含新目录）→ commit → push 当前分支；PAT 与 `admin-host/data/` 不进 Git。
+
+---
+
 ## 3. 执行逻辑流（仅本目录）
 
 1. agent-host 启动时 `workspaceRoot` 默认为本目录。
