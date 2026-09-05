@@ -119,10 +119,12 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
   const timer = setTimeout(() => {
     rec.isTimeout = true;
     killChild(child);
-    setTimeout(() => {
+    const killer = setTimeout(() => {
       if (children.has(String(execId))) killChild(child, true);
     }, 2000);
+    if (killer.unref) killer.unref();
   }, timeoutMs);
+  if (timer.unref) timer.unref();
 
   const append = (field, chunk) => {
     rec[field] += chunk;

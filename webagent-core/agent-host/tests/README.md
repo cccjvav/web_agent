@@ -11,7 +11,7 @@
 | 文件 | 覆盖 |
 |---|---|
 | `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、CRLF 保留、SEARCH 多处拒绝、`occurrence` 指定第几处、grep 跳过大文件、嵌套正则拒绝、find_files `truncated`、新建拒绝 unified diff、空 SEARCH 建新文件 |
-| `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek / Chat Plus 客户端配方 |
+| `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek / Chat Plus 客户端配方、`get_logs` 不含 args/chunk/result/patch |
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command`、`cancel_command` 终态保持 cancelled、持久 hash 不能单独覆盖 |
 | `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝 |
 | `hostPersist.test.js` | `generateNewSecret` 写入 `config.json`；旧盘 `永久顺`/假 `github`/`demo` 迁成 `local-demo`；带 `githubId` 的 octocat **留下**；`usage.json` 进 gitignore；`read-hashes.json` 跨 require 仍能 recalledHash，**sessionHash 为空**；`resetHashes` 删文件 |
@@ -25,8 +25,9 @@
 | `usageTracker.test.js` | `record` 写 `.webagent/usage.json`；成功率；`reportNow` POST Bearer |
 | `adminHost.test.js` | 无 Bearer 401；有令牌 ingest；HTML 含 `@alice` / 未绑定 GitHub |
 | `providers.test.js` | `gpt-4o` 无接口字段时 caps/context 为空；声明了 `capabilities`/`context_window` 才填 |
-| `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`、多模型博弈、总结钮、本机演示授权、**GitHub 验证** / **验证令牌**、Codex/挂钩/插件未实现、不得含永久顺 / 「使用 GitHub 登录」）、模块脚本、MCP 401、initialize、tools/list、ping、**ping 后有 usage.json 且 reset-round 不清它**、空 token 400、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、本机 `POST /api/chat` NDJSON（Ask + Plan 分支再总结） |
-| `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime；不写死 `--auth none` / `trusted-origins *`；`run-webagent.sh` 接受 `$1` 并检查 node；runtime 包名 `webagent-code-server-runtime` |
+| `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`、多模型博弈、总结钮、本机演示授权、**GitHub 验证** / **验证令牌**、Codex/挂钩/插件未实现、不得含永久顺 / 「使用 GitHub 登录」）、模块脚本、MCP 401、initialize、tools/list、ping、**ping 后有 usage.json 且 reset-round 不清它**、`/status.tools` 无 inputSchema、远程 `get_logs` 无 args/chunk/patch、空 token 400、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、本机 `POST /api/chat` NDJSON（Ask + Plan 分支再总结） |
+| `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime；不写死 `--auth none` / `trusted-origins *`；`run-webagent.sh` 接受 `$1` 并检查 node；`run-webagent-vscode.sh` 检查 node 且不 mkdir；runtime 包名 `webagent-code-server-runtime` |
+| `workbenchHtml.test.js` | 工作台 HTML 含 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login 等）；不得含「使用 GitHub 登录」 |
 | `docsSite.test.js` | 跑 `docs-site/build.js` 后，提交的 `content.js` 与生成结果一致（忽略当天 `builtAt`） |
 | `codeServerAuth.test.js` | 口令落盘复用；`CODE_SERVER_PASSWORD`；`CODE_SERVER_AUTH=none`；trusted-origins 仅本机 |
 | `skipWorkbench.test.js` | `WEBAGENT_SKIP_WORKBENCH=1` 不占用工作台端口 |
@@ -87,6 +88,7 @@
   - L97–L99：`handleRpc('tools/call', 未知名)` → **`isError === true`**，正文含 Available（不是 JSON-RPC throw）。
   - L101–L110：`_meta.mode:'ask'` 调 `apply_patch` → `isError`，正文含 locked/Ask/CODE；无 `_meta` 的 `ping` 成功。
   - L101–L104：`remember` 后 `recall` 能读回文本；`limit:3` 按 `- ` 条目计数，`truncated` 为真，正文不含 `## ` 标题。
+  - ping 的 `tools/call` 之后 `get_logs`：数组；JSON 不含 `"args"` / `"chunk"` / `"result"` / `"patch"`；有 `tool_call_end` 且 tool 为 ping。
   - L106–L109：`prompts/list` 含 `connect`；`prompts/get` 正文含「快速连接这个 MCP」。
   - L111–L112：`webagent://clients` 文本含 `无需` 或 `Plus=no` 或 `not ChatGPT-only`。
   - L114–L139：`listClients`：`chat` 无需 Plus、无需隧道；`arena` 支持 MCP 且无需 Plus；`deepseek` 的 `connectMode==='extension-http'`、`prompt` **只有 URL**、`extensionId` 为 `kdmpkkahkhdmdhfkdihkopikgcocbpbf`、步骤含「不要装 deepseek-pp-shell-host」；`chat-plus` 同样 `extension-http`、`prompt` 只有 URL、`repoUrl` 为 `https://github.com/aiguicai/Chat-Plus`、步骤含「不要再装 aiguicai/MCP-Gateway」；`chatgpt-free` 为 `unsupported-mcp`；`chatgpt-plus` `needsPlus`。
@@ -222,7 +224,7 @@
   - L111–113：health JSON `ok` 且 `product==='Web Agent'`。
   - L115–139：GET `/` HTML 必须含：`Web Agent`；`编辑进化` 或 `CHAT`；`Add API`；`btn-agent-pick`；`agent-pick-menu`；`Web Agent Code`；`环境偏好`；`技术栈`；`技能引导`；`怎么连到本机仓库`；`无需 Plus` 或 `不需要 Plus`；`打开 DeepSeek`；`data-site="deepseek"`；`id="page-env"` / `btn-detect-env` / `page-stack` / `btn-detect-stack`；`本机演示授权` 与 `不是 GitHub`；含 `多模型博弈`、`btn-plan-merge`、`think-select`；不得含 `永久顺` / `使用 GitHub 登录`；`type="module"` 与 `/app.js`。status 含 `planRound.active===false` 与 `multiModel.maxBranches===4`。末尾再 POST Plan start/branch/merge，首轮无 consensus、两支可总结、`agreementRate==null`。
   - L137–142：GET `/app.js` 含 `from './js/state.js'`；GET `/js/state.js` 含 `export const state`。
-  - L148–160：GET **mcp 端口** `/api/status`（本机无隧道头）：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===25`；clients 含 arena（无需 Plus）、deepseek（`extension-http`、支持 MCP、无需 Plus）与 chat-plus；`mcpCanonicalUrl` 以 `/mcp` 结尾；`bridgeAccount.license/provider` 为 `local-demo` 且 `loggedIn`；`recentLogs` 是数组。`tools/call` ping 之后再 GET `/status`：有 `tool_call_end` 且 payload 只有 tool/success/durationMs。
+  - L148–160：GET **mcp 端口** `/api/status`（本机无隧道头）：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===25` 且每项无 `inputSchema`；clients 含 arena（无需 Plus）、deepseek（`extension-http`、支持 MCP、无需 Plus）与 chat-plus；`mcpCanonicalUrl` 以 `/mcp` 结尾；`bridgeAccount.license/provider` 为 `local-demo` 且 `loggedIn`；`recentLogs` 是数组。`tools/call` ping 之后再 GET `/status`：有 `tool_call_end` 且 payload 只有 tool/success/durationMs。再 `tools/call` `get_logs`：正文不含 `"args"` / `"chunk"` / `"patch"`。
   - L154–160：错误 secret POST initialize → 401。
   - L162–170：正确 secret initialize 200，instructions 含 Bridge MCP 与 `webagent://instructions`。
   - L172–183：tools/list 25 个且含 apply_patch / start_command / workspace_info。
@@ -243,7 +245,7 @@
 - L5：`repoRoot` = tests 上三级（仓库根）。
 - L6–L8：读 `ensure-code-server.js` 与 `run-code-oss.js` 原文。
 - L10：`bin/code-server-dist` 不存在。
-- L12–L17：拼接 `run-webagent.cmd` + `.sh`，正则 **不得** 匹配 `code-server`；必须匹配 `agent-host`。`.sh` 须含 `$1`、`command -v node`、`mkdir`、自定义路径不存在的报错。runtime `package.json` 的 `name` 为 `webagent-code-server-runtime`。
+- L12–L17：拼接 `run-webagent.cmd` + `.sh`，正则 **不得** 匹配 `code-server`；必须匹配 `agent-host`。`.sh` 须含 `$1`、`command -v node`、`mkdir`、自定义路径不存在的报错。`run-webagent-vscode.sh` 须检查 node、拒绝不存在的工作区、**不得** `mkdir`。runtime `package.json` 的 `name` 为 `webagent-code-server-runtime`。
 - L19–L28：`run-webagent-vscode.cmd` 与 `run-code-oss.js` 存在；ensure 含 `bin/code-server-runtime`，且含 `code-server@4.135.0` 或 `'code-server': VERSION`；ensure/runner 都不含 `code-server-dist`；runner `require('./codeServerAuth')`；不得写死 `'--auth', 'none'` 与 `trusted-origins *`。
 - 无 async `main`。
 
@@ -256,6 +258,10 @@
 - L26–L28：`CODE_SERVER_AUTH=none` → `mode:'none'`、password null。
 
 ---
+
+### 📄 文件名：`workbenchHtml.test.js`
+
+- **文件职责：** 不启 HTTP。读 `workbench/index.html`，锁 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login 等），不得含「使用 GitHub 登录」或「永久顺」。
 
 ### 📄 文件名：`docsSite.test.js`
 
@@ -338,7 +344,7 @@
 
 ## 3. 执行逻辑流（仅本目录）
 
-1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **sandbox** → **hostPersist** → tunnel → **bridgeTunnel** → **apiFiles** → **localControl** → **corsAllow** → **githubAuth** → **usageTracker** → **adminHost** → **providers** → httpSmoke → codeServerNotRunnable → **codeServerAuth** → skipWorkbench → **planRound** → runChat → chatMode → profile → oauth → **docsSite**。
+1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **sandbox** → **hostPersist** → tunnel → **bridgeTunnel** → **apiFiles** → **localControl** → **corsAllow** → **githubAuth** → **usageTracker** → **adminHost** → **providers** → httpSmoke → codeServerNotRunnable → **codeServerAuth** → skipWorkbench → **planRound** → runChat → chatMode → profile → oauth → **docsSite** → **workbenchHtml**。
 2. 单文件：改 `config.workspaceRoot` 指向 tmp → require 被测模块 → assert → 删 tmp。`tunnel` / `chatMode` / `codeServerNotRunnable` 不改工作区。`bridgeTunnel` 改 tmp 工作区并 stub 隧道导出。
 3. 启进程的测试 spawn `src/index.js`，结束必须杀子进程。
 4. 失败路径：有 `main()` 的文件走 `main().catch` → `exit(1)`；`profile.test.js` 同步抛错由 Node 非 0 退出；CMD 的 `run-tests.cmd` 据此 pause。

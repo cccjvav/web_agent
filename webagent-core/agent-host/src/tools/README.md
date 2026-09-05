@@ -27,7 +27,7 @@
 
   - **Function `tool(def)`（L17–L19）** — 输入工具定义对象，原样返回（无变换）。
   - **Function `pingHost()`（L21–L23）** — 无参。返回 `{ ok, ts, ...snapshot() }`。
-  - **Function `getLogs({ maxLines=50 })`（L25–L28）** — `maxLines` clamp 到 1–200；返回 `{ logs, count }`。
+  - **Function `getLogs({ maxLines=50 })`** — `maxLines` clamp 到 1–200。每条只留 `type`/`timestamp` 以及 payload 里的 `tool`/`success`/`durationMs`/`execId`/`status`/`truncated`（不含 args、补丁、命令输出）。返回 `{ logs, count }`。
   - **Function `getCapabilities()`（L30–L35）** — 工具名+描述 + session snapshot。
   - **Function `getTaskStatus()`（L37–L45）** — 展开 `getTaskState()`；`status==='in_progress'` 时 `suggestedWaitMs=2000`，`etaSeconds = max(1, round((100-progress)/10))`，否则两者为 0。
   - **Const `TOOLS`（L50–L394）** — 每项含 `name` / `aliases` / `description` / `mode` / `inputSchema` / `handler`。名称行号（`name:` 所在行）：
@@ -167,7 +167,7 @@
   - **Function `killChild`（L12–L26）** — 无 pid return。win32 `taskkill /pid /t /f`。非 Windows 先 `process.kill(-pid)` 杀**进程组**，失败再 `child.kill`。
   - **Function `workingDirFrom`（L28–L34）** — 走 `resolveSafePath`（含真实路径），逃出工作区抛 outside workspace。
   - **Function `publicRecord`（L31–L48）** — stdout/stderr 截尾；running 时带 `suggestedWaitMs` 与 poll hint。
-  - **Function `startProcess`（L77–L166）** — `execId` 为 16 位 hex（不是自增序号）；同时 running 最多 8 条，已结束记录最多留 40。timeout 至少 1s；broadcast `command_started`；spawn PowerShell 或 bash；非 Windows `detached:true` 以便杀进程组；超时 kill 再 2s force；stdout/stderr 环形 200KB；error reject；close 时若不是 `cancelled` 则 status `timeout` 或 `done`。返回 `{ rec, done }`。
+  - **Function `startProcess`（L77–L166）** — `execId` 为 16 位 hex（不是自增序号）；同时 running 最多 8 条，已结束记录最多留 40。timeout 至少 1s；broadcast `command_started`；spawn PowerShell 或 bash；非 Windows `detached:true` 以便杀进程组；超时 kill 再 2s force；timeout 与 force-kill 的 `setTimeout` 都 `unref()`；stdout/stderr 环形 200KB；error reject；close 时若不是 `cancelled` 则 status `timeout` 或 `done`。返回 `{ rec, done }`。
   - **Function `executeCommand`（L134–L137）** — 返回 `done`（等到结束）。
   - **Function `startCommand`（L139–L152）** — 不等待；`done.catch` 标 error；立即返回 execId + running。
   - **Function `getCommandOutput`（L154–L161）** — id = execId 或 commandId 或最新序号；没有 rec → found false。

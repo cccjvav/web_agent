@@ -26,6 +26,11 @@ const runtimePkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'bin/code-serv
 assert.strictEqual(runtimePkg.name, 'webagent-code-server-runtime');
 assert.ok(!/shuncode/i.test(JSON.stringify(runtimePkg)));
 
+const vscodeSh = fs.readFileSync(path.join(repoRoot, 'run-webagent-vscode.sh'), 'utf8');
+assert.ok(/command -v node/.test(vscodeSh), 'vscode sh must check node');
+assert.ok(/does not exist/.test(vscodeSh), 'vscode sh must refuse a missing workspace');
+assert.ok(!/mkdir/.test(vscodeSh), 'vscode sh must not mkdir a workspace');
+
 assert.ok(fs.existsSync(path.join(repoRoot, 'run-webagent-vscode.cmd')));
 assert.ok(fs.existsSync(path.join(repoRoot, 'webagent-core/scripts/run-code-oss.js')));
 assert.ok(ensure.includes('bin/code-server-runtime'));

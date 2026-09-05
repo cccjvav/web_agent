@@ -128,6 +128,15 @@ async function main() {
   assert.strictEqual(remotePing.isError, false);
   assert.ok(String(remotePing.content[0].text).includes('"ok": true') || String(remotePing.content[0].text).includes('"ok":true'));
 
+  const hostLogs = await callTool('get_logs', { maxLines: 20 });
+  assert.ok(Array.isArray(hostLogs.logs));
+  const logBlob = JSON.stringify(hostLogs);
+  assert.ok(!logBlob.includes('"args"'));
+  assert.ok(!logBlob.includes('"chunk"'));
+  assert.ok(!logBlob.includes('"result"'));
+  assert.ok(!logBlob.includes('"patch"'));
+  assert.ok(hostLogs.logs.some((e) => e.type === 'tool_call_end' && e.payload && e.payload.tool === 'ping'));
+
   const mem = await callTool('remember', { text: 'calculator divide throws on zero' });
   assert.ok(mem.ok);
   const recalled = await callTool('recall', { limit: 20 });

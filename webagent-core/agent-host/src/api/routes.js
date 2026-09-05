@@ -79,7 +79,7 @@ router.get('/status', (req, res) => {
     workbenchPort: config.workbenchPort,
     workspaceRoot: config.workspaceRoot,
     installId: config.installId,
-    tools: getToolList(),
+    tools: getToolList().map(({ name, description }) => ({ name, description })),
     taskState: getTaskState(),
     recentLogs: recentToolLogs(12),
     bridgeRunning: config.bridgeRunning,

@@ -28,7 +28,7 @@
 
 - **路由（逐步，含分支）：**
 
-  - **GET `/status`（L71–L113）** — 拼 online、端口、workspace、tools、taskState、**`recentLogs: recentToolLogs(12)`**、bridgeRunning、mcpInfo 展开、models（apiKey 变成 `hasKey` 布尔）、activeModelId、multiModel、**`planRound: planRound.snapshot()`**、bridgeAccount（含 `githubId`）、**`githubAuth.deviceAvailable`**、**`usage: tracker.snapshot()`**、mcpSession。无鉴权。字段 `recentLogs` 仍在，但是工具名摘要，不是补丁全文。
+  - **GET `/status`（L71–L113）** — 拼 online、端口、workspace、**tools 只含 name/description（无 inputSchema）**、taskState、**`recentLogs: recentToolLogs(12)`**、bridgeRunning、mcpInfo 展开、models（apiKey 变成 `hasKey` 布尔）、activeModelId、multiModel、**`planRound: planRound.snapshot()`**、bridgeAccount（含 `githubId`）、**`githubAuth.deviceAvailable`**、**`usage: tracker.snapshot()`**、mcpSession。无鉴权。`recentLogs` 仍在，但是工具名摘要。
   - **POST `/bridge/reset-secret`（L100–L106）** — `generateNewSecret()`（内存 + `.webagent/config.json`）→ `oauth.revokeAll()` → broadcast `secret_rotated`（不含新旧密钥）。
   - **POST `/bridge/start`（L108–L148）**
     - L110–L112：`!loggedIn || !deviceAuthorized` → **403**（文案：需要先点本机演示授权或完成 GitHub 验证。Chat 不受影响）。

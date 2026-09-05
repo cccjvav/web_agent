@@ -22,9 +22,19 @@ function pingHost() {
   return { ok: true, ts: Date.now(), ...snapshot() };
 }
 
+const LOG_KEEP = new Set(['tool', 'success', 'durationMs', 'execId', 'status', 'truncated']);
+
 function getLogs({ maxLines = 50 } = {}) {
   const n = Math.min(200, Math.max(1, Number(maxLines) || 50));
-  return { logs: eventBus.getRecentLogs(n), count: n };
+  const logs = eventBus.getRecentLogs(n).map((e) => {
+    const src = (e && e.payload) || {};
+    const payload = {};
+    for (const key of LOG_KEEP) {
+      if (src[key] !== undefined) payload[key] = src[key];
+    }
+    return { type: e.type, timestamp: e.timestamp, payload };
+  });
+  return { logs, count: n };
 }
 
 function getCapabilities() {
@@ -75,7 +85,7 @@ const TOOLS = [
   tool({
     name: 'get_logs',
     aliases: [],
-    description: 'Recent host events. Default 50 lines. Use when a tool failed and you need context.',
+    description: 'Recent host events (tool name / success / duration only; no file bodies). Default 50. Use when a tool failed and you need context.',
     mode: ['ask', 'plan', 'code'],
     inputSchema: {
       type: 'object',
@@ -323,7 +333,7 @@ const TOOLS = [
     inputSchema: {
       type: 'object',
       properties: {
-        execId: { type: 'number' },
+        execId: { type: 'string', description: '16-char hex from start_command.' },
         commandId: { type: 'string' },
         tail: { type: 'number' }
       }
@@ -333,11 +343,11 @@ const TOOLS = [
   tool({
     name: 'cancel_command',
     aliases: [],
-    description: 'SIGTERM a running start_command execId.',
+    description: 'Stop a running start_command execId (process group kill).',
     mode: ['code'],
     inputSchema: {
       type: 'object',
-      properties: { execId: { type: 'number' } },
+      properties: { execId: { type: 'string', description: '16-char hex from start_command.' } },
       required: ['execId']
     },
     handler: cancelCommand

@@ -1,6 +1,6 @@
 # Web Agent
 
-本机工作台 + 独立 agent-host。网页 AI 通过 MCP 改你电脑上的仓库。
+本机工作台 + 独立 agent-host。网页 AI 通过 MCP 改你电脑上的仓库。许可证 [ISC](./LICENSE)。安全边界见 [SECURITY.md](./SECURITY.md)。
 
 同类产品的公开文档可参考 [docs.shuncode.top](https://docs.shuncode.top/docs/intro/)。
 
@@ -23,6 +23,8 @@ GitHub 默认分支 `main` 目前仍是更早的原型快照。现行工作台�
 | [总览.md](./总览.md) | 各子文件夹 README 索引、全局调用链、Install→Run |
 | [DOCUMENTATION_SUMMARY.md](./DOCUMENTATION_SUMMARY.md) | 文档覆盖率与链接审查 |
 | [测试说明.md](./测试说明.md) | 怎么跑测试、测了什么 |
+| [LICENSE](./LICENSE) | ISC |
+| [SECURITY.md](./SECURITY.md) | 隧道、本机密钥、OAuth 只在内存 |
 
 简要对照：
 
