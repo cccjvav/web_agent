@@ -4,7 +4,8 @@
 - **日期**：2026-09-06
 - **性质**：只读复核 + 全量测试 + 依赖审计 + 机械全查；未改任何代码
 - **前情**：v3（REPORT_v3.md，已入库）验收 N1-N3 与「复制规则」功能并提出 V3-1…V3-4；项目助手合并我的分支后落地 `2a49505`（关闭 V3-1 / V3-3）
-- **V4-1 落地**：工作台 `/ws` `onclose` 退避重连（1s→30s）；状态栏「事件流重连中」；`broadcast` 成功发送重置 30min idle。V3-2 / V3-4 仍为可选。不要再按第四节重复 V4-1。
+- **V4-1 落地**：工作台 `/ws` `onclose` 退避重连（1s→30s）；状态栏「事件流重连中」；`broadcast` 成功发送重置 30min idle。不要再按第四节重复 V4-1。
+- **V3-2 / V3-4 落地**：审查时标可选；后来已做 timingSafeEqual 与 `engines.node >=18`。
 
 ---
 
@@ -15,7 +16,7 @@
 | **V3-1** 隧道日志缓冲封顶（P3） | 代码：`cloudflared.js` L119/L182、`ngrok.js` L133 三处全部改为 `buf = (buf + text).slice(-65536)`；全仓 grep 无残留 `buf += text`。**测试**：`tunnel.test.js` 新增源码锁——slice 出现次数 cloudflared=2、ngrok=1，且禁止无界追加回潮。**文档**：tunnel/README、tests/README、测试说明.md 三处口径同步（广播仍用当前 `text` 截 400，不受影响——与修复建议一致） | ✅ 闭环 |
 | **V3-3** `?secret=` 日志暴露提示（P4） | SECURITY.md 隧道节新增完整一段：优先 path/Bearer，query 仅兜底、可能进边缘/代理日志；与代码 `server.js` L22 事实相符 | ✅ 闭环 |
 | REPORT_v3 入库索引 | README 文档表 + DOCUMENTATION_SUMMARY 过程文档行均已加入；REPORT_v3.md 文首加"V3-1/V3-3 已落地勿重做"标注（沿用 v2 惯例） | ✅ |
-| V3-2（timingSafeEqual）/ V3-4（engines） | 未做——**符合预期**：v3 即标注为可选不阻塞，REPORT_v3 标注里也如实写明 | ➖ 保持可选 |
+| V3-2（timingSafeEqual）/ V3-4（engines） | 审查当时可选未做；之后已落地（oauth/admin 等长 `crypto.timingSafeEqual`；`engines.node >=18`） | ✅ |
 | docs-site/content.js | 已随文档变更重新生成；docsSite.test（build→逐字节比对）PASS，确定性保持 | ✅ |
 
 ## 二、本轮全面扫描（@2a49505）
@@ -31,9 +32,9 @@
 
 ## 三、结论（已按第四节补遗修正）
 
-**~~无新发现~~ → 追问复查后新增 1 条 P3（V4-1，见第四节补遗）。** 四轮审查（v1 @6c1b0fa → v2 @c92fd7c → v3 @78a540b → v4 @2a49505）累计提出的 P1×1、P2×4、P3×7、N×3、V3×2 全部闭环；剩余为 V4-1（待修）、两条明示可选项（V3-2 时序安全比较、V3-4 engines 字段）与 SECURITY.md 已披露的有意取舍。
+**~~无新发现~~ → 追问复查后新增 1 条 P3（V4-1，见第四节补遗）。** 四轮审查（v1 @6c1b0fa → v2 @c92fd7c → v3 @78a540b → v4 @2a49505）累计提出的 P1×1、P2×4、P3×7、N×3、V3×4 已闭环（含后来落地的 V3-2/V3-4 与 V4-1）。剩余为 SECURITY.md 已披露的有意取舍。
 
-建议的后续节奏：修掉 V4-1 后可正常迭代新功能；每次功能提交保持现有习惯（代码+README+测试锁三同步）。
+建议的后续节奏：每次功能提交保持现有习惯（代码+README+测试锁三同步）。
 
 ## 四、补遗（v4 交付后追问复查所得）
 

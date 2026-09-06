@@ -24,7 +24,7 @@
 | `dangerousCommands.test.js` | `rm -rf` / `rm -r -f` / `find -delete` / `r""m -rf`：远程 MCP 与本机 `/api` 两条路径 |
 | `githubAuth.test.js` | PAT 空令牌 400；假 fetch 校验 octocat；设备码 grant_type 含 `device_code`；无 client_id → `E_NO_GITHUB_APP` |
 | `usageTracker.test.js` | `record` 写 `.webagent/usage.json`；成功率；`reportNow` POST Bearer |
-| `adminHost.test.js` | 无 Bearer 读 `/`、`/api/stats` 与 POST 都 401；有令牌 HTML 含 `@alice`；body 超 1MB → 413；默认 bind 不是 0.0.0.0 |
+| `adminHost.test.js` | 无 Bearer 读 `/`、`/api/stats` 与 POST 都 401；有令牌 HTML 含 `@alice`；body 超 1MB → 413；默认 bind 不是 0.0.0.0；**源码锁** Bearer 用 `crypto.timingSafeEqual` |
 | `extensionCopy.test.js` | `extension/` 与 `extensions-installed/webagent.webagent-core-0.6.9/` 除 README 外逐字节一致 |
 | `providers.test.js` | `gpt-4o` 无接口字段时 caps/context 为空；声明了 `capabilities`/`context_window` 才填 |
 | `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`、多模型博弈、总结钮、本机演示授权、**GitHub 验证** / **验证令牌**、Named Tunnel `tunnel run --token`、`ngrok http`、Codex/挂钩/插件未实现、不得含「不会被使用」/永久顺 / 「使用 GitHub 登录」）、模块脚本、MCP 401、initialize、tools/list、ping、**ping 后有 usage.json 且 reset-round 不清它**、`/status.tools` 无 inputSchema、远程 `get_logs` 无 args/chunk/patch、空 token 400、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、**外站 Origin 打 `/mcp` tools/call 403 且不执行**、本机 `POST /api/chat` NDJSON（Ask + Plan 分支再总结） |
@@ -38,7 +38,7 @@
 | `chatMode.test.js` | `@webagent` 默认 Agent=code；`/ask` `/plan`（直接 require 插件 `modeFromChatRequest.js`） |
 | `toolLabel.test.js` | 共用短标签：Explored / Found N files / Found N matches / Read / Patched |
 | `profile.test.js` | 环境偏好 / 技术栈写入 `.webagent`，进入指令 |
-| `oauth.test.js` | OAuth 发现、配对、PKCE、Bearer `/mcp`、SSE、session 复用/未知 404/`DELETE`、SSE endpoint 含密钥路径、注册限速 429、refresh 轮换与重放吊销 |
+| `oauth.test.js` | OAuth 发现、配对、PKCE、Bearer `/mcp`、SSE、session 复用/未知 404/`DELETE`、SSE endpoint 含密钥路径、注册限速 429、refresh 轮换与重放吊销；**源码锁** secretKey 用 `crypto.timingSafeEqual`、`engines.node >=18` |
 
 ---
 
@@ -336,7 +336,7 @@
 
 ### 📄 文件名：`oauth.test.js`
 
-- **文件职责：** 真 listen 随机端口：发现文档、401、URL 密钥 initialize、SSE ping、PKCE 发 token、refresh 轮换与重放吊销、Bearer tools/call、`Mcp-Session-Id` 复用/未知 404/`DELETE`、SSE GET endpoint 含 `/mcp/<secret>`、第 21 次 register 429、revoke 后 401。
+- **文件职责：** 真 listen 随机端口：发现文档、401、URL 密钥 initialize、SSE ping、PKCE 发 token、refresh 轮换与重放吊销、Bearer tools/call、`Mcp-Session-Id` 复用/未知 404/`DELETE`、SSE GET endpoint 含 `/mcp/<secret>`、第 21 次 register 429、revoke 后 401。源码锁：`oauth.js` 用 `crypto.timingSafeEqual` 比 secretKey；`package.json` `engines.node` 为 `>=18`。
 - **Function `request`（L16–L47）** — 相对已 listen 的 server；`json=true` 发 JSON，否则 urlencoded。
 - **Function `main`（L49–L153）**
   - L50–L57：express 挂 `oauth.router` + `/mcp`；`listen(0)`。

@@ -4,7 +4,8 @@
 - **日期**：2026-09-06
 - **性质**：只读复核 + 实测探针 + 全量测试 + 依赖审计；未改任何代码
 - **前情**：v2（REPORT_v2.md，已入库）验收 8/8 闭环并提出 N1-N3；项目助手随后落地 3 个提交：`bc14a71`（REPORT_v2 入库+标注）、`03d40b7`（Chat Plus / DeepSeek++「复制规则」新功能）、`78a540b`（关闭 N1-N3 + 修「MCP 设置谎言」）
-- **V3-1 / V3-3 落地**：隧道日志 buf 上限 64k；SECURITY.md 写明 `?secret=` 可能进第三方日志。V3-2 / V3-4 仍为可选、未做。不要再按第四节重复 V3-1/V3-3。
+- **V3-1 / V3-3 落地**：隧道日志 buf 上限 64k；SECURITY.md 写明 `?secret=` 可能进第三方日志。不要再按第四节重复 V3-1/V3-3。
+- **V3-2 / V3-4 落地**：secretKey / admin Bearer 等长时 `crypto.timingSafeEqual`；`agent-host/package.json` `engines.node` 为 `>=18`。不要再按第四节重复。
 
 ---
 

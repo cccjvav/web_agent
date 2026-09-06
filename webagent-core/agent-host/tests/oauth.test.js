@@ -66,11 +66,22 @@ async function main() {
     assert.strictEqual(prm.status, 200);
     assert.ok(prm.json.resource.endsWith('/mcp'));
 
+    const oauthSrc = fs.readFileSync(path.join(__dirname, '../src/mcp/oauth.js'), 'utf8');
+    assert.ok(oauthSrc.includes('crypto.timingSafeEqual'), 'URL secret compare must be timing-safe');
+    assert.ok(!oauthSrc.includes('token === config.secretKey'), 'must not compare secretKey with ===');
+    const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
+    assert.strictEqual(pkg.engines && pkg.engines.node, '>=18');
+
     const denied = await request(server, 'POST', '/mcp', {
       body: { jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }
     });
     assert.strictEqual(denied.status, 401);
     assert.ok(String(denied.headers['www-authenticate'] || '').includes('resource_metadata='));
+
+    assert.ok(oauth.verifyAccessToken(config.secretKey) && oauth.verifyAccessToken(config.secretKey).kind === 'secret');
+    assert.ok(!oauth.verifyAccessToken(`${config.secretKey}x`));
+    assert.ok(!oauth.verifyAccessToken(config.secretKey.slice(0, -1)));
+    assert.ok(!oauth.verifyAccessToken(''));
 
     const secretOk = await request(server, 'POST', `/mcp/${config.secretKey}`, {
       body: { jsonrpc: '2.0', id: 1, method: 'initialize', params: { clientInfo: { name: 'url-secret' } } }

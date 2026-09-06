@@ -10,6 +10,9 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "cors": "^2.8.6",
     "diff": "^9.0.0",

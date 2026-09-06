@@ -32,6 +32,7 @@
   | `author` | 作者 | `""` |
   | `license` | 许可证 | `ISC` |
   | `description` | 简介 | `""` |
+  | `engines.node` | 最低 Node | `>=18`（CI 用 20；npm 在更旧版本会警告，不硬退出） |
   | `dependencies.cors` | CORS 中间件 | `^2.8.6`（`src/utils/corsAllow.js` 的白名单，不再全开） |
   | `dependencies.diff` | jsdiff | `^9.0.0`（`src/utils/diff.js`、`tools/patchEngine.js`） |
   | `dependencies.express` | HTTP | `^5.2.1` |

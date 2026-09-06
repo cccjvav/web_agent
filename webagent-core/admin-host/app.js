@@ -229,8 +229,15 @@ function unauthorized(res) {
   res.end(JSON.stringify({ error: 'unauthorized' }));
 }
 
+function timingSafeEqualString(a, b) {
+  const left = Buffer.from(String(a || ''), 'utf8');
+  const right = Buffer.from(String(b || ''), 'utf8');
+  if (left.length !== right.length) return false;
+  return crypto.timingSafeEqual(left, right);
+}
+
 function tokenOk(req, token) {
-  return bearer(req) === token;
+  return timingSafeEqualString(bearer(req), token);
 }
 
 function createHandler({ dataDir, token }) {

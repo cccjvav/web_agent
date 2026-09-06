@@ -207,9 +207,16 @@ function issueAccess(clientId) {
   return rec;
 }
 
+function timingSafeEqualString(a, b) {
+  const left = Buffer.from(String(a || ''), 'utf8');
+  const right = Buffer.from(String(b || ''), 'utf8');
+  if (left.length !== right.length) return false;
+  return crypto.timingSafeEqual(left, right);
+}
+
 function verifyAccessToken(token) {
   if (!token) return null;
-  if (token === config.secretKey) return { kind: 'secret', clientId: 'url-secret' };
+  if (timingSafeEqualString(token, config.secretKey)) return { kind: 'secret', clientId: 'url-secret' };
   pruneExpiredTokens();
   const rec = accessTokens.get(token);
   if (!rec) return null;

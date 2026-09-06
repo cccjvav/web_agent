@@ -120,6 +120,10 @@ async function run() {
     });
     assert.strictEqual(huge.status, 413);
 
+    const appSrc = fs.readFileSync(path.resolve(__dirname, '../../admin-host/app.js'), 'utf8');
+    assert.ok(appSrc.includes('crypto.timingSafeEqual'), 'admin Bearer compare must be timing-safe');
+    assert.ok(!appSrc.includes('bearer(req) === token'), 'must not compare admin token with ===');
+
     const indexSrc = fs.readFileSync(path.resolve(__dirname, '../../admin-host/index.js'), 'utf8');
     assert.ok(indexSrc.includes('WEBAGENT_ADMIN_BIND'));
     assert.ok(!/listen\(\s*port,\s*'0\.0\.0\.0'/.test(indexSrc));

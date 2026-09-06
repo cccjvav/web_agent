@@ -63,7 +63,8 @@ macOS / Linux：
 - **Function `rankDay(rows, day)`（L85–L111）** — 同一 GitHub 用户或同一 installId 留最新一条；按 toolCalls 降序。
 - **Function `renderPage`（L121–L182）** — HTML 排行榜；无 GitHub 显示「未绑定 GitHub」+ installId。
 - **Function `readBody(req)`** — 拼 JSON；超过 1MB 抛 `status=413`。
-- **Function `createHandler({ dataDir, token })`** — GET `/health` 无鉴权；GET `/` HTML、GET `/api/stats`、POST `/api/report` 都要 Bearer；其它 404。
+- **Function `tokenOk(req, token)`** — Bearer 与令牌用 `crypto.timingSafeEqual` 比（长度不同直接 false）。
+- **Function `createHandler({ dataDir, token })`** — GET `/health` 无鉴权；GET `/` HTML、GET `/api/stats`、POST `/api/report` 都要 Bearer（`tokenOk`）；其它 404。
 - **Function `createServer(opts={})`** — 返回 `{ server, handler, dataDir, token }`。
 
 ### 📄 文件名：`index.js`

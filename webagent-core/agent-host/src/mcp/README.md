@@ -230,11 +230,12 @@
     - 生成 `sccid_` / `sccsec_`，存 Map，返回注册结果。
   - **Function `s256(verifier)`（L144–L146）** — SHA-256 `base64url`。
   - **Function `issueAccess(clientId)`（L148–L162）** — 发 `scat_` / `scrt_`，写入两个 token Map。
-  - **Function `verifyAccessToken(token)`（L164–L175）**
-    - L165：假值 → `null`。
-    - L166：`token === config.secretKey` → `{ kind:'secret', clientId:'url-secret' }`（**贴 URL 的密钥走这里**）。
-    - L167–L172：Map 没有或过期（过期会 delete）→ `null`。
-    - L174：`{ kind:'oauth', clientId }`。
+  - **Function `timingSafeEqualString(a, b)`** — 转 utf8 Buffer；长度不同直接 false；等长才 `crypto.timingSafeEqual`。
+  - **Function `verifyAccessToken(token)`**
+    - 假值 → `null`。
+    - `timingSafeEqualString(token, config.secretKey)` 为真 → `{ kind:'secret', clientId:'url-secret' }`（**贴 URL 的密钥走这里**）。
+    - Map 没有或过期（过期会 delete）→ `null`。
+    - `{ kind:'oauth', clientId }`。
   - **Function `revokeAll()`（L177–L183）** — 四个 Map clear，`pairing=null`。被 `POST /api/bridge/reset-secret` 调用。
   - **Function `authorizeHtml(query, error)`（L185–L218）** — 返回完整 HTML 字符串（见下方 DOM）。
   - **Function `escapeHtml(s)`（L220–L224）** — `& < > " '`。
