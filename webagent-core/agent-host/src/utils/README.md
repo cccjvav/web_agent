@@ -22,13 +22,14 @@
 - **核心类/函数清单：**
 
   - **Function `clipStr` / `sanitizePayload`（L12–L41）** — 字符串截 4000 并替换 `ghp_` / `github_pat_` / `sk-` / `Bearer …`；对象键 `apiKey|token|password|secret|secretKey|authorization|access_token|refresh_token|pat|namedToken|ngrokToken|authtoken` 整值改 `[redacted]`；`diff|patch|content|chunk|stdout|stderr|args|body` 截 500。深度 6、键 40、数组 40。
-  - **Class `BridgeEventBus`（L43–L85）**
+  - **Class `BridgeEventBus`（L47–L111）**
     - **constructor** — `wsClients` Set；`logs=[]`；`maxLogs=500`。
-    - **Method `addWsClient(ws)`** — 已有 ≥32 路则 `close(1013)` 返回 false；否则加入 Set，30 分钟空闲 `close(1001)`。
-    - **Method `broadcast(type, payload={})`（L58–L80）**
+    - **Method `_clearIdle` / `_touchIdle`** — WeakMap 存每个 socket 的 idle `setTimeout`；`unref()`。
+    - **Method `addWsClient(ws)`** — 已有 ≥32 路则 `close(1013)` 返回 false；否则加入 Set，`_touchIdle`（30 分钟后 `close(1001)`）。`close` 时清定时器并从 Set 删除。
+    - **Method `broadcast(type, payload={})`**
       - 日志和 WebSocket 用 `sanitizePayload(payload)`；进程内 `this.emit(type, payload)` 仍是原对象。
       - `logs.unshift`；超过 maxLogs 则 `pop`。
-      - 对每个 ws，`readyState === 1` 才 `try send`，catch 空。
+      - 对每个 ws，`readyState === 1` 才 `try send`，**发送成功后 `_touchIdle(ws)`**（有活动就不当空闲）；catch 空。
     - **Method `getRecentLogs(limit=50)`（L82–L84）** — `logs.slice(0, limit)`（已脱敏）。
 
 - **关键变量：** L87 `const eventBus = new BridgeEventBus()`，L88–L89 `module.exports = eventBus` 并挂 `sanitizePayload`（单例，不是类）。
@@ -82,5 +83,5 @@
 2. mcpApp 先 `mcpCors()`：浏览器预检只给扩展和名单里的聊天站回 `Access-Control-Allow-Origin`。`/mcp` 再过 `rejectDisallowedMcpOrigin`：名单外 Origin 的 POST 得 403，工具不跑。
 3. 两套 app 的 `/api` 先过 `rejectUnlessLocalControl`：Cloudflare 头、`*.trycloudflare.com` / ngrok Host、或当前 `publicTunnelUrl` 主机名 → 404；本机回环 `next()`。再过 `rejectCrossSiteApi`：`https://evil.example` 这类 Origin 同样 404。无 Origin 的 Node 插件 / 测试仍通。
 4. 工具/MCP 调用 `broadcast` → 写入 logs + 推到所有打开的工作台。
-5. 工作台 `connectWs` 根据 type 刷新终端、文件树、BRIDGE 工具卡、todos。
+5. 工作台 `connectWs` 根据 type 刷新终端、文件树、BRIDGE 工具卡、todos。`onclose` 后 1s→30s 退避重连；状态栏写「事件流重连中」。有工具广播时服务端 idle 计时重置，空闲满 30 分钟仍会 1001 关掉（客户端再连）。
 6. `patchEngine` 写盘后用 `createUnifiedDiff` 把 diff 放进 broadcast payload，工作台可开 diff 页。

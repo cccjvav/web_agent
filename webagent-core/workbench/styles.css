@@ -271,6 +271,7 @@ u { text-decoration: none; }
   display: flex; align-items: center; justify-content: space-between; padding: 0 8px; font-size: 12px; color: var(--text2);
 }
 .sb-left, .sb-right { display: flex; gap: 10px; }
+#sb-ws { color: var(--warn); }
 
 #modal {
   position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 30;

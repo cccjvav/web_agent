@@ -159,6 +159,9 @@ async function main() {
     const appJs = await request('GET', `http://127.0.0.1:${workbenchPort}/app.js`);
     assert.strictEqual(appJs.status, 200);
     assert.ok(appJs.raw.includes("from './js/state.js'"));
+    assert.ok(/ws\.onclose\s*=/.test(appJs.raw), 'workbench WS must reconnect on close');
+    assert.ok(appJs.raw.includes('事件流重连中'));
+    assert.ok(page.raw.includes('id="sb-ws"'));
     const stateJs = await request('GET', `http://127.0.0.1:${workbenchPort}/js/state.js`);
     assert.strictEqual(stateJs.status, 200);
     assert.ok(stateJs.raw.includes('export const state'));

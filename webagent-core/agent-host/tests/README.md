@@ -15,7 +15,7 @@
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`workspace_info.rules`、`path`/`confirm:'true'`/`bash`/`ls`、`start_command`、`cancel_command` 终态保持 cancelled、持久 hash 不能单独覆盖 |
 | `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝；UNC / 盘符路径拒绝；Windows 上再测 junction |
 | `hostPersist.test.js` | `config.version` 等于插件 `package.json`；`generateNewSecret` 写入 `config.json`；旧盘 `永久顺`/假 `github`/`demo` 迁成 `local-demo`；带 `githubId` 的 octocat **留下**；`usage.json` 进 gitignore；强制 `git add -f` 后 `trackedSecretFiles` 能发现并警告；`read-hashes.json` 跨 require 仍能 recalledHash，**sessionHash 为空**；`resetHashes` 删文件 |
-| `eventBus.test.js` | 日志脱敏 `ghp_` / `sk-` / `Bearer` / `oldSecret` / `namedToken` / `ngrokToken`；长 chunk 截断；普通字段留下 |
+| `eventBus.test.js` | 日志脱敏 `ghp_` / `sk-` / `Bearer` / `oldSecret` / `namedToken` / `ngrokToken`；长 chunk 截断；普通字段留下；**源码锁** app.js `onclose` 重连 +「事件流重连中」+ 30s 封顶；broadcast 成功发送必须 `_touchIdle`；假 socket 验证 idle 重置、1001、第 33 路 1013 |
 | `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com`；`canonicalNamedUrl`；`parseNgrokUrl`；缺主机名/Token/Authtoken 在 spawn 前拒绝；**日志 buf 上限** `slice(-65536)` 锁 cloudflared 两处 + ngrok 一处 |
 | `bridgeTunnel.test.js` | stub Quick/Named/ngrok：cloudflare 启动后 mcpUrl 含 trycloudflare；Named / ngrok 成功走自定义主机名且响应不含 Token；缺字段仍 200；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
 | `apiFiles.test.js` | `PUT /api/files/content` 走 `write_file`：普通文件写入、`.env` 拒绝、越界拒绝、错 hash 409、`POST /api/skills` |
@@ -207,7 +207,7 @@
 
 ### 📄 文件名：`eventBus.test.js`
 
-- **文件职责：** 不启 HTTP。broadcast 带 token / apiKey / 超长 chunk 后，`getRecentLogs` 不得出现原文，须含 `[redacted]`，普通字段留下。
+- **文件职责：** 不启 HTTP。broadcast 带 token / apiKey / 超长 chunk 后，`getRecentLogs` 不得出现原文，须含 `[redacted]`，普通字段留下。源码锁：`workbench/app.js` 必须 `ws.onclose` 重连、文案「事件流重连中」、退避封顶 30000；`eventBus.js` 的 `broadcast` 在 `ws.send` 之后 `_touchIdle`。假 WebSocket：加入后有 30min idle；broadcast 清掉旧 timer 再 arm；idle 回调 `close(1001)`；第 33 路 `close(1013)`。
 
 ### 📄 文件名：`corsAllow.test.js`
 
@@ -269,7 +269,7 @@
 
 ### 📄 文件名：`workbenchHtml.test.js`
 
-- **文件职责：** 不启 HTTP。读 `workbench/index.html`，锁 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login / named-domain / named-token / ngrok-domain / ngrok-token 等），含 `cloudflared tunnel run --token` 与 `ngrok http`，不得含「不会被使用」/「使用 GitHub 登录」或「永久顺」。
+- **文件职责：** 不启 HTTP。读 `workbench/index.html`，锁 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login / named-domain / named-token / ngrok-domain / ngrok-token / sb-ws 等），含 `cloudflared tunnel run --token` 与 `ngrok http`，不得含「不会被使用」/「使用 GitHub 登录」或「永久顺」。
 
 ### 📄 文件名：`docsSite.test.js`
 

@@ -38,7 +38,7 @@
     - L161–L164 CHAT / BRIDGE 页签。
     - L165–L197 `#right-chat`：流、Tasks、chips、`#chat-input`、`#btn-agent-pick`、隐藏 `#mode-select`、`#model-select`、`#think-select`、`#plan-badge`、`#btn-plan-merge`（总结）、发送。
     - L193–L222 `#right-bridge`：等待文案、任务、log、MCP session。L204–L221 `.mcp-session`：`#btn-reset-round`（清除本轮统计）、`#btn-stop-bridge-rb`、`#stat-calls` / `#stat-avg` / `#stat-fail` / `#stat-ok`。
-  - L226–L235 `#statusbar`。
+  - L226–L236 `#statusbar`：`#sb-bridge`；`#sb-ws` 默认 hidden，断线时由 `app.js` 写「事件流重连中」。
   - L238–L590 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/**多模型博弈** `#page-multimodel`）。**`#page-env` / `#page-stack` 有完整表单**。挂钩/插件/MCP 服务器名单/Voice/Dictation **标明不会执行或未实现**。Codex 页写「没有接 OpenAI Codex OAuth」，按钮 disabled。API Key 提示写 `.webagent/config.json`，不是钥匙串。`#page-multimodel`：启用、合并主模型、合并思考、合并时只读验证、每回合最大分支 2–8 默认 4。Bridge 页含客户端卡片、复制 URL/提示词、`#btn-copy-rules`（默认 hidden）、打开各站点、**本机演示授权**（`#btn-gh-login`，文案写不是 GitHub）以及 **GitHub 验证**（`#btn-gh-token` / `#btn-gh-device` / `#btn-gh-clear`）。隧道 radio：cloudflare 默认会拉 Quick Tunnel；**Named Tunnel** 填 `#named-domain` / `#named-token` 后启动会 `tunnel run --token`；**ngrok** 填 `#ngrok-domain`（可选）/ `#ngrok-token` 后启动会 `ngrok http`。`#btn-reset-secret` 在高级设置。
   - L577–L596 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`（Plan 文案「分支」）。
   - L597 `#toast`；L598 `<script type="module" src="./app.js">`（原生 ES module，无打包）。
@@ -49,10 +49,12 @@
 
 ### 📄 文件名：`app.js`
 
-- **文件职责：** 工作台入口。import `js/*.js` 后 `boot`。71 行。
-- **Function `connectWs`（L9–L32）** — `ws(s)://location.host/ws`；`command_output` → `ui.termLine`；`file_patched` → `ui.loadTree`；`todos_updated` → `ui.paintTodos`；`tool_call_end` → `ui.logBridgeTool`。
-- **Function `loadMonaco`（L34–L58）** — jsDelivr monaco 0.52.2；`window.monaco.editor.create`；onerror 或 7s 超时。
-- **Function `boot`（L60–L69）** — `ui.bind`、默认 code、并行 refresh/tree/skills/custom/monaco、WS、welcome。L71 `boot().catch(console.error)`。
+- **文件职责：** 工作台入口。import `js/*.js` 后 `boot`。120 行。
+- **Function `setWsStatus`（L15–L25）** — 写 `#sb-ws`；有文案则去掉 hidden，空则藏起来。
+- **Function `scheduleWsReconnect`（L27–L36）** — 已有 timer 则 return；状态栏「事件流重连中」；`setTimeout(connectWs, delay)`，delay 从 1s 倍增，`Math.min(..., WS_BACKOFF_MAX=30000)`。
+- **Function `connectWs`（L38–L77）** — `ws(s)://location.host/ws`；已有 CONNECTING/OPEN 的 socket 则 return。`onopen` 把退避打回 1s 并清空状态栏。`command_output` → `ui.termLine`；`file_patched` → `ui.loadTree`；`todos_updated` → `ui.paintTodos`；`tool_call_end` → `ui.logBridgeTool`。**`ws.onclose` 调 `scheduleWsReconnect`**（服务端 30min idle / 1013 满员同样走这条）。constructor 抛错也重连。
+- **Function `loadMonaco`（L79–L103）** — jsDelivr monaco 0.52.2；`window.monaco.editor.create`；onerror 或 7s 超时。
+- **Function `boot`（L105–L118）** — `ui.bind`、默认 code、并行 refresh/tree/skills/custom/monaco、WS、welcome。L120 `boot().catch(console.error)`。
 
 ---
 
@@ -147,7 +149,7 @@
   - L168–L177 终端面板。
   - L179–L277 右侧 CHAT 消息/工具卡/共识/composer。
   - L279–L291 BRIDGE 等待与统计。
-  - L293–L297 状态栏。
+  - L293–L298 状态栏；`#sb-ws` 用 `--warn`。
   - L299–L352 设置模态与表单。
   - L354–L387 Bridge 药丸、URL 盒、隧道卡片。
   - L389–L424 菜单、toast、diff 色、下拉、客户端卡、ChatGPT 仿页、滚动条、`@media max-width 980px`。

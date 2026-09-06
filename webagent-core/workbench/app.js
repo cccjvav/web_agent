@@ -6,10 +6,49 @@ import './js/bridge.js';
 import './js/settings.js';
 import './js/bind.js';
 
+const WS_BACKOFF_MIN = 1000;
+const WS_BACKOFF_MAX = 30000;
+let wsBackoffMs = WS_BACKOFF_MIN;
+let wsTimer = null;
+let wsSock = null;
+
+function setWsStatus(text) {
+  const el = $('#sb-ws');
+  if (!el) return;
+  if (text) {
+    el.textContent = text;
+    el.classList.remove('hidden');
+  } else {
+    el.textContent = '';
+    el.classList.add('hidden');
+  }
+}
+
+function scheduleWsReconnect() {
+  if (wsTimer) return;
+  setWsStatus('事件流重连中');
+  const delay = wsBackoffMs;
+  wsBackoffMs = Math.min(wsBackoffMs * 2, WS_BACKOFF_MAX);
+  wsTimer = setTimeout(() => {
+    wsTimer = null;
+    connectWs();
+  }, delay);
+}
+
 function connectWs() {
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  if (wsTimer) {
+    clearTimeout(wsTimer);
+    wsTimer = null;
+  }
+  if (wsSock && (wsSock.readyState === 0 || wsSock.readyState === 1)) return;
   try {
     const ws = new WebSocket(`${proto}//${location.host}/ws`);
+    wsSock = ws;
+    ws.onopen = () => {
+      wsBackoffMs = WS_BACKOFF_MIN;
+      setWsStatus('');
+    };
     ws.onmessage = (ev) => {
       let msg; try { msg = JSON.parse(ev.data); } catch { return; }
       if (msg.type === 'command_output' && msg.payload && msg.payload.chunk) {
@@ -28,7 +67,13 @@ function connectWs() {
         });
       }
     };
-  } catch (_) {}
+    ws.onclose = () => {
+      if (wsSock === ws) wsSock = null;
+      scheduleWsReconnect();
+    };
+  } catch (_) {
+    scheduleWsReconnect();
+  }
 }
 
 function loadMonaco() {

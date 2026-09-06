@@ -46,8 +46,26 @@ class BridgeEventBus extends EventEmitter {
   constructor() {
     super();
     this.wsClients = new Set();
+    this.idleTimers = new WeakMap();
     this.logs = [];
     this.maxLogs = 500;
+  }
+
+  _clearIdle(ws) {
+    const idle = this.idleTimers.get(ws);
+    if (idle) {
+      clearTimeout(idle);
+      this.idleTimers.delete(ws);
+    }
+  }
+
+  _touchIdle(ws) {
+    this._clearIdle(ws);
+    const idle = setTimeout(() => {
+      try { ws.close(1001, 'idle'); } catch (_) {}
+    }, WS_IDLE_MS);
+    if (idle.unref) idle.unref();
+    this.idleTimers.set(ws, idle);
   }
 
   addWsClient(ws) {
@@ -56,12 +74,9 @@ class BridgeEventBus extends EventEmitter {
       return false;
     }
     this.wsClients.add(ws);
-    const idle = setTimeout(() => {
-      try { ws.close(1001, 'idle'); } catch (_) {}
-    }, WS_IDLE_MS);
-    if (idle.unref) idle.unref();
+    this._touchIdle(ws);
     ws.on('close', () => {
-      clearTimeout(idle);
+      this._clearIdle(ws);
       this.wsClients.delete(ws);
     });
     return true;
@@ -84,6 +99,7 @@ class BridgeEventBus extends EventEmitter {
       if (ws.readyState === 1) {
         try {
           ws.send(message);
+          this._touchIdle(ws);
         } catch (err) {}
       }
     }
