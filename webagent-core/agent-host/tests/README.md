@@ -6,7 +6,7 @@
 
 跑法：Windows `run-tests.cmd`；其它 `cd webagent-core/agent-host && npm test`。覆盖总表也见 [测试说明.md](../../../测试说明.md)。
 
-`package.json` scripts.test 按下面顺序 `&&` 串联，任一失败即停。
+`npm test` 跑 `scripts/run-tests.js`：逐个 `tests/*.test.js`，失败也继续，最后汇总。新增 `*.test.js` 会被自动跑到。
 
 | 文件 | 覆盖 |
 |---|---|
@@ -24,7 +24,8 @@
 | `dangerousCommands.test.js` | `rm -rf` / `rm -r -f` / `find -delete` / `r""m -rf`：远程 MCP 与本机 `/api` 两条路径 |
 | `githubAuth.test.js` | PAT 空令牌 400；假 fetch 校验 octocat；设备码 grant_type 含 `device_code`；无 client_id → `E_NO_GITHUB_APP` |
 | `usageTracker.test.js` | `record` 写 `.webagent/usage.json`；成功率；`reportNow` POST Bearer |
-| `adminHost.test.js` | 无 Bearer 401；有令牌 ingest；HTML 含 `@alice` / 未绑定 GitHub |
+| `adminHost.test.js` | 无 Bearer 读 `/`、`/api/stats` 与 POST 都 401；有令牌 HTML 含 `@alice`；body 超 1MB → 413；默认 bind 不是 0.0.0.0 |
+| `extensionCopy.test.js` | `extension/` 与 `extensions-installed/webagent.webagent-core-0.6.9/` 除 README 外逐字节一致 |
 | `providers.test.js` | `gpt-4o` 无接口字段时 caps/context 为空；声明了 `capabilities`/`context_window` 才填 |
 | `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`、多模型博弈、总结钮、本机演示授权、**GitHub 验证** / **验证令牌**、Named Tunnel `tunnel run --token`、`ngrok http`、Codex/挂钩/插件未实现、不得含「不会被使用」/永久顺 / 「使用 GitHub 登录」）、模块脚本、MCP 401、initialize、tools/list、ping、**ping 后有 usage.json 且 reset-round 不清它**、`/status.tools` 无 inputSchema、远程 `get_logs` 无 args/chunk/patch、空 token 400、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、**外站 Origin 打 `/mcp` tools/call 403 且不执行**、本机 `POST /api/chat` NDJSON（Ask + Plan 分支再总结） |
 | `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime；不写死 `--auth none` / `trusted-origins *` / `--disable-workspace-trust`；`syncExtension` 读插件 `package.json` 版本、不写死 `webagent.webagent-core-0.6.9`；`run-webagent.sh` 接受 `$1` 并检查 node；`run-webagent-vscode.sh` 检查 node 且不 mkdir；runtime 包名 `webagent-code-server-runtime` |
@@ -353,7 +354,7 @@
 
 ## 3. 执行逻辑流（仅本目录）
 
-1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **sandbox** → **hostPersist** → tunnel → **bridgeTunnel** → **apiFiles** → **localControl** → **corsAllow** → **githubAuth** → **usageTracker** → **adminHost** → **providers** → httpSmoke → codeServerNotRunnable → **codeServerAuth** → skipWorkbench → **planRound** → runChat → chatMode → **toolLabel** → profile → oauth → **docsSite** → **workbenchHtml** → **dangerousCommands**。
+1. `npm test` → `scripts/run-tests.js` 按表中顺序跑每个 `*.test.js`（失败继续，最后非 0）。表外新文件追加在末尾。
 2. 单文件：改 `config.workspaceRoot` 指向 tmp → require 被测模块 → assert → 删 tmp。`tunnel` / `chatMode` / `codeServerNotRunnable` 不改工作区。`bridgeTunnel` 改 tmp 工作区并 stub 隧道导出。
 3. 启进程的测试 spawn `src/index.js`，结束必须杀子进程。
 4. 失败路径：有 `main()` 的文件走 `main().catch` → `exit(1)`；`profile.test.js` 同步抛错由 Node 非 0 退出；CMD 的 `run-tests.cmd` 据此 pause。
