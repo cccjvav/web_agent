@@ -17,6 +17,8 @@ const required = [
   'btn-send',
   'btn-plan-merge',
   'btn-gh-login',
+  'btn-copy-prompt',
+  'btn-copy-rules',
   'chat-input',
   'model-select'
 ];

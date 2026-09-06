@@ -5,8 +5,14 @@ const { listSkills } = require('../tools/skills');
 
 const CONNECT_LINE = '快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。';
 
+const PAGE_RULES_LEAD = '这些规则与 MCP initialize.instructions 相同。Chat Plus / DeepSeek++ 不会自动转给网页模型。贴进扩展的系统提示词或新对话第一句，不要贴进 MCP 地址框。';
+
 function getBootstrapPrompt(mcpUrl) {
   return `${mcpUrl || ''}\n\n${CONNECT_LINE}`;
+}
+
+function getPageRulesPrompt() {
+  return `${PAGE_RULES_LEAD}\n\n${getInstructions()}`;
 }
 
 const SERVER_INSTRUCTIONS = `# Web Agent Bridge MCP
@@ -64,4 +70,11 @@ function getInstructions() {
   return [SERVER_INSTRUCTIONS.trim(), ...extra].join('\n\n');
 }
 
-module.exports = { getInstructions, SERVER_INSTRUCTIONS, getBootstrapPrompt, CONNECT_LINE };
+module.exports = {
+  getInstructions,
+  SERVER_INSTRUCTIONS,
+  getBootstrapPrompt,
+  getPageRulesPrompt,
+  CONNECT_LINE,
+  PAGE_RULES_LEAD
+};

@@ -119,19 +119,22 @@
 - **文件职责：** 给模型的「怎么用这台 MCP」说明书，以及剪贴板第一句连接语。
 - **核心类/函数清单：**
 
-  - **Function `getBootstrapPrompt(mcpUrl)`（L8–L10）**
+  - **Function `getBootstrapPrompt(mcpUrl)`（L10–L12）**
     - 输入：`mcpUrl` 字符串（可空）。
     - 返回：URL + 空行 + `CONNECT_LINE`。Arena 等 paste-url 客户端当第一句。
-  - **Function `getInstructions()`（L59–L66）**
-    - 无参数。L58 `loadCustom()`。
-    - L60：若 `custom.instructions` 真值，追加 `## Workspace instructions`。
-    - L61：追加 `formatWorkspaceContext`（环境/技术栈/skills）。
-    - L62：追加工作区根路径。
-    - L63：`SERVER_INSTRUCTIONS.trim()` 与 extra 用 `\n\n` 拼接。
+  - **Function `getPageRulesPrompt()`（L14–L16）**
+    - 无参数。返回 `PAGE_RULES_LEAD` + 空行 + `getInstructions()`。给 Chat Plus / DeepSeek++ 贴进扩展系统提示词，**不是** MCP URL。
+  - **Function `getInstructions()`（L64–L71）**
+    - 无参数。L65 `loadCustom()`。
+    - L67：若 `custom.instructions` 真值，追加 `## Workspace instructions`。
+    - L68：追加 `formatWorkspaceContext`（环境/技术栈/skills）。
+    - L69：追加工作区根路径。
+    - L70：`SERVER_INSTRUCTIONS.trim()` 与 extra 用 `\n\n` 拼接。
 
 - **关键变量/常量：**
   - L6 `CONNECT_LINE`：固定一句中文（测试锁原文，改一字会红）。
-  - L12–L55 `SERVER_INSTRUCTIONS`：Ask/Plan 只读、Code 可写、工作流 1–7（含 git `available:false`、读后可省略 `expectedHash`、HASH_REQUIRED 带 `currentHash`）、输出预算、`tools/call` 失败是 MCP `isError` 文本（不是传输崩溃）、别名 `bash`/`cat`/`path`、安全（`confirm_dangerous` / `confirm_overwrite` / `confirm=true`；`write_file` 覆盖只认本进程读过的 hash；新建不要 unified diff）、memory。这是 `initialize.instructions` 的主体。模板字符串里**不能**写 `{layer,code,msg,detail}` 这种花括号，会当成 JS 插值炸掉。
+  - L8 `PAGE_RULES_LEAD`：说明这些规则与 `initialize.instructions` 相同，扩展不会自动转给网页模型（测试锁原文）。
+  - L18–L62 `SERVER_INSTRUCTIONS`：Ask/Plan 只读、Code 可写、工作流 1–7（含 git `available:false`、读后可省略 `expectedHash`、HASH_REQUIRED 带 `currentHash`）、输出预算、`tools/call` 失败是 MCP `isError` 文本（不是传输崩溃）、别名 `bash`/`cat`/`path`、安全（`confirm_dangerous` / `confirm_overwrite` / `confirm=true`；`write_file` 覆盖只认本进程读过的 hash；新建不要 unified diff）、memory。这是 `initialize.instructions` 的主体。模板字符串里**不能**写 `{layer,code,msg,detail}` 这种花括号，会当成 JS 插值炸掉。
 
 ---
 
@@ -140,22 +143,22 @@
 - **文件职责：** 工作台 Bridge 页「怎么连」卡片的**数据**，不是 MCP 协议实现。`server.js` 的 JSON-RPC **不读取**本文件。
 - **核心类/函数清单：**
 
-  - **Function `hydrateClient(client, urls)`（L136–L158）**
+  - **Function `hydrateClient(client, urls)`（L127–L152）**
     - 输入：`CLIENTS` 里的一项；`urls.mcpUrl` / `urls.mcpCanonicalUrl`。
-    - L137–L138：canonical 缺省把 `/mcp/<secret>` 收成 `/mcp`。
-    - L140–L150 按 `connectMode` 设 `prompt`：
-      - `paste-url` → `getBootstrapPrompt(mcpUrl)`（URL + CONNECT_LINE）
-      - `oauth-connector` → 规范地址两行，不含长期密钥
-      - `extension-http` → **只有** `mcpUrl` 一行（DeepSeek++ / Chat Plus URL 框）
+    - L128–L129：canonical 缺省把 `/mcp/<secret>` 收成 `/mcp`。
+    - L130–L144 按 `connectMode` 设 `prompt` / `rulesText`：
+      - `paste-url` → `getBootstrapPrompt(mcpUrl)`（URL + CONNECT_LINE）；`rulesText` 空
+      - `oauth-connector` → 规范地址两行，不含长期密钥；`rulesText` 空
+      - `extension-http` → **`prompt` 只有** `mcpUrl` 一行（DeepSeek++ / Chat Plus URL 框）；**`rulesText` = `getPageRulesPrompt()`**（贴进扩展系统提示词）
       - `unsupported-mcp` → 空串
-      - 其它（含 `local-chat`）→ `prompt` 保持 `''`
-    - L151–L157：oauth 模式对外 `mcpUrl` 改成 canonical；附 `connectLine`。
-  - **Function `listClients(urls = {})`（L160–L162）**
+      - 其它（含 `local-chat`）→ `prompt` / `rulesText` 保持 `''`
+    - L145–L151：oauth 模式对外 `mcpUrl` 改成 canonical；附 `connectLine` 与 `rulesText`。
+  - **Function `listClients(urls = {})`（L154–L156）**
     - 返回 **7** 张卡全部 hydrate。
-  - **Function `getClient(id, urls = {})`（L164–L167）**
+  - **Function `getClient(id, urls = {})`（L158–L161）**
     - 找不到 id 则 **回落到 `CLIENTS[1]`（arena）**。
 
-- **关键变量 `CLIENTS`（L3–L133）——每项 Key：**
+- **关键变量 `CLIENTS`（L3–L125）——每项 Key：**
 
   | Key | 含义 | 取值 |
   |---|---|---|
@@ -366,7 +369,7 @@
    - `notifications/*`：空对象，HTTP 204。
 
 5. **工作台卡片（不经 JSON-RPC）**  
-   `../api/routes.js` 调 `clients.listClients` + `instructions.getBootstrapPrompt` + `oauth.snapshotPairing`，把 hydrate 后的 `prompt` 交给用户复制。DeepSeek / Chat Plus 卡只有一行 URL；Arena 卡是 URL + `CONNECT_LINE`；ChatGPT 自制插件卡是规范 `/mcp` 两行（OAuth）；聊天栏卡 `prompt` 为空。
+   `../api/routes.js` 调 `clients.listClients` + `instructions.getBootstrapPrompt` + `oauth.snapshotPairing`，把 hydrate 后的 `prompt`（以及 extension-http 的 `rulesText`）交给用户复制。DeepSeek / Chat Plus 卡 `prompt` 只有一行 URL，`rulesText` 是给扩展系统提示词的规则；Arena 卡是 URL + `CONNECT_LINE`；ChatGPT 自制插件卡是规范 `/mcp` 两行（OAuth）；聊天栏卡 `prompt` 为空。
 
 **本目录没有的事（避免误读）：** 不 spawn cloudflared；不实现 `apply_patch`。远程 `tools/call` 默认 Code，可用 `params._meta.mode` 切 Ask/Plan。
 

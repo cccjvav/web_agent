@@ -11,8 +11,8 @@
 | 文件 | 覆盖 |
 |---|---|
 | `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、CRLF 保留、SEARCH 多处拒绝、`occurrence` 指定第几处、grep 跳过大文件、嵌套正则拒绝、find_files 超额 `truncated`、**恰好 cap 条不算截断**、新建拒绝 unified diff、空 SEARCH 建新文件、**同一文件并发补丁一个成功一个 STALE** |
-| `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、**远程 `confirm_dangerous` 仍 `E_FORBIDDEN`**、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、DeepSeek / Chat Plus / ChatGPT 聊天栏与自制插件配方、`get_logs` 不含 args/chunk/result/patch |
-| `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`path`/`confirm:'true'`/`bash`/`ls`、`start_command`、`cancel_command` 终态保持 cancelled、持久 hash 不能单独覆盖 |
+| `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、**远程 `confirm_dangerous` 仍 `E_FORBIDDEN`**、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、`PAGE_RULES_LEAD` / `getPageRulesPrompt`、DeepSeek / Chat Plus `rulesText` 与「复制规则」、ChatGPT 聊天栏与自制插件配方、`get_logs` 不含 args/chunk/result/patch |
+| `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`workspace_info.rules`、`path`/`confirm:'true'`/`bash`/`ls`、`start_command`、`cancel_command` 终态保持 cancelled、持久 hash 不能单独覆盖 |
 | `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝；UNC / 盘符路径拒绝；Windows 上再测 junction |
 | `hostPersist.test.js` | `config.version` 等于插件 `package.json`；`generateNewSecret` 写入 `config.json`；旧盘 `永久顺`/假 `github`/`demo` 迁成 `local-demo`；带 `githubId` 的 octocat **留下**；`usage.json` 进 gitignore；强制 `git add -f` 后 `trackedSecretFiles` 能发现并警告；`read-hashes.json` 跨 require 仍能 recalledHash，**sessionHash 为空**；`resetHashes` 删文件 |
 | `eventBus.test.js` | 日志脱敏 `ghp_` / `sk-` / `Bearer` / `oldSecret` / `namedToken` / `ngrokToken`；长 chunk 截断；普通字段留下 |
@@ -80,8 +80,8 @@
   - L25–L30：`initialize` 的 `instructions` 含 `Web Agent Bridge MCP` 与 `webagent://instructions`；有 `capabilities.resources` / `prompts`；有 `serverInfo.name`。
   - L32–L33：`ping.ok === true`。
   - L35–L44：`resources/list` 的 uri 含 protocol / memory / profile / clients；`resources/read` protocol 正文含 `Streamable HTTP`。
-  - L46–L53：**锁死** `CONNECT_LINE` 原文；`getBootstrapPrompt(url)` 必须是 `url + 空行 + CONNECT_LINE`。
-  - L55–L62：`getToolList().length === 25`；含 ping / workspace_info / remember / get_task_status / git_status / start_command；**不含** `lsp`。
+  - L46–L60：**锁死** `CONNECT_LINE` 原文；`getBootstrapPrompt(url)` 必须是 `url + 空行 + CONNECT_LINE`；锁死 `PAGE_RULES_LEAD`；`getPageRulesPrompt()` 以该句开头且含 `Web Agent Bridge MCP`。
+  - L62–L69：`getToolList().length === 25`；含 ping / workspace_info / remember / get_task_status / git_status / start_command；**不含** `lsp`。
   - L64–L65：`clipJson` 2 万字符 stdout → `_truncated` 或 stdout 变短。
   - L67–L74：`run_command` `rm -rf ...` 无 `confirm_dangerous` → `publicError.code === 'E_BAD_ARGS'` 且消息含该字段。
   - L76–L82：未知工具 → `ProtocolError` 且 `E_UNKNOWN_CMD`，消息含 `Available:`。
@@ -94,7 +94,7 @@
   - ping 的 `tools/call` 之后 `get_logs`：数组；JSON 不含 `"args"` / `"chunk"` / `"result"` / `"patch"`；有 `tool_call_end` 且 tool 为 ping。
   - L106–L109：`prompts/list` 含 `connect`；`prompts/get` 正文含「快速连接这个 MCP」。
   - L111–L112：`webagent://clients` 文本含 `无需` 或 `Plus=no` 或 `not ChatGPT-only`。
-  - L114–L139：`listClients`：`chat` 无需 Plus、无需隧道；`arena` 支持 MCP 且无需 Plus；`deepseek` 的 `connectMode==='extension-http'`、`prompt` **只有 URL**、`extensionId` 为 `kdmpkkahkhdmdhfkdihkopikgcocbpbf`、步骤含「不要装 deepseek-pp-shell-host」；`chat-plus` 同样 `extension-http`、`prompt` 只有 URL、`repoUrl` 为 `https://github.com/aiguicai/Chat-Plus`、步骤含「不要再装 aiguicai/MCP-Gateway」；`chatgpt-free` 为 `unsupported-mcp`（步骤含「贴进 ChatGPT 输入框」）；`chatgpt-plus` 为自制插件：`oauth-connector`、`needsPlus===false`、步骤含开发者模式 / 新建插件。
+  - L176–L215：`listClients`：`chat` 无需 Plus、无需隧道；`arena` 支持 MCP、无需 Plus、`rulesText===''`；`deepseek` 的 `connectMode==='extension-http'`、`prompt` **只有 URL**、`rulesText` 以 `PAGE_RULES_LEAD` 开头、`extensionId` 为 `kdmpkkahkhdmdhfkdihkopikgcocbpbf`、步骤含「不要装 deepseek-pp-shell-host」与「复制规则」；`chat-plus` 同样 `extension-http`、`prompt` 只有 URL、`rulesText` 非空、步骤含「注入工具信息」、`repoUrl` 为 `https://github.com/aiguicai/Chat-Plus`、步骤含「不要再装 aiguicai/MCP-Gateway」；`chatgpt-free` 为 `unsupported-mcp`（步骤含「贴进 ChatGPT 输入框」）；`chatgpt-plus` 为自制插件：`oauth-connector`、`needsPlus===false`、步骤含开发者模式 / 新建插件。
   - L141：删 tmp。
 
 ---
@@ -112,7 +112,7 @@
   - L69–L75：Ask 调 `delete_file` → `ProtocolError E_BAD_ARGS`。
   - L77–L83：`../outside.txt` → 消息匹配 `outside workspace`。
   - L85–L107：`.env` 与 `.webagent/config.json` 走 `read_files` 被拒（SENSITIVE|FORBIDDEN）；`.env.example` 可读；`list_directory` 不出现 `.env`。
-  - L109–L111：`workspace_info.root === tmp`。
+  - L133–L136：`workspace_info.root === tmp`；`rules` 含 `Web Agent Bridge MCP`；`hint` 含 `initialize.instructions`。
   - L113–L117：`start_command` `echo async-ok`，poll 后 status 为 done/timeout，stdout 含该字符串。
   - 另测：`start_command` 长 sleep 后 `cancel_command`，立即与 250ms 后 `get_command_output` 都是 `cancelled`。
   - 另测：只 `rememberHash` + `clearSession` 后 `write_file` 仍要 `confirm_overwrite`。
@@ -231,7 +231,7 @@
   - L111–113：health JSON `ok` 且 `product==='Web Agent'`。
   - L115–139：GET `/` HTML 必须含：`Web Agent`；`编辑进化` 或 `CHAT`；`Add API`；`btn-agent-pick`；`agent-pick-menu`；`Web Agent Code`；`环境偏好`；`技术栈`；`技能引导`；`怎么连到本机仓库`；`无需 Plus` 或 `不需要 Plus`；`打开 DeepSeek`；`data-site="deepseek"`；`id="page-env"` / `btn-detect-env` / `page-stack` / `btn-detect-stack`；`本机演示授权` 与 `不是 GitHub`；含 `多模型博弈`、`btn-plan-merge`、`think-select`；不得含 `永久顺` / `使用 GitHub 登录`；`type="module"` 与 `/app.js`。status 含 `planRound.active===false` 与 `multiModel.maxBranches===4`。末尾再 POST Plan start/branch/merge，首轮无 consensus、两支可总结、`agreementRate==null`。
   - L137–142：GET `/app.js` 含 `from './js/state.js'`；GET `/js/state.js` 含 `export const state`。
-  - L148–160：GET **mcp 端口** `/api/status`（本机无隧道头）：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===25` 且每项无 `inputSchema`；clients 含 arena（无需 Plus）、deepseek（`extension-http`、支持 MCP、无需 Plus）、chat-plus、chatgpt-free（`unsupported-mcp`）、chatgpt-plus（`oauth-connector`、无需 Plus）；`mcpCanonicalUrl` 以 `/mcp` 结尾；`bridgeAccount.license/provider` 为 `local-demo` 且 `loggedIn`；`recentLogs` 是数组。`tools/call` ping 之后再 GET `/status`：有 `tool_call_end` 且 payload 只有 tool/success/durationMs。再 `tools/call` `get_logs`：正文不含 `"args"` / `"chunk"` / `"patch"`。
+  - L148–160：GET **mcp 端口** `/api/status`（本机无隧道头）：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===25` 且每项无 `inputSchema`；clients 含 arena（无需 Plus、`rulesText===''`）、deepseek（`extension-http`、支持 MCP、无需 Plus、`rulesText` 非空）、chat-plus（`rulesText` 含 Bridge MCP）、chatgpt-free（`unsupported-mcp`）、chatgpt-plus（`oauth-connector`、无需 Plus）；`mcpCanonicalUrl` 以 `/mcp` 结尾；`bridgeAccount.license/provider` 为 `local-demo` 且 `loggedIn`；`recentLogs` 是数组。`tools/call` ping 之后再 GET `/status`：有 `tool_call_end` 且 payload 只有 tool/success/durationMs。再 `tools/call` `get_logs`：正文不含 `"args"` / `"chunk"` / `"patch"`。
   - L154–160：错误 secret POST initialize → 401。
   - L162–170：正确 secret initialize 200，instructions 含 Bridge MCP 与 `webagent://instructions`。
   - L172–183：tools/list 25 个且含 apply_patch / start_command / workspace_info。

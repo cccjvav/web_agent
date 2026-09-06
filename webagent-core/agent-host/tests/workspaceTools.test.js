@@ -141,6 +141,8 @@ async function main() {
   const info = await callTool('workspace_info', {}, 'ask');
   assert.ok(info.root === tmp);
   assert.ok(Array.isArray(info.topLevel));
+  assert.ok(info.rules && String(info.rules).includes('Web Agent Bridge MCP'));
+  assert.ok(/initialize\.instructions/.test(String(info.hint)));
 
   const viaPath = await callTool('read_files', { path: 'keep.txt' }, 'ask');
   assert.ok(viaPath.hash);

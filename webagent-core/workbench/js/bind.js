@@ -138,9 +138,21 @@ export function bind() {
     await navigator.clipboard.writeText(ui.promptText());
     const c = ui.selectedClientInfo();
     ui.toast(c && c.connectMode === 'extension-http'
-      ? '已复制 MCP 地址，填进 DeepSeek++ 侧边栏（Streamable HTTP）'
+      ? '已复制 MCP 地址，填进扩展侧边栏（Streamable HTTP）'
       : '已复制提示词，请整段作为第一句发出');
   };
+  onClick('#btn-copy-rules', async () => {
+    const c = ui.selectedClientInfo();
+    const text = (c && c.rulesText) || '';
+    if (!text) {
+      ui.toast('当前客户端会读 initialize.instructions，不必另贴规则');
+      return;
+    }
+    await navigator.clipboard.writeText(text);
+    ui.toast(c.id === 'chat-plus'
+      ? '已复制规则，贴进 Chat Plus「编排 / 系统提示词」，不要贴进 URL 框'
+      : '已复制规则，贴进扩展系统提示或对话第一句，不要贴进 URL 框');
+  });
   $('#btn-reset-secret').onclick = async () => {
     await fetch('/api/bridge/reset-secret', { method: 'POST' });
     await ui.refreshStatus();

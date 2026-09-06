@@ -34,9 +34,9 @@
 
     | 行 | name | mode | handler |
     |---|---|---|---|
-    | L52 | ping | ask,plan,code | pingHost |
-    | L60 | workspace_info | 同上 | workspaceInfo |
-    | L68 | get_capabilities | 同上 | getCapabilities |
+    | L56 | ping | ask,plan,code | pingHost |
+    | L68 | workspace_info（描述写明 instructions 缺失时先调） | 同上 | workspaceInfo |
+    | L76 | get_capabilities | 同上 | getCapabilities |
     | L76 | get_logs | 同上 | getLogs |
     | L87 | get_task_status | 同上 | getTaskStatus |
     | L95 | remember | 同上 | remember |
@@ -216,7 +216,7 @@
 
 ### 📄 文件名：`workspaceInfo.js`
 
-- **Function `workspaceInfo`（L10–L51）** — loadCustom + resolve env/stack；try gitStatus，catch 记 error；try listDir 顶层 maxDepth 1；try 读 package.json `name`。返回 root、packageName、git 摘要、skills 名、topLevel、hint 不要 dump 整树。
+- **Function `workspaceInfo`（L11–L53）** — loadCustom + resolve env/stack；try gitStatus，catch 记 error；try listDir 顶层 maxDepth 1；try 读 package.json `name`。返回 root、packageName、git 摘要、skills 名、topLevel、**`rules: getInstructions()`**（给丢掉 `initialize.instructions` 的网页扩展）、hint 写明先看 `rules`、不要 dump 整树。
 
 ---
 

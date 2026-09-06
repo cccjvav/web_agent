@@ -110,6 +110,17 @@ SSE 作为备选（本仓库 GET `/mcp` 也认 `text/event-stream`）；主路�
 
 只连 DeepSeek、且能装商店扩展时，也可以继续用 [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md) 的 DeepSeek++（不用从源码编译）。两套扩展不要抢同一页；选一个即可。
 
+### 把规则交给网页模型（重要）
+
+Chat Plus **会调**我们的工具，**不会**把 `initialize.instructions`（Ask/Plan 只读、先读再补丁、危险命令）自动交给网页上的模型。只填 URL 时，模型可能改文件但不按规矩来。
+
+1. 工作台仍选中 **Chat Plus 扩展（多网站）**，点 **复制规则**（不是「复制提示词」）。
+2. 打开 Chat Plus **编排**页，把剪贴板贴进该网站的**系统提示词预设**。不要贴进 MCP 的 URL 框。
+3. 打开浮窗里的 **注入工具信息**（第一轮对话建议开着）。
+4. 模型若调用 `workspace_info`，结果里也会带同一份规则，当作兜底。
+
+ChatGPT 自制插件那条路径会读 `initialize.instructions`，不必这一步。
+
 ---
 
 ## 4. 在网页 AI 里下任务

@@ -378,7 +378,7 @@
         </div>
         <div class="page hidden" id="page-instructions">
           <h2>指令</h2>
-          <p class="lead">始终生效的工作区指令，写入 .webagent/instructions.md。本地 Chat 会读它；远程网页 Agent 连上 Bridge 时，会拼进 MCP initialize.instructions。</p>
+          <p class="lead">始终生效的工作区指令，写入 .webagent/instructions.md。本地 Chat 会读它；远程网页 Agent 连上 Bridge 时，会拼进 MCP initialize.instructions。Chat Plus / DeepSeek++ 不会自动转给网页模型，请在 Bridge 页用「复制规则」贴进扩展。</p>
           <textarea class="ms-input tall" id="instr-text" placeholder="例如：提交信息用中文；改动必须带测试。"></textarea>
           <button type="button" id="btn-save-instr" class="vs-btn primary">保存指令</button>
         </div>
@@ -497,6 +497,7 @@
           <div class="btn-wrap" id="bridge-actions">
             <button type="button" id="btn-bridge-toggle" class="vs-btn primary">启动 Bridge</button>
             <button type="button" id="btn-copy-prompt" class="vs-btn">复制提示词</button>
+            <button type="button" id="btn-copy-rules" class="vs-btn hidden">复制规则</button>
             <button type="button" class="vs-btn open-site" data-site="chatgpt" title="在 Web Agent 内置浏览器中打开 chatgpt.com">打开 ChatGPT</button>
             <button type="button" class="vs-btn open-site" data-site="arena" title="在 Web Agent 内置浏览器中打开 arena.ai">打开 Arena</button>
             <button type="button" class="vs-btn open-site" data-site="deepseek" title="在本机 Chrome/Edge 打开 chat.deepseek.com，用 DeepSeek++ 连 Bridge">打开 DeepSeek</button>
@@ -506,7 +507,7 @@
             <button type="button" class="vs-btn open-site" data-site="manus" title="在 Web Agent 内置浏览器中打开 manus.im">打开 Manus</button>
             <button type="button" class="vs-btn open-site" data-site="shunova" title="在 Web Agent 内置浏览器中打开 shunova.cc">打开 Shunova</button>
           </div>
-          <p class="hint" id="prompt-hint">网页 Agent：Quick Tunnel / Named Tunnel 先装 cloudflared；ngrok 先装 ngrok 并填 Authtoken。逐步说明见仓库根「隧道使用指南.md」。再按上面选中的客户端复制提示词。本机 Chat 不必走这一步。规则在 initialize.instructions；客户端若没吃到，可读 webagent://instructions。</p>
+          <p class="hint" id="prompt-hint">网页 Agent：Quick Tunnel / Named Tunnel 先装 cloudflared；ngrok 先装 ngrok 并填 Authtoken。逐步说明见仓库根「隧道使用指南.md」。再按上面选中的客户端复制提示词。本机 Chat 不必走这一步。Chat Plus / DeepSeek++ 不会把 initialize.instructions 交给网页模型：选中后点「复制规则」，贴进扩展的系统提示词，不要贴进 MCP 地址框。ChatGPT 自制插件会读 initialize.instructions。</p>
           <p class="warn-line">⚠ Bridge 等于给网页 AI 一把施工证：可读改工作区、跑非破坏性命令。一次任务可以挂几小时；做完请停 Bridge。请勿公开 MCP 地址。</p>
 
           <section class="block">

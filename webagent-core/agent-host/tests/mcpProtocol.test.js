@@ -11,7 +11,7 @@ const { clipJson } = require('../src/mcp/budget');
 const { handleRpc, handlePost } = require('../src/mcp/server');
 const { callTool, getToolList } = require('../src/tools');
 const { publicError, ProtocolError } = require('../src/mcp/errors');
-const { getBootstrapPrompt, CONNECT_LINE } = require('../src/mcp/instructions');
+const { getBootstrapPrompt, getPageRulesPrompt, CONNECT_LINE, PAGE_RULES_LEAD } = require('../src/mcp/instructions');
 
 function req(method, params, extra = {}) {
   return {
@@ -50,6 +50,13 @@ async function main() {
     getBootstrapPrompt('https://example.trycloudflare.com/mcp/abc'),
     `https://example.trycloudflare.com/mcp/abc\n\n${CONNECT_LINE}`
   );
+  assert.strictEqual(
+    PAGE_RULES_LEAD,
+    '这些规则与 MCP initialize.instructions 相同。Chat Plus / DeepSeek++ 不会自动转给网页模型。贴进扩展的系统提示词或新对话第一句，不要贴进 MCP 地址框。'
+  );
+  const pageRules = getPageRulesPrompt();
+  assert.ok(pageRules.startsWith(PAGE_RULES_LEAD));
+  assert.ok(pageRules.includes('Web Agent Bridge MCP'));
 
   const tools = getToolList().map((t) => t.name);
   assert.strictEqual(tools.length, 25);
@@ -168,15 +175,20 @@ async function main() {
   const { listClients } = require('../src/mcp/clients');
   const catalog = listClients({ mcpUrl: 'https://x.trycloudflare.com/mcp/abc', mcpCanonicalUrl: 'https://x.trycloudflare.com/mcp' });
   assert.ok(catalog.some((c) => c.id === 'chat' && c.needsPlus === false && c.needsTunnel === false));
-  assert.ok(catalog.some((c) => c.id === 'arena' && c.supportsMcp && !c.needsPlus));
+  assert.ok(catalog.some((c) => c.id === 'arena' && c.supportsMcp && !c.needsPlus && c.rulesText === ''));
   const deepseek = catalog.find((c) => c.id === 'deepseek');
   assert.ok(deepseek && deepseek.connectMode === 'extension-http' && deepseek.supportsMcp && !deepseek.needsPlus);
   assert.strictEqual(deepseek.prompt, 'https://x.trycloudflare.com/mcp/abc');
+  assert.ok(deepseek.rulesText && deepseek.rulesText.startsWith(PAGE_RULES_LEAD));
+  assert.ok(deepseek.rulesText.includes('Web Agent Bridge MCP'));
   assert.strictEqual(deepseek.extensionId, 'kdmpkkahkhdmdhfkdihkopikgcocbpbf');
   assert.ok(deepseek.steps.some((s) => /不要装 deepseek-pp-shell-host/.test(s)));
+  assert.ok(deepseek.steps.some((s) => /复制规则/.test(s)));
   const chatPlus = catalog.find((c) => c.id === 'chat-plus');
   assert.ok(chatPlus && chatPlus.connectMode === 'extension-http' && chatPlus.supportsMcp && !chatPlus.needsPlus);
   assert.strictEqual(chatPlus.prompt, 'https://x.trycloudflare.com/mcp/abc');
+  assert.ok(chatPlus.rulesText && chatPlus.rulesText.startsWith(PAGE_RULES_LEAD));
+  assert.ok(chatPlus.steps.some((s) => /注入工具信息/.test(s)));
   assert.strictEqual(chatPlus.repoUrl, 'https://github.com/aiguicai/Chat-Plus');
   assert.ok(chatPlus.steps.some((s) => /不要再装 aiguicai\/MCP-Gateway/.test(s)));
   const gptBar = catalog.find((c) => c.id === 'chatgpt-free');

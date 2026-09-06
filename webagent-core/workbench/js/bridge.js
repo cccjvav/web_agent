@@ -77,6 +77,10 @@ export function paintClients() {
   if (detail && c) {
     detail.innerHTML = `<ol>${(c.steps || []).map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ol>`;
   }
+  const copyRules = $('#btn-copy-rules');
+  if (copyRules) {
+    copyRules.classList.toggle('hidden', !(c && c.connectMode === 'extension-http' && c.rulesText));
+  }
   const pair = state.status && state.status.pairing;
   const line = $('#pairing-line');
   if (line) {

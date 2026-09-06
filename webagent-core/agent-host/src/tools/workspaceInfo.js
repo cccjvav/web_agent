@@ -6,6 +6,7 @@ const { resolveEnvironment, resolveTechStack } = require('../models/profile');
 const { listSkills } = require('./skills');
 const { gitStatus } = require('./gitOps');
 const { listDir } = require('./fileOps');
+const { getInstructions } = require('../mcp/instructions');
 
 function workspaceInfo() {
   const custom = loadCustom();
@@ -45,7 +46,8 @@ function workspaceInfo() {
     techStack,
     skills: listSkills().map((s) => s.name),
     topLevel,
-    hint: 'This is orientation only. Use search_files / read_files for contents; do not dump the whole tree.'
+    rules: getInstructions(),
+    hint: 'Some web MCP clients drop initialize.instructions. Follow `rules` here. Then search_files / read_files; do not dump the whole tree.'
   };
 }
 

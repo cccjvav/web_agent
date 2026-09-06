@@ -1,4 +1,4 @@
-const { CONNECT_LINE, getBootstrapPrompt } = require('./instructions');
+const { CONNECT_LINE, getBootstrapPrompt, getPageRulesPrompt } = require('./instructions');
 
 const CLIENTS = [
   {
@@ -49,6 +49,7 @@ const CLIENTS = [
       '点「复制」得到这一行 MCP 地址（带密钥），不要发到公开地方',
       '本机浏览器打开 https://chat.deepseek.com/ ，点 DeepSeek++ 侧边栏 → MCP',
       '添加远程服务，传输选 Streamable HTTP，URL 填刚复制的地址。不要装 deepseek-pp-shell-host',
+      '点「复制规则」，贴进 DeepSeek++ 系统提示词或新对话第一句。不要贴进 MCP 地址框',
       '新开 DeepSeek 对话下任务。右侧 BRIDGE 应出现工具调用'
     ]
   },
@@ -67,6 +68,7 @@ const CLIENTS = [
       '启动 Bridge，等到地址变成 https://….trycloudflare.com/mcp/…',
       '点「复制」得到这一行 MCP 地址（带密钥），不要发到公开地方',
       '打开 Chat Plus 侧边栏，添加 MCP 服务：传输选 Streamable HTTP，URL 填刚复制的地址。不要再装 aiguicai/MCP-Gateway',
+      '点「复制规则」，贴进 Chat Plus 编排里的系统提示词。打开「注入工具信息」。不要贴进 MCP 地址框',
       '打开已适配的网页（ChatGPT、Gemini、DeepSeek、豆包、通义、Arena 等），给当前页启用工具',
       '新开对话下任务。右侧 BRIDGE 应出现工具调用'
     ]
@@ -126,6 +128,7 @@ function hydrateClient(client, urls) {
   const mcpUrl = urls.mcpUrl || '';
   const canonical = urls.mcpCanonicalUrl || mcpUrl.replace(/\/mcp\/[^/]+$/, '/mcp');
   let prompt = '';
+  let rulesText = '';
   if (client.connectMode === 'paste-url') {
     prompt = getBootstrapPrompt(mcpUrl);
   } else if (client.connectMode === 'oauth-connector') {
@@ -135,12 +138,14 @@ function hydrateClient(client, urls) {
     ].join('\n');
   } else if (client.connectMode === 'extension-http') {
     prompt = mcpUrl;
+    rulesText = getPageRulesPrompt();
   } else if (client.connectMode === 'unsupported-mcp') {
     prompt = '';
   }
   return {
     ...client,
     prompt,
+    rulesText,
     mcpUrl: client.connectMode === 'oauth-connector' ? canonical : mcpUrl,
     connectLine: CONNECT_LINE
   };

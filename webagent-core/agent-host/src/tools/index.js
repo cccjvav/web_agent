@@ -67,7 +67,7 @@ const TOOLS = [
   tool({
     name: 'workspace_info',
     aliases: [],
-    description: 'Orientation: workspace root, git branch, tech stack, skills, top-level names. Call this before listing the whole tree.',
+    description: 'Orientation: workspace root, git branch, tech stack, skills, and operating rules. Call this first when initialize.instructions is missing. Do not list the whole tree.',
     mode: ['ask', 'plan', 'code'],
     inputSchema: { type: 'object', properties: {} },
     handler: workspaceInfo

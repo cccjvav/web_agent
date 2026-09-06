@@ -148,6 +148,7 @@ async function main() {
     assert.ok(page.raw.includes('.webagent/config.json'));
     assert.ok(page.raw.includes('多模型博弈'));
     assert.ok(page.raw.includes('btn-plan-merge'));
+    assert.ok(page.raw.includes('id="btn-copy-rules"'));
     assert.ok(page.raw.includes('think-select'));
     assert.ok(!page.raw.includes('永久顺'));
     assert.ok(!page.raw.includes('使用 GitHub 登录'));
@@ -168,7 +169,9 @@ async function main() {
     assert.ok(status.json.tools.every((t) => t.name && t.inputSchema === undefined));
     assert.ok(Array.isArray(status.json.clients) && status.json.clients.some((c) => c.id === 'arena' && !c.needsPlus));
     assert.ok(status.json.clients.some((c) => c.id === 'deepseek' && c.connectMode === 'extension-http' && !c.needsPlus && c.supportsMcp));
-    assert.ok(status.json.clients.some((c) => c.id === 'chat-plus' && c.connectMode === 'extension-http' && !c.needsPlus && c.supportsMcp && c.repoUrl === 'https://github.com/aiguicai/Chat-Plus'));
+    assert.ok(status.json.clients.some((c) => c.id === 'chat-plus' && c.connectMode === 'extension-http' && !c.needsPlus && c.supportsMcp && c.repoUrl === 'https://github.com/aiguicai/Chat-Plus' && c.rulesText && c.rulesText.includes('Web Agent Bridge MCP')));
+    assert.ok(status.json.clients.some((c) => c.id === 'deepseek' && c.rulesText && c.rulesText.includes('不要贴进 MCP 地址框')));
+    assert.ok(status.json.clients.some((c) => c.id === 'arena' && c.rulesText === ''));
     assert.ok(status.json.clients.some((c) => c.id === 'chatgpt-free' && c.connectMode === 'unsupported-mcp' && !c.supportsMcp));
     assert.ok(status.json.clients.some((c) => c.id === 'chatgpt-plus' && c.connectMode === 'oauth-connector' && !c.needsPlus && c.supportsMcp));
     assert.ok(status.json.mcpCanonicalUrl && status.json.mcpCanonicalUrl.endsWith('/mcp'));

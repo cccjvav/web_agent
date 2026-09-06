@@ -103,6 +103,14 @@ https://xxxx.trycloudflare.com/mcp/一串密钥
 
 SSE 作为备选；本仓库主路径是 Streamable HTTP。不要用扩展的「本地桥 / Native Messaging」来代替我们的隧道。
 
+### 把规则交给网页模型（重要）
+
+DeepSeek++ **会调**我们的工具，**不会**自动把 `initialize.instructions` 交给网页上的 DeepSeek。只填 URL 时，模型可能改文件但不按规矩来。
+
+1. 工作台仍选中 **DeepSeek 网页**，点 **复制规则**（不是「复制提示词」）。
+2. 贴进 DeepSeek++ 的系统提示词预设，或新对话第一句。不要贴进 MCP 的 URL 框。
+3. 模型若调用 `workspace_info`，结果里也会带同一份规则，当作兜底。
+
 ---
 
 ## 4. 在 DeepSeek 里下任务
