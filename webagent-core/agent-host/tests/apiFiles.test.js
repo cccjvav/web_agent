@@ -96,6 +96,32 @@ async function main() {
     assert.strictEqual(opened.status, 200);
     assert.strictEqual(opened.json.content, 'hello from editor');
     assert.ok(opened.json.hash);
+
+    const saved = await request(server, 'POST', '/api/models', {
+      model: {
+        id: 'custom-1',
+        name: 'Demo',
+        protocol: 'openai',
+        modelId: 'demo-l',
+        baseUrl: 'https://example.com/v1',
+        apiKey: 'sk-secret',
+        group: 'demo-group',
+        contextSize: '128K',
+        caps: ['vision'],
+        pricing: '$1/M'
+      }
+    });
+    assert.strictEqual(saved.status, 200);
+    const status = await request(server, 'GET', '/api/status');
+    assert.strictEqual(status.status, 200);
+    const row = (status.json.models || []).find((m) => m.id === 'custom-1');
+    assert.ok(row, 'GET /api/status must list the saved model (workbench table source)');
+    assert.strictEqual(row.group, 'demo-group');
+    assert.strictEqual(row.contextSize, '128K');
+    assert.deepStrictEqual(row.caps, ['vision']);
+    assert.strictEqual(row.pricing, '$1/M');
+    assert.strictEqual(row.hasKey, true);
+    assert.ok(!('apiKey' in row));
   } finally {
     await new Promise((r) => server.close(r));
     fs.rmSync(tmp, { recursive: true, force: true });

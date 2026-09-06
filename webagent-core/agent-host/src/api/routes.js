@@ -96,13 +96,19 @@ router.get('/status', (req, res) => {
     namedDomain: cfg.bridge.namedDomain || '',
     ngrokDomain: cfg.bridge.ngrokDomain || '',
     ...mcpInfo(req),
+    // Workbench paintProviderTable reads GET /api/status.models (not /api/models).
+    // Keep display fields; never send apiKey (hasKey only).
     models: cfg.models.map((m) => ({
       id: m.id,
       name: m.name,
       protocol: m.protocol,
       modelId: m.modelId,
       baseUrl: m.baseUrl,
-      hasKey: Boolean(m.apiKey)
+      hasKey: Boolean(m.apiKey),
+      group: m.group || '',
+      contextSize: m.contextSize || '',
+      caps: Array.isArray(m.caps) ? m.caps : [],
+      pricing: m.pricing || ''
     })),
     activeModelId: cfg.activeModelId,
     multiModel: cfg.multiModel,
