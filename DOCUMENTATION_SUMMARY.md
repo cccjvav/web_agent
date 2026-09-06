@@ -2,7 +2,9 @@
 
 对照第一～三阶段生成的子文件夹 `README.md` 与根目录 [`总览.md`](./总览.md) 做覆盖率、链接、格式检查。本报告不是产品使用指南。
 
-审查日期：2026-09-03。分支：`arena/01a05d84-web-agent`。
+审查日期：2026-09-03（计数口径）；分支：`arena/01a05d84-web-agent`。
+
+过程文档（[REPORT.md](./REPORT.md)、[PROMPT.md](./PROMPT.md)）**不计入**下面的代码文件覆盖率。用户操作指南在仓库根 Markdown，不全部嵌进 docs-site（见 [docs-site/README.md](./docs-site/README.md) 收录范围）。
 
 ---
 

@@ -28,6 +28,7 @@ GitHub 默认分支 `main` 目前仍是更早的原型快照。现行工作台�
 | [LICENSE](./LICENSE) | ISC |
 | [SECURITY.md](./SECURITY.md) | 隧道、本机密钥、OAuth 只在内存 |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | 怎么跑测试、改功能时改说明书、不要做的几件事 |
+| [REPORT.md](./REPORT.md) / [PROMPT.md](./PROMPT.md) | 过程审查与待办（不是产品指南） |
 
 简要对照：
 
