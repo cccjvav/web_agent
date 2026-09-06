@@ -10,7 +10,7 @@
 
 - **定位：** 跨 MCP / Chat / 命令执行的广播通道；补丁成功后生成 unified diff 给 UI；mcp 端口上的 `/api` 只允许本机回环；浏览器跨域只放行扩展和已知聊天站。
 - **依赖：** Node `events`；npm 包 `diff`、`cors`（仅 `corsAllow.js`）。`localControl.js` 读 `../config`（看当前 `publicTunnelUrl` 的 Host），无第三方依赖。
-- **谁调用：** `../index.js` 把 `/ws` 客户端交给 eventBus，并把 `rejectUnlessLocalControl` + `rejectCrossSiteApi` 挂在两套 app 的 `/api` 前；`mcpCors()` 挂在 mcpApp；几乎所有工具与 `mcp/server.js`、`api/routes.js` broadcast；`patchEngine` 调 `createUnifiedDiff`。
+- **谁调用：** `../index.js` 把 `/ws` 客户端交给 eventBus，并把 `rejectUnlessLocalControl` + `rejectCrossSiteApi` 挂在两套 app 的 `/api` 前；`mcpCors()` 挂在 mcpApp；`rejectDisallowedMcpOrigin` 挂在 `/mcp` 前（带了不在名单的 Origin → 403，工具不执行）；几乎所有工具与 `mcp/server.js`、`api/routes.js` broadcast；`patchEngine` 调 `createUnifiedDiff`。
 
 ---
 
@@ -71,14 +71,15 @@
 - **Function `isAllowedApiBrowserOrigin(origin)`（L72–L75）** — 无 Origin 或本机 Origin 才真。聊天站 Origin **不能**打 `/api`。
 - **Function `refererOrigin(req)`（L77–L82）** — 从表单 CSRF 的 Referer 取 origin。
 - **Function `rejectCrossSiteApi(req, res, next)`（L84–L96）** — 有 Origin 且非本机 → 404；无 Origin 但 Referer 非本机 → 404；否则 `next()`。
-- **Function `mcpCors()`（L98–L104）** — `cors({ origin(cb) })`，回调 `isAllowedMcpOrigin`。
+- **Function `mcpCors()`（L98–L104）** — `cors({ origin(cb) })`，回调 `isAllowedMcpOrigin`。只决定 CORS 头，**不**拦执行。
+- **Function `rejectDisallowedMcpOrigin(req, res, next)`（L106–L112）** — 请求带了 Origin 且 `isAllowedMcpOrigin` 为假 → **403** `{ error:'origin not allowed' }`；无 Origin → `next()`。挂在 `mcpApp.use('/mcp', …)` 上。
 
 ---
 
 ## 3. 执行逻辑流
 
 1. `index.js` `attachWss`：浏览器连 3000 的 `/ws` → `addWsClient`，并立即收到 `connected`（**不含** secretKey）。mcp 端口不挂 WebSocket。
-2. mcpApp 先 `mcpCors()`：浏览器预检只给扩展和名单里的聊天站回 `Access-Control-Allow-Origin`。
+2. mcpApp 先 `mcpCors()`：浏览器预检只给扩展和名单里的聊天站回 `Access-Control-Allow-Origin`。`/mcp` 再过 `rejectDisallowedMcpOrigin`：名单外 Origin 的 POST 得 403，工具不跑。
 3. 两套 app 的 `/api` 先过 `rejectUnlessLocalControl`：Cloudflare 头、`*.trycloudflare.com` / ngrok Host、或当前 `publicTunnelUrl` 主机名 → 404；本机回环 `next()`。再过 `rejectCrossSiteApi`：`https://evil.example` 这类 Origin 同样 404。无 Origin 的 Node 插件 / 测试仍通。
 4. 工具/MCP 调用 `broadcast` → 写入 logs + 推到所有打开的工作台。
 5. 工作台 `connectWs` 根据 type 刷新终端、文件树、BRIDGE 工具卡、todos。

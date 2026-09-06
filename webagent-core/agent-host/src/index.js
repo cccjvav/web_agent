@@ -70,7 +70,7 @@ applyCommon(mcpApp);
 mcpApp.use(mcpCors());
 mountHealth(mcpApp);
 mcpApp.use(oauth.router);
-mcpApp.use('/mcp', mcpRouter);
+mcpApp.use('/mcp', rejectDisallowedMcpOrigin, mcpRouter);
 mcpApp.use('/api', rejectUnlessLocalControl, rejectCrossSiteApi, apiRouter);
 
 function attachWss(server) {

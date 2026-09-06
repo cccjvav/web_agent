@@ -55,7 +55,7 @@
 - **核心类/函数清单：**
 
   - **顶层启动（L1–L25）**
-    - L13：`require('./utils/corsAllow')` 的 `mcpCors` / `rejectCrossSiteApi`。
+    - L13：`require('./utils/corsAllow')` 的 `mcpCors` / `rejectCrossSiteApi` / `rejectDisallowedMcpOrigin`。
     - L14：`require('./usage/tracker')`。
     - L16：`persistIdentity(store)`。
     - L17：`tracker.startReporter()`（15 分钟上报；没配 URL 则空转）。
@@ -66,7 +66,7 @@
   - **Function `mountWorkbench(app)`（L45–59）** — 静态 `../../workbench`；SPA 回退：非 GET → next；path 以 `/api` `/mcp` `/ws` `/oauth` `/.well-known` 开头或恰好 `/register` → next；有扩展名 → next；否则 `index.html`。
   - **两套 app（L62–74）**
     - L62–66 `uiApp`：health、`/api` 先 `rejectUnlessLocalControl` 再 `rejectCrossSiteApi`、工作台静态 + SPA。**没有** cors、**没有** `/mcp`。
-    - L68–74 `mcpApp`：`mcpCors()`（白名单，不是 `cors()` 全开）、health、`oauth.router`、`/mcp`、`/api` 先 `rejectUnlessLocalControl` 再 `rejectCrossSiteApi`。**没有**静态工作台、**没有** SPA。
+    - L68–74 `mcpApp`：`mcpCors()`（白名单，不是 `cors()` 全开）、health、`oauth.router`、`/mcp` 先 `rejectDisallowedMcpOrigin` 再 mcpRouter、`/api` 先 `rejectUnlessLocalControl` 再 `rejectCrossSiteApi`。**没有**静态工作台、**没有** SPA。
   - **Function `attachWss(server)`（L76–96）** — `WebSocketServer` path `/ws`；**非本机控制面直接 close(1008)**；否则 `addWsClient`，立刻 send `type:'connected'`，payload 只含 `serverName`、`version`（**不含 secretKey**）。
   - **Function `listenOrExit(server, port, label)`（L102–112）** — `error.code==='EADDRINUSE'` 打印占用后 `exit(1)`；其它 error 同样退出；`listen(port, config.host)`（默认 127.0.0.1）。
   - **双服务器（L98–141）**

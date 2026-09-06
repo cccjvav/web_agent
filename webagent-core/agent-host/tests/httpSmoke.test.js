@@ -328,6 +328,24 @@ async function main() {
       'chrome-extension://kdmpkkahkhdmdhfkdihkopikgcocbpbf'
     );
 
+    const evilMcp = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/${secret}`, {
+      jsonrpc: '2.0',
+      id: 12,
+      method: 'tools/call',
+      params: { name: 'run_command', arguments: { command: 'echo EVIL_EXEC' } }
+    }, { Origin: 'https://evil.example' });
+    assert.strictEqual(evilMcp.status, 403);
+    assert.ok(!/EVIL_EXEC/.test(evilMcp.raw || ''));
+
+    const pageMcp = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/${secret}`, {
+      jsonrpc: '2.0',
+      id: 13,
+      method: 'tools/call',
+      params: { name: 'ping', arguments: {} }
+    }, { Origin: 'https://chat.deepseek.com' });
+    assert.strictEqual(pageMcp.status, 200);
+    assert.strictEqual(pageMcp.json.result.isError, false);
+
     const mcpRoot = await request('GET', `http://127.0.0.1:${mcpPort}/`);
     assert.ok(!(mcpRoot.raw || '').includes('btn-agent-pick'));
 

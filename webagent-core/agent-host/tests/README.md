@@ -26,7 +26,7 @@
 | `usageTracker.test.js` | `record` 写 `.webagent/usage.json`；成功率；`reportNow` POST Bearer |
 | `adminHost.test.js` | 无 Bearer 401；有令牌 ingest；HTML 含 `@alice` / 未绑定 GitHub |
 | `providers.test.js` | `gpt-4o` 无接口字段时 caps/context 为空；声明了 `capabilities`/`context_window` 才填 |
-| `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`、多模型博弈、总结钮、本机演示授权、**GitHub 验证** / **验证令牌**、Named Tunnel `tunnel run --token`、`ngrok http`、Codex/挂钩/插件未实现、不得含「不会被使用」/永久顺 / 「使用 GitHub 登录」）、模块脚本、MCP 401、initialize、tools/list、ping、**ping 后有 usage.json 且 reset-round 不清它**、`/status.tools` 无 inputSchema、远程 `get_logs` 无 args/chunk/patch、空 token 400、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、本机 `POST /api/chat` NDJSON（Ask + Plan 分支再总结） |
+| `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`、多模型博弈、总结钮、本机演示授权、**GitHub 验证** / **验证令牌**、Named Tunnel `tunnel run --token`、`ngrok http`、Codex/挂钩/插件未实现、不得含「不会被使用」/永久顺 / 「使用 GitHub 登录」）、模块脚本、MCP 401、initialize、tools/list、ping、**ping 后有 usage.json 且 reset-round 不清它**、`/status.tools` 无 inputSchema、远程 `get_logs` 无 args/chunk/patch、空 token 400、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、**外站 Origin 打 `/mcp` tools/call 403 且不执行**、本机 `POST /api/chat` NDJSON（Ask + Plan 分支再总结） |
 | `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime；不写死 `--auth none` / `trusted-origins *` / `--disable-workspace-trust`；`syncExtension` 读插件 `package.json` 版本、不写死 `webagent.webagent-core-0.6.9`；`run-webagent.sh` 接受 `$1` 并检查 node；`run-webagent-vscode.sh` 检查 node 且不 mkdir；runtime 包名 `webagent-code-server-runtime` |
 | `workbenchHtml.test.js` | 工作台 HTML 含 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login / named-domain / named-token / ngrok-domain / ngrok-token 等）；含 `ngrok http`；不得含「不会被使用」/「使用 GitHub 登录」 |
 | `docsSite.test.js` | 跑 `docs-site/build.js` 后，提交的 `content.js` 与生成结果一致（忽略当天 `builtAt`） |
@@ -240,7 +240,7 @@
   - L207–211：本机 `POST /api/bridge/reset-round` 仍 200。
   - L214–223：带 `cf-ray` 的 mcp 口 `/api/status`、`/api/chat`、`/api/tool/call` 以及 `Host: *.trycloudflare.com` 的 `/api/status` 都 **404**，正文不含 secret。
   - L225–231：同一组隧道头 `POST /mcp/<secret>` initialize 仍 200。
-  - L233–270：`Origin: https://evil.example` 打 mcp `/api/status` 与工作台 `reset-round` 都 404；本机 Origin 的 `/api/status` 200；OPTIONS `/mcp` 对 evil 无 ACAO，对 `chat.deepseek.com` 与 DeepSeek++ 扩展 Origin 回相同 ACAO。
+  - L233–270：`Origin: https://evil.example` 打 mcp `/api/status` 与工作台 `reset-round` 都 404；本机 Origin 的 `/api/status` 200；OPTIONS `/mcp` 对 evil 无 ACAO，对 `chat.deepseek.com` 与 DeepSeek++ 扩展 Origin 回相同 ACAO；evil Origin 的 `POST /mcp` `run_command` **403** 且响应不含命令输出；DeepSeek Origin 的 ping 仍 200。
   - L272–273：mcp 口 GET `/` 正文不得含 `btn-agent-pick`（没有工作台静态）。
   - L236–249：**工作台口** `POST /api/chat` NDJSON 必须有 `tool`（`list_directory`）、`message`、`done`。
   - L259–262：finally `stop` 子进程，等 300ms，删 tmp。
