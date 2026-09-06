@@ -40,6 +40,8 @@ assert.ok(!html.includes('D:\\skills'));
 assert.ok(!html.includes('不必拷进当前项目'));
 assert.ok(!html.includes('不必拷进工作区'));
 assert.ok(html.includes('技能使用指南.md'));
+assert.ok(html.includes('都不会'));
+assert.ok(!html.includes('Chat 模式才能外接 MCP'));
 assert.ok(html.includes('./app.js'));
 assert.ok(html.includes('./styles.css'));
 assert.ok(html.includes('./favicon.svg'));

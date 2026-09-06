@@ -123,6 +123,10 @@ async function run() {
     const indexSrc = fs.readFileSync(path.resolve(__dirname, '../../admin-host/index.js'), 'utf8');
     assert.ok(indexSrc.includes('WEBAGENT_ADMIN_BIND'));
     assert.ok(!/listen\(\s*port,\s*'0\.0\.0\.0'/.test(indexSrc));
+    const adminReadme = fs.readFileSync(path.resolve(__dirname, '../../admin-host/README.md'), 'utf8');
+    assert.ok(!adminReadme.includes('**不需要**令牌（本机排行榜）'));
+    assert.ok(adminReadme.includes('GET /health'));
+    assert.ok(adminReadme.includes('Bearer'));
     void token;
   } finally {
     await new Promise((resolve) => server.close(resolve));

@@ -42,8 +42,8 @@ macOS / Linux：
 
 ## 鉴权
 
-- 看网页和 `/api/stats`：**不需要**令牌（本机排行榜）。
-- `POST /api/report`：必须 `Authorization: Bearer <令牌>`。
+- `GET /health`：不需要令牌。
+- `GET /`、`GET /api/stats`、`POST /api/report`：必须 `Authorization: Bearer <令牌>`。浏览器打开排行榜时，请求头同样要带 Bearer（和上报接口同一把令牌）。
 
 不要把令牌写进仓库。`admin-host/data/` 已在 `.gitignore`。
 

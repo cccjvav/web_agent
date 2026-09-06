@@ -7,6 +7,11 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const testsDir = path.join(root, 'tests');
 
+if (!fs.existsSync(path.join(root, 'node_modules', 'express'))) {
+  console.error('缺少依赖。先在 webagent-core/agent-host 跑：npm install');
+  process.exit(2);
+}
+
 const preferred = [
   'patchEngine.test.js',
   'mcpProtocol.test.js',

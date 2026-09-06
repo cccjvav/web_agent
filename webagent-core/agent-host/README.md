@@ -27,7 +27,7 @@
   | `version` | npm 版本 | `1.0.0`（展示用产品版本读 `../extension/package.json`，不是这个字段） |
   | `main` | Node 默认入口字段 | `index.js`（**本目录根没有该文件**；真正启动走 `scripts.start`） |
   | `scripts.start` | `npm start` | `node src/index.js` |
-  | `scripts.test` | `npm test` | `node scripts/run-tests.js`：逐文件跑 `tests/*.test.js`，失败也继续并汇总。 |
+  | `scripts.test` | `npm test` | `node scripts/run-tests.js`：缺 `node_modules/express` 则退出码 2；否则逐文件跑 `tests/*.test.js`，失败也继续并汇总。 |
   | `keywords` | npm 关键词 | `[]` |
   | `author` | 作者 | `""` |
   | `license` | 许可证 | `ISC` |

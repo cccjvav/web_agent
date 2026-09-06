@@ -86,7 +86,7 @@
   | `instructions` | 始终生效指令 | 中文默认句（提交用中文、Ask 只读等） |
   | `agents[]` | 自定义智能体 | 一条 default |
   | `prompts[]` | 可插入提示 | 一条 diagnose |
-  | `hooks` / `mcpServers` / `plugins` / `quickLinks` | UI 列表 | `[]`（hooks 无运行时执行器） |
+  | `hooks` / `mcpServers` / `plugins` / `quickLinks` | UI 列表 | `[]`（hooks / mcpServers 无运行时执行器，只记在工作区） |
   | `voice` / `dictation` | 占位 | `''` |
   | `codex.loggedIn/account` | 演示登录 | false / `''` |
 

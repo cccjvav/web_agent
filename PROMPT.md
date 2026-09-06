@@ -2,6 +2,23 @@
 
 > 用法：整段复制。执行方若是被 Arena 固定在其它分支的会话，按第 0 步用 worktree/只读提取审阅与改码，**不要切换分支**；产出提交只允许落在 `arena/01a05d84-web-agent`（或该会话被固定的分支，二选一并在交付说明里写明）。
 
+## 完成情况对照（核对于 `c92fd7c`；其后还有 Chat Plus 规则补强 `03d40b7`）
+
+下面「待办」1–10 **已经做完**，不要再照做、也不要去改已删除的过程稿。
+
+| 提示词项 | 编号 | 提交 | 说明 |
+|---|---|---|---|
+| 1 | P1-1 | `d0e1d8e` | admin-host 读接口 Bearer + 默认 127.0.0.1 + body 1MB |
+| 2 | P2-1 | `6dbd61f` | `extensionCopy.test.js` 锁副本 |
+| 3 | P2-2 | `923147b` | `scripts/run-tests.js` 逐文件汇总 |
+| 4 | P2-3 | `0db6d98` | 工作台 `./app.js` 等相对路径 |
+| 5 | P2-4 | `cc3d316` | docs-site 路径校验 + 默认 loopback |
+| 6–8 | P3-1/2/3 | `47b3cc3` `87bff44` `0e58850` | **删除式**：不要再编辑 `修复任务书.md` / `合并版项目问题清单与修复计划.md` |
+| 9 | P3-4 | `d1de7b8` | docs-site 收录范围 |
+| 10 | P3-5 | `c92fd7c` | webagent-repro DO-NOT-EDIT 横幅 |
+
+v2 复核（[REPORT_v2.md](./REPORT_v2.md)）新增 N1–N3：admin-host README 鉴权口径、测试缺依赖预检、本文件完成对照。不要重复劳动 v1 的 1–10。
+
 ---
 
 你在仓库 `cccjvav/web_agent` 上工作。目标分支：`arena/01a05d84-web-agent`（当前 tip 应为 `6c1b0fa` 或更新）。

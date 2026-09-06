@@ -139,6 +139,8 @@ async function main() {
     assert.ok(page.raw.includes('没有接 OpenAI Codex'));
     assert.ok(page.raw.includes('不会自动执行'));
     assert.ok(page.raw.includes('没有插件市场'));
+    assert.ok(page.raw.includes('都不会'));
+    assert.ok(!page.raw.includes('Chat 模式才能外接 MCP'));
     assert.ok(page.raw.includes('Named Tunnel'));
     assert.ok(page.raw.includes('cloudflared tunnel run --token'));
     assert.ok(page.raw.includes('ngrok http'));

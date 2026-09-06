@@ -279,7 +279,7 @@
             <article><h4>技能</h4><p>创建可重用的技能文件，提供特定领域知识和工作流。</p><button type="button" class="vs-btn" data-page="skills">引导...</button></article>
             <article><h4>指令</h4><p>设置始终生效的指令，在整个工作区或用户配置文件中引导 AI 行为。</p><button type="button" class="vs-btn" data-page="instructions">新建...</button></article>
             <article><h4>挂钩</h4><p>只把命令记在工作区里。保存文件或跑任务时不会自动执行。</p><button type="button" class="vs-btn" data-page="hooks">新建...</button></article>
-            <article><h4>MCP 服务器</h4><p>连接外部工具服务器，通过自定义工具和数据源扩展 AI 功能。</p><button type="button" class="vs-btn" data-page="mcp">浏览...</button></article>
+            <article><h4>MCP 服务器</h4><p>只把别人的 MCP 地址记在工作区。本机 Chat 和 Bridge 都不会去连。</p><button type="button" class="vs-btn" data-page="mcp">浏览...</button></article>
             <article><h4>插件</h4><p>没有插件市场，也不会加载插件代码。这里只是工作区备注。</p><button type="button" class="vs-btn" data-page="plugins">浏览...</button></article>
             <article><h4>Voice Mode Instructions</h4><p>本工作台没有语音模式，也不会读写 voice.md。</p><button type="button" class="vs-btn" disabled>未实现</button></article>
             <article><h4>Dictation Instructions</h4><p>本工作台没有听写，也不会读写 dictation.md。</p><button type="button" class="vs-btn" disabled>未实现</button></article>
@@ -407,8 +407,8 @@
         </div>
         <div class="page hidden" id="page-mcp">
           <h2>MCP 服务器</h2>
-          <p class="lead">Chat 模式才能外接 MCP。Bridge 无法调用这里配置的 MCP。</p>
-          <p class="hint">两边的「MCP」方向相反：这里是你去连别人的工具；Bridge 是你把自己变成 MCP。</p>
+          <p class="lead">这里只把别人的 MCP 地址记在工作区里。本机 Chat 和 Bridge <strong>都不会</strong>去连这些地址。</p>
+          <p class="hint">两边的「MCP」方向相反：Bridge 是你把自己变成 MCP；这里的名单目前没有运行时客户端。</p>
           <div id="mcps-list"></div>
           <label class="field-label">名称</label>
           <input id="mcp-name" class="ms-input" placeholder="filesystem" />

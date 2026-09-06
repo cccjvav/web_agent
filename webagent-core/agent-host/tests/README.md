@@ -6,7 +6,7 @@
 
 跑法：Windows `run-tests.cmd`；其它 `cd webagent-core/agent-host && npm test`。覆盖总表也见 [测试说明.md](../../../测试说明.md)。
 
-`npm test` 跑 `scripts/run-tests.js`：逐个 `tests/*.test.js`，失败也继续，最后汇总。新增 `*.test.js` 会被自动跑到。
+`npm test` 跑 `scripts/run-tests.js`：缺 `node_modules/express` 则打印先 `npm install` 并以退出码 2 结束；否则逐个 `tests/*.test.js`，失败也继续，最后汇总。新增 `*.test.js` 会被自动跑到。
 
 | 文件 | 覆盖 |
 |---|---|
@@ -229,7 +229,7 @@
 - **Function `main`（L81–257）**
   - L82–89：spawn `src/index.js`，env 设 `WORKSPACE_ROOT=tmp`、`WORKBENCH_PORT`、`AGENT_HOST_PORT`。
   - L111–113：health JSON `ok` 且 `product==='Web Agent'`。
-  - L115–139：GET `/` HTML 必须含：`Web Agent`；`编辑进化` 或 `CHAT`；`Add API`；`btn-agent-pick`；`agent-pick-menu`；`Web Agent Code`；`环境偏好`；`技术栈`；`技能引导`；`怎么连到本机仓库`；`无需 Plus` 或 `不需要 Plus`；`打开 DeepSeek`；`data-site="deepseek"`；`id="page-env"` / `btn-detect-env` / `page-stack` / `btn-detect-stack`；`本机演示授权` 与 `不是 GitHub`；含 `多模型博弈`、`btn-plan-merge`、`think-select`；不得含 `永久顺` / `使用 GitHub 登录`；`type="module"` 与 `/app.js`。status 含 `planRound.active===false` 与 `multiModel.maxBranches===4`。末尾再 POST Plan start/branch/merge，首轮无 consensus、两支可总结、`agreementRate==null`。
+  - L115–139：GET `/` HTML 必须含：`Web Agent`；`编辑进化` 或 `CHAT`；`Add API`；`btn-agent-pick`；`agent-pick-menu`；`Web Agent Code`；`环境偏好`；`技术栈`；`技能引导`；`怎么连到本机仓库`；`无需 Plus` 或 `不需要 Plus`；`打开 DeepSeek`；`data-site="deepseek"`；`id="page-env"` / `btn-detect-env` / `page-stack` / `btn-detect-stack`；`本机演示授权` 与 `不是 GitHub`；含 `多模型博弈`、`btn-plan-merge`、`think-select`；不得含 `永久顺` / `使用 GitHub 登录`；`type="module"` 与 `./app.js`。status 含 `planRound.active===false` 与 `multiModel.maxBranches===4`。末尾再 POST Plan start/branch/merge，首轮无 consensus、两支可总结、`agreementRate==null`。
   - L137–142：GET `/app.js` 含 `from './js/state.js'`；GET `/js/state.js` 含 `export const state`。
   - L148–160：GET **mcp 端口** `/api/status`（本机无隧道头）：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===25` 且每项无 `inputSchema`；clients 含 arena（无需 Plus、`rulesText===''`）、deepseek（`extension-http`、支持 MCP、无需 Plus、`rulesText` 非空）、chat-plus（`rulesText` 含 Bridge MCP）、chatgpt-free（`unsupported-mcp`）、chatgpt-plus（`oauth-connector`、无需 Plus）；`mcpCanonicalUrl` 以 `/mcp` 结尾；`bridgeAccount.license/provider` 为 `local-demo` 且 `loggedIn`；`recentLogs` 是数组。`tools/call` ping 之后再 GET `/status`：有 `tool_call_end` 且 payload 只有 tool/success/durationMs。再 `tools/call` `get_logs`：正文不含 `"args"` / `"chunk"` / `"patch"`。
   - L154–160：错误 secret POST initialize → 401。

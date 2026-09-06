@@ -4,7 +4,7 @@
 
 审查日期：2026-09-03（计数口径）；分支：`arena/01a05d84-web-agent`。
 
-过程文档（[REPORT.md](./REPORT.md)、[PROMPT.md](./PROMPT.md)）**不计入**下面的代码文件覆盖率。用户操作指南在仓库根 Markdown，不全部嵌进 docs-site（见 [docs-site/README.md](./docs-site/README.md) 收录范围）。
+过程文档（[REPORT.md](./REPORT.md)、[REPORT_v2.md](./REPORT_v2.md)、[PROMPT.md](./PROMPT.md)）**不计入**下面的代码文件覆盖率。用户操作指南在仓库根 Markdown，不全部嵌进 docs-site（见 [docs-site/README.md](./docs-site/README.md) 收录范围）。
 
 ---
 

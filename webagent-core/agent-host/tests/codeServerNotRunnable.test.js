@@ -45,4 +45,11 @@ assert.ok(!runner.includes("'--trusted-origins',\n    '*'"));
 assert.ok(runner.includes('trustedOrigins('));
 assert.ok(!runner.includes('--disable-workspace-trust'), 'workspace trust must stay on by default');
 
+const testRunner = fs.readFileSync(
+  path.join(repoRoot, 'webagent-core/agent-host/scripts/run-tests.js'),
+  'utf8'
+);
+assert.ok(testRunner.includes("node_modules', 'express'") || testRunner.includes('node_modules/express'));
+assert.ok(testRunner.includes('process.exit(2)'));
+
 console.log('vscode launcher uses npm runtime, not a vendored dist');
