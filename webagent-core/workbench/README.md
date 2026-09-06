@@ -41,7 +41,7 @@
   - L226–L235 `#statusbar`。
   - L238–L590 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/**多模型博弈** `#page-multimodel`）。**`#page-env` / `#page-stack` 有完整表单**。挂钩/插件/Voice/Dictation **标明不会执行或未实现**。Codex 页写「没有接 OpenAI Codex OAuth」，按钮 disabled。API Key 提示写 `.webagent/config.json`，不是钥匙串。`#page-multimodel`：启用、合并主模型、合并思考、合并时只读验证、每回合最大分支 2–8 默认 4。Bridge 页含客户端卡片、复制 URL/提示词、打开各站点、**本机演示授权**（`#btn-gh-login`，文案写不是 GitHub）以及 **GitHub 验证**（`#btn-gh-token` / `#btn-gh-device` / `#btn-gh-clear`）。隧道 radio：cloudflare 默认会拉 Quick Tunnel；**Named Tunnel** 填 `#named-domain` / `#named-token` 后启动会 `tunnel run --token`；**ngrok** 填 `#ngrok-domain`（可选）/ `#ngrok-token` 后启动会 `ngrok http`。`#btn-reset-secret` 在高级设置。
   - L577–L596 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`（Plan 文案「分支」）。
-  - L597 `#toast`；L598 `<script type="module" src="/app.js">`（原生 ES module，无打包）。
+  - L597 `#toast`；L598 `<script type="module" src="./app.js">`（原生 ES module，无打包）。
 
 跨模块调用走 `js/state.js` 的 `ui` 袋（避免 import 环），**不改** `/api` 与按钮行为。
 

@@ -151,7 +151,7 @@ async function main() {
     assert.ok(page.raw.includes('think-select'));
     assert.ok(!page.raw.includes('永久顺'));
     assert.ok(!page.raw.includes('使用 GitHub 登录'));
-    assert.ok(page.raw.includes('type="module"') && page.raw.includes('/app.js'));
+    assert.ok(page.raw.includes('type="module"') && page.raw.includes('./app.js'));
 
     const appJs = await request('GET', `http://127.0.0.1:${workbenchPort}/app.js`);
     assert.strictEqual(appJs.status, 200);
