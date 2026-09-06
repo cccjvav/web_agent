@@ -13,6 +13,7 @@ const { gitStatus, gitDiff } = require('./gitOps');
 const { loadSkill } = require('./skills');
 const { workspaceInfo } = require('./workspaceInfo');
 const { resolveToolName, normalizeToolArgs } = require('./normalize');
+const { assertCommandAllowed } = require('./dangerous');
 
 function tool(def) {
   return def;
@@ -53,9 +54,6 @@ function getTaskStatus() {
     etaSeconds: running ? Math.max(1, Math.round((100 - (task.progress || 0)) / 10)) : 0
   };
 }
-
-const DANGEROUS_RE =
-  /\b(rm\s+-rf|rm\s+-fr|mkfs\b|dd\s+if=|shutdown\b|reboot\b|halt\b|poweroff\b|git\s+push\b|git\s+reset\s+--hard|git\s+checkout\s+--|git\s+clean\s+-f|format\s+[a-z]:|del\s+\/s|rd\s+\/s|rmdir\s+\/s|Remove-Item\s+-Recurse|drop\s+database|Invoke-Expression\b|\biex\b|Invoke-WebRequest\b|\biwr\b|Start-Process\b|curl\b[\s\S]*\|\s*(?:sh|bash|zsh|powershell|pwsh|cmd)|wget\b[\s\S]*\|\s*(?:sh|bash|zsh)|powershell[^\n]*-enc(?:odedcommand)?|certutil\b[\s\S]*-urlcache|bitsadmin\b|reg\s+add\b|net\s+user\b|schtasks\b)\b/i;
 
 const TOOLS = [
   tool({
@@ -438,21 +436,11 @@ async function callTool(name, args = {}, currentMode = null, opts = {}) {
   }
   const input = normalizeToolArgs(toolDef.name, args || {});
   const remote = Boolean(opts && opts.remote);
-  if ((toolDef.name === 'run_command' || toolDef.name === 'start_command') && DANGEROUS_RE.test(String(input.command || ''))) {
-    if (remote) {
-      throw new ProtocolError(
-        'E_FORBIDDEN',
-        'Destructive commands are blocked on remote MCP. Run them from local Chat if you really mean it.',
-        { retryHint: 'Use the local workbench Chat in Code mode, or pick a non-destructive command.' }
-      );
-    }
-    if (!input.confirm_dangerous) {
-      throw new ProtocolError(
-        'E_BAD_ARGS',
-        'Destructive command blocked. Pass confirm_dangerous=true if you really mean it.',
-        { retryHint: 'Retry the same command with confirm_dangerous=true only if the user asked for this destructive action.' }
-      );
-    }
+  if (toolDef.name === 'run_command' || toolDef.name === 'start_command') {
+    assertCommandAllowed(input.command, {
+      remote,
+      confirmDangerous: Boolean(input.confirm_dangerous)
+    });
   }
   if (remote && (toolDef.name === 'run_command' || toolDef.name === 'start_command')) {
     const t = Number(input.timeoutSec);

@@ -45,11 +45,11 @@ If a tool returns E_BAD_ARGS about mode, tell the user to switch to Code.
 - path / file_path / file are accepted as filePath. confirm / confirm_overwrite / confirm_dangerous accept true/1/"true".
 
 ## Safety
-- Destructive shell (rm -rf, mkfs, dd, shutdown, git reset --hard, Remove-Item -Recurse) needs confirm_dangerous=true on local Chat. Remote MCP rejects those commands even with that flag (E_FORBIDDEN).
+- Destructive shell (rm -rf / rm -r -f / find -delete, mkfs, dd, shutdown, git reset --hard, Remove-Item -Recurse) needs confirm_dangerous=true on local Chat. Remote MCP rejects those commands even with that flag (E_FORBIDDEN). Matching is after quote/whitespace normalization. Encoded or nested scripts may still slip through — this is not an OS sandbox.
 - Prefer apply_patch over write_file. Overwrite write_file is allowed if confirm_overwrite=true, expectedHash matches, or you read_files that path in this host process. A hash left on disk from a previous run is not enough. New files: empty SEARCH or the file body — not a unified diff.
 - delete_file needs confirm=true after you have listed the path.
-- Stay inside the workspace; the host rejects path escape.
-- .env, keys, SSH, and .webagent/config.json are blocked (E_FORBIDDEN). Do not ask the user to paste secrets.
+- File tools stay inside the workspace (realpath); the host rejects path escape on read/write/patch. run_command cwd is the workspace, but the command string can still touch files outside it.
+- .env, keys, SSH, and .webagent/config.json are blocked on file tools (E_FORBIDDEN), not on run_command. Do not ask the user to paste secrets.
 
 ## Memory
 Use remember to persist durable facts across chats; recall before repeating research.
