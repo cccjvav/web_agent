@@ -11,6 +11,10 @@ function stripBuiltAt(s) {
   return String(s).replace(/"builtAt":"\d{4}-\d{2}-\d{2}"/g, '"builtAt":""');
 }
 
+const serveSrc = fs.readFileSync(path.join(repoRoot, 'docs-site/serve.js'), 'utf8');
+assert.ok(serveSrc.includes('ROOT + path.sep'), 'serve.js must reject paths outside ROOT + sep');
+assert.ok(/DOCS_HOST \|\| '127\.0\.0\.1'/.test(serveSrc), 'docs-site default bind is loopback');
+
 assert.ok(fs.existsSync(contentPath), 'docs-site/content.js must be committed');
 const before = fs.readFileSync(contentPath, 'utf8');
 

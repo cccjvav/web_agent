@@ -6,9 +6,9 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
-const ROOT = __dirname;
+const ROOT = path.resolve(__dirname);
 const PORT = parseInt(process.env.DOCS_PORT || '4173', 10);
-const HOST = process.env.DOCS_HOST || '0.0.0.0';
+const HOST = process.env.DOCS_HOST || '127.0.0.1';
 
 const built = spawnSync(process.execPath, [path.join(ROOT, 'build.js')], { stdio: 'inherit' });
 if (built.status !== 0) process.exit(built.status || 1);
@@ -27,8 +27,8 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
   let rel = decodeURIComponent(url.pathname);
   if (rel === '/') rel = '/index.html';
-  const file = path.normalize(path.join(ROOT, rel));
-  if (!file.startsWith(ROOT)) {
+  const file = path.resolve(path.join(ROOT, rel));
+  if (file !== ROOT && !file.startsWith(ROOT + path.sep)) {
     res.writeHead(403).end('forbidden');
     return;
   }
@@ -43,6 +43,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`Web Agent docs  http://127.0.0.1:${PORT}/`);
-  console.log('bind', HOST);
+  const shown = (HOST === '0.0.0.0' || HOST === '::') ? '127.0.0.1' : HOST;
+  console.log(`Web Agent docs  http://${shown}:${PORT}/`);
+  console.log(`bind ${HOST}:${PORT}`);
 });
