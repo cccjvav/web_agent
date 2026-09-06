@@ -8,7 +8,7 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-mcp-'));
 config.workspaceRoot = tmp;
 
 const { clipJson } = require('../src/mcp/budget');
-const { handleRpc } = require('../src/mcp/server');
+const { handleRpc, handlePost } = require('../src/mcp/server');
 const { callTool, getToolList } = require('../src/tools');
 const { publicError, ProtocolError } = require('../src/mcp/errors');
 const { getBootstrapPrompt, CONNECT_LINE } = require('../src/mcp/instructions');
@@ -187,6 +187,57 @@ async function main() {
   assert.strictEqual(gptPlugin.prompt.split('\n')[0], 'MCP 规范地址（给连接器用）：https://x.trycloudflare.com/mcp');
   assert.ok(gptPlugin.steps.some((s) => /开发者模式/.test(s)));
   assert.ok(gptPlugin.steps.some((s) => /新建插件/.test(s)));
+
+  function fakeRes() {
+    return {
+      statusCode: 200,
+      body: undefined,
+      headers: {},
+      setHeader(k, v) { this.headers[String(k).toLowerCase()] = v; },
+      status(code) { this.statusCode = code; return this; },
+      json(obj) { this.body = obj; return this; },
+      end() { return this; },
+      write() {}
+    };
+  }
+
+  async function post(body) {
+    const res = fakeRes();
+    await handlePost({ ip: '127.0.0.1', body, headers: {}, params: {} }, res);
+    return res;
+  }
+
+  const emptyBatch = await post([]);
+  assert.strictEqual(emptyBatch.statusCode, 400);
+  assert.strictEqual(emptyBatch.body.error.code, -32600);
+
+  const batch = await post([
+    { jsonrpc: '2.0', id: 1, method: 'ping', params: {} },
+    { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }
+  ]);
+  assert.ok(Array.isArray(batch.body));
+  assert.strictEqual(batch.body.length, 2);
+  assert.strictEqual(batch.body[0].id, 1);
+  assert.strictEqual(batch.body[0].result.ok, true);
+  assert.strictEqual(batch.body[1].id, 2);
+  assert.ok(Array.isArray(batch.body[1].result.tools));
+
+  const mixed = await post([
+    { jsonrpc: '2.0', method: 'notifications/initialized', params: {} },
+    { jsonrpc: '2.0', id: 3, method: 'ping', params: {} }
+  ]);
+  assert.ok(Array.isArray(mixed.body));
+  assert.strictEqual(mixed.body.length, 1);
+  assert.strictEqual(mixed.body[0].id, 3);
+
+  const notes = await post([
+    { jsonrpc: '2.0', method: 'notifications/initialized' }
+  ]);
+  assert.strictEqual(notes.statusCode, 204);
+
+  const zero = await post({ jsonrpc: '2.0', id: 0, method: 'ping', params: {} });
+  assert.strictEqual(zero.body.id, 0);
+  assert.strictEqual(zero.body.result.ok, true);
 
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('mcp protocol tests passed');

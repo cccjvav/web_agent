@@ -259,36 +259,86 @@ function hostStatus() {
   };
 }
 
-async function handlePost(req, res) {
-  const { jsonrpc, id, method } = req.body || {};
-  const isInit = method === 'initialize';
-  const bound = bindHttpSession(req, { createIfMissing: isInit });
-  if (!bound.ok) return rejectUnknownSession(req, res);
+function rpcId(id) {
+  return id === undefined ? null : id;
+}
 
-  if (jsonrpc !== '2.0') {
-    return sendJsonRpc(req, res, {
-      jsonrpc: '2.0',
-      error: { code: -32600, message: 'Invalid Request: jsonrpc must be "2.0"' },
-      id: id || null
-    }, 400);
+function invalidRpc(id, message) {
+  return {
+    jsonrpc: '2.0',
+    error: { code: -32600, message },
+    id: rpcId(id)
+  };
+}
+
+async function dispatchOne(req, body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return { kind: 'response', payload: invalidRpc(null, 'Invalid Request'), httpStatus: 400 };
   }
-
+  if (body.jsonrpc !== '2.0') {
+    return {
+      kind: 'response',
+      payload: invalidRpc(body.id, 'Invalid Request: jsonrpc must be "2.0"'),
+      httpStatus: 400
+    };
+  }
+  const method = body.method;
+  const notify = body.id === undefined || (method && String(method).startsWith('notifications/'));
+  req.body = body;
   try {
     const result = await handleRpc(req);
-    if (method && String(method).startsWith('notifications/')) {
-      return res.status(204).end();
-    }
-    return sendJsonRpc(req, res, { jsonrpc: '2.0', id, result });
+    if (notify) return { kind: 'notification' };
+    return { kind: 'response', payload: { jsonrpc: '2.0', id: body.id, result }, httpStatus: 200 };
   } catch (err) {
+    if (notify) return { kind: 'notification' };
     const info = publicError(err);
-    const http = info.code === 'E_UNKNOWN_CMD' ? 404 : 200;
+    const httpStatus = info.code === 'E_UNKNOWN_CMD' ? 404 : 200;
     const rpcCode = err.rpcCode || (info.code === 'E_UNKNOWN_CMD' ? -32601 : info.layer === 'protocol' ? -32602 : -32603);
-    return sendJsonRpc(req, res, {
-      jsonrpc: '2.0',
-      id: id || null,
-      error: { code: rpcCode, message: `[${info.layer}] ${info.code}: ${info.msg}`, data: info }
-    }, http);
+    return {
+      kind: 'response',
+      payload: {
+        jsonrpc: '2.0',
+        id: rpcId(body.id),
+        error: { code: rpcCode, message: `[${info.layer}] ${info.code}: ${info.msg}`, data: info }
+      },
+      httpStatus
+    };
   }
+}
+
+async function handlePost(req, res) {
+  const incoming = req.body;
+  if (Array.isArray(incoming) && incoming.length === 0) {
+    return sendJsonRpc(req, res, invalidRpc(null, 'Invalid Request: empty batch'), 400);
+  }
+
+  const batch = Array.isArray(incoming);
+  const items = batch ? incoming : [incoming];
+  const hasInit = items.some((b) => b && typeof b === 'object' && b.method === 'initialize');
+  const bound = bindHttpSession(req, { createIfMissing: hasInit });
+  if (!bound.ok) return rejectUnknownSession(req, res);
+
+  const saved = req.body;
+  const responses = [];
+  let lastHttp = 200;
+  try {
+    for (const item of items) {
+      const out = await dispatchOne(req, item);
+      if (out.kind === 'response') {
+        responses.push(out.payload);
+        lastHttp = out.httpStatus;
+      }
+    }
+  } finally {
+    req.body = saved;
+  }
+
+  if (batch) {
+    if (!responses.length) return res.status(204).end();
+    return sendJsonRpc(req, res, responses, 200);
+  }
+  if (!responses.length) return res.status(204).end();
+  return sendJsonRpc(req, res, responses[0], lastHttp);
 }
 
 function handleGet(req, res) {
@@ -338,6 +388,7 @@ router.delete('/:secret', requireAuth, handleDelete);
 
 module.exports = router;
 module.exports.handleRpc = handleRpc;
+module.exports.handlePost = handlePost;
 module.exports.promptsFromCustom = promptsFromCustom;
 module.exports.isAuthorized = isAuthorized;
 module.exports.rejectUnauthorized = rejectUnauthorized;
