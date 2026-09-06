@@ -10,7 +10,7 @@ const apiRouter = require('./api/routes');
 const eventBus = require('./utils/eventBus');
 const store = require('./models/store');
 const { rejectUnlessLocalControl, isLocalControlPlane } = require('./utils/localControl');
-const { mcpCors, rejectCrossSiteApi } = require('./utils/corsAllow');
+const { mcpCors, rejectCrossSiteApi, rejectDisallowedMcpOrigin } = require('./utils/corsAllow');
 const tracker = require('./usage/tracker');
 
 persistIdentity(store);

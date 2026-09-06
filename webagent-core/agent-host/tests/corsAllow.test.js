@@ -1,10 +1,14 @@
 const assert = require('assert');
+const http = require('http');
+const express = require('express');
 const {
   isLoopbackOrigin,
   isExtensionOrigin,
   isAllowedMcpOrigin,
   isAllowedApiBrowserOrigin,
-  rejectCrossSiteApi
+  rejectCrossSiteApi,
+  rejectDisallowedMcpOrigin,
+  mcpCors
 } = require('../src/utils/corsAllow');
 
 assert.strictEqual(isLoopbackOrigin('http://127.0.0.1:3000'), true);
@@ -91,4 +95,110 @@ function fakeRes() {
   assert.strictEqual(res.statusCode, 404);
 }
 
-console.log('corsAllow tests passed');
+{
+  let nextCalled = false;
+  const res = fakeRes();
+  rejectDisallowedMcpOrigin(
+    { headers: { origin: 'https://evil.example' } },
+    res,
+    () => { nextCalled = true; }
+  );
+  assert.strictEqual(nextCalled, false);
+  assert.strictEqual(res.statusCode, 403);
+}
+
+{
+  let nextCalled = false;
+  rejectDisallowedMcpOrigin({ headers: {} }, fakeRes(), () => { nextCalled = true; });
+  assert.strictEqual(nextCalled, true);
+}
+
+{
+  let nextCalled = false;
+  rejectDisallowedMcpOrigin(
+    { headers: { origin: 'https://chat.deepseek.com' } },
+    fakeRes(),
+    () => { nextCalled = true; }
+  );
+  assert.strictEqual(nextCalled, true);
+}
+
+function request(server, method, urlPath, body, headers) {
+  return new Promise((resolve, reject) => {
+    const addr = server.address();
+    const payload = body == null ? null : JSON.stringify(body);
+    const req = http.request(
+      {
+        hostname: '127.0.0.1',
+        port: addr.port,
+        path: urlPath,
+        method,
+        headers: {
+          ...(payload
+            ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
+            : {}),
+          ...(headers || {})
+        }
+      },
+      (res) => {
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => {
+          const raw = Buffer.concat(chunks).toString('utf8');
+          let parsed = null;
+          try { parsed = raw ? JSON.parse(raw) : null; } catch { parsed = null; }
+          resolve({ status: res.statusCode, json: parsed, raw });
+        });
+      }
+    );
+    req.on('error', reject);
+    if (payload) req.write(payload);
+    req.end();
+  });
+}
+
+(async () => {
+  const fs = require('fs');
+  const os = require('os');
+  const path = require('path');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-cors-mcp-'));
+  const { config } = require('../src/config');
+  config.workspaceRoot = tmp;
+  const mcpRouter = require('../src/mcp/server');
+
+  const app = express();
+  app.use(express.json());
+  app.use(mcpCors());
+  app.use('/mcp', rejectDisallowedMcpOrigin, mcpRouter);
+  const server = await new Promise((resolve) => {
+    const s = app.listen(0, '127.0.0.1', () => resolve(s));
+  });
+  try {
+    const secret = config.secretKey;
+    const evil = await request(server, 'POST', `/mcp/${secret}`, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'tools/call',
+      params: { name: 'run_command', arguments: { command: 'echo EVIL_EXEC' } }
+    }, { Origin: 'https://evil.com' });
+    assert.strictEqual(evil.status, 403);
+    assert.ok(!/EVIL_EXEC/.test(evil.raw || ''));
+
+    const noOrigin = await request(server, 'POST', `/mcp/${secret}`, {
+      jsonrpc: '2.0',
+      id: 2,
+      method: 'tools/call',
+      params: { name: 'ping', arguments: {} }
+    });
+    assert.strictEqual(noOrigin.status, 200);
+    assert.strictEqual(noOrigin.json.result.isError, false);
+  } finally {
+    await new Promise((r) => server.close(r));
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+
+  console.log('corsAllow tests passed');
+})().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

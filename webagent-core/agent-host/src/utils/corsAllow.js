@@ -102,6 +102,14 @@ function mcpCors() {
   });
 }
 
+/** Browser Origin on /mcp that is not allowlisted → 403 (do not run tools). No Origin (CLI / tunnel) still passes. */
+function rejectDisallowedMcpOrigin(req, res, next) {
+  const origin = String((req && req.headers && req.headers.origin) || '').trim();
+  if (!origin) return next();
+  if (isAllowedMcpOrigin(origin)) return next();
+  return res.status(403).json({ error: 'origin not allowed' });
+}
+
 module.exports = {
   PAGE_ORIGINS,
   extraOrigins,
@@ -110,5 +118,6 @@ module.exports = {
   isAllowedMcpOrigin,
   isAllowedApiBrowserOrigin,
   rejectCrossSiteApi,
+  rejectDisallowedMcpOrigin,
   mcpCors
 };
