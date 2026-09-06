@@ -1,6 +1,19 @@
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 const { parseTunnelUrl, canonicalNamedUrl, startNamedTunnel } = require('../src/tunnel/cloudflared');
 const { parseNgrokUrl, startNgrokTunnel } = require('../src/tunnel/ngrok');
+
+const CAP = 'buf = (buf + text).slice(-65536)';
+function sliceHits(src) {
+  return src.split(CAP).length - 1;
+}
+const cfSrc = fs.readFileSync(path.join(__dirname, '../src/tunnel/cloudflared.js'), 'utf8');
+const ngSrc = fs.readFileSync(path.join(__dirname, '../src/tunnel/ngrok.js'), 'utf8');
+assert.strictEqual(sliceHits(cfSrc), 2, 'cloudflared.js must cap log buf twice (Named + Quick)');
+assert.strictEqual(sliceHits(ngSrc), 1, 'ngrok.js must cap log buf once');
+assert.ok(!/buf \+= text/.test(cfSrc), 'cloudflared.js must not append unbounded log buf');
+assert.ok(!/buf \+= text/.test(ngSrc), 'ngrok.js must not append unbounded log buf');
 
 const sample = `
 2026-09-02 INF +--------------------------------------------------------------------------------------------+

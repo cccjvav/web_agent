@@ -25,6 +25,8 @@
 
 公网请求打 `/api` 或 `/ws` 会 404；本机 Chat 走 3000，不经过隧道。CORS 白名单**不是**门卡，URL 里的密钥仍要保管。
 
+MCP 认证优先用路径 `/mcp/<密钥>` 或请求头 `Authorization: Bearer`。还认查询串 `?secret=`，只是兜底；经公共隧道时 query 可能进边缘/代理访问日志，不要把密钥放在查询串里当主用法。
+
 ## 本机密钥
 
 MCP 密钥和模型 API Key 写在工作区 `.webagent/config.json`（尽量 `chmod 0600`，并 gitignore）。不是系统钥匙串，也不搬到 `%APPDATA%`（密钥跟着这台「车」）。非 Git 场景（打包、备份、网盘同步、把工作区目录整个拷走）仍可能带上明文 Key。GitHub PAT 不会写入该文件。

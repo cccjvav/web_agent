@@ -29,8 +29,8 @@
   - **Function `startNamedTunnel({ hostname, token, port=config.port, timeoutMs=25000 })`（L77–L150）**
     - 主机名非法 → reject `E_NAMED_HOSTNAME`；Token 空 → `E_NAMED_TOKEN`。都在 spawn 前。
     - 先 `stopTunnel()`。无二进制 → `E_NO_CLOUDFLARED`。
-    - spawn args `tunnel --no-autoupdate run --token TOKEN`。日志把 Token 换成 `[token]`。就绪看 `Registered tunnel connection` / `connIndex=`。
-  - **Function `startQuickTunnel({ port=config.port, timeoutMs=25000 })`（L152–L213）** — 先 `stopTunnel()`；spawn `tunnel --url http://127.0.0.1:${port} --no-autoupdate`；解析 trycloudflare。
+    - spawn args `tunnel --no-autoupdate run --token TOKEN`。日志把 Token 换成 `[token]`。就绪看 `Registered tunnel connection` / `connIndex=`。日志缓冲 `buf = (buf + text).slice(-65536)`（只为就绪判定；广播用当前 `text` 截 400）。
+  - **Function `startQuickTunnel({ port=config.port, timeoutMs=25000 })`（L152–L213）** — 先 `stopTunnel()`；spawn `tunnel --url http://127.0.0.1:${port} --no-autoupdate`；解析 trycloudflare。日志缓冲同样 slice 到 64k。
   - **Function `snapshot()`（L215–L225）** — 并上 `ngrok.snapshot()`：`running` 为 cloudflared **或** ngrok；`url` 为 quickUrl / ngrok url / `publicTunnelUrl`。不含 Token。
 
 - **关键变量：** L8 `URL_RE`；L75 `NAMED_READY_RE`；L9–L10 `child`、`quickUrl`；L227–L229 进程退出会 `stopTunnel`。
@@ -51,7 +51,7 @@
     - 先 `cloudflared.stopTunnel()`（会停 ngrok 旧进程 + cloudflared），再 `stopNgrok()`。
     - 无二进制 → `E_NO_NGROK`。
     - spawn args：`http 127.0.0.1:<port> --log=stdout --log-format=term`，有主机名再 `--url https://host`。`env.NGROK_AUTHTOKEN=tok`。
-    - 日志把 Authtoken 原文换成 `[token]`（截 400 字）。填了主机名则等 `started tunnel` / `Forwarding` 后用该 `https://host`；否则用 `parseNgrokUrl`。
+    - 日志把 Authtoken 原文换成 `[token]`（截 400 字）。缓冲 `buf = (buf + text).slice(-65536)`。填了主机名则等 `started tunnel` / `Forwarding` 后用该 `https://host`；否则用 `parseNgrokUrl`。
     - 25s 超时、`error`、`exit` 未 settled 则 reject。
   - **Function `snapshot()`（L162–L168）** — `{ binary, url: ngrokUrl, running }`。不含 Token。
 

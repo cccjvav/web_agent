@@ -130,7 +130,7 @@ function startNgrokTunnel({ hostname, token, port = config.port, timeoutMs = 250
 
     const onData = (chunk) => {
       const text = chunk.toString();
-      buf += text;
+      buf = (buf + text).slice(-65536);
       const safe = tok ? text.split(tok).join('[token]') : text;
       eventBus.broadcast('tunnel_log', { chunk: safe.slice(0, 400) });
       const parsed = parseNgrokUrl(buf);

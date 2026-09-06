@@ -16,7 +16,7 @@
 | `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝；UNC / 盘符路径拒绝；Windows 上再测 junction |
 | `hostPersist.test.js` | `config.version` 等于插件 `package.json`；`generateNewSecret` 写入 `config.json`；旧盘 `永久顺`/假 `github`/`demo` 迁成 `local-demo`；带 `githubId` 的 octocat **留下**；`usage.json` 进 gitignore；强制 `git add -f` 后 `trackedSecretFiles` 能发现并警告；`read-hashes.json` 跨 require 仍能 recalledHash，**sessionHash 为空**；`resetHashes` 删文件 |
 | `eventBus.test.js` | 日志脱敏 `ghp_` / `sk-` / `Bearer` / `oldSecret` / `namedToken` / `ngrokToken`；长 chunk 截断；普通字段留下 |
-| `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com`；`canonicalNamedUrl`；`parseNgrokUrl`；缺主机名/Token/Authtoken 在 spawn 前拒绝 |
+| `tunnel.test.js` | 从 cloudflared 日志解析 `*.trycloudflare.com`；`canonicalNamedUrl`；`parseNgrokUrl`；缺主机名/Token/Authtoken 在 spawn 前拒绝；**日志 buf 上限** `slice(-65536)` 锁 cloudflared 两处 + ngrok 一处 |
 | `bridgeTunnel.test.js` | stub Quick/Named/ngrok：cloudflare 启动后 mcpUrl 含 trycloudflare；Named / ngrok 成功走自定义主机名且响应不含 Token；缺字段仍 200；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
 | `apiFiles.test.js` | `PUT /api/files/content` 走 `write_file`：普通文件写入、`.env` 拒绝、越界拒绝、错 hash 409、`POST /api/skills` |
 | `localControl.test.js` | 回环 / Cloudflare 头 / trycloudflare Host / ngrok Host / Named `publicTunnelUrl` Host 是否算本机控制面 |
@@ -136,6 +136,7 @@
 - L11：无 URL 文本 → `null`。
 - L12–L15：`canonicalNamedUrl` 去协议/路径/端口；空串与 `localhost` → `null`。
 - L18–L25：`parseNgrokUrl` 认 `url=`、JSON `"url"`、`Forwarding`；无 URL → `null`。
+- 源码锁：`cloudflared.js` 两处、`ngrok.js` 一处必须是 `buf = (buf + text).slice(-65536)`，且不得 `buf += text`。
 - L31–L47：`startNamedTunnel` 缺主机名 `E_NAMED_HOSTNAME`、缺 Token `E_NAMED_TOKEN`；`startNgrokTunnel` 缺 Authtoken `E_NGROK_TOKEN`、坏主机名 `E_NGROK_HOSTNAME`（spawn 之前）。测前删 `NGROK_AUTHTOKEN`。
 - L48：打印 passed。
 

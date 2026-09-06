@@ -116,7 +116,7 @@ function startNamedTunnel({ hostname, token, port = config.port, timeoutMs = 250
 
     const onData = (chunk) => {
       const text = chunk.toString();
-      buf += text;
+      buf = (buf + text).slice(-65536);
       const safe = tok ? text.split(tok).join('[token]') : text;
       eventBus.broadcast('tunnel_log', { chunk: safe.slice(0, 400) });
       if (NAMED_READY_RE.test(buf) && !settled) {
@@ -179,7 +179,7 @@ function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) {
 
     const onData = (chunk) => {
       const text = chunk.toString();
-      buf += text;
+      buf = (buf + text).slice(-65536);
       eventBus.broadcast('tunnel_log', { chunk: text.slice(0, 400) });
       const url = parseTunnelUrl(buf);
       if (url && !settled) {
