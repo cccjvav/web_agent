@@ -9,7 +9,7 @@
 信任：这台电脑的主人；任务期间拿着完整 MCP 地址的那个网页 Agent。  
 不信任：把地址发到群里的人；通宵无人值守、把隧道当永久公网服务。
 
-因此**不做**：操作系统级命令沙箱、系统钥匙串、把一把 URL 密钥拆成多把、交互式 PTY、按客户端隔离全部全局状态。理由见 [架构导读.md](./架构导读.md) 第 12 节。已经做的：路径不能跑出工作区、远程危险命令拒绝、公网 `/api` 404、密钥 gitignore；若 Git 已经跟踪 `.webagent/config.json`，启动时会警告。
+因此**不做**：操作系统级命令沙箱、系统钥匙串、把一把 URL 密钥拆成多把、交互式 PTY、按客户端隔离全部全局状态。理由见 [架构导读.md](./架构导读.md) 第 12 节。已经做的：文件工具路径不能跑出工作区、远程常见破坏性命令拒绝（词法归一后判定，编码/嵌套脚本仍可能绕过）、公网 `/api` 404、带了不在白名单里的 Origin 打 `/mcp` 得 403、密钥 gitignore；若 Git 已经跟踪 `.webagent/config.json`，启动时会警告。
 
 ## Bridge / 隧道
 
@@ -18,7 +18,7 @@
 拿到完整 MCP 地址（`/mcp/<密钥>`）的人可以：
 
 - 读工作区里未标敏感的文件
-- 打补丁、跑**非破坏性**命令（Windows 上是 PowerShell；`rm -rf` / `git push` / `curl | sh` 一类即使带 `confirm_dangerous` 也会被远程拒绝，只能在本机 Chat 确认）
+- 打补丁、跑**非破坏性**命令（Windows 上是 PowerShell；`rm -rf` / `rm -r -f` / `find -delete` / `git push` / `curl | sh` 一类即使带 `confirm_dangerous` 也会被远程拒绝，只能在本机 Chat 确认。这是常见写法拦截，不是操作系统沙箱）
 - 在你这台电脑上执行 Code 模式允许的其它工具
 
 **不要**把 `trycloudflare.com/mcp/...`、ngrok 地址或 Named 的 `https://你的域名/mcp/...` 发到群、Issue、截图网盘。Quick Tunnel（以及未预留的 ngrok）域名每次启动都可能变，旧地址作废，但当次有效期内等同施工证。Named Token 与 ngrok Authtoken 不要贴进聊天或日志。
@@ -27,7 +27,11 @@
 
 ## 本机密钥
 
-MCP 密钥和模型 API Key 写在工作区 `.webagent/config.json`（尽量 `chmod 0600`，并 gitignore）。不是系统钥匙串。GitHub PAT 不会写入该文件。
+MCP 密钥和模型 API Key 写在工作区 `.webagent/config.json`（尽量 `chmod 0600`，并 gitignore）。不是系统钥匙串，也不搬到 `%APPDATA%`（密钥跟着这台「车」）。非 Git 场景（打包、备份、网盘同步、把工作区目录整个拷走）仍可能带上明文 Key。GitHub PAT 不会写入该文件。
+
+敏感路径拦截（`.env`、`*.pem`、`.ssh/`、`.webagent/config.json` 等）**只作用于文件工具**。`read_files ".env"` 会被拒；`run_command "cat .env"` 可以读出内容。
+
+工作台 `GET /api/status` **仍带** `secretKey`：本机拼 MCP 地址要用，且 `/api` 已限制为回环 + 同源。不另开 `/api/bridge/secret`。
 
 ChatGPT 自制 MCP 插件用的 OAuth access / refresh **只在内存**。关掉 `run-webagent` 进程后要重新配对。
 

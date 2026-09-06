@@ -68,12 +68,12 @@
     - L415–L421：未知名 → `ProtocolError E_UNKNOWN_CMD`，消息含 Available 列表，`detail.retryHint` 提示可用别名。
     - L422–L427：`currentMode` 真且不在该工具 mode 列表 → `E_BAD_ARGS`（Ask/Plan 只读文案）。远程 MCP 默认传入 `'code'`（见 `mcp/server.remoteToolMode`）；本机 Chat 传入 UI 模式。
     - L428：`normalizeToolArgs(toolDef.name, args)`（snake_case、`path`→`filePath`、`"true"`→布尔）。
-    - 工具名为 `run_command` 或 `start_command` 且命令匹配 `DANGEROUS_RE`：`opts.remote` 真 → **`E_FORBIDDEN`**（即使带了 `confirm_dangerous`）；本机无 `confirm_dangerous` → `E_BAD_ARGS`。远程还会把 `timeoutSec` 夹到最多 60。闸包括 `rm -rf`、`git push`、`curl … | sh`、`iex` / `iwr`、关机格式化等。
+    - 工具名为 `run_command` 或 `start_command`：走 `assertCommandAllowed`（`dangerous.js`，远程与本机同一处）。`opts.remote` 真 → **`E_FORBIDDEN`**（即使带了 `confirm_dangerous`）；本机无 `confirm_dangerous` → `E_BAD_ARGS`。远程还会把 `timeoutSec` 夹到最多 60。闸包括 `rm -rf` / `rm -r -f` / `find -delete`、`git push`、`curl … | sh`、`iex` / `iwr`、关机格式化等（词法归一，不是 OS 沙箱）。
     - L438：`await handler(input)`。
     - L439–L442：`result.isTimeout` 则打 `E_TIMEOUT`、`suggestedWaitMs=0`。
     - L443：`clipJson(result)` 后返回。
 
-- **关键变量：** L47–L48 `DANGEROUS_RE`（i 标志）匹配 `rm -rf` / `mkfs` / `dd if=` / `shutdown` / `reboot` / `halt` / `poweroff` / **`git push`** / `git reset --hard` / `git checkout --` / `git clean -f` / `format x:` / `del /s` / `rd /s` / `Remove-Item -Recurse` / `drop database` / `Invoke-Expression` / `iex` / `iwr` / `Start-Process` / **`curl|wget` 管道进 shell** / `powershell -enc` / `certutil -urlcache` / `bitsadmin` / `reg add` / `net user` / `schtasks`。
+- **危险命令：** 实现在 `dangerous.js`（`isDangerousCommand` / `assertCommandAllowed`）。先剥空引号、折叠空白、按 `|` / `&&` 分段，再在 token 上判定。不是 OS 沙箱。
 
 ---
 
@@ -121,6 +121,13 @@
   - **Function `grepSearch`（L236–L340）** — 空 query / 超 200 字 / regex 超 120 字 / 嵌套量词（ReDoS）→ `E_BAD_ARGS`。编正则（非 regex 则转义）；非法正则抛。最多扫 800 个文件、收集 2000 条、合计约 8MB；跳过大文件和二进制。分页 `limit` 1–100。返回 `scannedFiles` / `skippedLarge` / `skippedBinary` / `truncated`。
 
 ---
+
+### 📄 文件名：`dangerous.js`
+
+- **文件职责：** 破坏性命令判定 + 远程/本机策略。只被 `index.js` `callTool` 调用。
+- **核心类/函数清单：**
+  - **Function `isDangerousCommand(command)`** — 归一化后按 token 判定 `rm` 递归、`find -delete`、`dd`/`mkfs`/`shred`/`truncate`、`git push`/`reset --hard`、管道进 shell、PowerShell `Remove-Item -Recurse` 等。
+  - **Function `assertCommandAllowed(command, { remote, confirmDangerous })`** — 远程一律 `E_FORBIDDEN`；本机无确认 `E_BAD_ARGS`。
 
 ### 📄 文件名：`normalize.js`
 

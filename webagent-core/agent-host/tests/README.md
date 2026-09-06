@@ -20,7 +20,8 @@
 | `bridgeTunnel.test.js` | stub Quick/Named/ngrok：cloudflare 启动后 mcpUrl 含 trycloudflare；Named / ngrok 成功走自定义主机名且响应不含 Token；缺字段仍 200；`E_NO_CLOUDFLARED` 仍 200；未登录 403 |
 | `apiFiles.test.js` | `PUT /api/files/content` 走 `write_file`：普通文件写入、`.env` 拒绝、越界拒绝、错 hash 409、`POST /api/skills` |
 | `localControl.test.js` | 回环 / Cloudflare 头 / trycloudflare Host / ngrok Host / Named `publicTunnelUrl` Host 是否算本机控制面 |
-| `corsAllow.test.js` | MCP Origin 白名单；外站 Origin/Referer 打 `/api` 拒绝 |
+| `corsAllow.test.js` | MCP Origin 白名单；外站 Origin 打 `/mcp` 403 且不执行工具；无 Origin 仍可调；外站 Origin/Referer 打 `/api` 拒绝 |
+| `dangerousCommands.test.js` | `rm -rf` / `rm -r -f` / `find -delete` / `r""m -rf`：远程 MCP 与本机 `/api` 两条路径 |
 | `githubAuth.test.js` | PAT 空令牌 400；假 fetch 校验 octocat；设备码 grant_type 含 `device_code`；无 client_id → `E_NO_GITHUB_APP` |
 | `usageTracker.test.js` | `record` 写 `.webagent/usage.json`；成功率；`reportNow` POST Bearer |
 | `adminHost.test.js` | 无 Bearer 401；有令牌 ingest；HTML 含 `@alice` / 未绑定 GitHub |
@@ -352,7 +353,7 @@
 
 ## 3. 执行逻辑流（仅本目录）
 
-1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **sandbox** → **hostPersist** → tunnel → **bridgeTunnel** → **apiFiles** → **localControl** → **corsAllow** → **githubAuth** → **usageTracker** → **adminHost** → **providers** → httpSmoke → codeServerNotRunnable → **codeServerAuth** → skipWorkbench → **planRound** → runChat → chatMode → **toolLabel** → profile → oauth → **docsSite** → **workbenchHtml**。
+1. `npm test` 按 `package.json` `scripts.test` 顺序 `&&`：patchEngine → mcpProtocol → workspaceTools → **sandbox** → **hostPersist** → tunnel → **bridgeTunnel** → **apiFiles** → **localControl** → **corsAllow** → **githubAuth** → **usageTracker** → **adminHost** → **providers** → httpSmoke → codeServerNotRunnable → **codeServerAuth** → skipWorkbench → **planRound** → runChat → chatMode → **toolLabel** → profile → oauth → **docsSite** → **workbenchHtml** → **dangerousCommands**。
 2. 单文件：改 `config.workspaceRoot` 指向 tmp → require 被测模块 → assert → 删 tmp。`tunnel` / `chatMode` / `codeServerNotRunnable` 不改工作区。`bridgeTunnel` 改 tmp 工作区并 stub 隧道导出。
 3. 启进程的测试 spawn `src/index.js`，结束必须杀子进程。
 4. 失败路径：有 `main()` 的文件走 `main().catch` → `exit(1)`；`profile.test.js` 同步抛错由 Node 非 0 退出；CMD 的 `run-tests.cmd` 据此 pause。
