@@ -1,6 +1,6 @@
 # 使用统计后台（独立进程）
 
-这是一个**单独的 Node 服务**，默认监听 **4174**。主工作台（`agent-host` 的 4173）**不会**自动打开这个端口。
+这是一个**单独的 Node 服务**，默认 **127.0.0.1:4174**（`WEBAGENT_ADMIN_BIND` 可改成 `0.0.0.0`）。主工作台是 3000，**不会**自动打开这个端口。 docs-site 默认 4173，不要和本进程搞混。
 
 ## 启动
 
@@ -24,7 +24,7 @@ macOS / Linux：
 ./run-admin.sh
 ```
 
-打开 `http://127.0.0.1:4174/` 看当天排名。`GET /api/stats?day=YYYY-MM-DD` 返回 JSON。
+打开 `http://127.0.0.1:4174/` 看当天排名（请求头要带 `Authorization: Bearer <令牌>`）。`GET /api/stats?day=YYYY-MM-DD` 同样要令牌。`GET /health` 不需要。
 
 ## 客户端怎么上报
 
@@ -62,9 +62,10 @@ macOS / Linux：
 - **Function `ingest(dataDir, body)`（L54–L83）** — 无 `installId` 抛 400。按 installId+day 去重后追加。
 - **Function `rankDay(rows, day)`（L85–L111）** — 同一 GitHub 用户或同一 installId 留最新一条；按 toolCalls 降序。
 - **Function `renderPage`（L121–L182）** — HTML 排行榜；无 GitHub 显示「未绑定 GitHub」+ installId。
-- **Function `createHandler({ dataDir, token })`（L207–L250）** — GET `/` HTML；GET `/health`；GET `/api/stats`；POST `/api/report` 要 Bearer；其它 404。
-- **Function `createServer(opts={})`（L252–L258）** — 返回 `{ server, handler, dataDir, token }`。
+- **Function `readBody(req)`** — 拼 JSON；超过 1MB 抛 `status=413`。
+- **Function `createHandler({ dataDir, token })`** — GET `/health` 无鉴权；GET `/` HTML、GET `/api/stats`、POST `/api/report` 都要 Bearer；其它 404。
+- **Function `createServer(opts={})`** — 返回 `{ server, handler, dataDir, token }`。
 
 ### 📄 文件名：`index.js`
 
-L1–L14：`WEBAGENT_ADMIN_PORT` 默认 4174，`listen(port, '0.0.0.0')`。打印本机 URL 与数据目录。未设 `WEBAGENT_ADMIN_TOKEN` 时提示令牌文件路径。
+`WEBAGENT_ADMIN_PORT` 默认 4174，`WEBAGENT_ADMIN_BIND` 默认 `127.0.0.1`。启动日志打印真实 bind。未设 `WEBAGENT_ADMIN_TOKEN` 时提示令牌文件路径。

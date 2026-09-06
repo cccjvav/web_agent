@@ -71,6 +71,15 @@ async function run() {
     });
     assert.strictEqual(denied.status, 401);
 
+    const pageDenied = await request(server, { method: 'GET', url: '/?day=2026-04-01' });
+    assert.strictEqual(pageDenied.status, 401);
+
+    const statsDenied = await request(server, { method: 'GET', url: '/api/stats?day=2026-04-01' });
+    assert.strictEqual(statsDenied.status, 401);
+
+    const health = await request(server, { method: 'GET', url: '/health' });
+    assert.strictEqual(health.status, 200);
+
     const ok = await request(server, {
       method: 'POST',
       url: '/api/report',
@@ -82,15 +91,38 @@ async function run() {
     });
     assert.strictEqual(ok.status, 200);
 
-    const page = await request(server, { method: 'GET', url: '/?day=2026-04-01' });
+    const page = await request(server, {
+      method: 'GET',
+      url: '/?day=2026-04-01',
+      headers: { Authorization: 'Bearer tok' }
+    });
     assert.strictEqual(page.status, 200);
     assert.ok(page.body.includes('@alice'));
     assert.ok(page.body.includes('@carol'));
     assert.ok(page.body.includes('未绑定 GitHub'));
 
-    const stats = await request(server, { method: 'GET', url: '/api/stats?day=2026-04-01' });
+    const stats = await request(server, {
+      method: 'GET',
+      url: '/api/stats?day=2026-04-01',
+      headers: { Authorization: 'Bearer tok' }
+    });
     const json = JSON.parse(stats.body);
     assert.strictEqual(json.rows[0].githubUser, 'alice');
+
+    const huge = await request(server, {
+      method: 'POST',
+      url: '/api/report',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer tok'
+      },
+      body: `{"installId":"z","pad":"${'x'.repeat(1024 * 1024 + 8)}"}`
+    });
+    assert.strictEqual(huge.status, 413);
+
+    const indexSrc = fs.readFileSync(path.resolve(__dirname, '../../admin-host/index.js'), 'utf8');
+    assert.ok(indexSrc.includes('WEBAGENT_ADMIN_BIND'));
+    assert.ok(!/listen\(\s*port,\s*'0\.0\.0\.0'/.test(indexSrc));
     void token;
   } finally {
     await new Promise((resolve) => server.close(resolve));

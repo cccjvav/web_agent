@@ -181,11 +181,31 @@ function renderPage(rows, day) {
 </html>`;
 }
 
-function readBody(req) {
+const MAX_BODY_BYTES = 1024 * 1024;
+
+function readBody(req, maxBytes = MAX_BODY_BYTES) {
   return new Promise((resolve, reject) => {
     const chunks = [];
-    req.on('data', (c) => chunks.push(c));
+    let n = 0;
+    let done = false;
+    const fail = (err) => {
+      if (done) return;
+      done = true;
+      reject(err);
+    };
+    req.on('data', (c) => {
+      n += c.length;
+      if (n > maxBytes) {
+        const err = new Error('payload too large');
+        err.status = 413;
+        fail(err);
+        return;
+      }
+      chunks.push(c);
+    });
     req.on('end', () => {
+      if (done) return;
+      done = true;
       const raw = Buffer.concat(chunks).toString('utf8');
       if (!raw) return resolve({});
       try {
@@ -194,7 +214,7 @@ function readBody(req) {
         reject(err);
       }
     });
-    req.on('error', reject);
+    req.on('error', fail);
   });
 }
 
@@ -204,35 +224,42 @@ function bearer(req) {
   return '';
 }
 
+function unauthorized(res) {
+  res.writeHead(401, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ error: 'unauthorized' }));
+}
+
+function tokenOk(req, token) {
+  return bearer(req) === token;
+}
+
 function createHandler({ dataDir, token }) {
   return async function handle(req, res) {
     const url = new URL(req.url, 'http://127.0.0.1');
     res.setHeader('Cache-Control', 'no-store');
     try {
+      if (req.method === 'GET' && url.pathname === '/health') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, product: 'Web Agent Admin' }));
+        return;
+      }
       if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
+        if (!tokenOk(req, token)) return unauthorized(res);
         const day = url.searchParams.get('day') || today();
         const html = renderPage(loadReports(dataDir), day);
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(html);
         return;
       }
-      if (req.method === 'GET' && url.pathname === '/health') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true, product: 'Web Agent Admin' }));
-        return;
-      }
       if (req.method === 'GET' && url.pathname === '/api/stats') {
+        if (!tokenOk(req, token)) return unauthorized(res);
         const day = url.searchParams.get('day') || today();
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ day, rows: rankDay(loadReports(dataDir), day) }));
         return;
       }
       if (req.method === 'POST' && url.pathname === '/api/report') {
-        if (bearer(req) !== token) {
-          res.writeHead(401, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'unauthorized' }));
-          return;
-        }
+        if (!tokenOk(req, token)) return unauthorized(res);
         const body = await readBody(req);
         const rec = ingest(dataDir, body);
         res.writeHead(200, { 'Content-Type': 'application/json' });
