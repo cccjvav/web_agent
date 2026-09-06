@@ -1,6 +1,12 @@
 # 架构 / 源码可视化导览
 
-把仓库根的 **架构导读**、**技术实现**、**总览**、各夹行级 README 收成一套可点的 HTML。不另写实现；正文来自那些 Markdown。
+把仓库根的 **架构导读**、**技术实现**、**总览**、**组件说明**，以及各夹行级 README 收成一套可点的 HTML。不另写实现；正文来自那些 Markdown。
+
+## 收录范围
+
+站内嵌的是：架构导读、技术实现、总览、组件说明、以及 `docs-site/build.js` 里 `FILE_DOCS` 列出的各级 README。
+
+**不**嵌进站点的：根目录用户操作指南（[使用指南.md](../使用指南.md)、[隧道使用指南.md](../隧道使用指南.md)、[技能使用指南.md](../技能使用指南.md)、[启动脚本说明.md](../启动脚本说明.md)、网页 DeepSeek / Chat Plus / VS Code 指南）。那些以仓库根 Markdown 为准。
 
 ## 打开（Windows CMD）
 
@@ -40,7 +46,7 @@ node docs-site/serve.js
 |---|---|
 | `index.html` / `styles.css` / `app.js` | 壳 |
 | `build.js` | 把 Markdown 打成 `content.js`（无 npm 依赖） |
-| `serve.js` | 先 build，再在 `0.0.0.0:4173` 提供静态页。侧栏链到 `#/guide` 等站内 hash，**不**链 `../架构导读.md`（那个路径 404） |
+| `serve.js` | 先 build，再在 **127.0.0.1:4173** 提供静态页（`DOCS_HOST` 可覆盖）。路径必须落在本目录内（`ROOT + sep`）。侧栏链到 `#/guide` 等站内 hash，**不**链 `../架构导读.md`（那个路径 404） |
 | `content.js` | 生成物；不要手改 |
 
 改导读或行级 README 后：再执行一次 `node docs-site/build.js` 或重启 `serve.js`。`npm test` 末尾的 `docsSite.test.js` 会再跑一遍 build，并断言提交的 `content.js` 没有漂移（`builtAt` 只精确到日期）。
