@@ -28,11 +28,27 @@
 | 根启动脚本清点：run-webagent / run-admin / run-tests / run-webagent-vscode / check-env 的 .cmd+.sh 成对齐全 | OK |
 | v1-v3 既有结论（内存有界、原子写、子进程清理、XSS 面、认证链、回环默认、CI push+PR） | 抽查保持，无回归 |
 
-## 三、结论
+## 三、结论（已按第四节补遗修正）
 
-**无新发现。** 四轮审查（v1 @6c1b0fa → v2 @c92fd7c → v3 @78a540b → v4 @2a49505）累计提出的 P1×1、P2×4、P3×7、N×3、V3×2 全部闭环；剩余仅两条明示可选项（V3-2 时序安全比较、V3-4 engines 字段）与 SECURITY.md 已披露的有意取舍。仓库当前状态：**可维护、可交付，测试/文档/代码三方一致**。
+**~~无新发现~~ → 追问复查后新增 1 条 P3（V4-1，见第四节补遗）。** 四轮审查（v1 @6c1b0fa → v2 @c92fd7c → v3 @78a540b → v4 @2a49505）累计提出的 P1×1、P2×4、P3×7、N×3、V3×2 全部闭环；剩余为 V4-1（待修）、两条明示可选项（V3-2 时序安全比较、V3-4 engines 字段）与 SECURITY.md 已披露的有意取舍。
 
-建议的后续节奏：无阻塞项，可正常迭代新功能；每次功能提交保持现有习惯（代码+README+测试锁三同步），审查可按里程碑抽查而非每提交全查。
+建议的后续节奏：修掉 V4-1 后可正常迭代新功能；每次功能提交保持现有习惯（代码+README+测试锁三同步）。
+
+## 四、补遗（v4 交付后追问复查所得）
+
+| 编号 | 级别 | 问题 | 证据 | 建议 |
+|---|---|---|---|---|
+| **V4-1** | **P3 功能/UX** | 工作台事件流**静默死亡**：`workbench/app.js` `connectWs()` 只在 boot 调一次（L71），**无 `onclose`/`onerror`、无任何重连**；服务端 `eventBus.addWsClient` 的一次性 idle 定时器（`WS_IDLE_MS=30min`，L58-61）**不随 broadcast 活动重置**，到点必以 1001 关闭每个 WS；`MAX_WS=32` 拒绝（1013）客户端同样无反应。后果：Bridge 任务超 30 分钟（文档主推"一次任务可以挂几小时"）后，BRIDGE 工具调用日志、终端输出、`file_patched` 文件树自刷、todos 全部停更，**无任何提示**；数据面不受影响（MCP 调用/写盘照常），仅刷新页面可恢复。全部文档无"断线需刷新"提示 | app.js L9-31/L70-71；eventBus.js L10-11/L54-67；`grep -rn "reconnect\|onclose" workbench/` 为空；无 setInterval 轮询兜底（refreshStatus 仅用户动作触发） | ① 客户端：`ws.onclose = () => setTimeout(connectWs, 退避 1s→30s 封顶)`，状态栏显示"事件流重连中"；② 服务端：broadcast 成功发送时重置 idle 定时器（或 60s 心跳 ping）；③ 按项目惯例加源码锁测试（app.js 必须含 onclose 重连；eventBus broadcast 必须 touch 定时器）；④ workbench README 数据流第 6 条与使用指南补一句 |
+
+**审查方法学备注**（本轮教训，供后续审查者参考）：V4-1 在 v1-v4 四轮中都漏过，原因是此前对前端只查了 XSS/路径/按钮存在性，没有沿"服务端主动断连 × 客户端重连策略"这条跨层链路对过账；且一次 `grep -v "//"` 过滤把含 URL 的 WebSocket 命中行滤掉过。跨层生命周期（连接、定时器、子进程）应作为固定审查维度。
+
+## 五、剩余风险边界（沙箱内无法验证、需真机确认的维度）
+
+1. **Windows 真机行为**：junction/symlink 测试是 win32 门槛（本沙箱 Linux 跳过）、`.cmd` 脚本引号/编码、CRLF 全链路——建议真机跑一遍 `run-webagent.cmd` + `run-tests.cmd` + 网页 VS Code 模式。
+2. **真隧道长挂**：cloudflared/ngrok 从未真实 spawn（无二进制，测试全为 stub+源码锁）；V3-1 修复后建议真开 Bridge 挂 2 小时以上观察 RSS 与日志流。
+3. **浏览器 E2E**：工作台只做过源码级断言与只读探针，无真实点击流（沙箱无 Playwright）；Monaco CDN 失败回退已有 textarea 兜底（代码确认），但整页交互未实测。
+4. **真实外部服务**：GitHub OAuth 设备流、真实模型 API、DeepSeek++/Chat Plus 扩展实连——只验到协议层/源码层。
+5. **压测/覆盖率**：无负载测试；29 个测试文件无覆盖率度量（未装 c8/nyc）。
 
 ---
-*过程报告同置仓库根：REPORT.md（v1）/ REPORT_v2.md / REPORT_v3.md / REPORT_v4.md（本文件）。本轮无待办。*
+*过程报告同置仓库根：REPORT.md（v1）/ REPORT_v2.md / REPORT_v3.md / REPORT_v4.md（本文件）。待办：第四节 V4-1（P3）；V3-2/V3-4 仍为可选。*
