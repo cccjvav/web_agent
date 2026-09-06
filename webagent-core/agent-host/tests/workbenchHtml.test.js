@@ -34,5 +34,9 @@ assert.ok(!/ngrok 开发域名[\s\S]{0,80}未实现/.test(html));
 assert.ok(!html.includes('不会被使用'));
 assert.ok(!html.includes('使用 GitHub 登录'));
 assert.ok(!html.includes('永久顺'));
+assert.ok(!html.includes('D:\\skills'));
+assert.ok(!html.includes('不必拷进当前项目'));
+assert.ok(!html.includes('不必拷进工作区'));
+assert.ok(html.includes('技能使用指南.md'));
 
 console.log('workbench HTML has bind() nodes');

@@ -14,6 +14,7 @@ GitHub 默认分支 `main` 目前仍是更早的原型快照。现行工作台�
 |---|---|
 | [使用指南.md](./使用指南.md) | Windows + CMD 从安装到 Bridge |
 | [隧道使用指南.md](./隧道使用指南.md) | Quick Tunnel / Named Tunnel / ngrok 逐步（CMD） |
+| [技能使用指南.md](./技能使用指南.md) | Skill 放哪、怎么建、load_skill、挂自己仓库 |
 | [架构导读.md](./架构导读.md) | 人话 → 比喻 → 文件落地 → 行业叫法（为什么这样装） |
 | [docs-site/](./docs-site/) | 同一套导读/直译的可视化 HTML（`node docs-site/serve.js` → http://127.0.0.1:4173/） |
 | [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md) | DeepSeek 网页 + DeepSeek++（不 fork 扩展） |

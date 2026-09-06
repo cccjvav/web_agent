@@ -352,7 +352,7 @@
         </div>
         <div class="page hidden" id="page-skills">
           <h2>技能引导</h2>
-          <p class="lead">Skills 本质上是文件夹：<code>.webagent/skills/名字/SKILL.md</code>。把路径给 AI 就会用。Bridge 也支持，不必拷进当前项目。</p>
+          <p class="lead">Skills 是当前工作区里的作业指导书：<code>.webagent/skills/名字/SKILL.md</code>（也可以放 <code>skills/名字/SKILL.md</code>）。本机 Chat 和 Bridge 同一套：先看到目录，要用时模型再 <code>load_skill</code>。逐步见仓库根「技能使用指南.md」。</p>
           <ol class="guide-steps">
             <li><strong>起名</strong>：小写、连字符，只做一件事（如 <code>fix-tests</code>）。</li>
             <li><strong>写何时使用</strong>：模型靠这段描述决定要不要 <code>load_skill</code>。</li>
@@ -374,7 +374,7 @@
           <label class="field-label">SKILL.md 预览（可再改）</label>
           <textarea id="sk-body" class="ms-input tall" placeholder="# Skill: …"></textarea>
           <button type="button" id="btn-add-skill" class="vs-btn primary">新建 Skill 文件夹</button>
-          <p class="hint">对话里也可以说「按 D:\skills\release 这份 Skill 发版」，不必先拷进工作区。</p>
+          <p class="hint">对话里说「按 fix-tests 做」。Skill 必须在当前工作区这两个目录里；工作区外的路径读不了。挂自己的仓库时，演示区的 Skill 不会自动拷过去。</p>
         </div>
         <div class="page hidden" id="page-instructions">
           <h2>指令</h2>

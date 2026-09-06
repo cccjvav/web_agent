@@ -70,7 +70,7 @@ run-webagent-vscode.cmd
 
 GitHub Copilot 自己的 Ask/Edit/Agent 下拉是 Copilot 扩展私有 UI，第三方扩展开不进去。若你同时装了 Copilot，请用 **`@webagent`** 或左侧 **Web Agent** 侧栏，不要指望 Copilot 的 Agent 下拉里出现 Web Agent。
 
-齿轮 → **智能体自定义设置** 里可填 **环境偏好**、**技术栈**，并用 **技能引导** 建 `SKILL.md`。这些会写进工作区 `.webagent/`，原生 Chat `@webagent` 和 Bridge 都会带上。
+齿轮 → **智能体自定义设置** 里可填 **环境偏好**、**技术栈**，并用 **技能引导** 建 `SKILL.md`。这些会写进工作区 `.webagent/`，原生 Chat `@webagent` 和 Bridge 都会带上。Skills 逐步见 [技能使用指南.md](./技能使用指南.md)。
 
 工作区就是你传入的文件夹，VS Code 资源管理器、编辑器、搜索都是真的。
 
