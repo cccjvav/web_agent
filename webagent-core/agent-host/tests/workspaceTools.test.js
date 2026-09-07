@@ -69,6 +69,12 @@ async function main() {
     const cu = await callTool('load_skill', { name: 'computer-use' }, 'ask');
     assert.ok(cu.found && String(cu.content).includes('Computer Use'));
   }
+  const pmMd = path.resolve(__dirname, '../../../project-manager/SKILL.md');
+  if (fs.existsSync(pmMd)) {
+    assert.ok(listed.skills.some((s) => s.name === 'project-manager'));
+    const pm = await callTool('load_skill', { name: 'project-manager' }, 'ask');
+    assert.ok(pm.found && String(pm.content).includes('CONTEXT.md'));
+  }
 
   fs.writeFileSync(path.join(tmp, 'gone.txt'), 'x');
   let deleteBlocked = false;
