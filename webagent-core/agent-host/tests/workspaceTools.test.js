@@ -74,6 +74,7 @@ async function main() {
     assert.ok(listed.skills.some((s) => s.name === 'project-manager'));
     const pm = await callTool('load_skill', { name: 'project-manager' }, 'ask');
     assert.ok(pm.found && String(pm.content).includes('CONTEXT.md'));
+    assert.ok(String(pm.content).includes('核心理念') || String(pm.content).length > 8000);
   }
 
   fs.writeFileSync(path.join(tmp, 'gone.txt'), 'x');

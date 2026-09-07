@@ -212,7 +212,7 @@
 - **Const `BUNDLED_SKILL_NAMES`（L12）** — `computer-use`、`project-manager`。
 - **Function `bundledSkills`（L14–L29）** — 仓库根 `<name>/SKILL.md`（与工作区无关）。缺文件则跳过。
 - **Function `listSkills`（L37–L57）** — 工作区两处 + bundled；同名工作区优先；preview 前 240 字。对外列表不含 `absDir`。
-- **Function `loadSkill`（L59–L83）** — 无 name 返回列表+hint。找不到 `{ found:false, available }`。找到从 `absDir` 读最多 8000 字。
+- **Function `loadSkill`（L59–L83）** — 无 name 返回列表+hint。找不到 `{ found:false, available }`。找到从 `absDir` 读最多 **28000** 字（`project-manager` 全文约 23KB）。
 
 ---
 

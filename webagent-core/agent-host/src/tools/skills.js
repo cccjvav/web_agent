@@ -78,7 +78,7 @@ function loadSkill({ name } = {}) {
     found: true,
     name: hit.name,
     path: hit.path,
-    content: fs.readFileSync(md, 'utf8').slice(0, 8000)
+    content: fs.readFileSync(md, 'utf8').slice(0, 28000)
   };
 }
 

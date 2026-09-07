@@ -34,3 +34,6 @@ webagent-core/extensions-installed/extensions.json
 
 # Local screenshot dumps (never part of the product)
 image-search/
+
+# project-manager privacy map (real secrets / PII)
+manager/privacy.md
