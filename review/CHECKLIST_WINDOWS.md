@@ -1,8 +1,8 @@
 # Windows 真机验证清单（CHECKLIST_WINDOWS）
 
-- **对应代码**：`arena/01a05d84-web-agent` tip `2a49505`（或更新）；审查系列见 REPORT.md / REPORT_v2-v4.md
-- **为什么需要**：四轮审查在 Linux 沙箱完成，以下维度沙箱**覆盖不到**：Windows 专属代码路径（junction、.cmd、CRLF）、真实隧道长时间运行、真实浏览器交互、真实外部服务（GitHub / 模型 API / 浏览器扩展）
-- **分工**：**A 节给使用者**（约 20 分钟，双击+点几下，不需要读代码）；**B 节给项目助手/开发**（约半天，含一条已知问题 V4-1 的复现）；C 节是**不用做**的（沙箱已覆盖）
+- **对应代码**：`arena/01a05d84-web-agent`（V4-1 / V3-2 / V3-4 已在 `63a960d` 落地；本清单在 `review/`）
+- **为什么需要**：审查在 Linux 沙箱完成，以下维度沙箱**覆盖不到**：Windows 专属代码路径（junction、.cmd、CRLF）、真实隧道长时间运行、真实浏览器交互、真实外部服务（GitHub / 模型 API / 浏览器扩展）
+- **分工**：**A 节给使用者**（约 20 分钟，双击+点几下，不需要读代码）；**B 节给项目助手/开发**（约半天）；C 节是**不用做**的（沙箱已覆盖）
 - **记录方式**：每节末尾有结果表。填完后可整份提交回仓库（或聊天发回），失败的项附截图/CMD 窗口原文
 
 ## 前置条件
@@ -10,7 +10,7 @@
 | 项 | 要求 |
 |---|---|
 | 系统 | Windows 10/11 |
-| Node.js | **20 LTS**（CI 用 20；package.json 暂无 engines 字段=已知可选项 V3-4，别用低于 18 的） |
+| Node.js | **20 LTS**（CI 用 20；`agent-host/package.json` 声明 `engines.node >=18`，别用更旧的） |
 | Git | 任意近年版本（`check-env.cmd` 会查） |
 | 隧道（可选，B3 需要） | `winget install --id Cloudflare.cloudflared`；ngrok 走 `winget install Ngrok.Ngrok` |
 | 网络 | A5/B6/B7 需要外网（Monaco CDN、模型 API、GitHub） |
@@ -74,8 +74,8 @@ Bridge 页选中 DeepSeek++ 或 Chat Plus 卡片 → 出现「复制规则」按
 **B3 真隧道长挂 ≥2 小时（验证 V3-1 修复）**
 启动 Bridge（cloudflared），期间让网页端持续调工具（或挂一个长任务）。观察：任务管理器 node 进程内存**稳定不爬升**（修复前三处日志 buf 无上限）；BRIDGE 日志持续滚动；隧道日志里 Token 显示为 `[token]` 不是原文。ngrok 同样跑一轮（它 `--log=stdout` 每请求一行，最吃缓冲）。
 
-**B4 V4-1 复现与修复验证（当前预期"复现成功"）**
-已知问题：工作台事件流 30 分钟静默断连（`connectWs` 无重连 × `eventBus` 一次性 idle 定时器）。复现：开着工作台与 Bridge，放置 35 分钟不刷新，再从网页端触发一次工具调用 → BRIDGE 日志**不再滚动**、文件树不自刷，刷新页面才恢复。修复后（客户端退避重连 + 服务端活动重置定时器 + 源码锁测试）重跑本条应变为"35 分钟后日志照常滚动"。
+**B4 V4-1 已修复，验证重连（预期：日志仍滚动）**
+开着工作台与 Bridge，放置 35 分钟不刷新，再从网页端触发一次工具调用 → BRIDGE 日志**照常滚动**；期间状态栏可能短暂出现「事件流重连中」后自动恢复。不要按「断了必须刷新页面」当通过标准。
 
 **B5 浏览器 E2E 点击流**
 设置弹窗逐页打开保存（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/插件/API/Codex/多模型博弈）；多模型博弈开 2–8 分支跑一轮合并；终端面板 `run_command`；搜索 `search_files` 结果可点击打开文件；全程 DevTools Console 无未捕获异常。
@@ -102,7 +102,7 @@ Bridge 页选中 DeepSeek++ 或 Chat Plus 卡片 → 出现「复制规则」按
 
 | 项 | 通过? | 备注（失败附日志） |
 |---|---|---|
-| B1–B11 | ☐ | B4 修复前预期=复现成功 |
+| B1–B11 | ☐ | B4 预期=35 分钟后日志仍滚动 |
 
 ---
 
@@ -110,13 +110,11 @@ Bridge 页选中 DeepSeek++ 或 Chat Plus 卡片 → 出现「复制规则」按
 
 - `npm test` 29/29、`npm audit` 0 漏洞、`node --check` 全量语法、md 链接/密钥/gitignore 扫描（Linux 侧已绿；真机只需 A10/B1 的 Windows 侧确认）
 - XSS 面审查（escapeHtml/textContent 全覆盖）、MCP 认证链、内存有界性、原子写、子进程清理——源码级已验
-- V1–V3 全部修复项的验收（见 REPORT_v2/v3/v4 矩阵）
+- V1–V5 修复项的验收（见同目录 REPORT_v2…v5 矩阵）
 
 ## 已知未修项（跑清单时会遇到，别当新问题报）
 
 | 编号 | 内容 | 状态 |
 |---|---|---|
-| V4-1 | 工作台 WS 30 分钟静默断连不重连（B4 就是它） | **待修**，修复建议见 REPORT_v4.md 第四节 |
-| V3-2 | secretKey/token `===` 比较非时序安全 | 可选加固 |
-| V3-4 | package.json 无 engines 字段 | 可选（前置条件里人工注意 Node 版本即可） |
+| V4-1 / V3-2 / V3-4 | WS 重连、时序安全比较、engines | **已落地**（`63a960d`），B4 按新预期验 |
 | 披露取舍 | Key 明文在 `.webagent/config.json`、`/api/status` 带 secretKey、启动日志打印含密钥 MCP URL 等 | SECURITY.md 有意为之，勿报 |
