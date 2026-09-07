@@ -37,7 +37,7 @@
 | 问题描述 | 优先级 | 预计解决阶段 | 关联模块 | 详情 |
 |---|---|---|---|---|
 | Windows 真机冒烟：真跑 snap/act 脚本、真视觉模型端到端、设置页勾选交互、远程客户端实收 image 内容 | P1 | 第一/三阶段验收 | computer-use / agent / mcp | → review/REPORT_SHUNCODE_S1.md 与 S3 报告「真机还缺什么」 |
-| S4 图形资料：用户的 ShunCode 界面截图未入仓（仅存于其与前任助手的聊天） | P1 | 第四阶段 | UI | 已请用户补发；产品分支 92b3e93 与本分支均查无图片文件 |
+| ~~S4 图形资料：用户的 ShunCode 界面截图未入仓~~ 内容已目视记录（manager/stages/s4-terminal.md 索引）；**字节**仍缺 | P1 | 第四阶段 S4-4 | UI | 附件未落到沙箱盘（/home/user/uploads 缺失）；请用户重发或经产品分支入仓 |
 | ~~Bridge 回传截图（MCP image 内容）~~ | 已解决 | 第三阶段完成（2026-09-07 用户书面签字） | mcp | → review/REPORT_SHUNCODE_S3.md |
 | npm test 偶发 1/30 失败（文件名未留存，3 次重跑不可复现） | P3 | 真机复现时排查 | tests | 优先查依赖临时端口的 HTTP 用例 |
 | mcp/README 除 method 表/tools-catch 外的区段（oauth/hostStatus 等）行号未逐一核对 | P3 | 下次触及 mcp/README 时 | docs | method 表与 tools/call 细节已于 S3 实测校正 |
