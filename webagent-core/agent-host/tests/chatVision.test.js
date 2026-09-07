@@ -156,6 +156,17 @@ async function main() {
     assert.ok(events.some((e) => e.t === 'status' && /不会看图|未标记/.test(e.text || '')), 'UI 有诚实提示');
   });
 
+  // --- 设置页 vision 勾选（源码锁：UI 三件套都在）
+  {
+    const wbRoot = path.resolve(__dirname, '../../workbench');
+    const html = fs.readFileSync(path.join(wbRoot, 'index.html'), 'utf8');
+    assert.ok(html.includes('id="m-vision"'), 'API 页应有「可看图 vision」勾选框');
+    const bindSrc = fs.readFileSync(path.join(wbRoot, 'js', 'bind.js'), 'utf8');
+    assert.ok(bindSrc.includes('m-vision') && /vision:/.test(bindSrc), 'Add API 流应把勾选写进模型记录 vision 字段');
+    const settingsSrc = fs.readFileSync(path.join(wbRoot, 'js', 'settings.js'), 'utf8');
+    assert.ok(/m\.vision/.test(settingsSrc), '模型表应显示 vision pill');
+  }
+
   // --- MCP 不变：Bridge 仍然只回文本
   const serverSrc = fs.readFileSync(path.join(__dirname, '../src/mcp/server.js'), 'utf8');
   assert.ok(!serverSrc.includes('computerUse'), 'MCP server 不得引用 Chat 专用 computerUse');

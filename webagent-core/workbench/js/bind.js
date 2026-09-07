@@ -477,6 +477,9 @@ export function bind() {
         group,
         contextSize: m.contextSize,
         caps: m.caps,
+        // 「可看图」勾选 或 探测到的 caps 自带 vision → 模型记录带 vision:true（openai.js 据此决定发不发 image_url）
+        vision: Boolean($('#m-vision') && $('#m-vision').checked)
+          || (Array.isArray(m.caps) && m.caps.some((c) => /vision/i.test(String(c)))),
         pricing: m.pricing || ''
       }))
     ];

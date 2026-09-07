@@ -39,7 +39,7 @@
     - L173–L205 `#right-chat`：流、Tasks、chips、`#chat-input`、`#btn-agent-pick`、隐藏 `#mode-select`、`#model-select`、`#think-select`、`#plan-badge`、`#btn-plan-merge`（总结）、发送。
     - L208–L241 `#right-bridge`：等待文案、任务、log、MCP session 卡（可折叠）。`#btn-stop-bridge-rb`、`#btn-bridge-health`、`#btn-reset-round`（按钮文案 Clear log，title 仍是「清除本轮统计」）、`#stat-calls` / `#stat-avg`（秒）/ `#stat-fail` / `#stat-ok`、`#sess-meta`、`#sess-foot`。
   - L244–L254 `#statusbar`：`#sb-bridge`；`#sb-ws` 默认 hidden，断线时由 `app.js` 写「事件流重连中」。
-  - L256–L608 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/**多模型博弈** `#page-multimodel`）。**`#page-env` / `#page-stack` 有完整表单**。挂钩/插件/MCP 服务器名单/Voice/Dictation **标明不会执行或未实现**。Codex 页写「没有接 OpenAI Codex OAuth」，按钮 disabled。API Key 提示写 `.webagent/config.json`，不是钥匙串。`#page-multimodel`：启用、合并主模型、合并思考、合并时只读验证、每回合最大分支 2–8 默认 4。Bridge 页含客户端卡片、复制 URL/提示词、`#btn-copy-rules`（默认 hidden）、打开各站点、**本机演示授权**（`#btn-gh-login`，文案写不是 GitHub）以及 **GitHub 验证**（`#btn-gh-token` / `#btn-gh-device` / `#btn-gh-clear`）。隧道 radio：cloudflare 默认会拉 Quick Tunnel；**Named Tunnel** 填 `#named-domain` / `#named-token` 后启动会 `tunnel run --token`；**ngrok** 填 `#ngrok-domain`（可选）/ `#ngrok-token` 后启动会 `ngrok http`。`#btn-reset-secret` 在高级设置。
+  - L256–L608 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/**多模型博弈** `#page-multimodel`）。**`#page-env` / `#page-stack` 有完整表单**。挂钩/插件/MCP 服务器名单/Voice/Dictation **标明不会执行或未实现**。Codex 页写「没有接 OpenAI Codex OAuth」，按钮 disabled。API Key 提示写 `.webagent/config.json`，不是钥匙串。API 页有 `#m-vision`「可看图（vision）」勾选：Add API 时写进模型记录，本机 Chat 据此决定截图发不发 `image_url`（computer-use）。`#page-multimodel`：启用、合并主模型、合并思考、合并时只读验证、每回合最大分支 2–8 默认 4。Bridge 页含客户端卡片、复制 URL/提示词、`#btn-copy-rules`（默认 hidden）、打开各站点、**本机演示授权**（`#btn-gh-login`，文案写不是 GitHub）以及 **GitHub 验证**（`#btn-gh-token` / `#btn-gh-device` / `#btn-gh-clear`）。隧道 radio：cloudflare 默认会拉 Quick Tunnel；**Named Tunnel** 填 `#named-domain` / `#named-token` 后启动会 `tunnel run --token`；**ngrok** 填 `#ngrok-domain`（可选）/ `#ngrok-token` 后启动会 `ngrok http`。`#btn-reset-secret` 在高级设置。
   - L610–L629 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`（Plan 文案「分支」）。
   - L630 `#toast`；L631 `<script type="module" src="./app.js">`（原生 ES module，无打包）。
 
@@ -124,7 +124,7 @@
 
 - **文件职责：** 自定义设置、API Provider 表、skills 列表。
 - **Function `rowList`（L4–L7）** / **`paintCustom`（L9–L82）** — `#mm-merge` 用当前对话模型 + 已配置模型列表。`#codex-status` 恒写未实现，不读 `c.codex.loggedIn`。
-- **Function `paintProviderTable`（L73–L111）** — radio 改 `activeModelId`。
+- **Function `paintProviderTable`（L83–L123）** — radio 改 `activeModelId`；`m.vision` 且 caps 无 vision 时补一枚 `vision` pill。
 - **Function `loadCustomizations`（L113–L117）** / **`saveCustom`（L119–L129）** — GET/PUT `/api/customizations`。
 - **Function `loadSkills`（L131–L139）** — GET `/api/skills`。
 
@@ -134,7 +134,7 @@
 
 - **文件职责：** 全部 DOM 事件。闭包内 `skillMarkdown` / `SKILL_TPL` / `fillSkillPreview` / `probeProvider`（不导出）。
 - **Function `onClick(id, handler)`（L4–8）** — 节点不存在则跳过，避免 `null.onclick` 把整个 `boot` 打断。
-- **Function `bind`（L10–L571）** — 先 `initTheme`；`#btn-theme` 切换浅/深；`#btn-sess-toggle` 折叠 MCP 卡；`#btn-bridge-health` 调 `checkBridgeHealth`。其余：活动栏、菜单、发送、`#btn-plan-merge`（`planAction:'merge'`）、`#model-select` onchange POST `/api/models` `{ activeModelId }`、`#think-select` 标记 touched、Enter、Bridge、复制 URL/提示词、`#btn-copy-rules`（复制 `rulesText`）、reset-secret、本机演示授权、**验证令牌** `/bridge/token`、设备码 `/bridge/device`+poll、清除 GitHub `/bridge/github/clear`、各 `ui.saveCustom`、技能模板、环境/技术栈、probe/Add API（手动 id 时 caps/context 空，不猜 1.3M）、Codex 钮 toast「未实现，不会假装已登录」、保存多模型博弈（`maxBranches` 默认 4）、终端 `POST /api/tool/call` `run_command` mode code、搜索 `search_files` mode ask、Ctrl/Cmd+S。
+- **Function `bind`（L10–L574）** — 先 `initTheme`；`#btn-theme` 切换浅/深；`#btn-sess-toggle` 折叠 MCP 卡；`#btn-bridge-health` 调 `checkBridgeHealth`。其余：活动栏、菜单、发送、`#btn-plan-merge`（`planAction:'merge'`）、`#model-select` onchange POST `/api/models` `{ activeModelId }`、`#think-select` 标记 touched、Enter、Bridge、复制 URL/提示词、`#btn-copy-rules`（复制 `rulesText`）、reset-secret、本机演示授权、**验证令牌** `/bridge/token`、设备码 `/bridge/device`+poll、清除 GitHub `/bridge/github/clear`、各 `ui.saveCustom`、技能模板、环境/技术栈、probe/Add API（手动 id 时 caps/context 空，不猜 1.3M；`#m-vision` 勾选或 caps 自带 vision → 记录 `vision:true`）、Codex 钮 toast「未实现，不会假装已登录」、保存多模型博弈（`maxBranches` 默认 4）、终端 `POST /api/tool/call` `run_command` mode code、搜索 `search_files` mode ask、Ctrl/Cmd+S。
 
 ---
 
