@@ -209,8 +209,9 @@
 ### 📄 文件名：`skills.js`
 
 - **Function `skillRoots`（L5–L10）** — `.webagent/skills` 与工作区 `skills/`。
-- **Function `listSkills`（L12–L29）** — 必须是目录且有 `SKILL.md`；preview 前 240 字。
-- **Function `loadSkill`（L31–L55）** — 无 name 返回列表+hint。找不到 `{ found:false, available }`。找到读最多 8000 字。
+- **Function `bundledSkills`（L12–L22）** — 仓库根 `computer-use/SKILL.md`（与工作区无关）。没有该文件则空数组。
+- **Function `listSkills`（L30–L50）** — 工作区两处 + bundled；同名工作区优先；preview 前 240 字。对外列表不含 `absDir`。
+- **Function `loadSkill`（L52–L76）** — 无 name 返回列表+hint。找不到 `{ found:false, available }`。找到从 `absDir` 读最多 8000 字。
 
 ---
 
