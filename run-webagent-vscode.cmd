@@ -25,6 +25,8 @@ if errorlevel 1 (
   exit /b 1
 )
 
+if not "%~1"=="" if exist "%WORKSPACE_ROOT%" if not exist "%WORKSPACE_ROOT%\" set "WORKSPACE_ROOT=%~dp1"
+if "%WORKSPACE_ROOT:~-1%"=="\" set "WORKSPACE_ROOT=%WORKSPACE_ROOT:~0,-1%"
 if not exist "%WORKSPACE_ROOT%" (
   echo [错误] 工作区不存在：
   echo   %WORKSPACE_ROOT%
