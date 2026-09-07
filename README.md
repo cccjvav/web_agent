@@ -29,7 +29,7 @@ GitHub 默认分支 `main` 目前仍是更早的原型快照。现行工作台�
 | [SECURITY.md](./SECURITY.md) | 隧道、本机密钥、OAuth 只在内存 |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | 怎么跑测试、改功能时改说明书、不要做的几件事 |
 | [review/](./review/) | 过程审查（v1–v6、Windows 清单、PROMPT_SHUNCODE。不是产品指南） |
-| [CONTEXT.md](./CONTEXT.md) / [manager/CONTEXT.md](./manager/CONTEXT.md) | 给下一任助手的短索引（项目管家）。不要当用户手册 |
+| [manager/CONTEXT.md](./manager/CONTEXT.md) | 给下一任助手的短索引（项目管家）。不要当用户手册 |
 
 简要对照：
 
