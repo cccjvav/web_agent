@@ -39,9 +39,9 @@
 **不做**：真 PTY（未点名）、Electron、vendor 任何 ShunCode 代码/资源（截图仅作设计参考，不抠图不抄素材）。
 
 ## 子计划
-- **S4-1 安装包（Inno Setup，非 Electron）**：`installer/webagent.iss` + `installer/build-installer.cmd` + `installer/README.md`。装：仓库文件（排 node_modules/.cache/code-server-runtime）+ 开始菜单/桌面快捷方式（**默认指向 run-webagent-vscode.cmd**）+ 卸载项；前置检查 Node≥18/npm，缺则指引 check-env.cmd；code-server 仍首跑自下载（gitignore 既定）。沙箱无法编译 .iss：交付脚本+文档+语法自查清单，真机编译列进验收。
-- **S4-2 Code-OSS 当默认壳**：安装器与文档把 `run-webagent-vscode.cmd` 立为主入口（桌面图标=它），`run-webagent.cmd` 改名语义「经典工作台（备用）」；启动脚本说明.md / 使用指南.md / 架构导读 §12 同步（§12「Code-OSS 当默认壳」行从不做表移入「已经做了」）。
-- **S4-3 UI 对齐**：上表差距 1–5，逐项带 workbenchHtml 锁 + workbench/README 行号校正 + content.js 重建。
+ - **S4-1 安装包（Inno Setup，非 Electron，提交 4a85ecf）**：`installer/webagent.iss` + `installer/build-installer.cmd` + `installer/README.md`。装：仓库文件（排 node_modules/.cache/code-server-runtime）+ 开始菜单/桌面快捷方式（**默认指向 run-webagent-vscode.cmd**）+ 卸载项；前置检查 Node≥18/npm，缺则指引 check-env.cmd；code-server 仍首跑自下载（gitignore 既定）。沙箱无法编译 .iss：交付脚本+文档+语法自查清单，真机编译列进验收。
+ - **S4-2 Code-OSS 当默认壳（提交 8a73df0，文档口径）**：安装器与文档把 `run-webagent-vscode.cmd` 立为主入口（桌面图标=它），`run-webagent.cmd` 改名语义「经典工作台（备用）」；启动脚本说明.md / 使用指南.md / 架构导读 §12 同步（§12「Code-OSS 当默认壳」行从不做表移入「已经做了」）。
+ - **S4-3 UI 对齐（提交 8a73df0 抛光 + ce6d52f 弹层）**：差距 1（可搜索模型弹层 picker.js）、3（branch-pill）、5（composer chip）已做；**差距 2/4 侦察发现早已实现**（失败卡红框+Failed、Bridge 快速打开/高级设置 details），从清单移除；全部带 workbenchHtml 锁 + README 行号校正 + content.js 重建。
 - **S4-4 资料补齐**：截图字节入 `review/shuncode-ui/`（待用户重发或产品分支入仓后 fetch）。
 
 ## 决策
@@ -49,7 +49,9 @@
 - 默认壳 = Code-OSS 但**不删**自研工作台：双入口都在，安装器只改默认快捷方式（回退零成本）。
 - 截图只作设计参考：不入库 vendor 素材、不抠图；差距清单只描述布局与交互语义。
 
-## 待更新文档（开工时勾）
-- [ ] 启动脚本说明.md、使用指南.md、架构导读.md §12、installer/README.md（新）
-- [ ] workbench/README.md（S4-3 每项）、tests/README.md、测试说明.md
-- [ ] manager/CONTEXT.md、review/REPORT_SHUNCODE_S4.md（收尾）
+## 待更新文档
+- [x] 启动脚本说明.md、使用指南.md、架构导读.md §12、installer/README.md（新）
+- [x] workbench/README.md、tests/README.md
+- [x] manager/CONTEXT.md
+- [ ] review/REPORT_SHUNCODE_S4.md（收尾时写：含真机验收清单——.iss 编译/安装冒烟/模型弹层浏览器交互/远程客户端实收 image）
+- [ ] S4-4 截图字节入 review/shuncode-ui/（用户自行入仓后 fetch 核对）

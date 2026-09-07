@@ -8,9 +8,9 @@
 - **创建时间**：2026-09
 
 ## 当前状态
-- **阶段**：S4-终端化（进行中：规划已落 `manager/stages/s4-terminal.md`；S1–S3 已完成）
-- **正在做**：S4-1 安装包（Inno Setup 脚本）→ S4-2 Code-OSS 默认壳 → S4-3 UI 对齐五项；真 PTY 未点名不做
-- **阻塞项**：ShunCode 截图**字节**未入仓（附件未落到沙箱盘，内容已目视记录进 s4-terminal.md 索引）；等用户重发或产品分支入仓后 fetch 补齐 `review/shuncode-ui/`
+- **阶段**：S4-终端化（代码完成：S4-1 安装包 4a85ecf / S4-2 默认壳+抛光 8a73df0 / S4-3 模型弹层 ce6d52f；S1–S3 已完成）
+- **正在做**：等用户把 ShunCode 截图字节自行入仓（`review/shuncode-ui/`）后 fetch 核对；S4 收尾报告待写真机验收清单后出
+- **阻塞项**：无代码阻塞；真机验收（.iss 编译、安装冒烟、弹层交互、远程实收 image）待 Windows
 
 ## 已完成阶段摘要
 | 阶段 | 做了什么 | 详情 |
