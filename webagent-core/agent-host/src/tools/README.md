@@ -209,9 +209,10 @@
 ### 📄 文件名：`skills.js`
 
 - **Function `skillRoots`（L5–L10）** — `.webagent/skills` 与工作区 `skills/`。
-- **Function `bundledSkills`（L12–L22）** — 仓库根 `computer-use/SKILL.md`（与工作区无关）。没有该文件则空数组。
-- **Function `listSkills`（L30–L50）** — 工作区两处 + bundled；同名工作区优先；preview 前 240 字。对外列表不含 `absDir`。
-- **Function `loadSkill`（L52–L91）** — 无 name 返回列表+hint。找不到 `{ found:false, available }`。找到从 `absDir` 读最多 8000 字，返回带 `absDir`；`computer-use` 额外带 `scriptsDir`（仓库根 `computer-use/win`）与 `runHint`（「手」的薄转发：Windows 本机 Chat 经 run_command 用绝对路径跑 `snap.ps1` 等，`-Out` 截图存工作区内，Chat 会把新截图作为图片附给标记 vision 的模型；Bridge 不回传图片）。
+- **Const `BUNDLED_SKILL_NAMES`（L12）** — `computer-use`、`project-manager`。
+- **Function `bundledSkills`（L14–L29）** — 仓库根 `<name>/SKILL.md`（与工作区无关）。缺文件则跳过。
+- **Function `listSkills`（L37–L57）** — 工作区两处 + bundled；同名工作区优先；preview 前 240 字。对外列表不含 `absDir`。
+- **Function `loadSkill`（L59–L96）** — 无 name 返回列表+hint。找不到 `{ found:false, available }`。找到从 `absDir` 读最多 **28000** 字（`project-manager` 全文约 23KB），返回带 `absDir`；`computer-use` 额外带 `scriptsDir`（仓库根 `computer-use/win`）与 `runHint`（「手」的薄转发：Windows 本机 Chat 经 run_command 用绝对路径跑 `snap.ps1` 等，`-Out` 截图存工作区内，Chat 会把新截图作为图片附给标记 vision 的模型；Bridge 不回传图片）。
 
 ---
 

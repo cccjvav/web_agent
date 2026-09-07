@@ -9,16 +9,23 @@ function skillRoots() {
   ];
 }
 
+const BUNDLED_SKILL_NAMES = ['computer-use', 'project-manager'];
+
 function bundledSkills() {
-  const dir = path.resolve(__dirname, '../../../../computer-use');
-  const md = path.join(dir, 'SKILL.md');
-  if (!fs.existsSync(md)) return [];
-  return [{
-    name: 'computer-use',
-    path: path.relative(config.workspaceRoot, dir),
-    absDir: dir,
-    preview: fs.readFileSync(md, 'utf8').slice(0, 240)
-  }];
+  const repoRoot = path.resolve(__dirname, '../../../..');
+  const out = [];
+  for (const name of BUNDLED_SKILL_NAMES) {
+    const dir = path.join(repoRoot, name);
+    const md = path.join(dir, 'SKILL.md');
+    if (!fs.existsSync(md)) continue;
+    out.push({
+      name,
+      path: path.relative(config.workspaceRoot, dir),
+      absDir: dir,
+      preview: fs.readFileSync(md, 'utf8').slice(0, 240)
+    });
+  }
+  return out;
 }
 
 function addSkill(skills, seen, entry) {
@@ -72,7 +79,7 @@ function loadSkill({ name } = {}) {
     name: hit.name,
     path: hit.path,
     absDir: hit.absDir,
-    content: fs.readFileSync(md, 'utf8').slice(0, 8000)
+    content: fs.readFileSync(md, 'utf8').slice(0, 28000)
   };
   if (hit.name === 'computer-use') {
     // 「手」的薄转发：脚本在仓库根（不在工作区），给模型绝对目录与现成命令模板。
