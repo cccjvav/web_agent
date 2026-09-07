@@ -29,5 +29,18 @@
 | 17-multimodel-settings-dark.jpg | ShunCode 设置「多模型博弈」页深色：启用开关/合并主模型/思考强度/只读验证/每回合分支数 | 顶栏内置浏览器 Arena 与 WorkBuddy 两 tab |
 | 18-failed-toolcards-red.jpg | ShunCode 聊天面板失败工具卡红框 + Failed 标（list_directory/read_files） | 三屏对照：左 Arena 网页、中 WorkBuddy 网页 |
 
+## 安装系列（第三批 `1eb1cad`，2026-09-07 夜上传）与技术栈取证
+| 文件 | 主体画面 | 背景/备注 |
+|---|---|---|
+| 19-install-exe-versions.jpg | 资源管理器：ShunCode-0.5.0→0.6.5-win32-x64-Setup.exe 历版安装包（各约 224MB） | tooltip：ShunCode Setup / 0.6.5.0 / 219MB |
+| 20-install-license.jpg | 安装向导许可协议页：MIT + Copyright Microsoft Corporation（= Code-OSS 许可证原文） | 单选「我同意/我不同意」= Inno Setup 页式 |
+| 21-install-destdir.jpg | 选择目标位置：默认 `D:\Program Files\ShunCode`，提示装后需 1.10GB | 系统级安装（非 per-user） |
+| 22-install-startmenu.jpg | 选择开始菜单文件夹：ShunCode + 「不创建」复选 | Inno 标准页 |
+| 23-install-additional-tasks.jpg | 附加任务：桌面快捷方式 / 「通过 ShunCode 打开」文件+目录上下文菜单 / 注册为受支持文件类型编辑器 / 添加到 PATH | 任务集与 VS Code 官方安装器同构 |
+| 24-install-ready.jpg | 准备安装汇总页 | Inno 标准页 |
+| 25-install-finished-launch.jpg | 安装完成页 + 「运行 ShunCode」复选 + 完成按钮 | 太极 logo |
+
+**技术栈结论（取证）**：ShunCode = **Code-OSS（VS Code）分支桌面版 ⇒ 运行时必为 Electron**（许可页 MIT/Microsoft 原文 + VS Code 同构界面 + 224MB 安装包/1.1GB 装后体积佐证；未拍到关于页/安装目录，属高置信推断）；**安装包工具 = Inno Setup**（各页中文文案与 Inno 逐字一致，标题「安装 - ShunCode」），与我方 `installer/webagent.iss` 同工具；附加任务集照搬 VS Code（上下文菜单×2、注册编辑器、PATH）。
+
 ## 隐私说明
 截图含已失效的 trycloudflare 临时地址、公开账号名、他人本机路径（如视频作者工作区目录）——作为历史参考保留；**不要**把其中任何 URL/路径/令牌抄进文档或代码。
