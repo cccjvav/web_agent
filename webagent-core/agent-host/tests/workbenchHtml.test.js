@@ -65,4 +65,10 @@ assert.ok(html.includes('image 内容') && html.includes('签字'), 'stage 3: br
 const bindSrc = fs.readFileSync(path.resolve(__dirname, '../../workbench/js/bind.js'), 'utf8');
 assert.ok(bindSrc.includes('walk-local-chat') && bindSrc.includes('walk-bridge'), 'welcome two-path cards are wired');
 
+// stage 4 (S4-3): ShunCode UI alignment polish
+assert.ok(html.includes('id="chip-local"') && html.includes('id="chip-approval"'), 'composer semantic chips (本地 / 默认审批)');
+const chatSrc = fs.readFileSync(path.resolve(__dirname, '../../workbench/js/chat.js'), 'utf8');
+assert.ok(chatSrc.includes('branch-pill'), 'multi-model round messages carry a branch pill');
+assert.ok(/details class="block"/.test(html) && html.includes('快速打开') && html.includes('高级设置'), 'bridge page collapsible groups');
+
 console.log('workbench HTML has bind() nodes');

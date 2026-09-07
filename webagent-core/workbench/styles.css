@@ -508,3 +508,9 @@ html[data-theme="light"] #toast { background: var(--bg2); border-color: var(--bo
 html[data-theme="light"] .dropdown button:hover,
 html[data-theme="light"] #manage-menu button:hover { background: #d9ecf7; color: var(--text); }
 html[data-theme="light"] ::-webkit-scrollbar-thumb { background: #cbbba8; }
+
+/* stage 4 (S4-3): ShunCode 对齐——回合分支徽标与 composer 语义 chip */
+.branch-pill-row { display: flex; justify-content: flex-end; margin-top: 6px; }
+.branch-pill { background: #0e639c; color: #fff; border-radius: 10px; padding: 2px 10px; font-size: 11px; }
+.composer-chips { display: flex; gap: 6px; margin-top: 6px; }
+.chip-info { color: var(--mute); font-size: 11px; border: 1px solid #333; border-radius: 10px; padding: 1px 8px; }

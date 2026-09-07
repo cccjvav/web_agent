@@ -34,13 +34,13 @@
     - L148–L164 `#agent-pane` 智能体窗口（独立输入框与 Ask/Plan/Code）。
     - L165–L168 `#diff-pane` 补丁对比。
     - L170–L180 `#panel` 终端，默认 hidden。
-  - L183–L260 **右侧 `#rightbar`：**
+  - L183–L261 **右侧 `#rightbar`：**
     - L184–L187 CHAT / BRIDGE 页签。
-    - L188–L221 `#right-chat`：流、Tasks、chips、`#chat-input`、`#btn-agent-pick`、隐藏 `#mode-select`、`#model-select`、`#think-select`、`#plan-badge`、`#btn-plan-merge`（总结）、发送。
-    - L223–L259 `#right-bridge`：等待文案、任务、log、MCP session 卡（可折叠）。`#btn-stop-bridge-rb`、`#btn-bridge-health`、`#btn-reset-round`（按钮文案 Clear log，title 仍是「清除本轮统计」）、`#stat-calls` / `#stat-avg`（秒）/ `#stat-fail` / `#stat-ok`、`#sess-meta`、`#sess-foot`。
-  - L263–L274 `#statusbar`：`#sb-bridge`；`#sb-ws` 默认 hidden，断线时由 `app.js` 写「事件流重连中」。
-  - L276–L629 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/**多模型博弈** `#page-multimodel`）。概述页顶部 `#two-paths`「两条路」区块：本机 Chat（模型在右侧对话框跑、能动工作区与 computer-use 脚本、vision 模型收得到截图、不用隧道）vs Bridge（模型是网页 AI、经 MCP 工具层、第三阶段用户签字后 run_command 截图以 image 内容回传、要公网地址）。**`#page-env` / `#page-stack` 有完整表单**。挂钩/插件/MCP 服务器名单/Voice/Dictation **标明不会执行或未实现**。Codex 页写「没有接 OpenAI Codex OAuth」，按钮 disabled。API Key 提示写 `.webagent/config.json`，不是钥匙串。API 页有 `#m-vision`「可看图（vision）」勾选：Add API 时写进模型记录，本机 Chat 据此决定截图发不发 `image_url`（computer-use）。`#page-multimodel`：启用、合并主模型、合并思考、合并时只读验证、每回合最大分支 2–8 默认 4。Bridge 页含客户端卡片、复制 URL/提示词、`#btn-copy-rules`（默认 hidden）、打开各站点、**本机演示授权**（`#btn-gh-login`，文案写不是 GitHub）以及 **GitHub 验证**（`#btn-gh-token` / `#btn-gh-device` / `#btn-gh-clear`）。隧道 radio：cloudflare 默认会拉 Quick Tunnel；**Named Tunnel** 填 `#named-domain` / `#named-token` 后启动会 `tunnel run --token`；**ngrok** 填 `#ngrok-domain`（可选）/ `#ngrok-token` 后启动会 `ngrok http`。`#btn-reset-secret` 在高级设置。
-  - L631–L650 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`（Plan 文案「分支」）。
+    - L188–L222 `#right-chat`：流、Tasks、chips、`#chat-input`、`#btn-agent-pick`、隐藏 `#mode-select`、`#model-select`、`#think-select`、`#plan-badge`、`#btn-plan-merge`（总结）、发送；发送行下新增语义 chip `#chip-local` / `#chip-approval`（本地 / 默认审批，纯展示带 title）；多模型回合消息右下蓝 `branch-pill`（模型名 · 分支 x/y，chat.js 渲染）。
+    - L224–L260 `#right-bridge`：等待文案、任务、log、MCP session 卡（可折叠）。`#btn-stop-bridge-rb`、`#btn-bridge-health`、`#btn-reset-round`（按钮文案 Clear log，title 仍是「清除本轮统计」）、`#stat-calls` / `#stat-avg`（秒）/ `#stat-fail` / `#stat-ok`、`#sess-meta`、`#sess-foot`。
+  - L264–L275 `#statusbar`：`#sb-bridge`；`#sb-ws` 默认 hidden，断线时由 `app.js` 写「事件流重连中」。
+  - L277–L630 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/**多模型博弈** `#page-multimodel`）。概述页顶部 `#two-paths`「两条路」区块：本机 Chat（模型在右侧对话框跑、能动工作区与 computer-use 脚本、vision 模型收得到截图、不用隧道）vs Bridge（模型是网页 AI、经 MCP 工具层、第三阶段用户签字后 run_command 截图以 image 内容回传、要公网地址）。**`#page-env` / `#page-stack` 有完整表单**。挂钩/插件/MCP 服务器名单/Voice/Dictation **标明不会执行或未实现**。Codex 页写「没有接 OpenAI Codex OAuth」，按钮 disabled。API Key 提示写 `.webagent/config.json`，不是钥匙串。API 页有 `#m-vision`「可看图（vision）」勾选：Add API 时写进模型记录，本机 Chat 据此决定截图发不发 `image_url`（computer-use）。`#page-multimodel`：启用、合并主模型、合并思考、合并时只读验证、每回合最大分支 2–8 默认 4。Bridge 页含客户端卡片、复制 URL/提示词、`#btn-copy-rules`（默认 hidden）、打开各站点、**本机演示授权**（`#btn-gh-login`，文案写不是 GitHub）以及 **GitHub 验证**（`#btn-gh-token` / `#btn-gh-device` / `#btn-gh-clear`）。隧道 radio：cloudflare 默认会拉 Quick Tunnel；**Named Tunnel** 填 `#named-domain` / `#named-token` 后启动会 `tunnel run --token`；**ngrok** 填 `#ngrok-domain`（可选）/ `#ngrok-token` 后启动会 `ngrok http`。`#btn-reset-secret` 在高级设置。
+  - L632–L651 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`（Plan 文案「分支」）。
   - L630 `#toast`；L631 `<script type="module" src="./app.js">`（原生 ES module，无打包）。
 
 跨模块调用走 `js/state.js` 的 `ui` 袋（避免 import 环），**不改** `/api` 与按钮行为。

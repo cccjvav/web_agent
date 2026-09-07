@@ -29,7 +29,7 @@
 | `providers.test.js` | `gpt-4o` 无接口字段时 caps/context 为空；声明了 `capabilities`/`context_window` 才填 |
 | `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`、多模型博弈、总结钮、本机演示授权、**GitHub 验证** / **验证令牌**、Named Tunnel `tunnel run --token`、`ngrok http`、Codex/挂钩/插件未实现、不得含「不会被使用」/永久顺 / 「使用 GitHub 登录」）、模块脚本、MCP 401、initialize、tools/list、ping、**ping 后有 usage.json 且 reset-round 不清它**、`/status.tools` 无 inputSchema、远程 `get_logs` 无 args/chunk/patch、空 token 400、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、**外站 Origin 打 `/mcp` tools/call 403 且不执行**、本机 `POST /api/chat` NDJSON（Ask + Plan 分支再总结） |
 | `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime；不写死 `--auth none` / `trusted-origins *` / `--disable-workspace-trust`；`syncExtension` 读插件 `package.json` 版本、不写死 `webagent.webagent-core-0.6.9`；`run-webagent.sh` 接受 `$1` 并检查 node；`run-webagent-vscode.sh` 检查 node 且不 mkdir；runtime 包名 `webagent-code-server-runtime` |
-| `workbenchHtml.test.js` | 工作台 HTML 含 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login / named-domain / named-token / ngrok-domain / ngrok-token 等）；含 `ngrok http`；不得含「不会被使用」/「使用 GitHub 登录」 |
+| `workbenchHtml.test.js` | 工作台 HTML 含 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login / named-domain / named-token / ngrok-domain / ngrok-token 等）；含 `ngrok http`；不得含「不会被使用」/「使用 GitHub 登录」；**S4 锁**：composer chip、chat.js branch-pill、Bridge 页折叠组 |
 | `docsSite.test.js` | 跑 `docs-site/build.js` 后，提交的 `content.js` 与生成结果一致（忽略当天 `builtAt`） |
 | `codeServerAuth.test.js` | 口令落盘复用；`CODE_SERVER_PASSWORD`；`CODE_SERVER_AUTH=none`；trusted-origins 仅本机 |
 | `skipWorkbench.test.js` | `WEBAGENT_SKIP_WORKBENCH=1` 不占用工作台端口 |
