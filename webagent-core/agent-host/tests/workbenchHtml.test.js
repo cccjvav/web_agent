@@ -49,5 +49,11 @@ assert.ok(html.includes('./favicon.svg'));
 assert.ok(!html.includes('src="/app.js"'));
 assert.ok(!html.includes('href="/styles.css"'));
 assert.ok(!html.includes('href="/favicon.svg"'));
+assert.ok(html.includes('id="btn-theme"'));
+assert.ok(html.includes('id="btn-bridge-health"'));
+assert.ok(html.includes('id="sess-meta"'));
+assert.ok(html.includes('清除本轮统计'));
+assert.ok(html.includes('Clear log'));
+assert.ok(html.includes('data-theme'));
 
 console.log('workbench HTML has bind() nodes');

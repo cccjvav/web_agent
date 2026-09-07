@@ -53,6 +53,8 @@ export function setRight(which) {
   $('#right-bridge').classList.toggle('hidden', which !== 'bridge');
 }
 
+ui.applyTheme = applyTheme;
+ui.initTheme = initTheme;
 ui.toast = toast;
 ui.escapeHtml = escapeHtml;
 ui.renderMd = renderMd;

@@ -1,11 +1,17 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>欢迎 — Web Agent</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="./styles.css" />
+  <script>
+    try {
+      var t = localStorage.getItem('webagent-theme');
+      if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <header id="titlebar">
@@ -24,7 +30,9 @@
     <div class="tb-center">
       <div class="tb-search" id="window-title">欢迎</div>
     </div>
-    <div class="tb-right"></div>
+    <div class="tb-right">
+      <button type="button" id="btn-theme" class="tb-theme" title="切换浅色 / 深色。这是网页工作台的 CSS 主题，不是安装包皮肤。">浅色</button>
+    </div>
   </header>
 
   <div id="workbench">
@@ -208,23 +216,30 @@
           <ul id="bridge-todo-list"></ul>
         </div>
         <div id="bridge-log" class="bridge-log"></div>
-        <div class="mcp-session">
-          <div class="sess-top">
-            <span class="dot" id="sess-dot"></span>
-            <strong>MCP session</strong>
-            <span class="sess-actions">
-              <button type="button" id="btn-reset-round" class="vs-btn">清除本轮统计</button>
-              <button type="button" id="btn-stop-bridge-rb" class="vs-btn">Stop Bridge</button>
+        <div class="mcp-session" id="mcp-session">
+          <button type="button" class="sess-head" id="btn-sess-toggle" aria-expanded="true">
+            <span class="sess-head-left">
+              <span class="dot" id="sess-dot"></span>
+              <strong>MCP session</strong>
             </span>
+            <span class="chev" id="sess-chev">▾</span>
+          </button>
+          <div class="sess-body" id="sess-body">
+            <p class="sess-note" id="sess-note">Start the Bridge here, then connect the configured MCP URL from the external client.</p>
+            <div class="sess-actions">
+              <button type="button" id="btn-stop-bridge-rb" class="vs-btn sess-btn">Stop Bridge</button>
+              <button type="button" id="btn-bridge-health" class="vs-btn sess-btn">Health</button>
+              <button type="button" id="btn-reset-round" class="vs-btn sess-btn" title="清除本轮统计">Clear log</button>
+            </div>
+            <div class="sess-grid">
+              <div><label>Tool calls</label><span id="stat-calls">0</span></div>
+              <div><label>Average response</label><span id="stat-avg">0.0 s</span></div>
+              <div><label>Failures</label><span id="stat-fail">0</span></div>
+              <div><label>Success rate</label><span id="stat-ok">100.0%</span></div>
+            </div>
+            <p class="tiny" id="sess-meta">Streamable HTTP</p>
+            <p class="sess-foot" id="sess-foot">Bridge mode is output-only here. Continue the conversation in the external client.</p>
           </div>
-          <p class="sess-note" id="sess-note">Start the Bridge here, then connect the configured MCP URL from the external client.</p>
-          <div class="sess-grid">
-            <div><span id="stat-calls">0</span><label>Tool calls</label></div>
-            <div><span id="stat-avg">0 ms</span><label>Average response</label></div>
-            <div><span id="stat-fail">0</span><label>Failures</label></div>
-            <div><span id="stat-ok">100%</span><label>Success rate</label></div>
-          </div>
-          <p class="tiny">Streamable HTTP</p>
         </div>
       </div>
     </aside>

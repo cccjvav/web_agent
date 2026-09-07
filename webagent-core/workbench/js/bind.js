@@ -8,6 +8,19 @@ function onClick(id, handler) {
 }
 
 export function bind() {
+  if (ui.initTheme) ui.initTheme();
+  onClick('#btn-theme', () => {
+    const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    ui.applyTheme(cur === 'light' ? 'dark' : 'light');
+  });
+  onClick('#btn-sess-toggle', () => {
+    const box = $('#mcp-session');
+    if (!box) return;
+    const on = box.classList.toggle('collapsed');
+    const btn = $('#btn-sess-toggle');
+    if (btn) btn.setAttribute('aria-expanded', on ? 'false' : 'true');
+  });
+  onClick('#btn-bridge-health', () => ui.checkBridgeHealth && ui.checkBridgeHealth());
   $$('#activitybar [data-left]').forEach((b) => {
     b.onclick = () => {
       const left = b.dataset.left;

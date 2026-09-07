@@ -1,10 +1,19 @@
 import { $, $$, state, SITES, ui } from './state.js';
 import { escapeHtml } from './dom.js';
 
+function formatClock(ms) {
+  if (!ms) return '';
+  const d = new Date(ms);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 export function logBridgeTool(ev) {
   state.stats.calls += 1;
   if (ev.ok === false || ev.error) state.stats.fail += 1;
   if (ev.durationMs) state.stats.totalMs += ev.durationMs;
+  state.stats.lastTool = ev.label || ev.name || '';
+  state.stats.lastToolAt = Date.now();
   ui.paintStats();
   const wait = $('#bridge-wait');
   if (wait) wait.classList.add('hidden');
@@ -16,23 +25,38 @@ export function logBridgeTool(ev) {
   row.innerHTML = `<header><span>${escapeHtml(ev.label || ev.name)}</span><span class="dur">${escapeHtml(right)}</span></header>`;
   log.appendChild(row);
   log.scrollTop = log.scrollHeight;
-  $('#sess-note').textContent = 'Remote MCP client is calling local tools.';
+  const note = $('#sess-note');
+  if (note) note.textContent = 'Connected · the external Agent can call Web Agent tools';
+  const dot = $('#sess-dot');
+  if (dot) dot.classList.add('on');
 }
 
 export function paintStats() {
   const s = state.stats;
-  $('#stat-calls').textContent = String(s.calls);
-  $('#stat-fail').textContent = String(s.fail);
-  const ok = s.calls ? Math.round((1 - s.fail / s.calls) * 100) : 100;
-  $('#stat-ok').textContent = ok + '%';
-  $('#stat-avg').textContent = (s.calls ? Math.round(s.totalMs / s.calls) : 0) + ' ms';
+  if ($('#stat-calls')) $('#stat-calls').textContent = String(s.calls);
+  if ($('#stat-fail')) $('#stat-fail').textContent = String(s.fail);
+  const rate = s.calls ? (1 - s.fail / s.calls) * 100 : 100;
+  if ($('#stat-ok')) $('#stat-ok').textContent = rate.toFixed(1) + '%';
+  const avgMs = s.calls ? s.totalMs / s.calls : 0;
+  if ($('#stat-avg')) $('#stat-avg').textContent = (avgMs / 1000).toFixed(1) + ' s';
+  const sess = state.status && state.status.mcpSession;
+  const active = sess
+    ? (sess.httpSessions || (sess.alive ? 1 : 0) || sess.clients || 0)
+    : (s.calls ? 1 : 0);
+  const parts = ['Streamable HTTP', `${active} active`];
+  if (s.lastTool) {
+    parts.push(`Last tool: ${s.lastTool}`);
+    const clock = formatClock(s.lastToolAt);
+    if (clock) parts.push(clock);
+  }
+  if ($('#sess-meta')) $('#sess-meta').textContent = parts.join(' · ');
 }
 
 export async function resetRound() {
   try {
     await fetch('/api/bridge/reset-round', { method: 'POST' });
   } catch (_) {}
-  state.stats = { calls: 0, fail: 0, totalMs: 0 };
+  state.stats = { calls: 0, fail: 0, totalMs: 0, lastTool: '', lastToolAt: 0 };
   ui.paintStats();
   const log = $('#bridge-log');
   if (log) log.innerHTML = '';
@@ -287,14 +311,35 @@ export function paintBridge() {
       + (u.telemetryConfigured ? '（已配置上报）' : '（未配置 WEBAGENT_TELEMETRY_URL，不上报）');
   }
   const sess = s.mcpSession;
-  if (sess && sess.latest) {
-    $('#sess-note').textContent = sess.alive
-      ? `MCP client ${sess.latest.key} · ${sess.latest.calls} calls · last seen ${sess.ageMs}ms ago`
-      : 'Last MCP client went quiet (>10s). Call ping or retry initialize.';
-  } else {
-    $('#sess-note').textContent = running
-      ? 'Bridge is running and waiting for the external MCP client.'
-      : 'Start the Bridge here, then connect the configured MCP URL from the external client.';
+  const note = $('#sess-note');
+  if (note) {
+    if (sess && sess.alive) {
+      note.textContent = 'Connected · the external Agent can call Web Agent tools';
+    } else if (sess && sess.latest) {
+      note.textContent = 'Idle · last MCP client went quiet. Call ping or retry initialize.';
+    } else {
+      note.textContent = running
+        ? 'Waiting · Bridge is running. Connect the MCP URL from the external client.'
+        : 'Stopped · Start the Bridge here, then connect the configured MCP URL from the external client.';
+    }
+  }
+  ui.paintStats();
+}
+
+export async function checkBridgeHealth() {
+  try {
+    const h = await fetch('/health');
+    const hj = await h.json().catch(() => ({}));
+    await ui.refreshStatus();
+    const s = state.status || {};
+    const bits = [];
+    bits.push(hj.ok ? '工作台健康' : '工作台无响应');
+    bits.push(s.bridgeRunning ? 'Bridge 运行中' : 'Bridge 已停止');
+    const tun = s.tunnel || {};
+    if (tun.url) bits.push(String(tun.url).replace(/^https?:\/\//, ''));
+    ui.toast(bits.join(' · '));
+  } catch (e) {
+    ui.toast('健康检查失败：' + (e.message || e));
   }
 }
 
@@ -329,4 +374,5 @@ ui.openSite = openSite;
 ui.startBridge = startBridge;
 ui.stopBridge = stopBridge;
 ui.paintBridge = paintBridge;
+ui.checkBridgeHealth = checkBridgeHealth;
 ui.refreshStatus = refreshStatus;

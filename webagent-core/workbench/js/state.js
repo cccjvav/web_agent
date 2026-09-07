@@ -24,7 +24,7 @@ export const state = {
   monaco: null,
   editor: null,
   dirty: {},
-  stats: { calls: 0, fail: 0, totalMs: 0 },
+  stats: { calls: 0, fail: 0, totalMs: 0, lastTool: '', lastToolAt: 0 },
   loggedIn: true,
   custom: null,
   stayOnBridge: false,
