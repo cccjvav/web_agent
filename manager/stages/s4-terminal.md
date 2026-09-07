@@ -5,7 +5,7 @@
 ## 需求与授权
 - 任务书第四阶段三子项：真 PTY / 安装包 / Code-OSS 当默认壳；「不要做 Electron exe，除非用户点名」。
 - 用户 2026-09-07 点名：**Windows 安装包 + 「基本上就是 vscode 复刻的编辑器」当壳**；图形 UI 参考其 ShunCode 截图。**真 PTY 未点名，仍不做**（架构导读 §12 该取舍保留）。
-- UI 参考资料：用户 2026-09-07 补发 18 张 ShunCode 截图（17 张不重复）。**注意：附件轮字节曾未落沙箱盘；用户随后经网页上传入仓（`758532a`）并归档 `review/shuncode-ui/`（16 张，含 1 张附件轮没有的「Bridge 等待态」；附件轮 2 张未上传，以本索引为准）。**
+- UI 参考资料：用户 2026-09-07 补发 18 张 ShunCode 截图（17 张不重复）。**注意：附件轮字节曾未落沙箱盘；用户随后两批网页上传入仓（`758532a` + `176cabf`）共 18 张，全数归档 `review/shuncode-ui/`（含附件轮缺的 2 张与新增「Bridge 等待态」；重复原件已去重）。**
 
 ## 参考资料索引（目视记录，文件名=用户附件原名 → 内容）
 | # | 原附件 | 画面 |
@@ -42,7 +42,7 @@
  - **S4-1 安装包（Inno Setup，非 Electron，提交 4a85ecf）**：`installer/webagent.iss` + `installer/build-installer.cmd` + `installer/README.md`。装：仓库文件（排 node_modules/.cache/code-server-runtime）+ 开始菜单/桌面快捷方式（**默认指向 run-webagent-vscode.cmd**）+ 卸载项；前置检查 Node≥18/npm，缺则指引 check-env.cmd；code-server 仍首跑自下载（gitignore 既定）。沙箱无法编译 .iss：交付脚本+文档+语法自查清单，真机编译列进验收。
  - **S4-2 Code-OSS 当默认壳（提交 8a73df0，文档口径）**：安装器与文档把 `run-webagent-vscode.cmd` 立为主入口（桌面图标=它），`run-webagent.cmd` 改名语义「经典工作台（备用）」；启动脚本说明.md / 使用指南.md / 架构导读 §12 同步（§12「Code-OSS 当默认壳」行从不做表移入「已经做了」）。
  - **S4-3 UI 对齐（提交 8a73df0 抛光 + ce6d52f 弹层）**：差距 1（可搜索模型弹层 picker.js）、3（branch-pill）、5（composer chip）已做；**差距 2/4 侦察发现早已实现**（失败卡红框+Failed、Bridge 快速打开/高级设置 details），从清单移除；全部带 workbenchHtml 锁 + README 行号校正 + content.js 重建。
- - **S4-4 资料补齐（完成，提交见下）**：用户 2026-09-07 网页上传入仓（`758532a`，16 张含 1 张新增「Bridge 等待态」），已 `git mv` 归档 `review/shuncode-ui/` 并重命名 + 索引 README；附件轮另有 2 张未上传（多模型深色/失败工具卡），以本文件目视记录为准。
+ - **S4-4 资料补齐（完成）**：两批网页上传共 18 张（`758532a` 16 + `176cabf` 补 2）齐；归档 `review/shuncode-ui/` 去重（16 个重复原件 git rm）+ 重命名 + 索引 README。归属纠正：12/13 曾误名 `chatgpt-*`，弹层实为 ShunCode 自有模型弹层（ChatGPT 客户端仅内嵌背景），改 `shuncode-*`；命名与归属约定见夹内 README（本项目是 Web Agent，ShunCode 仅参考）。
 
 ## 决策
 - 安装器选 **Inno Setup** 而非 NSIS/zip：单文件 exe、标准卸载、脚本可读可审；不碰 Electron 红线。

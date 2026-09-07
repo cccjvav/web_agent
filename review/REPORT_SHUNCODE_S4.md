@@ -4,7 +4,7 @@
 - **任务书**：[PROMPT_SHUNCODE.md](./PROMPT_SHUNCODE.md) 第四阶段（用户在 S3 签字轮点名：「依照 shuncode 的形式来……windows 安装包，加上一个基本上就是 vscode 复刻的编辑器」）
 - **日期**：2026-09-07
 - **前序报告**：[S1](./REPORT_SHUNCODE_S1.md) · [S2](./REPORT_SHUNCODE_S2.md) · [S3](./REPORT_SHUNCODE_S3.md)
-- **图形参考**：[shuncode-ui/](./shuncode-ui/README.md)（用户 2026-09-07 网页上传入仓 `758532a`，16 张归档 + 索引）
+- **图形参考**：[shuncode-ui/](./shuncode-ui/README.md)（用户 2026-09-07 两批网页上传入仓 `758532a`+`176cabf`，18 张归档 + 索引 + 命名归属约定）
 
 ## 做了什么
 
@@ -14,7 +14,7 @@
 
 **S4-3 UI 对齐（`8a73df0` 抛光 + `ce6d52f` 弹层）**：规划 5 项差距，侦察后 2 项（失败工具卡红框+Failed、Bridge 快速打开/高级设置折叠）**早已在代码里**，从清单移除（教训入经验库）；实做 3 项——①composer 回合 chip 与右下**branch-pill**（模型·分支徽标，对照 14 图）；②**可搜索模型弹层** `js/picker.js`（`openModelPicker`：搜索过滤 name/id/modelId/group，行显 displayName+group/modelId+上下文+能力 pill，合并页带「Current merge model」灰注，Esc/外点关闭、视口内钳位；composer `#model-pick-btn` 可见 + `#model-select` 隐藏但仍是状态源与 onchange 契约；多模型页 `#mm-merge-display` 只读显 + `#btn-mm-pick`/`#btn-mm-active`，对照 11/12/13 图）；③bridge 状态细节行。全部带 `workbenchHtml.test.js` 结构锁 + workbench README 行号校正 + content.js 重建。
 
-**S4-4 资料归档（`277cb71`）**：上传的 16 张截图 `git mv` 入 `review/shuncode-ui/` 重命名 + 索引 README（新名↔原附件名↔画面、来源、隐私告诫）。对账：附件轮 18 张中 2 张未上传（多模型博弈深色、WorkBuddy 失败工具卡，内容以 stages 目视记录为准）；上传**新增 1 张** Bridge 等待态（05 图）——右栏等待文案与内置浏览器 Arena 空态贴 URL 引导句，列入真机文案对照。
+**S4-4 资料归档（`277cb71` 首批 + 本提交补齐）**：首批 16 张 `git mv` 入 `review/shuncode-ui/` 重命名 + 索引；第二批（`176cabf`）补齐附件轮缺的 2 张（17 多模型博弈设置页深色、18 失败工具卡红框三屏对照），并 `git rm` 16 个与归档重复的原名原件。**归属纠正**：12/13 曾误名 `chatgpt-*`——弹层实为 ShunCode 自有模型弹层（锚其 composer、列其 API Provider 端点），ChatGPT 客户端只是内嵌背景，已改 `shuncode-*`。夹内 README 立「命名与归属约定」：本项目是 Web Agent，ShunCode 仅参考；内嵌第三方画面只进背景列不进文件名。05 图 Bridge 等待态列入真机文案对照。
 
 ## 测了什么
 
