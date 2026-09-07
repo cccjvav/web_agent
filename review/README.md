@@ -8,6 +8,7 @@
 | [REPORT_v6.md](./REPORT_v6.md) | 拆模块建议（可选备忘）。**没有**当成施工任务跑；贴桥不靠拆文件 |
 | [CHECKLIST_WINDOWS.md](./CHECKLIST_WINDOWS.md) | 沙箱覆盖不到的 Windows 真机清单 |
 | [PROMPT.md](./PROMPT.md) | 审查助手用过的提示词；文首有 1–10 完成对照 |
+| [PROMPT_SHUNCODE.md](./PROMPT_SHUNCODE.md) | 往 ShunCode「本机助手」对齐（第一阶段=本机 Chat 看图）。不是产品指南 |
 | [REPORT.md](./REPORT.md) … [REPORT_v4.md](./REPORT_v4.md) | 更早几轮发现与验收，查历史用 |
 
 根目录不再堆这些文件。v6 第四节的六批拆分默认不做。
