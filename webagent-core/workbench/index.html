@@ -111,6 +111,21 @@
                   <div class="walk-title">了解基础知识</div>
                 </div>
               </div>
+              <h3>两条路</h3>
+              <div class="walk-card" id="walk-local-chat">
+                <div class="walk-ico">💬</div>
+                <div>
+                  <div class="walk-title">本机 Chat —— 右侧对话框</div>
+                  <div class="walk-desc">模型直接改当前工作区（Ask / Plan / Code），能按 computer-use 说明跑截屏/键鼠脚本；标了「可看图」的模型会收到截图当图片。不用隧道，随时可用。</div>
+                </div>
+              </div>
+              <div class="walk-card" id="walk-bridge">
+                <div class="walk-ico">🌉</div>
+                <div>
+                  <div class="walk-title">Bridge —— 把工作区交给网页 AI</div>
+                  <div class="walk-desc">把当前工作区变成 MCP，给 Arena / ChatGPT 自制插件 / DeepSeek++ 等网页 Agent。只回文本：远程看不到桌面截图，危险命令被拒。要先启动 Bridge 拿公网地址。</div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="welcome-bottom">
@@ -282,6 +297,11 @@
         <div class="page" id="page-overview">
           <h2>本地 的智能体自定义设置</h2>
           <p class="lead">定制智能体在项目中的工作方式。为整个团队配置工作区自定义，或创建跨项目跟随你的个人自定义。</p>
+          <section class="block" id="two-paths">
+            <div class="block-h">两条路：本机 Chat 与 Bridge</div>
+            <p class="hint"><strong>本机 Chat</strong> —— 模型在右侧对话框里跑（API Provider 页配 Endpoint/Key）。能动当前工作区文件和 run_command（含仓库根 computer-use 脚本）；标了 vision 的模型收得到截图，纯文本模型会被如实告知看不了图。不需要隧道。</p>
+            <p class="hint"><strong>Bridge</strong> —— 模型是网页 AI（Arena、ChatGPT 自制 MCP 插件、DeepSeek++ 等）。经 MCP 工具层动同一个工作区；永远收不到截图（tools/call 恒文本），远程危险命令被拒。要启动 Bridge 拿公网地址，任务做完点停止。</p>
+          </section>
           <label class="field-label">自定义智能体</label>
           <p class="hint">描述你的偏好和约定，以串联智能体、技能和指令。</p>
           <div class="pref-row">
@@ -492,7 +512,7 @@
             <div>
               <h2>Web Agent Bridge</h2>
               <p class="lead">把当前工作区变成 MCP，给<strong>任意</strong>能调工具的网页 Agent 用。不绑死 ChatGPT，也不需要 Plus。ChatGPT 聊天栏贴链接不行；要对接着设置里的自制 MCP 插件。</p>
-              <p class="hint" id="bridge-sub">本机 Chat 随时可用。网页 Agent 要先启动 Bridge 拿到公网地址。</p>
+              <p class="hint" id="bridge-sub">本机 Chat 随时可用（可看图的模型收得到截图）。网页 Agent 要先启动 Bridge 拿到公网地址；Bridge 只回文本，远程看不到桌面。</p>
             </div>
             <span id="bridge-pill" class="status-pill stop">已停止</span>
           </div>

@@ -56,4 +56,13 @@ assert.ok(html.includes('清除本轮统计'));
 assert.ok(html.includes('Clear log'));
 assert.ok(html.includes('data-theme'));
 
+// stage 2 (ShunCode alignment): welcome/settings spell out the two paths
+for (const id of ['walk-local-chat', 'walk-bridge', 'two-paths']) {
+  assert.ok(html.includes(`id="${id}"`), `workbench HTML missing #${id}`);
+}
+assert.ok(html.includes('两条路'));
+assert.ok(html.includes('Bridge 只回文本'), 'bridge page states text-only honestly');
+const bindSrc = fs.readFileSync(path.resolve(__dirname, '../../workbench/js/bind.js'), 'utf8');
+assert.ok(bindSrc.includes('walk-local-chat') && bindSrc.includes('walk-bridge'), 'welcome two-path cards are wired');
+
 console.log('workbench HTML has bind() nodes');

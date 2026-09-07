@@ -74,6 +74,8 @@ export function bind() {
   $('#menu-bridge').onclick = () => ui.openModal('bridge');
   $('#btn-agent-window').onclick = () => ui.openAgentWindow();
   $('#walk-basics').onclick = () => ui.openModal('overview');
+  $('#walk-local-chat').onclick = () => ui.openAgentWindow();
+  $('#walk-bridge').onclick = () => ui.openModal('bridge');
   $('[data-menu="file"]').onclick = (e) => {
     e.stopPropagation();
     $('#file-menu').classList.toggle('hidden');
