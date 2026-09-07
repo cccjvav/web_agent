@@ -29,23 +29,9 @@
 - **vendor ShunCode / DSH / 扩展**：截图仅作设计参考，未抠图、未复制素材、未引入任何 vendor 代码。
 - 无 TS 重写；`resolveSafePath` 未开驱动器读取口子；base64 不经 eventBus；日志无 API key。
 
-## Windows 真机验收清单（交给用户执行）
+## Windows 真机验收清单
 
-**安装包**
-- [ ] `installer\build-installer.cmd`（Inno Setup 6）编译出 `WebAgent-Setup-*.exe`，无脚本错误。
-- [ ] 安装冒烟：标准用户权限可装；默认目录正确；桌面+开始菜单图标双击进 **vscode 壳**；「经典工作台」入口进经典工作台；两壳首跑 code-server 自下载成功（需联网）。
-- [ ] Node 缺失机器上安装器给出 check-env 指引且不崩。
-- [ ] 卸载：程序与运行时缓存清除；用户工作区/配置/浏览器 profile 保留；重裝覆盖正常。
-
-**UI（对照 shuncode-ui 截图）**
-- [ ] composer 点模型按钮弹出可搜索弹层：输入过滤生效（名称/ID/组）、行内上下文与能力 pill 正确、点选后按钮标签与隐藏 select 同步、Esc/外点关闭；**明暗两主题**各过一遍。
-- [ ] 多模型页「合并主模型」弹层带「Current merge model」灰注且只读显同步。
-- [ ] 回合右下 branch-pill（模型·分支 n/n）与 composer chip 显示正确（对照 14 图）。
-- [ ] Bridge **等待态**文案对照 05 图（「Waiting for the remote Agent… Input stays in the external client」语义）：我们的等待文案是否到位，不到位记入下轮抛光。
-
-**S3 遗留真机项（一并勾）**
-- [ ] 真机 `snap.ps1` → 远程网页客户端**实际收到 image 内容**并描述画面（不同 MCP 客户端渲染支持逐个验证）。
-- [ ] >6MB 截图走静默降级（tooBig）路径确认。
+**已并入唯一活基线 [CHECKLIST_WINDOWS.md](./CHECKLIST_WINDOWS.md)（2026-09-07 合并）**：D 节 D1–D8＝本阶段交付形态（安装包编译/安装/卸载冒烟、缺 Node 指引、模型弹层明暗、branch-pill、等待态文案对照 05 图、S3 遗留远程实收 image 与 >6MB 降级）；A/B 节继承项同轮修订三处过时（B8 端口拓扑：3000 属主=code-server；A2/A3 默认壳定位；A10/C 节 29→30）。本报告不再复列清单，执行结果填基线各节结果表。
 
 ## 阶段结论
 
