@@ -89,7 +89,7 @@ function loadSkill({ name } = {}) {
       'Windows 本机 Chat：经 run_command 执行（cwd 留在工作区），例如',
       `& "${path.join(out.scriptsDir, 'snap.ps1')}" -WindowTitle <标题子串> -Out shots\\cur.png`,
       '截图请用 -Out 存到工作区内（如 shots\\cur.png）：Chat 会把新截图作为图片附进下一轮请求（模型需标记 vision）。',
-      'Bridge / 网页 MCP 不回传图片，远程网页 Agent 看不了屏幕。'
+      'Bridge / 网页 MCP 会把新产生的截图作为 image 内容附进 tools/call 回包（第三阶段，用户签字后启用）；远程危险命令仍被拒。'
     ].join('\n');
   }
   return out;

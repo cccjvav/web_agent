@@ -4,11 +4,13 @@
 // 下一轮请求里作为 OpenAI 兼容的 image_url 部分发给**标记了 vision** 的模型。
 //
 // 边界（有意为之，勿放宽）：
-// - 只属于本机 Chat（agent 层）。MCP/Bridge 不引用本模块：网页 tools/call 仍只回 type:'text'。
+// - 两个消费方：本机 Chat（openai.js 把 data URL 作为 image_url 附给**标记 vision** 的模型）；
+//   Bridge（mcp/server.js——用户 2026-09-07 书面同意后：run_command 截图作为 tools/call 的
+//   image 内容回给网页 Agent，授权记录见 review/REPORT_SHUNCODE_S3.md）。
 // - 白名单目录：工作区内（realpath 判定，symlink 逃逸同样拒绝）或仓库根 computer-use/ 内。
 //   不开任意盘符读文件的口子（架构导读 第 12 节的沙箱取舍保持不变）。
 // - 只认 .png/.jpg/.jpeg；超过 MAX_BYTES 不读，返回 tooBig 让 Chat 诚实说明。
-// - base64 只进模型请求体；**不经 eventBus 广播**（状态事件只带相对路径）。
+// - base64 只进模型请求体与 MCP 响应；**不经 eventBus 广播**（状态事件只带相对路径）。
 const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');

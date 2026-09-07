@@ -10,6 +10,9 @@ const { ProtocolError, publicError } = require('./errors');
 const { touch, snapshot, createHttpSession, touchHttpSession, destroyHttpSession } = require('./session');
 const oauth = require('./oauth');
 const tracker = require('../usage/tracker');
+// 第三阶段（用户 2026-09-07 书面同意）：run_command 截图以 MCP image 内容回给网页 Agent。
+// 白名单与 6MB 上限复用 agent 层 computerUse；授权记录见 review/REPORT_SHUNCODE_S3.md。
+const { collectShot } = require('../agent/computerUse');
 
 const router = express.Router();
 const SUPPORTED_PROTOCOL = ['2024-11-05', '2025-03-26', '2025-06-18'];
@@ -182,8 +185,26 @@ async function handleRpc(req) {
         tracker.record({ ok: true });
         eventBus.broadcast('tool_call_end', { tool: name, success: true, durationMs, truncated: Boolean(clipped && clipped._truncated) });
         const text = typeof clipped === 'string' ? clipped : JSON.stringify(clipped, null, 2);
+        const content = [{ type: 'text', text: clipText(text).text }];
+        // 第三阶段（已获用户书面同意）：run_command 产生的截图附为 image 内容。
+        // base64 只进 MCP 响应，不经 eventBus 广播；认不出截图就只回文本，不让调用失败。
+        if (name === 'run_command') {
+          try {
+            const shot = collectShot({
+              command: String((toolArgs && toolArgs.command) || ''),
+              stdout: String((result && result.stdout) || '')
+            });
+            if (shot && shot.dataUrl) {
+              content.push({
+                type: 'image',
+                data: shot.dataUrl.slice(shot.dataUrl.indexOf(';base64,') + 8),
+                mimeType: shot.mime || 'image/png'
+              });
+            }
+          } catch (_) { /* 截图识别失败不影响文本结果 */ }
+        }
         return {
-          content: [{ type: 'text', text: clipText(text).text }],
+          content,
           isError: false
         };
       } catch (err) {

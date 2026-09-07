@@ -138,6 +138,25 @@ async function main() {
   assert.strictEqual(askLocked.isError, true);
   assert.ok(/locked in ASK|Ask\/Plan are read-only|switch to CODE/i.test(askLocked.content[0].text));
 
+  // 第三阶段（用户 2026-09-07 书面同意）：run_command 截图以 image 内容回给网页 Agent
+  const shotPng = path.join(tmp, 'shot.png');
+  fs.writeFileSync(shotPng, Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex'));
+  const shotCall = await handleRpc(req('tools/call', {
+    name: 'run_command',
+    arguments: { command: `echo ${shotPng}` }
+  }));
+  assert.strictEqual(shotCall.isError, false);
+  assert.strictEqual(shotCall.content[0].type, 'text', 'text 仍是第一个 content');
+  const imgPart = shotCall.content.find((c) => c.type === 'image');
+  assert.ok(imgPart, 'run_command 出现截图应回 image 内容');
+  assert.strictEqual(imgPart.mimeType, 'image/png');
+  assert.ok(imgPart.data.length > 0 && !imgPart.data.startsWith('data:'), 'image data 是裸 base64');
+  const noShot = await handleRpc(req('tools/call', {
+    name: 'run_command',
+    arguments: { command: 'echo plain-text-no-image' }
+  }));
+  assert.ok(!noShot.content.some((c) => c.type === 'image'), '无截图路径不附图');
+
   const remotePing = await handleRpc(req('tools/call', { name: 'ping', arguments: {} }));
   assert.strictEqual(remotePing.isError, false);
   assert.ok(String(remotePing.content[0].text).includes('"ok": true') || String(remotePing.content[0].text).includes('"ok":true'));

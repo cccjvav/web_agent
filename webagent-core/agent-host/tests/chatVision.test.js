@@ -4,7 +4,7 @@
 // - computerUse：从 run_command 命令/输出里认出截图路径，白名单解析，读成 data URL
 // - openai.js：vision 模型下一轮请求带 image_url；纯文本模型诚实失败、永不带图
 // - skills.js：load_skill('computer-use') 给出仓库根脚本绝对目录 + 转发说明
-// - MCP 不动：server.js 不引用 computerUse，tools/call 仍只回 text
+// - MCP（第三阶段用户签字后翻转）：server.js 复用 computerUse，run_command 截图以 image 内容回传
 // 全程不依赖真显示器：假 PNG + 本地假 provider。
 const assert = require('assert');
 const fs = require('fs');
@@ -75,7 +75,7 @@ assert.strictEqual(modelSeesImages(null), false);
   assert.ok(skill.absDir && skill.absDir.endsWith('computer-use'));
   assert.ok(skill.scriptsDir && skill.scriptsDir.endsWith(path.join('computer-use', 'win')));
   assert.ok(/snap\.ps1/.test(skill.runHint || ''), 'runHint 应给出 snap.ps1 命令模板');
-  assert.ok(/不回传图片|看不了屏幕/.test(skill.runHint || ''), 'runHint 应写明 Bridge 无图');
+  assert.ok(/image 内容|第三阶段/.test(skill.runHint || ''), 'runHint 应写明 Bridge 签字后回图');
   const other = loadSkill({ name: '不存在' });
   assert.strictEqual(other.found, false);
 }
@@ -167,10 +167,11 @@ async function main() {
     assert.ok(/m\.vision/.test(settingsSrc), '模型表应显示 vision pill');
   }
 
-  // --- MCP 不变：Bridge 仍然只回文本
+  // --- 第三阶段（用户 2026-09-07 书面同意）：Bridge 以 image 内容回传截图
   const serverSrc = fs.readFileSync(path.join(__dirname, '../src/mcp/server.js'), 'utf8');
-  assert.ok(!serverSrc.includes('computerUse'), 'MCP server 不得引用 Chat 专用 computerUse');
-  assert.ok(!/type:\s*'image'/.test(serverSrc), "MCP tools/call 仍只回 type:'text'");
+  assert.ok(serverSrc.includes('computerUse'), 'tools/call 应复用 computerUse 认截图');
+  assert.ok(/type:\s*'image'/.test(serverSrc), 'run_command 截图应以 image 内容回传');
+  assert.ok(!/broadcast\([^)]*(dataUrl|base64)/.test(serverSrc), '截图不得经 eventBus 广播');
 
   fs.rmSync(tmp, { recursive: true, force: true });
   fs.rmSync(outside, { recursive: true, force: true });

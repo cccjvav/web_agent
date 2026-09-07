@@ -134,7 +134,7 @@
 - **关键变量/常量：**
   - L6 `CONNECT_LINE`：固定一句中文（测试锁原文，改一字会红）。
   - L8 `PAGE_RULES_LEAD`：说明这些规则与 `initialize.instructions` 相同，扩展不会自动转给网页模型（测试锁原文）。
-  - L18–L62 `SERVER_INSTRUCTIONS`：Ask/Plan 只读、Code 可写、工作流 1–7（含 git `available:false`、读后可省略 `expectedHash`、HASH_REQUIRED 带 `currentHash`）、输出预算、`tools/call` 失败是 MCP `isError` 文本（不是传输崩溃）、别名 `bash`/`cat`/`path`、安全（`confirm_dangerous` / `confirm_overwrite` / `confirm=true`；`write_file` 覆盖只认本进程读过的 hash；新建不要 unified diff）、memory。这是 `initialize.instructions` 的主体。模板字符串里**不能**写 `{layer,code,msg,detail}` 这种花括号，会当成 JS 插值炸掉。
+  - L17–L80 `router`、`SUPPORTED_PROTOCOL`（三个协议版本）、`extractToken`（Bearer / `params.secret` / `x-mcp-secret` / query）与鉴权/会话辅助（`isAuthorized` / `rejectUnauthorized` / `requireAuth` / `wantsSse` / `incomingSessionId` / `bindHttpSession` / `mcpEndpointPath`）。**`initialize.instructions` 主体已移入 `instructions.js` 的 `getInstructions()`**（见下方 instructions.js 条目；模板字符串里不能写 `{layer,code,msg,detail}` 花括号的告诫随之迁移）。
 
 ---
 
@@ -310,34 +310,34 @@
     - 先 `bindHttpSession`：`initialize` 才发新 sid；未知头且非 initialize → 404。
     - `jsonrpc !== '2.0'` → 400、RPC `-32600`。
     - L237–L242：`handleRpc`；method 以 `notifications/` 开头 → **HTTP 204 无 body**。
-    - L243–L252：catch：`E_UNKNOWN_CMD` → HTTP 404 且 rpc `-32601`；其它协议 `-32602`；否则 `-32603` 或 `err.rpcCode`。**工具失败不会进这里**：`tools/call` 自己 `return { isError:true }`。
+    - L313–L322：catch：`E_UNKNOWN_CMD` → HTTP 404 且 rpc `-32601`；其它协议 `-32602`；否则 `-32603` 或 `err.rpcCode`。**工具失败不会进这里**：`tools/call` 自己 `return { isError:true }`。
   - **Function `handleGet(req, res)`（L294–L324）**
     - SSE：最多 32 路；`event: endpoint` 的 data 是 `/mcp/<secret>` 或 `/mcp`（跟这次 URL 一致）；10 分钟空闲结束；每 15s `: ping`。
     - 未知 session 头 → 404。
     - 否则 `hostStatus()` JSON。
-  - **Function `handleDelete`（L326–L330）** — 删掉该 `Mcp-Session-Id`，204。
+  - **Function `handleDelete`（L397–L401）** — 删掉该 `Mcp-Session-Id`，204。
 
   **`handleRpc` 的 method 分支：**
 
   | 行 | method | 做什么 |
   |---|---|---|
-  | L102–L117 | `initialize` | L103 默认 client 名 `External-Agent`；L104 `touch`；L105 broadcast `agent_connected`；返回 protocol、capabilities、serverInfo、**`instructions: getInstructions()`** |
-  | L119–L122 | `notifications/initialized`、`notifications/cancelled`、`logging/setLevel` | 返回 `{}` |
-  | L124–L133 | `ping` | `touch incCall`，busy 写死 `false` |
-  | L135–L137 | `tools/list` | `getToolList()` **不传 mode**（列表含 Code-only 工具） |
-  | L139–L165 | `tools/call` | 见下 |
-  | L167–L168 | `resources/list` | `listResources()` |
-  | L170–L175 | `resources/read` | 未知 uri 抛 `E_NOT_FOUND` |
-  | L177–L178 | `prompts/list` | `promptsFromCustom()` |
-  | L180–L205 | `prompts/get` | `connect` 走 bootstrap；否则 custom.prompts；没有抛 `E_NOT_FOUND` |
-  | L207–L208 | default | `E_UNKNOWN_CMD`（未知 **method**，仍是 JSON-RPC error） |
+  | L138–L153 | `initialize` | L139 默认 client 名 `External-Agent`；L140 `touch`；L141 broadcast `agent_connected`；返回 protocol、capabilities、serverInfo、**`instructions: getInstructions()`** |
+  | L155–L158 | `notifications/initialized`、`notifications/cancelled`、`logging/setLevel` | 返回 `{}` |
+  | L160–L169 | `ping` | `touch incCall`，busy 写死 `false` |
+  | L171–L173 | `tools/list` | `getToolList()` **不传 mode**（列表含 Code-only 工具） |
+  | L175–L221 | `tools/call` | 见下（第三阶段：run_command 截图附 `image` 内容） |
+  | L223–L224 | `resources/list` | `listResources()` |
+  | L226–L231 | `resources/read` | 未知 uri 抛 `E_NOT_FOUND` |
+  | L233–L234 | `prompts/list` | `promptsFromCustom()` |
+  | L236–L261 | `prompts/get` | `connect` 走 bootstrap；否则 custom.prompts；没有抛 `E_NOT_FOUND` |
+  | L263–L264 | default | `E_UNKNOWN_CMD`（未知 **method**，仍是 JSON-RPC error） |
 
-  **`tools/call` 细节（L140–L174）：成功 `tracker.record({ ok:true })`，catch `tracker.record({ ok:false })`。只记 Bridge MCP，不记本机 Chat。`reset-round` 不清 usage.json。**
-  - L141：无 `name` → 抛 `E_BAD_ARGS`（这才会变成 JSON-RPC error）。
-  - L142：broadcast `tool_call_start`，source `'Bridge-Remote'`。
+  **`tools/call` 细节（L175–L221）：成功 `tracker.record({ ok:true })`，catch `tracker.record({ ok:false })`。只记 Bridge MCP，不记本机 Chat。`reset-round` 不清 usage.json。**
+  - L177：无 `name` → 抛 `E_BAD_ARGS`（这才会变成 JSON-RPC error）。
+  - L178：broadcast `tool_call_start`，source `'Bridge-Remote'`。
   - **`callTool(name, toolArgs || {}, remoteToolMode(params), { remote: true })`** — 默认 Code；`_meta.mode=ask|plan` 时模式锁生效。远程破坏性命令 `E_FORBIDDEN`。
-  - L146：再 `clipJson`。
-  - L151–L154：成功 → MCP `content[{type:text}]`，`isError:false`。
+  - L182：再 `clipJson`。
+  - L188–L210：成功 → MCP `content` 第一个部件仍是 `{type:'text'}`；**第三阶段（用户 2026-09-07 书面同意，授权记录 review/REPORT_SHUNCODE_S3.md）**：`run_command` 产出截图时（复用 agent 层 `computerUse.collectShot`：白名单目录 + 6MB 上限）追加 `{type:'image', data:<裸 base64>, mimeType}`；认不出截图静默回纯文本；`isError:false`。base64 **不经 eventBus 广播**。
   - L155–L163：`catch` → `publicError`；`incFail`；**始终** `return { content:[{type:text, text: JSON.stringify(info)}], isError:true }`。未知工具名、HASH_REQUIRED、STALE_FILE 都走这条，网页 Agent 把它当工具结果而不是传输崩溃。
 
 - **路由（L332–L337）：** `GET/POST/DELETE /` 与 `GET/POST/DELETE /:secret` 均 `requireAuth`。挂到 app 上后即 `/mcp` 与 `/mcp/:secret`。
@@ -364,7 +364,7 @@
    `handlePost` 绑定 session，再校验 `jsonrpc==='2.0'` → `handleRpc`：
    - `initialize`：`session.touch` + `instructions.getInstructions()`（读 customizations / profile / skills）。
    - `tools/list`：出本目录，调 `../tools.getToolList()`。
-   - `tools/call`：出本目录，调 `../tools.callTool`（真正改盘）；回来用 `budget.clipJson` / `clipText`；**工具失败回 MCP `isError:true` 文本**（`publicError` 的 layer/code/msg/detail），不升级成 JSON-RPC `error`；全程 `eventBus.broadcast`（目录外）给工作台。
+   - `tools/call`：出本目录，调 `../tools.callTool`（真正改盘）；回来用 `budget.clipJson` / `clipText`；**工具失败回 MCP `isError:true` 文本**（`publicError` 的 layer/code/msg/detail），不升级成 JSON-RPC `error`；**第三阶段（用户签字）**：`run_command` 截图经 `../agent/computerUse.collectShot` 以 `type:'image'` content 附在文本部件后（白名单/6MB 复用；base64 不进 eventBus）；全程 `eventBus.broadcast`（目录外）给工作台。
    - `resources/*`：留在 `resources.js`（只读说明书 / 状态，不写盘）。
    - `prompts/*`：`instructions` + `customizations`。
    - `notifications/*`：空对象，HTTP 204。

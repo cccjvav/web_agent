@@ -94,7 +94,7 @@
 
 ### 📄 文件名：`computerUse.js`
 
-- **文件职责：** 本机 Chat 专用「眼睛」：认出 `run_command` 产生的截图文件、读成 data URL 给 `openai.js`。**MCP/Bridge 不引用本模块**：网页 `tools/call` 仍只回 `type:'text'`（chatVision.test 源码锁）。
+- **文件职责：** 「眼睛」的公共实现：认出 `run_command` 产生的截图文件、读成 data URL。两个消费方：本机 Chat `openai.js`（data URL 作 `image_url` 附给 **vision** 模型）与 Bridge `mcp/server.js`（**第三阶段，用户 2026-09-07 书面同意**：截图以 `type:'image'` 内容回给网页 Agent；mcpProtocol/chatVision 测试锁）。base64 不经 eventBus 广播的边界不变。
 - **核心类/函数清单：**
 
   - **`COMPUTER_USE_DIR`（L16）** — 仓库根 `computer-use/`（与 `skills.js bundledSkills()` 同一位置）。**`MAX_BYTES`（L18）** — 单图上限 6MB。
