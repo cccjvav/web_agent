@@ -1,5 +1,6 @@
 import { $, $$, state, ui } from './state.js';
 import { escapeHtml } from './dom.js';
+import { openModelPicker } from './picker.js';
 
 function onClick(id, handler) {
   const node = $(id);
@@ -76,6 +77,38 @@ export function bind() {
   $('#walk-basics').onclick = () => ui.openModal('overview');
   $('#walk-local-chat').onclick = () => ui.openAgentWindow();
   $('#walk-bridge').onclick = () => ui.openModal('bridge');
+  // 阶段 4（S4-3）：可搜索模型弹层（composer 作答模型 + 多模型合并主模型）
+  if ($('#model-pick-btn')) {
+    $('#model-pick-btn').onclick = () => openModelPicker({
+      anchor: $('#model-pick-btn'),
+      currentId: $('#model-select') ? $('#model-select').value : '',
+      onPick: (id) => {
+        const sel = $('#model-select');
+        if (sel) {
+          sel.value = id;
+          if (sel.onchange) sel.onchange();
+        }
+        $('#model-pick-btn').textContent = ((state.status && state.status.models || []).find((m) => m.id === id) || {}).name || id;
+      }
+    });
+  }
+  if ($('#btn-mm-pick')) {
+    $('#btn-mm-pick').onclick = () => openModelPicker({
+      anchor: $('#btn-mm-pick'),
+      currentId: $('#mm-merge') ? $('#mm-merge').value : '',
+      mergeMark: true,
+      onPick: (id) => {
+        if ($('#mm-merge')) $('#mm-merge').value = id;
+        if ($('#mm-merge-display')) $('#mm-merge-display').value = id;
+      }
+    });
+  }
+  if ($('#btn-mm-active')) {
+    $('#btn-mm-active').onclick = () => {
+      if ($('#mm-merge')) $('#mm-merge').value = 'active';
+      if ($('#mm-merge-display')) $('#mm-merge-display').value = '';
+    };
+  }
   $('[data-menu="file"]').onclick = (e) => {
     e.stopPropagation();
     $('#file-menu').classList.toggle('hidden');

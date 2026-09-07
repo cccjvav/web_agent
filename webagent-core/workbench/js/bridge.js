@@ -362,6 +362,8 @@ export async function refreshStatus() {
     `<option value="${escapeHtml(m.id)}" ${m.id === state.status.activeModelId ? 'selected' : ''}>${escapeHtml(m.name)}</option>`
   ).join('');
   if (cur) sel.value = cur;
+  const pb = $('#model-pick-btn');
+  if (pb) pb.textContent = ((state.status.models || []).find((m) => m.id === state.status.activeModelId) || {}).name || '模型 ▾';
   if (state.status.planRound) state.planRound = state.status.planRound;
   if (ui.paintPlanComposer) ui.paintPlanComposer();
   const think = $('#think-select');

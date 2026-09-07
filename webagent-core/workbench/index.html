@@ -207,7 +207,8 @@
                 <option value="plan">Plan</option>
                 <option value="code" selected>Code</option>
               </select>
-              <select id="model-select" class="mini-sel" title="作答模型"></select>
+              <button type="button" id="model-pick-btn" class="mini-sel" title="作答模型（可搜索）">模型 ▾</button>
+              <select id="model-select" class="mini-sel hidden" title="作答模型"></select>
               <select id="think-select" class="mini-sel" title="思考强度">
                 <option value="low">思考 低</option>
                 <option value="medium">思考 中</option>
@@ -491,10 +492,15 @@
           <p class="lead">Plan 下：选模型 + 思考强度发任务。不重打任务，换模型后空发送 = 新分支（串行）。满额如「分支 3/4」。至少两支即可点总结，不必跑满。总结走下面的合并主模型。没填 API Key 时分支是本机草案，总结是原文拼接，不会假装已经调了远程模型，也没有假的 97% 投票。</p>
           <label class="chk"><input type="checkbox" id="mm-enabled" checked /> 启用多模型博弈</label>
           <label class="field-label">合并主模型</label>
-          <select id="mm-merge" class="ms-input">
+          <select id="mm-merge" class="ms-input hidden">
             <option value="active">用当前对话模型</option>
             <option value="auto">用当前对话模型</option>
           </select>
+          <div class="mm-pick-row">
+            <input id="mm-merge-display" class="ms-input" readonly placeholder="留空表示合并时使用当前对话选中的模型" />
+            <button type="button" id="btn-mm-pick" class="vs-btn" title="从已配置的模型中选择合并主模型">选择…</button>
+            <button type="button" id="btn-mm-active" class="vs-btn">使用当前对话模型</button>
+          </div>
           <label class="field-label">合并思考强度</label>
           <select id="mm-think" class="ms-input">
             <option value="low">低</option>

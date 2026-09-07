@@ -67,6 +67,8 @@ assert.ok(bindSrc.includes('walk-local-chat') && bindSrc.includes('walk-bridge')
 
 // stage 4 (S4-3): ShunCode UI alignment polish
 assert.ok(html.includes('id="chip-local"') && html.includes('id="chip-approval"'), 'composer semantic chips (本地 / 默认审批)');
+assert.ok(html.includes('id="model-pick-btn"') && html.includes('id="model-select"'), 'searchable model picker button + hidden fallback select');
+assert.ok(html.includes('id="btn-mm-pick"') && html.includes('id="mm-merge-display"') && html.includes('id="btn-mm-active"'), 'merge-model picker row');
 const chatSrc = fs.readFileSync(path.resolve(__dirname, '../../workbench/js/chat.js'), 'utf8');
 assert.ok(chatSrc.includes('branch-pill'), 'multi-model round messages carry a branch pill');
 assert.ok(/details class="block"/.test(html) && html.includes('快速打开') && html.includes('高级设置'), 'bridge page collapsible groups');
