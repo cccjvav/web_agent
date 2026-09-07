@@ -141,6 +141,18 @@ composer 模型按钮 → 弹层：搜索过滤（名称/ID/组）生效、行�
 **D7 Bridge 等待态文案（对照 05 图）**
 启动 Bridge 未接客户端时，右栏等待文案语义到位（参考帧：「Waiting for the remote Agent… Input stays in the external client」+ 零统计）；不到位记入下轮抛光，**不算本阶段失败**。
 
+**D9 上下文菜单与打开方式（P5-1，对照 ShunCode 23 图）**
+资源管理器右键文件/目录 → 「用 Web Agent 打开」→ VS Code 壳以该目录（文件则取其目录）为工作区启动；右键 .md/.txt/.js/.json/.py/.html/.css → 「打开方式」菜单含 Web Agent 且**双击默认关联未被劫持**；卸载后菜单项与打开方式注册清干净。
+
+**D10 PATH 与环境广播（P5-1）**
+勾选 addpath 安装后，**新开**终端直接 `run-webagent-vscode` 可用（无需重启：ChangesEnvironment 广播）；覆装一遍 PATH 不出现重复段；卸载后 PATH 精确摘除本目录（无残留、无误删他段）。
+
+**D11 双安装模式与许可页（P5-1，对照 ShunCode 20/21 图）**
+安装对话框可选「仅当前用户」或「为所有用户」（系统级）两种模式皆装通；许可页显示 ISC 许可原文、安装前说明页显示 SECURITY.md 安全边界；中文页面无乱码。
+
+**D12 app 窗口快捷方式（P5-1）**
+双击桌面「Web Agent (app 窗口)」→ 无边框独立窗口（Edge/Chrome `--app`，任务栏独立图标）；主程序未运行时自动后台最小化拉起 VS Code 壳；无 Edge/Chrome 环境回退默认浏览器普通窗且不报错。
+
 **D8 S3 遗留 + computer-use 冒烟（S1 报告提议项）**
 真机跑 `snap.ps1` 截图 → 远程网页客户端（Arena/ChatGPT 自制插件等）**实际收到 image 内容**并描述画面（各 MCP 客户端渲染支持逐个验证）；>6MB 截图走静默降级（tooBig）不报错。
 
@@ -148,7 +160,7 @@ composer 模型按钮 → 弹层：搜索过滤（名称/ID/组）生效、行�
 
 | 项 | 通过? | 现象/截图 |
 |---|---|---|
-| D1–D8 | ☐ | |
+| D1–D12 | ☐ | |
 
 ---
 
@@ -158,4 +170,4 @@ composer 模型按钮 → 弹层：搜索过滤（名称/ID/组）生效、行�
 |---|---|---|
 | V4-1 / V3-2 / V3-4 | WS 重连、时序安全比较、engines | **已落地**（`63a960d`），B4 按新预期验 |
 | 披露取舍 | Key 明文在 `.webagent/config.json`、`/api/status` 带 secretKey、启动日志打印含密钥 MCP URL 等 | SECURITY.md 有意为之，勿报 |
-| 真 PTY | 架构导读 §12 既定取舍：未点名不做 | 勿报 |
+| 真 PTY | **经默认壳解决**：code-server 终端即真 PTY；经典壳按设计保持一次性命令（§12，2026-09-07 用户决定） | 勿报缺陷；经典壳要真 PTY 需另点名（P5-4） |

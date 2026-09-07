@@ -9,7 +9,7 @@
 
 ## 当前状态
 - **阶段**：S4-终端化（代码完成：S4-1 安装包 4a85ecf / S4-2 默认壳+抛光 8a73df0 / S4-3 模型弹层 ce6d52f；S1–S3 已完成）
-- **正在做**：无——ShunCode 对齐 S1–S4 代码面全部关账（S4 报告 `review/REPORT_SHUNCODE_S4.md`）；等真机验收反馈驱动小修
+- **正在做**：阶段 5 体验面对齐代码面完成（P5-1 `bc2d338` + P5-2 口径）；等真机跑 CHECKLIST D1–D12 反馈
 - **阻塞项**：无代码阻塞；真机验收唯一基线 review/CHECKLIST_WINDOWS.md（A/B 继承项 + S4 D 节 D1–D8），待 Windows 执行
 
 ## 已完成阶段摘要
