@@ -2,7 +2,7 @@
 
 当前处理目标：`webagent-core/agent-host/src/agent/`
 
-本目录实现 **本机 Chat**（`POST /api/chat`）。网页 Agent 走 MCP，**不进入本目录**。无 `.json` / `.html`。文件：`runChat.js`、`openai.js`、`providers.js`、`toolLabel.js`。
+本目录实现 **本机 Chat**（`POST /api/chat`）。网页 Agent 走 MCP，**不进入本目录**。无 `.json` / `.html`。文件：`runChat.js`、`openai.js`、`computerUse.js`、`providers.js`、`toolLabel.js`。
 
 ---
 
@@ -68,25 +68,41 @@
 
 ### 📄 文件名：`openai.js`
 
-- **文件职责：** OpenAI 兼容 `/chat/completions` 工具循环，最多 10 步。
+- **文件职责：** OpenAI 兼容 `/chat/completions` 工具循环，最多 10 步。本机 Chat 的「眼睛」在这里把截图附成 `image_url`（**MCP 不走本文件**）。
 - **核心类/函数清单：**
 
-  - **Function `systemPrompt(mode)`（L8–L41）**
-    - L9–L12：code 允许 patch/命令；否则 READ-ONLY。
-    - L16–L21：follow-user / en / 默认中文。
-    - L22–L39：拼工作区根、循环规则、Windows PowerShell 提示、plan 不改仓库、custom.instructions、`formatWorkspaceContext`。
-  - **Function `temperatureFor(level)`（L43–L47）** — `low→0.1`，`medium→0.4`，其它 `0.7`。不盲发未知厂商字段。
-  - **Function `runOpenAI({ mode, message, history=[], emit, model, thinkLevel, allowTools=true, extraSystem })`（L49–L157）**
-    - L70–L71：baseUrl 去尾 `/`，空则抛。`emit` 缺省空函数。
-    - L72–L85：`allowTools` 真才把 `getToolList(mode)` 转 function tools（Ask/Plan 列表无 apply_patch）。
-    - L87–L95：system（可拼 extraSystem）+ history 最后 12 条 + 当前 user。
-    - L97–L105：`temperature: temperatureFor(thinkLevel)`；有 tools 才带 `tool_choice:'auto'`。
-    - L107–L169：最多 10 轮 POST `${base}/chat/completions`。
-      - `!resp.ok` 抛 HTTP + 正文前 240。
-      - JSON 失败抛。无 message 抛。
-      - 有 tool_calls 最多 8 个；arguments parse 失败当 `{}`；try `callTool(name, args, mode)`，结果 `JSON.stringify.slice(0,12000)` 作为 role tool；catch 则 `ERROR: …`；然后 `continue`。
-      - 无 tool_calls → emit message（空则「（无文本输出）」）并 **`return { text }`**。
+  - **Function `modelSeesImages(model)`（L11–L18）** — `model.vision === true` 或 `caps`/`capabilities` 数组含 `vision`（大小写不敏感）→ 会看图。探测不到的纯文本 Endpoint 一律按不会看图处理（诚实拒绝，不假装 OCR）。
+  - **Function `systemPrompt(mode)`（L20–L53）**
+    - code 允许 patch/命令；否则 READ-ONLY。
+    - follow-user / en / 默认中文。
+    - 拼工作区根、循环规则、Windows PowerShell 提示、plan 不改仓库、custom.instructions、`formatWorkspaceContext`。
+  - **Function `temperatureFor(level)`（L55–L59）** — `low→0.1`，`medium→0.4`，其它 `0.7`。不盲发未知厂商字段。
+  - **Function `runOpenAI({ mode, message, history=[], emit, model, thinkLevel, allowTools=true, extraSystem })`（L61–L197）**
+    - L72–L73：baseUrl 去尾 `/`，空则抛。`emit` 缺省空函数。
+    - L74–L83：`allowTools` 真才把 `getToolList(mode)` 转 function tools（Ask/Plan 列表无 apply_patch）。
+    - L85–L93：system（可拼 extraSystem）+ history 最后 12 条 + 当前 user。
+    - L95–L103：`temperature: temperatureFor(thinkLevel)`；有 tools 才带 `tool_choice:'auto'`。
+    - L105–L193：最多 10 轮 POST `${base}/chat/completions`。
+      - `!resp.ok` 抛 HTTP + 正文前 240。JSON 失败抛。无 message 抛。
+      - 有 tool_calls 最多 8 个；arguments parse 失败当 `{}`；try `callTool(name, args, mode)`，结果 `JSON.stringify.slice(0,12000)` 作为 role tool；catch 则 `ERROR: …`。
+      - **「眼睛」（L152–L178）**：`run_command` 成功后 `computerUse.collectShot` 认截图（命令 `-Out` / stdout）——`tooBig` 则注入「降 Quality 重截」提示；`modelSeesImages` 真则追加一条 `role:'user'` 多模态消息（text + `image_url` data URL）并 send status（**只带路径不带 base64**）；假则注入 `[系统提示]` 要求模型**如实转告**「当前模型不会看图」并 send status。文本通道 12000 字截断，所以图必须走 image 部分。
+      - 然后 `continue`；无 tool_calls → emit message（空则「（无文本输出）」）并 **`return { text }`**。
     - 10 轮用尽 emit「已达到最大工具轮次。」并 `return { text }`。
+  - 导出 `{ runOpenAI, systemPrompt, temperatureFor, modelSeesImages }`。
+
+---
+
+### 📄 文件名：`computerUse.js`
+
+- **文件职责：** 本机 Chat 专用「眼睛」：认出 `run_command` 产生的截图文件、读成 data URL 给 `openai.js`。**MCP/Bridge 不引用本模块**：网页 `tools/call` 仍只回 `type:'text'`（chatVision.test 源码锁）。
+- **核心类/函数清单：**
+
+  - **`COMPUTER_USE_DIR`（L16）** — 仓库根 `computer-use/`（与 `skills.js bundledSkills()` 同一位置）。**`MAX_BYTES`（L18）** — 单图上限 6MB。
+  - **Function `findShotCandidates({command,stdout})`（L28–L41）** — 认三种来源：`-Out <路径>`（带/不带引号）、stdout JSON 的 `"out":"….png"`、stdout 裸 `*.png|jpg|jpeg` token。
+  - **Function `resolveShotPath(raw, roots)`（L55–L66）** — 相对路径按工作区解析；`realpathSync` 后**白名单**：仅工作区内或 `computer-use/` 内收（symlink 逃逸同拒）；仅图片扩展名。`roots={workspaceRoot,cuDir}` 可注入（测试用）。
+  - **Function `readShotAsDataUrl(abs)`（L68–L80）** — 读文件转 `data:image/png;base64,…`；空/超限/不可读 → null。
+  - **Function `collectShot(input, roots)`（L82–L99）** — 主入口：遍历候选取第一张可附加的 `{abs,rel,dataUrl,bytes,mime}`；超限 `{tooBig,rel,bytes}`；没有 null。
+- **关键边界：** base64 只进模型请求体，**不经 eventBus 广播**；不开任意盘符读文件（架构导读 第 12 节沙箱取舍不变）。
 
 ---
 

@@ -36,6 +36,7 @@
 | `planRound.test.js` | 回合 clamp、空任务/满额/过早总结错误码 |
 | `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；Plan 首轮一支、空发第二支、过早 merge、再 merge `agreementRate==null`；第二参 emit 与 `payload.emit` |
 | `chatMode.test.js` | `@webagent` 默认 Agent=code；`/ask` `/plan`（直接 require 插件 `modeFromChatRequest.js`） |
+| `chatVision.test.js` | 本机 Chat「眼+手」（ShunCode 第一阶段）：截图路径解析（`-Out`/JSON out/裸路径）、白名单（工作区内收、区外/非图/symlink 逃逸拒）、`modelSeesImages`、`load_skill('computer-use')` 带 `scriptsDir`+`runHint`；假 provider 集成——vision 模型第二轮请求含 `image_url` data URL 且事件流不带 base64，纯文本模型永不带图并注入诚实提示；**源码锁** MCP server 不引用 computerUse、无 `type:'image'` |
 | `toolLabel.test.js` | 共用短标签：Explored / Found N files / Found N matches / Read / Patched |
 | `profile.test.js` | 环境偏好 / 技术栈写入 `.webagent`，进入指令 |
 | `oauth.test.js` | OAuth 发现、配对、PKCE、Bearer `/mcp`、SSE、session 复用/未知 404/`DELETE`、SSE endpoint 含密钥路径、注册限速 429、refresh 轮换与重放吊销；**源码锁** secretKey 用 `crypto.timingSafeEqual`、`engines.node >=18` |
@@ -315,6 +316,15 @@
 
 - **文件职责：** 直接 `require('../../extension/modeFromChatRequest')`（不加载 `extension.js`，因此不需要 `vscode`）。
 - L3–L9：command ask/plan、`/ask 这是什么`、普通「修复测试」、空对象 → 分别 ask/plan/ask/code/code。
+
+### 📄 文件名：`chatVision.test.js`
+
+- **文件职责：** ShunCode 第一阶段（review/PROMPT_SHUNCODE.md）：本机 Chat「眼 + 手」最小集。不依赖真显示器：假 PNG + 本地假 provider（http 服务脚本化两轮响应并记录请求体）。
+- 单测 `computerUse`：`findShotCandidates` 认 `-Out`（带/不带引号、反斜杠路径）、mark JSON `"out"`、裸图路径，无图命令不误报；`resolveShotPath` 工作区内相对/绝对收，**工作区外、非图扩展名、symlink 逃逸拒**；`collectShot` 返回 `data:image/png;base64,`。
+- `modelSeesImages`：`vision:true` / caps 含 vision → true；`{}`/null → false。
+- `loadSkill({name:'computer-use'})`：`absDir`/`scriptsDir` 以 `computer-use`/`computer-use/win` 结尾；`runHint` 含 `snap.ps1` 与「不回传图片」。
+- 集成：vision 模型——恰好两轮请求，第二轮含 `"type":"image_url"` 与 data URL、第一轮无图、status 含「截图」、**事件流不含 base64**；纯文本模型——所有请求体不含 `image_url`、对话注入「未标记为可看图」、status 诚实提示。
+- 源码锁：`mcp/server.js` 不含 `computerUse`、无 `type:'image'`（Bridge 行为与第一阶段前一致）。
 
 ### 📄 文件名：`toolLabel.test.js`
 
