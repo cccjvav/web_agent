@@ -14,6 +14,7 @@ export function logBridgeTool(ev) {
   if (ev.durationMs) state.stats.totalMs += ev.durationMs;
   state.stats.lastTool = ev.label || ev.name || '';
   state.stats.lastToolAt = Date.now();
+  state.stats.healthLine = '';
   ui.paintStats();
   const wait = $('#bridge-wait');
   if (wait) wait.classList.add('hidden');
@@ -39,6 +40,10 @@ export function paintStats() {
   if ($('#stat-ok')) $('#stat-ok').textContent = rate.toFixed(1) + '%';
   const avgMs = s.calls ? s.totalMs / s.calls : 0;
   if ($('#stat-avg')) $('#stat-avg').textContent = (avgMs / 1000).toFixed(1) + ' s';
+  if ($('#sess-meta') && s.healthLine) {
+    $('#sess-meta').textContent = s.healthLine;
+    return;
+  }
   const sess = state.status && state.status.mcpSession;
   const active = sess
     ? (sess.httpSessions || (sess.alive ? 1 : 0) || sess.clients || 0)
@@ -236,6 +241,7 @@ export async function startBridge() {
   const data = await res.json();
   if (!data.success) { ui.toast(data.error || '无法启动'); return false; }
   if (data.note) ui.toast(data.note.slice(0, 180));
+  state.stats.healthLine = '';
   await ui.refreshStatus();
   $('#mcp-banner').classList.remove('hidden');
   try { await navigator.clipboard.writeText(state.status.mcpUrl); } catch (_) {}
@@ -246,6 +252,7 @@ export async function startBridge() {
 
 export async function stopBridge() {
   await fetch('/api/bridge/stop', { method: 'POST' });
+  state.stats.healthLine = '';
   await ui.refreshStatus();
   $('#sess-dot').classList.remove('on');
 }
@@ -337,9 +344,11 @@ export async function checkBridgeHealth() {
     bits.push(s.bridgeRunning ? 'Bridge 运行中' : 'Bridge 已停止');
     const tun = s.tunnel || {};
     if (tun.url) bits.push(String(tun.url).replace(/^https?:\/\//, ''));
-    ui.toast(bits.join(' · '));
+    state.stats.healthLine = bits.join(' · ');
+    ui.paintStats();
   } catch (e) {
-    ui.toast('健康检查失败：' + (e.message || e));
+    state.stats.healthLine = '健康检查失败：' + (e.message || e);
+    ui.paintStats();
   }
 }
 

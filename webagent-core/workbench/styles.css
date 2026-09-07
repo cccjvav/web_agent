@@ -289,6 +289,7 @@ u { text-decoration: none; }
 .sess-grid span { display: block; font-size: 18px; font-weight: 600; color: var(--sess-num); margin-top: 2px; }
 .sess-grid label { font-size: 11px; color: var(--mute); }
 .sess-foot { font-size: 11px; color: var(--mute); margin: 6px 0 0; line-height: 1.4; }
+#sess-meta { word-break: break-all; }
 
 #statusbar {
   height: var(--status); background: var(--bg0); border-top: 1px solid var(--border);

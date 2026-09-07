@@ -115,7 +115,7 @@
 - **Function `arenaConnect`（L141–L170）** — 本机 `/mcp/${secret}` initialize/tools/list/resources/read，再 `ui.sendChat(..., { stayOnBridge:true })`。
 - **Function `openSite`（L172–L190）**。
 - **Function `startBridge` / `stopBridge` / `paintBridge`** — POST start：named 时带 `#named-domain` / `#named-token`；ngrok 时带 `#ngrok-domain` / `#ngrok-token`；按 `s.tunnel.url` 与 `tunnelProvider` 显示 Quick Tunnel、Named Tunnel、ngrok 或「走当前页面源」；会话说明写成 Connected / Waiting / Stopped。
-- **Function `checkBridgeHealth`** — GET `/health` + `/api/status`，toast 工作台/Bridge/隧道，不改磁盘。
+- **Function `checkBridgeHealth`** — GET `/health` + `/api/status`，结果写入 `#sess-meta`（Streamable HTTP 那一行），不 toast。`state.stats.healthLine` 直到下次工具调用 / 启停 Bridge / Clear log。不改磁盘。
 - **Function `refreshStatus`** — GET `/api/status`；填 `#model-select`；同步 `state.planRound` 并 `ui.paintPlanComposer`；未触摸过的 `#think-select` 跟 `multiModel.thinkLevel`。
 
 ---
