@@ -9,8 +9,8 @@
 | 批次 | 内容 | 状态 |
 |---|---|---|
 | B1 | 后端「眼+手」：computerUse.js / openai.js / skills.js / routes.js + chatVision.test + 四份文档同步 + content.js 重建 | ✅ 30/30 绿，已提交推送 |
-| B2 | 设置页 vision 勾选（index.html/bind.js/settings.js）+ workbench README + 测试锁 | ⏳ 进行中 |
-| B3 | 技能使用指南 §10 重写 + 架构导读 §12 更新 + content.js 重建 | ⏳ 待做 |
+| B2 | 设置页 vision 勾选（index.html/bind.js/settings.js）+ workbench README + 测试锁 | ✅ 30/30 绿，已提交推送（71c2806，含 B1 漏提交的 content.js） |
+| B3 | 技能使用指南 §10 重写 + 架构导读 §12 更新（两份不在 FILE_DOCS，无需重建） | ⏳ 进行中 |
 | B4 | 本报告定稿 + 最终 npm test 输出 | ⏳ 待做 |
 
 ## 做了什么（B1 明细）
