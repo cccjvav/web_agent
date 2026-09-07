@@ -123,7 +123,7 @@
                 <div class="walk-ico">🌉</div>
                 <div>
                   <div class="walk-title">Bridge —— 把工作区交给网页 AI</div>
-                  <div class="walk-desc">把当前工作区变成 MCP，给 Arena / ChatGPT 自制插件 / DeepSeek++ 等网页 Agent。只回文本：远程看不到桌面截图，危险命令被拒。要先启动 Bridge 拿公网地址。</div>
+                  <div class="walk-desc">把当前工作区变成 MCP，给 Arena / ChatGPT 自制插件 / DeepSeek++ 等网页 Agent。第三阶段签字后 run_command 截图以 image 内容回传；远程危险命令仍被拒。要先启动 Bridge 拿公网地址。</div>
                 </div>
               </div>
             </div>
@@ -300,7 +300,7 @@
           <section class="block" id="two-paths">
             <div class="block-h">两条路：本机 Chat 与 Bridge</div>
             <p class="hint"><strong>本机 Chat</strong> —— 模型在右侧对话框里跑（API Provider 页配 Endpoint/Key）。能动当前工作区文件和 run_command（含仓库根 computer-use 脚本）；标了 vision 的模型收得到截图，纯文本模型会被如实告知看不了图。不需要隧道。</p>
-            <p class="hint"><strong>Bridge</strong> —— 模型是网页 AI（Arena、ChatGPT 自制 MCP 插件、DeepSeek++ 等）。经 MCP 工具层动同一个工作区；永远收不到截图（tools/call 恒文本），远程危险命令被拒。要启动 Bridge 拿公网地址，任务做完点停止。</p>
+            <p class="hint"><strong>Bridge</strong> —— 模型是网页 AI（Arena、ChatGPT 自制 MCP 插件、DeepSeek++ 等）。经 MCP 工具层动同一个工作区；用户 2026-09-07 书面签字后，run_command 截图以 image 内容回传，远程危险命令仍被拒。要启动 Bridge 拿公网地址，任务做完点停止——拿到地址的人就能看到截图。</p>
           </section>
           <label class="field-label">自定义智能体</label>
           <p class="hint">描述你的偏好和约定，以串联智能体、技能和指令。</p>
@@ -512,7 +512,7 @@
             <div>
               <h2>Web Agent Bridge</h2>
               <p class="lead">把当前工作区变成 MCP，给<strong>任意</strong>能调工具的网页 Agent 用。不绑死 ChatGPT，也不需要 Plus。ChatGPT 聊天栏贴链接不行；要对接着设置里的自制 MCP 插件。</p>
-              <p class="hint" id="bridge-sub">本机 Chat 随时可用（可看图的模型收得到截图）。网页 Agent 要先启动 Bridge 拿到公网地址；Bridge 只回文本，远程看不到桌面。</p>
+              <p class="hint" id="bridge-sub">本机 Chat 随时可用（可看图的模型收得到截图）。网页 Agent 要先启动 Bridge 拿到公网地址；Bridge 现在也会把 run_command 截图以图片回传（第三阶段用户签字），危险命令仍被拒。</p>
             </div>
             <span id="bridge-pill" class="status-pill stop">已停止</span>
           </div>

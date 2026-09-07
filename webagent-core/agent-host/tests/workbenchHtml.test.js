@@ -61,7 +61,7 @@ for (const id of ['walk-local-chat', 'walk-bridge', 'two-paths']) {
   assert.ok(html.includes(`id="${id}"`), `workbench HTML missing #${id}`);
 }
 assert.ok(html.includes('两条路'));
-assert.ok(html.includes('Bridge 只回文本'), 'bridge page states text-only honestly');
+assert.ok(html.includes('image 内容') && html.includes('签字'), 'stage 3: bridge copy says screenshots return as image content after user consent');
 const bindSrc = fs.readFileSync(path.resolve(__dirname, '../../workbench/js/bind.js'), 'utf8');
 assert.ok(bindSrc.includes('walk-local-chat') && bindSrc.includes('walk-bridge'), 'welcome two-path cards are wired');
 
