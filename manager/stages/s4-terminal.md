@@ -53,5 +53,8 @@
 - [x] 启动脚本说明.md、使用指南.md、架构导读.md §12、installer/README.md（新）
 - [x] workbench/README.md、tests/README.md
 - [x] manager/CONTEXT.md
-- [ ] review/REPORT_SHUNCODE_S4.md（收尾时写：含真机验收清单——.iss 编译/安装冒烟/模型弹层浏览器交互/远程客户端实收 image）
+- [x] review/REPORT_SHUNCODE_S4.md 已写（含真机验收清单：.iss 编译/安装卸载冒烟/弹层明暗/branch-pill/等待态文案对照 05 图/S3 遗留远程实收 image 与 >6MB 降级）
 - [ ] S4-4 截图字节入 review/shuncode-ui/（用户自行入仓后 fetch 核对）
+
+## 阶段结论（2026-09-07）
+代码面完工并关账：S4-1 安装包 `4a85ecf`、S4-2 默认壳口径 + S4-3 抛光 `8a73df0`、S4-3 弹层 `ce6d52f`、S4-4 截图归档 `277cb71`、收尾报告见 `review/REPORT_SHUNCODE_S4.md`。真 PTY 未点名不做（§12 取舍保留）。后续仅真机验收反馈驱动小修。
