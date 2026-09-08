@@ -170,7 +170,7 @@ async function main() {
     assert.strictEqual(status.status, 200);
     assert.ok(status.json.secretKey);
     assert.ok(status.json.prompt.includes('快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。'));
-    assert.ok(Array.isArray(status.json.tools) && status.json.tools.length === 25);
+    assert.ok(Array.isArray(status.json.tools) && status.json.tools.length === 30);
     assert.ok(status.json.tools.every((t) => t.name && t.inputSchema === undefined));
     assert.ok(Array.isArray(status.json.clients) && status.json.clients.some((c) => c.id === 'arena' && !c.needsPlus));
     assert.ok(status.json.clients.some((c) => c.id === 'deepseek' && c.connectMode === 'extension-http' && !c.needsPlus && c.supportsMcp));
@@ -217,7 +217,7 @@ async function main() {
     assert.ok(names.includes('apply_patch'));
     assert.ok(names.includes('start_command'));
     assert.ok(names.includes('workspace_info'));
-    assert.strictEqual(names.length, 25);
+    assert.strictEqual(names.length, 30);
 
     const bare = await request('POST', `http://127.0.0.1:${mcpPort}/mcp`, {
       jsonrpc: '2.0',

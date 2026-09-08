@@ -59,7 +59,7 @@ async function main() {
   assert.ok(pageRules.includes('Web Agent Bridge MCP'));
 
   const tools = getToolList().map((t) => t.name);
-  assert.strictEqual(tools.length, 25);
+  assert.strictEqual(tools.length, 30);
   assert.ok(tools.includes('ping'));
   assert.ok(tools.includes('workspace_info'));
   assert.ok(tools.includes('remember'));

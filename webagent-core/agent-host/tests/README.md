@@ -32,6 +32,8 @@
 | `workbenchHtml.test.js` | 工作台 HTML 含 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login / named-domain / named-token / ngrok-domain / ngrok-token 等）；含 `ngrok http`；不得含「不会被使用」/「使用 GitHub 登录」；**S4 锁**：composer chip、chat.js branch-pill、Bridge 页折叠组 |
 | `docsSite.test.js` | 跑 `docs-site/build.js` 后，提交的 `content.js` 与生成结果一致（忽略当天 `builtAt`） |
 | `codeServerAuth.test.js` | 口令落盘复用；`CODE_SERVER_PASSWORD`；`CODE_SERVER_AUTH=none`；trusted-origins 仅本机 |
+| `board.test.js` | 多 Agent 任务板：认领原子性（并发仅一胜）、归属者才能改状态、注记开放、释放回池、持久化 |
+| `mcpBoard.test.js` | 板子经真 MCP 协议：双模拟客户端互见（peers_list）、会话身份穿进归属、E_TAKEN 跨客户端 |
 | `skipWorkbench.test.js` | `WEBAGENT_SKIP_WORKBENCH=1` 不占用工作台端口 |
 | `planRound.test.js` | 回合 clamp、空任务/满额/过早总结错误码 |
 | `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；Plan 首轮一支、空发第二支、过早 merge、再 merge `agreementRate==null`；第二参 emit 与 `payload.emit` |
