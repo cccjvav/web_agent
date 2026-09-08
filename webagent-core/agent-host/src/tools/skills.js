@@ -9,7 +9,7 @@ function skillRoots() {
   ];
 }
 
-const BUNDLED_SKILL_NAMES = ['computer-use', 'project-manager'];
+const BUNDLED_SKILL_NAMES = ['computer-use', 'project-manager', 'multi-agent-board'];
 
 function bundledSkills() {
   const repoRoot = path.resolve(__dirname, '../../../..');

@@ -40,7 +40,7 @@
 | ~~S4 图形资料未入仓~~ 已解决：用户网页上传入仓 758532a，归档 review/shuncode-ui/（16 张+索引） | 已解决 | S4-4 完成 | UI | 缺 2 张以 stages/s4-terminal.md 目视记录为准 |
 | ~~Bridge 回传截图（MCP image 内容）~~ | 已解决 | 第三阶段完成（2026-09-07 用户书面签字） | mcp | → review/REPORT_SHUNCODE_S3.md |
 | npm test 偶发 1/30 失败（文件名未留存，3 次重跑不可复现） | P3 | 真机复现时排查 | tests | 优先查依赖临时端口的 HTTP 用例 |
-| 沙箱回收新变体：worktree 完好但 .git HEAD 回滚到会话基点（bfd040f），全库显「本地修改/未跟踪」 | P2 | 已处置 | 工程 | 恢复：fetch 显式 refspec → `git reset --hard <远端 tip>`；远端 tip 仍是唯一真相（2026-09-07 实例） |
+| 沙箱回收新变体：worktree 完好但 .git HEAD 回滚到会话基点（bfd040f），全库显「本地修改/未跟踪」 | P2 | 已处置 | 工程 | 恢复：fetch 显式 refspec → `git reset --hard <远端 tip>`；若回收发生在**提交之后**（新提交坐在旧基上）：树移植=`git reset --hard <远端 tip>` + `git checkout <丢失提交> -- .` 再重提交（2026-09-07、2026-09-08 两实例） |
 | mcp/README 除 method 表/tools-catch 外的区段（oauth/hostStatus 等）行号未逐一核对 | P3 | 下次触及 mcp/README 时 | docs | method 表与 tools/call 细节已于 S3 实测校正 |
 
 ## UI 对齐

@@ -153,6 +153,9 @@ composer 模型按钮 → 弹层：搜索过滤（名称/ID/组）生效、行�
 **D12 app 窗口快捷方式（P5-1）**
 双击桌面「Web Agent (app 窗口)」→ 无边框独立窗口（Edge/Chrome `--app`，任务栏独立图标）；主程序未运行时自动后台最小化拉起 VS Code 壳；无 Edge/Chrome 环境回退默认浏览器普通窗且不报错。
 
+**D13 多 Agent 任务板（第六阶段）**
+两个不同网页客户端（如 Arena + 自制插件）同连 Bridge：各自 `peers_list` 互见（count≥2、key 为 client@ip）；A `board_create` 后 B `board_list` 可见；同任务 A/B 同时 `board_claim` 仅一胜（输家 E_TAKEN）；owner 改状态、非 owner 加注记各验一遍；工作区出现 `.webagent/board.json`；停 Bridge 后板文件保留（临时=随工作区，不随进程）。
+
 **D8 S3 遗留 + computer-use 冒烟（S1 报告提议项）**
 真机跑 `snap.ps1` 截图 → 远程网页客户端（Arena/ChatGPT 自制插件等）**实际收到 image 内容**并描述画面（各 MCP 客户端渲染支持逐个验证）；>6MB 截图走静默降级（tooBig）不报错。
 
@@ -160,7 +163,7 @@ composer 模型按钮 → 弹层：搜索过滤（名称/ID/组）生效、行�
 
 | 项 | 通过? | 现象/截图 |
 |---|---|---|
-| D1–D12 | ☐ | |
+| D1–D13 | ☐ | |
 
 ---
 
