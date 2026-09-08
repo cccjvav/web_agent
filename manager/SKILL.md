@@ -11,7 +11,7 @@ name: project-manager
 description: 推理型项目上下文管理 + 项目使用手册生成。通过轻量级索引 CONTEXT.md 实现按需推理（不预加载全部文档）；通过 user-manual 生成完整项目使用手册（非开发者也能快速上手）。当开始新上下文、接手项目、了解项目情况、生成使用手册、或用户提到"项目管家""更新项目记录""生成手册"时触发。
 ---
 
-# 项目管家 v12
+# 项目管家 v13
 
 ## 核心理念
 
@@ -122,6 +122,7 @@ cp <skill包路径>/SKILL.md manager/SKILL.md
 2. 在 `manager/stages/` 当前阶段文件追加关键决策和经验
 3. 有复用价值的经验同步到 `manager/docs/experience.md`
 4. 检查 CONTEXT.md 非阶段摘要区域是否超 80 行
+5. **元复盘（元管理回路，v13 新增）**：问一句「本阶段经验是否暴露 SKILL.md/模板/流程自身的缺陷？」是则修订技能原文（`project-manager/SKILL.md`）并升版本号、覆盖同步 `manager/SKILL.md` 副本、在 `manager/docs/experience.md`「元管理」节记一条『技能进化』；**触发器＝每阶段关闭 + 任一 P1 经验被解决时**。复盘对象从此包含机制本身，不只阶段/任务
 
 ### manager/ 目录
 ```
@@ -139,7 +140,7 @@ manager/
 - manager/ 下所有文件首行必须有定位说明 `<!-- 定位：... -->`
 - CONTEXT.md 只放"是什么"和"在哪"，不放"怎么做"
 - experience.md 只沉淀可复用经验，偶发问题不记录
-- manager/SKILL.md 是只读副本，禁止修改
+- manager/SKILL.md 是只读副本，禁止直接修改；**唯一修订通道＝元复盘**：改技能原文 `project-manager/SKILL.md` 升版本后覆盖同步副本
 - 涉敏信息（API Key、姓名、身份证号、地址、身份、IP 等）一律用 {{占位符}} 写入管理文件，真实数据只存 manager/privacy.md
 ```
 
@@ -338,6 +339,7 @@ agents.md 记录项目级的通用约定——不需要索引就能找到的、�
 - [ ] 进度偏差及原因：
 - [ ] 可复用的方法论：
 - [ ] 下一阶段需规避什么：
+- [ ] 元复盘：本阶段经验是否需要修订 SKILL.md/模板/流程？（是→完成开发后必做第 5 条）
 
 ## 待更新文档
 - [ ] docs/api.md：[需要更新的内容]
