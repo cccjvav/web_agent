@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { config } = require('../config');
-const { snapshot } = require('../mcp/session');
+const { allSessions } = require('../mcp/session');
 
 const BOARD_REL = path.join('.webagent', 'board.json');
 const PEER_ALIVE_MS = 10 * 60 * 1000; // 10 分钟内有动静算在线（MCP 客户端轮询间隔不定，比 ping 的 10s 宽）
@@ -83,9 +83,8 @@ function view(task) {
 // —— 工具 handlers（签名与既有工具一致：(args, ctx)）——
 
 function peersList(_args = {}, _ctx = {}) {
-  const snap = snapshot();
   const now = Date.now();
-  const peers = (snap.sessions || []).map((s) => ({
+  const peers = allSessions().map((s) => ({
     key: s.key,
     client: (s.clientInfo && s.clientInfo.name) || 'External-Agent',
     connectedAt: s.connectedAt,

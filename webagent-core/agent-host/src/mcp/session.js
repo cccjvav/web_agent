@@ -46,6 +46,11 @@ function snapshot() {
   };
 }
 
+// 第六阶段审计 F6：snapshot() 的 sessions 截断到 8 供界面用；板工具要全量在场者
+function allSessions() {
+  return [...sessions.values()].sort((a, b) => String(b.lastSeen).localeCompare(String(a.lastSeen)));
+}
+
 function pruneHttpSessions() {
   const now = Date.now();
   for (const [id, rec] of httpSessions) {
@@ -123,6 +128,7 @@ module.exports = {
   snapshot,
   sessionKey,
   keyForReq,
+  allSessions,
   setHttpSessionKey,
   reset,
   createHttpSession,

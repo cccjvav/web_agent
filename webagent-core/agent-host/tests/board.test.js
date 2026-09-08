@@ -76,6 +76,14 @@ async function main() {
   assert.ok(Array.isArray(p.peers));
   assert.ok(p.aliveWindowMs > 0);
 
+  // F6：>8 客户端同连不截断
+  const sess = require('../src/mcp/session');
+  for (let i = 1; i <= 9; i++) {
+    sess.touch({ ip: `10.1.0.${i}`, body: { params: { clientInfo: { name: `c${i}` } } } });
+  }
+  const many = board.peersList({}, A);
+  assert.strictEqual(many.count, 9);
+
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('board.test ok');
 }

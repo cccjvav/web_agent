@@ -43,7 +43,7 @@ Name: "addpath"; Description: "添加到 PATH（任意终端可直接 run-webage
 
 [Files]
 ; 仓库主体（排除运行时产物与隐私文件；workspace 只带骨架 README，见下一条）
-Source: "..\*"; DestDir: "{app}"; Flags: createallsubdirs recursesubdirs; Excludes: "\.git\*,\.git,node_modules\*,.npm\*,.cache\*,.local\*,code-server-app\*,bin\code-server-runtime\*,!bin\code-server-runtime\package.json,*.log,*.tar.gz,*.tmp.*,dist\*,build\*,out\*,workspace\*,manager\privacy.md,installer\output\*,review\shuncode-ui\*"
+Source: "..\*"; DestDir: "{app}"; Flags: createallsubdirs recursesubdirs; Excludes: "\.git\*,\.git,node_modules\*,.npm\*,.cache\*,.local\*,.webagent\*,code-server-app\*,bin\code-server-runtime\*,!bin\code-server-runtime\package.json,*.log,*.tar.gz,*.tmp.*,dist\*,build\*,out\*,workspace\*,manager\privacy.md,installer\output\*,review\shuncode-ui\*"
 Source: "..\workspace\README.md"; DestDir: "{app}\workspace"; Flags: confirmoverwrite skipifsourcedoesntexist
 
 [Icons]

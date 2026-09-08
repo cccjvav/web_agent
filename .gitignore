@@ -25,6 +25,7 @@ Thumbs.db
 **/.webagent/config.json
 **/.webagent/read-hashes.json
 **/.webagent/usage.json
+**/.webagent/board.json
 
 # Admin host local token + reports
 webagent-core/admin-host/data/
