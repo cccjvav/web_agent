@@ -37,4 +37,4 @@
 - 安装器 P5-1 任务集与文档三处（installer/README、启动脚本说明、CHECKLIST D9–D12）互相对应，无口径分叉。
 
 ## 建议处置
-F1–F6 为一个小文档/卫生批（约 6 处单行级修改+1 行 gitignore+1 行 Excludes+peers 上限），可一次绿提交修完；F7–F9 不修。等用户点名后动。
+F1–F6 **已修于 `176f6b0`**（用户点名全修）：CHECKLIST 32/32 与 7 cmd 清单、review/README 补 S1–S4/shuncode-ui/审计三行+措辞、`.gitignore` 加 `**/.webagent/board.json`、.iss Excludes 加 `.webagent\*` 兜底、peers_list 改 `allSessions()` 全量（board.test 加 9 客户端不截断锁）。F7–F9 按 info 不修。32/32 绿。
