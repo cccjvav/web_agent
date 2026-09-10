@@ -2,14 +2,14 @@
 
 这是本仓库的 **第二条运行方式**：浏览器里打开 **真正的 VS Code**，左侧活动栏有 **Web Agent** 插件，插件连本机 `agent-host`。ChatGPT / Arena 改磁盘仍然走 Bridge + cloudflared，和第一种方式相同。
 
-| | 方式 A：自绘工作台 | 方式 B：网页 VS Code |
-|---|---|---|
-| 启动 | `run-webagent.cmd` | `run-webagent-vscode.cmd` |
-| 浏览器里看到 | 仿 VS Code 的工作台 | **官方 code-server / Code-OSS** |
-| 端口 3000 | 工作台 UI | code-server |
-| 端口 48271 | agent-host MCP | 同样 |
-| 改文件的引擎 | 同一套 MCP 工具 | 同一套 |
-| 同时开两个 | **不要**（抢 3000） | **不要** |
+| | 方式 A：自绘工作台 | 方式 B：网页 VS Code | 方式 C：本机桌面 VS Code |
+|---|---|---|---|
+| 启动 | `run-webagent.cmd` | `run-webagent-vscode.cmd` | `run-webagent.cmd` + `install-vscode-extension.cmd` |
+| 界面 | 仿 VS Code 的工作台 | **官方 code-server / Code-OSS** | 已安装的微软 VS Code |
+| 端口 3000 | 工作台 UI | code-server | **不占用**（可与 A 同时开） |
+| 端口 48271 | agent-host MCP | 同样 | 同样（插件打这扇门） |
+| 改文件的引擎 | 同一套 MCP 工具 | 同一套 | 同一套 |
+| 同时开 A 与 B | **不要**（抢 3000） | **不要** | C 不抢 3000 |
 
 官方 [coder/code-server](https://github.com/coder/code-server) **不发布 Windows 安装包**。Git 里也不再内嵌 code-server。  
 **做法：** 第一次启动时用 **npm** 下载完整的 `code-server@4.135.0`（带 `out/`），装到 `bin/code-server-runtime/`（不进 Git）。Node 22 LTS 可以跑，尽管上游标注 Node 24。
@@ -138,7 +138,9 @@ wsl --install
 | 路径 | 角色 |
 |---|---|
 | `run-webagent-vscode.cmd` / `.sh` | 本方式入口 |
+| `install-vscode-extension.cmd` | 方式 C：侧载到本机桌面 VS Code |
 | `webagent-core/scripts/run-code-oss.js` | 先 ensure，再同时拉起 agent-host + code-server |
+| `webagent-core/scripts/install-desktop-extension.js` | 拷插件到 `~/.vscode/extensions` |
 | `webagent-core/scripts/ensure-code-server.js` | 从 npm 安装到 `bin/code-server-runtime/` |
 | `bin/code-server-runtime/` | **完整可运行** 的 code-server（Git 忽略内容） |
 | `webagent-core/extension/` | 插件源码 |
@@ -180,5 +182,19 @@ agent-host 没起来。看黑色窗口报错；防火墙是否拦了 Node。
 
 ## 7. 和方式 A 怎么选
 
-- 只想让 ChatGPT 改本机仓库、界面够用：继续 **`run-webagent.cmd`**
+- 只想让网页 Agent 改本机仓库、界面够用：继续 **`run-webagent.cmd`**
 - 想要浏览器里完整 VS Code（语法高亮、多文件、插件生态）+ 同一套 Bridge：**`run-webagent-vscode.cmd`**
+- 本机已经装了 VS Code：走方式 C（下一节），不必下载 code-server
+
+---
+
+## 8. 方式 C：本机已安装的桌面 VS Code
+
+不经过浏览器、不占 3000。插件源码仍是 `webagent-core/extension/`，和方式 B 同一份。
+
+1. 仓库根双击 `install-vscode-extension.cmd`（拷到 `%USERPROFILE%\.vscode\extensions\webagent.webagent-core-<版本>`，不要 vsix）。
+2. `run-webagent.cmd D:\code\my-app`，黑色窗口保持开着。
+3. 完全退出 VS Code 再打开；**文件 → 打开文件夹** = 第 2 步那个路径（不要打开 `web_agent` 源码仓）。
+4. 活动栏 **Web Agent**；Chat 里 `@webagent`。状态栏「未连接 48271」= 引擎没起来；「工作区不一致」= 打开的文件夹和 `Workspace` 不是同一个。
+
+逐步与排错见 [使用指南.md](./使用指南.md) 第 5 节。

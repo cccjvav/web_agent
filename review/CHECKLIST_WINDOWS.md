@@ -52,7 +52,7 @@ Bridge 页选中 DeepSeek++ 或 Chat Plus 卡片 → 出现「复制规则」按
 建目录 `D:\我的 项目\demo`（放任意小项目），CMD 里跑 `run-webagent.cmd "D:\我的 项目\demo"` → 正常启动且工作台文件树显示中文目录名不乱码；Chat/编辑可用。
 
 **A10 测试双击跑（修订：29→30）**
-双击 `run-tests.cmd` → 自动装依赖后逐文件 PASS，最后 `32 test files passed`（数字可能随版本增加），窗口不闪退。
+双击 `run-tests.cmd` → 自动装依赖后逐文件 PASS，最后 `33 test files passed`（数字可能随版本增加），窗口不闪退。
 
 **A11 干净退出**
 关掉 CMD 窗口 → 任务管理器里不应残留 `node.exe`（起了隧道时也不应残留 `cloudflared.exe`/`ngrok.exe`）；再双击能重新起来。
@@ -71,7 +71,7 @@ Bridge 页选中 DeepSeek++ 或 Chat Plus 卡片 → 出现「复制规则」按
 `sandbox.test.js` L72 起：junction 指向工作区外时 `resolveSafePath` 必须拒绝。注意该段包在 `try{…}catch(_){}` 里，`fs.symlinkSync(…,'junction')` 失败会**静默跳过**。验证方法：先 `node -e "const fs=require('fs');fs.symlinkSync('C:\\Windows','.%TEMP%\\jtest','junction');console.log('ok')"` 确认本机能建 junction，再跑 `npm test` 看 sandbox.test 通过；建议在测试里给 catch 加一行 skip 日志（属可选改进）。
 
 **B2 .cmd 检出形态**
-`git ls-files --eol "*.cmd"` 在 Windows 检出后应全部 `w/crlf attr/text eol=crlf`（7 个：check-env、run-webagent、run-webagent-vscode、run-webagent-appwindow、run-admin、run-tests、docs-site/serve）。任何 `w/lf` 都说明检出被污染。
+`git ls-files --eol "*.cmd"` 在 Windows 检出后应全部 `w/crlf attr/text eol=crlf`（8 个：check-env、run-webagent、run-webagent-vscode、run-webagent-appwindow、run-admin、run-tests、install-vscode-extension、docs-site/serve）。任何 `w/lf` 都说明检出被污染。
 
 **B3 真隧道长挂 ≥2 小时（验证 V3-1 修复）**
 启动 Bridge（cloudflared），期间让网页端持续调工具（或挂一个长任务）。观察：任务管理器 node 进程内存**稳定不爬升**（修复前三处日志 buf 无上限）；BRIDGE 日志持续滚动；隧道日志里 Token 显示为 `[token]` 不是原文。ngrok 同样跑一轮（它 `--log=stdout` 每请求一行，最吃缓冲）。

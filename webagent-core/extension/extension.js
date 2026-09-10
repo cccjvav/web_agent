@@ -3,6 +3,7 @@ const http = require('http');
 const https = require('https');
 const path = require('path');
 const { modeFromChatRequest } = require('./modeFromChatRequest');
+const { sameWorkspace } = require('./workspaceMatch');
 
 function agentHostUrl() {
   const fromCfg = vscode.workspace.getConfiguration('webagent').get('agentHostUrl');
@@ -154,7 +155,7 @@ function registerChatParticipant(context) {
         }
       );
     } catch (err) {
-      stream.markdown(`连不上 agent-host：${err.message}\n\n确认 \`run-webagent-vscode\` 已启动 :48271。`);
+      stream.markdown(`连不上 agent-host：${err.message}\n\n确认 run-webagent.cmd 或 run-webagent-vscode.cmd 已启动 agent-host（:48271）。`);
     }
   };
   const participant = vscode.chat.createChatParticipant('webagent.agent', handler);
@@ -183,10 +184,21 @@ function activate(context) {
   async function refreshBar() {
     try {
       const r = await requestJson('GET', `${agentHostUrl()}/api/status`);
-      const running = r.json && r.json.bridgeRunning;
+      if (!r.json || r.status >= 400) throw new Error('http ' + r.status);
+      const folder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0];
+      const folderPath = folder && folder.uri && folder.uri.fsPath;
+      if (r.json.workspaceRoot && folderPath && !sameWorkspace(folderPath, r.json.workspaceRoot)) {
+        statusBar.text = '$(warning) Web Agent 工作区不一致';
+        statusBar.tooltip =
+          `VS Code 打开的是 ${folderPath}，agent-host 改的是 ${r.json.workspaceRoot}。请打开同一个文件夹，或用 run-webagent.cmd 带上这个路径启动。`;
+        return;
+      }
+      const running = r.json.bridgeRunning;
       statusBar.text = running ? '$(zap) Web Agent Bridge 运行中' : '$(hubot) Web Agent';
+      statusBar.tooltip = r.json.workspaceRoot ? `工作区 ${r.json.workspaceRoot}` : '已连接 agent-host';
     } catch {
       statusBar.text = '$(warning) Web Agent 未连接 48271';
+      statusBar.tooltip = '先运行 run-webagent.cmd（或 run-webagent-vscode.cmd）让 agent-host 听 48271。';
     }
   }
   refreshBar();
@@ -255,7 +267,7 @@ class ChatView {
       } catch (err) {
         this._view.webview.postMessage({
           type: 'event',
-          ev: { type: 'error', message: err.message + '（确认 run-webagent-vscode 已启动 agent-host :48271）' }
+          ev: { type: 'error', message: err.message + '（确认 run-webagent.cmd 或 run-webagent-vscode.cmd 已启动 agent-host :48271）' }
         });
       }
     });

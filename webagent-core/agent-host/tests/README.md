@@ -42,6 +42,7 @@
 | `toolLabel.test.js` | 共用短标签：Explored / Found N files / Found N matches / Read / Patched |
 | `profile.test.js` | 环境偏好 / 技术栈写入 `.webagent`，进入指令 |
 | `oauth.test.js` | OAuth 发现、配对、PKCE、Bearer `/mcp`、SSE、session 复用/未知 404/`DELETE`、SSE endpoint 含密钥路径、注册限速 429、refresh 轮换与重放吊销；**源码锁** secretKey 用 `crypto.timingSafeEqual`、`engines.node >=18` |
+| `desktopExtension.test.js` | 桌面 VS Code 侧载：`workspaceMatch` 路径规范化；`installTo` 拷 `extension/`（无 README）、摘旧 `webagent.webagent-core-*`；`WEBAGENT_VSCODE_EXTENSIONS`；根 `install-vscode-extension.cmd` 不拉 code-server；`extension.js` 提示 `run-webagent.cmd` |
 
 ---
 
@@ -365,6 +366,15 @@
   - L134–L140：Bearer 调 `workspace_info` 成功，`isError===false`。
   - L142–L147：`revokeAll` 后同一 Bearer ping → 401。
   - L148–L151：close server，删 tmp。
+
+### 📄 文件名：`desktopExtension.test.js`
+
+- **文件职责：** 不启 HTTP。锁桌面 VS Code 侧载安装与工作区路径比对。
+- `sameWorkspace`：Windows 盘符大小写、尾斜杠视为同一路径；空串或不同目录为假。
+- `WEBAGENT_VSCODE_EXTENSIONS` 覆盖 `defaultExtensionDirs` 为单一路径。
+- `installTo(tmp)`：写出 `package.json` / `extension.js` / `workspaceMatch.js` / `resources/icon.svg`，不拷 README；预先放的 `webagent.webagent-core-0.0.1` 被摘掉。
+- 根 `install-vscode-extension.cmd` 含 `install-desktop-extension.js`、`chcp 65001`，不含 `code-server`。
+- `extension.js` 含 `workspaceMatch` 与 `run-webagent.cmd`。
 
 ---
 

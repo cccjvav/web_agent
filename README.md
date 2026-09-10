@@ -40,6 +40,7 @@ GitHub 默认分支 `main` 目前仍是更早的原型快照。现行工作台�
 | `webagent-repro/` | 不用 | 更早一版纯 Bridge 原型 |
 | `bin/code-server-runtime/` | 第二种跑法下载到这里 | npm 完整 code-server，不进 Git |
 | `run-webagent-vscode.cmd` | 第二种跑法 | 浏览器里真 VS Code + Web Agent 侧栏，见 [网页VSCode使用指南.md](./网页VSCode使用指南.md) |
+| `install-vscode-extension.cmd` | 本机已装桌面 VS Code | 侧载插件到 `.vscode/extensions`，引擎仍是 `run-webagent.cmd`，见 [使用指南.md](./使用指南.md) 第 5 节 |
 | `webagent-core/agent-host/tests/` | 产品测试 | `run-tests.cmd`；不必在仓库根再放 `tests/` |
 
 - 右侧 **Chat**：输入框 **Agent ▾** 默认 **Code**（像 Copilot Agent：搜-读-改-测），只改本机，不需要隧道，不需要 Plus
@@ -60,7 +61,7 @@ run-webagent.cmd
 run-webagent.cmd D:\code\my-app
 ```
 
-让网页 Agent 改这个仓库：先装一种隧道（默认 `winget install --id Cloudflare.cloudflared`；也可用 ngrok），再在工作台 **启动 Bridge**。逐步填法见 [隧道使用指南.md](./隧道使用指南.md)。Arena 复制提示词；DeepSeek 把 MCP 地址填进 DeepSeek++；多个网页用 Chat Plus；ChatGPT 走设置里的自制插件，不要把地址贴进聊天栏。细节见使用指南第 6 节。
+让网页 Agent 改这个仓库：先装一种隧道（默认 `winget install --id Cloudflare.cloudflared`；也可用 ngrok），再在工作台 **启动 Bridge**。逐步填法见 [隧道使用指南.md](./隧道使用指南.md)。Arena 复制提示词；DeepSeek 把 MCP 地址填进 DeepSeek++；多个网页用 Chat Plus；ChatGPT 走设置里的自制插件，不要把地址贴进聊天栏。细节见使用指南第 7 节。
 
 网页里打开真正的 VS Code：
 

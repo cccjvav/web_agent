@@ -55,6 +55,8 @@ Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./w
 
 现：**123 / 123**（含 `tests/workbenchHtml.test.js`、`.github/workflows/test.yml`）。工作台把原来的单文件 `app.js` IIFE 拆成 `js/state.js`、`js/dom.js`、`js/tabs.js`、`js/chat.js`、`js/bridge.js`、`js/settings.js`、`js/bind.js`（+7），均写入 [`workbench/README.md`](./webagent-core/workbench/README.md)。P0 后又加 `src/utils/localControl.js` 与 `tests/localControl.test.js`。P1 加 `tests/sandbox.test.js`、`src/utils/corsAllow.js` 与 `tests/corsAllow.test.js`、`scripts/codeServerAuth.js` 与 `tests/codeServerAuth.test.js`、`tests/apiFiles.test.js`（`PUT /files/content` 走 `write_file`）。其后补回：`src/auth/github.js`、`src/usage/tracker.js`、`admin-host/app.js`+`index.js`、`run-admin.cmd/.sh`、`tests/githubAuth.test.js`、`usageTracker.test.js`、`adminHost.test.js`、`providers.test.js`。仓库级约定是 Skill [`docs-sync`](./workspace/.webagent/skills/docs-sync/SKILL.md)（`load_skill` 名 `docs-sync`），不是仓库根 `文档约定.md`。测绿就提交、勿攒未提交树：[`commit-now`](./workspace/.webagent/skills/commit-now/SKILL.md)。该 Skill 还要求：动到「为什么这样装」时按四层写法改根目录 [`架构导读.md`](./架构导读.md)（产品文，不计入上面的代码文件数）。
 
+其后补桌面 VS Code 侧载：`webagent-core/scripts/install-desktop-extension.js`、`webagent-core/extension/workspaceMatch.js`、`webagent-core/agent-host/tests/desktopExtension.test.js`、根 `install-vscode-extension.cmd`，写入 [scripts/README.md](./webagent-core/scripts/README.md)、[extension/README.md](./webagent-core/extension/README.md)、[tests/README.md](./webagent-core/agent-host/tests/README.md)、[启动脚本说明.md](./启动脚本说明.md)。
+
 故意不单独再拆的：
 
 | 路径 | 原因 |

@@ -4,13 +4,13 @@
 
 VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@webagent`。工具实现仍在 agent-host，本目录只做 HTTP 客户端 + webview HTML 字符串。
 
-文件：`extension.js`、`modeFromChatRequest.js`、`package.json`、`resources/icon.svg`。
+文件：`extension.js`、`modeFromChatRequest.js`、`workspaceMatch.js`、`package.json`、`resources/icon.svg`。
 
 ---
 
 ## 1. 模块概述
 
-- **定位：** 网页 VS Code 的 UI 插件。`scripts/ensure-code-server.js` 的 `syncExtension` 会把本目录拷到 `extensions-installed/`。
+- **定位：** VS Code / code-server 的 UI 插件。`scripts/ensure-code-server.js` 的 `syncExtension` 会把本目录拷到 `extensions-installed/`（网页 VS Code）。桌面 VS Code 走 `scripts/install-desktop-extension.js` 拷到用户 `~/.vscode/extensions`。
 - **依赖：** VS Code API（`vscode`）；Node `http`/`https`/`path`。运行时打 `agentHostUrl()`（默认 `http://127.0.0.1:48271`）。
 - **谁调用：** code-server 加载插件后 `activate`。自绘工作台 **不加载** 本目录。
 
@@ -56,7 +56,7 @@ VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@webage
   - **Function `historyFromChatContext`（L89–L105）** — 最多 12 轮 user/assistant。
   - **Function `revealWorkspaceFile(rel)`（L107–L115）** — 无 folder 或 rel 则 return；打开失败 catch 空。
   - **Function `registerChatParticipant`（L117–L166）** — 无 `createChatParticipant` 则 return。handler：空 message 输出模式说明（`/plan` 写多模型分支，没 Key 是本机草案）；否则 `postNdjson /api/chat`。status→progress；tool→markdown，apply_patch 成功 reveal + `stream.reference`；message/error/consensus（标题「多模型总结」）。catch 提示连不上 48271。外层 try/catch warn，不抛给 activate。
-  - **Function `activate`（L168–L220）** — 注册 ChatView、BridgeView；Chat 参与者；状态栏每 5s GET `/api/status`（运行中 / Agent / 未连接）。命令：打开侧栏；`openAgentChat` 试原生 Chat query `@webagent `，失败侧栏；resetSecret POST reset-secret。
+  - **Function `activate`（L168–L220）** — 注册 ChatView、BridgeView；Chat 参与者；状态栏每 5s GET `/api/status`。连得上时用 `workspaceMatch.sameWorkspace` 比对 VS Code 打开的文件夹与 `workspaceRoot`（不一致则警告）；连不上提示先跑 `run-webagent.cmd`。命令：打开侧栏；`openAgentChat` 试原生 Chat query `@webagent `，失败侧栏；resetSecret POST reset-secret。
   - **Class `ChatView`（L222–L263）** — webview scripts 开。`openNative` → 命令。`send`：history 12，postNdjson，事件转 webview；apply_patch reveal；assistantText 非空才进 history。
   - **Class `BridgeView`（L265–L304）** — start POST `{ tunnelProvider:'cloudflare' }`；stop/copy/reset；refresh GET status。catch 弹 ErrorMessage。
   - **Function `chatHtml`（L306–L413）** — 完整 HTML。内嵌脚本：默认 `mode='code'`；Agent 菜单切 ask/plan/code；Enter 发送；set_todos 画任务。Agent 菜单 Plan 文案「分支」。DOM：`#log` 空态、`#tasks`、textarea `#q`、`#agent` 按钮、`#menu`、`#go`。
@@ -66,6 +66,12 @@ VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@webage
   内嵌 `bridgeHtml` 脚本：L455 `paintTasks`、L462 `paintLogs`（只画 `tool_call_end` 最多 12 条）。
 
 - **导出（L484）：** `{ activate, deactivate: () => {}, modeFromChatRequest }`。`deactivate` 空函数。`modeFromChatRequest` 来自同目录 `./modeFromChatRequest`。
+
+### 📄 文件名：`workspaceMatch.js`
+
+- **文件职责：** 桌面 VS Code 打开的文件夹 vs agent-host `workspaceRoot`。无 `vscode` 依赖，测试可直接 require。
+- **Function `normalizePath(p)`** — 反斜杠改 `/`、去尾 `/`、小写。
+- **Function `sameWorkspace(vscodeFolder, hostRoot)`** — 任一侧空则 false；否则规范化后全等。
 
 ### 📄 文件名：`modeFromChatRequest.js`
 
