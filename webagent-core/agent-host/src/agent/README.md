@@ -62,7 +62,7 @@
 ### 📄 文件名：`toolLabel.js`
 
 - **文件职责：** 给工作台 / VS Code 侧栏的短标签。`runChat.js` 与 `openai.js` **共用**这一份。
-- **Function `toolLabel(name, result, ok)`（L1–L30）** — 失败时 list/read 给固定英文。成功：list → `Explored dirPath`；find_files → `Found N files`；search_files → `Found N matches`；read / command / Patched / git status / Tasks。未知名原样返回。
+- **Function `toolLabel(name, result, ok)`** — 失败时 list/read 给固定英文。成功：list → `Explored dirPath`；find_files → `Found N files`；search_files → `Found N matches`；read / command / Patched / git status / Tasks / `load_skill` → `Skill name` 或 `Skills N`。未知名原样返回。
 
 ---
 

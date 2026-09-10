@@ -22,6 +22,7 @@ const tunnel = require('../tunnel/cloudflared');
 const ngrok = require('../tunnel/ngrok');
 const github = require('../auth/github');
 const tracker = require('../usage/tracker');
+const ptyJobs = require('../tools/ptyJobs');
 
 const router = express.Router();
 
@@ -264,21 +265,42 @@ router.post('/chat', async (req, res) => {
     res.write(`${JSON.stringify({ type, ...data })}\n`);
   };
 
+  const client = String((req.body && req.body.client) || '');
+  const pty = client === 'vscode-extension';
   try {
-    await runChat({
-      mode: req.body && req.body.mode,
-      message: req.body && req.body.message,
-      history: (req.body && req.body.history) || [],
-      modelId: req.body && req.body.modelId,
-      thinkLevel: req.body && req.body.thinkLevel,
-      planAction: req.body && req.body.planAction,
-      emit
+    await ptyJobs.runWithPty({ pty, remote: false, emit }, async () => {
+      await runChat({
+        mode: req.body && req.body.mode,
+        message: req.body && req.body.message,
+        history: (req.body && req.body.history) || [],
+        modelId: req.body && req.body.modelId,
+        thinkLevel: req.body && req.body.thinkLevel,
+        planAction: req.body && req.body.planAction,
+        emit
+      });
     });
     emit('done', {});
   } catch (err) {
     emit('error', { message: err.message });
   }
   res.end();
+});
+
+router.post('/pty/hello', (req, res) => {
+  ptyJobs.noteClient();
+  res.json({ ok: true, ...ptyJobs.snapshot() });
+});
+
+router.get('/pty/jobs', (req, res) => {
+  ptyJobs.noteClient();
+  res.json({ jobs: ptyJobs.listPending(), ...ptyJobs.snapshot() });
+});
+
+router.post('/pty/jobs/:jobId', (req, res) => {
+  ptyJobs.noteClient();
+  const out = ptyJobs.report(req.params.jobId, req.body || {});
+  if (!out) return res.status(404).json({ ok: false, error: 'unknown job' });
+  res.json({ ok: true, ...out });
 });
 
 router.post('/tasks/reset', (req, res) => {

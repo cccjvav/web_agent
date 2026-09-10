@@ -285,6 +285,8 @@ async function main() {
     assert.ok(!String(blockedStatus.raw || '').includes(secret));
     const blockedChat = await request('POST', `http://127.0.0.1:${mcpPort}/api/chat`, { mode: 'ask', message: 'hi' }, tunnelHeaders);
     assert.strictEqual(blockedChat.status, 404);
+    const blockedPty = await request('POST', `http://127.0.0.1:${mcpPort}/api/pty/hello`, {}, tunnelHeaders);
+    assert.strictEqual(blockedPty.status, 404);
     const blockedTool = await request('POST', `http://127.0.0.1:${mcpPort}/api/tool/call`, { name: 'ping', arguments: {} }, tunnelHeaders);
     assert.strictEqual(blockedTool.status, 404);
     const blockedHost = await request('GET', `http://127.0.0.1:${mcpPort}/api/status`, undefined, { Host: 'random-words.trycloudflare.com' });
@@ -309,6 +311,13 @@ async function main() {
     });
     assert.strictEqual(localOriginApi.status, 200);
     assert.ok(localOriginApi.json.secretKey);
+
+    const ptyHello = await request('POST', `http://127.0.0.1:${mcpPort}/api/pty/hello`, {});
+    assert.strictEqual(ptyHello.status, 200);
+    assert.strictEqual(ptyHello.json.ok, true);
+    const ptyJobs = await request('GET', `http://127.0.0.1:${mcpPort}/api/pty/jobs`);
+    assert.strictEqual(ptyJobs.status, 200);
+    assert.ok(Array.isArray(ptyJobs.json.jobs));
 
     const evilUi = await request('POST', `http://127.0.0.1:${workbenchPort}/api/bridge/reset-round`, {}, {
       Origin: 'https://evil.example'

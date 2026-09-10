@@ -130,7 +130,7 @@
           <ul class="muted">
             <li>Quick Tunnel 只在 Cloudflare 时 <code>startQuickTunnel</code></li>
             <li>远程 tools/call 默认 Code</li>
-            <li><code>sendCommandInput</code> 恒定失败，没有 PTY</li>
+            <li>远程 MCP 没有交互式 PTY（<code>send_command_input</code> <code>E_FORBIDDEN</code>）；桌面 Chat 可走集成终端「Web Agent · 1」</li>
             <li>工作台 arenaConnect 打的是本机 /mcp，不是云上 Arena</li>
             <li>隧道带 Cloudflare 头时 48271 /api 404，不下发 secretKey</li>
             <li>默认只听 127.0.0.1；符号链接不能指到工作区外</li>

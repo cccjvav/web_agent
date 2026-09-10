@@ -60,9 +60,14 @@ async function main() {
   fs.mkdirSync(path.join(tmp, '.webagent', 'skills', 'demo'), { recursive: true });
   fs.writeFileSync(path.join(tmp, '.webagent', 'skills', 'demo', 'SKILL.md'), '# Skill: demo\nDo the demo.\n');
   const listed = await callTool('load_skill', {}, 'ask');
-  assert.ok(listed.skills.some((s) => s.name === 'demo'));
+  const demoListed = listed.skills.find((s) => s.name === 'demo');
+  assert.ok(demoListed);
+  assert.ok(demoListed.skillFile && /SKILL\.md$/.test(String(demoListed.skillFile).replace(/\\/g, '/')));
+  assert.ok(demoListed.skillFileAbs && path.isAbsolute(demoListed.skillFileAbs));
   const loaded = await callTool('load_skill', { name: 'demo' }, 'ask');
   assert.ok(loaded.found && loaded.content.includes('Do the demo'));
+  assert.ok(loaded.skillFile && /SKILL\.md$/.test(String(loaded.skillFile).replace(/\\/g, '/')));
+  assert.ok(loaded.skillFileAbs && path.isAbsolute(loaded.skillFileAbs));
   const bundledMd = path.resolve(__dirname, '../../../computer-use/SKILL.md');
   if (fs.existsSync(bundledMd)) {
     assert.ok(listed.skills.some((s) => s.name === 'computer-use'));

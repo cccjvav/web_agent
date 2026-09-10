@@ -206,6 +206,7 @@ export async function sendChat(text, opts = {}) {
 }
 
 export function handleEvent(ev) {
+  if (ev.type === 'pty_request' || ev.type === 'done') return;
   if (ev.type === 'status') pushMsg({ kind: 'status', text: ev.text });
   else if (ev.type === 'tool') {
     pushMsg({

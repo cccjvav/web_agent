@@ -1,7 +1,7 @@
 const { applyPatch } = require('./patchEngine');
 const { readFile, readFiles, writeFile, deleteFile, renameFile, listDir, grepSearch } = require('./fileOps');
 const { findFiles } = require('./findFiles');
-const { executeCommand, startCommand, getCommandOutput, cancelCommand, wait } = require('./executor');
+const { executeCommand, startCommand, getCommandOutput, cancelCommand, sendCommandInput, wait } = require('./executor');
 const { reportProgress, setTodos, getTaskState } = require('./progressTracker');
 const { runMultiModelConsensus } = require('./consensusEngine');
 const eventBus = require('../utils/eventBus');
@@ -404,6 +404,22 @@ const TOOLS = [
     handler: cancelCommand
   }),
   tool({
+    name: 'send_command_input',
+    aliases: [],
+    hidden: true,
+    description: 'Write stdin to a live PTY started by run_command/start_command (desktop Chat with the VS Code plugin). Not advertised in tools/list. Remote MCP rejects this.',
+    mode: ['code'],
+    inputSchema: {
+      type: 'object',
+      properties: {
+        execId: { type: 'string' },
+        input: { type: 'string' }
+      },
+      required: ['execId', 'input']
+    },
+    handler: sendCommandInput
+  }),
+  tool({
     name: 'wait',
     aliases: [],
     description: 'Sleep up to 15s. Prefer suggestedWaitMs from get_command_output / get_task_status.',
@@ -465,9 +481,10 @@ for (const t of TOOLS) {
   }
 }
 
-function getToolList(currentMode = null) {
+function getToolList(currentMode = null, opts = {}) {
   return TOOLS
     .filter((t) => !currentMode || t.mode.includes(currentMode))
+    .filter((t) => (opts && opts.includeHidden) || !t.hidden)
     .map(({ name, description, inputSchema }) => ({ name, description, inputSchema }));
 }
 
@@ -475,9 +492,10 @@ async function callTool(name, args = {}, currentMode = null, opts = {}) {
   const resolved = resolveToolName(name);
   const toolDef = toolRegistry.get(resolved) || toolRegistry.get(name);
   if (!toolDef) {
+    const available = TOOLS.filter((t) => !t.hidden).map((t) => t.name).join(', ');
     throw new ProtocolError(
       'E_UNKNOWN_CMD',
-      `Unknown tool: "${name}". Available: ${TOOLS.map((t) => t.name).join(', ')}.`,
+      `Unknown tool: "${name}". Available: ${available}.`,
       { retryHint: 'Call tools/list and use one of the Available names (aliases like bash→run_command, cat→read_files are also accepted).' }
     );
   }
@@ -489,6 +507,13 @@ async function callTool(name, args = {}, currentMode = null, opts = {}) {
   }
   const input = normalizeToolArgs(toolDef.name, args || {});
   const remote = Boolean(opts && opts.remote);
+  if (remote && toolDef.name === 'send_command_input') {
+    throw new ProtocolError(
+      'E_FORBIDDEN',
+      'send_command_input is not available on remote MCP. Interactive PTY is desktop Chat only.',
+      { tool: 'send_command_input' }
+    );
+  }
   if (toolDef.name === 'run_command' || toolDef.name === 'start_command') {
     assertCommandAllowed(input.command, {
       remote,

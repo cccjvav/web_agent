@@ -4,6 +4,14 @@ const https = require('https');
 const path = require('path');
 const { modeFromChatRequest } = require('./modeFromChatRequest');
 const { sameWorkspace } = require('./workspaceMatch');
+const { startPtyHost } = require('./ptyHost');
+
+let ptyHost = null;
+
+function dispatchPty(ev) {
+  if (!ev || ev.type !== 'pty_request' || !ptyHost || typeof ptyHost.handleIncoming !== 'function') return;
+  ptyHost.handleIncoming(ev);
+}
 
 function agentHostUrl() {
   const fromCfg = vscode.workspace.getConfiguration('webagent').get('agentHostUrl');
@@ -132,9 +140,10 @@ function registerChatParticipant(context) {
     try {
       await postNdjson(
         `${agentHostUrl()}/api/chat`,
-        { mode, message, history: historyFromChatContext(chatContext) },
+        { mode, message, history: historyFromChatContext(chatContext), client: 'vscode-extension' },
         (ev) => {
           if (token.isCancellationRequested) return;
+          dispatchPty(ev);
           if (ev.type === 'status' && ev.text) stream.progress(ev.text);
           else if (ev.type === 'tool') {
             const ok = ev.ok !== false && !ev.error;
@@ -167,6 +176,7 @@ function registerChatParticipant(context) {
 }
 
 function activate(context) {
+  ptyHost = startPtyHost(context, { agentHostUrl, requestJson });
   const chat = new ChatView();
   const bridge = new BridgeView();
   context.subscriptions.push(
@@ -254,8 +264,9 @@ class ChatView {
       try {
         await postNdjson(
           `${agentHostUrl()}/api/chat`,
-          { mode, message: text, history },
+          { mode, message: text, history, client: 'vscode-extension' },
           (ev) => {
+            dispatchPty(ev);
             this._view.webview.postMessage({ type: 'event', ev });
             if (ev && ev.type === 'message' && ev.text) assistantText += ev.text;
             if (ev && ev.type === 'tool' && ev.name === 'apply_patch' && ev.result && ev.result.filePath) {

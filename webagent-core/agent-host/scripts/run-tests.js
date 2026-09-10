@@ -41,7 +41,8 @@ const preferred = [
   'docsSite.test.js',
   'workbenchHtml.test.js',
   'dangerousCommands.test.js',
-  'extensionCopy.test.js'
+  'extensionCopy.test.js',
+  'ptyJobs.test.js'
 ];
 
 const found = fs.readdirSync(testsDir).filter((f) => f.endsWith('.test.js'));

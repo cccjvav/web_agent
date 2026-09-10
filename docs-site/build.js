@@ -315,8 +315,9 @@ function parseGuide(md) {
 }
 
 function parseTerms(md) {
-  const block = md.split('## 12. 术语对照')[1] || '';
-  const table = block.split('## 13.')[0] || block;
+  const m = md.split(/\n(?=## \d+\. 术语对照)/);
+  const block = m.length > 1 ? m[1] : '';
+  const table = block.split(/\n## \d+\./)[0] || block;
   const rows = [];
   for (const line of table.split('\n')) {
     if (!/^\|/.test(line) || /---/.test(line) || /你听到的词/.test(line)) continue;

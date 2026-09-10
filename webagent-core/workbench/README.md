@@ -101,7 +101,7 @@
 - **Function `pushMsg`（L96–L103）**。
 - **Function `paintPlanComposer`（L105–L123）** — Plan 时显示 `分支 n/max`；`canMerge` 才显示总结钮。
 - **Function `sendChat`（L125–L199）** — Ask/Code 空输入直接 return；Plan 空输入仅 `canBranch` 时当 `planAction:'branch'`；`planAction:'merge'` 不重打任务。POST `/api/chat` 带 `modelId`/`thinkLevel`/`planAction`。parse 失败 continue；finally `ui.refreshStatus` + `ui.loadTree`。
-- **Function `handleEvent`（L201–L242）** — tool 可 `ui.logBridgeTool`；`planRound` 写入 `state.planRound`；message 可附分支徽章。
+- **Function `handleEvent`** — 跳过 `pty_request` / `done`（工作台不走 PTY）。tool 可 `ui.logBridgeTool`；`planRound` 写入 `state.planRound`；message 可附分支徽章。
 - **Function `paintTodos`（L244–L261）** / **`agentLabel`（L263–L266）** / **`setAgentMode`（L268–L275）** — 切模式后 `paintPlanComposer`。
 
 ---

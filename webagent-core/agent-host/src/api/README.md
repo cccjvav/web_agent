@@ -42,7 +42,8 @@
   - **POST `/bridge/reset-round`（L195–L200）** — `mcpReset()` + `resetHashes()` + broadcast `bridge_round_reset`。
   - **POST `/consensus/run`（L155–L163）** — `runMultiModelConsensus`；catch 500。
   - **POST `/tool/call`（L165–L176）** — body `{ name, arguments, mode='code' }`；broadcast 后 `callTool(..., mode)`；失败 400。
-  - **POST `/chat`（L180–L202）** — NDJSON、`X-Accel-Buffering: no`、flushHeaders。emit 写一行 JSON。try `runChat({ mode, message, history, modelId, thinkLevel, planAction, emit })` 后 emit `done`；catch emit `error`；最后 `res.end()`。`runChat` 必须从 payload 取出 emit，否则内置/OpenAI 路径都没有事件流。
+  - **POST `/chat`** — NDJSON、`X-Accel-Buffering: no`、flushHeaders。emit 写一行 JSON。`body.client === 'vscode-extension'` 时 `ptyJobs.runWithPty({ pty:true, emit })` 包住 `runChat`（可能发 `pty_request`）。工作台不带 client，仍一次性 spawn。后 emit `done`；catch emit `error`；最后 `res.end()`。
+  - **POST `/pty/hello`** / **GET `/pty/jobs`** / **POST `/pty/jobs/:jobId`** — 插件心跳、列出未完成 job、回报 accepted/progress/done。本机控制面；隧道 404。
   - **POST `/tasks/reset`（L202–L204）** — `resetTaskState()`。
   - **GET `/files/tree`（L206–L213）** — `callTool('list_directory', { recursive:true, maxDepth:5 }, 'ask')`。
   - **GET `/files/content`（L215–L234）** — query.path → resolveSafePath；不存在或目录 404；否则全文+hash，并 `rememberHash`。

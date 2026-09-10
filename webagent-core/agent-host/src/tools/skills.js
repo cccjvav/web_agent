@@ -28,10 +28,18 @@ function bundledSkills() {
   return out;
 }
 
+function skillFileFields(dir) {
+  const md = path.join(dir, 'SKILL.md');
+  return {
+    skillFile: path.relative(config.workspaceRoot, md).replace(/\\/g, '/'),
+    skillFileAbs: md
+  };
+}
+
 function addSkill(skills, seen, entry) {
   if (seen.has(entry.name)) return;
   seen.add(entry.name);
-  skills.push(entry);
+  skills.push({ ...entry, ...skillFileFields(entry.absDir || path.join(config.workspaceRoot, entry.path)) });
 }
 
 function listSkills() {
@@ -60,7 +68,13 @@ function loadSkill({ name } = {}) {
   const skills = listSkills();
   if (!name) {
     return {
-      skills: skills.map(({ name: n, path: p, preview }) => ({ name: n, path: p, preview })),
+      skills: skills.map(({ name: n, path: p, preview, skillFile, skillFileAbs }) => ({
+        name: n,
+        path: p,
+        preview,
+        skillFile,
+        skillFileAbs
+      })),
       hint: skills.length ? 'Pass name to load a SKILL.md in full.' : 'No skills yet. Put a folder with SKILL.md under .webagent/skills/.'
     };
   }
@@ -79,6 +93,8 @@ function loadSkill({ name } = {}) {
     name: hit.name,
     path: hit.path,
     absDir: hit.absDir,
+    skillFile: hit.skillFile,
+    skillFileAbs: hit.skillFileAbs,
     content: fs.readFileSync(md, 'utf8').slice(0, 28000)
   };
   if (hit.name === 'computer-use') {

@@ -22,7 +22,7 @@
 
 ### 📄 文件名：`index.js`
 
-- **文件职责：** 登记约 25 个工具名，做模式锁和危险命令闸，然后把调用派到本目录其它文件。
+- **文件职责：** 登记 **30** 个对外工具名（另隐藏 `send_command_input`），做模式锁和危险命令闸，然后把调用派到本目录其它文件。
 - **核心类/函数清单：**
 
   - **Function `tool(def)`（L17–L19）** — 输入工具定义对象，原样返回（无变换）。
@@ -47,6 +47,7 @@
     | L167 | read_files（alias read_file） | 同上 | readFiles |
     | L183 | git_status | 同上 | gitStatus |
     | L191 | git_diff | 同上 | gitDiff |
+    | peers_list / board_* | 同上 | boardTools |
     | L206 | load_skill | 同上 | loadSkill |
     | L217 | apply_patch | **code** | applyPatch |
     | L234 | write_file | **code** | writeFile |
@@ -56,20 +57,22 @@
     | L301 | start_command | **code** | startCommand |
     | L318 | get_command_output | ask,plan,code | getCommandOutput |
     | L333 | cancel_command | **code** | cancelCommand |
+    | send_command_input | **code**（hidden） | sendCommandInput |
     | L345 | wait | ask,plan,code | wait |
     | L356 | report_progress | **plan,code** | reportProgress |
     | L372 | set_todos | ask,plan,code | setTodos |
 
   - **L396–L402** — 把 name 与 aliases 写入 `toolRegistry` Map。
-  - **Function `getToolList(currentMode=null)`（L406–L410）** — mode 假则全部；真则 `t.mode.includes(currentMode)`。映射为 `{ name, description, inputSchema }`（不含 handler）。
+  - **Function `getToolList(currentMode=null, opts={})`** — mode 假则全部对外工具；真则 `t.mode.includes(currentMode)`。默认丢掉 `hidden`；`opts.includeHidden` 才带上 `send_command_input`。映射为 `{ name, description, inputSchema }`（不含 handler）。
   - **Function `callTool(name, args={}, currentMode=null, opts={})`**
     - L413：`resolveToolName(name)`（`normalize.js`：`bash`→`run_command`、`cat`→`read_files` 等）。
     - L414：registry 先查 resolved 再查原名。
     - L415–L421：未知名 → `ProtocolError E_UNKNOWN_CMD`，消息含 Available 列表，`detail.retryHint` 提示可用别名。
     - L422–L427：`currentMode` 真且不在该工具 mode 列表 → `E_BAD_ARGS`（Ask/Plan 只读文案）。远程 MCP 默认传入 `'code'`（见 `mcp/server.remoteToolMode`）；本机 Chat 传入 UI 模式。
     - L428：`normalizeToolArgs(toolDef.name, args)`（snake_case、`path`→`filePath`、`"true"`→布尔）。
+    - 远程且工具名 `send_command_input` → **`E_FORBIDDEN`**（交互式 PTY 仅桌面 Chat）。
     - 工具名为 `run_command` 或 `start_command`：走 `assertCommandAllowed`（`dangerous.js`，远程与本机同一处）。`opts.remote` 真 → **`E_FORBIDDEN`**（即使带了 `confirm_dangerous`）；本机无 `confirm_dangerous` → `E_BAD_ARGS`。远程还会把 `timeoutSec` 夹到最多 60。闸包括 `rm -rf` / `rm -r -f` / `find -delete`、`git push`、`curl … | sh`、`iex` / `iwr`、关机格式化等（词法归一，不是 OS 沙箱）。
-    - L438：`await handler(input)`。
+    - `await handler(input, opts)`。
     - L439–L442：`result.isTimeout` 则打 `E_TIMEOUT`、`suggestedWaitMs=0`。
     - L443：`clipJson(result)` 后返回。
 
@@ -179,11 +182,10 @@
   - **Function `publicRecord`（L31–L48）** — stdout/stderr 截尾；running 时带 `suggestedWaitMs` 与 poll hint。
   - **Function `scrubEnv(base)`** — 拷贝环境后删掉名字像 API Key / token / secret / password 的变量，避免命令子进程读到宿主密钥。
   - **Function `startProcess`** — `execId` 为 16 位 hex；同时 running 最多 8 条，已结束最多留 40。timeout 至少 1s；spawn 时 `env` 走 `scrubEnv(process.env)` 再加 `CI`/`TERM`/`FORCE_COLOR`；非 Windows `detached:true`；超时 kill 再 2s force，定时器 `unref()`。返回 `{ rec, done }`。
-  - **Function `executeCommand`（L134–L137）** — 返回 `done`（等到结束）。
-  - **Function `startCommand`（L139–L152）** — 不等待；`done.catch` 标 error；立即返回 execId + running。
-  - **Function `getCommandOutput`（L154–L161）** — id = execId 或 commandId 或最新序号；没有 rec → found false。
-  - **Function `cancelCommand`（L163–L174）** — 非 running → cancelled false；否则 force kill。
-  - **Function `sendCommandInput`（L176–L183）** — **恒定** `{ ok:false }`，无 PTY。
+  - **Function `executeCommand` / `startCommand`** — `wantsPty()` 为真则 `ptyJobs.enqueue('run'|'start')`（桌面 Chat `client:'vscode-extension'`）。否则 execute 等到结束；start 立即返回 execId + running。
+  - **Function `getCommandOutput`** — id = execId 或 commandId 或最新序号；没有 rec → found false。PTY 活任务同样走这里 poll。
+  - **Function `cancelCommand`** — 非 running → cancelled false；PTY 则 enqueue cancel；否则 force kill。
+  - **Function `sendCommandInput`** — PTY 活则 enqueue input；否则 `{ ok:false }`（无 stdin）。远程 MCP 到不了这里（先 `E_FORBIDDEN`）。
   - **Function `wait`（L185–L189）** — ms clamp 0–15000。
 
 - **关键变量：** `lastExecId`、`commandStore`、`children`、`MAX_CAPTURE=200*1024`、`MAX_RUNNING=8`、`MAX_COMMANDS=40`。
@@ -209,12 +211,21 @@
 ### 📄 文件名：`skills.js`
 
 - **Function `skillRoots`（L5–L10）** — `.webagent/skills` 与工作区 `skills/`。
-- **Const `BUNDLED_SKILL_NAMES`（L12）** — `computer-use`、`project-manager`。
+- **Const `BUNDLED_SKILL_NAMES`（L12）** — `computer-use`、`project-manager`、`multi-agent-board`。
 - **Function `bundledSkills`（L14–L29）** — 仓库根 `<name>/SKILL.md`（与工作区无关）。缺文件则跳过。
-- **Function `listSkills`（L37–L57）** — 工作区两处 + bundled；同名工作区优先；preview 前 240 字。对外列表不含 `absDir`。
-- **Function `loadSkill`（L59–L96）** — 无 name 返回列表+hint。找不到 `{ found:false, available }`。找到从 `absDir` 读最多 **28000** 字（`project-manager` 全文约 23KB），返回带 `absDir`；`computer-use` 额外带 `scriptsDir`（仓库根 `computer-use/win`）与 `runHint`（「手」的薄转发：Windows 本机 Chat 经 run_command 用绝对路径跑 `snap.ps1` 等，`-Out` 截图存工作区内，Chat 会把新截图作为图片附给标记 vision 的模型；Bridge 在第三阶段用户签字后会把截图以 image 内容回给网页 Agent）。
+- **Function `skillFileFields(dir)`** — `{ skillFile: 相对工作区的 SKILL.md, skillFileAbs: 绝对路径 }`。
+- **Function `listSkills`** — 工作区两处 + bundled；同名工作区优先；preview 前 240 字；每项带 `skillFile` / `skillFileAbs`。
+- **Function `loadSkill`** — 无 name 返回列表+hint（含 skillFile）。找不到 `{ found:false, available }`。找到从 `absDir` 读最多 **28000** 字，返回带 `absDir`/`skillFile`/`skillFileAbs`；`computer-use` 额外带 `scriptsDir`（仓库根 `computer-use/win`）与 `runHint`（「手」的薄转发：Windows 本机 Chat 经 run_command 用绝对路径跑 `snap.ps1` 等，`-Out` 截图存工作区内，Chat 会把新截图作为图片附给标记 vision 的模型；Bridge 在第三阶段用户签字后会把截图以 image 内容回给网页 Agent）。
 
 ---
+
+### 📄 文件名：`ptyJobs.js`
+
+- **文件职责：** 桌面 Chat 档 B：把 run/start/cancel/input 排进队列，NDJSON `pty_request`，等插件 POST `/api/pty/jobs/:id`。`runWithPty` 用 AsyncLocalStorage，因此 `timedTool`/`callTool` 不必传 opts。
+- **Function `runWithPty(ctx, fn)`** — `{ pty, remote, emit }` 写入 ALS。
+- **Function `enqueue(kind, payload)`** — 发 `pty_request`；超时 120s；插件 `done` 后 resolve。
+- **Function `report(jobId, body)`** — accepted / progress / done。
+- **Function `listPending` / `noteClient` / `snapshot` / `resetForTests`**。
 
 ### 📄 文件名：`workspaceInfo.js`
 

@@ -42,7 +42,8 @@
 | `toolLabel.test.js` | 共用短标签：Explored / Found N files / Found N matches / Read / Patched |
 | `profile.test.js` | 环境偏好 / 技术栈写入 `.webagent`，进入指令 |
 | `oauth.test.js` | OAuth 发现、配对、PKCE、Bearer `/mcp`、SSE、session 复用/未知 404/`DELETE`、SSE endpoint 含密钥路径、注册限速 429、refresh 轮换与重放吊销；**源码锁** secretKey 用 `crypto.timingSafeEqual`、`engines.node >=18` |
-| `desktopExtension.test.js` | 桌面 VS Code 侧载：`workspaceMatch` 路径规范化；`installTo` 拷 `extension/`（无 README）、摘旧 `webagent.webagent-core-*`；`WEBAGENT_VSCODE_EXTENSIONS`；根 `install-vscode-extension.cmd` 不拉 code-server；`extension.js` 提示 `run-webagent.cmd` |
+| `desktopExtension.test.js` | 桌面 VS Code 侧载：`workspaceMatch` 路径规范化；`installTo` 拷 `extension/`（无 README、含 `ptyHost.js`）、摘旧 `webagent.webagent-core-*`；`WEBAGENT_VSCODE_EXTENSIONS`；根 `install-vscode-extension.cmd` 不拉 code-server；`extension.js` 提示 `run-webagent.cmd` |
+| `ptyJobs.test.js` | PTY 队列 emit/report/denied；默认名单 30；远程 `send_command_input` `E_FORBIDDEN`；插件 `client:'vscode-extension'` |
 
 ---
 
@@ -85,7 +86,7 @@
   - L32–L33：`ping.ok === true`。
   - L35–L44：`resources/list` 的 uri 含 protocol / memory / profile / clients；`resources/read` protocol 正文含 `Streamable HTTP`。
   - L46–L60：**锁死** `CONNECT_LINE` 原文；`getBootstrapPrompt(url)` 必须是 `url + 空行 + CONNECT_LINE`；锁死 `PAGE_RULES_LEAD`；`getPageRulesPrompt()` 以该句开头且含 `Web Agent Bridge MCP`。
-  - L62–L69：`getToolList().length === 25`；含 ping / workspace_info / remember / get_task_status / git_status / start_command；**不含** `lsp`。
+  - L62–L69：`getToolList().length === 30`；含 ping / workspace_info / remember / get_task_status / git_status / start_command；**不含** `lsp` / `send_command_input`。
   - L71–L72：`clipJson` 2 万字符 stdout → `_truncated` 或 stdout 变短。
   - L74–L81：`run_command` `rm -rf ...` 无 `confirm_dangerous` → `publicError.code === 'E_BAD_ARGS'` 且消息含该字段。
   - L83–L89：未知工具 → `ProtocolError` 且 `E_UNKNOWN_CMD`，消息含 `Available:`。
@@ -239,10 +240,10 @@
   - L111–113：health JSON `ok` 且 `product==='Web Agent'`。
   - L115–139：GET `/` HTML 必须含：`Web Agent`；`编辑进化` 或 `CHAT`；`Add API`；`btn-agent-pick`；`agent-pick-menu`；`Web Agent Code`；`环境偏好`；`技术栈`；`技能引导`；`怎么连到本机仓库`；`无需 Plus` 或 `不需要 Plus`；`打开 DeepSeek`；`data-site="deepseek"`；`id="page-env"` / `btn-detect-env` / `page-stack` / `btn-detect-stack`；`本机演示授权` 与 `不是 GitHub`；含 `多模型博弈`、`btn-plan-merge`、`think-select`；不得含 `永久顺` / `使用 GitHub 登录`；`type="module"` 与 `./app.js`。status 含 `planRound.active===false` 与 `multiModel.maxBranches===4`。末尾再 POST Plan start/branch/merge，首轮无 consensus、两支可总结、`agreementRate==null`。
   - L137–142：GET `/app.js` 含 `from './js/state.js'`；GET `/js/state.js` 含 `export const state`。
-  - L148–160：GET **mcp 端口** `/api/status`（本机无隧道头）：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===25` 且每项无 `inputSchema`；clients 含 arena（无需 Plus、`rulesText===''`）、deepseek（`extension-http`、支持 MCP、无需 Plus、`rulesText` 非空）、chat-plus（`rulesText` 含 Bridge MCP）、chatgpt-free（`unsupported-mcp`）、chatgpt-plus（`oauth-connector`、无需 Plus）；`mcpCanonicalUrl` 以 `/mcp` 结尾；`bridgeAccount.license/provider` 为 `local-demo` 且 `loggedIn`；`recentLogs` 是数组。`tools/call` ping 之后再 GET `/status`：有 `tool_call_end` 且 payload 只有 tool/success/durationMs。再 `tools/call` `get_logs`：正文不含 `"args"` / `"chunk"` / `"patch"`。
+  - L148–160：GET **mcp 端口** `/api/status`（本机无隧道头）：有 `secretKey`；`prompt` 含「快速连接这个 MCP…」整句；`tools.length===30` 且每项无 `inputSchema`；clients 含 arena（无需 Plus、`rulesText===''`）、deepseek（`extension-http`、支持 MCP、无需 Plus、`rulesText` 非空）、chat-plus（`rulesText` 含 Bridge MCP）、chatgpt-free（`unsupported-mcp`）、chatgpt-plus（`oauth-connector`、无需 Plus）；`mcpCanonicalUrl` 以 `/mcp` 结尾；`bridgeAccount.license/provider` 为 `local-demo` 且 `loggedIn`；`recentLogs` 是数组。`tools/call` ping 之后再 GET `/status`：有 `tool_call_end` 且 payload 只有 tool/success/durationMs。再 `tools/call` `get_logs`：正文不含 `"args"` / `"chunk"` / `"patch"`。
   - L154–160：错误 secret POST initialize → 401。
   - L162–170：正确 secret initialize 200，instructions 含 Bridge MCP 与 `webagent://instructions`。
-  - L172–183：tools/list 25 个且含 apply_patch / start_command / workspace_info。
+  - L172–183：tools/list 30 个且含 apply_patch / start_command / workspace_info。
   - L185–191：`POST /mcp` 无密钥 → 401。
   - L193–195：GET `/.well-known/oauth-authorization-server` 200，有 `authorization_endpoint`。
   - L197–205：tools/call ping 成功，`isError===false`。

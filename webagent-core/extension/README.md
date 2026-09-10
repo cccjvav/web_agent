@@ -4,7 +4,7 @@
 
 VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@webagent`。工具实现仍在 agent-host，本目录只做 HTTP 客户端 + webview HTML 字符串。
 
-文件：`extension.js`、`modeFromChatRequest.js`、`workspaceMatch.js`、`package.json`、`resources/icon.svg`。
+文件：`extension.js`、`ptyHost.js`、`modeFromChatRequest.js`、`workspaceMatch.js`、`package.json`、`resources/icon.svg`。
 
 ---
 
@@ -55,9 +55,9 @@ VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@webage
   - **Function `postNdjson(url, body, onEvent)`（L46–L87）** — 按协议选 `http`/`https`（与 `requestJson` 相同）。按行 parse，失败忽略；结束处理残余 buf。
   - **Function `historyFromChatContext`（L89–L105）** — 最多 12 轮 user/assistant。
   - **Function `revealWorkspaceFile(rel)`（L107–L115）** — 无 folder 或 rel 则 return；打开失败 catch 空。
-  - **Function `registerChatParticipant`（L117–L166）** — 无 `createChatParticipant` 则 return。handler：空 message 输出模式说明（`/plan` 写多模型分支，没 Key 是本机草案）；否则 `postNdjson /api/chat`。status→progress；tool→markdown，apply_patch 成功 reveal + `stream.reference`；message/error/consensus（标题「多模型总结」）。catch 提示连不上 48271。外层 try/catch warn，不抛给 activate。
-  - **Function `activate`（L168–L220）** — 注册 ChatView、BridgeView；Chat 参与者；状态栏每 5s GET `/api/status`。连得上时用 `workspaceMatch.sameWorkspace` 比对 VS Code 打开的文件夹与 `workspaceRoot`（不一致则警告）；连不上提示先跑 `run-webagent.cmd`。命令：打开侧栏；`openAgentChat` 试原生 Chat query `@webagent `，失败侧栏；resetSecret POST reset-secret。
-  - **Class `ChatView`（L222–L263）** — webview scripts 开。`openNative` → 命令。`send`：history 12，postNdjson，事件转 webview；apply_patch reveal；assistantText 非空才进 history。
+  - **Function `registerChatParticipant`** — 无 `createChatParticipant` 则 return。handler：空 message 输出模式说明；否则 `postNdjson /api/chat`（body 带 `client:'vscode-extension'`）。`pty_request` → `dispatchPty`；status→progress；tool→markdown，apply_patch 成功 reveal + `stream.reference`；message/error/consensus。catch 提示连不上 48271。
+  - **Function `activate`** — `startPtyHost`（hello 3s、poll 400ms）；注册 ChatView、BridgeView；Chat 参与者；状态栏每 5s GET `/api/status`。连得上时用 `workspaceMatch.sameWorkspace` 比对工作区；连不上提示先跑 `run-webagent.cmd`。
+  - **Class `ChatView`** — webview scripts 开。`send`：history 12，postNdjson 同样 `client:'vscode-extension'`，`dispatchPty` 后事件转 webview。
   - **Class `BridgeView`（L265–L304）** — start POST `{ tunnelProvider:'cloudflare' }`；stop/copy/reset；refresh GET status。catch 弹 ErrorMessage。
   - **Function `chatHtml`（L306–L413）** — 完整 HTML。内嵌脚本：默认 `mode='code'`；Agent 菜单切 ask/plan/code；Enter 发送；set_todos 画任务。Agent 菜单 Plan 文案「分支」。DOM：`#log` 空态、`#tasks`、textarea `#q`、`#agent` 按钮、`#menu`、`#go`。
   - **Function `bridgeHtml`（L415–L482）** — 启动/停止/复制/重置。4s refresh。copy 用 `status.prompt` 或 mcpUrl+CONNECT。DOM：`#pill`、`#url`、按钮、`#tasks`、`#stream`。
@@ -66,6 +66,10 @@ VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@webage
   内嵌 `bridgeHtml` 脚本：L455 `paintTasks`、L462 `paintLogs`（只画 `tool_call_end` 最多 12 条）。
 
 - **导出（L484）：** `{ activate, deactivate: () => {}, modeFromChatRequest }`。`deactivate` 空函数。`modeFromChatRequest` 来自同目录 `./modeFromChatRequest`。
+
+### 📄 文件名：`ptyHost.js`
+
+- **文件职责：** 桌面 Chat 档 B。从 `vscode.env.appRoot` 加载 **node-pty**；失败则集成终端 `shellIntegration` / `sendText`。Windows 多行 / 非 ASCII / 超长命令写临时 `.ps1`。终端名「Web Agent · 1」。`handleIncoming` 与 poll 共用去重。结果 POST `/api/pty/jobs/:id`。
 
 ### 📄 文件名：`workspaceMatch.js`
 

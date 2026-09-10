@@ -5,6 +5,7 @@ const { config } = require('../config');
 const eventBus = require('../utils/eventBus');
 const { resolveSafePath } = require('./patchEngine');
 const { ProtocolError } = require('../mcp/errors');
+const ptyJobs = require('./ptyJobs');
 
 let lastExecId = '';
 const commandStore = new Map();
@@ -80,8 +81,32 @@ function publicRecord(rec, tail) {
     stdout: String(rec.stdout || '').slice(-limit),
     stderr: String(rec.stderr || '').slice(-limit),
     suggestedWaitMs: running ? rec.suggestedWaitMs : 0,
-    hint: running ? 'Still running. Poll get_command_output with this execId.' : undefined
+    hint: running ? 'Still running. Poll get_command_output with this execId.' : undefined,
+    execution: rec.execution,
+    outputCaptured: rec.outputCaptured,
+    message: rec.message,
+    ok: rec.ok
   };
+}
+
+function storePtyResult(result) {
+  lastExecId = result.execId;
+  const rec = {
+    execId: result.execId,
+    command: result.command,
+    status: result.status || (result.ok === false ? 'error' : 'done'),
+    stdout: result.stdout || '',
+    stderr: result.stderr || '',
+    exitCode: result.exitCode,
+    durationMs: result.durationMs,
+    execution: 'pty',
+    outputCaptured: result.outputCaptured,
+    message: result.message,
+    ok: result.ok,
+    isTimeout: result.status === 'timeout'
+  };
+  commandStore.set(String(result.execId), rec);
+  return rec;
 }
 
 function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
@@ -177,12 +202,87 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
   return { rec, done };
 }
 
-function executeCommand(opts) {
+async function executeCommand(opts) {
+  if (ptyJobs.wantsPty()) {
+    pruneCommands();
+    const result = await ptyJobs.enqueue('run', {
+      command: (opts && opts.command) || '',
+      cwd: (opts && opts.cwd) || '.',
+      timeoutSec: (opts && opts.timeoutSec) || 30
+    });
+    const rec = storePtyResult(result);
+    return publicRecord(rec);
+  }
   const { done } = startProcess(opts || {});
   return done;
 }
 
 function startCommand(opts) {
+  if (ptyJobs.wantsPty()) {
+    if (countRunning() >= MAX_RUNNING) {
+      throw new ProtocolError('E_BAD_ARGS', `Too many running commands (max ${MAX_RUNNING}). Cancel or wait.`);
+    }
+    pruneCommands();
+    const execId = crypto.randomBytes(8).toString('hex');
+    lastExecId = execId;
+    const timeoutMs = Math.max(1000, ((opts && opts.timeoutSec) || 30) * 1000);
+    const rec = {
+      execId,
+      command: (opts && opts.command) || '',
+      cwd: (opts && opts.cwd) || '.',
+      status: 'running',
+      stdout: '',
+      stderr: '',
+      execution: 'pty',
+      suggestedWaitMs: Math.min(4000, Math.max(800, Math.round(timeoutMs / 8)))
+    };
+    commandStore.set(String(execId), rec);
+    eventBus.broadcast('command_started', {
+      execId,
+      command: rec.command,
+      cwd: rec.cwd,
+      timestamp: new Date().toISOString()
+    });
+    ptyJobs.enqueue('run', {
+      execId,
+      command: rec.command,
+      cwd: rec.cwd,
+      timeoutSec: (opts && opts.timeoutSec) || 30,
+      onChunk: (chunk, stream) => {
+        const field = stream === 'stderr' ? 'stderr' : 'stdout';
+        rec[field] += chunk;
+        if (rec[field].length > MAX_CAPTURE) rec[field] = rec[field].slice(-MAX_CAPTURE);
+        eventBus.broadcast('command_output', { execId, stream: field, chunk });
+      }
+    }).then((result) => {
+      rec.status = result.status || (result.ok === false ? 'error' : 'done');
+      rec.stdout = result.stdout != null ? result.stdout : rec.stdout;
+      rec.stderr = result.stderr != null ? result.stderr : rec.stderr;
+      rec.exitCode = result.exitCode;
+      rec.durationMs = result.durationMs;
+      rec.outputCaptured = result.outputCaptured;
+      rec.message = result.message;
+      rec.ok = result.ok;
+      rec.isTimeout = result.status === 'timeout';
+      eventBus.broadcast('command_finished', {
+        execId,
+        command: rec.command,
+        exitCode: rec.exitCode,
+        durationMs: rec.durationMs,
+        status: rec.status
+      });
+    }).catch((err) => {
+      if (rec.status === 'running') rec.status = 'error';
+      rec.stderr = `${rec.stderr || ''}${err && err.message ? err.message : err}`;
+    });
+    return {
+      execId: rec.execId,
+      status: 'running',
+      command: rec.command,
+      suggestedWaitMs: rec.suggestedWaitMs,
+      hint: 'Poll get_command_output until status is done or timeout. Desktop Chat runs this in Web Agent · 1.'
+    };
+  }
   const { rec, done } = startProcess(opts || {});
   done.catch((err) => {
     if (rec.status === 'running') rec.status = 'error';
@@ -206,10 +306,22 @@ function getCommandOutput({ execId, commandId, tail } = {}) {
   return publicRecord(rec, tail);
 }
 
-function cancelCommand({ execId } = {}) {
+async function cancelCommand({ execId } = {}) {
   const id = String(execId || '');
   const rec = commandStore.get(id);
   const child = children.get(id);
+  if (ptyJobs.wantsPty()) {
+    if (!rec) return { execId: id, found: false };
+    if (rec.status !== 'running') {
+      return { execId: rec.execId, status: rec.status, cancelled: false, message: 'Command is not running.' };
+    }
+    rec.status = 'cancelled';
+    try {
+      await ptyJobs.enqueue('cancel', { execId: id });
+    } catch (_) { /* plugin may already have exited */ }
+    if (child) killChild(child, true);
+    return { execId: rec.execId, cancelled: true, status: 'cancelled', execution: 'pty' };
+  }
   if (!rec) return { execId: id, found: false };
   if (rec.status !== 'running') {
     return { execId: rec.execId, status: rec.status, cancelled: false, message: 'Command is not running.' };
@@ -219,11 +331,14 @@ function cancelCommand({ execId } = {}) {
   return { execId: rec.execId, cancelled: true, status: 'cancelled' };
 }
 
-function sendCommandInput({ execId, input } = {}) {
+async function sendCommandInput({ execId, input } = {}) {
+  if (ptyJobs.wantsPty()) {
+    return ptyJobs.enqueue('input', { execId, input });
+  }
   return {
     ok: false,
     execId,
-    message: 'Interactive PTY is not enabled on this host. Commands are one-shot processes.',
+    message: 'Interactive PTY is not enabled on this host. Commands are one-shot processes. Desktop Chat with the VS Code plugin can write stdin to a live terminal.',
     input
   };
 }

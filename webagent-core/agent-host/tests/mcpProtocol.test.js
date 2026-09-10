@@ -67,6 +67,8 @@ async function main() {
   assert.ok(tools.includes('git_status'));
   assert.ok(tools.includes('start_command'));
   assert.ok(!tools.includes('lsp'));
+  assert.ok(!tools.includes('send_command_input'));
+  assert.ok(getToolList(null, { includeHidden: true }).some((t) => t.name === 'send_command_input'));
 
   const clipped = clipJson({ stdout: 'x'.repeat(20000), ok: true });
   assert.ok(clipped._truncated || clipped.stdout.length < 20000);
@@ -121,6 +123,13 @@ async function main() {
   }));
   assert.strictEqual(remoteDanger.isError, true);
   assert.ok(/E_FORBIDDEN|remote MCP|Destructive commands are blocked on remote/i.test(remoteDanger.content[0].text));
+
+  const remotePty = await handleRpc(req('tools/call', {
+    name: 'send_command_input',
+    arguments: { execId: 'deadbeefdeadbeef', input: 'y\n' }
+  }));
+  assert.strictEqual(remotePty.isError, true);
+  assert.ok(/E_FORBIDDEN/.test(remotePty.content[0].text));
 
   fs.writeFileSync(path.join(tmp, 'note.txt'), 'hello\n');
   const viaPath = await callTool('cat', { path: 'note.txt' });

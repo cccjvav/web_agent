@@ -23,6 +23,11 @@ function toolLabel(name, result, ok) {
   if (name === 'run_command' || name === 'execute_command') {
     return result && result.command ? result.command : 'Run command';
   }
+  if (name === 'load_skill') {
+    if (result && result.found && result.name) return `Skill ${result.name}`;
+    if (result && Array.isArray(result.skills)) return `Skills ${result.skills.length}`;
+    return 'load_skill';
+  }
   if (name === 'apply_patch') return result && result.filePath ? `Patched ${result.filePath}` : 'apply_patch';
   if (name === 'git_status') return 'git status';
   if (name === 'set_todos') return 'Tasks';
