@@ -17,7 +17,7 @@ function test(name, check) {
   }
 }
 
-console.log('🎨 Checking Seabreeze Club SVG page...');
+console.log('🎨 Checking Tideway SVG page...');
 test('page has an accessible inline SVG scene', () => {
   assert.match(page, /id="rideScene"[\s\S]*?role="img"/);
   assert.match(page, /鹈鹕骑自行车/);

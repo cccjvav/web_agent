@@ -22,7 +22,7 @@
 
     pauseButton.setAttribute('aria-pressed', String(paused));
     pauseLabel.textContent = paused ? '播放动画' : '暂停动画';
-    pauseButton.setAttribute('aria-label', paused ? '播放海边骑行动画' : '暂停海边骑行动画');
+    pauseButton.setAttribute('aria-label', paused ? '播放潮汐骑行动画' : '暂停潮汐骑行动画');
   };
 
   pauseButton.addEventListener('click', () => {

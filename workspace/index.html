@@ -3,354 +3,328 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f3efe7" />
+    <meta name="theme-color" content="#0d1b2b" />
     <meta
       name="description"
-      content="一只鹈鹕的海边骑行日志：纯 SVG 与原生 SMIL 动画小站。"
+      content="Tideway 02：一只鹈鹕骑着自行车穿过北湾的纯 SVG 动态航行记录。"
     />
-    <title>海风骑行 · 鹈鹕骑自行车</title>
+    <title>TIDEWAY 02 · 鹈鹕骑行记录</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="site-shell">
+    <div class="page-frame" id="top">
       <header class="topbar" aria-label="主导航">
-        <a class="brand" href="#top" aria-label="海风骑行首页">
-          <span class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 44 44" role="img">
-              <circle cx="22" cy="22" r="21" fill="#173c4d" />
-              <path
-                d="M13 24c4-7 8-10 14-9 4 .7 6 3 5 6-1 3-5 4-10 3l-5 8"
-                fill="none"
-                stroke="#f8d486"
-                stroke-linecap="round"
-                stroke-width="2.8"
-              />
-              <path d="m25 20 9 3-9 2" fill="#ed795f" />
-              <circle cx="26.5" cy="17.5" r="1.5" fill="#fffaf1" />
+        <a class="wordmark" href="#top" aria-label="Tideway 骑行社首页">
+          <span class="wordmark-symbol" aria-hidden="true">
+            <svg viewBox="0 0 42 42">
+              <circle cx="21" cy="21" r="20" fill="#f3ae69" />
+              <path d="M10 25c3-8 8-11 14-10 3 .4 5 2 5 4 0 3-4 4-8 3l-4 8" fill="none" stroke="#10263a" stroke-linecap="round" stroke-width="2.5" />
+              <path d="m24 20 11 3-11 3" fill="#e76d55" />
+              <circle cx="25.5" cy="17.5" r="1.4" fill="#10263a" />
             </svg>
           </span>
-          <span class="brand-copy">
-            <strong>海风骑行</strong>
-            <small>SEABREEZE CLUB</small>
-          </span>
+          <span class="wordmark-text"><b>TIDEWAY</b><small>PELICAN CYCLE CLUB</small></span>
         </a>
 
         <nav class="nav-links" aria-label="页面区域">
-          <a class="active" href="#ride">今日路线</a>
-          <a href="#field-notes">田野笔记</a>
-          <a href="#about">关于车队</a>
+          <a class="active" href="#ride">当前航线 <span>01</span></a>
+          <a href="#log">沿途记录 <span>02</span></a>
+          <a href="#about">关于车队 <span>03</span></a>
         </nav>
 
         <div class="top-actions">
-          <span class="live-pill"><span class="live-dot"></span>现场记录中</span>
-          <button class="icon-button" id="pauseButton" type="button" aria-pressed="false">
-            <span class="pause-icon" aria-hidden="true"><i></i><i></i></span>
+          <span class="location-status"><i></i> NORTH BAY / 18:42</span>
+          <button class="motion-button" id="pauseButton" type="button" aria-pressed="false" aria-label="暂停海边骑行动画">
+            <span class="motion-icon" aria-hidden="true"><i></i><i></i></span>
             <span id="pauseLabel">暂停动画</span>
           </button>
-          <button class="replay-button" id="replayButton" type="button">
-            <span aria-hidden="true">↻</span>
-            重播
-          </button>
+          <button class="reset-button" id="replayButton" type="button" aria-label="重置动画时间线">重置 <b>↺</b></button>
         </div>
       </header>
 
-      <main id="top">
+      <main>
         <section class="hero" id="ride" aria-labelledby="hero-title">
-          <div class="hero-copy">
-            <p class="eyebrow"><span class="eyebrow-line"></span> COASTAL RIDE / 07:24 AM</p>
-            <h1 id="hero-title">把风装进<br /><em>车篮里。</em></h1>
-            <p class="hero-intro">
-              今天的领骑员是一只不太会刹车的鹈鹕。沿着潮线向东，风从左耳穿过，下一站是灯塔。
-            </p>
-            <div class="route-meta">
-              <div class="route-avatar" aria-hidden="true">
-                <svg viewBox="0 0 50 50">
-                  <circle cx="25" cy="25" r="25" fill="#f8d486" />
-                  <path d="M11 30c3-9 8-14 15-14 5 0 9 3 9 7 0 4-4 5-9 4l-5 9" fill="#fbfaf3" />
-                  <path d="m27 21 13 4-13 4" fill="#ed795f" />
-                  <circle cx="29" cy="18.5" r="1.8" fill="#173c4d" />
+          <div class="intro-copy">
+            <div class="route-kicker"><b>02</b><span></span> 潮汐线路 / TIDEWAY</div>
+            <h1 id="hero-title">骑过<br /><em>晚风。</em></h1>
+            <p class="intro-text">黄昏前的最后一段路，交给阿浪和他的旧车。向东，越过潮线，去追一盏刚刚亮起的灯。</p>
+
+            <div class="rider-card">
+              <div class="rider-avatar" aria-hidden="true">
+                <svg viewBox="0 0 56 56">
+                  <circle cx="28" cy="28" r="28" fill="#e76d55" />
+                  <path d="M12 33c3-10 9-16 17-15 6 .5 10 3 10 8 0 4-4 6-10 5l-5 10" fill="#fff1d2" />
+                  <path d="m30 24 17 5-17 5" fill="#f3ae69" />
+                  <circle cx="33" cy="21" r="2" fill="#10263a" />
                 </svg>
               </div>
-              <div>
-                <span class="meta-label">今日领骑</span>
-                <strong>阿浪 · 斑嘴鹈鹕</strong>
-              </div>
-              <span class="verified" title="已确认路线">✓</span>
+              <div class="rider-info"><span>今晚的领骑员</span><strong>阿浪 · 斑嘴鹈鹕</strong></div>
+              <div class="rider-mark">◎<small>LIVE</small></div>
             </div>
-            <a class="scroll-cue" href="#field-notes">
-              <span class="scroll-arrow">↓</span>
-              <span>向下查看航迹</span>
-            </a>
+
+            <div class="intro-bottom">
+              <div><span>出发坐标</span><strong>北湾 35° 12′ N</strong></div>
+              <a href="#log">查看完整记录 <b>↗</b></a>
+            </div>
           </div>
 
-          <div class="scene-card" aria-label="鹈鹕骑自行车的海边动画场景">
-            <div class="scene-topline">
-              <div class="scene-location"><span class="location-pin">⌖</span> 北湾 · 潮汐公路</div>
-              <div class="scene-status"><span></span> LIVE / 01:42</div>
+          <div class="visual-card" aria-label="鹈鹕骑自行车穿过北湾的动态场景">
+            <div class="visual-head">
+              <div><span class="panel-overline">MOTION STUDY / 02</span><strong>风把路吹亮了</strong></div>
+              <div class="panel-counter"><b>02</b><span>/ 03</span></div>
             </div>
-            <div class="scene-window">
+            <div class="scene-wrap">
               <svg
                 id="rideScene"
                 class="ride-scene"
-                viewBox="0 0 1100 690"
+                viewBox="0 0 1000 620"
                 role="img"
                 aria-labelledby="sceneTitle sceneDesc"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <title id="sceneTitle">阿浪骑着自行车穿过北湾海岸</title>
-                <desc id="sceneDesc">太阳、云朵、海浪与道路持续移动，鹈鹕踩着自行车向右前进。</desc>
+                <title id="sceneTitle">鹈鹕阿浪骑自行车穿越北湾潮汐公路</title>
+                <desc id="sceneDesc">黄昏、海浪、灯塔和一只踩着自行车的鹈鹕，所有移动由原生 SVG SMIL 动画完成。</desc>
                 <defs>
-                  <linearGradient id="skyGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stop-color="#99dce0" />
-                    <stop offset="0.62" stop-color="#d9f1e6" />
-                    <stop offset="1" stop-color="#f7dfb1" />
+                  <linearGradient id="nightSky" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#11263d" />
+                    <stop offset=".48" stop-color="#1c4f69" />
+                    <stop offset="1" stop-color="#e28b70" />
                   </linearGradient>
-                  <linearGradient id="seaGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stop-color="#4db9bb" />
-                    <stop offset="1" stop-color="#157d91" />
+                  <linearGradient id="seaTone" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#226a82" />
+                    <stop offset="1" stop-color="#0c304a" />
                   </linearGradient>
-                  <linearGradient id="roadGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stop-color="#d9a873" />
-                    <stop offset="1" stop-color="#b9775a" />
+                  <linearGradient id="roadTone" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#29485a" />
+                    <stop offset="1" stop-color="#111e30" />
                   </linearGradient>
-                  <linearGradient id="hillBack" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stop-color="#74b7a5" />
-                    <stop offset="1" stop-color="#418d83" />
-                  </linearGradient>
-                  <linearGradient id="hillFront" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stop-color="#4f9d8f" />
-                    <stop offset="1" stop-color="#2c716f" />
-                  </linearGradient>
-                  <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0" stop-color="#fff6c5" stop-opacity=".95" />
-                    <stop offset=".55" stop-color="#ffe19a" stop-opacity=".48" />
-                    <stop offset="1" stop-color="#ffe19a" stop-opacity="0" />
+                  <radialGradient id="sunDisc" cx="50%" cy="50%" r="50%">
+                    <stop offset="0" stop-color="#fff5c8" />
+                    <stop offset=".68" stop-color="#f4bf77" />
+                    <stop offset="1" stop-color="#ec846b" />
                   </radialGradient>
-                  <filter id="softShadow" x="-30%" y="-30%" width="160%" height="180%">
-                    <feGaussianBlur in="SourceAlpha" stdDeviation="9" result="blur" />
-                    <feOffset dy="8" result="offsetBlur" />
-                    <feComponentTransfer><feFuncA type="linear" slope=".22" /></feComponentTransfer>
+                  <radialGradient id="sunAura" cx="50%" cy="50%" r="50%">
+                    <stop offset="0" stop-color="#f8c77f" stop-opacity=".55" />
+                    <stop offset="1" stop-color="#f8c77f" stop-opacity="0" />
+                  </radialGradient>
+                  <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+                    <feGaussianBlur stdDeviation="16" />
+                  </filter>
+                  <filter id="characterShadow" x="-30%" y="-30%" width="160%" height="180%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="7" result="blur" />
+                    <feOffset dy="7" result="offset" />
+                    <feComponentTransfer in="offset"><feFuncA type="linear" slope=".35" /></feComponentTransfer>
                     <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
                   </filter>
-                  <filter id="sunBlur" x="-100%" y="-100%" width="300%" height="300%">
-                    <feGaussianBlur stdDeviation="14" />
-                  </filter>
-                  <clipPath id="sceneClip"><rect width="1100" height="690" rx="24" /></clipPath>
+                  <clipPath id="sceneClip"><rect width="1000" height="620" rx="18" /></clipPath>
                 </defs>
 
                 <g clip-path="url(#sceneClip)">
-                  <!-- morning sky -->
-                  <rect width="1100" height="690" fill="url(#skyGradient)" />
-                  <circle cx="875" cy="125" r="118" fill="url(#sunGlow)" filter="url(#sunBlur)" />
-                  <circle cx="875" cy="125" r="47" fill="#ffda82" />
-                  <circle cx="862" cy="112" r="36" fill="#ffe7a4" opacity=".42" />
+                  <rect width="1000" height="620" fill="url(#nightSky)" />
 
-                  <!-- drifting clouds, animated with native SMIL -->
-                  <g class="clouds cloud-one" opacity=".72">
-                    <animateTransform attributeName="transform" type="translate" from="-330 0" to="1190 0" dur="42s" repeatCount="indefinite" />
-                    <path d="M72 142c0-18 15-32 34-32 7-25 30-41 57-41 28 0 51 18 57 44 5-2 11-3 17-3 24 0 44 19 44 43H72Z" fill="#fffdf1" />
-                  </g>
-                  <g class="clouds cloud-two" opacity=".4">
-                    <animateTransform attributeName="transform" type="translate" from="-510 0" to="1260 0" dur="58s" repeatCount="indefinite" />
-                    <path d="M70 220c0-13 11-24 25-24 6-20 24-32 45-32 22 0 40 14 45 34 5-2 9-2 14-2 19 0 34 15 34 34H70Z" fill="#fffdf1" />
+                  <!-- sunset halo and stars -->
+                  <circle cx="748" cy="175" r="155" fill="url(#sunAura)" filter="url(#glow)" />
+                  <circle cx="748" cy="175" r="69" fill="url(#sunDisc)" />
+                  <path d="M665 175h166" stroke="#ffe6a5" stroke-linecap="round" stroke-width="2" opacity=".32" />
+                  <g fill="#f7e9bf">
+                    <circle cx="114" cy="93" r="2"><animate attributeName="opacity" values=".2;1;.2" dur="2.8s" repeatCount="indefinite" /></circle>
+                    <circle cx="196" cy="148" r="1.6"><animate attributeName="opacity" values="1;.25;1" dur="3.6s" repeatCount="indefinite" /></circle>
+                    <circle cx="331" cy="78" r="2"><animate attributeName="opacity" values=".2;.9;.2" dur="2.1s" repeatCount="indefinite" /></circle>
+                    <circle cx="482" cy="130" r="1.5"><animate attributeName="opacity" values=".9;.2;.9" dur="3.1s" repeatCount="indefinite" /></circle>
+                    <circle cx="888" cy="82" r="1.8"><animate attributeName="opacity" values=".3;1;.3" dur="2.5s" repeatCount="indefinite" /></circle>
                   </g>
 
-                  <!-- distant birds -->
-                  <g fill="none" stroke="#317d83" stroke-linecap="round" stroke-width="4" opacity=".6">
-                    <path d="M180 180q12-12 24 0 12-12 24 0" />
-                    <path d="M274 126q9-9 18 0 9-9 18 0" />
-                    <path d="M423 203q11-11 22 0 11-11 22 0" />
+                  <!-- wind ribbons moving across the sky -->
+                  <g fill="none" stroke="#a9d4d2" stroke-linecap="round" opacity=".33">
+                    <path d="M-50 117c103-33 139 39 238 8 76-24 122-31 195-1" stroke-width="4">
+                      <animateTransform attributeName="transform" type="translate" values="0 0; 210 0; 0 0" dur="10s" repeatCount="indefinite" />
+                    </path>
+                    <path d="M560 92c67-21 111 19 169 2 53-15 105-14 161 13" stroke-width="3">
+                      <animateTransform attributeName="transform" type="translate" values="40 0; -160 0; 40 0" dur="13s" repeatCount="indefinite" />
+                    </path>
+                    <path d="M-130 217c80-28 125 15 201-2 55-12 100-11 151 13" stroke-width="2">
+                      <animateTransform attributeName="transform" type="translate" values="-10 0; 190 0; -10 0" dur="12s" repeatCount="indefinite" />
+                    </path>
                   </g>
 
-                  <!-- layered coastal hills -->
-                  <path d="M-40 382c113-70 179-65 272-12 82 47 144 40 223-14 88-60 139-76 232-21 86 51 166 45 249-11 62-42 123-48 204-2v164H-40Z" fill="url(#hillBack)" />
-                  <path d="M-40 430c100-66 169-54 257-5 79 44 148 33 222-18 97-66 155-49 222 0 78 57 150 58 237 3 69-44 140-46 242 19v125H-40Z" fill="url(#hillFront)" opacity=".93" />
-                  <path d="M0 435c100-41 177-26 250 11 87 45 155 25 227-20 82-50 141-36 209 14 90 67 170 53 250 2 58-37 111-39 164-15v91H0Z" fill="#285f68" opacity=".28" />
+                  <!-- tiny migrating flock -->
+                  <g fill="none" stroke="#102e45" stroke-linecap="round" stroke-width="4" opacity=".72">
+                    <path d="M196 220q12-12 24 0 12-12 24 0" />
+                    <path d="M260 184q9-9 18 0 9-9 18 0" />
+                    <animateTransform attributeName="transform" type="translate" values="0 0; 80 -12; 160 0" dur="16s" repeatCount="indefinite" />
+                  </g>
 
-                  <!-- sea and moving wave marks -->
-                  <path d="M0 402h1100v174H0Z" fill="url(#seaGradient)" />
+                  <!-- distant hills -->
+                  <path d="M-80 372c116-67 202-91 312-38 88 42 151 43 231-5 89-54 157-66 246-5 85 58 178 55 312-17v143H-80Z" fill="#184b60" />
+                  <path d="M-70 411c111-50 184-65 274-17 100 54 163 50 247-10 94-67 157-46 237 8 89 60 177 46 310-34v125H-70Z" fill="#12384f" opacity=".88" />
+                  <path d="M0 407c93-29 153-19 220 16 77 40 146 33 217-19 81-59 149-40 217 11 77 57 151 54 236-3 41-28 78-38 110-41v73H0Z" fill="#102b42" opacity=".75" />
+
+                  <!-- sea -->
+                  <path d="M0 387h1000v137H0Z" fill="url(#seaTone)" />
                   <g fill="none" stroke-linecap="round">
-                    <g stroke="#a5e1d2" stroke-width="4" opacity=".55">
-                      <path d="M-90 440h112m38 0h190m62 0h145m58 0h202m46 0h194">
-                        <animateTransform attributeName="transform" type="translate" values="0 0; 100 0; 0 0" dur="8s" repeatCount="indefinite" />
+                    <g stroke="#8fc9c9" stroke-width="4" opacity=".55">
+                      <path d="M-110 414h130m42 0h90m45 0h164m40 0h106m62 0h170m48 0h150">
+                        <animateTransform attributeName="transform" type="translate" values="0 0; 110 0; 0 0" dur="8s" repeatCount="indefinite" />
                       </path>
-                      <path d="M-40 481h170m48 0h84m63 0h180m50 0h130m48 0h190">
-                        <animateTransform attributeName="transform" type="translate" values="0 0; -120 0; 0 0" dur="9s" repeatCount="indefinite" />
+                      <path d="M-30 451h86m39 0h160m52 0h103m57 0h153m48 0h142m49 0h112">
+                        <animateTransform attributeName="transform" type="translate" values="0 0; -150 0; 0 0" dur="10s" repeatCount="indefinite" />
                       </path>
-                      <path d="M35 526h112m52 0h224m48 0h96m53 0h240m55 0h120">
-                        <animateTransform attributeName="transform" type="translate" values="0 0; 70 0; 0 0" dur="7s" repeatCount="indefinite" />
+                      <path d="M46 493h140m43 0h109m59 0h193m55 0h124m45 0h132">
+                        <animateTransform attributeName="transform" type="translate" values="0 0; 80 0; 0 0" dur="7s" repeatCount="indefinite" />
                       </path>
                     </g>
-                    <g stroke="#e8f5d6" stroke-width="3" opacity=".35">
-                      <path d="M60 419h58m22 0h74m35 0h50m210 0h64m30 0h102m42 0h64" />
-                      <path d="M18 503h78m25 0h145m31 0h85m191 0h128m28 0h120" />
-                    </g>
-                  </g>
-                  <path d="M0 567h1100v123H0Z" fill="url(#roadGradient)" />
-                  <path d="M0 568h1100" stroke="#f5c781" stroke-width="8" opacity=".65" />
-
-                  <!-- road motion: the dashed center line loops every 200 units -->
-                  <g fill="none" stroke="#f8d796" stroke-linecap="round" stroke-width="9" opacity=".9">
-                    <g>
-                      <path d="M-200 640h96m104 0h96m104 0h96m104 0h96m104 0h96m104 0h96m104 0h96m104 0h96m104 0h96" />
-                      <animateTransform attributeName="transform" type="translate" from="0 0" to="-200 0" dur="1.6s" repeatCount="indefinite" />
+                    <g stroke="#d1e6d0" stroke-width="2" opacity=".42">
+                      <path d="M56 431h55m26 0h76m32 0h88m136 0h63m32 0h104m35 0h96" />
+                      <path d="M26 476h88m29 0h111m31 0h74m58 0h131m26 0h116m31 0h117" />
                     </g>
                   </g>
-                  <path d="M0 574c183-11 310-4 450 6 237 17 415 11 650-8" fill="none" stroke="#9c5d51" stroke-width="3" opacity=".55" />
 
-                  <!-- tiny speed marks behind the bicycle -->
-                  <g class="speed-marks" fill="none" stroke="#fff2cd" stroke-linecap="round">
-                    <path d="M220 515h72" stroke-width="6"><animate attributeName="opacity" values="0;.85;0" dur="1.4s" repeatCount="indefinite" /></path>
-                    <path d="M280 548h55" stroke-width="4"><animate attributeName="opacity" values="0;.6;0" dur="1.7s" begin=".4s" repeatCount="indefinite" /></path>
-                    <path d="M352 492h38" stroke-width="5"><animate attributeName="opacity" values="0;.7;0" dur="1.2s" begin=".2s" repeatCount="indefinite" /></path>
+                  <!-- lighthouse at the edge of the route -->
+                  <g transform="translate(140 321)">
+                    <path d="M-12 67h39l-6-59H-5Z" fill="#f6e4bf" stroke="#10263a" stroke-width="4" />
+                    <path d="M-18 8h51v11h-51Z" fill="#e76d55" stroke="#10263a" stroke-width="4" />
+                    <path d="M-7-2h30v10H-7Z" fill="#f3ae69" stroke="#10263a" stroke-width="4" />
+                    <path d="M8-15V-2" stroke="#10263a" stroke-width="4" />
+                    <path d="M-27 67h69" stroke="#f3ae69" stroke-linecap="round" stroke-width="7" />
+                    <path d="M-35-31h85" stroke="#ffe6a5" stroke-linecap="round" stroke-width="3" opacity=".55">
+                      <animate attributeName="opacity" values=".15;.7;.15" dur="2.5s" repeatCount="indefinite" />
+                    </path>
+                  </g>
+
+                  <!-- road and moving lane markers -->
+                  <path d="M0 508c192-18 345-14 502 0 171 15 323 13 498-6v118H0Z" fill="url(#roadTone)" />
+                  <path d="M0 508c192-18 345-14 502 0 171 15 323 13 498-6" fill="none" stroke="#f3ae69" stroke-width="5" opacity=".75" />
+                  <g fill="none" stroke="#f8d693" stroke-linecap="round" stroke-width="9" opacity=".9">
+                    <path d="M-200 579h104m76 0h104m76 0h104m76 0h104m76 0h104m76 0h104m76 0h104m76 0h104m76 0h104">
+                      <animateTransform attributeName="transform" type="translate" from="0 0" to="-180 0" dur="1.55s" repeatCount="indefinite" />
+                    </path>
+                  </g>
+                  <g fill="none" stroke="#f4c786" stroke-linecap="round">
+                    <path d="M190 476h53" stroke-width="5"><animate attributeName="opacity" values="0;.9;0" dur="1.3s" repeatCount="indefinite" /></path>
+                    <path d="M263 455h35" stroke-width="3"><animate attributeName="opacity" values="0;.65;0" dur="1.7s" begin=".3s" repeatCount="indefinite" /></path>
+                    <path d="M315 495h63" stroke-width="4"><animate attributeName="opacity" values="0;.7;0" dur="1.5s" begin=".65s" repeatCount="indefinite" /></path>
                   </g>
 
                   <!-- bicycle shadow -->
-                  <ellipse cx="625" cy="631" rx="273" ry="23" fill="#143e4d" opacity=".22">
-                    <animate attributeName="rx" values="273;252;273" dur="1.8s" repeatCount="indefinite" />
+                  <ellipse cx="526" cy="599" rx="267" ry="17" fill="#071321" opacity=".55">
+                    <animate attributeName="rx" values="267;247;267" dur="1.6s" repeatCount="indefinite" />
                   </ellipse>
 
-                  <!-- bicycle frame -->
-                  <g id="bicycle" stroke="#173c4d" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- spinning wheels -->
-                    <g class="wheel" fill="none" stroke="#173c4d">
+                  <!-- bicycle -->
+                  <g id="bicycle" fill="none" stroke="#f3d595" stroke-linecap="round" stroke-linejoin="round">
+                    <g class="wheel">
                       <g>
-                        <circle cx="465" cy="535" r="91" stroke-width="10" />
-                        <circle cx="465" cy="535" r="78" stroke="#f5c879" stroke-width="3" opacity=".8" />
-                        <path d="M465 444v182M374 535h182M401 471l128 128M529 471 401 599" stroke-width="2.5" opacity=".75" />
-                        <circle cx="465" cy="535" r="10" fill="#ed795f" stroke-width="5" />
-                        <animateTransform attributeName="transform" type="rotate" from="0 465 535" to="360 465 535" dur="1.25s" repeatCount="indefinite" />
+                        <circle cx="348" cy="506" r="80" stroke="#f8d693" stroke-width="9" />
+                        <circle cx="348" cy="506" r="68" stroke="#4d7380" stroke-width="2" />
+                        <path d="M348 426v160M268 506h160M291 449l114 114M405 449 291 563" stroke="#c9a96d" stroke-width="2" opacity=".8" />
+                        <circle cx="348" cy="506" r="9" fill="#e76d55" stroke="#f8d693" stroke-width="5" />
+                        <animateTransform attributeName="transform" type="rotate" from="0 348 506" to="360 348 506" dur="1.2s" repeatCount="indefinite" />
                       </g>
                       <g>
-                        <circle cx="788" cy="535" r="91" stroke-width="10" />
-                        <circle cx="788" cy="535" r="78" stroke="#f5c879" stroke-width="3" opacity=".8" />
-                        <path d="M788 444v182M697 535h182M724 471l128 128M852 471 724 599" stroke-width="2.5" opacity=".75" />
-                        <circle cx="788" cy="535" r="10" fill="#ed795f" stroke-width="5" />
-                        <animateTransform attributeName="transform" type="rotate" from="0 788 535" to="360 788 535" dur="1.25s" repeatCount="indefinite" />
+                        <circle cx="704" cy="506" r="80" stroke="#f8d693" stroke-width="9" />
+                        <circle cx="704" cy="506" r="68" stroke="#4d7380" stroke-width="2" />
+                        <path d="M704 426v160M624 506h160M647 449l114 114M761 449 647 563" stroke="#c9a96d" stroke-width="2" opacity=".8" />
+                        <circle cx="704" cy="506" r="9" fill="#e76d55" stroke="#f8d693" stroke-width="5" />
+                        <animateTransform attributeName="transform" type="rotate" from="0 704 506" to="360 704 506" dur="1.2s" repeatCount="indefinite" />
                       </g>
                     </g>
-
-                    <!-- frame geometry -->
-                    <path d="M465 535 585 423 680 535 465 535 788 535 715 414 680 535" fill="#f4c879" fill-opacity=".19" stroke-width="9" />
-                    <path d="M585 423h-42" stroke-width="9" />
-                    <path d="M715 414c20-20 34-20 51-11" fill="none" stroke-width="8" />
-                    <path d="M766 404v-22" stroke-width="8" />
-                    <path d="M746 382h38" stroke-width="8" />
-                    <path d="M585 423 574 393" stroke-width="8" />
-                    <path d="M554 392h42" stroke-width="8" />
-                    <!-- crank and pedals -->
-                    <circle cx="680" cy="535" r="18" fill="#f8d486" stroke-width="6" />
-                    <path d="M680 535 708 512m-38 48-20 19" stroke-width="7" />
-                    <path d="M702 509h28m-55 54h-29" stroke-width="6" />
+                    <path d="M348 506 466 405 531 506 348 506 704 506 642 393 531 506" stroke-width="8" />
+                    <path d="M466 405h-47M642 393c17-17 28-19 47-11M687 382v-23M666 359h42" stroke-width="8" />
+                    <path d="M466 405 455 376M426 375h43" stroke-width="8" />
+                    <circle cx="531" cy="506" r="17" fill="#f3ae69" stroke="#f8d693" stroke-width="5" />
+                    <path d="M531 506 556 483m-34 47-23 22M550 485h29m-55 66h-29" stroke-width="6" />
                   </g>
 
-                  <!-- pelican + subtle bounce, all motion is native SVG SMIL -->
-                  <g id="pelican" filter="url(#softShadow)">
-                    <animateTransform attributeName="transform" type="translate" values="0 0; 0 -6; 0 0; 0 4; 0 0" dur="2.35s" repeatCount="indefinite" />
+                  <!-- the pelican rider: bounce, pedal, flap -->
+                  <g id="pelican" filter="url(#characterShadow)">
+                    <animateTransform attributeName="transform" type="translate" values="0 0; 3 -5; 0 0; -3 3; 0 0" dur="2.2s" repeatCount="indefinite" />
 
-                    <!-- far leg -->
-                    <g transform="translate(625 347)" fill="none" stroke="#e98242" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M0 0 36 93 3 178" stroke-width="12" />
-                      <path d="M3 178-23 178" stroke-width="8" />
-                      <animateTransform attributeName="transform" type="rotate" additive="sum" values="-13; 13; -13" dur="1.25s" repeatCount="indefinite" />
+                    <g transform="translate(486 345)" fill="none" stroke="#ef9558" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M0 0 39 74 22 161" stroke-width="12" />
+                      <path d="M22 161H-6" stroke-width="8" />
+                      <animateTransform attributeName="transform" additive="sum" type="rotate" values="-14; 14; -14" dur="1.2s" repeatCount="indefinite" />
                     </g>
-                    <!-- near leg -->
-                    <g transform="translate(659 349)" fill="none" stroke="#f0914d" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M0 0-28 89 13 174" stroke-width="13" />
-                      <path d="M13 174 40 174" stroke-width="8" />
-                      <animateTransform attributeName="transform" type="rotate" additive="sum" values="13; -13; 13" dur="1.25s" repeatCount="indefinite" />
+                    <g transform="translate(532 347)" fill="none" stroke="#f3a05d" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M0 0-28 75 6 158" stroke-width="13" />
+                      <path d="M6 158H34" stroke-width="8" />
+                      <animateTransform attributeName="transform" additive="sum" type="rotate" values="14; -14; 14" dur="1.2s" repeatCount="indefinite" />
                     </g>
 
-                    <!-- plump body -->
-                    <path d="M544 273c7-54 51-86 107-80 59 6 92 52 83 111-7 47-43 76-94 79-58 4-104-35-96-110Z" fill="#fffaf0" stroke="#173c4d" stroke-width="6" />
-                    <path d="M563 299c13 30 42 53 83 57 25 2 47-3 64-14-16 29-45 43-82 41-42-2-70-28-78-63Z" fill="#f6e7d2" opacity=".85" />
-                    <!-- wing: its small flap gives the ride a breezy rhythm -->
+                    <!-- body -->
+                    <path d="M397 278c5-52 49-82 105-77 63 6 91 52 78 110-11 48-50 74-101 73-58-1-88-42-82-106Z" fill="#fff0d0" stroke="#10263a" stroke-width="6" />
+                    <path d="M416 313c19 28 48 44 83 47 29 2 52-6 70-22-17 31-48 47-86 45-36-2-62-23-74-51Z" fill="#e7d5b1" opacity=".75" />
+                    <!-- wing -->
                     <g>
-                      <path d="M584 260c34-32 80-27 103 1 19 23 15 54-10 70-30 19-69 4-90-28-13-19-14-31-3-43Z" fill="#f4e7d4" stroke="#173c4d" stroke-width="5" />
-                      <path d="M597 275c20 16 39 27 69 31" fill="none" stroke="#d7b995" stroke-width="4" stroke-linecap="round" />
-                      <path d="M593 288c17 15 32 23 54 28" fill="none" stroke="#d7b995" stroke-width="3" stroke-linecap="round" />
-                      <animateTransform attributeName="transform" type="rotate" values="0 635 274; -5 635 274; 0 635 274; 4 635 274; 0 635 274" dur="2.1s" repeatCount="indefinite" />
+                      <path d="M425 269c35-30 76-22 97 6 17 22 10 53-16 67-28 16-64 3-82-28-11-18-10-34 1-45Z" fill="#e76d55" stroke="#10263a" stroke-width="5" />
+                      <path d="M437 283c21 17 39 27 66 31m-61-18c16 15 31 22 53 27" fill="none" stroke="#f6bc75" stroke-linecap="round" stroke-width="4" />
+                      <animateTransform attributeName="transform" type="rotate" values="0 472 270; -6 472 270; 0 472 270; 5 472 270; 0 472 270" dur="2s" repeatCount="indefinite" />
                     </g>
-
-                    <!-- long neck and head -->
-                    <path d="M657 276c21-18 35-42 34-70-1-27-17-45-4-71 10-20 35-28 57-18 22 10 29 31 19 50-9 17-28 24-34 40-9 25 15 52-6 81-13 17-35 26-56 21Z" fill="#fffaf0" stroke="#173c4d" stroke-width="6" />
-                    <path d="M670 177c13-24 36-31 54-19 8 5 12 12 14 20-15-10-32-11-45 1-9 9-14 21-15 36-9-10-13-23-8-38Z" fill="#f4e7d4" opacity=".9" />
-                    <path d="M682 141c0-28 22-47 50-44 27 3 42 25 35 49-7 23-30 34-57 27-18-5-28-16-28-32Z" fill="#fffaf0" stroke="#173c4d" stroke-width="6" />
-                    <!-- beak / pouch -->
-                    <path d="M747 139c36-4 81 4 117 23-25 26-74 32-119 10-10-5-13-24 2-33Z" fill="#ee8052" stroke="#173c4d" stroke-width="6" />
-                    <path d="M751 159c32 9 67 9 102 3" fill="none" stroke="#bd5949" stroke-width="4" stroke-linecap="round" />
-                    <path d="M852 158c7 0 11 2 14 5-8 6-15 8-24 8" fill="#d8664f" />
-                    <!-- face -->
-                    <circle cx="724" cy="135" r="7" fill="#173c4d" />
-                    <circle cx="726" cy="132" r="2.4" fill="#fffaf0" />
-                    <path d="M705 113q18-11 36-2" fill="none" stroke="#d7b995" stroke-linecap="round" stroke-width="4" />
-                    <!-- a tiny scarf makes the character memorable -->
-                    <path d="M672 214c18 9 35 10 50 4l-6 23c-17 6-31 4-45-4Z" fill="#ed795f" stroke="#173c4d" stroke-width="4" />
-                    <path d="m705 236 23 31-23-8" fill="#ed795f" stroke="#173c4d" stroke-linejoin="round" stroke-width="4" />
+                    <!-- long neck -->
+                    <path d="M504 274c26-17 40-41 37-68-3-25-18-43-4-67 12-20 38-26 58-13 21 13 26 34 14 52-10 15-29 20-35 36-9 24 17 49-3 77-14 20-43 31-67 20Z" fill="#fff0d0" stroke="#10263a" stroke-width="6" />
+                    <path d="M519 178c13-25 37-33 55-19 9 7 13 15 13 24-13-11-30-12-43-2-11 8-17 20-18 35-10-11-12-24-7-38Z" fill="#e7d5b1" opacity=".8" />
+                    <!-- head -->
+                    <path d="M532 136c0-28 23-47 51-43 27 4 40 27 32 51-8 23-32 32-58 25-17-5-25-17-25-33Z" fill="#fff0d0" stroke="#10263a" stroke-width="6" />
+                    <!-- beak -->
+                    <path d="M608 132c38-5 85 4 119 24-25 24-74 29-119 8-11-5-13-24 0-32Z" fill="#f3ae69" stroke="#10263a" stroke-width="6" />
+                    <path d="M614 153c32 10 70 9 103 2" fill="none" stroke="#d86b52" stroke-linecap="round" stroke-width="4" />
+                    <path d="M712 156c7 1 12 3 15 6-7 6-15 8-25 8" fill="#e76d55" />
+                    <!-- eye and scarf -->
+                    <circle cx="581" cy="130" r="7" fill="#10263a" />
+                    <circle cx="583" cy="127" r="2.2" fill="#fff7dc" />
+                    <path d="M560 109q19-12 37-2" fill="none" stroke="#d0ad7d" stroke-linecap="round" stroke-width="4" />
+                    <path d="M514 215c17 9 35 10 51 3l-5 23c-17 6-32 4-46-5Z" fill="#e76d55" stroke="#10263a" stroke-width="4" />
+                    <path d="m550 235 23 31-23-8" fill="#e76d55" stroke="#10263a" stroke-linejoin="round" stroke-width="4" />
                   </g>
 
-                  <!-- foreground salt dots -->
-                  <g fill="#fff1c9" opacity=".75">
-                    <circle cx="128" cy="599" r="4" /><circle cx="180" cy="614" r="3" /><circle cx="916" cy="602" r="4" /><circle cx="970" cy="584" r="3" /><circle cx="1042" cy="620" r="4" />
+                  <!-- foreground glints -->
+                  <g fill="#f5c982">
+                    <circle cx="97" cy="548" r="3" /><circle cx="174" cy="574" r="4" /><circle cx="852" cy="557" r="3" /><circle cx="924" cy="537" r="4" />
                   </g>
                 </g>
               </svg>
-              <div class="scene-sticker sticker-one">风力 3 级</div>
-              <div class="scene-sticker sticker-two">好天气 !</div>
+              <div class="scene-tag tag-time"><span></span> SUNSET / 18:42</div>
+              <div class="scene-tag tag-wind">风速 <b>18</b> km/h <i>↗</i></div>
+              <div class="scene-stamp">T<br /><b>W</b></div>
             </div>
-            <div class="scene-caption">
-              <span><strong>01</strong> / 03　穿过海岸线</span>
-              <span class="caption-rule"></span>
-              <span>向东 · 还有 8.6 km</span>
-            </div>
+            <div class="visual-foot"><span><b>01</b> 北湾潮线</span><span class="foot-rule"></span><span>距离灯塔 8.6 km</span></div>
           </div>
         </section>
 
-        <section class="field-notes" id="field-notes" aria-labelledby="notes-title">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow"><span class="eyebrow-line"></span> FIELD NOTES / 今日观测</p>
-              <h2 id="notes-title">沿途的小事，<em>都在发光。</em></h2>
-            </div>
-            <p class="section-note">骑慢一点，才能听见海鸥<br />在风里的拐弯。</p>
+        <section class="ride-log" id="log" aria-labelledby="log-title">
+          <div class="section-intro">
+            <div><span class="section-number">02</span><p class="section-label">RIDE LOG / 沿途记录</p><h2 id="log-title">三种风景，<em>一种心情。</em></h2></div>
+            <p>没有导航，也没有赶时间。<br />阿浪只跟着海面上的亮光走。</p>
           </div>
-          <div class="stats-grid">
-            <article class="stat-card stat-route">
-              <div class="stat-icon icon-route" aria-hidden="true"><span></span><span></span><span></span></div>
-              <p>今日航迹</p>
-              <strong>12.8 <small>km</small></strong>
-              <div class="mini-route"><i></i><i></i><i></i><i></i><b></b></div>
-              <span class="stat-foot">已完成 04.2 km</span>
+          <div class="log-grid">
+            <article class="log-card log-distance">
+              <div class="log-card-top"><span>路程 / DISTANCE</span><b>↗</b></div>
+              <div class="log-figure">12.8 <small>km</small></div>
+              <div class="distance-line"><span class="distance-progress"></span><i></i><i></i><i></i><b></b></div>
+              <div class="log-card-bottom"><span>已完成 04.2 km</span><strong>33%</strong></div>
             </article>
-            <article class="stat-card stat-wind">
-              <div class="stat-icon icon-wind" aria-hidden="true"><span></span><span></span><span></span></div>
-              <p>海风方向</p>
-              <strong>东南风 <small>↗</small></strong>
-              <div class="wind-meter"><span style="width: 68%"></span></div>
-              <span class="stat-foot">体感轻柔 · 18 km/h</span>
+            <article class="log-card log-weather">
+              <div class="log-card-top"><span>海风 / WIND</span><b>≈</b></div>
+              <div class="log-figure">东南 <small>↗</small></div>
+              <div class="wind-lines"><i></i><i></i><i></i><i></i></div>
+              <div class="log-card-bottom"><span>体感温度 22°</span><strong>柔和</strong></div>
             </article>
-            <article class="stat-card stat-mood">
-              <div class="stat-icon icon-mood" aria-hidden="true">✦</div>
-              <p>阿浪的心情</p>
-              <strong>非常舒展 <small>☺</small></strong>
-              <div class="mood-dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
-              <span class="stat-foot">因为今天没有红灯</span>
+            <article class="log-card log-mood">
+              <div class="log-card-top"><span>心情 / MOOD</span><b>✦</b></div>
+              <div class="log-figure">舒展 <small>☺</small></div>
+              <div class="mood-scale"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+              <div class="log-card-bottom"><span>因为没有红灯</span><strong>4.8 / 5</strong></div>
             </article>
           </div>
         </section>
 
-        <section class="about-strip" id="about" aria-label="车队介绍">
-          <div class="about-symbol">✳</div>
-          <div><strong>海风骑行社</strong><span>给每一阵风找一辆自行车。</span></div>
-          <a href="#ride">回到路线 <span>↗</span></a>
+        <section class="about-panel" id="about" aria-labelledby="about-title">
+          <div class="about-badge">TIDE<br /><b>WAY</b></div>
+          <div class="about-copy"><p class="section-label">03 / ABOUT THE CLUB</p><h2 id="about-title">给每一阵风，<br /><em>找一辆自行车。</em></h2></div>
+          <div class="about-note"><p>我们相信，最好的路线不是最快的那一条。是能让你在路边停下来，看见一只鹈鹕正好经过的那一条。</p><a href="#ride">重新出发 <b>↗</b></a></div>
         </section>
       </main>
 
-      <footer class="footer">
-        <span>© 2025 SEABREEZE CLUB</span>
-        <span class="footer-center">MADE WITH SALT &amp; SUNSHINE</span>
-        <span>纯 SVG · 原生 SMIL</span>
-      </footer>
+      <footer class="footer"><span>© 2025 TIDEWAY CYCLE CLUB</span><span>NO ENGINE / JUST WIND</span><span>纯 SVG · 原生 SMIL</span></footer>
     </div>
     <script src="app.js"></script>
   </body>
