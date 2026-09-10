@@ -108,6 +108,7 @@ router.get('/status', (req, res) => {
       group: m.group || '',
       contextSize: m.contextSize || '',
       caps: Array.isArray(m.caps) ? m.caps : [],
+      vision: Boolean(m.vision),
       pricing: m.pricing || ''
     })),
     activeModelId: cfg.activeModelId,

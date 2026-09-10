@@ -22,25 +22,25 @@
 
 - **文件职责：** DOM 骨架。逻辑在 `app.js` + `js/*.js`。
 - **DOM 结构区块：**
-  - L3–L14：charset、viewport、title、favicon、`./styles.css`；html `data-theme`；head 脚本读 `localStorage webagent-theme`。
+  - L3–L15：charset、viewport、title、favicon、`./styles.css`；html `data-theme`；head 脚本读 `localStorage webagent-theme`。
   - L17–L36 **标题栏 `#titlebar`：** 文件/编辑/选择/查看/转到/运行菜单（多数按钮无 JS）；`#menu-term` 终端、`#menu-help` 帮助；中间 `#window-title`；右侧 `#btn-theme` 浅色/深色（只换本页 CSS，不是 exe 皮肤）。
-  - L31–L54 **活动栏 `#activitybar`：** `data-left=explorer|search` 有 JS；SCM/调试/扩展按钮无 handler；底栏 `#btn-account` 无登录实现、`#btn-manage` 打开管理菜单。
-  - L56–L70 **左侧栏 `#sidebar`：** 默认 `collapsed`。`#left-explorer` 文件树；`#left-search` 搜索框。
-  - L72–L157 **中间 `#center`：**
+  - L39–L62 **活动栏 `#activitybar`：** `data-left=explorer|search` 有 JS；SCM/调试/扩展按钮无 handler；底栏 `#btn-account` 无登录实现、`#btn-manage` 打开管理菜单。
+  - L64–L78 **左侧栏 `#sidebar`：** 默认 `collapsed`。`#left-explorer` 文件树；`#left-search` 搜索框。
+  - L80–L181 **中间 `#center`：**
     - L73 `#tabs` 标签条。
-    - L75–L112 `#welcome` 欢迎页：新建/打开文件/打开文件夹（后两个只点开资源管理器）；「连接到」「生成新工作区」无 handler；`#recent-list`；`#walk-basics` 打开设置；`#btn-agent-window`。
-    - L113–L114 Monaco `#editor` 与 fallback textarea。
-    - L115–L123 `#browser` 内置假浏览器（地址栏、`#browser-page`）。
-    - L125–L140 `#agent-pane` 智能体窗口（独立输入框与 Ask/Plan/Code）。
-    - L142–L145 `#diff-pane` 补丁对比。
-    - L147–L157 `#panel` 终端，默认 hidden。
-  - L168–L242 **右侧 `#rightbar`：**
-    - L169–L172 CHAT / BRIDGE 页签。
-    - L173–L205 `#right-chat`：流、Tasks、chips、`#chat-input`、`#btn-agent-pick`、隐藏 `#mode-select`、`#model-select`、`#think-select`、`#plan-badge`、`#btn-plan-merge`（总结）、发送。
-    - L208–L241 `#right-bridge`：等待文案、任务、log、MCP session 卡（可折叠）。`#btn-stop-bridge-rb`、`#btn-bridge-health`、`#btn-reset-round`（按钮文案 Clear log，title 仍是「清除本轮统计」）、`#stat-calls` / `#stat-avg`（秒）/ `#stat-fail` / `#stat-ok`、`#sess-meta`、`#sess-foot`。
-  - L244–L254 `#statusbar`：`#sb-bridge`；`#sb-ws` 默认 hidden，断线时由 `app.js` 写「事件流重连中」。
-  - L256–L608 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/**多模型博弈** `#page-multimodel`）。**`#page-env` / `#page-stack` 有完整表单**。挂钩/插件/MCP 服务器名单/Voice/Dictation **标明不会执行或未实现**。Codex 页写「没有接 OpenAI Codex OAuth」，按钮 disabled。API Key 提示写 `.webagent/config.json`，不是钥匙串。`#page-multimodel`：启用、合并主模型、合并思考、合并时只读验证、每回合最大分支 2–8 默认 4。Bridge 页含客户端卡片、复制 URL/提示词、`#btn-copy-rules`（默认 hidden）、打开各站点、**本机演示授权**（`#btn-gh-login`，文案写不是 GitHub）以及 **GitHub 验证**（`#btn-gh-token` / `#btn-gh-device` / `#btn-gh-clear`）。隧道 radio：cloudflare 默认会拉 Quick Tunnel；**Named Tunnel** 填 `#named-domain` / `#named-token` 后启动会 `tunnel run --token`；**ngrok** 填 `#ngrok-domain`（可选）/ `#ngrok-token` 后启动会 `ngrok http`。`#btn-reset-secret` 在高级设置。
-  - L610–L629 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`（Plan 文案「分支」）。
+    - L83–L135 `#welcome` 欢迎页：新建/打开文件/打开文件夹（后两个只点开资源管理器）；「连接到」「生成新工作区」无 handler；`#recent-list`；`#walk-basics` 打开设置；**「两条路」标题与两张卡**：`#walk-local-chat`（打开智能体窗口——本机 Chat 直接改工作区、vision 模型可看截图）、`#walk-bridge`（打开设置 Bridge 页——网页 AI 经 MCP、第三阶段签字后截图以 image 内容回传）；`#btn-agent-window`。
+    - L136–L137 Monaco `#editor` 与 fallback textarea。
+    - L138–L147 `#browser` 内置假浏览器（地址栏、`#browser-page`）。
+    - L148–L164 `#agent-pane` 智能体窗口（独立输入框与 Ask/Plan/Code）。
+    - L165–L168 `#diff-pane` 补丁对比。
+    - L170–L180 `#panel` 终端，默认 hidden。
+  - L183–L262 **右侧 `#rightbar`：**
+    - L184–L187 CHAT / BRIDGE 页签。
+    - L188–L223 `#right-chat`：流、Tasks、chips、`#chat-input`、`#btn-agent-pick`、隐藏 `#mode-select`、`#model-select`、`#think-select`、`#plan-badge`、`#btn-plan-merge`（总结）、发送；发送行下新增语义 chip `#chip-local` / `#chip-approval`（本地 / 默认审批，纯展示带 title）；多模型回合消息右下蓝 `branch-pill`（模型名 · 分支 x/y，chat.js 渲染）；`#model-pick-btn` 可搜索弹层取代原生 select 的视觉（`#model-select` 转 hidden 保留状态与 onchange）。
+    - L225–L261 `#right-bridge`：等待文案、任务、log、MCP session 卡（可折叠）。`#btn-stop-bridge-rb`、`#btn-bridge-health`、`#btn-reset-round`（按钮文案 Clear log，title 仍是「清除本轮统计」）、`#stat-calls` / `#stat-avg`（秒）/ `#stat-fail` / `#stat-ok`、`#sess-meta`、`#sess-foot`。
+  - L265–L276 `#statusbar`：`#sb-bridge`；`#sb-ws` 默认 hidden，断线时由 `app.js` 写「事件流重连中」。
+  - L278–L635 **`#modal` 设置：** 左侧 nav 多页（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/Bridge/插件/API/Codex/**多模型博弈** `#page-multimodel`）。概述页顶部 `#two-paths`「两条路」区块：本机 Chat（模型在右侧对话框跑、能动工作区与 computer-use 脚本、vision 模型收得到截图、不用隧道）vs Bridge（模型是网页 AI、经 MCP 工具层、第三阶段用户签字后 run_command 截图以 image 内容回传、要公网地址）。**`#page-env` / `#page-stack` 有完整表单**。挂钩/插件/MCP 服务器名单/Voice/Dictation **标明不会执行或未实现**。Codex 页写「没有接 OpenAI Codex OAuth」，按钮 disabled。API Key 提示写 `.webagent/config.json`，不是钥匙串。API 页有 `#m-vision`「可看图（vision）」勾选：Add API 时写进模型记录，本机 Chat 据此决定截图发不发 `image_url`（computer-use）。`#page-multimodel`：启用、合并主模型（**S4 起**为只读显示框 `#mm-merge-display` + `#btn-mm-pick` 可搜索弹层（带 Current merge model 标记）+ `#btn-mm-active`；原生 `#mm-merge` 转 hidden 保留状态）、合并思考、合并时只读验证、每回合最大分支 2–8 默认 4。Bridge 页含客户端卡片、复制 URL/提示词、`#btn-copy-rules`（默认 hidden）、打开各站点、**本机演示授权**（`#btn-gh-login`，文案写不是 GitHub）以及 **GitHub 验证**（`#btn-gh-token` / `#btn-gh-device` / `#btn-gh-clear`）。隧道 radio：cloudflare 默认会拉 Quick Tunnel；**Named Tunnel** 填 `#named-domain` / `#named-token` 后启动会 `tunnel run --token`；**ngrok** 填 `#ngrok-domain`（可选）/ `#ngrok-token` 后启动会 `ngrok http`。`#btn-reset-secret` 在高级设置。
+  - L637–L656 下拉：`#file-menu`、`#manage-menu`、`#agent-pick-menu`（Plan 文案「分支」）。
   - L630 `#toast`；L631 `<script type="module" src="./app.js">`（原生 ES module，无打包）。
 
 跨模块调用走 `js/state.js` 的 `ui` 袋（避免 import 环），**不改** `/api` 与按钮行为。
@@ -116,7 +116,7 @@
 - **Function `openSite`（L172–L190）**。
 - **Function `startBridge` / `stopBridge` / `paintBridge`** — POST start：named 时带 `#named-domain` / `#named-token`；ngrok 时带 `#ngrok-domain` / `#ngrok-token`；按 `s.tunnel.url` 与 `tunnelProvider` 显示 Quick Tunnel、Named Tunnel、ngrok 或「走当前页面源」；会话说明写成 Connected / Waiting / Stopped。
 - **Function `checkBridgeHealth`** — GET `/health` + `/api/status`，结果写入 `#sess-meta`（Streamable HTTP 那一行），不 toast。`state.stats.healthLine` 直到下次工具调用 / 启停 Bridge / Clear log。不改磁盘。
-- **Function `refreshStatus`** — GET `/api/status`；填 `#model-select`；同步 `state.planRound` 并 `ui.paintPlanComposer`；未触摸过的 `#think-select` 跟 `multiModel.thinkLevel`。
+- **Function `refreshStatus`** — GET `/api/status`；填 `#model-select`（隐藏态，状态源）；同步 `#model-pick-btn` 文案（当前激活模型名）；同步 `state.planRound` 并 `ui.paintPlanComposer`；未触摸过的 `#think-select` 跟 `multiModel.thinkLevel`。
 
 ---
 
@@ -124,8 +124,14 @@
 
 - **文件职责：** 自定义设置、API Provider 表、skills 列表。
 - **Function `rowList`（L4–L7）** / **`paintCustom`（L9–L82）** — `#mm-merge` 用当前对话模型 + 已配置模型列表。`#codex-status` 恒写未实现，不读 `c.codex.loggedIn`。
-- **Function `paintProviderTable`（L73–L111）** — radio 改 `activeModelId`。
-- **Function `loadCustomizations`（L113–L117）** / **`saveCustom`（L119–L129）** — GET/PUT `/api/customizations`。
+- **Function `paintProviderTable`（L83–L123）** — radio 改 `activeModelId`；`m.vision` 且 caps 无 vision 时补一枚 `vision` pill。
+- **Function `loadCustomizations`（L127–L131）** / **`saveCustom`（L133–L143）** — GET/PUT `/api/customizations`；`loadCustomizations` 同时把 `mergeModel` 回填隐藏 `#mm-merge` 与只读显示框 `#mm-merge-display`。
+
+### 📄 文件名：`js/picker.js`
+
+- **文件职责：** 阶段 4（S4-3）可搜索模型选择弹层（ShunCode 对齐），composer 作答模型与合并主模型两处复用。
+- **Function `openModelPicker`（L16–L66）** — 参数 `{ anchor, currentId, onPick, mergeMark }`；行 = 显示名 + `group/modelId` + 上下文 + 能力 pill（vision 补 pill 同 provider 表）；搜索框过滤（name/id/modelId/group）；`mergeMark` 时当前行加「Current merge model」灰注；fixed 定位在 anchor 下方、夹在视口内；Esc/外部点击关；选中回调 `onPick(id)` 后自动关。
+- **Function `closeModelPicker`（L12–L14）** — 关掉唯一实例。
 - **Function `loadSkills`（L131–L139）** — GET `/api/skills`。
 
 ---
@@ -134,7 +140,7 @@
 
 - **文件职责：** 全部 DOM 事件。闭包内 `skillMarkdown` / `SKILL_TPL` / `fillSkillPreview` / `probeProvider`（不导出）。
 - **Function `onClick(id, handler)`（L4–8）** — 节点不存在则跳过，避免 `null.onclick` 把整个 `boot` 打断。
-- **Function `bind`（L10–L571）** — 先 `initTheme`；`#btn-theme` 切换浅/深；`#btn-sess-toggle` 折叠 MCP 卡；`#btn-bridge-health` 调 `checkBridgeHealth`。其余：活动栏、菜单、发送、`#btn-plan-merge`（`planAction:'merge'`）、`#model-select` onchange POST `/api/models` `{ activeModelId }`、`#think-select` 标记 touched、Enter、Bridge、复制 URL/提示词、`#btn-copy-rules`（复制 `rulesText`）、reset-secret、本机演示授权、**验证令牌** `/bridge/token`、设备码 `/bridge/device`+poll、清除 GitHub `/bridge/github/clear`、各 `ui.saveCustom`、技能模板、环境/技术栈、probe/Add API（手动 id 时 caps/context 空，不猜 1.3M）、Codex 钮 toast「未实现，不会假装已登录」、保存多模型博弈（`maxBranches` 默认 4）、终端 `POST /api/tool/call` `run_command` mode code、搜索 `search_files` mode ask、Ctrl/Cmd+S。
+- **Function `bind`（L10–L608）** — 先 `initTheme`；`#btn-theme` 切换浅/深；`#btn-sess-toggle` 折叠 MCP 卡；`#btn-bridge-health` 调 `checkBridgeHealth`。其余：活动栏、菜单、发送、`#btn-plan-merge`（`planAction:'merge'`）、`#model-select` onchange POST `/api/models` `{ activeModelId }`、`#think-select` 标记 touched、Enter、Bridge、复制 URL/提示词、`#btn-copy-rules`（复制 `rulesText`）、reset-secret、本机演示授权、**验证令牌** `/bridge/token`、设备码 `/bridge/device`+poll、清除 GitHub `/bridge/github/clear`、各 `ui.saveCustom`、技能模板、环境/技术栈、probe/Add API（手动 id 时 caps/context 空，不猜 1.3M；`#m-vision` 勾选或 caps 自带 vision → 记录 `vision:true`）、Codex 钮 toast「未实现，不会假装已登录」、保存多模型博弈（`maxBranches` 默认 4）、终端 `POST /api/tool/call` `run_command` mode code、搜索 `search_files` mode ask、Ctrl/Cmd+S、欢迎页两条路卡（`#walk-local-chat` 开智能体窗口、`#walk-bridge` 开设置 Bridge 页）、**S4 模型弹层接线**（`#model-pick-btn` 开 picker → 写回隐藏 `#model-select` 并手动触发 onchange；`#btn-mm-pick` 开 mergeMark picker 写 `#mm-merge`+显示框；`#btn-mm-active` 复位 `active`）。
 
 ---
 

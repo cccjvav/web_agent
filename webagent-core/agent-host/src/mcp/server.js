@@ -7,9 +7,12 @@ const { getInstructions, getBootstrapPrompt } = require('./instructions');
 const { listResources, readResource } = require('./resources');
 const { clipJson, clipText } = require('./budget');
 const { ProtocolError, publicError } = require('./errors');
-const { touch, snapshot, createHttpSession, touchHttpSession, destroyHttpSession } = require('./session');
+const { touch, snapshot, createHttpSession, touchHttpSession, destroyHttpSession, keyForReq, setHttpSessionKey } = require('./session');
 const oauth = require('./oauth');
 const tracker = require('../usage/tracker');
+// 第三阶段（用户 2026-09-07 书面同意）：run_command 截图以 MCP image 内容回给网页 Agent。
+// 白名单与 6MB 上限复用 agent 层 computerUse；授权记录见 review/REPORT_SHUNCODE_S3.md。
+const { collectShot } = require('../agent/computerUse');
 
 const router = express.Router();
 const SUPPORTED_PROTOCOL = ['2024-11-05', '2025-03-26', '2025-06-18'];
@@ -49,6 +52,17 @@ function wantsSse(req) {
 const MAX_SSE = 32;
 const SSE_IDLE_MS = 10 * 60 * 1000;
 let sseOpen = 0;
+
+// 身份感知 touch：握手后同 ip 的后续调用归回具名会话行，不造匿名 mcp@ip 幻影 peer
+function sessTouch(req, extra) {
+  const k = keyForReq(req);
+  return touch(req, k ? Object.assign({ key: k }, extra || {}) : (extra || {}));
+}
+
+function sessionKeyFallback(req) {
+  const client = (req && req.body && req.body.params && req.body.params.clientInfo && req.body.params.clientInfo.name) || 'mcp';
+  return `${client}@${(req && req.ip) || 'local'}`;
+}
 
 function incomingSessionId(req) {
   return String((req.headers && req.headers['mcp-session-id']) || '').trim() || null;
@@ -134,7 +148,8 @@ async function handleRpc(req) {
   switch (method) {
     case 'initialize': {
       const clientInfo = (params && params.clientInfo) || { name: 'External-Agent' };
-      touch(req, { clientInfo, key: `${clientInfo.name}@${req.ip || 'local'}` });
+      const sessInit = touch(req, { clientInfo, key: `${clientInfo.name}@${req.ip || 'local'}` });
+      if (req.mcpSessionId) setHttpSessionKey(req.mcpSessionId, sessInit.key);
       eventBus.broadcast('agent_connected', { clientInfo, ip: req.ip });
       return {
         protocolVersion: pickProtocol(params),
@@ -155,7 +170,7 @@ async function handleRpc(req) {
       return {};
 
     case 'ping': {
-      const sess = touch(req, { incCall: true });
+      const sess = sessTouch(req, { incCall: true });
       return {
         ok: true,
         ts: Date.now(),
@@ -166,7 +181,7 @@ async function handleRpc(req) {
     }
 
     case 'tools/list':
-      touch(req);
+      sessTouch(req);
       return { tools: getToolList() };
 
     case 'tools/call': {
@@ -174,22 +189,43 @@ async function handleRpc(req) {
       if (!name) throw new ProtocolError('E_BAD_ARGS', 'tools/call requires params.name');
       eventBus.broadcast('tool_call_start', { tool: name, args: toolArgs, source: 'Bridge-Remote' });
       const started = Date.now();
+      // 第六阶段：把会话身份（clientName@ip）穿给工具层，多 Agent 任务板靠它记归属
+      const callerKey = keyForReq(req) || sessionKeyFallback(req);
+      const sess0 = touch(req, { key: callerKey });
       try {
-        const result = await callTool(name, toolArgs || {}, remoteToolMode(params), { remote: true });
+        const result = await callTool(name, toolArgs || {}, remoteToolMode(params), { remote: true, callerKey: sess0.key });
         const clipped = clipJson(result);
         const durationMs = Date.now() - started;
-        touch(req, { incCall: true });
+        sessTouch(req, { incCall: true });
         tracker.record({ ok: true });
         eventBus.broadcast('tool_call_end', { tool: name, success: true, durationMs, truncated: Boolean(clipped && clipped._truncated) });
         const text = typeof clipped === 'string' ? clipped : JSON.stringify(clipped, null, 2);
+        const content = [{ type: 'text', text: clipText(text).text }];
+        // 第三阶段（已获用户书面同意）：run_command 产生的截图附为 image 内容。
+        // base64 只进 MCP 响应，不经 eventBus 广播；认不出截图就只回文本，不让调用失败。
+        if (name === 'run_command') {
+          try {
+            const shot = collectShot({
+              command: String((toolArgs && toolArgs.command) || ''),
+              stdout: String((result && result.stdout) || '')
+            });
+            if (shot && shot.dataUrl) {
+              content.push({
+                type: 'image',
+                data: shot.dataUrl.slice(shot.dataUrl.indexOf(';base64,') + 8),
+                mimeType: shot.mime || 'image/png'
+              });
+            }
+          } catch (_) { /* 截图识别失败不影响文本结果 */ }
+        }
         return {
-          content: [{ type: 'text', text: clipText(text).text }],
+          content,
           isError: false
         };
       } catch (err) {
         const durationMs = Date.now() - started;
         const info = publicError(err);
-        touch(req, { incCall: true, incFail: true });
+        sessTouch(req, { incCall: true, incFail: true });
         tracker.record({ ok: false });
         eventBus.broadcast('tool_call_end', { tool: name, success: false, durationMs, error: info });
         return {

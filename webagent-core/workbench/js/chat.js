@@ -90,6 +90,13 @@ export function renderMsg(m) {
   }
   wrap.className = 'msg assistant';
   wrap.innerHTML = `<div>${renderMd(m.text || '')}</div>`;
+  if (m.branch) {
+    const b = m.branch;
+    const row = document.createElement('div');
+    row.className = 'branch-pill-row';
+    row.innerHTML = `<span class="branch-pill">${escapeHtml(b.modelName || '')} · 分支 ${escapeHtml(String(b.index))}/${escapeHtml(String(b.max))}${b.simulated ? ' · 本机草案' : ''}</span>`;
+    wrap.appendChild(row);
+  }
   return wrap;
 }
 
@@ -234,10 +241,7 @@ export function handleEvent(ev) {
     state.planRound = ev.round;
     paintPlanComposer();
   } else if (ev.type === 'message') {
-    const extra = ev.branch
-      ? `\n\n*${ev.branch.modelName || ''} · 分支 ${ev.branch.index}/${ev.branch.max}${ev.branch.simulated ? ' · 本机草案' : ''}*`
-      : '';
-    pushMsg({ kind: 'assistant', text: (ev.text || '') + extra });
+    pushMsg({ kind: 'assistant', text: ev.text || '', branch: ev.branch || null });
   } else if (ev.type === 'error') pushMsg({ kind: 'assistant', text: '错误：' + ev.message });
 }
 

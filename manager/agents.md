@@ -20,4 +20,4 @@
 ## 工具偏好
 - 壳 = workbench/extension，引擎 = agent-host
 - Windows 用户指南用 CMD，不要改成 bash
-- Bridge 默认不把桌面截图回给网页模型
+- Bridge 会把 run_command 的桌面截图回给网页模型（第三阶段，用户 2026-09-07 书面签字）；computerUse 白名单 / 6MB 边界不变

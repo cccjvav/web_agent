@@ -4,6 +4,18 @@ const { config } = require('../config');
 const { formatWorkspaceContext, resolveEnvironment } = require('../models/profile');
 const { listSkills } = require('../tools/skills');
 const { toolLabel } = require('./toolLabel');
+const { collectShot } = require('./computerUse');
+
+// 模型会不会看图：显式 vision 标记（设置页 Add API 勾选）或 caps 里带 vision。
+// 探测不到的纯文本 Endpoint 一律按「不会看图」处理——宁可诚实拒绝，不假装 OCR。
+function modelSeesImages(model) {
+  if (!model) return false;
+  if (model.vision === true) return true;
+  const caps = Array.isArray(model.caps)
+    ? model.caps
+    : (Array.isArray(model.capabilities) ? model.capabilities : []);
+  return caps.some((c) => /vision/i.test(String(c)));
+}
 
 function systemPrompt(mode) {
   const lock =
@@ -134,6 +146,35 @@ async function runOpenAI({
             tool_call_id: tc.id,
             content: JSON.stringify(result).slice(0, 12000)
           });
+          // 本机 Chat 的「眼睛」：run_command 产生截图（如 computer-use snap.ps1 -Out …）时，
+          // 下一轮把 PNG 作为 image_url 部分发给模型。文本通道会被 12000 字截断，不能当眼睛。
+          // MCP/Bridge 不走这里：tools/call 仍只回 type:'text'。
+          if (name === 'run_command') {
+            const shot = collectShot({
+              command: String(args.command || ''),
+              stdout: String((result && result.stdout) || '')
+            });
+            if (shot && shot.tooBig) {
+              const note = `截图 ${shot.rel} 约 ${Math.round(shot.bytes / 1048576)}MB，超过 6MB 上限，未附加。请让用户降低 snap.ps1 -Quality 或改截更小窗口；如实说明你看不到这张图。`;
+              messages.push({ role: 'user', content: `[系统提示] ${note}` });
+              send('status', { text: `截图过大未附加：${shot.rel}` });
+            } else if (shot && shot.dataUrl) {
+              if (modelSeesImages(model)) {
+                messages.push({
+                  role: 'user',
+                  content: [
+                    { type: 'text', text: `computer-use 截图 ${shot.rel}（${shot.bytes} 字节）已作为图片附上。看图决策；坐标用这张图的像素空间传给 mark/act-bg。` },
+                    { type: 'image_url', image_url: { url: shot.dataUrl } }
+                  ]
+                });
+                send('status', { text: `已把截图作为图片发给模型：${shot.rel}` });
+              } else {
+                const honest = '截图已生成，但当前模型未标记为可看图（设置 → API → Add API 时勾选「可看图 vision」）。computer-use 看不了屏幕；请把这一点如实转告用户，不要假装看到了画面。';
+                messages.push({ role: 'user', content: `[系统提示] ${honest}` });
+                send('status', { text: '当前模型不会看图：computer-use 看不了屏幕（设置 → API 换标记 vision 的模型）' });
+              }
+            }
+          }
         } catch (err) {
           const durationMs = Date.now() - t0;
           send('tool', { name, args, error: err.message, ok: false, durationMs, label: toolLabel(name, null, false) });
@@ -156,4 +197,4 @@ async function runOpenAI({
   return { text };
 }
 
-module.exports = { runOpenAI, systemPrompt, temperatureFor };
+module.exports = { runOpenAI, systemPrompt, temperatureFor, modelSeesImages };

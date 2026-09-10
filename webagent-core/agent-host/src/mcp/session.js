@@ -46,6 +46,11 @@ function snapshot() {
   };
 }
 
+// 第六阶段审计 F6：snapshot() 的 sessions 截断到 8 供界面用；板工具要全量在场者
+function allSessions() {
+  return [...sessions.values()].sort((a, b) => String(b.lastSeen).localeCompare(String(a.lastSeen)));
+}
+
 function pruneHttpSessions() {
   const now = Date.now();
   for (const [id, rec] of httpSessions) {
@@ -86,6 +91,32 @@ function destroyHttpSession(id) {
   return httpSessions.delete(id);
 }
 
+function setHttpSessionKey(id, key) {
+  const rec = httpSessions.get(id);
+  if (rec) rec.key = key;
+  return Boolean(rec);
+}
+
+// 第六阶段：tools/call 里没有 clientInfo，靠会话 id（initialize 时绑过 key）或 ip 回落认人
+function keyForReq(req) {
+  const id = req && req.headers && req.headers['mcp-session-id'];
+  if (id) {
+    const rec = httpSessions.get(id);
+    if (rec && rec.key) return rec.key;
+  }
+  const ip = (req && (req.ip || (req.headers && req.headers['x-forwarded-for']))) || 'local';
+  let best = null;
+  let bestNamed = null;
+  for (const s of sessions.values()) {
+    if (String(s.key).endsWith('@' + ip)) {
+      if (!best || String(s.lastSeen) > String(best.lastSeen)) best = s;
+      // 具名行优先：握手前留下的匿名 mcp@ip 行不得盖过已握手客户端
+      if (!String(s.key).startsWith('mcp@') && (!bestNamed || String(s.lastSeen) > String(bestNamed.lastSeen))) bestNamed = s;
+    }
+  }
+  return (bestNamed || best) ? (bestNamed || best).key : null;
+}
+
 function reset() {
   sessions.clear();
   httpSessions.clear();
@@ -96,6 +127,9 @@ module.exports = {
   touch,
   snapshot,
   sessionKey,
+  keyForReq,
+  allSessions,
+  setHttpSessionKey,
   reset,
   createHttpSession,
   touchHttpSession,

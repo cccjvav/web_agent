@@ -25,6 +25,7 @@ Thumbs.db
 **/.webagent/config.json
 **/.webagent/read-hashes.json
 **/.webagent/usage.json
+**/.webagent/board.json
 
 # Admin host local token + reports
 webagent-core/admin-host/data/
@@ -37,3 +38,6 @@ image-search/
 
 # project-manager privacy map (real secrets / PII)
 manager/privacy.md
+
+# installer build output (never part of the product)
+installer/output/

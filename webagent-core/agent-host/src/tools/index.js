@@ -11,6 +11,7 @@ const { ProtocolError } = require('../mcp/errors');
 const { clipJson } = require('../mcp/budget');
 const { gitStatus, gitDiff } = require('./gitOps');
 const { loadSkill } = require('./skills');
+const boardTools = require('./board');
 const { workspaceInfo } = require('./workspaceInfo');
 const { resolveToolName, normalizeToolArgs } = require('./normalize');
 const { assertCommandAllowed } = require('./dangerous');
@@ -209,6 +210,58 @@ const TOOLS = [
       }
     },
     handler: gitDiff
+  }),
+  tool({
+    name: 'peers_list',
+    aliases: [],
+    description: 'List web agents (MCP clients) currently connected to this Bridge: key (client@ip), connectedAt/lastSeen, call counters, alive flag (10-min window). Use it to know who else is here before dividing work.',
+    mode: ['ask', 'plan', 'code'],
+    inputSchema: { type: 'object', properties: {} },
+    handler: boardTools.peersList
+  }),
+  tool({
+    name: 'board_list',
+    aliases: [],
+    description: 'Read the shared temporary task board (.webagent/board.json): tasks with id/title/status(open|claimed|doing|done|failed)/owner and last notes. Always check it before starting work; claim with board_claim before doing a task.',
+    mode: ['ask', 'plan', 'code'],
+    inputSchema: { type: 'object', properties: {} },
+    handler: boardTools.boardList
+  }),
+  tool({
+    name: 'board_create',
+    aliases: [],
+    description: 'Add a task to the shared board (status open, unowned). title required (<=200 chars); optional note. The board is temporary per-workspace coordination metadata only — never put secrets in it.',
+    mode: ['ask', 'plan', 'code'],
+    inputSchema: {
+      type: 'object',
+      properties: { title: { type: 'string' }, note: { type: 'string' } },
+      required: ['title']
+    },
+    handler: boardTools.boardCreate
+  }),
+  tool({
+    name: 'board_claim',
+    aliases: [],
+    description: 'Atomically claim an open board task (owner defaults to your session key). If another agent claimed it first you get ok:false E_TAKEN with the current owner — pick another task. Claiming prevents double work; it is assignment, not collaboration.',
+    mode: ['ask', 'plan', 'code'],
+    inputSchema: {
+      type: 'object',
+      properties: { id: { type: 'string' }, owner: { type: 'string', description: 'Override owner key; defaults to caller session key.' } },
+      required: ['id']
+    },
+    handler: boardTools.boardClaim
+  }),
+  tool({
+    name: 'board_update',
+    aliases: [],
+    description: 'Update a board task: status changes are OWNER-only (claimed/doing/done/failed, or open = release back to pool); any connected agent may append a short progress note (<=500 chars) so peers know what you are doing.',
+    mode: ['ask', 'plan', 'code'],
+    inputSchema: {
+      type: 'object',
+      properties: { id: { type: 'string' }, status: { type: 'string', enum: ['open', 'claimed', 'doing', 'done', 'failed'] }, note: { type: 'string' } },
+      required: ['id']
+    },
+    handler: boardTools.boardUpdate
   }),
   tool({
     name: 'load_skill',
@@ -446,7 +499,7 @@ async function callTool(name, args = {}, currentMode = null, opts = {}) {
     const t = Number(input.timeoutSec);
     input.timeoutSec = Math.min(60, Number.isFinite(t) && t > 0 ? t : 30);
   }
-  const result = await toolDef.handler(input);
+  const result = await toolDef.handler(input, opts);
   if (result && result.isTimeout) {
     result.code = 'E_TIMEOUT';
     result.suggestedWaitMs = 0;

@@ -8,9 +8,9 @@
 - **创建时间**：2026-09
 
 ## 当前状态
-- **阶段**：S1-本机 Chat 视觉与交接（进行中）
-- **正在做**：`review/PROMPT_SHUNCODE.md` 第一阶段；已接入官方 project-manager 规则
-- **阻塞项**：本机 Chat 尚无 image_url；Bridge 工具结果只有 type:text
+- **阶段**：S4-终端化（代码完成：S4-1 安装包 4a85ecf / S4-2 默认壳+抛光 8a73df0 / S4-3 模型弹层 ce6d52f；S1–S3 已完成）
+- **正在做**：阶段 6 多 Agent 任务板代码面完成（C1 `507ceb9` + C2 skill/文档）；等真机跑 CHECKLIST D1–D13 反馈
+- **阻塞项**：无代码阻塞；真机验收唯一基线 review/CHECKLIST_WINDOWS.md（A/B 继承项 + S4 D 节 D1–D8），待 Windows 执行
 
 ## 已完成阶段摘要
 | 阶段 | 做了什么 | 详情 |
@@ -18,6 +18,9 @@
 | 审查闭环 | V4-1 / V3-2 / V3-4，过程文档进 review/ | → review/README.md |
 | computer-use | 仓库根脚本 + load_skill 按名 | → computer-use/SKILL.md |
 | 项目管家 | 官方 SKILL 进 project-manager/ | → manager/stages/s1-handoff.md |
+| ShunCode 第一阶段 | 本机 Chat「眼+手」：vision 模型收截图 image_url、纯文本模型诚实拒看、Bridge 恒 text 零改动 | → review/REPORT_SHUNCODE_S1.md |
+| ShunCode 第二阶段 | 欢迎页/设置「两条路」分清（本机 Chat vs Bridge）+ README 行号全量校正 | → review/REPORT_SHUNCODE_S2.md |
+| ShunCode 第三阶段 | Bridge 把 run_command 截图以 MCP image 内容回传（书面签字存档）；活表面文案全量翻转 | → review/REPORT_SHUNCODE_S3.md |
 
 ## 导航规则
 - 为什么两端口/隧道/沙箱 → `架构导读.md`
@@ -25,5 +28,12 @@
 - Skill / computer-use → `技能使用指南.md`
 - 有意不做 → `架构导读.md` 第 12 节、`SECURITY.md`
 - 往 ShunCode 对齐 → `review/PROMPT_SHUNCODE.md`
+- 中断恢复 / 施工进度 / 第一阶段明细 → `review/REPORT_SHUNCODE_S1.md`（含恢复锚点表）
+- 第二阶段（两条路会话壳）明细 → `review/REPORT_SHUNCODE_S2.md` 与 `manager/stages/s2-shell.md`
+- 第三阶段（Bridge 回图 + 授权原文）→ `review/REPORT_SHUNCODE_S3.md` 与 `manager/stages/s3-bridge-image.md`
+- 沙箱回收、测试假绿等踩坑经验 → `manager/docs/experience.md`
 - 项目约定 → `manager/agents.md`
 - 规则全文（load_skill 截断时）→ `manager/SKILL.md` 或 `project-manager/SKILL.md`
+
+## 遗留问题
+→ manager/docs/experience.md#遗留问题追踪

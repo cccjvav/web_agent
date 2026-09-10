@@ -74,6 +74,8 @@ export function paintCustom() {
     ).join('');
     mergeSel.innerHTML = `<option value="active">用当前对话模型</option><option value="auto">用当前对话模型</option>${extras}`;
     if (mm.mergeModel) mergeSel.value = mm.mergeModel;
+    const disp = $('#mm-merge-display');
+    if (disp) disp.value = mm.mergeModel && mm.mergeModel !== 'active' && mm.mergeModel !== 'auto' ? mm.mergeModel : '';
   }
   if ($('#mm-think') && mm.thinkLevel) $('#mm-think').value = mm.thinkLevel;
   if ($('#mm-readonly') && typeof mm.mergeAllowsRead === 'boolean') $('#mm-readonly').checked = mm.mergeAllowsRead;
@@ -95,7 +97,9 @@ export function paintProviderTable() {
   });
   box.innerHTML = Object.keys(groups).map((g) => {
     const rows = groups[g].map((m) => {
-      const caps = (m.caps || []).map((c) => `<span class="cap-pill">${escapeHtml(c)}</span>`).join('') || '—';
+      const capList = (m.caps || []).slice();
+      if (m.vision && !capList.some((c) => /vision/i.test(String(c)))) capList.push('vision');
+      const caps = capList.map((c) => `<span class="cap-pill">${escapeHtml(c)}</span>`).join('') || '—';
       const checked = m.id === (state.status && state.status.activeModelId) ? 'checked' : '';
       return `<tr>
         <td><label><input type="radio" name="active-model" value="${escapeHtml(m.id)}" ${checked} /> ${escapeHtml(m.name || m.modelId)}</label></td>
