@@ -1,9 +1,10 @@
 {
   "name": "webagent-workspace-target",
   "version": "1.0.0",
-  "description": "Live workspace inside Web Agent Editor",
-  "main": "src/calculator.js",
+  "description": "Live workspace with a pure SVG and native SMIL pelican cycling scene.",
+  "main": "server.js",
   "scripts": {
-    "test": "node tests/calculator.test.js"
+    "start": "node server.js",
+    "test": "node tests/calculator.test.js && node tests/page.test.js"
   }
 }

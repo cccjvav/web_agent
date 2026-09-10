@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f3efe7" />
+    <meta
+      name="description"
+      content="一只鹈鹕的海边骑行日志：纯 SVG 与原生 SMIL 动画小站。"
+    />
+    <title>海风骑行 · 鹈鹕骑自行车</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="topbar" aria-label="主导航">
+        <a class="brand" href="#top" aria-label="海风骑行首页">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 44 44" role="img">
+              <circle cx="22" cy="22" r="21" fill="#173c4d" />
+              <path
+                d="M13 24c4-7 8-10 14-9 4 .7 6 3 5 6-1 3-5 4-10 3l-5 8"
+                fill="none"
+                stroke="#f8d486"
+                stroke-linecap="round"
+                stroke-width="2.8"
+              />
+              <path d="m25 20 9 3-9 2" fill="#ed795f" />
+              <circle cx="26.5" cy="17.5" r="1.5" fill="#fffaf1" />
+            </svg>
+          </span>
+          <span class="brand-copy">
+            <strong>海风骑行</strong>
+            <small>SEABREEZE CLUB</small>
+          </span>
+        </a>
+
+        <nav class="nav-links" aria-label="页面区域">
+          <a class="active" href="#ride">今日路线</a>
+          <a href="#field-notes">田野笔记</a>
+          <a href="#about">关于车队</a>
+        </nav>
+
+        <div class="top-actions">
+          <span class="live-pill"><span class="live-dot"></span>现场记录中</span>
+          <button class="icon-button" id="pauseButton" type="button" aria-pressed="false">
+            <span class="pause-icon" aria-hidden="true"><i></i><i></i></span>
+            <span id="pauseLabel">暂停动画</span>
+          </button>
+          <button class="replay-button" id="replayButton" type="button">
+            <span aria-hidden="true">↻</span>
+            重播
+          </button>
+        </div>
+      </header>
+
+      <main id="top">
+        <section class="hero" id="ride" aria-labelledby="hero-title">
+          <div class="hero-copy">
+            <p class="eyebrow"><span class="eyebrow-line"></span> COASTAL RIDE / 07:24 AM</p>
+            <h1 id="hero-title">把风装进<br /><em>车篮里。</em></h1>
+            <p class="hero-intro">
+              今天的领骑员是一只不太会刹车的鹈鹕。沿着潮线向东，风从左耳穿过，下一站是灯塔。
+            </p>
+            <div class="route-meta">
+              <div class="route-avatar" aria-hidden="true">
+                <svg viewBox="0 0 50 50">
+                  <circle cx="25" cy="25" r="25" fill="#f8d486" />
+                  <path d="M11 30c3-9 8-14 15-14 5 0 9 3 9 7 0 4-4 5-9 4l-5 9" fill="#fbfaf3" />
+                  <path d="m27 21 13 4-13 4" fill="#ed795f" />
+                  <circle cx="29" cy="18.5" r="1.8" fill="#173c4d" />
+                </svg>
+              </div>
+              <div>
+                <span class="meta-label">今日领骑</span>
+                <strong>阿浪 · 斑嘴鹈鹕</strong>
+              </div>
+              <span class="verified" title="已确认路线">✓</span>
+            </div>
+            <a class="scroll-cue" href="#field-notes">
+              <span class="scroll-arrow">↓</span>
+              <span>向下查看航迹</span>
+            </a>
+          </div>
+
+          <div class="scene-card" aria-label="鹈鹕骑自行车的海边动画场景">
+            <div class="scene-topline">
+              <div class="scene-location"><span class="location-pin">⌖</span> 北湾 · 潮汐公路</div>
+              <div class="scene-status"><span></span> LIVE / 01:42</div>
+            </div>
+            <div class="scene-window">
+              <svg
+                id="rideScene"
+                class="ride-scene"
+                viewBox="0 0 1100 690"
+                role="img"
+                aria-labelledby="sceneTitle sceneDesc"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <title id="sceneTitle">阿浪骑着自行车穿过北湾海岸</title>
+                <desc id="sceneDesc">太阳、云朵、海浪与道路持续移动，鹈鹕踩着自行车向右前进。</desc>
+                <defs>
+                  <linearGradient id="skyGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#99dce0" />
+                    <stop offset="0.62" stop-color="#d9f1e6" />
+                    <stop offset="1" stop-color="#f7dfb1" />
+                  </linearGradient>
+                  <linearGradient id="seaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#4db9bb" />
+                    <stop offset="1" stop-color="#157d91" />
+                  </linearGradient>
+                  <linearGradient id="roadGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#d9a873" />
+                    <stop offset="1" stop-color="#b9775a" />
+                  </linearGradient>
+                  <linearGradient id="hillBack" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#74b7a5" />
+                    <stop offset="1" stop-color="#418d83" />
+                  </linearGradient>
+                  <linearGradient id="hillFront" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#4f9d8f" />
+                    <stop offset="1" stop-color="#2c716f" />
+                  </linearGradient>
+                  <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0" stop-color="#fff6c5" stop-opacity=".95" />
+                    <stop offset=".55" stop-color="#ffe19a" stop-opacity=".48" />
+                    <stop offset="1" stop-color="#ffe19a" stop-opacity="0" />
+                  </radialGradient>
+                  <filter id="softShadow" x="-30%" y="-30%" width="160%" height="180%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="9" result="blur" />
+                    <feOffset dy="8" result="offsetBlur" />
+                    <feComponentTransfer><feFuncA type="linear" slope=".22" /></feComponentTransfer>
+                    <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                  <filter id="sunBlur" x="-100%" y="-100%" width="300%" height="300%">
+                    <feGaussianBlur stdDeviation="14" />
+                  </filter>
+                  <clipPath id="sceneClip"><rect width="1100" height="690" rx="24" /></clipPath>
+                </defs>
+
+                <g clip-path="url(#sceneClip)">
+                  <!-- morning sky -->
+                  <rect width="1100" height="690" fill="url(#skyGradient)" />
+                  <circle cx="875" cy="125" r="118" fill="url(#sunGlow)" filter="url(#sunBlur)" />
+                  <circle cx="875" cy="125" r="47" fill="#ffda82" />
+                  <circle cx="862" cy="112" r="36" fill="#ffe7a4" opacity=".42" />
+
+                  <!-- drifting clouds, animated with native SMIL -->
+                  <g class="clouds cloud-one" opacity=".72">
+                    <animateTransform attributeName="transform" type="translate" from="-330 0" to="1190 0" dur="42s" repeatCount="indefinite" />
+                    <path d="M72 142c0-18 15-32 34-32 7-25 30-41 57-41 28 0 51 18 57 44 5-2 11-3 17-3 24 0 44 19 44 43H72Z" fill="#fffdf1" />
+                  </g>
+                  <g class="clouds cloud-two" opacity=".4">
+                    <animateTransform attributeName="transform" type="translate" from="-510 0" to="1260 0" dur="58s" repeatCount="indefinite" />
+                    <path d="M70 220c0-13 11-24 25-24 6-20 24-32 45-32 22 0 40 14 45 34 5-2 9-2 14-2 19 0 34 15 34 34H70Z" fill="#fffdf1" />
+                  </g>
+
+                  <!-- distant birds -->
+                  <g fill="none" stroke="#317d83" stroke-linecap="round" stroke-width="4" opacity=".6">
+                    <path d="M180 180q12-12 24 0 12-12 24 0" />
+                    <path d="M274 126q9-9 18 0 9-9 18 0" />
+                    <path d="M423 203q11-11 22 0 11-11 22 0" />
+                  </g>
+
+                  <!-- layered coastal hills -->
+                  <path d="M-40 382c113-70 179-65 272-12 82 47 144 40 223-14 88-60 139-76 232-21 86 51 166 45 249-11 62-42 123-48 204-2v164H-40Z" fill="url(#hillBack)" />
+                  <path d="M-40 430c100-66 169-54 257-5 79 44 148 33 222-18 97-66 155-49 222 0 78 57 150 58 237 3 69-44 140-46 242 19v125H-40Z" fill="url(#hillFront)" opacity=".93" />
+                  <path d="M0 435c100-41 177-26 250 11 87 45 155 25 227-20 82-50 141-36 209 14 90 67 170 53 250 2 58-37 111-39 164-15v91H0Z" fill="#285f68" opacity=".28" />
+
+                  <!-- sea and moving wave marks -->
+                  <path d="M0 402h1100v174H0Z" fill="url(#seaGradient)" />
+                  <g fill="none" stroke-linecap="round">
+                    <g stroke="#a5e1d2" stroke-width="4" opacity=".55">
+                      <path d="M-90 440h112m38 0h190m62 0h145m58 0h202m46 0h194">
+                        <animateTransform attributeName="transform" type="translate" values="0 0; 100 0; 0 0" dur="8s" repeatCount="indefinite" />
+                      </path>
+                      <path d="M-40 481h170m48 0h84m63 0h180m50 0h130m48 0h190">
+                        <animateTransform attributeName="transform" type="translate" values="0 0; -120 0; 0 0" dur="9s" repeatCount="indefinite" />
+                      </path>
+                      <path d="M35 526h112m52 0h224m48 0h96m53 0h240m55 0h120">
+                        <animateTransform attributeName="transform" type="translate" values="0 0; 70 0; 0 0" dur="7s" repeatCount="indefinite" />
+                      </path>
+                    </g>
+                    <g stroke="#e8f5d6" stroke-width="3" opacity=".35">
+                      <path d="M60 419h58m22 0h74m35 0h50m210 0h64m30 0h102m42 0h64" />
+                      <path d="M18 503h78m25 0h145m31 0h85m191 0h128m28 0h120" />
+                    </g>
+                  </g>
+                  <path d="M0 567h1100v123H0Z" fill="url(#roadGradient)" />
+                  <path d="M0 568h1100" stroke="#f5c781" stroke-width="8" opacity=".65" />
+
+                  <!-- road motion: the dashed center line loops every 200 units -->
+                  <g fill="none" stroke="#f8d796" stroke-linecap="round" stroke-width="9" opacity=".9">
+                    <g>
+                      <path d="M-200 640h96m104 0h96m104 0h96m104 0h96m104 0h96m104 0h96m104 0h96m104 0h96m104 0h96" />
+                      <animateTransform attributeName="transform" type="translate" from="0 0" to="-200 0" dur="1.6s" repeatCount="indefinite" />
+                    </g>
+                  </g>
+                  <path d="M0 574c183-11 310-4 450 6 237 17 415 11 650-8" fill="none" stroke="#9c5d51" stroke-width="3" opacity=".55" />
+
+                  <!-- tiny speed marks behind the bicycle -->
+                  <g class="speed-marks" fill="none" stroke="#fff2cd" stroke-linecap="round">
+                    <path d="M220 515h72" stroke-width="6"><animate attributeName="opacity" values="0;.85;0" dur="1.4s" repeatCount="indefinite" /></path>
+                    <path d="M280 548h55" stroke-width="4"><animate attributeName="opacity" values="0;.6;0" dur="1.7s" begin=".4s" repeatCount="indefinite" /></path>
+                    <path d="M352 492h38" stroke-width="5"><animate attributeName="opacity" values="0;.7;0" dur="1.2s" begin=".2s" repeatCount="indefinite" /></path>
+                  </g>
+
+                  <!-- bicycle shadow -->
+                  <ellipse cx="625" cy="631" rx="273" ry="23" fill="#143e4d" opacity=".22">
+                    <animate attributeName="rx" values="273;252;273" dur="1.8s" repeatCount="indefinite" />
+                  </ellipse>
+
+                  <!-- bicycle frame -->
+                  <g id="bicycle" stroke="#173c4d" stroke-linecap="round" stroke-linejoin="round">
+                    <!-- spinning wheels -->
+                    <g class="wheel" fill="none" stroke="#173c4d">
+                      <g>
+                        <circle cx="465" cy="535" r="91" stroke-width="10" />
+                        <circle cx="465" cy="535" r="78" stroke="#f5c879" stroke-width="3" opacity=".8" />
+                        <path d="M465 444v182M374 535h182M401 471l128 128M529 471 401 599" stroke-width="2.5" opacity=".75" />
+                        <circle cx="465" cy="535" r="10" fill="#ed795f" stroke-width="5" />
+                        <animateTransform attributeName="transform" type="rotate" from="0 465 535" to="360 465 535" dur="1.25s" repeatCount="indefinite" />
+                      </g>
+                      <g>
+                        <circle cx="788" cy="535" r="91" stroke-width="10" />
+                        <circle cx="788" cy="535" r="78" stroke="#f5c879" stroke-width="3" opacity=".8" />
+                        <path d="M788 444v182M697 535h182M724 471l128 128M852 471 724 599" stroke-width="2.5" opacity=".75" />
+                        <circle cx="788" cy="535" r="10" fill="#ed795f" stroke-width="5" />
+                        <animateTransform attributeName="transform" type="rotate" from="0 788 535" to="360 788 535" dur="1.25s" repeatCount="indefinite" />
+                      </g>
+                    </g>
+
+                    <!-- frame geometry -->
+                    <path d="M465 535 585 423 680 535 465 535 788 535 715 414 680 535" fill="#f4c879" fill-opacity=".19" stroke-width="9" />
+                    <path d="M585 423h-42" stroke-width="9" />
+                    <path d="M715 414c20-20 34-20 51-11" fill="none" stroke-width="8" />
+                    <path d="M766 404v-22" stroke-width="8" />
+                    <path d="M746 382h38" stroke-width="8" />
+                    <path d="M585 423 574 393" stroke-width="8" />
+                    <path d="M554 392h42" stroke-width="8" />
+                    <!-- crank and pedals -->
+                    <circle cx="680" cy="535" r="18" fill="#f8d486" stroke-width="6" />
+                    <path d="M680 535 708 512m-38 48-20 19" stroke-width="7" />
+                    <path d="M702 509h28m-55 54h-29" stroke-width="6" />
+                  </g>
+
+                  <!-- pelican + subtle bounce, all motion is native SVG SMIL -->
+                  <g id="pelican" filter="url(#softShadow)">
+                    <animateTransform attributeName="transform" type="translate" values="0 0; 0 -6; 0 0; 0 4; 0 0" dur="2.35s" repeatCount="indefinite" />
+
+                    <!-- far leg -->
+                    <g transform="translate(625 347)" fill="none" stroke="#e98242" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M0 0 36 93 3 178" stroke-width="12" />
+                      <path d="M3 178-23 178" stroke-width="8" />
+                      <animateTransform attributeName="transform" type="rotate" additive="sum" values="-13; 13; -13" dur="1.25s" repeatCount="indefinite" />
+                    </g>
+                    <!-- near leg -->
+                    <g transform="translate(659 349)" fill="none" stroke="#f0914d" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M0 0-28 89 13 174" stroke-width="13" />
+                      <path d="M13 174 40 174" stroke-width="8" />
+                      <animateTransform attributeName="transform" type="rotate" additive="sum" values="13; -13; 13" dur="1.25s" repeatCount="indefinite" />
+                    </g>
+
+                    <!-- plump body -->
+                    <path d="M544 273c7-54 51-86 107-80 59 6 92 52 83 111-7 47-43 76-94 79-58 4-104-35-96-110Z" fill="#fffaf0" stroke="#173c4d" stroke-width="6" />
+                    <path d="M563 299c13 30 42 53 83 57 25 2 47-3 64-14-16 29-45 43-82 41-42-2-70-28-78-63Z" fill="#f6e7d2" opacity=".85" />
+                    <!-- wing: its small flap gives the ride a breezy rhythm -->
+                    <g>
+                      <path d="M584 260c34-32 80-27 103 1 19 23 15 54-10 70-30 19-69 4-90-28-13-19-14-31-3-43Z" fill="#f4e7d4" stroke="#173c4d" stroke-width="5" />
+                      <path d="M597 275c20 16 39 27 69 31" fill="none" stroke="#d7b995" stroke-width="4" stroke-linecap="round" />
+                      <path d="M593 288c17 15 32 23 54 28" fill="none" stroke="#d7b995" stroke-width="3" stroke-linecap="round" />
+                      <animateTransform attributeName="transform" type="rotate" values="0 635 274; -5 635 274; 0 635 274; 4 635 274; 0 635 274" dur="2.1s" repeatCount="indefinite" />
+                    </g>
+
+                    <!-- long neck and head -->
+                    <path d="M657 276c21-18 35-42 34-70-1-27-17-45-4-71 10-20 35-28 57-18 22 10 29 31 19 50-9 17-28 24-34 40-9 25 15 52-6 81-13 17-35 26-56 21Z" fill="#fffaf0" stroke="#173c4d" stroke-width="6" />
+                    <path d="M670 177c13-24 36-31 54-19 8 5 12 12 14 20-15-10-32-11-45 1-9 9-14 21-15 36-9-10-13-23-8-38Z" fill="#f4e7d4" opacity=".9" />
+                    <path d="M682 141c0-28 22-47 50-44 27 3 42 25 35 49-7 23-30 34-57 27-18-5-28-16-28-32Z" fill="#fffaf0" stroke="#173c4d" stroke-width="6" />
+                    <!-- beak / pouch -->
+                    <path d="M747 139c36-4 81 4 117 23-25 26-74 32-119 10-10-5-13-24 2-33Z" fill="#ee8052" stroke="#173c4d" stroke-width="6" />
+                    <path d="M751 159c32 9 67 9 102 3" fill="none" stroke="#bd5949" stroke-width="4" stroke-linecap="round" />
+                    <path d="M852 158c7 0 11 2 14 5-8 6-15 8-24 8" fill="#d8664f" />
+                    <!-- face -->
+                    <circle cx="724" cy="135" r="7" fill="#173c4d" />
+                    <circle cx="726" cy="132" r="2.4" fill="#fffaf0" />
+                    <path d="M705 113q18-11 36-2" fill="none" stroke="#d7b995" stroke-linecap="round" stroke-width="4" />
+                    <!-- a tiny scarf makes the character memorable -->
+                    <path d="M672 214c18 9 35 10 50 4l-6 23c-17 6-31 4-45-4Z" fill="#ed795f" stroke="#173c4d" stroke-width="4" />
+                    <path d="m705 236 23 31-23-8" fill="#ed795f" stroke="#173c4d" stroke-linejoin="round" stroke-width="4" />
+                  </g>
+
+                  <!-- foreground salt dots -->
+                  <g fill="#fff1c9" opacity=".75">
+                    <circle cx="128" cy="599" r="4" /><circle cx="180" cy="614" r="3" /><circle cx="916" cy="602" r="4" /><circle cx="970" cy="584" r="3" /><circle cx="1042" cy="620" r="4" />
+                  </g>
+                </g>
+              </svg>
+              <div class="scene-sticker sticker-one">风力 3 级</div>
+              <div class="scene-sticker sticker-two">好天气 !</div>
+            </div>
+            <div class="scene-caption">
+              <span><strong>01</strong> / 03　穿过海岸线</span>
+              <span class="caption-rule"></span>
+              <span>向东 · 还有 8.6 km</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="field-notes" id="field-notes" aria-labelledby="notes-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow"><span class="eyebrow-line"></span> FIELD NOTES / 今日观测</p>
+              <h2 id="notes-title">沿途的小事，<em>都在发光。</em></h2>
+            </div>
+            <p class="section-note">骑慢一点，才能听见海鸥<br />在风里的拐弯。</p>
+          </div>
+          <div class="stats-grid">
+            <article class="stat-card stat-route">
+              <div class="stat-icon icon-route" aria-hidden="true"><span></span><span></span><span></span></div>
+              <p>今日航迹</p>
+              <strong>12.8 <small>km</small></strong>
+              <div class="mini-route"><i></i><i></i><i></i><i></i><b></b></div>
+              <span class="stat-foot">已完成 04.2 km</span>
+            </article>
+            <article class="stat-card stat-wind">
+              <div class="stat-icon icon-wind" aria-hidden="true"><span></span><span></span><span></span></div>
+              <p>海风方向</p>
+              <strong>东南风 <small>↗</small></strong>
+              <div class="wind-meter"><span style="width: 68%"></span></div>
+              <span class="stat-foot">体感轻柔 · 18 km/h</span>
+            </article>
+            <article class="stat-card stat-mood">
+              <div class="stat-icon icon-mood" aria-hidden="true">✦</div>
+              <p>阿浪的心情</p>
+              <strong>非常舒展 <small>☺</small></strong>
+              <div class="mood-dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+              <span class="stat-foot">因为今天没有红灯</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="about-strip" id="about" aria-label="车队介绍">
+          <div class="about-symbol">✳</div>
+          <div><strong>海风骑行社</strong><span>给每一阵风找一辆自行车。</span></div>
+          <a href="#ride">回到路线 <span>↗</span></a>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>© 2025 SEABREEZE CLUB</span>
+        <span class="footer-center">MADE WITH SALT &amp; SUNSHINE</span>
+        <span>纯 SVG · 原生 SMIL</span>
+      </footer>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>

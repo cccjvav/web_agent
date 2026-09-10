@@ -4,15 +4,16 @@
 
 这是 `run-webagent.cmd` **默认**挂上的本机项目（`WORKSPACE_ROOT` 未指定时 = 仓库根 `workspace\`）。Chat / Bridge / 网页 Agent 改的就是这里的磁盘。不是 MCP 服务器源码。
 
-无 Python。代码：`src/calculator.js`、`tests/calculator.test.js`；配置：`package.json`、`.webagent/customizations.json`。
+无 Python。工作区现在同时包含：`index.html` / `styles.css` / `app.js`（纯 SVG 与原生 SMIL 的「鹈鹕骑自行车」页面）、`server.js`（静态预览服务器），以及原有的 `src/calculator.js` / `tests/calculator.test.js` 演示代码；配置：`package.json`、`.webagent/customizations.json`。
 
 ---
 
 ## 1. 模块概述
 
-- **定位：** 演示工作区（计算器）。用来验证搜-读-补丁-再测，不是产品进程。
-- **兄弟依赖：** **没有 require 产品代码。** 反过来：`agent-host` 的 `config.workspaceRoot` 默认指向本目录；`load_skill` 读 `.webagent/skills/`；`getInstructions` 会拼 `customizations.json` / `instructions.md`。
-- **谁调用：** 用户在工作台或 MCP 工具里读写；`npm test` 在本目录跑计算器测试。
+- **定位：** 演示工作区 + 可直接预览的静态视觉页面。页面以海边骑行小故事展示 SVG / SMIL 动画，不是产品进程。
+- **兄弟依赖：** **没有第三方运行时依赖。** `index.html`、`styles.css`、`app.js` 和 `server.js` 均为原生文件；原有 calculator 仍用来验证搜-读-补丁-再测。
+- **启动页面：** `npm start` 后访问 `http://localhost:4173/`；动画控制调用 SVG 原生 `pauseAnimations()` / `setCurrentTime()`，不依赖 canvas、图片或前端框架。
+- **谁调用：** 用户在工作台或 MCP 工具里读写；`npm test` 会同时运行计算器测试和页面结构检查。
 
 ---
 
@@ -27,11 +28,40 @@
   |---|---|---|
   | `name` | 包名 | `webagent-workspace-target` |
   | `version` | 版本 | `1.0.0` |
-  | `description` | 说明 | `Live workspace inside Web Agent Editor` |
-  | `main` | 入口字段 | `src/calculator.js` |
-  | `scripts.test` | `npm test` | `node tests/calculator.test.js` |
+  | `description` | 说明 | `Live workspace with a pure SVG and native SMIL pelican cycling scene.` |
+  | `main` | 入口字段 | `server.js` |
+  | `scripts.start` | 页面预览 | `node server.js` |
+  | `scripts.test` | `npm test` | 计算器 + 页面结构检查 |
 
 无 `dependencies`。
+
+---
+
+### 📄 文件名：`index.html`
+
+- **文件职责：** 页面结构与全部插画。内嵌的 `rideScene` 是完整海岸线 SVG，鹈鹕、车轮、云朵、海浪与道路移动都使用原生 SMIL（`animate` / `animateTransform`）。
+- **交互入口：** 顶部「暂停动画」和「重播」按钮由 `app.js` 控制 SVG 时间线；导航锚点连接到路线、田野笔记和车队介绍。
+- **资源边界：** 不加载图片、canvas、第三方组件或外部字体。
+
+---
+
+### 📄 文件名：`styles.css`
+
+- **文件职责：** 页面布局、响应式断点、卡片与按钮视觉样式。
+- **适配：** 桌面双栏 Hero 在窄屏变成单栏；`prefers-reduced-motion` 下停止过渡动画并由脚本暂停 SVG。
+
+---
+
+### 📄 文件名：`app.js`
+
+- **文件职责：** 极少量原生 DOM 行为：暂停/播放、回到时间 0、减少动效偏好，以及滚动时同步导航高亮。
+- **不负责：** 插画运动不在 JavaScript 中逐帧实现，全部交给 SVG SMIL 时间线。
+
+---
+
+### 📄 文件名：`server.js`
+
+- **文件职责：** 无依赖的 Node 静态文件服务器，绑定 `0.0.0.0` 方便工作台预览；仅处理 `GET` / `HEAD` 并防止路径逃逸。
 
 ---
 
@@ -65,6 +95,11 @@
   - L37–L40：`divide(10,0)` 必须 throw，消息匹配 `/Cannot divide by zero/`
 - L42–L52：打印 Summary；`failed>0` → `exit(1)`，否则 `exit(0)`。
 - **没有测 `power`。**
+
+### 📄 文件名：`tests/page.test.js`
+
+- **文件职责：** 不启动浏览器的静态检查，确认页面包含可访问的 inline SVG、至少 10 个 SMIL 动画、无栅格图片依赖、存在暂停/重播控制和 reduced-motion 规则。
+- **运行方式：** 通过 `npm test` 与计算器测试串联执行。
 
 ---
 
