@@ -4,14 +4,14 @@
 
 这是 `run-webagent.cmd` **默认**挂上的本机项目（`WORKSPACE_ROOT` 未指定时 = 仓库根 `workspace\`）。Chat / Bridge / 网页 Agent 改的就是这里的磁盘。不是 MCP 服务器源码。
 
-无 Python。工作区现在同时包含：`index.html` / `styles.css` / `app.js`（纯 SVG 与原生 SMIL 的「鹈鹕骑自行车」页面）、`server.js`（静态预览服务器），以及原有的 `src/calculator.js` / `tests/calculator.test.js` 演示代码；配置：`package.json`、`.webagent/customizations.json`。
+无 Python。工作区现在包含：`index.html`（单文件纯 SVG + 原生 SMIL 的「鹈鹕骑自行车」页面）、`server.js`（静态预览服务器），以及原有的 `src/calculator.js` / `tests/calculator.test.js` 演示代码；配置：`package.json`、`.webagent/customizations.json`。
 
 ---
 
 ## 1. 模块概述
 
-- **定位：** 演示工作区 + 可直接预览的静态视觉页面。页面以海边骑行小故事展示 SVG / SMIL 动画，不是产品进程。
-- **兄弟依赖：** **没有第三方运行时依赖。** `index.html`、`styles.css`、`app.js` 和 `server.js` 均为原生文件；原有 calculator 仍用来验证搜-读-补丁-再测。
+- **定位：** 演示工作区 + 可直接预览的静态视觉页面。页面以运动实验展示 SVG / SMIL 动画，不是产品进程。
+- **兄弟依赖：** **没有第三方运行时依赖。** `index.html` 内联全部 CSS、SVG 与原生控制脚本；原有 calculator 仍用来验证搜-读-补丁-再测。
 - **启动页面：** `npm start` 后访问 `http://localhost:4173/`；动画控制调用 SVG 原生 `pauseAnimations()` / `setCurrentTime()`，不依赖 canvas、图片或前端框架。
 - **谁调用：** 用户在工作台或 MCP 工具里读写；`npm test` 会同时运行计算器测试和页面结构检查。
 
@@ -39,23 +39,9 @@
 
 ### 📄 文件名：`index.html`
 
-- **文件职责：** 页面结构与全部插画。内嵌的 `rideScene` 是完整海岸线 SVG，鹈鹕、车轮、云朵、海浪与道路移动都使用原生 SMIL（`animate` / `animateTransform`）。
-- **交互入口：** 顶部「暂停动画」和「重播」按钮由 `app.js` 控制 SVG 时间线；导航锚点连接到路线、田野笔记和车队介绍。
-- **资源边界：** 不加载图片、canvas、第三方组件或外部字体。
-
----
-
-### 📄 文件名：`styles.css`
-
-- **文件职责：** 页面布局、响应式断点、卡片与按钮视觉样式。
-- **适配：** 桌面双栏 Hero 在窄屏变成单栏；`prefers-reduced-motion` 下停止过渡动画并由脚本暂停 SVG。
-
----
-
-### 📄 文件名：`app.js`
-
-- **文件职责：** 极少量原生 DOM 行为：暂停/播放、回到时间 0、减少动效偏好，以及滚动时同步导航高亮。
-- **不负责：** 插画运动不在 JavaScript 中逐帧实现，全部交给 SVG SMIL 时间线。
+- **文件职责：** 页面结构、全部插画、样式与控制逻辑。内嵌的 `rideScene` 是完整海岸公路 SVG，鹈鹕、车轮、曲柄、两段式腿部 IK、云朵、树木、海浪与道路移动都使用原生 SMIL（`animate` / `animateTransform`）。
+- **运动实现：** 车轮与曲柄共用 1.20 秒周期；大腿、小腿分别使用预计算的两段式逆向运动学角度序列，脚掌端点跟随脚踏圆周；云带、树带、路面虚线按单元宽度循环。
+- **交互入口：** 顶部按钮与空格键控制 SVG 原生时间线，`prefers-reduced-motion` 会自动暂停；没有外部 CSS、图片、字体或 JS 库。
 
 ---
 
@@ -98,7 +84,7 @@
 
 ### 📄 文件名：`tests/page.test.js`
 
-- **文件职责：** 不启动浏览器的静态检查，确认页面包含可访问的 inline SVG、至少 10 个 SMIL 动画、无栅格图片依赖、存在暂停/重播控制和 reduced-motion 规则。
+- **文件职责：** 不启动浏览器的静态检查，确认单文件页面包含可访问的 inline SVG、SMIL 动画、两段式 IK 标记、无外部资源、空格/按钮暂停重播控制和 reduced-motion 规则。
 - **运行方式：** 通过 `npm test` 与计算器测试串联执行。
 
 ---

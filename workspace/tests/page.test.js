@@ -4,8 +4,6 @@ const path = require('node:path');
 
 const workspace = path.join(__dirname, '..');
 const page = fs.readFileSync(path.join(workspace, 'index.html'), 'utf8');
-const styles = fs.readFileSync(path.join(workspace, 'styles.css'), 'utf8');
-const behavior = fs.readFileSync(path.join(workspace, 'app.js'), 'utf8');
 
 function test(name, check) {
   try {
@@ -17,28 +15,41 @@ function test(name, check) {
   }
 }
 
-console.log('🎨 Checking Tideway SVG page...');
+console.log('🎨 Checking PEL-01 single-file SVG page...');
 test('page has an accessible inline SVG scene', () => {
   assert.match(page, /id="rideScene"[\s\S]*?role="img"/);
   assert.match(page, /鹈鹕骑自行车/);
 });
 
 test('scene uses native SMIL animation primitives', () => {
-  assert.ok((page.match(/<animate(?:Transform)?\b/g) || []).length >= 10);
+  assert.ok((page.match(/<animate(?:Transform)?\b/g) || []).length >= 15);
   assert.match(page, /repeatCount="indefinite"/);
+  assert.match(page, /dur="1\.2s"/);
 });
 
-test('page has no raster image dependency', () => {
-  assert.doesNotMatch(page, /<img\b|<canvas\b|https?:\/\/[^'" ]+\.(?:png|jpe?g|webp|gif)/i);
+test('page includes two-link IK leg chains', () => {
+  assert.match(page, /id="ikLegs"/);
+  assert.match(page, /class="upper-leg"/);
+  assert.match(page, /class="lower-leg"/);
+  assert.match(page, /IK LOCKED/);
+  assert.match(page, /脚掌全程贴合脚踏/);
 });
 
-test('motion controls can pause and replay the SVG timeline', () => {
-  assert.match(behavior, /pauseAnimations/);
-  assert.match(behavior, /setCurrentTime\(0\)/);
+test('single file has no external page dependencies', () => {
+  assert.doesNotMatch(page, /<link\b|<img\b|<canvas\b|<script\b[^>]+src=/i);
+  assert.doesNotMatch(page, /https?:\/\/[^'" ]+\.(?:png|jpe?g|webp|gif|js|css)/i);
+});
+
+test('space and button controls can pause and replay the SVG timeline', () => {
+  assert.match(page, /pauseAnimations/);
+  assert.match(page, /setCurrentTime\(0\)/);
+  assert.match(page, /event\.code !== 'Space'/);
+  assert.match(page, /id="pauseButton"/);
+  assert.match(page, /id="replayButton"/);
 });
 
 test('layout includes reduced-motion support', () => {
-  assert.match(styles, /prefers-reduced-motion/);
+  assert.match(page, /prefers-reduced-motion/);
 });
 
-console.log('🎉 SVG page checks passed.');
+console.log('🎉 Single-file SVG page checks passed.');
