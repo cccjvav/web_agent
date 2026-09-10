@@ -48,7 +48,7 @@
   - **GET `/files/tree`（L206–L213）** — `callTool('list_directory', { recursive:true, maxDepth:5 }, 'ask')`。
   - **GET `/files/content`（L215–L234）** — query.path → resolveSafePath；不存在或目录 404；否则全文+hash，并 `rememberHash`。
   - **PUT `/files/content`（L236–L258）** — path 与 string content 必须；`callTool('write_file', { confirm_overwrite:true, expectedHash? }, 'code')`。敏感路径 / 逃出工作区 400；`STALE_FILE` 409。不直接 `writeFileSync`。
-  - **GET `/skills`（L260–L281）** — 扫两个 skills 根，有 SKILL.md 则 preview 400 字（不要求 isDirectory 检查，与 `tools/skills.listSkills` 略不同）。
+  - **GET `/skills`** — 直接 `listSkills()`：工作区两处 + 仓库根 bundled，须是目录且有 SKILL.md；每项 `name`/`path`/`preview`/`skillFile`/`skillFileAbs`（与 `load_skill` 列表同一份）。
   - **POST `/providers/probe`（L283–L291）** — `listRemoteModels`；失败 400。
   - **GET `/models`（L293–L300）** — apiKey 显示 `••••` 或 `''`。
   - **POST `/models`（L302–L315）** — 可改 activeModelId；可整表 models；可 upsert `body.model`；可合并 multiModel；然后 **`store.save(cfg)` 整份**。

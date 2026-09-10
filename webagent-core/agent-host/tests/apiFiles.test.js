@@ -91,6 +91,12 @@ async function main() {
     });
     assert.strictEqual(skill.status, 200);
     assert.ok(fs.existsSync(path.join(tmp, '.webagent/skills/demo-skill/SKILL.md')));
+    const listed = await request(server, 'GET', '/api/skills');
+    assert.strictEqual(listed.status, 200);
+    const demoSkill = (listed.json.skills || []).find((s) => s.name === 'demo-skill');
+    assert.ok(demoSkill);
+    assert.ok(demoSkill.skillFile && /SKILL\.md$/.test(String(demoSkill.skillFile).replace(/\\/g, '/')));
+    assert.ok(demoSkill.skillFileAbs && path.isAbsolute(demoSkill.skillFileAbs));
 
     const opened = await request(server, 'GET', '/api/files/content?path=notes.md');
     assert.strictEqual(opened.status, 200);

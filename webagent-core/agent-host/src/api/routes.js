@@ -362,26 +362,15 @@ router.put('/files/content', async (req, res) => {
 });
 
 router.get('/skills', (req, res) => {
-  const roots = [
-    path.join(config.workspaceRoot, '.webagent', 'skills'),
-    path.join(config.workspaceRoot, 'skills')
-  ];
-  const skills = [];
-  for (const root of roots) {
-    if (!fs.existsSync(root)) continue;
-    for (const name of fs.readdirSync(root)) {
-      const dir = path.join(root, name);
-      const skillMd = path.join(dir, 'SKILL.md');
-      if (fs.existsSync(skillMd)) {
-        skills.push({
-          name,
-          path: path.relative(config.workspaceRoot, dir),
-          preview: fs.readFileSync(skillMd, 'utf8').slice(0, 400)
-        });
-      }
-    }
-  }
-  res.json({ skills });
+  res.json({
+    skills: listSkills().map(({ name, path: p, preview, skillFile, skillFileAbs }) => ({
+      name,
+      path: p,
+      preview,
+      skillFile,
+      skillFileAbs
+    }))
+  });
 });
 
 router.post('/providers/probe', async (req, res) => {

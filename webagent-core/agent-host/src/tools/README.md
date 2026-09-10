@@ -25,56 +25,56 @@
 - **文件职责：** 登记 **30** 个对外工具名（另隐藏 `send_command_input`），做模式锁和危险命令闸，然后把调用派到本目录其它文件。
 - **核心类/函数清单：**
 
-  - **Function `tool(def)`（L17–L19）** — 输入工具定义对象，原样返回（无变换）。
-  - **Function `pingHost()`（L21–L23）** — 无参。返回 `{ ok, ts, ...snapshot() }`。
-  - **Function `getLogs({ maxLines=50 })`** — `maxLines` clamp 到 1–200。每条只留 `type`/`timestamp` 以及 payload 里的 `tool`/`success`/`durationMs`/`execId`/`status`/`truncated`（不含 args、补丁、命令输出）。返回 `{ logs, count }`。
-  - **Function `getCapabilities()`（L30–L35）** — 工具名+描述 + session snapshot。
-  - **Function `getTaskStatus()`（L37–L45）** — 展开 `getTaskState()`；`status==='in_progress'` 时 `suggestedWaitMs=2000`，`etaSeconds = max(1, round((100-progress)/10))`，否则两者为 0。
-  - **Const `TOOLS`（L50–L394）** — 每项含 `name` / `aliases` / `description` / `mode` / `inputSchema` / `handler`。名称行号（`name:` 所在行）：
+  - **Function `tool(def)`（L19–L21）** — 输入工具定义对象，原样返回（无变换）。
+  - **Function `pingHost()`（L23–L27）** — 无参。返回 `{ ok, ts, ...snapshot() }`。
+  - **Function `getLogs({ maxLines=50 })`（L29–L40）** — `maxLines` clamp 到 1–200。每条只留 `type`/`timestamp` 以及 payload 里的 `tool`/`success`/`durationMs`/`execId`/`status`/`truncated`（不含 args、补丁、命令输出）。返回 `{ logs, count }`。
+  - **Function `getCapabilities()`（L42–L47）** — 工具名+描述 + session snapshot。
+  - **Function `getTaskStatus()`（L49–L57）** — 展开 `getTaskState()`；`status==='in_progress'` 时 `suggestedWaitMs=2000`，`etaSeconds = max(1, round((100-progress)/10))`，否则两者为 0。
+  - **Const `TOOLS`（L59–L466）** — 每项含 `name` / `aliases` / `description` / `mode` / `inputSchema` / `handler`。名称行号（`name:` 所在行）：
 
     | 行 | name | mode | handler |
     |---|---|---|---|
-    | L56 | ping | ask,plan,code | pingHost |
-    | L68 | workspace_info（描述写明 instructions 缺失时先调） | 同上 | workspaceInfo |
-    | L76 | get_capabilities | 同上 | getCapabilities |
-    | L76 | get_logs | 同上 | getLogs |
-    | L87 | get_task_status | 同上 | getTaskStatus |
-    | L95 | remember | 同上 | remember |
-    | L107 | recall | 同上 | recall |
-    | L118 | list_directory（alias list_dir） | 同上 | listDir |
-    | L133 | find_files | 同上 | findFiles |
-    | L148 | search_files（alias grep_search） | 同上 | grepSearch |
-    | L167 | read_files（alias read_file） | 同上 | readFiles |
-    | L183 | git_status | 同上 | gitStatus |
-    | L191 | git_diff | 同上 | gitDiff |
-    | peers_list / board_* | 同上 | boardTools |
-    | L206 | load_skill | 同上 | loadSkill |
-    | L217 | apply_patch | **code** | applyPatch |
-    | L234 | write_file | **code** | writeFile |
-    | L254 | delete_file | **code** | deleteFile |
-    | L269 | rename_file（alias move_file） | **code** | renameFile |
-    | L284 | run_command（alias execute_command） | **code** | executeCommand |
-    | L301 | start_command | **code** | startCommand |
-    | L318 | get_command_output | ask,plan,code | getCommandOutput |
-    | L333 | cancel_command | **code** | cancelCommand |
-    | send_command_input | **code**（hidden） | sendCommandInput |
-    | L345 | wait | ask,plan,code | wait |
-    | L356 | report_progress | **plan,code** | reportProgress |
-    | L372 | set_todos | ask,plan,code | setTodos |
+    | L61 | ping | ask,plan,code | pingHost |
+    | L69 | workspace_info（描述写明 instructions 缺失时先调） | 同上 | workspaceInfo |
+    | L77 | get_capabilities | 同上 | getCapabilities |
+    | L85 | get_logs | 同上 | getLogs |
+    | L96 | get_task_status | 同上 | getTaskStatus |
+    | L104 | remember | 同上 | remember |
+    | L116 | recall | 同上 | recall |
+    | L127 | list_directory（alias list_dir） | 同上 | listDir |
+    | L142 | find_files | 同上 | findFiles |
+    | L157 | search_files（alias grep_search） | 同上 | grepSearch |
+    | L176 | read_files（alias read_file） | 同上 | readFiles |
+    | L192 | git_status | 同上 | gitStatus |
+    | L200 | git_diff | 同上 | gitDiff |
+    | L215–L255 | peers_list / board_* | 同上 | boardTools |
+    | L267 | load_skill | 同上 | loadSkill |
+    | L278 | apply_patch | **code** | applyPatch |
+    | L296 | write_file | **code** | writeFile |
+    | L316 | delete_file | **code** | deleteFile |
+    | L331 | rename_file（alias move_file） | **code** | renameFile |
+    | L346 | run_command（alias execute_command） | **code** | executeCommand |
+    | L363 | start_command | **code** | startCommand |
+    | L380 | get_command_output | ask,plan,code | getCommandOutput |
+    | L395 | cancel_command | **code** | cancelCommand |
+    | L407 | send_command_input | **code**（hidden） | sendCommandInput |
+    | L423 | wait | ask,plan,code | wait |
+    | L434 | report_progress | **plan,code** | reportProgress |
+    | L450 | set_todos | ask,plan,code | setTodos |
 
-  - **L396–L402** — 把 name 与 aliases 写入 `toolRegistry` Map。
-  - **Function `getToolList(currentMode=null, opts={})`** — mode 假则全部对外工具；真则 `t.mode.includes(currentMode)`。默认丢掉 `hidden`；`opts.includeHidden` 才带上 `send_command_input`。映射为 `{ name, description, inputSchema }`（不含 handler）。
-  - **Function `callTool(name, args={}, currentMode=null, opts={})`**
-    - L413：`resolveToolName(name)`（`normalize.js`：`bash`→`run_command`、`cat`→`read_files` 等）。
-    - L414：registry 先查 resolved 再查原名。
-    - L415–L421：未知名 → `ProtocolError E_UNKNOWN_CMD`，消息含 Available 列表，`detail.retryHint` 提示可用别名。
-    - L422–L427：`currentMode` 真且不在该工具 mode 列表 → `E_BAD_ARGS`（Ask/Plan 只读文案）。远程 MCP 默认传入 `'code'`（见 `mcp/server.remoteToolMode`）；本机 Chat 传入 UI 模式。
-    - L428：`normalizeToolArgs(toolDef.name, args)`（snake_case、`path`→`filePath`、`"true"`→布尔）。
+  - **L468–L474** — 把 name 与 aliases 写入 `toolRegistry` Map。
+  - **Function `getToolList(currentMode=null, opts={})`（L484–L489）** — mode 假则全部对外工具；真则 `t.mode.includes(currentMode)`。默认丢掉 `hidden`；`opts.includeHidden` 才带上 `send_command_input`。映射为 `{ name, description, inputSchema }`（不含 handler）。
+  - **Function `callTool(name, args={}, currentMode=null, opts={})`（L491–L533）**
+    - L492：`resolveToolName(name)`（`normalize.js`：`bash`→`run_command`、`cat`→`read_files` 等）。
+    - L493：registry 先查 resolved 再查原名。
+    - L494–L500：未知名 → `ProtocolError E_UNKNOWN_CMD`，消息含 Available 列表，`detail.retryHint` 提示可用别名。
+    - L501–L506：`currentMode` 真且不在该工具 mode 列表 → `E_BAD_ARGS`（Ask/Plan 只读文案）。远程 MCP 默认传入 `'code'`（见 `mcp/server.remoteToolMode`）；本机 Chat 传入 UI 模式。
+    - L507：`normalizeToolArgs(toolDef.name, args)`（snake_case、`path`→`filePath`、`"true"`→布尔）。
     - 远程且工具名 `send_command_input` → **`E_FORBIDDEN`**（交互式 PTY 仅桌面 Chat）。
     - 工具名为 `run_command` 或 `start_command`：走 `assertCommandAllowed`（`dangerous.js`，远程与本机同一处）。`opts.remote` 真 → **`E_FORBIDDEN`**（即使带了 `confirm_dangerous`）；本机无 `confirm_dangerous` → `E_BAD_ARGS`。远程还会把 `timeoutSec` 夹到最多 60。闸包括 `rm -rf` / `rm -r -f` / `find -delete`、`git push`、`curl … | sh`、`iex` / `iwr`、关机格式化等（词法归一，不是 OS 沙箱）。
     - `await handler(input, opts)`。
-    - L439–L442：`result.isTimeout` 则打 `E_TIMEOUT`、`suggestedWaitMs=0`。
-    - L443：`clipJson(result)` 后返回。
+    - `result.isTimeout` 则打 `E_TIMEOUT`、`suggestedWaitMs=0`。
+    - `clipJson(result)` 后返回。
 
 - **危险命令：** 实现在 `dangerous.js`（`isDangerousCommand` / `assertCommandAllowed`）。先剥空引号、折叠空白、按 `|` / `&&` 分段，再在 token 上判定。不是 OS 沙箱。
 
@@ -99,10 +99,13 @@
   - **Function `withWriteLock(paths, fn)`** — 按路径排队。同一文件上的 `apply_patch` / `write_file` / `delete_file` / `rename_file` 串行；后到的若哈希过期会 `STALE_FILE`。
   - **Function `detectEol` / `toLf` / `applyEol`（L19–L31）** — 有 `\r\n` 则整文件按 CRLF 写回；匹配在 LF 上进行。
   - **Function `countOccurrences` / `replaceOccurrence`（L33–L59）** — 非重叠计数；按 1-based `occurrence` 替换一处。
-  - **Function `looksLikeUnifiedDiff(text)`（L109–L114）** — 去 BOM/前导空白后，开头是 `diff --git `，或开头像 `--- …` + `+++ ` 且全文含 `@@`。
-  - **Function `parseSearchReplaceBlocks(patchText)`（L116–L127）** — 正则 `<<<<< SEARCH` … `=====` … `>>>>> REPLACE`；SEARCH 与 `=======` 之间的换行可省略（空 SEARCH 新建）。收集 `{ search, replace }`。
-  - **Function `applySearchBlocks`（L129–L172）** — 已有文件：SEARCH 必须命中 1 次，否则 `E_CONFLICT`（可传 `occurrence`）；空 SEARCH 拒；写回原换行。
-  - **Function `applyPatch({ filePath, patch, expectedHash=null, dryRun=false, occurrence })`（L174–L298）**
+  - **Function `looksLikeUnifiedDiff(text)`（L154–L159）** — 去 BOM/前导空白后，开头是 `diff --git `，或开头像 `--- …` + `+++ ` 且全文含 `@@`。
+  - **Function `looksLikeV4A(text)`（L161–L165）** — `*** Begin Patch` 或 `Update File` / `Add File` / `Delete File` / `Move to`。
+  - **Function `rejectUnsupportedPatchFormat`（L167–L179）** — 没有 SEARCH 块且像 V4A → `E_BAD_ARGS` + retryHint；不写盘。
+  - **Function `parseSearchReplaceBlocks(patchText)`（L181–L192）** — 正则 `<<<<< SEARCH` … `=====` … `>>>>> REPLACE`；SEARCH 与 `=======` 之间的换行可省略（空 SEARCH 新建）。收集 `{ search, replace }`。
+  - **Function `applySearchBlocks`（L194–L237）** — 已有文件：SEARCH 必须命中 1 次，否则 `E_CONFLICT`（可传 `occurrence`）；空 SEARCH 拒；写回原换行。
+  - **Function `applyPatch({ filePath, patch, expectedHash=null, dryRun=false, occurrence })`（L239–L370）**
+    - 先认 V4A（`*** Begin Patch` / `Update File` / `Add File` / `Delete File` / `Move to`）。没有 SEARCH 块则 `E_BAD_ARGS`，`retryHint` 让改写成 SEARCH/REPLACE；**不**当文件正文、**不**解析 V4A。
     - **文件不存在：** 若整段像 unified diff 且第一块不是空 SEARCH → `E_BAD_ARGS`（禁止把 diff 当新文件正文）。第一块 search trim 为空则用 replace 当新内容，否则整段 `patch`。不改调用方给的换行。
     - **文件存在：** 没 hash 且非 dryRun → `HASH_REQUIRED`；hash 不符 → `STALE_FILE`。有 blocks 走 `applySearchBlocks`；unified diff / 整段覆盖后仍 `applyEol` 回原 CRLF/LF。
     - 写 `tempSibling` 再 `renameSync`。
@@ -177,9 +180,9 @@
 - **文件职责：** 在工作区跑 shell。Windows 走 PowerShell，其它 bash。
 - **核心类/函数清单：**
 
-  - **Function `killChild`（L12–L26）** — 无 pid return。win32 `taskkill /pid /t /f`。非 Windows 先 `process.kill(-pid)` 杀**进程组**，失败再 `child.kill`。
-  - **Function `workingDirFrom`（L28–L34）** — 走 `resolveSafePath`（含真实路径），逃出工作区抛 outside workspace。
-  - **Function `publicRecord`（L31–L48）** — stdout/stderr 截尾；running 时带 `suggestedWaitMs` 与 poll hint。
+  - **Function `killChild`（L35–L49）** — 无 pid return。win32 `taskkill /pid /t /f`。非 Windows 先 `process.kill(-pid)` 杀**进程组**，失败再 `child.kill`。
+  - **Function `workingDirFrom`（L51–L57）** — 走 `resolveSafePath`（含真实路径），逃出工作区抛 outside workspace。
+  - **Function `publicRecord`（L69–L90）** — stdout/stderr 截尾；running 时带 `suggestedWaitMs` 与 poll hint。
   - **Function `scrubEnv(base)`** — 拷贝环境后删掉名字像 API Key / token / secret / password 的变量，避免命令子进程读到宿主密钥。
   - **Function `startProcess`** — `execId` 为 16 位 hex；同时 running 最多 8 条，已结束最多留 40。timeout 至少 1s；spawn 时 `env` 走 `scrubEnv(process.env)` 再加 `CI`/`TERM`/`FORCE_COLOR`；非 Windows `detached:true`；超时 kill 再 2s force，定时器 `unref()`。返回 `{ rec, done }`。
   - **Function `executeCommand` / `startCommand`** — `wantsPty()` 为真则 `ptyJobs.enqueue('run'|'start')`（桌面 Chat `client:'vscode-extension'`）。否则 execute 等到结束；start 立即返回 execId + running。
@@ -268,7 +271,7 @@
 
 ## 3. 执行逻辑流
 
-1. 调用方 `callTool(name, args, mode?)`（`index.js` L412）。
+1. 调用方 `callTool(name, args, mode?)`（`index.js` L491）。
 2. `resolveToolName` → 查 registry → 可选模式锁 → `normalizeToolArgs` → 可选危险命令闸。
 3. handler 进入具体文件：读走 `fileOps`/`findFiles`/`gitOps`/`skills`/`workspaceInfo`/`memory`；写走 `patchEngine`/`fileOps.writeFile`；命令走 `executor`。读/补丁成功会 `rememberHash`。
 4. 所有写路径先 `resolveSafePath` → `assertNotSensitive`。

@@ -132,7 +132,7 @@
 - **文件职责：** 阶段 4（S4-3）可搜索模型选择弹层（ShunCode 对齐），composer 作答模型与合并主模型两处复用。
 - **Function `openModelPicker`（L16–L66）** — 参数 `{ anchor, currentId, onPick, mergeMark }`；行 = 显示名 + `group/modelId` + 上下文 + 能力 pill（vision 补 pill 同 provider 表）；搜索框过滤（name/id/modelId/group）；`mergeMark` 时当前行加「Current merge model」灰注；fixed 定位在 anchor 下方、夹在视口内；Esc/外部点击关；选中回调 `onPick(id)` 后自动关。
 - **Function `closeModelPicker`（L12–L14）** — 关掉唯一实例。
-- **Function `loadSkills`（L131–L139）** — GET `/api/skills`。
+- **Function `loadSkills`** — GET `/api/skills`（与 `load_skill` 列表同一份，hint 显示 `skillFile`）。
 
 ---
 

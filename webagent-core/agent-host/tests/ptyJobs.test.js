@@ -94,7 +94,19 @@ async function main() {
   assert.ok(host.includes('Web Agent · 1'));
   assert.ok(host.includes('/api/pty/hello'));
   assert.ok(host.includes('handleIncoming'));
+  assert.ok(host.includes('noteStream'));
+  assert.ok(host.includes('waitForShellIntegration'));
+  assert.ok(host.includes('同类都允许'));
+  assert.ok(host.includes('streamFreshUntil'));
   assert.ok(/[^\x00-\x7F]|needsFile/.test(host) || host.includes('needsFile'));
+
+  const policy = require('../../extension/ptyPolicy');
+  assert.ok(policy.isReadishCommand('git status'));
+  assert.ok(policy.looksDangerousCommand('rm -rf x'));
+  assert.strictEqual(policy.shouldAutoAllow('git status', {}).allow, true);
+  assert.strictEqual(policy.shouldAutoAllow('rm -rf x', { allowSession: true }).alwaysAsk, true);
+  assert.strictEqual(policy.commandFamily('npm test'), 'npm');
+  assert.ok(policy.shouldAutoAllow('npm test', { allowedFamilies: new Set(['npm']) }).allow);
 
   const routes = fs.readFileSync(path.resolve(__dirname, '../src/api/routes.js'), 'utf8');
   assert.ok(routes.includes("client === 'vscode-extension'"));

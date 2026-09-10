@@ -158,6 +158,26 @@ function looksLikeUnifiedDiff(text) {
   return false;
 }
 
+function looksLikeV4A(text) {
+  const t = String(text || '').replace(/^\uFEFF/, '');
+  return /\*{3}\s*Begin Patch\b/i.test(t)
+    || /\*{3}\s*(Update File|Add File|Delete File|Move to)\b/i.test(t);
+}
+
+function rejectUnsupportedPatchFormat(filePath, patch, blocks) {
+  if (blocks && blocks.length) return;
+  if (!looksLikeV4A(patch)) return;
+  throw new ProtocolError(
+    'E_BAD_ARGS',
+    `Patch for ${filePath} looks like Codex V4A (*** Begin Patch / Update File / Add File / Delete File / Move to). This host applies SEARCH/REPLACE, or unified diff on an existing file — not V4A, and not a multi-file patch in one call.`,
+    {
+      filePath,
+      format: 'v4a',
+      retryHint: 'Rewrite as <<<<<<< SEARCH ... ======= ... >>>>>>> REPLACE for this one filePath. Do not paste *** Begin Patch.'
+    }
+  );
+}
+
 function parseSearchReplaceBlocks(patchText) {
   const blocks = [];
   const regex = /<{5,}\s*SEARCH\r?\n([\s\S]*?)\r?\n?={5,}\r?\n([\s\S]*?)\r?\n>{5,}\s*REPLACE/g;
@@ -222,9 +242,11 @@ async function applyPatch(opts = {}) {
 
 async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = false, occurrence } = {}) {
   const fullPath = resolveSafePath(filePath);
+  const blocksEarly = parseSearchReplaceBlocks(patch);
+  rejectUnsupportedPatchFormat(filePath, patch, blocksEarly);
 
   if (!fs.existsSync(fullPath)) {
-    const blocks = parseSearchReplaceBlocks(patch);
+    const blocks = blocksEarly;
     const emptySearchNew = blocks.length > 0 && String(blocks[0].search).trim() === '';
     if (looksLikeUnifiedDiff(patch) && !emptySearchNew) {
       throw new ProtocolError(
@@ -296,7 +318,7 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
   }
 
   let patchedContent = currentContent;
-  const blocks = parseSearchReplaceBlocks(patch);
+  const blocks = blocksEarly;
   const eol = detectEol(currentContent);
 
   if (blocks.length > 0) {
@@ -356,5 +378,7 @@ module.exports = {
   toPosixRel,
   detectEol,
   countOccurrences,
-  withWriteLock
+  withWriteLock,
+  looksLikeV4A,
+  looksLikeUnifiedDiff
 };

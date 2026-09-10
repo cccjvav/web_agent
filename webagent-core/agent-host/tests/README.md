@@ -43,7 +43,7 @@
 | `profile.test.js` | 环境偏好 / 技术栈写入 `.webagent`，进入指令 |
 | `oauth.test.js` | OAuth 发现、配对、PKCE、Bearer `/mcp`、SSE、session 复用/未知 404/`DELETE`、SSE endpoint 含密钥路径、注册限速 429、refresh 轮换与重放吊销；**源码锁** secretKey 用 `crypto.timingSafeEqual`、`engines.node >=18` |
 | `desktopExtension.test.js` | 桌面 VS Code 侧载：`workspaceMatch` 路径规范化；`installTo` 拷 `extension/`（无 README、含 `ptyHost.js`）、摘旧 `webagent.webagent-core-*`；`WEBAGENT_VSCODE_EXTENSIONS`；根 `install-vscode-extension.cmd` 不拉 code-server；`extension.js` 提示 `run-webagent.cmd` |
-| `ptyJobs.test.js` | PTY 队列 emit/report/denied；默认名单 30；远程 `send_command_input` `E_FORBIDDEN`；插件 `client:'vscode-extension'` |
+| `ptyJobs.test.js` | PTY 队列 emit/report/denied；默认名单 30；远程 `send_command_input` `E_FORBIDDEN`；插件 `client:'vscode-extension'`；`ptyPolicy` 只读自动放行 / 危险命令仍问 |
 
 ---
 

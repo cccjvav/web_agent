@@ -67,9 +67,13 @@ VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@webage
 
 - **导出（L484）：** `{ activate, deactivate: () => {}, modeFromChatRequest }`。`deactivate` 空函数。`modeFromChatRequest` 来自同目录 `./modeFromChatRequest`。
 
+### 📄 文件名：`ptyPolicy.js`
+
+- **文件职责：** 不依赖 `vscode`。只读命令（`git status` / `echo` / `ls`…）自动放行；破坏性命令即使「本会话都允许」也再问；`commandFamily` 给「同类都允许」。
+
 ### 📄 文件名：`ptyHost.js`
 
-- **文件职责：** 桌面 Chat 档 B。从 `vscode.env.appRoot` 加载 **node-pty**；失败则集成终端 `shellIntegration` / `sendText`。Windows 多行 / 非 ASCII / 超长命令写临时 `.ps1`。终端名「Web Agent · 1」。`handleIncoming` 与 poll 共用去重。结果 POST `/api/pty/jobs/:id`。
+- **文件职责：** 桌面 Chat 档 B。从 `vscode.env.appRoot` 加载 **node-pty**；失败则等最多 2.5s 的 `shellIntegration` 再 `executeCommand`，仍没有才 `sendText`。Windows 多行 / 非 ASCII / 超长命令写临时 `.ps1`。终端名「Web Agent · 1」。NDJSON `pty_request` 走 `noteStream`（2.5s 内不轮询）；poll 无 pending 时 2s 一次、有活 job 400ms。`handleIncoming` 去重。确认：运行 / 本会话都允许 / 同类都允许 / 拒绝。
 
 ### 📄 文件名：`workspaceMatch.js`
 

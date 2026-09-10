@@ -213,6 +213,32 @@ x = 2;
   const raceAfter = fs.readFileSync(path.join(tmp, 'race.js'), 'utf8');
   assert.ok(raceAfter === 'value = 2;\n' || raceAfter === 'value = 3;\n');
 
+  const { looksLikeV4A } = require('../src/tools/patchEngine');
+  const v4a = `*** Begin Patch\n*** Update File: sample.js\n@@\n-return a + b\n+return 1\n*** End Patch\n`;
+  assert.ok(looksLikeV4A(v4a));
+  const beforeV4a = fs.readFileSync(path.join(tmp, 'sample.js'), 'utf8');
+  const v4aRead = readFile({ filePath: 'sample.js' });
+  let v4aRejected = false;
+  try {
+    await applyPatch({ filePath: 'sample.js', expectedHash: v4aRead.hash, patch: v4a });
+  } catch (err) {
+    v4aRejected = err.code === 'E_BAD_ARGS' && /V4A/.test(err.message) && err.detail && /SEARCH/.test(err.detail.retryHint);
+  }
+  assert.ok(v4aRejected, 'V4A must be rejected with SEARCH/REPLACE retryHint');
+  assert.strictEqual(fs.readFileSync(path.join(tmp, 'sample.js'), 'utf8'), beforeV4a);
+
+  let v4aNewRejected = false;
+  try {
+    await applyPatch({
+      filePath: 'v4a-new.js',
+      patch: '*** Begin Patch\n*** Add File: v4a-new.js\n+hi\n*** End Patch\n'
+    });
+  } catch (err) {
+    v4aNewRejected = err.code === 'E_BAD_ARGS' && /V4A/.test(err.message);
+  }
+  assert.ok(v4aNewRejected, 'V4A must not create a new file');
+  assert.ok(!fs.existsSync(path.join(tmp, 'v4a-new.js')));
+
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('patchEngine tests passed');
 }

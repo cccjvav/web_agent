@@ -50,6 +50,7 @@ try {
   assert.ok(fs.existsSync(path.join(installed.dest, 'workspaceMatch.js')));
   assert.ok(fs.existsSync(path.join(installed.dest, 'modeFromChatRequest.js')));
   assert.ok(fs.existsSync(path.join(installed.dest, 'ptyHost.js')));
+  assert.ok(fs.existsSync(path.join(installed.dest, 'ptyPolicy.js')));
   assert.ok(fs.existsSync(path.join(installed.dest, 'resources', 'icon.svg')));
   assert.ok(!fs.existsSync(path.join(installed.dest, 'README.md')), 'README 不进安装副本');
   assert.ok(!fs.existsSync(stale), '旧版本目录应被摘掉');

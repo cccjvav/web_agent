@@ -4,6 +4,7 @@ const vscode = require('vscode');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { shouldAutoAllow } = require('./ptyPolicy');
 
 function loadNodePty() {
   const root = vscode.env && vscode.env.appRoot;
@@ -60,31 +61,73 @@ function spawnSpec(command) {
   };
 }
 
+function waitForShellIntegration(terminal, ms = 2500) {
+  const ready = terminal && terminal.shellIntegration;
+  if (ready && typeof ready.executeCommand === 'function') return Promise.resolve(ready);
+  if (!vscode.window.onDidChangeTerminalShellIntegration) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = (si) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      try { d.dispose(); } catch (_) {}
+      resolve(si || null);
+    };
+    const timer = setTimeout(() => finish(terminal.shellIntegration || null), ms);
+    const d = vscode.window.onDidChangeTerminalShellIntegration((e) => {
+      if (e.terminal === terminal && e.shellIntegration) finish(e.shellIntegration);
+    });
+  });
+}
+
 class PtyHost {
   constructor({ agentHostUrl, requestJson }) {
     this.agentHostUrl = agentHostUrl;
     this.requestJson = requestJson;
     this.allowSession = false;
+    this.allowedFamilies = new Set();
     this.sessions = new Map();
     this.seen = new Set();
     this.polling = false;
     this.disposed = false;
     this.seq = 0;
+    this.pendingHint = 0;
+    this.streamFreshUntil = 0;
   }
 
   start(context) {
     this.hello();
     this.helloTimer = setInterval(() => this.hello(), 3000);
-    this.pollTimer = setInterval(() => this.poll().catch(() => {}), 400);
     if (this.helloTimer.unref) this.helloTimer.unref();
-    if (this.pollTimer.unref) this.pollTimer.unref();
+    this.armPoll();
     context.subscriptions.push({ dispose: () => this.dispose() });
+  }
+
+  pollDelayMs() {
+    if (Date.now() < this.streamFreshUntil) return 2000;
+    if (this.pendingHint > 0) return 400;
+    return 2000;
+  }
+
+  armPoll() {
+    if (this.disposed) return;
+    clearTimeout(this.pollTimer);
+    this.pollTimer = setTimeout(() => {
+      this.poll().catch(() => {}).finally(() => this.armPoll());
+    }, this.pollDelayMs());
+    if (this.pollTimer.unref) this.pollTimer.unref();
+  }
+
+  noteStream() {
+    this.streamFreshUntil = Date.now() + 2500;
+    this.pendingHint = Math.max(this.pendingHint, 1);
   }
 
   dispose() {
     this.disposed = true;
     clearInterval(this.helloTimer);
-    clearInterval(this.pollTimer);
+    clearTimeout(this.pollTimer);
     for (const s of this.sessions.values()) {
       try { if (s.proc && s.proc.kill) s.proc.kill(); } catch (_) {}
     }
@@ -98,16 +141,19 @@ class PtyHost {
   async hello() {
     if (this.disposed) return;
     try {
-      await this.requestJson('POST', this.url('/api/pty/hello'), { ok: true });
+      const r = await this.requestJson('POST', this.url('/api/pty/hello'), { ok: true });
+      if (r && r.json && typeof r.json.pending === 'number') this.pendingHint = r.json.pending;
     } catch (_) { /* agent-host 可能还没起来 */ }
   }
 
   async poll() {
     if (this.disposed || this.polling) return;
+    if (Date.now() < this.streamFreshUntil) return;
     this.polling = true;
     try {
       const r = await this.requestJson('GET', this.url('/api/pty/jobs'));
       const list = (r.json && r.json.jobs) || [];
+      this.pendingHint = list.length;
       for (const job of list) {
         await this.handleIncoming(job);
       }
@@ -121,17 +167,26 @@ class PtyHost {
   }
 
   async confirm(command) {
-    if (this.allowSession) return true;
+    const decision = shouldAutoAllow(command, {
+      allowSession: this.allowSession,
+      allowedFamilies: this.allowedFamilies
+    });
+    if (decision.allow) return true;
     const preview = String(command || '').slice(0, 400);
+    const buttons = decision.alwaysAsk
+      ? ['运行', '拒绝']
+      : ['运行', '本会话都允许', '同类都允许', '拒绝'];
     const pick = await vscode.window.showWarningMessage(
       `Web Agent 要在集成终端「Web Agent · 1」运行：\n${preview}`,
       { modal: true },
-      '运行',
-      '本会话都允许',
-      '拒绝'
+      ...buttons
     );
     if (pick === '本会话都允许') {
       this.allowSession = true;
+      return true;
+    }
+    if (pick === '同类都允许') {
+      if (decision.family) this.allowedFamilies.add(decision.family);
       return true;
     }
     return pick === '运行';
@@ -160,7 +215,7 @@ class PtyHost {
         return;
       }
       const cwd = this.cwdFor(job);
-      this.spawn(job, cwd);
+      await this.spawn(job, cwd);
     } catch (err) {
       try {
         await this.postJob(job.jobId, {
@@ -172,13 +227,13 @@ class PtyHost {
     }
   }
 
-  spawn(job, cwd) {
+  async spawn(job, cwd) {
     const nodePty = loadNodePty();
     if (nodePty) {
       this.spawnNodePty(nodePty, job, cwd);
       return;
     }
-    this.spawnFallback(job, cwd);
+    await this.spawnFallback(job, cwd);
   }
 
   spawnNodePty(nodePty, job, cwd) {
@@ -236,39 +291,40 @@ class PtyHost {
     });
   }
 
-  spawnFallback(job, cwd) {
+  async runShellIntegration(si, job) {
+    const execution = si.executeCommand(String(job.command || ''));
+    let buf = '';
+    try {
+      if (execution && execution.read) {
+        for await (const chunk of execution.read()) {
+          buf += String(chunk);
+          await this.postJob(job.jobId, { state: 'progress', stdout: stripAnsi(chunk) });
+        }
+      }
+      const exitCode = execution && execution.exitCode ? await execution.exitCode : 0;
+      await this.postJob(job.jobId, {
+        state: 'done',
+        status: 'done',
+        exitCode: exitCode == null ? 0 : exitCode,
+        stdout: stripAnsi(buf),
+        outputCaptured: true
+      });
+    } catch (err) {
+      await this.postJob(job.jobId, {
+        state: 'done',
+        status: 'error',
+        stderr: err && err.message ? err.message : String(err)
+      });
+    }
+  }
+
+  async spawnFallback(job, cwd) {
     const existing = vscode.window.terminals.find((t) => /^Web Agent/.test(t.name));
     const terminal = existing || vscode.window.createTerminal({ name: 'Web Agent · 1', cwd });
     terminal.show(true);
-    const si = terminal.shellIntegration;
+    const si = await waitForShellIntegration(terminal, 2500);
     if (si && typeof si.executeCommand === 'function') {
-      const execution = si.executeCommand(String(job.command || ''));
-      let buf = '';
-      const run = async () => {
-        try {
-          if (execution && execution.read) {
-            for await (const chunk of execution.read()) {
-              buf += String(chunk);
-              await this.postJob(job.jobId, { state: 'progress', stdout: stripAnsi(chunk) });
-            }
-          }
-          const exitCode = execution && execution.exitCode ? await execution.exitCode : 0;
-          await this.postJob(job.jobId, {
-            state: 'done',
-            status: 'done',
-            exitCode: exitCode == null ? 0 : exitCode,
-            stdout: stripAnsi(buf),
-            outputCaptured: true
-          });
-        } catch (err) {
-          await this.postJob(job.jobId, {
-            state: 'done',
-            status: 'error',
-            stderr: err && err.message ? err.message : String(err)
-          });
-        }
-      };
-      run();
+      await this.runShellIntegration(si, job);
       return;
     }
     terminal.sendText(String(job.command || ''), true);
@@ -345,4 +401,4 @@ function startPtyHost(context, deps) {
   }
 }
 
-module.exports = { startPtyHost, PtyHost, loadNodePty, stripAnsi, scrubEnv, spawnSpec };
+module.exports = { startPtyHost, PtyHost, loadNodePty, stripAnsi, scrubEnv, spawnSpec, waitForShellIntegration };

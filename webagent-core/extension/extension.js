@@ -9,8 +9,9 @@ const { startPtyHost } = require('./ptyHost');
 let ptyHost = null;
 
 function dispatchPty(ev) {
-  if (!ev || ev.type !== 'pty_request' || !ptyHost || typeof ptyHost.handleIncoming !== 'function') return;
-  ptyHost.handleIncoming(ev);
+  if (!ev || ev.type !== 'pty_request' || !ptyHost) return;
+  if (typeof ptyHost.noteStream === 'function') ptyHost.noteStream();
+  if (typeof ptyHost.handleIncoming === 'function') ptyHost.handleIncoming(ev);
 }
 
 function agentHostUrl() {

@@ -148,7 +148,7 @@ export async function loadSkills() {
   const list = data.skills || [];
   $('#cnt-skills').textContent = list.length ? String(list.length) : '';
   $('#skills-list').innerHTML = list.length
-    ? list.map((s) => `<article class="block"><h4>${escapeHtml(s.name)}</h4><p class="hint">${escapeHtml(s.path)}</p><pre style="white-space:pre-wrap;font-size:12px">${escapeHtml(s.preview)}</pre></article>`).join('')
+    ? list.map((s) => `<article class="block"><h4>${escapeHtml(s.name)}</h4><p class="hint">${escapeHtml(s.skillFile || s.path)}</p><pre style="white-space:pre-wrap;font-size:12px">${escapeHtml(s.preview)}</pre></article>`).join('')
     : '<p class="hint">还没有 Skill。把文件夹放到 .webagent/skills/ 即可。</p>';
 }
 
