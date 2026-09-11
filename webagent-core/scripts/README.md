@@ -100,3 +100,16 @@
 7. 插件打 48271 的 `/api/chat` 与 `/api/bridge/*`，与自绘工作台同一引擎。
 8. 不要与 `run-webagent.cmd` 同时开（抢 3000）。
 9. 桌面 VS Code：`install-vscode-extension.cmd` → `install-desktop-extension.js` 拷到 `~/.vscode/extensions`；再单独 `run-webagent.cmd` 听 48271。不进本文件的 ensure/run-code-oss。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [codeServerAuth.js](codeServerAuth.js) | 2 个函数/类节点 |
+| [ensure-code-server.js](ensure-code-server.js) | 9 个函数/类节点 |
+| [install-desktop-extension.js](install-desktop-extension.js) | 7 个函数/类节点 |
+| [run-code-oss.js](run-code-oss.js) | 16 个函数/类节点 |
+<!-- docs-inventory:end -->

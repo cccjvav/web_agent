@@ -403,3 +403,65 @@
 - resourceBudget：保留schema/Date/分页游标、有界读取、worker取消、目录预算、根目录glob；排队写锁取消拒写与新文件排他创建。
 - monacoLoading：网络失败/超时降级/迟到加载保留缓冲区（真实函数fixture，不是浏览器）。
 - Windows CI额外编译input/input2/keys.cs，解析全部PS脚本，检查无效句柄拒绝；不代表交互桌面验收。
+
+### 文档工程回归（2026-09-12）
+documentationPolicy是runner必需测试，检查当前清单并用独立临时git仓库验证新增/删除/改动、缺README、坏链接、坏语法、标记损坏与只读模式。docsSite验证自动收录每份归属README和源码快照hash；测试fixture不进入发行源码快照。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
+| [apiFiles.test.js](apiFiles.test.js) | 13 个函数/类节点 |
+| [auditControl.test.js](auditControl.test.js) | 17 个函数/类节点 |
+| [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
+| [board.test.js](board.test.js) | 4 个函数/类节点 |
+| [bridgeTunnel.test.js](bridgeTunnel.test.js) | 20 个函数/类节点 |
+| [chatMode.test.js](chatMode.test.js) | 0 个函数/类节点 |
+| [chatVision.test.js](chatVision.test.js) | 20 个函数/类节点 |
+| [codeServerAuth.test.js](codeServerAuth.test.js) | 0 个函数/类节点 |
+| [codeServerNotRunnable.test.js](codeServerNotRunnable.test.js) | 0 个函数/类节点 |
+| [corsAllow.test.js](corsAllow.test.js) | 20 个函数/类节点 |
+| [dangerousCommands.test.js](dangerousCommands.test.js) | 11 个函数/类节点 |
+| [desktopExtension.test.js](desktopExtension.test.js) | 0 个函数/类节点 |
+| [docsHttp.test.js](docsHttp.test.js) | 14 个函数/类节点 |
+| [docsSite.test.js](docsSite.test.js) | 4 个函数/类节点 |
+| [documentationPolicy.test.js](documentationPolicy.test.js) | 11 个函数/类节点 |
+| [editorRuntime.test.js](editorRuntime.test.js) | 33 个函数/类节点 |
+| [eventBus.test.js](eventBus.test.js) | 9 个函数/类节点 |
+| [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
+| [githubAuth.test.js](githubAuth.test.js) | 8 个函数/类节点 |
+| [hostPersist.test.js](hostPersist.test.js) | 3 个函数/类节点 |
+| [httpSmoke.test.js](httpSmoke.test.js) | 40 个函数/类节点 |
+| [installerPackaging.test.js](installerPackaging.test.js) | 9 个函数/类节点 |
+| [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
+| [mcpBoard.test.js](mcpBoard.test.js) | 6 个函数/类节点 |
+| [mcpProtocol.test.js](mcpProtocol.test.js) | 31 个函数/类节点 |
+| [modelLifecycle.test.js](modelLifecycle.test.js) | 16 个函数/类节点 |
+| [monacoLoading.test.js](monacoLoading.test.js) | 12 个函数/类节点 |
+| [oauth.test.js](oauth.test.js) | 15 个函数/类节点 |
+| [oauthClientAuth.test.js](oauthClientAuth.test.js) | 8 个函数/类节点 |
+| [patchEngine.test.js](patchEngine.test.js) | 4 个函数/类节点 |
+| [planRound.test.js](planRound.test.js) | 6 个函数/类节点 |
+| [profile.test.js](profile.test.js) | 1 个函数/类节点 |
+| [providers.test.js](providers.test.js) | 6 个函数/类节点 |
+| [ptyJobs.test.js](ptyJobs.test.js) | 12 个函数/类节点 |
+| [ptyLifecycle.test.js](ptyLifecycle.test.js) | 32 个函数/类节点 |
+| [resourceBudget.test.js](resourceBudget.test.js) | 14 个函数/类节点 |
+| [runChat.test.js](runChat.test.js) | 21 个函数/类节点 |
+| [sandbox.test.js](sandbox.test.js) | 3 个函数/类节点 |
+| [skipWorkbench.test.js](skipWorkbench.test.js) | 16 个函数/类节点 |
+| [stateIntegrity.test.js](stateIntegrity.test.js) | 14 个函数/类节点 |
+| [testRunner.test.js](testRunner.test.js) | 1 个函数/类节点 |
+| [toolLabel.test.js](toolLabel.test.js) | 0 个函数/类节点 |
+| [tunnel.test.js](tunnel.test.js) | 11 个函数/类节点 |
+| [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 13 个函数/类节点 |
+| [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
+| [webviewRuntime.test.js](webviewRuntime.test.js) | 25 个函数/类节点 |
+| [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 18 个函数/类节点 |
+| [workspaceTools.test.js](workspaceTools.test.js) | 11 个函数/类节点 |
+<!-- docs-inventory:end -->

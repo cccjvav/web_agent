@@ -48,3 +48,13 @@ Windows 操作见根目录 [使用指南.md](../使用指南.md)。工作流见 
 2. 若有人执行本目录 `start-webagent.sh`：算出仓库根 → `exec run-webagent.sh` → 与根 bash 入口相同。
 3. 网页 VS Code：根 `run-webagent-vscode.cmd` → `scripts/run-code-oss.js` → 拷 `extension/` 到 `extensions-installed/`，agent-host 跳过 3000。
 4. 桌面 VS Code：根 `install-vscode-extension.cmd` → `scripts/install-desktop-extension.js` 拷到 `~/.vscode/extensions`；引擎仍是根 `run-webagent.cmd` 的 :48271。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [start-webagent.sh](start-webagent.sh) | 文件级登记；未做符号完整性证明 |
+<!-- docs-inventory:end -->

@@ -141,3 +141,17 @@
 3. 否则能调所选模型 → `openai.runOpenAI`（返回 `{ text }`）；失败改 builtin。
 4. 无 Key → `runBuiltin`：explore 只读 → Ask 摘要 / Code 解析消息里的补丁或围栏再测。
 5. 每步 `timedTool`/`emit('tool')` 被工作台或 VS Code 插件画成工具卡。Plan 另发 `planRound` / 满 2 支才 `consensus`。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [computerUse.js](computerUse.js) | 7 个函数/类节点 |
+| [openai.js](openai.js) | 11 个函数/类节点 |
+| [providers.js](providers.js) | 6 个函数/类节点 |
+| [runChat.js](runChat.js) | 34 个函数/类节点 |
+| [toolLabel.js](toolLabel.js) | 1 个函数/类节点 |
+<!-- docs-inventory:end -->

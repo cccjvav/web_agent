@@ -93,3 +93,18 @@ requestScope.js使用AsyncLocalStorage传播每个Chat请求的AbortSignal；che
 
 ### boundedFile.js（2026-09-11新增）
 readBoundedText在路径及fd上检查普通文件/8MiB默认上限，按64KiB块读取且最多maxBytes+1探测增长，finally关闭fd，不先readFileSync整个增长文件。由工具读/补丁/API读共用；不是操作系统沙箱。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [boundedFile.js](boundedFile.js) | 1 个函数/类节点 |
+| [corsAllow.js](corsAllow.js) | 14 个函数/类节点 |
+| [diff.js](diff.js) | 1 个函数/类节点 |
+| [eventBus.js](eventBus.js) | 12 个函数/类节点 |
+| [localControl.js](localControl.js) | 7 个函数/类节点 |
+| [requestScope.js](requestScope.js) | 5 个函数/类节点 |
+<!-- docs-inventory:end -->

@@ -137,3 +137,16 @@ store.load仅ENOENT返回默认值；JSON损坏/结构错误抛E_CONFIG_CORRUPT�
 3. MCP `initialize` / Chat systemPrompt 读 `loadCustom` + `formatWorkspaceContext`。
 4. 工具 remember/recall 只碰 `memory/`。
 5. Add API / 多模型开关走 `store.save` / `patch`，与 customizations 文件分开。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [customizations.js](customizations.js) | 5 个函数/类节点 |
+| [memory.js](memory.js) | 7 个函数/类节点 |
+| [profile.js](profile.js) | 15 个函数/类节点 |
+| [store.js](store.js) | 28 个函数/类节点 |
+<!-- docs-inventory:end -->

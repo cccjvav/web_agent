@@ -112,3 +112,18 @@ VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@webage
 3. 用户发消息 → `postNdjson('/api/chat')` → 与工作台同一套 `runChat`/`callTool`。
 4. Bridge 按钮 → `/api/bridge/start|stop`：start 在 cloudflare 下 `await startQuickTunnel`；失败仍 200，MCP 走当前 Host。stop 调 `stopTunnel`。
 5. 默认模式 Code（Agent），与 Copilot 侧栏 Agent 对齐。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [extension.js](extension.js) | 42 个函数/类节点 |
+| [modeFromChatRequest.js](modeFromChatRequest.js) | 1 个函数/类节点 |
+| [package.json](package.json) | 文件级登记；未做符号完整性证明 |
+| [ptyHost.js](ptyHost.js) | 55 个函数/类节点 |
+| [ptyPolicy.js](ptyPolicy.js) | 4 个函数/类节点 |
+| [workspaceMatch.js](workspaceMatch.js) | 2 个函数/类节点 |
+<!-- docs-inventory:end -->

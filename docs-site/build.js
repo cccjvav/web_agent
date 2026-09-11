@@ -38,6 +38,23 @@ const FILE_DOCS = [
   { id: 'launchers', path: '启动脚本说明.md', group: '入口' }
 ];
 
+
+// Stable legacy IDs plus manifest-derived directory docs: new modules cannot be
+// silently omitted from the viewer after inventory generation.
+const docConfig = JSON.parse(fs.readFileSync(path.join(__dirname, 'documentation.config.json'), 'utf8'));
+const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, 'documentation-manifest.json'), 'utf8'));
+const discoveredDocs = [...new Set(manifest.files.map(file => file.doc))].sort();
+for (const docPath of discoveredDocs) {
+  if (!FILE_DOCS.some(doc => doc.path === docPath)) {
+    const id = 'directory-' + require('crypto').createHash('sha256').update(docPath).digest('hex').slice(0, 12);
+    FILE_DOCS.push({ id, path: docPath, group: '源码目录' });
+  }
+}
+for (const doc of docConfig.extraSiteDocs) {
+  if (FILE_DOCS.some(existing => existing.id === doc.id && existing.path !== doc.path)) throw new Error('Duplicate documentation route: ' + doc.id);
+  if (!FILE_DOCS.some(existing => existing.path === doc.path)) FILE_DOCS.push(doc);
+}
+
 function readUtf8(rel) {
   return fs.readFileSync(path.join(ROOT, rel), 'utf8').replace(/^\uFEFF/, '');
 }
@@ -60,6 +77,8 @@ function slug(text) {
     .slice(0, 80);
 }
 
+let activeDocPath = 'README.md';
+const sourcePaths = new Set(manifest.files.map(file => file.path));
 function rewriteHref(href) {
   if (!href) return href;
   const [rawPath, hash] = href.split('#');
@@ -77,8 +96,11 @@ function rewriteHref(href) {
     './DOCUMENTATION_SUMMARY.md': '#/files/summary',
     'DOCUMENTATION_SUMMARY.md': '#/files/summary'
   };
+  const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(activeDocPath), decodeURIComponent(p)));
+  if (sourcePaths.has(resolved)) return `#/source/${encodeURIComponent(resolved)}${hash ? '/' + hash : ''}`;
+  if (map[resolved]) return hash ? `${map[resolved]}/${hash}` : map[resolved];
   if (map[p]) return hash ? `${map[p]}/${hash}` : map[p];
-  const fileHit = FILE_DOCS.find((d) => p.endsWith(d.path) || p === `./${d.path}`);
+  const fileHit = FILE_DOCS.find(d => d.path === resolved) || FILE_DOCS.find((d) => p.endsWith(d.path) || p === `./${d.path}`);
   if (fileHit) return hash ? `#/files/${fileHit.id}/${hash}` : `#/files/${fileHit.id}`;
   if (p.endsWith('.md')) return href;
   return href;
@@ -339,6 +361,7 @@ const workflowMd = readUtf8('组件说明.md');
 
 const files = {};
 for (const doc of FILE_DOCS) {
+  activeDocPath = doc.path;
   const md = readUtf8(doc.path);
   files[doc.id] = {
     id: doc.id,
@@ -350,7 +373,17 @@ for (const doc of FILE_DOCS) {
   };
 }
 
+activeDocPath = 'README.md';
+const sources = {};
+for (const file of manifest.files) {
+  const text = fs.readFileSync(path.join(ROOT, file.path), 'utf8').replace(/\r\n/g, '\n');
+  const sha256 = require('crypto').createHash('sha256').update(text).digest('hex');
+  if (sha256 !== file.sha256) throw new Error('Source snapshot drift; regenerate inventory: ' + file.path);
+  const omitted = (docConfig.sourceSnapshotExclusions || []).find(rule => file.path.startsWith(rule.prefix));
+  sources[file.path] = omitted ? { sha256, omitted: omitted.reason } : { text, sha256 };
+}
 const payload = {
+  sources,
   builtAt: new Date().toISOString().slice(0, 10),
   guide: parseGuide(guideMd),
   impl: {

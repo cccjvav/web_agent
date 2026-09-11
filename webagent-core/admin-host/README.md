@@ -70,3 +70,14 @@ macOS / Linux：
 ### 📄 文件名：`index.js`
 
 `WEBAGENT_ADMIN_PORT` 默认 4174，`WEBAGENT_ADMIN_BIND` 默认 `127.0.0.1`。启动日志打印真实 bind。未设 `WEBAGENT_ADMIN_TOKEN` 时提示令牌文件路径。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [app.js](app.js) | 27 个函数/类节点 |
+| [index.js](index.js) | 1 个函数/类节点 |
+<!-- docs-inventory:end -->

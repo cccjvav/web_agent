@@ -9,7 +9,7 @@
 
 ## 当前状态
 - **阶段**：2026-09-11审计交叉验证与分批修复；历史S4/S6代码完成不代表缺陷清零。
-- **正在做**：原F01–F38确认缺陷已完成代码整改批次；第七批隧道/资源预算c92de99，第八批Windows输入/文档866094b均推送。正在收尾补排队写取消、stop/logout与schema边界、Monaco反馈及文档状态。五项产品决策保持不变，远程仅认证MCP，不开放工作台UI。平台验收未完成，不能宣称发行就绪。
+- **正在做**：2026-09-12文档工程落地：源码旁README＋自动清单/JS AST索引＋CI门禁；唯一规范manager/docs/documentation.md，阶段记录manager/stages/documentation-2026-09-12.md。源码整改和平台未验收边界继续以原审计台账为准。
 - **唯一活台账**：review/AUDIT_CROSSCHECK_2026-09-11.md（外部35项发现、原F01–F38、验收结果与决策）；阶段记录见manager/stages/audit-2026-09-11.md。
 - **验收限制**：Windows CI运行34644206411已通过安装器及输入C#编译/PS解析；交互安装/升级/卸载、桌面DPI/剪贴板、浏览器/真实VS Code PTY与手机Arena公网MCP仍未验收。
 

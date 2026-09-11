@@ -43,3 +43,13 @@
 2. 「用 GitHub 设备码」：有 `WEBAGENT_GITHUB_CLIENT_ID` 才 `startDeviceLogin`；前端按 interval 打 `/bridge/device/poll`。
 3. 「清除 GitHub 身份」→ `clearGithubKeepDemo`，Bridge 仍可用演示授权。
 4. 登出 Bridge → `resetPending`。主 `index.js` **不** listen 管理页。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [github.js](github.js) | 12 个函数/类节点 |
+<!-- docs-inventory:end -->

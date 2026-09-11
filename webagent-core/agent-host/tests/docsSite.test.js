@@ -37,3 +37,13 @@ const context = { window: {} };
 require('vm').runInNewContext(after, context);
 assert.ok(context.window.DOCS.files.summary.html, 'summary route must have real content');
 assert.ok(context.window.DOCS.fileIndex.some(doc => doc.id === 'summary'));
+
+const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, 'docs-site/documentation-manifest.json'), 'utf8'));
+for (const file of manifest.files) {
+  assert.ok(context.window.DOCS.fileIndex.some(doc => doc.path === file.doc), 'Every owning README is navigable: ' + file.doc);
+  assert.strictEqual(context.window.DOCS.sources[file.path].sha256, file.sha256);
+}
+assert.ok(Object.values(context.window.DOCS.files).some(doc => doc.html.includes('#/source/')), 'Source links resolve inside the docs viewer');
+assert.ok(context.window.DOCS.files['source-index'].html.includes('/L'));
+
+assert.ok(!context.window.DOCS.sources['webagent-core/agent-host/tests/installerPackaging.test.js'].text, 'Test fixtures are not embedded in distributable docs');

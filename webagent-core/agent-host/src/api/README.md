@@ -90,3 +90,13 @@
 
 ### 2026-09-11 生命周期补充
 bridge start/stop/logout均以generation排除旧请求，stop/logout等待进程退出；logout期间较旧start最终409，不能重新发布running。文本GET使用boundedFile（8MiB）；等待写锁后再检查请求取消。停止失败不是成功响应，实际残留进程需人工核对。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [routes.js](routes.js) | 48 个函数/类节点 |
+<!-- docs-inventory:end -->

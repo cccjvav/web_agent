@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "sourceExtensions": [
+    ".js",
+    ".mjs",
+    ".cjs",
+    ".ts",
+    ".tsx",
+    ".jsx",
+    ".py",
+    ".json",
+    ".html",
+    ".css",
+    ".yaml",
+    ".yml",
+    ".xml",
+    ".svg",
+    ".ps1",
+    ".cs",
+    ".cmd",
+    ".bat",
+    ".sh",
+    ".iss"
+  ],
+  "exclusions": [
+    {
+      "prefix": "webagent-repro/",
+      "reason": "冻结原型，由现有README说明，不计当前产品覆盖率"
+    },
+    {
+      "prefix": "webagent-core/extensions-installed/",
+      "reason": "发行副本；以extension源码为准，现有副本一致性测试负责校验"
+    },
+    {
+      "prefix": "bin/code-server-dist/",
+      "reason": "第三方运行时"
+    },
+    {
+      "prefix": "bin/code-server-runtime/",
+      "reason": "第三方运行时"
+    },
+    {
+      "prefix": "workspace/",
+      "reason": "示例工作区和用户数据；维护规范另由docs-sync Skill引用"
+    },
+    {
+      "prefix": ".config/",
+      "reason": "历史运行配置，已有目录说明；不扫描用户配置正文"
+    },
+    {
+      "path": "docs-site/content.js",
+      "reason": "由Markdown生成的文档站内容"
+    },
+    {
+      "path": "docs-site/documentation-manifest.json",
+      "reason": "本工具生成的清单，避免自引用"
+    }
+  ],
+  "rootScriptDoc": "启动脚本说明.md",
+  "rootDoc": "README.md",
+  "extraSiteDocs": [
+    {
+      "id": "documentation-policy",
+      "path": "manager/docs/documentation.md",
+      "group": "维护"
+    },
+    {
+      "id": "source-index",
+      "path": "docs-site/source-index.md",
+      "group": "维护"
+    }
+  ],
+  "sourceSnapshotExclusions": [
+    {
+      "prefix": "webagent-core/agent-host/tests/",
+      "reason": "测试fixture源码不嵌入可能随安装包发行的content.js；保留结构索引和README归属"
+    }
+  ]
+}

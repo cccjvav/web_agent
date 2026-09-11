@@ -52,3 +52,13 @@
 2. 没有 `node_modules/express` 时 `npm install`（根脚本检查的是这个路径）。
 3. `node src/index.js` → 见 `src/README.md`（双端口、OAuth、MCP）。
 4. `npm test` → 见 `tests/README.md`。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [package.json](package.json) | 文件级登记；未做符号完整性证明 |
+<!-- docs-inventory:end -->

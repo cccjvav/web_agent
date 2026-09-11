@@ -28,3 +28,7 @@
 - 产品用户指南仍是仓库根 `使用指南.md`，不要另写第三份总说明书抢地位
 - 只推当前Arena会话固定分支（以会话提供的分支为准，不沿用历史分支名）
 - 涉敏信息用 `{{占位符}}`，真实数据只存 `manager/privacy.md`（已 gitignore）
+
+## 代码文档（强制）
+唯一规范：[manager/docs/documentation.md](manager/docs/documentation.md)。纳入范围的源码目录必须有同级README；新增/移动/删除文件同步文档归属。复杂分支解释基于真实源码，不将生成记录当作语义审查。
+改动后先审查正文，再运行 `node docs-site/check-docs.js --write`、`node docs-site/build.js` 和完整测试。不得手改生成清单/索引/自动导航区，排除项须有理由。

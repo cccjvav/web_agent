@@ -31,3 +31,16 @@
 installerPackaging.test.js覆盖干净清单、私密数据排除、用户副本与校验失败清理、工作区路径和关键Inno声明。新增Windows CI编译任务；本地Linux无法执行ISCC/CMD，必须另外确认Windows CI及普通用户安装/升级/卸载/Edge窗口实机结果。不把静态声明检查当安装验收。
 
 Windows CI首次实际编译发现官方Inno安装没有ChineseSimplified.isl；现改为检测语言包存在才启用chs，否则保留英文标准向导（产品自定义中文说明不变）。若需完整中文标准向导，构建机先安装简体中文语言包。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [build-installer.cmd](build-installer.cmd) | 文件级登记；未做符号完整性证明 |
+| [launch.js](launch.js) | 21 个函数/类节点 |
+| [package.js](package.js) | 4 个函数/类节点 |
+| [webagent.iss](webagent.iss) | 文件级登记；未做符号完整性证明 |
+<!-- docs-inventory:end -->

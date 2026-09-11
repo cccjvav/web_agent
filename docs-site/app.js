@@ -10,6 +10,7 @@
     { id: 'graph', label: '知识图谱', hint: '总览调用链' },
     { id: 'workflow', label: '工作流', hint: '组件说明' },
     { id: 'files', label: '文件夹说明书', hint: '行级 README' },
+    { id: 'source', label: '源码快照', hint: '与清单hash对应' },
     { id: 'terms', label: '术语', hint: '先人话' }
   ];
 
@@ -322,6 +323,34 @@
     }
   }
 
+  function renderSource() {
+    const main = $('.main');
+    let sourcePath;
+    try { sourcePath = decodeURIComponent(route().rest[0] || ''); } catch (_) { sourcePath = ''; }
+    const source = (window.DOCS.sources || {})[sourcePath];
+    main.innerHTML = pageChrome('源码快照', '静态构建内容，不读取任意磁盘路径；行号与显示的SHA-256对应。');
+    const title = document.createElement('p');
+    title.textContent = source ? sourcePath + ' · SHA-256 ' + source.sha256 : '请从目录README或源码符号索引选择文件。';
+    main.appendChild(title);
+    if (!source || typeof source.text !== 'string') {
+      if (source && source.omitted) { const note = document.createElement('p'); note.textContent = source.omitted; main.appendChild(note); }
+      return;
+    }
+    const range = /^L(\d+)(?:-L?(\d+))?$/.exec(route().rest[1] || '');
+    const start = range ? Number(range[1]) : 0, end = range ? Number(range[2] || range[1]) : 0;
+    const pre = document.createElement('pre');
+    source.text.split('\n').forEach((text, i) => {
+      const line = document.createElement('span');
+      line.id = 'source-L' + (i + 1);
+      line.textContent = String(i + 1).padStart(5) + '  ' + text + '\n';
+      if (i + 1 >= start && i + 1 <= end) line.style.background = 'rgba(255,200,0,0.18)';
+      pre.appendChild(line);
+    });
+    main.appendChild(pre);
+    const target = document.getElementById('source-L' + start);
+    if (target) target.scrollIntoView({ block: 'center' });
+  }
+
   function render() {
     const r = route();
     const page = PAGES.some((p) => p.id === r.page) ? r.page : 'map';
@@ -333,6 +362,7 @@
     else if (page === 'workflow') renderProsePage('workflow', '组件说明', '从双击到文件被改。小白工作流。');
     else if (page === 'files') renderFiles();
     else if (page === 'terms') renderTerms();
+    else if (page === 'source') renderSource();
   }
 
   window.addEventListener('hashchange', render);

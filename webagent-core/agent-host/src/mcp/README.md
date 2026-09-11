@@ -372,3 +372,20 @@ OAuth注册严格校验none/client_secret_post/client_secret_basic。token与rev
 
 ### 2026-09-11 输出预算修订（覆盖旧裁切说明）
 16k字符是软目标，不是响应硬上限。预算器保留数组、类型、标识符及分页内容/游标；只裁切非分页的文本字段，标记`_truncated`，结构仍超预算标记`_budgetExceeded`。不会改写nextCursor、丢页内记录或截断JSON字符串；需要更小响应请降低工具limit/缩小路径。大文件等硬资源边界在工具内部执行。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [budget.js](budget.js) | 6 个函数/类节点 |
+| [clients.js](clients.js) | 5 个函数/类节点 |
+| [errors.js](errors.js) | 6 个函数/类节点 |
+| [instructions.js](instructions.js) | 3 个函数/类节点 |
+| [oauth.js](oauth.js) | 41 个函数/类节点 |
+| [resources.js](resources.js) | 5 个函数/类节点 |
+| [server.js](server.js) | 32 个函数/类节点 |
+| [session.js](session.js) | 13 个函数/类节点 |
+<!-- docs-inventory:end -->

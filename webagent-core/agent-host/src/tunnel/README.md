@@ -72,3 +72,15 @@
 - generation及child引用隔离过期日志、就绪与exit；停止取消未就绪启动，active进程退出清URL/running。已有pid的error不视为退出，仍尝试停止并等待。
 - API start/stop/logout都有代次控制；logout等待停止，不让较旧start重新发布状态。
 - 本地进程fixture验证等待退出、过期事件、启动取消与信号失败；真实公网及Windows进程树不是这些fixture的验收范围。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [cloudflared.js](cloudflared.js) | 39 个函数/类节点 |
+| [ngrok.js](ngrok.js) | 22 个函数/类节点 |
+| [stopProcess.js](stopProcess.js) | 8 个函数/类节点 |
+<!-- docs-inventory:end -->

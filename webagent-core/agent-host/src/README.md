@@ -93,3 +93,15 @@
 4. 两个 listen：给人看的 3000（可跳过）与 MCP 的 48271。
 5. 浏览器打开 3000 拿到 workbench；Chat 走 3000 的 `/api`；网页 Agent 走 `/mcp`（可能经隧道）。VS Code 插件仍打本机 `127.0.0.1:48271/api`（无 Cloudflare 头）。
 6. `/ws` 只挂在 3000，把工具事件推回 UI；连接消息**不下发** secretKey。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [config.js](config.js) | 2 个函数/类节点 |
+| [extensionVersion.js](extensionVersion.js) | 1 个函数/类节点 |
+| [index.js](index.js) | 13 个函数/类节点 |
+<!-- docs-inventory:end -->

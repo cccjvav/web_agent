@@ -193,3 +193,16 @@
 
 ### 2026-09-11 编辑器加载反馈
 loadMonaco从app.js移入js/monaco.js；底栏aria-live显示加载中/纯文本降级/高级编辑器就绪。网络、AMD加载及初始化失败均回落；7秒为等待上限，迟到成功仍捕获当前缓冲区后升级，不丢纯文本编辑。monacoLoading回归执行真实函数的加载/错误/迟到fixture，尚非浏览器验收。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [app.js](app.js) | 9 个函数/类节点 |
+| [favicon.svg](favicon.svg) | 文件级登记；未做符号完整性证明 |
+| [index.html](index.html) | 文件级登记；未做符号完整性证明 |
+| [styles.css](styles.css) | 文件级登记；未做符号完整性证明 |
+<!-- docs-inventory:end -->

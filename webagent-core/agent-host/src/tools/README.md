@@ -296,3 +296,30 @@ apply_patch仅接受完整相等哈希，不再接受短前缀；write_file携�
 
 ### 2026-09-11 资源边界修订
 文本读写与补丁结果上限8MiB，read_files每次最多20路径；目录列表扫描1000项/深度8，截短需缩小路径。搜索使用最多4个worker、2秒deadline，取消终止worker，启发式regex检查不构成安全保证。find_files支持`**/`匹配零层目录。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [board.js](board.js) | 22 个函数/类节点 |
+| [consensusEngine.js](consensusEngine.js) | 7 个函数/类节点 |
+| [dangerous.js](dangerous.js) | 32 个函数/类节点 |
+| [executor.js](executor.js) | 30 个函数/类节点 |
+| [fileOps.js](fileOps.js) | 30 个函数/类节点 |
+| [findFiles.js](findFiles.js) | 3 个函数/类节点 |
+| [gitOps.js](gitOps.js) | 6 个函数/类节点 |
+| [index.js](index.js) | 15 个函数/类节点 |
+| [normalize.js](normalize.js) | 4 个函数/类节点 |
+| [patchEngine.js](patchEngine.js) | 33 个函数/类节点 |
+| [planRound.js](planRound.js) | 10 个函数/类节点 |
+| [progressTracker.js](progressTracker.js) | 5 个函数/类节点 |
+| [ptyJobs.js](ptyJobs.js) | 22 个函数/类节点 |
+| [readCache.js](readCache.js) | 10 个函数/类节点 |
+| [searchWorker.js](searchWorker.js) | 0 个函数/类节点 |
+| [sensitive.js](sensitive.js) | 12 个函数/类节点 |
+| [skills.js](skills.js) | 11 个函数/类节点 |
+| [workspaceInfo.js](workspaceInfo.js) | 3 个函数/类节点 |
+<!-- docs-inventory:end -->

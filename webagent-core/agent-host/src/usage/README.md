@@ -45,3 +45,13 @@
 1. 远程 `tools/call` 结束 → `record`。
 2. 约 4 秒后若配了 URL+令牌，POST 到独立管理页 `/api/report`（默认 4174，**不是** 3000/48271）。
 3. 跨日 `load` 自动空计数。换工作区 = 另一份 usage.json。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [tracker.js](tracker.js) | 19 个函数/类节点 |
+<!-- docs-inventory:end -->
