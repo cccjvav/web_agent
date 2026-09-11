@@ -33,7 +33,9 @@ LicenseFile=..\LICENSE
 InfoBeforeFile=..\SECURITY.md
 
 [Languages]
+#if FileExists(AddBackslash(CompilerPath) + "Languages\ChineseSimplified.isl")
 Name: "chs"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+#endif
 Name: "en"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
