@@ -1,55 +1,49 @@
-# 架构 / 源码可视化导览
+# 文档站：正文、索引与源码快照的只读展示
 
-把仓库根的 **架构导读**、**技术实现**、**总览**、**组件说明**，以及各夹行级 README 收成一套可点的 HTML。不另写实现；正文来自那些 Markdown。
-
-## 收录范围
-
-站内嵌的是：架构导读、技术实现、总览、组件说明、以及清单自动发现的源码目录README、维护规范与源码符号索引。旧FILE_DOCS保留历史页面ID，新目录不再依赖手填该列表。
-
-**不**嵌进站点的：根目录用户操作指南（[使用指南.md](../使用指南.md)、[隧道使用指南.md](../隧道使用指南.md)、[技能使用指南.md](../技能使用指南.md)、[启动脚本说明.md](../启动脚本说明.md)、网页 DeepSeek / Chat Plus / VS Code 指南）。那些以仓库根 Markdown 为准。
-
-## 打开（Windows CMD）
-
-在仓库根：
-
-```bat
-node docs-site\serve.js
-```
-
-浏览器打开 **http://127.0.0.1:4173/**
-
-启动时会重新跑 `build.js`，所以改过 `架构导读.md` / `技术实现.md` 后只要重启这个进程。
-
-Linux / macOS：
-
-```bash
-node docs-site/serve.js
-```
-
-不要和 `run-webagent.cmd` 抢端口：导览默认 **4173**，工作台仍是 3000。
-
-## 页面
-
-| 页 | 看什么 |
-|---|---|
-| 全景图 | 远端 / 车间 / 店堂三层；路径 A/B/C；一次 apply_patch |
-| 架构导读 | 每节四层卡片（人话、比喻、文件、行业叫法） |
-| 代码直译 | `技术实现.md` 全文 + 左侧目录 |
-| 知识图谱 | `总览.md` |
-| 工作流 | `组件说明.md` |
-| 文件夹说明书 | 各子夹 README |
-| 术语 | 导读第 12 节 |
-
-## 文件
+## 职责与文件
+文档站不是工作台，也不运行Agent工具。正文来自仓库Markdown，不在content.js手工维护另一份解释。
 
 | 文件 | 职责 |
 |---|---|
-| `index.html` / `styles.css` / `app.js` | 壳 |
-| `build.js` | 把 Markdown 打成 `content.js`（无 npm 依赖） |
-| `serve.js` | 先 build，再在 **127.0.0.1:4173** 提供静态页（`DOCS_HOST` 可覆盖）。路径必须落在本目录内（`ROOT + sep`）；畸形URL、非法百分号编码/NUL返回400而不退出进程。`DOCS_PORT=0`可用于测试，日志显示实际监听端口。侧栏链到 `#/guide` 等站内 hash，**不**链 `../架构导读.md`（那个路径 404） |
-| `content.js` | 生成物；不要手改 |
+| documentation.config.json | 纳入源码、排除理由与额外页面配置 |
+| check-docs.js | 重新扫描git文件集合，校验README归属/链接并生成结构产物 |
+| documentation-manifest.json | 自动hash、文档归属及JS AST结构，不是语义审查证书 |
+| source-index.md | 自动源码/符号索引，行号对应hash快照 |
+| build.js | 保留历史页面ID，自动收录清单中的README，转换Markdown及源码快照 |
+| index.html / app.js / styles.css | 文档浏览壳、导航、搜索与源码展示 |
+| content.js | 构建生成物，不直接修改 |
+| serve.js / serve.cmd | 重建后提供本目录静态文件，默认回环4173 |
 
-改导读或行级 README 后：再执行一次 `node docs-site/build.js` 或重启 `serve.js`。`npm test` 末尾的 `docsSite.test.js` 会再跑一遍 build，并断言提交的 `content.js` 没有漂移（`builtAt` 只精确到日期）。
+## 生成与启动流程
+先安装开发依赖，审查对应源码和正文，再从仓库根运行：
+
+```sh
+npm ci --prefix webagent-core/agent-host
+node docs-site/check-docs.js --write
+node docs-site/build.js
+node docs-site/serve.js
+```
+
+打开http://127.0.0.1:4173。serve会运行build，但不会替你刷新过期的源码清单；build发现源码hash漂移会拒绝生成。DOCS_HOST/DOCS_PORT可覆盖监听，文档预览与产品本机控制面不是同一服务。
+
+## 页面与阅读路径
+- 架构导读：发生了什么、为什么这样拆。
+- 技术实现：跨模块执行链和关键边界，不再逐函数复制所有README。
+- 文件夹说明书：模块职责、分工、错误路径、验证与本页目录。
+- 维护规范/源码索引：规则和自动定位；源码快照按行高亮，使用textContent而非执行源码HTML。
+- 总览、组件说明、历史文档统计：各自保留定位，历史计数不当作当前质量分数。
+
+实际收录由build的兼容列表、清单归属和extraSiteDocs共同决定。**启动脚本说明已经收录**；不能继续写成站外文档。使用指南、各第三方客户端教程等未全部内嵌，以根Markdown为准。
+
+## 安全与质量边界
+静态服务器不新增任意仓库路径读取接口，路径必须位于docs-site范围。源码快照来自配置纳入文件，hash一致才生成；测试fixture正文不嵌入可能随安装包发行的content.js，仅保留结构和归属。
+
+JS/CJS/MJS用Acorn提取节点；其他语言只有文件级登记。链接检查范围是受检文档的内联本地文件目标，不证明全部标题锚点、外部URL可用或正文准确。排版和语义必须另外审查。
+
+## 验证
+文档门禁使用documentationPolicy的真实清单检查及负例；documentationQuality检查本次关键契约、表格/围栏及本页目录函数fixture；docsSite验证生成一致性、归属导航和快照hash；docsHttp验证畸形URL及正常请求。浏览器窄屏/键盘/视觉效果仍需实测，不以生成成功代替。
+
+规范见[文档维护规范](../manager/docs/documentation.md)，正文质量审查见[本次审查](../review/DOC_QUALITY_2026-09-12.md)。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航
@@ -58,7 +52,7 @@ node docs-site/serve.js
 
 | 源码 | 定位证据 |
 |---|---|
-| [app.js](app.js) | 48 个函数/类节点 |
+| [app.js](app.js) | 50 个函数/类节点 |
 | [build.js](build.js) | 26 个函数/类节点 |
 | [check-docs.js](check-docs.js) | 17 个函数/类节点 |
 | [documentation.config.json](documentation.config.json) | 文件级登记；未做符号完整性证明 |

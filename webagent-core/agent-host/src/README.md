@@ -1,98 +1,52 @@
-# src 模块说明书
+# 后端进程组装与共享配置
 
-当前处理目标：`webagent-core/agent-host/src/`
+## 职责与文件
+本层负责把子模块装成服务，不重复实现MCP或工具业务。admin-host在另一个目录和进程中，默认4174；文档站默认4173，二者都不是这里自动创建的服务器。
 
-本 README 只覆盖**本目录直接文件** `config.js`、`index.js`、`extensionVersion.js`。子目录各有自己的 README：`mcp/`、`tools/`、`agent/`、`models/`、`api/`、`auth/`、`usage/`、`tunnel/`、`utils/`。管理页在仓库 `webagent-core/admin-host/`（**另一进程**，默认 4174）。
+| 文件 | 主要职责 |
+|---|---|
+| `config.js` | 单例工作区/端口/身份/隧道状态；persistIdentity加载或保存连接密钥和安装ID |
+| `extensionVersion.js` | 从扩展package.json读取展示版本，失败时使用代码里的回退值 |
+| `index.js` | 加载模块、初始化身份和统计、组装两套Express/HTTP及WS，处理监听错误 |
 
----
+## 配置入口
+| 环境项 | 作用 | 默认 |
+|---|---|---|
+| WORKSPACE_ROOT | 被编辑项目的根目录 | 仓库workspace |
+| AGENT_HOST_PORT | MCP/API端口 | 48271 |
+| WORKBENCH_PORT | 自绘工作台端口 | 3000 |
+| WEBAGENT_BIND | 监听地址 | 127.0.0.1 |
+| WEBAGENT_SKIP_WORKBENCH | 为code-server让出UI端口 | 非1时不跳过 |
 
-## 1. 模块概述
+config.secretKey/installId先产生内存值，再由persistIdentity用磁盘配置替换或写回。generateNewSecret更新内存后尝试落盘，保存失败目前被捕获；不能保证每一次换钥匙都已持久化。
 
-- **定位：** 进程入口与全局单例配置。`index.js` 组装**两套** Express（店堂 UI 与后厨 MCP）、开两个 HTTP 端口。
-- **依赖：** 本目录几乎所有子模块；npm：`express`、`ws`、`cors`。
-- **谁调用：** `run-webagent.cmd` / `.sh` 执行 `node src/index.js`；`scripts/run-code-oss.js` 同样启动并设 `WEBAGENT_SKIP_WORKBENCH=1`。
+## 执行流程与路由边界
+```text
+启动入口 → config / 模块加载 → persistIdentity → reporter
+  ├─ uiApp：health → 本机API → 工作台静态页/SPA → uiServer上的WS
+  └─ mcpApp：CORS → health/OAuth → 认证MCP → 仅本机可用的API
+```
 
----
+两端口都对API使用localControl与跨站检查；MCP端口不挂工作台静态页。WS只挂uiServer，在upgrade校验本机来源和Origin，连接后的首事件不包含secretKey。
 
-## 2. 文件级详细说明书
+applyCommon关闭x-powered-by，设置no-store，JSON请求体限20MB；路由再按自己的语义验证。listen错误（包括端口占用）会打印并退出，不应把日志已输出当作服务已监听。
 
-### 📄 文件名：`config.js`
+**初始化顺序限制**：直接启动index.js时，persistIdentity先于工作区存在性检查；写配置可能先创建目录。因而不能声称“直接node启动时，不存在的显式工作区一定零副作用拒绝”。仓库Windows启动器会先resolveWorkspace验证，二者不是同一路径。
 
-- **文件职责：** 进程内单例：端口、工作区根、secret、隧道 URL。任何 `require('../config')` 拿到同一块对象。
-- **核心类/函数清单：**
+## 阅读导航
+| 任务 | 文档 |
+|---|---|
+| 人机接口与成功语义 | [api](api/README.md) |
+| 远程协议和OAuth | [mcp](mcp/README.md) |
+| 模型与Plan | [agent](agent/README.md) |
+| 文件、命令和PTY | [tools](tools/README.md) |
+| 配置与记忆 | [models](models/README.md) |
+| GitHub可选身份 | [auth](auth/README.md) |
+| 隧道和公网就绪 | [tunnel](tunnel/README.md) |
+| 统计与公共辅助 | [usage](usage/README.md)、[utils](utils/README.md) |
 
-  - **模块加载（L1–L21）**
-    - L4–L6：`workspaceRoot = path.resolve(process.env.WORKSPACE_ROOT || …/workspace)`。
-    - L8–L21 `config` 对象，见 Key 表。
-  - **Function `generateNewSecret()`（L23–L29）** — 12 字节 hex 写入 `config.secretKey`；lazy `require('./models/store').patch({ secretKey })` 落盘（失败 catch 空）。返回新值。
-  - **Function `persistIdentity(store)`（L32–L44）**
-    - L32：`store.load()`。
-    - L33–L34：有 `saved.secretKey` 则覆盖内存，否则 `store.patch({ secretKey })`。
-    - L35–L36：`installId` 同样。
-    - L38–L43：调用 `store.protectWorkspaceSecrets()`（gitignore + chmod），再 `warnTrackedSecrets()`（Git 已跟踪密钥文件则 stderr 警告）；失败 catch 空。
-
-- **关键变量 `config` Key：**
-
-  | Key | 含义 | 取值 |
-  |---|---|---|
-  | `port` | MCP/API 端口 | `AGENT_HOST_PORT` 或 `48271` |
-  | `workbenchPort` | UI 端口 | `WORKBENCH_PORT` 或 `3000` |
-  | `host` | listen 地址 | `WEBAGENT_BIND` 或 **`'127.0.0.1'`**（不再默认听所有网卡） |
-  | `workspaceRoot` | 工具允许读写的根 | 环境变量或仓库 `workspace/` |
-  | `secretKey` | URL 密钥 | 先随机 12 字节 hex，随即可能被 persistIdentity 换成磁盘值 |
-  | `version` | 展示版本 | `productVersion()`：读 `webagent-core/extension/package.json`，读失败回退 `'0.6.9'` |
-  | `serverName` / `productName` | MCP serverInfo / 日志 | `WebAgent-AgentHost` / `Web Agent` |
-  | `tunnelProvider` | 隧道种类标签 | 默认 `'cloudflare'` |
-  | `publicTunnelUrl` | 当前隧道公网 URL（Quick / Named / ngrok） | 默认 `null`，由 tunnel 模块成功时写入 |
-  | `bridgeRunning` | Bridge 开关 | 默认 `false`，由 `/api/bridge/start` 置 true |
-  | `installId` | 安装 ID | 8 字节 hex，可被磁盘覆盖 |
-
----
-
-### 📄 文件名：`index.js`
-
-- **文件职责：** 创建 **uiApp / mcpApp** 两套 Express、两个 `http.Server`、可选跳过 3000。隧道打在 48271 时公网只应碰到 MCP/OAuth；`/api` 在 mcpApp 上要过 `rejectUnlessLocalControl`。
-- **核心类/函数清单：**
-
-  - **顶层启动（L1–L25）**
-    - L13：`require('./utils/corsAllow')` 的 `mcpCors` / `rejectCrossSiteApi` / `rejectDisallowedMcpOrigin`。
-    - L14：`require('./usage/tracker')`。
-    - L16：`persistIdentity(store)`。
-    - L17：`tracker.startReporter()`（15 分钟上报；没配 URL 则空转）。
-    - L19–L25：工作区不存在且设了 `WORKSPACE_ROOT` → 打印错误 `exit(1)`；未设环境变量 → `mkdirSync`。
-    - **不** `listen` 4174。管理页是 `webagent-core/admin-host/index.js`。
-  - **Function `applyCommon(app)`（L27–35）** — 关 x-powered-by、所有响应 `Cache-Control: no-store`、json 20mb、urlencoded。**不再**给两套 app 共用无条件 `cors()`。
-  - **Function `mountHealth(app)`（L37–41）** — `GET /health` → `{ ok, product, version }`。
-  - **Function `mountWorkbench(app)`（L45–59）** — 静态 `../../workbench`；SPA 回退：非 GET → next；path 以 `/api` `/mcp` `/ws` `/oauth` `/.well-known` 开头或恰好 `/register` → next；有扩展名 → next；否则 `index.html`。
-  - **两套 app（L62–74）**
-    - L62–66 `uiApp`：health、`/api` 先 `rejectUnlessLocalControl` 再 `rejectCrossSiteApi`、工作台静态 + SPA。**没有** cors、**没有** `/mcp`。
-    - L68–74 `mcpApp`：`mcpCors()`（白名单，不是 `cors()` 全开）、health、`oauth.router`、`/mcp` 先 `rejectDisallowedMcpOrigin` 再 mcpRouter、`/api` 先 `rejectUnlessLocalControl` 再 `rejectCrossSiteApi`。**没有**静态工作台、**没有** SPA。
-  - **Function `attachWss(server)`（L76–96）** — `WebSocketServer` path `/ws`；**verifyClient在upgrade阶段拒绝非本机控制面/外站Origin**（无Origin本机客户端仍允许）；connection处理保留close(1008)兜底；否则 `addWsClient`，立刻 send `type:'connected'`，payload 只含 `serverName`、`version`（**不含 secretKey**）。
-  - **Function `listenOrExit(server, port, label)`（L102–112）** — `error.code==='EADDRINUSE'` 打印占用后 `exit(1)`；其它 error 同样退出；`listen(port, config.host)`（默认 127.0.0.1）。
-  - **双服务器（L98–141）**
-    - L98–100：`uiServer = createServer(uiApp)`，`mcpServer = createServer(mcpApp)`；**只**给 uiServer attachWss。
-    - L114：`skipWorkbench = WEBAGENT_SKIP_WORKBENCH === '1'`。
-    - L116–128：非 skip 则 listen 3000 并打印 UI/MCP/**Bind**、三种隧道、以及「公网只收 /mcp 与 OAuth」。
-    - L129–136：skip 则打印「不占用 3000」，并说明 `/api` 仅本机回环。
-    - L138–141：无论 skip 都 listen `config.port`（48271）。
-
-- **关键变量：** L43 `workbenchDir`；L62 `uiApp`；L68 `mcpApp`；L98–99 两个 Server。导出 `{ uiApp, mcpApp, uiServer, mcpServer }`（L143）。
-
-### 📄 文件名：`extensionVersion.js`
-
-- **文件职责：** 产品展示版本只来自插件清单，避免 `config.js` 再写死一份。
-- **Function `productVersion()`（L1–L7）** — `require('../../extension/package.json').version`；catch 或空则 `'0.6.9'`。
-
----
-
-## 3. 执行逻辑流
-
-1. CMD/`node src/index.js` 加载 `config`（随机 secret）→ `persistIdentity` 可能换成磁盘密钥 → `tracker.startReporter()`。
-2. 确保工作区目录。
-3. 两套 Express：`uiApp`（3000：工作台 + `/api` + `/ws`）与 `mcpApp`（48271：`/mcp` + OAuth + 本机才能打的 `/api`）。
-4. 两个 listen：给人看的 3000（可跳过）与 MCP 的 48271。
-5. 浏览器打开 3000 拿到 workbench；Chat 走 3000 的 `/api`；网页 Agent 走 `/mcp`（可能经隧道）。VS Code 插件仍打本机 `127.0.0.1:48271/api`（无 Cloudflare 头）。
-6. `/ws` 只挂在 3000，把工具事件推回 UI；连接消息**不下发** secretKey。
+## 验证
+httpSmoke、skipWorkbench和auditControl验证双端口及HTTP/WS边界，hostPersist验证部分身份持久化。真实代理、Windows启动和平台路径行为不能仅由这些测试替代。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航

@@ -1,50 +1,20 @@
-# usage 模块说明书
+# MCP用量统计与可选上报
 
-当前处理目标：`webagent-core/agent-host/src/usage/`
+## 职责与入口
+`tracker.js`记录当前工作区当天的MCP工具调用数和失败数，保存到 `.webagent/usage.json`。它不是精确token计费器，也不自动统计所有Chat、直接REST和后台进程操作。
 
-本目录只有 `tracker.js`：把 **Bridge `tools/call`** 记进工作区 `.webagent/usage.json`（按 UTC 日）。`POST /api/bridge/reset-round` **不**清这份文件。本机 Chat 的 `/api/tool/call` **不**走这里。
+## 执行流程
+record读取当天记录、累计toolCalls/fail、更新lastAt并调度报告。today使用UTC日期；跨天或读取/解析失败时返回当天空记录。successRate在零调用时为null，否则由计数计算百分比。
 
----
+reportNow仅在配置WEBAGENT_TELEMETRY_URL及WEBAGENT_TELEMETRY_TOKEN且有调用时发送。payload含安装ID、可选GitHub身份、日期、调用计数和产品版本，不发送文件正文、命令或API Key。是否可以关联身份仍应告知用户，不能称完全匿名。
 
-## 1. 模块概述
+报告返回后重新读取最新当天数据，只更新lastReportAt，不用发出前的旧快照覆盖期间新增计数。定时周期为15分钟，另有调度防抖。
 
-- **定位：** 日汇总 + 可选上报。没配 `WEBAGENT_TELEMETRY_URL` + `WEBAGENT_TELEMETRY_TOKEN` 就不发 HTTP。
-- **依赖：** `../config`（`workspaceRoot` / `installId` / `productName` / `version`）、`../models/store`（GitHub 用户名）。
-- **谁调用：** `../mcp/server.js` 的 `tools/call` 成功/失败各 `record` 一次；`../index.js` 启动 `startReporter()`；`../api/routes.js` `GET /status` 的 `usage`。
+## 数据边界与失败
+usage.json顺序写盘，读取异常回空，不是不可丢失的审计日志或数据库事务。网络/上报失败不应被解读为工具失败；业务成功率仍取决于调用入口是否正确传入ok。界面telemetryConfigured只反映部分配置状态，不证明服务器收到报告。
 
----
-
-## 2. 文件级详细说明书
-
-### 📄 文件名：`tracker.js`
-
-- **文件职责：** 读写 usage.json；15 分钟 interval + 调用后 4 秒 debounce 上报。timer `unref`，不挡测试退出。
-- **核心类/函数清单：**
-
-  - **Function `usagePath`** — `<workspace>/.webagent/usage.json`。
-  - **Function `today`** — `toISOString().slice(0,10)`。
-  - **Function `emptyDay(day)`** — `toolCalls/fail` 0，`lastAt`/`lastReportAt` null。
-  - **Function `load`** — 坏 JSON 或 `day` 不是今天 → `emptyDay()`。
-  - **Function `save(next)`** — mkdir + 美化 JSON。
-  - **Function `successRate(rec)`** — 无调用 → `null`；否则 `round((1-fail/toolCalls)*100)`。
-  - **Function `snapshot`** — load + successRate + `telemetryConfigured` + `intervalMs`。
-  - **Function `record({ ok=true })`** — toolCalls+1；`ok` 假则 fail+1；写 `lastAt`；`scheduleReport`。
-  - **Function `identity`** — `provider==='github'` 才带 githubUser（去 `@`）和 githubId。
-  - **Function `payload`** — 上报 JSON：installId、github、day、计数、product、version。
-  - **Function `reportNow({ fetchFn=fetch })`** — 缺 URL/token → `{ skipped:true, reason:'not-configured' }`；无调用 → `'no-calls'`。POST Bearer。`!ok` 不改 lastReportAt。成功后重新load，只对同一天的最新记录合并lastReportAt；不把请求前的旧计数写回，跨日响应不更新新一天。回归见auditStorage.test.js。
-  - **Function `scheduleReport`** — 已有 debounce 则 return；否则 4000ms 后 `reportNow().catch` 空。
-  - **Function `startReporter`** — 已有 timer 则 return；`setInterval` 15 分钟。
-  - **Function `stopReporter`** — 清 interval 与 debounce。测试用。
-
-- **关键变量：** L6 `INTERVAL_MS = 15*60*1000`；L8–L9 `timer` / `debounce`。
-
----
-
-## 3. 执行逻辑流
-
-1. 远程 `tools/call` 结束 → `record`。
-2. 约 4 秒后若配了 URL+令牌，POST 到独立管理页 `/api/report`（默认 4174，**不是** 3000/48271）。
-3. 跨日 `load` 自动空计数。换工作区 = 另一份 usage.json。
+## 验证
+usageTracker与auditStorage覆盖统计和延迟报告期间计数不回退。没有远端collector可用性、重试持久队列或精确计费验收保证。管理端职责见[admin-host说明](../../../admin-host/README.md)。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航

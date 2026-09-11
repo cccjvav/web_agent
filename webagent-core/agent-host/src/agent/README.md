@@ -1,146 +1,46 @@
-# agent 模块说明书
+# 本机 Chat：模型循环与 Plan
 
-## 第六批：请求取消与PTY生命周期
+## 职责与入口
+本目录接收 `/api/chat` 已解析的请求，选择模型、调用共享工具并产生事件。工作台、扩展 webview、原生 VS Code Chat 都可使用这条通道。远程 MCP 在 `mcp/server.js` 调工具，不经过本目录的 Chat 调度；但会复用截图辅助函数。
 
-模型HTTP及响应body最多120秒，服从当前Chat请求AbortSignal。普通工具执行前检查取消；取消不是切换模型或继续内置执行的理由。
+## 文件分工
+| 文件 | 主要职责与调用方 |
+|---|---|
+| `runChat.js` | `runChat` 选择普通 Chat 或 Plan；`runBuiltin` 做有限的规则式探索；`runPlanRound` 管理分支和总结 |
+| `openai.js` | `runOpenAI` 请求 OpenAI 兼容端点，循环处理工具结果；`systemPrompt` 组合模式、画像和自定义指令 |
+| `providers.js` | Add API 时探测 `/models`，从返回字段读取上下文与视觉能力，不靠模型名称猜测 |
+| `computerUse.js` | 从命令和stdout识别截图路径，校验真实路径及图片大小，供Chat和MCP分别附图 |
+| `toolLabel.js` | 将工具结果转换为短标签；标签不替代结果对象中的失败状态 |
 
+## 执行流程
+### 普通 Chat
+1. `runChat` 读取工作区配置；指定模型ID存在时选中它，否则按当前活动模型/列表首项选择。因此无效ID并不是严格的“模型不存在”异常。
+2. 非builtin模型缺少调用字段时，发送error并停止。已发出的模型请求失败时也停止，交由用户选择重试或换模型；不会自动重放成内置文件修改。
+3. 选中builtin时，`runBuiltin` 扫描目录、搜索并读取有限文件。Ask输出探索摘要；Code只识别消息中的明确文件正文/补丁意图，必要时执行探测到的测试命令。它不是通用大模型。
+4. `timedTool` 把抛出的异常及结果中的 `ok:false` / `success:false` 转成失败工具事件，返回 `{ok:false,error}`。调用方必须检查结果，不能把“不抛异常”当成功。
 
-## 2026-09-11当前整改语义
+### 模型工具循环
+`runOpenAI` 发送system、最近历史和当前问题，最多10轮模型请求。每轮最多执行8项工具调用，但所有tool_call ID都收到结果或“未执行”的限额反馈，保持对话协议完整。
 
-模型调用失败/所选非builtin模型配置不完整时停止，不自动调用内置写入；内置写入/补丁失败停止。工具业务ok:false/success:false也计失败。每轮最多执行8项，但对全部tool_call id返回结果或限额错误。Plan分支提交前核对原round对象，总结还核对分支数，拒绝过期结果。
+工具按模式筛选；执行仍经过 `tools.callTool` 的模式与命令检查。参数解析和工具异常会反馈给模型，不代表每次工具失败都立即终止整个循环。**模型服务调用失败停止**与**工具失败作为结果反馈**是两种不同情形。
 
+结果经软预算处理后序列化，保持完整JSON。普通模型请求及响应body受120秒deadline约束，并服从当前Chat取消信号；外层HTTP Chat还有5分钟总截止时间。
 
-当前处理目标：`webagent-core/agent-host/src/agent/`
+### Plan 分支与总结
+- `start` 创建全局当前轮次，`branch` 追加分支，`reset` 清空；关闭多模型时使用single草案，不是“只有一支就自动总结”。
+- 至少两支才可merge，分支上限由配置限制在2–8。分支返回前检查原round对象；总结还检查分支数，拒绝将迟到结果写入新轮次。
+- 远程分支使用只读工具；builtin草案明确标 `simulated:true`。总结结果不是统计意义上的一致率证明。
+- **现有差异**：分支遇到非builtin配置不完整会停止，但merge路径在 `canCallModel(mergeModel)` 为false时仍进入 `mergeLocalBranches`，尚未统一成严格配置失败。这是实际行为，不应概括成“Plan所有入口均失败停止”。
 
-本目录实现 **本机 Chat**（`POST /api/chat`）。网页 Agent 走 MCP，**不进入本目录**。无 `.json` / `.html`。文件：`runChat.js`、`openai.js`、`computerUse.js`、`providers.js`、`toolLabel.js`。
+## 截图与数据边界
+截图候选必须在允许的工作区或computer-use目录真实路径内，单图上限6MiB。Chat只给标记vision的模型附 `image_url`；未标记时提示看不到图。MCP使用同一截图辅助，但以MCP image内容返回。base64不经事件总线广播。
 
----
+取消不是回滚：取消到达前已经完成的写入仍然存在；模型最终回答也不是测试通过证明。Plan轮次为进程内共享状态，不是每个浏览器独立会话数据库。
 
-## 1. 模块概述
+## 验证与继续阅读
+`modelLifecycle.test.js` 检查模型失败/工具结果/Plan代次，`chatVision.test.js` 检查附图契约，`ptyLifecycle.test.js` 覆盖请求取消相关边界。真实模型提供商、网络中断和桌面截图效果仍需集成验收。
 
-- **定位：** 有 API Key 时跑 OpenAI 兼容工具循环；没有 Key 时跑内置探索（搜-读-可选补丁-测）。Plan 走多模型分支：有 Key 调对应模型，没 Key 写本机草案。
-- **依赖：** `../tools`（`callTool`）、`../tools/planRound`、`../tools/consensusEngine`（`draftLocalBranch`/`mergeLocalBranches`）、`../models/store`、`../models/customizations`、`../models/profile`、`../tools/skills`、`../config`。
-- **谁调用：** 仅 `../api/routes.js` 的 `POST /chat`（以及测试）。VS Code 插件也打同一条 `/api/chat`，因此间接经过本目录。
-
----
-
-## 2. 文件级详细说明书
-
-### 📄 文件名：`runChat.js`
-
-- **文件职责：** Chat 入口。决定 builtin vs OpenAI；内置路径实现 Ask/Plan/Code。
-- **核心类/函数清单：**
-
-  - **Function `flattenDir`（L12–L18）** — 递归摊平 `items`（含 children）到数组。
-  - **Function `timedTool`（L20–L50）**
-    - 输入：`emit`、`mode`、工具名、args。
-    - try `callTool` 成功 emit `tool` ok true；catch emit ok false，**不把异常抛出**。返回 `{ ok, result|error, durationMs }`。
-  - **Function `keywordsFrom`（L52–L63）** — 按空白与中文标点切词，去掉停用词，长度≥2，最多 6 个。
-  - **Function `pickExisting`（L65–L73）** — 工作区存在且是文件的相对路径。
-  - **Function `detectTestCommand`（L75–L87）**
-    - 先用 `resolveTechStack(loadCustom()).testCommand`（探测层已按 pnpm/yarn/npm 拼 `test`）。
-    - 没有声明且存在 `tests/` 目录 → `{ cmd: (packageManager 或 npm) + ' test', kind:'guess' }`。
-    - 都没有 → `null`。
-  - **Function `extractPatch`（L89–L92）** — 第一段 `<<<<<<< SEARCH`…`>>>>>>> REPLACE`，没有则 null。
-  - **Function `extractWriteIntent`（L94–L99）** — 同时有代码围栏和「写入|创建|write|create + 带扩展名路径」才返回 `{ filePath, content }`。
-  - **Function `clip`（L101–L104）** / **`stripLineNumbers`（L106–L111）** — 去掉 `^\d+:\s?`。
-  - **Function `explore`（L113–L178）** — **只读**：list_directory maxDepth 3 → git_status → find_files max 100 → 有 keyword 则 search_files（前 3 词 `|` 拼接、isRegex）→ 读 README/package 等最多 6 个。填 facts.files/readme/pkg/testCmd。不写文件。
-  - **Function `summarizeAsk`（L180–L200）** — markdown 摘要，声明只读 Ask。
-  - **Function `runBuiltin`（L202–L305）**
-    - mode 默认 `ask`。先 set_todos 三条，再 `facts = explore(...)`。
-    - **`mode==='plan'`（仅当误入 builtin）：** emit 一段「请走 Plan 入口」摘要，**return**。真正的分支在 `runPlanRound`。
-    - **`mode==='ask'`：** todos completed，emit summarizeAsk，return。
-    - 否则视为 **code**：有 writeIntent → write_file；有 patch → 从消息匹配文件或 `facts.files[0]`，read_files 取 hash 再 apply_patch；detectTestCommand 有则 run_command timeout 60；最后 emit 摘要（写明内置没有大模型）。
-  - **Function `capturingEmit`（L307–L318）** — 吞掉 `message` 事件，其它转给外层 emit；`.captured()` 取文本。
-  - **Function `pickModel`（L320–L327）** — 按 id，否则 `activeModelId`，否则第一项。
-  - **Function `canCallModel`（L329–L331）** — 同时有 apiKey、baseUrl、modelId，且 `protocol !== 'builtin'`。
-  - **Function `resolvePlanAction`（L333–L343）** — 显式 `planAction` 优先；`multiModel.enabled===false` → `single`；空消息且未合并的活回合 → `branch`；否则 `start`。
-  - **Function `runPlanBranch`（L345–L383）** — 能调模型：`runOpenAI` mode plan，`simulated:false`。否则复用 `live.facts` 或 `explore`，`draftLocalBranch`，`simulated:true`。
-  - **Function `addLiveBranch`（L385–L405）** — status「模型名 · 分支 n/max」后 `planRound.addBranch`。
-  - **Function `emitRound`（L407–L420）** — emit `planRound` + 带 `branch` 元数据的 message。
-  - **Function `runPlanRound`（L422–L523）**
-    - `single`：一份草案，无回合。
-    - `reset`：清空。
-    - `merge`：<2 支 emit error；合并主模型 `auto`→active；能调则 `runOpenAI` 读各支原文（`mergeAllowsRead===false` 则 `allowTools:false`），`agreementRate:null`；否则 `mergeLocalBranches`。然后 `markMerged`、todos、emit consensus。
-    - `branch` / `start`：start 空任务抛 `E_PLAN_NO_TASK`（catch 成 error 事件）。
-  - **Function `runChat`（L525–L548）** — `send` 第二参或 `payload.emit`。`mode==='plan'` → `runPlanRound`。否则能调 `payload.modelId` 或 active 则 `runOpenAI`（失败改 builtin）；否则 `runBuiltin`。导出 `{ runChat, planRound }`。
-
-- **关键变量：** L8 `SKIP_DIRS` = node_modules/.git/.cache/dist/build/.local/bin。
-
----
-
-### 📄 文件名：`toolLabel.js`
-
-- **文件职责：** 给工作台 / VS Code 侧栏的短标签。`runChat.js` 与 `openai.js` **共用**这一份。
-- **Function `toolLabel(name, result, ok)`** — 失败时 list/read 给固定英文。成功：list → `Explored dirPath`；find_files → `Found N files`；search_files → `Found N matches`；read / command / Patched / git status / Tasks / `load_skill` → `Skill name` 或 `Skills N`。未知名原样返回。
-
----
-
-### 📄 文件名：`openai.js`
-
-- **文件职责：** OpenAI 兼容 `/chat/completions` 工具循环，最多 10 步。本机 Chat 的「眼睛」在这里把截图附成 `image_url`（**MCP 不走本文件**）。
-- **核心类/函数清单：**
-
-  - **Function `modelSeesImages(model)`（L11–L18）** — `model.vision === true` 或 `caps`/`capabilities` 数组含 `vision`（大小写不敏感）→ 会看图。探测不到的纯文本 Endpoint 一律按不会看图处理（诚实拒绝，不假装 OCR）。
-  - **Function `systemPrompt(mode)`（L20–L53）**
-    - code 允许 patch/命令；否则 READ-ONLY。
-    - follow-user / en / 默认中文。
-    - 拼工作区根、循环规则、Windows PowerShell 提示、plan 不改仓库、custom.instructions、`formatWorkspaceContext`。
-  - **Function `temperatureFor(level)`（L55–L59）** — `low→0.1`，`medium→0.4`，其它 `0.7`。不盲发未知厂商字段。
-  - **Function `runOpenAI({ mode, message, history=[], emit, model, thinkLevel, allowTools=true, extraSystem })`（L61–L197）**
-    - L72–L73：baseUrl 去尾 `/`，空则抛。`emit` 缺省空函数。
-    - L74–L83：`allowTools` 真才把 `getToolList(mode)` 转 function tools（Ask/Plan 列表无 apply_patch）。
-    - L85–L93：system（可拼 extraSystem）+ history 最后 12 条 + 当前 user。
-    - L95–L103：`temperature: temperatureFor(thinkLevel)`；有 tools 才带 `tool_choice:'auto'`。
-    - L105–L193：最多 10 轮 POST `${base}/chat/completions`。
-      - `!resp.ok` 抛 HTTP + 正文前 240。JSON 失败抛。无 message 抛。
-      - 每轮最多执行8个tool_calls，超额ID仍返回明确未执行结果以保持协议完整；`callTool`结果经clipJson软预算后序列化为完整JSON，业务失败/异常明确反馈，不自动切模型重放修改。
-      - **「眼睛」（L152–L178）**：`run_command` 成功后 `computerUse.collectShot` 认截图（命令 `-Out` / stdout）——`tooBig` 则注入「降 Quality 重截」提示；`modelSeesImages` 真则追加一条 `role:'user'` 多模态消息（text + `image_url` data URL）并 send status（**只带路径不带 base64**）；假则注入 `[系统提示]` 要求模型**如实转告**「当前模型不会看图」并 send status。文本通道采用12000字符软预算并保持JSON完整，图仍走image部分。
-      - 然后 `continue`；无 tool_calls → emit message（空则「（无文本输出）」）并 **`return { text }`**。
-    - 10 轮用尽 emit「已达到最大工具轮次。」并 `return { text }`。
-  - 导出 `{ runOpenAI, systemPrompt, temperatureFor, modelSeesImages }`。
-
----
-
-### 📄 文件名：`computerUse.js`
-
-- **文件职责：** 「眼睛」的公共实现：认出 `run_command` 产生的截图文件、读成 data URL。两个消费方：本机 Chat `openai.js`（data URL 作 `image_url` 附给 **vision** 模型）与 Bridge `mcp/server.js`（**第三阶段，用户 2026-09-07 书面同意**：截图以 `type:'image'` 内容回给网页 Agent；mcpProtocol/chatVision 测试锁）。base64 不经 eventBus 广播的边界不变。
-- **核心类/函数清单：**
-
-  - **`COMPUTER_USE_DIR`（L16）** — 仓库根 `computer-use/`（与 `skills.js bundledSkills()` 同一位置）。**`MAX_BYTES`（L18）** — 单图上限 6MB。
-  - **Function `findShotCandidates({command,stdout})`（L28–L41）** — 认三种来源：`-Out <路径>`（带/不带引号）、stdout JSON 的 `"out":"….png"`、stdout 裸 `*.png|jpg|jpeg` token。
-  - **Function `resolveShotPath(raw, roots)`（L55–L66）** — 相对路径按工作区解析；`realpathSync` 后**白名单**：仅工作区内或 `computer-use/` 内收（symlink 逃逸同拒）；仅图片扩展名。`roots={workspaceRoot,cuDir}` 可注入（测试用）。
-  - **Function `readShotAsDataUrl(abs)`（L68–L80）** — 读文件转 `data:image/png;base64,…`；空/超限/不可读 → null。
-  - **Function `collectShot(input, roots)`（L82–L99）** — 主入口：遍历候选取第一张可附加的 `{abs,rel,dataUrl,bytes,mime}`；超限 `{tooBig,rel,bytes}`；没有 null。
-- **关键边界：** base64 只进模型请求体，**不经 eventBus 广播**；不开任意盘符读文件（架构导读 第 12 节沙箱取舍不变）。
-
----
-
-### 📄 文件名：`providers.js`
-
-- **文件职责：** 探测远程 `/models`，给工作台 Add API 用。
-- **核心类/函数清单：**
-
-  - **Function `normalizeBase`（L1–L6）** — trim，去尾 `/`，再去掉尾部 `/chat/completions`。
-  - **Function `probeCaps(m)`（L8–L14）** — 只用接口字段 `capabilities` / `supported_features` / `caps`。都没有 → `[]`。**不**用模型 id 猜「视觉」。
-  - **Function `probeContext(m)`（L16–L26）** — `context_length` / `context_window` / `max_model_len` / `contextSize`。数字 ≥1e6 → `nM`；≥1000 → `nK`；没有 → `''`。
-  - **Function `listRemoteModels`（L28–L68）**
-    - L29–L31：无 base / 无 key 抛中文错误。
-    - L32–L40：GET `/models` Bearer；`!ok` 抛 HTTP + 正文前 200。
-    - L42–L46：非 JSON 抛。
-    - L47–L48：`data.data` 数组，否则 `data` 是数组，否则 `[]`；空则抛。
-    - L49–L55：hostname 去 `api.` 取第一段当 group。
-    - L56–L67：映射 id/name/group/`probeContext`/`probeCaps`/pricing。
-
----
-
-## 3. 执行逻辑流
-
-1. `routes.js` `POST /chat` 打开 NDJSON，调用 `runChat({ mode, message, history, modelId, thinkLevel, planAction, emit })`（emit 在对象里）。
-2. `runChat` 取出 `send`。`mode==='plan'` → `runPlanRound`（分支/总结）。
-3. 否则能调所选模型 → `openai.runOpenAI`（返回 `{ text }`）；失败改 builtin。
-4. 无 Key → `runBuiltin`：explore 只读 → Ask 摘要 / Code 解析消息里的补丁或围栏再测。
-5. 每步 `timedTool`/`emit('tool')` 被工作台或 VS Code 插件画成工具卡。Plan 另发 `planRound` / 满 2 支才 `consensus`。
+工具副作用见[工具说明](../tools/README.md)，HTTP事件及结束语义见[API说明](../api/README.md)。函数位置使用文档站源码索引，不手抄旧行号。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航

@@ -88,9 +88,9 @@
 
 ## docs-site/app.js
 
-[目录说明](README.md) · SHA-256 `f6665b3d79712c682053f793a36ff6add77c4b45d0524eeec56376d59272aa01`
+[目录说明](README.md) · SHA-256 `3d8ec9d6bbb95818cdfc6a3bd5d8b0bbbd6d626d88072695886d968f86b9c77d`
 
-- `anonymous@2:1` — FunctionExpression，[L2–L376](app.js#L2-L376)
+- `anonymous@2:1` — FunctionExpression，[L2–L385](app.js#L2-L385)
 - `anonymous@2:1/$` — ArrowFunctionExpression，[L3–L3](app.js#L3-L3)
 - `anonymous@2:1/$$` — ArrowFunctionExpression，[L4–L4](app.js#L4-L4)
 - `anonymous@2:1/route` — FunctionDeclaration，[L17–L21](app.js#L17-L21)
@@ -99,49 +99,51 @@
 - `anonymous@2:1/renderNav/anonymous@39:18` — ArrowFunctionExpression，[L39–L43](app.js#L39-L43)
 - `anonymous@2:1/renderNav/anonymous@50:33` — ArrowFunctionExpression，[L50–L50](app.js#L50-L50)
 - `anonymous@2:1/renderNav/anonymous@50:33/anonymous@50:72` — ArrowFunctionExpression，[L50–L50](app.js#L50-L50)
-- `anonymous@2:1/escapeAttr` — FunctionDeclaration，[L53–L55](app.js#L53-L55)
-- `anonymous@2:1/pageChrome` — FunctionDeclaration，[L57–L66](app.js#L57-L66)
-- `anonymous@2:1/renderMap` — FunctionDeclaration，[L68–L155](app.js#L68-L155)
-- `anonymous@2:1/renderMap/anonymous@150:30` — ArrowFunctionExpression，[L150–L150](app.js#L150-L150)
-- `anonymous@2:1/renderMap/anonymous@150:30/anonymous@150:67` — ArrowFunctionExpression，[L150–L150](app.js#L150-L150)
-- `anonymous@2:1/renderMap/anonymous@151:30` — ArrowFunctionExpression，[L151–L154](app.js#L151-L154)
-- `anonymous@2:1/renderMap/anonymous@151:30/anonymous@151:69` — ArrowFunctionExpression，[L151–L154](app.js#L151-L154)
-- `anonymous@2:1/renderMap/anonymous@151:30/anonymous@151:69/anonymous@152:32` — ArrowFunctionExpression，[L152–L152](app.js#L152-L152)
-- `anonymous@2:1/paintPath` — FunctionDeclaration，[L181–L186](app.js#L181-L186)
-- `anonymous@2:1/paintPath/anonymous@183:63` — ArrowFunctionExpression，[L183–L184](app.js#L183-L184)
-- `anonymous@2:1/paintPatch` — FunctionDeclaration，[L188–L199](app.js#L188-L199)
-- `anonymous@2:1/paintPatch/anonymous@196:64` — ArrowFunctionExpression，[L196–L197](app.js#L196-L197)
-- `anonymous@2:1/renderGuide` — FunctionDeclaration，[L201–L236](app.js#L201-L236)
-- `anonymous@2:1/renderGuide/compact` — ArrowFunctionExpression，[L205–L205](app.js#L205-L205)
-- `anonymous@2:1/renderGuide/anonymous@209:25` — ArrowFunctionExpression，[L209–L209](app.js#L209-L209)
-- `anonymous@2:1/renderGuide/anonymous@212:23` — ArrowFunctionExpression，[L212–L226](app.js#L212-L226)
-- `anonymous@2:1/renderGuide/anonymous@230:34` — ArrowFunctionExpression，[L230–L230](app.js#L230-L230)
-- `anonymous@2:1/renderProsePage` — FunctionDeclaration，[L238–L254](app.js#L238-L254)
-- `anonymous@2:1/renderProsePage/anonymous@243:39` — ArrowFunctionExpression，[L243–L244](app.js#L243-L244)
-- `anonymous@2:1/renderFiles` — FunctionDeclaration，[L256–L284](app.js#L256-L284)
-- `anonymous@2:1/renderFiles/anonymous@260:39` — ArrowFunctionExpression，[L260–L260](app.js#L260-L260)
-- `anonymous@2:1/renderFiles/anonymous@265:23` — ArrowFunctionExpression，[L265–L270](app.js#L265-L270)
-- `anonymous@2:1/renderFiles/anonymous@265:23/anonymous@267:25` — ArrowFunctionExpression，[L267–L267](app.js#L267-L267)
-- `anonymous@2:1/renderFiles/anonymous@265:23/anonymous@267:51` — ArrowFunctionExpression，[L267–L268](app.js#L267-L268)
-- `anonymous@2:1/renderFiles/anonymous@278:30` — ArrowFunctionExpression，[L278–L278](app.js#L278-L278)
-- `anonymous@2:1/renderFiles/anonymous@278:30/anonymous@278:65` — ArrowFunctionExpression，[L278–L278](app.js#L278-L278)
-- `anonymous@2:1/renderTerms` — FunctionDeclaration，[L286–L294](app.js#L286-L294)
-- `anonymous@2:1/renderTerms/anonymous@291:20` — ArrowFunctionExpression，[L291–L291](app.js#L291-L291)
-- `anonymous@2:1/onSearch` — FunctionDeclaration，[L296–L324](app.js#L296-L324)
-- `anonymous@2:1/onSearch/anonymous@300:39` — ArrowFunctionExpression，[L300–L302](app.js#L300-L302)
-- `anonymous@2:1/onSearch/anonymous@303:33` — ArrowFunctionExpression，[L303–L305](app.js#L303-L305)
-- `anonymous@2:1/onSearch/anonymous@306:34` — ArrowFunctionExpression，[L306–L308](app.js#L306-L308)
-- `anonymous@2:1/onSearch/anonymous@309:38` — ArrowFunctionExpression，[L309–L313](app.js#L309-L313)
-- `anonymous@2:1/onSearch/anonymous@318:117` — ArrowFunctionExpression，[L318–L319](app.js#L318-L319)
-- `anonymous@2:1/renderSource` — FunctionDeclaration，[L326–L352](app.js#L326-L352)
-- `anonymous@2:1/renderSource/anonymous@342:36` — ArrowFunctionExpression，[L342–L348](app.js#L342-L348)
-- `anonymous@2:1/render` — FunctionDeclaration，[L354–L366](app.js#L354-L366)
-- `anonymous@2:1/render/anonymous@356:28` — ArrowFunctionExpression，[L356–L356](app.js#L356-L356)
-- `anonymous@2:1/anonymous@369:37` — ArrowFunctionExpression，[L369–L374](app.js#L369-L374)
+- `anonymous@2:1/escapeText` — FunctionDeclaration，[L53–L55](app.js#L53-L55)
+- `anonymous@2:1/escapeAttr` — FunctionDeclaration，[L57–L59](app.js#L57-L59)
+- `anonymous@2:1/pageChrome` — FunctionDeclaration，[L61–L70](app.js#L61-L70)
+- `anonymous@2:1/renderMap` — FunctionDeclaration，[L72–L159](app.js#L72-L159)
+- `anonymous@2:1/renderMap/anonymous@154:30` — ArrowFunctionExpression，[L154–L154](app.js#L154-L154)
+- `anonymous@2:1/renderMap/anonymous@154:30/anonymous@154:67` — ArrowFunctionExpression，[L154–L154](app.js#L154-L154)
+- `anonymous@2:1/renderMap/anonymous@155:30` — ArrowFunctionExpression，[L155–L158](app.js#L155-L158)
+- `anonymous@2:1/renderMap/anonymous@155:30/anonymous@155:69` — ArrowFunctionExpression，[L155–L158](app.js#L155-L158)
+- `anonymous@2:1/renderMap/anonymous@155:30/anonymous@155:69/anonymous@156:32` — ArrowFunctionExpression，[L156–L156](app.js#L156-L156)
+- `anonymous@2:1/paintPath` — FunctionDeclaration，[L185–L190](app.js#L185-L190)
+- `anonymous@2:1/paintPath/anonymous@187:63` — ArrowFunctionExpression，[L187–L188](app.js#L187-L188)
+- `anonymous@2:1/paintPatch` — FunctionDeclaration，[L192–L203](app.js#L192-L203)
+- `anonymous@2:1/paintPatch/anonymous@200:64` — ArrowFunctionExpression，[L200–L201](app.js#L200-L201)
+- `anonymous@2:1/renderGuide` — FunctionDeclaration，[L205–L240](app.js#L205-L240)
+- `anonymous@2:1/renderGuide/compact` — ArrowFunctionExpression，[L209–L209](app.js#L209-L209)
+- `anonymous@2:1/renderGuide/anonymous@213:25` — ArrowFunctionExpression，[L213–L213](app.js#L213-L213)
+- `anonymous@2:1/renderGuide/anonymous@216:23` — ArrowFunctionExpression，[L216–L230](app.js#L216-L230)
+- `anonymous@2:1/renderGuide/anonymous@234:34` — ArrowFunctionExpression，[L234–L234](app.js#L234-L234)
+- `anonymous@2:1/renderProsePage` — FunctionDeclaration，[L242–L258](app.js#L242-L258)
+- `anonymous@2:1/renderProsePage/anonymous@247:39` — ArrowFunctionExpression，[L247–L248](app.js#L247-L248)
+- `anonymous@2:1/renderFiles` — FunctionDeclaration，[L260–L293](app.js#L260-L293)
+- `anonymous@2:1/renderFiles/anonymous@264:39` — ArrowFunctionExpression，[L264–L264](app.js#L264-L264)
+- `anonymous@2:1/renderFiles/anonymous@269:23` — ArrowFunctionExpression，[L269–L274](app.js#L269-L274)
+- `anonymous@2:1/renderFiles/anonymous@269:23/anonymous@271:25` — ArrowFunctionExpression，[L271–L271](app.js#L271-L271)
+- `anonymous@2:1/renderFiles/anonymous@269:23/anonymous@271:51` — ArrowFunctionExpression，[L271–L272](app.js#L271-L272)
+- `anonymous@2:1/renderFiles/anonymous@280:57` — ArrowFunctionExpression，[L280–L280](app.js#L280-L280)
+- `anonymous@2:1/renderFiles/anonymous@286:30` — ArrowFunctionExpression，[L286–L286](app.js#L286-L286)
+- `anonymous@2:1/renderFiles/anonymous@286:30/anonymous@286:65` — ArrowFunctionExpression，[L286–L286](app.js#L286-L286)
+- `anonymous@2:1/renderTerms` — FunctionDeclaration，[L295–L303](app.js#L295-L303)
+- `anonymous@2:1/renderTerms/anonymous@300:20` — ArrowFunctionExpression，[L300–L300](app.js#L300-L300)
+- `anonymous@2:1/onSearch` — FunctionDeclaration，[L305–L333](app.js#L305-L333)
+- `anonymous@2:1/onSearch/anonymous@309:39` — ArrowFunctionExpression，[L309–L311](app.js#L309-L311)
+- `anonymous@2:1/onSearch/anonymous@312:33` — ArrowFunctionExpression，[L312–L314](app.js#L312-L314)
+- `anonymous@2:1/onSearch/anonymous@315:34` — ArrowFunctionExpression，[L315–L317](app.js#L315-L317)
+- `anonymous@2:1/onSearch/anonymous@318:38` — ArrowFunctionExpression，[L318–L322](app.js#L318-L322)
+- `anonymous@2:1/onSearch/anonymous@327:117` — ArrowFunctionExpression，[L327–L328](app.js#L327-L328)
+- `anonymous@2:1/renderSource` — FunctionDeclaration，[L335–L361](app.js#L335-L361)
+- `anonymous@2:1/renderSource/anonymous@351:36` — ArrowFunctionExpression，[L351–L357](app.js#L351-L357)
+- `anonymous@2:1/render` — FunctionDeclaration，[L363–L375](app.js#L363-L375)
+- `anonymous@2:1/render/anonymous@365:28` — ArrowFunctionExpression，[L365–L365](app.js#L365-L365)
+- `anonymous@2:1/anonymous@378:37` — ArrowFunctionExpression，[L378–L383](app.js#L378-L383)
 
 ## docs-site/build.js
 
-[目录说明](README.md) · SHA-256 `679b0196ac2db0799fb74afe103dcab2d61b7276d183a07dc8f30e3473cc5e92`
+[目录说明](README.md) · SHA-256 `192615d5dc1f5701b1f63ded818619323790504101e590c0986a14bb2535fec6`
 
 - `anonymous@46:54` — ArrowFunctionExpression，[L46–L46](build.js#L46-L46)
 - `anonymous@48:22` — ArrowFunctionExpression，[L48–L48](build.js#L48-L48)
@@ -194,7 +196,7 @@
 
 ## docs-site/documentation.config.json
 
-[目录说明](README.md) · SHA-256 `68a0a8020f8947608fff36ac346efa54f79bc2cc3119345e4b535cfa50f196bd`
+[目录说明](README.md) · SHA-256 `8135ca1d5fbbc4389a374a6569359debb3086053271b19a7681c1da896dd7e41`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -220,7 +222,7 @@
 
 ## docs-site/styles.css
 
-[目录说明](README.md) · SHA-256 `5e2e38339ea3cd6161fe096ff14f02ced604828d8eb39c9dc9ba6c5511b4c2d1`
+[目录说明](README.md) · SHA-256 `4ac82068f46413bf6bf60afb9d5004a623640c8117e87a7ff4b113d6558f0c2c`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -371,12 +373,12 @@
 
 ## webagent-core/agent-host/scripts/run-tests.js
 
-[目录说明](../webagent-core/agent-host/scripts/README.md) · SHA-256 `e288dbf83ca4741fd35261ccd056605f2bb123e7e5744a4c57b1e390dffbaad0`
+[目录说明](../webagent-core/agent-host/scripts/README.md) · SHA-256 `5a431c049c46bb7eaa7723c1709f9467c8e94dbf6ebe848234660949af821565`
 
-- `anonymous@49:46` — ArrowFunctionExpression，[L49–L49](../webagent-core/agent-host/scripts/run-tests.js#L49-L49)
-- `anonymous@50:27` — ArrowFunctionExpression，[L50–L50](../webagent-core/agent-host/scripts/run-tests.js#L50-L50)
-- `anonymous@51:33` — ArrowFunctionExpression，[L51–L51](../webagent-core/agent-host/scripts/run-tests.js#L51-L51)
-- `anonymous@64:46` — ArrowFunctionExpression，[L64–L64](../webagent-core/agent-host/scripts/run-tests.js#L64-L64)
+- `anonymous@50:46` — ArrowFunctionExpression，[L50–L50](../webagent-core/agent-host/scripts/run-tests.js#L50-L50)
+- `anonymous@51:27` — ArrowFunctionExpression，[L51–L51](../webagent-core/agent-host/scripts/run-tests.js#L51-L51)
+- `anonymous@52:33` — ArrowFunctionExpression，[L52–L52](../webagent-core/agent-host/scripts/run-tests.js#L52-L52)
+- `anonymous@65:46` — ArrowFunctionExpression，[L65–L65](../webagent-core/agent-host/scripts/run-tests.js#L65-L65)
 
 ## webagent-core/agent-host/src/agent/computerUse.js
 
@@ -1558,6 +1560,20 @@
 - `anonymous@40:25` — ArrowFunctionExpression，[L40–L40](../webagent-core/agent-host/tests/documentationPolicy.test.js#L40-L40)
 - `anonymous@41:25` — ArrowFunctionExpression，[L41–L41](../webagent-core/agent-host/tests/documentationPolicy.test.js#L41-L41)
 - `anonymous@42:16` — ArrowFunctionExpression，[L42–L42](../webagent-core/agent-host/tests/documentationPolicy.test.js#L42-L42)
+
+## webagent-core/agent-host/tests/documentationQuality.test.js
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `fe35e1e372f5fcf4a568115ca7019f1bf9f2ce7b68fafdad240b5a4f3f789fa0`
+
+- `anonymous@10:88` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationQuality.test.js#L10-L10)
+- `read` — ArrowFunctionExpression，[L35–L35](../webagent-core/agent-host/tests/documentationQuality.test.js#L35-L35)
+- `$` — ArrowFunctionExpression，[L50–L50](../webagent-core/agent-host/tests/documentationQuality.test.js#L50-L50)
+- `$$` — ArrowFunctionExpression，[L50–L50](../webagent-core/agent-host/tests/documentationQuality.test.js#L50-L50)
+- `route` — ArrowFunctionExpression，[L50–L50](../webagent-core/agent-host/tests/documentationQuality.test.js#L50-L50)
+- `pageChrome` — ArrowFunctionExpression，[L51–L51](../webagent-core/agent-host/tests/documentationQuality.test.js#L51-L51)
+- `go` — ArrowFunctionExpression，[L51–L51](../webagent-core/agent-host/tests/documentationQuality.test.js#L51-L51)
+- `getElementById` — ArrowFunctionExpression，[L52–L52](../webagent-core/agent-host/tests/documentationQuality.test.js#L52-L52)
+- `getElementById/scrollIntoView` — FunctionExpression，[L52–L52](../webagent-core/agent-host/tests/documentationQuality.test.js#L52-L52)
 
 ## webagent-core/agent-host/tests/editorRuntime.test.js
 

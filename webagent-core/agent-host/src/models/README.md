@@ -1,142 +1,44 @@
-# models 模块说明书
+# 工作区配置、画像与记忆
 
-## 2026-09-11当前整改语义
+## 职责与文件归属
+这些模块把“当前被编辑项目”的配置和偏好放在其 `.webagent/` 下。安装器的用户runtime目录与这里的工作区状态不是同一个概念。
 
-store.load仅ENOENT返回默认值；JSON损坏/结构错误抛E_CONFIG_CORRUPT，保留原文件，后续patch/save拒绝覆盖。校验配置对象、模型id与字段类型；保存使用0600同目录独占临时文件＋rename，失败清理。用户恢复需先备份并显式修复/移走损坏文件，禁止静默重置。
+| 文件 | 存储/输出 | 用途 |
+|---|---|---|
+| `store.js` | `.webagent/config.json` | 模型、活动模型、Bridge选项、多模型配置及持久身份 |
+| `customizations.js` | `customizations.json`及三份派生Markdown | 指令、偏好、环境/栈覆盖与界面列表 |
+| `profile.js` | 返回对象或Markdown，不主动写盘 | 根据平台、项目清单和锁文件推断环境与测试命令 |
+| `memory.js` | `memory/YYYY-MM-DD.md` | 追加简短备忘和读取日期条目 |
 
+## 配置读写流程
+### 模型与Bridge配置
+`load`在文件不存在时使用defaults；已有文件的JSON或部分结构校验失败则抛 `E_CONFIG_CORRUPT` 并保留原文。模型ID须非空且不重复，已校验的模型字段要满足类型约束；这不是所有嵌套字段的完整schema验证。
 
-当前处理目标：`webagent-core/agent-host/src/models/`
+`patch`先load，再合并顶层和特定子对象；`save`写同目录独占临时文件并rename，尝试0600权限及忽略规则保护。损坏配置应先备份再显式修复，不能期待下一次patch静默重置。权限模式在Windows不等价于完整ACL管理；gitignore也不能移除已跟踪的秘密文件。
 
-工作区磁盘上的配置、指令、记忆。文件都写在 **被编辑项目** 的 `.webagent/` 下，不是 Git 仓库根。无独立 `.html`。产出的 json/md 由本目录函数写入。
+| 配置组 | 主要字段与语义 |
+|---|---|
+| 模型 | activeModelId、models中的id/protocol/baseUrl/apiKey/modelId；默认有builtin探索模型 |
+| 多模型 | enabled、mergeModel、thinkLevel、maxBranches（2–8）、mergeAllowsRead |
+| Bridge | loggedIn/deviceAuthorized、provider/username/githubId、tunnelProvider及提供商域名/Token |
+| 主机身份 | secretKey、installId由config.persistIdentity补充，非每次随机生成的新配置 |
 
----
+GitHub身份验证后保存身份字段，不保存该流程的PAT。模型API Key和隧道Token则可能存在config.json中；不能笼统说“没有凭据落盘”。
 
-## 1. 模块概述
+### 自定义配置：保证不同
+`loadCustom`合并默认environment/techStack；**任何读取或解析异常当前都会退回defaults**。`saveCustom`直接顺序写JSON、instructions.md、preference.md、tech-stack.md，不使用store的原子写/损坏保留机制，也不是四文件事务。
 
-- **定位：** 持久化「这个工作区怎么干活」：模型列表与 Bridge 开关（`store.js`）、自定义指令/环境/技术栈（`customizations.js`）、OS/栈探测（`profile.js`）、跨对话备忘（`memory.js`）。
-- **依赖：** `../config`（workspaceRoot）。`profile` 被 customizations 与 mcp/instructions、agent/openai 调用。
-- **谁调用：** `../index.js` persistIdentity；`../api/routes.js` REST；`../mcp/*` 拼 instructions；工具 `remember`/`recall`。
+因此“所有配置损坏都拒绝覆盖”并不成立。修改前备份重要自定义指令；相关损坏恢复保证仍需单独改善，不能由store测试代替。
 
----
+### 环境与记忆
+profile先探测平台、package/lock/项目清单，再用用户非auto的值覆盖；推断出的测试命令不证明依赖已安装或命令能成功。hooks、外部MCP配置等列表的存在不代表运行时执行器已经实现。
 
-## 2. 文件级详细说明书
+memory的day必须为有效日历日期；路径和真实链接目标经过工作区检查。remember写条目，recall只读、不为了查询创建目录；读取有条目数及文本预算。Ask/Plan允许写这类协作元数据，不等于允许任意修改源码。
 
-### 📄 文件名：`store.js`
+## 验证与关联
+`stateIntegrity`覆盖store损坏保留/校验，`hostPersist`覆盖身份持久化，`profile`覆盖画像，`auditStorage`覆盖记忆日期与路径。它们不证明customizations拥有相同的事务保证。
 
-- **文件职责：** 读写 `<工作区>/.webagent/config.json`。
-- **核心类/函数清单：**
-
-  - **Function `dir`（L9–L11）** / **`storePath`（L13–L15）** — `.webagent` 与其中 `config.json`。
-  - **Function `defaults`（L17–L54）** — 见下方 Key。含 `bridge.githubId: ''`、`bridge.namedToken: ''`。
-  - **Function `clampBranches(n)`（L56–L60）** — 非有限 → 4；否则 round 后夹到 2–8。
-  - **Function `normalizeMultiModel(mm)`（L62–L70）** — 与 defaults 合并后 clamp `maxBranches`；`enabled`/`mergeAllowsRead` 非布尔则 true；`mergeModel` 空则 `'auto'`；`thinkLevel` 空则 `'high'`。
-  - **Function `isFakeGithub(b)`（L72–L77）** — `provider==='github'` 且没有 `githubId`，且 username 空/`demo`/`local`。
-  - **Function `normalizeBridge`（L79–L93）** — 旧盘 `永久顺` → `local-demo`；**假** github（`isFakeGithub`）收成 `local-demo`；`username==='demo'` 且已是 local-demo → `'local'`。带 `githubId` 的真 GitHub **留下**，并强制 `loggedIn`/`deviceAuthorized`。
-  - **Function `load`（L95–L108）** — try 读 JSON 与 defaults 浅合并；`models` 非非空数组则用默认；`bridge` 走 `normalizeBridge`；`multiModel` 走 `normalizeMultiModel`。仅文件不存在返回defaults；其他错误保留文件并抛E_CONFIG_CORRUPT。
-  - **Function `restrictFileMode`（L110–L114）** — `chmod 0600`；失败 catch 空（Windows 可能无效）。
-  - **Function `lineCovers` / `alreadyIgnored`（L120–L134）** — 根或嵌套 `.gitignore` 是否已覆盖 `.webagent/config.json` 等。
-  - **Function `ensureNestedIgnore`（L140–L156）** — 写 `.webagent/.gitignore`（`config.json`、`read-hashes.json`、`usage.json`），已有则不重复。
-  - **Function `ensureWorkspaceGitignore`（L158–L176）** — 仅当工作区根有 `.git` 时，往**该仓库** `.gitignore` 追加上述三行。不是 git 仓库则跳过。
-  - **Function `protectWorkspaceSecrets`（L178–L184）** — 嵌套 ignore + 工作区 ignore + 已有 `config.json` 则 chmod。失败 catch 空。
-  - **Function `trackedSecretFiles`（L186–L204）** — 工作区是 git 时 `git ls-files` 那三份密钥文件。gitignore **挡不住已经 add/提交的**。git 没有或失败 → `[]`。
-  - **Function `warnTrackedSecrets(log)`（L206–L214）** — 有跟踪则 `console.warn`（或传入的 log）提示 `git rm --cached`。启动 `persistIdentity` 会调。
-  - **Function `save`（L216–L227）** — 先 `normalizeBridge` + `normalizeMultiModel`，再 mkdir + 美化 JSON + chmod + `protectWorkspaceSecrets`。
-  - **Function `patch`（L229–L239）** — load 后浅合并；bridge 深一层后 `normalizeBridge`；multiModel 走 `normalizeMultiModel`；`models` 仅当 `partial.models` 真才替换。
-  - **Function `reset`（L241–L243）** — `save(defaults())`。测试用。
-
-- **关键变量 `defaults()` 的 JSON Key：**
-
-  | Key | 含义 | 取值 |
-  |---|---|---|
-  | `activeModelId` | 当前 Chat 模型 | 默认 `'builtin'` |
-  | `models[]` | 模型列表 | 默认一条 builtin：`id/name/protocol/baseUrl/apiKey/modelId` |
-  | `models[].protocol` | 协议 | `'builtin'` 或工作台写入的 `'chat.completions'` |
-  | `multiModel.enabled` | Plan 是否开多模型分支（false 则单次草案） | 默认 `true` |
-  | `multiModel.mergeModel` | 合并主模型 id；`'auto'`/`'active'` = 当前对话模型 | 默认 `'auto'` |
-  | `multiModel.thinkLevel` | 思考强度（映射 temperature） | 默认 `'high'` |
-  | `multiModel.maxBranches` | 每回合最大分支（clamp 2–8） | 默认 `4` |
-  | `multiModel.mergeAllowsRead` | 合并时只读文件验证 | 默认 `true` |
-  | `bridge.loggedIn` | 演示登录 | 默认 `true`（否则 `/bridge/start` 403） |
-  | `bridge.deviceAuthorized` | 设备授权 | 默认 `true` |
-  | `bridge.provider` / `username` / `license` | 默认本机演示授权；验证 GitHub 后可为 `'github'` | `'local-demo'` / `'local'` / `'local-demo'` |
-  | `bridge.githubId` | GitHub 数字 id；假 github 迁走时清空 | 默认 `''` |
-  | `bridge.tunnelProvider` | 隧道种类 | 默认 `'cloudflare'` |
-  | `bridge.persistentMode` | 持久隧道标记 | 默认 `false`（本目录不消费它去 spawn） |
-  | `bridge.ngrokDomain` / `ngrokToken` / `namedDomain` / `namedToken` / `namedPort` / `quickLinks` | 隧道 UI；Token 只在启动时写入，**不**进 `/status` | 空串 / 48271 / `[]` |
-
-  另外 `persistIdentity` 会往该文件写入 `secretKey`、`installId`（不在 defaults 函数里，由 config 补上）。
-
----
-
-### 📄 文件名：`customizations.js`
-
-- **文件职责：** `customizations.json`，并同步写出 `instructions.md` / `preference.md` / `tech-stack.md`。
-- **核心类/函数清单：**
-
-  - **Function `file`（L6–L8）** — `…/.webagent/customizations.json`。
-  - **Function `defaults`（L10–L50）** — 见 Key 表。
-  - **Function `loadCustom`（L52–L65）** — try 合并 environment/techStack；catch 返回 defaults。
-  - **Function `saveCustom`（L67–L78）** — 与 defaults 合并；有 next.environment / techStack 再深合并；写 json + 三份 md。
-  - **Function `patchCustom`（L80–L82）** — `saveCustom({ ...loadCustom(), ...partial })`。
-
-- **关键变量 `defaults()` Key：**
-
-  | Key | 含义 | 默认 |
-  |---|---|---|
-  | `preference` | 概述页偏好句 | `''` |
-  | `environment.os/shell` | 系统/壳 | `'auto'`（由 profile 探测） |
-  | `environment.replyLanguage/commitLanguage` | 回复/提交语言 | `'zh-CN'` |
-  | `environment.notes` | 备注 | `''` |
-  | `techStack.languages/frameworks/packageManager/testCommand/notes` | 技术栈 | 全 `''` |
-  | `instructions` | 始终生效指令 | 中文默认句（提交用中文、Ask 只读等） |
-  | `agents[]` | 自定义智能体 | 一条 default |
-  | `prompts[]` | 可插入提示 | 一条 diagnose |
-  | `hooks` / `mcpServers` / `plugins` / `quickLinks` | UI 列表 | `[]`（hooks / mcpServers 无运行时执行器，只记在工作区） |
-  | `voice` / `dictation` | 占位 | `''` |
-  | `codex.loggedIn/account` | 演示登录 | false / `''` |
-
----
-
-### 📄 文件名：`profile.js`
-
-- **文件职责：** 探测 OS 与仓库技术栈；拼给模型的上下文；生成两份 markdown。**不写磁盘。**
-- **核心类/函数清单：**
-
-  - **Function `detectEnvironment`（L5–L16）** — win32→windows/powershell；darwin→macos/bash；否则 linux/bash。语言写死 zh-CN。
-  - **Function `readJson`（L18–L24）** — 失败 null。
-  - **Function `exists`（L26–L28）** — `existsSync(join(root,rel))`。
-  - **Function `detectTechStack`（L30–L76）**
-    - L38–L50：有 package.json → JS；tsconfig/jsconfig → TS；deps 判 Next/React/Nuxt/Vue/Express；lock 判 pnpm/yarn/npm；`scripts.test` → `${packageManager} test`。
-    - L51–L55：Python 清单 → pytest 命令（仅当 testCommand 仍空）。
-    - L56–L64：Cargo.toml / go.mod 同样仅当字段仍空。
-    - L65：index.html 且不含 HTML → 加 HTML。
-    - L67–L75：uniq join。探测结果 `notes` 恒空串（用户备注走 `stack.notes`）。
-  - **Function `resolveEnvironment`（L78–L88）** — os/shell 仅当用户值存在且不是 `'auto'` 才覆盖；语言用 `||`。
-  - **Function `resolveTechStack`（L90–L100）** — 各字段 `stack.xxx || detected.xxx`。
-  - **Function `languageLabel`（L102–L107）** — zh-CN/zh→中文；en→English；follow-user→跟随用户。
-  - **Function `osLabel`（L109–L111）** — windows/macos/linux 映射。
-  - **Function `formatWorkspaceContext`（L113–L147）** — markdown 三段 Environment / Tech stack / Skills。栈全空时加 not declared。skills 空则提示目录。
-  - **Function `markdownPreference`（L149–L166）** / **`markdownTechStack`（L168–L182）** — 中文 md；`filter(l !== null)` 保留空字符串当空行。
-
----
-
-### 📄 文件名：`memory.js`
-
-- **文件职责：** `.webagent/memory/YYYY-MM-DD.md` 追加备忘。Ask/Plan允许记忆元数据，不表示允许任意路径写入。
-- **Function `memoryDir` / `dayFile`** — 日期缺省UTC当天；显式day必须是有效日历日期YYYY-MM-DD，坏日期抛E_BAD_ARGS。目录、文件均经resolveSafePath验证，含真实链接目标。
-- **Function `remember`** — text空返回ok:false；先验证日期/路径，再mkdir和append。新文件加日期标题，正文换行压成空格。
-- **Function `recall`** — 不创建目录；指定day读一天，否则仅枚举日期命名的md并倒序读取。只收集列表条目，limit为1–200，文本预算8000字符；无记忆返回empty。日期命名但非法的文件/越界链接会明确报错，不读取外部内容。
-- **验证**：auditStorage的坏日期/闰日/链接边界回归。
-
----
-
-## 3. 执行逻辑流
-
-1. 进程启动：`config.persistIdentity(store)` 从 `config.json` 取回 secret/installId，没有则 patch 进去；然后 `protectWorkspaceSecrets`（密钥仍在工作区，但 git 忽略）。
-2. 工作台设置页 PUT `/api/customizations` → `saveCustom` 写 json+md。
-3. MCP `initialize` / Chat systemPrompt 读 `loadCustom` + `formatWorkspaceContext`。
-4. 工具 remember/recall 只碰 `memory/`。
-5. Add API / 多模型开关走 `store.save` / `patch`，与 customizations 文件分开。
+配置进入Chat系统提示的链路见[Agent说明](../agent/README.md)；接口及失败映射见[API说明](../api/README.md)。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航

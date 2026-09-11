@@ -1,57 +1,37 @@
-# agent-host 模块说明书
+# agent-host：产品后端npm包
 
-当前处理目标：`webagent-core/agent-host/`
+## 职责与启动
+这是现行后端包：本机API/Chat、认证MCP、文件工具、命令、会话和可选隧道。自绘工作台由本进程提供；网页VS Code模式由启动脚本关闭其3000端口，将UI交给code-server。
 
-本目录是 **现行 Bridge 进程** 的 npm 包根。本层只有 `package.json`（无 `.js` / `.html`）。源码在 `src/`，测试在 `tests/`，各子目录已有第一阶段 README，这里不重复行级翻译那些 `.js`。
+从本目录执行：
 
----
+```sh
+npm ci
+npm start
+```
 
-## 1. 模块概述
+指定工作区和端口时优先使用仓库启动入口，参见[启动说明](../../启动脚本说明.md)。直接require整个包不是受支持启动方式：package.json的main仍指向不存在的根index.js，真实入口由scripts.start指定为src/index.js。
 
-- **定位：** 独立 Node 进程：工作台 UI（默认 3000）、MCP/API（默认 48271）、本机 Chat、磁盘工具、可选隧道。
-- **兄弟依赖：** 静态页来自 `../workbench/`（`src/index.js` 挂静态目录）。不依赖 `../extension/`（那是 code-server 插件）。不依赖 `../../webagent-repro/`。
-- **谁调用：** 仓库根 `run-webagent.cmd` / `.sh` 执行 `node src/index.js`；`../scripts/run-code-oss.js` 同样启动并设 `WEBAGENT_SKIP_WORKBENCH=1`；`run-tests.cmd` 跑 `npm test`。
+## 清单与目录分工
+| 项目 | 职责 |
+|---|---|
+| `src/` | 启动组装、运行时模块与工具；见src说明 |
+| `scripts/run-tests.js` | 测试发现/顺序、筛选、独立进程、超时和汇总 |
+| `tests/` | 模块、HTTP/WS、进程及界面fixture；不是全部平台E2E |
+| `package.json` | scripts.start/scripts.test、Node要求和依赖 |
+| `package-lock.json` | 锁定依赖树；应与package.json一起更新 |
 
----
+运行依赖为Express、ws、cors、diff。**开发依赖含Acorn**，用于文档结构检查；不能再写“无devDependencies”。只安装production依赖可用于部分运行入口，但不足以执行完整文档/测试流程。
 
-## 2. 文件级详细说明书
+包清单version不是产品展示版本：展示版本由src/extensionVersion.js读取扩展清单。支持范围以engines及实际CI为依据，不因包能安装就断言所有Node版本已验收。
 
-### 📄 文件名：`package.json`
+## 执行流程与边界
+scripts.start加载src/index.js，组装共享配置与模块，默认监听UI 3000和MCP 48271。默认回环地址；公共MCP认证与本机控制面分开。admin-host是另一独立服务，不由本包自动启动。
 
-- **文件职责：** npm 清单：启动命令、测试顺序、运行时依赖。
-- **每一个 Key：**
+环境与初始化副作用见[src入口说明](src/README.md)；数据持久化保证以[models](src/models/README.md)为准，不能统一推广为所有JSON原子存储。
 
-  | Key | 用途 | 取值 |
-  |---|---|---|
-  | `name` | 包名 | `agent-host` |
-  | `version` | npm 版本 | `1.0.0`（展示用产品版本读 `../extension/package.json`，不是这个字段） |
-  | `main` | Node 默认入口字段 | `index.js`（**本目录根没有该文件**；真正启动走 `scripts.start`） |
-  | `scripts.start` | `npm start` | `node src/index.js` |
-  | `scripts.test` | `npm test` | `node scripts/run-tests.js`：缺 `node_modules/express` 则退出码 2；否则逐文件跑 `tests/*.test.js`，失败也继续并汇总。 |
-  | `keywords` | npm 关键词 | `[]` |
-  | `author` | 作者 | `""` |
-  | `license` | 许可证 | `ISC` |
-  | `description` | 简介 | `""` |
-  | `engines.node` | 最低 Node | `>=18`（CI 用 20；npm 在更旧版本会警告，不硬退出） |
-  | `dependencies.cors` | CORS 中间件 | `^2.8.6`（`src/utils/corsAllow.js` 的白名单，不再全开） |
-  | `dependencies.diff` | jsdiff | `^9.0.0`（`src/utils/diff.js`、`tools/patchEngine.js`） |
-  | `dependencies.express` | HTTP | `^5.2.1` |
-  | `dependencies.ws` | WebSocket | `^8.21.3`（`src/index.js` 的 `/ws`） |
-
-测试runner支持`npm test -- --filter=oauth`文件名子串筛选；无匹配/未知参数退出2，preferred测试缺失退出1。每文件默认120秒，可用`WEBAGENT_TEST_TIMEOUT_MS`设1000–600000毫秒。
-
-无 `devDependencies`。测试用 Node 自带 `assert`。
-
-`package-lock.json` 是 lockfile，不在本说明书展开每个嵌套包。
-
----
-
-## 3. 执行逻辑流（仅本层）
-
-1. `cd webagent-core/agent-host`（或由根 `.cmd` `cd` 进来）。
-2. 没有 `node_modules/express` 时 `npm install`（根脚本检查的是这个路径）。
-3. `node src/index.js` → 见 `src/README.md`（双端口、OAuth、MCP）。
-4. `npm test` → 见 `tests/README.md`。
+## 验证
+`npm test`运行完整测试；`npm test -- --filter=oauth`只运行文件名匹配项，不等于完整验收。缺依赖/非法参数/零匹配应失败。默认单文件120秒，WEBAGENT_TEST_TIMEOUT_MS允许1000–600000毫秒。详细测试分类见[tests](tests/README.md)。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航

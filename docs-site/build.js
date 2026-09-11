@@ -387,7 +387,7 @@ const payload = {
   builtAt: new Date().toISOString().slice(0, 10),
   guide: parseGuide(guideMd),
   impl: {
-    title: '代码直译技术实现',
+    title: '技术实现：执行链与边界',
     toc: tocFromMd(implMd),
     html: mdToHtml(implMd)
   },

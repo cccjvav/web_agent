@@ -1,95 +1,52 @@
-# api 模块说明书
+# 本机 API：工作台与扩展的控制接口
 
-## 第六批：请求取消与PTY生命周期
+## 职责与入口
+`routes.js`提供挂载在 `/api` 下的REST和Chat NDJSON流。两端口的挂载规则由上级 `index.js` 决定；本机控制面检查和浏览器Origin检查在进入router前执行。本目录不是远程MCP认证入口，也不能通过开放Origin白名单将远程工作台变成受支持产品。
 
-/chat设置5分钟总截止时间，断开连接/请求中止会abort；emit不写已关闭响应，结束清理监听器。/pty/hello和jobs/report校验clientId与工作区，报告只允许所属客户端；旧版插件不含身份字段会被拒绝，需同步升级。
+## 接口导航
+以下路径都省略 `/api` 前缀；精确参数见 `routes.js` 和调用方。
 
+| 路径 | 方法 | 用途及关键结果 |
+|---|---|---|
+| `/status`、`/logs` | GET | 状态快照、日志；status包含本机连接所需信息，不应当成可公开接口 |
+| `/bridge/start`、`/bridge/stop`、`/bridge/logout` | POST | 启停隧道或注销；代次控制拒绝迟到启动 |
+| `/bridge/reset-secret`、`/bridge/reset-round` | POST | 重置连接身份，或清MCP会话/读取hash缓存；不是同一个操作 |
+| `/bridge/login`、`/bridge/token` | POST | 本机演示授权，或验证用户提供的GitHub身份 |
+| `/bridge/device`、`/bridge/device/poll`、`/bridge/github/clear` | POST | GitHub设备流及清理；不等同MCP OAuth配对 |
+| `/chat` | POST | 本机Chat的NDJSON事件流 |
+| `/tool/call`、`/consensus/run`、`/tasks/reset` | POST | 直接调用工具、本机共识流程、清任务状态 |
+| `/pty/hello`、`/pty/jobs`、`/pty/jobs/:jobId` | POST / GET / POST | PTY客户端存活、取任务、报告状态 |
+| `/files/tree`、`/files/content` | GET | 文件导航与内容/hash读取 |
+| `/files/content` | PUT | 通过write_file保存，接受expectedHash |
+| `/models` | GET / POST | 模型配置读取/更新；响应隐藏API Key正文 |
+| `/providers/probe`、`/profile/detect` | POST / GET | 探测模型、环境与技术栈 |
+| `/customizations` | GET / PUT | 自定义配置；其持久化保证见models说明 |
+| `/skills` | GET / POST | 列出Skill或创建Skill正文 |
 
-## 2026-09-11当前整改语义
+## 执行流程与成功语义
+### Bridge
+start先验证授权，保存选项，再等待旧隧道停止并启动所选提供商。只有取得公网URL后才将running设为true。为兼容UI，部分启动失败仍返回HTTP 200，但 `success:false`、`running:false` 和 `tunnelError` 表明业务失败。新start/stop/logout使旧start的最终响应变为409。
 
-无公网隧道时MCP地址回退到127.0.0.1:config.port，不再使用工作台页面Host。bridge/start仅实际获得隧道URL后running/success为true；失败仍HTTP200以保留错误展示兼容，但success/running=false，并广播bridge_failed。
+stop/logout等待停止Promise，失败不能当成功。没有公网隧道时连接信息指向本机MCP端口，而非浏览器页面Host；这不意味着手机仍能连接本机地址。
 
+### Chat流
+请求创建AbortController，5分钟到期、请求中止或响应断开触发abort。外层用requestScope传播信号，扩展客户端另启用PTY上下文。`emit`只向仍打开的响应写入一行JSON，最后清理监听器和计时器。
 
-当前处理目标：`webagent-core/agent-host/src/api/`
+**done是流处理结束，不是整个任务成功的保证。** runChat可以先发送error再返回，router随后仍发送done。客户端应同时处理error、工具ok状态和done，不能只等到done就显示“全部成功”。
 
-本目录只有 `routes.js`：工作台和 VS Code 插件用的 REST，挂在 `/api`。无 `.json` / `.html`。
+### 直接工具调用
+`/tool/call`异常返回400。当前实现对正常返回的对象外包 `success:true`，即使内部result可能包含 `ok:false`；事件统计也采用这一外层成功口径。这与MCP按业务失败标记isError不同，调用者须读取result，本轮文档审查未改变该行为。
 
----
+### 文件保存
+GET经安全路径和有界读取返回content/hash；PUT将路径、内容、覆盖确认及expectedHash传给write_file。旧hash冲突映射为409，其他保存异常为400。浏览器应保留未保存缓冲区，再读取新磁盘状态，而不是无条件强制覆盖。
 
-## 1. 模块概述
+### PTY身份
+hello、取任务和报告都要提供clientId与匹配的workspace；不匹配409。job报告还由PTY模块核对所有权和状态，终态不能通过迟到accepted复活。这里只负责协议接线，真正终端运行在扩展端。
 
-- **定位：** 给人点的按钮的后端：状态、Chat 流、文件树、自定义设置、启停 Bridge、探测模型。
-- **依赖：** `../config`、`../tools`、`../tools/readCache`（`resetHashes`、`rememberHash`）、`../tools/planRound`、`../agent/runChat`、`../agent/providers`、`../models/*`、`../mcp/session`（含 `reset`）、`../mcp/instructions`、`../mcp/clients`、`../mcp/oauth`、`../tunnel/cloudflared`、`../tunnel/ngrok`、`../auth/github`、`../usage/tracker`、`../utils/eventBus`、`../tools/patchEngine`。
-- **谁调用：** `../index.js`：`uiApp.use('/api', apiRouter)`；`mcpApp.use('/api', rejectUnlessLocalControl, apiRouter)`（隧道/公网 Host 打 48271 的 `/api` 得 404）。浏览器工作台走 **3000**；VS Code 插件走本机 `127.0.0.1:48271`。
+## 边界与验证
+requestScope由 `/chat`显式创建，**不代表所有REST请求自动拥有同样的断连取消机制**。API参数校验也不等于通用JSON Schema验证器。配置写入的保护程度以各models实现为准。
 
----
-
-## 2. 文件级详细说明书
-
-### 📄 文件名：`routes.js`
-
-- **文件职责：** 注册全部 `/api/*` 路由。
-- **核心类/函数清单：**
-
-  - **Function `publicOrigin(req)`（L27–L31）** — proto/host 来自转发头或 `req`，fallback host 用 `workbenchPort`。
-  - **Function `mcpOrigin(req)`（L33–L36）** — 有 `config.publicTunnelUrl` 用它（去尾 `/`），否则 `publicOrigin`。
-  - **Function `isNamedTunnelProvider(provider)`（L38–L40）** — `cloudflare-named` 或 `named` 为真。
-  - **Function `isNgrokProvider(provider)`（L42–L44）** — `provider === 'ngrok'`。
-  - **Function `recentToolLogs(limit=12)`（L46–L59）** — `getRecentLogs(40)` 里只留 `tool_call_end`，最多 12 条；payload 只含 `tool` / `success` / `durationMs`。
-  - **Function `mcpInfo(req)`（L61–L77）** — 拼 `/mcp/${secretKey}`、canonical `/mcp`、bootstrap prompt、`listClients`、pairing、`tunnel.snapshot()`（含 ngrok 是否在跑）。不含 Token。
-
-- **路由（逐步，含分支）：**
-
-  - **GET `/status`（L79–L123）** — 拼 online、端口、workspace、**tools 只含 name/description（无 inputSchema）**、taskState、**`recentLogs: recentToolLogs(12)`**、bridgeRunning、`tunnelProvider`、**`namedDomain` / `ngrokDomain`（主机名，不含 Token）**、mcpInfo 展开、models（apiKey 变成 `hasKey` 布尔）、activeModelId、multiModel、**`planRound: planRound.snapshot()`**、bridgeAccount（含 `githubId`）、**`githubAuth.deviceAvailable`**、**`usage: tracker.snapshot()`**、mcpSession。无鉴权。`recentLogs` 仍在，但是工具名摘要。
-  - **POST `/bridge/reset-secret`（L120–L125）** — `generateNewSecret()`（内存 + `.webagent/config.json`）→ `oauth.revokeAll()` → broadcast `secret_rotated`（不含新旧密钥）。
-  - **POST `/bridge/start`（L131–L210）**
-    - L133–L135：`!loggedIn || !deviceAuthorized` → **403**（文案：需要先点本机演示授权或完成 GitHub 验证。Chat 不受影响）。
-    - L136–L149：记下 tunnelProvider、namedDomain、ngrokDomain；body 里有 Named Token / ngrok Authtoken 才写入 store；`config.bridgeRunning=true`。
-    - L150：`oauth.ensurePairing()`。
-    - L152–L181：`cloudflare` → **`await tunnel.startQuickTunnel`**；named → **`await tunnel.startNamedTunnel`**；`ngrok` → **`await ngrok.startNgrokTunnel({ hostname, token, port })`**。失败记下 `tunnelError`，**不** 500。缺字段不会改走 Quick Tunnel。
-    - L183–L209：broadcast + json。有 `tunnel.url` → note「Quick / Named / ngrok 已就绪」；否则 note 带错误或「走当前页面源」。响应 **不含** Token。
-  - **POST `/bridge/stop`（L212–L217）** — **`tunnel.stopTunnel()`**（会停 ngrok），`bridgeRunning=false`，broadcast，json 带 mcpInfo。
-  - **POST `/bridge/reset-round`（L195–L200）** — `mcpReset()` + `resetHashes()` + broadcast `bridge_round_reset`。
-  - **POST `/consensus/run`（L155–L163）** — `runMultiModelConsensus`；catch 500。
-  - **POST `/tool/call`（L165–L176）** — body `{ name, arguments, mode='code' }`；broadcast 后 `callTool(..., mode)`；失败 400。
-  - **POST `/chat`** — NDJSON、`X-Accel-Buffering: no`、flushHeaders。emit 写一行 JSON。`body.client === 'vscode-extension'` 时 `ptyJobs.runWithPty({ pty:true, emit })` 包住 `runChat`（可能发 `pty_request`）。工作台不带 client，仍一次性 spawn。后 emit `done`；catch emit `error`；最后 `res.end()`。
-  - **POST `/pty/hello`** / **GET `/pty/jobs`** / **POST `/pty/jobs/:jobId`** — 插件心跳、列出未完成 job、回报 accepted/progress/done。本机控制面；隧道 404。
-  - **POST `/tasks/reset`（L202–L204）** — `resetTaskState()`。
-  - **GET `/files/tree`（L206–L213）** — `callTool('list_directory', { recursive:true, maxDepth:5 }, 'ask')`。
-  - **GET `/files/content`（L215–L234）** — query.path → resolveSafePath；不存在或目录 404；否则全文+hash，并 `rememberHash`。
-  - **PUT `/files/content`（L236–L258）** — path 与 string content 必须；`callTool('write_file', { confirm_overwrite:true, expectedHash? }, 'code')`。敏感路径 / 逃出工作区 400；`STALE_FILE` 409。不直接 `writeFileSync`。
-  - **GET `/skills`** — 直接 `listSkills()`：工作区两处 + 仓库根 bundled，须是目录且有 SKILL.md；每项 `name`/`path`/`preview`/`skillFile`/`skillFileAbs`（与 `load_skill` 列表同一份）。
-  - **POST `/providers/probe`（L283–L291）** — `listRemoteModels`；失败 400。
-  - **GET `/models`（L293–L300）** — apiKey 显示 `••••` 或 `''`。
-  - **POST `/models`（L302–L315）** — 可改 activeModelId；可整表 models；可 upsert `body.model`；可合并 multiModel；然后 **`store.save(cfg)` 整份**。
-  - **GET `/logs`（L343–L345）** — 80 条脱敏全文（本机控制面；不是 `/status` 那种摘要）。
-  - **GET `/profile/detect`（L321–L327）** — detectEnvironment + detectTechStack + listSkills。
-  - **GET `/customizations`（L329–L331）** / **PUT（L333–L337）** — load / patchCustom。
-  - **POST `/skills`（L339–L354）** — name 清洗：非单词变 `-`，去首尾 `-`，最长 40；空 400。默认 content 模板。`callTool('write_file')` 写 `.webagent/skills/<name>/SKILL.md`。
-  - **POST `/bridge/login`（L368–L380）** — 本机演示授权：`provider/license=local-demo`，`loggedIn` 与 `deviceAuthorized` true，清空 `githubId`。**不**请求 GitHub。按钮文案仍是「本机演示授权」，**不是**「使用 GitHub 登录」。
-  - **POST `/bridge/token`（L382–L389）** — `github.loginWithToken(body.token)`。空令牌 400。成功只写入用户名/`githubId`，**不**把 PAT 写入 config.json。
-  - **POST `/bridge/device`（L391–L398）** — `startDeviceLogin`。无 `WEBAGENT_GITHUB_CLIENT_ID` → 400 `E_NO_GITHUB_APP`。
-  - **POST `/bridge/device/poll`（L400–L407）** — `pollDeviceLogin`。grant_type 在 github.js 里写死为 `urn:ietf:params:oauth:grant-type:device_code`。
-  - **POST `/bridge/github/clear`（L409–L412）** — `clearGithubKeepDemo()`，仍保留演示授权。
-  - **POST `/bridge/logout`（L414–L428）** — `github.resetPending()`；loggedIn false、清空 githubId；**`tunnel.stopTunnel()`**；`bridgeRunning=false`。
-  - **POST `/bridge/reset-round` 不清 `usage.json`。**
-
-- **关键变量：** L22 `router = express.Router()`。
-
----
-
-## 3. 执行逻辑流
-
-1. 工作台 boot → GET `/status` 填 Bridge 卡与模型下拉。
-2. CHAT 发送 → POST `/chat` → `runChat` → 工具经 `callTool`。
-3. 点启动 Bridge → POST `/bridge/start`：登录校验后置 `bridgeRunning`、配对码；`cloudflare` 时 `await startQuickTunnel`；named 时 `await startNamedTunnel`；`ngrok` 时 `await startNgrokTunnel`。成功则 `mcpOrigin` 用公网 URL；失败HTTP200但success/running=false，MCP走本机MCP端口。缺 Authtoken/主机名不会改走 Quick Tunnel。
-4. 点停止 Bridge → POST `/bridge/stop` → `stopTunnel()` 清子进程与 `publicTunnelUrl`。
-5. 点「清除本轮统计」→ POST `/bridge/reset-round` → 清 MCP session 计数与 `readCache` 哈希。
-6. 设置页表单 → PUT `/customizations` 或 POST `/models`。
-7. 插件侧栏与工作台打同一组路径。
-
-### 2026-09-11 生命周期补充
-bridge start/stop/logout均以generation排除旧请求，stop/logout等待进程退出；logout期间较旧start最终409，不能重新发布running。文本GET使用boundedFile（8MiB）；等待写锁后再检查请求取消。停止失败不是成功响应，实际残留进程需人工核对。
+`httpSmoke`、`apiFiles`、`bridgeTunnel`、`auditControl`、`ptyLifecycle`覆盖实际HTTP和模块边界；不是手机OAuth、真实终端或浏览器全部操作的验收。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航

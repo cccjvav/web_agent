@@ -6,10 +6,10 @@
   const PAGES = [
     { id: 'map', label: '全景图', hint: '三层、三条路' },
     { id: 'guide', label: '架构导读', hint: '人话四层' },
-    { id: 'impl', label: '代码直译', hint: '函数逐步' },
+    { id: 'impl', label: '技术实现', hint: '执行链与边界' },
     { id: 'graph', label: '知识图谱', hint: '总览调用链' },
     { id: 'workflow', label: '工作流', hint: '组件说明' },
-    { id: 'files', label: '文件夹说明书', hint: '行级 README' },
+    { id: 'files', label: '文件夹说明书', hint: '职责、流程与验证' },
     { id: 'source', label: '源码快照', hint: '与清单hash对应' },
     { id: 'terms', label: '术语', hint: '先人话' }
   ];
@@ -48,6 +48,10 @@
     `;
     $('#q').addEventListener('input', onSearch);
     $$('.nav [data-go]').forEach((btn) => btn.addEventListener('click', () => go(btn.dataset.go)));
+  }
+
+  function escapeText(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   function escapeAttr(s) {
@@ -259,7 +263,7 @@
     const doc = window.DOCS.files[id] || window.DOCS.files[idx[0].id];
     const groups = [...new Set(idx.map((x) => x.group))];
     $('.main').innerHTML = `
-      ${pageChrome('文件夹说明书', '第一阶段行级 README：每个函数的步骤与分支。解释以磁盘源码为准。')}
+      ${pageChrome('文件夹说明书', '先看职责与流程，再看失败边界和验证；函数行号请用源码索引。')}
       <div class="layout-split">
         <div class="toc file-list">
           ${groups.map((g) => `
@@ -270,13 +274,18 @@
           `).join('')}
         </div>
         <article class="prose card">
-          <p class="faint">${doc.path}</p>
+          <p class="faint">${escapeText(doc.path)}</p>
+          <details class="section-toc" open>
+            <summary>本页目录（${(doc.toc || []).length}）</summary>
+            <nav aria-label="本页章节">${(doc.toc || []).map(t => `<a class="l${t.level}" href="#/files/${encodeURIComponent(doc.id)}/${encodeURIComponent(t.id)}">${escapeText(t.text)}</a>`).join('')}</nav>
+          </details>
           ${doc.html}
         </article>
       </div>
     `;
     $$('[data-file]').forEach((b) => b.addEventListener('click', () => go(`files/${b.dataset.file}`)));
-    const anchor = route().rest[1];
+    let anchor;
+    try { anchor = decodeURIComponent(route().rest[1] || ''); } catch (_) { anchor = ''; }
     if (anchor) {
       const target = document.getElementById(anchor);
       if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -357,7 +366,7 @@
     renderNav(page);
     if (page === 'map') renderMap();
     else if (page === 'guide') renderGuide();
-    else if (page === 'impl') renderProsePage('impl', '代码直译技术实现', '只描述当前仓库源码。没有的标未实现。if / try 分支在原文里。');
+    else if (page === 'impl') renderProsePage('impl', '技术实现', '跨模块执行链、错误语义与已知差异；详细职责见目录说明。');
     else if (page === 'graph') renderProsePage('overview', '总览 · 知识图谱', '子 README 索引、三条路径、Install → Run。总图在全景页用图层画过一遍。');
     else if (page === 'workflow') renderProsePage('workflow', '组件说明', '从双击到文件被改。小白工作流。');
     else if (page === 'files') renderFiles();

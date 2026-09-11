@@ -1,377 +1,68 @@
-# MCP 模块说明书
-
-## 2026-09-11当前整改语义
-
-OAuth注册严格校验none/client_secret_post/client_secret_basic。token与revoke执行客户端认证，Basic与POST不得混用，secret定时安全比较，认证失败401 invalid_client；认证和PKCE通过后才消耗授权码。刷新/吊销同样验证客户端。HTTP会话键为peer:<随机session id>，显示名称/IP不再作为归属身份；无session不借用同IP其他客户端身份，board写入要求有效初始化会话。tools/call业务失败也isError:true并记失败统计，保留原结果结构。
-
-
-当前处理目标：`webagent-core/agent-host/src/mcp/`
-
-本文件只描述该目录内 8 个 `.js` 源码（无 `.json` / `.yaml` / 独立 `.html`）。行号以当前文件为准；解释不补源码里没有的调用。
-
----
-
-## 1. 模块概述
-
-- **定位：** agent-host 的 **MCP 协议门面**。把本机工具暴露成 Streamable HTTP JSON-RPC 2.0（兼 SSE），给 Arena / DeepSeek++ / Chat Plus / ChatGPT 自制插件等网页端调用。本目录**不改磁盘**：改文件发生在兄弟模块 `../tools/`。
-- **在进程中的挂载（由 `../index.js` 完成，不在本目录）：** `app.use(oauth.router)` 在前（匿名发现文档 + 配对页），然后 `app.use('/mcp', mcpRouter)`（`server.js` 导出的 Express Router）。
-
-**它调用的兄弟模块：**
-
-| 本目录文件 | require 的本目录文件 | require 的目录外模块 |
-|---|---|---|
-| `server.js` | `instructions` `resources` `budget` `errors` `session` `oauth` | `../tools`（`getToolList`/`callTool`）、`../config`、`../models/customizations`、`../utils/eventBus` |
-| `oauth.js` | （无） | `../config` |
-| `resources.js` | `session` `instructions` `clients` | `../config`、`../tools`、`../tools/skills`、`../tools/progressTracker`、`../models/customizations`、`../models/profile`、`../models/memory`、`../utils/eventBus` |
-| `instructions.js` | （无） | `../models/customizations`、`../config`、`../models/profile`、`../tools/skills` |
-| `clients.js` | `instructions` | （无） |
-| `budget.js` / `errors.js` / `session.js` | （无） | （无） |
-
-**谁调用本模块：** `../index.js` 挂路由；`../api/routes.js` 用 `oauth.snapshotPairing` / `ensurePairing` / `revokeAll`、`clients.listClients`、`instructions.getBootstrapPrompt`（工作台 Bridge 页，不走 JSON-RPC）。
-
----
-
-## 2. 文件级详细说明书
-
-### 📄 文件名：`errors.js`
-
-- **文件职责：** 把工具失败分成「协议层」和「执行层」，供 `server.js` 决定回 JSON-RPC `error` 还是 MCP `isError: true`。
-- **核心类/函数清单（代码行级注释）：**
-
-  - **Class `ProtocolError`（L1–L9）**
-    - 输入：`code`（字符串错误码）、`message`、`detail`（可选对象）。
-    - 行为：L3 `super(message)`；L4–L7 设 `name='ProtocolError'`、`layer='protocol'`、`code`、`detail || {}`。
-  - **Class `ExecutionError`（L11–L19）**
-    - 与上相同，但 L14–L15 `name='ExecutionError'`、`layer='execution'`。
-  - **Function `classifyToolError(err)`（L21–L36）**
-    - 输入：任意 thrown 值。返回：已分类的 Error。
-    - L22：已经是上述两类 → 原样返回。
-    - L23：取出 `err.message`，否则把 `err` 转字符串。
-    - L24–L35：**按顺序第一次命中即返回**（后面的正则不会再跑）：
-      - L24 `Unknown tool` → `E_UNKNOWN_CMD`（协议）
-      - L25 `locked in` 或 `Ask/Plan are read-only` → `E_BAD_ARGS`
-      - L26 `requires ` 或 `required` → `E_BAD_ARGS`
-      - L27 `HASH_REQUIRED` → `E_BAD_ARGS`（协议；`apply_patch` 没 hash 时已是 `ProtocolError`，这条兜底裸 Error）
-      - L28 `STALE_FILE` → `E_STALE_FILE`（执行）
-      - L29 `Patch conflict` → `E_CONFLICT`
-      - L30 `GIT_UNAVAILABLE` 或 `not a git repository` → `E_NOT_READY`（执行；现行 `git_status`/`git_diff` 多数情况已收成 `available:false`，不会走到这里）
-      - L31 `not found` / `No such file` → `E_NOT_FOUND`
-      - L32 `timeout` / `isTimeout` → `E_TIMEOUT`
-      - L33 `ACCESS_DENIED_SENSITIVE_FILE` / `E_FORBIDDEN` → `E_FORBIDDEN`
-      - L34 `confirm_dangerous` / `confirm_overwrite` / `confirm=true` → `E_BAD_ARGS`（协议）
-      - L35 其它 → `E_INTERNAL`（执行）
-  - **Function `publicError(err)`（L38–L46）**
-    - 返回 `{ layer, code, msg, detail }`，给 MCP 正文或 JSON-RPC `data`。`detail` 常含 `currentHash` / `retryHint`。
-
-- **关键变量/常量：** 无模块级配置。导出见 L48。
-
----
-
-### 📄 文件名：`session.js`
-
-- **文件职责：** 进程内 MCP 客户端心跳表（内存 `Map`，重启清空）。工作台用它显示「对面还在不在」。
-- **核心类/函数清单：**
-
-  - **Function `sessionKey(req)`（L3–L7）**
-    - 输入：Express `req`（可空）。
-    - L4：ip = `req.ip` 或头 `x-forwarded-for`，都没有则 `'local'`。
-    - L5：client = `req.body.params.clientInfo.name`，没有则 `'mcp'`。
-    - L6：返回 `` `${client}@${ip}` ``。
-  - **Function `touch(req, extra = {})`（L9–L27）**
-    - 输入：`req`；`extra` 可含 `key`、`incCall`、`incFail`、`busy`、以及要合并的其它字段。
-    - L10：key 优先 `extra.key`。
-    - L11–L16：没有旧记录则新建 `connectedAt`、`calls:0`、`fail:0`。
-    - L17–L24：覆盖 extra；**始终**刷新 `lastSeen`；仅当 `incCall`/`incFail` 为真才 +1；`busy = Boolean(extra.busy)`（没传则为 false）。
-    - L25–L26：写回 Map，返回 `next`。
-  - **Function `snapshot()`（L34–L47）**
-    - 无输入。按 `lastSeen` 字符串降序。
-    - `staleAfterMs` 写死 10000；`alive` 当 latest 存在且年龄 &lt; 10s；`sessions` 最多 8 条。附 `httpSessions` 数量。
-  - **Function `createHttpSession` / `touchHttpSession` / `destroyHttpSession`（L56–L87）** — Streamable HTTP 的 `Mcp-Session-Id` 表（内存，24h TTL，最多 200）。未知 id 的后续请求由 `server.js` 回 404。
-  - **Function `reset()`（L89–L93）** — 清心跳表 **和** HTTP session 表。被 `POST /api/bridge/reset-round` 调用。
-
-- **关键变量：** L1 心跳 `sessions`；L4 HTTP `httpSessions`。导出含 `touch` / `snapshot` / `sessionKey` / `reset` / HTTP session 三个函数。
-
----
-
-### 📄 文件名：`budget.js`
-
-- **文件职责：** 以16k字符为软目标减少非分页文本，不损坏JSON/schema/游标。不是硬响应大小保证。
-- `estimateTokens`：ceil(length/4)，只是估计。
-- `clipText`：显式截短文字并附截短提示。
-- `clipJson`：JSON未超目标原样返回；超目标按JSON序列化语义复制（保留Date的字符串表示）。保持字符串/数组类型、全部数组成员与ID/hash/状态字段；带offset/cursor/nextCursor的页与子内容不裁切。
-- 非分页文本字段分配可用字符预算，裁切标记`_truncated`/`originalChars`；仍超目标的对象标记`_budgetExceeded`。不会用summary替代schema或伪造nextCursor。
-- MCP最终结果不再在JSON序列化后clipText；工具内部文件/搜索/任务资源上限负责硬边界。
-
----
-
-### 📄 文件名：`instructions.js`
-
-- **文件职责：** 给模型的「怎么用这台 MCP」说明书，以及剪贴板第一句连接语。
-- **核心类/函数清单：**
-
-  - **Function `getBootstrapPrompt(mcpUrl)`（L10–L12）**
-    - 输入：`mcpUrl` 字符串（可空）。
-    - 返回：URL + 空行 + `CONNECT_LINE`。Arena 等 paste-url 客户端当第一句。
-  - **Function `getPageRulesPrompt()`（L14–L16）**
-    - 无参数。返回 `PAGE_RULES_LEAD` + 空行 + `getInstructions()`。给 Chat Plus / DeepSeek++ 贴进扩展系统提示词，**不是** MCP URL。
-  - **Function `getInstructions()`（L64–L71）**
-    - 无参数。L65 `loadCustom()`。
-    - L67：若 `custom.instructions` 真值，追加 `## Workspace instructions`。
-    - L68：追加 `formatWorkspaceContext`（环境/技术栈/skills）。
-    - L69：追加工作区根路径。
-    - L70：`SERVER_INSTRUCTIONS.trim()` 与 extra 用 `\n\n` 拼接。
-
-- **关键变量/常量：**
-  - L6 `CONNECT_LINE`：固定一句中文（测试锁原文，改一字会红）。
-  - L8 `PAGE_RULES_LEAD`：说明这些规则与 `initialize.instructions` 相同，扩展不会自动转给网页模型（测试锁原文）。
-  - L17–L80 `router`、`SUPPORTED_PROTOCOL`（三个协议版本）、`extractToken`（Bearer / `params.secret` / `x-mcp-secret` / query）与鉴权/会话辅助（`isAuthorized` / `rejectUnauthorized` / `requireAuth` / `wantsSse` / `incomingSessionId` / `bindHttpSession` / `mcpEndpointPath`）。**`initialize.instructions` 主体已移入 `instructions.js` 的 `getInstructions()`**（见下方 instructions.js 条目；模板字符串里不能写 `{layer,code,msg,detail}` 花括号的告诫随之迁移）。
-
----
-
-### 📄 文件名：`clients.js`
-
-- **文件职责：** 工作台 Bridge 页「怎么连」卡片的**数据**，不是 MCP 协议实现。`server.js` 的 JSON-RPC **不读取**本文件。
-- **核心类/函数清单：**
-
-  - **Function `hydrateClient(client, urls)`（L127–L152）**
-    - 输入：`CLIENTS` 里的一项；`urls.mcpUrl` / `urls.mcpCanonicalUrl`。
-    - L128–L129：canonical 缺省把 `/mcp/<secret>` 收成 `/mcp`。
-    - L130–L144 按 `connectMode` 设 `prompt` / `rulesText`：
-      - `paste-url` → `getBootstrapPrompt(mcpUrl)`（URL + CONNECT_LINE）；`rulesText` 空
-      - `oauth-connector` → 规范地址两行，不含长期密钥；`rulesText` 空
-      - `extension-http` → **`prompt` 只有** `mcpUrl` 一行（DeepSeek++ / Chat Plus URL 框）；**`rulesText` = `getPageRulesPrompt()`**（贴进扩展系统提示词）
-      - `unsupported-mcp` → 空串
-      - 其它（含 `local-chat`）→ `prompt` / `rulesText` 保持 `''`
-    - L145–L151：oauth 模式对外 `mcpUrl` 改成 canonical；附 `connectLine` 与 `rulesText`。
-  - **Function `listClients(urls = {})`（L154–L156）**
-    - 返回 **7** 张卡全部 hydrate。
-  - **Function `getClient(id, urls = {})`（L158–L161）**
-    - 找不到 id 则 **回落到 `CLIENTS[1]`（arena）**。
-
-- **关键变量 `CLIENTS`（L3–L125）——每项 Key：**
-
-  | Key | 含义 | 取值 |
-  |---|---|---|
-  | `id` | 卡片主键 | `chat` / `arena` / `deepseek` / `chat-plus` / `generic` / `chatgpt-free` / `chatgpt-plus` |
-  | `name` | UI 标题 | 中文名 |
-  | `url` | 打开的网站；本机 Chat / generic 为 `null` | URL 或 null |
-  | `needsPlus` | 是否必须付费档 | 现行 7 张卡均为 `false`（ChatGPT 自制插件不绑 Plus） |
-  | `needsTunnel` | 是否需要公网隧道 | 仅 `chat` 为 `false` |
-  | `supportsMcp` | 该端会不会真调 MCP | `chat` 与 `chatgpt-free` 为 `false` |
-  | `connectMode` | hydrate 分支 | 见上 |
-  | `summary` / `steps` | UI 文案 | 字符串 / 字符串数组 |
-  | `extensionId` / `storeUrl` | 仅 DeepSeek 项 | CWS 扩展 ID 与商店 URL |
-  | `repoUrl` | 仅 Chat Plus 项 | `https://github.com/aiguicai/Chat-Plus` |
-
----
-
-### 📄 文件名：`resources.js`
-
-- **文件职责：** MCP `resources/list` 与 `resources/read`。当网页客户端丢掉 `initialize.instructions` 时的第二条规则通道。
-- **核心类/函数清单：**
-
-  - **Function `listResources()`（L25–L27）**
-    - 无输入。直接返回 `RESOURCE_DEFS`（L13–L23 的 8 项）。
-  - **Function `readResource(uri)`（L29–L112）**
-    - 输入：字符串 URI。未知 → L110–L111 返回 `null`（由 `server.js` 转成 `E_NOT_FOUND`）。
-    - L32–L33 `webagent://instructions`：`getInstructions()`。
-    - L34–L39 `profile`：`formatWorkspaceContext(loadCustom(), listSkills())`。
-    - L38–L58 `protocol`：写死的传输/错误/心跳/补丁要点（markdown 数组 join）。含：`tools/call` 失败是 `isError: true`；JSON-RPC `error` 只给坏 jsonrpc / 未知 method / 缺 `params.name`；`git_status` 在普通文件夹返回 `available:false`；`apply_patch` 复用上次 `read_files` 的 sha256；`path`/`bash`/`cat`/`grep`/`ls` 别名。
-    - L58–L65 `capabilities`：`getToolList()` 拼 `tools N` + 每行 name/description。
-    - L66–L80 `config`：server/version/workspace/`bridgeRunning`/tunnel/`installId`/客户端数；L78 **明文 `secret omitted`，不输出密钥**。
-    - L81–L93 `workspace`：root、用户 instructions、任务状态、最近 5 条 event 的 type。
-    - L94–L97 `memory`：`recall({ limit: 80 }).text`。
-    - L98–L109 `clients`：用占位 `(mcp url)` 调用 `listClients`，列出每张卡 summary。
-
-- **关键变量 `RESOURCE_DEFS`（L13–L23）：** 每项 `uri` / `name` / `mimeType` / `description`。uri 取值仅上表 8 个 `webagent://…`。
-
----
-
-### 📄 文件名：`oauth.js`
-
-- **文件职责：** OAuth 2.1 子集（动态注册 + 授权码 + PKCE S256 + 本机配对码）。给 ChatGPT 自制 MCP 插件。Arena / DeepSeek++ / Chat Plus **不走本文件的授权码流程**，但 `verifyAccessToken` 同时认 URL 密钥。聊天栏贴链接也不走这里。
-- **存储：** L7–L10 四个内存 `Map`；L17 `pairing`。进程退出全丢。
-
-- **核心类/函数清单：**
-
-  - **Function `now()`（L19–L21）** — 返回 `Date.now()`。
-  - **Function `randomToken(prefix, bytes = 24)`（L23–L25）** — `` `${prefix}` + hex ``。
-  - **Function `randomPairingCode()`（L27–L31）**
-    - L28 字母表去掉 0/O/1/I。L29–L30 用 8 字节映射成长度 8 的码。
-  - **Function `requestOrigin(req)`（L33–L38）**
-    - L34：若 `config.publicTunnelUrl` 真 → 去尾 `/` 返回（隧道域名）。
-    - L35–L37：否则用 `x-forwarded-proto` / `req.protocol` / `http` 与 host 头拼 origin。
-  - **Function `issuePairing()`（L40–L48）** — 写入新 pairing（attempts:0，TTL 见常量），返回 snapshot。
-  - **Function `snapshotPairing()`（L50–L59）**
-    - L51：没有或过期 → `{ code:null, expiresInSec:0, expired:true }`。
-    - L55–L58：否则给出剩余秒数。
-  - **Function `ensurePairing()`（L61–L65）** — 过期或无 code 则 issue，否则返回当前 snap。
-  - **Function `consumePairing(code)`（L67–L88）**
-    - L69–L73：过期 → 抛，`status=400`。
-    - L74–L80：`attempts > 5` → `pairing=null`，抛 429。
-    - L81–L85：大小写不敏感比较失败 → 400。
-    - L86–L87：成功则 `pairing=null`（用过即废），返回 `true`。
-  - **Function `authorizationServerMetadata(origin)`（L90–L102）** — 发现文档对象（issuer、authorize/token/register/revoke、S256、grant 类型）。
-  - **Function `protectedResourceMetadata(origin)`（L104–L110）** — `resource` 为 `${origin}/mcp`。
-  - **Function `wwwAuthenticate(origin)`（L112–L114）** — `Bearer realm=…` 指向 protected-resource 元数据。
-  - **Function `pruneExpiredTokens` / `revokeClientTokens` / `pruneClients`（L120–L160）** — 清过期 code/token；客户端最多 80，满则删最旧并吊销其 token。
-  - **Function `registerClient(body = {})`（L162–L189）**
-    - 先 `pruneClients`。`redirect_uris` 必须是非空数组，否则 400。
-    - 生成 `sccid_` / `sccsec_`，存 Map，返回注册结果。
-  - **Function `s256(verifier)`（L144–L146）** — SHA-256 `base64url`。
-  - **Function `issueAccess(clientId)`（L148–L162）** — 发 `scat_` / `scrt_`，写入两个 token Map。
-  - **Function `timingSafeEqualString(a, b)`** — 转 utf8 Buffer；长度不同直接 false；等长才 `crypto.timingSafeEqual`。
-  - **Function `verifyAccessToken(token)`**
-    - 假值 → `null`。
-    - `timingSafeEqualString(token, config.secretKey)` 为真 → `{ kind:'secret', clientId:'url-secret' }`（**贴 URL 的密钥走这里**）。
-    - Map 没有或过期（过期会 delete）→ `null`。
-    - `{ kind:'oauth', clientId }`。
-  - **Function `revokeAll()`（L177–L183）** — 四个 Map clear，`pairing=null`。被 `POST /api/bridge/reset-secret` 调用。
-  - **Function `authorizeHtml(query, error)`（L185–L218）** — 返回完整 HTML 字符串（见下方 DOM）。
-  - **Function `escapeHtml(s)`（L220–L224）** — `& < > " '`。
-  - **Function `completeAuthorize(body)`（L226–L257）**
-    - L227–L231：未知 client_id → 400。
-    - L232–L236：redirect_uri 不在注册列表 → 400。
-    - L237–L241：challenge method 缺省 S256；不是 S256 → 400。
-    - L242：`consumePairing`。
-    - L243–L250：发一次性 `sccode_`。
-    - L251–L256：302 目标 URL 带 `code`，有 `state` 则带上。
-  - **Function `handleToken(body = {})`（L259–L297）**
-    - L261–L283 `authorization_code`：code 无效/过期 400；**先 delete code**；client_id / redirect_uri 不符 400；无 verifier 或 PKCE 失败 400；然后 `issueAccess`。
-    - `refresh_token`：轮换（旧 refresh 进 `spentRefresh`）；**再拿已用过的 refresh → 吊销该 client 全部 token**（重放检测）。可选 `client_id` 必须一致。
-    - 其它 grant → 400。
-  - **Function `tokenResponse(issued)`（L299–L306）** — Bearer、expires_in 秒、refresh、scope `mcp`。
-  - **Function `sendError(res, err)`（L331–L335）** — `status || 500`；429 时 `slow_down`，400 时 `invalid_request`，否则 `server_error`。
-  - **Function `rateLimit(key, max, windowMs)`（L315–L329）** — 内存滑窗。注册每 IP 每分钟 20；token 每 IP 每分钟 60。超限 429 `slow_down`。
-  - **Function `registerHandler`（L347–L353）** — 先限速再 201 + `registerClient`；catch `sendError`。
-
-- **路由（L313–L365）：**
-
-  | 行 | 方法 | 路径 | 行为 |
-  |---|---|---|---|
-  | L313–L315 | GET | `/.well-known/oauth-authorization-server` | metadata（匿名） |
-  | L316–L318 | GET | `/.well-known/oauth-protected-resource` | 资源元数据 |
-  | L319–L321 | GET | `/.well-known/oauth-protected-resource/mcp` | 同上 |
-  | L332–L333 | POST | `/oauth/register` 与 `/register` | 动态注册 |
-  | L335–L339 | GET | `/oauth/authorize` | `ensurePairing` + HTML |
-  | L341–L349 | POST | `/oauth/authorize` | try 302；catch 用错误重绘 HTML |
-  | L375–L382 | POST | `/oauth/token` | 每 IP 每分钟 60 次；`handleToken` |
-  | L358–L365 | POST | `/oauth/revoke` | 从两个 token Map delete，**始终 200** `{ revoked:true }` |
-
-- **内嵌 HTML DOM（`authorizeHtml` L185–L218）：**
-  - L192–L201：全页居中深色样式。
-  - L202–L216：`<form method="post" action="/oauth/authorize">`。
-  - L205–L206：说明配对码 5 分钟、用过即废。
-  - L207：可选错误 `<p class="err">`。
-  - L208：用户输入 `pairing_code`。
-  - L209–L214：隐藏域 `client_id` `redirect_uri` `state` `code_challenge` `code_challenge_method` `response_type=code`。
-  - L215：提交按钮「确认配对」。
-
-- **关键常量（L12–L15）：**
-  - `PAIRING_TTL_MS` = 5 分钟
-  - `CODE_TTL_MS` = 5 分钟
-  - `ACCESS_TTL_MS` = 1 小时
-  - `REFRESH_TTL_MS` = 7 天
-
----
-
-### 📄 文件名：`server.js`
-
-- **文件职责：** MCP 的 HTTP 入口。校验身份后，把 JSON-RPC method 派到本目录其它文件或 `../tools.callTool`。
-- **核心类/函数清单：**
-
-  - **Function `extractToken(req)`（L17–L24）** — 顺序：Bearer 头 → `params.secret` → 头 `x-mcp-secret` → `query.secret` → `''`。
-  - **Function `isAuthorized(req)`（L26–L28）** — `Boolean(oauth.verifyAccessToken(extractToken(req)))`。
-  - **Function `rejectUnauthorized(req, res)`（L30–L38）** — 设 `WWW-Authenticate`，401 JSON-RPC `-32000`。
-  - **Function `requireAuth`（L40–L43）** — 未授权则 reject，否则 `next()`。
-  - **Function `wantsSse(req)`（L45–L47）** — `Accept` 含 `text/event-stream`。
-  - **Function `bindHttpSession(req, { createIfMissing })`（L57–L72）** — 有 `Mcp-Session-Id` 则必须已登记（initialize 可换新）；无头且 `createIfMissing`（initialize / SSE GET）才发新 id。简单 HTTP 客户端不带头仍可调用。
-  - **Function `sendJsonRpc(req, res, payload, httpStatus=200)`（L87–L97）**
-    - 若本次有 session 才回写 `Mcp-Session-Id`。
-    - SSE 则 `event: message` + data 后 end。
-    - 否则普通 JSON。
-  - **Function `builtinPrompts()`（L67–L75）** — 仅一项 `name:'connect'`。
-  - **Function `promptsFromCustom()`（L77–L85）** — 内置 + `custom.prompts`（description 截 120 字）。
-  - **Function `pickProtocol(params)`（L86–L90）** — 客户端要的版本在支持列表里就用，否则 `'2025-03-26'`。
-  - **Function `remoteToolMode(params)`（L92–L97）** — 读 `params._meta.mode` 或 `_meta.webagentMode`；仅 `ask|plan|code`；缺省 **`'code'`**。
-  - **Function `handleRpc(req)`（L99–L210）** — 见下方 method 分支。
-  - **Function `hostStatus()`（L212–L225）** — GET 非 SSE 的主机摘要（含完整 instructions、transports、auth 三种）。
-  - **Function `handlePost(req, res)`（L263–L292）**
-    - 先 `bindHttpSession`：`initialize` 才发新 sid；未知头且非 initialize → 404。
-    - `jsonrpc !== '2.0'` → 400、RPC `-32600`。
-    - L237–L242：`handleRpc`；method 以 `notifications/` 开头 → **HTTP 204 无 body**。
-    - L313–L322：catch：`E_UNKNOWN_CMD` → HTTP 404 且 rpc `-32601`；其它协议 `-32602`；否则 `-32603` 或 `err.rpcCode`。**工具失败不会进这里**：`tools/call` 自己 `return { isError:true }`。
-  - **Function `handleGet(req, res)`（L294–L324）**
-    - SSE：最多 32 路；`event: endpoint` 的 data 是 `/mcp/<secret>` 或 `/mcp`（跟这次 URL 一致）；10 分钟空闲结束；每 15s `: ping`。
-    - 未知 session 头 → 404。
-    - 否则 `hostStatus()` JSON。
-  - **Function `handleDelete`（L397–L401）** — 删掉该 `Mcp-Session-Id`，204。
-
-  **`handleRpc` 的 method 分支：**
-
-  | 行 | method | 做什么 |
-  |---|---|---|
-  | L138–L153 | `initialize` | L139 默认 client 名 `External-Agent`；L140 `touch`；L141 broadcast `agent_connected`；返回 protocol、capabilities、serverInfo、**`instructions: getInstructions()`** |
-  | L155–L158 | `notifications/initialized`、`notifications/cancelled`、`logging/setLevel` | 返回 `{}` |
-  | L160–L169 | `ping` | `touch incCall`，busy 写死 `false` |
-  | L171–L173 | `tools/list` | `getToolList()` **不传 mode**（列表含 Code-only 工具） |
-  | L175–L221 | `tools/call` | 见下（第三阶段：run_command 截图附 `image` 内容） |
-  | L223–L224 | `resources/list` | `listResources()` |
-  | L226–L231 | `resources/read` | 未知 uri 抛 `E_NOT_FOUND` |
-  | L233–L234 | `prompts/list` | `promptsFromCustom()` |
-  | L236–L261 | `prompts/get` | `connect` 走 bootstrap；否则 custom.prompts；没有抛 `E_NOT_FOUND` |
-  | L263–L264 | default | `E_UNKNOWN_CMD`（未知 **method**，仍是 JSON-RPC error） |
-
-  **`tools/call` 细节（L175–L221）：成功 `tracker.record({ ok:true })`，catch `tracker.record({ ok:false })`。只记 Bridge MCP，不记本机 Chat。`reset-round` 不清 usage.json。**
-  - L177：无 `name` → 抛 `E_BAD_ARGS`（这才会变成 JSON-RPC error）。
-  - L178：broadcast `tool_call_start`，source `'Bridge-Remote'`。
-  - **`callTool(name, toolArgs || {}, remoteToolMode(params), { remote: true })`** — 默认 Code；`_meta.mode=ask|plan` 时模式锁生效。远程破坏性命令 `E_FORBIDDEN`。
-  - L182：再 `clipJson`。
-  - L188–L210：成功 → MCP `content` 第一个部件仍是 `{type:'text'}`；**第三阶段（用户 2026-09-07 书面同意，授权记录 review/REPORT_SHUNCODE_S3.md）**：`run_command` 产出截图时（复用 agent 层 `computerUse.collectShot`：白名单目录 + 6MB 上限）追加 `{type:'image', data:<裸 base64>, mimeType}`；认不出截图静默回纯文本；`isError:false`。base64 **不经 eventBus 广播**。
-  - L155–L163：`catch` → `publicError`；`incFail`；**始终** `return { content:[{type:text, text: JSON.stringify(info)}], isError:true }`。未知工具名、HASH_REQUIRED、STALE_FILE 都走这条，网页 Agent 把它当工具结果而不是传输崩溃。
-
-- **路由（L332–L337）：** `GET/POST/DELETE /` 与 `GET/POST/DELETE /:secret` 均 `requireAuth`。挂到 app 上后即 `/mcp` 与 `/mcp/:secret`。
-
-- **关键变量：** L14 `router`；L15 `SUPPORTED_PROTOCOL = ['2024-11-05','2025-03-26','2025-06-18']`。
-
----
-
-## 3. 执行逻辑流（仅针对该子文件夹）
-
-数据从 HTTP 进入本文件夹之后：
-
-1. **OAuth 发现 / 配对（匿名，不进 `server.js`）**  
-   客户端 GET `oauth.js` 的 `/.well-known/…`（L313–L321）拿元数据 → POST `/oauth/register`（L325–L333）拿到 `client_id` → 浏览器 GET `/oauth/authorize`（L335–L339，`ensurePairing`）看到配对页 HTML → 用户填工作台配对码 → POST `completeAuthorize`（L341–L349）→ 302 带回一次性 code → POST `/oauth/token` + PKCE（L351–L356）得到 Bearer。
-
-2. **MCP 请求进 `server.js` 路由（L332–L337）**  
-   `requireAuth` → `extractToken`（路径密钥 / Bearer / 头 / query）→ `oauth.verifyAccessToken`（认 URL 密钥，或认 access token）。失败则 401 + `WWW-Authenticate`。
-
-3. **GET**  
-   - `Accept: text/event-stream` → SSE 通道（最多 32 路；endpoint 带回 `/mcp/<secret>`）。  
-   - 否则 `hostStatus()`，其中 `instructions` 来自 `instructions.js`。
-
-4. **POST JSON-RPC**  
-   `handlePost` 绑定 session，再校验 `jsonrpc==='2.0'` → `handleRpc`：
-   - `initialize`：`session.touch` + `instructions.getInstructions()`（读 customizations / profile / skills）。
-   - `tools/list`：出本目录，调 `../tools.getToolList()`。
-   - `tools/call`：出本目录，调 `../tools.callTool`（真正改盘）；回来用 `budget.clipJson` / `clipText`；**工具失败回 MCP `isError:true` 文本**（`publicError` 的 layer/code/msg/detail），不升级成 JSON-RPC `error`；**第三阶段（用户签字）**：`run_command` 截图经 `../agent/computerUse.collectShot` 以 `type:'image'` content 附在文本部件后（白名单/6MB 复用；base64 不进 eventBus）；全程 `eventBus.broadcast`（目录外）给工作台。
-   - `resources/*`：留在 `resources.js`（只读说明书 / 状态，不写盘）。
-   - `prompts/*`：`instructions` + `customizations`。
-   - `notifications/*`：空对象，HTTP 204。
-
-5. **工作台卡片（不经 JSON-RPC）**  
-   `../api/routes.js` 调 `clients.listClients` + `instructions.getBootstrapPrompt` + `oauth.snapshotPairing`，把 hydrate 后的 `prompt`（以及 extension-http 的 `rulesText`）交给用户复制。DeepSeek / Chat Plus 卡 `prompt` 只有一行 URL，`rulesText` 是给扩展系统提示词的规则；Arena 卡是 URL + `CONNECT_LINE`；ChatGPT 自制插件卡是规范 `/mcp` 两行（OAuth）；聊天栏卡 `prompt` 为空。
-
-**本目录没有的事（避免误读）：** 不 spawn cloudflared；不实现 `apply_patch`。远程 `tools/call` 默认 Code，可用 `params._meta.mode` 切 Ask/Plan。
-
----
-
-第一阶段本文件夹已完成。按约束暂停。
-
-请输入下一个文件夹名称（例如 `webagent-core/agent-host/src/tools`）。全部文件夹处理完后再进入第三阶段。
-
-### 2026-09-11 输出预算修订（覆盖旧裁切说明）
-16k字符是软目标，不是响应硬上限。预算器保留数组、类型、标识符及分页内容/游标；只裁切非分页的文本字段，标记`_truncated`，结构仍超预算标记`_budgetExceeded`。不会改写nextCursor、丢页内记录或截断JSON字符串；需要更小响应请降低工具limit/缩小路径。大文件等硬资源边界在工具内部执行。
+# MCP：远程客户端协议、认证与工具结果
+
+## 职责与文件分工
+MCP使外部Agent在认证后调用当前工作区工具；它不开放本机 `/api` 或WebSocket控制面，也不负责本机Chat的模型循环。
+
+| 文件 | 主要职责 |
+|---|---|
+| `server.js` | HTTP/JSON-RPC分发、认证入口、会话、tools/resources/prompts及SSE |
+| `oauth.js` | 动态客户端注册、配对授权、PKCE、token认证/轮换/撤销 |
+| `session.js` | MCP HTTP会话及心跳/调用统计；提供协作任务板的peer标识 |
+| `budget.js` | 保留JSON结构和游标的软字符预算 |
+| `errors.js` | ProtocolError/ExecutionError及对外错误对象转换 |
+| `instructions.js` | initialize说明、连接引导和给网页模型的规则文本 |
+| `resources.js` | 主机、工作区、记忆和客户端连接说明资源，不是任意磁盘读取接口 |
+| `clients.js` | 客户端连接方式、配方与文案；列出配方不表示第三方客户端当前可用性已实测 |
+
+## 建立连接
+### 地址和凭据
+规范路径为 `/mcp`，兼容 `/mcp/<secret>`。extractToken依次检查Bearer、路径secret、x-mcp-secret和query secret；验证由oauth模块完成，支持主机连接密钥或有效OAuth访问令牌。不要把带secret的URL当普通公开链接。
+
+未认证返回401并给WWW-Authenticate发现提示。允许浏览器Origin只是CORS层条件，不代替凭据认证。OAuth发现/注册/授权/token端点挂在MCP端口，由上层index挂载。
+
+### initialize与会话
+initialize协商支持的协议版本，返回能力、服务器信息和instructions，并建立Mcp-Session-Id。当前声明支持2024-11-05、2025-03-26、2025-06-18；客户端应保存服务器选择的版本和会话ID。
+
+会话使用随机ID，初始化后的peer由该ID关联，不再以相同IP/显示名称作为唯一身份。无会话仍可走部分兼容调用，但修改board必须先初始化；未知已提供的session通常404，重新initialize可建立新会话。会话和授权凭据不是同一个对象，不能把显示名称当认证用户。
+
+HTTP会话有24小时TTL及200上限。进程重启会丢失内存会话；客户端需要重新初始化，而不是持续重发失效ID。
+
+## 请求、通知与结果
+- POST支持单个JSON-RPC请求或batch。batch逐项执行；仅通知无返回结果时为204；空batch拒绝。HTTP200不意味着其中每个RPC/工具成功。
+- `tools/list`返回可见工具schema；`tools/call`最终经过共享callTool，远程命令权限与本机审批不同。
+- 工具返回 `ok:false` 或 `success:false` 时，MCP结果带 `isError:true`；抛出的异常也变成失败内容。客户端应检查isError及错误对象，而非只看HTTP状态。
+- 公共工具错误含layer、code、msg、detail；未分类错误可能归为E_INTERNAL。错误分类器的字符串匹配不是完整异常类型系统。
+- run_command可附截图image内容；无可用截图则只有文本，识别图片失败不应把文本结果丢掉。图片有真实路径和6MiB边界，base64不广播到日志。
+
+**取消差异**：当前 `notifications/cancelled` 只是被接收并返回空处理结果，没有建立RPC请求ID到执行AbortController的映射。不能把本机Chat的取消实现宣传为MCP协议级取消已经贯通。远程命令仍依赖自身超时或受支持的命令取消工具。
+
+### SSE
+POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连接/心跳，最多32路，15秒发送心跳，10分钟定时结束。这里的结束计时不因心跳刷新，不能描述成永久事件订阅或可靠消息重放。
+
+## OAuth授权流程与边界
+1. register登记redirect URI及token端点认证方式：none、client_secret_basic或client_secret_post。后两种返回客户端secret。
+2. 用户完成配对授权，服务器核对已注册redirect URI、配对码及PKCE方式，只支持S256。
+3. 换token前先认证客户端，再验证code、redirect URI和code_verifier；验证通过才消费code。
+4. refresh成功轮换新access/refresh并作废旧访问令牌；重复使用已消费refresh会撤销该客户端令牌。
+5. revoke/reset清理相应内存状态。主机连接密钥和OAuth客户端secret各有用途，不应混用。
+
+| 对象 | 当前有效期/性质 |
+|---|---|
+| 配对码 | 5分钟、一次性 |
+| 授权码 | 5分钟 |
+| access token | 1小时 |
+| refresh token | 7天，使用时轮换 |
+| 授权存储 | 进程内存；重启后重新配对，不是持久登录 |
+
+## 输出预算不是截断JSON
+16k字符是软目标。clipJson保留数组成员、类型、标识符和分页字段；带offset/cursor/nextCursor的页及子内容不再被静默裁切。非分页文本可显式缩短；对象可标 `_truncated`、`originalChars`、`_budgetExceeded`。数组不会为加元数据而变成对象。
+
+因此不是所有响应都严格小于16k，也不是所有类型都带同样的截短标志。大文件、搜索和命令捕获的硬上限在各工具实现；需要更小返回应缩小查询范围或limit。
+
+## 验证与排查
+`mcpProtocol`覆盖RPC、通知/batch和附图，`oauth`与`oauthClientAuth`覆盖PKCE/刷新/客户端认证，`mcpBoard`覆盖会话任务归属，`resourceBudget`覆盖schema与游标。测试不等同手机Arena、所有代理或第三方连接器的端到端验收。
+
+排查顺序：本机健康 → 公网路由 → 认证 → initialize/session → tools/list → 只读工具 → 经明确授权的写入。精确工具模式和文件边界见[工具说明](../tools/README.md)。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航

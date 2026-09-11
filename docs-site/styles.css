@@ -203,3 +203,10 @@ button { font-family: inherit; }
   .layer { grid-template-columns: 1fr; }
   .main { padding: 18px 16px 60px; }
 }
+
+/* Long module pages need local navigation, separate from the folder list. */
+.section-toc { margin: 1rem 0 1.5rem; padding: .75rem; border: 1px solid currentColor; border-radius: .5rem; }
+.section-toc summary { cursor: pointer; font-weight: 600; }
+.section-toc nav { display: flex; flex-direction: column; gap: .35rem; max-height: 16rem; overflow: auto; margin-top: .6rem; }
+.section-toc .l3, .section-toc .l4 { padding-left: 1rem; }
+.section-toc a:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }

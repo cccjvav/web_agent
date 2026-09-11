@@ -68,6 +68,11 @@
       "id": "source-index",
       "path": "docs-site/source-index.md",
       "group": "维护"
+    },
+    {
+      "id": "documentation-quality",
+      "path": "review/DOC_QUALITY_2026-09-12.md",
+      "group": "维护"
     }
   ],
   "sourceSnapshotExclusions": [

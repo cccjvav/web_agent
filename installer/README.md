@@ -1,36 +1,41 @@
-# Windows安装与用户运行时（2026-09-11整改）
+# Windows安装、用户运行时与升级边界
 
-## 安装包来源
+## 职责与文件
+| 文件 | 作用 |
+|---|---|
+| `package.js` | 从显式白名单构建output/payload与installation.json SHA-256清单 |
+| `webagent.iss` | Inno Setup安装定义、入口/PATH及安装前检查 |
+| `build-installer.cmd` | 先stage，再调用Inno Setup 6编译 |
+| `launch.js` | 无依赖Node启动器，准备用户runtime、解析工作区并启动所选模式 |
 
-先运行`node installer/package.js`，按显式文件/源码目录白名单生成installer/output/payload与SHA-256 installation.json清单。ISCC只读取这个payload，不能再递归打包整个checkout。排除admin-host/data、用户workspace内容、密钥目录、node_modules、历史webagent-repro和管理隐私资料。code-server配置生成干净默认值，不复制本机配置中的密码。
+## 执行流程
+1. 在仓库根运行node installer/package.js，stage只收录产品白名单，不递归打包整个checkout。用户workspace、后台data、node_modules、冻结原型和私密管理资料排除；C#源码等Add-Type依赖必须随包。
+2. ISCC只读取payload。installation.json检测内容损坏，不是数字签名，也不是发布者身份认证。
+3. 安装版launch读取manifest，以其hash命名用户releases目录；首次复制逐文件校验并在临时目录完成后发布.ready。已有.ready副本直接复用，**不是每次启动都重新校验全部文件**。
+4. 依赖与code-server下载在该用户可写runtime中进行，不写Program Files。源码checkout没有installation.json，仍在checkout运行。
 
-白名单以package.js为准；新增产品资源必须同时更新打包测试。目录中的链接拒绝打包。清单校验用于检测损坏，不是数字签名或发布者身份认证。
+## 路径与数据归属
+程序安装目录用于静态文件；默认用户根为LOCALAPPDATA/WebAgent，可由WEBAGENT_DATA_HOME覆盖。
 
-## 用户确认的方案A
+| 数据 | 默认位置/策略 |
+|---|---|
+| runtime | releases/<manifest-hash> |
+| 默认工作区 | workspace；显式参数或WORKSPACE_ROOT优先 |
+| code-server设置/密码 | code-server目录，跨升级保留 |
+| 统计后台 | admin目录 |
+| App窗口启动日志 | startup.log |
 
-安装文件仍留Program Files（系统安装）或用户程序目录（用户安装）。CMD入口交给无依赖installer/launch.js：安装版本按manifest哈希复制并校验到`%LOCALAPPDATA%\WebAgent\releases\<hash>`，npm/code-server下载仅在该用户运行时副本内进行，不写程序安装目录。首次复制失败清理临时目录，并发准备只复用完整副本。
+显式相对工作区相对于调用者cwd解析；传文件取父目录；不存在的显式路径拒绝，缺省路径可创建；Windows盘符根分隔符不随意裁掉。被编辑工作区自身的.webagent配置与用户runtime不是同一层数据。
 
-稳定用户数据：默认工作区`%LOCALAPPDATA%\WebAgent\workspace`；code-server配置/密码与用户设置在WebAgent/code-server；admin报告与令牌在WebAgent/admin。`WEBAGENT_DATA_HOME`可明确覆盖根。显式WORKSPACE_ROOT和工作区参数继续优先，文件参数取父目录；相对参数基于调用者原cwd，盘符根不去尾斜杠。
+## 模式、升级与卸载
+classic启动自绘工作台；vscode启动code-server编排；app后台启动并等待healthz（当前探测3000端口，最多120秒）后打开窗口；admin启动独立后台；extension侧载桌面扩展。
 
-源码checkout不带installation.json，仍使用源码目录与原有workspace；不能把开发checkout当成安装包。
+升级保留用户数据与旧runtime，不自动迁移旧安装目录中的workspace。升级前备份并显式选择用户可写工作区。卸载不删除LocalAppData/WebAgent；彻底清理要先备份，不触碰其他用户目录。PATH按分号条目规范比较，不按子串删除同前缀目录。
 
-升级保留既有用户数据和旧runtime版本，不自动删除或覆盖用户资料。旧版放在安装目录workspace中的数据**不自动迁移**：升级前备份，将工作区复制到用户可写位置，启动时显式指定新位置；不要在Program Files内继续编辑。卸载不删除LocalAppData/WebAgent；彻底移除时需用户备份并手动清理，其他用户数据不触碰。
+## 失败与验收
+首次复制校验失败清理临时目录；npm或编译失败应非零退出。Inno缺少ChineseSimplified.isl时仅保留标准英文向导，不把缺语言包冒充可用中文向导。
 
-## 入口与编译
-
-- run-webagent.cmd：classic，本机自绘工作台＋agent-host。
-- run-webagent-vscode.cmd：vscode，agent-host＋code-server。
-- run-webagent-appwindow.cmd：app，后台启动code-server；轮询healthz最多120秒，不再固定等5秒。超时提示用户startup.log；浏览器路径不重复加引号。
-- run-admin.cmd：admin独立进程；install-vscode-extension.cmd：extension，仅安装桌面扩展。
-- installer/build-installer.cmd：先stage再调用Inno Setup 6；需要Node与ISCC。
-
-已修AppVer预处理定义、Node检查Exec/退出码、PrepareToInstall返回String。PATH按分号分割、规范后逐条完整比较，保留同前缀其他条目；卸载不整值删除用户Path。
-
-## 验收边界
-
-installerPackaging.test.js覆盖干净清单、私密数据排除、用户副本与校验失败清理、工作区路径和关键Inno声明。新增Windows CI编译任务；本地Linux无法执行ISCC/CMD，必须另外确认Windows CI及普通用户安装/升级/卸载/Edge窗口实机结果。不把静态声明检查当安装验收。
-
-Windows CI首次实际编译发现官方Inno安装没有ChineseSimplified.isl；现改为检测语言包存在才启用chs，否则保留英文标准向导（产品自定义中文说明不变）。若需完整中文标准向导，构建机先安装简体中文语言包。
+installerPackaging验证白名单、私密fixture不入包、runtime路径和重要声明；Windows CI编译输入C#、解析PS并编译安装器。普通用户安装/升级迁移/卸载、PATH和浏览器窗口的实际效果仍需Windows实机验收。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航
