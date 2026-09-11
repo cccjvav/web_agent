@@ -17,10 +17,10 @@
 |---|---|---|
 | `snap.ps1 -WindowTitle <子串> -Out <png路径> [-Quality n] [-B64]` | 截目标窗口(标题子串匹配)或全屏到 PNG/JPEG | `META` json:rect(Left,Top,Right,Bottom)、w、h;截图文件(输出目录不存在会自动创建) |
 | `info.ps1` | 枚举窗口(标题/句柄/前台)、屏幕几何、光标位置、DPI | JSON(UTF-8) |
-| `act-bg.ps1 -WindowTitle <子串> -X <图上x> -Y <图上y>` | **默认点击**:PostMessage(WM_MOUSEMOVE/DOWN/UP)后台注入目标窗口;不 SetCursorPos、不抢前台、窗口无需置顶 | `BGCLICK OK before=x,y after=x,y` |
+| `act-bg.ps1 -WindowTitle <子串> -X <图上x> -Y <图上y>` | **默认点击**:PostMessage(WM_MOUSEMOVE/DOWN/UP)后台注入目标窗口;不 SetCursorPos、不抢前台、窗口无需置顶 | `BGCLICK SUBMITTED before=x,y after=x,y` |
 | `mark.ps1 -Path <png> -Pts "x:y[,x:y…]" [-Size n] [-Out <png>]` | 点击前**画点确认**:在截图副本画白晕红芯准星+编号(1..N),源文件不动;坐标=同一截图像素空间 | JSON `{"in","out","pts","ok"}`;输出默认 `<名>-marked.png` |
 | `act.ps1 -WindowTitle <子串> -X <图上x> -Y <图上y>` | 前台点击(SetForegroundWindow+SetCursorPos+mouse_event)—— 会动用户光标、抢焦点 | `CLICK <detail> at x,y win=<title>` |
-| `type.ps1 -WindowTitle <子串> -Text <文本> [-Method clip\|fg] [-Mode char]` | 文字输入(见"打字原语与实测"节):clip=后台剪贴板+Ctrl+V(默认);fg=真实 Ctrl+V(需前台);char=后台 WM_CHAR 兜底 | `BGTYPE OK <method> before=x,y after=x,y chars=N` |
+| `type.ps1 -WindowTitle <子串> -Text <文本> [-Method clip\|fg] [-Mode char]` | 文字输入(见"打字原语与实测"节):clip=后台剪贴板+Ctrl+V(默认);fg=真实 Ctrl+V(需前台);char=后台 WM_CHAR 兜底 | `BGTYPE <method> SUBMITTED before=x,y after=x,y chars=N` |
 | `ocr.ps1 -Path <img>` | (可选)图片 OCR | `TEXT <x> <y> <w> <h> <text>` 每行一条 |
 
 ## 坐标协议(全链路一致,零换算)
@@ -37,7 +37,7 @@
 3. 截图经原生图像通道交多模态模型 → 模型输出动作 + 图上坐标;
 3b. **点前画点确认(强制轮)**:对每个待点坐标先 `mark.ps1 -Path <帧png> -Pts "x:y,…"` 在副本上画准星+编号,把 marked 预览交视觉核对——标记中心对准目标元素才算通过;未对准则修正坐标重新 mark,严禁跳过此轮直接点击;
 4. 点击默认走 `act-bg.ps1`;**必须校验返回 `before=… after=…` 两值相等**(光标零位移)才可继续;
-4b. 打字轮(需要输入时):`type.ps1 -Method clip`(后台剪贴板+Ctrl+V,自动保存/恢复用户剪贴板)先试,重截截图用视觉/OCR 确认文字落位;若目标忽略后台键盘(现代 UI 框架 WinUI/CEF/Chromium 常忽略——2026-09-07 实测 Win11 记事本即如此),**上报后经用户当次许可**再改 `-Method fg`(真实 Ctrl+V,要求目标已在前台;焦点不可得时返回 ERR_NOFOCUS,绝不盲发到未知窗口);
+4b. 打字轮(需要输入时):`type.ps1 -Method clip`(后台剪贴板+Ctrl+V,自动保存/恢复用户剪贴板)先试,重截截图用视觉/OCR 确认文字落位;若目标忽略后台键盘(现代 UI 框架 WinUI/CEF/Chromium 常忽略——2026-09-07 实测 Win11 记事本即如此),**上报后经用户当次许可**再改 `-Method fg`(真实 Ctrl+V,要求目标已在前台;焦点不可得时返回 ERR_NOFOCUS,不主动盲发，但焦点在提交期间仍可能改变);
 5. 再 snap 复核画面确实变化(成功标准 = 图上可验证的变化,不只看返回码);
 6. 任何一轮失败 → 停止并上报,不得静默重试或私自降级前台方案。
 
@@ -51,13 +51,13 @@
 ## 安全规则
 
 - 授权范围:仅操作会话内用户指定的窗口(截屏+注入);其他窗口/全屏操作需另行授权。
-- 默认不移动物理光标、不抢焦点、不弹前台 —— 保证用户可并行使用电脑。
+- 默认不移动物理光标、不抢焦点、不弹前台 —— 通常不抢前台，但共享剪贴板和应用行为仍会影响用户，执行期间避免并行编辑。
 - `act.ps1`(前台方案)默认禁用,仅当 ①目标窗口确认不响应后台注入 且 ②用户当次明示许可 才可使用。
 - 不做密码框/敏感区域的读取。
 ## 打字原语与实测(2026-09-07)
 - 实现:`win/type.ps1` + `win/keys.cs`,三种注入:
   - `-Method clip`(默认):存旧剪贴板 → Set-Clipboard(Text) → **后台** PostMessage Ctrl+V → 恢复剪贴板(`-DelayMs` 控制恢复时机,`-KeepClipboard` 不恢复)。不抢焦点、光标不动;经典 Win32 控件可用。
-  - `-Method fg`:存旧剪贴板 → Set-Clipboard(Text) → **真实** Ctrl+V(keybd_event)→ 恢复剪贴板。等同人手粘贴、最可靠;要求目标窗口在前台(自动尝试置前,失败返回 `ERR_NOFOCUS` 且不发送任何键 —— 绝不盲发)。属前台动作,**须用户当次许可**。
+  - `-Method fg`:存旧剪贴板 → Set-Clipboard(Text) → **真实** Ctrl+V(keybd_event)→ 恢复剪贴板。等同人手粘贴、最可靠;要求目标窗口在前台(自动尝试置前,失败返回 `ERR_NOFOCUS` 且不发送任何键；提交期间仍有焦点竞争)。属前台动作,**须用户当次许可**。
   - `-Mode char`:逐字 PostMessage WM_CHAR(UTF-16 单元),不碰剪贴板;仅经典编辑框响应。
 - 实测矩阵(目标 = Win11 记事本,WinUI 输入管线;OCR 验证):
   | 方法 | 是否落位 | 结论 |
@@ -65,9 +65,16 @@
   | clip 后台 Ctrl+V | ✗ | 现代 UI 框架忽略对无焦点窗口 PostMessage 的键盘消息 |
   | char 后台 WM_CHAR | ✗ | 同上 |
   | fg 真实 Ctrl+V | ✓ ASCII+中文均落位、光标零位移 | 通用可靠路径 |
-- 规则:输入后必须重截截图、用视觉/OCR 确认目标文本出现才算成功;`BGTYPE OK` 只表示消息已发。fg 测试给用户带来的多余文字可用 Ctrl+Z 撤销。
+- 规则:输入后必须重截截图、用视觉/OCR 确认目标文本出现才算成功;`SUBMITTED` 只表示消息已发。fg 测试给用户带来的多余文字可用 Ctrl+Z 撤销。
 
 ## 截图回传通道(实测,2026-09-07)
 
 - 原生图像通道(推荐):截图文件经文件读图/附件/URL 直达多模态模型,无体积上限问题。
 - base64 文本通道(不推荐看图):run_command 单响应截断点 ≈ 65,537 字符;256KB 以上分片续读会丢字节 —— 切勿用它回传关键大图。
+
+## 2026-09-11 失败与状态契约
+- 标题是忽略大小写的字面子串；没有目标或匹配多个窗口均非零退出，不再选第一个/解释通配符。
+- ERR_* 返回非零退出。SUBMITTED仅表示输入提交，不证明应用接受；前台旧式输入API无法提供完整送达确认。
+- 检查窗口边界、坐标范围与可检测的焦点/WinAPI错误；DPI、遮挡和提交期间焦点变更仍须截图复核。
+- type使用Windows Forms快照可读取的全部剪贴板格式；快照失败不修改，finally恢复失败明确非零。若序号说明用户/应用改了剪贴板，不覆盖新内容。延迟渲染/特殊格式不能保证无损，实机验收仍待。
+- 当前新增验证为源码契约与Windows CI编译/解析；本次没有重做历史表中的桌面实测，不将历史记录算作本次验收。

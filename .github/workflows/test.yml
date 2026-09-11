@@ -27,6 +27,20 @@ jobs:
           node-version: '22'
       - run: node webagent-core/agent-host/tests/installerPackaging.test.js
       - run: node installer/package.js
+      - name: Compile Windows input helpers and validate script syntax
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($file in @('input.cs','input2.cs','keys.cs')) {
+            Add-Type -Path (Join-Path 'computer-use/win' $file)
+          }
+          foreach ($file in Get-ChildItem computer-use/win/*.ps1) {
+            $tokens=$null; $parseErrors=$null
+            [void][System.Management.Automation.Language.Parser]::ParseFile($file.FullName,[ref]$tokens,[ref]$parseErrors)
+            if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
+          }
+          if ([WinInput]::Click([IntPtr]::Zero,0,0) -notlike 'ERR_*') { throw 'Invalid window must fail' }
+          if ([WinBgKeys]::SendChars([IntPtr]::Zero,'') -notlike 'ERR_*') { throw 'Invalid window must fail' }
       - name: Compile clean installer payload
         shell: pwsh
         run: |

@@ -30,20 +30,22 @@ public static class WinBgInput
         if (!IsWindow(hwnd)) return "ERR_NOWINDOW";
         RECT r;
         if (!GetWindowRect(hwnd, out r)) return "ERR_NORECT";
+        if (imgX < 0 || imgY < 0 || imgX >= r.Right-r.Left || imgY >= r.Bottom-r.Top) return "ERR_BOUNDS";
         POINT p;
         p.X = r.Left + imgX;
         p.Y = r.Top + imgY;
         if (!ScreenToClient(hwnd, ref p)) return "ERR_STC";
+        if (p.X < 0 || p.Y < 0 || p.X > 32767 || p.Y > 32767) return "ERR_BOUNDS";
         int lParam = (p.Y << 16) | (p.X & 0xFFFF);
-        PostMessage(hwnd, WM_MOUSEMOVE, IntPtr.Zero, (IntPtr)lParam);
+        if (!PostMessage(hwnd, WM_MOUSEMOVE, IntPtr.Zero, (IntPtr)lParam)) return "ERR_POSTMESSAGE";
         Thread.Sleep(60);
-        PostMessage(hwnd, WM_LBUTTONDOWN, (IntPtr)MK_LBUTTON, (IntPtr)lParam);
+        if (!PostMessage(hwnd, WM_LBUTTONDOWN, (IntPtr)MK_LBUTTON, (IntPtr)lParam)) return "ERR_POSTMESSAGE";
         Thread.Sleep(100);
-        PostMessage(hwnd, WM_LBUTTONUP, IntPtr.Zero, (IntPtr)lParam);
+        if (!PostMessage(hwnd, WM_LBUTTONUP, IntPtr.Zero, (IntPtr)lParam)) return "ERR_POSTMESSAGE";
         Thread.Sleep(50);
         POINT after;
-        GetCursorPos(out after);
-        return "OK before=" + before.X + "," + before.Y + " after=" + after.X + "," + after.Y;
+        if (!GetCursorPos(out after)) return "ERR_CURSOR_AFTER_SUBMISSION";
+        return "SUBMITTED before=" + before.X + "," + before.Y + " after=" + after.X + "," + after.Y;
     }
 }
 

@@ -275,6 +275,11 @@
       </div>
     `;
     $$('[data-file]').forEach((b) => b.addEventListener('click', () => go(`files/${b.dataset.file}`)));
+    const anchor = route().rest[1];
+    if (anchor) {
+      const target = document.getElementById(anchor);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   function renderTerms() {

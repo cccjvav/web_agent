@@ -5,13 +5,17 @@ $ErrorActionPreference="Stop"
 $here=Split-Path -Parent $MyInvocation.MyCommand.Path
 Add-Type -Path (Join-Path $here "input.cs")
 if($WindowTitle){
-  $p=Get-Process | Where-Object { $_.MainWindowTitle -like "*$WindowTitle*" } | Select-Object -First 1
+  $matches=@(Get-Process | Where-Object { $_.MainWindowHandle -ne 0 -and $_.MainWindowTitle.IndexOf($WindowTitle,[StringComparison]::OrdinalIgnoreCase) -ge 0 })
+  if($matches.Count -ne 1){ Write-Output "ERR_WINDOW_MISSING_OR_AMBIGUOUS"; exit 2 }
+  $p=$matches[0]
   if(-not $p){ Write-Output "ERR_NO_WINDOW"; exit 2 }
   $r=[WinInput]::Click($p.MainWindowHandle,$X,$Y)
+  if($r -like "ERR_*"){ Write-Output $r; exit 3 }
   Write-Output ("CLICK "+$r+" at "+$X+","+$Y+" win="+$p.MainWindowTitle)
 } else {
   $hwnd=[WinInput]::GetForegroundWindow()
   $r=[WinInput]::Click($hwnd,$X,$Y)
+  if($r -like "ERR_*"){ Write-Output $r; exit 3 }
   Write-Output ("CLICK "+$r+" fg-window "+$hwnd)
 }
 

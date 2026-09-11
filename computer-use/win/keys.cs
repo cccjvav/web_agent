@@ -15,6 +15,8 @@ public static class WinBgKeys
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
     [DllImport("user32.dll")] public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
 
+    [DllImport("user32.dll")] public static extern uint GetClipboardSequenceNumber();
+
     public struct POINT { public int X; public int Y; }
 
     public const uint WM_KEYDOWN = 0x0100;
@@ -27,7 +29,7 @@ public static class WinBgKeys
     static string CursorText()
     {
         POINT c;
-        GetCursorPos(out c);
+        if (!GetCursorPos(out c)) return "unknown";
         return c.X + "," + c.Y;
     }
 
@@ -36,15 +38,18 @@ public static class WinBgKeys
     {
         if (!IsWindow(hwnd)) return "ERR_NOWINDOW";
         string b = CursorText();
-        PostMessage(hwnd, WM_KEYDOWN, (IntPtr)VK_CONTROL, IntPtr.Zero);
-        Thread.Sleep(50);
-        PostMessage(hwnd, WM_KEYDOWN, (IntPtr)VK_V, IntPtr.Zero);
-        Thread.Sleep(50);
-        PostMessage(hwnd, WM_KEYUP, (IntPtr)VK_V, IntPtr.Zero);
-        Thread.Sleep(50);
-        PostMessage(hwnd, WM_KEYUP, (IntPtr)VK_CONTROL, IntPtr.Zero);
+        if (!PostMessage(hwnd, WM_KEYDOWN, (IntPtr)VK_CONTROL, IntPtr.Zero)) return "ERR_POSTMESSAGE";
+        bool ok = false, released;
+        try {
+            Thread.Sleep(50);
+            ok = PostMessage(hwnd, WM_KEYDOWN, (IntPtr)VK_V, IntPtr.Zero);
+        } finally {
+            released = PostMessage(hwnd, WM_KEYUP, (IntPtr)VK_V, IntPtr.Zero);
+            released &= PostMessage(hwnd, WM_KEYUP, (IntPtr)VK_CONTROL, IntPtr.Zero);
+        }
+        if (!ok || !released) return "ERR_POSTMESSAGE";
         Thread.Sleep(80);
-        return "OK before=" + b + " after=" + CursorText();
+        return "SUBMITTED before=" + b + " after=" + CursorText();
     }
 
     // fallback: WM_CHAR per char (classic edit controls only)
@@ -54,14 +59,14 @@ public static class WinBgKeys
         string b = CursorText();
         foreach (char ch in text)
         {
-            PostMessage(hwnd, WM_CHAR, (IntPtr)ch, IntPtr.Zero);
+            if (!PostMessage(hwnd, WM_CHAR, (IntPtr)ch, IntPtr.Zero)) return "ERR_POSTMESSAGE_PARTIAL";
             Thread.Sleep(10);
         }
-        return "OK before=" + b + " after=" + CursorText();
+        return "SUBMITTED before=" + b + " after=" + CursorText();
     }
 
     // real Ctrl+V: safe foreground typing. Requires hwnd to be foreground (or successfully brought foreground);
-    // otherwise returns ERR_NOFOCUS and sends nothing, so text can never land in an unintended window.
+    // otherwise returns ERR_NOFOCUS and sends nothing, focus may still change during submission; inspect the application afterwards.
     public static string PasteFg(IntPtr hwnd)
     {
         if (!IsWindow(hwnd)) return "ERR_NOWINDOW";
@@ -79,7 +84,7 @@ public static class WinBgKeys
         keybd_event((byte)VK_V, 0x2F, KEYEVENTF_KEYUP, UIntPtr.Zero);
         keybd_event((byte)VK_CONTROL, 0x1D, KEYEVENTF_KEYUP, UIntPtr.Zero);
         Thread.Sleep(120);
-        return "OK before=" + b + " after=" + CursorText();
+        return "SUBMITTED before=" + b + " after=" + CursorText();
     }
 }
 

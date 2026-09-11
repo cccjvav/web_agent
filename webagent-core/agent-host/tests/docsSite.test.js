@@ -32,3 +32,8 @@ assert.strictEqual(
 );
 
 console.log('docs-site content.js matches build.js');
+
+const context = { window: {} };
+require('vm').runInNewContext(after, context);
+assert.ok(context.window.DOCS.files.summary.html, 'summary route must have real content');
+assert.ok(context.window.DOCS.fileIndex.some(doc => doc.id === 'summary'));

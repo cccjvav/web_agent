@@ -4,13 +4,13 @@
 #   -Method fg  : Set-Clipboard(Text) -> real Ctrl+V via keybd_event on the FOREGROUND window -> restore clipboard.
 #                 Needs target foreground (or bringable); never blind-types: ERR_NOFOCUS if focus unavailable.
 #   -Mode char  : background WM_CHAR per char, no clipboard use (classic edit controls only)
-#   prints: BGTYPE OK <method/mode> before=x,y after=x,y chars=N   (before==after => cursor untouched)
+#   SUBMITTED means input sent, not proof the application accepted the text.
 param(
   [string]$WindowTitle="",
   [string]$Text="",
-  [string]$Method="clip",     # clip | fg
-  [string]$Mode="",           # "" | char
-  [int]$DelayMs=900,
+  [ValidateSet("clip","fg")][string]$Method="clip",     # clip | fg
+  [ValidateSet("","char")][string]$Mode="",           # "" | char
+  [ValidateRange(0,10000)][int]$DelayMs=900,
   [switch]$KeepClipboard
 )
 [Console]::OutputEncoding=[System.Text.Encoding]::UTF8
@@ -18,32 +18,49 @@ $ErrorActionPreference="Stop"
 $here=Split-Path -Parent $MyInvocation.MyCommand.Path
 Add-Type -Path (Join-Path $here "keys.cs")
 if(-not $WindowTitle){ Write-Output "ERR_NO_WINDOW"; exit 2 }
-$p=Get-Process | Where-Object { $_.MainWindowTitle -like "*$WindowTitle*" } | Select-Object -First 1
+$matches=@(Get-Process | Where-Object { $_.MainWindowHandle -ne 0 -and $_.MainWindowTitle.IndexOf($WindowTitle,[StringComparison]::OrdinalIgnoreCase) -ge 0 })
+  if($matches.Count -ne 1){ Write-Output "ERR_WINDOW_MISSING_OR_AMBIGUOUS"; exit 2 }
+  $p=$matches[0]
 if(-not $p){ Write-Output "ERR_NO_WINDOW"; exit 2 }
 $hwnd=$p.MainWindowHandle
 
 if($Mode -eq "char"){
   $r=[WinBgKeys]::SendChars($hwnd,$Text)
-  Write-Output ("BGTYPE OK char " + $r + " chars=" + $Text.Length)
+  if($r -like "ERR_*"){ Write-Output $r; exit 3 }
+  Write-Output ("BGTYPE char " + $r + " chars=" + $Text.Length)
   exit 0
 }
 
-# remember old clipboard, set target text, inject paste, restore old clipboard
-$old=$null
-try { $old=Get-Clipboard -Raw -ErrorAction Stop } catch { $old=$null }
-try { Set-Clipboard -Value $Text -ErrorAction Stop } catch { Write-Output "ERR_CLIPBOARD"; exit 3 }
-Start-Sleep -Milliseconds 200
-if($Method -eq "fg"){
-  $r=[WinBgKeys]::PasteFg($hwnd)
-} else {
-  $r=[WinBgKeys]::PasteClipboard($hwnd)
-}
-Start-Sleep -Milliseconds $DelayMs
+# Snapshot all available formats before modifying; fail closed if snapshot fails.
+Add-Type -AssemblyName System.Windows.Forms
+$old=New-Object System.Windows.Forms.DataObject
+$hadOld=$false
 if(-not $KeepClipboard){
   try {
-    if($null -ne $old){ Set-Clipboard -Value $old -ErrorAction SilentlyContinue }
-    else { Set-Clipboard -Value "" -ErrorAction SilentlyContinue }
-  } catch { }
+    $data=[System.Windows.Forms.Clipboard]::GetDataObject()
+    if($null -ne $data){
+      foreach($format in $data.GetFormats($false)){ $old.SetData($format,$false,$data.GetData($format,$false)); $hadOld=$true }
+    }
+  } catch { Write-Output "ERR_CLIPBOARD_SNAPSHOT"; exit 3 }
 }
-Write-Output ("BGTYPE OK " + $Method + " " + $r + " chars=" + $Text.Length)
-
+$changed=$false; $resultCode=0; $sequence=0
+try {
+  [System.Windows.Forms.Clipboard]::SetText($Text)
+  $changed=$true; $sequence=[WinBgKeys]::GetClipboardSequenceNumber()
+  Start-Sleep -Milliseconds 200
+  if($Method -eq "fg"){ $r=[WinBgKeys]::PasteFg($hwnd) }
+  else { $r=[WinBgKeys]::PasteClipboard($hwnd) }
+  if($r -like "ERR_*"){ throw $r }
+  Start-Sleep -Milliseconds $DelayMs
+  Write-Output ("BGTYPE " + $Method + " " + $r + " chars=" + $Text.Length)
+} catch { Write-Output ("ERR_TYPE " + $_.Exception.Message); $resultCode=3 }
+finally {
+  if($changed -and -not $KeepClipboard){
+    try {
+      if([WinBgKeys]::GetClipboardSequenceNumber() -ne $sequence){ throw "Clipboard changed externally; not overwriting it" }
+      if($hadOld){ [System.Windows.Forms.Clipboard]::SetDataObject($old,$true) }
+      else { [System.Windows.Forms.Clipboard]::Clear() }
+    } catch { Write-Output ("ERR_CLIPBOARD_RESTORE " + $_.Exception.Message); $resultCode=4 }
+  }
+}
+exit $resultCode

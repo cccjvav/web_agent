@@ -21,14 +21,18 @@ public static class WinInput
         if (!GetWindowRect(hwnd, out r)) return "ERR_NORECT";
         SetForegroundWindow(hwnd);
         Thread.Sleep(250);
+        if (GetForegroundWindow() != hwnd) return "ERR_NOFOCUS";
+        if (!GetWindowRect(hwnd, out r)) return "ERR_NORECT";
+        if (imgX < 0 || imgY < 0 || imgX >= r.Right-r.Left || imgY >= r.Bottom-r.Top) return "ERR_BOUNDS";
         int sx = r.Left + imgX;
         int sy = r.Top + imgY;
-        SetCursorPos(sx, sy);
+        if (!SetCursorPos(sx, sy)) return "ERR_CURSOR";
         Thread.Sleep(80);
+        if (GetForegroundWindow() != hwnd) return "ERR_NOFOCUS";
         mouse_event(0x0002, 0, 0, 0, UIntPtr.Zero);
         Thread.Sleep(40);
         mouse_event(0x0004, 0, 0, 0, UIntPtr.Zero);
-        return "OK";
+        return "SUBMITTED";
     }
 }
 
