@@ -63,7 +63,8 @@ try {
 
 const repoRoot = path.resolve(__dirname, '../../..');
 const cmd = fs.readFileSync(path.join(repoRoot, 'install-vscode-extension.cmd'), 'utf8');
-assert.ok(/install-desktop-extension\.js/.test(cmd));
+assert.ok(/installer\\launch\.js" extension/.test(cmd));
+assert.ok(fs.readFileSync(path.join(repoRoot, 'installer/launch.js'), 'utf8').includes("extension: 'webagent-core/scripts/install-desktop-extension.js'"));
 assert.ok(/chcp 65001/.test(cmd));
 assert.ok(!/code-server/i.test(cmd), '桌面插件安装不得拉起 code-server');
 

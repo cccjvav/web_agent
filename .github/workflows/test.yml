@@ -17,3 +17,23 @@ jobs:
           node-version: '20'
       - run: npm ci --no-audit --no-fund
       - run: npm test
+
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node webagent-core/agent-host/tests/installerPackaging.test.js
+      - run: node installer/package.js
+      - name: Compile clean installer payload
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $iscc)) {
+            choco install innosetup --yes --no-progress
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          & $iscc /Qp installer/webagent.iss
+          exit $LASTEXITCODE

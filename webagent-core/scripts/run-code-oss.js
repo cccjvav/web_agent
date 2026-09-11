@@ -113,7 +113,7 @@ async function main() {
 
   await waitHealth(`http://127.0.0.1:${mcpPort}/health`, 15000);
 
-  const userData = path.join(repoRoot, '.local/share/code-server');
+  const userData = process.env.WEBAGENT_USER_DATA_DIR || path.join(repoRoot, '.local/share/code-server');
   const configFile = path.join(repoRoot, '.config/code-server/config.yaml');
   fs.mkdirSync(userData, { recursive: true });
   const auth = resolveAuth({ userData, env: process.env });

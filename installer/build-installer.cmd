@@ -15,6 +15,9 @@ if not defined ISCC (
   exit /b 1
 )
 
+node package.js
+if errorlevel 1 exit /b 1
+
 echo 编译安装器：webagent.iss
 "%ISCC%" /Qp webagent.iss
 if errorlevel 1 (

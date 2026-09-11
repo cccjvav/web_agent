@@ -10,6 +10,7 @@
 
 | 文件 | 覆盖 |
 |---|---|
+| `installerPackaging.test.js` | 干净发行清单、秘密/原型排除、manifest校验与用户运行时、失败清理、相对路径/文件/根目录；ISCC/CMD另需Windows |
 | `webviewRuntime.test.js` | 实际扩展宿主回调/HTML脚本：动态文本不经HTML、任务日志空值、CSP nonce、消息白名单；不是VS Code真实CSP执行验收 |
 | `editorRuntime.test.js` | 真实编辑器ES模块＋DOM/Monaco fixture：切tab/dirty/关闭/卸载、HTTP保存结果、hash冲突、保存竞态与模型释放；非浏览器E2E |
 | `auditStorage.test.js` | 记忆日期/链接边界、敏感路径、git-header/BOM补丁、stale dryRun、写锁、mode保留、rename失败清理、Skill限额、用量延迟响应 |

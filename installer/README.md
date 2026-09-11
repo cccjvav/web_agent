@@ -1,38 +1,31 @@
-# installer/ — Windows 安装器（第四阶段 S4-1）
+# Windows安装与用户运行时（2026-09-11整改）
 
-**定位：** 用户点名的「Windows 安装包」。Inno Setup 6 脚本，编译出单文件 `webagent-setup-<版本>.exe`。**不是 Electron**（任务书红线：不做 Electron exe 当产品壳；安装器 exe 只是安装载体）。
+## 安装包来源
 
-## 装什么 / 不装什么
-- **装**：仓库全部源文件与文档（`.git`、`node_modules`、`.cache`、`.local`、`code-server-app`、`bin/code-server-runtime/*`（保留其 package.json）、日志、压缩包、`workspace/*`（只带骨架 README）、`manager/privacy.md`、`installer/output/*` 均排除）。
-- **不捆绑 Node**：安装时检测 PATH/注册表，缺则提示先装 Node LTS 或跑 `check-env.cmd`（不拦安装）。
-- **code-server 首跑自下载**：沿用仓库既定 gitignore 规则（`run-webagent-vscode.cmd` 第一次运行从 npm 拉 4.135.0）。
-- **卸载**：清运行时产物（node_modules、code-server-runtime、code-server-app、.cache、.local）；**workspace 是用户的仓库，卸载不碰**。
+先运行`node installer/package.js`，按显式文件/源码目录白名单生成installer/output/payload与SHA-256 installation.json清单。ISCC只读取这个payload，不能再递归打包整个checkout。排除admin-host/data、用户workspace内容、密钥目录、node_modules、历史webagent-repro和管理隐私资料。code-server配置生成干净默认值，不复制本机配置中的密码。
 
-## 默认壳
-桌面与开始菜单主图标 → `run-webagent-vscode.cmd`（Code-OSS / VS Code 复刻壳，用户点名）；开始菜单另给「经典工作台（备用）」→ `run-webagent.cmd`。装完勾选「立即启动」进 VS Code 壳。
+白名单以package.js为准；新增产品资源必须同时更新打包测试。目录中的链接拒绝打包。清单校验用于检测损坏，不是数字签名或发布者身份认证。
 
-## 附加任务（P5-1 安装器对齐，对照 review/shuncode-ui/ 19–25 安装系列）
-ShunCode 安装包同为 Inno Setup、任务集与 VS Code 官方同构；本安装器对齐如下（默认全勾选）：
-- **桌面快捷方式（VS Code 壳）**：`desktopicon` 任务控制（开始菜单主图标不受任务影响，始终创建）。
-- **app 窗口快捷方式**：`appwindow` → `run-webagent-appwindow.cmd`：探 3000 口，无主程序则后台最小化拉起 VS Code 壳，再用 Edge/Chrome `--app=http://127.0.0.1:3000` 开无边框独立窗口（无浏览器地址栏/标签条，任务栏独立图标）；都没有则回退默认浏览器普通窗口。
-- **上下文菜单 + 打开方式**：`ctxmenu` → HKCU\Software\Classes 写「用 Web Agent 打开」（文件 `*\shell` 传 `%1`、目录 `Directory\shell` 传 `%V`；run cmd 收到**文件**参数时自动取其目录当工作区）；另注册 ProgID `WebAgent.OpenWith` 进 .md/.txt/.js/.json/.py/.html/.css 的「打开方式」菜单——**不劫持双击默认关联**。卸载 `uninsdeletekey/uninsdeletevalue` 清干净。
-- **PATH**：`addpath` → HKCU Environment Path 以 `{olddata};{app}` 追加；`ChangesEnvironment=yes` 广播环境变量、新终端即刻生效；**覆盖安装先摘旧段再追加（幂等）**，卸载经 [Code] `StripAppFromPath` 精确摘除（绝不整值删用户 Path）。
-- **双安装模式**：`PrivilegesRequiredOverridesAllowed=dialog`——默认用户级，对话框可选「为所有用户」（系统级，对照 ShunCode 的 Program Files 默认）。
-- **许可页/说明页**：许可页挂真许可证 `LICENSE`（ISC）；安全边界（隧道=施工证、Key 明文取舍等）挂安装前说明页 `InfoBeforeFile=SECURITY.md`。
+## 用户确认的方案A
 
-## 怎么编译（Windows）
-1. 装 Inno Setup 6（jrsoftware.org，免费；语言包含简体中文）。
-2. 双击或命令行跑 `installer\build-installer.cmd`。
-3. 产物：`installer\output\webagent-setup-<版本>.exe`（`output/` 已排除在安装源与 Git 之外）。
+安装文件仍留Program Files（系统安装）或用户程序目录（用户安装）。CMD入口交给无依赖installer/launch.js：安装版本按manifest哈希复制并校验到`%LOCALAPPDATA%\WebAgent\releases\<hash>`，npm/code-server下载仅在该用户运行时副本内进行，不写程序安装目录。首次复制失败清理临时目录，并发准备只复用完整副本。
 
-## 沙箱边界（诚实说明）
-本仓库的 Linux 沙箱**无法编译 .iss**（ISCC 仅 Windows）。此处交付：脚本 + 编译入口 + 本说明 + 语法自查；真机编译与安装冒烟列入 Windows 验收唯一基线 `review/CHECKLIST_WINDOWS.md`（D 节）。
+稳定用户数据：默认工作区`%LOCALAPPDATA%\WebAgent\workspace`；code-server配置/密码与用户设置在WebAgent/code-server；admin报告与令牌在WebAgent/admin。`WEBAGENT_DATA_HOME`可明确覆盖根。显式WORKSPACE_ROOT和工作区参数继续优先，文件参数取父目录；相对参数基于调用者原cwd，盘符根不去尾斜杠。
 
-## 语法自查清单（改 .iss 时过一遍）
-- [ ] `{#AppVer}` 与 OutputBaseFilename 一致；升版只改 `#define AppVer`
-- [ ] Excludes 通配以反斜杠写目录、逗号分隔；`!` 取回保留项（package.json）
-- [ ] AppId GUID 不换（换了=另一个产品，升级链断）
-- [ ] 新增运行时缓存目录 → 同步 [UninstallDelete]
-- [ ] 中文文案在 [Languages] chs 下无乱码（真机看一眼）
-- [ ] 新增 [Registry] 键 → 同步卸载清理（uninsdeletekey/uninsdeletevalue 或 [Code] 摘除）；PATH 只能精确摘段
-- [ ] 新增 [Tasks] → 同步 [Icons]/[Registry] 的 Tasks: 引用与 installer/README 附加任务节
+源码checkout不带installation.json，仍使用源码目录与原有workspace；不能把开发checkout当成安装包。
+
+升级保留既有用户数据和旧runtime版本，不自动删除或覆盖用户资料。旧版放在安装目录workspace中的数据**不自动迁移**：升级前备份，将工作区复制到用户可写位置，启动时显式指定新位置；不要在Program Files内继续编辑。卸载不删除LocalAppData/WebAgent；彻底移除时需用户备份并手动清理，其他用户数据不触碰。
+
+## 入口与编译
+
+- run-webagent.cmd：classic，本机自绘工作台＋agent-host。
+- run-webagent-vscode.cmd：vscode，agent-host＋code-server。
+- run-webagent-appwindow.cmd：app，后台启动code-server；轮询healthz最多120秒，不再固定等5秒。超时提示用户startup.log；浏览器路径不重复加引号。
+- run-admin.cmd：admin独立进程；install-vscode-extension.cmd：extension，仅安装桌面扩展。
+- installer/build-installer.cmd：先stage再调用Inno Setup 6；需要Node与ISCC。
+
+已修AppVer预处理定义、Node检查Exec/退出码、PrepareToInstall返回String。PATH按分号分割、规范后逐条完整比较，保留同前缀其他条目；卸载不整值删除用户Path。
+
+## 验收边界
+
+installerPackaging.test.js覆盖干净清单、私密数据排除、用户副本与校验失败清理、工作区路径和关键Inno声明。新增Windows CI编译任务；本地Linux无法执行ISCC/CMD，必须另外确认Windows CI及普通用户安装/升级/卸载/Edge窗口实机结果。不把静态声明检查当安装验收。

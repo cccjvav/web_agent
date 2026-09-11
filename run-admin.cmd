@@ -1,7 +1,11 @@
 @echo off
-setlocal
-cd /d "%~dp0"
-if not defined WEBAGENT_ADMIN_PORT set WEBAGENT_ADMIN_PORT=4174
-echo [webagent-admin] 独立进程，默认端口 %WEBAGENT_ADMIN_PORT%
-echo [webagent-admin] 主工作台不会自动打开这个端口。
-node webagent-core\admin-host\index.js
+chcp 65001 >nul
+setlocal EnableExtensions DisableDelayedExpansion
+where node >nul 2>&1
+if errorlevel 1 (
+  echo [错误] 未找到Node.js，请安装Node LTS后重新打开CMD。
+  exit /b 1
+)
+rem Preserve caller cwd: relative workspaces resolve where the command was invoked.
+node "%~dp0installer\launch.js" admin "%~1"
+exit /b %ERRORLEVEL%

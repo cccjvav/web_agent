@@ -4,6 +4,8 @@
 
 网页 VS Code 第二种跑法的启动脚本。`run-webagent.cmd` **不进入**本目录。无 `.html`。
 
+安装版由installer/launch.js在用户运行时副本执行，代码目录无需写权限；run-code-oss的用户配置目录优先WEBAGENT_USER_DATA_DIR以跨升级保留。
+
 文件：`ensure-code-server.js`、`run-code-oss.js`、`codeServerAuth.js`、`install-desktop-extension.js`。
 
 ---

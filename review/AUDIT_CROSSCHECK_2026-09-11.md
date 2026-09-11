@@ -108,7 +108,7 @@
 | 编号 | 问题 | 本轮状态 / 下一步 |
 |---|---|---|
 | F01 | 工作台主题函数未定义导致启动阻断 | 代码与模块回归已修；浏览器E2E待环境 |
-| F02 | Inno版本宏被注释、ShellExec错误、PrepareToInstall签名错 | **待修＋Windows编译** |
+| F02 | Inno版本宏被注释、ShellExec错误、PrepareToInstall签名错 | 第四批代码修复＋发行隔离；Windows CI/实机验收待确认 |
 | F03 | remember/recall 工作区外读写 | 本轮修复；Windows链接测试待验收 |
 | F04 | 敏感文件别名/嵌套/大小写 | 本轮修复主要路径；OS级竞态/硬链接隔离不作保证 |
 | F05 | WebSocket跨站Origin未过滤 | 本轮修复＋HTTP/WS回归 |
@@ -137,11 +137,11 @@
 | F28 | budget裁切破坏schema与cursor | **待修**，稳定schema、工具自身分页 |
 | F29 | store坏配置静默覆盖、schema不足 | **待修**，与X12合并 |
 | F30 | 用户Skill可读工作区外链接 | 本轮修复；额外采纳X15有界读取 |
-| F31 | 安装包递归包含admin-host/data令牌 | **待修**，干净staging/明确文件清单 |
-| F32 | Inno PATH子串删除破坏同前缀目录 | **待修＋Windows验收** |
-| F33 | 系统级安装后普通用户无法写Program Files运行时 | **方案A已确认，待实施＋Windows验收** |
-| F34 | 启动相对路径/盘符根/appwindow等待和引号 | **待修＋CMD验收** |
-| F35 | 归档原型可直接启动不安全入口 | **发行隔离待修**；冻结JS变更需先确认 |
+| F31 | 安装包递归包含admin-host/data令牌 | 第四批代码修复＋发行隔离；Windows CI/实机验收待确认 |
+| F32 | Inno PATH子串删除破坏同前缀目录 | 第四批代码修复＋发行隔离；Windows CI/实机验收待确认 |
+| F33 | 系统级安装后普通用户无法写Program Files运行时 | 方案A已实现用户运行时/稳定数据；旧版显式迁移，Windows实机待验收 |
+| F34 | 启动相对路径/盘符根/appwindow等待和引号 | 第四批代码修复＋发行隔离；Windows CI/实机验收待确认 |
+| F35 | 归档原型可直接启动不安全入口 | 第四批代码修复＋发行隔离；Windows CI/实机验收待确认 |
 | F36 | docs服务器畸形URI导致进程退出 | 本轮修复 |
 | F37 | computer-use返回失败但脚本报OK、焦点/坐标/剪贴板 | **待修＋Windows桌面验收** |
 | F38 | Plan全局轮次await期间更换，结果串任务 | **待修**，round id/version校验 |
@@ -181,3 +181,11 @@
 webviewRuntime.test.js使用无脚本的普通HTML标记作为文本样本，验证渲染不调用innerHTML、生成CSP nonce匹配且更新、宿主消息校验实际接线。测试执行真实模板与宿主代码，但不是VS Code容器的CSP运行验收。后端授权、PTY审批等仍是独立待修项。
 
 第三批最终验收：Linux Node v22.22.3，41/41测试文件通过，退出码0；包含编辑器、webview与发行副本一致性回归。文档站重建与一致性检查通过。未运行真实VS Code/browser/Windows安装验收。
+
+## 九、第四批：安装发行与Windows启动
+
+F02/F31/F32/F34/F35发行隔离代码已修；F33按确认方案A实现用户运行时＋稳定用户数据，旧版工作区采取显式备份迁移策略。新package.js白名单staging、生成无密码默认配置、清单校验；Inno只打包payload，不含冻结原型。CMD统一走launch.js，保留cwd/盘符根、app等待healthz而非固定5秒。
+
+新增installerPackaging回归与Windows CI编译任务。旧runtime与用户资料默认保留，卸载不主动清除LocalAppData；代码修复不等于Windows实机安装/迁移/卸载已验收。F35冻结JS未改，只隔离发行。
+
+第四批本地验收：42/42测试文件通过、退出码0；文档生成一致性通过。Windows CI结果另查。
