@@ -10,6 +10,7 @@
 
 | 文件 | 覆盖 |
 |---|---|
+| `ptyLifecycle.test.js` | 归属、审批过期、非零/未知退出、晚到progress、输出预算、真实命令取消、HTTP deadline、插件过期批准拒绝spawn及ShellIntegration结束事件fixture |
 | `modelLifecycle.test.js` | 模型失败不重放、9个tool id完整结果、Plan异步旧轮次/过期总结拒绝 |
 | `oauthClientAuth.test.js` | 实际HTTP：public/secret-post/secret-basic、错误凭据/混用拒绝、不消耗code、refresh认证 |
 | `stateIntegrity.test.js` | 坏配置保留/保存失败清理、短hash/已删目标/链接写语义、同名同IP隔离、认领状态机、业务失败统计 |

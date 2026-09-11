@@ -130,7 +130,7 @@ export function paintPlanComposer() {
 }
 
 export async function sendChat(text, opts = {}) {
-  if (state.sending) return;
+  if (state.sending) { if (state.chatAbort) state.chatAbort.abort(); return; }
   const message = text != null ? text : ($('#chat-input').value || ($('#agent-input') && $('#agent-input').value) || '');
   if (text == null) {
     $('#chat-input').value = '';
@@ -152,6 +152,9 @@ export async function sendChat(text, opts = {}) {
     }
   }
   state.sending = true;
+  state.chatAbort = new AbortController();
+  const sendButton = $('#btn-send');
+  if (sendButton) { sendButton.textContent = '停止'; sendButton.title = '停止当前任务'; }
   state.stayOnBridge = !!opts.stayOnBridge;
   if (!opts.stayOnBridge) ui.setRight('chat');
   const history = state.history.slice(-12);
@@ -167,6 +170,7 @@ export async function sendChat(text, opts = {}) {
   const thinkLevel = ($('#think-select') && $('#think-select').value) || 'high';
   try {
     const res = await fetch('/api/chat', {
+      signal: state.chatAbort.signal,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -200,6 +204,8 @@ export async function sendChat(text, opts = {}) {
     pushMsg({ kind: 'assistant', text: '请求失败：' + err.message });
   } finally {
     state.sending = false;
+    state.chatAbort = null;
+    if (sendButton) { sendButton.textContent = '↑'; sendButton.title = '发送'; }
     ui.refreshStatus();
     ui.loadTree();
   }

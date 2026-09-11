@@ -6,6 +6,7 @@ const eventBus = require('../utils/eventBus');
 const { resolveSafePath } = require('./patchEngine');
 const { ProtocolError } = require('../mcp/errors');
 const ptyJobs = require('./ptyJobs');
+const { currentSignal, checkCancelled } = require('../utils/requestScope');
 
 let lastExecId = '';
 const commandStore = new Map();
@@ -150,6 +151,18 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
     env: { ...scrubEnv(process.env), CI: 'true', TERM: 'xterm-256color', FORCE_COLOR: '1' }
   });
   children.set(String(execId), child);
+  const requestSignal = currentSignal();
+  const abort = () => {
+    if (rec.status !== 'running') return;
+    rec.status = 'cancelled'; rec.ok = false;
+    killChild(child);
+    const force = setTimeout(() => { if (children.has(String(execId))) killChild(child, true); }, 2000);
+    if (force.unref) force.unref();
+  };
+  if (requestSignal) {
+    requestSignal.addEventListener('abort', abort, { once: true });
+    if (requestSignal.aborted) abort();
+  }
 
   const timer = setTimeout(() => {
     rec.isTimeout = true;
@@ -172,6 +185,7 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
 
   const done = new Promise((resolve, reject) => {
     child.on('error', (err) => {
+      if (requestSignal) requestSignal.removeEventListener('abort', abort);
       clearTimeout(timer);
       children.delete(String(execId));
       rec.durationMs = Date.now() - startTime;
@@ -181,12 +195,14 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
       reject(new Error(`Failed to start command: ${err.message}`));
     });
     child.on('close', (code, signal) => {
+      if (requestSignal) requestSignal.removeEventListener('abort', abort);
       clearTimeout(timer);
       children.delete(String(execId));
       rec.exitCode = code;
       rec.signal = signal;
       rec.durationMs = Date.now() - startTime;
-      if (rec.status === 'running') rec.status = rec.isTimeout ? 'timeout' : 'done';
+      if (rec.status === 'running') rec.status = rec.isTimeout ? 'timeout' : (code === 0 ? 'done' : 'error');
+      rec.ok = rec.status === 'done' && code === 0;
       eventBus.broadcast('command_finished', {
         execId,
         command,
@@ -203,6 +219,7 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
 }
 
 async function executeCommand(opts) {
+  checkCancelled();
   if (ptyJobs.wantsPty()) {
     pruneCommands();
     const result = await ptyJobs.enqueue('run', {
@@ -218,6 +235,7 @@ async function executeCommand(opts) {
 }
 
 function startCommand(opts) {
+  checkCancelled();
   if (ptyJobs.wantsPty()) {
     if (countRunning() >= MAX_RUNNING) {
       throw new ProtocolError('E_BAD_ARGS', `Too many running commands (max ${MAX_RUNNING}). Cancel or wait.`);
@@ -255,7 +273,8 @@ function startCommand(opts) {
         eventBus.broadcast('command_output', { execId, stream: field, chunk });
       }
     }).then((result) => {
-      rec.status = result.status || (result.ok === false ? 'error' : 'done');
+      if (rec.status !== 'cancelled') rec.status = result.status || (result.ok === false ? 'error' : 'done');
+      rec.ok = rec.status !== 'cancelled' && result.ok === true;
       rec.stdout = result.stdout != null ? result.stdout : rec.stdout;
       rec.stderr = result.stderr != null ? result.stderr : rec.stderr;
       rec.exitCode = result.exitCode;
@@ -316,6 +335,7 @@ async function cancelCommand({ execId } = {}) {
       return { execId: rec.execId, status: rec.status, cancelled: false, message: 'Command is not running.' };
     }
     rec.status = 'cancelled';
+    ptyJobs.cancelExec(id);
     try {
       await ptyJobs.enqueue('cancel', { execId: id });
     } catch (_) { /* plugin may already have exited */ }

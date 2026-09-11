@@ -489,6 +489,7 @@ function getToolList(currentMode = null, opts = {}) {
 }
 
 async function callTool(name, args = {}, currentMode = null, opts = {}) {
+  require('../utils/requestScope').checkCancelled();
   const resolved = resolveToolName(name);
   const toolDef = toolRegistry.get(resolved) || toolRegistry.get(name);
   if (!toolDef) {

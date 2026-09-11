@@ -117,13 +117,13 @@
 | F08 | git diff被当文件正文覆盖 | 本轮修复 |
 | F09 | 编辑器切tab丢未保存编辑 | 第二批代码修复：每tab模型/dirty/关闭确认/卸载提示；DOM＋Monaco fixture通过，浏览器真机待验收 |
 | F10 | 保存失败假成功、缺hash冲突保护 | 第二批代码修复：GET hash/PUT expectedHash/409保留编辑；保存中后续修改不丢失，真实浏览器待验收 |
-| F11 | PTY只读自动批准前缀判断过宽 | **待修**，保守策略，命令复合表达式需审批 |
+| F11 | PTY只读自动批准前缀判断过宽 | 第六批代码修复＋本地/fixture回归；真实Windows/VS Code仍待验收 |
 | F12 | 原子写丢可执行位、锁键别名、短hash前缀 | 第五批代码修复＋回归；详见第十节，真实客户端/平台兼容仍待 |
-| F13 | PTY失败/超时/未捕获被报成功 | **待修＋真实VS Code** |
-| F14 | 审批等待超时后仍可能启动命令 | **待修**，审批/执行分别计时、批准时再次验证 |
-| F15 | PTY jobs/输出无界保留 | **待修**，上限/TTL/终态后拒绝progress |
-| F16 | VS Code多窗口领取错误工作区任务 | **待修＋双窗口验收**，job/client/workspace身份 |
-| F17 | 取消没贯通后端、请求deadline缺失 | **待修**，request-scoped AbortController |
+| F13 | PTY失败/超时/未捕获被报成功 | 第六批代码修复＋本地/fixture回归；真实Windows/VS Code仍待验收 |
+| F14 | 审批等待超时后仍可能启动命令 | 第六批代码修复＋本地/fixture回归；真实Windows/VS Code仍待验收 |
+| F15 | PTY jobs/输出无界保留 | 第六批代码修复＋本地/fixture回归；真实Windows/VS Code仍待验收 |
+| F16 | VS Code多窗口领取错误工作区任务 | 第六批代码修复＋本地/fixture回归；真实Windows/VS Code仍待验收 |
+| F17 | 取消没贯通后端、请求deadline缺失 | 第六批代码修复＋本地/fixture回归；真实Windows/VS Code仍待验收 |
 | F18 | >8 tool_calls 导致缺失结果message | 第五批代码修复＋回归；详见第十节，真实客户端/平台兼容仍待 |
 | F19 | 模型失败自动降级继续修改，写失败仍报已写入 | 第五批代码修复＋回归；详见第十节，真实客户端/平台兼容仍待 |
 | F20 | OAuth声明basic/post但未实现client secret校验 | 第五批代码修复＋回归；详见第十节，真实客户端/平台兼容仍待 |
@@ -201,3 +201,11 @@ F29/F12：坏配置保留拒绝覆盖、校验与原子0600保存；完整hash�
 Windows CI补充：第四批首次编译发现缺少可选ChineseSimplified语言包，92ae535修正检测后，GitHub运行34642456660的Windows安装编译与Linux全量测试均通过。这是编译通过，不是安装/升级/卸载/桌面操作人工验收。
 
 第五批本地全量45/45通过，退出码0；首次全量发现通知分支变量引用错误，修正后复跑通过。新增三份回归，Windows安装编译已通过，客户端兼容/桌面实机验收仍待。
+
+## 十一、第六批：PTY与请求生命周期
+
+F11完整只读命令匹配，复合语法需审批。F13真实退出码/超时/输出状态，不可观测fallback不执行。F14审批claimed与accepted分开计时，批准时重新验证。F15输出200Ki、32在途、256保留、15分钟终态TTL；终态不再收progress。F16每插件随机clientId与workspace绑定、所属报告。F17请求ALS取消、5分钟截止、模型120秒、工具开始前检查、普通进程TERM/KILL，PTY取消下发插件；三种Chat入口均传递取消。
+
+新增ptyLifecycle测试，含真实短命子进程取消和真实插件代码fixture；不代表真实Windows/VS Code终端验收完成。旧插件必须同步升级才能访问新增身份校验的PTY API。
+
+第六批全量46/46测试通过，退出码0；HTTP smoke同步验证新PTY身份字段（缺失/错工作区409，匹配成功），真实VS Code/Windows终端验收仍待。

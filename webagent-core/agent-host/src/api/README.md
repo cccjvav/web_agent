@@ -1,5 +1,10 @@
 # api 模块说明书
 
+## 第六批：请求取消与PTY生命周期
+
+/chat设置5分钟总截止时间，断开连接/请求中止会abort；emit不写已关闭响应，结束清理监听器。/pty/hello和jobs/report校验clientId与工作区，报告只允许所属客户端；旧版插件不含身份字段会被拒绝，需同步升级。
+
+
 ## 2026-09-11当前整改语义
 
 无公网隧道时MCP地址回退到127.0.0.1:config.port，不再使用工作台页面Host。bridge/start仅实际获得隧道URL后running/success为true；失败仍HTTP200以保留错误展示兼容，但success/running=false，并广播bridge_failed。

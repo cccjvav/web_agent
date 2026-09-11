@@ -5,6 +5,7 @@ const { formatWorkspaceContext, resolveEnvironment } = require('../models/profil
 const { listSkills } = require('../tools/skills');
 const { toolLabel } = require('./toolLabel');
 const { collectShot } = require('./computerUse');
+const { fetchText, checkCancelled } = require('../utils/requestScope');
 
 // 模型会不会看图：显式 vision 标记（设置页 Add API 勾选）或 caps 里带 vision。
 // 探测不到的纯文本 Endpoint 一律按「不会看图」处理——宁可诚实拒绝，不假装 OCR。
@@ -104,7 +105,8 @@ async function runOpenAI({
 
   for (let step = 0; step < 10; step++) {
     send('status', { text: step === 0 ? `请求 ${model.modelId || 'model'}…` : '模型继续调用工具…' });
-    const resp = await fetch(`${base}/chat/completions`, {
+    checkCancelled();
+    const { response: resp, text: raw } = await fetchText(`${base}/chat/completions`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${model.apiKey}`,
@@ -112,7 +114,6 @@ async function runOpenAI({
       },
       body: JSON.stringify({ ...bodyBase, messages })
     });
-    const raw = await resp.text();
     if (!resp.ok) {
       throw new Error(`HTTP ${resp.status}: ${raw.slice(0, 240)}`);
     }

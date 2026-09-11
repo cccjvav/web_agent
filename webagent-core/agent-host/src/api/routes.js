@@ -23,6 +23,7 @@ const ngrok = require('../tunnel/ngrok');
 const github = require('../auth/github');
 const tracker = require('../usage/tracker');
 const ptyJobs = require('../tools/ptyJobs');
+const { runWithSignal } = require('../utils/requestScope');
 
 const router = express.Router();
 
@@ -258,19 +259,25 @@ router.post('/tool/call', async (req, res) => {
 });
 
 router.post('/chat', async (req, res) => {
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  const timeout = setTimeout(abort, 5 * 60 * 1000);
+  const disconnected = () => { if (!res.writableEnded) abort(); };
+  req.on('aborted', abort);
+  res.on('close', disconnected);
   res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('X-Accel-Buffering', 'no');
   if (typeof res.flushHeaders === 'function') res.flushHeaders();
 
   const emit = (type, data = {}) => {
-    res.write(`${JSON.stringify({ type, ...data })}\n`);
+    if (!res.destroyed && !res.writableEnded) res.write(`${JSON.stringify({ type, ...data })}\n`);
   };
 
   const client = String((req.body && req.body.client) || '');
   const pty = client === 'vscode-extension';
   try {
-    await ptyJobs.runWithPty({ pty, remote: false, emit }, async () => {
+    await runWithSignal(controller.signal, () => ptyJobs.runWithPty({ pty, remote: false, emit }, async () => {
       await runChat({
         mode: req.body && req.body.mode,
         message: req.body && req.body.message,
@@ -280,27 +287,30 @@ router.post('/chat', async (req, res) => {
         planAction: req.body && req.body.planAction,
         emit
       });
-    });
+    }));
     emit('done', {});
   } catch (err) {
     emit('error', { message: err.message });
   }
-  res.end();
+  clearTimeout(timeout);
+  req.off('aborted', abort);
+  res.off('close', disconnected);
+  if (!res.destroyed) res.end();
 });
 
 router.post('/pty/hello', (req, res) => {
-  ptyJobs.noteClient();
+  if (!ptyJobs.noteClient(req.body)) return res.status(409).json({ ok: false, error: 'workspace/client mismatch' });
   res.json({ ok: true, ...ptyJobs.snapshot() });
 });
 
 router.get('/pty/jobs', (req, res) => {
-  ptyJobs.noteClient();
-  res.json({ jobs: ptyJobs.listPending(), ...ptyJobs.snapshot() });
+  if (!ptyJobs.noteClient(req.query)) return res.status(409).json({ ok: false, error: 'workspace/client mismatch' });
+  res.json({ jobs: ptyJobs.listPending(req.query.clientId), ...ptyJobs.snapshot() });
 });
 
 router.post('/pty/jobs/:jobId', (req, res) => {
-  ptyJobs.noteClient();
-  const out = ptyJobs.report(req.params.jobId, req.body || {});
+  if (!ptyJobs.noteClient(req.body)) return res.status(409).json({ ok: false, error: 'workspace/client mismatch' });
+  const out = ptyJobs.report(req.params.jobId, req.body || {}, req.body.clientId);
   if (!out) return res.status(404).json({ ok: false, error: 'unknown job' });
   res.json({ ok: true, ...out });
 });

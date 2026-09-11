@@ -1,5 +1,10 @@
 # utils 模块说明书
 
+## 第六批：请求取消与PTY生命周期
+
+requestScope.js使用AsyncLocalStorage传播每个Chat请求的AbortSignal；checkCancelled在工具开始前阻断后续执行。fetchText连接到请求取消，120秒覆盖模型响应与body读取，finally移除监听器和计时器。
+
+
 当前处理目标：`webagent-core/agent-host/src/utils/`
 
 进程内事件总线、diff 辅助、本机控制面闸、以及 MCP CORS 白名单。无 `.json` / `.html`。

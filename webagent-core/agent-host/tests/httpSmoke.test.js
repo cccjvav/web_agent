@@ -312,10 +312,15 @@ async function main() {
     assert.strictEqual(localOriginApi.status, 200);
     assert.ok(localOriginApi.json.secretKey);
 
-    const ptyHello = await request('POST', `http://127.0.0.1:${mcpPort}/api/pty/hello`, {});
+    const missingIdentity = await request('POST', `http://127.0.0.1:${mcpPort}/api/pty/hello`, {});
+    assert.strictEqual(missingIdentity.status, 409);
+    const identity = { clientId: 'smoke-client', workspace: tmp };
+    const wrongWorkspace = await request('POST', `http://127.0.0.1:${mcpPort}/api/pty/hello`, { ...identity, workspace: path.dirname(tmp) });
+    assert.strictEqual(wrongWorkspace.status, 409);
+    const ptyHello = await request('POST', `http://127.0.0.1:${mcpPort}/api/pty/hello`, identity);
     assert.strictEqual(ptyHello.status, 200);
     assert.strictEqual(ptyHello.json.ok, true);
-    const ptyJobs = await request('GET', `http://127.0.0.1:${mcpPort}/api/pty/jobs`);
+    const ptyJobs = await request('GET', `http://127.0.0.1:${mcpPort}/api/pty/jobs?${new URLSearchParams(identity)}`);
     assert.strictEqual(ptyJobs.status, 200);
     assert.ok(Array.isArray(ptyJobs.json.jobs));
 

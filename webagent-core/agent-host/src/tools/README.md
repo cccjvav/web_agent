@@ -1,5 +1,10 @@
 # tools 模块说明书
 
+## 第六批：请求取消与PTY生命周期
+
+PTY job包含workspaceRoot，客户端hello/jobs/report必须提供随机clientId和匹配的workspace。claimed保留审批期限，批准后accepted重新验证且启动执行计时；过期/终态不接受progress或重新执行。任务最多32个在途、256条保留记录、终态15分钟TTL，stdout/stderr各200Ki字符上限。run成功要求真实exitCode=0且输出可捕获；取消/超时/未知退出码均非成功。requestScope取消会结束job并通知所属插件停止执行；普通子进程取消发送TERM并在2秒后必要时升级KILL。
+
+
 ## 2026-09-11当前整改语义
 
 apply_patch仅接受完整相等哈希，不再接受短前缀；write_file携带旧hash但目标已删除时拒绝重新创建。atomicWriteText跟随已校验的真实目标，保留符号链接本身。board只允许当前peer认领自己，不接受任意owner；open任务需board_claim后才能更新状态，终态仅可重新开放。

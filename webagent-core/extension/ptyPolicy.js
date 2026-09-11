@@ -1,6 +1,7 @@
 'use strict';
 
-const READISH = /^(?:&\s*)?(?:git\s+(?:status|diff|log|branch|show|rev-parse)\b|echo\b|dir\b|ls\b|pwd\b|type\s|cat\s|Get-ChildItem\b|Get-Content\b|whoami\b|hostname\b)/i;
+const READISH = /^(?:pwd|whoami|hostname|git status(?: --short| --porcelain| --branch| -s| -b| -sb)*|git diff(?: --stat| --name-only)?|git log(?: --oneline)?(?: -n [0-9]+)?|git rev-parse --show-toplevel|ls|dir|Get-ChildItem|(?:cat|type|Get-Content) [A-Za-z0-9_./:\\-]+|echo [A-Za-z0-9 ._-]+)$/i;
+const COMPOUND = /[;&|<>`$(){}\r\n]/;
 
 const DANGEROUS = /\b(?:rm\s+-[rR]{0,2}f|rm\s+-r\s+-f|Remove-Item\b.*-(?:Recurse|Force)|del\s+\/s|rd\s+\/s|format\s+[a-zA-Z]:|git\s+push\b|git\s+reset\s+--hard|git\s+clean\s+-f|drop\s+database|curl\b[\s\S]*\|\s*(?:sh|bash|powershell)|iex\b|Invoke-Expression\b|iwr\b[\s\S]*\|\s*)/i;
 
@@ -20,7 +21,7 @@ function commandFamily(command) {
 
 function shouldAutoAllow(command, state = {}) {
   const family = commandFamily(command);
-  if (looksDangerousCommand(command)) {
+  if (COMPOUND.test(String(command || '')) || looksDangerousCommand(command)) {
     return { allow: false, alwaysAsk: true, family };
   }
   if (isReadishCommand(command)) {

@@ -1,5 +1,10 @@
 # extension 模块说明书
 
+## 第六批：请求取消与PTY生命周期
+
+PTY自动批准仅限完整匹配的保守只读命令，复合语法必须再次明确审批，不能被会话/命令族许可自动放行。插件每进程生成clientId，工作区匹配后才处理job；先claimed，用户批准后再次accepted，失效不spawn。轮询不等待长命令，以接收取消。node-pty区分timeout与exitCode，输出200Ki字符；fallback只在有shellIntegration及真实结束事件时执行，无可观测退出机制则拒绝，不再sendText后报成功。原生Chat CancellationToken传给HTTP；扩展Chat发送按钮执行中变停止，cancel消息中止HTTP。
+
+
 当前处理目标：`webagent-core/extension/`
 
 VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@webagent`。工具实现仍在 agent-host，本目录只做 HTTP 客户端 + webview HTML 字符串。

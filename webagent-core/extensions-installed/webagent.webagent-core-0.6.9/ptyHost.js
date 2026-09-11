@@ -5,6 +5,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { shouldAutoAllow } = require('./ptyPolicy');
+const { sameWorkspace } = require('./workspaceMatch');
+const crypto = require('crypto');
 
 function loadNodePty() {
   const root = vscode.env && vscode.env.appRoot;
@@ -92,6 +94,7 @@ class PtyHost {
     this.polling = false;
     this.disposed = false;
     this.seq = 0;
+    this.clientId = crypto.randomBytes(16).toString('hex');
     this.pendingHint = 0;
     this.streamFreshUntil = 0;
   }
@@ -138,10 +141,15 @@ class PtyHost {
     return `${this.agentHostUrl()}${p}`;
   }
 
+  identity() {
+    const folder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0];
+    return { clientId: this.clientId, workspace: folder && folder.uri.fsPath || '' };
+  }
+
   async hello() {
     if (this.disposed) return;
     try {
-      const r = await this.requestJson('POST', this.url('/api/pty/hello'), { ok: true });
+      const r = await this.requestJson('POST', this.url('/api/pty/hello'), this.identity());
       if (r && r.json && typeof r.json.pending === 'number') this.pendingHint = r.json.pending;
     } catch (_) { /* agent-host 可能还没起来 */ }
   }
@@ -151,7 +159,7 @@ class PtyHost {
     if (Date.now() < this.streamFreshUntil) return;
     this.polling = true;
     try {
-      const r = await this.requestJson('GET', this.url('/api/pty/jobs'));
+      const r = await this.requestJson('GET', this.url('/api/pty/jobs?' + new URLSearchParams(this.identity())));
       const list = (r.json && r.json.jobs) || [];
       this.pendingHint = list.length;
       for (const job of list) {
@@ -163,7 +171,7 @@ class PtyHost {
   }
 
   async postJob(jobId, body) {
-    return this.requestJson('POST', this.url(`/api/pty/jobs/${jobId}`), body);
+    return this.requestJson('POST', this.url(`/api/pty/jobs/${jobId}`), { ...body, ...this.identity() });
   }
 
   async confirm(command) {
@@ -193,18 +201,19 @@ class PtyHost {
   }
 
   cwdFor(job) {
-    const folder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0];
-    const root = folder && folder.uri && folder.uri.fsPath;
-    const rel = String(job.cwd || '.').replace(/\\/g, '/');
-    if (!root) return process.cwd();
-    if (!rel || rel === '.') return root;
-    return path.join(root, rel);
+    const root = this.identity().workspace;
+    if (!root || !sameWorkspace(root, job.workspaceRoot)) throw new Error('PTY workspace mismatch');
+    const cwd = path.resolve(root, String(job.cwd || '.'));
+    const realRoot = fs.realpathSync(root), realCwd = fs.realpathSync(cwd);
+    const rel = path.relative(realRoot, realCwd);
+    if (rel === '..' || rel.startsWith('..' + path.sep) || path.isAbsolute(rel)) throw new Error('PTY cwd outside workspace');
+    return realCwd;
   }
 
   async handleRun(job) {
     try {
-      const accepted = await this.postJob(job.jobId, { state: 'accepted' });
-      if (accepted.json && accepted.json.already) return;
+      const claimed = await this.postJob(job.jobId, { state: 'claimed' });
+      if (!claimed.json || claimed.json.claimed !== true) return;
       const allow = await this.confirm(job.command);
       if (!allow) {
         await this.postJob(job.jobId, {
@@ -214,6 +223,8 @@ class PtyHost {
         });
         return;
       }
+      const accepted = await this.postJob(job.jobId, { state: 'accepted' });
+      if (!accepted.json || accepted.json.accepted !== true || this.disposed) return;
       const cwd = this.cwdFor(job);
       await this.spawn(job, cwd);
     } catch (err) {
@@ -251,7 +262,7 @@ class PtyHost {
     });
     proc.onData((d) => {
       const chunk = String(d);
-      buf += chunk;
+      buf = (buf + chunk).slice(-200 * 1024);
       writeEmitter.fire(chunk.replace(/\n/g, '\r\n'));
       this.postJob(job.jobId, { state: 'progress', stdout: stripAnsi(chunk) }).catch(() => {});
     });
@@ -271,7 +282,9 @@ class PtyHost {
     const session = { proc, terminal, writeEmitter, closeEmitter, buf: () => buf };
     this.sessions.set(String(job.execId), session);
     const timeoutMs = Math.max(1000, (Number(job.timeoutSec) || 30) * 1000);
+    let timedOut = false;
     const killer = setTimeout(() => {
+      timedOut = true;
       try { proc.kill(); } catch (_) {}
     }, timeoutMs);
     proc.onExit(({ exitCode }) => {
@@ -283,64 +296,62 @@ class PtyHost {
       }
       this.postJob(job.jobId, {
         state: 'done',
-        status: 'done',
-        exitCode: exitCode == null ? 0 : exitCode,
+        status: timedOut ? 'timeout' : (exitCode === 0 ? 'done' : 'error'),
+        ok: !timedOut && exitCode === 0,
+        exitCode,
         stdout: stripAnsi(buf),
         outputCaptured: true
       }).catch(() => {});
     });
   }
 
-  async runShellIntegration(si, job) {
-    const execution = si.executeCommand(String(job.command || ''));
-    let buf = '';
+  async runShellIntegration(si, job, terminal) {
+    if (typeof vscode.window.onDidEndTerminalShellExecution !== 'function') throw new Error('无法捕获shell execution退出状态，未执行命令');
+    let execution, listener, timer, timedOut = false, buf = '';
+    const ended = new Promise(resolve => {
+      listener = vscode.window.onDidEndTerminalShellExecution(event => {
+        if (event.execution === execution) resolve(event.exitCode);
+      });
+      timer = setTimeout(() => { timedOut = true; terminal.dispose(); resolve(undefined); }, Math.max(1000, Number(job.timeoutSec || 30) * 1000));
+    });
     try {
-      if (execution && execution.read) {
+      execution = si.executeCommand(String(job.command || ''));
+      const reading = (async () => {
+        if (!execution || typeof execution.read !== 'function') throw new Error('无法捕获终端输出');
         for await (const chunk of execution.read()) {
-          buf += String(chunk);
+          buf = (buf + String(chunk)).slice(-200 * 1024);
           await this.postJob(job.jobId, { state: 'progress', stdout: stripAnsi(chunk) });
         }
-      }
-      const exitCode = execution && execution.exitCode ? await execution.exitCode : 0;
-      await this.postJob(job.jobId, {
-        state: 'done',
-        status: 'done',
-        exitCode: exitCode == null ? 0 : exitCode,
-        stdout: stripAnsi(buf),
-        outputCaptured: true
-      });
-    } catch (err) {
-      await this.postJob(job.jobId, {
-        state: 'done',
-        status: 'error',
-        stderr: err && err.message ? err.message : String(err)
-      });
-    }
+      })();
+      // Read errors must not become unhandled rejections while waiting for the exit event.
+      let readError, readFinished = false;
+      const caughtReading = reading.then(() => { readFinished = true; }).catch(err => { readError = err; terminal.dispose(); });
+      const exitCode = await ended;
+      await Promise.race([caughtReading, new Promise(resolve => setTimeout(resolve, 250))]);
+      await this.postJob(job.jobId, { state: 'done', status: timedOut ? 'timeout' : (exitCode === 0 && !readError && readFinished ? 'done' : 'error'),
+        ok: !timedOut && !readError && readFinished && exitCode === 0, exitCode, stdout: stripAnsi(buf), outputCaptured: !readError && readFinished });
+    } finally { clearTimeout(timer); if (listener) listener.dispose(); this.sessions.delete(String(job.execId)); }
   }
 
   async spawnFallback(job, cwd) {
-    const existing = vscode.window.terminals.find((t) => /^Web Agent/.test(t.name));
-    const terminal = existing || vscode.window.createTerminal({ name: 'Web Agent · 1', cwd });
+    const terminal = vscode.window.createTerminal({ name: 'Web Agent · 1', cwd, env: scrubEnv(process.env) });
     terminal.show(true);
-    const si = await waitForShellIntegration(terminal, 2500);
-    if (si && typeof si.executeCommand === 'function') {
-      await this.runShellIntegration(si, job);
-      return;
+    this.sessions.set(String(job.execId), { terminal, proc: { kill: () => terminal.dispose() } });
+    try {
+      const si = await waitForShellIntegration(terminal, 2500);
+      if (!si) throw new Error('无node-pty或可观测shellIntegration，未执行命令；不会用sendText后假报成功');
+      const live = await this.postJob(job.jobId, { state: 'check' });
+      if (!live.json || !live.json.running || this.disposed) { terminal.dispose(); this.sessions.delete(String(job.execId)); return; }
+      await this.runShellIntegration(si, job, terminal);
+    } catch (err) {
+      terminal.dispose(); this.sessions.delete(String(job.execId)); throw err;
     }
-    terminal.sendText(String(job.command || ''), true);
-    this.postJob(job.jobId, {
-      state: 'done',
-      status: 'done',
-      exitCode: 0,
-      stdout: '(command sent to Web Agent · 1; output was not captured — look at the terminal)',
-      outputCaptured: false
-    }).catch(() => {});
   }
 
   async handleInput(job) {
     try {
       const accepted = await this.postJob(job.jobId, { state: 'accepted' });
-      if (accepted.json && accepted.json.already) return;
+      if (!accepted.json || accepted.json.accepted !== true) return;
       const session = this.sessions.get(String(job.execId));
       if (!session || !session.proc || typeof session.proc.write !== 'function') {
         await this.postJob(job.jobId, {
@@ -365,7 +376,13 @@ class PtyHost {
   }
 
   async handleIncoming(job) {
-    if (!job || !job.jobId) return;
+    if (!job || !job.jobId || !sameWorkspace(this.identity().workspace, job.workspaceRoot)) return;
+    if (job.cancelRequested) {
+      const session = this.sessions.get(String(job.execId));
+      if (session && session.proc && session.proc.kill) session.proc.kill();
+      await this.postJob(job.jobId, { state: 'cancelled' });
+      return;
+    }
     if (this.seen.has(job.jobId)) return;
     this.seen.add(job.jobId);
     if (this.seen.size > 400) {
@@ -375,12 +392,13 @@ class PtyHost {
     const kind = job.kind || 'run';
     if (kind === 'input') return this.handleInput(job);
     if (kind === 'cancel') return this.handleCancel(job);
-    return this.handleRun(job);
+    this.handleRun(job).catch(() => {}); // Keep polling while approval/execution is pending, so cancellation can arrive.
   }
 
   async handleCancel(job) {
     try {
-      await this.postJob(job.jobId, { state: 'accepted' });
+      const accepted = await this.postJob(job.jobId, { state: 'accepted' });
+      if (!accepted.json || accepted.json.accepted !== true) return;
       const session = this.sessions.get(String(job.execId));
       if (session && session.proc && session.proc.kill) {
         try { session.proc.kill(); } catch (_) {}

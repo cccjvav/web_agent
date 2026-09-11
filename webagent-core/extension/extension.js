@@ -31,6 +31,7 @@ function requestJson(method, url, body) {
         port: u.port,
         path: u.pathname + u.search,
         method,
+        timeout: 15000,
         headers: payload
           ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
           : {}
@@ -48,13 +49,14 @@ function requestJson(method, url, body) {
         });
       }
     );
+    req.on('timeout', () => req.destroy(new Error('本机API请求超时')));
     req.on('error', reject);
     if (payload) req.write(payload);
     req.end();
   });
 }
 
-function postNdjson(url, body, onEvent) {
+function postNdjson(url, body, onEvent, signal) {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
     const lib = u.protocol === 'https:' ? https : http;
@@ -65,6 +67,8 @@ function postNdjson(url, body, onEvent) {
         port: u.port,
         path: u.pathname + u.search,
         method: 'POST',
+        signal,
+        timeout: 300000,
         headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
       },
       (res) => {
@@ -91,6 +95,7 @@ function postNdjson(url, body, onEvent) {
         });
       }
     );
+    req.on('timeout', () => req.destroy(new Error('Chat请求超时')));
     req.on('error', reject);
     req.write(payload);
     req.end();
@@ -129,6 +134,9 @@ function registerChatParticipant(context) {
   if (!vscode.chat || typeof vscode.chat.createChatParticipant !== 'function') return;
   try {
   const handler = async (request, chatContext, stream, token) => {
+    const controller = new AbortController();
+    const subscription = token.onCancellationRequested(() => controller.abort());
+    if (token.isCancellationRequested) controller.abort();
     const mode = modeFromChatRequest(request);
     const message = String(request.prompt || '').replace(/^\s*\/(ask|plan|code)\b/i, '').trim();
     if (!message) {
@@ -136,6 +144,7 @@ function registerChatParticipant(context) {
         '当前是 **Agent** 模式（对应 Web Agent Code）：会对工作区搜、读、必要时打补丁并跑测试。\n\n' +
           '- `/ask` 只读\n- `/plan` 多模型分支（换模型后再发同一任务；没 Key 是本机草案）\n- `/code` 或直接发任务 = Agent\n\n描述要构建或修复的内容即可。'
       );
+      subscription.dispose();
       return;
     }
     stream.progress(mode === 'code' ? 'Agent 正在搜-读-补丁-再测…' : `Web Agent ${mode}…`);
@@ -163,11 +172,11 @@ function registerChatParticipant(context) {
           else if (ev.type === 'consensus' && ev.result) {
             stream.markdown(`\n\n**多模型总结**${ev.result.simulated === false ? '' : '（本机拼接，未调合并主模型）'}\n\n${ev.result.canonical || ev.result.summary || ''}\n`);
           }
-        }
+        }, controller.signal
       );
     } catch (err) {
       stream.markdown(`连不上 agent-host：${err.message}\n\n确认 run-webagent.cmd 或 run-webagent-vscode.cmd 已启动 agent-host（:48271）。`);
-    }
+    } finally { subscription.dispose(); }
   };
   const participant = vscode.chat.createChatParticipant('webagent.agent', handler);
   participant.iconPath = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'icon.svg'));
@@ -247,7 +256,7 @@ function activate(context) {
 function validWebviewMessage(msg, surface) {
   if (!msg || typeof msg !== 'object' || Array.isArray(msg) || typeof msg.type !== 'string') return false;
   if (surface === 'chat') {
-    if (msg.type === 'openNative') return true;
+    if (msg.type === 'openNative' || msg.type === 'cancel') return true;
     return msg.type === 'send' && ['ask', 'plan', 'code'].includes(msg.mode)
       && typeof msg.text === 'string' && msg.text.trim().length > 0 && msg.text.length <= 128000;
   }
@@ -271,7 +280,9 @@ class ChatView {
         vscode.commands.executeCommand('webagent.openAgentChat');
         return;
       }
-      if (msg.type !== 'send') return;
+      if (msg.type === 'cancel') { if (this.controller) this.controller.abort(); return; }
+      if (msg.type !== 'send' || this.controller) return;
+      this.controller = new AbortController();
       const { mode, text } = msg;
       this._view.webview.postMessage({ type: 'user', text });
       const history = this.history.slice(-12);
@@ -288,7 +299,7 @@ class ChatView {
             if (ev && ev.type === 'tool' && ev.name === 'apply_patch' && ev.result && ev.result.filePath) {
               revealWorkspaceFile(ev.result.filePath);
             }
-          }
+          }, this.controller.signal
         );
         if (assistantText) this.history.push({ role: 'assistant', content: assistantText });
       } catch (err) {
@@ -296,6 +307,9 @@ class ChatView {
           type: 'event',
           ev: { type: 'error', message: err.message + '（确认 run-webagent.cmd 或 run-webagent-vscode.cmd 已启动 agent-host :48271）' }
         });
+      } finally {
+        this.controller = null;
+        this._view.webview.postMessage({ type: 'finished' });
       }
     });
   }
@@ -402,6 +416,7 @@ button.send{margin-left:auto;background:#0e639c;color:#fff;border:0;width:28px;h
 <script nonce="${nonce}">
 const vscode = acquireVsCodeApi();
 let mode = 'code';
+let sending = false;
 const labels = { ask: 'Agent · Web Agent Ask ▾', plan: 'Agent · Web Agent Plan ▾', code: 'Agent · Web Agent Code ▾' };
 const menu = document.getElementById('menu');
 document.getElementById('agent').onclick = (e) => { e.stopPropagation(); menu.classList.toggle('on'); };
@@ -436,8 +451,10 @@ function paintTasks(todos){
   });
 }
 document.getElementById('go').onclick = () => {
+  if (sending) { vscode.postMessage({ type: 'cancel' }); return; }
   const t = document.getElementById('q').value.trim(); if(!t) return;
   document.getElementById('q').value='';
+  sending = true; document.getElementById('go').textContent = '■';
   vscode.postMessage({ type:'send', mode, text:t });
 };
 document.getElementById('q').onkeydown = e => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); document.getElementById('go').click(); } };
@@ -445,6 +462,7 @@ document.getElementById('open-native').onclick = () => vscode.postMessage({ type
 window.addEventListener('message', e => {
   const m = e.data;
   if (!m || typeof m !== 'object' || Array.isArray(m)) return;
+  if (m.type === 'finished') { sending = false; document.getElementById('go').textContent = '↑'; }
   if (m.type==='user') add('msg user', m.text);
   if (m.type==='event') {
     const ev = m.ev || {};
