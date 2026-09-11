@@ -1,5 +1,10 @@
 # tools 模块说明书
 
+## 2026-09-11当前整改语义
+
+apply_patch仅接受完整相等哈希，不再接受短前缀；write_file携带旧hash但目标已删除时拒绝重新创建。atomicWriteText跟随已校验的真实目标，保留符号链接本身。board只允许当前peer认领自己，不接受任意owner；open任务需board_claim后才能更新状态，终态仅可重新开放。
+
+
 当前处理目标：`webagent-core/agent-host/src/tools/`
 
 本目录是 **真正改磁盘 / 跑命令** 的实现。MCP（`../mcp/server.js`）和本机 Chat（`../agent/runChat.js`、`../api/routes.js`）都只通过 `index.js` 的 `callTool` 进来。目录内无 `.json` / `.html`。

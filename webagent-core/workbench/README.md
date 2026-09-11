@@ -1,5 +1,10 @@
 # workbench 模块说明书
 
+## 2026-09-11当前整改语义
+
+内置arenaConnect仅显示外部客户端配置指引：不请求本机/mcp、不伪造成功日志、不调用sendChat、不自动切Code。真实手机/网页Arena连接须走外部MCP客户端。
+
+
 当前处理目标：`webagent-core/workbench/`
 
 浏览器里的自绘工作台。静态文件由 `../agent-host/src/index.js` 用 `express.static` 挂出。本目录 **不直接 fs**；所有读写经 `/api/*` 与 `/ws`。
@@ -11,7 +16,7 @@
 ## 1. 模块概述
 
 - **定位：** UI 组件壳（欢迎页、编辑器、CHAT、BRIDGE、设置模态）。真正改盘在 agent-host。
-- **依赖的兄弟模块：** 运行时 HTTP 依赖 `agent-host` 的 `/api`、`/mcp`（仅内置演示 `arenaConnect`）、`/ws`。源码上不 require Node 模块。
+- **依赖的兄弟模块：** 运行时 HTTP 依赖 `agent-host` 的 `/api`和`/ws`；arenaConnect不再伪造MCP会话。源码上不 require Node 模块。
 - **谁调用：** 用户浏览器打开 `http://127.0.0.1:3000`。`run-webagent-vscode` 跳过本目录（`WEBAGENT_SKIP_WORKBENCH=1`）。
 
 ---
@@ -111,7 +116,7 @@
 - **Function `logBridgeTool`（L11–L32）** / **`paintStats`（L34–L53）** / **`resetRound`（L55–L67）** — 统计用秒和一位小数成功率；meta 行写 Streamable HTTP / active / last tool。Clear log → POST `/api/bridge/reset-round`。
 - **Function `selectedClientInfo`（L45–L48）** / **`promptText`（L50–L55）** / **`paintClients`（L57–L93）** — 无 prompt 则拼 CONNECT_LINE；选中 `extension-http` 且有 `rulesText` 时去掉 `#btn-copy-rules` 的 `hidden`；配对码仅 `pair.code && bridgeRunning`。
 - **Function `renderBrowser`（L91–L139）** — arena/chatgpt 走 `arenaConnect`；deepseek **不调 MCP**。
-- **Function `arenaConnect`（L141–L170）** — 本机 `/mcp/${secret}` initialize/tools/list/resources/read，再 `ui.sendChat(..., { stayOnBridge:true })`。
+- **Function `arenaConnect`（L141–L170）** — 仅提示在真实客户端连接，不发MCP请求或本机修改任务。
 - **Function `openSite`（L172–L190）**。
 - **Function `startBridge` / `stopBridge` / `paintBridge`** — POST start：named 时带 `#named-domain` / `#named-token`；ngrok 时带 `#ngrok-domain` / `#ngrok-token`；按 `s.tunnel.url` 与 `tunnelProvider` 显示 Quick Tunnel、Named Tunnel、ngrok 或「走当前页面源」；会话说明写成 Connected / Waiting / Stopped。
 - **Function `checkBridgeHealth`** — GET `/health` + `/api/status`，结果写入 `#sess-meta`（Streamable HTTP 那一行），不 toast。`state.stats.healthLine` 直到下次工具调用 / 启停 Bridge / Clear log。不改磁盘。
@@ -179,4 +184,4 @@
 5. 复制提示词读 `clients[].prompt`（hydrate 在服务端）。选中 Chat Plus / DeepSeek++ 时显示 `#btn-copy-rules`，复制 `clients[].rulesText`（`getPageRulesPrompt()`），贴进扩展系统提示词，不要贴进 MCP URL 框。
 6. `/ws` 把远程 MCP 工具调用画到 BRIDGE。
 7. 「Clear log / 清除本轮统计」→ POST `/api/bridge/reset-round`（清 session 计数 + 读哈希缓存）并清空右侧 log。Health 只探活。标题栏浅色/深色只改 CSS 变量。
-8. 内置「打开 Arena」只是本机演示：先打本机 `/mcp`，再走 `/api/chat`。
+8. 内置「打开 Arena」只是本机演示：仅连接指引，不执行MCP或本机Chat。

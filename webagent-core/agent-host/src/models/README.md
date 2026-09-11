@@ -1,5 +1,10 @@
 # models 模块说明书
 
+## 2026-09-11当前整改语义
+
+store.load仅ENOENT返回默认值；JSON损坏/结构错误抛E_CONFIG_CORRUPT，保留原文件，后续patch/save拒绝覆盖。校验配置对象、模型id与字段类型；保存使用0600同目录独占临时文件＋rename，失败清理。用户恢复需先备份并显式修复/移走损坏文件，禁止静默重置。
+
+
 当前处理目标：`webagent-core/agent-host/src/models/`
 
 工作区磁盘上的配置、指令、记忆。文件都写在 **被编辑项目** 的 `.webagent/` 下，不是 Git 仓库根。无独立 `.html`。产出的 json/md 由本目录函数写入。
@@ -27,7 +32,7 @@
   - **Function `normalizeMultiModel(mm)`（L62–L70）** — 与 defaults 合并后 clamp `maxBranches`；`enabled`/`mergeAllowsRead` 非布尔则 true；`mergeModel` 空则 `'auto'`；`thinkLevel` 空则 `'high'`。
   - **Function `isFakeGithub(b)`（L72–L77）** — `provider==='github'` 且没有 `githubId`，且 username 空/`demo`/`local`。
   - **Function `normalizeBridge`（L79–L93）** — 旧盘 `永久顺` → `local-demo`；**假** github（`isFakeGithub`）收成 `local-demo`；`username==='demo'` 且已是 local-demo → `'local'`。带 `githubId` 的真 GitHub **留下**，并强制 `loggedIn`/`deviceAuthorized`。
-  - **Function `load`（L95–L108）** — try 读 JSON 与 defaults 浅合并；`models` 非非空数组则用默认；`bridge` 走 `normalizeBridge`；`multiModel` 走 `normalizeMultiModel`。**catch 返回 defaults，不抛。**
+  - **Function `load`（L95–L108）** — try 读 JSON 与 defaults 浅合并；`models` 非非空数组则用默认；`bridge` 走 `normalizeBridge`；`multiModel` 走 `normalizeMultiModel`。仅文件不存在返回defaults；其他错误保留文件并抛E_CONFIG_CORRUPT。
   - **Function `restrictFileMode`（L110–L114）** — `chmod 0600`；失败 catch 空（Windows 可能无效）。
   - **Function `lineCovers` / `alreadyIgnored`（L120–L134）** — 根或嵌套 `.gitignore` 是否已覆盖 `.webagent/config.json` 等。
   - **Function `ensureNestedIgnore`（L140–L156）** — 写 `.webagent/.gitignore`（`config.json`、`read-hashes.json`、`usage.json`），已有则不重复。

@@ -34,7 +34,7 @@ function publicOrigin(req) {
 
 function mcpOrigin(req) {
   if (config.publicTunnelUrl) return String(config.publicTunnelUrl).replace(/\/$/, '');
-  return publicOrigin(req);
+  return `http://127.0.0.1:${config.port}`;
 }
 
 function isNamedTunnelProvider(provider) {
@@ -157,7 +157,8 @@ router.post('/bridge/start', async (req, res) => {
   if (bodyToken) bridgePatch.namedToken = bodyToken;
   if (bodyNgrokTok) bridgePatch.ngrokToken = bodyNgrokTok;
   store.patch({ bridge: bridgePatch });
-  config.bridgeRunning = true;
+  config.bridgeRunning = false;
+  config.publicTunnelUrl = null;
   config.tunnelProvider = provider;
   oauth.ensurePairing();
 
@@ -191,26 +192,27 @@ router.post('/bridge/start', async (req, res) => {
   }
 
   const info = mcpInfo(req);
-  const tunnelUrl = info.tunnel && info.tunnel.url;
+  const tunnelUrl = !tunnelError && config.publicTunnelUrl;
+  config.bridgeRunning = Boolean(tunnelUrl);
   let note;
   if (tunnelUrl) {
     note = named
       ? `Named Tunnel 已就绪：${tunnelUrl}`
       : (ngrokProv ? `ngrok 已就绪：${tunnelUrl}` : `Quick Tunnel 已就绪：${tunnelUrl}`);
   } else if (tunnelError) {
-    note = `${tunnelError} MCP 暂走当前页面源（本机预览可用）。`;
+    note = `${tunnelError} 远程Bridge未就绪；MCP仅可通过本机48271端口访问。`;
   } else if (named) {
-    note = '未启动 Named Tunnel。MCP 走当前页面源。';
+    note = '未启动 Named Tunnel。MCP仅可通过本机48271端口访问。';
   } else if (ngrokProv) {
-    note = '未启动 ngrok。MCP 走当前页面源。';
+    note = '未启动 ngrok。MCP仅可通过本机48271端口访问。';
   } else {
-    note = '未启动 Quick Tunnel（cloudflare / Named Tunnel / ngrok 才会拉起对应进程）。MCP 走当前页面源。';
+    note = '未启动 Quick Tunnel（cloudflare / Named Tunnel / ngrok 才会拉起对应进程）。MCP仅可通过本机48271端口访问。';
   }
 
-  eventBus.broadcast('bridge_started', { provider, tunnelUrl: tunnelUrl || null, tunnelError });
+  eventBus.broadcast(config.bridgeRunning ? 'bridge_started' : 'bridge_failed', { provider, tunnelUrl: tunnelUrl || null, tunnelError });
   res.json({
-    success: true,
-    running: true,
+    success: config.bridgeRunning,
+    running: config.bridgeRunning,
     provider,
     tunnelError,
     note,

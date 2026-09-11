@@ -150,7 +150,8 @@ function boardClaim(args = {}, ctx = {}) {
       return { ok: false, error: 'E_TAKEN', detail: `Task ${id} is ${task.status}, owned by ${task.owner}. Pick another or wait for release.`, task: view(task) };
     }
     const by = callerOf(ctx);
-    task.owner = String((args && args.owner) || by);
+    if (args.owner && args.owner !== by) return { ok: false, error: 'E_NOT_OWNER', detail: 'Tasks can only be claimed for the current peer' };
+    task.owner = by;
     task.status = 'claimed';
     task.claimedAt = stamp();
     task.updatedAt = stamp();
@@ -174,6 +175,9 @@ function boardUpdate(args = {}, ctx = {}) {
     if (!task) return { ok: false, error: 'E_NOT_FOUND', detail: `No board task ${id}.` };
     const by = callerOf(ctx);
     if (status) {
+      if (!task.owner || task.status === 'open') return { ok: false, error: 'E_NOT_OWNER', detail: 'Claim this task with board_claim before changing status' };
+      const allowed = { claimed: ['doing', 'done', 'failed', 'open'], doing: ['done', 'failed', 'open'], done: ['open'], failed: ['open'] };
+      if (status !== task.status && !(allowed[task.status] || []).includes(status)) return { ok: false, error: 'E_BAD_STATE', detail: 'Invalid task transition' };
       if (task.owner && task.owner !== by) {
         return { ok: false, error: 'E_NOT_OWNER', detail: `Task ${id} is owned by ${task.owner}; only the owner may change status. Add a note instead.`, task: view(task) };
       }

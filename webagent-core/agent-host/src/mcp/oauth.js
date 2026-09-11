@@ -161,6 +161,10 @@ function pruneClients() {
 
 function registerClient(body = {}) {
   pruneClients();
+  const method = body.token_endpoint_auth_method || 'none';
+  if (!['none', 'client_secret_post', 'client_secret_basic'].includes(method)) {
+    const err = new Error('unsupported token_endpoint_auth_method'); err.status = 400; throw err;
+  }
   const redirectUris = Array.isArray(body.redirect_uris) ? body.redirect_uris.filter(Boolean) : [];
   if (!redirectUris.length) {
     const err = new Error('redirect_uris required');
@@ -174,7 +178,7 @@ function registerClient(body = {}) {
     client_secret: clientSecret,
     redirect_uris: redirectUris,
     client_name: body.client_name || 'mcp-client',
-    token_endpoint_auth_method: body.token_endpoint_auth_method || 'none',
+    token_endpoint_auth_method: method,
     createdAt: now()
   };
   clients.set(clientId, rec);
@@ -303,8 +307,36 @@ function completeAuthorize(body) {
   return url.toString();
 }
 
-function handleToken(body = {}) {
+function authenticateClient(body, authorization = '', inferredId) {
+  let clientId = body.client_id || inferredId;
+  let secret = body.client_secret;
+  let method = secret == null ? 'none' : 'client_secret_post';
+  const reject = () => { const err = new Error('client authentication failed'); err.status = 401; err.oauthError = 'invalid_client'; throw err; };
+  if (authorization) {
+    if (secret != null || !/^Basic [A-Za-z0-9+/]+={0,2}$/i.test(authorization)) return reject();
+    try {
+      const decoded = Buffer.from(authorization.slice(6), 'base64').toString('utf8');
+      const colon = decoded.indexOf(':');
+      if (colon < 1) return reject();
+      const decode = value => decodeURIComponent(value.replace(/\+/g, ' '));
+      const id = decode(decoded.slice(0, colon));
+      if (body.client_id && body.client_id !== id) return reject();
+      clientId = id;
+      secret = decode(decoded.slice(colon + 1));
+      method = 'client_secret_basic';
+    } catch (_) { return reject(); }
+  }
+  const client = clients.get(clientId);
+  if (!client || client.token_endpoint_auth_method !== method) return reject();
+  if (method !== 'none' && (typeof secret !== 'string' || !timingSafeEqualString(secret, client.client_secret))) return reject();
+  return clientId;
+}
+
+function handleToken(body = {}, authorization = '') {
   pruneExpiredTokens();
+  const tokenRecord = refreshTokens.get(body.refresh_token) || spentRefresh.get(body.refresh_token);
+  const clientId = authenticateClient(body, authorization, tokenRecord && tokenRecord.clientId);
+  body = { ...body, client_id: clientId };
   const grant = body.grant_type;
   if (grant === 'authorization_code') {
     const rec = authCodes.get(body.code);
@@ -313,7 +345,6 @@ function handleToken(body = {}) {
       err.status = 400;
       throw err;
     }
-    authCodes.delete(body.code);
     if (rec.clientId !== body.client_id) {
       const err = new Error('client_id mismatch');
       err.status = 400;
@@ -329,6 +360,7 @@ function handleToken(body = {}) {
       err.status = 400;
       throw err;
     }
+    authCodes.delete(body.code);
     const issued = issueAccess(rec.clientId);
     return tokenResponse(issued);
   }
@@ -399,7 +431,8 @@ function rateLimit(key, max, windowMs) {
 
 function sendError(res, err) {
   const status = err.status || 500;
-  const error = status === 429 ? 'slow_down' : status === 400 ? 'invalid_request' : 'server_error';
+  if (status === 401) res.setHeader('WWW-Authenticate', 'Basic realm="Web Agent OAuth"');
+  const error = err.oauthError || (status === 429 ? 'slow_down' : status === 400 ? 'invalid_request' : 'server_error');
   res.status(status).json({ error, error_description: err.message });
 }
 
@@ -444,17 +477,24 @@ router.post('/oauth/authorize', (req, res) => {
 router.post('/oauth/token', (req, res) => {
   try {
     rateLimit(`tok:${clientIp(req)}`, 60, 60 * 1000);
-    res.json(handleToken(req.body || {}));
+    res.json(handleToken(req.body || {}, req.headers.authorization || ''));
   } catch (err) {
     sendError(res, err);
   }
 });
 
 router.post('/oauth/revoke', (req, res) => {
-  const token = (req.body && (req.body.token || req.body.access_token)) || '';
-  accessTokens.delete(token);
-  refreshTokens.delete(token);
-  res.status(200).json({ revoked: true });
+  try {
+    const body = req.body || {};
+    const token = body.token || body.access_token || '';
+    const rec = accessTokens.get(token) || refreshTokens.get(token);
+    const clientId = authenticateClient(body, req.headers.authorization || '', rec && rec.clientId);
+    if (rec && rec.clientId === clientId) {
+      accessTokens.delete(rec.access);
+      refreshTokens.delete(rec.refresh);
+    }
+    res.status(200).json({ revoked: true });
+  } catch (err) { sendError(res, err); }
 });
 
 module.exports = {

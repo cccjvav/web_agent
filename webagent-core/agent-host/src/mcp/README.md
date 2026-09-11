@@ -1,5 +1,10 @@
 # MCP 模块说明书
 
+## 2026-09-11当前整改语义
+
+OAuth注册严格校验none/client_secret_post/client_secret_basic。token与revoke执行客户端认证，Basic与POST不得混用，secret定时安全比较，认证失败401 invalid_client；认证和PKCE通过后才消耗授权码。刷新/吊销同样验证客户端。HTTP会话键为peer:<随机session id>，显示名称/IP不再作为归属身份；无session不借用同IP其他客户端身份，board写入要求有效初始化会话。tools/call业务失败也isError:true并记失败统计，保留原结果结构。
+
+
 当前处理目标：`webagent-core/agent-host/src/mcp/`
 
 本文件只描述该目录内 8 个 `.js` 源码（无 `.json` / `.yaml` / 独立 `.html`）。行号以当前文件为准；解释不补源码里没有的调用。

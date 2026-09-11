@@ -38,5 +38,15 @@ if (!process.argv.includes('--vm-child')) {
   context.localStorage.setItem = () => { throw new Error('storage unavailable'); };
   assert.doesNotThrow(() => dom.namespace.initTheme());
   assert.strictEqual(state.namespace.ui.applyTheme, dom.namespace.applyTheme);
+  const bridge = new vm.SourceTextModule(fs.readFileSync(path.join(root, 'bridge.js'), 'utf8'), { context });
+  await bridge.link(specifier => specifier === './state.js' ? state : dom);
+  await bridge.evaluate();
+  button.classList = { remove() {} };
+  state.namespace.ui.setRight = () => {};
+  state.namespace.ui.toast = () => {};
+  state.namespace.ui.sendChat = () => { throw new Error('connecting must not execute a task'); };
+  context.fetch = () => { throw new Error('guidance must not pretend to initialize MCP'); };
+  await bridge.namespace.arenaConnect('example task');
+  assert.ok(button.textContent.includes('尚未建立'));
   console.log('workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });

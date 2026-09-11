@@ -21,6 +21,7 @@ async function timedTool(emit, mode, name, args) {
   const t0 = Date.now();
   try {
     const result = await callTool(name, args, mode);
+    if (result && (result.ok === false || result.success === false)) throw new Error(result.error || result.message || '工具执行失败');
     const durationMs = Date.now() - t0;
     if (emit) {
       emit('tool', {
@@ -253,7 +254,8 @@ async function runBuiltin(payload, emit) {
 
   const write = extractWriteIntent(message);
   if (write) {
-    await timedTool(emit, 'code', 'write_file', { ...write, confirm_overwrite: true });
+    const written = await timedTool(emit, 'code', 'write_file', { ...write, confirm_overwrite: true });
+    if (!written.ok) { if (emit) emit('error', { message: '写入失败，任务已停止：' + written.error }); return; }
   }
 
   const patch = extractPatch(message);
@@ -263,11 +265,12 @@ async function runBuiltin(payload, emit) {
     if (target) {
       const hashed = await timedTool(emit, 'code', 'read_files', { filePath: target, limit: 400 });
       if (hashed.ok && hashed.result.hash) {
-        await timedTool(emit, 'code', 'apply_patch', {
+        const patched = await timedTool(emit, 'code', 'apply_patch', {
           filePath: target,
           expectedHash: hashed.result.hash,
           patch
         });
+        if (!patched.ok) { if (emit) emit('error', { message: '补丁失败，任务已停止：' + patched.error }); return; }
       }
     }
   }
@@ -343,6 +346,7 @@ function resolvePlanAction(payload, mm) {
 }
 
 async function runPlanBranch({ emit, model, thinkLevel, task, history }) {
+  if (model && model.protocol !== 'builtin' && !canCallModel(model)) throw new Error('模型配置不完整，Plan任务已停止');
   if (canCallModel(model)) {
     const cap = capturingEmit(emit);
     const out = await runOpenAI({
@@ -393,6 +397,7 @@ async function addLiveBranch({ emit, model, thinkLevel, history, task }) {
     });
   }
   const out = await runPlanBranch({ emit, model, thinkLevel, task: t, history });
+  if (planRound.current() !== live || !live || live.merged) throw new Error('Plan轮次已更换或结束，丢弃过期分支结果');
   if (out.facts && live) live.facts = out.facts;
   return planRound.addBranch({
     modelId: model && model.id,
@@ -448,6 +453,7 @@ async function runPlanRound(payload, emit, cfg) {
         if (emit) emit('error', { message: '至少两个分支才能总结。换模型后空发送再作答一次。' });
         return;
       }
+      const mergeVersion = live.branches.length;
       const mergeId = mm.mergeModel === 'auto' ? 'active' : mm.mergeModel || 'active';
       const mergeModel = mergeId === 'active' ? pickModel(cfg, cfg.activeModelId) : pickModel(cfg, mergeId);
       let result;
@@ -492,6 +498,7 @@ async function runPlanRound(payload, emit, cfg) {
           facts: live.facts || {}
         });
       }
+      if (planRound.current() !== live || live.merged || live.branches.length !== mergeVersion) throw new Error('Plan轮次或分支已变化，丢弃过期总结结果');
       planRound.markMerged(result);
       await timedTool(emit, 'plan', 'set_todos', { todos: result.unifiedActionPlan || [] });
       if (emit) {
@@ -530,6 +537,10 @@ async function runChat(payload = {}, emit) {
     return runPlanRound(payload, send, cfg);
   }
   const active = pickModel(cfg, payload.modelId);
+  if (active && active.protocol !== 'builtin' && !canCallModel(active)) {
+    if (send) send('error', { message: '所选模型配置不完整，任务已停止；不会自动切换到内置执行。' });
+    return { ok: false, error: 'model configuration incomplete' };
+  }
   if (canCallModel(active)) {
     try {
       return await runOpenAI({
@@ -541,7 +552,8 @@ async function runChat(payload = {}, emit) {
         thinkLevel: payload.thinkLevel
       });
     } catch (err) {
-      if (send) send('error', { message: `模型调用失败，改走内置探索：${err.message}` });
+      if (send) send('error', { message: `模型调用失败，任务已停止；请主动选择重试或切换模型：${err.message}` });
+      return { ok: false, error: err.message };
     }
   }
   return runBuiltin(payload, send);

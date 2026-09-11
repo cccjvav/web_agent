@@ -148,7 +148,9 @@ async function handleRpc(req) {
   switch (method) {
     case 'initialize': {
       const clientInfo = (params && params.clientInfo) || { name: 'External-Agent' };
-      const sessInit = touch(req, { clientInfo, key: `${clientInfo.name}@${req.ip || 'local'}` });
+      const peerId = req.mcpSessionId || incomingSessionId(req) || createHttpSession();
+      req.mcpSessionId = peerId;
+      const sessInit = touch(req, { clientInfo, key: `peer:${peerId}` });
       if (req.mcpSessionId) setHttpSessionKey(req.mcpSessionId, sessInit.key);
       eventBus.broadcast('agent_connected', { clientInfo, ip: req.ip });
       return {
@@ -190,15 +192,19 @@ async function handleRpc(req) {
       eventBus.broadcast('tool_call_start', { tool: name, args: toolArgs, source: 'Bridge-Remote' });
       const started = Date.now();
       // 第六阶段：把会话身份（clientName@ip）穿给工具层，多 Agent 任务板靠它记归属
+      if (['board_create', 'board_claim', 'board_update'].includes(name) && !keyForReq(req)) {
+        return { content: [{ type: 'text', text: JSON.stringify({ ok: false, error: 'E_SESSION_REQUIRED', detail: 'Initialize and retain Mcp-Session-Id before modifying board state' }) }], isError: true };
+      }
       const callerKey = keyForReq(req) || sessionKeyFallback(req);
       const sess0 = touch(req, { key: callerKey });
       try {
         const result = await callTool(name, toolArgs || {}, remoteToolMode(params), { remote: true, callerKey: sess0.key });
+        const failed = Boolean(result && (result.ok === false || result.success === false));
         const clipped = clipJson(result);
         const durationMs = Date.now() - started;
-        sessTouch(req, { incCall: true });
-        tracker.record({ ok: true });
-        eventBus.broadcast('tool_call_end', { tool: name, success: true, durationMs, truncated: Boolean(clipped && clipped._truncated) });
+        sessTouch(req, { incCall: true, incFail: failed });
+        tracker.record({ ok: !failed });
+        eventBus.broadcast('tool_call_end', { tool: name, success: !failed, durationMs, truncated: Boolean(clipped && clipped._truncated) });
         const text = typeof clipped === 'string' ? clipped : JSON.stringify(clipped, null, 2);
         const content = [{ type: 'text', text: clipText(text).text }];
         // 第三阶段（已获用户书面同意）：run_command 产生的截图附为 image 内容。
@@ -220,7 +226,7 @@ async function handleRpc(req) {
         }
         return {
           content,
-          isError: false
+          isError: failed
         };
       } catch (err) {
         const durationMs = Date.now() - started;

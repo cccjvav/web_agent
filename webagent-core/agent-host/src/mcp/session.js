@@ -27,6 +27,10 @@ function touch(req, extra = {}) {
     fail: prev.fail + (extra.incFail ? 1 : 0),
     busy: Boolean(extra.busy)
   };
+  for (const [id, rec] of sessions) {
+    if (Date.now() - Date.parse(rec.lastSeen) > SESSION_TTL_MS) sessions.delete(id);
+  }
+  if (!sessions.has(key) && sessions.size >= MAX_HTTP_SESSIONS) sessions.delete(sessions.keys().next().value);
   sessions.set(key, next);
   return next;
 }
@@ -99,22 +103,10 @@ function setHttpSessionKey(id, key) {
 
 // 第六阶段：tools/call 里没有 clientInfo，靠会话 id（initialize 时绑过 key）或 ip 回落认人
 function keyForReq(req) {
-  const id = req && req.headers && req.headers['mcp-session-id'];
-  if (id) {
-    const rec = httpSessions.get(id);
-    if (rec && rec.key) return rec.key;
-  }
-  const ip = (req && (req.ip || (req.headers && req.headers['x-forwarded-for']))) || 'local';
-  let best = null;
-  let bestNamed = null;
-  for (const s of sessions.values()) {
-    if (String(s.key).endsWith('@' + ip)) {
-      if (!best || String(s.lastSeen) > String(best.lastSeen)) best = s;
-      // 具名行优先：握手前留下的匿名 mcp@ip 行不得盖过已握手客户端
-      if (!String(s.key).startsWith('mcp@') && (!bestNamed || String(s.lastSeen) > String(bestNamed.lastSeen))) bestNamed = s;
-    }
-  }
-  return (bestNamed || best) ? (bestNamed || best).key : null;
+  const id = req && (req.mcpSessionId || req.headers && req.headers['mcp-session-id']);
+  if (!id) return null;
+  const rec = touchHttpSession(id);
+  return rec && rec.key || null;
 }
 
 function reset() {

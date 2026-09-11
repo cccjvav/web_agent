@@ -1,5 +1,10 @@
 # api 模块说明书
 
+## 2026-09-11当前整改语义
+
+无公网隧道时MCP地址回退到127.0.0.1:config.port，不再使用工作台页面Host。bridge/start仅实际获得隧道URL后running/success为true；失败仍HTTP200以保留错误展示兼容，但success/running=false，并广播bridge_failed。
+
+
 当前处理目标：`webagent-core/agent-host/src/api/`
 
 本目录只有 `routes.js`：工作台和 VS Code 插件用的 REST，挂在 `/api`。无 `.json` / `.html`。
@@ -72,7 +77,7 @@
 
 1. 工作台 boot → GET `/status` 填 Bridge 卡与模型下拉。
 2. CHAT 发送 → POST `/chat` → `runChat` → 工具经 `callTool`。
-3. 点启动 Bridge → POST `/bridge/start`：登录校验后置 `bridgeRunning`、配对码；`cloudflare` 时 `await startQuickTunnel`；named 时 `await startNamedTunnel`；`ngrok` 时 `await startNgrokTunnel`。成功则 `mcpOrigin` 用公网 URL；失败仍 200，MCP 走当前页面 Host。缺 Authtoken/主机名不会改走 Quick Tunnel。
+3. 点启动 Bridge → POST `/bridge/start`：登录校验后置 `bridgeRunning`、配对码；`cloudflare` 时 `await startQuickTunnel`；named 时 `await startNamedTunnel`；`ngrok` 时 `await startNgrokTunnel`。成功则 `mcpOrigin` 用公网 URL；失败HTTP200但success/running=false，MCP走本机MCP端口。缺 Authtoken/主机名不会改走 Quick Tunnel。
 4. 点停止 Bridge → POST `/bridge/stop` → `stopTunnel()` 清子进程与 `publicTunnelUrl`。
 5. 点「清除本轮统计」→ POST `/bridge/reset-round` → 清 MCP session 计数与 `readCache` 哈希。
 6. 设置页表单 → PUT `/customizations` 或 POST `/models`。

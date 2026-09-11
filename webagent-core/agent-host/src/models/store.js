@@ -92,9 +92,29 @@ function normalizeBridge(bridge) {
   return b;
 }
 
+function validateConfig(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('配置必须为JSON对象');
+  for (const key of ['bridge', 'multiModel']) {
+    if (value[key] != null && (typeof value[key] !== 'object' || Array.isArray(value[key]))) throw new Error('配置字段类型错误: ' + key);
+  }
+  if (value.models != null) {
+    if (!Array.isArray(value.models)) throw new Error('models必须为数组');
+    const ids = new Set();
+    for (const model of value.models) {
+      if (!model || typeof model !== 'object' || typeof model.id !== 'string' || !model.id || ids.has(model.id)) throw new Error('模型id缺失或重复');
+      ids.add(model.id);
+      for (const key of ['name', 'protocol', 'baseUrl', 'apiKey', 'modelId']) {
+        if (model[key] != null && typeof model[key] !== 'string') throw new Error('模型字段类型错误: ' + key);
+      }
+    }
+  }
+  if (value.activeModelId != null && typeof value.activeModelId !== 'string') throw new Error('activeModelId必须为字符串');
+  return value;
+}
+
 function load() {
   try {
-    const raw = JSON.parse(fs.readFileSync(storePath(), 'utf8'));
+    const raw = validateConfig(JSON.parse(fs.readFileSync(storePath(), 'utf8')));
     return {
       ...defaults(),
       ...raw,
@@ -102,8 +122,11 @@ function load() {
       bridge: normalizeBridge(raw.bridge),
       multiModel: normalizeMultiModel(raw.multiModel)
     };
-  } catch {
-    return defaults();
+  } catch (err) {
+    if (err.code === 'ENOENT') return defaults();
+    const failure = new Error('配置读取/校验失败，原文件已保留，请备份并修复：' + storePath());
+    failure.code = 'E_CONFIG_CORRUPT';
+    throw failure;
   }
 }
 
@@ -214,13 +237,19 @@ function warnTrackedSecrets(log) {
 }
 
 function save(next) {
+  validateConfig(next);
+  if (fs.existsSync(storePath())) load(); // Never overwrite an unreadable/corrupt existing configuration.
   const cfg = {
     ...next,
     bridge: normalizeBridge(next && next.bridge),
     multiModel: normalizeMultiModel(next && next.multiModel)
   };
   fs.mkdirSync(dir(), { recursive: true });
-  fs.writeFileSync(storePath(), JSON.stringify(cfg, null, 2), 'utf8');
+  const tmp = storePath() + '.tmp.' + require('crypto').randomBytes(8).toString('hex');
+  try {
+    fs.writeFileSync(tmp, JSON.stringify(cfg, null, 2), { encoding: 'utf8', flag: 'wx', mode: 0o600 });
+    fs.renameSync(tmp, storePath());
+  } finally { try { fs.unlinkSync(tmp); } catch (err) { if (err.code !== 'ENOENT') throw err; } }
   restrictFileMode(storePath());
   protectWorkspaceSecrets();
   return cfg;

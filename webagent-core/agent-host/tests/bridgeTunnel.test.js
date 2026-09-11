@@ -113,10 +113,12 @@ async function main() {
     };
     const fallback = await request(server, 'POST', '/api/bridge/start', { tunnelProvider: 'cloudflare' });
     assert.strictEqual(fallback.status, 200);
-    assert.strictEqual(fallback.json.success, true);
+    assert.strictEqual(fallback.json.success, false);
+    assert.strictEqual(fallback.json.running, false);
+    assert.ok(fallback.json.mcpUrl.startsWith(`http://127.0.0.1:${config.port}/mcp/`));
     assert.strictEqual(startCalls, 1);
     assert.ok(fallback.json.tunnelError);
-    assert.ok(String(fallback.json.note).includes('当前页面源'));
+    assert.ok(String(fallback.json.note).includes('MCP仅可通过本机'));
     assert.ok(!String(fallback.json.mcpUrl).includes('trycloudflare.com'));
 
     startCalls = 0;

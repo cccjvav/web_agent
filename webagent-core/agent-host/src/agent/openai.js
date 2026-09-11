@@ -127,7 +127,13 @@ async function runOpenAI({
     messages.push(msg);
 
     if (msg.tool_calls && msg.tool_calls.length) {
-      for (const tc of msg.tool_calls.slice(0, 8)) {
+      if (!Array.isArray(msg.tool_calls) || msg.tool_calls.some(tc => !tc || typeof tc.id !== 'string')
+        || new Set(msg.tool_calls.map(tc => tc.id)).size !== msg.tool_calls.length) throw new Error('模型工具调用缺少唯一id');
+      for (const [index, tc] of msg.tool_calls.entries()) {
+        if (index >= 8) {
+          messages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify({ ok: false, error: '本轮工具执行上限为8，请在后续轮次重新请求' }) });
+          continue;
+        }
         const name = tc.function && tc.function.name;
         let args = {};
         try {
@@ -139,6 +145,7 @@ async function runOpenAI({
         const t0 = Date.now();
         try {
           const result = await callTool(name, args, mode);
+          if (result && (result.ok === false || result.success === false)) throw new Error(result.error || result.message || '工具执行失败');
           const durationMs = Date.now() - t0;
           send('tool', { name, args, result, ok: true, durationMs, label: toolLabel(name, result, true) });
           messages.push({

@@ -18,6 +18,7 @@ function tempSibling(fullPath) {
 
 /** Replace text without losing an existing executable's permissions; clean up on failure. */
 function atomicWriteText(fullPath, content) {
+  if (fs.existsSync(fullPath)) fullPath = fs.realpathSync(fullPath); // Replace the checked target, not the symlink itself.
   const tmp = tempSibling(fullPath);
   const mode = fs.existsSync(fullPath) ? fs.statSync(fullPath).mode & 0o777 : null;
   try {
@@ -331,7 +332,7 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
     );
   }
 
-  if (expectedHash && currentHash !== expectedHash && !currentHash.startsWith(expectedHash)) {
+  if (expectedHash && currentHash !== expectedHash) {
     throw new ExecutionError(
       'E_STALE_FILE',
       `STALE_FILE: file changed since last read. Re-run read_files for a fresh sha256. expected=${expectedHash} current=${currentHash}`,

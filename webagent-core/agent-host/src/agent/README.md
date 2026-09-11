@@ -1,5 +1,10 @@
 # agent 模块说明书
 
+## 2026-09-11当前整改语义
+
+模型调用失败/所选非builtin模型配置不完整时停止，不自动调用内置写入；内置写入/补丁失败停止。工具业务ok:false/success:false也计失败。每轮最多执行8项，但对全部tool_call id返回结果或限额错误。Plan分支提交前核对原round对象，总结还核对分支数，拒绝过期结果。
+
+
 当前处理目标：`webagent-core/agent-host/src/agent/`
 
 本目录实现 **本机 Chat**（`POST /api/chat`）。网页 Agent 走 MCP，**不进入本目录**。无 `.json` / `.html`。文件：`runChat.js`、`openai.js`、`computerUse.js`、`providers.js`、`toolLabel.js`。

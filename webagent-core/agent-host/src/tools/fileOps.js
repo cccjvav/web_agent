@@ -143,6 +143,7 @@ function writeFile(opts = {}) {
 function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = false, confirm_overwrite = false }) {
   const fullPath = resolveSafePath(filePath);
   const exists = fs.existsSync(fullPath);
+  if (expectedHash && !exists) throw new ProtocolError('E_STALE_FILE', '文件已被删除，拒绝用旧版本重新创建');
   let overwriteOk = Boolean(confirmOverwrite || confirm_overwrite);
   let currentHash = null;
   if (exists) {

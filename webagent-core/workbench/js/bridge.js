@@ -172,34 +172,11 @@ export function renderBrowser(tab) {
 }
 
 export async function arenaConnect(text) {
+  // This built-in page is guidance, not an external Arena session or an agent runner.
   ui.setRight('bridge');
-  $('#sess-dot').classList.add('on');
-  $('#sess-note').textContent = 'MCP session connected from the built-in browser.';
-  ui.toast('已用提示词连接本机 MCP');
-  try {
-    const secret = state.status && state.status.secretKey;
-    await fetch(`/mcp/${secret}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { clientInfo: { name: 'Arena' } } })
-    });
-    await fetch(`/mcp/${secret}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} })
-    });
-    await fetch(`/mcp/${secret}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'resources/read', params: { uri: 'webagent://instructions' } })
-    });
-    ui.logBridgeTool({ name: 'tools/list', ok: true, result: { tools: (state.status.tools || []).map((t) => t.name) } });
-    ui.logBridgeTool({ name: 'resources/read', ok: true, result: { uri: 'webagent://instructions' } });
-  } catch (e) { ui.toast(e.message); }
-  const extra = (text || '').replace(ui.promptText(), '').trim();
-  const task = extra || '搜相关文件、读源码、必要时打补丁，再跑测试';
-  ui.setAgentMode('code');
-  ui.sendChat(task, { stayOnBridge: true });
+  $('#sess-dot').classList.remove('on');
+  $('#sess-note').textContent = '此处仅为连接指引，尚未建立外部MCP会话。请在真实Arena客户端配置Bridge的MCP地址。';
+  ui.toast('请到真实Arena客户端连接；此操作不会启动本机Code任务。');
 }
 
 export async function openSite(key) {
