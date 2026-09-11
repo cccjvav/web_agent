@@ -293,3 +293,6 @@ apply_patch仅接受完整相等哈希，不再接受短前缀；write_file携�
 5. 结果经 `clipJson` 返回；副作用经 `eventBus.broadcast` 到工作台。
 6. 远程 MCP 不传 mode，锁不生效；本机 Chat 传 ask/plan/code。
 7. 不是 git 仓库时 `git_status`/`git_diff` 返回 `available:false`，不抛。
+
+### 2026-09-11 资源边界修订
+文本读写与补丁结果上限8MiB，read_files每次最多20路径；目录列表扫描1000项/深度8，截短需缩小路径。搜索使用最多4个worker、2秒deadline，取消终止worker，启发式regex检查不构成安全保证。find_files支持`**/`匹配零层目录。

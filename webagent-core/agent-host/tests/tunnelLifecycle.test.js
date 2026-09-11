@@ -1,0 +1,53 @@
+'use strict';
+const assert = require('assert');
+const { EventEmitter } = require('events');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const cp = require('child_process');
+const { stopProcess } = require('../src/tunnel/stopProcess');
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-tunnel-life-'));
+const oldSpawn = cp.spawn, oldFind = cp.spawnSync, oldPath = process.env.CLOUDFLARED_PATH;
+function fake() {
+  const proc = new EventEmitter(); proc.stdout = new EventEmitter(); proc.stderr = new EventEmitter();
+  proc.exitCode = null; proc.signalCode = null; proc.signals = [];
+  proc.kill = signal => { proc.signals.push(signal); proc.killed = true; };
+  return proc;
+}
+const tick = () => new Promise(resolve => setImmediate(resolve));
+(async () => {
+  const stubborn = fake();
+  const keep = setTimeout(() => {}, 1000);
+  stubborn.kill = signal => { stubborn.signals.push(signal); stubborn.killed = true; if (signal === 'SIGKILL') stubborn.emit('exit', 0); };
+  await stopProcess(stubborn, 10); clearTimeout(keep);
+  assert.deepStrictEqual(stubborn.signals, ['SIGTERM', 'SIGKILL'], 'killed flag is not proof of process exit');
+  const bin = path.join(tmp, 'cloudflared'); fs.writeFileSync(bin, 'fixture'); process.env.CLOUDFLARED_PATH = bin;
+  const spawned = [];
+  cp.spawn = () => { const proc = fake(); spawned.push(proc); return proc; };
+  cp.spawnSync = () => ({ status: 1, stdout: '' });
+  const tunnel = require('../src/tunnel/cloudflared');
+  const { config } = require('../src/config');
+  const first = tunnel.startQuickTunnel(); await tick();
+  spawned[0].stdout.emit('data', Buffer.from('https://first.trycloudflare.com'));
+  await first; assert.ok(config.publicTunnelUrl.includes('first'));
+  const second = tunnel.startQuickTunnel(); await tick();
+  assert.strictEqual(spawned.length, 1, 'replacement waits for old process exit');
+  spawned[0].stdout.emit('data', Buffer.from('https://stale.trycloudflare.com'));
+  assert.strictEqual(config.publicTunnelUrl, null);
+  spawned[0].emit('exit', 0); await tick();
+  assert.strictEqual(spawned.length, 2);
+  spawned[1].stdout.emit('data', Buffer.from('https://second.trycloudflare.com')); await second;
+  spawned[0].emit('exit', 0);
+  assert.ok(config.publicTunnelUrl.includes('second'), 'late old exit cannot clear new URL');
+  config.bridgeRunning = true;
+  spawned[1].emit('exit', 1);
+  assert.strictEqual(config.publicTunnelUrl, null); assert.strictEqual(config.bridgeRunning, false);
+  const third = tunnel.startQuickTunnel(); const rejected = assert.rejects(third, /cancelled/); await tick();
+  const stopping = tunnel.stopTunnel(); spawned[2].emit('exit', 0);
+  await stopping; await rejected;
+  console.log('tunnel process reference/generation/start-stop regressions passed');
+})().catch(err => { console.error(err); process.exitCode = 1; }).finally(() => {
+  cp.spawn = oldSpawn; cp.spawnSync = oldFind;
+  if (oldPath === undefined) delete process.env.CLOUDFLARED_PATH; else process.env.CLOUDFLARED_PATH = oldPath;
+  fs.rmSync(tmp, { recursive: true, force: true });
+});

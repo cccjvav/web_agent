@@ -205,8 +205,8 @@ async function handleRpc(req) {
         sessTouch(req, { incCall: true, incFail: failed });
         tracker.record({ ok: !failed });
         eventBus.broadcast('tool_call_end', { tool: name, success: !failed, durationMs, truncated: Boolean(clipped && clipped._truncated) });
-        const text = typeof clipped === 'string' ? clipped : JSON.stringify(clipped, null, 2);
-        const content = [{ type: 'text', text: clipText(text).text }];
+        const text = typeof clipped === 'string' ? clipped : JSON.stringify(clipped);
+        const content = [{ type: 'text', text }];
         // 第三阶段（已获用户书面同意）：run_command 产生的截图附为 image 内容。
         // base64 只进 MCP 响应，不经 eventBus 广播；认不出截图就只回文本，不让调用失败。
         if (name === 'run_command') {

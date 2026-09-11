@@ -1,3 +1,4 @@
+const { clipJson } = require('../mcp/budget');
 const { callTool, getToolList } = require('../tools');
 const { loadCustom } = require('../models/customizations');
 const { config } = require('../config');
@@ -152,7 +153,7 @@ async function runOpenAI({
           messages.push({
             role: 'tool',
             tool_call_id: tc.id,
-            content: JSON.stringify(result).slice(0, 12000)
+            content: JSON.stringify(clipJson(result, 12000))
           });
           // 本机 Chat 的「眼睛」：run_command 产生截图（如 computer-use snap.ps1 -Out …）时，
           // 下一轮把 PNG 作为 image_url 部分发给模型。文本通道会被 12000 字截断，不能当眼睛。

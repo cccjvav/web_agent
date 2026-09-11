@@ -1,3 +1,4 @@
+const { readBoundedText, MAX_TEXT_BYTES } = require('../utils/boundedFile');
 const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
@@ -29,6 +30,7 @@ function readFiles({ filePath, paths, offset = 1, limit = 400 } = {}) {
   if (!list.length) {
     throw new Error('read_files requires filePath or paths[]');
   }
+  if (list.length > 20) throw new ProtocolError('E_BAD_ARGS', 'read_files supports at most 20 paths per call');
   if (list.length === 1) return readFile({ filePath: list[0], offset, limit });
   return {
     files: list.map((p) => {
@@ -52,7 +54,7 @@ function readFile({ filePath, offset = 1, limit = 400 }) {
     throw new Error(`Path "${filePath}" is a directory, use list_dir instead.`);
   }
 
-  const content = fs.readFileSync(fullPath, 'utf8');
+  const content = readBoundedText(fullPath);
   const hash = computeHash(content);
   const allLines = content.split(/\r?\n/);
 
@@ -142,12 +144,13 @@ function writeFile(opts = {}) {
 
 function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = false, confirm_overwrite = false }) {
   const fullPath = resolveSafePath(filePath);
+  if (typeof content !== 'string' || Buffer.byteLength(content, 'utf8') > MAX_TEXT_BYTES) throw new ProtocolError('E_BAD_ARGS', 'write_file content exceeds text budget');
   const exists = fs.existsSync(fullPath);
   if (expectedHash && !exists) throw new ProtocolError('E_STALE_FILE', '文件已被删除，拒绝用旧版本重新创建');
   let overwriteOk = Boolean(confirmOverwrite || confirm_overwrite);
   let currentHash = null;
   if (exists) {
-    const current = fs.readFileSync(fullPath, 'utf8');
+    const current = readBoundedText(fullPath);
     currentHash = computeHash(current);
     const seenThisSession = sessionHash(filePath);
     if (!overwriteOk && expectedHash && expectedHash === currentHash) overwriteOk = true;
@@ -192,34 +195,35 @@ function listDir({ dirPath = '.', recursive = false, maxDepth = 3 }) {
     throw new Error(`Directory not found: "${dirPath}"`);
   }
 
+  let visited = 0, truncated = false;
+  maxDepth = Math.max(1, Math.min(8, Number(maxDepth) || 3));
   function scan(currentPath, currentDepth) {
     if (currentDepth > maxDepth) return [];
-    const entries = fs.readdirSync(currentPath, { withFileTypes: true });
-    const results = [];
-
-    for (const entry of entries) {
-      const itemFullPath = path.join(currentPath, entry.name);
-      if (!isInsideWorkspace(itemFullPath)) continue;
-      const relPath = toPosixRel(path.relative(config.workspaceRoot, itemFullPath));
-      if (isHidden(relPath)) continue;
-      if (entry.isSymbolicLink && entry.isSymbolicLink()) continue;
-
-      if (entry.isDirectory()) {
-        const item = { name: entry.name, path: relPath, type: 'directory' };
-        if (recursive && currentDepth < maxDepth) {
-          item.children = scan(itemFullPath, currentDepth + 1);
+    const results = [], dir = fs.opendirSync(currentPath);
+    try {
+      let entry;
+      while ((entry = dir.readSync())) {
+        if (++visited > 1000) { truncated = true; break; }
+        const itemFullPath = path.join(currentPath, entry.name);
+        if (!isInsideWorkspace(itemFullPath) || entry.isSymbolicLink()) continue;
+        const relPath = toPosixRel(path.relative(config.workspaceRoot, itemFullPath));
+        if (isHidden(relPath)) continue;
+        if (entry.isDirectory()) {
+          const item = { name: entry.name, path: relPath, type: 'directory' };
+          if (recursive && currentDepth < maxDepth) item.children = scan(itemFullPath, currentDepth + 1);
+          results.push(item);
+        } else if (entry.isFile()) {
+          const stat = fs.statSync(itemFullPath);
+          results.push({ name: entry.name, path: relPath, type: 'file', size: stat.size, mtime: stat.mtime });
         }
-        results.push(item);
-      } else {
-        const stat = fs.statSync(itemFullPath);
-        results.push({ name: entry.name, path: relPath, type: 'file', size: stat.size, mtime: stat.mtime });
+        if (truncated) break;
       }
-    }
+    } finally { dir.closeSync(); }
     return results;
   }
 
   const items = scan(fullPath, 1);
-  return { dirPath, items };
+  return { dirPath, items, truncated };
 }
 
 function grepFile(fullItemPath, pattern, matches, budget) {
@@ -228,9 +232,9 @@ function grepFile(fullItemPath, pattern, matches, budget) {
   if (stat.size > MAX_GREP_FILE_BYTES) return 'large';
   if (budget.bytes + stat.size > MAX_GREP_SCAN_BYTES) return 'budget';
   budget.bytes += stat.size;
-  const buf = fs.readFileSync(fullItemPath);
-  if (buf.includes(0)) return 'binary';
-  const lines = buf.toString('utf8').split(/\r?\n/);
+  const text = readBoundedText(fullItemPath, MAX_GREP_FILE_BYTES);
+  if (text.includes('\0')) return 'binary';
+  const lines = text.split(/\r?\n/);
   for (let idx = 0; idx < lines.length; idx++) {
     if (matches.length >= MAX_GREP_COLLECT) return 'ok';
     if (pattern.test(lines[idx])) {
@@ -241,7 +245,7 @@ function grepFile(fullItemPath, pattern, matches, budget) {
   return 'ok';
 }
 
-function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = false, limit = 20, cursor = 0 } = {}) {
+function scanSearch({ query, searchPath = '.', isRegex = false, caseSensitive = false, limit = 20, cursor = 0 } = {}) {
   const q = String(query == null ? '' : query);
   if (!q) {
     throw new ProtocolError('E_BAD_ARGS', 'search_files requires a non-empty query.');
@@ -347,6 +351,34 @@ function grepSearch({ query, searchPath = '.', isRegex = false, caseSensitive = 
   };
 }
 
+let activeSearches = 0;
+function grepSearch(args = {}) {
+  const { Worker } = require('worker_threads');
+  const { currentSignal, checkCancelled } = require('../utils/requestScope');
+  checkCancelled();
+  if (activeSearches >= 4) return Promise.reject(new ProtocolError('E_BUSY', 'Search workers busy; retry later'));
+  activeSearches++;
+  return new Promise((resolve, reject) => {
+    let worker;
+    try { worker = new Worker(path.join(__dirname, 'searchWorker.js'), { workerData: { workspaceRoot: config.workspaceRoot, args }, resourceLimits: { maxOldGenerationSizeMb: 64 } }); }
+    catch (err) { activeSearches--; reject(err); return; }
+    let done = false;
+    const signal = currentSignal();
+    const finish = (err, value) => {
+      if (done) return; done = true; activeSearches--; clearTimeout(timer);
+      if (signal) signal.removeEventListener('abort', abort);
+      worker.terminate().catch(() => {});
+      if (err) reject(err); else resolve(value);
+    };
+    const abort = () => finish(new ProtocolError('E_CANCELLED', 'Search cancelled'));
+    const timer = setTimeout(() => finish(new ProtocolError('E_TIMEOUT', 'Search exceeded 2 second deadline; narrow the path/pattern')), 2000);
+    if (signal) signal.addEventListener('abort', abort, { once: true });
+    worker.once('message', msg => finish(msg.error ? new ProtocolError(msg.error.code || 'E_BAD_ARGS', msg.error.message) : null, msg.result));
+    worker.once('error', err => finish(err));
+    worker.once('exit', code => { if (!done) finish(new Error('Search worker exited without result: ' + code)); });
+  });
+}
+
 module.exports = {
   readFile,
   readFiles,
@@ -354,5 +386,6 @@ module.exports = {
   deleteFile,
   renameFile,
   listDir,
-  grepSearch
+  grepSearch,
+  scanSearch
 };

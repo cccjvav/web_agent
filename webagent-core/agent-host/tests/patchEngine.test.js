@@ -92,12 +92,12 @@ x
   }
   assert.ok(conflict);
 
-  const grep = grepSearch({ query: 'function add', searchPath: '.' });
+  const grep = await grepSearch({ query: 'function add', searchPath: '.' });
   assert.ok(grep.totalMatches >= 1);
 
   let nested = false;
   try {
-    grepSearch({ query: '(a+)+', isRegex: true, searchPath: '.' });
+    await grepSearch({ query: '(a+)+', isRegex: true, searchPath: '.' });
   } catch (err) {
     nested = err.code === 'E_BAD_ARGS' || /ReDoS|nested/i.test(err.message);
   }
@@ -118,10 +118,10 @@ x
   fs.writeFileSync(path.join(tmp, 'huge.txt'), Buffer.alloc(2 * 1024 * 1024, 0x61));
   fs.writeFileSync(path.join(tmp, 'needle.txt'), 'UNIQUE_TOKEN_XYZ\n', 'utf8');
   fs.writeFileSync(path.join(tmp, 'binary.dat'), Buffer.from([0, 1, 2, 65, 66]));
-  const capped = grepSearch({ query: 'UNIQUE_TOKEN_XYZ', searchPath: '.' });
+  const capped = await grepSearch({ query: 'UNIQUE_TOKEN_XYZ', searchPath: '.' });
   assert.ok(capped.totalMatches >= 1);
   assert.ok(capped.skippedLarge >= 1, 'files over 1.5MB must be skipped');
-  const binHit = grepSearch({ query: 'AB', searchPath: 'binary.dat' });
+  const binHit = await grepSearch({ query: 'AB', searchPath: 'binary.dat' });
   assert.ok(binHit.skippedBinary >= 1 || binHit.totalMatches === 0);
 
   let unifiedBlocked = false;

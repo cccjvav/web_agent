@@ -384,3 +384,6 @@ OAuth注册严格校验none/client_secret_post/client_secret_basic。token与rev
 第一阶段本文件夹已完成。按约束暂停。
 
 请输入下一个文件夹名称（例如 `webagent-core/agent-host/src/tools`）。全部文件夹处理完后再进入第三阶段。
+
+### 2026-09-11 输出预算修订（覆盖旧裁切说明）
+16k字符是软目标，不是响应硬上限。预算器保留数组、类型、标识符及分页内容/游标；只裁切非分页的文本字段，标记`_truncated`，结构仍超预算标记`_budgetExceeded`。不会改写nextCursor、丢页内记录或截断JSON字符串；需要更小响应请降低工具limit/缩小路径。大文件等硬资源边界在工具内部执行。

@@ -24,6 +24,7 @@ try {
   const manifest = stage(source, output);
   assert.ok(manifest.files.length > 50);
   assert.ok(manifest.files.some(f => f.path === 'installer/launch.js'));
+  assert.ok(manifest.files.some(f => f.path === 'computer-use/win/input.cs'));
   for (const f of manifest.files) assert.ok(!fs.readFileSync(path.join(output, f.path), 'utf8').includes('PRIVATE_FIXTURE_DO_NOT_PACKAGE'));
   assert.ok(!manifest.files.some(f => f.path.startsWith('webagent-repro/')));
   assert.throws(() => stage(source, tmp), /Invalid staging/);

@@ -1,3 +1,4 @@
+const { readBoundedText, MAX_TEXT_BYTES } = require('../utils/boundedFile');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -18,6 +19,7 @@ function tempSibling(fullPath) {
 
 /** Replace text without losing an existing executable's permissions; clean up on failure. */
 function atomicWriteText(fullPath, content) {
+  if (Buffer.byteLength(content, 'utf8') > MAX_TEXT_BYTES) throw new ProtocolError('E_BAD_ARGS', 'Result exceeds text file budget');
   if (fs.existsSync(fullPath)) fullPath = fs.realpathSync(fullPath); // Replace the checked target, not the symlink itself.
   const tmp = tempSibling(fullPath);
   const mode = fs.existsSync(fullPath) ? fs.statSync(fullPath).mode & 0o777 : null;
@@ -263,6 +265,7 @@ async function applyPatch(opts = {}) {
 }
 
 async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = false, occurrence } = {}) {
+  if (typeof patch === 'string' && Buffer.byteLength(patch, 'utf8') > MAX_TEXT_BYTES) throw new ProtocolError('E_BAD_ARGS', 'Patch exceeds text budget');
   if (typeof patch !== 'string') throw new ProtocolError('E_BAD_ARGS', 'patch must be a string.');
   const fullPath = resolveSafePath(filePath);
   const blocksEarly = parseSearchReplaceBlocks(patch);
@@ -313,7 +316,7 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
     };
   }
 
-  const currentContent = fs.readFileSync(fullPath, 'utf8');
+  const currentContent = readBoundedText(fullPath);
   const currentHash = computeHash(currentContent);
   if (!expectedHash) {
     const remembered = recalledHash(filePath);

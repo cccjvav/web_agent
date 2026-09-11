@@ -8,10 +8,12 @@ function globToRegExp(glob) {
   const g = String(glob || '**/*').replace(/\\/g, '/');
   const escaped = g
     .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+    .replace(/\*\*\//g, '::DSDIR::')
     .replace(/\*\*/g, '::DS::')
     .replace(/\*/g, '[^/]*')
+    .replace(/\?/g, '[^/]')
     .replace(/::DS::/g, '.*')
-    .replace(/\?/g, '[^/]');
+    .replace(/::DSDIR::/g, '(?:.*/)?');
   return new RegExp(`^${escaped}$`);
 }
 
@@ -22,7 +24,7 @@ function findFiles({ glob = '**/*', searchPath = '.', maxResults = 40 } = {}) {
   }
   const re = globToRegExp(glob);
   const files = [];
-  let truncated = false;
+  let truncated = false, visited = 0;
   const cap = Math.max(1, Math.min(200, Number(maxResults) || 40));
 
   function walk(dir) {
@@ -35,6 +37,7 @@ function findFiles({ glob = '**/*', searchPath = '.', maxResults = 40 } = {}) {
     }
     for (const entry of entries) {
       if (truncated) return;
+      if (++visited > 10000) { truncated = true; return; }
       const full = path.join(dir, entry.name);
       if (!isInsideWorkspace(full)) continue;
       const rel = path.relative(config.workspaceRoot, full).split(path.sep).join('/');

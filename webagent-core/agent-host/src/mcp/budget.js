@@ -16,44 +16,40 @@ function clipText(text, maxChars = MAX_CHARS) {
   };
 }
 
+// Soft character target: never discard array members, identifiers or pagination
+// metadata to meet it. Tool-specific bounds remain the hard resource limits.
 function clipJson(value, maxChars = MAX_CHARS) {
   if (value == null) return value;
-  if (typeof value === 'string') {
-    const clipped = clipText(value, maxChars);
-    return clipped.truncated
-      ? { text: clipped.text, _truncated: true, originalChars: clipped.originalChars }
-      : value;
-  }
+  if (typeof value === 'string') return clipText(value, maxChars).text;
   const raw = JSON.stringify(value);
   if (raw.length <= maxChars) return value;
-  const copy = (typeof value === 'object' && !Array.isArray(value)) ? { ...value } : { value };
-  for (const key of ['stdout', 'stderr', 'content', 'preview', 'text', 'diff']) {
-    if (typeof copy[key] === 'string' && copy[key].length > 2000) {
-      const clipped = clipText(copy[key], Math.min(4000, maxChars / 3));
-      copy[key] = clipped.text;
+  const textFields = new Set(['stdout', 'stderr', 'content', 'preview', 'text', 'diff', 'answer', 'description', 'summary']);
+  const leaves = [];
+  function copy(node, protectedPage = false) {
+    if (!node || typeof node !== 'object') return node;
+    const page = protectedPage || ['offset', 'cursor', 'nextCursor'].some(key => Object.hasOwn(node, key));
+    if (Array.isArray(node)) return node.map(item => copy(item, page));
+    const result = {};
+    for (const [key, val] of Object.entries(node)) {
+      result[key] = copy(val, page);
+      if (!page && textFields.has(key) && typeof val === 'string') leaves.push({ result, key, val });
     }
+    return result;
   }
-  if (Array.isArray(copy.matches) && copy.matches.length > 20) {
-    copy.totalMatches = copy.totalMatches || copy.matches.length;
-    copy.nextCursor = 20;
-    copy.matches = copy.matches.slice(0, 20);
+  const result = copy(value);
+  for (const leaf of leaves) leaf.result[leaf.key] = '';
+  const available = Math.max(0, maxChars - JSON.stringify(result).length - 150);
+  const share = Math.floor(available / Math.max(1, leaves.length));
+  let truncated = false;
+  for (const leaf of leaves) {
+    const clipped = clipText(leaf.val, share);
+    leaf.result[leaf.key] = clipped.text; truncated ||= clipped.truncated;
   }
-  if (Array.isArray(copy.items) && copy.items.length > 40) {
-    copy.nextCursor = 40;
-    copy.items = copy.items.slice(0, 40);
+  if (!Array.isArray(result)) {
+    if (truncated) { result._truncated = true; result.originalChars = raw.length; }
+    if (JSON.stringify(result).length > maxChars) result._budgetExceeded = true;
   }
-  let next = JSON.stringify(copy);
-  if (next.length > maxChars) {
-    return {
-      _truncated: true,
-      summary: clipText(next, maxChars - 120).text,
-      originalChars: raw.length,
-      hint: 'Narrow the path, lower limit, or pass cursor/offset.'
-    };
-  }
-  copy._truncated = true;
-  copy.originalChars = raw.length;
-  return copy;
+  return result;
 }
 
 module.exports = { MAX_CHARS, estimateTokens, clipText, clipJson };

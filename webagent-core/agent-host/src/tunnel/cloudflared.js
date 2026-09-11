@@ -3,10 +3,13 @@ const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
 const eventBus = require('../utils/eventBus');
+const { stopProcess } = require('./stopProcess');
 
 const URL_RE = /https:\/\/[a-z0-9-]+\.trycloudflare\.com/i;
 
 let child = null;
+let generation = 0, cancelPending = null;
+let stopping = Promise.resolve();
 let quickUrl = null;
 
 function parseTunnelUrl(chunk) {
@@ -47,19 +50,18 @@ function installHint() {
 }
 
 function stopTunnel() {
-  try {
-    const ngrok = require('./ngrok');
-    if (typeof ngrok.stopNgrok === 'function') ngrok.stopNgrok();
-  } catch (_) {}
-  if (child && !child.killed) {
-    try { child.kill('SIGTERM'); } catch (_) {}
-    setTimeout(() => {
-      try { if (child && !child.killed) child.kill('SIGKILL'); } catch (_) {}
-    }, 1500);
-  }
+  generation++;
+  if (cancelPending) { cancelPending(); cancelPending = null; }
+  const previous = child;
   child = null;
   quickUrl = null;
   config.publicTunnelUrl = null;
+  config.bridgeRunning = false;
+  let other = Promise.resolve();
+  try { other = require('./ngrok').stopNgrok(); } catch (_) {}
+  stopping = Promise.all([stopping, stopProcess(previous), other]).then(() => undefined);
+  stopping.catch(() => {}); // Callers awaiting stop still receive failures.
+  return stopping;
 }
 
 function canonicalNamedUrl(hostname) {
@@ -73,7 +75,7 @@ function canonicalNamedUrl(hostname) {
 
 const NAMED_READY_RE = /Registered tunnel connection|\bconnIndex=/i;
 
-function startNamedTunnel({ hostname, token, port = config.port, timeoutMs = 25000 } = {}) {
+async function startNamedTunnel({ hostname, token, port = config.port, timeoutMs = 25000 } = {}) {
   const url = canonicalNamedUrl(hostname);
   if (!url) {
     const err = new Error('Named Tunnel 需要主机名，例如 mcp.example.com。');
@@ -86,7 +88,10 @@ function startNamedTunnel({ hostname, token, port = config.port, timeoutMs = 250
     err.code = 'E_NAMED_TOKEN';
     return Promise.reject(err);
   }
-  stopTunnel();
+  const stopped = stopTunnel();
+  const ticket = generation;
+  await stopped;
+  if (ticket !== generation) throw new Error('Tunnel start superseded');
   const bin = findCloudflared();
   if (!bin) {
     const err = new Error(installHint());
@@ -110,11 +115,12 @@ function startNamedTunnel({ hostname, token, port = config.port, timeoutMs = 250
     const timer = setTimeout(() => {
       if (settled) return;
       settled = true;
-      stopTunnel();
+      if (child === proc && ticket === generation) stopTunnel().catch(() => {});
       reject(new Error('cloudflared Named Tunnel 已启动但 25 秒内没有连上 Cloudflare。请确认 Token、Public Hostname 指到 ' + target + '，以及本机网络。'));
     }, timeoutMs);
 
     const onData = (chunk) => {
+      if (child !== proc || ticket !== generation) return;
       const text = chunk.toString();
       buf = (buf + text).slice(-65536);
       const safe = tok ? text.split(tok).join('[token]') : text;
@@ -129,17 +135,25 @@ function startNamedTunnel({ hostname, token, port = config.port, timeoutMs = 250
       }
     };
 
+    cancelPending = () => {
+      if (settled) return; settled = true; clearTimeout(timer); reject(new Error('Tunnel start cancelled'));
+    };
+    const clearActive = () => {
+      if (child !== proc || ticket !== generation) return;
+      child = null; quickUrl = null; config.publicTunnelUrl = null; config.bridgeRunning = false;
+      eventBus.broadcast('tunnel_stopped', {});
+    };
     proc.stdout.on('data', onData);
     proc.stderr.on('data', onData);
     proc.on('error', (err) => {
+      clearActive();
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      child = null;
       reject(new Error(`无法启动 cloudflared: ${err.message}`));
     });
     proc.on('exit', (code) => {
-      child = null;
+      clearActive();
       if (settled) return;
       settled = true;
       clearTimeout(timer);
@@ -148,8 +162,11 @@ function startNamedTunnel({ hostname, token, port = config.port, timeoutMs = 250
   });
 }
 
-function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) {
-  stopTunnel();
+async function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) {
+  const stopped = stopTunnel();
+  const ticket = generation;
+  await stopped;
+  if (ticket !== generation) throw new Error('Tunnel start superseded');
   const bin = findCloudflared();
   if (!bin) {
     const err = new Error(installHint());
@@ -173,11 +190,12 @@ function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) {
     const timer = setTimeout(() => {
       if (settled) return;
       settled = true;
-      stopTunnel();
+      if (child === proc && ticket === generation) stopTunnel().catch(() => {});
       reject(new Error('cloudflared 已启动但 25 秒内没有给出 trycloudflare.com 地址。请检查网络，或把 CLOUDFLARED_PATH 指到 cloudflared.exe。'));
     }, timeoutMs);
 
     const onData = (chunk) => {
+      if (child !== proc || ticket !== generation) return;
       const text = chunk.toString();
       buf = (buf + text).slice(-65536);
       eventBus.broadcast('tunnel_log', { chunk: text.slice(0, 400) });
@@ -192,17 +210,25 @@ function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) {
       }
     };
 
+    cancelPending = () => {
+      if (settled) return; settled = true; clearTimeout(timer); reject(new Error('Tunnel start cancelled'));
+    };
+    const clearActive = () => {
+      if (child !== proc || ticket !== generation) return;
+      child = null; quickUrl = null; config.publicTunnelUrl = null; config.bridgeRunning = false;
+      eventBus.broadcast('tunnel_stopped', {});
+    };
     proc.stdout.on('data', onData);
     proc.stderr.on('data', onData);
     proc.on('error', (err) => {
+      clearActive();
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      child = null;
       reject(new Error(`无法启动 cloudflared: ${err.message}`));
     });
     proc.on('exit', (code) => {
-      child = null;
+      clearActive();
       if (settled) return;
       settled = true;
       clearTimeout(timer);
@@ -222,9 +248,9 @@ function snapshot() {
   };
 }
 
-process.on('exit', stopTunnel);
-process.on('SIGINT', () => { stopTunnel(); process.exit(0); });
-process.on('SIGTERM', () => { stopTunnel(); process.exit(0); });
+process.on('exit', () => { stopTunnel().catch(() => {}); });
+process.on('SIGINT', () => { stopTunnel().then(() => process.exit(0), () => process.exit(1)); });
+process.on('SIGTERM', () => { stopTunnel().then(() => process.exit(0), () => process.exit(1)); });
 
 module.exports = {
   parseTunnelUrl,

@@ -1,3 +1,4 @@
+const { readBoundedText, MAX_TEXT_BYTES } = require('../utils/boundedFile');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -26,6 +27,7 @@ const ptyJobs = require('../tools/ptyJobs');
 const { runWithSignal } = require('../utils/requestScope');
 
 const router = express.Router();
+let bridgeGeneration = 0;
 
 function publicOrigin(req) {
   const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http').split(',')[0].trim();
@@ -140,6 +142,7 @@ router.post('/bridge/reset-secret', (req, res) => {
 });
 
 router.post('/bridge/start', async (req, res) => {
+  const bridgeTicket = ++bridgeGeneration;
   const cfg = store.load();
   if (!cfg.bridge.loggedIn || !cfg.bridge.deviceAuthorized) {
     return res.status(403).json({ success: false, error: '需要先点本机演示授权或完成 GitHub 验证。Chat 不受影响。' });
@@ -164,13 +167,15 @@ router.post('/bridge/start', async (req, res) => {
   oauth.ensurePairing();
 
   let tunnelError = null;
-  if (provider === 'cloudflare') {
+  try { await tunnel.stopTunnel(); } catch (err) { tunnelError = err.message; }
+  if (bridgeTicket !== bridgeGeneration) return res.status(409).json({ success: false, running: false, error: 'Bridge start superseded' });
+  if (!tunnelError && provider === 'cloudflare') {
     try {
       await tunnel.startQuickTunnel({ port: config.port });
     } catch (err) {
       tunnelError = err && err.message ? err.message : String(err);
     }
-  } else if (named) {
+  } else if (!tunnelError && named) {
     try {
       await tunnel.startNamedTunnel({
         hostname: namedDomain,
@@ -180,7 +185,7 @@ router.post('/bridge/start', async (req, res) => {
     } catch (err) {
       tunnelError = err && err.message ? err.message : String(err);
     }
-  } else if (ngrokProv) {
+  } else if (!tunnelError && ngrokProv) {
     try {
       await ngrok.startNgrokTunnel({
         hostname: ngrokDomain,
@@ -192,6 +197,7 @@ router.post('/bridge/start', async (req, res) => {
     }
   }
 
+  if (bridgeTicket !== bridgeGeneration) return res.status(409).json({ success: false, running: false, error: 'Bridge start superseded by a newer request' });
   const info = mcpInfo(req);
   const tunnelUrl = !tunnelError && config.publicTunnelUrl;
   config.bridgeRunning = Boolean(tunnelUrl);
@@ -221,8 +227,9 @@ router.post('/bridge/start', async (req, res) => {
   });
 });
 
-router.post('/bridge/stop', (req, res) => {
-  tunnel.stopTunnel();
+router.post('/bridge/stop', async (req, res) => {
+  bridgeGeneration++;
+  await tunnel.stopTunnel();
   config.bridgeRunning = false;
   eventBus.broadcast('bridge_stopped', {});
   res.json({ success: true, running: false, ...mcpInfo(req) });
@@ -335,7 +342,7 @@ router.get('/files/content', (req, res) => {
     if (!fs.existsSync(full) || fs.statSync(full).isDirectory()) {
       return res.status(404).json({ error: 'not found' });
     }
-    const content = fs.readFileSync(full, 'utf8');
+    const content = readBoundedText(full);
     const hash = computeHash(content);
     rememberHash(filePath, hash);
     res.json({
