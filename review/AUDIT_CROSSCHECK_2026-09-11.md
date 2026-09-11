@@ -5,7 +5,7 @@
 **另一输入**：本会话 2026-09-11 审查，编号 F01–F38、D01–D06；本文件保留其问题索引及最新状态。
 **分支**：`arena/01a08d85-web-agent`。
 
-> 本轮完成逐项交叉验证和**第一批修复**，不是所有问题已经解决。尤其安装器、webview注入和PTY生命周期仍待修；编辑器数据保护已在第二批修复但浏览器验收尚待，不能据此宣布版本可发布。
+> 本轮完成逐项交叉验证和**第一批修复**，不是所有问题已经解决。尤其安装器和PTY生命周期仍待修；webview动态文本/CSP已修但真实VS Code验收尚待；编辑器数据保护已在第二批修复但浏览器验收尚待，不能据此宣布版本可发布。
 
 ## 一、怎么处理两份报告的分歧
 
@@ -113,7 +113,7 @@
 | F04 | 敏感文件别名/嵌套/大小写 | 本轮修复主要路径；OS级竞态/硬链接隔离不作保证 |
 | F05 | WebSocket跨站Origin未过滤 | 本轮修复＋HTTP/WS回归 |
 | F06 | 本机API Host黑名单缺口 | 本轮修复＋HTTP回归 |
-| F07 | extension webview任务/日志innerHTML注入 | **待修**，动态文本DOM渲染＋CSP＋消息校验 |
+| F07 | extension webview任务/日志innerHTML注入 | 第三批代码修复：DOM/textContent、随机nonce CSP、宿主消息校验；VM/DOM回归通过，真实VS Code待验收 |
 | F08 | git diff被当文件正文覆盖 | 本轮修复 |
 | F09 | 编辑器切tab丢未保存编辑 | 第二批代码修复：每tab模型/dirty/关闭确认/卸载提示；DOM＋Monaco fixture通过，浏览器真机待验收 |
 | F10 | 保存失败假成功、缺hash冲突保护 | 第二批代码修复：GET hash/PUT expectedHash/409保留编辑；保存中后续修改不丢失，真实浏览器待验收 |
@@ -170,6 +170,14 @@
 
 新增editorRuntime.test.js执行实际state/dom/tabs模块，使用DOM与Monaco fixture覆盖：textarea切页保存编辑、dirty、取消关闭、beforeunload、409/500/网络/坏JSON不报成功、携带完整hash、保存中禁止重复提交/关闭、保存时继续编辑及切页不串文件、Monaco晚到迁移、同tab复用模型与视图、关闭释放模型/监听器。不是浏览器E2E。
 
-冲突时保留当前缓冲区并提示核对磁盘；本批不添加强制覆盖、自动合并或草稿磁盘持久化。浏览器崩溃/强制结束不在beforeunload可保证的范围内。F07与安装器仍待下一批。
+冲突时保留当前缓冲区并提示核对磁盘；本批不添加强制覆盖、自动合并或草稿磁盘持久化。浏览器崩溃/强制结束不在beforeunload可保证的范围内。F07在随后第三批处理；安装器仍待。
 
 第二批验收：缺失依赖时runner明确退出2；npm ci恢复依赖后，Linux Node v22.22.3全量40/40测试文件通过，退出码0，文档生成一致性通过。真实浏览器/Windows验收仍未运行。
+
+## 八、第三批：扩展webview动态文本
+
+任务/日志改为DOM与textContent；Chat/Bridge HTML每页随机nonce，CSP default-src none、script仅nonce，CSS仍允许inline，base/form禁止。宿主检查消息类型、Chat模式、字符串文本与128000字符上限；无效消息在产生副作用前忽略。任务500条、日志12条显示上限，容忍非数组输入。源与extensions-installed发行副本已同步。
+
+webviewRuntime.test.js使用无脚本的普通HTML标记作为文本样本，验证渲染不调用innerHTML、生成CSP nonce匹配且更新、宿主消息校验实际接线。测试执行真实模板与宿主代码，但不是VS Code容器的CSP运行验收。后端授权、PTY审批等仍是独立待修项。
+
+第三批最终验收：Linux Node v22.22.3，41/41测试文件通过，退出码0；包含编辑器、webview与发行副本一致性回归。文档站重建与一致性检查通过。未运行真实VS Code/browser/Windows安装验收。

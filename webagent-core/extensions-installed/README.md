@@ -4,6 +4,8 @@
 
 这是 **code-server 的插件安装目录**，不是第二份源码。`scripts/ensure-code-server.js` 的 `syncExtension()` 把 `../extension/` 拷到这里。
 
+2026-09-11：已从源同步webview动态文本/CSP/消息校验修复，extensionCopy回归保证副本一致。
+
 **不要在本目录改 JS。** 改 `../extension/extension.js` / `package.json`，再跑 vscode 入口即可覆盖副本。
 
 无 Python。本层无手写源码；副本文件与 `../extension/` 相同（`extension.js`、`modeFromChatRequest.js`、`workspaceMatch.js`、`package.json`、`resources/icon.svg`）。桌面 VS Code **不**读本目录，走用户 `~/.vscode/extensions`。

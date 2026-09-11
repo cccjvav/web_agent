@@ -47,6 +47,13 @@ VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@webage
 
 ### 📄 文件名：`extension.js`
 
+**2026-09-11安全更新：** Chat/Bridge每次生成页面使用随机nonce，CSP默认禁止资源/网络加载，仅允许该nonce脚本；保留内联CSS以兼容现有布局，禁止base与form提交。任务标题、工具名和耗时均用DOM＋textContent渲染，不拼接动态HTML。任务列表最多显示500项，工具日志12项；坏数组/空消息安全忽略。
+
+`validWebviewMessage(msg, surface)`在宿主回调入口校验对象与消息类型；Chat仅openNative/send，send限定ask/plan/code和非空字符串（最多128000字符）；Bridge仅refresh/start/stop/reset/copy，copy需字符串且最多128000字符。未知/畸形消息不会触发后端或剪贴板操作。此校验不代替后端授权与命令审批。
+
+回归：webviewRuntime.test.js执行实际HTML脚本、宿主回调与DOM fixture；CSP内容已检查，但真实VS Code中的CSP执行仍待实测。发行副本从此源码同步，不独立修改。
+
+
 - **文件职责：** activate 注册侧栏、Chat 参与者、状态栏；webview HTML 内嵌在本文件。
 - **核心类/函数清单：**
 
@@ -58,12 +65,11 @@ VS Code / code-server 插件源码。侧栏 Chat、Bridge、原生 Chat `@webage
   - **Function `registerChatParticipant`** — 无 `createChatParticipant` 则 return。handler：空 message 输出模式说明；否则 `postNdjson /api/chat`（body 带 `client:'vscode-extension'`）。`pty_request` → `dispatchPty`；status→progress；tool→markdown，apply_patch 成功 reveal + `stream.reference`；message/error/consensus。catch 提示连不上 48271。
   - **Function `activate`** — `startPtyHost`（hello 3s、poll 400ms）；注册 ChatView、BridgeView；Chat 参与者；状态栏每 5s GET `/api/status`。连得上时用 `workspaceMatch.sameWorkspace` 比对工作区；连不上提示先跑 `run-webagent.cmd`。
   - **Class `ChatView`** — webview scripts 开。`send`：history 12，postNdjson 同样 `client:'vscode-extension'`，`dispatchPty` 后事件转 webview。
-  - **Class `BridgeView`（L265–L304）** — start POST `{ tunnelProvider:'cloudflare' }`；stop/copy/reset；refresh GET status。catch 弹 ErrorMessage。
-  - **Function `chatHtml`（L306–L413）** — 完整 HTML。内嵌脚本：默认 `mode='code'`；Agent 菜单切 ask/plan/code；Enter 发送；set_todos 画任务。Agent 菜单 Plan 文案「分支」。DOM：`#log` 空态、`#tasks`、textarea `#q`、`#agent` 按钮、`#menu`、`#go`。
-  - **Function `bridgeHtml`（L415–L482）** — 启动/停止/复制/重置。4s refresh。copy 用 `status.prompt` 或 mcpUrl+CONNECT。DOM：`#pill`、`#url`、按钮、`#tasks`、`#stream`。
+  - **Class `BridgeView`** — start POST `{ tunnelProvider:'cloudflare' }`；stop/copy/reset；refresh GET status。catch 弹 ErrorMessage。
+  - **Function `chatHtml`** — 完整 HTML。内嵌脚本：默认 `mode='code'`；Agent 菜单切 ask/plan/code；Enter 发送；set_todos 画任务。Agent 菜单 Plan 文案「分支」。DOM：`#log` 空态、`#tasks`、textarea `#q`、`#agent` 按钮、`#menu`、`#go`。
+  - **Function `bridgeHtml`** — 启动/停止/复制/重置。4s refresh。copy 用 `status.prompt` 或 mcpUrl+CONNECT。DOM：`#pill`、`#url`、按钮、`#tasks`、`#stream`。
 
-  内嵌 `chatHtml` 脚本函数：L377 `add`、L382 `paintTasks`。  
-  内嵌 `bridgeHtml` 脚本：L455 `paintTasks`、L462 `paintLogs`（只画 `tool_call_end` 最多 12 条）。
+  内嵌chatHtml：add/paintTasks；bridgeHtml：paintTasks/paintLogs。以函数名定位，不维护易漂移行号。
 
 - **导出（L484）：** `{ activate, deactivate: () => {}, modeFromChatRequest }`。`deactivate` 空函数。`modeFromChatRequest` 来自同目录 `./modeFromChatRequest`。
 

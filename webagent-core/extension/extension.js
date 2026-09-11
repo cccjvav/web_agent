@@ -2,6 +2,7 @@ const vscode = require('vscode');
 const http = require('http');
 const https = require('https');
 const path = require('path');
+const crypto = require('crypto');
 const { modeFromChatRequest } = require('./modeFromChatRequest');
 const { sameWorkspace } = require('./workspaceMatch');
 const { startPtyHost } = require('./ptyHost');
@@ -242,6 +243,19 @@ function activate(context) {
   );
 }
 
+// Webview messages are untrusted input, even with a restrictive page CSP.
+function validWebviewMessage(msg, surface) {
+  if (!msg || typeof msg !== 'object' || Array.isArray(msg) || typeof msg.type !== 'string') return false;
+  if (surface === 'chat') {
+    if (msg.type === 'openNative') return true;
+    return msg.type === 'send' && ['ask', 'plan', 'code'].includes(msg.mode)
+      && typeof msg.text === 'string' && msg.text.trim().length > 0 && msg.text.length <= 128000;
+  }
+  if (surface !== 'bridge') return false;
+  if (msg.type === 'copy') return typeof msg.text === 'string' && msg.text.length <= 128000;
+  return ['refresh', 'start', 'stop', 'reset'].includes(msg.type);
+}
+
 class ChatView {
   constructor() {
     this.history = [];
@@ -252,6 +266,7 @@ class ChatView {
     webviewView.webview.options = { enableScripts: true };
     webviewView.webview.html = chatHtml();
     webviewView.webview.onDidReceiveMessage(async (msg) => {
+      if (!validWebviewMessage(msg, 'chat')) return;
       if (msg.type === 'openNative') {
         vscode.commands.executeCommand('webagent.openAgentChat');
         return;
@@ -292,6 +307,7 @@ class BridgeView {
     webviewView.webview.options = { enableScripts: true };
     webviewView.webview.html = bridgeHtml();
     webviewView.webview.onDidReceiveMessage(async (msg) => {
+      if (!validWebviewMessage(msg, 'bridge')) return;
       try {
         if (msg.type === 'refresh') return this.refresh();
         if (msg.type === 'start') {
@@ -328,8 +344,10 @@ class BridgeView {
 }
 
 function chatHtml() {
+  const nonce = crypto.randomBytes(18).toString('base64');
   return `<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none';">
 <style>
 body{margin:0;font:12px/1.45 system-ui;background:#1e1e1e;color:#ccc;height:100vh;display:flex;flex-direction:column}
 #log{flex:1;overflow:auto;padding:12px}
@@ -367,7 +385,7 @@ button.send{margin-left:auto;background:#0e639c;color:#fff;border:0;width:28px;h
 <div id="tasks"><h4><span>Tasks</span><span id="task-count">0/0</span></h4><ul id="task-list"></ul></div>
 <div class="foot">
   <div class="composer">
-    <textarea id="q" rows="2" placeholder="描述要构建的内容"></textarea>
+    <textarea id="q" rows="2" maxlength="128000" placeholder="描述要构建的内容"></textarea>
     <div class="row">
       <span>+</span>
       <button type="button" class="agent-btn" id="agent">Agent · Web Agent Code ▾</button>
@@ -381,7 +399,7 @@ button.send{margin-left:auto;background:#0e639c;color:#fff;border:0;width:28px;h
     </div>
   </div>
 </div>
-<script>
+<script nonce="${nonce}">
 const vscode = acquireVsCodeApi();
 let mode = 'code';
 const labels = { ask: 'Agent · Web Agent Ask ▾', plan: 'Agent · Web Agent Plan ▾', code: 'Agent · Web Agent Code ▾' };
@@ -404,11 +422,18 @@ function add(cls, text){
   const d=document.createElement('div'); d.className=cls; d.textContent=text; log.appendChild(d); log.scrollTop=log.scrollHeight;
 }
 function paintTasks(todos){
-  const list = todos || [];
+  const list = Array.isArray(todos) ? todos.filter(t => t && typeof t === 'object').slice(0, 500) : [];
   document.getElementById('tasks').style.display = list.length ? 'block' : 'none';
   const done = list.filter(t => t.status === 'completed').length;
   document.getElementById('task-count').textContent = done + '/' + list.length;
-  document.getElementById('task-list').innerHTML = list.map(t => '<li>' + (t.status==='completed'?'☑ ':t.status==='in_progress'?'▶ ':'☐ ') + (t.title||'') + '</li>').join('');
+  const box = document.getElementById('task-list');
+  box.replaceChildren();
+  list.forEach(t => {
+    const item = document.createElement('li');
+    item.textContent = (t.status === 'completed' ? '☑ ' : t.status === 'in_progress' ? '▶ ' : '☐ ')
+      + (typeof t.title === 'string' ? t.title : '');
+    box.appendChild(item);
+  });
 }
 document.getElementById('go').onclick = () => {
   const t = document.getElementById('q').value.trim(); if(!t) return;
@@ -419,6 +444,7 @@ document.getElementById('q').onkeydown = e => { if(e.key==='Enter' && !e.shiftKe
 document.getElementById('open-native').onclick = () => vscode.postMessage({ type:'openNative' });
 window.addEventListener('message', e => {
   const m = e.data;
+  if (!m || typeof m !== 'object' || Array.isArray(m)) return;
   if (m.type==='user') add('msg user', m.text);
   if (m.type==='event') {
     const ev = m.ev || {};
@@ -437,8 +463,10 @@ window.addEventListener('message', e => {
 }
 
 function bridgeHtml() {
+  const nonce = crypto.randomBytes(18).toString('base64');
   return `<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none';">
 <style>
 body{margin:0;padding:12px;font:12px/1.4 system-ui;background:#1e1e1e;color:#ccc}
 .pill{display:inline-block;padding:3px 10px;border-radius:12px;margin-bottom:10px;border:1px solid #4fc1ff;color:#4fc1ff}
@@ -465,7 +493,7 @@ button{background:#0e639c;color:#fff;border:0;padding:7px 10px;border-radius:4px
 </div>
 <div class="card" id="stream"></div>
 <p class="hint" id="hint">启动后等 trycloudflare.com。Arena：把提示词整段当第一句。ChatGPT：不要贴进聊天栏，走设置里的自制 MCP 插件。</p>
-<script>
+<script nonce="${nonce}">
 const vscode = acquireVsCodeApi();
 let status = {};
 const CONNECT = '快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。';
@@ -477,24 +505,46 @@ document.getElementById('copy').onclick = () => {
 };
 document.getElementById('reset').onclick = () => vscode.postMessage({ type:'reset' });
 function paintTasks(todos){
-  const list = todos || [];
+  const list = Array.isArray(todos) ? todos.filter(t => t && typeof t === 'object').slice(0, 500) : [];
   document.getElementById('tasks').style.display = list.length ? 'block' : 'none';
   const done = list.filter(t => t.status === 'completed').length;
   document.getElementById('task-count').textContent = done + '/' + list.length;
-  document.getElementById('task-list').innerHTML = list.map(t => '<li>' + (t.status==='completed'?'☑ ':'☐ ') + (t.title||'') + '</li>').join('');
+  const box = document.getElementById('task-list');
+  box.replaceChildren();
+  list.forEach(t => {
+    const item = document.createElement('li');
+    item.textContent = (t.status === 'completed' ? '☑ ' : t.status === 'in_progress' ? '▶ ' : '☐ ')
+      + (typeof t.title === 'string' ? t.title : '');
+    box.appendChild(item);
+  });
 }
 function paintLogs(logs){
   const box = document.getElementById('stream');
-  const tools = (logs || []).filter(l => l.type === 'tool_call_end').slice(0, 12);
-  box.innerHTML = tools.map(l => {
-    const p = l.payload || {};
-    const ok = p.success !== false;
-    return '<div class="tool"><span>' + (p.tool||'') + '</span><span>' + (ok ? ((p.durationMs||0)+' ms') : 'Failed') + '</span></div>';
-  }).join('') || '<p class="hint">Waiting for the remote Agent</p>';
+  const tools = (Array.isArray(logs) ? logs : []).filter(l => l && l.type === 'tool_call_end').slice(0, 12);
+  box.replaceChildren();
+  tools.forEach(l => {
+    const p = l.payload && typeof l.payload === 'object' ? l.payload : {};
+    const row = document.createElement('div');
+    row.className = 'tool';
+    const name = document.createElement('span');
+    name.textContent = typeof p.tool === 'string' ? p.tool : '';
+    const result = document.createElement('span');
+    result.textContent = p.success === false ? 'Failed'
+      : ((typeof p.durationMs === 'number' && Number.isFinite(p.durationMs) ? p.durationMs : 0) + ' ms');
+    row.appendChild(name);
+    row.appendChild(result);
+    box.appendChild(row);
+  });
+  if (!tools.length) {
+    const empty = document.createElement('p');
+    empty.className = 'hint';
+    empty.textContent = 'Waiting for the remote Agent';
+    box.appendChild(empty);
+  }
 }
 window.addEventListener('message', e => {
-  if (e.data.type !== 'status') return;
-  status = e.data.status || {};
+  if (!e.data || e.data.type !== 'status') return;
+  status = e.data.status && typeof e.data.status === 'object' ? e.data.status : {};
   document.getElementById('url').textContent = status.mcpUrl || status.error || '—';
   document.getElementById('pill').textContent = status.error ? ('离线 ' + status.error) : (status.bridgeRunning ? 'Bridge 运行中' : '已连接 agent-host');
   paintTasks(status.taskState && status.taskState.todos);
