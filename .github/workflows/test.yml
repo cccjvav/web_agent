@@ -35,5 +35,11 @@ jobs:
             choco install innosetup --yes --no-progress
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
-          & $iscc /Qp installer/webagent.iss
-          exit $LASTEXITCODE
+          $ErrorActionPreference = 'Continue'
+          & $iscc /Qp installer/webagent.iss 2>&1 | Tee-Object -Variable compileLog
+          $result = $LASTEXITCODE
+          if ($result -ne 0) {
+            $detail = (($compileLog | Select-Object -Last 12) -join '%0A')
+            Write-Output "::error::$detail"
+          }
+          exit $result
