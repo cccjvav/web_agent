@@ -511,7 +511,8 @@ router.post('/bridge/github/clear', (req, res) => {
   res.json({ success: true, provider: 'local-demo', username: 'local' });
 });
 
-router.post('/bridge/logout', (req, res) => {
+router.post('/bridge/logout', async (req, res) => {
+  bridgeGeneration++;
   github.resetPending();
   store.patch({
     bridge: {
@@ -522,7 +523,7 @@ router.post('/bridge/logout', (req, res) => {
       provider: 'local-demo'
     }
   });
-  tunnel.stopTunnel();
+  await tunnel.stopTunnel();
   config.bridgeRunning = false;
   res.json({ success: true });
 });

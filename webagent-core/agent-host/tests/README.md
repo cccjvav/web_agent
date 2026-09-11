@@ -397,3 +397,9 @@
 2. 单文件：改 `config.workspaceRoot` 指向 tmp → require 被测模块 → assert → 删 tmp。`tunnel` / `chatMode` / `codeServerNotRunnable` 不改工作区。`bridgeTunnel` 改 tmp 工作区并 stub 隧道导出。
 3. 启进程的测试 spawn `src/index.js`，结束必须杀子进程。
 4. 失败路径：有 `main()` 的文件走 `main().catch` → `exit(1)`；`profile.test.js` 同步抛错由 Node 非 0 退出；CMD 的 `run-tests.cmd` 据此 pause。
+
+### 2026-09-11 第七至九批补充
+- tunnelLifecycle：捕获进程引用、等待exit、旧事件隔离、取消未就绪启动、信号失败不报退出（进程fixture）。
+- resourceBudget：保留schema/Date/分页游标、有界读取、worker取消、目录预算、根目录glob；排队写锁取消拒写与新文件排他创建。
+- monacoLoading：网络失败/超时降级/迟到加载保留缓冲区（真实函数fixture，不是浏览器）。
+- Windows CI额外编译input/input2/keys.cs，解析全部PS脚本，检查无效句柄拒绝；不代表交互桌面验收。

@@ -2,7 +2,7 @@
 
 当前处理目标：`webagent-core/agent-host/src/tunnel/`
 
-本目录两个文件：`cloudflared.js`（Quick Tunnel + Named Tunnel）和 `ngrok.js`（`ngrok http`）。无 `.json` / `.html`。逐步用法见仓库根 [隧道使用指南.md](../../../../隧道使用指南.md)。
+本目录包含共享停止辅助`stopProcess.js`以及两个提供商文件：`cloudflared.js`（Quick Tunnel + Named Tunnel）和 `ngrok.js`（`ngrok http`）。无 `.json` / `.html`。逐步用法见仓库根 [隧道使用指南.md](../../../../隧道使用指南.md)。
 
 ---
 
@@ -10,7 +10,7 @@
 
 - **定位：** 把本机 `config.port`（默认 48271）映射成 HTTPS，让云上网页 Agent 能打进来。
 - **依赖：** `../config`、`../utils/eventBus`。`ngrok.js` 还用 `canonicalNamedUrl`（`cloudflared.js`）。
-- **谁调用：** `../api/routes.js`：`/status` 暴露 `tunnel.snapshot()`（会并上 ngrok 是否在跑）；**`POST /bridge/start`** 在 `tunnelProvider==='cloudflare'` 时 `await startQuickTunnel`；**`cloudflare-named` / `named` 时 `await startNamedTunnel`**；**`ngrok` 时 `await startNgrokTunnel`**（失败记下 `tunnelError`，Bridge 仍 200）；`/bridge/stop` 与 `/bridge/logout` 调 `stopTunnel`（会顺带 `stopNgrok`）。
+- **谁调用：** `../api/routes.js`：`/status` 暴露 `tunnel.snapshot()`（会并上 ngrok 是否在跑）；**`POST /bridge/start`** 在 `tunnelProvider==='cloudflare'` 时 `await startQuickTunnel`；**`cloudflare-named` / `named` 时 `await startNamedTunnel`**；**`ngrok` 时 `await startNgrokTunnel`**（失败记下`tunnelError`，返回失败状态；不宣称远程已就绪）；`/bridge/stop` 与 `/bridge/logout` 调 `stopTunnel`（会顺带 `stopNgrok`）。
 
 ---
 
@@ -66,3 +66,9 @@
 3. ngrok：校验 Authtoken（可环境变量）→ spawn `ngrok http` → 解析或使用预留域名 → `publicTunnelUrl`。
 4. 换模式再启动会先 `stopTunnel`（连带停 ngrok）。之后 `mcpOrigin` 优先用该 URL。
 5. **产品按钮：** `POST /bridge/start` 按 provider 进 1/2/3；失败仍 200，MCP 走当前 Host。缺字段**不会**偷偷改走 Quick Tunnel。
+
+## 2026-09-11 生命周期修订（覆盖上文旧行号/同步停止描述）
+- stop/start均可等待；共享stopProcess捕获旧进程引用，等待exit而不是把killed标志当退出。TERM后1.5秒升级KILL，3秒未退出则失败并拒绝替换；Windows采用taskkill树。停止失败需要人工核对/重启，不宣称远端一定不可达。
+- generation及child引用隔离过期日志、就绪与exit；停止取消未就绪启动，active进程退出清URL/running。已有pid的error不视为退出，仍尝试停止并等待。
+- API start/stop/logout都有代次控制；logout等待停止，不让较旧start重新发布状态。
+- 本地进程fixture验证等待退出、过期事件、启动取消与信号失败；真实公网及Windows进程树不是这些fixture的验收范围。

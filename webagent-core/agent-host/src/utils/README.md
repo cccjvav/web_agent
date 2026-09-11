@@ -90,3 +90,6 @@ requestScope.js使用AsyncLocalStorage传播每个Chat请求的AbortSignal；che
 4. 工具/MCP 调用 `broadcast` → 写入 logs + 推到所有打开的工作台。
 5. 工作台 `connectWs` 根据 type 刷新终端、文件树、BRIDGE 工具卡、todos。`onclose` 后 1s→30s 退避重连；状态栏写「事件流重连中」。有工具广播时服务端 idle 计时重置，空闲满 30 分钟仍会 1001 关掉（客户端再连）。
 6. `patchEngine` 写盘后用 `createUnifiedDiff` 把 diff 放进 broadcast payload，工作台可开 diff 页。
+
+### boundedFile.js（2026-09-11新增）
+readBoundedText在路径及fd上检查普通文件/8MiB默认上限，按64KiB块读取且最多maxBytes+1探测增长，finally关闭fd，不先readFileSync整个增长文件。由工具读/补丁/API读共用；不是操作系统沙箱。

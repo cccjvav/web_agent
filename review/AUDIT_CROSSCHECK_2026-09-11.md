@@ -37,20 +37,20 @@
 | X09 | writeFile 只使用 recalledHash，缺 sessionHash | **误报**。fileOps 已 import/sessionHash，并把显式 hash 和本进程 hash 与磁盘当前内容计算出的 hash 比较；`workspaceTools.test.js` 覆盖跨进程缓存不能授权覆盖。 | 不加 force 绕过；保存 UI 未传 hash 是 F10。 |
 | X10 | 进程 crash 未释放计数器，应 close 时删除 execId | **主张缺证据，建议会破坏查询**。没有独立计数器；countRunning 遍历 status=running。error/close 均改变状态，完成记录用于 get_command_output。 | 不在 close 删除可查询结果；进程树/PTY 终态问题仍待 F13–F17/F23。 |
 | X11 | access 1 小时没说明；到期必须重新配对 | **误报且建议不准确**。§4.7 TTL 已列 access 1 小时、refresh 7 天。有效 refresh 可换 token，不是每小时重新配对。 | 本轮补一句到期刷新与进程重启失效的区别。 |
-| X12 | store.load 坏配置静默 defaults，后续覆盖 | **属实，与 F29 重复**。read/parse 错误都吞掉。只加 warn 不足以防止下一次覆盖。 | 合并 F29，待原子持久化、损坏恢复及输入校验一起修。 |
+| X12 | store.load 坏配置静默 defaults，后续覆盖 | **属实，与 F29 重复**。read/parse 错误都吞掉。只加 warn 不足以防止下一次覆盖。 | 合并F29，第五批完成原子持久化、损坏保留及输入校验。 |
 | X13 | 缺 WEBAGENT_CORS_ORIGINS | **误报**。corsAllow.extraOrigins 已实现；`corsAllow.test.js` 有环境变量扩展测试；使用指南环境变量表已有说明。 | 不重复实现，不扩大 API/WS 白名单。 |
 | X14 | initialize 读 instructions 微延迟；应缓存或 ?refresh=true | **待测性能建议**。没有延迟数据，initialize 也不等于每个 SSE 心跳。缓存还需文件变化失效语义。 | 暂不新增协议参数；同步文件扫描性能纳入后续测量。 |
 | X15 | Skill 没大小上限；建议“截取 28000/240” | **发现属实，但建议原本就有且不足**。原实现先 readFileSync 全量，再 slice。原会话 F30 只聚焦路径，外部报告补充了明确的有界读取缺口。 | **本轮修复**：普通文件检查、128 KiB 字节上限、按需要读前缀、truncated 标志；并修 F30 用户 Skill 外链。 |
 | X16 | findFiles 只支持 **/*，正则当文本 | **部分属实/接口口径**。glob 本来不是 regex，且代码还支持 `?`。glob 的零层目录等匹配细节值得专项测试。 | 文档明确 glob 支持范围；正则使用 search_files 的 isRegex。暂不引入新 glob 库。 |
 | X17 | grepSearch.js 的 escapeRegExp 异常；需新增 isRegex | **文件引用错误，功能已实现**。实际是 fileOps.grepSearch，已有 isRegex/caseSensitive，literal 分支会转义正则元字符。 | 不新建重复文件/开关；真实正则时间复杂度问题为 F27。 |
-| X18 | 10 轮内仍会无限 tool_calls，缺 max_iterations | **误报**。runOpenAI 外层固定 10 轮，内部每轮只处理前 8 项，不会无限循环。真实问题是剩余 id 无 tool message，F18。 | 不用新参数掩盖协议错误；F18 待修。 |
+| X18 | 10 轮内仍会无限 tool_calls，缺 max_iterations | **误报**。runOpenAI 外层固定 10 轮，内部每轮只处理前 8 项，不会无限循环。真实问题是剩余 id 无 tool message，F18。 | 不用新参数掩盖协议错误；F18已在第五批修复。 |
 | X19 | listenOrExit 非 EADDRINUSE 无错误提示 | **误报**。该分支已有 console.error(err) 再 exit(1)。 | 不重复增加日志。 |
 
 ### 安全与隐私（原报告 §4）
 
 | 编号 | 原文主张 | 核对结论与证据 | 处置 |
 |---|---|---|---|
-| X20 | 已跟踪密钥仍可能提交；需 warnTrackedSecrets | **风险真实，建议已实现**。store.trackedSecretFiles/warnTrackedSecrets 已由 config.persistIdentity 启动时调用。 | 不重复实现；安装包绕过 gitignore 是独立 F31，仍待修。 |
+| X20 | 已跟踪密钥仍可能提交；需 warnTrackedSecrets | **风险真实，建议已实现**。store.trackedSecretFiles/warnTrackedSecrets 已由 config.persistIdentity 启动时调用。 | 不重复实现；安装包绕过gitignore是独立F31，第四批发行隔离已修。 |
 | X21 | 配对码只在内存，应脱敏写盘并重载 | **既定设计，建议不采纳**。配对码短时、一次性；脱敏码不能恢复原码，存原码扩大持久化敏感面。重启 OAuth 失效已在 SECURITY 说明。 | 维持内存配对；若需要持久登录，须用户决定完整凭据存储方案，而非偷偷落盘配对码。 |
 | X22 | 自定义代理被误拦，应可信 IP/isCustomProxy | **需要设计决策，原描述不完整**。缺 CF 头的陌生代理并不一定被拦；旧代码反而可能把本机代理当作本机控制面。 | 本轮按现有 local-only 边界收紧 Host；不增加泛化代理放行。用户确需代理 UI 再讨论身份认证方案。 |
 | X23 | cloudflared 提示只有 winget | **误报**。installHint 已按平台输出 Windows winget / macOS brew / Linux 官方安装说明。 | 不盲加未配置仓库的 apt-get 命令。 |
@@ -61,7 +61,7 @@
 | 编号 | 原文主张 | 核对结论与证据 | 处置 |
 |---|---|---|---|
 | X25 | pelican.html SMIL 兼容性 | **不属于项目**。仓库没有 pelican.html；鹈鹕是此前独立测试，未进仓。CSS @supports 也不能直接证明 SMIL 支持。 | 排除，不修改产品来修独立示例。 |
-| X26 | Monaco 加载约7秒且无提示 | **部分属实**。7秒是降级等待上限，不是固定加载耗时。缺明显加载/失败反馈可改进，但 F01 模块启动错误更优先。 | 本轮先修 F01 和主题联动；CDN加载体验后续补浏览器验收。 |
+| X26 | Monaco 加载约7秒且无提示 | **部分属实**。7秒是降级等待上限，不是固定加载耗时。缺明显加载/失败反馈可改进，但 F01 模块启动错误更优先。 | F01/主题已修；第九批补加载/降级/迟到反馈fixture，浏览器验收仍待。 |
 | X27 | copy-rules 只在 extension-http 显示 | **行为属实，是否改变属 UX 取舍**。paste-url 配方已有整段提示词；并非所有配方都存在 rulesText。 | 不显示一个没有内容的按钮；通用复制入口可后续统一设计。 |
 | X28 | docs-site 移动端 px 导致 iPhone 缩放异常 | **未提供设备/截图/复现，不能确认**。CSS 已有 max-width:980px 媒体查询。px 本身不是错误，把所有 px 改 rem/vh/vw 也非正确通用修法。 | 保留窄屏/缩放/无障碍实测任务，不全局替换单位。 |
 | X29 | run-tests 缺 filter | **有效开发体验建议**。原来可直接 node tests/xxx.test.js，但 runner 无筛选；原报告目录 web-agent-core 拼写不正确。 | **本轮新增** `npm test -- --filter=oauth`（文件名子串），零匹配/坏参数非零退出、单文件超时、缺 preferred 文件失败。根 CMD 仍是全量入口。 |
@@ -224,3 +224,17 @@ F37：输入脚本错误不再报OK/exit0，窗口子串须唯一；C#检查可�
 D02：summary现有路由补实际文档，文件页支持二级锚点定位；生成内容回归验证summary存在。同步工具预算、桌面技能和技术说明；Windows CI加入三份输入C#编译、全部PS语法解析及无效句柄拒绝测试。
 
 第八批本地全量48/48通过，退出码0，文档站生成一致性通过；Windows CI编译/解析待本次推送后确认，交互桌面仍未验收。
+
+
+## 十四、收尾边界与验收分层
+Windows CI **34644206411**（866094b）完整成功：Linux测试、Windows输入C#编译/PS语法解析/无效句柄拒绝、安装器编译。该证据不等于桌面实测。
+
+收尾补充：logout使旧start失效并等待停止；已有pid的process error不能直接当退出；worker名额等真正终止才释放；排队写锁取得后及落盘前检查取消；补丁新建使用排他原子发布，目标同时出现则拒绝覆盖；预算复制保留Date序列化语义。Monaco底栏加载/降级反馈和迟到加载缓冲区保护。
+
+当前原F01–F38已确认缺陷均有代码整改和对应验证记录；不把所有项标为平台验收完成。剩余验收矩阵：
+1. Windows标准/管理员安装、升级迁移、PATH冲突与卸载保留；DPI/焦点/剪贴板多格式真实操作。
+2. 浏览器编辑/冲突/未保存提示、窄屏/缩放/无障碍；真实VS Code多窗口PTY、审批/取消/退出事件。
+3. 真实Cloudflare/ngrok进程树和网络失败；手机Arena到认证MCP的OAuth/刷新/任务闭环；实际模型服务超时取消。
+4. 性能建议X14需要基线数据，W01/W02/W03/W04自动索引/发行说明/文档lint/覆盖率阈值仍是未采纳或未测建议，不包装为已实现产品能力。持久登录与远程UI依照已确认决策继续不实现。
+
+收尾全量49/49测试文件通过，退出码0；文档站重建一致性通过，新增Monaco加载fixture；HTTP回归验证logout使未完成start返回409。Windows上次完整CI34644206411成功，本次提交远端结果另查。

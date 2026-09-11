@@ -31,12 +31,12 @@ function clipJson(value, maxChars = MAX_CHARS) {
     if (Array.isArray(node)) return node.map(item => copy(item, page));
     const result = {};
     for (const [key, val] of Object.entries(node)) {
-      result[key] = copy(val, page);
+      Object.defineProperty(result, key, { value: copy(val, page), enumerable: true, writable: true, configurable: true });
       if (!page && textFields.has(key) && typeof val === 'string') leaves.push({ result, key, val });
     }
     return result;
   }
-  const result = copy(value);
+  const result = copy(JSON.parse(raw));
   for (const leaf of leaves) leaf.result[leaf.key] = '';
   const available = Math.max(0, maxChars - JSON.stringify(result).length - 150);
   const share = Math.floor(available / Math.max(1, leaves.length));

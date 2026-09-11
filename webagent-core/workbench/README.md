@@ -190,3 +190,6 @@
 6. `/ws` 把远程 MCP 工具调用画到 BRIDGE。
 7. 「Clear log / 清除本轮统计」→ POST `/api/bridge/reset-round`（清 session 计数 + 读哈希缓存）并清空右侧 log。Health 只探活。标题栏浅色/深色只改 CSS 变量。
 8. 内置「打开 Arena」只是本机演示：仅连接指引，不执行MCP或本机Chat。
+
+### 2026-09-11 编辑器加载反馈
+loadMonaco从app.js移入js/monaco.js；底栏aria-live显示加载中/纯文本降级/高级编辑器就绪。网络、AMD加载及初始化失败均回落；7秒为等待上限，迟到成功仍捕获当前缓冲区后升级，不丢纯文本编辑。monacoLoading回归执行真实函数的加载/错误/迟到fixture，尚非浏览器验收。

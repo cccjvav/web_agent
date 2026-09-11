@@ -1,3 +1,4 @@
+const { checkCancelled } = require('../utils/requestScope');
 const { readBoundedText, MAX_TEXT_BYTES } = require('../utils/boundedFile');
 const fs = require('fs');
 const path = require('path');
@@ -18,7 +19,8 @@ function tempSibling(fullPath) {
 }
 
 /** Replace text without losing an existing executable's permissions; clean up on failure. */
-function atomicWriteText(fullPath, content) {
+function atomicWriteText(fullPath, content, { exclusive = false } = {}) {
+  checkCancelled();
   if (Buffer.byteLength(content, 'utf8') > MAX_TEXT_BYTES) throw new ProtocolError('E_BAD_ARGS', 'Result exceeds text file budget');
   if (fs.existsSync(fullPath)) fullPath = fs.realpathSync(fullPath); // Replace the checked target, not the symlink itself.
   const tmp = tempSibling(fullPath);
@@ -26,7 +28,9 @@ function atomicWriteText(fullPath, content) {
   try {
     fs.writeFileSync(tmp, content, { encoding: 'utf8', flag: 'wx', ...(mode == null ? {} : { mode }) });
     if (mode != null) fs.chmodSync(tmp, mode);
-    fs.renameSync(tmp, fullPath);
+    checkCancelled();
+    if (exclusive) fs.linkSync(tmp, fullPath);
+    else fs.renameSync(tmp, fullPath);
   } finally {
     try { fs.unlinkSync(tmp); } catch (err) { if (err.code !== 'ENOENT') throw err; }
   }
@@ -53,6 +57,7 @@ function lockOne(key, fn) {
   writeLocks.set(key, tail);
   return Promise.resolve(prev).catch(() => {}).then(async () => {
     try {
+      checkCancelled();
       return await fn();
     } finally {
       release();
@@ -293,7 +298,7 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
 
     await Promise.resolve();
     fs.mkdirSync(path.dirname(fullPath), { recursive: true });
-    fs.writeFileSync(fullPath, newContent, 'utf8');
+    atomicWriteText(fullPath, newContent, { exclusive: true });
 
     const diffInfo = createUnifiedDiff(filePath, '', newContent);
     eventBus.broadcast('file_patched', {

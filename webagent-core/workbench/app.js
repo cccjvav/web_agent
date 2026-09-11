@@ -1,3 +1,4 @@
+import { loadMonaco } from './js/monaco.js';
 import { $, state, ui } from './js/state.js';
 import './js/dom.js';
 import './js/tabs.js';
@@ -74,32 +75,6 @@ function connectWs() {
   } catch (_) {
     scheduleWsReconnect();
   }
-}
-
-function loadMonaco() {
-  return new Promise((resolve) => {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js';
-    script.onload = () => {
-      window.require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs' } });
-      window.require(['vs/editor/editor.main'], () => {
-        ui.captureActiveFile();
-        state.editor = window.monaco.editor.create($('#editor'), {
-          model: null,
-          theme: document.documentElement.dataset.theme === 'light' ? 'vs' : 'vs-dark',
-          automaticLayout: true,
-          minimap: { enabled: false },
-          fontSize: 13,
-          scrollBeyondLastLine: false
-        });
-        ui.activateTab(state.activeTab);
-        resolve(true);
-      });
-    };
-    script.onerror = () => resolve(false);
-    document.head.appendChild(script);
-    setTimeout(() => resolve(!!state.editor), 7000);
-  });
 }
 
 async function boot() {

@@ -94,8 +94,8 @@
     - L95–L103：`temperature: temperatureFor(thinkLevel)`；有 tools 才带 `tool_choice:'auto'`。
     - L105–L193：最多 10 轮 POST `${base}/chat/completions`。
       - `!resp.ok` 抛 HTTP + 正文前 240。JSON 失败抛。无 message 抛。
-      - 有 tool_calls 最多 8 个；arguments parse 失败当 `{}`；try `callTool(name, args, mode)`，结果 `JSON.stringify.slice(0,12000)` 作为 role tool；catch 则 `ERROR: …`。
-      - **「眼睛」（L152–L178）**：`run_command` 成功后 `computerUse.collectShot` 认截图（命令 `-Out` / stdout）——`tooBig` 则注入「降 Quality 重截」提示；`modelSeesImages` 真则追加一条 `role:'user'` 多模态消息（text + `image_url` data URL）并 send status（**只带路径不带 base64**）；假则注入 `[系统提示]` 要求模型**如实转告**「当前模型不会看图」并 send status。文本通道 12000 字截断，所以图必须走 image 部分。
+      - 每轮最多执行8个tool_calls，超额ID仍返回明确未执行结果以保持协议完整；`callTool`结果经clipJson软预算后序列化为完整JSON，业务失败/异常明确反馈，不自动切模型重放修改。
+      - **「眼睛」（L152–L178）**：`run_command` 成功后 `computerUse.collectShot` 认截图（命令 `-Out` / stdout）——`tooBig` 则注入「降 Quality 重截」提示；`modelSeesImages` 真则追加一条 `role:'user'` 多模态消息（text + `image_url` data URL）并 send status（**只带路径不带 base64**）；假则注入 `[系统提示]` 要求模型**如实转告**「当前模型不会看图」并 send status。文本通道采用12000字符软预算并保持JSON完整，图仍走image部分。
       - 然后 `continue`；无 tool_calls → emit message（空则「（无文本输出）」）并 **`return { text }`**。
     - 10 轮用尽 emit「已达到最大工具轮次。」并 `return { text }`。
   - 导出 `{ runOpenAI, systemPrompt, temperatureFor, modelSeesImages }`。

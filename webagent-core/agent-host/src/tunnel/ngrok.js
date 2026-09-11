@@ -157,7 +157,8 @@ async function startNgrokTunnel({ hostname, token, port = config.port, timeoutMs
     proc.stdout.on('data', onData);
     proc.stderr.on('data', onData);
     proc.on('error', (err) => {
-      clearActive();
+      if (!proc.pid) clearActive();
+      else if (child === proc && ticket === generation) stopNgrok().catch(() => {});
       if (settled) return;
       settled = true;
       clearTimeout(timer);

@@ -365,9 +365,9 @@ function grepSearch(args = {}) {
     let done = false;
     const signal = currentSignal();
     const finish = (err, value) => {
-      if (done) return; done = true; activeSearches--; clearTimeout(timer);
+      if (done) return; done = true; clearTimeout(timer);
       if (signal) signal.removeEventListener('abort', abort);
-      worker.terminate().catch(() => {});
+      worker.terminate().catch(() => {}).finally(() => { activeSearches--; });
       if (err) reject(err); else resolve(value);
     };
     const abort = () => finish(new ProtocolError('E_CANCELLED', 'Search cancelled'));

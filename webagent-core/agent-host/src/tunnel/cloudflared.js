@@ -146,7 +146,8 @@ async function startNamedTunnel({ hostname, token, port = config.port, timeoutMs
     proc.stdout.on('data', onData);
     proc.stderr.on('data', onData);
     proc.on('error', (err) => {
-      clearActive();
+      if (!proc.pid) clearActive();
+      else if (child === proc && ticket === generation) stopTunnel().catch(() => {});
       if (settled) return;
       settled = true;
       clearTimeout(timer);
@@ -221,7 +222,8 @@ async function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) 
     proc.stdout.on('data', onData);
     proc.stderr.on('data', onData);
     proc.on('error', (err) => {
-      clearActive();
+      if (!proc.pid) clearActive();
+      else if (child === proc && ticket === generation) stopTunnel().catch(() => {});
       if (settled) return;
       settled = true;
       clearTimeout(timer);

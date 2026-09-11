@@ -193,6 +193,18 @@ async function main() {
     assert.strictEqual(ngrokStatus.json.ngrokDomain, 'mcp.ngrok-free.app');
     assert.ok(!JSON.stringify(ngrokStatus.json).includes('ngrok_test_token_must_hide'));
 
+    let readyStart, finishStart;
+    const entered = new Promise(resolve => { readyStart = resolve; });
+    tunnel.startQuickTunnel = () => new Promise(resolve => { finishStart = resolve; readyStart(); });
+    const pendingStart = request(server, 'POST', '/api/bridge/start', { tunnelProvider: 'cloudflare' });
+    await entered;
+    const loggedOut = await request(server, 'POST', '/api/bridge/logout', {});
+    assert.strictEqual(loggedOut.status, 200);
+    finishStart({ url: 'https://obsolete.trycloudflare.com' });
+    const staleStart = await pendingStart;
+    assert.strictEqual(staleStart.status, 409, 'logout supersedes pending start');
+    assert.strictEqual(config.bridgeRunning, false);
+
     store.patch({ bridge: { loggedIn: false, deviceAuthorized: false } });
     const denied = await request(server, 'POST', '/api/bridge/start', { tunnelProvider: 'cloudflare' });
     assert.strictEqual(denied.status, 403);

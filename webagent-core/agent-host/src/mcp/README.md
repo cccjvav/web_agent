@@ -95,27 +95,12 @@ OAuth注册严格校验none/client_secret_post/client_secret_basic。token与rev
 
 ### 📄 文件名：`budget.js`
 
-- **文件职责：** 把工具结果截到约 16k 字符，避免网页 Agent 上下文被一次日志撑爆。
-- **核心类/函数清单：**
-
-  - **Function `estimateTokens(text)`（L4–L6）**
-    - 输入：任意。返回 `ceil(length/4)`。源码里 MCP 主路径主要用 `clipText`/`clipJson`，本函数被导出供测试或其它模块。
-  - **Function `clipText(text, maxChars = MAX_CHARS)`（L8–L17）**
-    - L9：`null`/`undefined` 当空串。
-    - L10：未超长 → `{ text, truncated:false }`。
-    - L11–L16：保留 `maxChars-80`，后缀提示 truncated 字数以及用 offset/limit/cursor/`get_command_output`。
-  - **Function `clipJson(value, maxChars = MAX_CHARS)`（L19–L56）**
-    - L20：`null`/`undefined` 原样返回。
-    - L21–L26：**字符串**：截断则包成 `{ text, _truncated, originalChars }`，否则返回原字符串。
-    - L27–L28：stringify 后未超长 → 原对象。
-    - L29：非数组对象浅拷贝，否则包 `{ value }`。
-    - L30–L35：键 `stdout|stderr|content|preview|text|diff` 若字符串 &gt;2000，再 clip 到 `min(4000, maxChars/3)`。
-    - L36–L40：`matches` 多于 20 条则切到 20，设 `nextCursor=20`。
-    - L41–L44：`items` 多于 40 条则切到 40，`nextCursor=40`。
-    - L45–L52：仍超长 → 只留 `_truncated` + `summary` + `hint`。
-    - L53–L55：否则给 copy 打 `_truncated` 和 `originalChars`。
-
-- **关键变量：** L1–L2 注释写明 ~4k tokens ≈ 16k chars；`MAX_CHARS = 16000`。
+- **文件职责：** 以16k字符为软目标减少非分页文本，不损坏JSON/schema/游标。不是硬响应大小保证。
+- `estimateTokens`：ceil(length/4)，只是估计。
+- `clipText`：显式截短文字并附截短提示。
+- `clipJson`：JSON未超目标原样返回；超目标按JSON序列化语义复制（保留Date的字符串表示）。保持字符串/数组类型、全部数组成员与ID/hash/状态字段；带offset/cursor/nextCursor的页与子内容不裁切。
+- 非分页文本字段分配可用字符预算，裁切标记`_truncated`/`originalChars`；仍超目标的对象标记`_budgetExceeded`。不会用summary替代schema或伪造nextCursor。
+- MCP最终结果不再在JSON序列化后clipText；工具内部文件/搜索/任务资源上限负责硬边界。
 
 ---
 
