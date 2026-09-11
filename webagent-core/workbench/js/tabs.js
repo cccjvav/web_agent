@@ -7,7 +7,7 @@ export function paintTabs() {
   state.tabs.forEach((t) => {
     const d = document.createElement('div');
     d.className = 'tab' + (t.id === state.activeTab ? ' on' : '');
-    d.innerHTML = `<span>${escapeHtml(t.title)}</span><span class="x">✕</span>`;
+    d.innerHTML = `<span>${escapeHtml(t.title)}${t.dirty ? ' •' : ''}</span><span class="x">✕</span>`;
     d.querySelector('span').onclick = () => activateTab(t.id);
     d.querySelector('.x').onclick = (e) => { e.stopPropagation(); closeTab(t.id); };
     tabs.appendChild(d);
@@ -18,7 +18,30 @@ export function paintTabs() {
   document.title = `${cur ? cur.title : '欢迎'} — Web Agent`;
 }
 
+export function captureActiveFile() {
+  const tab = state.tabs.find(t => t.id === state.activeTab);
+  if (!tab || tab.kind !== 'file') return;
+  tab.content = tab.model ? tab.model.getValue() : $('#editor-fallback').value;
+  if (tab.model && state.editor) tab.viewState = state.editor.saveViewState();
+  tab.dirty = tab.content !== tab.savedContent;
+}
+
+let safetyBound = false;
+export function initEditorSafety() {
+  if (safetyBound) return;
+  safetyBound = true;
+  $('#editor-fallback').addEventListener('input', () => { captureActiveFile(); paintTabs(); });
+  window.addEventListener('beforeunload', event => {
+    captureActiveFile();
+    if (state.tabs.some(t => t.kind === 'file' && (t.dirty || t.saving))) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+  });
+}
+
 export function activateTab(id) {
+  captureActiveFile();
   state.activeTab = id;
   const t = state.tabs.find((x) => x.id === id);
   $('#welcome').classList.toggle('hidden', !t || t.kind !== 'welcome');
@@ -26,8 +49,8 @@ export function activateTab(id) {
   $('#agent-pane').classList.toggle('hidden', !t || t.kind !== 'agent');
   $('#diff-pane').classList.toggle('hidden', !t || t.kind !== 'diff');
   const showEditor = t && t.kind === 'file';
-  if (state.editor) $('#editor').classList.toggle('hidden', !showEditor);
-  else $('#editor-fallback').classList.toggle('hidden', !showEditor);
+  $('#editor').classList.toggle('hidden', !showEditor || !state.editor);
+  $('#editor-fallback').classList.toggle('hidden', !showEditor || !!state.editor);
   if (showEditor) applyEditor(t);
   if (t && t.kind === 'browser') ui.renderBrowser(t);
   if (t && t.kind === 'diff') paintDiff(t);
@@ -35,9 +58,19 @@ export function activateTab(id) {
 }
 
 export function closeTab(id) {
-  if (state.tabs.length === 1) return;
+  captureActiveFile();
+  const tab = state.tabs.find(t => t.id === id);
+  if (!tab || state.tabs.length === 1) return;
+  if (tab.saving) return ui.toast('正在保存，请等待完成后再关闭');
+  if (tab.dirty && !window.confirm('“' + tab.title + '”有未保存修改，确定放弃并关闭？')) return;
+  if (state.activeTab === id) {
+    state.activeTab = null;
+    if (state.editor) state.editor.setModel(null);
+  }
+  if (tab.modelListener) tab.modelListener.dispose();
+  if (tab.model) tab.model.dispose();
   state.tabs = state.tabs.filter((t) => t.id !== id);
-  if (state.activeTab === id) activateTab(state.tabs[state.tabs.length - 1].id);
+  if (state.activeTab == null) activateTab(state.tabs[state.tabs.length - 1].id);
   else paintTabs();
 }
 
@@ -83,15 +116,25 @@ export function ensureWelcome() {
 }
 
 export async function openFile(filePath) {
-  let tab = state.tabs.find((t) => t.id === 'file:' + filePath);
-  if (!tab) {
-    const res = await fetch(`/api/files/content?path=${encodeURIComponent(filePath)}`);
-    const data = await res.json();
-    if (!res.ok) return ui.toast(data.error || '无法打开');
-    tab = { id: 'file:' + filePath, title: filePath.split('/').pop(), kind: 'file', path: filePath, content: data.content };
-    state.tabs.push(tab);
-  }
-  activateTab(tab.id);
+  try {
+    let tab = state.tabs.find(t => t.id === 'file:' + filePath);
+    if (!tab) {
+      const res = await fetch(`/api/files/content?path=${encodeURIComponent(filePath)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '无法打开');
+      if (typeof data.content !== 'string' || !/^[a-f0-9]{64}$/.test(data.hash || '')) {
+        throw new Error('文件响应缺少内容或有效版本号');
+      }
+      // Another open may have completed while this request was pending.
+      tab = state.tabs.find(t => t.id === 'file:' + filePath);
+      if (!tab) {
+        tab = { id: 'file:' + filePath, title: filePath.split('/').pop(), kind: 'file',
+          path: filePath, content: data.content, savedContent: data.content, hash: data.hash, dirty: false };
+        state.tabs.push(tab);
+      }
+    }
+    activateTab(tab.id);
+  } catch (err) { ui.toast('打开失败：' + err.message); }
 }
 
 export function langFor(p) {
@@ -105,8 +148,16 @@ export function langFor(p) {
 
 export function applyEditor(tab) {
   if (state.editor && window.monaco) {
-    const model = window.monaco.editor.createModel(tab.content || '', langFor(tab.path || ''));
-    state.editor.setModel(model);
+    if (!tab.model) {
+      tab.model = window.monaco.editor.createModel(tab.content || '', langFor(tab.path || ''));
+      tab.modelListener = tab.model.onDidChangeContent(() => {
+        tab.content = tab.model.getValue();
+        tab.dirty = tab.content !== tab.savedContent;
+        paintTabs();
+      });
+    }
+    state.editor.setModel(tab.model);
+    if (tab.viewState) state.editor.restoreViewState(tab.viewState);
   } else {
     $('#editor-fallback').value = tab.content || '';
   }
@@ -161,17 +212,37 @@ export async function loadTree() {
   };
 }
 export async function saveActive() {
-  const tab = state.tabs.find((t) => t.id === state.activeTab);
-  if (!tab || tab.kind !== 'file') return;
-  const content = state.editor ? state.editor.getValue() : $('#editor-fallback').value;
-  await fetch('/api/files/content', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ path: tab.path, content })
-  });
-  tab.content = content;
-  ui.toast('已保存 ' + tab.path);
+  captureActiveFile();
+  const tab = state.tabs.find(t => t.id === state.activeTab);
+  if (!tab || tab.kind !== 'file' || tab.saving) return;
+  if (!/^[a-f0-9]{64}$/.test(tab.hash || '')) return ui.toast('缺少文件版本号，不能安全保存');
+  const content = tab.content;
+  tab.saving = true;
+  try {
+    const res = await fetch('/api/files/content', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: tab.path, content, expectedHash: tab.hash })
+    });
+    const data = await res.json();
+    if (res.status === 409) throw new Error('磁盘文件已变化，未覆盖。请保留当前编辑并核对磁盘版本');
+    if (!res.ok || data.success !== true) throw new Error(data.error || '服务器未确认保存成功');
+    if (!/^[a-f0-9]{64}$/.test(data.hash || '')) throw new Error('保存响应缺少版本号，请核对磁盘状态');
+    tab.hash = data.hash;
+    tab.savedContent = content;
+    captureActiveFile();
+    tab.dirty = tab.content !== tab.savedContent;
+    ui.toast('已保存 ' + tab.path + (tab.dirty ? '（仍有后续未保存修改）' : ''));
+  } catch (err) {
+    ui.toast('保存失败：' + err.message);
+  } finally {
+    tab.saving = false;
+    paintTabs();
+  }
 }
+
+ui.captureActiveFile = captureActiveFile;
+ui.initEditorSafety = initEditorSafety;
 
 ui.paintTabs = paintTabs;
 ui.activateTab = activateTab;

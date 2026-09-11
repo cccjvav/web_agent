@@ -83,16 +83,16 @@ function loadMonaco() {
     script.onload = () => {
       window.require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs' } });
       window.require(['vs/editor/editor.main'], () => {
+        ui.captureActiveFile();
         state.editor = window.monaco.editor.create($('#editor'), {
-          value: '',
-          language: 'plaintext',
+          model: null,
           theme: document.documentElement.dataset.theme === 'light' ? 'vs' : 'vs-dark',
           automaticLayout: true,
           minimap: { enabled: false },
           fontSize: 13,
           scrollBeyondLastLine: false
         });
-        $('#editor').classList.add('hidden');
+        ui.activateTab(state.activeTab);
         resolve(true);
       });
     };
@@ -104,6 +104,7 @@ function loadMonaco() {
 
 async function boot() {
   try {
+    ui.initEditorSafety();
     ui.bind();
   } catch (err) {
     console.error('bind failed', err);
@@ -114,7 +115,7 @@ async function boot() {
   ui.termLine('Web Agent terminal ready.', 'info');
   await Promise.all([ui.refreshStatus(), ui.loadTree(), ui.loadSkills(), ui.loadCustomizations(), loadMonaco()]);
   connectWs();
-  ui.activateTab('welcome');
+  ui.activateTab(state.activeTab);
 }
 
 boot().catch((err) => console.error(err));

@@ -10,6 +10,7 @@
 
 | 文件 | 覆盖 |
 |---|---|
+| `editorRuntime.test.js` | 真实编辑器ES模块＋DOM/Monaco fixture：切tab/dirty/关闭/卸载、HTTP保存结果、hash冲突、保存竞态与模型释放；非浏览器E2E |
 | `auditStorage.test.js` | 记忆日期/链接边界、敏感路径、git-header/BOM补丁、stale dryRun、写锁、mode保留、rename失败清理、Skill限额、用量延迟响应 |
 | `auditControl.test.js` | 本机API Host校验及实际HTTP/WS握手的Origin校验 |
 | `workbenchRuntime.test.js` | 实际ES模块主题初始化、DOM/storage/Monaco fixture；不是浏览器E2E |

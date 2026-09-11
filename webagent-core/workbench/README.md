@@ -53,7 +53,7 @@
 - **Function `setWsStatus`（L15–L25）** — 写 `#sb-ws`；有文案则去掉 hidden，空则藏起来。
 - **Function `scheduleWsReconnect`（L27–L36）** — 已有 timer 则 return；状态栏「事件流重连中」；`setTimeout(connectWs, delay)`，delay 从 1s 倍增，`Math.min(..., WS_BACKOFF_MAX=30000)`。
 - **Function `connectWs`（L38–L77）** — `ws(s)://location.host/ws`；已有 CONNECTING/OPEN 的 socket 则 return。`onopen` 把退避打回 1s 并清空状态栏。`command_output` → `ui.termLine`；`file_patched` → `ui.loadTree`；`todos_updated` → `ui.paintTodos`；`tool_call_end` → `ui.logBridgeTool`。**`ws.onclose` 调 `scheduleWsReconnect`**（服务端 30min idle / 1013 满员同样走这条）。constructor 抛错也重连。
-- **Function `loadMonaco`（L79–L103）** — jsDelivr monaco 0.52.2；`window.monaco.editor.create`；onerror 或 7s 超时。
+- **Function `loadMonaco`（L79–L103）** — jsDelivr monaco 0.52.2；创建前捕获textarea编辑，创建时model:null，随后恢复当前tab；onerror或7s超时保留fallback。
 - **Function `boot`（L105–L118）** — `ui.bind`、默认 code、并行 refresh/tree/skills/custom/monaco、WS、welcome。L120 `boot().catch(console.error)`。
 
 ---
@@ -80,15 +80,15 @@
 
 ### 📄 文件名：`js/tabs.js`
 
-- **文件职责：** 标签、文件树、打开文件、Monaco/fallback、保存。
-- **Function `paintTabs`（L4–L19）** / **`activateTab`（L21–L35）** — kind=welcome/browser/agent/diff/file；browser 调 `ui.renderBrowser`。
-- **Function `closeTab`（L37–L42）** — 只剩 1 个则 return。
-- **Function `openAgentWindow`（L44–L53）** / **`openDiff`（L55–L65）** / **`paintDiff`（L67–L76）** — `+` 非 `+++` 绿。
-- **Function `ensureWelcome`（L78–L83）**。
-- **Function `openFile`（L85–L95）** — GET `/api/files/content`。
-- **Function `langFor`（L97–L104）** / **`applyEditor`（L106–L113）** — `window.monaco`。
-- **Function `treeHtml`（L115–L126）** / **`loadTree`（L128–L162）** — GET `/api/files/tree`；recent 最多 6。
-- **Function `saveActive`（L163–L174）** — 仅 file tab PUT。
+- `paintTabs` / `activateTab`：切换前捕获当前文件内容，dirty显示圆点；按kind切换界面，隐藏未使用的Monaco/textarea。
+- `captureActiveFile` / `initEditorSafety`：textarea input与Monaco模型变更同步tab缓冲区；beforeunload发现未保存或保存中内容时请求浏览器确认。不能防止崩溃或强制退出。
+- `closeTab`：未保存需确认，保存中拒绝关闭；关闭后释放模型和监听器。至少保留一个tab。
+- `openFile`：GET读取内容及完整hash作为保存基线；请求失败提示；并发打开返回时再次查重，不覆盖已有编辑。
+- `langFor` / `applyEditor`：每文件复用一个Monaco model，保存/恢复视图状态；无Monaco时使用textarea。晚加载Monaco保留已输入内容。
+- `saveActive`：PUT携带expectedHash；只在HTTP成功、success:true且新hash有效时更新保存基线。409/网络/服务端错误保留编辑，不提示成功。重复保存被抑制；保存期间的新编辑仍dirty，响应不会污染其他tab。
+- `openAgentWindow` / `openDiff` / `paintDiff` / `ensureWelcome`：其他页签及差异展示。
+- `treeHtml` / `loadTree`：目录树与最近文件入口。
+- 验证：agent-host/tests/editorRuntime.test.js执行真实模块＋DOM/Monaco fixture，不代表真实浏览器验收。
 
 ---
 
