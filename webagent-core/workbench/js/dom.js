@@ -1,5 +1,24 @@
 import { $, $$, ui } from './state.js';
 
+export function applyTheme(theme) {
+  const selected = theme === 'light' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = selected;
+  try { localStorage.setItem('webagent-theme', selected); } catch (_) { /* private/storage-disabled browser */ }
+  const button = $('#btn-theme');
+  if (button) {
+    button.textContent = selected === 'light' ? '深色' : '浅色';
+    button.setAttribute('aria-label', `切换到${selected === 'light' ? '深色' : '浅色'}主题`);
+  }
+  if (window.monaco) window.monaco.editor.setTheme(selected === 'light' ? 'vs' : 'vs-dark');
+  return selected;
+}
+
+export function initTheme() {
+  let saved = 'dark';
+  try { saved = localStorage.getItem('webagent-theme') || 'dark'; } catch (_) {}
+  return applyTheme(saved);
+}
+
 export function toast(text) {
   const el = $('#toast');
   el.hidden = false;

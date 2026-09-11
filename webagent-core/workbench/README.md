@@ -68,14 +68,13 @@
 
 ### 📄 文件名：`js/dom.js`
 
-- **文件职责：** toast / 转义 / 极简 markdown / 终端行 / 模态 / 右侧页签。
-- **Function `applyTheme` / `initTheme`（L3–L16）** — `data-theme=light|dark` 写入 html 与 `localStorage webagent-theme`；按钮文案「浅色/深色」。
-- **Function `toast`（L18–L24）** — 显示 2.2s。
-- **Function `escapeHtml`（L11–L15）** — 五字符。
-- **Function `renderMd`（L17–L27）** — escape 后再 fence/inline/bold/标题/列表/`<br>`。
-- **Function `termLine`（L29–L36）**。
-- **Function `openModal` / `closeModal` / `showPage`（L38–L47）**。
-- **Function `setRight`（L49–L54）** — chat/bridge。
+- **文件职责：** 主题、toast、转义、极简 Markdown、终端行、模态与右侧页签。函数名是导航；本节不维护易漂移的行号。
+- **Function `applyTheme` / `initTheme`** — 只允许 dark/light；更新 html 的 data-theme，尝试持久化 localStorage `webagent-theme`；存储被禁用不抛错。按钮文本/aria-label 表示要切换到的主题，Monaco 已加载则同步 setTheme。
+- **Function `toast`** — 显示2.2秒。
+- **Function `escapeHtml` / `renderMd`** — 五字符转义，随后处理简化 Markdown；不是完整 Markdown 实现。
+- **Function `termLine`** — 以 textContent 添加终端行。
+- **Function `openModal` / `closeModal` / `showPage` / `setRight`** — 设置页和Chat/Bridge切换。
+- **验证**：`workbenchRuntime.test.js` 执行实际 ES module 并验证主题/存储故障；它使用DOM fixture，不代表真实浏览器E2E已完成。`app.js` 初始化Monaco时读取当前data-theme。
 
 ---
 

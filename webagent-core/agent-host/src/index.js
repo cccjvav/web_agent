@@ -10,7 +10,7 @@ const apiRouter = require('./api/routes');
 const eventBus = require('./utils/eventBus');
 const store = require('./models/store');
 const { rejectUnlessLocalControl, isLocalControlPlane } = require('./utils/localControl');
-const { mcpCors, rejectCrossSiteApi, rejectDisallowedMcpOrigin } = require('./utils/corsAllow');
+const { mcpCors, rejectCrossSiteApi, rejectDisallowedMcpOrigin, isAllowedApiBrowserOrigin } = require('./utils/corsAllow');
 const tracker = require('./usage/tracker');
 
 persistIdentity(store);
@@ -74,7 +74,13 @@ mcpApp.use('/mcp', rejectDisallowedMcpOrigin, mcpRouter);
 mcpApp.use('/api', rejectUnlessLocalControl, rejectCrossSiteApi, apiRouter);
 
 function attachWss(server) {
-  const wss = new WebSocketServer({ server, path: '/ws' });
+  const wss = new WebSocketServer({
+    server,
+    path: '/ws',
+    verifyClient({ req }) {
+      return isLocalControlPlane(req) && isAllowedApiBrowserOrigin(req.headers.origin);
+    }
+  });
   wss.on('connection', (ws, req) => {
     if (!isLocalControlPlane(req)) {
       try { ws.close(1008, 'local only'); } catch (_) {}

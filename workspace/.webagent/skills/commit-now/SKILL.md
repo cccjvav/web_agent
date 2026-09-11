@@ -14,7 +14,7 @@
 
 ## Code
 
-1. **一块测绿就提交。** `cd webagent-core/agent-host && npm test`（或根目录 `run-tests.cmd`）通过后，立刻 `git add` 这一块相关文件 → `git commit` → `git push origin` **当前会话分支**（本仓库是 `arena/01a05d84-web-agent`）。不要等 GitHub + 用量 + admin + 假 UI + 文档 + Skill 攒成一次超大提交。
+1. **一块测绿就提交。** `cd webagent-core/agent-host && npm test`（或根目录 `run-tests.cmd`）通过后，立刻 `git add` 这一块相关文件 → `git commit` → `git push origin` **当前会话分支**（以当前Arena会话提供的固定分支为准，不沿用历史会话名）。不要等 GitHub + 用量 + admin + 假 UI + 文档 + Skill 攒成一次超大提交。
 2. **未跟踪的新文件必须 `git add`。** 只改已跟踪文件却忘了 add `src/auth/` 这类新目录，reset 后一样没了。
 3. **不要用工作区当备份。** `.webagent/config.json` 进 gitignore；PAT 本来就不该落盘。唯一可靠备份是 **已 push 的 commit**。
 4. **写 Skill 也可以在中途。** 用户点名「记成教训」时立刻写，不要放到全部功能做完。本文件就是这条规则本身。

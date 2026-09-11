@@ -46,7 +46,7 @@ node docs-site/serve.js
 |---|---|
 | `index.html` / `styles.css` / `app.js` | 壳 |
 | `build.js` | 把 Markdown 打成 `content.js`（无 npm 依赖） |
-| `serve.js` | 先 build，再在 **127.0.0.1:4173** 提供静态页（`DOCS_HOST` 可覆盖）。路径必须落在本目录内（`ROOT + sep`）。侧栏链到 `#/guide` 等站内 hash，**不**链 `../架构导读.md`（那个路径 404） |
+| `serve.js` | 先 build，再在 **127.0.0.1:4173** 提供静态页（`DOCS_HOST` 可覆盖）。路径必须落在本目录内（`ROOT + sep`）；畸形URL、非法百分号编码/NUL返回400而不退出进程。`DOCS_PORT=0`可用于测试，日志显示实际监听端口。侧栏链到 `#/guide` 等站内 hash，**不**链 `../架构导读.md`（那个路径 404） |
 | `content.js` | 生成物；不要手改 |
 
 改导读或行级 README 后：再执行一次 `node docs-site/build.js` 或重启 `serve.js`。`npm test` 末尾的 `docsSite.test.js` 会再跑一遍 build，并断言提交的 `content.js` 没有漂移（`builtAt` 只精确到日期）。

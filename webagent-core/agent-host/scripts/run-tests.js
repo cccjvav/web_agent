@@ -48,7 +48,28 @@ const preferred = [
 const found = fs.readdirSync(testsDir).filter((f) => f.endsWith('.test.js'));
 const extra = found.filter((f) => !preferred.includes(f)).sort();
 const missing = preferred.filter((f) => !found.includes(f));
-const files = [...preferred.filter((f) => found.includes(f)), ...extra];
+let filter = '';
+for (const arg of process.argv.slice(2)) {
+  if (arg.startsWith('--filter=') && arg.slice(9)) filter = arg.slice(9);
+  else {
+    console.error('Usage: npm test -- --filter=filename-substring');
+    process.exit(2);
+  }
+}
+if (missing.length) {
+  console.error('missing preferred files:', missing.join(', '));
+  process.exit(1);
+}
+const files = [...preferred, ...extra].filter(f => !filter || f.includes(filter));
+if (!files.length) {
+  console.error(`No test files match filter: ${filter}`);
+  process.exit(2);
+}
+const timeout = Number(process.env.WEBAGENT_TEST_TIMEOUT_MS || 120000);
+if (!Number.isInteger(timeout) || timeout < 1000 || timeout > 600000) {
+  console.error('WEBAGENT_TEST_TIMEOUT_MS must be an integer from 1000 to 600000.');
+  process.exit(2);
+}
 
 let failed = 0;
 const results = [];
@@ -56,8 +77,10 @@ for (const f of files) {
   console.log(`\n—— ${f} ——`);
   const r = spawnSync(process.execPath, [path.join(testsDir, f)], {
     cwd: root,
-    stdio: 'inherit'
+    stdio: 'inherit',
+    timeout
   });
+  if (r.error) console.error(`${f}: ${r.error.message}`);
   const code = r.status == null ? 1 : r.status;
   const ok = code === 0;
   if (!ok) failed += 1;
@@ -68,9 +91,6 @@ for (const f of files) {
 console.log('\n—— summary ——');
 for (const r of results) {
   console.log(`${r.ok ? 'PASS' : 'FAIL'}  ${r.file}`);
-}
-if (missing.length) {
-  console.log('missing preferred files:', missing.join(', '));
 }
 if (failed) {
   console.error(`\n${failed}/${files.length} test files failed`);

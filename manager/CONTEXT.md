@@ -8,9 +8,10 @@
 - **创建时间**：2026-09
 
 ## 当前状态
-- **阶段**：S4-终端化（代码完成：S4-1 安装包 4a85ecf / S4-2 默认壳+抛光 8a73df0 / S4-3 模型弹层 ce6d52f；S1–S3 已完成）
-- **正在做**：阶段 6 多 Agent 任务板代码面完成（C1 `507ceb9` + C2 skill/文档）；等真机跑 CHECKLIST D1–D13 反馈
-- **阻塞项**：无代码阻塞；真机验收唯一基线 review/CHECKLIST_WINDOWS.md（A/B 继承项 + S4 D 节 D1–D8），待 Windows 执行
+- **阶段**：2026-09-11审计交叉验证与分批修复；历史S4/S6代码完成不代表缺陷清零。
+- **正在做**：第一批路径/Host/WS/补丁/主题/Skill/用量/docs/runner修复及验收。
+- **唯一活台账**：review/AUDIT_CROSSCHECK_2026-09-11.md（外部35项发现、原F01–F38、验收结果与决策）；阶段记录见manager/stages/audit-2026-09-11.md。
+- **验收限制**：Chromium下载失败；Windows/ISCC、真实VS Code PTY/隧道/模型尚未运行。
 
 ## 已完成阶段摘要
 | 阶段 | 做了什么 | 详情 |

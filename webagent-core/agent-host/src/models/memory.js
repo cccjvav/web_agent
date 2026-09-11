@@ -1,32 +1,42 @@
 const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
+const { resolveSafePath } = require('../tools/patchEngine');
+const { ProtocolError } = require('../mcp/errors');
 
 function memoryDir() {
-  return path.join(config.workspaceRoot, '.webagent', 'memory');
+  return resolveSafePath('.webagent/memory');
 }
 
 function dayFile(day) {
-  const stamp = day || new Date().toISOString().slice(0, 10);
-  return path.join(memoryDir(), `${stamp}.md`);
+  const stamp = day == null ? new Date().toISOString().slice(0, 10) : String(day);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(stamp)
+      || !Number.isFinite(Date.parse(stamp))
+      || new Date(stamp).toISOString().slice(0, 10) !== stamp) {
+    throw new ProtocolError('E_BAD_ARGS', 'day must be a valid YYYY-MM-DD calendar date.');
+  }
+  return resolveSafePath(`.webagent/memory/${stamp}.md`);
 }
 
 function remember({ text, day } = {}) {
   const body = String(text || '').trim();
   if (!body) return { ok: false, error: 'text required' };
-  fs.mkdirSync(memoryDir(), { recursive: true });
   const file = dayFile(day);
+  fs.mkdirSync(memoryDir(), { recursive: true });
   const line = `\n- ${new Date().toISOString()} ${body.replace(/\n+/g, ' ')}\n`;
   fs.appendFileSync(file, fs.existsSync(file) ? line : `# ${path.basename(file, '.md')}\n${line}`, 'utf8');
   return { ok: true, path: path.relative(config.workspaceRoot, file) };
 }
 
 function recall({ limit = 40, day } = {}) {
-  fs.mkdirSync(memoryDir(), { recursive: true });
+  const selectedFile = day == null ? null : dayFile(day);
+  const dir = memoryDir();
   const cap = Math.max(1, Math.min(200, Number(limit) || 40));
-  const files = day
-    ? [dayFile(day)]
-    : fs.readdirSync(memoryDir()).filter((f) => f.endsWith('.md')).sort().reverse().map((f) => path.join(memoryDir(), f));
+  const files = selectedFile
+    ? [selectedFile]
+    : (fs.existsSync(dir) ? fs.readdirSync(dir) : [])
+      .filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f)).sort().reverse()
+      .map((f) => dayFile(f.slice(0, -3)));
   const bullets = [];
   let truncated = false;
   for (const file of files) {

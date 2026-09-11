@@ -16,6 +16,19 @@ function tempSibling(fullPath) {
   return `${fullPath}.tmp.${process.pid}.${Date.now()}.${crypto.randomBytes(4).toString('hex')}`;
 }
 
+/** Replace text without losing an existing executable's permissions; clean up on failure. */
+function atomicWriteText(fullPath, content) {
+  const tmp = tempSibling(fullPath);
+  const mode = fs.existsSync(fullPath) ? fs.statSync(fullPath).mode & 0o777 : null;
+  try {
+    fs.writeFileSync(tmp, content, { encoding: 'utf8', flag: 'wx', ...(mode == null ? {} : { mode }) });
+    if (mode != null) fs.chmodSync(tmp, mode);
+    fs.renameSync(tmp, fullPath);
+  } finally {
+    try { fs.unlinkSync(tmp); } catch (err) { if (err.code !== 'ENOENT') throw err; }
+  }
+}
+
 function toPosixRel(p) {
   return String(p || '').replace(/\\/g, '/');
 }
@@ -23,7 +36,8 @@ function toPosixRel(p) {
 const writeLocks = new Map();
 
 function writeLockKey(filePath) {
-  return toPosixRel(String(filePath || '')).replace(/^\.\//, '') || '.';
+  const canonical = realPathOrJoin(resolveSafePath(filePath));
+  return process.platform === 'win32' ? canonical.toLowerCase() : canonical;
 }
 
 function lockOne(key, fn) {
@@ -138,6 +152,10 @@ function resolveSafePath(relPath) {
   }
   const root = path.resolve(config.workspaceRoot);
   const incoming = String(relPath || '.').replace(/[/\\]+/g, path.sep);
+  if (process.platform === 'win32' && incoming.split(path.sep).some(part =>
+    part !== '.' && part !== '..' && (part.includes(':') || /[. ]$/.test(part)))) {
+    throw new ProtocolError('E_BAD_ARGS', 'Ambiguous Windows path component.');
+  }
   const resolved = path.resolve(root, incoming);
   const rel = path.relative(root, resolved);
   const posix = toPosixRel(rel);
@@ -148,6 +166,9 @@ function resolveSafePath(relPath) {
     throw new Error(`Security error: path "${relPath}" is outside workspace root.`);
   }
   if (posix && posix !== '.') assertNotSensitive(posix);
+  const real = realPathOrJoin(resolved);
+  const realRel = toPosixRel(path.relative(realPathOrJoin(root), real));
+  if (realRel && realRel !== '.') assertNotSensitive(realRel);
   return resolved;
 }
 
@@ -241,6 +262,7 @@ async function applyPatch(opts = {}) {
 }
 
 async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = false, occurrence } = {}) {
+  if (typeof patch !== 'string') throw new ProtocolError('E_BAD_ARGS', 'patch must be a string.');
   const fullPath = resolveSafePath(filePath);
   const blocksEarly = parseSearchReplaceBlocks(patch);
   rejectUnsupportedPatchFormat(filePath, patch, blocksEarly);
@@ -323,9 +345,19 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
 
   if (blocks.length > 0) {
     patchedContent = applySearchBlocks(currentContent, blocks, { filePath, occurrence });
-  } else if (patch.startsWith('--- ') && patch.includes('@@')) {
+  } else if (looksLikeUnifiedDiff(patch) || /^--- |^\+\+\+ |^@@/m.test(patch)) {
     const jsdiff = require('diff');
-    const applied = jsdiff.applyPatch(toLf(currentContent), toLf(patch));
+    let parsed;
+    try {
+      parsed = jsdiff.parsePatch(toLf(patch).replace(/^\uFEFF/, '').trimStart());
+    } catch (err) {
+      throw new ProtocolError('E_BAD_ARGS', `Invalid unified diff: ${err.message}`);
+    }
+    if (parsed.length !== 1 || !parsed[0].hunks || !parsed[0].hunks.length
+        || parsed[0].oldFileName === '/dev/null' || parsed[0].newFileName === '/dev/null') {
+      throw new ProtocolError('E_BAD_ARGS', 'Expected one unified diff for a single existing file with hunks.');
+    }
+    const applied = jsdiff.applyPatch(toLf(currentContent), parsed[0]);
     if (applied === false) {
       throw new Error(`Unified diff failed to apply cleanly to "${filePath}".`);
     }
@@ -345,9 +377,7 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
     };
   }
 
-  const tempPath = tempSibling(fullPath);
-  fs.writeFileSync(tempPath, patchedContent, 'utf8');
-  fs.renameSync(tempPath, fullPath);
+  atomicWriteText(fullPath, patchedContent);
 
   const newHash = computeHash(patchedContent);
   rememberHash(filePath, newHash);
@@ -372,6 +402,7 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
 module.exports = {
   applyPatch,
   computeHash,
+  atomicWriteText,
   tempSibling,
   resolveSafePath,
   isInsideWorkspace,

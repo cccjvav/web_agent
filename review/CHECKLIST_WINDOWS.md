@@ -110,7 +110,7 @@ Bridge 页选中 DeepSeek++ 或 Chat Plus 卡片 → 出现「复制规则」按
 
 ## C 节：不需要在真机做的（沙箱已覆盖）
 
-- `npm test` 32/32、`npm audit` 0 漏洞、`node --check` 全量语法、md 链接/密钥/gitignore 扫描（Linux 侧已绿；真机只需 A10/B1 的 Windows 侧确认）
+- `npm test` 全量（文件数以runner实际输出为准）、`npm audit` 0 漏洞、`node --check` 全量语法、md 链接/密钥/gitignore 扫描（Linux 侧已绿；真机只需 A10/B1 的 Windows 侧确认）
 - XSS 面审查（escapeHtml/textContent 全覆盖）、MCP 认证链、内存有界性、原子写、子进程清理——源码级已验
 - V1–V5 修复项的验收（见同目录 REPORT_v2…v5 矩阵）；ShunCode 对齐 S1–S4 代码面（见 REPORT_SHUNCODE_S1…S4）
 

@@ -21,20 +21,20 @@
 - **文件职责：** 读写 usage.json；15 分钟 interval + 调用后 4 秒 debounce 上报。timer `unref`，不挡测试退出。
 - **核心类/函数清单：**
 
-  - **Function `usagePath`（L11–L13）** — `<workspace>/.webagent/usage.json`。
-  - **Function `today`（L15–L17）** — `toISOString().slice(0,10)`。
-  - **Function `emptyDay(day)`（L19–L27）** — `toolCalls/fail` 0，`lastAt`/`lastReportAt` null。
-  - **Function `load`（L29–L44）** — 坏 JSON 或 `day` 不是今天 → `emptyDay()`。
-  - **Function `save(next)`（L46–L51）** — mkdir + 美化 JSON。
-  - **Function `successRate(rec)`（L53–L56）** — 无调用 → `null`；否则 `round((1-fail/toolCalls)*100)`。
-  - **Function `snapshot`（L58–L66）** — load + successRate + `telemetryConfigured` + `intervalMs`。
-  - **Function `record({ ok=true })`（L68–L76）** — toolCalls+1；`ok` 假则 fail+1；写 `lastAt`；`scheduleReport`。
-  - **Function `identity`（L78–L87）** — `provider==='github'` 才带 githubUser（去 `@`）和 githubId。
-  - **Function `payload`（L89–L105）** — 上报 JSON：installId、github、day、计数、product、version。
-  - **Function `reportNow({ fetchFn=fetch })`（L107–L129）** — 缺 URL/token → `{ skipped:true, reason:'not-configured' }`；无调用 → `'no-calls'`。POST Bearer。`!ok` 不改 lastReportAt。成功写 `lastReportAt`。
-  - **Function `scheduleReport`（L131–L138）** — 已有 debounce 则 return；否则 4000ms 后 `reportNow().catch` 空。
-  - **Function `startReporter`（L140–L146）** — 已有 timer 则 return；`setInterval` 15 分钟。
-  - **Function `stopReporter`（L148–L157）** — 清 interval 与 debounce。测试用。
+  - **Function `usagePath`** — `<workspace>/.webagent/usage.json`。
+  - **Function `today`** — `toISOString().slice(0,10)`。
+  - **Function `emptyDay(day)`** — `toolCalls/fail` 0，`lastAt`/`lastReportAt` null。
+  - **Function `load`** — 坏 JSON 或 `day` 不是今天 → `emptyDay()`。
+  - **Function `save(next)`** — mkdir + 美化 JSON。
+  - **Function `successRate(rec)`** — 无调用 → `null`；否则 `round((1-fail/toolCalls)*100)`。
+  - **Function `snapshot`** — load + successRate + `telemetryConfigured` + `intervalMs`。
+  - **Function `record({ ok=true })`** — toolCalls+1；`ok` 假则 fail+1；写 `lastAt`；`scheduleReport`。
+  - **Function `identity`** — `provider==='github'` 才带 githubUser（去 `@`）和 githubId。
+  - **Function `payload`** — 上报 JSON：installId、github、day、计数、product、version。
+  - **Function `reportNow({ fetchFn=fetch })`** — 缺 URL/token → `{ skipped:true, reason:'not-configured' }`；无调用 → `'no-calls'`。POST Bearer。`!ok` 不改 lastReportAt。成功后重新load，只对同一天的最新记录合并lastReportAt；不把请求前的旧计数写回，跨日响应不更新新一天。回归见auditStorage.test.js。
+  - **Function `scheduleReport`** — 已有 debounce 则 return；否则 4000ms 后 `reportNow().catch` 空。
+  - **Function `startReporter`** — 已有 timer 则 return；`setInterval` 15 分钟。
+  - **Function `stopReporter`** — 清 interval 与 debounce。测试用。
 
 - **关键变量：** L6 `INTERVAL_MS = 15*60*1000`；L8–L9 `timer` / `debounce`。
 

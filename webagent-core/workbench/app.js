@@ -86,7 +86,7 @@ function loadMonaco() {
         state.editor = window.monaco.editor.create($('#editor'), {
           value: '',
           language: 'plaintext',
-          theme: 'vs-dark',
+          theme: document.documentElement.dataset.theme === 'light' ? 'vs' : 'vs-dark',
           automaticLayout: true,
           minimap: { enabled: false },
           fontSize: 13,

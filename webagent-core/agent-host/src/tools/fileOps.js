@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
-const { resolveSafePath, isInsideWorkspace, computeHash, toPosixRel, withWriteLock, tempSibling } = require('./patchEngine');
+const { resolveSafePath, isInsideWorkspace, computeHash, toPosixRel, withWriteLock, atomicWriteText } = require('./patchEngine');
 const { isHidden } = require('./sensitive');
 const eventBus = require('../utils/eventBus');
 const { ProtocolError, ExecutionError } = require('../mcp/errors');
@@ -171,14 +171,7 @@ function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = fal
     }
   }
   fs.mkdirSync(path.dirname(fullPath), { recursive: true });
-  const tmpPath = tempSibling(fullPath);
-  fs.writeFileSync(tmpPath, content, 'utf8');
-  try {
-    fs.renameSync(tmpPath, fullPath);
-  } catch (err) {
-    try { fs.unlinkSync(tmpPath); } catch (_) {}
-    throw err;
-  }
+  atomicWriteText(fullPath, content);
   const hash = computeHash(content);
 
   eventBus.broadcast('file_written', { filePath, hash, size: content.length });

@@ -94,10 +94,13 @@ function loadCustomPatterns() {
 
 function isSensitive(relPath) {
   const rel = toPosix(relPath);
-  const base = rel.split('/').pop();
-  if (SENSITIVE_EXCEPTIONS.includes(base)) return false;
+  // Built-in protections are case-insensitive and apply at every directory depth.
+  const parts = rel.toLowerCase().split('/');
+  const suffixes = parts.map((_, i) => parts.slice(i).join('/'));
+  const base = parts[parts.length - 1];
   for (const pat of SENSITIVE_PATTERNS) {
-    if (globMatch(pat, rel)) return true;
+    if (SENSITIVE_EXCEPTIONS.includes(base) && (pat === '.env' || pat === '.env.*')) continue;
+    if (suffixes.some((suffix) => globMatch(pat, suffix))) return true;
   }
   for (const pat of loadCustomPatterns()) {
     if (pat.startsWith('!')) {

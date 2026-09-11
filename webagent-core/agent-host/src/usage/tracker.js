@@ -123,9 +123,11 @@ async function reportNow({ fetchFn = fetch } = {}) {
     const text = await resp.text().catch(() => '');
     return { skipped: false, ok: false, status: resp.status, error: text.slice(0, 200) };
   }
-  rec.lastReportAt = new Date().toISOString();
-  save(rec);
-  return { skipped: false, ok: true, lastReportAt: rec.lastReportAt };
+  const lastReportAt = new Date().toISOString();
+  // Calls may have arrived (or the day changed) while the HTTP request was in flight.
+  const latest = load();
+  if (latest.day === rec.day) save({ ...latest, lastReportAt });
+  return { skipped: false, ok: true, lastReportAt };
 }
 
 function scheduleReport() {

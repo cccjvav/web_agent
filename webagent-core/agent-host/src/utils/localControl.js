@@ -46,6 +46,10 @@ function isPublicHost(req) {
 
 function isLocalControlPlane(req) {
   if (isTunnelRequest(req)) return false;
+  // A loopback socket alone is not proof of a local browser origin (DNS rebinding).
+  const host = String((req && req.headers && req.headers.host) || '');
+  const localHost = /^(localhost|127\.0\.0\.1|\[::1\])(?::([0-9]{1,5}))?$/i.exec(host);
+  if (!localHost || (localHost[2] && (Number(localHost[2]) < 1 || Number(localHost[2]) > 65535))) return false;
   if (isPublicHost(req)) return false;
   const ip = (req && req.socket && req.socket.remoteAddress) || (req && req.ip);
   return isLoopbackAddress(ip);

@@ -117,10 +117,11 @@
 
 ### 📄 文件名：`memory.js`
 
-- **文件职责：** `.webagent/memory/YYYY-MM-DD.md` 追加备忘。
-- **Function `memoryDir`（L5–L7）** / **`dayFile`（L9–L12）** — day 缺省 ISO 日期。
-- **Function `remember`（L14–L22）** — text trim 空 → `{ ok:false, error:'text required' }`。存在则 append；否则先写 `# 日期`。换行压成空格。
-- **Function `recall`（L24–L57）** — 指定 day 只读一天；否则所有 `.md` sort reverse。只收集 `^\\s*-\\s` 条目（标题不算）。`limit` 夹到 1–200（默认 40），满额或正文超 8000 字则 `truncated:true`。空则 `'(empty memory)'`。返回 `{ files, text, count, truncated }`。
+- **文件职责：** `.webagent/memory/YYYY-MM-DD.md` 追加备忘。Ask/Plan允许记忆元数据，不表示允许任意路径写入。
+- **Function `memoryDir` / `dayFile`** — 日期缺省UTC当天；显式day必须是有效日历日期YYYY-MM-DD，坏日期抛E_BAD_ARGS。目录、文件均经resolveSafePath验证，含真实链接目标。
+- **Function `remember`** — text空返回ok:false；先验证日期/路径，再mkdir和append。新文件加日期标题，正文换行压成空格。
+- **Function `recall`** — 不创建目录；指定day读一天，否则仅枚举日期命名的md并倒序读取。只收集列表条目，limit为1–200，文本预算8000字符；无记忆返回empty。日期命名但非法的文件/越界链接会明确报错，不读取外部内容。
+- **验证**：auditStorage的坏日期/闰日/链接边界回归。
 
 ---
 

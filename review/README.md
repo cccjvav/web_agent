@@ -4,7 +4,8 @@
 
 | 文件 | 留它当… |
 |---|---|
-| [REPORT_v5.md](./REPORT_v5.md) | 最近一次验收：V4-1 / V3-2 / V3-4 已闭环，当时无新缺陷 |
+| [AUDIT_CROSSCHECK_2026-09-11.md](./AUDIT_CROSSCHECK_2026-09-11.md) | 当前活台账：外部35项发现＋4项建议逐条核对；第一批修复与F01–F38剩余任务 |
+| [REPORT_v5.md](./REPORT_v5.md) | 历史验收：V4-1 / V3-2 / V3-4 已闭环，当时无新缺陷 |
 | [REPORT_v6.md](./REPORT_v6.md) | 拆模块建议（可选备忘）。**没有**当成施工任务跑；贴桥不靠拆文件 |
 | [CHECKLIST_WINDOWS.md](./CHECKLIST_WINDOWS.md) | Windows 真机验收**唯一活基线**（A/B 继承项 + D1–D13，含阶段 6 任务板） |
 | [PROMPT.md](./PROMPT.md) | 审查助手用过的提示词；文首有 1–10 完成对照 |

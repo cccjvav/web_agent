@@ -67,7 +67,7 @@
   - **两套 app（L62–74）**
     - L62–66 `uiApp`：health、`/api` 先 `rejectUnlessLocalControl` 再 `rejectCrossSiteApi`、工作台静态 + SPA。**没有** cors、**没有** `/mcp`。
     - L68–74 `mcpApp`：`mcpCors()`（白名单，不是 `cors()` 全开）、health、`oauth.router`、`/mcp` 先 `rejectDisallowedMcpOrigin` 再 mcpRouter、`/api` 先 `rejectUnlessLocalControl` 再 `rejectCrossSiteApi`。**没有**静态工作台、**没有** SPA。
-  - **Function `attachWss(server)`（L76–96）** — `WebSocketServer` path `/ws`；**非本机控制面直接 close(1008)**；否则 `addWsClient`，立刻 send `type:'connected'`，payload 只含 `serverName`、`version`（**不含 secretKey**）。
+  - **Function `attachWss(server)`（L76–96）** — `WebSocketServer` path `/ws`；**verifyClient在upgrade阶段拒绝非本机控制面/外站Origin**（无Origin本机客户端仍允许）；connection处理保留close(1008)兜底；否则 `addWsClient`，立刻 send `type:'connected'`，payload 只含 `serverName`、`version`（**不含 secretKey**）。
   - **Function `listenOrExit(server, port, label)`（L102–112）** — `error.code==='EADDRINUSE'` 打印占用后 `exit(1)`；其它 error 同样退出；`listen(port, config.host)`（默认 127.0.0.1）。
   - **双服务器（L98–141）**
     - L98–100：`uiServer = createServer(uiApp)`，`mcpServer = createServer(mcpApp)`；**只**给 uiServer attachWss。

@@ -49,13 +49,13 @@
 ### 📄 文件名：`localControl.js`
 
 - **文件职责：** 判断请求是不是本机控制面。隧道/公网 Host 打 `/api` 得 404。
-- **Function `isLoopbackAddress(addr)`（L3–L9）** — `127.0.0.1` / `::1` / `::ffff:127.0.0.1` / `localhost`。
-- **Function `isTunnelRequest(req)`（L11–L20）** — 头 `cf-ray` / `cf-connecting-ip` / `cf-visitor` / `cf-ew-via` / `cdn-loop`。
-- **Function `hostName(req)`（L22–L28）** — `Host` 去端口、去 IPv6 方括号。
-- **Function `publicTunnelHost()`（L30–L34）** — 从 `config.publicTunnelUrl` 取出主机名（无则空串）。
-- **Function `isPublicHost(req)`（L36–L45）** — `*.trycloudflare.com`、ngrok 域名，或当前 `publicTunnelUrl` 的 Host（Named Tunnel 自定义域名）。
-- **Function `isLocalControlPlane(req)`（L47–L52）** — 隧道头或公网 Host → 假；否则看 `socket.remoteAddress` 是否回环。
-- **Function `rejectUnlessLocalControl(req, res, next)`（L54–L57）** — 本机 `next()`，否则 404 `{ error:'not found' }`。
+- **Function `isLoopbackAddress(addr)`** — `127.0.0.1` / `::1` / `::ffff:127.0.0.1` / `localhost`。
+- **Function `isTunnelRequest(req)`** — 头 `cf-ray` / `cf-connecting-ip` / `cf-visitor` / `cf-ew-via` / `cdn-loop`。
+- **Function `hostName(req)`** — `Host` 去端口、去 IPv6 方括号。
+- **Function `publicTunnelHost()`** — 从 `config.publicTunnelUrl` 取出主机名（无则空串）。
+- **Function `isPublicHost(req)`** — `*.trycloudflare.com`、ngrok 域名，或当前 `publicTunnelUrl` 的 Host（Named Tunnel 自定义域名）。
+- **Function `isLocalControlPlane(req)`** — 必须无隧道特征头，Host严格为localhost/127.0.0.1/[::1]及可选有效端口，再检查socket.remoteAddress为回环；未知/缺失/畸形Host均拒绝。
+- **Function `rejectUnlessLocalControl(req, res, next)`** — 本机 `next()`，否则 404 `{ error:'not found' }`。
 
 ---
 
@@ -79,9 +79,9 @@
 
 ## 3. 执行逻辑流
 
-1. `index.js` `attachWss`：浏览器连 3000 的 `/ws` → `addWsClient`，并立即收到 `connected`（**不含** secretKey）。mcp 端口不挂 WebSocket。
+1. `index.js` `attachWss`：浏览器连3000的`/ws`，先在upgrade阶段验证本机控制面＋本机HTTP(S) Origin（无Origin允许本机客户端），通过才`addWsClient`，并立即收到 `connected`（**不含** secretKey）。mcp 端口不挂 WebSocket。
 2. mcpApp 先 `mcpCors()`：浏览器预检只给扩展和名单里的聊天站回 `Access-Control-Allow-Origin`。`/mcp` 再过 `rejectDisallowedMcpOrigin`：名单外 Origin 的 POST 得 403，工具不跑。
-3. 两套 app 的 `/api` 先过 `rejectUnlessLocalControl`：Cloudflare 头、`*.trycloudflare.com` / ngrok Host、或当前 `publicTunnelUrl` 主机名 → 404；本机回环 `next()`。再过 `rejectCrossSiteApi`：`https://evil.example` 这类 Origin 同样 404。无 Origin 的 Node 插件 / 测试仍通。
+3. 两套 app 的 `/api` 先过 `rejectUnlessLocalControl`：Cloudflare 头、`*.trycloudflare.com` / ngrok Host、或当前 `publicTunnelUrl` 主机名 → 404；只有明确本机Host与回环socket才`next()`。再过 `rejectCrossSiteApi`：`https://evil.example` 这类 Origin 同样 404。无 Origin 的 Node 插件 / 测试仍通。
 4. 工具/MCP 调用 `broadcast` → 写入 logs + 推到所有打开的工作台。
 5. 工作台 `connectWs` 根据 type 刷新终端、文件树、BRIDGE 工具卡、todos。`onclose` 后 1s→30s 退避重连；状态栏写「事件流重连中」。有工具广播时服务端 idle 计时重置，空闲满 30 分钟仍会 1001 关掉（客户端再连）。
 6. `patchEngine` 写盘后用 `createUnifiedDiff` 把 diff 放进 broadcast payload，工作台可开 diff 页。

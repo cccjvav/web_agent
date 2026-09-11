@@ -11,6 +11,14 @@
 
 因此**不做**：操作系统级命令沙箱、系统钥匙串、把一把 URL 密钥拆成多把、**远程**交互式 PTY、按客户端隔离全部全局状态。理由见 [架构导读.md](./架构导读.md) 第 12 节。已经做的：文件工具路径不能跑出工作区、远程常见破坏性命令拒绝（词法归一后判定，编码/嵌套脚本仍可能绕过）、公网 `/api` 404（含 `/api/pty/*`）、带了不在白名单里的 Origin 打 `/mcp` 得 403、密钥 gitignore；若 Git 已经跟踪 `.webagent/config.json`，启动时会警告。桌面 Chat 的集成终端 PTY 只走本机 `/api/pty`（VS Code 插件，`client: vscode-extension`）；远程 `send_command_input` 是 `E_FORBIDDEN`。
 
+## 本机控制面与文件工具补充（2026-09-11）
+
+`/api`要求Host为localhost、127.0.0.1或[::1]（可带有效端口），且socket回环、无隧道特征头；外站Origin/Referer仍被拒绝。`/ws`在upgrade阶段也验证本机控制面和Origin；无Origin的本机Node客户端仍允许。`WEBAGENT_CORS_ORIGINS`只扩展MCP网页白名单，不能放开API或WS。
+
+文件路径检查同时验证逻辑路径和真实链接目标；内置敏感规则不区分大小写并覆盖嵌套目录。记忆day仅接收有效日历日期；用户Skill必须实际位于工作区内，产品固定bundled目录例外保留。这是应用层保护，不是OS沙箱，不承诺抵抗有本机文件系统写权限进程的所有竞态或硬链接操作。
+
+本轮只修复了一批问题；webview文本注入、PTY审批与取消等仍需处理，见[交叉验证台账](./review/AUDIT_CROSSCHECK_2026-09-11.md)。不要把新增回归通过视为整体安全验收完成。
+
 ## Bridge / 隧道
 
 点「启动 Bridge」并装了对应隧道程序之后，会给 48271 办一张公网门牌：默认是临时的 `*.trycloudflare.com`；选 Named Tunnel 则是你在 Cloudflare 登记的主机名；选 ngrok 则是 `*.ngrok*` 或你预留的域名。
@@ -33,7 +41,7 @@ MCP 密钥和模型 API Key 写在工作区 `.webagent/config.json`（尽量 `ch
 
 敏感路径拦截（`.env`、`*.pem`、`.ssh/`、`.webagent/config.json` 等）**只作用于文件工具**。`read_files ".env"` 会被拒；`run_command "cat .env"` 可以读出内容。
 
-工作台 `GET /api/status` **仍带** `secretKey`：本机拼 MCP 地址要用，且 `/api` 已限制为回环 + 同源。不另开 `/api/bridge/secret`。
+工作台 `GET /api/status` **仍带** `secretKey`：本机拼 MCP 地址要用，且`/api`限制回环socket＋明确本机Host＋本机HTTP(S) Origin（允许本机不同端口，不是严格同源）。不另开 `/api/bridge/secret`。
 
 ChatGPT 自制 MCP 插件用的 OAuth access / refresh **只在内存**。关掉 `run-webagent` 进程后要重新配对。
 

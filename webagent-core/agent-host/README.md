@@ -38,6 +38,8 @@
   | `dependencies.express` | HTTP | `^5.2.1` |
   | `dependencies.ws` | WebSocket | `^8.21.3`（`src/index.js` 的 `/ws`） |
 
+测试runner支持`npm test -- --filter=oauth`文件名子串筛选；无匹配/未知参数退出2，preferred测试缺失退出1。每文件默认120秒，可用`WEBAGENT_TEST_TIMEOUT_MS`设1000–600000毫秒。
+
 无 `devDependencies`。测试用 Node 自带 `assert`。
 
 `package-lock.json` 是 lockfile，不在本说明书展开每个嵌套包。

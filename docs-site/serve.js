@@ -24,8 +24,15 @@ const TYPES = {
 
 const server = http.createServer((req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  const url = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
-  let rel = decodeURIComponent(url.pathname);
+  let rel;
+  try {
+    const url = new URL(req.url, 'http://127.0.0.1');
+    rel = decodeURIComponent(url.pathname);
+    if (rel.includes('\0')) throw new Error('invalid path');
+  } catch (_) {
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' }).end('bad request');
+    return;
+  }
   if (rel === '/') rel = '/index.html';
   const file = path.resolve(path.join(ROOT, rel));
   if (file !== ROOT && !file.startsWith(ROOT + path.sep)) {
@@ -44,6 +51,6 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, HOST, () => {
   const shown = (HOST === '0.0.0.0' || HOST === '::') ? '127.0.0.1' : HOST;
-  console.log(`Web Agent docs  http://${shown}:${PORT}/`);
-  console.log(`bind ${HOST}:${PORT}`);
+  console.log(`Web Agent docs  http://${shown}:${server.address().port}/`);
+  console.log(`bind ${HOST}:${server.address().port}`);
 });

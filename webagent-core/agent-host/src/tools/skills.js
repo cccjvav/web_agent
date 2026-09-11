@@ -1,6 +1,33 @@
 const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
+const { resolveSafePath } = require('./patchEngine');
+const { ProtocolError } = require('../mcp/errors');
+
+const MAX_SKILL_BYTES = 128 * 1024;
+function readSkillPrefix(file, chars) {
+  if (!fs.statSync(file).isFile()) {
+    throw new ProtocolError('E_BAD_ARGS', 'SKILL.md must be a regular file.');
+  }
+  const fd = fs.openSync(file, 'r');
+  try {
+    const stat = fs.fstatSync(fd);
+    if (!stat.isFile() || stat.size > MAX_SKILL_BYTES) {
+      throw new ProtocolError('E_BAD_ARGS', 'SKILL.md must be a regular file no larger than 128 KiB.');
+    }
+    const buffer = Buffer.alloc(Math.min(stat.size, (chars + 1) * 4));
+    const bytes = fs.readSync(fd, buffer, 0, buffer.length, 0);
+    const text = buffer.subarray(0, bytes).toString('utf8');
+    return { content: text.slice(0, chars), truncated: bytes < stat.size || text.length > chars };
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+function preview(file) {
+  try { return readSkillPrefix(file, 240).content; }
+  catch (err) { if (err.code === 'E_BAD_ARGS') return err.message; throw err; }
+}
+
 
 function skillRoots() {
   return [
@@ -22,7 +49,7 @@ function bundledSkills() {
       name,
       path: path.relative(config.workspaceRoot, dir),
       absDir: dir,
-      preview: fs.readFileSync(md, 'utf8').slice(0, 240)
+      preview: preview(md)
     });
   }
   return out;
@@ -51,11 +78,13 @@ function listSkills() {
       const dir = path.join(root, name);
       const md = path.join(dir, 'SKILL.md');
       if (fs.existsSync(md) && fs.statSync(dir).isDirectory()) {
+        try { resolveSafePath(path.relative(config.workspaceRoot, md)); }
+        catch (_) { continue; } // A user skill may not inherit the bundled-skill path exception.
         addSkill(skills, seen, {
           name,
           path: path.relative(config.workspaceRoot, dir),
           absDir: dir,
-          preview: fs.readFileSync(md, 'utf8').slice(0, 240)
+          preview: preview(md)
         });
       }
     }
@@ -88,6 +117,7 @@ function loadSkill({ name } = {}) {
     };
   }
   const md = path.join(hit.absDir, 'SKILL.md');
+  const prefix = readSkillPrefix(md, 28000);
   const out = {
     found: true,
     name: hit.name,
@@ -95,7 +125,8 @@ function loadSkill({ name } = {}) {
     absDir: hit.absDir,
     skillFile: hit.skillFile,
     skillFileAbs: hit.skillFileAbs,
-    content: fs.readFileSync(md, 'utf8').slice(0, 28000)
+    content: prefix.content,
+    truncated: prefix.truncated
   };
   if (hit.name === 'computer-use') {
     // 「手」的薄转发：脚本在仓库根（不在工作区），给模型绝对目录与现成命令模板。

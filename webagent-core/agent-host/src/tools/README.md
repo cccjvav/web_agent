@@ -85,30 +85,32 @@
 - **文件职责：** 工作区路径沙箱、sha256、SEARCH/REPLACE（或 unified diff / 整文件覆盖）写盘。
 - **核心类/函数清单：**
 
-  - **Function `computeHash(content)`（L11–L13）** — sha256 hex，utf8。
-  - **Function `tempSibling(fullPath)`（L15–L17）** — `.tmp.${pid}.${Date.now()}.${4字节hex}`，避免同毫秒撞名。
-  - **Function `toPosixRel(p)`（L19–L21）** — 反斜杠改 `/`。
-  - **Function `existingAncestor` / `realPathOrJoin` / `isInsideWorkspace`（L19–L49）** — 沿父目录找到已存在的节点再 `realpathSync`，挡住 **symlink / junction** 指到工作区外。
+  - **Function `computeHash(content)`** — sha256 hex，utf8。
+  - **Function `atomicWriteText(fullPath, content)`** — 同目录随机临时文件、wx独占创建、保留已有文件mode的0777位、rename；finally清理临时文件。不是跨进程事务或ACL/所有者复制。
+  - **Function `tempSibling(fullPath)`** — `.tmp.${pid}.${Date.now()}.${4字节hex}`，避免同毫秒撞名。
+  - **Function `toPosixRel(p)`** — 反斜杠改 `/`。
+  - **Function `existingAncestor` / `realPathOrJoin` / `isInsideWorkspace`** — 沿父目录找到已存在的节点再 `realpathSync`，挡住 **symlink / junction** 指到工作区外。
   - **Function `resolveSafePath(relPath)`**
     - 先拒 UNC（`//server/share`）、Windows 盘符（`C:\…`）、`\\?\` 设备路径。
     - 相对 `config.workspaceRoot` 解析。
     - posix 为 `..`、以 `../` 开头、或 `rel` 绝对路径 → 抛 Security error。
     - `isInsideWorkspace` 为假（真实路径跑出工作区，含 symlink / junction）同样抛。
-    - posix 非空且不是 `.` → `assertNotSensitive`。
+    - 同时检查逻辑相对路径与真实目标的相对路径是否敏感；Windows另拒含冒号/尾随点空格的歧义部件。
     - 返回**逻辑**绝对路径。
-  - **Function `withWriteLock(paths, fn)`** — 按路径排队。同一文件上的 `apply_patch` / `write_file` / `delete_file` / `rename_file` 串行；后到的若哈希过期会 `STALE_FILE`。
-  - **Function `detectEol` / `toLf` / `applyEol`（L19–L31）** — 有 `\r\n` 则整文件按 CRLF 写回；匹配在 LF 上进行。
-  - **Function `countOccurrences` / `replaceOccurrence`（L33–L59）** — 非重叠计数；按 1-based `occurrence` 替换一处。
-  - **Function `looksLikeUnifiedDiff(text)`（L154–L159）** — 去 BOM/前导空白后，开头是 `diff --git `，或开头像 `--- …` + `+++ ` 且全文含 `@@`。
-  - **Function `looksLikeV4A(text)`（L161–L165）** — `*** Begin Patch` 或 `Update File` / `Add File` / `Delete File` / `Move to`。
-  - **Function `rejectUnsupportedPatchFormat`（L167–L179）** — 没有 SEARCH 块且像 V4A → `E_BAD_ARGS` + retryHint；不写盘。
-  - **Function `parseSearchReplaceBlocks(patchText)`（L181–L192）** — 正则 `<<<<< SEARCH` … `=====` … `>>>>> REPLACE`；SEARCH 与 `=======` 之间的换行可省略（空 SEARCH 新建）。收集 `{ search, replace }`。
-  - **Function `applySearchBlocks`（L194–L237）** — 已有文件：SEARCH 必须命中 1 次，否则 `E_CONFLICT`（可传 `occurrence`）；空 SEARCH 拒；写回原换行。
-  - **Function `applyPatch({ filePath, patch, expectedHash=null, dryRun=false, occurrence })`（L239–L370）**
+  - **Function `withWriteLock(paths, fn)`** — 以规范真实路径排队（Windows键小写），归一`..`等别名。同一文件上的 `apply_patch` / `write_file` / `delete_file` / `rename_file` 串行；后到的若哈希过期会 `STALE_FILE`。
+  - **Function `detectEol` / `toLf` / `applyEol`** — 有 `\r\n` 则整文件按 CRLF 写回；匹配在 LF 上进行。
+  - **Function `countOccurrences` / `replaceOccurrence`** — 非重叠计数；按 1-based `occurrence` 替换一处。
+  - **Function `looksLikeUnifiedDiff(text)`** — 去 BOM/前导空白后，开头是 `diff --git `，或开头像 `--- …` + `+++ ` 且全文含 `@@`。
+  - **Function `looksLikeV4A(text)`** — `*** Begin Patch` 或 `Update File` / `Add File` / `Delete File` / `Move to`。
+  - **Function `rejectUnsupportedPatchFormat`** — 没有 SEARCH 块且像 V4A → `E_BAD_ARGS` + retryHint；不写盘。
+  - **Function `parseSearchReplaceBlocks(patchText)`** — 正则 `<<<<< SEARCH` … `=====` … `>>>>> REPLACE`；SEARCH 与 `=======` 之间的换行可省略（空 SEARCH 新建）。收集 `{ search, replace }`。
+  - **Function `applySearchBlocks`** — 已有文件：SEARCH 必须命中 1 次，否则 `E_CONFLICT`（可传 `occurrence`）；空 SEARCH 拒；写回原换行。
+  - **Function `applyPatch({ filePath, patch, expectedHash=null, dryRun=false, occurrence })`**
     - 先认 V4A（`*** Begin Patch` / `Update File` / `Add File` / `Delete File` / `Move to`）。没有 SEARCH 块则 `E_BAD_ARGS`，`retryHint` 让改写成 SEARCH/REPLACE；**不**当文件正文、**不**解析 V4A。
     - **文件不存在：** 若整段像 unified diff 且第一块不是空 SEARCH → `E_BAD_ARGS`（禁止把 diff 当新文件正文）。第一块 search trim 为空则用 replace 当新内容，否则整段 `patch`。不改调用方给的换行。
     - **文件存在：** 没 hash 且非 dryRun → `HASH_REQUIRED`；hash 不符 → `STALE_FILE`。有 blocks 走 `applySearchBlocks`；unified diff / 整段覆盖后仍 `applyEol` 回原 CRLF/LF。
-    - 写 `tempSibling` 再 `renameSync`。
+    - 已有文件的git header/BOM unified diff解析为单文件补丁，必须有hunks；无效、多文件、/dev/null补丁拒绝，不当正文保存。
+    - 已有文件调用`atomicWriteText`替换，保留普通权限位并在失败时清理临时文件。新建路径仍按新文件分支处理。
 
 ---
 
@@ -117,14 +119,14 @@
 - **文件职责：** 读/写/删/改名/列目录/grep。全部先 `resolveSafePath`。
 - **核心类/函数清单：**
 
-  - **Function `readFiles`（L8–L25）** — 合并 `paths[]` 与 `filePath`。空 → 抛。恰好 1 个直接 `readFile`。多个则逐个 try，失败变成 `{ filePath, error }`。
-  - **Function `readFile`（L27–L60）** — 不存在抛；目录抛去用 list_dir。全文 hash；默认 offset=1 limit=400；内容格式 `行号: 文本`。broadcast `file_read`。
-  - **Function `deleteFile`（L62–L84）** — 无 path 抛。相对路径空或 `.` 拒绝删根。不存在抛。非空目录抛。目录 `rmdirSync`，文件 `unlinkSync`。broadcast `file_deleted`。
-  - **Function `renameFile`（L86–L100）** — `from||filePath` 与 `to||dest` 缺一抛。源不存在 / 目标已存在抛。mkdir 父目录后 rename。broadcast `file_renamed`。
-  - **Function `writeFile`（L139–L193）** — `resolveSafePath`（含敏感拦截）。已存在则要 `confirm_overwrite`、匹配的 `expectedHash`，或**本进程** `sessionHash` 仍等于当前 sha256。磁盘上的 `read-hashes.json`（上次进程留下的）**不能**单独放行覆盖。hash 不符 → `E_STALE_FILE`。写 `tempSibling` 再 `renameSync`。broadcast `file_written`；`rememberHash`。
-  - **Function `listDir`（L172–L206）** — 内嵌 `scan`：depth 超 `maxDepth` 返回 []；真实路径在工作区外或 **符号链接** skip；`isHidden` skip；目录仅 `recursive && currentDepth < maxDepth` 才扫 children。
-  - **Function `grepFile`（L208–L223）** — 单文件：`>1.5MB` 记 large；含 NUL 记 binary；否则按行匹配，命中 content 截 400 字。
-  - **Function `grepSearch`（L236–L340）** — 空 query / 超 200 字 / regex 超 120 字 / 嵌套量词（ReDoS）→ `E_BAD_ARGS`。编正则（非 regex 则转义）；非法正则抛。最多扫 800 个文件、收集 2000 条、合计约 8MB；跳过大文件和二进制。分页 `limit` 1–100。返回 `scannedFiles` / `skippedLarge` / `skippedBinary` / `truncated`。
+  - **Function `readFiles`** — 合并 `paths[]` 与 `filePath`。空 → 抛。恰好 1 个直接 `readFile`。多个则逐个 try，失败变成 `{ filePath, error }`。
+  - **Function `readFile`** — 不存在抛；目录抛去用 list_dir。全文 hash；默认 offset=1 limit=400；内容格式 `行号: 文本`。broadcast `file_read`。
+  - **Function `deleteFile`** — 无 path 抛。相对路径空或 `.` 拒绝删根。不存在抛。非空目录抛。目录 `rmdirSync`，文件 `unlinkSync`。broadcast `file_deleted`。
+  - **Function `renameFile`** — `from||filePath` 与 `to||dest` 缺一抛。源不存在 / 目标已存在抛。mkdir 父目录后 rename。broadcast `file_renamed`。
+  - **Function `writeFile`** — `resolveSafePath`（含敏感拦截）。已存在则要 `confirm_overwrite`、匹配的 `expectedHash`，或**本进程** `sessionHash` 仍等于当前 sha256。磁盘上的 `read-hashes.json`（上次进程留下的）**不能**单独放行覆盖。hash 不符 → `E_STALE_FILE`。调用`atomicWriteText`（保留原普通权限位、失败清理临时文件）。broadcast `file_written`；`rememberHash`。
+  - **Function `listDir`** — 内嵌 `scan`：depth 超 `maxDepth` 返回 []；真实路径在工作区外或 **符号链接** skip；`isHidden` skip；目录仅 `recursive && currentDepth < maxDepth` 才扫 children。
+  - **Function `grepFile`** — 单文件：`>1.5MB` 记 large；含 NUL 记 binary；否则按行匹配，命中 content 截 400 字。
+  - **Function `grepSearch`** — 空 query / 超 200 字 / regex 超 120 字 / 嵌套量词（ReDoS）→ `E_BAD_ARGS`。编正则（非 regex 则转义）；非法正则抛。最多扫 800 个文件、收集 2000 条、合计约 8MB；跳过大文件和二进制。分页 `limit` 1–100。返回 `scannedFiles` / `skippedLarge` / `skippedBinary` / `truncated`。
 
 ---
 
@@ -163,13 +165,13 @@
 - **文件职责：** 敏感路径与噪声目录过滤。
 - **核心类/函数清单：**
 
-  - **Function `toPosix`（L58–L60）** — `/` 化，去前导 `./`。
-  - **Function `globMatch`（L62–L79）** — pattern 以 `/` 结尾匹配目录前缀；否则 `*`/`**` 编正则，测整路径或 basename。空或 `.` → false。
-  - **Function `loadCustomPatterns`（L81–L93）** — 读工作区 `.webagentignore`；不存在或 catch → `[]`；空行与 `#` 丢掉。
-  - **Function `isSensitive`（L95–L110）** — basename 在例外列表 → false；内置 patterns 命中 true；自定义以 `!` 开头命中则 false（放行）。
-  - **Function `isNoise`（L112–L117）** — 路径任一段在 `NOISE_NAMES`。
-  - **Function `isHidden`（L119–L121）** — sensitive 或 noise。
-  - **Function `assertNotSensitive`（L123–L129）** — 敏感则抛 `ACCESS_DENIED_SENSITIVE_FILE`，`code='E_FORBIDDEN'`。
+  - **Function `toPosix`** — `/` 化，去前导 `./`。
+  - **Function `globMatch`** — pattern 以 `/` 结尾匹配目录前缀；否则 `*`/`**` 编正则，测整路径或 basename。空或 `.` → false。
+  - **Function `loadCustomPatterns`** — 读工作区 `.webagentignore`；不存在或 catch → `[]`；空行与 `#` 丢掉。
+  - **Function `isSensitive`** — 内置patterns大小写不敏感、作用于每层目录后缀；`.env.example`等只豁免`.env`规则，不豁免`.ssh/`等敏感目录；内置命中后不能被自定义!解除。再按顺序应用自定义规则。
+  - **Function `isNoise`** — 路径任一段在 `NOISE_NAMES`。
+  - **Function `isHidden`** — sensitive 或 noise。
+  - **Function `assertNotSensitive`** — 敏感则抛 `ACCESS_DENIED_SENSITIVE_FILE`，`code='E_FORBIDDEN'`。
 
 - **关键常量：** L5–L35 `SENSITIVE_PATTERNS`（`.env`、密钥、`.webagent/config.json` 等）；L37 例外 `.env.example` 等；L39–L56 `NOISE_NAMES`（`node_modules`、`.git`、`dist`…）。
 
@@ -206,6 +208,8 @@
 
 ### 📄 文件名：`findFiles.js`
 
+输入为简化glob（`*`、`**`、`?`），不是正则；完整正则内容搜索请用`search_files`的`isRegex:true`。
+
 - **Function `globToRegExp`（L7–L16）** — 默认 `**/*`；`**`→`.*`，`*`→`[^/]*`。
 - **Function `findFiles`（L18–L59）** — 起点不存在抛。内嵌 `walk`：readdir 失败 return；hidden skip。命中文件时若已满 `maxResults`（默认 40，夹到 1–200）才 `truncated:true` 并停；恰好收满 cap 且没有下一条不算截断。`glob==='**/*'` 时文件都收。起点是文件则只 push 自己。
 
@@ -213,12 +217,13 @@
 
 ### 📄 文件名：`skills.js`
 
-- **Function `skillRoots`（L5–L10）** — `.webagent/skills` 与工作区 `skills/`。
-- **Const `BUNDLED_SKILL_NAMES`（L12）** — `computer-use`、`project-manager`、`multi-agent-board`。
-- **Function `bundledSkills`（L14–L29）** — 仓库根 `<name>/SKILL.md`（与工作区无关）。缺文件则跳过。
+- **Function `skillRoots`** — `.webagent/skills` 与工作区 `skills/`。
+- **Const `BUNDLED_SKILL_NAMES`** — `computer-use`、`project-manager`、`multi-agent-board`。
+- **Function `bundledSkills`** — 仓库根 `<name>/SKILL.md`（与工作区无关）。缺文件则跳过。
 - **Function `skillFileFields(dir)`** — `{ skillFile: 相对工作区的 SKILL.md, skillFileAbs: 绝对路径 }`。
-- **Function `listSkills`** — 工作区两处 + bundled；同名工作区优先；preview 前 240 字；每项带 `skillFile` / `skillFileAbs`。
-- **Function `loadSkill`** — 无 name 返回列表+hint（含 skillFile）。找不到 `{ found:false, available }`。找到从 `absDir` 读最多 **28000** 字，返回带 `absDir`/`skillFile`/`skillFileAbs`；`computer-use` 额外带 `scriptsDir`（仓库根 `computer-use/win`）与 `runHint`（「手」的薄转发：Windows 本机 Chat 经 run_command 用绝对路径跑 `snap.ps1` 等，`-Out` 截图存工作区内，Chat 会把新截图作为图片附给标记 vision 的模型；Bridge 在第三阶段用户签字后会把截图以 image 内容回给网页 Agent）。
+- **Function `readSkillPrefix` / `preview`** — 打开前检查普通文件，fd上再次检查类型与128 KiB字节上限；按所需字符数最多读取对应UTF-8字节前缀，不先读完整大文件。预览240字符，加载28000字符；超限预览显示错误，加载抛E_BAD_ARGS。
+- **Function `listSkills`** — 工作区两处 + bundled；用户skill须通过resolveSafePath，越界链接不入目录；同名工作区优先，每项带skillFile/skillFileAbs。
+- **Function `loadSkill`** — 无 name 返回列表+hint（含 skillFile）。找不到 `{ found:false, available }`。找到从 `absDir` 读最多 **28000** 字，返回带 `absDir`/`skillFile`/`skillFileAbs`/`truncated`；`computer-use` 额外带 `scriptsDir`（仓库根 `computer-use/win`）与 `runHint`（「手」的薄转发：Windows 本机 Chat 经 run_command 用绝对路径跑 `snap.ps1` 等，`-Out` 截图存工作区内，Chat 会把新截图作为图片附给标记 vision 的模型；Bridge 在第三阶段用户签字后会把截图以 image 内容回给网页 Agent）。
 
 ---
 

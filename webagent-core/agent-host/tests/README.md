@@ -6,10 +6,15 @@
 
 跑法：Windows `run-tests.cmd`；其它 `cd webagent-core/agent-host && npm test`。覆盖总表也见 [测试说明.md](../../../测试说明.md)。
 
-`npm test` 跑 `scripts/run-tests.js`：缺 `node_modules/express` 则打印先 `npm install` 并以退出码 2 结束；否则逐个 `tests/*.test.js`，失败也继续，最后汇总。新增 `*.test.js` 会被自动跑到。
+`npm test` 跑 `scripts/run-tests.js`：缺 `node_modules/express` 则打印先 `npm install` 并以退出码 2 结束；否则逐个 `tests/*.test.js`，失败也继续，最后汇总。新增`*.test.js`自动发现；preferred测试缺失退出1。支持`npm test -- --filter=oauth`文件名子串筛选；无匹配/未知参数退出2。每文件默认120秒超时，WEBAGENT_TEST_TIMEOUT_MS支持1000–600000毫秒。无覆盖率百分比统计。
 
 | 文件 | 覆盖 |
 |---|---|
+| `auditStorage.test.js` | 记忆日期/链接边界、敏感路径、git-header/BOM补丁、stale dryRun、写锁、mode保留、rename失败清理、Skill限额、用量延迟响应 |
+| `auditControl.test.js` | 本机API Host校验及实际HTTP/WS握手的Origin校验 |
+| `workbenchRuntime.test.js` | 实际ES模块主题初始化、DOM/storage/Monaco fixture；不是浏览器E2E |
+| `docsHttp.test.js` | 子进程HTTP：畸形URI/NUL返回400且继续服务、首页200与404 |
+| `testRunner.test.js` | runner子进程：筛选、无匹配、未知参数和非法timeout退出码 |
 | `patchEngine.test.js` | `apply_patch` 成功、STALE_FILE、读缓存省略 hash、从未 read 的 orphan→`HASH_REQUIRED`+`currentHash`、冲突、CRLF 保留、SEARCH 多处拒绝、`occurrence` 指定第几处、grep 跳过大文件、嵌套正则拒绝、find_files 超额 `truncated`、**恰好 cap 条不算截断**、新建拒绝 unified diff、空 SEARCH 建新文件、**同一文件并发补丁一个成功一个 STALE** |
 | `mcpProtocol.test.js` | initialize.instructions、资源、**25** 工具、危险命令（含 `git reset --hard`）、**远程 `confirm_dangerous` 仍 `E_FORBIDDEN`**、`Available:`、`cat`/`path` 别名、`tools/call` `isError:true`、memory、connect 提示词、`PAGE_RULES_LEAD` / `getPageRulesPrompt`、DeepSeek / Chat Plus `rulesText` 与「复制规则」、ChatGPT 聊天栏与自制插件配方、`get_logs` 不含 args/chunk/result/patch、**第三阶段：run_command 截图以 `type:'image'` 内容回传（text 仍在第一位、裸 base64、无图不附）** |
 | `workspaceTools.test.js` | 无仓 `available:false`、skills、`delete_file` 须 `confirm`、覆盖须 `confirm_overwrite`、Ask 锁、路径逃逸、敏感文件、`workspace_info.rules`、`path`/`confirm:'true'`/`bash`/`ls`、`start_command`、`cancel_command` 终态保持 cancelled、持久 hash 不能单独覆盖 |
