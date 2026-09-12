@@ -183,6 +183,26 @@
       "id": "learning-mcp-5",
       "path": "webagent-core/agent-host/src/utils/事件总线详解.md",
       "group": "源码复盘"
+    },
+    {
+      "id": "learning-api-0",
+      "path": "webagent-core/agent-host/src/api/路由逐项详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-api-1",
+      "path": "webagent-core/agent-host/src/tools/缓存与进度详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-api-2",
+      "path": "webagent-core/agent-host/src/tools/技能与隐藏规则详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-api-3",
+      "path": "webagent-core/agent-host/src/utils/差异展示详解.md",
+      "group": "源码复盘"
     }
   ],
   "sourceSnapshotExclusions": [

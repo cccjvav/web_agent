@@ -1079,8 +1079,8 @@
     {
       "path": "docs-site/documentation.config.json",
       "doc": "docs-site/README.md",
-      "sha256": "d1a5b066292f9355d41f92127a04f1ba0e2607ffcc7b2ca081ff1b694f276bb2",
-      "lineCount": 195,
+      "sha256": "bacbc22f9b5e760a274bd2431c55db5cbfd0deb319ecf216644227ab1d3794c6",
+      "lineCount": 215,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -10645,8 +10645,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLearning.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "c551e1edf691a505428d2e5814ab3addf1cb99b1191ead3b4e28c5d23d58e885",
-      "lineCount": 103,
+      "sha256": "df541254e4da41016fe898c2083cfcd610f651b0498d86826e366416431b27ee",
+      "lineCount": 110,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -10674,29 +10674,29 @@
           "id": "namedFunctions",
           "name": "namedFunctions",
           "kind": "FunctionDeclaration",
-          "startLine": 48,
-          "endLine": 63,
+          "startLine": 55,
+          "endLine": 70,
           "parameters": [
             "node",
             "result = new Set()"
           ]
         },
         {
-          "id": "namedFunctions/anonymous@59:44",
-          "name": "anonymous@59:44",
+          "id": "namedFunctions/anonymous@66:44",
+          "name": "anonymous@66:44",
           "kind": "ArrowFunctionExpression",
-          "startLine": 59,
-          "endLine": 59,
+          "startLine": 66,
+          "endLine": 66,
           "parameters": [
             "child"
           ]
         },
         {
-          "id": "anonymous@75:35",
-          "name": "anonymous@75:35",
+          "id": "anonymous@82:35",
+          "name": "anonymous@82:35",
           "kind": "ArrowFunctionExpression",
-          "startLine": 75,
-          "endLine": 75,
+          "startLine": 82,
+          "endLine": 82,
           "parameters": [
             "p"
           ]

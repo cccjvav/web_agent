@@ -1,6 +1,6 @@
 # 测试导航：测了什么，以及没有证明什么
 
-新增 `documentationLearning.test.js`：校验首组逐函数正文的具名函数提及、Conda/人工验收入口、表格与代码块及发行说明入包；只防机械遗漏，不认证解释准确性，也不代表 Windows/Conda 实测。
+新增 `documentationLearning.test.js`：校验累计39个源码文件对应正文的具名函数/类方法提及、Conda/人工验收入口、表格与代码块及发行说明入包；只防机械遗漏，不认证解释准确性，也不代表 Windows/Conda 实测。
 
 ## 职责与运行
 这里存放可独立运行的 `.test.js`，统一入口是上一级scripts/run-tests.js。runner检查依赖和必需测试，发现其他测试文件，以独立进程执行，超时/失败非零退出；测试失败仍汇总其余结果。

@@ -9,6 +9,13 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/src/api/routes.js", "webagent-core/agent-host/src/api/路由逐项详解.md"],
+  ["webagent-core/agent-host/src/tools/readCache.js", "webagent-core/agent-host/src/tools/缓存与进度详解.md"],
+  ["webagent-core/agent-host/src/tools/progressTracker.js", "webagent-core/agent-host/src/tools/缓存与进度详解.md"],
+  ["webagent-core/agent-host/src/tools/skills.js", "webagent-core/agent-host/src/tools/技能与隐藏规则详解.md"],
+  ["webagent-core/agent-host/src/tools/sensitive.js", "webagent-core/agent-host/src/tools/技能与隐藏规则详解.md"],
+  ["webagent-core/agent-host/src/utils/diff.js", "webagent-core/agent-host/src/utils/差异展示详解.md"],
+
   ["webagent-core/agent-host/src/mcp/session.js", "webagent-core/agent-host/src/mcp/会话与结果详解.md"],
   ["webagent-core/agent-host/src/mcp/errors.js", "webagent-core/agent-host/src/mcp/会话与结果详解.md"],
   ["webagent-core/agent-host/src/mcp/budget.js", "webagent-core/agent-host/src/mcp/会话与结果详解.md"],
