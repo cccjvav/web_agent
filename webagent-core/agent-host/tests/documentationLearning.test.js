@@ -130,6 +130,23 @@ for (const [source, guide] of pairs) {
 }
 // File-level evidence for non-JS prose: no semantic or selector completeness claim.
 const artifactPairs = [
+  [".github/workflows/test.yml", "平台启动与CI详解.md"],
+  ["check-env.cmd", "平台启动与CI详解.md"],
+  ["docs-site/serve.cmd", "平台启动与CI详解.md"],
+  ["install-vscode-extension.cmd", "平台启动与CI详解.md"],
+  ["installer/build-installer.cmd", "平台启动与CI详解.md"],
+  ["run-admin.cmd", "平台启动与CI详解.md"],
+  ["run-admin.sh", "平台启动与CI详解.md"],
+  ["run-tests.cmd", "平台启动与CI详解.md"],
+  ["run-webagent-appwindow.cmd", "平台启动与CI详解.md"],
+  ["run-webagent-vscode.cmd", "平台启动与CI详解.md"],
+  ["run-webagent-vscode.sh", "平台启动与CI详解.md"],
+  ["run-webagent.cmd", "平台启动与CI详解.md"],
+  ["run-webagent.sh", "平台启动与CI详解.md"],
+  ["webagent-core/agent-host/package.json", "平台启动与CI详解.md"],
+  ["webagent-core/start-webagent.sh", "平台启动与CI详解.md"],
+  ["installer/webagent.iss", "installer/安装声明详解.md"],
+
   [
     "docs-site/documentation.config.json",
     "docs-site/清单与构建详解.md"

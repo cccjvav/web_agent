@@ -1,5 +1,8 @@
 # 持续集成
 
+精细复盘：[CI逐job与嵌入PowerShell解释](../../平台启动与CI详解.md)。
+
+
 ## 职责与入口
 `test.yml`定义Linux agent-host测试与Windows安装器验证。它不部署产品，不代替桌面验收。
 

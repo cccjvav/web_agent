@@ -303,6 +303,16 @@
       "id": "learning-markup-2",
       "path": "webagent-core/workbench/样式规则详解.md",
       "group": "源码复盘"
+    },
+    {
+      "id": "learning-platform",
+      "path": "平台启动与CI详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-inno",
+      "path": "installer/安装声明详解.md",
+      "group": "源码复盘"
     }
   ],
   "sourceSnapshotExclusions": [
