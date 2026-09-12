@@ -130,6 +130,19 @@ for (const [source, guide] of pairs) {
 }
 // File-level evidence for non-JS prose: no semantic or selector completeness claim.
 const artifactPairs = [
+  ["computer-use/win/capture.cs", "computer-use/win/截图标记与OCR详解.md"],
+  ["computer-use/win/snap.ps1", "computer-use/win/截图标记与OCR详解.md"],
+  ["computer-use/win/info.ps1", "computer-use/win/截图标记与OCR详解.md"],
+  ["computer-use/win/mark.cs", "computer-use/win/截图标记与OCR详解.md"],
+  ["computer-use/win/mark.ps1", "computer-use/win/截图标记与OCR详解.md"],
+  ["computer-use/win/ocr.ps1", "computer-use/win/截图标记与OCR详解.md"],
+  ["computer-use/win/act.ps1", "computer-use/win/鼠标键盘与剪贴板详解.md"],
+  ["computer-use/win/act-bg.ps1", "computer-use/win/鼠标键盘与剪贴板详解.md"],
+  ["computer-use/win/type.ps1", "computer-use/win/鼠标键盘与剪贴板详解.md"],
+  ["computer-use/win/input.cs", "computer-use/win/鼠标键盘与剪贴板详解.md"],
+  ["computer-use/win/input2.cs", "computer-use/win/鼠标键盘与剪贴板详解.md"],
+  ["computer-use/win/keys.cs", "computer-use/win/鼠标键盘与剪贴板详解.md"],
+
   [".github/workflows/test.yml", "平台启动与CI详解.md"],
   ["check-env.cmd", "平台启动与CI详解.md"],
   ["docs-site/serve.cmd", "平台启动与CI详解.md"],
@@ -184,6 +197,12 @@ for (const [source, guide] of artifactPairs) {
   assert.ok(read(source).length, source + ': artifact exists');
   assert.ok(routes.has(guide), guide + ': artifact guide is navigable');
   assert.ok(read(guide).includes(path.basename(source)), guide + ': identifies source artifact');
+}
+// Every in-scope non-test file needs a human guide; registration is not semantic certification.
+const explainedSources = new Set([...pairs, ...artifactPairs].map(pair => pair[0]));
+const sourceManifest = JSON.parse(read('docs-site/documentation-manifest.json'));
+for (const file of sourceManifest.files) {
+  if (!file.path.includes('/tests/')) assert.ok(explainedSources.has(file.path), file.path + ': needs a detailed implementation guide');
 }
 const docs = new Set([...artifactPairs.map(p => p[1]), ...pairs.map(p => p[1]), 'Conda环境说明.md', '代码复盘指南.md', 'review/CHECKLIST_WINDOWS.md']);
 for (const doc of docs) {

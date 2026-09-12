@@ -313,6 +313,16 @@
       "id": "learning-inno",
       "path": "installer/安装声明详解.md",
       "group": "源码复盘"
+    },
+    {
+      "id": "learning-computer-use-0",
+      "path": "computer-use/win/截图标记与OCR详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-computer-use-1",
+      "path": "computer-use/win/鼠标键盘与剪贴板详解.md",
+      "group": "源码复盘"
     }
   ],
   "sourceSnapshotExclusions": [
