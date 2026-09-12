@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const root = path.resolve(__dirname, '..');
 const files = [
   'LICENSE', 'SECURITY.md', 'README.md', '使用指南.md', '技术实现.md', '架构导读.md', '组件说明.md',
-  'Conda环境说明.md', '代码复盘指南.md', 'review/CHECKLIST_WINDOWS.md',
+  'Conda环境说明.md', '代码复盘指南.md', 'Windows新手逐步验收.md', 'review/CHECKLIST_WINDOWS.md',
   'installer/README.md', 'installer/函数详解.md',
   'webagent-core/agent-host/scripts/README.md', 'webagent-core/agent-host/scripts/运行器详解.md',
   '总览.md', '技能使用指南.md', '网页VSCode使用指南.md', 'check-env.cmd',

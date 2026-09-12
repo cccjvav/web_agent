@@ -196,7 +196,7 @@
 
 ## docs-site/documentation.config.json
 
-[目录说明](README.md) · SHA-256 `33f51498bb4634881497ea8d3e45c1a5986ee559cd1c9bb87878aea8201368fc`
+[目录说明](README.md) · SHA-256 `d6c50918527e766764d625eac58daea47f496aab8ce1223f67925a7291257a19`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -266,7 +266,7 @@
 
 ## installer/package.js
 
-[目录说明](../installer/README.md) · SHA-256 `f63fd4281e02986f013c27cd47a8f76a01b064833a5b556c899b3e3ab8ead3c6`
+[目录说明](../installer/README.md) · SHA-256 `9561aee4de010060fc30ae58dea482154697759d27eeb02872b0d84d3ebf2499`
 
 - `digest` — FunctionDeclaration，[L23–L23](../installer/package.js#L23-L23)
 - `collect` — FunctionDeclaration，[L24–L43](../installer/package.js#L24-L43)
@@ -1547,7 +1547,7 @@
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `34c023437999a5372ccb9afd8cae241177247f0d21e0f84912ec33c3f0120444`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `8b007c2492828768cb314b753797df4267f9cc5b3846ec208530b94c9dbb8528`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)

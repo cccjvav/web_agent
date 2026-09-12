@@ -388,6 +388,11 @@
       "id": "learning-tests-protocol-http",
       "path": "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md",
       "group": "源码复盘"
+    },
+    {
+      "id": "windows-step-by-step",
+      "path": "Windows新手逐步验收.md",
+      "group": "使用"
     }
   ],
   "sourceSnapshotExclusions": [

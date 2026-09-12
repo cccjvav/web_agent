@@ -265,7 +265,7 @@ const sourceManifest = JSON.parse(read('docs-site/documentation-manifest.json'))
 for (const file of sourceManifest.files) {
   assert.ok(explainedSources.has(file.path), file.path + ': needs a detailed implementation guide');
 }
-const docs = new Set([...artifactPairs.map(p => p[1]), ...pairs.map(p => p[1]), 'Conda环境说明.md', '代码复盘指南.md', 'review/CHECKLIST_WINDOWS.md']);
+const docs = new Set([...artifactPairs.map(p => p[1]), ...pairs.map(p => p[1]), 'Conda环境说明.md', '代码复盘指南.md', 'Windows新手逐步验收.md', 'review/CHECKLIST_WINDOWS.md']);
 for (const doc of docs) {
   assert.ok(routes.has(doc), doc + ': has viewer route');
   let fenced = false, columns = null;
@@ -285,11 +285,13 @@ for (const doc of docs) {
 }
 const conda = read('Conda环境说明.md');
 for (const contract of ['process.execPath', 'sys.executable', 'conda run', '--include=dev', '-NoProfile', '未执行', '本轮沙箱没有 Conda']) assert.ok(conda.includes(contract), contract);
+const walkthrough = read('Windows新手逐步验收.md');
+for (const contract of ['CMD-A', 'CMD-B', 'echo %ERRORLEVEL%', '自动测试未执行', '当前会话本身没有', 'workspace_info', '停止 Bridge']) assert.ok(walkthrough.includes(contract), contract);
 const checklist = read('review/CHECKLIST_WINDOWS.md');
 for (const section of ['E1–E6', '## F.', '## G.', '## H.', '未执行', '不自动删']) assert.ok(checklist.includes(section), section);
 assert.ok(!checklist.includes('33 test files passed'));
 assert.ok(!checklist.includes('不需要在真机做的（沙箱已覆盖）'));
 const packaged = require('../../../installer/package').collect(root);
-for (const p of ['Conda环境说明.md', '代码复盘指南.md', 'review/CHECKLIST_WINDOWS.md']) assert.ok(packaged.includes(p), p + ': ships with product');
+for (const p of ['Conda环境说明.md', '代码复盘指南.md', 'Windows新手逐步验收.md', 'review/CHECKLIST_WINDOWS.md']) assert.ok(packaged.includes(p), p + ': ships with product');
 assert.ok(read('代码复盘指南.md').includes('尚须继续补齐'));
 console.log('learning documentation names, navigation, formatting and Conda/acceptance contracts passed; not semantic certification');

@@ -1079,8 +1079,8 @@
     {
       "path": "docs-site/documentation.config.json",
       "doc": "docs-site/README.md",
-      "sha256": "33f51498bb4634881497ea8d3e45c1a5986ee559cd1c9bb87878aea8201368fc",
-      "lineCount": 400,
+      "sha256": "d6c50918527e766764d625eac58daea47f496aab8ce1223f67925a7291257a19",
+      "lineCount": 405,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -1392,7 +1392,7 @@
     {
       "path": "installer/package.js",
       "doc": "installer/README.md",
-      "sha256": "f63fd4281e02986f013c27cd47a8f76a01b064833a5b556c899b3e3ab8ead3c6",
+      "sha256": "9561aee4de010060fc30ae58dea482154697759d27eeb02872b0d84d3ebf2499",
       "lineCount": 71,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -10645,8 +10645,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLearning.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "34c023437999a5372ccb9afd8cae241177247f0d21e0f84912ec33c3f0120444",
-      "lineCount": 296,
+      "sha256": "8b007c2492828768cb314b753797df4267f9cc5b3846ec208530b94c9dbb8528",
+      "lineCount": 298,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
