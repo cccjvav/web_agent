@@ -203,6 +203,31 @@
       "id": "learning-api-3",
       "path": "webagent-core/agent-host/src/utils/差异展示详解.md",
       "group": "源码复盘"
+    },
+    {
+      "id": "learning-tools-0",
+      "path": "webagent-core/agent-host/src/tools/补丁与路径详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-tools-1",
+      "path": "webagent-core/agent-host/src/tools/文件与搜索详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-tools-2",
+      "path": "webagent-core/agent-host/src/tools/命令与PTY详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-tools-3",
+      "path": "webagent-core/agent-host/src/tools/工具入口与命令策略详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-tools-4",
+      "path": "webagent-core/agent-host/src/tools/任务板与工作区详解.md",
+      "group": "源码复盘"
     }
   ],
   "sourceSnapshotExclusions": [

@@ -9,6 +9,19 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/src/tools/patchEngine.js", "webagent-core/agent-host/src/tools/补丁与路径详解.md"],
+  ["webagent-core/agent-host/src/tools/fileOps.js", "webagent-core/agent-host/src/tools/文件与搜索详解.md"],
+  ["webagent-core/agent-host/src/tools/findFiles.js", "webagent-core/agent-host/src/tools/文件与搜索详解.md"],
+  ["webagent-core/agent-host/src/tools/searchWorker.js", "webagent-core/agent-host/src/tools/文件与搜索详解.md"],
+  ["webagent-core/agent-host/src/tools/executor.js", "webagent-core/agent-host/src/tools/命令与PTY详解.md"],
+  ["webagent-core/agent-host/src/tools/ptyJobs.js", "webagent-core/agent-host/src/tools/命令与PTY详解.md"],
+  ["webagent-core/agent-host/src/tools/index.js", "webagent-core/agent-host/src/tools/工具入口与命令策略详解.md"],
+  ["webagent-core/agent-host/src/tools/normalize.js", "webagent-core/agent-host/src/tools/工具入口与命令策略详解.md"],
+  ["webagent-core/agent-host/src/tools/dangerous.js", "webagent-core/agent-host/src/tools/工具入口与命令策略详解.md"],
+  ["webagent-core/agent-host/src/tools/board.js", "webagent-core/agent-host/src/tools/任务板与工作区详解.md"],
+  ["webagent-core/agent-host/src/tools/gitOps.js", "webagent-core/agent-host/src/tools/任务板与工作区详解.md"],
+  ["webagent-core/agent-host/src/tools/workspaceInfo.js", "webagent-core/agent-host/src/tools/任务板与工作区详解.md"],
+
   ["webagent-core/agent-host/src/api/routes.js", "webagent-core/agent-host/src/api/路由逐项详解.md"],
   ["webagent-core/agent-host/src/tools/readCache.js", "webagent-core/agent-host/src/tools/缓存与进度详解.md"],
   ["webagent-core/agent-host/src/tools/progressTracker.js", "webagent-core/agent-host/src/tools/缓存与进度详解.md"],
