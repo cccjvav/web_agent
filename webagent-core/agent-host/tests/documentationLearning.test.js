@@ -9,6 +9,17 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/workbench/js/state.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
+  ["webagent-core/workbench/js/dom.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
+  ["webagent-core/workbench/js/tabs.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
+  ["webagent-core/workbench/js/monaco.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
+  ["webagent-core/workbench/js/picker.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
+  ["webagent-core/workbench/app.js", "webagent-core/workbench/js/启动与Chat详解.md"],
+  ["webagent-core/workbench/js/chat.js", "webagent-core/workbench/js/启动与Chat详解.md"],
+  ["webagent-core/workbench/js/bridge.js", "webagent-core/workbench/js/Bridge与设置详解.md"],
+  ["webagent-core/workbench/js/settings.js", "webagent-core/workbench/js/Bridge与设置详解.md"],
+  ["webagent-core/workbench/js/bind.js", "webagent-core/workbench/js/交互绑定详解.md"],
+
   ["webagent-core/extension/ptyHost.js", "webagent-core/extension/PTY扩展详解.md"],
   ["webagent-core/extension/ptyPolicy.js", "webagent-core/extension/PTY扩展详解.md"],
   ["webagent-core/extension/extension.js", "webagent-core/extension/入口与Webview详解.md"],
@@ -94,7 +105,7 @@ for (const [source, guide] of pairs) {
   const body = read(guide);
   assert.ok(routes.has(guide), guide + ': available in documentation viewer');
   assert.ok(body.includes('验证'), guide + ': verification and limitations');
-  for (const name of namedFunctions(acorn.parse(read(source), { ecmaVersion: 'latest' }))) {
+  for (const name of namedFunctions(acorn.parse(read(source), { ecmaVersion: 'latest', sourceType: source.startsWith('webagent-core/workbench/') ? 'module' : 'script' }))) {
     assert.ok(body.includes(name), source + ': named function missing from guide: ' + name);
   }
 }

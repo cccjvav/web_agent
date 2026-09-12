@@ -238,6 +238,26 @@
       "id": "learning-extension-1",
       "path": "webagent-core/extension/入口与Webview详解.md",
       "group": "源码复盘"
+    },
+    {
+      "id": "learning-workbench-0",
+      "path": "webagent-core/workbench/js/状态与编辑器详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-workbench-1",
+      "path": "webagent-core/workbench/js/启动与Chat详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-workbench-2",
+      "path": "webagent-core/workbench/js/Bridge与设置详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-workbench-3",
+      "path": "webagent-core/workbench/js/交互绑定详解.md",
+      "group": "源码复盘"
     }
   ],
   "sourceSnapshotExclusions": [
