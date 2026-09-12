@@ -196,7 +196,7 @@
 
 ## docs-site/documentation.config.json
 
-[目录说明](README.md) · SHA-256 `5695789b7fa090d01953179349187ad5c1c2419ea68ac123e793aa2ded2c90b6`
+[目录说明](README.md) · SHA-256 `0915b0ae92c28b2808ff853a01820c0404da0d7624f50696c2ac950d34b5d666`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -1547,13 +1547,14 @@
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `9c88178489ef52f10e8363e6bec1b31a45cfba7b10913af9d5c3f0860ac1a677`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `312c5241e8a73ba10f10ded76631499b8ce853779771ab946d16f53192a046bf`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)
-- `namedFunctions` — FunctionDeclaration，[L103–L118](../webagent-core/agent-host/tests/documentationLearning.test.js#L103-L118)
-- `namedFunctions/anonymous@114:44` — ArrowFunctionExpression，[L114–L114](../webagent-core/agent-host/tests/documentationLearning.test.js#L114-L114)
-- `anonymous@130:35` — ArrowFunctionExpression，[L130–L130](../webagent-core/agent-host/tests/documentationLearning.test.js#L130-L130)
+- `namedFunctions` — FunctionDeclaration，[L104–L119](../webagent-core/agent-host/tests/documentationLearning.test.js#L104-L119)
+- `namedFunctions/anonymous@115:44` — ArrowFunctionExpression，[L115–L115](../webagent-core/agent-host/tests/documentationLearning.test.js#L115-L115)
+- `anonymous@171:43` — ArrowFunctionExpression，[L171–L171](../webagent-core/agent-host/tests/documentationLearning.test.js#L171-L171)
+- `anonymous@171:68` — ArrowFunctionExpression，[L171–L171](../webagent-core/agent-host/tests/documentationLearning.test.js#L171-L171)
 
 ## webagent-core/agent-host/tests/documentationPolicy.test.js
 
@@ -2119,7 +2120,7 @@
 
 ## webagent-core/agent-host/tests/workbenchHtml.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `876420454b2fcfa3786a15f9ee50414fdec6faece7f2454cf6bb8f57be0e9a5e`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `83a0c8131a8be00966c73f44bdd991f6982afb7c43637122f5440e8812d262bb`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 

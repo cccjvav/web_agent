@@ -74,3 +74,5 @@ assert.ok(chatSrc.includes('branch-pill'), 'multi-model round messages carry a b
 assert.ok(/details class="block"/.test(html) && html.includes('快速打开') && html.includes('高级设置'), 'bridge page collapsible groups');
 
 console.log('workbench HTML has bind() nodes');
+
+assert.ok(!html.includes('\uFFFD'), 'workbench copy must not contain Unicode replacement characters');

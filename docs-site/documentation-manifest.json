@@ -1079,8 +1079,8 @@
     {
       "path": "docs-site/documentation.config.json",
       "doc": "docs-site/README.md",
-      "sha256": "5695789b7fa090d01953179349187ad5c1c2419ea68ac123e793aa2ded2c90b6",
-      "lineCount": 300,
+      "sha256": "0915b0ae92c28b2808ff853a01820c0404da0d7624f50696c2ac950d34b5d666",
+      "lineCount": 315,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -10645,8 +10645,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLearning.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "9c88178489ef52f10e8363e6bec1b31a45cfba7b10913af9d5c3f0860ac1a677",
-      "lineCount": 158,
+      "sha256": "312c5241e8a73ba10f10ded76631499b8ce853779771ab946d16f53192a046bf",
+      "lineCount": 199,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -10674,29 +10674,39 @@
           "id": "namedFunctions",
           "name": "namedFunctions",
           "kind": "FunctionDeclaration",
-          "startLine": 103,
-          "endLine": 118,
+          "startLine": 104,
+          "endLine": 119,
           "parameters": [
             "node",
             "result = new Set()"
           ]
         },
         {
-          "id": "namedFunctions/anonymous@114:44",
-          "name": "anonymous@114:44",
+          "id": "namedFunctions/anonymous@115:44",
+          "name": "anonymous@115:44",
           "kind": "ArrowFunctionExpression",
-          "startLine": 114,
-          "endLine": 114,
+          "startLine": 115,
+          "endLine": 115,
           "parameters": [
             "child"
           ]
         },
         {
-          "id": "anonymous@130:35",
-          "name": "anonymous@130:35",
+          "id": "anonymous@171:43",
+          "name": "anonymous@171:43",
           "kind": "ArrowFunctionExpression",
-          "startLine": 130,
-          "endLine": 130,
+          "startLine": 171,
+          "endLine": 171,
+          "parameters": [
+            "p"
+          ]
+        },
+        {
+          "id": "anonymous@171:68",
+          "name": "anonymous@171:68",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 171,
+          "endLine": 171,
           "parameters": [
             "p"
           ]
@@ -14723,8 +14733,8 @@
     {
       "path": "webagent-core/agent-host/tests/workbenchHtml.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "876420454b2fcfa3786a15f9ee50414fdec6faece7f2454cf6bb8f57be0e9a5e",
-      "lineCount": 77,
+      "sha256": "83a0c8131a8be00966c73f44bdd991f6982afb7c43637122f5440e8812d262bb",
+      "lineCount": 79,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": []

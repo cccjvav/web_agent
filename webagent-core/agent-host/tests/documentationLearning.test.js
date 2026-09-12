@@ -9,6 +9,7 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/tests/workbenchHtml.test.js", "webagent-core/workbench/页面结构详解.md"],
   ["webagent-core/admin-host/app.js", "webagent-core/admin-host/统计服务详解.md"],
   ["webagent-core/admin-host/index.js", "webagent-core/admin-host/统计服务详解.md"],
   ["docs-site/check-docs.js", "docs-site/清单与构建详解.md"],
@@ -127,7 +128,47 @@ for (const [source, guide] of pairs) {
     assert.ok(body.includes(name), source + ': named function missing from guide: ' + name);
   }
 }
-const docs = new Set([...pairs.map(p => p[1]), 'Conda环境说明.md', '代码复盘指南.md', 'review/CHECKLIST_WINDOWS.md']);
+// File-level evidence for non-JS prose: no semantic or selector completeness claim.
+const artifactPairs = [
+  [
+    "docs-site/documentation.config.json",
+    "docs-site/清单与构建详解.md"
+  ],
+  [
+    "docs-site/index.html",
+    "docs-site/浏览与服务详解.md"
+  ],
+  [
+    "docs-site/styles.css",
+    "docs-site/样式规则详解.md"
+  ],
+  [
+    "webagent-core/workbench/index.html",
+    "webagent-core/workbench/页面结构详解.md"
+  ],
+  [
+    "webagent-core/workbench/favicon.svg",
+    "webagent-core/workbench/页面结构详解.md"
+  ],
+  [
+    "webagent-core/workbench/styles.css",
+    "webagent-core/workbench/样式规则详解.md"
+  ],
+  [
+    "webagent-core/extension/package.json",
+    "webagent-core/extension/入口与Webview详解.md"
+  ],
+  [
+    "webagent-core/extension/resources/icon.svg",
+    "webagent-core/extension/入口与Webview详解.md"
+  ]
+];
+for (const [source, guide] of artifactPairs) {
+  assert.ok(read(source).length, source + ': artifact exists');
+  assert.ok(routes.has(guide), guide + ': artifact guide is navigable');
+  assert.ok(read(guide).includes(path.basename(source)), guide + ': identifies source artifact');
+}
+const docs = new Set([...artifactPairs.map(p => p[1]), ...pairs.map(p => p[1]), 'Conda环境说明.md', '代码复盘指南.md', 'review/CHECKLIST_WINDOWS.md']);
 for (const doc of docs) {
   assert.ok(routes.has(doc), doc + ': has viewer route');
   let fenced = false, columns = null;

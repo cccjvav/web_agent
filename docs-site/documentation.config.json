@@ -288,6 +288,21 @@
       "id": "learning-admin-docs-3",
       "path": "webagent-core/agent-host/tests/统计与文档测试详解.md",
       "group": "源码复盘"
+    },
+    {
+      "id": "learning-markup-0",
+      "path": "docs-site/样式规则详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-markup-1",
+      "path": "webagent-core/workbench/页面结构详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-markup-2",
+      "path": "webagent-core/workbench/样式规则详解.md",
+      "group": "源码复盘"
     }
   ],
   "sourceSnapshotExclusions": [
