@@ -1,5 +1,7 @@
 # agent-host维护脚本
 
+逐步阅读：[run-tests.js 顶层执行流程与回调详解](运行器详解.md)。
+
 ## 职责与入口
 run-tests.js是npm test的统一入口，不是产品服务启动器。
 

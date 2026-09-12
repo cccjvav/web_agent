@@ -1,176 +1,123 @@
-# Windows 真机验收清单（CHECKLIST_WINDOWS · 唯一活基线）
+# Windows 与跨端人工验收清单（唯一活基线）
 
-- **对应代码**：`arena/01a07238-web-agent`（含 ShunCode 对齐 S1–S4 全部提交）
-- **地位**：**唯一**真机验收基线。2026-09-07 合并：V 时代 A/B/C 节 + ShunCode 对齐第四阶段 D 节；旧编号 A1–A11 / B1–B11 保留不变（历史报告引用不失效），过时措辞已就地修订（见各条「修订」注）
-- **为什么需要**：审查在 Linux 沙箱完成，以下维度沙箱**覆盖不到**：Windows 专属代码路径（junction、.cmd、CRLF）、真实隧道长时间运行、真实浏览器交互、真实外部服务（GitHub / 模型 API / 浏览器扩展）、Inno Setup 编译与安装行为
-- **分工**：**A 节给使用者**（约 25 分钟，双击+点几下）；**B 节给项目助手/开发**（约半天）；**D 节=第四阶段交付形态**（安装包+UI，使用者可跑 D2–D7）；C 节是**不用做**的（沙箱已覆盖）
-- **记录方式**：每节末尾有结果表。填完后可整份提交回仓库（或聊天发回），失败的项附截图/CMD 窗口原文
+本清单对照当前源码维护，不绑定某个旧审计分支。**执行时记录 `git rev-parse HEAD`**；历史报告的 A/B/D 编号继续保留，但通过条件以本文为准。步骤尚未实际执行的，不勾通过。
 
-## 前置条件
+Conda 用户先看[Conda 环境说明](../Conda环境说明.md)，完成 E1–E6；产品基本使用见[使用指南](../使用指南.md)。自动测试范围见[测试说明](../测试说明.md)，源码阅读见[代码复盘指南](../代码复盘指南.md)。
 
-| 项 | 要求 |
-|---|---|
-| 系统 | Windows 10/11 |
-| Node.js | **20 LTS**（CI 用 20；`agent-host/package.json` 声明 `engines.node >=18`，别用更旧的） |
-| Git | 任意近年版本（`check-env.cmd` 会查） |
-| Inno Setup | **6**（仅 D1 编译安装包需要；https://jrsoftware.org/isinfo.php） |
-| 隧道（可选，B3 需要） | `winget install --id Cloudflare.cloudflared`；ngrok 走 `winget install Ngrok.Ngrok` |
-| 网络 | A3/A5/B6/B7/D2/D8 需要外网（Monaco CDN、code-server 自下载、模型 API、GitHub） |
-| 克隆方式 | `git clone` 后**不要**手动改 .cmd 换行符（`.gitattributes` 已强制 CRLF 检出） |
+## 0. 哪些必须在 Windows，哪些不是？
 
----
-
-## A 节：使用者冒烟（约 25 分钟）
-
-> 每条格式：操作 → 预期。**任何一条不符，记下编号和现象即可，不要自己改文件。**
-
-**A1 环境检查**
-双击 `check-env.cmd` → 列出 Node/npm/Git 版本；cloudflared/ngrok 未装时给出 winget 安装命令而不是报错崩溃。
-
-**A2 默认壳启动（修订：S4-2 起默认入口=VS Code 复刻壳）**
-双击 `run-webagent-vscode.cmd`（或安装器桌面图标，见 D2）→ 黑色 CMD 窗口保持开着；**首跑从 npm 下载 code-server 4.135.0（约 50MB+依赖，耐心等）**；随后浏览器/壳内打开 `http://127.0.0.1:3000` = VS Code 网页版。**不要与经典壳同时开**（两壳都要 3000 口）。
-
-**A3 经典壳（备用）与工作台首开（修订：经典壳降为备用入口）**
-先关掉 A2 的壳。双击 `run-webagent.cmd` → CMD 窗口打印工作台 3000、MCP 48271；首次运行自动 `npm install`。浏览器开 `http://127.0.0.1:3000` → 经典工作台样式完整（无裸 HTML）；左侧文件树能展开 `workspace/` 里的示例计算器项目；双击文件能打开编辑器（联网时 Monaco 深色；断网退化为普通文本框，**不算失败**，见 B6）。
-
-**A4 编辑与保存**
-改一个文件按 Ctrl+S → 提示保存成功；文件树里该文件内容确实变了（用记事本开磁盘上的文件核对）。
-
-**A5 本机 Chat**
-右侧 Chat 发一句"你好" → 有回复流出来。**没配模型 API Key 时应给出明确提示**（引导去设置页填 Key），而不是无反应或白屏报错。
-
-**A6 Bridge / 隧道（装了 cloudflared 才做）**
-设置里启动 Bridge（默认 Cloudflare Quick Tunnel）→ 数十秒内出现 `https://….trycloudflare.com/mcp/…` 地址；界面有"施工证"警示文案。**做完记得停 Bridge、关 CMD 窗口。**
-
-**A7 复制规则按钮**
-Bridge 页选中 DeepSeek++ 或 Chat Plus 卡片 → 出现「复制规则」按钮，点击后剪贴板里是一段以"这些规则与 MCP initialize.instructions 相同"开头的规则文本；选中 Arena 卡时该按钮**隐藏**。
-
-**A8 统计后台（可选组件）**
-双击 `run-admin.cmd` → 另一个进程起在 4174；浏览器直接开 `http://127.0.0.1:4174/` 应**要令牌**（401/提示），`http://127.0.0.1:4174/health` 不需要。
-
-**A9 中文与空格路径**
-建目录 `D:\我的 项目\demo`（放任意小项目），CMD 里跑 `run-webagent.cmd "D:\我的 项目\demo"` → 正常启动且工作台文件树显示中文目录名不乱码；Chat/编辑可用。
-
-**A10 测试双击跑（修订：29→30）**
-双击 `run-tests.cmd` → 自动装依赖后逐文件 PASS，最后 `33 test files passed`（数字可能随版本增加），窗口不闪退。
-
-**A11 干净退出**
-关掉 CMD 窗口 → 任务管理器里不应残留 `node.exe`（起了隧道时也不应残留 `cloudflared.exe`/`ngrok.exe`）；再双击能重新起来。
-
-### A 节结果表
-
-| 项 | 通过? | 现象/截图 |
+| 环境 | 可以验证 | 不能据此替代 |
 |---|---|---|
-| A1–A11 | ☐ | |
+| Linux 沙箱/CI | Node 自动测试、HTTP/WS 测试、文档生成与结构守卫 | Windows 桌面输入、真实 VS Code PTY、安装交互、真实浏览器视觉 |
+| Windows CI | 当前工作流中的打包测试、Inno 编译、输入 C# 编译和 PS 解析 | 实际安装/升级/卸载、DPI、应用接收输入、用户 Conda/PATH |
+| 任意可用的真实浏览器测试环境 | 经典工作台/文档站的点击、键盘、布局、CDN 失败路径 | Windows 专有行为；沙箱里仅拿 HTTP 200 不算浏览器验收 |
+| Windows 10/11 交互桌面（物理机或合适的 VM） | CMD、安装器、桌面 VS Code、剪贴板、窗口、DPI | 其他物理设备/屏幕组合；RDP 自身也可能改变剪贴板/DPI |
+| 真实手机 + 运行主机 + 真实 MCP 客户端 | 手机 Arena/其他客户端经认证 MCP 提交任务、接收结果 | 只在主机打开一个手机宽度的页面不是跨端联通 |
+| 真实网络及服务账号 | 模型 API、GitHub、隧道断线/长挂与恢复 | mock 测试或日志里出现 URL |
 
----
+**因此：不是所有缺失项都只能在你的 Windows 电脑跑。** 但你的 Conda 配置、桌面软件、实际显示器和手机链路，需要你那套环境的证据。其他人/CI 的结果不能代替你的配置验收。
 
-## B 节：项目助手/开发技术项
+## 准备、停止与记录
 
-**B1 win32 junction 沙箱分支（Linux 上被跳过，从未真实执行）**
-`sandbox.test.js` L72 起：junction 指向工作区外时 `resolveSafePath` 必须拒绝。注意该段包在 `try{…}catch(_){}` 里，`fs.symlinkSync(…,'junction')` 失败会**静默跳过**。验证方法：先 `node -e "const fs=require('fs');fs.symlinkSync('C:\\Windows','.%TEMP%\\jtest','junction');console.log('ok')"` 确认本机能建 junction，再跑 `npm test` 看 sandbox.test 通过；建议在测试里给 catch 加一行 skip 日志（属可选改进）。
+1. 使用独立测试工作区，例如 `%USERPROFILE%\WebAgent-acceptance`，不要用重要仓库；备份用户配置。只连接你拥有或获准使用的主机与客户端。
+2. 从已激活的 Conda Prompt（CMD）进入仓库；按 Conda 说明确认 Node/npm/Python 路径，执行 `npm ci --include=dev --prefix webagent-core/agent-host`。
+3. 不同时启动经典壳与网页 VS Code 壳。用 `netstat -ano | findstr :3000`、`netstat -ano | findstr :48271` 核对占用，先辨认 PID，不要批量结束所有 node.exe。
+4. 保存编辑、停止 Bridge，再在启动窗口 Ctrl+C；重新检查本项目进程与端口。App 窗口可能有后台服务，关浏览器不等于停服务；只停止已确认属于本次测试的进程。
+5. 每项记录：日期、提交、系统/浏览器/VS Code/Node 版本、启动方式、操作、预期、实测、结果（通过/失败/未执行/不适用）、证据。失败附脱敏错误与截图，不贴密钥或完整 MCP 凭据 URL。
 
-**B2 .cmd 检出形态**
-`git ls-files --eol "*.cmd"` 在 Windows 检出后应全部 `w/crlf attr/text eol=crlf`（8 个：check-env、run-webagent、run-webagent-vscode、run-webagent-appwindow、run-admin、run-tests、install-vscode-extension、docs-site/serve）。任何 `w/lf` 都说明检出被污染。
+## A. 使用者基本冒烟
 
-**B3 真隧道长挂 ≥2 小时（验证 V3-1 修复）**
-启动 Bridge（cloudflared），期间让网页端持续调工具（或挂一个长任务）。观察：任务管理器 node 进程内存**稳定不爬升**（修复前三处日志 buf 无上限）；BRIDGE 日志持续滚动；隧道日志里 Token 显示为 `[token]` 不是原文。ngrok 同样跑一轮（它 `--log=stdout` 每请求一行，最吃缓冲）。
-
-**B4 V4-1 已修复，验证重连（预期：日志仍滚动）**
-开着工作台与 Bridge，放置 35 分钟不刷新，再从网页端触发一次工具调用 → BRIDGE 日志**照常滚动**；期间状态栏可能短暂出现「事件流重连中」后自动恢复。不要按「断了必须刷新页面」当通过标准。
-
-**B5 浏览器 E2E 点击流**
-设置弹窗逐页打开保存（概述/环境/技术栈/智能体/技能/指令/提示/挂钩/MCP/插件/API/Codex/多模型博弈）；多模型博弈开 2–8 分支跑一轮合并（合并主模型经 S4-3 弹层选择，见 D5）；终端面板 `run_command`；搜索 `search_files` 结果可点击打开文件；全程 DevTools Console 无未捕获异常。
-
-**B6 Monaco CDN 失败路径**
-断网（或 hosts 屏蔽 `cdn.jsdelivr.net`）刷新工作台 → 编辑器退化为文本框（`#editor-fallback`），能打开、编辑、Ctrl+S 保存；恢复网络后刷新回到 Monaco。
-
-**B7 真实外部服务**
-① GitHub 设备码流：设置页 `btn-gh-device` 走完授权 → 状态显示已验证；**重启 agent-host 后令牌应消失**（SECURITY.md 承诺只在内存）；`.webagent/config.json` 里不得出现 PAT。② 真实模型 API Key 跑通 A5。③ DeepSeek++ 扩展（ID `kdmpkkahkhdmdhfkdihkopikgcocbpbf`）按卡片步骤实连，BRIDGE 出现工具调用；④ Chat Plus（github.com/aiguicai/Chat-Plus）同验，注意"复制规则"贴进编排系统提示词、开"注入工具信息"。
-
-**B8 网页 VS Code 模式端口拓扑（修订：3000 的占用者是 code-server，不是 agent-host）**
-`run-webagent-vscode.cmd` 设 `WEBAGENT_SKIP_WORKBENCH=1` 启动 agent-host → **agent-host 不监听 3000**（`skipWorkbench.test.js` 锁）；**监听 3000 的是 code-server**（`run-code-oss.js`，`CODE_SERVER_PORT` 默认 3000）；MCP 48271 照常；插件打本机 `/api` 通（无 Cloudflare 头不误杀）。验证：`netstat -ano` 看 3000 的属主应是 code-server 进程；两壳同开抢 3000 报占用＝**预期行为**，别当缺陷。
-
-**B9 docs-site 于 Windows**
-`docs-site\serve.cmd`（或 `node serve.js`）→ 默认只听 127.0.0.1；`http://127.0.0.1:4173/#/…` 各页渲染正常；探针 `GET /..%2f..%2f使用指南.md` 与 `GET /../使用指南.md` 应 404/403（win32 下 `path.sep='\\'` 守卫仍生效）。
-
-**B10 admin-host 绑定覆盖**
-`set WEBAGENT_ADMIN_BIND=0.0.0.0` 后启动 `run-admin.cmd` → 日志显示实际 bind 地址（诚实日志），且无令牌仍 401。测完还原。
-
-**B11 中文路径深测（A9 的开发侧延伸）**
-在 `D:\我的 项目\demo` 上跑通：`apply_patch`（含中文内容文件）、`search_files` 中文关键词、junction/symlink 逃逸拒绝、`start_command` 输出中文不乱码。
-
-### B 节结果表
-
-| 项 | 通过? | 备注（失败附日志） |
+| 编号 | 操作步骤 | 通过条件 |
 |---|---|---|
-| B1–B11 | ☐ | B4 预期=35 分钟后日志仍滚动；B8 预期=3000 属主为 code-server |
+| A1 | 在启动产品的同一个 Prompt 执行 `check-env.cmd`，并核对 `node -p "process.execPath"` | Node/npm/Git 检查可解释；未装可选隧道明确提示，不当作本地功能必需 |
+| A2 | 先建测试目录，执行 `run-webagent-vscode.cmd "测试目录绝对路径"`；等待首次下载后打开 3000 | VS Code 壳可用，目录正确；下载/平台失败记失败，不能把已启动 agent-host 当作整个壳成功 |
+| A3 | 停 A2，再执行 `run-webagent.cmd "测试目录绝对路径"`，打开 3000 | 经典工作台与文件树正常；Monaco 加载失败后文本框可用不等于整个页面失败 |
+| A4 | 在测试目录放 `acceptance.txt`，打开、修改、Ctrl+S；用记事本核对，再重开页面 | 磁盘、编辑器内容一致，未保存内容切换时有预期保护；浏览器崩溃恢复未承诺 |
+| A5 | 明确选择内置探索模型做简单读操作；再选择已配置外部模型发“你好”；在专用测试配置中验证缺配置提示 | 分别记录；内置成功不替代真实 API 成功；外部失败明确停止，不自动换模型重放修改 |
+| A6 | 有隧道时在设置启动 Bridge，等地址，再用授权客户端连接（先做 F1–F4） | 不仅有 URL，还要实际 initialize/正常读任务成功；结束后停止 Bridge |
+| A7 | Bridge 选择 DeepSeek/Chat Plus，点复制规则；再切 Arena | 前两者复制到剪贴板且内容匹配所选卡片，Arena 不误显示该按钮；结束后清理敏感剪贴板 |
+| A8 | 可选：运行 `run-admin.cmd`，访问 4174 的 `/health` 及根页面 | health 可达；普通地址栏访问根页面无 Bearer 时 401 是预期，不是已经实现网页登录；需要统计功能时按 admin-host README 使用授权方式 |
+| A9 | 创建含中文、空格的测试目录，用带引号的绝对路径启动；完成 A4 | 显示与保存路径正确，无乱码；不存在的显式工作区应拒绝，不悄悄改到默认目录 |
+| A10 | 执行 `npm test --prefix webagent-core/agent-host`，紧接 `echo %ERRORLEVEL%` | 全量通过且退出 0；以当前 runner 文件数为准；双击 `run-tests.cmd` 是便捷入口，不替代缺少开发依赖时的安装步骤 |
+| A11 | 按“停止与记录”退出，再重新启动 | 本次产品/隧道进程确实退出，端口可重新使用；其他应用的 node.exe 不在本清单清理范围 |
 
----
+## B. 技术与浏览器验收
 
-## C 节：不需要在真机做的（沙箱已覆盖）
-
-- `npm test` 全量（文件数以runner实际输出为准）、`npm audit` 0 漏洞、`node --check` 全量语法、md 链接/密钥/gitignore 扫描（Linux 侧已绿；真机只需 A10/B1 的 Windows 侧确认）
-- XSS 面审查（escapeHtml/textContent 全覆盖）、MCP 认证链、内存有界性、原子写、子进程清理——源码级已验
-- V1–V5 修复项的验收（见同目录 REPORT_v2…v5 矩阵）；ShunCode 对齐 S1–S4 代码面（见 REPORT_SHUNCODE_S1…S4）
-
----
-
-## D 节：第四阶段交付形态（安装包 + 默认壳 + UI 对齐）
-
-> 图形对照：`review/shuncode-ui/`（参考产品 ShunCode 截图索引，含归属约定）。D5–D7 明暗两主题各过一遍。
-
-**D1 安装包编译（需 Inno Setup 6）**
-`installer\build-installer.cmd` → 产出 `webagent-setup-{AppVer}.exe`（版本号唯一改动点＝.iss 顶部 `#define AppVer`），编译过程无脚本错误。
-
-**D2 安装冒烟**
-标准用户权限可装；默认目录 `{autopf}\WebAgent`；桌面+开始菜单主图标 → `run-webagent-vscode.cmd`，开始菜单「经典工作台（备用）」→ `run-webagent.cmd`、「环境自检」→ `check-env.cmd`；勾选「立即启动」进 VS Code 壳且首跑 code-server 自下载成功。
-
-**D3 缺 Node 机器**
-未装 Node 的机器上运行安装/启动 → 给出 check-env 指引且**不阻断不崩溃**（安装器前置检查为非阻断）。
-
-**D4 卸载干净**
-控制面板卸载 → 程序与运行时缓存（agent-host `node_modules`、`bin\code-server-runtime`）清除；**用户工作区/配置/浏览器 profile 保留**；重装覆盖安装正常。
-
-**D5 可搜索模型弹层（对照 11/12/13 图）**
-composer 模型按钮 → 弹层：搜索过滤（名称/ID/组）生效、行显上下文与能力 pill、点选后按钮标签与隐藏 select 同步、Esc/外点关闭、视口内不溢出；多模型页「合并主模型」弹层带「Current merge model」灰注且只读显同步。
-
-**D6 回合徽标与 chip（对照 14 图）**
-回合右下蓝徽标「模型 · 分支 n/n」计数正确；composer 语义 chip 显示正确。
-
-**D7 Bridge 等待态文案（对照 05 图）**
-启动 Bridge 未接客户端时，右栏等待文案语义到位（参考帧：「Waiting for the remote Agent… Input stays in the external client」+ 零统计）；不到位记入下轮抛光，**不算本阶段失败**。
-
-**D9 上下文菜单与打开方式（P5-1，对照 ShunCode 23 图）**
-资源管理器右键文件/目录 → 「用 Web Agent 打开」→ VS Code 壳以该目录（文件则取其目录）为工作区启动；右键 .md/.txt/.js/.json/.py/.html/.css → 「打开方式」菜单含 Web Agent 且**双击默认关联未被劫持**；卸载后菜单项与打开方式注册清干净。
-
-**D10 PATH 与环境广播（P5-1）**
-勾选 addpath 安装后，**新开**终端直接 `run-webagent-vscode` 可用（无需重启：ChangesEnvironment 广播）；覆装一遍 PATH 不出现重复段；卸载后 PATH 精确摘除本目录（无残留、无误删他段）。
-
-**D11 双安装模式与许可页（P5-1，对照 ShunCode 20/21 图）**
-安装对话框可选「仅当前用户」或「为所有用户」（系统级）两种模式皆装通；许可页显示 ISC 许可原文、安装前说明页显示 SECURITY.md 安全边界；中文页面无乱码。
-
-**D12 app 窗口快捷方式（P5-1）**
-双击桌面「Web Agent (app 窗口)」→ 无边框独立窗口（Edge/Chrome `--app`，任务栏独立图标）；主程序未运行时自动后台最小化拉起 VS Code 壳；无 Edge/Chrome 环境回退默认浏览器普通窗且不报错。
-
-**D13 多 Agent 任务板（第六阶段）**
-两个不同网页客户端（如 Arena + 自制插件）同连 Bridge：各自 `peers_list` 互见（count≥2、key 为 client@ip）；A `board_create` 后 B `board_list` 可见；同任务 A/B 同时 `board_claim` 仅一胜（输家 E_TAKEN）；owner 改状态、非 owner 加注记各验一遍；工作区出现 `.webagent/board.json`；停 Bridge 后板文件保留（临时=随工作区，不随进程）。
-
-**D8 S3 遗留 + computer-use 冒烟（S1 报告提议项）**
-真机跑 `snap.ps1` 截图 → 远程网页客户端（Arena/ChatGPT 自制插件等）**实际收到 image 内容**并描述画面（各 MCP 客户端渲染支持逐个验证）；>6MB 截图走静默降级（tooBig）不报错。
-
-### D 节结果表
-
-| 项 | 通过? | 现象/截图 |
+| 编号 | 操作步骤 | 通过条件和限制 |
 |---|---|---|
-| D1–D13 | ☐ | |
+| B1 | 在 Windows 执行 `npm test --prefix webagent-core/agent-host -- --filter=sandbox`；审查测试对 Windows junction 分支的执行证据 | 要有该分支实际执行证据；测试文件整体 PASS 不证明被条件跳过的分支。建链接无权限时记未执行，请维护者协助，不让小白改安全代码绕过 |
+| B2 | 执行 `git ls-files --eol "*.cmd"` | 检出符合 `.gitattributes` 的 CRLF 规则；文件数量不固定 |
+| B3 | 只连自己的测试工作区，真实隧道长挂至少 2 小时；每 15 分钟记录进程内存、状态及一次无副作用请求 | 请求持续可用，资源没有持续无界增长；断线有可解释状态。Quick/Named/ngrok 按实际使用模式分别记录，不以一个替代全部 |
+| B4 | 页面保持 35 分钟不刷新，之后发一次正常请求并查看新事件 | 日志仍能更新/连接可恢复；不同通道可能有固定寿命，重连本身不算失败。MCP 流、工作台 WS、隧道分别记录 |
+| B5 | 逐页打开设置；改一项非敏感设置后保存重开；搜索并点结果；创建 Plan 分支并合并 | 值持久化符合各模块契约、路径/编辑器同步，无未捕获异常；未实现的设置应诚实标识。不要把 mock Plan 当作真实服务验证 |
+| B6 | 用浏览器 DevTools 阻断 Monaco CDN 请求后重载；打开/编辑/保存文本，再解除阻断重载 | 超时回退可编辑，磁盘保存正确；恢复后 Monaco 正常。再测慢速加载期间输入，迟到的 Monaco 不覆盖已输入文本；测完撤销阻断 |
+| B7 | 在自己账号完成实际模型/GitHub及所用浏览器插件授权；运行一项只读任务后重启服务再检查身份 | 每种服务单独记录；GitHub 身份、模型凭据、MCP OAuth 不是一种登录。内存授权重启需重新配对是当前设计，不把它判为登录持久化回归 |
+| B8 | 网页 VS Code 模式启动后用 `netstat -ano` 辨认 3000/48271 的拥有者，核对日志 | 3000 是 code-server，48271 是 agent-host；后者不再监听经典 UI 端口；这不代表 PTY 已通过，另做 G1–G4 |
+| B9 | 仓库根执行 `node docs-site/serve.js`，打开 4173；依次读 Conda、复盘指南、函数详解；点中文标题目录、前进后退、刷新深链接 | 内容/锚点准确、无空白；源代码作为文本显示。再做下文 H1–H3，不用 HTTP 200 或 VM DOM fixture 冒充视觉验收 |
+| B10 | 默认配置启动统计后台，核对实际监听与无授权访问结果 | 默认仅本机，未带令牌不能读统计。没有远程后台需求时不开放网卡、不改变防火墙 |
+| B11 | 中文/空格工作区里保存中文、搜中文、运行无副作用的中文输出命令 | 磁盘、搜索、命令输出一致；经典命令与 PTY 分别记录，不能用前者替代后者 |
 
----
+## C. 自动化证据如何使用
 
-## 已知未修项（跑清单时会遇到，别当新问题报）
+- 全量 `npm test`、文档校验、打包测试是可重复的证据；每次改动要重跑，旧报告不是永久绿灯。
+- 目前 Windows CI 并非 Windows 上的全部交互测试；查看 `.github/workflows/test.yml` 的实际步骤。
+- `npm audit` 是与当时 registry 数据有关的额外检查。旧报告“0 漏洞”不能继承到今天，也不是本清单对依赖风险的保证。
+- 安全边界、持久化、取消和进程清理测试各有覆盖限制。不得写“源码已验，因此无需实机”来关闭其平台行为。
 
-| 编号 | 内容 | 状态 |
+## D. 安装、升级、卸载和桌面
+
+安装项目建议用可恢复的 Windows VM/快照；需要普通用户、管理员两种权限。Conda-only Node 要从激活后的 Prompt 启动入口，资源管理器快捷方式另测。
+
+| 编号 | 操作步骤 | 通过条件 |
 |---|---|---|
-| V4-1 / V3-2 / V3-4 | WS 重连、时序安全比较、engines | **已落地**（`63a960d`），B4 按新预期验 |
-| 披露取舍 | Key 明文在 `.webagent/config.json`、`/api/status` 带 secretKey、启动日志打印含密钥 MCP URL 等 | SECURITY.md 有意为之，勿报 |
-| 真 PTY | **经默认壳解决**：code-server 终端即真 PTY；经典壳按设计保持一次性命令（§12，2026-09-07 用户决定） | 勿报缺陷；经典壳要真 PTY 需另点名（P5-4） |
+| D1 | 仓库根执行 `installer\build-installer.cmd`（需 Inno Setup 6），查看输出目录 | 编译成功、安装包存在；编译成功不算安装成功 |
+| D2 | 运行安装包，按所选安装模式完成；从普通用户启动产品并保存测试文件；记录实际程序/运行时路径 | 程序目录存静态文件，依赖与运行时写入用户可写目录；不能把“普通用户无需 UAC 即可写 Program Files”当预期。默认用户根 `%LOCALAPPDATA%\WebAgent` |
+| D3 | 在没有可见 Node 的测试 VM 启动安装器，再启动入口 | 安装阶段警告可继续，真正运行给出可理解的缺 Node 说明；不是“没有 Node 产品照样可用” |
+| D4 | 升级前备份测试工作区与配置，记录旧版本；安装新版并明确选回同一工作区；随后卸载再检查 | 更新后数据可读；卸载清程序/注册项，不自动删 `%LOCALAPPDATA%\WebAgent`、工作区或用户配置。旧 runtime 保留不是自动迁移证明；不要按旧清单要求把用户缓存一律删光 |
+| D5 | 打开模型选择弹层，搜索、点选、Esc、外点；多模型合并选择另测 | 当前值同步、键盘可退出、小窗口不溢出、主模型选择语义正确 |
+| D6 | 跑多分支回合，核对模型/分支数徽标；切换新回合 | 显示与实际回合一致，迟到响应不污染新回合；明/暗主题分别记录 |
+| D7 | Bridge 开启但无客户端时观察等待态，再连接客户端 | 等待与已连接可区分；仅有隧道 URL 不显示为任务成功 |
+| D8 | 只在无敏感数据的桌面用 computer-use 技能完成截图；让实际 MCP 客户端查看图片；用记事本做文字输入后核对，再测自己的 DPI/多屏配置 | 图片在目标客户端确实可见；`SUBMITTED` 只是输入已提交，必须查看应用内容。剪贴板在无并发修改时恢复；并发改变不能被旧快照覆盖。不在密码框/付款窗口练习 |
+| D9 | 在安装器勾选相关集成，右键测试文件/目录打开，再卸载后检查菜单 | 工作区正确、默认文件关联不被劫持、相关菜单项卸载后消失 |
+| D10 | 勾选 PATH 集成，新开终端检查入口；覆盖安装后再查 PATH；卸载后再查 | 本产品条目不重复，卸载只移除本产品条目；Conda 激活路径不能被误删 |
+| D11 | 分别验“仅当前用户”和“所有用户”，记录 UAC/目录/许可证页 | 权限与所选模式匹配；许可可读。有中文语言文件才要求中文向导；缺该文件时英文回退不冒充中文 |
+| D12 | 启动 app 窗口入口；未启动后台时再测一次；关闭窗口后检查进程 | 等待就绪后打开 Edge/Chrome app 窗口；无适用浏览器时默认浏览器回退明确；关闭窗口不误声称后台已停止 |
+| D13 | 两个自己授权的客户端连同一测试工作区，创建测试任务板任务、查看、认领、更新 | 对方能看到任务；同一任务只有一个认领成功；重启后板文件保留但客户端授权需重建 |
+
+## F. 手机 Arena / 远程 MCP（不开放远程 UI）
+
+1. **F1 主机准备**：本机经典/VS Code 路径先通过；临时测试工作区只有无敏感文件，启用 Bridge。保存脱敏启动时间和网络条件，不分享带密钥的 URL。
+2. **F2 手机连接**：使用你实际账号上具备 MCP 接入能力的客户端配置页添加连接，按客户端支持的 OAuth/配对方式完成授权。普通聊天框粘贴地址不是配置 MCP。如果该版本/账号没有入口，记录“受客户端能力阻塞”，不要编造按钮路径。
+3. **F3 只读验证**：请求列出测试工作区并读取预先写入的 `acceptance.txt`，核对内容及主机日志。手机可切蜂窝网络以确认跨网络路径；私有配置不应发送给无关客户端。
+4. **F4 受控写入**：明确授权仅在测试目录新建 `phone-acceptance.txt`，指定无敏感文字；主机磁盘核对，再在客户端读回。写操作仍遵守项目现有权限/确认策略。
+5. **F5 生命周期**：停止 Bridge 后新请求应不能继续经该隧道访问；重启并按当前内存授权策略重新配对；旧连接不能因为保留 UI 就被认为还有效。结束后清理测试连接。
+
+以上不用把 `/api`、`/ws` 或整个工作台暴露到公网。不同客户端对 SSE、图片、OAuth 的支持分别验；一个客户端成功不能替代其他客户端。
+
+## G. 真 VS Code PTY
+
+- **G1 环境**：记录桌面 VS Code 或网页 code-server 版本、扩展加载状态、工作区和实际终端 shell；运行 Conda E3 的解释器诊断。
+- **G2 正常/失败**：从产品的 PTY 执行路径提交安全的输出命令，例如 Windows PowerShell 的 `Write-Output 'pty-check'; exit 0`；再用 `exit 7` 检查失败结果。输出和真实退出码应可观察，不能用普通 REST 包装的 `success:true` 代替。
+- **G3 审批**：发起需要确认的本地测试命令，先拒绝并核对未执行，再新建任务允许；关闭/取消任务后迟到审批不应执行。不要通过关闭策略让测试“通过”。
+- **G4 取消/隔离**：在测试终端运行 `Start-Sleep -Seconds 30`，按产品支持的取消方式终止，观察任务终态和真实进程；切换测试工作区检查旧任务不会在新工作区执行。未接入取消的 MCP 通知不作为可用取消按钮，见代码差异记录。
+
+缺少 node-pty 且 shell integration 不可观察时，明确“未执行”是当前设计；不是可以 sendText 后假报成功。
+
+## H. 布局、键盘与小屏
+
+- **H1 桌面视觉**：经典工作台和文档站分别在约 1280px/1920px 宽度，100%/200% 缩放下看长段落、表格、长路径、代码块、弹层；无内容被不可恢复地裁切。分别保存截图。
+- **H2 键盘**：只用 Tab/Shift+Tab/Enter/Space/Esc 操作可折叠目录、导航和弹层；焦点可见、无键盘陷阱、关闭弹层后焦点位置合理。发现异常记实际结果，不因 CSS 有 focus-visible 就通过。
+- **H3 小屏**：真实手机或浏览器设备模拟测约 390px 宽度，表格/源码可横向查看、目录不挡正文。模拟器只证明该视口布局，真实触摸另测；手机 MCP 连通仍需 F 节。完整无障碍认证还需要读屏等额外测试，本清单不冒充该认证。
+
+## 结果模板
+
+按实际项目逐行复制，不要将 A1–A11 合并勾一次。`不适用` 必须写原因，`未执行` 不能计为通过。
+
+| 编号 | 提交/环境 | 操作摘要 | 实际结果 | 判定 | 脱敏证据/阻塞原因 |
+|---|---|---|---|---|---|
+| E1 | 待填 | 待填 | 待填 | 未执行 | 待填 |
+| A1 | 待填 | 待填 | 待填 | 未执行 | 待填 |
+| G2 | 待填 | 待填 | 待填 | 未执行 | 待填 |
+| F3 | 待填 | 待填 | 待填 | 未执行 | 待填 |
+
+代码中已知差异见[文档质量审查](DOC_QUALITY_2026-09-12.md)与[交叉审计台账](AUDIT_CROSSCHECK_2026-09-11.md)。这不授权忽略新的失败，也不把旧报告“已修复”当作本机验收记录。

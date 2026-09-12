@@ -1,5 +1,7 @@
 # Web Agent
 
+**环境与复盘入口**：[Windows + Conda](Conda环境说明.md) · [逐项人工验收](review/CHECKLIST_WINDOWS.md) · [从文件到函数的复盘指南](代码复盘指南.md)。
+
 本机工作台 + 独立 agent-host。网页 AI 通过 MCP 改你电脑上的仓库。许可证 [ISC](./LICENSE)。安全边界见 [SECURITY.md](./SECURITY.md)。
 
 同类产品的公开文档可参考 [docs.shuncode.top](https://docs.shuncode.top/docs/intro/)。

@@ -15,6 +15,7 @@ if (!fs.existsSync(path.join(root, 'node_modules', 'express'))) {
 const preferred = [
   'documentationPolicy.test.js',
   'documentationQuality.test.js',
+  'documentationLearning.test.js',
   'patchEngine.test.js',
   'mcpProtocol.test.js',
   'workspaceTools.test.js',

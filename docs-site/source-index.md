@@ -196,7 +196,7 @@
 
 ## docs-site/documentation.config.json
 
-[目录说明](README.md) · SHA-256 `8135ca1d5fbbc4389a374a6569359debb3086053271b19a7681c1da896dd7e41`
+[目录说明](README.md) · SHA-256 `7cc086c2138af3ca3ae3ee811482efe0d52ee931319ae67d17d75b30196b9eb8`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -266,12 +266,12 @@
 
 ## installer/package.js
 
-[目录说明](../installer/README.md) · SHA-256 `fbeb5e5d6b6950e530121d46b33155c8165d79fa8ceb76b99cebcbf966d0f0f1`
+[目录说明](../installer/README.md) · SHA-256 `f63fd4281e02986f013c27cd47a8f76a01b064833a5b556c899b3e3ab8ead3c6`
 
-- `digest` — FunctionDeclaration，[L20–L20](../installer/package.js#L20-L20)
-- `collect` — FunctionDeclaration，[L21–L40](../installer/package.js#L21-L40)
-- `collect/add` — FunctionDeclaration，[L23–L36](../installer/package.js#L23-L36)
-- `stage` — FunctionDeclaration，[L41–L62](../installer/package.js#L41-L62)
+- `digest` — FunctionDeclaration，[L23–L23](../installer/package.js#L23-L23)
+- `collect` — FunctionDeclaration，[L24–L43](../installer/package.js#L24-L43)
+- `collect/add` — FunctionDeclaration，[L26–L39](../installer/package.js#L26-L39)
+- `stage` — FunctionDeclaration，[L44–L65](../installer/package.js#L44-L65)
 
 ## installer/webagent.iss
 
@@ -373,12 +373,12 @@
 
 ## webagent-core/agent-host/scripts/run-tests.js
 
-[目录说明](../webagent-core/agent-host/scripts/README.md) · SHA-256 `5a431c049c46bb7eaa7723c1709f9467c8e94dbf6ebe848234660949af821565`
+[目录说明](../webagent-core/agent-host/scripts/README.md) · SHA-256 `4c83a14aa170ec93b4071e56baff1da4ce0b3bfd380a57cadfdff02fe0094dc6`
 
-- `anonymous@50:46` — ArrowFunctionExpression，[L50–L50](../webagent-core/agent-host/scripts/run-tests.js#L50-L50)
-- `anonymous@51:27` — ArrowFunctionExpression，[L51–L51](../webagent-core/agent-host/scripts/run-tests.js#L51-L51)
-- `anonymous@52:33` — ArrowFunctionExpression，[L52–L52](../webagent-core/agent-host/scripts/run-tests.js#L52-L52)
-- `anonymous@65:46` — ArrowFunctionExpression，[L65–L65](../webagent-core/agent-host/scripts/run-tests.js#L65-L65)
+- `anonymous@51:46` — ArrowFunctionExpression，[L51–L51](../webagent-core/agent-host/scripts/run-tests.js#L51-L51)
+- `anonymous@52:27` — ArrowFunctionExpression，[L52–L52](../webagent-core/agent-host/scripts/run-tests.js#L52-L52)
+- `anonymous@53:33` — ArrowFunctionExpression，[L53–L53](../webagent-core/agent-host/scripts/run-tests.js#L53-L53)
+- `anonymous@66:46` — ArrowFunctionExpression，[L66–L66](../webagent-core/agent-host/scripts/run-tests.js#L66-L66)
 
 ## webagent-core/agent-host/src/agent/computerUse.js
 
@@ -1544,6 +1544,16 @@
 - `anonymous@39:45` — ArrowFunctionExpression，[L39–L39](../webagent-core/agent-host/tests/docsSite.test.js#L39-L39)
 - `anonymous@43:47` — ArrowFunctionExpression，[L43–L43](../webagent-core/agent-host/tests/docsSite.test.js#L43-L43)
 - `anonymous@46:56` — ArrowFunctionExpression，[L46–L46](../webagent-core/agent-host/tests/docsSite.test.js#L46-L46)
+
+## webagent-core/agent-host/tests/documentationLearning.test.js
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `e7941e0b4b1520c4c397eb73f945ec39b7fa49959dc4532c4190f8b5ec7dff86`
+
+- `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
+- `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)
+- `namedFunctions` — FunctionDeclaration，[L20–L33](../webagent-core/agent-host/tests/documentationLearning.test.js#L20-L33)
+- `namedFunctions/anonymous@29:44` — ArrowFunctionExpression，[L29–L29](../webagent-core/agent-host/tests/documentationLearning.test.js#L29-L29)
+- `anonymous@44:35` — ArrowFunctionExpression，[L44–L44](../webagent-core/agent-host/tests/documentationLearning.test.js#L44-L44)
 
 ## webagent-core/agent-host/tests/documentationPolicy.test.js
 

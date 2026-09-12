@@ -1,5 +1,7 @@
 # 测试导航：测了什么，以及没有证明什么
 
+新增 `documentationLearning.test.js`：校验首组逐函数正文的具名函数提及、Conda/人工验收入口、表格与代码块及发行说明入包；只防机械遗漏，不认证解释准确性，也不代表 Windows/Conda 实测。
+
 ## 职责与运行
 这里存放可独立运行的 `.test.js`，统一入口是上一级scripts/run-tests.js。runner检查依赖和必需测试，发现其他测试文件，以独立进程执行，超时/失败非零退出；测试失败仍汇总其余结果。
 
@@ -68,6 +70,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [desktopExtension.test.js](desktopExtension.test.js) | 0 个函数/类节点 |
 | [docsHttp.test.js](docsHttp.test.js) | 14 个函数/类节点 |
 | [docsSite.test.js](docsSite.test.js) | 4 个函数/类节点 |
+| [documentationLearning.test.js](documentationLearning.test.js) | 5 个函数/类节点 |
 | [documentationPolicy.test.js](documentationPolicy.test.js) | 11 个函数/类节点 |
 | [documentationQuality.test.js](documentationQuality.test.js) | 9 个函数/类节点 |
 | [editorRuntime.test.js](editorRuntime.test.js) | 33 个函数/类节点 |

@@ -73,6 +73,46 @@
       "id": "documentation-quality",
       "path": "review/DOC_QUALITY_2026-09-12.md",
       "group": "维护"
+    },
+    {
+      "id": "conda-windows",
+      "path": "Conda环境说明.md",
+      "group": "运行与验收"
+    },
+    {
+      "id": "windows-acceptance",
+      "path": "review/CHECKLIST_WINDOWS.md",
+      "group": "运行与验收"
+    },
+    {
+      "id": "code-learning",
+      "path": "代码复盘指南.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "installer-functions",
+      "path": "installer/函数详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "host-entry-functions",
+      "path": "webagent-core/agent-host/src/入口详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "utils-functions",
+      "path": "webagent-core/agent-host/src/utils/函数详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "tunnel-stop-functions",
+      "path": "webagent-core/agent-host/src/tunnel/停止进程详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "test-runner-functions",
+      "path": "webagent-core/agent-host/scripts/运行器详解.md",
+      "group": "源码复盘"
     }
   ],
   "sourceSnapshotExclusions": [
