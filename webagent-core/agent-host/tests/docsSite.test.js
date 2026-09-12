@@ -47,3 +47,7 @@ assert.ok(Object.values(context.window.DOCS.files).some(doc => doc.html.includes
 assert.ok(context.window.DOCS.files['source-index'].html.includes('/L'));
 
 assert.ok(!context.window.DOCS.sources['webagent-core/agent-host/tests/installerPackaging.test.js'].text, 'Test fixtures are not embedded in distributable docs');
+
+const appSrc = fs.readFileSync(path.join(repoRoot, 'docs-site/app.js'), 'utf8');
+assert.ok(appSrc.includes('arenaConnect 仅显示连接指引'), 'connection guidance must not claim to execute MCP');
+assert.ok(!appSrc.includes('arenaConnect 打的是本机 /mcp'), 'stale Arena behavior must not return');

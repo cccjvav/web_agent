@@ -268,6 +268,26 @@
       "id": "learning-editor-orchestration",
       "path": "webagent-core/scripts/编辑器编排详解.md",
       "group": "源码复盘"
+    },
+    {
+      "id": "learning-admin-docs-0",
+      "path": "webagent-core/admin-host/统计服务详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-admin-docs-1",
+      "path": "docs-site/清单与构建详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-admin-docs-2",
+      "path": "docs-site/浏览与服务详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-admin-docs-3",
+      "path": "webagent-core/agent-host/tests/统计与文档测试详解.md",
+      "group": "源码复盘"
     }
   ],
   "sourceSnapshotExclusions": [

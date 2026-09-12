@@ -9,6 +9,16 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/admin-host/app.js", "webagent-core/admin-host/统计服务详解.md"],
+  ["webagent-core/admin-host/index.js", "webagent-core/admin-host/统计服务详解.md"],
+  ["docs-site/check-docs.js", "docs-site/清单与构建详解.md"],
+  ["docs-site/build.js", "docs-site/清单与构建详解.md"],
+  ["docs-site/app.js", "docs-site/浏览与服务详解.md"],
+  ["docs-site/serve.js", "docs-site/浏览与服务详解.md"],
+  ["webagent-core/agent-host/tests/adminHost.test.js", "webagent-core/agent-host/tests/统计与文档测试详解.md"],
+  ["webagent-core/agent-host/tests/docsSite.test.js", "webagent-core/agent-host/tests/统计与文档测试详解.md"],
+  ["webagent-core/agent-host/tests/docsHttp.test.js", "webagent-core/agent-host/tests/统计与文档测试详解.md"],
+
   ["webagent-core/scripts/ensure-code-server.js", "webagent-core/scripts/编辑器编排详解.md"],
   ["webagent-core/scripts/codeServerAuth.js", "webagent-core/scripts/编辑器编排详解.md"],
   ["webagent-core/scripts/run-code-oss.js", "webagent-core/scripts/编辑器编排详解.md"],

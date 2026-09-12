@@ -136,7 +136,7 @@
             <li>Quick Tunnel 只在 Cloudflare 时 <code>startQuickTunnel</code></li>
             <li>远程 tools/call 默认 Code</li>
             <li>远程 MCP 没有交互式 PTY（<code>send_command_input</code> <code>E_FORBIDDEN</code>）；桌面 Chat 可走集成终端「Web Agent · 1」</li>
-            <li>工作台 arenaConnect 打的是本机 /mcp，不是云上 Arena</li>
+            <li>工作台 arenaConnect 仅显示连接指引，不调用本机 MCP 或云上 Arena</li>
             <li>隧道带 Cloudflare 头时 48271 /api 404，不下发 secretKey</li>
             <li>默认只听 127.0.0.1；符号链接不能指到工作区外</li>
             <li>MCP CORS 白名单；外站 Origin 不能打本机 /api</li>
@@ -178,7 +178,7 @@
       ['agent-host', 'SKIP_WORKBENCH=1'],
       ['extension.js', '仍 POST :48271/api/chat'],
       ['callTool', '同一套扳手'],
-      ['磁盘', '网页改盘仍走 B']
+      ['磁盘', '扩展经本机 Chat API 改盘']
     ]
   };
 

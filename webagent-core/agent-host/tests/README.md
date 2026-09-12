@@ -1,5 +1,8 @@
 # 测试导航：测了什么，以及没有证明什么
 
+精细实现复盘：[adminHost/docsSite/docsHttp逐fixture与断言](统计与文档测试详解.md)。
+
+
 新增 `documentationLearning.test.js`：校验累计39个源码文件对应正文的具名函数/类方法提及、Conda/人工验收入口、表格与代码块及发行说明入包；只防机械遗漏，不认证解释准确性，也不代表 Windows/Conda 实测。
 
 ## 职责与运行

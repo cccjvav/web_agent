@@ -131,7 +131,7 @@
     {
       "path": "docs-site/app.js",
       "doc": "docs-site/README.md",
-      "sha256": "3d8ec9d6bbb95818cdfc6a3bd5d8b0bbbd6d626d88072695886d968f86b9c77d",
+      "sha256": "299b7f1f549b23682ddf478ebc585e87d49b65d172eb335a08d1f34f8dd29126",
       "lineCount": 386,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -1079,8 +1079,8 @@
     {
       "path": "docs-site/documentation.config.json",
       "doc": "docs-site/README.md",
-      "sha256": "1112af12450476185c0bbc7396d4136a52fd9af2136ca4e610178a3c83f546b0",
-      "lineCount": 280,
+      "sha256": "5695789b7fa090d01953179349187ad5c1c2419ea68ac123e793aa2ded2c90b6",
+      "lineCount": 300,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -1088,7 +1088,7 @@
     {
       "path": "docs-site/index.html",
       "doc": "docs-site/README.md",
-      "sha256": "5fb55b6fcc79eaeb595efe88ef8fec37d5145aa2956d8bc6a2f0aa289b41d4e9",
+      "sha256": "bf109b23c94392add9405ad8ad21508156d25b7af5d3d819033dfd3e5f84f50c",
       "lineCount": 18,
       "structure": "file-only",
       "semanticReview": "not-certified",
@@ -10595,8 +10595,8 @@
     {
       "path": "webagent-core/agent-host/tests/docsSite.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "54365ea194b2814693200f8091589c5ed4ad225ef4ac6870e38372f1ccc01dc7",
-      "lineCount": 50,
+      "sha256": "894a5503fefb668a212d4f742885c1a056d15a605dba212b6d5be3b6c9773c9f",
+      "lineCount": 54,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -10645,8 +10645,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLearning.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "e2524bad4e8ecb0596c13e1ba3de58f2805685a14cfe308525fe02d730b791b4",
-      "lineCount": 148,
+      "sha256": "9c88178489ef52f10e8363e6bec1b31a45cfba7b10913af9d5c3f0860ac1a677",
+      "lineCount": 158,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -10674,29 +10674,29 @@
           "id": "namedFunctions",
           "name": "namedFunctions",
           "kind": "FunctionDeclaration",
-          "startLine": 93,
-          "endLine": 108,
+          "startLine": 103,
+          "endLine": 118,
           "parameters": [
             "node",
             "result = new Set()"
           ]
         },
         {
-          "id": "namedFunctions/anonymous@104:44",
-          "name": "anonymous@104:44",
+          "id": "namedFunctions/anonymous@114:44",
+          "name": "anonymous@114:44",
           "kind": "ArrowFunctionExpression",
-          "startLine": 104,
-          "endLine": 104,
+          "startLine": 114,
+          "endLine": 114,
           "parameters": [
             "child"
           ]
         },
         {
-          "id": "anonymous@120:35",
-          "name": "anonymous@120:35",
+          "id": "anonymous@130:35",
+          "name": "anonymous@130:35",
           "kind": "ArrowFunctionExpression",
-          "startLine": 120,
-          "endLine": 120,
+          "startLine": 130,
+          "endLine": 130,
           "parameters": [
             "p"
           ]
