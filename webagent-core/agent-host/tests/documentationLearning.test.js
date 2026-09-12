@@ -9,6 +9,12 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/extension/ptyHost.js", "webagent-core/extension/PTY扩展详解.md"],
+  ["webagent-core/extension/ptyPolicy.js", "webagent-core/extension/PTY扩展详解.md"],
+  ["webagent-core/extension/extension.js", "webagent-core/extension/入口与Webview详解.md"],
+  ["webagent-core/extension/modeFromChatRequest.js", "webagent-core/extension/入口与Webview详解.md"],
+  ["webagent-core/extension/workspaceMatch.js", "webagent-core/extension/入口与Webview详解.md"],
+
   ["webagent-core/agent-host/src/tools/patchEngine.js", "webagent-core/agent-host/src/tools/补丁与路径详解.md"],
   ["webagent-core/agent-host/src/tools/fileOps.js", "webagent-core/agent-host/src/tools/文件与搜索详解.md"],
   ["webagent-core/agent-host/src/tools/findFiles.js", "webagent-core/agent-host/src/tools/文件与搜索详解.md"],

@@ -228,6 +228,16 @@
       "id": "learning-tools-4",
       "path": "webagent-core/agent-host/src/tools/任务板与工作区详解.md",
       "group": "源码复盘"
+    },
+    {
+      "id": "learning-extension-0",
+      "path": "webagent-core/extension/PTY扩展详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-extension-1",
+      "path": "webagent-core/extension/入口与Webview详解.md",
+      "group": "源码复盘"
     }
   ],
   "sourceSnapshotExclusions": [

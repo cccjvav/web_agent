@@ -1,5 +1,8 @@
 # VS Code扩展：本机Chat界面与可观测PTY宿主
 
+逐函数与嵌入脚本详解：[入口与Webview](入口与Webview详解.md) · [PTY扩展](PTY扩展详解.md)。覆盖本目录5个JS文件，并讲解package.json贡献声明和SVG资源。
+
+
 ## 职责与入口
 扩展为VS Code提供Web Agent侧栏和可用时的原生Chat参与者，调用本机agent-host；它不是新的远程模型服务器。桌面Chat可把命令交给本目录PTY宿主，网页MCP仍走主机的普通命令执行路径。
 
