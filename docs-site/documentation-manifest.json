@@ -1079,8 +1079,8 @@
     {
       "path": "docs-site/documentation.config.json",
       "doc": "docs-site/README.md",
-      "sha256": "7cc086c2138af3ca3ae3ee811482efe0d52ee931319ae67d17d75b30196b9eb8",
-      "lineCount": 125,
+      "sha256": "f14e7c11cba7d2adc552969a347bee8b795743f3c9eeebb55f9b03a076b322ad",
+      "lineCount": 165,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -1969,7 +1969,7 @@
     {
       "path": "webagent-core/agent-host/src/agent/openai.js",
       "doc": "webagent-core/agent-host/src/agent/README.md",
-      "sha256": "a789071a009c2a15ae01907462f9f011b7c45f5f0083ee83cd105f97fe92c4eb",
+      "sha256": "777ba715860041e8d0cf86fe8b6ad51d8068659f0dea9a361d2a808bbe988b13",
       "lineCount": 210,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -10645,8 +10645,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLearning.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "e7941e0b4b1520c4c397eb73f945ec39b7fa49959dc4532c4190f8b5ec7dff86",
-      "lineCount": 72,
+      "sha256": "83ec220a393b440d7a64b1880b3c648fb3350440d6c8ce312343c2b16acb269c",
+      "lineCount": 88,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -10674,29 +10674,29 @@
           "id": "namedFunctions",
           "name": "namedFunctions",
           "kind": "FunctionDeclaration",
-          "startLine": 20,
-          "endLine": 33,
+          "startLine": 36,
+          "endLine": 49,
           "parameters": [
             "node",
             "result = new Set()"
           ]
         },
         {
-          "id": "namedFunctions/anonymous@29:44",
-          "name": "anonymous@29:44",
+          "id": "namedFunctions/anonymous@45:44",
+          "name": "anonymous@45:44",
           "kind": "ArrowFunctionExpression",
-          "startLine": 29,
-          "endLine": 29,
+          "startLine": 45,
+          "endLine": 45,
           "parameters": [
             "child"
           ]
         },
         {
-          "id": "anonymous@44:35",
-          "name": "anonymous@44:35",
+          "id": "anonymous@60:35",
+          "name": "anonymous@60:35",
           "kind": "ArrowFunctionExpression",
-          "startLine": 44,
-          "endLine": 44,
+          "startLine": 60,
+          "endLine": 60,
           "parameters": [
             "p"
           ]

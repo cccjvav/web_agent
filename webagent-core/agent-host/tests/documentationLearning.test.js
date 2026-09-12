@@ -9,6 +9,22 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/src/agent/runChat.js", "webagent-core/agent-host/src/agent/Chat调度详解.md"],
+  ["webagent-core/agent-host/src/agent/openai.js", "webagent-core/agent-host/src/agent/模型调用详解.md"],
+  ["webagent-core/agent-host/src/agent/providers.js", "webagent-core/agent-host/src/agent/模型调用详解.md"],
+  ["webagent-core/agent-host/src/agent/computerUse.js", "webagent-core/agent-host/src/agent/模型调用详解.md"],
+  ["webagent-core/agent-host/src/agent/toolLabel.js", "webagent-core/agent-host/src/agent/模型调用详解.md"],
+  ["webagent-core/agent-host/src/tools/planRound.js", "webagent-core/agent-host/src/tools/Plan状态详解.md"],
+  ["webagent-core/agent-host/src/tools/consensusEngine.js", "webagent-core/agent-host/src/tools/Plan状态详解.md"],
+  ["webagent-core/agent-host/src/models/store.js", "webagent-core/agent-host/src/models/配置存储详解.md"],
+  ["webagent-core/agent-host/src/models/customizations.js", "webagent-core/agent-host/src/models/画像与记忆详解.md"],
+  ["webagent-core/agent-host/src/models/profile.js", "webagent-core/agent-host/src/models/画像与记忆详解.md"],
+  ["webagent-core/agent-host/src/models/memory.js", "webagent-core/agent-host/src/models/画像与记忆详解.md"],
+  ["webagent-core/agent-host/src/auth/github.js", "webagent-core/agent-host/src/auth/GitHub身份详解.md"],
+  ["webagent-core/agent-host/src/usage/tracker.js", "webagent-core/agent-host/src/usage/用量上报详解.md"],
+  ["webagent-core/agent-host/src/config.js", "webagent-core/agent-host/src/运行配置详解.md"],
+  ["webagent-core/agent-host/src/extensionVersion.js", "webagent-core/agent-host/src/运行配置详解.md"],
+
   ['installer/launch.js', 'installer/函数详解.md'],
   ['installer/package.js', 'installer/函数详解.md'],
   ['webagent-core/agent-host/src/index.js', 'webagent-core/agent-host/src/入口详解.md'],

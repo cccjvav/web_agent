@@ -113,6 +113,46 @@
       "id": "test-runner-functions",
       "path": "webagent-core/agent-host/scripts/运行器详解.md",
       "group": "源码复盘"
+    },
+    {
+      "id": "learning-core-0",
+      "path": "webagent-core/agent-host/src/agent/Chat调度详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-core-1",
+      "path": "webagent-core/agent-host/src/agent/模型调用详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-core-2",
+      "path": "webagent-core/agent-host/src/tools/Plan状态详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-core-3",
+      "path": "webagent-core/agent-host/src/models/配置存储详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-core-4",
+      "path": "webagent-core/agent-host/src/models/画像与记忆详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-core-5",
+      "path": "webagent-core/agent-host/src/auth/GitHub身份详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-core-6",
+      "path": "webagent-core/agent-host/src/usage/用量上报详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-core-7",
+      "path": "webagent-core/agent-host/src/运行配置详解.md",
+      "group": "源码复盘"
     }
   ],
   "sourceSnapshotExclusions": [

@@ -1,5 +1,8 @@
 # GitHub可选身份验证
 
+逐函数阅读：[GitHub身份详解](GitHub身份详解.md)。
+
+
 ## 职责与入口
 `github.js`通过GitHub API确认用户名和用户ID，供Bridge显示可选GitHub身份。它不是模型服务登录，不是MCP OAuth配对；本机Chat不要求先完成此流程。
 

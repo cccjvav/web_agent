@@ -157,7 +157,7 @@ async function runOpenAI({
           });
           // 本机 Chat 的「眼睛」：run_command 产生截图（如 computer-use snap.ps1 -Out …）时，
           // 下一轮把 PNG 作为 image_url 部分发给模型。文本通道会被 12000 字截断，不能当眼睛。
-          // MCP/Bridge 不走这里：tools/call 仍只回 type:'text'。
+          // MCP/Bridge 不走这里：mcp/server.js 复用 collectShot，以 MCP image 内容回图。
           if (name === 'run_command') {
             const shot = collectShot({
               command: String(args.command || ''),

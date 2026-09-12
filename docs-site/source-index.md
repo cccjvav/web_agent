@@ -196,7 +196,7 @@
 
 ## docs-site/documentation.config.json
 
-[目录说明](README.md) · SHA-256 `7cc086c2138af3ca3ae3ee811482efe0d52ee931319ae67d17d75b30196b9eb8`
+[目录说明](README.md) · SHA-256 `f14e7c11cba7d2adc552969a347bee8b795743f3c9eeebb55f9b03a076b322ad`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -394,7 +394,7 @@
 
 ## webagent-core/agent-host/src/agent/openai.js
 
-[目录说明](../webagent-core/agent-host/src/agent/README.md) · SHA-256 `a789071a009c2a15ae01907462f9f011b7c45f5f0083ee83cd105f97fe92c4eb`
+[目录说明](../webagent-core/agent-host/src/agent/README.md) · SHA-256 `777ba715860041e8d0cf86fe8b6ad51d8068659f0dea9a361d2a808bbe988b13`
 
 - `modelSeesImages` — FunctionDeclaration，[L13–L20](../webagent-core/agent-host/src/agent/openai.js#L13-L20)
 - `modelSeesImages/anonymous@19:19` — ArrowFunctionExpression，[L19–L19](../webagent-core/agent-host/src/agent/openai.js#L19-L19)
@@ -1547,13 +1547,13 @@
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `e7941e0b4b1520c4c397eb73f945ec39b7fa49959dc4532c4190f8b5ec7dff86`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `83ec220a393b440d7a64b1880b3c648fb3350440d6c8ce312343c2b16acb269c`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)
-- `namedFunctions` — FunctionDeclaration，[L20–L33](../webagent-core/agent-host/tests/documentationLearning.test.js#L20-L33)
-- `namedFunctions/anonymous@29:44` — ArrowFunctionExpression，[L29–L29](../webagent-core/agent-host/tests/documentationLearning.test.js#L29-L29)
-- `anonymous@44:35` — ArrowFunctionExpression，[L44–L44](../webagent-core/agent-host/tests/documentationLearning.test.js#L44-L44)
+- `namedFunctions` — FunctionDeclaration，[L36–L49](../webagent-core/agent-host/tests/documentationLearning.test.js#L36-L49)
+- `namedFunctions/anonymous@45:44` — ArrowFunctionExpression，[L45–L45](../webagent-core/agent-host/tests/documentationLearning.test.js#L45-L45)
+- `anonymous@60:35` — ArrowFunctionExpression，[L60–L60](../webagent-core/agent-host/tests/documentationLearning.test.js#L60-L60)
 
 ## webagent-core/agent-host/tests/documentationPolicy.test.js
 

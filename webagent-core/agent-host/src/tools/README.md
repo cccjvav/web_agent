@@ -1,5 +1,8 @@
 # 工具层：读取、修改、命令和协作状态
 
+逐函数阅读：[Plan状态详解](Plan状态详解.md)。
+
+
 ## 职责与入口
 MCP、本机Chat和部分REST操作复用 `index.js` 的callTool。它做工具名称/参数归一、模式检查、远程限制和结果预算，再调用具体handler。**schema用于描述接口，不代表这里有通用JSON Schema执行器**；参数边界仍由归一逻辑和handler检查。
 
