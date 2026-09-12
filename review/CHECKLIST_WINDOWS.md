@@ -20,7 +20,7 @@ Conda 用户先看[Conda 环境说明](../Conda环境说明.md)，完成 E1–E6
 ## 准备、停止与记录
 
 1. 使用独立测试工作区，例如 `%USERPROFILE%\WebAgent-acceptance`，不要用重要仓库；备份用户配置。只连接你拥有或获准使用的主机与客户端。
-2. 从已激活的 Conda Prompt（CMD）进入仓库；按 Conda 说明确认 Node/npm/Python 路径，执行 `npm ci --include=dev --prefix webagent-core/agent-host`。
+2. 从 VS Code 集成终端的 Command Prompt（CMD）激活 Conda 并进入仓库；按 Conda 说明确认系统 Node、npm/npx 与环境 Python 的实际路径，若 Anaconda Prompt 可用而此处不可用，先按该说明第 2.2 节排查 PATH，执行 `npm ci --include=dev --prefix webagent-core/agent-host`。
 3. 不同时启动经典壳与网页 VS Code 壳。用 `netstat -ano | findstr :3000`、`netstat -ano | findstr :48271` 核对占用，先辨认 PID，不要批量结束所有 node.exe。
 4. 保存编辑、停止 Bridge，再在启动窗口 Ctrl+C；重新检查本项目进程与端口。App 窗口可能有后台服务，关浏览器不等于停服务；只停止已确认属于本次测试的进程。
 5. 每项记录：日期、提交、系统/浏览器/VS Code/Node 版本、启动方式、操作、预期、实测、结果（通过/失败/未执行/不适用）、证据。失败附脱敏错误与截图，不贴密钥或完整 MCP 凭据 URL。

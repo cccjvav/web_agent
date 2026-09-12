@@ -12,13 +12,15 @@
 
 Web Agent 的产品入口是 `node src/index.js`，不是 Python 脚本；当前产品没有要用 pip 安装的根 `requirements.txt`。**不要为了运行 Web Agent 就在根目录执行 `pip install -r requirements.txt` 或安装 pytest。** 如果你的业务项目需要它们，请进入那个项目，按它自己的依赖文件安装。
 
-下文命令面向 **Windows 的 Anaconda Prompt / Miniconda Prompt（CMD）**。不要直接复制到 PowerShell、Git Bash 或 WSL；CMD 的 `set`、`%变量%`、`cd /d` 与那些终端不同。路径和环境名是例子，要换成自己的。
+下文默认你的实际使用方式：**Windows 桌面 VS Code → 集成终端 Command Prompt（CMD）→ `conda activate`，复用本机已安装的 Node.js/npm**。Anaconda Prompt 仅用于对照诊断，不要求改用它。不要直接复制到 PowerShell、Git Bash 或 WSL；CMD 的 `set`、`%变量%`、`cd /d` 与那些终端不同。路径和环境名是例子，要换成自己的。
 
 ## 2. 准备并确认实际解释器
 
 ### 2.1 优先复用已有环境
 
-打开 Conda 自带的 Prompt：
+在 VS Code 命令面板执行 `Terminal: Select Default Profile`，选择 **Command Prompt**，关闭旧终端并新建终端。选择的是 CMD 终端，不是 Python 解释器选择器；后者不保证 Node/npm 可用。
+
+在该集成 CMD 终端逐条执行：
 
 ```bat
 conda info --envs
@@ -30,13 +32,71 @@ python -c "import sys; print(sys.executable); print(sys.version)"
 where node
 node -p "process.execPath"
 node --version
+where npm
+where npx
 npm --version
+npx --version
 git --version
 ```
 
 通过标准：Python 路径属于你选定的环境；Node 路径是你有意选择的安装位置，且 npm 能运行。`where` 可以列出多个候选，真正启动的是搜索顺序中的可执行项；`sys.executable` / `process.execPath` 是更直接的证据。
 
-### 2.2 没有合适环境时再新建（可选）
+### 2.2 VS Code 中 npm/npx 不可用，而 Anaconda Prompt 可用
+
+**这是两个 shell 的命令查找环境不同的现象，不能仅凭它判断 Conda 或 Node 损坏。** Anaconda Prompt 通常也是经 Conda 初始化的 CMD，但启动入口、父进程环境、激活脚本可能不同。Conda 激活会调整 PATH，不等于容器隔离，也不会必然隐藏系统 Node。
+
+先分别在 **VS Code 集成 CMD** 和 **能正常使用 npm 的 Anaconda Prompt** 中执行下列命令，尽量激活同一个环境；再比较激活前后结果。每条独立执行，失败也保留报错：
+
+```bat
+echo %COMSPEC%
+echo %CONDA_PREFIX%
+where conda
+where node
+where npm
+where npx
+node -p "process.execPath"
+node --version
+npm --version
+npx --version
+echo %PATHEXT%
+```
+
+`npx --version` 只查版本，不执行或下载项目包。`where` 可能列出多个候选；比较其完整路径，不要只比较版本号。必要时本地查看 `echo %PATH%`，不要把完整环境变量或含个人路径/凭据的日志原样公开。
+
+| 观察结果 | 含义与下一步 |
+|---|---|
+| VS Code 中 node/npm/npx 全找不到，Prompt 能找到 | 优先怀疑 VS Code 继承旧 PATH 或终端配置覆盖；先按下面顺序重启核对 |
+| 两边 node 的实际路径不同 | 使用了系统、Conda 或版本管理器中的不同安装；先确定要用哪一个，不急着重装 |
+| node 能运行，where npm/npx 无结果 | node.exe 所在目录未必有 npm.cmd/npx.cmd；检查实际安装是否完整，不能仅凭 node 存在就认定 npm 已装好 |
+| 激活前正常，激活后不正常 | 检查该环境的激活脚本、环境变量或重复 Node 安装，是否覆盖而非追加 PATH |
+| npm.cmd 能运行但 npm 不行 | 检查 PATHEXT 是否包含 .CMD，以及 CMD 宏/命令同名冲突；不要盲目重置整个 PATHEXT |
+| 提示 npm.ps1 禁止运行 | 这是 PowerShell 脚本策略问题，不是当前 CMD 的“不是内部或外部命令”；先确认实际 shell，勿为此全局放宽执行策略 |
+
+**按风险从低到高修复，每步之后重跑路径诊断：**
+
+1. 保存文件，停止正在使用的服务，**完全退出所有 VS Code 窗口和相关 Code.exe 进程**，再从开始菜单重新打开。安装 Node 或修改 PATH 之后，只新建终端或 Reload Window 不一定刷新 VS Code 父进程环境。不应强杀有未保存内容的进程。
+2. 在 VS Code 用户设置和工作区设置中检查 `terminal.integrated.env.windows`、`terminal.integrated.profiles.windows`，是否把 PATH 写死、置空，或指定了特殊启动脚本。记录原配置，只修具体覆盖项，不整份删除设置。
+3. 在能够运行 npm 的 Prompt 中根据 `where node/npm/npx` 确认安装目录。例如只有在确认 `C:\Program Files\nodejs` 确实包含 node.exe、npm.cmd、npx.cmd 后，才可在 VS Code CMD 做临时验证：
+
+```bat
+set "PATH=C:\Program Files\nodejs;%PATH%"
+where node
+where npm
+where npx
+node -p "process.execPath"
+npm --version
+npx --version
+```
+
+   该路径仅是常见例子，不适用于所有安装/版本管理器；要换成已查明的实际目录。此 `set` 仅影响当前 CMD 和随后启动的子进程，不修复父 VS Code 的环境。
+4. 若临时补 PATH 后恢复，使用 Windows“编辑账户的环境变量”在适当的用户/系统 Path 中检查并补上**已确认的 Node 安装目录**，保留其他条目，然后完整重启 VS Code。不要用 `setx PATH "%PATH%;..."`，它可能展开、重复甚至截断现有值；也不要添加整个 Conda 环境来凑 PATH。
+5. 若实际 Node 目录缺 npm.cmd/npx.cmd，才考虑用所选 Node 安装器修复 npm 组件；版本管理器安装则按其机制修复。不要首先执行 `npm install -g npm`、删除 Conda 环境或再装第二套 Node。
+
+补充对照：完全退出 VS Code 后，在可用的 Anaconda Prompt 里执行 `code .`，若新开的 VS Code 终端可用，则支持“继承环境不同”的判断；**这只是诊断，不是要求你以后必须从 Prompt 启动**。如果 Code 已在后台运行，`code .` 可能复用旧进程，比较无效。
+
+如果 CMD 中连 `conda activate` 都不可用，才另行处理 Conda 的 CMD 初始化：可在能找到 Conda 的 Prompt 中执行 `conda init cmd.exe`，再完整重启 VS Code。该命令会修改 shell 初始化配置，不是 npm 修复命令；你已经能正常激活时不必重复执行。
+
+### 2.3 没有合适环境时再新建（可选）
 
 ```bat
 conda create -n webagent-dev python=3.11
@@ -47,7 +107,7 @@ conda activate webagent-dev
 
 Node 有两种选择，**选一种作为主要来源**：
 
-- 推荐新手：系统安装 Node.js 22（含 npm），Conda 只管理 Python。Node 22 与当前 Windows CI 配置一致；包声明的 `>=18` 是最低约束，不代表建议安装过旧版本。
+- 按你的现有配置优先复用系统安装的 Node.js（含 npm），Conda 只管理 Python，不因 PATH 问题重复安装。若需要新装，推荐 Node.js 22。Node 22 与当前 Windows CI 配置一致；包声明的 `>=18` 是最低约束，不代表建议安装过旧版本。
 - 希望连 Node 也隔离：在当前环境执行下面命令。渠道需要联网；若渠道不可达或包解算失败，先修复 Conda 配置，不要随意叠加不明渠道。
 
 ```bat
@@ -64,7 +124,7 @@ npm --version
 
 ### 3.1 安装产品依赖
 
-在已激活的 Prompt 中进入**仓库根**：
+在已激活的 VS Code 集成 CMD 中进入**仓库根**：
 
 ```bat
 cd /d "D:\projects\web_agent"
@@ -94,7 +154,7 @@ run-webagent-vscode.cmd "%USERPROFILE%\WebAgent-acceptance"
 
 安装版不适合做源码开发/全量测试：测试文件并非完整随包交付。修改和测试应在 Git checkout 中进行。
 
-若 Node 只安装在 Conda 环境中，资源管理器双击的快捷方式**不保证能找到它**。先激活环境，再从同一个 Prompt 调用安装目录中的入口，例如：
+若 Node 只安装在 Conda 环境中，资源管理器双击的快捷方式**不保证能找到它**。先激活环境，再从同一个已核验的 CMD 调用安装目录中的入口，例如：
 
 ```bat
 conda activate webagent-dev
@@ -121,7 +181,7 @@ python -c "import sys; print(sys.executable)"
 conda run -n webagent-dev --no-capture-output python -c "import sys; print(sys.executable)"
 ```
 
-上面是你在 Conda Prompt 中的示例。若 Agent 的 PowerShell 找不到 `conda`，使用第 2 节确认的可执行文件**绝对路径**（下面示例路径必须替换），PowerShell 调用带空格的路径需要 `&`：
+上面是你在 VS Code 集成 CMD 中的示例。若 Agent 的 PowerShell 找不到 `conda`，使用第 2 节确认的可执行文件**绝对路径**（下面示例路径必须替换），PowerShell 调用带空格的路径需要 `&`：
 
 ```powershell
 & 'C:\Users\你的用户名\miniconda3\Scripts\conda.exe' run -n webagent-dev --no-capture-output python -c "import sys; print(sys.executable)"
@@ -204,15 +264,15 @@ node docs-site/serve.js
 
 ## 7. Conda 专项验收（E1–E6）
 
-均从全新打开的 Prompt 开始；记录日期、`git rev-parse HEAD`、Windows/浏览器/VS Code 版本、Conda 环境名、Node/npm/Python 版本。日志中删去 Token、API Key、含密钥的 MCP URL 和个人路径。
+均从重新启动的 VS Code、新建的集成 CMD 终端开始；记录日期、`git rev-parse HEAD`、Windows/浏览器/VS Code 版本、Conda 环境名、Node/npm/Python 版本。日志中删去 Token、API Key、含密钥的 MCP URL 和个人路径。
 
 | 编号 | 操作 | 通过条件／证据 |
 |---|---|---|
-| E1 | 按第 2 节激活并诊断 | Python 路径属于所选环境；Node/npm 与预期一致；保存脱敏文本 |
+| E1 | 在 VS Code 集成 CMD 按第 2 节激活并诊断；出现差异时对照 Anaconda Prompt | Python 路径属于所选环境；node/npm/npx 路径与版本符合选择；记录激活前后结果及启动方式 |
 | E2 | 按第 3 节安装、启动经典壳，创建并保存验收文件 | 页面可用，磁盘内容一致；记录启动方式和工作区 |
 | E3 | 在实际 Agent 执行路径诊断 Python，再用 `conda run` 重复 | 路径正确；报错/审批/超时不能算通过；PTY 路径另做一次，不用经典命令结果替代 |
 | E4 | 按第 6 节跑全量测试 | 退出 0、所有文件通过；记录文件数和日志，不用绿色启动页替代 |
-| E5 | 保存后停服务，关闭 Prompt，新开 Prompt 重复激活和启动 | 无需依靠之前窗口的偶然环境；解释器仍正确。若承诺双击启动，再单独验证快捷方式 |
+| E5 | 保存后停服务，完全退出 VS Code，重新打开集成 CMD 重复激活和启动 | 无需依靠之前窗口的偶然环境；解释器仍正确。若承诺双击启动，再单独验证快捷方式 |
 | E6 | 在 4173 检查本说明、源码讲解、中文锚点；再跑产品人工清单 | 记录人工清单各项的通过/失败/未执行，不能只填“全部正常” |
 
 若业务工作区是 Python 项目，再按那个项目的真实测试命令验证一次（例如它确实使用 pytest 且已安装，才运行 `conda run -n 环境名 python -m pytest`）。这份结果与 Web Agent 的 `npm test` 分开记录。
