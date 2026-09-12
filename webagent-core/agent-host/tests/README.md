@@ -1,5 +1,20 @@
 # 测试导航：测了什么，以及没有证明什么
 
+逐测试详解：[浏览器与Webview测试详解](浏览器与Webview测试详解.md)（monacoLoading、workbenchRuntime、editorRuntime、webviewRuntime）。
+
+
+逐测试详解：[Chat模型与图像测试详解](Chat模型与图像测试详解.md)（runChat、modelLifecycle、chatVision）。
+
+
+逐测试详解：[文档守卫测试详解](文档守卫测试详解.md)（documentationPolicy、documentationQuality、documentationLearning）。
+
+
+逐测试详解：[安装与运行器测试详解](安装与运行器测试详解.md)（testRunner、codeServerAuth、extensionCopy、desktopExtension、codeServerNotRunnable、installerPackaging）。
+
+
+逐测试详解：[模式画像与Plan测试详解](模式画像与Plan测试详解.md)（chatMode、toolLabel、providers、profile、planRound）。
+
+
 精细实现复盘：[adminHost/docsSite/docsHttp逐fixture与断言](统计与文档测试详解.md)。
 
 

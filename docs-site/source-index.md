@@ -196,7 +196,7 @@
 
 ## docs-site/documentation.config.json
 
-[目录说明](README.md) · SHA-256 `bf3a0169310abeb4a8d0be5becb003600d66167b010cad8b4441f0f114234fe0`
+[目录说明](README.md) · SHA-256 `0f23d5dfc4488a88bbd0207fb2b5e46abdb92cf7b27864a58ebcb9e881fddd26`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -1547,15 +1547,15 @@
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `9022b636e79095d92b5d8841a1d77e7009318c913e36408e245146512f0243b0`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `340635937816587236f154935b61ab373a05b47e5dc666c2b5ff170565320872`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)
-- `namedFunctions` — FunctionDeclaration，[L104–L119](../webagent-core/agent-host/tests/documentationLearning.test.js#L104-L119)
-- `namedFunctions/anonymous@115:44` — ArrowFunctionExpression，[L115–L115](../webagent-core/agent-host/tests/documentationLearning.test.js#L115-L115)
-- `anonymous@202:66` — ArrowFunctionExpression，[L202–L202](../webagent-core/agent-host/tests/documentationLearning.test.js#L202-L202)
-- `anonymous@207:43` — ArrowFunctionExpression，[L207–L207](../webagent-core/agent-host/tests/documentationLearning.test.js#L207-L207)
-- `anonymous@207:68` — ArrowFunctionExpression，[L207–L207](../webagent-core/agent-host/tests/documentationLearning.test.js#L207-L207)
+- `namedFunctions` — FunctionDeclaration，[L130–L145](../webagent-core/agent-host/tests/documentationLearning.test.js#L130-L145)
+- `namedFunctions/anonymous@141:44` — ArrowFunctionExpression，[L141–L141](../webagent-core/agent-host/tests/documentationLearning.test.js#L141-L141)
+- `anonymous@228:66` — ArrowFunctionExpression，[L228–L228](../webagent-core/agent-host/tests/documentationLearning.test.js#L228-L228)
+- `anonymous@233:43` — ArrowFunctionExpression，[L233–L233](../webagent-core/agent-host/tests/documentationLearning.test.js#L233-L233)
+- `anonymous@233:68` — ArrowFunctionExpression，[L233–L233](../webagent-core/agent-host/tests/documentationLearning.test.js#L233-L233)
 
 ## webagent-core/agent-host/tests/documentationPolicy.test.js
 

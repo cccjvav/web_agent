@@ -9,6 +9,32 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/tests/monacoLoading.test.js", "webagent-core/agent-host/tests/浏览器与Webview测试详解.md"],
+  ["webagent-core/agent-host/tests/workbenchRuntime.test.js", "webagent-core/agent-host/tests/浏览器与Webview测试详解.md"],
+  ["webagent-core/agent-host/tests/editorRuntime.test.js", "webagent-core/agent-host/tests/浏览器与Webview测试详解.md"],
+  ["webagent-core/agent-host/tests/webviewRuntime.test.js", "webagent-core/agent-host/tests/浏览器与Webview测试详解.md"],
+
+  ["webagent-core/agent-host/tests/runChat.test.js", "webagent-core/agent-host/tests/Chat模型与图像测试详解.md"],
+  ["webagent-core/agent-host/tests/modelLifecycle.test.js", "webagent-core/agent-host/tests/Chat模型与图像测试详解.md"],
+  ["webagent-core/agent-host/tests/chatVision.test.js", "webagent-core/agent-host/tests/Chat模型与图像测试详解.md"],
+
+  ["webagent-core/agent-host/tests/documentationPolicy.test.js", "webagent-core/agent-host/tests/文档守卫测试详解.md"],
+  ["webagent-core/agent-host/tests/documentationQuality.test.js", "webagent-core/agent-host/tests/文档守卫测试详解.md"],
+  ["webagent-core/agent-host/tests/documentationLearning.test.js", "webagent-core/agent-host/tests/文档守卫测试详解.md"],
+
+  ["webagent-core/agent-host/tests/testRunner.test.js", "webagent-core/agent-host/tests/安装与运行器测试详解.md"],
+  ["webagent-core/agent-host/tests/codeServerAuth.test.js", "webagent-core/agent-host/tests/安装与运行器测试详解.md"],
+  ["webagent-core/agent-host/tests/extensionCopy.test.js", "webagent-core/agent-host/tests/安装与运行器测试详解.md"],
+  ["webagent-core/agent-host/tests/desktopExtension.test.js", "webagent-core/agent-host/tests/安装与运行器测试详解.md"],
+  ["webagent-core/agent-host/tests/codeServerNotRunnable.test.js", "webagent-core/agent-host/tests/安装与运行器测试详解.md"],
+  ["webagent-core/agent-host/tests/installerPackaging.test.js", "webagent-core/agent-host/tests/安装与运行器测试详解.md"],
+
+  ["webagent-core/agent-host/tests/chatMode.test.js", "webagent-core/agent-host/tests/模式画像与Plan测试详解.md"],
+  ["webagent-core/agent-host/tests/toolLabel.test.js", "webagent-core/agent-host/tests/模式画像与Plan测试详解.md"],
+  ["webagent-core/agent-host/tests/providers.test.js", "webagent-core/agent-host/tests/模式画像与Plan测试详解.md"],
+  ["webagent-core/agent-host/tests/profile.test.js", "webagent-core/agent-host/tests/模式画像与Plan测试详解.md"],
+  ["webagent-core/agent-host/tests/planRound.test.js", "webagent-core/agent-host/tests/模式画像与Plan测试详解.md"],
+
   ["webagent-core/agent-host/tests/workbenchHtml.test.js", "webagent-core/workbench/页面结构详解.md"],
   ["webagent-core/admin-host/app.js", "webagent-core/admin-host/统计服务详解.md"],
   ["webagent-core/admin-host/index.js", "webagent-core/admin-host/统计服务详解.md"],
