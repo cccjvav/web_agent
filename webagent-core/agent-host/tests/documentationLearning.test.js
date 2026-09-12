@@ -9,6 +9,14 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/scripts/ensure-code-server.js", "webagent-core/scripts/编辑器编排详解.md"],
+  ["webagent-core/scripts/codeServerAuth.js", "webagent-core/scripts/编辑器编排详解.md"],
+  ["webagent-core/scripts/run-code-oss.js", "webagent-core/scripts/编辑器编排详解.md"],
+  ["webagent-core/scripts/install-desktop-extension.js", "webagent-core/scripts/编辑器编排详解.md"],
+
+  ["webagent-core/agent-host/src/tunnel/cloudflared.js", "webagent-core/agent-host/src/tunnel/隧道生命周期详解.md"],
+  ["webagent-core/agent-host/src/tunnel/ngrok.js", "webagent-core/agent-host/src/tunnel/隧道生命周期详解.md"],
+
   ["webagent-core/workbench/js/state.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
   ["webagent-core/workbench/js/dom.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
   ["webagent-core/workbench/js/tabs.js", "webagent-core/workbench/js/状态与编辑器详解.md"],

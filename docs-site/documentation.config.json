@@ -258,6 +258,16 @@
       "id": "learning-workbench-3",
       "path": "webagent-core/workbench/js/交互绑定详解.md",
       "group": "源码复盘"
+    },
+    {
+      "id": "learning-tunnel-lifecycle",
+      "path": "webagent-core/agent-host/src/tunnel/隧道生命周期详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-editor-orchestration",
+      "path": "webagent-core/scripts/编辑器编排详解.md",
+      "group": "源码复盘"
     }
   ],
   "sourceSnapshotExclusions": [
