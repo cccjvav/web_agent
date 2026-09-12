@@ -153,6 +153,36 @@
       "id": "learning-core-7",
       "path": "webagent-core/agent-host/src/运行配置详解.md",
       "group": "源码复盘"
+    },
+    {
+      "id": "learning-mcp-0",
+      "path": "webagent-core/agent-host/src/mcp/会话与结果详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-mcp-1",
+      "path": "webagent-core/agent-host/src/mcp/资源与客户端详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-mcp-2",
+      "path": "webagent-core/agent-host/src/mcp/请求分发详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-mcp-3",
+      "path": "webagent-core/agent-host/src/mcp/OAuth授权详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-mcp-4",
+      "path": "webagent-core/agent-host/src/utils/控制面与Origin详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-mcp-5",
+      "path": "webagent-core/agent-host/src/utils/事件总线详解.md",
+      "group": "源码复盘"
     }
   ],
   "sourceSnapshotExclusions": [

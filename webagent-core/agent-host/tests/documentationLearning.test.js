@@ -9,6 +9,18 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/src/mcp/session.js", "webagent-core/agent-host/src/mcp/会话与结果详解.md"],
+  ["webagent-core/agent-host/src/mcp/errors.js", "webagent-core/agent-host/src/mcp/会话与结果详解.md"],
+  ["webagent-core/agent-host/src/mcp/budget.js", "webagent-core/agent-host/src/mcp/会话与结果详解.md"],
+  ["webagent-core/agent-host/src/mcp/instructions.js", "webagent-core/agent-host/src/mcp/资源与客户端详解.md"],
+  ["webagent-core/agent-host/src/mcp/resources.js", "webagent-core/agent-host/src/mcp/资源与客户端详解.md"],
+  ["webagent-core/agent-host/src/mcp/clients.js", "webagent-core/agent-host/src/mcp/资源与客户端详解.md"],
+  ["webagent-core/agent-host/src/mcp/server.js", "webagent-core/agent-host/src/mcp/请求分发详解.md"],
+  ["webagent-core/agent-host/src/mcp/oauth.js", "webagent-core/agent-host/src/mcp/OAuth授权详解.md"],
+  ["webagent-core/agent-host/src/utils/localControl.js", "webagent-core/agent-host/src/utils/控制面与Origin详解.md"],
+  ["webagent-core/agent-host/src/utils/corsAllow.js", "webagent-core/agent-host/src/utils/控制面与Origin详解.md"],
+  ["webagent-core/agent-host/src/utils/eventBus.js", "webagent-core/agent-host/src/utils/事件总线详解.md"],
+
   ["webagent-core/agent-host/src/agent/runChat.js", "webagent-core/agent-host/src/agent/Chat调度详解.md"],
   ["webagent-core/agent-host/src/agent/openai.js", "webagent-core/agent-host/src/agent/模型调用详解.md"],
   ["webagent-core/agent-host/src/agent/providers.js", "webagent-core/agent-host/src/agent/模型调用详解.md"],
@@ -35,6 +47,8 @@ const pairs = [
 ];
 function namedFunctions(node, result = new Set()) {
   if (!node || typeof node !== 'object') return result;
+  if (node.type === 'ClassDeclaration' && node.id) result.add(node.id.name);
+  if (node.type === 'MethodDefinition' && !node.computed && node.key.name) result.add(node.key.name);
   if (node.type === 'FunctionDeclaration' && node.id) result.add(node.id.name);
   if (node.type === 'VariableDeclarator' && node.id.type === 'Identifier' && node.init &&
       /^(ArrowFunctionExpression|FunctionExpression)$/.test(node.init.type)) result.add(node.id.name);
@@ -49,6 +63,7 @@ function namedFunctions(node, result = new Set()) {
 }
 // Negative fixture: this collector must not silently omit named nested callbacks.
 assert.deepStrictEqual([...namedFunctions(acorn.parse('function outer(){const cancel=()=>{};}', { ecmaVersion: 'latest' }))], ['outer', 'cancel']);
+assert.deepStrictEqual([...namedFunctions(acorn.parse('class Bus { constructor(){} broadcast(){} }', { ecmaVersion: 'latest' }))], ['Bus', 'constructor', 'broadcast']);
 for (const [source, guide] of pairs) {
   const body = read(guide);
   assert.ok(routes.has(guide), guide + ': available in documentation viewer');

@@ -196,7 +196,7 @@
 
 ## docs-site/documentation.config.json
 
-[目录说明](README.md) · SHA-256 `f14e7c11cba7d2adc552969a347bee8b795743f3c9eeebb55f9b03a076b322ad`
+[目录说明](README.md) · SHA-256 `d1a5b066292f9355d41f92127a04f1ba0e2607ffcc7b2ca081ff1b694f276bb2`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -1547,13 +1547,13 @@
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `83ec220a393b440d7a64b1880b3c648fb3350440d6c8ce312343c2b16acb269c`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `c551e1edf691a505428d2e5814ab3addf1cb99b1191ead3b4e28c5d23d58e885`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)
-- `namedFunctions` — FunctionDeclaration，[L36–L49](../webagent-core/agent-host/tests/documentationLearning.test.js#L36-L49)
-- `namedFunctions/anonymous@45:44` — ArrowFunctionExpression，[L45–L45](../webagent-core/agent-host/tests/documentationLearning.test.js#L45-L45)
-- `anonymous@60:35` — ArrowFunctionExpression，[L60–L60](../webagent-core/agent-host/tests/documentationLearning.test.js#L60-L60)
+- `namedFunctions` — FunctionDeclaration，[L48–L63](../webagent-core/agent-host/tests/documentationLearning.test.js#L48-L63)
+- `namedFunctions/anonymous@59:44` — ArrowFunctionExpression，[L59–L59](../webagent-core/agent-host/tests/documentationLearning.test.js#L59-L59)
+- `anonymous@75:35` — ArrowFunctionExpression，[L75–L75](../webagent-core/agent-host/tests/documentationLearning.test.js#L75-L75)
 
 ## webagent-core/agent-host/tests/documentationPolicy.test.js
 

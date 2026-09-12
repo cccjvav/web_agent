@@ -33,3 +33,9 @@
 - 对照源码新增8篇详解，覆盖15个源码文件（累计22），逐一说明具名辅助函数、匿名回调、输入输出和副作用；补充真实差异：模型调用非逐token流、能力探测无显式deadline、测试命令是启发式、customizations嵌套覆盖、GitHub单pending缺代次保护、记忆读取非有界等。未改变运行逻辑。
 - 仅纠正openai.js一处过时MCP“只回文本”注释；验收清单和Conda步骤保持不变，方便用户阅读。
 - 扩展documentationLearning映射、README/站点导航/复盘进度；清单166/25/37，构建与完整52/52通过。
+
+
+## 继续复盘：MCP与控制面第三组
+- 6篇人工详解覆盖11个源码文件：MCP全目录8文件及localControl/corsAllow/eventBus，累计33个。解释全部具名函数/类方法、路由、SSE与令牌状态；不把HTTP成功、软预算、内存TTL、提示文案当全面保证。
+- 明确现状限制：OAuth输入/元数据非完整标准认证，token/rateMap并非全部数量有界，HTTP会话未绑定OAuth主体，GET SSE固定寿命且非事件总线流，取消通知未贯通；不在本轮改变产品行为。
+- documentationLearning新增类名/构造器/方法提及守卫及负遗漏fixture（机械检查非语义证明）；构建、52/52通过。验收及Conda正文未改。
