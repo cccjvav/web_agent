@@ -9,6 +9,41 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/tests/mcpProtocol.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
+  ["webagent-core/agent-host/tests/httpSmoke.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
+  ["webagent-core/agent-host/tests/skipWorkbench.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
+
+  ["webagent-core/agent-host/tests/patchEngine.test.js", "webagent-core/agent-host/tests/补丁与编辑API测试详解.md"],
+  ["webagent-core/agent-host/tests/apiFiles.test.js", "webagent-core/agent-host/tests/补丁与编辑API测试详解.md"],
+
+  ["webagent-core/agent-host/tests/oauth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
+  ["webagent-core/agent-host/tests/oauthClientAuth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
+  ["webagent-core/agent-host/tests/githubAuth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
+
+  ["webagent-core/agent-host/tests/auditControl.test.js", "webagent-core/agent-host/tests/本机边界与跨站测试详解.md"],
+  ["webagent-core/agent-host/tests/localControl.test.js", "webagent-core/agent-host/tests/本机边界与跨站测试详解.md"],
+  ["webagent-core/agent-host/tests/corsAllow.test.js", "webagent-core/agent-host/tests/本机边界与跨站测试详解.md"],
+
+  ["webagent-core/agent-host/tests/dangerousCommands.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
+  ["webagent-core/agent-host/tests/sandbox.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
+  ["webagent-core/agent-host/tests/workspaceTools.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
+
+  ["webagent-core/agent-host/tests/board.test.js", "webagent-core/agent-host/tests/任务板与事件流测试详解.md"],
+  ["webagent-core/agent-host/tests/mcpBoard.test.js", "webagent-core/agent-host/tests/任务板与事件流测试详解.md"],
+  ["webagent-core/agent-host/tests/eventBus.test.js", "webagent-core/agent-host/tests/任务板与事件流测试详解.md"],
+
+  ["webagent-core/agent-host/tests/ptyJobs.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
+  ["webagent-core/agent-host/tests/ptyLifecycle.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
+  ["webagent-core/agent-host/tests/tunnel.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
+  ["webagent-core/agent-host/tests/tunnelLifecycle.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
+  ["webagent-core/agent-host/tests/bridgeTunnel.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
+
+  ["webagent-core/agent-host/tests/stateIntegrity.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
+  ["webagent-core/agent-host/tests/resourceBudget.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
+  ["webagent-core/agent-host/tests/auditStorage.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
+  ["webagent-core/agent-host/tests/hostPersist.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
+  ["webagent-core/agent-host/tests/usageTracker.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
+
   ["webagent-core/agent-host/tests/monacoLoading.test.js", "webagent-core/agent-host/tests/浏览器与Webview测试详解.md"],
   ["webagent-core/agent-host/tests/workbenchRuntime.test.js", "webagent-core/agent-host/tests/浏览器与Webview测试详解.md"],
   ["webagent-core/agent-host/tests/editorRuntime.test.js", "webagent-core/agent-host/tests/浏览器与Webview测试详解.md"],
@@ -224,11 +259,11 @@ for (const [source, guide] of artifactPairs) {
   assert.ok(routes.has(guide), guide + ': artifact guide is navigable');
   assert.ok(read(guide).includes(path.basename(source)), guide + ': identifies source artifact');
 }
-// Every in-scope non-test file needs a human guide; registration is not semantic certification.
+// Every in-scope source, including tests, needs a human guide; not semantic certification.
 const explainedSources = new Set([...pairs, ...artifactPairs].map(pair => pair[0]));
 const sourceManifest = JSON.parse(read('docs-site/documentation-manifest.json'));
 for (const file of sourceManifest.files) {
-  if (!file.path.includes('/tests/')) assert.ok(explainedSources.has(file.path), file.path + ': needs a detailed implementation guide');
+  assert.ok(explainedSources.has(file.path), file.path + ': needs a detailed implementation guide');
 }
 const docs = new Set([...artifactPairs.map(p => p[1]), ...pairs.map(p => p[1]), 'Conda环境说明.md', '代码复盘指南.md', 'review/CHECKLIST_WINDOWS.md']);
 for (const doc of docs) {

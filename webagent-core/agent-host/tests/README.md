@@ -1,24 +1,28 @@
 # 测试导航：测了什么，以及没有证明什么
 
-逐测试详解：[浏览器与Webview测试详解](浏览器与Webview测试详解.md)（monacoLoading、workbenchRuntime、editorRuntime、webviewRuntime）。
+全部52个测试文件已有逐fixture/断言正文。下表是阅读入口，不代表真机验收通过。
 
+## 逐测试详解
 
-逐测试详解：[Chat模型与图像测试详解](Chat模型与图像测试详解.md)（runChat、modelLifecycle、chatVision）。
+| 人工正文 | 对应测试（省略.test.js） |
+|---|---|
+| [模式画像与Plan测试详解](模式画像与Plan测试详解.md) | chatMode、toolLabel、providers、profile、planRound |
+| [安装与运行器测试详解](安装与运行器测试详解.md) | testRunner、codeServerAuth、extensionCopy、desktopExtension、codeServerNotRunnable、installerPackaging |
+| [文档守卫测试详解](文档守卫测试详解.md) | documentationPolicy、documentationQuality、documentationLearning |
+| [Chat模型与图像测试详解](Chat模型与图像测试详解.md) | runChat、modelLifecycle、chatVision |
+| [浏览器与Webview测试详解](浏览器与Webview测试详解.md) | monacoLoading、workbenchRuntime、editorRuntime、webviewRuntime |
+| [存储完整性与预算测试详解](存储完整性与预算测试详解.md) | stateIntegrity、resourceBudget、auditStorage、hostPersist、usageTracker |
+| [PTY与隧道测试详解](PTY与隧道测试详解.md) | ptyJobs、ptyLifecycle、tunnel、tunnelLifecycle、bridgeTunnel |
+| [任务板与事件流测试详解](任务板与事件流测试详解.md) | board、mcpBoard、eventBus |
+| [工作区与命令安全测试详解](工作区与命令安全测试详解.md) | dangerousCommands、sandbox、workspaceTools |
+| [本机边界与跨站测试详解](本机边界与跨站测试详解.md) | auditControl、localControl、corsAllow |
+| [OAuth与GitHub测试详解](OAuth与GitHub测试详解.md) | oauth、oauthClientAuth、githubAuth |
+| [补丁与编辑API测试详解](补丁与编辑API测试详解.md) | patchEngine、apiFiles |
+| [MCP协议与整机入口测试详解](MCP协议与整机入口测试详解.md) | mcpProtocol、httpSmoke、skipWorkbench |
+| [统计与文档测试](统计与文档测试详解.md) | adminHost、docsSite、docsHttp |
+| [工作台HTML结构与测试](../../workbench/页面结构详解.md) | workbenchHtml |
 
-
-逐测试详解：[文档守卫测试详解](文档守卫测试详解.md)（documentationPolicy、documentationQuality、documentationLearning）。
-
-
-逐测试详解：[安装与运行器测试详解](安装与运行器测试详解.md)（testRunner、codeServerAuth、extensionCopy、desktopExtension、codeServerNotRunnable、installerPackaging）。
-
-
-逐测试详解：[模式画像与Plan测试详解](模式画像与Plan测试详解.md)（chatMode、toolLabel、providers、profile、planRound）。
-
-
-精细实现复盘：[adminHost/docsSite/docsHttp逐fixture与断言](统计与文档测试详解.md)。
-
-
-新增 `documentationLearning.test.js`：校验累计39个源码文件对应正文的具名函数/类方法提及、Conda/人工验收入口、表格与代码块及发行说明入包；只防机械遗漏，不认证解释准确性，也不代表 Windows/Conda 实测。
+documentationLearning检查全部清单源文件的正文登记；对JS检查具名函数/类方法提及，对非JS检查文件名关联。总计130个JS与36个非JS对应60篇详解，只有机械遗漏/漂移检查，不认证解释准确性，也不代表Windows/Conda实测。
 
 ## 职责与运行
 这里存放可独立运行的 `.test.js`，统一入口是上一级scripts/run-tests.js。runner检查依赖和必需测试，发现其他测试文件，以独立进程执行，超时/失败非零退出；测试失败仍汇总其余结果。

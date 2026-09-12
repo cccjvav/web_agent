@@ -1079,8 +1079,8 @@
     {
       "path": "docs-site/documentation.config.json",
       "doc": "docs-site/README.md",
-      "sha256": "0f23d5dfc4488a88bbd0207fb2b5e46abdb92cf7b27864a58ebcb9e881fddd26",
-      "lineCount": 360,
+      "sha256": "33f51498bb4634881497ea8d3e45c1a5986ee559cd1c9bb87878aea8201368fc",
+      "lineCount": 400,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -10645,8 +10645,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLearning.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "340635937816587236f154935b61ab373a05b47e5dc666c2b5ff170565320872",
-      "lineCount": 261,
+      "sha256": "34c023437999a5372ccb9afd8cae241177247f0d21e0f84912ec33c3f0120444",
+      "lineCount": 296,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -10674,49 +10674,49 @@
           "id": "namedFunctions",
           "name": "namedFunctions",
           "kind": "FunctionDeclaration",
-          "startLine": 130,
-          "endLine": 145,
+          "startLine": 165,
+          "endLine": 180,
           "parameters": [
             "node",
             "result = new Set()"
           ]
         },
         {
-          "id": "namedFunctions/anonymous@141:44",
-          "name": "anonymous@141:44",
+          "id": "namedFunctions/anonymous@176:44",
+          "name": "anonymous@176:44",
           "kind": "ArrowFunctionExpression",
-          "startLine": 141,
-          "endLine": 141,
+          "startLine": 176,
+          "endLine": 176,
           "parameters": [
             "child"
           ]
         },
         {
-          "id": "anonymous@228:66",
-          "name": "anonymous@228:66",
+          "id": "anonymous@263:66",
+          "name": "anonymous@263:66",
           "kind": "ArrowFunctionExpression",
-          "startLine": 228,
-          "endLine": 228,
+          "startLine": 263,
+          "endLine": 263,
           "parameters": [
             "pair"
           ]
         },
         {
-          "id": "anonymous@233:43",
-          "name": "anonymous@233:43",
+          "id": "anonymous@268:43",
+          "name": "anonymous@268:43",
           "kind": "ArrowFunctionExpression",
-          "startLine": 233,
-          "endLine": 233,
+          "startLine": 268,
+          "endLine": 268,
           "parameters": [
             "p"
           ]
         },
         {
-          "id": "anonymous@233:68",
-          "name": "anonymous@233:68",
+          "id": "anonymous@268:68",
+          "name": "anonymous@268:68",
           "kind": "ArrowFunctionExpression",
-          "startLine": 233,
-          "endLine": 233,
+          "startLine": 268,
+          "endLine": 268,
           "parameters": [
             "p"
           ]

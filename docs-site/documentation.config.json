@@ -348,6 +348,46 @@
       "id": "learning-tests-ui",
       "path": "webagent-core/agent-host/tests/浏览器与Webview测试详解.md",
       "group": "源码复盘"
+    },
+    {
+      "id": "learning-tests-storage",
+      "path": "webagent-core/agent-host/tests/存储完整性与预算测试详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-tests-pty-tunnel",
+      "path": "webagent-core/agent-host/tests/PTY与隧道测试详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-tests-board-events",
+      "path": "webagent-core/agent-host/tests/任务板与事件流测试详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-tests-workspace",
+      "path": "webagent-core/agent-host/tests/工作区与命令安全测试详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-tests-local",
+      "path": "webagent-core/agent-host/tests/本机边界与跨站测试详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-tests-auth",
+      "path": "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-tests-patch-api",
+      "path": "webagent-core/agent-host/tests/补丁与编辑API测试详解.md",
+      "group": "源码复盘"
+    },
+    {
+      "id": "learning-tests-protocol-http",
+      "path": "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md",
+      "group": "源码复盘"
     }
   ],
   "sourceSnapshotExclusions": [
