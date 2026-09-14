@@ -109,3 +109,25 @@ try {
 }
 
 console.log('eventBus tests passed');
+
+// Authoritative per-process Bridge activity survives browser reload; local Chat is excluded.
+eventBus.broadcast('bridge_round_reset');
+eventBus.broadcast('tool_call_end', { tool: 'local-tool', success: true });
+assert.strictEqual(eventBus.getBridgeActivity().stats.calls, 0);
+for (let i = 0; i < 105; i++) eventBus.broadcast('tool_call_end', {
+  source: 'Bridge-Remote', tool: 'ping', success: i !== 0, durationMs: 2,
+  result: 'private result must not enter activity', args: { token: 'private-token' }
+});
+const activity = eventBus.getBridgeActivity();
+assert.strictEqual(activity.stats.calls, 105);
+assert.strictEqual(activity.stats.fail, 1);
+assert.strictEqual(activity.stats.totalMs, 210);
+assert.strictEqual(activity.logs.length, 100);
+assert.ok(!JSON.stringify(activity).includes('private'));
+assert.deepStrictEqual(eventBus.getBridgeActivity(), activity, 'reading a snapshot does not recount');
+eventBus.broadcast('bridge_round_reset');
+const cleared = eventBus.getBridgeActivity();
+assert.strictEqual(cleared.epoch, activity.epoch);
+assert.ok(cleared.revision > activity.revision);
+assert.strictEqual(cleared.stats.calls, 0);
+assert.strictEqual(cleared.logs.length, 0);

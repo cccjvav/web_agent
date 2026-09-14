@@ -64,7 +64,7 @@
   - `secretKey`：`crypto.randomBytes(12).toString('hex')`
   - `tunnelProvider`：写死 `'quick'`（注释写 Cloudflare / named / ngrok / local）
   - `tunnelUrl`：初始 `null`（隧道成功后由 TunnelManager 写回）
-  - `version`：`'0.6.9'`；`serverName`：`'Web Agent-Bridge'`
+  - `version`：`'0.7.0'`；`serverName`：`'Web Agent-Bridge'`
   - `timeoutMs` 30000；`maxCommandTimeout` 60000
   - `allowShellExecution` / `autoApprove` 均为 `true`（本目录其它文件**没有读取**这两项）
 - **Function `generateNewSecret`（L22–L25）** — 重新 randomBytes，返回新密钥。
@@ -240,7 +240,7 @@
 
 - **职责：** Studio 壳，无业务脚本（L237 `<script src="app.js">`）。
 - **主要 DOM id：** `bridge-status-pill`、`btn-rotate-secret`、`btn-copy-prompt`、`btn-run-tests`、`btn-copy-url`、`mcp-url-display`、`prompt-text-preview`、`file-tree-container`、`btn-refresh-files`、`tools-badge-container`、`tab-stream/editor/diff/simulator`、`activity-stream-list`、`code-editor-area`、`btn-save-file`、`diff-content-area`、`sim-tool-select`、`sim-args-input`、`btn-run-sim-call`、`sim-btn-diagnose/apply-fix/verify/full-flow`、`task-progress-bar`、`todo-list-container`、`terminal-stream-box`、`toast-notify`。
-- 标题写 `v0.6.9 (Core Repro)`。无 Chat 输入、无 `POST /api/chat`。
+- 标题写 `v0.7.0 (Core Repro)`。无 Chat 输入、无 `POST /api/chat`。
 
 ---
 

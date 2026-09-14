@@ -75,6 +75,8 @@ function mcpInfo(req) {
   };
 }
 
+router.get('/bridge/activity', (req, res) => res.json(eventBus.getBridgeActivity()));
+
 router.get('/status', (req, res) => {
   const cfg = store.load();
   res.json({

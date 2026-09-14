@@ -80,6 +80,7 @@ export function bind() {
   $('#menu-api').onclick = () => ui.openModal('api');
   $('#menu-bridge').onclick = () => ui.openModal('bridge');
   $('#btn-agent-window').onclick = () => ui.openAgentWindow();
+  onClick('#walk-start', () => ui.openModal('help'));
   $('#walk-basics').onclick = () => ui.openModal('overview');
   $('#walk-local-chat').onclick = () => ui.openAgentWindow();
   $('#walk-bridge').onclick = () => ui.openModal('bridge');
@@ -558,7 +559,7 @@ export function bind() {
   };
 
   $('#menu-term').onclick = () => $('#panel').classList.toggle('hidden');
-  $('#menu-help').onclick = () => ui.ensureWelcome();
+  $('#menu-help').onclick = () => ui.openModal('help');
   $('#btn-clear-term').onclick = () => { $('#terminal').innerHTML = ''; };
   $('#term-form').onsubmit = async (e) => {
     e.preventDefault();

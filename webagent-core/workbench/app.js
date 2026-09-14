@@ -55,9 +55,10 @@ function connectWs() {
       if (msg.type === 'command_output' && msg.payload && msg.payload.chunk) {
         ui.termLine(msg.payload.chunk, msg.payload.stream === 'stderr' ? 'err' : '');
       }
+      if (msg.type === 'bridge_round_reset' && ui.refreshBridgeActivity) ui.refreshBridgeActivity();
       if (msg.type === 'file_patched') ui.loadTree();
       if (msg.type === 'todos_updated') ui.paintTodos((msg.payload && msg.payload.todos) || []);
-      if (msg.type === 'tool_call_end') {
+      if (msg.type === 'tool_call_end' && msg.payload?.source === 'Bridge-Remote') {
         const p = msg.payload || {};
         ui.logBridgeTool({
           name: p.tool,
@@ -89,6 +90,10 @@ async function boot() {
   ui.paintChat();
   ui.termLine('Web Agent terminal ready.', 'info');
   connectWs();
+  if (ui.refreshBridgeActivity) {
+    ui.refreshBridgeActivity();
+    setInterval(() => ui.refreshBridgeActivity(), 3000);
+  }
   const results = await Promise.allSettled([
     () => ui.refreshStatus(), () => ui.loadTree(), () => ui.loadSkills(), () => ui.loadCustomizations(), loadMonaco
   ].map(load => Promise.resolve().then(load)));

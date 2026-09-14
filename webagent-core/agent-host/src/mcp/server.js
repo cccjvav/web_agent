@@ -193,6 +193,7 @@ async function handleRpc(req) {
       const started = Date.now();
       // 第六阶段：把会话身份（clientName@ip）穿给工具层，多 Agent 任务板靠它记归属
       if (['board_create', 'board_claim', 'board_update'].includes(name) && !keyForReq(req)) {
+        eventBus.broadcast('tool_call_end', { source: 'Bridge-Remote', tool: name, success: false, durationMs: Date.now() - started });
         return { content: [{ type: 'text', text: JSON.stringify({ ok: false, error: 'E_SESSION_REQUIRED', detail: 'Initialize and retain Mcp-Session-Id before modifying board state' }) }], isError: true };
       }
       const callerKey = keyForReq(req) || sessionKeyFallback(req);
@@ -204,7 +205,7 @@ async function handleRpc(req) {
         const durationMs = Date.now() - started;
         sessTouch(req, { incCall: true, incFail: failed });
         tracker.record({ ok: !failed });
-        eventBus.broadcast('tool_call_end', { tool: name, success: !failed, durationMs, truncated: Boolean(clipped && clipped._truncated) });
+        eventBus.broadcast('tool_call_end', { source: 'Bridge-Remote', tool: name, success: !failed, durationMs, truncated: Boolean(clipped && clipped._truncated) });
         const text = typeof clipped === 'string' ? clipped : JSON.stringify(clipped);
         const content = [{ type: 'text', text }];
         // 第三阶段（已获用户书面同意）：run_command 产生的截图附为 image 内容。
@@ -233,7 +234,7 @@ async function handleRpc(req) {
         const info = publicError(err);
         sessTouch(req, { incCall: true, incFail: true });
         tracker.record({ ok: false });
-        eventBus.broadcast('tool_call_end', { tool: name, success: false, durationMs, error: info });
+        eventBus.broadcast('tool_call_end', { source: 'Bridge-Remote', tool: name, success: false, durationMs, error: info });
         return {
           content: [{ type: 'text', text: JSON.stringify(info, null, 2) }],
           isError: true

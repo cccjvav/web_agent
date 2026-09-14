@@ -85,3 +85,8 @@ assert.ok(!html.includes('启动时显示欢迎页'));
 assert.ok(!html.includes('data-page="codex"'));
 assert.ok(html.includes('兼容资料（不执行）'));
 assert.ok(html.includes('aria-controls="agent-pick-menu"'));
+
+assert.ok(html.includes('id="walk-start"'));
+assert.ok(html.includes('id="page-help"'));
+assert.ok(bindSrc.includes("$('#menu-help').onclick = () => ui.openModal('help')"));
+assert.ok(bindSrc.includes("onClick('#walk-start', () => ui.openModal('help'))"));

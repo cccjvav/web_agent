@@ -1,4 +1,5 @@
 const EventEmitter = require('events');
+const { randomUUID } = require('crypto');
 
 const MAX_STR = 4000;
 const MAX_FIELD = 500;
@@ -49,6 +50,22 @@ class BridgeEventBus extends EventEmitter {
     this.idleTimers = new WeakMap();
     this.logs = [];
     this.maxLogs = 500;
+    this.bridgeEpoch = randomUUID();
+    this.bridgeRevision = 0;
+    this.resetBridgeActivity();
+  }
+
+  resetBridgeActivity() {
+    this.bridgeRevision += 1;
+    this.bridgeActivity = {
+      stats: { calls: 0, fail: 0, totalMs: 0, lastTool: '', lastToolAt: 0, healthLine: '' },
+      logs: []
+    };
+  }
+
+  getBridgeActivity() {
+    return { epoch: this.bridgeEpoch, revision: this.bridgeRevision,
+      stats: { ...this.bridgeActivity.stats }, logs: this.bridgeActivity.logs.slice() };
   }
 
   _clearIdle(ws) {
@@ -88,6 +105,22 @@ class BridgeEventBus extends EventEmitter {
       timestamp: new Date().toISOString(),
       payload: sanitizePayload(payload)
     };
+
+    if (type === 'bridge_round_reset') this.resetBridgeActivity();
+    if (type === 'tool_call_end' && payload.source === 'Bridge-Remote') {
+      const stats = this.bridgeActivity.stats;
+      const record = { tool: clipStr(payload.tool || 'unknown', 200),
+        success: payload.success !== false, durationMs: Math.max(0, Number(payload.durationMs) || 0),
+        timestamp: eventObj.timestamp };
+      stats.calls += 1;
+      if (!record.success) stats.fail += 1;
+      stats.totalMs += record.durationMs;
+      stats.lastTool = record.tool;
+      stats.lastToolAt = Date.parse(record.timestamp);
+      this.bridgeActivity.logs.unshift(record);
+      this.bridgeActivity.logs.length = Math.min(this.bridgeActivity.logs.length, 100);
+      this.bridgeRevision += 1;
+    }
 
     this.logs.unshift(eventObj);
     if (this.logs.length > this.maxLogs) {

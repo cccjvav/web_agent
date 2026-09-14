@@ -100,7 +100,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
 | [githubAuth.test.js](githubAuth.test.js) | 8 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 3 个函数/类节点 |
-| [httpSmoke.test.js](httpSmoke.test.js) | 40 个函数/类节点 |
+| [httpSmoke.test.js](httpSmoke.test.js) | 42 个函数/类节点 |
 | [installerPackaging.test.js](installerPackaging.test.js) | 17 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 6 个函数/类节点 |
@@ -127,6 +127,6 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 25 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 61 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 68 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 11 个函数/类节点 |
 <!-- docs-inventory:end -->

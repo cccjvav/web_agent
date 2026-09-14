@@ -372,6 +372,21 @@ async function main() {
     assert.strictEqual(pageMcp.status, 200);
     assert.strictEqual(pageMcp.json.result.isError, false);
 
+    const activityUrl = `http://127.0.0.1:${workbenchPort}/api/bridge/activity`;
+    const activity = await request('GET', activityUrl);
+    assert.strictEqual(activity.status, 200);
+    assert.ok(activity.json.stats.calls >= 1);
+    assert.ok(activity.json.logs.some(record => record.tool === 'ping' && record.success));
+    assert.ok(activity.json.logs.every(record => !('args' in record) && !('result' in record)));
+    const repeatedActivity = await request('GET', activityUrl);
+    assert.deepStrictEqual(repeatedActivity.json, activity.json, 'reload/poll is idempotent');
+    const blockedActivity = await request('GET', activityUrl, undefined, tunnelHeaders);
+    assert.strictEqual(blockedActivity.status, 404, 'activity is local control data, never public');
+    await request('POST', `http://127.0.0.1:${workbenchPort}/api/bridge/reset-round`, {});
+    const resetActivity = await request('GET', activityUrl);
+    assert.strictEqual(resetActivity.json.stats.calls, 0);
+    assert.deepStrictEqual(resetActivity.json.logs, []);
+
     const mcpRoot = await request('GET', `http://127.0.0.1:${mcpPort}/`);
     assert.ok(!(mcpRoot.raw || '').includes('btn-agent-pick'));
 

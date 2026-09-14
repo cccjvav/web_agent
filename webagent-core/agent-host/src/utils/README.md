@@ -49,7 +49,7 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 | [boundedFile.js](boundedFile.js) | 1 个函数/类节点 |
 | [corsAllow.js](corsAllow.js) | 14 个函数/类节点 |
 | [diff.js](diff.js) | 1 个函数/类节点 |
-| [eventBus.js](eventBus.js) | 12 个函数/类节点 |
+| [eventBus.js](eventBus.js) | 14 个函数/类节点 |
 | [localControl.js](localControl.js) | 7 个函数/类节点 |
 | [requestScope.js](requestScope.js) | 5 个函数/类节点 |
 <!-- docs-inventory:end -->

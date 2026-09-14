@@ -8,28 +8,48 @@ function formatClock(ms) {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
-export function logBridgeTool(ev) {
-  state.stats.calls += 1;
-  if (ev.ok === false || ev.error) state.stats.fail += 1;
-  if (ev.durationMs) state.stats.totalMs += ev.durationMs;
-  state.stats.lastTool = ev.label || ev.name || '';
-  state.stats.lastToolAt = Date.now();
-  state.stats.healthLine = '';
+let activityPending = null;
+let activityVersion = '';
+
+export function logBridgeTool() {
+  return refreshBridgeActivity();
+}
+
+export function paintBridgeActivity(snapshot) {
+  if (!snapshot || !snapshot.stats || !Array.isArray(snapshot.logs)) return;
+  const version = `${snapshot.epoch}:${snapshot.revision}`;
+  if (version === activityVersion) return;
+  activityVersion = version;
+  state.stats = { ...snapshot.stats };
   ui.paintStats();
-  const wait = $('#bridge-wait');
-  if (wait) wait.classList.add('hidden');
   const log = $('#bridge-log');
-  const row = document.createElement('div');
-  const ok = ev.ok !== false && !ev.error;
-  row.className = 'tool-card' + (ok ? '' : ' fail');
-  const right = ok ? `${ev.durationMs || 0} ms` : 'Failed';
-  row.innerHTML = `<header><span>${escapeHtml(ev.label || ev.name)}</span><span class="dur">${escapeHtml(right)}</span></header>`;
-  log.appendChild(row);
-  log.scrollTop = log.scrollHeight;
+  if (log) log.innerHTML = snapshot.logs.slice().reverse().map(record =>
+    `<div class="tool-card${record.success ? '' : ' fail'}"><header><span>${escapeHtml(record.tool)}</span>`
+    + `<span class="dur">${escapeHtml(record.success ? `${record.durationMs} ms` : 'Failed')} · ${escapeHtml(formatClock(Date.parse(record.timestamp)))}</span></header></div>`
+  ).join('');
+  if (log) log.scrollTop = log.scrollHeight;
+  const wait = $('#bridge-wait');
+  if (wait) wait.classList.toggle('hidden', snapshot.stats.calls > 0);
   const note = $('#sess-note');
-  if (note) note.textContent = 'Connected · the external Agent can call Web Agent tools';
-  const dot = $('#sess-dot');
-  if (dot) dot.classList.add('on');
+  if (note) note.textContent = `本次主机进程已完成 ${snapshot.stats.calls} 次 MCP 工具调用；显示最近 ${snapshot.logs.length} 条。不是实时连接证明。`;
+}
+
+export function refreshBridgeActivity() {
+  if (activityPending) return activityPending;
+  activityPending = Promise.resolve().then(async () => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    try {
+      const response = await fetch('/api/bridge/activity', { signal: controller.signal });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      paintBridgeActivity(await response.json());
+    } catch (_) {
+      activityVersion = '';
+      const note = $('#sess-note');
+      if (note) note.textContent = '工具统计同步失败：请确认已重启更新后的本机服务，且 MCP 与工作台属于同一个主机进程/工作区。';
+    } finally { clearTimeout(timer); activityPending = null; }
+  });
+  return activityPending;
 }
 
 export function paintStats() {
@@ -59,16 +79,13 @@ export function paintStats() {
 
 export async function resetRound() {
   try {
-    await fetch('/api/bridge/reset-round', { method: 'POST' });
-  } catch (_) {}
-  state.stats = { calls: 0, fail: 0, totalMs: 0, lastTool: '', lastToolAt: 0, healthLine: '' };
-  ui.paintStats();
-  const log = $('#bridge-log');
-  if (log) log.innerHTML = '';
-  const wait = $('#bridge-wait');
-  if (wait) wait.classList.remove('hidden');
-  await ui.refreshStatus();
-  ui.toast('已清除本轮 MCP 统计');
+    const response = await fetch('/api/bridge/reset-round', { method: 'POST' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    await ui.refreshStatus();
+    if (activityPending) await activityPending;
+    await refreshBridgeActivity();
+    ui.toast('已清除本轮 MCP 统计');
+  } catch (_) { ui.toast('清除失败，请检查本机服务；未假装清零。'); }
 }
 
 export function selectedClientInfo() {
@@ -342,3 +359,6 @@ ui.stopBridge = stopBridge;
 ui.paintBridge = paintBridge;
 ui.checkBridgeHealth = checkBridgeHealth;
 ui.refreshStatus = refreshStatus;
+
+ui.refreshBridgeActivity = refreshBridgeActivity;
+ui.paintBridgeActivity = paintBridgeActivity;

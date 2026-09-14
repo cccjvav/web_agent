@@ -111,7 +111,7 @@ if (!process.argv.includes('--vm-child')) {
   const bridge = new vm.SourceTextModule(fs.readFileSync(path.join(root, 'bridge.js'), 'utf8'), { context });
   await bridge.link(specifier => specifier === './state.js' ? state : dom);
   await bridge.evaluate();
-  button.classList = { remove() {} };
+  button.classList = { remove() {}, toggle() {} };
   state.namespace.ui.setRight = () => {};
   state.namespace.ui.toast = () => {};
   state.namespace.ui.sendChat = () => { throw new Error('connecting must not execute a task'); };
@@ -130,6 +130,33 @@ if (!process.argv.includes('--vm-child')) {
   assert.ok(!button.innerHTML.includes('arena-send'));
   bridge.namespace.renderBrowser({ site: 'custom', title: 'Unsafe', url: 'javascript:alert(1)' });
   assert.ok(!button.innerHTML.includes('href='), 'escapeHtml alone must not permit executable URLs');
+
+  let activityPaints = 0, activityRequests = 0;
+  state.namespace.ui.paintStats = () => { activityPaints++; };
+  const activity = { epoch: 'host-fixture', revision: 1,
+    stats: { calls: 7, fail: 1, totalMs: 10 },
+    logs: [{ tool: '<read_files>', success: true, durationMs: 2, timestamp: '2026-09-14T12:00:00Z' }] };
+  bridge.namespace.paintBridgeActivity(activity);
+  bridge.namespace.paintBridgeActivity(activity);
+  assert.strictEqual(activityPaints, 1, 'same snapshot is not accumulated or repainted');
+  assert.strictEqual(state.namespace.state.stats.calls, 7, 'restore the server total, not the visible log length');
+  assert.ok(button.innerHTML.includes('&lt;read_files&gt;'));
+  context.AbortController = AbortController;
+  context.fetch = async () => { activityRequests++; return { ok: true, json: async () => activity }; };
+  const firstRefresh = bridge.namespace.refreshBridgeActivity();
+  assert.strictEqual(bridge.namespace.refreshBridgeActivity(), firstRefresh, 'polls/events share one in-flight request');
+  await firstRefresh;
+  assert.strictEqual(activityRequests, 1);
+  context.fetch = async () => ({ ok: false, status: 503 });
+  await bridge.namespace.refreshBridgeActivity();
+  assert.ok(button.textContent.includes('同步失败'));
+  context.fetch = async () => ({ ok: true, json: async () => activity });
+  await bridge.namespace.refreshBridgeActivity();
+  assert.ok(!button.textContent.includes('同步失败'), 'same revision recovers the error message');
+  bridge.namespace.paintBridgeActivity({ ...activity, revision: 2, stats: { calls: 0, fail: 0, totalMs: 0 }, logs: [] });
+  assert.strictEqual(state.namespace.state.stats.calls, 0);
+  assert.strictEqual(button.innerHTML, '');
+  assert.strictEqual(timers.size, 0, 'each activity request clears its abort timer');
 
   let sockets = 0, activated = 0, warnings = 0;
   const bootUi = Object.fromEntries(['initEditorSafety', 'bind', 'setAgentMode', 'paintTabs', 'paintChat', 'termLine',

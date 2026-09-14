@@ -9,8 +9,8 @@ ES imports首先填ui，后执行boot。WS_BACKOFF_MIN/MAX为1/30秒，wsBackoff
 - **setWsStatus(text)**找底栏节点；文本非空则显示，否则清空hidden；缺节点静默返回。
 - **scheduleWsReconnect()**已有timer不再安排，显示重连；当前delay用于这次，下一次翻倍最高30秒；timeout回调清timer并connectWs，没有随机抖动。
 - **connectWs()**依据当前location.protocol选ws/wss，使用location.host的`/ws`，不是硬写localhost。清timer，已有CONNECTING/OPEN则返回；try new WebSocket。
-- socket **onopen**重置退避并隐藏状态；**onmessage**JSON解析失败忽略，command_output送terminal；file_patched刷新树；todos_updated重画任务；tool_call_end整理payload给logBridgeTool。不会执行服务器发来的JS。**onclose**只对同socket清引用，然后安排重连；构造异常也安排。无独立onerror处理，依赖close推进恢复。
-- **boot()**先try initEditorSafety+bind，错误console.error但继续；setAgentMode(code)、paintTabs/paintChat/terminal提示；先connectWs，再Promise.allSettled并发status/tree/skills/custom/Monaco；每个load经Promise.then捕获同步异常。部分失败console记录并toast，仍activateTab；事件流不被初次HTTP/CDN失败阻断。
+- socket **onopen**重置退避并隐藏状态；**onmessage**JSON解析失败忽略，command_output送terminal；file_patched刷新树；todos_updated重画任务；只有source=Bridge-Remote的tool_call_end触发logBridgeTool拉取主机快照；bridge_round_reset也触发同步。不会执行服务器发来的JS。**onclose**只对同socket清引用，然后安排重连；构造异常也安排。无独立onerror处理，依赖close推进恢复。
+- **boot()**先try initEditorSafety+bind，错误console.error但继续；setAgentMode(code)、paintTabs/paintChat/terminal提示；先connectWs，再立即refreshBridgeActivity并每3秒定时调用（单飞、5秒超时）；即使WS不可用也能从本机受保护API补回统计。随后Promise.allSettled并发status/tree/skills/custom/Monaco；每个load经Promise.then捕获同步异常。部分失败console记录并toast，仍activateTab；事件流不被初次HTTP/CDN失败阻断。
 
 没有本模块级页面卸载socket/timer清理；浏览器关闭页面通常销毁上下文，但不要解释成显式可靠离线协议。
 

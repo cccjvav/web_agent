@@ -79,13 +79,13 @@
             </div>
             <div>
               <h3>演练</h3>
-              <div class="walk-card">
+              <button type="button" class="walk-card" id="walk-start">
                 <div class="walk-ico">★</div>
                 <div>
                   <div class="walk-title">开始使用本机工作台</div>
                   <div class="walk-desc">配置模型与工作区偏好，或用无需 API 的内置探索</div>
                 </div>
-              </div>
+              </button>
               <div class="walk-card" id="walk-basics">
                 <div class="walk-ico">💡</div>
                 <div>
@@ -257,6 +257,7 @@
       <aside class="modal-nav">
         <div class="modal-nav-title">本地 的智能体自定义设置</div>
         <button type="button" class="nav-item on" data-page="overview">概述</button>
+        <button type="button" class="nav-item" data-page="help">使用帮助</button>
         <button type="button" class="nav-item" data-page="env">环境偏好</button>
         <button type="button" class="nav-item" data-page="stack">技术栈</button>
         <button type="button" class="nav-item" data-page="agents">智能体</button>
@@ -276,6 +277,18 @@
       </aside>
       <div class="modal-main">
         <button type="button" class="modal-close" id="modal-close" title="关闭">✕</button>
+        <div class="page hidden" id="page-help">
+          <h2>开始使用本机工作台</h2>
+          <ol class="guide-steps">
+            <li>左侧资源管理器打开当前工作区文件；编辑后按 Ctrl+S 保存。工作区由启动命令指定。</li>
+            <li>右侧 Chat 的模型按钮选“内置探索 Agent”，模式选 Ask；发送读取要求，展开 Read 工具卡核对正文。无需 API Key。</li>
+            <li>内置探索是固定工具流程，不是本机大模型。Ask 扫描和读取；Plan 生成本机草案；Code 可能应用明确的补丁或写入格式、执行测试。只读验收请选择 Ask。</li>
+            <li>需要真正的大模型推理时，到左侧 API Provider 配置；失败会停止，不自动换模型执行。</li>
+            <li>外部 AI 连接在 Bridge 设置进行。它必须真实调用本机 MCP 工具；仅发聊天、发现工具或调用其他服务不会增加这里的工具计数。</li>
+            <li>Bridge 统计来自当前主机进程，保留最近100条工具完成摘要；刷新页面可恢复，重启主机或清除本轮会重置。统计同步失败时检查本机服务和工作区，不要公开管理页面。</li>
+          </ol>
+          <p class="lead">完整 IDE、交互式终端与调试请使用桌面 VS Code 扩展。经典工作台不提供附件上传、网站代登录或插件市场。</p>
+        </div>
         <div class="page" id="page-overview">
           <h2>本地 的智能体自定义设置</h2>
           <p class="lead">定制智能体在项目中的工作方式。设置保存在当前工作区，不会自动跨项目同步。</p>

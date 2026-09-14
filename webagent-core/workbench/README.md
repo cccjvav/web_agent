@@ -53,8 +53,11 @@ editorRuntime/workbenchRuntime/monacoLoading用实际模块或函数fixture检�
 
 | 源码 | 定位证据 |
 |---|---|
-| [app.js](app.js) | 16 个函数/类节点 |
+| [app.js](app.js) | 17 个函数/类节点 |
 | [favicon.svg](favicon.svg) | 文件级登记；未做符号完整性证明 |
 | [index.html](index.html) | 文件级登记；未做符号完整性证明 |
 | [styles.css](styles.css) | 文件级登记；未做符号完整性证明 |
 <!-- docs-inventory:end -->
+
+## Bridge统计与帮助
+顶部帮助与欢迎页第一张卡均打开实际帮助页。Bridge统计改为主机端内存累计，每3秒经本机受保护API单飞同步，WS只用于催促刷新；刷新/漏收WS不会丢失本次主机进程的累计值。只统计远程MCP tools/call完成事件（成功和失败），不含本机Chat、工具发现或其他服务的调用。最近100条只含工具名、成功与否、耗时和时间，不包含参数、结果正文或截图；主机重启/清除本轮会重置。不同host实例/工作区的统计不会互相汇总。

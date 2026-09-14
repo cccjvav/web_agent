@@ -7,9 +7,11 @@
 | 函数 | 参数/返回 | 状态/回调/边界 |
 |---|---|---|
 | formatClock(ms) | 时间→本地时钟文本 | 空值空字符串；内部pad(n)补两位；本地时区不是UTC |
-| logBridgeTool(ev) | 工具事件→undefined | calls/fail/totalMs累加，lastTool/At更新、healthLine清；paintStats，追加escape后的日志卡，点亮sess-dot；不校验事件唯一性 |
+| logBridgeTool() | 无→Promise | 兼容事件入口，仅委托refreshBridgeActivity，不在浏览器累加，以免重复或混入本地Chat |
+| paintBridgeActivity(snapshot) | 服务端快照→undefined | 校验stats/logs，epoch:revision未变不重复绘制；覆盖state.stats、paintStats、转义后重建最近100条完成摘要；计数不等于当前仍连接 |
+| refreshBridgeActivity() | 无→Promise | 单飞GET本机/api/bridge/activity，5秒AbortController超时；成功paint，失败显示统计同步错误并允许下一次相同版本快照恢复；finally清timer与pending |
 | paintStats() | 无→undefined | 显示调用/失败/成功率/平均秒；healthLine优先；会话数取httpSessions/alive/clients或调用记录启发式，最后工具附formatClock |
-| resetRound() | 无→Promise<void> | POST reset-round网络失败吞，仍清页面统计/日志、刷新status、toast；UI归零不证明服务端请求成功 |
+| resetRound() | 无→Promise<void> | 检查POST reset-round的HTTP成功，刷新状态，等待已有快照再取新快照；失败提示而不假装本地清零 |
 | selectedClientInfo() | 无→客户端或null | 当前selectedClient优先，否则arena；找不到null |
 | promptText() | 无→字符串 | 客户端专用prompt优先、status.prompt其次，再拼mcpUrl+连接说明；可能含密钥，不公开粘贴 |
 | paintClients() | 无→undefined | map卡片/步骤，click修改selectedClient并重画；copyRules按connectMode显示；配对码只在Bridge运行且有效信息存在时展示 |

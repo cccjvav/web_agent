@@ -11,7 +11,7 @@ const config = {
   secretKey: crypto.randomBytes(12).toString('hex'), // Initial secret path
   tunnelProvider: 'quick', // 'quick' (Cloudflare) | 'named' | 'ngrok' | 'local'
   tunnelUrl: null,
-  version: '0.6.9',
+  version: '0.7.0',
   serverName: 'Web Agent-Bridge',
   timeoutMs: 30000,
   maxCommandTimeout: 60000,
