@@ -50,7 +50,7 @@ editorRuntime/workbenchRuntime/monacoLoading用实际模块或函数fixture检�
 
 | 源码 | 定位证据 |
 |---|---|
-| [app.js](app.js) | 9 个函数/类节点 |
+| [app.js](app.js) | 16 个函数/类节点 |
 | [favicon.svg](favicon.svg) | 文件级登记；未做符号完整性证明 |
 | [index.html](index.html) | 文件级登记；未做符号完整性证明 |
 | [styles.css](styles.css) | 文件级登记；未做符号完整性证明 |

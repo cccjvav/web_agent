@@ -88,6 +88,7 @@ readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，
 | 源码 | 定位证据 |
 |---|---|
 | [board.js](board.js) | 22 个函数/类节点 |
+| [commandJob.cs](commandJob.cs) | 文件级登记；未做符号完整性证明 |
 | [consensusEngine.js](consensusEngine.js) | 7 个函数/类节点 |
 | [dangerous.js](dangerous.js) | 32 个函数/类节点 |
 | [executor.js](executor.js) | 31 个函数/类节点 |

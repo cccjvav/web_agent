@@ -48,7 +48,7 @@ export function paintStats() {
   const active = sess
     ? (sess.httpSessions || (sess.alive ? 1 : 0) || sess.clients || 0)
     : (s.calls ? 1 : 0);
-  const parts = ['Streamable HTTP', `${active} active`];
+  const parts = ['Streamable HTTP', `${active} sessions (≤24h)`];
   if (s.lastTool) {
     parts.push(`Last tool: ${s.lastTool}`);
     const clock = formatClock(s.lastToolAt);
@@ -182,9 +182,6 @@ export async function arenaConnect(text) {
 export async function openSite(key) {
   const site = SITES[key];
   if (!site) return;
-  if (!(state.status && state.status.bridgeRunning)) {
-    await ui.startBridge();
-  }
   try { await navigator.clipboard.writeText(ui.promptText()); } catch (_) {}
   $('#mcp-banner').classList.remove('hidden');
   const id = 'browser:' + key;

@@ -191,6 +191,7 @@ for (const [source, guide] of pairs) {
 }
 // File-level evidence for non-JS prose: no semantic or selector completeness claim.
 const artifactPairs = [
+  ["webagent-core/agent-host/src/tools/commandJob.cs", "webagent-core/agent-host/src/tools/命令与PTY详解.md"],
   ["computer-use/win/capture.cs", "computer-use/win/截图标记与OCR详解.md"],
   ["computer-use/win/snap.ps1", "computer-use/win/截图标记与OCR详解.md"],
   ["computer-use/win/info.ps1", "computer-use/win/截图标记与OCR详解.md"],

@@ -81,5 +81,5 @@ POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连
 | [oauth.js](oauth.js) | 45 个函数/类节点 |
 | [resources.js](resources.js) | 5 个函数/类节点 |
 | [server.js](server.js) | 32 个函数/类节点 |
-| [session.js](session.js) | 13 个函数/类节点 |
+| [session.js](session.js) | 14 个函数/类节点 |
 <!-- docs-inventory:end -->

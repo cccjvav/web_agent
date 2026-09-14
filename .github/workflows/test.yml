@@ -24,6 +24,14 @@ jobs:
       - name: Check documentation inventory
         run: node ../../docs-site/check-docs.js
       - run: npm test
+      - name: Repeat Windows cancellation lifecycle
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          1..5 | ForEach-Object {
+            node scripts/run-tests.js --filter=ptyLifecycle
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
 
   windows-installer:
     runs-on: windows-latest
@@ -42,6 +50,7 @@ jobs:
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
+          Add-Type -Path 'webagent-core/agent-host/src/tools/commandJob.cs'
           foreach ($file in @('input.cs','input2.cs','keys.cs')) {
             Add-Type -Path (Join-Path 'computer-use/win' $file)
           }

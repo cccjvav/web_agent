@@ -139,8 +139,13 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
 
   const win = process.platform === 'win32';
   const shell = win ? 'powershell.exe' : '/bin/bash';
+  const jobSource = path.join(__dirname, 'commandJob.cs').replace(/'/g, "''");
+  // Attach before user code may spawn descendants. If the host is killed while
+  // taskkill is enumerating the tree, the OS job still terminates late children.
+  const guardedCommand = `try { Add-Type -Path '${jobSource}' -ErrorAction Stop; [WebAgentCommandJob]::Attach() } catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 };
+${command}`;
   const args = win
-    ? ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', command]
+    ? ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', guardedCommand]
     : ['-c', command];
   const child = spawn(shell, args, {
     cwd: workingDir,

@@ -1,7 +1,7 @@
 function toolLabel(name, result, ok) {
   if (!ok) {
-    if (name === 'list_directory' || name === 'list_dir') return 'Explored .';
-    if (name === 'read_files' || name === 'read_file') return 'Read files';
+    if (name === 'list_directory' || name === 'list_dir') return 'Explore failed';
+    if (name === 'read_files' || name === 'read_file') return 'Read failed';
     return name;
   }
   if (name === 'list_directory' || name === 'list_dir') {

@@ -8,7 +8,7 @@
 
 ## toolLabel.test.js
 
-[源码](toolLabel.test.js)八个strictEqual验证：list_directory有dirPath显示Explored src；null结果也可给Explored .；find_files用total生成数量；search_files用totalMatches；read_files/apply_patch显示路径；load_skill分单Skill和技能列表计数。无HTTP、无目录读取；参数中的ok=false不一定令标签变失败，错误外观由消费者另处理。本测试保护显示文本，不认证工具真的成功。
+[源码](toolLabel.test.js)八个strictEqual验证：list_directory有dirPath显示Explored src；null结果也可给Explore failed；find_files用total生成数量；search_files用totalMatches；read_files/apply_patch显示路径；load_skill分单Skill和技能列表计数。无HTTP、无目录读取；参数中的ok=false不一定令标签变失败，错误外观由消费者另处理。本测试保护显示文本，不认证工具真的成功。
 
 ## providers.test.js
 
@@ -49,3 +49,5 @@ try内await listRemoteModels，两个find回调取相应记录，断言未声明
 `npm test --prefix webagent-core/agent-host -- --filter=planRound`；其余可将filter替换chatMode、toolLabel、providers、profile。测试数据名字和日期不是实际用户/服务观测。
 
 2026-09-14新增：providers测试用fetch替身监听AbortSignal，timeoutMs20必须reject，keepAlive维持事件循环后finally清理，global.fetch恢复；不是提供商网络实测。
+
+toolLabel回归还要求read_files失败显示Read failed。

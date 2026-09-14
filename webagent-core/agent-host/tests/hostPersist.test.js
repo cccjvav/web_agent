@@ -79,6 +79,10 @@ function main() {
   assert.ok(gi.includes('.webagent/config.json'));
   assert.ok(gi.includes('.webagent/read-hashes.json'));
   assert.ok(gi.includes('.webagent/usage.json'));
+  for (const rel of ['board.json', 'memory/note.md', 'customizations.json', 'instructions.md', 'preference.md', 'tech-stack.md']) {
+    const result = spawnSync('git', ['check-ignore', '-q', '.webagent/' + rel], { cwd: tmp });
+    assert.strictEqual(result.status, 0, rel + ' must be private by default');
+  }
   const ignored = spawnSync('git', ['check-ignore', '-q', '.webagent/config.json'], { cwd: tmp });
   assert.strictEqual(ignored.status, 0);
   assert.deepStrictEqual(store.trackedSecretFiles(), []);

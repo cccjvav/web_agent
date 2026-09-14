@@ -49,3 +49,5 @@ paintTasks带HTML样式文本和null：仅一个li、textContent保留尖括号�
 ## 验证
 
 按monacoLoading、workbenchRuntime、editorRuntime、webviewRuntime分别filter，或全量npm test。真实焦点、浏览器安全策略、CDN、桌面VS Code插件与终端仍应执行人工验收。
+
+workbenchRuntime续测：openSite配startBridge抛错替身，仍能打开站点tab且不触发隧道。独立bootContext执行真实app.js，stateStub/monacoStub/empty合成模块注入；bootUi.loadTree同步抛错、loadMonaco异步拒绝，WebSocket替身计数sockets，activateTab与toast分别计数activated/warnings。等setImmediate后断言socket已连接尝试、初始tab仍激活且有可见错误提示。其他bootUi方法为空操作，console.error仅吞预期fixture失败，不模拟真实浏览器网络/剪贴板。

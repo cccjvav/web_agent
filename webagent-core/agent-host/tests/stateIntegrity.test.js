@@ -14,6 +14,18 @@ const tracker = require('../src/usage/tracker');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-state-'));
 config.workspaceRoot = tmp;
 (async () => {
+  const { createUnifiedDiff } = require('../src/utils/diff');
+  assert.strictEqual(createUnifiedDiff('a', 'x\n', 'x\n\n').additions, 1);
+  assert.strictEqual(createUnifiedDiff('a', '\n\n', '').deletions, 2);
+  const clock = Date.now;
+  try {
+    session.touch({}, { key: 'expired-fixture' });
+    session.createHttpSession();
+    Date.now = () => clock() + 25 * 60 * 60 * 1000;
+    assert.strictEqual(session.snapshot().httpSessions, 0);
+    assert.strictEqual(session.allSessions().length, 0);
+  } finally { Date.now = clock; }
+
   const custom = require('../src/models/customizations');
   fs.mkdirSync(path.join(tmp, '.webagent'), { recursive: true });
   const customFile = path.join(tmp, '.webagent/customizations.json');

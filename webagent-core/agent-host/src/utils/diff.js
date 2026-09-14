@@ -15,7 +15,7 @@ function createUnifiedDiff(filePath, oldContent, newContent) {
   let deletions = 0;
 
   for (const change of changes) {
-    const lines = change.value.split('\n').filter(Boolean).length;
+    const lines = change.count;
     if (change.added) additions += lines;
     if (change.removed) deletions += lines;
   }

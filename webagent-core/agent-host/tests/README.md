@@ -119,7 +119,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [runChat.test.js](runChat.test.js) | 21 个函数/类节点 |
 | [sandbox.test.js](sandbox.test.js) | 3 个函数/类节点 |
 | [skipWorkbench.test.js](skipWorkbench.test.js) | 16 个函数/类节点 |
-| [stateIntegrity.test.js](stateIntegrity.test.js) | 23 个函数/类节点 |
+| [stateIntegrity.test.js](stateIntegrity.test.js) | 24 个函数/类节点 |
 | [testRunner.test.js](testRunner.test.js) | 1 个函数/类节点 |
 | [toolLabel.test.js](toolLabel.test.js) | 0 个函数/类节点 |
 | [tunnel.test.js](tunnel.test.js) | 11 个函数/类节点 |
@@ -127,6 +127,6 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 25 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 18 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 36 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 11 个函数/类节点 |
 <!-- docs-inventory:end -->

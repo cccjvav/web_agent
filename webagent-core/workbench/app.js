@@ -88,8 +88,14 @@ async function boot() {
   ui.paintTabs();
   ui.paintChat();
   ui.termLine('Web Agent terminal ready.', 'info');
-  await Promise.all([ui.refreshStatus(), ui.loadTree(), ui.loadSkills(), ui.loadCustomizations(), loadMonaco()]);
   connectWs();
+  const results = await Promise.allSettled([
+    () => ui.refreshStatus(), () => ui.loadTree(), () => ui.loadSkills(), () => ui.loadCustomizations(), loadMonaco
+  ].map(load => Promise.resolve().then(load)));
+  if (results.some(result => result.status === 'rejected')) {
+    console.error('Some workbench data failed to load', results.filter(result => result.status === 'rejected'));
+    ui.toast('部分数据加载失败，请刷新重试；事件流仍会自动重连。');
+  }
   ui.activateTab(state.activeTab);
 }
 

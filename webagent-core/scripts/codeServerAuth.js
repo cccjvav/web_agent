@@ -17,7 +17,7 @@ function resolveAuth({ userData, env = process.env } = {}) {
   const passwordFile = path.join(dir, 'webagent-password');
   const fromEnv = String(env.CODE_SERVER_PASSWORD || '').trim();
   if (fromEnv) {
-    return { mode: 'password', password: fromEnv, passwordFile };
+    return { mode: 'password', password: fromEnv, passwordFile: null };
   }
 
   let existing = '';

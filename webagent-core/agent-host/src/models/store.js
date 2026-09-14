@@ -3,8 +3,8 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const { config } = require('../config');
 
-const SECRET_REL = ['.webagent/config.json', '.webagent/read-hashes.json', '.webagent/usage.json'];
-const NESTED_NAMES = ['config.json', 'read-hashes.json', 'usage.json'];
+const NESTED_NAMES = ['config.json', 'read-hashes.json', 'usage.json', 'board.json', 'memory/', 'customizations.json', 'instructions.md', 'preference.md', 'tech-stack.md'];
+const SECRET_REL = NESTED_NAMES.map(name => `.webagent/${name}`);
 
 function dir() {
   return path.join(config.workspaceRoot, '.webagent');

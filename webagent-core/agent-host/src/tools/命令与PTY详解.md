@@ -89,3 +89,13 @@ npm test --prefix webagent-core/agent-host -- --filter=workspaceTools
 取消时立即设rec.ok=false；PTY迟到成功只合并结果数据，不得覆盖cancelled/ok:false。经典命令和扩展共用ptyPolicy.scrubEnv，剔除token/access key/storage key等凭据名称，保留PATH/Conda；不是值扫描或OS沙箱。
 
 WEBAGENT_DEBUG_PROCESS=1仅用于进程排错，输出子进程exit与close分别发生的时间，帮助区分根进程退出与继承管道关闭；不是关闭管道来绕过退出验收。
+
+## Windows进程树保障：commandJob.cs
+
+[commandJob.cs](commandJob.cs)用Windows Job Object补足taskkill枚举时序不能提供的生命周期保障。startProcess在任何用户命令之前用Add-Type加载，再调用WebAgentCommandJob.Attach；加载或加入job失败直接exit 1，不无保护地继续。
+
+- WebAgentCommandJob的static job保留唯一非继承句柄直到PowerShell退出。Attach幂等，CreateJobObjectW用空安全属性创建非继承句柄；SetInformationJobObject的class=9设置ExtendedLimits，LimitFlags=0x2000（KILL_ON_JOB_CLOSE）；AssignProcessToJobObject把当前PowerShell纳入。失败先保存Win32错误、CloseHandle，再抛Win32Exception；成功不手工关闭，操作系统在进程退出时关闭。
+- GetCurrentProcess返回当前进程伪句柄。BasicLimits包含时间/flags/工作集/进程数/affinity/优先级字段，IoCounters包含六个64位IO计数，ExtendedLimits顺序组合两者与四个指针宽度内存字段；StructLayout.Sequential与UIntPtr保持32/64位ABI布局。未使用的限制字段为零，不额外限制内存/CPU。
+- 后代默认继承job成员关系而不继承job句柄，因此父PowerShell被终止、正常退出或崩溃时，最后句柄关闭会终止后代。这覆盖枚举后才出现的后代；不依赖记住旧PID再杀、不靠提前销毁stdout制造完成。
+- 这是一次性命令的生命周期策略，不是安全沙箱。Windows非PTY命令不能通过Start-Process把后台任务留在shell之外；长运行服务用保持前台的start_command。现有桌面PTY路径不受此改动影响。Add-Type增加每次启动开销；受限语言模式/不允许嵌套job的运行环境会明确失败，不能静默降级。
+- 验证：Windows矩阵运行真实取消用例，包含确认Node已启动后取消；仅Linux通过不能证明P/Invoke/Job Object可用。

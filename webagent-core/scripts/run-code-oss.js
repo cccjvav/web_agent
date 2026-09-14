@@ -142,7 +142,7 @@ async function main() {
   console.log(`  VS Code   http://127.0.0.1:${codePort}`);
   if (auth.mode === 'password') {
     console.log(`  登录密码  ${auth.password}`);
-    console.log(`            存在 ${auth.passwordFile}`);
+    console.log(auth.passwordFile ? `            存在 ${auth.passwordFile}` : '            来自CODE_SERVER_PASSWORD（未写入密码文件）');
     console.log('            自定：set CODE_SERVER_PASSWORD=…    关掉登录：set CODE_SERVER_AUTH=none');
   } else {
     console.log('  登录      已关（CODE_SERVER_AUTH=none）');

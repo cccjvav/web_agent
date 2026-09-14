@@ -11,7 +11,14 @@ function sessionKey(req) {
   return `${client}@${ip}`;
 }
 
+function pruneSessions() {
+  for (const [id, rec] of sessions) {
+    if (Date.now() - Date.parse(rec.lastSeen) > SESSION_TTL_MS) sessions.delete(id);
+  }
+}
+
 function touch(req, extra = {}) {
+  pruneSessions();
   const key = extra.key || sessionKey(req);
   const prev = sessions.get(key) || {
     key,
@@ -27,15 +34,14 @@ function touch(req, extra = {}) {
     fail: prev.fail + (extra.incFail ? 1 : 0),
     busy: Boolean(extra.busy)
   };
-  for (const [id, rec] of sessions) {
-    if (Date.now() - Date.parse(rec.lastSeen) > SESSION_TTL_MS) sessions.delete(id);
-  }
   if (!sessions.has(key) && sessions.size >= MAX_HTTP_SESSIONS) sessions.delete(sessions.keys().next().value);
   sessions.set(key, next);
   return next;
 }
 
 function snapshot() {
+  pruneSessions();
+  pruneHttpSessions();
   const list = [...sessions.values()].sort((a, b) => String(b.lastSeen).localeCompare(String(a.lastSeen)));
   const latest = list[0] || null;
   const ageMs = latest ? Date.now() - Date.parse(latest.lastSeen) : null;
@@ -52,6 +58,7 @@ function snapshot() {
 
 // 第六阶段审计 F6：snapshot() 的 sessions 截断到 8 供界面用；板工具要全量在场者
 function allSessions() {
+  pruneSessions();
   return [...sessions.values()].sort((a, b) => String(b.lastSeen).localeCompare(String(a.lastSeen)));
 }
 

@@ -22,6 +22,8 @@ try {
   const chosen = resolveAuth({ userData: tmp, env: { CODE_SERVER_PASSWORD: 'my-local-pass' } });
   assert.strictEqual(chosen.mode, 'password');
   assert.strictEqual(chosen.password, 'my-local-pass');
+  assert.strictEqual(chosen.passwordFile, null);
+  assert.ok(fs.readFileSync(first.passwordFile, 'utf8').includes(first.password), 'environment password must not replace saved password');
 
   const off = resolveAuth({ userData: tmp, env: { CODE_SERVER_AUTH: 'none' } });
   assert.strictEqual(off.mode, 'none');
