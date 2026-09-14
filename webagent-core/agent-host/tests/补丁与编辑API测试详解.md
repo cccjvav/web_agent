@@ -38,3 +38,5 @@ finally关server、rm tmp；catch exit1。这里直挂router，不是完整index
 ## 验证
 
 分别filter patchEngine/apiFiles，或`npm test --prefix webagent-core/agent-host`。CRLF fixture能在Linux执行，不代表真实Windows权限、杀毒软件占用或编辑器焦点验收。
+
+2026-09-14负例补充：新增截断补丁、完整块加截断尾块、孤立标记，分别对已有/新文件、dryRun真/假断言E_BAD_ARGS且原文件不变/新文件不存在。

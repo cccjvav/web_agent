@@ -1,5 +1,7 @@
 'use strict';
 
+const { scrubEnv } = require('./ptyPolicy');
+
 const vscode = require('vscode');
 const fs = require('fs');
 const os = require('os');
@@ -28,16 +30,6 @@ function stripAnsi(s) {
     .replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, '')
     .replace(/\u001b\][^\u0007]*(?:\u0007|\u001b\\)/g, '')
     .replace(/\r/g, '');
-}
-
-function scrubEnv(base) {
-  const out = { ...(base || {}) };
-  for (const key of Object.keys(out)) {
-    if (/(?:api[_-]?key|access[_-]?token|secret|password|credential|private[_-]?key)|^(?:github_token|gh_token|npm_token)$/i.test(key)) {
-      delete out[key];
-    }
-  }
-  return out;
 }
 
 function spawnSpec(command) {
@@ -334,7 +326,7 @@ class PtyHost {
   }
 
   async spawnFallback(job, cwd) {
-    const terminal = vscode.window.createTerminal({ name: 'Web Agent · 1', cwd, env: scrubEnv(process.env) });
+    const terminal = vscode.window.createTerminal({ name: 'Web Agent · 1', cwd, strictEnv: true, env: scrubEnv(process.env) });
     terminal.show(true);
     this.sessions.set(String(job.execId), { terminal, proc: { kill: () => terminal.dispose() } });
     try {

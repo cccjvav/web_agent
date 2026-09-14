@@ -42,3 +42,5 @@ collectShot须返回PNG data URL、bytes/rel；MAX_BYTES断言等于6MiB，**未
 `npm test --prefix webagent-core/agent-host -- --filter=runChat`，另分别filter=modelLifecycle、chatVision。涉及命令仅操作临时工作区，真实模型账户/图像理解、Windows桌面与手机MCP仍需单列实测。
 
 2026-09-14 Windows回归修正：集成命令echo只接收完整引号路径，不再让PowerShell把裸-Out解释为参数。先断言第二轮tool结果exitCode=0、stdout含cur.png，再核对image_url；失败时报告真实工具错误，不以模型固定文本代替执行成功。
+
+2026-09-14负例补充：modelLifecycle先省mode发模拟模型请求，defaultTools必须含read_files而无write_file；未知mode返回ok:false。

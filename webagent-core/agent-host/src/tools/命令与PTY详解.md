@@ -12,7 +12,7 @@
 | pruneCommands() | 无→undefined | 记录≥40时按Map顺序删非running至<40；不主动kill、不提供无限历史 |
 | killChild(child,force=false) | 子进程→undefined | Windows同步taskkill PID树；其他先杀进程组再回退child.kill，TERM/KILL按force。吞发送错误，不等待退出证明 |
 | workingDirFrom(cwd) | 目录→安全绝对路径 | resolveSafePath，任何异常统一改成outside workspace提示，原失败原因可能被泛化 |
-| scrubEnv(base) | 环境对象→副本 | 删除名称匹配凭据模式的字段；不是值扫描；保留PATH/一般Conda变量，不自动conda activate |
+| scrubEnv(base)，导入extension/ptyPolicy | 环境对象→副本 | 删除名称匹配凭据模式的字段；不是值扫描；保留PATH/一般Conda变量，不自动conda activate |
 | publicRecord(rec,tail) | 内部记录→展示对象 | stdout/stderr取尾部，tail默认8000钳500–200Ki字符，附状态/退出码/建议等待；截断不保留完整日志 |
 | storePtyResult(result) | PTY结果→记录 | 更新lastExecId、commandStore，标execution=pty；不启动/查询系统进程 |
 
@@ -85,3 +85,5 @@ npm test --prefix webagent-core/agent-host -- --filter=workspaceTools
 ```
 
 对照审批迟到、所有权、输出/退出码和取消断言；真实VS Code node-pty/shellIntegration及Conda解释器要按人工G/E项。测试通过不等于任意系统命令的后代进程都被可靠回收。
+
+取消时立即设rec.ok=false；PTY迟到成功只合并结果数据，不得覆盖cancelled/ok:false。经典命令和扩展共用ptyPolicy.scrubEnv，剔除token/access key/storage key等凭据名称，保留PATH/Conda；不是值扫描或OS沙箱。

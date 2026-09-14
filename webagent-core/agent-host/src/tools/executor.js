@@ -1,3 +1,4 @@
+const { scrubEnv } = require('../../../extension/ptyPolicy');
 const { spawn, spawnSync } = require('child_process');
 const crypto = require('crypto');
 const path = require('path');
@@ -55,16 +56,6 @@ function workingDirFrom(cwd) {
   } catch (err) {
     throw new Error(`cwd "${cwd}" is outside workspace root.`);
   }
-}
-
-function scrubEnv(base) {
-  const out = { ...base };
-  for (const key of Object.keys(out)) {
-    if (/(?:api[_-]?key|access[_-]?token|secret|password|credential|private[_-]?key)|^(?:github_token|gh_token|npm_token)$/i.test(key)) {
-      delete out[key];
-    }
-  }
-  return out;
 }
 
 function publicRecord(rec, tail) {
@@ -281,7 +272,6 @@ function startCommand(opts) {
       rec.durationMs = result.durationMs;
       rec.outputCaptured = result.outputCaptured;
       rec.message = result.message;
-      rec.ok = result.ok;
       rec.isTimeout = result.status === 'timeout';
       eventBus.broadcast('command_finished', {
         execId,
@@ -335,6 +325,7 @@ async function cancelCommand({ execId } = {}) {
       return { execId: rec.execId, status: rec.status, cancelled: false, message: 'Command is not running.' };
     }
     rec.status = 'cancelled';
+    rec.ok = false;
     ptyJobs.cancelExec(id);
     try {
       await ptyJobs.enqueue('cancel', { execId: id });
@@ -347,6 +338,7 @@ async function cancelCommand({ execId } = {}) {
     return { execId: rec.execId, status: rec.status, cancelled: false, message: 'Command is not running.' };
   }
   rec.status = 'cancelled';
+  rec.ok = false;
   if (child) killChild(child, true);
   return { execId: rec.execId, cancelled: true, status: 'cancelled' };
 }

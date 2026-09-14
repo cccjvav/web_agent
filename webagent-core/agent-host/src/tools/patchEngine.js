@@ -217,6 +217,12 @@ function parseSearchReplaceBlocks(patchText) {
       replace: match[2]
     });
   }
+  const remainder = String(patchText).replace(regex, '');
+  if (/^\s*(?:<{5,}\s*SEARCH\b|>{5,}\s*REPLACE\b|={5,}\s*$)/m.test(remainder)) {
+    throw new ProtocolError('E_BAD_ARGS', 'Incomplete or malformed SEARCH/REPLACE patch; original file preserved.', {
+      retryHint: 'Resend complete SEARCH/REPLACE blocks, including every closing REPLACE marker. Use write_file for literal marker text.'
+    });
+  }
   return blocks;
 }
 

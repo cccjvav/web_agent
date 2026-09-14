@@ -80,13 +80,23 @@ for (const f of files) {
   console.log(`\n—— ${f} ——`);
   const r = spawnSync(process.execPath, [path.join(testsDir, f)], {
     cwd: root,
-    stdio: 'inherit',
+    stdio: process.env.GITHUB_ACTIONS === 'true' ? 'pipe' : 'inherit',
+    encoding: 'utf8',
+    maxBuffer: 16 * 1024 * 1024,
     timeout
   });
+  if (r.stdout) process.stdout.write(r.stdout);
+  if (r.stderr) process.stderr.write(r.stderr);
   if (r.error) console.error(`${f}: ${r.error.message}`);
   const code = r.status == null ? 1 : r.status;
   const ok = code === 0;
-  if (!ok) failed += 1;
+  if (!ok) {
+    failed += 1;
+    if (process.env.GITHUB_ACTIONS === 'true') {
+      const detail = String(r.stderr || r.error?.message || r.stdout || 'Test failed').slice(-4000).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+      console.log(`::error title=${f}::${detail}`);
+    }
+  }
   results.push({ file: f, ok, code });
   console.log(ok ? `PASS ${f}` : `FAIL ${f} exit ${code}`);
 }

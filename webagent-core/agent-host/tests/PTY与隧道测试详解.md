@@ -51,3 +51,5 @@ tmp假cloudflared文件，CLOUDFLARED_PATH指它；cp.spawn返回fake并记录�
 ## 验证
 
 分别filter ptyJobs/ptyLifecycle/tunnel/tunnelLifecycle/bridgeTunnel或全量npm test。实际桌面PTY捕获、隧道二进制安装及手机MCP连接仍需人工验收。
+
+2026-09-14负例补充：ptyLifecycle增加三种授权状态下正文/危险命令不可自动许可；secrets环境fixture核对scrubEnv不改原对象并保留PATH/CONDA_PREFIX。oldEnqueue/finishLate替身制造取消后迟到成功，getCommandOutput必须cancelled且ok:false，finally恢复enqueue；createTerminal断言strictEnv。

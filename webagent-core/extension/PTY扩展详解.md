@@ -10,7 +10,7 @@
 |---|---|---|
 | loadNodePty() | 无→模块或null | 从vscode.env.appRoot下普通/asar node_modules尝试require；失败尝试下个，不自行下载安装 |
 | stripAnsi(s) | 文本→显示文本 | 去常见CSI/OSC和回车，不是完整终端模拟器 |
-| scrubEnv(base) | 环境→副本 | 去凭据命名字段，保留一般PATH/Conda变量；不加载Conda profile |
+| scrubEnv(base)，导入ptyPolicy | 环境→副本 | 去凭据命名字段，保留一般PATH/Conda变量；不加载Conda profile |
 | spawnSpec(command) | 文本→shell/args/cleanup | 非Windows选SHELL或bash -lc；Windows短ASCII单行用powershell -Command，其他写临时ps1后-File；cleanup给调用者，写临时失败抛错 |
 | waitForShellIntegration(terminal,ms=2500) | 终端→Promise<integration或null> | 已可executeCommand直接返回；无事件API返回null；否则注册变更回调，只接该终端；finish一次性清timer/dispose订阅/resolve，超时读当前integration |
 | startPtyHost(context,deps) | VS Code上下文/依赖→host或null | new PtyHost再start，初始化异常console.warn并null；不保证异步hello已成功 |
@@ -72,12 +72,12 @@ reading.then标readFinished，catch记录readError并dispose，防等待exit时�
 
 ## 6. ptyPolicy.js全部函数
 
-READISH是有限的普通读命令白名单，COMPOUND检查连接/扩展字符，DANGEROUS为扩展侧正则策略，**与agent-host的dangerous.js不是同一实现**。
+READISH仅自动许可有限元数据/目录/简单echo，不自动许可cat/type/Get-Content或Git正文/历史读取，COMPOUND检查连接/扩展字符，DANGEROUS为扩展侧正则策略，**与agent-host的dangerous.js不是同一实现**。
 
 - **isReadishCommand(command)**trim后白名单匹配，不证明命令读取绝无敏感信息。
 - **looksDangerousCommand(command)**正则分类，非完整shell解析。
 - **commandFamily(command)**去前导调用符，提取首段名字小写；带路径/复杂引号未必得到用户以为的程序名。
-- **shouldAutoAllow(command,state={})**先复合/危险→allow:false、alwaysAsk:true；然后只读→允许；再allowSession、allowedFamilies；其余需要询问但可提供持久到本会话的选项。危险/复合不会因会话允许就跳过询问。
+- **shouldAutoAllow(command,state={})**先CONTENT_READ正文读取、复合/危险→allow:false、alwaysAsk:true；然后只读→允许；再allowSession、allowedFamilies；其余需要询问但可提供持久到本会话的选项。危险/复合不会因会话允许就跳过询问。
 
 扩展审批不绕过后端Code模式或远程拒绝策略。自动放行不是撤销操作系统权限，用户仍要在独立测试工作区验收。
 
@@ -89,3 +89,9 @@ npm test --prefix webagent-core/agent-host -- --filter=webviewRuntime
 ```
 
 检查队列与VS Code API fixture相关路径；真实node-pty版本、shell integration、焦点、取消和Conda解释器继续按人工G/E节。不要把Mock事件顺序当所有VS Code版本都支持的证明。
+
+### 2026-09-14 凭据与审批加固
+
+ptyPolicy的**scrubEnv(base)**是经典executor和PTY共用的纯函数：复制输入对象，遍历键名删除token、access key、storage key、secret等模式，原对象不改。不按值识别未知命名的凭据。spawnFallback创建终端用strictEnv:true，防VS Code合并父环境把已删除字段重新继承回来。
+
+CONTENT_READ识别常见cat/type/Get-Content及git diff/log/show，先于allowSession/allowedFamilies要求每次确认；连普通文件也询问，因为词法路径检查不能保证无符号链接或已跟踪密钥。EXTRA_DANGER补dd/shred/truncate/mkfs、下载执行入口与npm publish等；两套危险命令词表仍非统一解析器，编码/别名不是完整覆盖。其他命令的会话或命令族授权仍是宽授权，用户仅应向可信任务授予；这不是逐文件权限沙箱。

@@ -13,6 +13,34 @@ const policy = require('../../extension/ptyPolicy');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-pty-life-'));
 config.workspaceRoot = tmp;
 (async () => {
+  for (const command of ['cat .env', 'type .webagent\\config.json', 'Get-Content ../../../private.txt', 'cat safe.txt', 'git diff', 'git log', 'dd if=/dev/zero of=/dev/sda', 'npm publish', 'Invoke-WebRequest https://example.invalid']) {
+    for (const state of [{}, { allowSession: true }, { allowedFamilies: new Set(['cat', 'type', 'git', 'dd', 'npm', 'invoke-webrequest', 'get-content']) }]) {
+      assert.strictEqual(policy.shouldAutoAllow(command, state).allow, false, command);
+    }
+  }
+  const secrets = ['NGROK_AUTHTOKEN', 'CLOUDFLARE_API_TOKEN', 'CF_TUNNEL_TOKEN', 'AWS_ACCESS_KEY_ID', 'AZURE_STORAGE_KEY', 'ANTHROPIC_AUTH_TOKEN', 'HF_TOKEN', 'WEBAGENT_TELEMETRY_TOKEN', 'WEBAGENT_ADMIN_TOKEN'];
+  const env = Object.fromEntries(secrets.map(key => [key, 'test-only']));
+  env.PATH = 'keep-path'; env.CONDA_PREFIX = 'keep-conda';
+  const scrubbed = policy.scrubEnv(env);
+  for (const key of secrets) assert.ok(!(key in scrubbed), key);
+  assert.strictEqual(scrubbed.PATH, 'keep-path'); assert.strictEqual(scrubbed.CONDA_PREFIX, 'keep-conda');
+  assert.strictEqual(env.HF_TOKEN, 'test-only', 'scrubbing must not mutate caller');
+  const executor = require('../src/tools/executor');
+  const oldEnqueue = jobs.enqueue;
+  let finishLate;
+  try {
+    jobs.enqueue = kind => kind === 'run' ? new Promise(resolve => { finishLate = resolve; }) : Promise.resolve({ ok: true });
+    await jobs.runWithPty({ pty: true, remote: false }, async () => {
+      const started = executor.startCommand({ command: 'echo late fixture' });
+      await executor.cancelCommand({ execId: started.execId });
+      assert.strictEqual(executor.getCommandOutput({ execId: started.execId }).ok, false);
+      finishLate({ status: 'done', ok: true, exitCode: 0, outputCaptured: true });
+      await new Promise(resolve => setImmediate(resolve));
+      const late = executor.getCommandOutput({ execId: started.execId });
+      assert.strictEqual(late.status, 'cancelled'); assert.strictEqual(late.ok, false);
+    });
+  } finally { jobs.enqueue = oldEnqueue; }
+
   assert.ok(policy.isReadishCommand('git status'));
   assert.strictEqual(policy.isReadishCommand('git branch -D local-test'), false);
   assert.strictEqual(policy.shouldAutoAllow('echo one; echo two', { allowSession: true }).allow, false);
@@ -77,7 +105,7 @@ config.workspaceRoot = tmp;
   await host.runShellIntegration({ executeCommand: () => execution }, { jobId: 'fixture', execId: 'fixture', command: 'echo fixture', timeoutSec: 2 }, { dispose() {} });
   assert.strictEqual(reports.at(-1).status, 'error');
   assert.strictEqual(reports.at(-1).exitCode, 3);
-  vscode.window.createTerminal = () => ({ show() {}, dispose() {}, sendText() { throw new Error('unobserved execution forbidden'); } });
+  vscode.window.createTerminal = options => { assert.strictEqual(options.strictEnv, true, 'terminal must not merge deleted credentials back from parent'); return { show() {}, dispose() {}, sendText() { throw new Error('unobserved execution forbidden'); } }; };
   await assert.rejects(() => host.spawnFallback({ execId: 'no-si' }, tmp), /未执行命令/);
   host.dispose();
 

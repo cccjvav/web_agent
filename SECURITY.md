@@ -52,3 +52,9 @@ ChatGPT 自制 MCP 插件用的 OAuth access / refresh **只在内存**。关掉
 ## 请求与终端取消（2026-09-11）
 
 Chat断开/停止会传递取消信号；每请求5分钟总期限，模型响应120秒期限。PTY基于客户端身份与工作区绑定，审批超时后不得执行；只读自动批准只接受保守完整命令。无可靠退出/输出捕获的fallback不执行，避免“已发送=成功”。这些是应用层控制，不保证对抗同机高权限进程或所有脱离进程组的子进程；真实Windows和VS Code仍待验收。
+
+## 第三轮审批与环境修正（2026-09-14）
+- 常见cat/type/Get-Content、git diff/log/show正文读取需当次PTY审批，即使已允许会话/命令族；路径/符号链接/已跟踪密钥无法仅靠命令词判断安全。
+- 会话/命令族允许仍可能执行其他任意程序；规则是尽力识别，不是OS沙箱。不得向不受信任务授予宽授权。
+- executor与PTY共用ptyPolicy.scrubEnv，移除token/access-key/storage-key等凭据名称，保留PATH/Conda；shell-integration终端设置strictEnv防重新继承。未知命名/程序自行读取磁盘凭据不在此保证内。
+- 截断或混合不完整SEARCH/REPLACE补丁拒绝，不整文件覆盖；需要写入字面补丁标记时应走受权限/hash保护的write_file。

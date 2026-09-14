@@ -532,7 +532,11 @@ async function runPlanRound(payload, emit, cfg) {
 async function runChat(payload = {}, emit) {
   const send = typeof emit === 'function' ? emit : payload.emit;
   const cfg = store.load();
-  const mode = payload.mode || 'agent';
+  const mode = payload.mode || 'ask';
+  if (!['ask', 'plan', 'code'].includes(mode)) {
+    if (send) send('error', { message: 'Unknown chat mode; use ask, plan or code.' });
+    return { ok: false, error: 'invalid chat mode' };
+  }
   if (mode === 'plan') {
     return runPlanRound(payload, send, cfg);
   }

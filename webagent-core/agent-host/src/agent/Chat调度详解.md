@@ -10,7 +10,7 @@
 
 ### runChat(payload = {}, emit)
 
-第二参数是函数时优先作为 send，否则取 payload.emit。同步 `store.load()` 在模型 try/catch 之前，坏配置会直接使 async 函数拒绝。mode 缺省为 `agent`；本文件没有在这里把 agent 改名为 code，HTTP/扩展的模式处理需另看调用方。
+第二参数是函数时优先作为 send，否则取 payload.emit。同步 `store.load()` 在模型 try/catch 之前，坏配置会直接使 async 函数拒绝。mode 缺省为 `ask`，保证只读工具集；未知mode发送error并返回ok:false，不静默降级为空工具集。HTTP/扩展的模式处理另看调用方。
 
 Plan 直接委托 runPlanRound。普通模式 pickModel；选中非 builtin 但字段不齐时 emit error、返回失败，不执行内置写入；字段齐则 await runOpenAI，异常转换为 error 事件及失败对象。其他情况走 runBuiltin。
 

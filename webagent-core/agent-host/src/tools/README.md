@@ -90,7 +90,7 @@ readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，
 | [board.js](board.js) | 22 个函数/类节点 |
 | [consensusEngine.js](consensusEngine.js) | 7 个函数/类节点 |
 | [dangerous.js](dangerous.js) | 32 个函数/类节点 |
-| [executor.js](executor.js) | 30 个函数/类节点 |
+| [executor.js](executor.js) | 29 个函数/类节点 |
 | [fileOps.js](fileOps.js) | 30 个函数/类节点 |
 | [findFiles.js](findFiles.js) | 3 个函数/类节点 |
 | [gitOps.js](gitOps.js) | 6 个函数/类节点 |

@@ -655,3 +655,15 @@ P3-37..46 见清单，逐条按"抽共享模块 / 加缓存 / 修文案 / 删死
 | 其余P0/P1/P2与优化建议 | 待逐条核验及补负例；优先防数据损坏/凭据泄漏 | 不采用配对码落盘、开放远程UI、强杀仅凭旧PID等危险建议 |
 
 旧REPORT*/ShunCode报告暂按历史留档，旧活台账降为前轮证据；统一以本节和CHECKLIST_WINDOWS区分当前修复与真实验收。无需现在大量移动文件制造断链。用户原始日志可能含用户名/路径，分享前脱敏。
+
+### 高风险修复批次
+
+| 编号 | 核对/修正 | 回归 |
+|---|---|---|
+| P0-1 | 属实；parseSearchReplaceBlocks完整匹配后检查残余标记，防单个截断和混合截断、已有/新建/dryRun | patchEngine新增负例修改前Missing expected rejection，修后通过；原字节不变 |
+| P0-2 | 属实；默认不再自动批准文件正文及Git历史；已会话/命令族允许也对识别出的正文读取询问；补高风险命令 | ptyLifecycle修改前cat .env误允许，修后拒自动批准；不声称命令解析完备 |
+| P0-3 | 属实；删除迟到result.ok覆盖，cancelCommand立即ok:false | ptyLifecycle模拟取消后迟到ok:true仍返回cancelled/false |
+| P0-4 | 属实；scrubEnv移到扩展纯策略模块，host与PTY共用，补token/access/storage key；额外发现终端环境合并风险，fallback用strictEnv | 合成凭据/保留Conda/PATH/输入不变及终端参数断言；仍非值扫描/OS沙箱 |
+| P0-5 | 属实；runChat默认ask，非法mode明确失败 | modelLifecycle修改前defaultTools不存在，修后只读工具集正确 |
+
+以上不代表其他P1–P3/优化建议已完成；真实Windows桌面/授权/手机仍需用户验收。扩展策略变化是安全收紧：普通cat也需要单次确认，不用词法路径假装能判定符号链接安全。

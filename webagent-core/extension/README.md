@@ -48,7 +48,7 @@ webview动态文本使用DOM文本节点，CSP含nonce，宿主只接受预期�
 | [extension.js](extension.js) | 42 个函数/类节点 |
 | [modeFromChatRequest.js](modeFromChatRequest.js) | 1 个函数/类节点 |
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
-| [ptyHost.js](ptyHost.js) | 55 个函数/类节点 |
-| [ptyPolicy.js](ptyPolicy.js) | 4 个函数/类节点 |
+| [ptyHost.js](ptyHost.js) | 54 个函数/类节点 |
+| [ptyPolicy.js](ptyPolicy.js) | 5 个函数/类节点 |
 | [workspaceMatch.js](workspaceMatch.js) | 2 个函数/类节点 |
 <!-- docs-inventory:end -->

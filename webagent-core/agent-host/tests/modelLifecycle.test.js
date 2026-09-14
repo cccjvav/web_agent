@@ -14,6 +14,15 @@ const model = { id: 'test', protocol: 'openai', apiKey: 'fixture', baseUrl: 'htt
 const reply = message => ({ ok: true, text: async () => JSON.stringify({ choices: [{ message }] }) });
 (async () => {
   store.save({ ...store.defaults(), activeModelId: 'test', models: [model] });
+  let defaultTools;
+  global.fetch = async (_, options) => {
+    defaultTools = JSON.parse(options.body).tools;
+    return reply({ role: 'assistant', content: 'default mode checked' });
+  };
+  await runChat({ message: 'list' }, () => {});
+  assert.ok(defaultTools.some(t => t.function.name === 'read_files'));
+  assert.ok(!defaultTools.some(t => t.function.name === 'write_file'));
+  assert.strictEqual((await runChat({ mode: 'invalid', message: 'list' }, () => {})).ok, false);
   const events = [];
   global.fetch = async () => { throw new Error('fixture model unavailable'); };
   await runChat({ mode: 'code', message: '创建 note.txt\n```text\nhello\n```' }, (type, data) => events.push({ type, ...data }));

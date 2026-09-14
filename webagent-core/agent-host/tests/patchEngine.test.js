@@ -11,6 +11,18 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-patch-'));
 config.workspaceRoot = tmp;
 
 async function main() {
+  const safeBody = 'keep this line\nold\n';
+  fs.writeFileSync(path.join(tmp, 'truncated.txt'), safeBody);
+  const complete = '<<<<<<< SEARCH\nold\n=======\nnew\n>>>>>>> REPLACE';
+  for (const broken of ['<<<<<<< SEARCH\nold\n=======\nnew\n', complete + '\n<<<<<<< SEARCH\nkeep', '=======\nnew\n>>>>>>> REPLACE']) {
+    for (const dryRun of [false, true]) {
+      await assert.rejects(() => applyPatch({ filePath: 'truncated.txt', patch: broken, expectedHash: computeHash(safeBody), dryRun }), e => e.code === 'E_BAD_ARGS' && /SEARCH/.test(e.detail.retryHint));
+      assert.strictEqual(fs.readFileSync(path.join(tmp, 'truncated.txt'), 'utf8'), safeBody);
+      await assert.rejects(() => applyPatch({ filePath: 'never-created.txt', patch: broken, dryRun }), /incomplete|malformed/i);
+      assert.ok(!fs.existsSync(path.join(tmp, 'never-created.txt')));
+    }
+  }
+
   fs.writeFileSync(path.join(tmp, 'sample.js'), 'function add(a, b) {\n  return a + b;\n}\n', 'utf8');
 
   const read = readFile({ filePath: 'sample.js' });
