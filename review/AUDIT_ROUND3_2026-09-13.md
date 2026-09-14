@@ -711,3 +711,10 @@ P3-43及OPT-E3“新测试漏登记静默漏检/新增测试必使runner失败�
 - P1-17属实并修复：appOrigin统一CODE_SERVER_PORT，ready/轮询/Edge或默认浏览器使用同一origin；真实随机端口HTTP回归含200/503和非法配置。
 - P1-18/19应区分生产依赖策略与测试入口缺陷：omit=dev不是生产启动错误，不把Acorn强塞生产依赖；run-tests.cmd现同时检查express/Acorn，缺任一则锁文件npm ci --include=dev。源码测试与安装载荷边界已注明。CMD实际执行仍待用户/Windows验证。
 - P1-21定位有误但现象部分属实：syncExtension在scripts/ensure-code-server.js，不在installer/package.js；package白名单本身会复制extension下Markdown，运行时sync仍只拷JS/package/icon，旧目录清理与文档副本待修。P1-22/34（载荷文档站/死链）尚未完成，不仅靠加一个SUMMARY文件就宣称所有构建输入齐备。
+
+### 最新CI反例：取消仍有间歇性失败
+
+- OAuth提交80c72bf，运行34855147938：七项CI任务全通过。
+- 安装入口提交31767dd，运行34855329666：Ubuntu20/22/24、Windows22/24及安装器通过；Windows20失败。失败为ptyLifecycle取消耗时30204ms，严格10秒断言命中，说明不能再用前两次绿灯外推取消稳定性。
+- 当前源码Windows killChild用同步taskkill /T /F且未检查返回状态、未设自身期限；已确认这是诊断/健壮性缺口，但仅凭源码与30秒结果不能断言此次是taskkill失败、进程创建竞态还是继承管道问题。后续必须取得终止结果及父/子进程时序证据，不能仅关闭管道或放宽测试来制造通过。
+- 最新本地全量仍52/52；用户第5步复验结果未收到，真实本机状态保持待验。当前审查不是“全部完成”。
