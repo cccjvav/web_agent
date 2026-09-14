@@ -1,5 +1,8 @@
 # Web Agent
 
+入口口径：安装版默认快捷方式是 `run-webagent-vscode.cmd`（code-server网页VS Code）；源码最短上手/新手验收使用 `run-webagent.cmd`（自绘经典工作台）。二者默认都用3000，不同时启动。
+
+
 **环境与复盘入口**：[Windows + Conda](Conda环境说明.md) · [逐项人工验收](review/CHECKLIST_WINDOWS.md) · [从文件到函数的复盘指南](代码复盘指南.md)。
 
 本机工作台 + 独立 agent-host。网页 AI 通过 MCP 改你电脑上的仓库。许可证 [ISC](./LICENSE)。安全边界见 [SECURITY.md](./SECURITY.md)。
@@ -41,7 +44,7 @@ GitHub 默认分支 `main` 目前仍是更早的原型快照。现行工作台�
 | `workspace/` | 默认演示工作区 | 计算器示例；`.webagent`（含 `docs-sync` 等 Skill）在这里，不在仓库根 |
 | `webagent-repro/` | 不用 | 更早一版纯 Bridge 原型 |
 | `bin/code-server-runtime/` | 第二种跑法下载到这里 | npm 完整 code-server，不进 Git |
-| `run-webagent-vscode.cmd` | 第二种跑法 | 浏览器里真 VS Code + Web Agent 侧栏，见 [网页VSCode使用指南.md](./网页VSCode使用指南.md) |
+| `run-webagent-vscode.cmd` | 安装版默认壳 | 浏览器里真 VS Code + Web Agent 侧栏，见 [网页VSCode使用指南.md](./网页VSCode使用指南.md) |
 | `install-vscode-extension.cmd` | 本机已装桌面 VS Code | 侧载插件到 `.vscode/extensions`，引擎仍是 `run-webagent.cmd`，见 [使用指南.md](./使用指南.md) 第 5 节 |
 | `webagent-core/agent-host/tests/` | 产品测试 | `run-tests.cmd`；不必在仓库根再放 `tests/` |
 

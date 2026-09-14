@@ -102,7 +102,7 @@
 - **内容结构：**
   - L1–L3：标题「修复失败的单元测试」；触发词：测试失败 / 除以零 / calculator。
   - L5–L6 **Ask：** 只读；文中写了 `list_directory` → `search_files` → `read_files` → `get_diagnostics`；禁止 `apply_patch` / `run_command`。  
-    （现行 `getToolList` **没有** `get_diagnostics` / `search_files` 这两个名字，测试锁的是 `find_files`。本文件是演示 Skill 原文，不以它为准改工具层。）
+    （现行 `getToolList` 没有 `get_diagnostics`；`search_files` 是真实工具，文件名查找用 `find_files`。本文件是演示 Skill 原文，不以它为准改工具层。）
   - L8–L9 **Plan：** 独立分支、写清共识、不改仓库。
   - L11–L23 **Code：** 读 `calculator.js` hash → `apply_patch` 给 `divide` 加除 0 守卫 → `STALE_FILE` 则重读 → `npm test` 要 5/5。
 

@@ -112,7 +112,7 @@ chmod +x run-webagent-vscode.sh
 ./run-webagent-vscode.sh /path/to/my-app
 ```
 
-同样需要 npm 网络。也可用环境变量 `CODE_SERVER_PATH` 以外的端口：
+同样需要 npm 网络。也可用下面的环境变量指定其他端口（没有CODE_SERVER_PATH开关）：
 
 ```bash
 CODE_SERVER_PORT=3000 AGENT_HOST_PORT=48271 ./run-webagent-vscode.sh
@@ -198,3 +198,5 @@ agent-host 没起来。看黑色窗口报错；防火墙是否拦了 Node。
 4. 活动栏 **Web Agent**；Chat 里 `@webagent`。状态栏「未连接 48271」= 引擎没起来；「工作区不一致」= 打开的文件夹和 `Workspace` 不是同一个。
 
 逐步与排错见 [使用指南.md](./使用指南.md) 第 5 节。
+
+安全边界：网页壳受信Origin仅本机127.0.0.1/localhost；WEBAGENT_BIND不是开放远程UI的许可。不要为LAN访问扩大Origin/关闭保护，手机使用认证MCP。

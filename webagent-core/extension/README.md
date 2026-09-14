@@ -35,6 +35,10 @@
 ## 界面与连接边界
 webview动态文本使用DOM文本节点，CSP含nonce，宿主只接受预期消息。不能把HTML转义/CSP当作后端授权。Bridge启动失败可能HTTP200但success=false；没有隧道时得到的是本机MCP地址，不能从网页页面Host推断公网可达。
 
+## 自定义主机端口
+
+agentHostUrl优先读取VS Code设置`webagent.agentHostUrl`，其次扩展进程环境`WEBAGENT_AGENT_HOST_URL`，最后默认http://127.0.0.1:48271。设置界面修改该配置后重载扩展；环境变量方式必须在启动VS Code前设置并完整退出旧进程再启动。不要把此URL指向不受信服务。端口与host实际启动配置需要一致，不能只修改扩展一端。
+
 ## 验证
 `extensionCopy`验证规范源码与副本，`webviewRuntime`运行实际模板/消息fixture，`desktopExtension`、`ptyLifecycle`覆盖接口与任务边界。尚不能据此声称真实VS Code多窗口、shell integration、Windows审批和取消全部验收。
 

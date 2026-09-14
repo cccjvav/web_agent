@@ -29,7 +29,7 @@
   | `disable-telemetry` | 关遥测 | `true` |
   | `disable-update-check` | 关更新检查 | `true` |
 
-命令行还会加 `--disable-workspace-trust`、`--trusted-origins`（仅 `127.0.0.1` / `localhost`）、`--app-name Web Agent`（见 `run-code-oss.js`），不写在本 yaml 里。`CODE_SERVER_AUTH=none` 时命令行 `--auth none` 关掉登录。
+工作区信任保持开启，不传禁用开关。命令行会加 `--trusted-origins`（仅 `127.0.0.1` / `localhost`）、`--app-name Web Agent`（见 `run-code-oss.js`），不写在本 yaml 里。`CODE_SERVER_AUTH=none` 时命令行 `--auth none` 关掉登录。
 
 ---
 

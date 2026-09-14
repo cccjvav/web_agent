@@ -58,3 +58,11 @@ Chat断开/停止会传递取消信号；每请求5分钟总期限，模型响�
 - 会话/命令族允许仍可能执行其他任意程序；规则是尽力识别，不是OS沙箱。不得向不受信任务授予宽授权。
 - executor与PTY共用ptyPolicy.scrubEnv，移除token/access-key/storage-key等凭据名称，保留PATH/Conda；shell-integration终端设置strictEnv防重新继承。未知命名/程序自行读取磁盘凭据不在此保证内。
 - 截断或混合不完整SEARCH/REPLACE补丁拒绝，不整文件覆盖；需要写入字面补丁标记时应走受权限/hash保护的write_file。
+
+## 外部网络依赖与用量上报
+
+- 经典工作台从jsDelivr加载Monaco可执行脚本，同页能访问本机状态，因此存在第三方CDN供应链信任面。加载失败提供纯文本回退；当前尚未vendor Monaco，不把离线回退当供应链隔离。
+- 配置WEBAGENT_TELEMETRY_URL与WEBAGENT_TELEMETRY_TOKEN两者后才可能外发统计，默认未配置不发送。payload包含installId、可选githubUser/githubId/provider、日期、调用数、失败数、成功率、lastAt、产品与版本，不包含模型key、MCP secret或命令正文，但不是匿名数据。
+- 关闭上报：停止产品，删除启动环境中的上述两项配置，再从清理后的新进程启动；本地usage.json仍可能记录统计，关闭上报不等于删除本地记录。不公开遥测令牌。
+- 截图自动回传除工作区外还允许本项目computer-use目录（现有技能兼容例外），该目录不要放私人截图。命令stdout中图片路径可能触发附件读取；尚未改成显式附件协议，此例外不能误说成严格仅工作区。
+- 强杀主机进程后应人工确认对应cloudflared/ngrok已退出；仅凭旧PID自动强杀可能误伤PID复用的其他进程，当前不实施这种回收。断电时进程不会继续运行，但重启后的外部服务/残留启动机制仍需核对。
