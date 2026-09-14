@@ -76,3 +76,6 @@ JS/CJS/MJS用Acorn提取节点；其他语言只有文件级登记。链接检�
 `documentation-manifest.json`和`source-index.md`是自动产物，不直接修改。改源码/README后先生成清单再build；build消费清单，不代替覆盖检查。JS之外暂只登记文件，不声称跨语言符号完整。受检链接仅内联本地文件目标，不是全网链接/全部标题锚点认证。
 
 源码快照视图只展示构建时按清单采集的文件，不增加读取任意磁盘路径的HTTP接口。源码以textContent显示，函数索引跳转到对应行并高亮。测试fixture不嵌入content.js，避免随安装包分发；清单仍记录其归属与AST结构。快照hash不匹配时build拒绝生成，要求先审查并刷新清单。
+
+## 安装载荷的预构建模式
+serve.js先检查bundled.json；存在则要求format=1/prebuilt=true/content.js存在，不运行build.js。不含此标记的源码checkout保持启动前重建。标记是发行模式选择，不是访问控制；服务默认仍回环、只读。安装包只带运行站点所需文件，源码与解释来自已生成的content.js快照。

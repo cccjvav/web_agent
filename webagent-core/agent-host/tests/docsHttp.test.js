@@ -2,6 +2,8 @@
 const assert = require('assert');
 const http = require('http');
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
 const { spawn } = require('child_process');
 
 function request(port, pathname) {
@@ -15,8 +17,13 @@ function request(port, pathname) {
 }
 (async () => {
   const root = path.resolve(__dirname, '../../..');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-docs-bundle-'));
+  const payload = path.join(tmp, 'payload');
+  require('../../../installer/package').stage(root, payload);
+  try {
+  for (const cwd of [root, payload]) {
   const child = spawn(process.execPath, ['docs-site/serve.js'], {
-    cwd: root, env: { ...process.env, DOCS_HOST: '127.0.0.1', DOCS_PORT: '0' }, stdio: ['ignore', 'pipe', 'pipe']
+    cwd, env: { ...process.env, DOCS_HOST: '127.0.0.1', DOCS_PORT: '0' }, stdio: ['ignore', 'pipe', 'pipe']
   });
   let stderr = '';
   child.stderr.on('data', d => { stderr += d; });
@@ -37,9 +44,12 @@ function request(port, pathname) {
     assert.strictEqual(await request(port, '/%00'), 400);
     assert.strictEqual(await request(port, '/'), 200, 'server must still serve after bad requests');
     assert.strictEqual(await request(port, '/missing-file.html'), 404);
+    assert.strictEqual(await request(port, '/content.js'), 200);
     console.log('docs HTTP malformed URL regressions passed');
   } finally {
     child.kill();
     await exited;
   }
+  }
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 })().catch(err => { console.error(err); process.exitCode = 1; });

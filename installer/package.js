@@ -14,10 +14,11 @@ const files = [
   'run-admin.cmd', 'install-vscode-extension.cmd', 'installer/launch.js',
   'webagent-core/agent-host/package.json', 'webagent-core/agent-host/package-lock.json',
   'webagent-core/admin-host/index.js', 'webagent-core/admin-host/app.js',
-  'workspace/README.md'
+  'workspace/README.md',
+  'docs-site/index.html', 'docs-site/app.js', 'docs-site/styles.css', 'docs-site/content.js', 'docs-site/serve.js', 'docs-site/README.md'
 ];
 const trees = ['webagent-core/agent-host/src', 'webagent-core/workbench', 'webagent-core/scripts',
-  'webagent-core/extension', 'computer-use', 'project-manager', 'multi-agent-board', 'docs-site'];
+  'webagent-core/extension', 'computer-use', 'project-manager', 'multi-agent-board'];
 const extensions = new Set(['.js', '.json', '.md', '.html', '.css', '.svg', '.ps1', '.cs', '.txt']);
 const forbidden = new Set(['node_modules', '.git', '.webagent', 'data', 'output', 'cache', '.cache', '.local']);
 function digest(data) { return crypto.createHash('sha256').update(data).digest('hex'); }
@@ -41,14 +42,41 @@ function collect(source = root) {
   for (const rel of trees) add(rel);
   return [...new Set(out)].sort();
 }
+function bundledDocs(source) {
+  const text = fs.readFileSync(path.join(source, 'docs-site/content.js'), 'utf8');
+  const match = text.match(/window\.DOCS = ([\s\S]+);\s*$/);
+  if (!match) throw new Error('Invalid prebuilt documentation');
+  return JSON.parse(match[1]);
+}
+function rewritePackagedMarkdown(rel, text, selected, docs) {
+  const directory = path.posix.dirname(rel);
+  const site = path.posix.relative(directory, 'docs-site/index.html');
+  return text.replace(/(!?)\[([^\]]*)\]\(([^)]+)\)/g, (whole, image, label, href) => {
+    if (/^(?:[a-z][a-z0-9+.-]*:|#|\/\/)/i.test(href)) return whole;
+    const [raw, anchor] = href.split('#');
+    let dest;
+    try { dest = path.posix.normalize(path.posix.join(directory, decodeURIComponent(raw))); }
+    catch (_) { return `${label}（仅源码仓库）`; }
+    if (selected.has(dest) || [...selected].some(file => file.startsWith(dest + '/'))) return whole;
+    const doc = docs.fileIndex.find(entry => entry.path === dest);
+    const special = { '架构导读.md': 'guide', '技术实现.md': 'impl', '总览.md': 'graph', '组件说明.md': 'workflow' };
+    const route = docs.sources[dest] ? `source/${encodeURIComponent(dest)}` : special[dest] || (doc && `files/${doc.id}`);
+    if (!image && route) return `[${label}](${site}#/${route}${anchor ? '/' + anchor : ''})`;
+    // Don't ship clickable links to deliberately excluded source/history/private data.
+    return `${label}（仅源码仓库：\`${raw.replace(/`/g, '')}\`）`;
+  });
+}
 function stage(source = root, target = path.join(root, 'installer/output/payload')) {
   source = path.resolve(source); target = path.resolve(target);
   if (source === target || source.startsWith(target + path.sep)) throw new Error('Invalid staging destination');
   const selected = collect(source); // Validate all inputs before replacing previous staging.
   fs.rmSync(target, { recursive: true, force: true });
   const entries = [];
+  const docs = bundledDocs(source);
+  const included = new Set(selected);
   for (const rel of selected) {
-    const data = fs.readFileSync(path.join(source, rel));
+    let data = fs.readFileSync(path.join(source, rel));
+    if (rel.endsWith('.md')) data = Buffer.from(rewritePackagedMarkdown(rel, data.toString('utf8'), included, docs));
     const dest = path.join(target, rel);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.writeFileSync(dest, data);
@@ -59,6 +87,9 @@ function stage(source = root, target = path.join(root, 'installer/output/payload
   fs.mkdirSync(path.join(target, '.config/code-server'), { recursive: true });
   fs.writeFileSync(path.join(target, '.config/code-server/config.yaml'), cfg);
   entries.push({ path: '.config/code-server/config.yaml', sha256: digest(cfg) });
+  const bundled = JSON.stringify({ format: 1, prebuilt: true });
+  fs.writeFileSync(path.join(target, 'docs-site/bundled.json'), bundled);
+  entries.push({ path: 'docs-site/bundled.json', sha256: digest(bundled) });
   const manifest = { format: 1, files: entries };
   fs.writeFileSync(path.join(target, 'installation.json'), JSON.stringify(manifest, null, 2));
   return manifest;

@@ -112,14 +112,28 @@ config.workspaceRoot = tmp;
   process.env.WEBAGENT_DEBUG_PROCESS = '1';
   console.log('PTY fixture: approval and shell-integration checks completed');
   // Real subprocess cancellation is connected to the request scope.
-  const cancellationStarted = Date.now();
-  const commandAbort = new AbortController();
-  const running = runWithSignal(commandAbort.signal, () => executeCommand({ command: 'node -e "setTimeout(() => {}, 30000)"', timeoutSec: 10 }));
-  setTimeout(() => commandAbort.abort(), 100);
-  const stopped = await running;
-  console.log('PTY fixture: subprocess cancellation completed in', Date.now() - cancellationStarted, 'ms');
-  assert.ok(Date.now() - cancellationStarted < 10000, 'Cancellation must close captured subprocess pipes promptly, not wait for natural exit');
-  assert.strictEqual(stopped.status, 'cancelled'); assert.strictEqual(stopped.ok, false);
+  const eventBus = require('../src/utils/eventBus');
+  for (const delay of [50, 100, 200, 400, 'ready']) {
+    const cancellationStarted = Date.now();
+    const commandAbort = new AbortController();
+    let readySeen = false;
+    const onOutput = event => {
+      if (String(event.chunk).includes('246813579')) {
+        readySeen = true;
+        if (delay === 'ready') commandAbort.abort();
+      }
+    };
+    eventBus.on('command_output', onOutput);
+    const running = runWithSignal(commandAbort.signal, () => executeCommand({ command: 'node -e "console.log(246813579);setTimeout(() => {}, 30000)"', timeoutSec: 10 }));
+    const timer = setTimeout(() => commandAbort.abort(), delay === 'ready' ? 8000 : delay);
+    let stopped;
+    try { stopped = await running; }
+    finally { clearTimeout(timer); eventBus.removeListener('command_output', onOutput); }
+    console.log('PTY cancellation', delay, 'elapsed', Date.now() - cancellationStarted, 'readySeen', readySeen);
+    assert.ok(Date.now() - cancellationStarted < 10000, 'Cancellation must close captured subprocess pipes promptly, not wait for natural exit');
+    if (delay === 'ready') assert.ok(readySeen, 'must also cancel a confirmed running descendant');
+    assert.strictEqual(stopped.status, 'cancelled'); assert.strictEqual(stopped.ok, false);
+  }
   const oldFetch = global.fetch;
   try {
     global.fetch = (_, options) => new Promise((resolve, reject) => {

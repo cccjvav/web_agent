@@ -29,6 +29,17 @@ try {
   for (const f of manifest.files) assert.ok(!fs.readFileSync(path.join(output, f.path), 'utf8').includes('PRIVATE_FIXTURE_DO_NOT_PACKAGE'));
   assert.ok(!manifest.files.some(f => f.path.startsWith('webagent-repro/')));
   assert.throws(() => stage(source, tmp), /Invalid staging/);
+  assert.ok(fs.existsSync(path.join(output, 'docs-site/bundled.json')));
+  assert.ok(!fs.existsSync(path.join(output, 'docs-site/build.js')), 'installed docs are prebuilt, not a partial build toolchain');
+  for (const entry of manifest.files.filter(f => f.path.endsWith('.md'))) {
+    const text = fs.readFileSync(path.join(output, entry.path), 'utf8');
+    for (const match of text.matchAll(/!?\[[^\]]*\]\(([^)]+)\)/g)) {
+      const href = match[1];
+      if (/^(?:[a-z][a-z0-9+.-]*:|#|\/\/)/i.test(href)) continue;
+      const dest = path.resolve(path.dirname(path.join(output, entry.path)), decodeURIComponent(href.split('#')[0]));
+      assert.ok(fs.existsSync(dest), `broken packaged link: ${entry.path} -> ${href}`);
+    }
+  }
   const home = path.join(tmp, 'user-data');
   const before = fs.readFileSync(path.join(output, 'installation.json'));
   const runtime = prepareRuntime(output, home);

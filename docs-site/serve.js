@@ -10,8 +10,16 @@ const ROOT = path.resolve(__dirname);
 const PORT = parseInt(process.env.DOCS_PORT || '4173', 10);
 const HOST = process.env.DOCS_HOST || '127.0.0.1';
 
-const built = spawnSync(process.execPath, [path.join(ROOT, 'build.js')], { stdio: 'inherit' });
-if (built.status !== 0) process.exit(built.status || 1);
+const bundled = fs.existsSync(path.join(ROOT, 'bundled.json'));
+if (bundled) {
+  const marker = JSON.parse(fs.readFileSync(path.join(ROOT, 'bundled.json'), 'utf8'));
+  if (marker.format !== 1 || marker.prebuilt !== true || !fs.existsSync(path.join(ROOT, 'content.js'))) {
+    throw new Error('Invalid bundled documentation');
+  }
+} else {
+  const built = spawnSync(process.execPath, [path.join(ROOT, 'build.js')], { stdio: 'inherit' });
+  if (built.status !== 0) process.exit(built.status || 1);
+}
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',

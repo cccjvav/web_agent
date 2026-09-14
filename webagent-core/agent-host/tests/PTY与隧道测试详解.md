@@ -53,3 +53,7 @@ tmp假cloudflared文件，CLOUDFLARED_PATH指它；cp.spawn返回fake并记录�
 分别filter ptyJobs/ptyLifecycle/tunnel/tunnelLifecycle/bridgeTunnel或全量npm test。实际桌面PTY捕获、隧道二进制安装及手机MCP连接仍需人工验收。
 
 2026-09-14负例补充：ptyLifecycle增加三种授权状态下正文/危险命令不可自动许可；secrets环境fixture核对scrubEnv不改原对象并保留PATH/CONDA_PREFIX。oldEnqueue/finishLate替身制造取消后迟到成功，getCommandOutput必须cancelled且ok:false，finally恢复enqueue；createTerminal断言strictEnv。
+
+取消回归现在覆盖50/100/200/400ms四个启动时刻，并通过command_output中的固定fixture标记确认Node后代已开始后再取消。每次仍要求10秒内关闭捕获管道、cancelled且ok:false；30秒有限工作负载只防无限遗留，不可靠自然退出通过。WEBAGENT_DEBUG_PROCESS在测试子进程开启，输出taskkill及exit/close时序诊断。
+
+新增局部onOutput(event)监听command_output，仅命中固定标记时设置readySeen，并在ready用例触发AbortController；finally移除监听，其他命令输出不改变控制流。
