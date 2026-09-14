@@ -22,7 +22,9 @@ const r = spawnSync(process.execPath, [buildPath], {
 assert.strictEqual(r.status, 0, r.stderr || r.stdout || 'docs-site/build.js failed');
 
 const after = fs.readFileSync(contentPath, 'utf8');
-assert.ok(after === before, 'docs-site/content.js drifted from inputs. Run: node docs-site/build.js');
+let firstMismatch = 0;
+while (firstMismatch < Math.min(after.length, before.length) && after[firstMismatch] === before[firstMismatch]) firstMismatch++;
+assert.ok(after === before, 'docs-site/content.js drift at ' + firstMismatch + ': ' + JSON.stringify({ before: before.slice(firstMismatch, firstMismatch + 160), after: after.slice(firstMismatch, firstMismatch + 160) }));
 
 // Re-run the real builder with every Markdown input converted to CRLF.
 // The output must be byte-identical, not just semantically similar HTML.

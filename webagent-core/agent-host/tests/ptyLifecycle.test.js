@@ -109,11 +109,15 @@ config.workspaceRoot = tmp;
   await assert.rejects(() => host.spawnFallback({ execId: 'no-si' }, tmp), /未执行命令/);
   host.dispose();
 
+  console.log('PTY fixture: approval and shell-integration checks completed');
   // Real subprocess cancellation is connected to the request scope.
+  const cancellationStarted = Date.now();
   const commandAbort = new AbortController();
-  const running = runWithSignal(commandAbort.signal, () => executeCommand({ command: 'node -e "setInterval(() => {}, 1000)"', timeoutSec: 10 }));
+  const running = runWithSignal(commandAbort.signal, () => executeCommand({ command: 'node -e "setTimeout(() => {}, 30000)"', timeoutSec: 10 }));
   setTimeout(() => commandAbort.abort(), 100);
   const stopped = await running;
+  console.log('PTY fixture: subprocess cancellation completed in', Date.now() - cancellationStarted, 'ms');
+  assert.ok(Date.now() - cancellationStarted < 10000, 'Cancellation must close captured subprocess pipes promptly, not wait for natural exit');
   assert.strictEqual(stopped.status, 'cancelled'); assert.strictEqual(stopped.ok, false);
   const oldFetch = global.fetch;
   try {

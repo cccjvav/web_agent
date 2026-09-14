@@ -93,7 +93,7 @@ for (const f of files) {
   if (!ok) {
     failed += 1;
     if (process.env.GITHUB_ACTIONS === 'true') {
-      const detail = String(r.stderr || r.error?.message || r.stdout || 'Test failed').slice(-4000).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+      const detail = [r.error?.message || '', String(r.stderr || '').slice(0, 1600), String(r.stderr || '').slice(-1000), String(r.stdout || '').slice(-1000)].join('\n').replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
       console.log(`::error title=${f}::${detail}`);
     }
   }
