@@ -32,6 +32,8 @@
 
 refresh同样检查机密客户端缺认证401，再正确认证200，旧access失效。public none无需客户端secret，但仍走PKCE。finally关server/revokeAll，catch exitCode1。没有测试TLS或第三方连接器实际兼容性，也不证明穷举所有畸形Basic header。
 
+新增回归：三种认证方式均验证有效授权码配错误类型/长度verifier为400，之后正确兑换仍成功；跨客户端提交spent refresh不会撤销持有者，同客户端重放仍撤销。填满80注册项后错误注册不得撤销最老有效token，有效新注册返回503；临时替换Date.now推进6分钟证明可回收空闲注册但保留活跃token，finally恢复时钟。危险scheme/非回环HTTP/凭据/fragment/空白/过长URI、过多回调和过长名字均拒绝；HTTPS、IPv4/IPv6回环允许。无效授权challenge/method/response_type/redirect/state不消耗配对码；成功后公开GET只显示页面不续发码，未知client返回400。origin测试临时替换config.publicTunnelUrl并finally恢复，验证伪造Host/转发头不能改变issuer、可信配置优先以及挑战头不接受注入字段。
+
 ## githubAuth.test.js
 
 [源码](githubAuth.test.js)导入前设临时WORKSPACE_ROOT。**jsonResp(status,body)**给ok/status和异步**text()/json()**两种响应接口。异步**run**resetPending/store，patch本机demo初态；空白token必须status400。

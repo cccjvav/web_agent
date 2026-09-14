@@ -21,7 +21,8 @@
 | now() | 无→毫秒数 | Date.now包装，方便统一时间读取，不是独立单调时钟 |
 | randomToken(prefix,bytes=24) | 前缀/字节数→hex token | crypto.randomBytes，不读磁盘 |
 | randomPairingCode() | 无→8字符 | 随机8字节，map到去掉易混字符的字母数字表；不是从时间戳生成 |
-| requestOrigin(req) | 请求→origin字符串 | 有config.publicTunnelUrl优先去末斜杠；否则转发proto/host优先于本地请求值，取逗号首项。**不是独立可信代理/Host校验器**，部署须配合入口限制 |
+| safeOrigin(value) | 字符串→规范origin或null | 只接受HTTP(S)、无凭据/路径/查询/fragment/空白/反斜杠的地址；不是DNS信任校验 |
+| requestOrigin(req) | 请求→origin字符串 | 有效config.publicTunnelUrl优先；否则仅本机Host（localhost/127.0.0.1/[::1]），最后固定本机config.port。忽略转发Host/proto，远端必须由本机控制面设置公网origin |
 | s256(verifier) | 字符串/Buffer→base64url摘要 | SHA-256；不在此检查verifier长度/字符集 |
 | timingSafeEqualString(a,b) | 两值→boolean | String转UTF8 Buffer，长度不同false，相等长度用crypto.timingSafeEqual；不把任意长度比较说成全流程常时 |
 
@@ -39,9 +40,9 @@
 
 - **authorizationServerMetadata(origin)**返回issuer及authorize/token/register/revoke端点，声明code/refresh、S256、none/post/basic三种认证方式和scope。
 - **protectedResourceMetadata(origin)**给resource=`origin/mcp`、授权服务器及header bearer方式。
-- **wwwAuthenticate(origin)**构造Bearer挑战，指向protected-resource元数据。
+- **wwwAuthenticate(origin)**先safeOrigin排除非法输入（失败回本机），再构造Bearer挑战，指向protected-resource元数据。
 
-这些函数纯构造对象/字符串，不验证域名或客户端。metadata包含openid scope，但本文件没有签发ID token/UserInfo完整OIDC流程；不能因此称为完整OpenID Connect提供者。
+这些函数不验证客户端；origin语法/来源限制不等于验证域名归属。metadata包含openid scope，但本文件没有签发ID token/UserInfo完整OIDC流程；不能因此称为完整OpenID Connect提供者。
 
 ## 4. 注册与清理函数
 
@@ -51,17 +52,19 @@
 
 ### revokeClientTokens(clientId)
 
-遍历access/refresh，匹配clientId就删；不删除clients注册、不清authCodes或所有spent记录。用于客户端淘汰和refresh重放处理。
+遍历access/refresh，匹配clientId就删；不删除clients注册、不清authCodes或所有spent记录。用于refresh重放处理；容量淘汰不再撤销有效令牌。
 
 ### pruneClients()
 
-先pruneExpiredTokens；注册表达到80时找最早createdAt，撤其access/refresh后删客户端，循环到有空间。不是按最近活跃度淘汰；不保证Map内其他种类状态也有数量上限。
+先pruneExpiredTokens；注册表不足80直接返回。满时遍历授权码/access/refresh建立protectedIds；只移除注册超过5分钟且无上述有效记录的客户端，腾出一位即返回；没有可移除项抛503 temporarily_unavailable。不会为新注册踢掉活跃/正在授权客户端。未配对注册仍能占满短期容量，这是有界拒绝服务风险，不宣称消灭注册滥用。
 
 ### registerClient(body={})
 
-**先pruneClients再验证新请求**。认证方式缺省none，只允许none/client_secret_post/client_secret_basic；redirect_uris需数组filter(Boolean)后非空，否则status400。这里没有完整URL/类型/scheme检查；精确匹配不等于已做redirect URL语义验证。
+认证方式缺省none，只允许none/client_secret_post/client_secret_basic。redirect_uris必须1–16项；逐项调用validateRedirectUri。client_name可缺省或不超过256字符的字符串。全部检查完成后才pruneClients，避免错误请求修改注册表。
 
-生成clientId和secret，存redirects、名字、方法、createdAt；返回注册元数据。即使none也返回secret，但该客户端使用none方式认证，不应误以为“有返回secret就必须Basic”。失败注册之前也可能已发生容量淘汰。
+**validateRedirectUri(value)**：类型为字符串、非空、最长2048、无空白/反斜杠/fragment；new URL解析，拒绝用户凭据。允许HTTPS或HTTP回环localhost/127.0.0.1/[::1]。内部reject统一抛400。原始字符串保留用于精确匹配，不用URL规范化扩大回调匹配。自定义scheme不受支持；原生连接器需使用回环回调。
+
+生成clientId和secret，存redirects副本、名字、方法、createdAt；返回注册元数据。即使none也返回secret，但该客户端使用none方式认证，不应误以为“有返回secret就必须Basic”。容量错误503；其他注册验证错误400。
 
 ### issueAccess(clientId) 与 tokenResponse(issued)
 
@@ -81,16 +84,9 @@ issueAccess生成access/refresh，创建含两个截止的共享记录，同时�
 
 **authorizeHtml(query,error)**返回完整HTML，包含配对输入、client/redirect/state/challenge/method等隐藏字段与固定response_type=code；动态字段经过escapeHtml。配对码本身不嵌在HTML；页面让用户从本机Bridge读取后输入。内联CSS定义弹性居中表单，代码生成HTML不等于完成键盘/小屏验收。
 
-**completeAuthorize(body)**同步顺序非常重要：
+**validateAuthorize(body)**在GET和POST共用：查client、精确redirect匹配、code_challenge_method缺省S256且仅允许S256、challenge必须43字符base64url、response_type可缺省为code但非code拒绝、state可缺省或最长2048字符串；最后validateRedirectUri构造URL。返回client和url。全部失败都在配对码消耗之前，不重定向到错误输入地址。
 
-1. 查已注册client，否则400。
-2. redirect_uri必须与注册列表includes精确匹配，否则400。
-3. code_challenge_method缺省S256，仅允许S256，否则400。
-4. consumePairing。
-5. 生成code，写clientId/redirectUri/challenge/exp。
-6. new URL(redirect_uri)，添加code和可选state，返回重定向地址。
-
-这里未完整验证response_type、challenge格式/非空、scope或resource；URL构造在消耗配对码/写授权码之后，非法已注册URL可导致最后失败而前面状态已变。不能把“精确redirect与S256验证”概括为所有OAuth授权输入都完整验证。没有自动回滚前述状态。
+**completeAuthorize(body)**先validateAuthorize，再consumePairing，生成/存入授权码，然后给已解析URL添加code和可选state。scope/resource尚未完整实现，不宣称完整OAuth/OIDC标准覆盖。缺省response_type/method保留已有直接调用兼容，但不允许空challenge。
 
 ## 6. authenticateClient(body,authorization='',inferredId)
 
@@ -106,19 +102,19 @@ issueAccess生成access/refresh，创建含两个截止的共享记录，同时�
 
 ### authorization_code 分支
 
-查code存在/未过期 → clientId一致 → redirectUri一致 → 有verifier且s256等于challenge，全部通过才delete授权码、issueAccess、tokenResponse。前面的认证/PKCE失败不提前消耗授权码；成功后不能二次兑换。错误多为status400，路由sendError默认映射invalid_request，而非每个分支精细区分invalid_grant。
+查code存在/未过期 → clientId一致 → redirectUri一致 → verifier为43–128位RFC7636未保留字符字符串且s256等于challenge，全部通过才delete授权码、issueAccess、tokenResponse。前面的认证/PKCE失败不提前消耗授权码；成功后不能二次兑换。错误多为status400，路由sendError默认映射invalid_request，而非每个分支精细区分invalid_grant。
 
 ### refresh_token 分支
 
 有效refresh需clientId一致；把旧refresh记入spentRefresh，删旧access和refresh，再签新的一对。不能把刷新说成延长旧access有效期，旧access已删除。
 
-无有效refresh但在spent中命中时，revokeClientTokens(spent.clientId)，抛“重放检测、已撤销”；其撤销范围是该client所有access/refresh，不只是刚刷新的一个。无记录则invalid refresh。认证失败不会先做这条撤销，必须先证明客户端身份。
+无有效refresh但在spent中命中且归属已认证clientId时，revokeClientTokens(spent.clientId)，抛“重放检测、已撤销”；其撤销范围是该client所有access/refresh，不只是刚刷新的一个。无记录则invalid refresh。认证失败不会先做这条撤销，必须先证明客户端身份。
 
 不支持的grant抛400。没有落盘、跨进程共享或后台刷新；网络客户端自己保存新token并按协议请求。
 
 ## 8. 限流、错误和所有路由回调
 
-**clientIp(req)**取req.ip/转发头/local，逗号首项trim；代理配置决定实际粒度。**rateLimit(key,max,windowMs)**固定窗口计数，超max抛429；老key只有再次访问才重置，rateHits没有全局过期清扫或容量上限，不可声称全部Map都数量有界。
+**clientIp(req)**取req.ip/转发头/local，逗号首项trim；代理配置决定实际粒度。**rateLimit(key,max,windowMs)**固定窗口计数，超max抛429；每次调用按expiresAt清除过期key；最多1000项，新key遇满时429，已有key仍按自身窗口计数。不同端点前缀不共用次数，授权GET/POST共用auth前缀。
 
 **sendError(res,err)**status默认500；401附Basic挑战；oauthError优先，否则429 slow_down、400 invalid_request、其他server_error，附error_description。不是JSON-RPC错误外壳。
 
@@ -126,12 +122,12 @@ issueAccess生成access/refresh，创建含两个截止的共享记录，同时�
 |---|---|---|
 | 三个well-known GET回调 | requestOrigin后返回授权/资源metadata；含资源/mcp别名 | 不要求Bearer，便于发现 |
 | registerHandler / POST oauth/register、register | IP每分钟20次，registerClient，201 | catch sendError |
-| GET oauth/authorize | ensurePairing，返回HTML | 不在这个回调先校验client/redirect；不返回配对码 |
-| POST oauth/authorize | completeAuthorize，302 | catch按status或400重新渲染错误HTML，不任意跳到失败输入地址 |
+| GET oauth/authorize | 每IP授权限流30/分钟、validateAuthorize后返回HTML | 不生成或更新配对码；过期提示去本机工作台生成，不公开码；失败sendError |
+| POST oauth/authorize | 共用授权30/分钟限流、completeAuthorize，302 | catch按status或400重新渲染错误HTML，不任意跳到失败输入地址 |
 | POST oauth/token | IP每分钟60次，handleToken后json | catch sendError |
 | POST oauth/revoke | token/access_token中取目标，查两张Map，authenticateClient；匹配所属client才删这一对 | 成功统一200 revoked:true，未知token不泄露存在性；catch sendError |
 
-revoke路由不是revokeAll，也不为该token新建spentRefresh重放记录。GET授权/撤销与注册/token的限流策略不同，不能写“所有OAuth端点统一限流”。
+revoke路由不是revokeAll，也不为该token新建spentRefresh重放记录。授权/撤销与注册/token的限流策略不同，不能写“所有OAuth端点统一限流”。
 
 ## 9. 验证与不冒充的保证
 
@@ -140,3 +136,7 @@ npm test --prefix webagent-core/agent-host -- --filter=oauth
 ```
 
 此filter会匹配基础OAuth及client auth测试；涵盖发现、配对/PKCE、public与secret方式、刷新旋转/重放等断言。真实手机/第三方OAuth客户端是否接受字段和重定向，需人工F节。上文明确记录未全面校验的输入、Map容量与内存策略，不因此声称OAuth全标准认证，也不在文档任务中静默调整授权产品决策。
+
+### 本轮安全边界
+
+公开GET不能再自动续发配对码；issuePairing/ensurePairing仍供本机控制面使用。全局5次错误锁定的fail-closed策略保留，因此有合法注册信息的攻击者仍可耗尽全局码的尝试预算；限流减少滥用，不把它声称为完全隔离的客户端配对。重启仍重新配对，不引入持久化密钥。单客户端令牌族数量、所有可能代理部署、真实Arena/手机回调尚未穷举验收。

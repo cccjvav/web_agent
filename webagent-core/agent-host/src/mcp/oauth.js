@@ -32,11 +32,25 @@ function randomPairingCode() {
   return [...buf].map((b) => alphabet[b % alphabet.length]).join('');
 }
 
+function safeOrigin(value) {
+  if (typeof value !== 'string' || /[\s\\]/.test(value)) return null;
+  try {
+    const url = new URL(value);
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password ||
+      url.pathname !== '/' || url.search || url.hash) return null;
+    return url.origin;
+  } catch (_) { return null; }
+}
+
 function requestOrigin(req) {
-  if (config.publicTunnelUrl) return String(config.publicTunnelUrl).replace(/\/$/, '');
-  const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http').split(',')[0].trim();
-  const host = (req.headers['x-forwarded-host'] || req.headers.host || `127.0.0.1:${config.port}`).split(',')[0].trim();
-  return `${proto}://${host}`;
+  const configured = safeOrigin(config.publicTunnelUrl);
+  if (configured) return configured;
+  // Remote discovery must use the tunnel origin configured by the local control plane.
+  // Never trust arbitrary Host or forwarded headers to select an OAuth issuer.
+  const host = req.headers && req.headers.host;
+  const local = safeOrigin(`${req.protocol === 'https' ? 'https' : 'http'}://${host || ''}`);
+  if (local && ['localhost', '127.0.0.1', '[::1]'].includes(new URL(local).hostname)) return local;
+  return `http://127.0.0.1:${config.port}`;
 }
 
 function issuePairing() {
@@ -114,7 +128,8 @@ function protectedResourceMetadata(origin) {
 }
 
 function wwwAuthenticate(origin) {
-  return `Bearer realm="Web Agent", resource_metadata="${origin}/.well-known/oauth-protected-resource"`;
+  const trusted = safeOrigin(origin) || `http://127.0.0.1:${config.port}`;
+  return `Bearer realm="Web Agent", resource_metadata="${trusted}/.well-known/oauth-protected-resource"`;
 }
 
 function pruneExpiredTokens() {
@@ -144,33 +159,49 @@ function revokeClientTokens(clientId) {
 
 function pruneClients() {
   pruneExpiredTokens();
-  while (clients.size >= MAX_CLIENTS) {
-    let oldestId = null;
-    let oldest = Infinity;
-    for (const [id, rec] of clients) {
-      if (rec.createdAt < oldest) {
-        oldest = rec.createdAt;
-        oldestId = id;
-      }
-    }
-    if (!oldestId) break;
-    revokeClientTokens(oldestId);
-    clients.delete(oldestId);
+  if (clients.size < MAX_CLIENTS) return;
+  const protectedIds = new Set();
+  for (const records of [authCodes, accessTokens, refreshTokens]) {
+    for (const rec of records.values()) protectedIds.add(rec.clientId);
   }
+  for (const [id, rec] of clients) {
+    if (!protectedIds.has(id) && now() - rec.createdAt > CODE_TTL_MS) {
+      clients.delete(id);
+      if (clients.size < MAX_CLIENTS) return;
+    }
+  }
+  const err = new Error('client registration capacity reached; retry later');
+  err.status = 503;
+  err.oauthError = 'temporarily_unavailable';
+  throw err;
+}
+
+function validateRedirectUri(value) {
+  const reject = () => { const err = new Error('invalid redirect_uri'); err.status = 400; throw err; };
+  if (typeof value !== 'string' || !value || value.length > 2048 || /[\s\\#]/.test(value)) return reject();
+  let url;
+  try { url = new URL(value); } catch (_) { return reject(); }
+  const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+  if (url.username || url.password || !url.hostname ||
+    !(url.protocol === 'https:' || (url.protocol === 'http:' && loopback))) return reject();
+  return url;
 }
 
 function registerClient(body = {}) {
-  pruneClients();
   const method = body.token_endpoint_auth_method || 'none';
   if (!['none', 'client_secret_post', 'client_secret_basic'].includes(method)) {
     const err = new Error('unsupported token_endpoint_auth_method'); err.status = 400; throw err;
   }
-  const redirectUris = Array.isArray(body.redirect_uris) ? body.redirect_uris.filter(Boolean) : [];
-  if (!redirectUris.length) {
-    const err = new Error('redirect_uris required');
-    err.status = 400;
-    throw err;
+  if (!Array.isArray(body.redirect_uris) || !body.redirect_uris.length || body.redirect_uris.length > 16) {
+    const err = new Error('redirect_uris must contain 1 to 16 URLs'); err.status = 400; throw err;
   }
+  const redirectUris = body.redirect_uris.slice();
+  for (const uri of redirectUris) validateRedirectUri(uri);
+  if (body.client_name != null && (typeof body.client_name !== 'string' || body.client_name.length > 256)) {
+    const err = new Error('invalid client_name'); err.status = 400; throw err;
+  }
+  // No registry mutation until the entire request is validated.
+  pruneClients();
   const clientId = randomToken('sccid_', 12);
   const clientSecret = randomToken('sccsec_', 16);
   const rec = {
@@ -276,7 +307,7 @@ function escapeHtml(s) {
   ));
 }
 
-function completeAuthorize(body) {
+function validateAuthorize(body) {
   const client = clients.get(body.client_id);
   if (!client) {
     const err = new Error('unknown client_id');
@@ -293,6 +324,16 @@ function completeAuthorize(body) {
     err.status = 400;
     throw err;
   }
+  if ((body.response_type != null && body.response_type !== 'code') ||
+    typeof body.code_challenge !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(body.code_challenge) ||
+    (body.state != null && (typeof body.state !== 'string' || body.state.length > 2048))) {
+    const err = new Error('invalid authorization parameters'); err.status = 400; throw err;
+  }
+  return { client, url: validateRedirectUri(body.redirect_uri) };
+}
+
+function completeAuthorize(body) {
+  const { client, url } = validateAuthorize(body);
   consumePairing(body.pairing_code);
   const code = randomToken('sccode_', 16);
   authCodes.set(code, {
@@ -301,7 +342,6 @@ function completeAuthorize(body) {
     challenge: body.code_challenge,
     exp: now() + CODE_TTL_MS
   });
-  const url = new URL(body.redirect_uri);
   url.searchParams.set('code', code);
   if (body.state) url.searchParams.set('state', body.state);
   return url.toString();
@@ -355,7 +395,7 @@ function handleToken(body = {}, authorization = '') {
       err.status = 400;
       throw err;
     }
-    if (!body.code_verifier || s256(body.code_verifier) !== rec.challenge) {
+    if (typeof body.code_verifier !== 'string' || !/^[A-Za-z0-9._~-]{43,128}$/.test(body.code_verifier) || s256(body.code_verifier) !== rec.challenge) {
       const err = new Error('PKCE verification failed');
       err.status = 400;
       throw err;
@@ -369,7 +409,7 @@ function handleToken(body = {}, authorization = '') {
     const rec = refreshTokens.get(presented);
     if (!rec || rec.refreshExp < now()) {
       const spent = spentRefresh.get(presented);
-      if (spent) {
+      if (spent && spent.clientId === clientId) {
         revokeClientTokens(spent.clientId);
         const replay = new Error('refresh_token replay detected; tokens for this client were revoked');
         replay.status = 400;
@@ -415,10 +455,17 @@ function clientIp(req) {
 
 function rateLimit(key, max, windowMs) {
   const t = now();
-  const rec = rateHits.get(key) || { n: 0, start: t };
+  for (const [id, hit] of rateHits) {
+    if (hit.expiresAt <= t) rateHits.delete(id);
+  }
+  if (!rateHits.has(key) && rateHits.size >= 1000) {
+    const err = new Error('rate limiter capacity reached'); err.status = 429; throw err;
+  }
+  const rec = rateHits.get(key) || { n: 0, start: t, expiresAt: t + windowMs };
   if (t - rec.start > windowMs) {
     rec.n = 0;
     rec.start = t;
+    rec.expiresAt = t + windowMs;
   }
   rec.n += 1;
   rateHits.set(key, rec);
@@ -458,13 +505,17 @@ router.post('/oauth/register', registerHandler);
 router.post('/register', registerHandler);
 
 router.get('/oauth/authorize', (req, res) => {
-  ensurePairing();
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.send(authorizeHtml(req.query));
+  try {
+    rateLimit(`auth:${clientIp(req)}`, 30, 60 * 1000);
+    validateAuthorize(req.query);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(authorizeHtml(req.query, snapshotPairing().expired ? '请先在本机工作台生成配对码' : ''));
+  } catch (err) { sendError(res, err); }
 });
 
 router.post('/oauth/authorize', (req, res) => {
   try {
+    rateLimit(`auth:${clientIp(req)}`, 30, 60 * 1000);
     const loc = completeAuthorize(req.body || {});
     res.redirect(302, loc);
   } catch (err) {
