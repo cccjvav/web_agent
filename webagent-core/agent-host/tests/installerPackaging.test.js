@@ -29,6 +29,13 @@ try {
   for (const f of manifest.files) assert.ok(!fs.readFileSync(path.join(output, f.path), 'utf8').includes('PRIVATE_FIXTURE_DO_NOT_PACKAGE'));
   assert.ok(!manifest.files.some(f => f.path.startsWith('webagent-repro/')));
   assert.throws(() => stage(source, tmp), /Invalid staging/);
+  const sourceDocs = path.join(source, 'docs-site/content.js');
+  const savedDocs = fs.readFileSync(sourceDocs);
+  try {
+    fs.writeFileSync(sourceDocs, 'invalid prebuilt data');
+    assert.throws(() => stage(source, output), /Invalid prebuilt documentation/);
+    assert.ok(fs.existsSync(path.join(output, 'installation.json')), 'invalid prebuilt docs must not remove previous staging');
+  } finally { fs.writeFileSync(sourceDocs, savedDocs); }
   assert.ok(fs.existsSync(path.join(output, 'docs-site/bundled.json')));
   assert.ok(!fs.existsSync(path.join(output, 'docs-site/build.js')), 'installed docs are prebuilt, not a partial build toolchain');
   for (const entry of manifest.files.filter(f => f.path.endsWith('.md'))) {

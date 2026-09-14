@@ -4,7 +4,7 @@
 
 ## .github/workflows/test.yml
 
-[目录说明](../.github/workflows/README.md) · SHA-256 `1b251e4299ed1ce28969731ed967810c87c59b5c6aedb93ffc6ed971139a5276`
+[目录说明](../.github/workflows/README.md) · SHA-256 `b3dd0f4ad14dce35c7993df5d85b17541b47a2f95443534adc56db949ed5f154`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -267,7 +267,7 @@
 
 ## installer/package.js
 
-[目录说明](../installer/README.md) · SHA-256 `383cdc8971b7ded79cfb29413eabe7c189d9d9ef6d7dda98a00d0187d1aa4043`
+[目录说明](../installer/README.md) · SHA-256 `eed654f02d30144226e221a8e3d0fded950e255cea54adabbd7e204f1adc80c4`
 
 - `digest` — FunctionDeclaration，[L24–L24](../installer/package.js#L24-L24)
 - `collect` — FunctionDeclaration，[L25–L44](../installer/package.js#L25-L44)
@@ -1708,24 +1708,25 @@
 
 ## webagent-core/agent-host/tests/installerPackaging.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `7924480cd8d7d91e442c013052a14ed4a272162adae5685e7b12c61439f2ef21`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `20c96563de21d5f0c2de8304dc805e972125ca790f73bffd2d0defcfa4229b76`
 
-- `anonymous@10:1` — ArrowFunctionExpression，[L10–L94](../webagent-core/agent-host/tests/installerPackaging.test.js#L10-L94)
+- `anonymous@10:1` — ArrowFunctionExpression，[L10–L101](../webagent-core/agent-host/tests/installerPackaging.test.js#L10-L101)
 - `anonymous@10:1/anonymous@27:32` — ArrowFunctionExpression，[L27–L27](../webagent-core/agent-host/tests/installerPackaging.test.js#L27-L27)
 - `anonymous@10:1/anonymous@28:32` — ArrowFunctionExpression，[L28–L28](../webagent-core/agent-host/tests/installerPackaging.test.js#L28-L28)
 - `anonymous@10:1/anonymous@30:33` — ArrowFunctionExpression，[L30–L30](../webagent-core/agent-host/tests/installerPackaging.test.js#L30-L30)
 - `anonymous@10:1/anonymous@31:16` — ArrowFunctionExpression，[L31–L31](../webagent-core/agent-host/tests/installerPackaging.test.js#L31-L31)
-- `anonymous@10:1/anonymous@34:44` — ArrowFunctionExpression，[L34–L34](../webagent-core/agent-host/tests/installerPackaging.test.js#L34-L34)
-- `anonymous@10:1/anonymous@54:16` — ArrowFunctionExpression，[L54–L54](../webagent-core/agent-host/tests/installerPackaging.test.js#L54-L54)
-- `anonymous@10:1/anonymous@55:72` — ArrowFunctionExpression，[L55–L55](../webagent-core/agent-host/tests/installerPackaging.test.js#L55-L55)
-- `anonymous@10:1/anonymous@56:16` — ArrowFunctionExpression，[L56–L56](../webagent-core/agent-host/tests/installerPackaging.test.js#L56-L56)
-- `anonymous@10:1/anonymous@57:16` — ArrowFunctionExpression，[L57–L57](../webagent-core/agent-host/tests/installerPackaging.test.js#L57-L57)
-- `anonymous@10:1/anonymous@62:16` — ArrowFunctionExpression，[L62–L62](../webagent-core/agent-host/tests/installerPackaging.test.js#L62-L62)
-- `anonymous@10:1/anonymous@76:77` — ArrowFunctionExpression，[L76–L76](../webagent-core/agent-host/tests/installerPackaging.test.js#L76-L76)
-- `anonymous@10:1/anonymous@78:46` — ArrowFunctionExpression，[L78–L80](../webagent-core/agent-host/tests/installerPackaging.test.js#L78-L80)
-- `anonymous@10:1/anonymous@81:20` — ArrowFunctionExpression，[L81–L81](../webagent-core/agent-host/tests/installerPackaging.test.js#L81-L81)
-- `anonymous@10:1/anonymous@87:32` — ArrowFunctionExpression，[L87–L87](../webagent-core/agent-host/tests/installerPackaging.test.js#L87-L87)
-- `anonymous@94:11` — ArrowFunctionExpression，[L94–L94](../webagent-core/agent-host/tests/installerPackaging.test.js#L94-L94)
+- `anonymous@10:1/anonymous@36:18` — ArrowFunctionExpression，[L36–L36](../webagent-core/agent-host/tests/installerPackaging.test.js#L36-L36)
+- `anonymous@10:1/anonymous@41:44` — ArrowFunctionExpression，[L41–L41](../webagent-core/agent-host/tests/installerPackaging.test.js#L41-L41)
+- `anonymous@10:1/anonymous@61:16` — ArrowFunctionExpression，[L61–L61](../webagent-core/agent-host/tests/installerPackaging.test.js#L61-L61)
+- `anonymous@10:1/anonymous@62:72` — ArrowFunctionExpression，[L62–L62](../webagent-core/agent-host/tests/installerPackaging.test.js#L62-L62)
+- `anonymous@10:1/anonymous@63:16` — ArrowFunctionExpression，[L63–L63](../webagent-core/agent-host/tests/installerPackaging.test.js#L63-L63)
+- `anonymous@10:1/anonymous@64:16` — ArrowFunctionExpression，[L64–L64](../webagent-core/agent-host/tests/installerPackaging.test.js#L64-L64)
+- `anonymous@10:1/anonymous@69:16` — ArrowFunctionExpression，[L69–L69](../webagent-core/agent-host/tests/installerPackaging.test.js#L69-L69)
+- `anonymous@10:1/anonymous@83:77` — ArrowFunctionExpression，[L83–L83](../webagent-core/agent-host/tests/installerPackaging.test.js#L83-L83)
+- `anonymous@10:1/anonymous@85:46` — ArrowFunctionExpression，[L85–L87](../webagent-core/agent-host/tests/installerPackaging.test.js#L85-L87)
+- `anonymous@10:1/anonymous@88:20` — ArrowFunctionExpression，[L88–L88](../webagent-core/agent-host/tests/installerPackaging.test.js#L88-L88)
+- `anonymous@10:1/anonymous@94:32` — ArrowFunctionExpression，[L94–L94](../webagent-core/agent-host/tests/installerPackaging.test.js#L94-L94)
+- `anonymous@101:11` — ArrowFunctionExpression，[L101–L101](../webagent-core/agent-host/tests/installerPackaging.test.js#L101-L101)
 
 ## webagent-core/agent-host/tests/localControl.test.js
 

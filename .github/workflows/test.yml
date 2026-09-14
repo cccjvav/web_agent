@@ -11,6 +11,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         node: [20, 22, 24]
+        include:
+          - os: ubuntu-latest
+            node: 18
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -54,6 +57,9 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           Add-Type -Path 'webagent-core/agent-host/src/tools/commandJob.cs'
+          foreach ($file in @('capture.cs','mark.cs')) {
+            Add-Type -Path (Join-Path 'computer-use/win' $file) -ReferencedAssemblies System.Drawing
+          }
           foreach ($file in @('input.cs','input2.cs','keys.cs')) {
             Add-Type -Path (Join-Path 'computer-use/win' $file)
           }

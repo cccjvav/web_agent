@@ -70,9 +70,9 @@ function stage(source = root, target = path.join(root, 'installer/output/payload
   source = path.resolve(source); target = path.resolve(target);
   if (source === target || source.startsWith(target + path.sep)) throw new Error('Invalid staging destination');
   const selected = collect(source); // Validate all inputs before replacing previous staging.
+  const docs = bundledDocs(source);
   fs.rmSync(target, { recursive: true, force: true });
   const entries = [];
-  const docs = bundledDocs(source);
   const included = new Set(selected);
   for (const rel of selected) {
     let data = fs.readFileSync(path.join(source, rel));
