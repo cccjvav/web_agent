@@ -50,7 +50,13 @@ installerPackaging验证白名单、私密fixture不入包、runtime路径和重
 | 源码 | 定位证据 |
 |---|---|
 | [build-installer.cmd](build-installer.cmd) | 文件级登记；未做符号完整性证明 |
-| [launch.js](launch.js) | 21 个函数/类节点 |
+| [launch.js](launch.js) | 22 个函数/类节点 |
 | [package.js](package.js) | 4 个函数/类节点 |
 | [webagent.iss](webagent.iss) | 文件级登记；未做符号完整性证明 |
 <!-- docs-inventory:end -->
+
+### 本轮启动与测试修正
+
+App窗口入口的健康检查、轮询和浏览器地址统一采用CODE_SERVER_PORT（缺省3000），非法端口直接报错。启动时npm ci --omit=dev是有意仅安装生产依赖；源码仓库的run-tests.cmd会同时检查express/Acorn，缺失时npm ci --include=dev。安装载荷不是完整开发仓库，不包含tests与run-tests.cmd；不要在Program Files内尝试开发测试。
+
+载荷文档站的重建输入和部分相对链接尚待修复；本批不把“安装器CI成功”当作所有打包文档可用。

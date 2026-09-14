@@ -17,11 +17,14 @@ if errorlevel 1 (
 )
 
 cd /d "%~dp0webagent-core\agent-host"
-if not exist "node_modules\express" (
-  echo 正在安装依赖 npm install ...
-  call npm install --no-audit --no-fund
+set "NEED_DEPS="
+if not exist "node_modules\express\package.json" set "NEED_DEPS=1"
+if not exist "node_modules\acorn\package.json" set "NEED_DEPS=1"
+if defined NEED_DEPS (
+  echo 正在安装完整测试依赖 npm ci --include=dev ...
+  call npm ci --include=dev --no-audit --no-fund
   if errorlevel 1 (
-    echo [错误] npm install 失败。
+    echo [错误] npm ci 失败。
     pause
     exit /b 1
   )

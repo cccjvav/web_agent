@@ -5,8 +5,9 @@ const os = require('os');
 const path = require('path');
 const root = path.resolve(__dirname, '../../..');
 const { collect, stage } = require('../../../installer/package');
-const { prepareRuntime, resolveWorkspace, safeRelative, userHome } = require('../../../installer/launch');
+const { prepareRuntime, resolveWorkspace, safeRelative, userHome, appOrigin, ready } = require('../../../installer/launch');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-package-'));
+(async () => {
 try {
   const source = path.join(tmp, 'source');
   for (const rel of collect(root)) {
@@ -59,5 +60,24 @@ try {
   assert.ok(!iss.includes("StringChangeEx(P, ';' + AppDir"));
   assert.ok(iss.includes('Source: "output\\payload\\*"'));
   assert.ok(!iss.includes('Source: "..\\*"'));
+  assert.strictEqual(appOrigin({}), 'http://127.0.0.1:3000');
+  assert.strictEqual(appOrigin({ CODE_SERVER_PORT: '4321' }), 'http://127.0.0.1:4321');
+  for (const port of ['0', '65536', '-1', '3000/path', 'abc']) assert.throws(() => appOrigin({ CODE_SERVER_PORT: port }), /CODE_SERVER_PORT/);
+  let status = 200;
+  const server = require('http').createServer((req, res) => {
+    assert.strictEqual(req.url, '/healthz'); res.writeHead(status).end('ok');
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  try {
+    const origin = appOrigin({ CODE_SERVER_PORT: String(server.address().port) });
+    assert.strictEqual(await ready(origin), true, 'probe must use configured nondefault port');
+    status = 503;
+    assert.strictEqual(await ready(origin), false);
+  } finally { await new Promise(resolve => server.close(resolve)); }
+  const cmd = fs.readFileSync(path.join(root, 'run-tests.cmd'), 'utf8');
+  assert.ok(cmd.includes('node_modules\\acorn\\package.json'));
+  assert.ok(cmd.includes('npm ci --include=dev --no-audit --no-fund'));
   console.log('installer packaging/runtime tests passed; Inno/CMD execution requires Windows');
 } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+
+})().catch(err => { console.error(err); process.exitCode = 1; });

@@ -65,16 +65,22 @@ function ensureDependencies(root) {
   });
   if (r.error || r.status !== 0) throw new Error('npm ci失败，请检查Node/npm与网络');
 }
-function ready() {
+function appOrigin(env = process.env) {
+  const port = String(env.CODE_SERVER_PORT || '3000');
+  if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) throw new Error('CODE_SERVER_PORT必须是1–65535的端口');
+  return `http://127.0.0.1:${Number(port)}`;
+}
+function ready(origin = appOrigin()) {
   return new Promise(resolve => {
-    const req = http.get('http://127.0.0.1:3000/healthz', { timeout: 1500 }, res => {
+    const req = http.get(`${origin}/healthz`, { timeout: 1500 }, res => {
       res.resume(); resolve(res.statusCode === 200);
     });
     req.on('timeout', () => req.destroy()); req.on('error', () => resolve(false));
   });
 }
 async function appWindow(root, workspace, env, home) {
-  if (!await ready()) {
+  const origin = appOrigin(env);
+  if (!await ready(origin)) {
     fs.mkdirSync(home, { recursive: true });
     const fd = fs.openSync(path.join(home, 'startup.log'), 'a');
     try {
@@ -83,7 +89,7 @@ async function appWindow(root, workspace, env, home) {
       child.on('error', err => console.error(err.message)); child.unref();
     } finally { fs.closeSync(fd); }
     const deadline = Date.now() + 120000;
-    while (!await ready()) {
+    while (!await ready(origin)) {
       if (Date.now() >= deadline) throw new Error('VS Code未在120秒内就绪；后台启动日志：' + path.join(home, 'startup.log'));
       await new Promise(resolve => setTimeout(resolve, 500));
     }
@@ -95,8 +101,8 @@ async function appWindow(root, workspace, env, home) {
     path.join(process.env.LOCALAPPDATA || '', 'Google/Chrome/Application/chrome.exe')
   ];
   const browser = candidates.find(p => path.isAbsolute(p) && fs.existsSync(p));
-  const child = browser ? spawn(browser, ['--app=http://127.0.0.1:3000'], { detached: true, stdio: 'ignore' })
-    : spawn('rundll32.exe', ['url.dll,FileProtocolHandler', 'http://127.0.0.1:3000'], { detached: true, stdio: 'ignore' });
+  const child = browser ? spawn(browser, [`--app=${origin}`], { detached: true, stdio: 'ignore' })
+    : spawn('rundll32.exe', ['url.dll,FileProtocolHandler', origin], { detached: true, stdio: 'ignore' });
   child.on('error', err => console.error('浏览器启动失败：' + err.message)); child.unref();
 }
 async function main() {
@@ -121,4 +127,4 @@ async function main() {
   child.on('exit', (code, signal) => { process.exitCode = code == null ? 1 : code; });
 }
 if (require.main === module) main().catch(err => { console.error(err.message); process.exitCode = 1; });
-module.exports = { userHome, safeRelative, prepareRuntime, resolveWorkspace };
+module.exports = { userHome, safeRelative, prepareRuntime, resolveWorkspace, appOrigin, ready };

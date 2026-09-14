@@ -705,3 +705,9 @@ P3-43及OPT-E3“新测试漏登记静默漏检/新增测试必使runner失败�
 - 自查补充：其他客户端提交已消费refresh不得撤销不属于自己的token族；单客户端令牌数量上限等未在本批完成。
 
 上述为自动化/源码结果，不代替手机第三方连接器验收。安装载荷及其余优化继续待办。
+
+### 安装入口续查
+
+- P1-17属实并修复：appOrigin统一CODE_SERVER_PORT，ready/轮询/Edge或默认浏览器使用同一origin；真实随机端口HTTP回归含200/503和非法配置。
+- P1-18/19应区分生产依赖策略与测试入口缺陷：omit=dev不是生产启动错误，不把Acorn强塞生产依赖；run-tests.cmd现同时检查express/Acorn，缺任一则锁文件npm ci --include=dev。源码测试与安装载荷边界已注明。CMD实际执行仍待用户/Windows验证。
+- P1-21定位有误但现象部分属实：syncExtension在scripts/ensure-code-server.js，不在installer/package.js；package白名单本身会复制extension下Markdown，运行时sync仍只拷JS/package/icon，旧目录清理与文档副本待修。P1-22/34（载荷文档站/死链）尚未完成，不仅靠加一个SUMMARY文件就宣称所有构建输入齐备。
