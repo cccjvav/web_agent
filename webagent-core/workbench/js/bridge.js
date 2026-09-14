@@ -125,31 +125,7 @@ export function renderBrowser(tab) {
   $('#br-url').value = tab.url || '';
   const page = $('#browser-page');
   const prompt = ui.promptText();
-  if (tab.site === 'arena') {
-    page.innerHTML = `<div class="arena">
-      <div class="arena-top"><span>✶ Agent Mode ▾</span><span></span></div>
-      <h1>What would you like to do?</h1>
-      <div class="arena-card">
-        <textarea id="arena-input">${escapeHtml(prompt)}</textarea>
-        <div class="arena-tools">
-          <span>Add files ▾</span>
-          <button type="button" class="arena-send" id="arena-send">→</button>
-        </div>
-      </div>
-      <div class="arena-gh"><span>Connect your GitHub <small style="color:#3b6fd4">NEW</small></span><button type="button">Connect</button></div>
-    </div>`;
-    $('#arena-send').onclick = () => ui.arenaConnect($('#arena-input').value);
-  } else if (tab.site === 'chatgpt') {
-    page.innerHTML = `<div class="gpt">
-      <div class="gpt-top">ChatGPT</div>
-      <h1>有什么可以帮忙的？</h1>
-      <div class="gpt-card">
-        <textarea id="gpt-input">${escapeHtml(prompt)}</textarea>
-        <div style="display:flex"><button type="button" class="gpt-send" id="gpt-send">↑</button></div>
-      </div>
-    </div>`;
-    $('#gpt-send').onclick = () => ui.arenaConnect($('#gpt-input').value);
-  } else if (tab.site === 'deepseek') {
+  if (tab.site === 'deepseek') {
     const mcp = (state.status && state.status.mcpUrl) || prompt || '';
     const store = 'https://chromewebstore.google.com/detail/deepseek++/kdmpkkahkhdmdhfkdihkopikgcocbpbf';
     page.innerHTML = `<div class="generic-site">
@@ -162,10 +138,15 @@ export function renderBrowser(tab) {
       <div class="prompt-box">${escapeHtml(mcp)}</div>
     </div>`;
   } else {
+    let externalUrl = '';
+    try {
+      const parsed = new URL(tab.url);
+      if (['https:', 'http:'].includes(parsed.protocol)) externalUrl = parsed.href;
+    } catch (_) { /* Invalid addresses are not made clickable. */ }
     page.innerHTML = `<div class="generic-site">
-      <h2>在 Web Agent 内置浏览器中打开 ${escapeHtml(tab.title)}</h2>
-      <p>官方站点若禁止被嵌入，会在此展示已复制的第一句提示词。把它整段贴进新对话发出去。</p>
-      <p><a href="${escapeHtml(tab.url)}" target="_blank" rel="noopener">${escapeHtml(tab.url)}</a></p>
+      <h2>${escapeHtml(tab.title)} · 外部客户端连接指引</h2>
+      <p>这里不会嵌入网站、代你登录或发送任务。请在真实客户端配置 MCP；若只用本机 Chat，不需要此步骤。</p>
+      <p>${externalUrl ? `<a href="${escapeHtml(externalUrl)}" target="_blank" rel="noopener noreferrer">在浏览器打开 ${escapeHtml(tab.title)}</a>` : '地址无效，仅支持 HTTP/HTTPS'}</p>
       <div class="prompt-box">${escapeHtml(prompt)}</div>
     </div>`;
   }
@@ -193,7 +174,7 @@ export async function openSite(key) {
   ui.closeModal();
   ui.setRight('bridge');
   ui.activateTab(id);
-  ui.toast(`在 Web Agent 内置浏览器中打开 ${site.url.replace(/^https?:\/\//, '')}`);
+  ui.toast(`已打开 ${site.name} 连接指引，尚未建立外部会话`);
 }
 
 export async function startBridge() {

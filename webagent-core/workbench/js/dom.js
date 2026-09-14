@@ -19,6 +19,22 @@ export function initTheme() {
   return applyTheme(saved);
 }
 
+// Measure only after the popover is attached and visible. Keep it inside the viewport.
+export function positionPopover(box, anchor) {
+  const margin = 8, gap = 4;
+  const width = window.innerWidth, height = window.innerHeight;
+  const r = anchor.getBoundingClientRect();
+  const below = Math.max(0, height - r.bottom - gap - margin);
+  const above = Math.max(0, r.top - gap - margin);
+  const up = box.scrollHeight > below && above > below;
+  box.style.position = 'fixed';
+  box.style.maxWidth = `${Math.max(1, width - margin * 2)}px`;
+  box.style.maxHeight = `${Math.max(1, up ? above : below)}px`;
+  const bounds = box.getBoundingClientRect();
+  box.style.left = `${Math.max(margin, Math.min(r.left, width - bounds.width - margin))}px`;
+  box.style.top = `${Math.max(margin, Math.min(up ? r.top - gap - bounds.height : r.bottom + gap, height - bounds.height - margin))}px`;
+}
+
 export function toast(text) {
   const el = $('#toast');
   el.hidden = false;

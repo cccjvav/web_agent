@@ -1,6 +1,6 @@
 import { $, $$, state, ui } from './state.js';
-import { escapeHtml } from './dom.js';
-import { openModelPicker } from './picker.js';
+import { escapeHtml, positionPopover } from './dom.js';
+import { openModelPicker, closeModelPicker } from './picker.js';
 
 function onClick(id, handler) {
   const node = $(id);
@@ -43,31 +43,37 @@ export function bind() {
     e.stopPropagation();
     $('#manage-menu').classList.toggle('hidden');
   };
+  const closeAgentMenu = () => {
+    $('#agent-pick-menu').classList.add('hidden');
+    $('#btn-agent-pick').setAttribute('aria-expanded', 'false');
+  };
   document.addEventListener('click', () => {
     $('#manage-menu').classList.add('hidden');
     $('#file-menu').classList.add('hidden');
-    const ap = $('#agent-pick-menu');
-    if (ap) ap.classList.add('hidden');
+    closeAgentMenu();
   });
+  window.addEventListener('resize', closeAgentMenu);
   $('#btn-agent-pick').onclick = (e) => {
     e.stopPropagation();
     const menu = $('#agent-pick-menu');
     const btn = $('#btn-agent-pick');
-    const r = btn.getBoundingClientRect();
-    menu.style.top = (r.bottom + 4) + 'px';
-    menu.style.left = r.left + 'px';
-    menu.classList.toggle('hidden');
+    if (!menu.classList.contains('hidden')) { closeAgentMenu(); return; }
+    closeModelPicker();
+    menu.classList.remove('hidden');
+    btn.setAttribute('aria-expanded', 'true');
+    positionPopover(menu, btn);
+    menu.querySelector('button').focus();
   };
   $('#agent-pick-menu').onclick = (e) => {
     e.stopPropagation();
     const b = e.target.closest('[data-mode]');
     if (b) {
       ui.setAgentMode(b.dataset.mode);
-      $('#agent-pick-menu').classList.add('hidden');
+      closeAgentMenu();
     }
   };
   $('#menu-custom-from-agent').onclick = () => {
-    $('#agent-pick-menu').classList.add('hidden');
+    closeAgentMenu();
     ui.openModal('agents');
   };
   $('#menu-custom').onclick = () => ui.openModal('overview');
@@ -599,7 +605,12 @@ export function bind() {
   };
 
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') ui.closeModal();
+    if (e.key === 'Escape') {
+      if (!$('#agent-pick-menu').classList.contains('hidden')) {
+        closeAgentMenu(); $('#btn-agent-pick').focus(); return;
+      }
+      closeModelPicker(); ui.closeModal();
+    }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
       ui.saveActive();

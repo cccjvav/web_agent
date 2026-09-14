@@ -16,6 +16,14 @@ loadMonaco状态先加载中；手动script.onerror→Promise false/纯文本提
 
 再真实加载bridge，button.classList.remove为空回调，只满足指引页灭灯调用，不检测CSS。Mock setRight/toast，sendChat/fetch均设置为一调用就抛。arenaConnect必须只改提示“尚未建立”，不可偷偷发本机任务/MCP请求。这是负向行为fixture，不只是检查文案。catch exitCode1，内存context随子进程退出释放。
 
+### 模型菜单与定位回归（2026-09-14）
+
+在相同VM中加载真实picker.js。**listen(target)**给document/window注入addEventListener/removeEventListener并用Set计数；setTimeout/clearTimeout用Map模拟未执行timer。createElement建立最小box，querySelector返回search/list，**getBoundingClientRect()**按maxWidth/maxHeight返回测试尺寸，**focus()**记录focused，contains判断box/search/list成员，**remove()**标记removed。这里只模拟几何，不伪称浏览器layout。
+
+**open(extra)**用anchor和onPick记录器打开真实picker；**clean()**断言timer和所有监听均清空。断言：聊天列表包含builtin且注明无需API、外部名称HTML转义；320×240视口底部锚点向上钳制到8px、最大高度178px；搜索无匹配；点击选中builtin回调；合并排除builtin且空表有配置提示；重开取消旧实例，延迟监听只剩一个；内部scroll不关，Escape事件提供preventDefault/stopPropagation空方法，断言恢复focus，resize/外部scroll全部清理；顶部锚点在空间充足时向下开。
+
+renderBrowser额外验证Arena是连接指引、不含arena-send伪按钮；javascript:地址不能成为href。URL为标准Node URL注入，不发外网请求。浏览器另行实测结果见CURRENT_AUDIT，不由本fixture冒充。
+
 ## editorRuntime.test.js
 
 [源码](editorRuntime.test.js)父进程15秒VM子模式。**element()**生成value/innerHTML/children/handlers，appendChild、querySelector、addEventListener等最小DOM；**get(id)**Map复用节点；window.confirm由布尔控制；fetch记录calls，从responses队列shift，没有计划响应直接assert失败，Error项抛错。

@@ -38,6 +38,76 @@ if (!process.argv.includes('--vm-child')) {
   context.localStorage.setItem = () => { throw new Error('storage unavailable'); };
   assert.doesNotThrow(() => dom.namespace.initTheme());
   assert.strictEqual(state.namespace.ui.applyTheme, dom.namespace.applyTheme);
+  // Exercise the actual picker, geometry and resource cleanup without adding a browser dependency to CI.
+  const listeners = new Map(), timers = new Map();
+  let serial = 0, box, focused;
+  function listen(target) {
+    target.addEventListener = (kind, fn) => {
+      if (!listeners.has(kind)) listeners.set(kind, new Set());
+      listeners.get(kind).add(fn);
+    };
+    target.removeEventListener = (kind, fn) => listeners.get(kind)?.delete(fn);
+  }
+  listen(context.document); listen(context.window);
+  context.setTimeout = fn => { timers.set(++serial, fn); return serial; };
+  context.clearTimeout = id => timers.delete(id);
+  context.window.innerWidth = 320; context.window.innerHeight = 240;
+  const anchor = { getBoundingClientRect: () => ({ left: 270, top: 190, bottom: 215 }),
+    contains: node => node === anchor, focus: () => { focused = anchor; } };
+  context.document.createElement = () => {
+    const search = { focus() { focused = search; } }, list = {};
+    const item = { style: {}, scrollHeight: 300,
+      querySelector: selector => selector === '.mp-search' ? search : list,
+      getBoundingClientRect() { return { width: Math.min(330, parseFloat(this.style.maxWidth)),
+        height: Math.min(300, parseFloat(this.style.maxHeight)) }; },
+      contains: node => [item, search, list].includes(node), remove() { this.removed = true; } };
+    return item;
+  };
+  context.document.body = { appendChild: node => { box = node; } };
+  const picker = new vm.SourceTextModule(fs.readFileSync(path.join(root, 'picker.js'), 'utf8'), { context });
+  await picker.link(specifier => specifier === './state.js' ? state : dom);
+  await picker.evaluate();
+  state.namespace.state.status = { models: [
+    { id: 'builtin', name: '内置探索 Agent', protocol: 'builtin' },
+    { id: 'api', name: 'External <model>', protocol: 'openai' }
+  ] };
+  let picked;
+  const open = extra => picker.namespace.openModelPicker({ anchor, onPick: id => { picked = id; }, ...extra });
+  const clean = () => {
+    assert.strictEqual(timers.size, 0, 'closing cancels deferred outside listener');
+    assert.ok([...listeners.values()].every(set => !set.size), 'all picker listeners must be removed');
+  };
+  open();
+  assert.ok(box.querySelector('.mp-list').innerHTML.includes('data-id="builtin"'));
+  assert.ok(box.querySelector('.mp-list').innerHTML.includes('无需 API Key'));
+  assert.ok(box.querySelector('.mp-list').innerHTML.includes('External &lt;model&gt;'));
+  assert.strictEqual(box.style.top, '8px');
+  assert.strictEqual(box.style.left, '8px');
+  assert.strictEqual(box.style.maxHeight, '178px');
+  box.querySelector('.mp-search').oninput({ target: { value: 'not-a-model' } });
+  assert.ok(box.querySelector('.mp-list').innerHTML.includes('无匹配模型'));
+  box.querySelector('.mp-list').onclick({ target: { closest: () => ({ dataset: { id: 'builtin' } }) } });
+  assert.strictEqual(picked, 'builtin'); clean();
+  open({ mergeMark: true });
+  assert.ok(!box.querySelector('.mp-list').innerHTML.includes('data-id="builtin"'));
+  picker.namespace.closeModelPicker(); clean();
+  state.namespace.state.status.models.pop();
+  open({ mergeMark: true });
+  assert.ok(box.querySelector('.mp-list').innerHTML.includes('尚未配置外部模型'));
+  // Reopening before deferred registration must not leak the previous instance.
+  const previous = box; open(); assert.ok(previous.removed);
+  for (const fn of timers.values()) fn(); timers.clear();
+  assert.strictEqual(listeners.get('mousedown').size, 1);
+  for (const fn of listeners.get('scroll')) fn({ target: box.querySelector('.mp-list') });
+  assert.ok(!box.removed, 'scrolling the list must not close it');
+  for (const fn of listeners.get('keydown')) fn({ key: 'Escape', preventDefault() {}, stopPropagation() {} });
+  assert.strictEqual(focused, anchor); clean();
+  open(); for (const fn of listeners.get('resize')) fn(); clean();
+  open(); for (const fn of listeners.get('scroll')) fn({ target: context.document }); clean();
+  context.window.innerHeight = 640;
+  dom.namespace.positionPopover(box, { getBoundingClientRect: () => ({ left: 10, top: 10, bottom: 30 }) });
+  assert.strictEqual(box.style.top, '34px', 'a top anchor opens below when space permits');
+  context.URL = URL;
   const bridge = new vm.SourceTextModule(fs.readFileSync(path.join(root, 'bridge.js'), 'utf8'), { context });
   await bridge.link(specifier => specifier === './state.js' ? state : dom);
   await bridge.evaluate();
@@ -53,6 +123,13 @@ if (!process.argv.includes('--vm-child')) {
   state.namespace.ui.activateTab = () => {};
   await bridge.namespace.openSite('chatgpt');
   assert.ok(state.namespace.state.tabs.some(tab => tab.id === 'browser:chatgpt'));
+
+  state.namespace.ui.promptText = () => 'Local connection instructions';
+  bridge.namespace.renderBrowser({ site: 'arena', title: 'Arena', url: 'https://arena.ai/agent' });
+  assert.ok(button.innerHTML.includes('外部客户端连接指引'));
+  assert.ok(!button.innerHTML.includes('arena-send'));
+  bridge.namespace.renderBrowser({ site: 'custom', title: 'Unsafe', url: 'javascript:alert(1)' });
+  assert.ok(!button.innerHTML.includes('href='), 'escapeHtml alone must not permit executable URLs');
 
   let sockets = 0, activated = 0, warnings = 0;
   const bootUi = Object.fromEntries(['initEditorSafety', 'bind', 'setAgentMode', 'paintTabs', 'paintChat', 'termLine',

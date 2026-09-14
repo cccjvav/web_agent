@@ -76,3 +76,12 @@ assert.ok(/details class="block"/.test(html) && html.includes('快速打开') &&
 console.log('workbench HTML has bind() nodes');
 
 assert.ok(!html.includes('\uFFFD'), 'workbench copy must not contain Unicode replacement characters');
+
+// Keep the useful lightweight shell, not nonfunctional IDE/login/upload controls.
+for (const id of ['btn-account', 'br-back', 'br-fwd']) assert.ok(!html.includes(`id="${id}"`));
+assert.ok(!html.includes('data-menu="edit"'));
+assert.ok(!html.includes('title="附加"'));
+assert.ok(!html.includes('启动时显示欢迎页'));
+assert.ok(!html.includes('data-page="codex"'));
+assert.ok(html.includes('兼容资料（不执行）'));
+assert.ok(html.includes('aria-controls="agent-pick-menu"'));

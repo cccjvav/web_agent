@@ -30,12 +30,12 @@ agent-host测试中的editorRuntime、workbenchRuntime、monacoLoading执行实�
 
 | 源码 | 定位证据 |
 |---|---|
-| [bind.js](bind.js) | 100 个函数/类节点 |
-| [bridge.js](bridge.js) | 29 个函数/类节点 |
+| [bind.js](bind.js) | 101 个函数/类节点 |
+| [bridge.js](bridge.js) | 27 个函数/类节点 |
 | [chat.js](chat.js) | 30 个函数/类节点 |
-| [dom.js](dom.js) | 14 个函数/类节点 |
+| [dom.js](dom.js) | 15 个函数/类节点 |
 | [monaco.js](monaco.js) | 9 个函数/类节点 |
-| [picker.js](picker.js) | 14 个函数/类节点 |
+| [picker.js](picker.js) | 16 个函数/类节点 |
 | [settings.js](settings.js) | 25 个函数/类节点 |
 | [state.js](state.js) | 2 个函数/类节点 |
 | [tabs.js](tabs.js) | 39 个函数/类节点 |

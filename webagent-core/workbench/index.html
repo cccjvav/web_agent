@@ -18,11 +18,6 @@
     <div class="tb-left">
       <nav class="tb-menu">
         <button type="button" data-menu="file">文件(<u>F</u>)</button>
-        <button type="button" data-menu="edit">编辑(<u>E</u>)</button>
-        <button type="button">选择(<u>S</u>)</button>
-        <button type="button">查看(<u>V</u>)</button>
-        <button type="button">转到(<u>G</u>)</button>
-        <button type="button">运行(<u>R</u>)</button>
         <button type="button" id="menu-term">终端(<u>T</u>)</button>
         <button type="button" id="menu-help">帮助(<u>H</u>)</button>
       </nav>
@@ -43,19 +38,7 @@
       <button class="ab-btn" data-left="search" title="搜索">
         <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="11" cy="11" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m16 16 4.2 4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       </button>
-      <button class="ab-btn" title="源代码管理">
-        <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="6" cy="18" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="6" cy="6" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="18" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 8.2v7.6M8.2 6h5.2c2 0 2.6.8 2.6 2.4V12" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-      </button>
-      <button class="ab-btn" title="运行和调试">
-        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M8 5.5v13l11-6.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-      </button>
-      <button class="ab-btn" title="扩展">
-        <svg viewBox="0 0 24 24" width="24" height="24"><path d="M7 3.5h4.5v6H17.5v4.5H11.5v6H7V3.5zM17.5 9.5H21v9.5h-7.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-      </button>
       <div class="ab-spacer"></div>
-      <button class="ab-btn" id="btn-account" title="帐户">
-        <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 19c1.4-3 4-4.5 7-4.5s5.6 1.5 7 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-      </button>
       <button class="ab-btn" id="btn-manage" title="管理">
         <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 3.6v2M12 18.4v2M4.9 7.1l1.6 1.1M17.5 15.8l1.6 1.1M3.6 12h2M18.4 12h2M4.9 16.9l1.6-1.1M17.5 8.2l1.6-1.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       </button>
@@ -84,16 +67,14 @@
           <div class="welcome-grid">
             <div>
               <h1>Web Agent</h1>
-              <p class="sub">编辑进化</p>
+              <p class="sub">轻量本机工作台 · 完整 IDE 请使用桌面 VS Code 扩展</p>
               <h3>启动</h3>
               <div class="start-links">
                 <button type="button" id="lnk-new-file"><span class="codicon">📄</span>新建文件...</button>
                 <button type="button" id="lnk-open-file"><span class="codicon">📝</span>打开文件...</button>
-                <button type="button" id="lnk-open-folder"><span class="codicon">📁</span>打开文件夹...</button>
-                <button type="button"><span class="codicon">🔗</span>连接到...</button>
-                <button type="button"><span class="codicon">✨</span>生成新工作区...</button>
+                <button type="button" id="lnk-open-folder"><span class="codicon">📁</span>浏览当前工作区</button>
               </div>
-              <h3>最近</h3>
+              <h3>工作区文件</h3>
               <div class="recent" id="recent-list"></div>
             </div>
             <div>
@@ -101,8 +82,8 @@
               <div class="walk-card">
                 <div class="walk-ico">★</div>
                 <div>
-                  <div class="walk-title">开始使用 VS Code</div>
-                  <div class="walk-desc">自定义编辑器、了解基础知识并开始编码</div>
+                  <div class="walk-title">开始使用本机工作台</div>
+                  <div class="walk-desc">配置模型与工作区偏好，或用无需 API 的内置探索</div>
                 </div>
               </div>
               <div class="walk-card" id="walk-basics">
@@ -123,22 +104,19 @@
                 <div class="walk-ico">🌉</div>
                 <div>
                   <div class="walk-title">Bridge —— 把工作区交给网页 AI</div>
-                  <div class="walk-desc">把当前工作区变成 MCP，给 Arena / ChatGPT 自制插件 / DeepSeek++ 等网页 Agent。第三阶段签字后 run_command 截图以 image 内容回传；远程危险命令仍被拒。要先启动 Bridge 拿公网地址。</div>
+                  <div class="walk-desc">把当前工作区变成 MCP，给 Arena / ChatGPT 自制插件 / DeepSeek++ 等网页 Agent。run_command 截图以 image 内容回传；远程危险命令仍被拒。要先启动 Bridge 拿公网地址。</div>
                 </div>
               </div>
             </div>
           </div>
           <div class="welcome-bottom">
             <button type="button" class="agent-window-btn" id="btn-agent-window">试用新的智能体窗口</button>
-            <label class="chk"><input type="checkbox" checked /> 启动时显示欢迎页</label>
           </div>
         </div>
         <div id="editor" class="hidden"></div>
         <textarea id="editor-fallback" class="hidden" spellcheck="false"></textarea>
         <div id="browser" class="hidden">
           <div class="browser-bar">
-            <button type="button" id="br-back" title="后退">←</button>
-            <button type="button" id="br-fwd" title="前进">→</button>
             <button type="button" id="br-reload" title="刷新">↻</button>
             <input id="br-url" spellcheck="false" />
             <button type="button" id="br-go" class="vs-btn">转到</button>
@@ -200,8 +178,8 @@
           <div class="composer-box">
             <textarea id="chat-input" rows="2" placeholder="描述要构建的内容"></textarea>
             <div class="composer-tools">
-              <button type="button" class="icon-btn" title="附加">+</button>
-              <button type="button" id="btn-agent-pick" class="mini-sel agent-pick">Agent · Web Agent Code ▾</button>
+              <span class="hint" title="当前不支持聊天附件上传">本机</span>
+              <button type="button" id="btn-agent-pick" aria-controls="agent-pick-menu" aria-expanded="false" class="mini-sel agent-pick">Agent · Web Agent Code ▾</button>
               <select id="mode-select" class="hidden">
                 <option value="ask">Ask</option>
                 <option value="plan">Plan</option>
@@ -264,7 +242,6 @@
 
   <footer id="statusbar">
     <div class="sb-left">
-      <span class="sb-item">0 ⚠ 0</span>
       <span class="sb-item" id="sb-bridge">Bridge 已停止</span>
       <span class="sb-item hidden" id="sb-ws"></span>
     </div>
@@ -272,7 +249,6 @@
       <span class="sb-item" id="sb-editor" role="status" aria-live="polite"></span>
       <span class="sb-item" id="sb-file">欢迎</span>
       <span class="sb-item">UTF-8</span>
-      <span class="sb-item">Ln 1, Col 1</span>
     </div>
   </footer>
 
@@ -287,19 +263,22 @@
         <button type="button" class="nav-item" data-page="skills">技能 <em id="cnt-skills"></em></button>
         <button type="button" class="nav-item" data-page="instructions">指令</button>
         <button type="button" class="nav-item" data-page="prompts">提示</button>
-        <button type="button" class="nav-item" data-page="hooks">挂钩</button>
-        <button type="button" class="nav-item" data-page="mcp">MCP 服务器</button>
         <button type="button" class="nav-item" data-page="bridge">Bridge</button>
-        <button type="button" class="nav-item" data-page="plugins">插件</button>
         <button type="button" class="nav-item" data-page="api">API Provider</button>
-        <button type="button" class="nav-item" data-page="codex">Codex</button>
         <button type="button" class="nav-item" data-page="multimodel">多模型博弈</button>
+        <details class="legacy-settings">
+          <summary>兼容资料（不执行）</summary>
+          <p class="hint">仅保留旧工作区备注，不会自动执行命令、连接外部MCP或加载插件。</p>
+          <button type="button" class="nav-item" data-page="hooks">挂钩备注</button>
+          <button type="button" class="nav-item" data-page="mcp">外部 MCP 地址备注</button>
+          <button type="button" class="nav-item" data-page="plugins">插件备注</button>
+        </details>
       </aside>
       <div class="modal-main">
         <button type="button" class="modal-close" id="modal-close" title="关闭">✕</button>
         <div class="page" id="page-overview">
           <h2>本地 的智能体自定义设置</h2>
-          <p class="lead">定制智能体在项目中的工作方式。为整个团队配置工作区自定义，或创建跨项目跟随你的个人自定义。</p>
+          <p class="lead">定制智能体在项目中的工作方式。设置保存在当前工作区，不会自动跨项目同步。</p>
           <section class="block" id="two-paths">
             <div class="block-h">两条路：本机 Chat 与 Bridge</div>
             <p class="hint"><strong>本机 Chat</strong> —— 模型在右侧对话框里跑（API Provider 页配 Endpoint/Key）。能动当前工作区文件和 run_command（含仓库根 computer-use 脚本）；标了 vision 的模型收得到截图，纯文本模型会被如实告知看不了图。不需要隧道。</p>
@@ -314,14 +293,9 @@
           <div class="card-grid">
             <article><h4>环境偏好</h4><p>操作系统、Shell、回复语言、提交说明。Chat 和 Bridge 都会读。</p><button type="button" class="vs-btn" data-page="env">配置...</button></article>
             <article><h4>技术栈</h4><p>声明语言、框架、包管理和测试命令，避免 Agent 猜错项目。</p><button type="button" class="vs-btn" data-page="stack">声明...</button></article>
-            <article><h4>智能体</h4><p>定义具有专属角色、工具访问权限和特定任务指令的自定义智能体。</p><button type="button" class="vs-btn" data-page="agents">新建...</button></article>
+            <article><h4>智能体</h4><p>保存角色与指令模板；不创建独立进程，也不提供额外权限隔离。</p><button type="button" class="vs-btn" data-page="agents">新建...</button></article>
             <article><h4>技能</h4><p>创建可重用的技能文件，提供特定领域知识和工作流。</p><button type="button" class="vs-btn" data-page="skills">引导...</button></article>
             <article><h4>指令</h4><p>设置始终生效的指令，在整个工作区或用户配置文件中引导 AI 行为。</p><button type="button" class="vs-btn" data-page="instructions">新建...</button></article>
-            <article><h4>挂钩</h4><p>只把命令记在工作区里。保存文件或跑任务时不会自动执行。</p><button type="button" class="vs-btn" data-page="hooks">新建...</button></article>
-            <article><h4>MCP 服务器</h4><p>只把别人的 MCP 地址记在工作区。本机 Chat 和 Bridge 都不会去连。</p><button type="button" class="vs-btn" data-page="mcp">浏览...</button></article>
-            <article><h4>插件</h4><p>没有插件市场，也不会加载插件代码。这里只是工作区备注。</p><button type="button" class="vs-btn" data-page="plugins">浏览...</button></article>
-            <article><h4>Voice Mode Instructions</h4><p>本工作台没有语音模式，也不会读写 voice.md。</p><button type="button" class="vs-btn" disabled>未实现</button></article>
-            <article><h4>Dictation Instructions</h4><p>本工作台没有听写，也不会读写 dictation.md。</p><button type="button" class="vs-btn" disabled>未实现</button></article>
           </div>
         </div>
         <div class="page hidden" id="page-env">
@@ -381,7 +355,7 @@
 
         <div class="page hidden" id="page-agents">
           <h2>智能体</h2>
-          <p class="lead">定义具有专属角色、工具访问权限和特定任务指令的自定义智能体。</p>
+          <p class="lead">保存角色与指令模板；不创建独立进程，也不提供额外权限隔离。</p>
           <div id="agents-list"></div>
           <label class="field-label">名称</label>
           <input id="ag-name" class="ms-input" placeholder="安全审查智能体" />

@@ -17,7 +17,7 @@
 | arenaConnect() | 无→Promise<void> | 仅切右Bridge、灭会话灯、提示去真实Arena配置；不发送任务给本机Code或外部Arena |
 | openSite(key) | 站点键→Promise<void> | 不启动隧道，仅尝试复制prompt，建/复用browser tab、关modal、切Bridge并激活；打开浏览器页不再隐式启动公网Bridge，用户另点启动Bridge |
 
-**renderBrowser**：Arena/ChatGPT分支生成本地外观示例，textarea预填escape后的prompt，发送onclick都调用arenaConnect；DeepSeek分支说明真实Chrome/Edge扩展、官方与第三方区别并给安装链接；其他分支显示外链和prompt。动态文本escape，但escapeHtml不是URL协议白名单，custom URL后续由配置校验与浏览器行为约束。
+**renderBrowser**：不再生成Arena/ChatGPT仿站登录、附件和发送界面。DeepSeek分支仍说明真实Chrome/Edge扩展、官方与第三方区别并给安装链接；其余站点统一显示“外部客户端连接指引”、外链和prompt，明确不代登录/发送任务。文本escape；外链先用URL解析，再只允许http/https协议，非法地址不生成可点击链接。arenaConnect保留兼容函数但不再由仿站发送按钮触发，不连接外部会话。
 
 ## 2. bridge.js启动/停止/状态函数
 
