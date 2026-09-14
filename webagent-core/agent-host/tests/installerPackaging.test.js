@@ -64,7 +64,7 @@ try {
   assert.strictEqual(resolveWorkspace('', tmp, path.join(tmp, 'default')), path.join(tmp, 'default'));
   assert.ok(userHome({ LOCALAPPDATA: tmp }).startsWith(tmp));
   const iss = fs.readFileSync(path.join(root, 'installer/webagent.iss'), 'utf8');
-  assert.ok(/^#define AppVer /m.test(iss));
+  assert.strictEqual((iss.match(/^#define AppVer "([^"]+)"/m) || [])[1], require('../../extension/package.json').version, 'installer and extension release versions must agree');
   assert.ok(iss.includes('function PrepareToInstall(var NeedsRestart: Boolean): String;'));
   assert.ok(!iss.includes('ShellExec('));
   assert.ok(iss.includes("CompareText(NormalizePathEntry(Entry), AppDir)"));

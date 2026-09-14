@@ -28,13 +28,13 @@
 
 ## 2. 配对生命周期：四个函数
 
-**issuePairing()**覆盖全局pairing，写新code、createdAt、expiresAt、attempts=0，返回snapshotPairing。不会保留多个客户端各自的码。
+**issuePairing()**覆盖全局pairing，写新code、createdAt、expiresAt、attempts为空Map，返回snapshotPairing。不会保留多个客户端各自的码。
 
 **snapshotPairing()**无值/已超时返回code:null、expired:true；否则返回实际code和四舍五入的剩余秒数，expired:false。它不主动删除过期对象；实际code只能通过本机控制面适当展示，不可公开日志。
 
 **ensurePairing()**若快照过期/无码则issue，否则返回当前快照。
 
-**consumePairing(code)**过期/无值抛status400；每次尝试先加计数，超过5清pairing并抛429；输入trim/大写后比较，错误400但保留对象及已增加次数；正确则清pairing、返回true。因此第6次即使输入正确也已超限；成功一次即废。
+**consumePairing(code,clientId=direct)**过期/无值抛400；以已验证的注册clientId计数，超过5只拒绝该client（429），不清除全局pairing；错误400，正确清pairing、返回true。直接模块调用缺省direct用于内部兼容；公开路由必须先验证client再传ID。每个客户端第6次仍超限，其他客户端不会被它换码/作废；成功一次即废。
 
 ## 3. 元数据与认证挑战
 
@@ -139,4 +139,4 @@ npm test --prefix webagent-core/agent-host -- --filter=oauth
 
 ### 本轮安全边界
 
-公开GET不能再自动续发配对码；issuePairing/ensurePairing仍供本机控制面使用。全局5次错误锁定的fail-closed策略保留，因此有合法注册信息的攻击者仍可耗尽全局码的尝试预算；限流减少滥用，不把它声称为完全隔离的客户端配对。重启仍重新配对，不引入持久化密钥。单客户端令牌族数量、所有可能代理部署、真实Arena/手机回调尚未穷举验收。
+公开GET不能再自动续发配对码；issuePairing/ensurePairing仍供本机控制面使用。错误预算现按已注册clientId隔离，避免另一注册者作废正常码；客户端ID不是秘密，攻击者若已知道目标ID仍可针对其尝试预算或进行流量DoS，不把此称为完整抗DoS。重启仍重新配对，不引入持久化密钥。单客户端令牌族数量、所有可能代理部署、真实Arena/手机回调尚未穷举验收。

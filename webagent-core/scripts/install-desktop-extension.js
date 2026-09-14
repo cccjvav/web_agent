@@ -24,14 +24,15 @@ function readManifest() {
   };
 }
 
-function copyTree(from, to) {
+function copyTree(from, to, isRoot = true) {
   fs.mkdirSync(to, { recursive: true });
   for (const name of fs.readdirSync(from)) {
-    if (name === 'README.md') continue;
+    if (isRoot && name === 'README.md') continue;
     const src = path.join(from, name);
     const dest = path.join(to, name);
-    const st = fs.statSync(src);
-    if (st.isDirectory()) copyTree(src, dest);
+    const st = fs.lstatSync(src);
+    if (st.isSymbolicLink()) throw new Error('Extension inputs must not be symbolic links: ' + src);
+    if (st.isDirectory()) copyTree(src, dest, false);
     else fs.copyFileSync(src, dest);
   }
 }

@@ -57,3 +57,7 @@ tmp假cloudflared文件，CLOUDFLARED_PATH指它；cp.spawn返回fake并记录�
 取消回归现在覆盖50/100/200/400ms四个启动时刻，并通过command_output中的固定fixture标记确认Node后代已开始后再取消。每次仍要求10秒内关闭捕获管道、cancelled且ok:false；30秒有限工作负载只防无限遗留，不可靠自然退出通过。WEBAGENT_DEBUG_PROCESS在测试子进程开启，输出taskkill及exit/close时序诊断。
 
 新增局部onOutput(event)监听command_output，仅命中固定标记时设置readySeen，并在ready用例触发AbortController；finally移除监听，其他命令输出不改变控制流。
+
+背压fixture：EventEmitter/constructor/fire/dispose与fakePty.spawn/onData/onExit/kill/write为替身；streamHost的postJob首个progress由releaseProgress阻塞，2000个输出块仍只有一请求在途，onExit等待释放再done且尾部≤200Ki。Windows读取scriptPath检查BOM，正常退出、spawn异常、无onExit的dispose均删除私有目录。
+
+另一个Windows用例让真实Node后代仅终止自己的PowerShell父进程（不调用taskkill /T）；根退出后必须10秒内关闭后代持有的管道，且必须先见到真实启动标记。这直接验证Job Object保障，不仅验证taskkill正常树枚举。

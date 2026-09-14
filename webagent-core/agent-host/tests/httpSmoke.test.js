@@ -111,6 +111,10 @@ async function main() {
     assert.strictEqual(health.status, 200);
     assert.strictEqual(health.json.ok, true);
     assert.strictEqual(health.json.product, 'Web Agent');
+    const unauthBody = await request('POST', `http://127.0.0.1:${mcpPort}/mcp`, 'not-an-object');
+    assert.strictEqual(unauthBody.status, 401, 'authenticate before strict JSON parsing');
+    const oversizedRegistration = await request('POST', `http://127.0.0.1:${mcpPort}/oauth/register`, { client_name: 'x'.repeat(70 * 1024) });
+    assert.strictEqual(oversizedRegistration.status, 413, 'public OAuth has a separate small body budget');
 
     const page = await request('GET', `http://127.0.0.1:${workbenchPort}/`);
     assert.strictEqual(page.status, 200);

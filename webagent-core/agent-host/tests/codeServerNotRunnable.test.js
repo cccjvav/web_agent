@@ -35,7 +35,7 @@ assert.ok(fs.existsSync(path.join(repoRoot, 'run-webagent-vscode.cmd')));
 assert.ok(fs.existsSync(path.join(repoRoot, 'webagent-core/scripts/run-code-oss.js')));
 assert.ok(ensure.includes('bin/code-server-runtime'));
 assert.ok(ensure.includes('code-server@4.135.0') || ensure.includes("'code-server': VERSION"));
-assert.ok(ensure.includes('extension/package.json'), 'syncExtension must read the extension version');
+assert.ok(ensure.includes('productVersion()'), 'syncExtension must read the extension version');
 assert.ok(!ensure.includes('webagent.webagent-core-0.6.9'), 'do not hardcode the extension dest folder');
 assert.ok(!ensure.includes('code-server-dist'));
 assert.ok(!runner.includes('code-server-dist'));
@@ -53,3 +53,20 @@ assert.ok(testRunner.includes("node_modules', 'express'") || testRunner.includes
 assert.ok(testRunner.includes('process.exit(2)'));
 
 console.log('vscode launcher uses npm runtime, not a vendored dist');
+
+if (process.platform !== 'win32') {
+  const tmp = fs.mkdtempSync(path.join(require('os').tmpdir(), 'webagent-shell-'));
+  try {
+    const bin = path.join(tmp, 'fake-bin'); fs.mkdirSync(bin);
+    fs.mkdirSync(path.join(tmp, 'work space'));
+    fs.writeFileSync(path.join(bin, 'node'), '#!/bin/sh\nprintf "WS=%s\\n" "$WORKSPACE_ROOT"\n', { mode: 0o755 });
+    fs.writeFileSync(path.join(bin, 'npm'), '#!/bin/sh\nexit 0\n', { mode: 0o755 });
+    for (const script of ['run-webagent.sh', 'run-webagent-vscode.sh']) {
+      const result = require('child_process').spawnSync('bash', [path.join(repoRoot, script), 'work space'], {
+        cwd: tmp, env: { ...process.env, PATH: bin + path.delimiter + process.env.PATH }, encoding: 'utf8', timeout: 5000
+      });
+      assert.strictEqual(result.status, 0, result.stderr);
+      assert.ok(result.stdout.includes('WS=' + path.join(tmp, 'work space')), result.stdout);
+    }
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+}

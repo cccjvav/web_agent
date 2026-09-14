@@ -24,14 +24,25 @@ if (!fs.existsSync(config.workspaceRoot)) {
   fs.mkdirSync(config.workspaceRoot, { recursive: true });
 }
 
-function applyCommon(app) {
+function applyCommon(app, { mcp = false } = {}) {
   app.disable('x-powered-by');
   app.use((req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
     next();
   });
-  app.use(express.json({ limit: '20mb' }));
-  app.use(express.urlencoded({ extended: false }));
+  // Reject nonlocal API and unauthenticated MCP before allocating/parsing bodies.
+  app.use('/api', rejectUnlessLocalControl, rejectCrossSiteApi);
+  if (mcp) {
+    app.use(mcpCors());
+    app.all(['/mcp', '/mcp/:secret'], (req, res, next) => {
+      if (req.method === 'OPTIONS' || mcpRouter.isAuthorized(req)) return next();
+      return mcpRouter.rejectUnauthorized(req, res);
+    });
+  }
+  const oauthJson = express.json({ limit: '64kb' });
+  const regularJson = express.json({ limit: '20mb' });
+  app.use((req, res, next) => (/^\/(?:oauth(?:\/|$)|register\/?$)/i.test(req.path) ? oauthJson : regularJson)(req, res, next));
+  app.use(express.urlencoded({ extended: false, limit: '64kb', parameterLimit: 32 }));
 }
 
 function mountHealth(app) {
@@ -66,8 +77,7 @@ uiApp.use('/api', rejectUnlessLocalControl, rejectCrossSiteApi, apiRouter);
 mountWorkbench(uiApp);
 
 const mcpApp = express();
-applyCommon(mcpApp);
-mcpApp.use(mcpCors());
+applyCommon(mcpApp, { mcp: true });
 mountHealth(mcpApp);
 mcpApp.use(oauth.router);
 mcpApp.use('/mcp', rejectDisallowedMcpOrigin, mcpRouter);

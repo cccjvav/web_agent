@@ -11,11 +11,11 @@
 | loadNodePty() | 无→模块或null | 从vscode.env.appRoot下普通/asar node_modules尝试require；失败尝试下个，不自行下载安装 |
 | stripAnsi(s) | 文本→显示文本 | 去常见CSI/OSC和回车，不是完整终端模拟器 |
 | scrubEnv(base)，导入ptyPolicy | 环境→副本 | 去凭据命名字段，保留一般PATH/Conda变量；不加载Conda profile |
-| spawnSpec(command) | 文本→shell/args/cleanup | 非Windows选SHELL或bash -lc；Windows短ASCII单行用powershell -Command，其他写临时ps1后-File；cleanup给调用者，写临时失败抛错 |
+| spawnSpec(command) | 文本→shell/args/cleanup | 非Windows选SHELL或bash -lc；Windows短ASCII单行用powershell -Command，其他用crypto随机前缀+mkdtemp私有目录，wx/0600写带UTF-8 BOM的ps1再-File；cleanup/cleanupDir给调用者，写失败删除目录并抛错 |
 | waitForShellIntegration(terminal,ms=2500) | 终端→Promise<integration或null> | 已可executeCommand直接返回；无事件API返回null；否则注册变更回调，只接该终端；finish一次性清timer/dispose订阅/resolve，超时读当前integration |
 | startPtyHost(context,deps) | VS Code上下文/依赖→host或null | new PtyHost再start，初始化异常console.warn并null；不保证异步hello已成功 |
 
-spawnSpec的临时脚本不是凭据文件，仍要注意命令正文可能敏感；nodePty.spawn如果在建立onExit前抛错，cleanup不保证已执行。Windows中文脚本的编码/系统PowerShell行为需真实验证。
+spawnSpec的临时脚本不是凭据文件，仍要注意命令正文可能敏感；spawn/终端创建失败、正常退出与dispose均清理临时目录。Windows中文脚本的编码/系统PowerShell行为需真实验证。
 
 ## 2. PtyHost构造与生命周期方法
 
@@ -27,7 +27,7 @@ spawnSpec的临时脚本不是凭据文件，仍要注意命令正文可能敏�
 | pollDelayMs() | 无→毫秒 | 流新鲜时2秒，待任务时400ms，否则2秒 |
 | armPoll() | 无→undefined | disposed返回；清旧timer，超时调用poll.catch吞错.finally再armPoll；避免固定interval重叠轮询 |
 | noteStream() | 无→undefined | 流事件后2.5秒新鲜，pendingHint至少1，让即时流和轮询去重配合 |
-| dispose() | 无→undefined | 标disposed、清hello/poll计时器，逐session尝试kill后clear；未逐个证明操作系统进程退出，也未await在途HTTP |
+| dispose() | 无→undefined | 标disposed、清hello/poll计时器，逐session尝试kill及cleanup后clear；未逐个证明操作系统进程退出，也未await在途HTTP |
 | url(p) | API路径→字符串 | 每次读agentHostUrl依赖后拼路径 |
 | identity() | 无→clientId/workspace | 只取第一个workspaceFolder，不是多根独立会话 |
 | hello() | 无→Promise | POST hello带身份，响应pending更新hint；异常吞，允许服务尚未启动 |
@@ -48,7 +48,7 @@ spawnSpec的临时脚本不是凭据文件，仍要注意命令正文可能敏�
 
 ### spawnNodePty(nodePty,job,cwd)
 
-spawnSpec，创建写/关VS Code EventEmitter，序号命名终端，nodePty.spawn传120×30尺寸、cwd和scrubEnv。onData回调保留尾200Ki字符、发终端显示、异步post progress（失败吞）。PTY对象的open为空回调，close尝试kill，handleInput尝试write；createTerminal并show，sessions按execId保存proc/terminal/emitter以及buf()闭包。
+spawnSpec，创建写/关VS Code EventEmitter，序号命名终端，nodePty.spawn传120×30尺寸、cwd和scrubEnv。onData回调保留尾200Ki字符、发终端显示、40ms合并进pending再由flushProgress串行post progress（失败吞）。PTY对象的open为空回调，close尝试kill，handleInput尝试write；createTerminal并show，sessions按execId保存proc/terminal/emitter以及buf()闭包。
 
 timeout回调设timedOut并kill；onExit清timer、发关闭事件、删session、尝试删临时脚本，再报告真实exitCode、完整尾部输出、outputCaptured=true。超时不因code0变成功。stdout是PTY合并输出，不承诺独立stderr；事件发送/网络回报失败不会恢复已结束进程。
 
@@ -95,3 +95,11 @@ npm test --prefix webagent-core/agent-host -- --filter=webviewRuntime
 ptyPolicy的**scrubEnv(base)**是经典executor和PTY共用的纯函数：复制输入对象，遍历键名删除token、access key、storage key、secret等模式，原对象不改。不按值识别未知命名的凭据。spawnFallback创建终端用strictEnv:true，防VS Code合并父环境把已删除字段重新继承回来。
 
 CONTENT_READ识别常见cat/type/Get-Content及git diff/log/show，先于allowSession/allowedFamilies要求每次确认；连普通文件也询问，因为词法路径检查不能保证无符号链接或已跟踪密钥。EXTRA_DANGER补dd/shred/truncate/mkfs、下载执行入口与npm publish等；两套危险命令词表仍非统一解析器，编码/别名不是完整覆盖。其他命令的会话或命令族授权仍是宽授权，用户仅应向可信任务授予；这不是逐文件权限沙箱。
+
+### 输出背压与临时脚本清理
+
+spawnNodePty局部cleanup清除progressTimer/killer并移除spec.cleanupDir，ended阻止继续排队；写文件exclusive失败也清理私有目录。flushProgress最多一条HTTP在途（flight），pending最多200Ki字符；请求结束后有待发内容才再定40ms计时器。onExit先cleanup/关闭终端信号，再await flight，然后发送完整尾部快照，避免progress越过done。正常终态释放两个EventEmitter；spawn或终端创建抛错时释放资源并上抛。
+
+这是有界合并，不保证每个输出字节都被HTTP逐条传输；最终快照与终端缓冲仍有200Ki字符上限。进程异常强杀扩展仍可能留下临时文件，不能承诺finally在断电时执行；Windows目录权限继承用户Temp ACL，0600不是完整Windows ACL证明。
+
+ptyPolicy的looksDangerousCommand先调用共享dangerousPolicy.isDangerousCommand，再叠加EXTRA_DANGER，原独立DANGEROUS正则已删除。共享检测器逐函数说明见[命令策略详解](../agent-host/src/tools/工具入口与命令策略详解.md)。

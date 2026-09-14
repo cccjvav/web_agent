@@ -19,4 +19,4 @@ if (b === 0) {
 ```
 
 3. 失败不要部分写入。若 `STALE_FILE`，重新读取再打补丁。
-4. `run_command`：`npm test`，确认 5/5。
+4. `run_command`：`npm test`，确认 6/6。

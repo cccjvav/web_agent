@@ -23,6 +23,9 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: Check documentation inventory
         run: node ../../docs-site/check-docs.js
+      - name: Audit production dependencies
+        continue-on-error: true
+        run: npm audit --omit=dev
       - run: npm test
       - name: Repeat Windows cancellation lifecycle
         if: runner.os == 'Windows'

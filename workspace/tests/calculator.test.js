@@ -41,6 +41,10 @@ test('divide(10, 0) should throw "Cannot divide by zero"', () => {
   }, /Cannot divide by zero/);
 });
 
+test('power(2, 10) should equal 1024', () => {
+  assert.strictEqual(power(2, 10), 1024);
+});
+
 console.log('----------------------------------------------------');
 console.log(`Summary: ${passed} passed, ${failed} failed.`);
 

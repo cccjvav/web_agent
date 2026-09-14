@@ -88,6 +88,12 @@ const oauth = require('../src/mcp/oauth');
       assert.throws(() => oauth.completeAuthorize({ ...request, ...patch }));
       assert.strictEqual(oauth.snapshotPairing().code, pending.code, 'invalid authorization must not consume pairing');
     }
+    const attacker = oauth.registerClient({ redirect_uris: ['https://attacker.invalid/cb'] });
+    for (let i = 0; i < 6; i++) {
+      assert.throws(() => oauth.completeAuthorize({ ...request, client_id: attacker.client_id,
+        redirect_uri: attacker.redirect_uris[0], pairing_code: 'WRONG' }));
+      assert.strictEqual(oauth.snapshotPairing().code, pending.code, 'another client cannot globally invalidate pairing');
+    }
     oauth.completeAuthorize(request);
     assert.strictEqual(oauth.snapshotPairing().code, null);
     const authorize = endpoint.replace('/token', '/authorize');

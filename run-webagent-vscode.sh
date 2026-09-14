@@ -5,6 +5,10 @@ if [ -n "${1-}" ]; then
   export WORKSPACE_ROOT="$1"
 fi
 export WORKSPACE_ROOT="${WORKSPACE_ROOT:-$ROOT/workspace}"
+case "$WORKSPACE_ROOT" in
+  /*) ;;
+  *) export WORKSPACE_ROOT="$PWD/$WORKSPACE_ROOT" ;;
+esac
 export AGENT_HOST_PORT="${AGENT_HOST_PORT:-48271}"
 export CODE_SERVER_PORT="${CODE_SERVER_PORT:-3000}"
 

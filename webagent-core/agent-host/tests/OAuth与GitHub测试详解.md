@@ -47,3 +47,5 @@ refresh同样检查机密客户端缺认证401，再正确认证200，旧access�
 ## 验证
 
 分别filter oauth/oauthClientAuth/githubAuth或完整`npm test --prefix webagent-core/agent-host`。实际用户配对与手机Arena连接仍需按Windows验收清单执行。
+
+跨客户端配对回归：第二个注册者连续六次错误输入，只消耗自己的尝试预算，快照code保持不变；合法注册者仍可用原码完成配对。未测大规模流量DoS。

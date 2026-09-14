@@ -49,3 +49,5 @@
 ## 验证
 
 分别filter mcpProtocol/httpSmoke/skipWorkbench，或`npm test --prefix webagent-core/agent-host`。Windows/Conda/浏览器/手机人工执行项仍以安装验收清单为准，不能以这些文件命名替代实测。
+
+httpSmoke增加真实HTTP早期边界：未认证MCP提交JSON字符串（严格对象解析本会拒绝）仍先401，证明认证先于解析；OAuth注册70KiB字段先413而非入库/一般字段校验。现有合法MCP、OAuth、跨站与本机请求保持回归。

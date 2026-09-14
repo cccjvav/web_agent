@@ -17,6 +17,11 @@ GitHub 默认分支 `main` 目前仍是更早的原型快照。现行工作台�
 
 | 文档 | 读它当… |
 |---|---|
+| [Windows新手逐步验收.md](./Windows新手逐步验收.md) | 桌面VS Code集成CMD＋Conda的线性验收步骤 |
+| [Conda环境说明.md](./Conda环境说明.md) | 环境运行、维护与依赖排错 |
+| [启动脚本说明.md](./启动脚本说明.md) | 各脚本的入口、参数与平台差异 |
+| [平台启动与CI详解.md](./平台启动与CI详解.md) | Bash/CMD/Inno及自动化验证边界 |
+| [代码复盘指南.md](./代码复盘指南.md) | 逐模块、函数和文件类型的学习路线 |
 | [使用指南.md](./使用指南.md) | Windows + CMD 从安装到 Bridge |
 | [隧道使用指南.md](./隧道使用指南.md) | Quick Tunnel / Named Tunnel / ngrok 逐步（CMD） |
 | [技能使用指南.md](./技能使用指南.md) | Skill 放哪、怎么建、load_skill、挂自己仓库 |
@@ -28,7 +33,7 @@ GitHub 默认分支 `main` 目前仍是更早的原型快照。现行工作台�
 | [组件说明.md](./组件说明.md) | 整条工作流、怎么跑、为什么这样装、每个目录是谁 |
 | [技术实现.md](./技术实现.md) | 对着源码逐步直译：每个函数拆步骤，if/try 不漏；不杜撰未实现的逻辑 |
 | [总览.md](./总览.md) | 各子文件夹 README 索引、全局调用链、Install→Run |
-| [DOCUMENTATION_SUMMARY.md](./DOCUMENTATION_SUMMARY.md) | 文档覆盖率与链接审查 |
+| [DOCUMENTATION_SUMMARY.md](./DOCUMENTATION_SUMMARY.md) | 历史计数与审查快照（不是实时覆盖率） |
 | [测试说明.md](./测试说明.md) | 怎么跑测试、测了什么 |
 | [LICENSE](./LICENSE) | ISC |
 | [SECURITY.md](./SECURITY.md) | 隧道、本机密钥、OAuth 只在内存 |
@@ -44,6 +49,7 @@ GitHub 默认分支 `main` 目前仍是更早的原型快照。现行工作台�
 | `workspace/` | 默认演示工作区 | 计算器示例；`.webagent`（含 `docs-sync` 等 Skill）在这里，不在仓库根 |
 | `webagent-repro/` | 不用 | 更早一版纯 Bridge 原型 |
 | `bin/code-server-runtime/` | 第二种跑法下载到这里 | npm 完整 code-server，不进 Git |
+| `run-webagent-appwindow.cmd` | 可选App样式窗口 | 网页VS Code就绪后打开独立浏览器窗口 |
 | `run-webagent-vscode.cmd` | 安装版默认壳 | 浏览器里真 VS Code + Web Agent 侧栏，见 [网页VSCode使用指南.md](./网页VSCode使用指南.md) |
 | `install-vscode-extension.cmd` | 本机已装桌面 VS Code | 侧载插件到 `.vscode/extensions`，引擎仍是 `run-webagent.cmd`，见 [使用指南.md](./使用指南.md) 第 5 节 |
 | `webagent-core/agent-host/tests/` | 产品测试 | `run-tests.cmd`；不必在仓库根再放 `tests/` |

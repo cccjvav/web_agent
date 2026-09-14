@@ -99,3 +99,5 @@ WEBAGENT_DEBUG_PROCESS=1仅用于进程排错，输出子进程exit与close分�
 - 后代默认继承job成员关系而不继承job句柄，因此父PowerShell被终止、正常退出或崩溃时，最后句柄关闭会终止后代。这覆盖枚举后才出现的后代；不依赖记住旧PID再杀、不靠提前销毁stdout制造完成。
 - 这是一次性命令的生命周期策略，不是安全沙箱。Windows非PTY命令不能通过Start-Process把后台任务留在shell之外；长运行服务用保持前台的start_command。现有桌面PTY路径不受此改动影响。Add-Type增加每次启动开销；受限语言模式/不允许嵌套job的运行环境会明确失败，不能静默降级。
 - 验证：Windows矩阵运行真实取消用例，包含确认Node已启动后取消；仅Linux通过不能证明P/Invoke/Job Object可用。
+
+Windows taskkill失败/超时/抛错时会用持有的ChildProcess句柄终止根进程；用户命令开始前已加入Job Object，因此不需要靠失效PID重新枚举后代。该回退与commandJob必须共同理解，不适用于任意未纳入job的外部进程。

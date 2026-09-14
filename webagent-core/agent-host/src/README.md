@@ -11,7 +11,7 @@
 | 文件 | 主要职责 |
 |---|---|
 | `config.js` | 单例工作区/端口/身份/隧道状态；persistIdentity加载或保存连接密钥和安装ID |
-| `extensionVersion.js` | 从扩展package.json读取展示版本，失败时使用代码里的回退值 |
+| `extensionVersion.js` | 从扩展package.json读取展示版本，失败或版本格式不合法时明确报错 |
 | `index.js` | 加载模块、初始化身份和统计、组装两套Express/HTTP及WS，处理监听错误 |
 
 ## 配置入口
@@ -62,5 +62,5 @@ httpSmoke、skipWorkbench和auditControl验证双端口及HTTP/WS边界，hostPe
 |---|---|
 | [config.js](config.js) | 2 个函数/类节点 |
 | [extensionVersion.js](extensionVersion.js) | 1 个函数/类节点 |
-| [index.js](index.js) | 13 个函数/类节点 |
+| [index.js](index.js) | 15 个函数/类节点 |
 <!-- docs-inventory:end -->

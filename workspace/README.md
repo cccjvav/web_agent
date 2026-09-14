@@ -64,7 +64,7 @@
   - L33–L35：`divide(10,2)===5`
   - L37–L40：`divide(10,0)` 必须 throw，消息匹配 `/Cannot divide by zero/`
 - L42–L52：打印 Summary；`failed>0` → `exit(1)`，否则 `exit(0)`。
-- **没有测 `power`。**
+- **已测 `power(2, 10) === 1024`。**
 
 ---
 
@@ -104,7 +104,7 @@
   - L5–L6 **Ask：** 只读；文中写了 `list_directory` → `search_files` → `read_files` → `get_diagnostics`；禁止 `apply_patch` / `run_command`。  
     （现行 `getToolList` 没有 `get_diagnostics`；`search_files` 是真实工具，文件名查找用 `find_files`。本文件是演示 Skill 原文，不以它为准改工具层。）
   - L8–L9 **Plan：** 独立分支、写清共识、不改仓库。
-  - L11–L23 **Code：** 读 `calculator.js` hash → `apply_patch` 给 `divide` 加除 0 守卫 → `STALE_FILE` 则重读 → `npm test` 要 5/5。
+  - L11–L23 **Code：** 读 `calculator.js` hash → `apply_patch` 给 `divide` 加除 0 守卫 → `STALE_FILE` 则重读 → `npm test` 要 6/6。
 
 ---
 

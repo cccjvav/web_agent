@@ -1,4 +1,5 @@
 'use strict';
+const { isDangerousCommand } = require('./dangerousPolicy');
 
 const READISH = /^(?:pwd|whoami|hostname|git status(?: --short| --porcelain| --branch| -s| -b| -sb)*|git rev-parse --show-toplevel|ls|dir|Get-ChildItem|echo [A-Za-z0-9 ._-]+)$/i;
 // Content reads (including Git history) always require per-command approval:
@@ -16,14 +17,13 @@ function scrubEnv(base) {
 
 const COMPOUND = /[;&|<>`$(){}\r\n]/;
 
-const DANGEROUS = /\b(?:rm\s+-[rR]{0,2}f|rm\s+-r\s+-f|Remove-Item\b.*-(?:Recurse|Force)|del\s+\/s|rd\s+\/s|format\s+[a-zA-Z]:|git\s+push\b|git\s+reset\s+--hard|git\s+clean\s+-f|drop\s+database|curl\b[\s\S]*\|\s*(?:sh|bash|powershell)|iex\b|Invoke-Expression\b|iwr\b[\s\S]*\|\s*)/i;
 
 function isReadishCommand(command) {
   return READISH.test(String(command || '').trim());
 }
 
 function looksDangerousCommand(command) {
-  return DANGEROUS.test(String(command || '')) || EXTRA_DANGER.test(String(command || ''));
+  return isDangerousCommand(command) || EXTRA_DANGER.test(String(command || ''));
 }
 
 function commandFamily(command) {

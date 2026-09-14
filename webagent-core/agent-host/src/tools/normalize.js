@@ -133,7 +133,7 @@ function normalizeToolArgs(toolName, args) {
   }
 
   if (toolName === 'list_directory') {
-    a.recursive = isTruthy(a.recursive) || a.recursive === true;
+    a.recursive = isTruthy(a.recursive);
   }
 
   if (toolName === 'search_files') {

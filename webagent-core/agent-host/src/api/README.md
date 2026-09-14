@@ -58,5 +58,5 @@ requestScope由 `/chat`显式创建，**不代表所有REST请求自动拥有同
 
 | 源码 | 定位证据 |
 |---|---|
-| [routes.js](routes.js) | 48 个函数/类节点 |
+| [routes.js](routes.js) | 47 个函数/类节点 |
 <!-- docs-inventory:end -->

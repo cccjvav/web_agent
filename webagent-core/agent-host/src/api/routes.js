@@ -29,12 +29,6 @@ const { runWithSignal } = require('../utils/requestScope');
 const router = express.Router();
 let bridgeGeneration = 0;
 
-function publicOrigin(req) {
-  const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http').split(',')[0].trim();
-  const host = (req.headers['x-forwarded-host'] || req.headers.host || `127.0.0.1:${config.workbenchPort}`).split(',')[0].trim();
-  return `${proto}://${host}`;
-}
-
 function mcpOrigin(req) {
   if (config.publicTunnelUrl) return String(config.publicTunnelUrl).replace(/\/$/, '');
   return `http://127.0.0.1:${config.port}`;

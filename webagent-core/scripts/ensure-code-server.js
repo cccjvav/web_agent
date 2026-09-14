@@ -81,32 +81,16 @@ function ensure() {
 }
 
 function extensionVersion() {
-  const pkgPath = path.join(repoRoot, 'webagent-core/extension/package.json');
-  try {
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-    if (pkg && pkg.version) return String(pkg.version);
-  } catch (_) {}
-  return '0.6.9';
+  return require('../agent-host/src/extensionVersion').productVersion();
 }
 
-function syncExtension() {
+function syncExtension(extRoot = path.join(repoRoot, 'webagent-core/extensions-installed')) {
   const src = path.join(repoRoot, 'webagent-core/extension');
   const version = extensionVersion();
-  const dest = path.join(repoRoot, `webagent-core/extensions-installed/webagent.webagent-core-${version}`);
-  fs.mkdirSync(dest, { recursive: true });
-  fs.mkdirSync(path.join(dest, 'resources'), { recursive: true });
-  for (const name of fs.readdirSync(src)) {
-    const from = path.join(src, name);
-    if (!fs.statSync(from).isFile()) continue;
-    if (name === 'package.json' || name.endsWith('.js')) {
-      fs.copyFileSync(from, path.join(dest, name));
-    }
-  }
-  const icon = path.join(src, 'resources/icon.svg');
-  if (fs.existsSync(icon)) {
-    fs.copyFileSync(icon, path.join(dest, 'resources/icon.svg'));
-  }
-  const extRoot = path.join(repoRoot, 'webagent-core/extensions-installed');
+  const dest = path.join(extRoot, `webagent.webagent-core-${version}`);
+  const { copyTree, pruneOld } = require('./install-desktop-extension');
+  copyTree(src, dest);
+  pruneOld(extRoot, path.basename(dest));
   const abs = dest.replace(/\\/g, '/');
   fs.writeFileSync(
     path.join(extRoot, 'extensions.json'),

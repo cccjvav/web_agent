@@ -58,7 +58,7 @@ function issuePairing() {
     code: randomPairingCode(),
     createdAt: now(),
     expiresAt: now() + PAIRING_TTL_MS,
-    attempts: 0
+    attempts: new Map()
   };
   return snapshotPairing();
 }
@@ -80,16 +80,16 @@ function ensurePairing() {
   return snap;
 }
 
-function consumePairing(code) {
+function consumePairing(code, clientId = 'direct') {
   const snap = snapshotPairing();
   if (!pairing || snap.expired) {
     const err = new Error('配对码已过期，请在工作台重新生成');
     err.status = 400;
     throw err;
   }
-  pairing.attempts += 1;
-  if (pairing.attempts > 5) {
-    pairing = null;
+  const attempts = (pairing.attempts.get(clientId) || 0) + 1;
+  pairing.attempts.set(clientId, attempts);
+  if (attempts > 5) {
     const err = new Error('配对码尝试次数过多');
     err.status = 429;
     throw err;
@@ -334,7 +334,7 @@ function validateAuthorize(body) {
 
 function completeAuthorize(body) {
   const { client, url } = validateAuthorize(body);
-  consumePairing(body.pairing_code);
+  consumePairing(body.pairing_code, client.client_id);
   const code = randomToken('sccode_', 16);
   authCodes.set(code, {
     clientId: client.client_id,

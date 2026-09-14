@@ -9,6 +9,7 @@ const { spawnSync } = require('child_process');
 const ROOT = path.resolve(__dirname);
 const PORT = parseInt(process.env.DOCS_PORT || '4173', 10);
 const HOST = process.env.DOCS_HOST || '127.0.0.1';
+if (!['127.0.0.1', 'localhost', '::1'].includes(HOST)) console.warn('警告：文档站没有认证，包含源码快照；非回环绑定会对可达网络公开。不要通过公网隧道暴露。');
 
 const bundled = fs.existsSync(path.join(ROOT, 'bundled.json'));
 if (bundled) {

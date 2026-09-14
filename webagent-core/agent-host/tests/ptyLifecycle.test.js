@@ -13,7 +13,7 @@ const policy = require('../../extension/ptyPolicy');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-pty-life-'));
 config.workspaceRoot = tmp;
 (async () => {
-  for (const command of ['cat .env', 'type .webagent\\config.json', 'Get-Content ../../../private.txt', 'cat safe.txt', 'git diff', 'git log', 'dd if=/dev/zero of=/dev/sda', 'npm publish', 'Invoke-WebRequest https://example.invalid']) {
+  for (const command of ['cat .env', 'type .webagent\\config.json', 'Get-Content ../../../private.txt', 'cat safe.txt', 'git diff', 'git log', 'dd if=/dev/zero of=/dev/sda', 'npm publish', 'Invoke-WebRequest https://example.invalid', 'rm -r folder', 'net user', 'reg add HKCU\\test', 'shutdown /s', 'find . -delete']) {
     for (const state of [{}, { allowSession: true }, { allowedFamilies: new Set(['cat', 'type', 'git', 'dd', 'npm', 'invoke-webrequest', 'get-content']) }]) {
       assert.strictEqual(policy.shouldAutoAllow(command, state).allow, false, command);
     }
@@ -109,6 +109,43 @@ config.workspaceRoot = tmp;
   await assert.rejects(() => host.spawnFallback({ execId: 'no-si' }, tmp), /未执行命令/);
   host.dispose();
 
+  // Saturated output must have one progress request in flight, then a final snapshot.
+  vscode.EventEmitter = class { constructor() { this.event = () => {}; } fire() {} dispose() {} };
+  vscode.window.createTerminal = () => ({ show() {}, dispose() {} });
+  let onData, onExit, releaseProgress, scriptPath;
+  const posted = [];
+  const streamHost = new PtyHost({ agentHostUrl: () => '', requestJson: async () => ({}) });
+  streamHost.postJob = async (_, body) => {
+    posted.push(body);
+    if (body.state === 'progress') await new Promise(resolve => { releaseProgress = resolve; });
+  };
+  const fakePty = { spawn(shell, args) {
+    if (args.includes('-File')) scriptPath = args.at(-1);
+    return { onData(fn) { onData = fn; }, onExit(fn) { onExit = fn; }, kill() {}, write() {} };
+  } };
+  streamHost.spawnNodePty(fakePty, { jobId: 'pressure', execId: 'pressure', command: 'x'.repeat(500) }, tmp);
+  if (scriptPath) assert.ok(fs.readFileSync(scriptPath, 'utf8').startsWith('\uFEFF'));
+  for (let i = 0; i < 1000; i++) onData('x'.repeat(400));
+  await new Promise(resolve => setTimeout(resolve, 60));
+  assert.strictEqual(posted.length, 1);
+  for (let i = 0; i < 1000; i++) onData('y'.repeat(400));
+  await new Promise(resolve => setTimeout(resolve, 60));
+  assert.strictEqual(posted.length, 1, 'progress must not create concurrent requests');
+  const finished = onExit({ exitCode: 0 });
+  assert.strictEqual(posted.length, 1, 'final result waits for outstanding progress');
+  releaseProgress(); await finished;
+  assert.strictEqual(posted.at(-1).state, 'done');
+  assert.ok(posted.at(-1).stdout.length <= 200 * 1024);
+  if (scriptPath) assert.ok(!fs.existsSync(path.dirname(scriptPath)), 'normal exit removes private temporary directory');
+  assert.throws(() => streamHost.spawnNodePty({ spawn(shell, args) {
+    if (args.includes('-File')) scriptPath = args.at(-1);
+    throw new Error('fixture spawn failure');
+  } }, { jobId: 'fail', execId: 'fail', command: 'x'.repeat(500) }, tmp), /fixture spawn failure/);
+  if (scriptPath) assert.ok(!fs.existsSync(path.dirname(scriptPath)), 'spawn failure removes private temporary directory');
+  streamHost.spawnNodePty(fakePty, { jobId: 'dispose', execId: 'dispose', command: 'x'.repeat(500) }, tmp);
+  streamHost.dispose();
+  if (scriptPath) assert.ok(!fs.existsSync(path.dirname(scriptPath)), 'dispose cleans up without an onExit callback');
+
   process.env.WEBAGENT_DEBUG_PROCESS = '1';
   console.log('PTY fixture: approval and shell-integration checks completed');
   // Real subprocess cancellation is connected to the request scope.
@@ -133,6 +170,16 @@ config.workspaceRoot = tmp;
     assert.ok(Date.now() - cancellationStarted < 10000, 'Cancellation must close captured subprocess pipes promptly, not wait for natural exit');
     if (delay === 'ready') assert.ok(readySeen, 'must also cancel a confirmed running descendant');
     assert.strictEqual(stopped.status, 'cancelled'); assert.strictEqual(stopped.ok, false);
+  }
+  if (process.platform === 'win32') {
+    const startedAt = Date.now();
+    const orphanGuard = await executeCommand({
+      command: 'node -e "console.log(975318642);setTimeout(()=>process.kill(process.ppid),100);setTimeout(()=>{},30000)"',
+      timeoutSec: 10
+    });
+    assert.ok(orphanGuard.stdout.includes('975318642'), 'descendant must actually have started');
+    assert.ok(Date.now() - startedAt < 10000, 'OS job must close descendant pipes after root-only termination, without taskkill /T');
+    assert.strictEqual(orphanGuard.ok, false);
   }
   const oldFetch = global.fetch;
   try {

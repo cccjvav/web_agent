@@ -46,12 +46,14 @@ function spawnSpec(command) {
       cleanup: null
     };
   }
-  const file = path.join(os.tmpdir(), `webagent-pty-${Date.now()}-${Math.random().toString(16).slice(2)}.ps1`);
-  fs.writeFileSync(file, text, 'utf8');
+  const cleanupDir = fs.mkdtempSync(path.join(os.tmpdir(), `webagent-pty-${crypto.randomBytes(12).toString('hex')}-`));
+  const file = path.join(cleanupDir, 'command.ps1');
+  try { fs.writeFileSync(file, '\uFEFF' + text, { encoding: 'utf8', flag: 'wx', mode: 0o600 }); }
+  catch (err) { fs.rmSync(cleanupDir, { recursive: true, force: true }); throw err; }
   return {
     shell: 'powershell.exe',
     args: ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', file],
-    cleanup: file
+    cleanup: file, cleanupDir
   };
 }
 
@@ -125,6 +127,7 @@ class PtyHost {
     clearTimeout(this.pollTimer);
     for (const s of this.sessions.values()) {
       try { if (s.proc && s.proc.kill) s.proc.kill(); } catch (_) {}
+      if (s.cleanup) s.cleanup();
     }
     this.sessions.clear();
   }
@@ -245,18 +248,36 @@ class PtyHost {
     const closeEmitter = new vscode.EventEmitter();
     this.seq += 1;
     const name = this.seq === 1 ? 'Web Agent · 1' : `Web Agent · ${this.seq}`;
-    let buf = '';
-    const proc = nodePty.spawn(spec.shell, spec.args, {
+    let buf = '', pending = '', flight = null, progressTimer = null, killer = null, ended = false;
+    const cleanup = () => {
+      ended = true;
+      clearTimeout(progressTimer); clearTimeout(killer);
+      if (spec.cleanupDir) { try { fs.rmSync(spec.cleanupDir, { recursive: true, force: true }); } catch (_) {} }
+    };
+    const flushProgress = () => {
+      progressTimer = null;
+      if (ended || flight || !pending) return;
+      const chunk = pending; pending = '';
+      flight = this.postJob(job.jobId, { state: 'progress', stdout: chunk }).catch(() => {}).finally(() => {
+        flight = null;
+        if (!ended && pending) progressTimer = setTimeout(flushProgress, 40);
+      });
+    };
+    let proc;
+    try { proc = nodePty.spawn(spec.shell, spec.args, {
       cwd,
       cols: 120,
       rows: 30,
       env: { ...scrubEnv(process.env), TERM: 'xterm-256color', FORCE_COLOR: '1', CI: 'true' }
     });
+    } catch (err) { cleanup(); writeEmitter.dispose(); closeEmitter.dispose(); throw err; }
     proc.onData((d) => {
+      if (ended) return;
       const chunk = String(d);
       buf = (buf + chunk).slice(-200 * 1024);
       writeEmitter.fire(chunk.replace(/\n/g, '\r\n'));
-      this.postJob(job.jobId, { state: 'progress', stdout: stripAnsi(chunk) }).catch(() => {});
+      pending = (pending + stripAnsi(chunk)).slice(-200 * 1024);
+      if (!ended && !flight && !progressTimer) progressTimer = setTimeout(flushProgress, 40);
     });
     const pty = {
       onDidWrite: writeEmitter.event,
@@ -269,23 +290,23 @@ class PtyHost {
         try { proc.write(data); } catch (_) {}
       }
     };
-    const terminal = vscode.window.createTerminal({ name, pty });
-    terminal.show(true);
-    const session = { proc, terminal, writeEmitter, closeEmitter, buf: () => buf };
+    let terminal;
+    try { terminal = vscode.window.createTerminal({ name, pty }); terminal.show(true); }
+    catch (err) { try { proc.kill(); } catch (_) {} cleanup(); writeEmitter.dispose(); closeEmitter.dispose(); throw err; }
+    const session = { proc, terminal, writeEmitter, closeEmitter, cleanup, buf: () => buf };
     this.sessions.set(String(job.execId), session);
     const timeoutMs = Math.max(1000, (Number(job.timeoutSec) || 30) * 1000);
     let timedOut = false;
-    const killer = setTimeout(() => {
+    killer = setTimeout(() => {
       timedOut = true;
       try { proc.kill(); } catch (_) {}
     }, timeoutMs);
-    proc.onExit(({ exitCode }) => {
-      clearTimeout(killer);
+    proc.onExit(async ({ exitCode }) => {
+      cleanup();
       try { closeEmitter.fire(exitCode); } catch (_) {}
       this.sessions.delete(String(job.execId));
-      if (spec.cleanup) {
-        try { fs.unlinkSync(spec.cleanup); } catch (_) {}
-      }
+      await flight; // Final snapshot must not overtake an outstanding progress request.
+      writeEmitter.dispose(); closeEmitter.dispose();
       this.postJob(job.jobId, {
         state: 'done',
         status: timedOut ? 'timeout' : (exitCode === 0 ? 'done' : 'error'),

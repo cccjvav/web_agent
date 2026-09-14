@@ -61,7 +61,7 @@ export async function resetRound() {
   try {
     await fetch('/api/bridge/reset-round', { method: 'POST' });
   } catch (_) {}
-  state.stats = { calls: 0, fail: 0, totalMs: 0, lastTool: '', lastToolAt: 0 };
+  state.stats = { calls: 0, fail: 0, totalMs: 0, lastTool: '', lastToolAt: 0, healthLine: '' };
   ui.paintStats();
   const log = $('#bridge-log');
   if (log) log.innerHTML = '';
@@ -171,7 +171,7 @@ export function renderBrowser(tab) {
   }
 }
 
-export async function arenaConnect(text) {
+export async function arenaConnect() {
   // This built-in page is guidance, not an external Arena session or an agent runner.
   ui.setRight('bridge');
   $('#sess-dot').classList.remove('on');

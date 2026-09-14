@@ -3,7 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 const srcRoot = path.resolve(__dirname, '../../extension');
-const copyRoot = path.resolve(__dirname, '../../extensions-installed/webagent.webagent-core-0.6.9');
+const version = require('../../extension/package.json').version;
+const copyRoot = path.resolve(__dirname, `../../extensions-installed/webagent.webagent-core-${version}`);
 
 function listFiles(root) {
   const out = [];
@@ -35,3 +36,15 @@ for (const rel of srcFiles) {
 }
 
 console.log('extensionCopy tests passed');
+
+const tmp = fs.mkdtempSync(path.join(require('os').tmpdir(), 'webagent-sync-'));
+try {
+  const stale = path.join(tmp, 'webagent.webagent-core-0.0.1');
+  fs.mkdirSync(stale); fs.writeFileSync(path.join(stale, 'old.txt'), 'old');
+  const other = path.join(tmp, 'other.extension-1.0.0'); fs.mkdirSync(other);
+  const dest = require('../../scripts/ensure-code-server').syncExtension(tmp);
+  assert.deepStrictEqual(listFiles(dest), srcFiles);
+  for (const rel of srcFiles) assert.ok(fs.readFileSync(path.join(dest, rel)).equals(fs.readFileSync(path.join(srcRoot, rel))), rel);
+  assert.ok(!fs.existsSync(stale)); assert.ok(fs.existsSync(other));
+  assert.strictEqual(JSON.parse(fs.readFileSync(path.join(tmp, 'extensions.json'), 'utf8'))[0].version, version);
+} finally { fs.rmSync(tmp, { recursive: true, force: true }); }

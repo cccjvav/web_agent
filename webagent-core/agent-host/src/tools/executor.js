@@ -41,12 +41,19 @@ function killChild(child, force = false) {
       const result = spawnSync('taskkill', ['/pid', String(child.pid), '/t', '/f'], {
         windowsHide: true, timeout: 3000, encoding: 'utf8', maxBuffer: 64 * 1024
       });
+      if (result.error || result.status !== 0) {
+        // Root termination is sufficient once commandJob has attached; its OS job closes descendants.
+        try { child.kill('SIGKILL'); } catch (_) {}
+      }
       if (result.error || result.status !== 0 || process.env.WEBAGENT_DEBUG_PROCESS === '1') {
         console.error('taskkill result', JSON.stringify({ pid: child.pid, status: result.status,
           error: result.error && result.error.code, stdout: String(result.stdout || '').slice(-600),
           stderr: String(result.stderr || '').slice(-600) }));
       }
-    } catch (err) { console.error('taskkill failed:', err.message); }
+    } catch (err) {
+      console.error('taskkill failed:', err.message);
+      try { child.kill('SIGKILL'); } catch (_) {}
+    }
     return;
   }
   const sig = force ? 'SIGKILL' : 'SIGTERM';

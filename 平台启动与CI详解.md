@@ -80,3 +80,5 @@ Linux可用`bash -n run-webagent.sh run-webagent-vscode.sh run-admin.sh webagent
 .gitattributes另要求Shell脚本使用LF，避免Windows检出后的CRLF破坏Unix解释器；CMD/BAT仍CRLF。
 
 Windows CI额外编译agent-host/src/tools/commandJob.cs，并在全量任务后再重复五次PTY生命周期回归，覆盖早期取消与已运行后代取消；任何失败保持失败，不使用重试到成功作为验收。Job Object只约束非PTY一次性命令的后代生命周期，不代替桌面PTY或UAC验收。
+
+CI同时运行非阻断npm audit --omit=dev：用于提示最新生产依赖公告，不因临时注册表网络失败把代码测试误报失败；安全告警仍需维护者处理。本轮本地审计返回0项已知漏洞，并非永久安全保证。
