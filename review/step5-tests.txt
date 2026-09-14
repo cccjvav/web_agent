@@ -1,0 +1,312 @@
+
+> agent-host@1.0.0 test
+> node scripts/run-tests.js
+
+
+—— documentationPolicy.test.js ——
+documentation policy and negative drift fixtures passed
+PASS documentationPolicy.test.js
+
+—— documentationQuality.test.js ——
+documentation editorial contracts, table/fence checks and local TOC fixture passed
+PASS documentationQuality.test.js
+
+—— documentationLearning.test.js ——
+learning documentation names, navigation, formatting and Conda/acceptance contracts passed; not semantic certification
+PASS documentationLearning.test.js
+
+—— patchEngine.test.js ——
+patchEngine tests passed
+PASS patchEngine.test.js
+
+—— mcpProtocol.test.js ——
+mcp protocol tests passed
+PASS mcpProtocol.test.js
+
+—— workspaceTools.test.js ——
+Error: command did not finish
+    at pollOutput (C:\Users\Peter\web_agent\webagent-core\agent-host\tests\workspaceTools.test.js:25:9)
+    at async main (C:\Users\Peter\web_agent\webagent-core\agent-host\tests\workspaceTools.test.js:184:20)
+FAIL workspaceTools.test.js exit 1
+
+—— sandbox.test.js ——
+sandbox tests passed
+PASS sandbox.test.js
+
+—— hostPersist.test.js ——
+host persist tests passed
+PASS hostPersist.test.js
+
+—— tunnel.test.js ——
+tunnel tests passed
+PASS tunnel.test.js
+
+—— bridgeTunnel.test.js ——
+(node:12000) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+bridge tunnel tests passed
+PASS bridgeTunnel.test.js
+
+—— apiFiles.test.js ——
+(node:24468) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+apiFiles tests passed
+PASS apiFiles.test.js
+
+—— localControl.test.js ——
+localControl tests passed
+PASS localControl.test.js
+
+—— eventBus.test.js ——
+eventBus tests passed
+PASS eventBus.test.js
+
+—— corsAllow.test.js ——
+corsAllow tests passed
+PASS corsAllow.test.js
+
+—— githubAuth.test.js ——
+githubAuth.test.js ok
+PASS githubAuth.test.js
+
+—— usageTracker.test.js ——
+usageTracker.test.js ok
+PASS usageTracker.test.js
+
+—— adminHost.test.js ——
+adminHost.test.js ok
+PASS adminHost.test.js
+
+—— providers.test.js ——
+providers.test.js ok
+PASS providers.test.js
+
+—— httpSmoke.test.js ——
+http smoke tests passed
+PASS httpSmoke.test.js
+
+—— codeServerNotRunnable.test.js ——
+vscode launcher uses npm runtime, not a vendored dist
+PASS codeServerNotRunnable.test.js
+
+—— codeServerAuth.test.js ——
+codeServerAuth tests passed
+PASS codeServerAuth.test.js
+
+—— skipWorkbench.test.js ——
+skip workbench tests passed
+PASS skipWorkbench.test.js
+
+—— planRound.test.js ——
+planRound tests passed
+PASS planRound.test.js
+
+—— runChat.test.js ——
+runChat tests passed
+PASS runChat.test.js
+
+—— chatMode.test.js ——
+chatMode tests passed
+PASS chatMode.test.js
+
+—— toolLabel.test.js ——
+toolLabel tests passed
+PASS toolLabel.test.js
+
+—— profile.test.js ——
+profile tests passed
+PASS profile.test.js
+
+—— oauth.test.js ——
+oauth / streamable http tests passed
+PASS oauth.test.js
+
+—— docsSite.test.js ——
+docs-site content.js matches build.js
+PASS docsSite.test.js
+
+—— workbenchHtml.test.js ——
+workbench HTML has bind() nodes
+PASS workbenchHtml.test.js
+
+—— dangerousCommands.test.js ——
+dangerousCommands tests passed
+PASS dangerousCommands.test.js
+
+—— extensionCopy.test.js ——
+extensionCopy tests passed
+PASS extensionCopy.test.js
+
+—— ptyJobs.test.js ——
+ptyJobs tests passed
+PASS ptyJobs.test.js
+
+—— auditControl.test.js ——
+===========================================================
+ Web Agent 0.6.9  workbench + agent-host
+  UI        http://127.0.0.1:0
+  MCP       http://127.0.0.1:0/mcp/506518da18894bae7be78b69
+  Bind      127.0.0.1（默认只听本机；WEBAGENT_BIND=0.0.0.0 才听所有网卡）
+  Bridge    工作台可选 Quick Tunnel / Named Tunnel / ngrok；任务做完请停
+            公网只收 /mcp 与 OAuth 发现文档；/api 与 /ws 仅本机回环
+  Workspace C:\Users\Peter\AppData\Local\Temp\webagent-control-regression-78RpnV
+===========================================================
+agent-host MCP listening on 127.0.0.1:0
+audit local control regressions passed
+PASS auditControl.test.js
+
+—— auditStorage.test.js ——
+SKIP file symlink regression: Windows symlink privilege unavailable
+audit storage regressions passed
+PASS auditStorage.test.js
+
+—— board.test.js ——
+board.test ok
+PASS board.test.js
+
+—— chatVision.test.js ——
+AssertionError [ERR_ASSERTION]: 第二轮请求必须带 image 部分
+    at C:\Users\Peter\web_agent\webagent-core\agent-host\tests\chatVision.test.js:135:12
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+FAIL chatVision.test.js exit 1
+
+—— desktopExtension.test.js ——
+desktopExtension tests passed
+PASS desktopExtension.test.js
+
+—— docsHttp.test.js ——
+docs HTTP malformed URL regressions passed
+PASS docsHttp.test.js
+
+—— editorRuntime.test.js ——
+(node:1428) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+editor runtime regressions passed (DOM/Monaco fixture, not browser E2E)
+PASS editorRuntime.test.js
+
+—— installerPackaging.test.js ——
+installer packaging/runtime tests passed; Inno/CMD execution requires Windows
+PASS installerPackaging.test.js
+
+—— mcpBoard.test.js ——
+mcpBoard.test ok
+PASS mcpBoard.test.js
+
+—— modelLifecycle.test.js ——
+model failure/tool-result/Plan generation regressions passed
+PASS modelLifecycle.test.js
+
+—— monacoLoading.test.js ——
+evalmachine.<anonymous>:1
+import { $, state, ui } from './state.js';
+^^^^^^
+
+SyntaxError: Cannot use import statement outside a module
+    at new Script (node:vm:117:7)
+    at createScript (node:vm:269:10)
+    at Object.runInContext (node:vm:300:10)
+    at C:\Users\Peter\web_agent\webagent-core\agent-host\tests\monacoLoading.test.js:16:6
+    at Object.<anonymous> (C:\Users\Peter\web_agent\webagent-core\agent-host\tests\monacoLoading.test.js:27:3)
+    at Module._compile (node:internal/modules/cjs/loader:1929:14)
+    at Object..js (node:internal/modules/cjs/loader:2060:10)
+    at Module.load (node:internal/modules/cjs/loader:1651:32)
+    at Module._load (node:internal/modules/cjs/loader:1443:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+FAIL monacoLoading.test.js exit 1
+
+—— oauthClientAuth.test.js ——
+OAuth public/secret-post/secret-basic HTTP regressions passed
+PASS oauthClientAuth.test.js
+
+—— ptyLifecycle.test.js ——
+PTY ownership/approval/result/capture/cancellation and request deadline tests passed
+PASS ptyLifecycle.test.js
+
+—— resourceBudget.test.js ——
+resource and schema budget regressions passed
+PASS resourceBudget.test.js
+
+—— stateIntegrity.test.js ——
+configuration, hash/link, peer identity and board-state regressions passed
+PASS stateIntegrity.test.js
+
+—— testRunner.test.js ——
+test runner filtering/argument regressions passed
+PASS testRunner.test.js
+
+—— tunnelLifecycle.test.js ——
+tunnel process reference/generation/start-stop regressions passed
+PASS tunnelLifecycle.test.js
+
+—— webviewRuntime.test.js ——
+webview runtime regressions passed (host/DOM fixtures, not real VS Code CSP enforcement)
+PASS webviewRuntime.test.js
+
+—— workbenchRuntime.test.js ——
+(node:18744) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)
+PASS workbenchRuntime.test.js
+
+—— summary ——
+PASS  documentationPolicy.test.js
+PASS  documentationQuality.test.js
+PASS  documentationLearning.test.js
+PASS  patchEngine.test.js
+PASS  mcpProtocol.test.js
+FAIL  workspaceTools.test.js
+PASS  sandbox.test.js
+PASS  hostPersist.test.js
+PASS  tunnel.test.js
+PASS  bridgeTunnel.test.js
+PASS  apiFiles.test.js
+PASS  localControl.test.js
+PASS  eventBus.test.js
+PASS  corsAllow.test.js
+PASS  githubAuth.test.js
+PASS  usageTracker.test.js
+PASS  adminHost.test.js
+PASS  providers.test.js
+PASS  httpSmoke.test.js
+PASS  codeServerNotRunnable.test.js
+PASS  codeServerAuth.test.js
+PASS  skipWorkbench.test.js
+PASS  planRound.test.js
+PASS  runChat.test.js
+PASS  chatMode.test.js
+PASS  toolLabel.test.js
+PASS  profile.test.js
+PASS  oauth.test.js
+PASS  docsSite.test.js
+PASS  workbenchHtml.test.js
+PASS  dangerousCommands.test.js
+PASS  extensionCopy.test.js
+PASS  ptyJobs.test.js
+PASS  auditControl.test.js
+PASS  auditStorage.test.js
+PASS  board.test.js
+FAIL  chatVision.test.js
+PASS  desktopExtension.test.js
+PASS  docsHttp.test.js
+PASS  editorRuntime.test.js
+PASS  installerPackaging.test.js
+PASS  mcpBoard.test.js
+PASS  modelLifecycle.test.js
+FAIL  monacoLoading.test.js
+PASS  oauthClientAuth.test.js
+PASS  ptyLifecycle.test.js
+PASS  resourceBudget.test.js
+PASS  stateIntegrity.test.js
+PASS  testRunner.test.js
+PASS  tunnelLifecycle.test.js
+PASS  webviewRuntime.test.js
+PASS  workbenchRuntime.test.js
+
+3/52 test files failed
