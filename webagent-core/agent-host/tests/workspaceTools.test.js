@@ -16,13 +16,15 @@ function git(args) {
   if (r.status !== 0) throw new Error(r.stderr || r.stdout || 'git failed');
 }
 
-async function pollOutput(execId, tries = 20) {
-  for (let i = 0; i < tries; i++) {
-    const out = await callTool('get_command_output', { execId });
+async function pollOutput(execId, timeoutMs = 15000) {
+  const deadline = Date.now() + timeoutMs;
+  let out;
+  while (Date.now() < deadline) {
+    out = await callTool('get_command_output', { execId });
     if (out.status && out.status !== 'running') return out;
     await new Promise((r) => setTimeout(r, 50));
   }
-  throw new Error('command did not finish');
+  throw new Error('command did not finish within ' + timeoutMs + 'ms: ' + JSON.stringify(out));
 }
 
 async function main() {
@@ -182,7 +184,8 @@ async function main() {
   assert.ok(/^[0-9a-f]{16}$/.test(String(started.execId)), 'execId must be a random hex id');
   assert.strictEqual(started.status, 'running');
   const finished = await pollOutput(started.execId);
-  assert.ok(['done', 'timeout'].includes(finished.status));
+  assert.strictEqual(finished.status, 'done');
+  assert.strictEqual(finished.exitCode, 0);
   assert.ok(String(finished.stdout).includes('async-ok'));
 
   const sleepy = await callTool(

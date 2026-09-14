@@ -27,7 +27,7 @@ filter/map/find/some都是从事件数组找上述证据，不代表全部事件
 
 ## chatVision.test.js
 
-[源码](chatVision.test.js)假1px PNG、两个临时目录，不依赖显示器。前半静态/函数断言：findShotCandidates识别反斜杠-Out、引号空格路径、mark JSON out，无关命令不误报；resolveShotPath允许工作区相对/绝对，拒外部与非图片。symlink逃逸断言放在宽catch内，**可能连断言失败也被catch吞掉**，不能把这段视为所有平台坚实覆盖；另有沙箱/预算测试补充。
+[源码](chatVision.test.js)假1px PNG、两个临时目录，不依赖显示器。前半静态/函数断言：findShotCandidates识别反斜杠-Out、引号空格路径、mark JSON out，无关命令不误报；resolveShotPath允许工作区相对/绝对，拒外部与非图片。symlink创建仅Windows EPERM/EACCES明确跳过，链接成功后的逃逸断言在catch外，不能吞失败。
 
 collectShot须返回PNG data URL、bytes/rel；MAX_BYTES断言等于6MiB，**未实际构造超限文件验证tooBig分支**。modelSeesImages检查vision布尔/caps/capabilities三来源，以及无声明/null反例。loadSkill computer-use须给绝对目录、脚本目录与snap提示/Bridge回图说明；未知Skill found=false。
 
@@ -40,3 +40,5 @@ collectShot须返回PNG data URL、bytes/rel；MAX_BYTES断言等于6MiB，**未
 ## 验证
 
 `npm test --prefix webagent-core/agent-host -- --filter=runChat`，另分别filter=modelLifecycle、chatVision。涉及命令仅操作临时工作区，真实模型账户/图像理解、Windows桌面与手机MCP仍需单列实测。
+
+2026-09-14 Windows回归修正：集成命令echo只接收完整引号路径，不再让PowerShell把裸-Out解释为参数。先断言第二轮tool结果exitCode=0、stdout含cur.png，再核对image_url；失败时报告真实工具错误，不以模型固定文本代替执行成功。

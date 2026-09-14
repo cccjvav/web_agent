@@ -120,7 +120,7 @@ node --version
 npm --version
 ```
 
-当前 Linux CI 使用 Node 20，Windows CI 使用 Node 22；这不是“所有 Node 版本均已验收”。本轮沙箱没有 Conda，也没有 Windows 桌面；以上 Conda 路径仍需要按第 7 节在本机实测。
+当前全量CI配置覆盖Ubuntu/Windows的Node20/22/24矩阵，另有Node22的Windows安装器任务；这不是“所有 Node 版本均已验收”。本轮沙箱没有 Conda，也没有 Windows 桌面；以上 Conda 路径仍需要按第 7 节在本机实测。
 
 ## 3. 从源码运行
 

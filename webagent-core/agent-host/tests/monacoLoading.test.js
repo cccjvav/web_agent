@@ -3,8 +3,10 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
-const source = fs.readFileSync(path.join(__dirname, '../../workbench/js/monaco.js'), 'utf8').replace(/^import .*;\n/, '').replace('export function', 'function');
+const rawSource = fs.readFileSync(path.join(__dirname, '../../workbench/js/monaco.js'), 'utf8');
 (async () => {
+  for (const eol of ['\n', '\r\n']) {
+  const source = rawSource.replace(/\r?\n/g, eol).replace(/^import[^\r\n]*;\r?\n/, '').replace('export function', 'function');
   let script, deadline, captured = 0, activated = 0;
   const status = {}, state = { activeTab: 'file' }, window = {};
   const context = vm.createContext({
@@ -23,5 +25,6 @@ const source = fs.readFileSync(path.join(__dirname, '../../workbench/js/monaco.j
   assert.ok(status.textContent.includes('就绪'), 'late load preserves buffer and upgrades status');
   const missing = context.loadMonaco(); delete window.require; script.onload();
   assert.strictEqual(await missing, false);
-  console.log('Monaco loading/failure/late-upgrade fixtures passed');
+  }
+  console.log('Monaco LF/CRLF loading/failure/late-upgrade fixtures passed');
 })().catch(err => { console.error(err); process.exitCode = 1; });

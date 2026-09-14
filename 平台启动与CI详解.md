@@ -60,7 +60,7 @@ dependencies：express HTTP路由、cors来源控制、ws WebSocket、diff差异
 
 [workflow](.github/workflows/test.yml)在push/pull_request触发，两job独立，不是一个通过另一个就可省略。
 
-**agent-host（Ubuntu）**：默认working-directory agent-host；checkout@v4拉源码；setup-node@v4选Node20；npm ci安装锁定依赖（含dev默认）；check-docs只检查、不自动修漂移；npm test跑全测试。Actions本身使用的Node运行时与node-version设置的项目Node版本是两件事；平台废弃action旧运行时提示不能被误报为项目测试失败。
+**agent-host（Ubuntu/Windows，Node20/22/24矩阵）**：fail-fast:false保留各平台结果；默认working-directory agent-host；checkout@v4拉源码；setup-node@v4使用矩阵版本；npm ci安装锁定依赖（含dev默认）；check-docs只检查、不自动修漂移；npm test跑全测试。Actions本身使用的Node运行时与node-version设置的项目Node版本是两件事；平台废弃action旧运行时提示不能被误报为项目测试失败。
 
 **windows-installer（Windows）**：checkout/setup Node22；npm ci --prefix agent-host，check-docs验证Windows换行规范；直接跑installerPackaging测试，再node installer/package.js生成payload。
 
@@ -76,3 +76,5 @@ npm test --prefix webagent-core/agent-host
 ```
 
 Linux可用`bash -n run-webagent.sh run-webagent-vscode.sh run-admin.sh webagent-core/start-webagent.sh`只检查语法，不启动服务。CMD/Inno的真实执行需Windows；Conda步骤照[Conda环境说明](Conda环境说明.md)，阅读完成与实际执行仍分开记录。
+
+.gitattributes另要求Shell脚本使用LF，避免Windows检出后的CRLF破坏Unix解释器；CMD/BAT仍CRLF。

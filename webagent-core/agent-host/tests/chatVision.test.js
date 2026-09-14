@@ -48,10 +48,15 @@ fs.writeFileSync(path.join(outside, 'evil.png'), Buffer.from(PNG_B64, 'base64'))
   assert.strictEqual(resolveShotPath(path.join(outside, 'evil.png'), { workspaceRoot: tmp, cuDir: noCu }), null, '工作区外图片必须拒收');
   assert.strictEqual(resolveShotPath('shots/cur.txt', { workspaceRoot: tmp, cuDir: noCu }), null, '非图片扩展名拒收');
   // symlink 逃逸：工作区内链接指向外部图片 → realpath 后拒绝
+  let linked = false;
   try {
     fs.symlinkSync(path.join(outside, 'evil.png'), path.join(tmp, 'shots', 'link.png'));
-    assert.strictEqual(resolveShotPath('shots/link.png', { workspaceRoot: tmp, cuDir: noCu }), null, 'symlink 逃逸必须拒收');
-  } catch (_) { /* 平台不支持 symlink 则跳过 */ }
+    linked = true;
+  } catch (err) {
+    if (process.platform !== 'win32' || !['EPERM', 'EACCES'].includes(err.code)) throw err;
+    console.log('SKIP image symlink: Windows privilege unavailable');
+  }
+  if (linked) assert.strictEqual(resolveShotPath('shots/link.png', { workspaceRoot: tmp, cuDir: noCu }), null, 'symlink 逃逸必须拒收');
   const shot = collectShot({ command: 'snap -Out shots/cur.png', stdout: '' }, { workspaceRoot: tmp, cuDir: noCu });
   assert.ok(shot && shot.dataUrl && shot.dataUrl.startsWith('data:image/png;base64,'), 'collectShot 应返回 data URL');
   assert.ok(shot.bytes > 0 && shot.rel);
@@ -114,8 +119,8 @@ const toolCallResp = (cmd) => ({
 });
 const finalResp = (text) => ({ choices: [{ message: { role: 'assistant', content: text } }] });
 
-// run_command 仅 code 模式；命令用 echo（Linux/Windows 都无害），-Out 指向预置假 PNG
-const cmd = `echo snapped -Out ${path.join(tmp, 'shots', 'cur.png')}`;
+// Quote the complete path: PowerShell echo is Write-Output; bare -Out is parsed as a parameter.
+const cmd = `echo "${path.join(tmp, 'shots', 'cur.png')}"`;
 
 async function main() {
   await withProvider([toolCallResp(cmd), finalResp('我看到截图了')], async (baseUrl, bodies) => {
@@ -131,6 +136,11 @@ async function main() {
     assert.strictEqual(out.text, '我看到截图了');
     assert.strictEqual(bodies.length, 2, '应恰好两轮请求');
     assert.ok(!JSON.stringify(bodies[0]).includes('image_url'), '第一轮不该有图');
+    const toolResult = bodies[1].messages.find(m => m.role === 'tool');
+    assert.ok(toolResult, 'provider must receive a tool result');
+    const execution = JSON.parse(toolResult.content);
+    assert.strictEqual(execution.exitCode, 0, JSON.stringify(execution));
+    assert.ok(String(execution.stdout).includes('cur.png'), JSON.stringify(execution));
     const second = JSON.stringify(bodies[1]);
     assert.ok(second.includes('"type":"image_url"'), '第二轮请求必须带 image 部分');
     assert.ok(second.includes('data:image/png;base64,'), 'image 用 data URL（不走会截断的文本通道）');

@@ -4,7 +4,11 @@
 
 | 文件 | 留它当… |
 |---|---|
-| [AUDIT_CROSSCHECK_2026-09-11.md](./AUDIT_CROSSCHECK_2026-09-11.md) | 当前活台账：外部35项发现＋4项建议逐条核对；第一批修复与F01–F38剩余任务 |
+| [AUDIT_ROUND3_2026-09-13.md](AUDIT_ROUND3_2026-09-13.md) | 当前交叉验证与修复台账在文末；原审查正文不视为全部属实 |
+| [AUDIT_2026-09-13.md](AUDIT_2026-09-13.md) | 第二份外部审查原文，待逐项对照 |
+| [01a08d85-web-agent-audit.md](01a08d85-web-agent-audit.md) | 第一份外部审查，含过时判断，保留来源不直接执行建议 |
+| [step5-tests.txt](step5-tests.txt) | 用户Windows Node24的3/52失败原始证据，可能含个人路径，勿公开转发 |
+| [AUDIT_CROSSCHECK_2026-09-11.md](./AUDIT_CROSSCHECK_2026-09-11.md) | 前轮历史台账：外部35项发现及旧F/X处理证据；当前状态见第三轮报告文末 |
 | [REPORT_v5.md](./REPORT_v5.md) | 历史验收：V4-1 / V3-2 / V3-4 已闭环，当时无新缺陷 |
 | [REPORT_v6.md](./REPORT_v6.md) | 拆模块建议（可选备忘）。**没有**当成施工任务跑；贴桥不靠拆文件 |
 | [CHECKLIST_WINDOWS.md](./CHECKLIST_WINDOWS.md) | Windows 真机验收**唯一活基线**（A/B 继承项 + D1–D13，含阶段 6 任务板） |

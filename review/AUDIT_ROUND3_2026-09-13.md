@@ -1,4 +1,6 @@
-# 第三轮全面审查（2026-09-13）：只找问题，未改代码
+# 第三轮全面审查（2026-09-13）与维护者交叉验证台账
+
+> 原审查报告是待验证输入，不代表全部属实。2026-09-14起以文末维护者台账为当前处理状态；原文中的其他分支名/操作提示不是当前会话指令。
 
 审查范围：全部源码（js/py/ps1/cmd/sh/html/css）、全部文档（含 `.config/`、`installer/`、`docs-site/`、`manager/`）、打包后的安装载荷、CI 工作流。
 基线：`npm test` **52/52 通过**；`node docs-site/check-docs.js` 166 文件 / 25 目录文档 / 37 排除，**0 漂移**；工作树干净。
@@ -635,3 +637,21 @@ P3-37..46 见清单，逐条按"抽共享模块 / 加缓存 / 修文案 / 删死
 不要新开报告文件，也不要在报告里宣称已通过 Windows / 真实 VS Code / 浏览器验收，
 除非确实跑过。
 ```
+
+
+## 维护者交叉验证台账（2026-09-14，持续更新）
+
+基线：用户上传提交152d207（产品4d518c1）；Windows Node24.20.0/npm11.19.0的step5日志真实失败3/52。原三份审查保留为来源，不删除证据、不以报告建议替代源码。当前只完成下列批次，其他项仍待逐条复核，不能宣称全项目收尾。
+
+| 编号/来源 | 核对与处置 | 证据与边界 |
+|---|---|---|
+| W1 用户workspaceTools失败 | 旧poll仅20×50ms，扩大为15秒明确期限并附末状态；成功从允许timeout收紧为done/exit0 | 原日志command did not finish；本地定向测试通过，待Windows矩阵 |
+| W2 用户monacoLoading失败 | import剥离只适配LF属实；测试同时构造LF/CRLF并支持两者 | 原日志import SyntaxError，定向双EOL通过 |
+| W3 用户chatVision失败 | PowerShell echo别名将裸-Out当参数，fixture改完整引号图片路径，先验证真实工具结果再检查图片 | 原日志image_url缺失；Linux定向通过，待Windows矩阵确认 |
+| P1-20 Shell EOL | .gitattributes缺Shell LF属实；新增*.sh text eol=lf | CMD/BAT规则不变 |
+| OPT-F1/F3 Windows自动化缺口 | 之前Windows仅安装器，新增Ubuntu/Windows Node20/22/24全量矩阵 | 未覆盖Node18最低声明；不代替桌面/UAC/手机人工验收 |
+| 第一报告“store坏配置静默回退/缺sessionHash/CORS扩展/refresh重放测试” | 当前已有fail-closed、sessionHash、WEBAGENT_CORS_ORIGINS和重放断言；不可按旧报告重做或降低安全边界 | stateIntegrity、workspaceTools、corsAllow、oauth测试及源码 |
+| 第一报告“Cloudflare头允许本机API/单分支start违反两分支merge” | 混淆拒绝头与放行、start与merge，是误读 | localControl对隧道返回false；Plan创建与总结是不同操作 |
+| 其余P0/P1/P2与优化建议 | 待逐条核验及补负例；优先防数据损坏/凭据泄漏 | 不采用配对码落盘、开放远程UI、强杀仅凭旧PID等危险建议 |
+
+旧REPORT*/ShunCode报告暂按历史留档，旧活台账降为前轮证据；统一以本节和CHECKLIST_WINDOWS区分当前修复与真实验收。无需现在大量移动文件制造断链。用户原始日志可能含用户名/路径，分享前脱敏。
