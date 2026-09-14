@@ -10,7 +10,7 @@
 |---|---|---|
 | countRunning() | 无→数量 | 遍历commandStore中status=running；取消标终态可早于进程真正退出 |
 | pruneCommands() | 无→undefined | 记录≥40时按Map顺序删非running至<40；不主动kill、不提供无限历史 |
-| killChild(child,force=false) | 子进程→undefined | Windows同步taskkill PID树；其他先杀进程组再回退child.kill，TERM/KILL按force。吞发送错误，不等待退出证明 |
+| killChild(child,force=false) | 子进程→undefined | Windows同步taskkill PID树（3秒期限，失败记录退出状态/错误；WEBAGENT_DEBUG_PROCESS=1额外记录成功结果）；其他先杀进程组再回退child.kill，TERM/KILL按force。吞发送错误，不等待退出证明 |
 | workingDirFrom(cwd) | 目录→安全绝对路径 | resolveSafePath，任何异常统一改成outside workspace提示，原失败原因可能被泛化 |
 | scrubEnv(base)，导入extension/ptyPolicy | 环境对象→副本 | 删除名称匹配凭据模式的字段；不是值扫描；保留PATH/一般Conda变量，不自动conda activate |
 | publicRecord(rec,tail) | 内部记录→展示对象 | stdout/stderr取尾部，tail默认8000钳500–200Ki字符，附状态/退出码/建议等待；截断不保留完整日志 |
@@ -24,7 +24,7 @@ running≥8拒绝，prune，生成execId与运行记录；验证cwd，算至少1
 
 **append(field,chunk)**追加保留尾200Ki字符、广播原chunk；stdout/stderr data回调转换字符串。**done Promise**的error回调移除signal、清timer、删children、更新错误/耗时、广播并reject；close回调同样清理，保存code/signal/耗时，仅仍running时改为done/error/timeout，算ok并resolve publicRecord。取消状态不被普通close覆盖。
 
-返回 `{rec,done}`，其中rec是可变记录。spawn成功不是业务成功；事件回调异常不都被隔离。killChild在Windows没有显式spawnSync超时，且“cancelled记录”不等于等待真实退出。
+返回 `{rec,done}`，其中rec是可变记录。spawn成功不是业务成功；事件回调异常不都被隔离。killChild在Windows有3秒spawnSync超时，且“cancelled记录”不等于等待真实退出。
 
 ## 3. executor的公开执行函数
 
@@ -87,3 +87,5 @@ npm test --prefix webagent-core/agent-host -- --filter=workspaceTools
 对照审批迟到、所有权、输出/退出码和取消断言；真实VS Code node-pty/shellIntegration及Conda解释器要按人工G/E项。测试通过不等于任意系统命令的后代进程都被可靠回收。
 
 取消时立即设rec.ok=false；PTY迟到成功只合并结果数据，不得覆盖cancelled/ok:false。经典命令和扩展共用ptyPolicy.scrubEnv，剔除token/access key/storage key等凭据名称，保留PATH/Conda；不是值扫描或OS沙箱。
+
+WEBAGENT_DEBUG_PROCESS=1仅用于进程排错，输出子进程exit与close分别发生的时间，帮助区分根进程退出与继承管道关闭；不是关闭管道来绕过退出验收。

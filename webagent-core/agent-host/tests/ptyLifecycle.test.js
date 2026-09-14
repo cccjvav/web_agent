@@ -109,6 +109,7 @@ config.workspaceRoot = tmp;
   await assert.rejects(() => host.spawnFallback({ execId: 'no-si' }, tmp), /未执行命令/);
   host.dispose();
 
+  process.env.WEBAGENT_DEBUG_PROCESS = '1';
   console.log('PTY fixture: approval and shell-integration checks completed');
   // Real subprocess cancellation is connected to the request scope.
   const cancellationStarted = Date.now();
