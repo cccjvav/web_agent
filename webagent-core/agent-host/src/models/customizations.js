@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const { readBoundedText } = require('../utils/boundedFile');
 const { config } = require('../config');
 const { markdownPreference, markdownTechStack } = require('./profile');
 
@@ -51,7 +53,8 @@ function defaults() {
 
 function loadCustom() {
   try {
-    const raw = JSON.parse(fs.readFileSync(file(), 'utf8'));
+    const raw = JSON.parse(readBoundedText(file()));
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('configuration must be an object');
     const base = defaults();
     return {
       ...base,
@@ -59,21 +62,36 @@ function loadCustom() {
       environment: { ...base.environment, ...(raw.environment || {}) },
       techStack: { ...base.techStack, ...(raw.techStack || {}) }
     };
-  } catch {
-    return defaults();
+  } catch (err) {
+    if (err.code === 'ENOENT') return defaults();
+    const failure = new Error('E_CUSTOM_CORRUPT: customizations could not be read; original file preserved. ' + err.message);
+    failure.code = 'E_CUSTOM_CORRUPT';
+    throw failure;
+  }
+}
+
+function writeCustomFile(target, text) {
+  const tmp = target + '.tmp.' + crypto.randomBytes(8).toString('hex');
+  try {
+    fs.writeFileSync(tmp, text, { encoding: 'utf8', mode: 0o600, flag: 'wx' });
+    fs.renameSync(tmp, target);
+  } finally {
+    try { fs.unlinkSync(tmp); } catch (err) { if (err.code !== 'ENOENT') throw err; }
   }
 }
 
 function saveCustom(next) {
+  loadCustom(); // Fail closed on unreadable existing state, even for direct saves.
+
   const merged = { ...defaults(), ...next };
   if (next && next.environment) merged.environment = { ...defaults().environment, ...next.environment };
   if (next && next.techStack) merged.techStack = { ...defaults().techStack, ...next.techStack };
   const dir = path.dirname(file());
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(file(), JSON.stringify(merged, null, 2), 'utf8');
-  fs.writeFileSync(path.join(dir, 'instructions.md'), merged.instructions || '', 'utf8');
-  fs.writeFileSync(path.join(dir, 'preference.md'), markdownPreference(merged), 'utf8');
-  fs.writeFileSync(path.join(dir, 'tech-stack.md'), markdownTechStack(merged), 'utf8');
+  writeCustomFile(file(), JSON.stringify(merged, null, 2));
+  writeCustomFile(path.join(dir, 'instructions.md'), merged.instructions || '');
+  writeCustomFile(path.join(dir, 'preference.md'), markdownPreference(merged));
+  writeCustomFile(path.join(dir, 'tech-stack.md'), markdownTechStack(merged));
   return merged;
 }
 

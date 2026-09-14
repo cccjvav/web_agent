@@ -7,9 +7,6 @@ const repoRoot = path.resolve(__dirname, '../../..');
 const contentPath = path.join(repoRoot, 'docs-site/content.js');
 const buildPath = path.join(repoRoot, 'docs-site/build.js');
 
-function stripBuiltAt(s) {
-  return String(s).replace(/"builtAt":"\d{4}-\d{2}-\d{2}"/g, '"builtAt":""');
-}
 
 const serveSrc = fs.readFileSync(path.join(repoRoot, 'docs-site/serve.js'), 'utf8');
 assert.ok(serveSrc.includes('ROOT + path.sep'), 'serve.js must reject paths outside ROOT + sep');
@@ -25,11 +22,26 @@ const r = spawnSync(process.execPath, [buildPath], {
 assert.strictEqual(r.status, 0, r.stderr || r.stdout || 'docs-site/build.js failed');
 
 const after = fs.readFileSync(contentPath, 'utf8');
-assert.strictEqual(
-  stripBuiltAt(after),
-  stripBuiltAt(before),
-  'docs-site/content.js drifted from Markdown. Run: node docs-site/build.js'
-);
+assert.ok(after === before, 'docs-site/content.js drifted from inputs. Run: node docs-site/build.js');
+
+// Re-run the real builder with every Markdown input converted to CRLF.
+// The output must be byte-identical, not just semantically similar HTML.
+let crlfBuild;
+const fixtureFs = { ...fs,
+  readFileSync(file, ...args) {
+    const raw = fs.readFileSync(file, ...args);
+    return String(file).endsWith('.md') && typeof raw === 'string' ? raw.replace(/\r?\n/g, '\r\n') : raw;
+  },
+  writeFileSync(file, data) {
+    assert.strictEqual(file, contentPath);
+    crlfBuild = data;
+  }
+};
+require('vm').runInNewContext(fs.readFileSync(buildPath, 'utf8'), {
+  require(name) { return name === 'fs' ? fixtureFs : require(name); },
+  __dirname: path.dirname(buildPath), Buffer, console: { log() {} }
+});
+assert.ok(crlfBuild === after, 'Markdown CRLF must not change generated documentation bytes');
 
 console.log('docs-site content.js matches build.js');
 

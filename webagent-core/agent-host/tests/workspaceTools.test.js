@@ -53,7 +53,10 @@ async function main() {
   git(['add', 'keep.txt']);
   git(['commit', '-m', 'init']);
 
+  git(['branch', 'release/1.2.3']);
+  git(['symbolic-ref', 'HEAD', 'refs/heads/release/1.2.3']);
   const st = await callTool('git_status', {}, 'ask');
+  assert.strictEqual(st.branch, 'release/1.2.3');
   assert.ok(st.branch);
   fs.writeFileSync(path.join(tmp, 'keep.txt'), 'hello world\n');
   const diff = await callTool('git_diff', { filePath: 'keep.txt' }, 'plan');

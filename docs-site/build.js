@@ -56,7 +56,7 @@ for (const doc of docConfig.extraSiteDocs) {
 }
 
 function readUtf8(rel) {
-  return fs.readFileSync(path.join(ROOT, rel), 'utf8').replace(/^\uFEFF/, '');
+  return fs.readFileSync(path.join(ROOT, rel), 'utf8').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
 }
 
 function escapeHtml(s) {
@@ -384,7 +384,6 @@ for (const file of manifest.files) {
 }
 const payload = {
   sources,
-  builtAt: new Date().toISOString().slice(0, 10),
   guide: parseGuide(guideMd),
   impl: {
     title: '技术实现：执行链与边界',

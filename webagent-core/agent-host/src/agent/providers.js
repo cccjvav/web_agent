@@ -1,3 +1,5 @@
+const { fetchText } = require('../utils/requestScope');
+
 function normalizeBase(url) {
   return String(url || '')
     .trim()
@@ -25,17 +27,16 @@ function probeContext(m) {
   return String(n);
 }
 
-async function listRemoteModels(baseUrl, apiKey) {
+async function listRemoteModels(baseUrl, apiKey, { timeoutMs = 15000 } = {}) {
   const base = normalizeBase(baseUrl);
   if (!base) throw new Error('API Endpoint URL 不能为空');
   if (!apiKey) throw new Error('API Key 不能为空');
-  const resp = await fetch(`${base}/models`, {
+  const { response: resp, text: raw } = await fetchText(`${base}/models`, {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json'
     }
-  });
-  const raw = await resp.text();
+  }, timeoutMs);
   if (!resp.ok) {
     throw new Error(`探测失败 HTTP ${resp.status}: ${raw.slice(0, 200)}`);
   }

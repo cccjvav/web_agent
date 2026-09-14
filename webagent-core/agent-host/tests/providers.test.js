@@ -30,6 +30,12 @@ async function run() {
     const declared = models.find((m) => m.id === 'flash-pro');
     assert.deepStrictEqual(declared.caps, ['vision']);
     assert.strictEqual(declared.contextSize, '128K');
+    global.fetch = async (_, opts) => new Promise((resolve, reject) => {
+      opts.signal.addEventListener('abort', () => reject(new Error('probe aborted')), { once: true });
+    });
+    const keepAlive = setTimeout(() => {}, 1000);
+    try { await assert.rejects(() => listRemoteModels('https://model.invalid', 'test', { timeoutMs: 20 }), /aborted/); }
+    finally { clearTimeout(keepAlive); }
   } finally {
     global.fetch = orig;
   }

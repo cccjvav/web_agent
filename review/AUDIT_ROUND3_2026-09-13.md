@@ -667,3 +667,17 @@ P3-37..46 见清单，逐条按"抽共享模块 / 加缓存 / 修文案 / 删死
 | P0-5 | 属实；runChat默认ask，非法mode明确失败 | modelLifecycle修改前defaultTools不存在，修后只读工具集正确 |
 
 以上不代表其他P1–P3/优化建议已完成；真实Windows桌面/授权/手机仍需用户验收。扩展策略变化是安全收紧：普通cat也需要单次确认，不用词法路径假装能判定符号链接安全。
+
+### P1存储/错误与新Windows CI发现
+
+| 编号 | 核实与修复 | 验证 |
+|---|---|---|
+| P1-6 | custom坏配置确会回默认；改仅缺文件默认、其他E_CUSTOM_CORRUPT保留；逐文件wx/0600/rename/finally | stateIntegrity新增负例原实现失败，修后通过；仍非四文件事务 |
+| P1-7 | instanceof优先原来已有，真正缺陷是not found被required文件名误分 | required.md/timeout.log回E_NOT_FOUND |
+| P1-8 | 含点分支截短属实；只按三点upstream分隔 | 临时release/1.2.3回归修前失败 |
+| P1-13 | provider探测无期限属实；复用fetchText，默认15秒覆盖读正文及取消 | providers短期限fixture拒绝 |
+| P1-14及自查 | board固定临时名/无cleanup属实；额外确认坏板被静默覆盖；修复随机.tmp.、0600、finally及fail-closed | stateIntegrity坏板/rename失败/权限回归 |
+| W4 新Windows矩阵 | 初次矩阵三个原失败已不再报错，但docsSite在Windows失败；readUtf8未统一Markdown CRLF，TOC/章节解析与Linux不同 | 全Markdown CRLF重跑真实builder的字节相等fixture；修复入口统一LF |
+| P3-44 构建漂移 | 删除unused builtAt当天日期，docsSite不再日期豁免；失败不倾倒超大源码diff | 输出只由输入决定；用户M content.js可能来自日期/平台构建，不代表误操作 |
+
+当前旧CI34852542412/34853003227的Windows新增全量有docsSite失败，不沿用“Windows全绿”说法；修复后须以新提交矩阵为准。未访问用户电脑，不宣称本机52/52通过。

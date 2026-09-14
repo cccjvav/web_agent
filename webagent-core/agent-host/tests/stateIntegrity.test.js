@@ -14,6 +14,43 @@ const tracker = require('../src/usage/tracker');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-state-'));
 config.workspaceRoot = tmp;
 (async () => {
+  const custom = require('../src/models/customizations');
+  fs.mkdirSync(path.join(tmp, '.webagent'), { recursive: true });
+  const customFile = path.join(tmp, '.webagent/customizations.json');
+  fs.writeFileSync(customFile, '{broken custom');
+  assert.throws(() => custom.loadCustom(), /CORRUPT/);
+  assert.throws(() => custom.saveCustom(custom.defaults()), /CORRUPT/);
+  assert.strictEqual(fs.readFileSync(customFile, 'utf8'), '{broken custom');
+  fs.unlinkSync(customFile);
+  custom.saveCustom(custom.defaults());
+  const customBefore = fs.readFileSync(customFile, 'utf8');
+  const renameCustom = fs.renameSync;
+  try {
+    fs.renameSync = (a, b) => { if (b === customFile) throw new Error('custom rename fixture'); return renameCustom(a, b); };
+    assert.throws(() => custom.patchCustom({ preference: 'must not publish' }), /custom rename/);
+    assert.strictEqual(fs.readFileSync(customFile, 'utf8'), customBefore);
+    assert.ok(!fs.readdirSync(path.dirname(customFile)).some(n => n.includes('.tmp.')));
+  } finally { fs.renameSync = renameCustom; }
+  const boardFile = path.join(tmp, '.webagent/board.json');
+  fs.writeFileSync(boardFile, '{broken board');
+  await assert.rejects(() => board.boardCreate({ title: 'no overwrite' }), /CORRUPT/);
+  assert.strictEqual(fs.readFileSync(boardFile, 'utf8'), '{broken board');
+  fs.unlinkSync(boardFile);
+  await board.boardCreate({ title: 'keep board' });
+  const boardBefore = fs.readFileSync(boardFile, 'utf8');
+  try {
+    fs.renameSync = (a, b) => { if (b === boardFile) throw new Error('board rename fixture'); return renameCustom(a, b); };
+    await assert.rejects(() => board.boardCreate({ title: 'not committed' }), /board rename/);
+    assert.strictEqual(fs.readFileSync(boardFile, 'utf8'), boardBefore);
+    assert.ok(!fs.readdirSync(path.dirname(boardFile)).some(n => n.includes('.tmp.')));
+  } finally { fs.renameSync = renameCustom; }
+  if (process.platform !== 'win32') {
+    assert.strictEqual(fs.statSync(customFile).mode & 0o777, 0o600);
+    assert.strictEqual(fs.statSync(boardFile).mode & 0o777, 0o600);
+  }
+  const { publicError } = require('../src/mcp/errors');
+  for (const name of ['required.md', 'timeout.log']) assert.strictEqual(publicError(new Error('File not found: ' + name)).code, 'E_NOT_FOUND');
+
   store.save(store.defaults());
   const file = path.join(tmp, '.webagent/config.json');
   fs.writeFileSync(file, '{broken config');

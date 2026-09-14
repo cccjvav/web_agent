@@ -47,3 +47,5 @@ try内await listRemoteModels，两个find回调取相应记录，断言未声明
 ## 验证
 
 `npm test --prefix webagent-core/agent-host -- --filter=planRound`；其余可将filter替换chatMode、toolLabel、providers、profile。测试数据名字和日期不是实际用户/服务观测。
+
+2026-09-14新增：providers测试用fetch替身监听AbortSignal，timeoutMs20必须reject，keepAlive维持事件循环后finally清理，global.fetch恢复；不是提供商网络实测。

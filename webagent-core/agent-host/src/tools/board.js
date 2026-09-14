@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { config } = require('../config');
+const { readBoundedText } = require('../utils/boundedFile');
 const { allSessions } = require('../mcp/session');
 
 const BOARD_REL = path.join('.webagent', 'board.json');
@@ -34,19 +35,26 @@ function boardPath() {
 
 function loadBoard() {
   try {
-    const raw = fs.readFileSync(boardPath(), 'utf8');
+    const raw = readBoundedText(boardPath());
     const parsed = JSON.parse(raw);
     if (parsed && Array.isArray(parsed.tasks)) return parsed;
-  } catch (_) { /* 没有板=空板 */ }
-  return { tasks: [] };
+    throw new Error('tasks must be an array');
+  } catch (err) {
+    if (err.code === 'ENOENT') return { tasks: [] };
+    throw new Error('E_BOARD_CORRUPT: original board preserved. ' + err.message);
+  }
 }
 
 function saveBoard(board) {
   const file = boardPath();
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  const tmp = `${file}.${process.pid}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(board, null, 2), 'utf8');
-  fs.renameSync(tmp, file);
+  const tmp = `${file}.tmp.${crypto.randomBytes(8).toString('hex')}`;
+  try {
+    fs.writeFileSync(tmp, JSON.stringify(board, null, 2), { encoding: 'utf8', mode: 0o600, flag: 'wx' });
+    fs.renameSync(tmp, file);
+  } finally {
+    try { fs.unlinkSync(tmp); } catch (err) { if (err.code !== 'ENOENT') throw err; }
+  }
 }
 
 function callerOf(ctx) {

@@ -61,7 +61,7 @@ function gitStatus() {
     const porcelain = git(['status', '--porcelain=v1', '-b']);
     const lines = porcelain.split('\n').filter(Boolean);
     const summary = lines[0] || '';
-    const branch = (summary.match(/##\s+([^\s.]+)/) || [])[1] || 'HEAD';
+    const branch = (summary.match(/^##\s+(\S+?)(?:\.\.\.|\s|$)/) || [])[1] || 'HEAD';
     const files = lines
       .filter((l) => !l.startsWith('##'))
       .slice(0, 80)

@@ -21,6 +21,7 @@ class ExecutionError extends Error {
 function classifyToolError(err) {
   if (err instanceof ProtocolError || err instanceof ExecutionError) return err;
   const msg = String(err && err.message ? err.message : err);
+  if (/not found|No such file/i.test(msg)) return new ExecutionError('E_NOT_FOUND', msg);
   if (/Unknown tool/i.test(msg)) return new ProtocolError('E_UNKNOWN_CMD', msg);
   if (/locked in|Ask\/Plan are read-only/i.test(msg)) return new ProtocolError('E_BAD_ARGS', msg);
   if (/requires |required/i.test(msg)) return new ProtocolError('E_BAD_ARGS', msg);
@@ -28,7 +29,6 @@ function classifyToolError(err) {
   if (/STALE_FILE/.test(msg)) return new ExecutionError('E_STALE_FILE', msg);
   if (/Patch conflict/.test(msg)) return new ExecutionError('E_CONFLICT', msg);
   if (/GIT_UNAVAILABLE|not a git repository/i.test(msg)) return new ExecutionError('E_NOT_READY', msg);
-  if (/not found|No such file/i.test(msg)) return new ExecutionError('E_NOT_FOUND', msg);
   if (/timeout|isTimeout/i.test(msg)) return new ExecutionError('E_TIMEOUT', msg);
   if (/ACCESS_DENIED_SENSITIVE_FILE|E_FORBIDDEN/i.test(msg)) return new ExecutionError('E_FORBIDDEN', msg);
   if (/confirm_dangerous|confirm_overwrite|confirm=true/i.test(msg)) return new ProtocolError('E_BAD_ARGS', msg);
