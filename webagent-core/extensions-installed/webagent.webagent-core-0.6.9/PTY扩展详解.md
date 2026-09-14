@@ -50,7 +50,7 @@ spawnSpec的临时脚本不是凭据文件，仍要注意命令正文可能敏�
 
 spawnSpec，创建写/关VS Code EventEmitter，序号命名终端，nodePty.spawn传120×30尺寸、cwd和scrubEnv。onData回调保留尾200Ki字符、发终端显示、40ms合并进pending再由flushProgress串行post progress（失败吞）。PTY对象的open为空回调，close尝试kill，handleInput尝试write；createTerminal并show，sessions按execId保存proc/terminal/emitter以及buf()闭包。
 
-timeout回调设timedOut并kill；onExit清timer、发关闭事件、删session、尝试删临时脚本，再报告真实exitCode、完整尾部输出、outputCaptured=true。超时不因code0变成功。stdout是PTY合并输出，不承诺独立stderr；事件发送/网络回报失败不会恢复已结束进程。
+timeout回调设timedOut并kill；onExit通过cleanup清timer/临时目录，发关闭事件、删session，等待在途progress并释放emitter，再报告真实exitCode、完整尾部输出、outputCaptured=true。超时不因code0变成功。stdout是PTY合并输出，不承诺独立stderr；事件发送/网络回报失败不会恢复已结束进程。
 
 ### runShellIntegration(si,job,terminal)
 
@@ -72,10 +72,10 @@ reading.then标readFinished，catch记录readError并dispose，防等待exit时�
 
 ## 6. ptyPolicy.js全部函数
 
-READISH仅自动许可有限元数据/目录/简单echo，不自动许可cat/type/Get-Content或Git正文/历史读取，COMPOUND检查连接/扩展字符，DANGEROUS为扩展侧正则策略，**与agent-host的dangerous.js不是同一实现**。
+READISH仅自动许可有限元数据/目录/简单echo，不自动许可cat/type/Get-Content或Git正文/历史读取，COMPOUND检查连接/扩展字符，基本危险分类复用dangerousPolicy，与agent-host一致；EXTRA_DANGER是扩展更保守的附加审批条件。
 
 - **isReadishCommand(command)**trim后白名单匹配，不证明命令读取绝无敏感信息。
-- **looksDangerousCommand(command)**正则分类，非完整shell解析。
+- **looksDangerousCommand(command)**共享词法检测加附加正则，非完整shell解析。
 - **commandFamily(command)**去前导调用符，提取首段名字小写；带路径/复杂引号未必得到用户以为的程序名。
 - **shouldAutoAllow(command,state={})**先CONTENT_READ正文读取、复合/危险→allow:false、alwaysAsk:true；然后只读→允许；再allowSession、allowedFamilies；其余需要询问但可提供持久到本会话的选项。危险/复合不会因会话允许就跳过询问。
 
