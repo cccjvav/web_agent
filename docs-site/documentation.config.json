@@ -461,6 +461,11 @@
       "id": "probe-entry-map",
       "path": "探针入口与实际可用范围.md",
       "group": "使用"
+    },
+    {
+      "id": "bridge-task-guide",
+      "path": "Bridge任务栏说明.md",
+      "group": "使用"
     }
   ],
   "sourceSnapshotExclusions": [

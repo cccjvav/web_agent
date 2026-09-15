@@ -94,3 +94,10 @@ chatHtml在日志区外增加原生details使用帮助，首屏可见且不随�
 BridgeView启动、原生Chat handler及ChatView send都先await workspaceBinding，然后把两个绑定字段随POST送往主机；失败showErrorMessage以modal=true弹窗，Bridge还校验HTTP及success。Chat校验后才登记历史，取消后不发送；postNdjson遇HTTP错误明确reject，不能把409正文吞成完成。refreshBar对空/不信任/首根不匹配给出警告，工作区变更会刷新，轮询仍保留。
 
 验证：workspaceEntry的真实扩展VM处理器覆盖空窗口无请求、首根不匹配不启动、不信任和查询期间关闭文件夹；bridgeTunnel真实HTTP覆盖缺失/过期绑定409且不改变隧道/授权。VM不等于真实桌面VSCode弹窗验收。服务器收到的字段是客户端声明，不是后台读取IDE的证明，也不是认证或OS隔离。
+
+
+## 11. Bridge Tasks（0.7.2，共用于桌面和code-server）
+
+BridgeView.refresh以refreshPending合并并行请求、拒绝HTTP错误，避免轮询重叠导致旧状态倒灌；finally释放单飞状态。服务端status.bridgeTaskStates是远程报告，status.taskState只属于本地Chat，不能混读。Bridge页**paintBridgeTasks(groups)**规范最多16组/每组50项，带会话摘要把todo交给paintTasks（Bridge最多800条，Chat仍500）；追加报告进度及空状态/非自动核验说明，所有文字textContent渲染，不接受HTML。
+
+Bridge任务区域不再因空列表隐藏，限制35vh并滚动/长词换行，颜色使用VSCode主题变量。请求失败保留最近计划但标记“同步失败，当前状态未知”；4秒消息刷新保留。code-server和桌面都加载该核心扩展，发行副本字节一致由extensionCopy验证。这里只说明代码/VM覆盖，未声称已在用户桌面或code-server窗口实测。

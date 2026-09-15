@@ -69,6 +69,7 @@ class BridgeEventBus extends EventEmitter {
       resetAt: this.bridgeActivity.resetAt, resetReason: this.bridgeActivity.resetReason,
       identity: require('./hostDiagnostics').hostIdentity(),
       pendingApprovals: require('./operatorQueue').list().filter(job => job.status === 'waiting-approval').length,
+      taskStates: require('../tools/progressTracker').getBridgeTaskStates(),
       executions: require('./toolTrace').snapshot('Bridge-Remote'),
       stats: { ...this.bridgeActivity.stats }, logs: this.bridgeActivity.logs.slice() };
   }
@@ -112,7 +113,7 @@ class BridgeEventBus extends EventEmitter {
     };
 
     if (type === 'bridge_round_reset') { this.resetBridgeActivity('operator-cleared'); require('./toolTrace').clearCompleted(); }
-    if (['tool_execution_start', 'tool_execution_end'].includes(type) && payload.source === 'Bridge-Remote') this.bridgeRevision += 1;
+    if (['tool_execution_start', 'tool_execution_end', 'todos_updated', 'progress_updated'].includes(type) && payload.source === 'Bridge-Remote') this.bridgeRevision += 1;
     if (type === 'tool_call_end' && payload.source === 'Bridge-Remote') {
       const stats = this.bridgeActivity.stats;
       const record = { tool: clipStr(payload.tool || 'unknown', 200),

@@ -48,4 +48,4 @@
 旧CONTEXT原样归档于context-history-through-0.4.md。当前索引≤80行，阶段表是管理状态依据；不再靠给过时结论追加“最新”段落掩盖矛盾。
 
 ## 入口差距（2026-09-16核对）
-普通CMD主机有API/MCP探针接口，但经典工作台没有与Companion等价的完整探针面板。code-server自动同步的是核心扩展，Companion显式要求Desktop且无remoteName，不能宣称完整实装。详见根《探针入口与实际可用范围.md》；这属于待实现，不只是待验收。
+普通CMD主机有API/MCP探针接口，但经典工作台没有与Companion等价的完整探针面板。code-server自动同步的是核心扩展，Companion显式要求Desktop且无remoteName，不能宣称完整实装。详见根《探针入口与实际可用范围.md》；用户2026-09-16明确不要求补齐这两个探针入口；保留当前边界说明，不作为待实现/待验收阻塞项。

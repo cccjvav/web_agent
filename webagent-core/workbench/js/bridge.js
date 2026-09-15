@@ -23,6 +23,7 @@ export function paintBridgeActivity(snapshot) {
     || !Number.isFinite(snapshot.stats.totalMs) || snapshot.stats.totalMs < 0) throw new Error('Invalid activity snapshot');
   if ($('#bridge-host') && snapshot.identity) $('#bridge-host').textContent = `${snapshot.identity.hostInstanceId} · ${snapshot.identity.workspaceRoot} · v${snapshot.identity.version}`;
   if ($('#btn-operations')) $('#btn-operations').textContent = `工具接入与审批（待批 ${snapshot.pendingApprovals || 0}）`;
+  if (ui.paintBridgeTasks) ui.paintBridgeTasks(snapshot.taskStates);
   const version = `${snapshot.epoch}:${snapshot.revision}`;
   if (version === activityVersion) return;
   activityInfo = { identity: snapshot.identity, resetAt: snapshot.resetAt, resetReason: snapshot.resetReason };
@@ -54,6 +55,7 @@ export function refreshBridgeActivity() {
       paintBridgeActivity(await response.json());
     } catch (_) {
       activityVersion = '';
+      if ($('#bridge-task-count')) $('#bridge-task-count').textContent = '任务同步失败，当前状态未知';
       const note = $('#sess-note');
       if (note) note.textContent = '工具统计同步失败：请确认已重启更新后的本机服务，且 MCP 与工作台属于同一个主机进程/工作区。';
     } finally { clearTimeout(timer); activityPending = null; }

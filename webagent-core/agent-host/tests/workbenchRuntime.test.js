@@ -202,5 +202,23 @@ if (!process.argv.includes('--vm-child')) {
   assert.equal(await bridge.namespace.startBridge(),false);assert.equal(alerts,3);
   context.fetch = async()=>{throw new Error('offline');};
   assert.equal(await bridge.namespace.startBridge(),false);assert.equal(alerts,4);
+  const taskNodes = new Map();
+  context.document.querySelector = selector => {
+    if (!taskNodes.has(selector)) taskNodes.set(selector,{innerHTML:'',textContent:'',classList:{remove(){},toggle(){}}});
+    return taskNodes.get(selector);
+  };
+  const chat = new vm.SourceTextModule(fs.readFileSync(path.join(root,'chat.js'),'utf8'),{context});
+  await chat.link(specifier=>specifier==='./state.js'?state:dom);await chat.evaluate();
+  chat.namespace.paintTodos([{title:'Local task',status:'pending'}]);
+  chat.namespace.paintBridgeTasks([{sessionId:'remote-a',todos:[{title:'Remote <script>',status:'completed'}]}]);
+  assert.ok(taskNodes.get('#chat-todo-list').innerHTML.includes('Local task'));
+  assert.ok(!taskNodes.get('#bridge-todo-list').innerHTML.includes('Local task'));
+  assert.ok(taskNodes.get('#bridge-todo-list').innerHTML.includes('&lt;script&gt;'));
+  assert.ok(taskNodes.get('#bridge-task-count').textContent.includes('1/1'));
+  bridge.namespace.paintBridgeActivity({...activity,taskStates:[]});
+  assert.ok(taskNodes.get('#bridge-todo-list').innerHTML.includes('set_todos'));
+  // Identical activity revisions must still refresh independent task expiry/snapshots.
+  bridge.namespace.paintBridgeActivity({...activity,taskStates:[{sessionId:'b',todos:[{title:'Another task'}]}]});
+  assert.ok(taskNodes.get('#bridge-todo-list').innerHTML.includes('Another task'));
   console.log('workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });

@@ -70,3 +70,6 @@ paintBridgeActivity校验epoch/revision和非负统计，渲染完成后才提�
 
 
 startBridge工作区校验（0.7.1）：记录页面state.status，再fetch实时status，必须与页面的workspaceRoot/identity.hostInstanceId一致才POST两个绑定字段。缺失、主机重启/更换项目、409或请求异常均弹窗并返回false；不能拿新主机状态悄悄替换旧页面目标。刷新整页核对项目后再启动。验证由workbenchRuntime与bridgeTunnel覆盖，实机另记。
+
+
+0.7.2 paintBridgeActivity在日志版本短路前更新远程Tasks；refreshBridgeActivity沿用3秒单飞轮询，在错误时给任务计数标“同步失败，当前状态未知”。计划独立于工具日志，不根据工具名称生成。Tasks只读Agent报告并显示会话和更新时间，重启丢失、30分钟未更新过期。

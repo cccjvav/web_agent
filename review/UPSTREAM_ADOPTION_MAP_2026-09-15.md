@@ -26,7 +26,7 @@
 | 05 | 审批、工作流与副作用 | mcp/custom_tools.py；scenarios/runtime.py（前批专项） | 已有固定白名单工作流、单次本机批准、失败/未知停止 | 已部分吸收；不照搬可重放副作用的retry。条件分支/补偿不是本批功能 |
 | 06 | 记忆相关性及来源 | memory/recall_score.py（完整函数）、recall_sources.py（前100行）、profiles.py（完整） | 原recall只按日期、整文件读取；上游tokenizer为拉丁/西里尔字母范围，不能直接满足中文 | 本批字面关键词检索、NFKC规范化、文件行号、输入扫描预算；不是embedding语义库，不跨工作区自动召回 |
 | 07 | 启发式规划的诚实契约 | planner/logic.py:infer_memory_profile/build_plan（前100行） | 我们有模型规划/Plan与确定性builtin，不能再把规则模板叫通用推理 | 候选：建议步骤标依据/风险/需哪些工具，实际权限再校验；中文与模糊任务需回归 |
-| 08 | 安全编辑的预览/确认/回退 | files/safe_edit.py:build_edit_preview/create_preview/apply_preview（前150行） | 我们已有hash冲突、补丁与审批；上游应用前比对原内容、预览有TTL | 已部分吸收：工作流before显式前置条件、写保护提示及严格条件schema；可读diff/回退仍待做。回退也必须检查当前版本，不能无条件覆盖。未认证其并发回退安全 |
+| 08 | 安全编辑的预览/确认/回退 | files/safe_edit.py:build_edit_preview/create_preview/apply_preview（前150行） | 我们已有hash冲突、补丁与审批；上游应用前比对原内容、预览有TTL | 已部分吸收：工作流before显式前置条件、写保护提示及严格条件schema；新文件可读diff与新旧文件预览baseHash/proposedHash已在0.7.2补齐；完整预览交互/受保护回退仍待做。回退也必须检查当前版本，不能无条件覆盖。未认证其并发回退安全 |
 | 09 | 文件变化与失效处理 | filewatch/runtime.py:_snapshot/_resolve_target（前120行） | 目前Skill即时重扫、编辑器hash保护；不存在跨工作区watch服务 | 候选：用户启用的目录失效提示、去抖/背压、删除检测；扫描上限要算访问条目而非仅匹配文件 |
 | 10 | 后台异步生命周期 | async_lifecycle.py（全文） | 已有请求Abort、命令进程树、隧道生命周期；Python强引用机制不能机械移植Node | 本批MCP登记父取消/总截止时间/清理；后续核对全宿主关闭时所有后台资源归属，不能把取消说成副作用回滚 |
 | 11 | 限流恢复与公平性 | rate_limit.py（全文） | 已有MCP入口边界与资源限制，但不能由限流名称推断有会话公平性 | 2026-09-16已部分落地：拒绝不增计数、JSON/HTML Retry-After、1000-key恢复与生成/真实HTTP回归；可信代理下的用户/会话公平性仍待实现，不按不可信头任意取身份 |

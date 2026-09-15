@@ -98,4 +98,4 @@ Probe Companion的0.2.0 VSIX白名单新增共享原型分析源码与hash；Wor
 
 ## 根package.json开发入口
 
-name为webagent-project，version与核心入口本次0.7.1对应，private=true防误发布，description说明源码入口。scripts.start调用installer/launch.js classic；start:vscode选择vscode模式；test委托agent-host完整测试；test:example仅跑examples/calculator；docs:check检查文档清单，不自动重写。没有新增依赖；首次测试仍先npm ci --prefix webagent-core/agent-host。验证workspaceEntry执行真实launch.main但替换进程启动，另用Node子进程检查配置默认根；不冒充Windows GUI启动验收。
+name为webagent-project，version与核心入口本次0.7.2对应，private=true防误发布，description说明源码入口。scripts.start调用installer/launch.js classic；start:vscode选择vscode模式；test委托agent-host完整测试；test:example仅跑examples/calculator；docs:check检查文档清单，不自动重写。没有新增依赖；首次测试仍先npm ci --prefix webagent-core/agent-host。验证workspaceEntry执行真实launch.main但替换进程启动，另用Node子进程检查配置默认根；不冒充Windows GUI启动验收。

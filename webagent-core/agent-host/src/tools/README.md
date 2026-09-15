@@ -99,7 +99,7 @@ readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，
 | [normalize.js](normalize.js) | 4 个函数/类节点 |
 | [patchEngine.js](patchEngine.js) | 33 个函数/类节点 |
 | [planRound.js](planRound.js) | 10 个函数/类节点 |
-| [progressTracker.js](progressTracker.js) | 5 个函数/类节点 |
+| [progressTracker.js](progressTracker.js) | 12 个函数/类节点 |
 | [ptyJobs.js](ptyJobs.js) | 22 个函数/类节点 |
 | [readCache.js](readCache.js) | 10 个函数/类节点 |
 | [searchWorker.js](searchWorker.js) | 1 个函数/类节点 |

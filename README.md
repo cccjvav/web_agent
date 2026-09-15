@@ -134,3 +134,7 @@ bash 入口与 `.cmd` 一样：缺 Node/npm 会退出；默认使用仓库根目
 |---|---|
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
 <!-- docs-inventory:end -->
+
+
+### Bridge Tasks（核心0.7.2）
+[任务栏说明](Bridge任务栏说明.md)：远程Agent需显式上报set_todos；按会话隔离、刷新恢复，与本地Chat和工具记录分开。桌面扩展/code-server共用核心实现，不是新增探针入口。

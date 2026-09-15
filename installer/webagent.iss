@@ -7,7 +7,7 @@
 ;   「用 Web Agent 打开」文件/目录上下文菜单、打开方式注册（不劫持双击默认）、
 ;   PATH 附加任务（卸载时 [Code] 精确摘除）、app 窗口桌面快捷方式任务。
 #ifndef AppVer
-#define AppVer "0.7.1"
+#define AppVer "0.7.2"
 #endif
 
 [Setup]

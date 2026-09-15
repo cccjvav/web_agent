@@ -10,7 +10,7 @@ const path = require('path');
 const fs = require('fs');
 const { config, generateNewSecret } = require('../config');
 const { getToolList, callTool, runMultiModelConsensus } = require('../tools');
-const { getTaskState, resetTaskState } = require('../tools/progressTracker');
+const { getTaskState, getBridgeTaskStates, resetTaskState } = require('../tools/progressTracker');
 const { resolveSafePath, computeHash } = require('../tools/patchEngine');
 const { runChat } = require('../agent/runChat');
 const planRound = require('../tools/planRound');
@@ -49,18 +49,10 @@ function isNgrokProvider(provider) {
 }
 
 function recentToolLogs(limit = 12) {
-  return eventBus.getRecentLogs(40)
-    .filter((e) => e.type === 'tool_call_end')
+  return eventBus.getBridgeActivity().logs
     .slice(0, Math.max(1, Math.min(40, Number(limit) || 12)))
-    .map((e) => ({
-      type: e.type,
-      timestamp: e.timestamp,
-      payload: {
-        tool: e.payload && e.payload.tool,
-        success: e.payload && e.payload.success,
-        durationMs: e.payload && e.payload.durationMs
-      }
-    }));
+    .map(record => ({ type: 'tool_call_end', timestamp: record.timestamp,
+      payload: { tool: record.tool, success: record.success, durationMs: record.durationMs } }));
 }
 
 function mcpInfo(req) {
@@ -127,6 +119,7 @@ router.get('/status', (req, res) => {
     installId: config.installId,
     tools: getToolList().map(({ name, description }) => ({ name, description })),
     taskState: getTaskState(),
+    bridgeTaskStates: getBridgeTaskStates(),
     recentLogs: recentToolLogs(12),
     bridgeRunning: config.bridgeRunning,
     tunnelProvider: cfg.bridge.tunnelProvider,

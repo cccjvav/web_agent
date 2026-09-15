@@ -299,7 +299,9 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
     if (emptySearchNew) newContent = blocks[0].replace;
 
     if (dryRun) {
-      return { success: true, isNewFile: true, filePath, message: 'Dry run check passed (New file)' };
+      const preview = createUnifiedDiff(filePath, '', newContent);
+      return { success: true, isNewFile: true, filePath, baseHash: null, proposedHash: computeHash(newContent),
+        diff: preview.patch, diffSummary: `+${preview.additions} -${preview.deletions}`, message: 'Dry run check passed (New file)' };
     }
 
     await Promise.resolve();
@@ -387,6 +389,8 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
     return {
       success: true,
       filePath,
+      baseHash: currentHash,
+      proposedHash: computeHash(patchedContent),
       diffSummary: `+${diffInfo.additions} -${diffInfo.deletions}`,
       diff: diffInfo.patch
     };

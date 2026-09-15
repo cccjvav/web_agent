@@ -253,9 +253,9 @@ export function handleEvent(ev) {
 }
 
 export function paintTodos(todos) {
-  const list = todos || [];
+  const list = Array.isArray(todos) ? todos.filter(t => t && typeof t === 'object').slice(0, 50) : [];
   const done = list.filter((t) => t.status === 'completed').length;
-  ['chat', 'bridge'].forEach((prefix) => {
+  ['chat'].forEach((prefix) => {
     const box = $(`#${prefix}-tasks`);
     if (!box) return;
     box.classList.toggle('hidden', !list.length);
@@ -269,6 +269,22 @@ export function paintTodos(todos) {
       }).join('');
     }
   });
+}
+
+export function paintBridgeTasks(groups, unavailable = false) {
+  const box = $('#bridge-tasks'), ul = $('#bridge-todo-list'), count = $('#bridge-task-count');
+  if (!box || !ul || !count) return;
+  box.classList.remove('hidden');
+  const states = Array.isArray(groups) ? groups.slice(0, 16).filter(g => g && typeof g === 'object') : [];
+  let total = 0, done = 0;
+  ul.innerHTML = states.map(group => {
+    const todos = Array.isArray(group.todos) ? group.todos.filter(t => t && typeof t === 'object').slice(0, 50) : [];
+    total += todos.length; done += todos.filter(t => t.status === 'completed').length;
+    return `<li class="tiny">会话 ${escapeHtml(group.sessionId || '未知')} · Agent上报 ${escapeHtml(group.lastUpdated || '')}</li>`
+      + (group.lastMessage ? `<li>${escapeHtml(group.lastMessage)}（报告进度 ${escapeHtml(String(group.progress))}%）</li>` : '')
+      + todos.map(t => `<li>${t.status === 'completed' ? '☑' : t.status === 'in_progress' ? '▶' : '☐'} ${escapeHtml(t.title || '')} · ${escapeHtml(t.status || '')}</li>`).join('');
+  }).join('') || '<li class="tiny">尚未收到任务计划。外部Agent需调用 set_todos / report_progress；工具调用不会自动生成任务。</li>';
+  count.textContent = unavailable ? '同步失败（保留最近快照）' : `${done}/${total} · Agent报告，非自动核验`;
 }
 
 export function agentLabel(mode) {
@@ -294,5 +310,6 @@ ui.sendChat = sendChat;
 ui.paintPlanComposer = paintPlanComposer;
 ui.handleEvent = handleEvent;
 ui.paintTodos = paintTodos;
+ui.paintBridgeTasks = paintBridgeTasks;
 ui.agentLabel = agentLabel;
 ui.setAgentMode = setAgentMode;

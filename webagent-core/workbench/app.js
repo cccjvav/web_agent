@@ -58,7 +58,10 @@ function connectWs() {
       }
       if (msg.type === 'bridge_round_reset' && ui.refreshBridgeActivity) ui.refreshBridgeActivity();
       if (msg.type === 'file_patched') ui.loadTree();
-      if (msg.type === 'todos_updated') ui.paintTodos((msg.payload && msg.payload.todos) || []);
+      if (['todos_updated', 'progress_updated'].includes(msg.type)) {
+        if (msg.payload?.source === 'Bridge-Remote') ui.refreshBridgeActivity();
+        else if (Array.isArray(msg.payload?.todos)) ui.paintTodos(msg.payload.todos);
+      }
       if (msg.type === 'tool_call_end' && msg.payload?.source === 'Bridge-Remote') {
         const p = msg.payload || {};
         ui.logBridgeTool({

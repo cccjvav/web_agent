@@ -473,19 +473,20 @@ const TOOLS = [
   tool({
     name: 'set_todos',
     aliases: [],
-    description: '更新任务分解，在本地 UI 显示。',
+    description: '上报任务计划（每次替换该会话计划，最多50项）；Bridge按远程会话显示，不从工具调用自动推断任务或验证完成。',
     mode: ['ask', 'plan', 'code'],
     inputSchema: {
       type: 'object',
       properties: {
         todos: {
           type: 'array',
+          maxItems: 50,
           items: {
             type: 'object',
             properties: {
               id: { type: 'string' },
               title: { type: 'string' },
-              status: { type: 'string' }
+              status: { type: 'string', enum: ['pending', 'in_progress', 'completed', 'failed', 'cancelled', 'blocked'] }
             },
             required: ['title']
           }

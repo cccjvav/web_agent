@@ -294,6 +294,17 @@ async function main() {
     await page.waitForFunction(() => document.querySelector('#connection-check-result').textContent.includes('已清除核对记录'));
     await page.click('#modal-close');
     assert.deepStrictEqual(errors, []);
+    await page.click('#rb-bridge-tab');
+    assert.ok((await page.locator('#bridge-tasks').textContent()).includes('set_todos'));
+    await rpc('set_todos',{todos:[{id:'plan-1',title:'REMOTE-TASK-SNAPSHOT',status:'in_progress'}]});
+    await page.waitForFunction(()=>document.querySelector('#bridge-todo-list').textContent.includes('REMOTE-TASK-SNAPSHOT'));
+    await page.request.post(base+'/api/tool/call',{data:{name:'set_todos',arguments:{todos:[{title:'LOCAL-PLAN-ONLY'}]},mode:'ask'}});
+    assert.ok(!(await page.locator('#bridge-todo-list').textContent()).includes('LOCAL-PLAN-ONLY'));
+    await page.reload();await page.click('#rb-bridge-tab');
+    await page.waitForFunction(()=>document.querySelector('#bridge-todo-list').textContent.includes('REMOTE-TASK-SNAPSHOT'));
+    await rpc('set_todos',{todos:[{id:'plan-1',title:'REMOTE-TASK-SNAPSHOT',status:'completed'}]});
+    await page.waitForFunction(()=>document.querySelector('#bridge-task-count').textContent.includes('1/1'));
+    assert.deepStrictEqual(errors, []);
     console.log('Browser PASS: minimal page observation + authenticated connection echo/forged session rejection/clear, help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');
   } finally {
     if (browser) await browser.close();

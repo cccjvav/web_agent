@@ -381,13 +381,19 @@ class BridgeView {
 
   async refresh() {
     if (!this._view) return;
-    try {
-      const r = await requestJson('GET', `${agentHostUrl()}/api/status`);
-      this._view.webview.postMessage({ type: 'status', status: r.json });
-    } catch (e) {
-      this._view.webview.postMessage({ type: 'status', status: { error: e.message } });
-    }
+    if (this.refreshPending) return this.refreshPending;
+    this.refreshPending = (async () => {
+      try {
+        const r = await requestJson('GET', `${agentHostUrl()}/api/status`);
+        if (r.status !== 200 || !r.json) throw new Error('HTTP ' + r.status);
+        this._view.webview.postMessage({ type: 'status', status: r.json });
+      } catch (e) {
+        this._view.webview.postMessage({ type: 'status', status: { error: e.message } });
+      }
+    })();
+    try { await this.refreshPending; } finally { this.refreshPending = null; }
   }
+
 }
 
 function chatHtml() {
@@ -525,13 +531,14 @@ function bridgeHtml() {
 <html><head><meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none';">
 <style>
-body{margin:0;padding:12px;font:12px/1.4 system-ui;background:#1e1e1e;color:#ccc}
+body{margin:0;padding:12px;font:12px/1.4 system-ui;background:var(--vscode-sideBar-background,#1e1e1e);color:var(--vscode-foreground,#ccc)}
 .pill{display:inline-block;padding:3px 10px;border-radius:12px;margin-bottom:10px;border:1px solid #4fc1ff;color:#4fc1ff}
-.card{background:#252526;border:1px solid #333;border-radius:8px;padding:10px;margin-bottom:10px}
+.card{background:var(--vscode-editor-background,#252526);border:1px solid var(--vscode-panel-border,#555);border-radius:8px;padding:10px;margin-bottom:10px}
 .url{word-break:break-all;font-family:ui-monospace,monospace;color:#9cdcfe;background:#111;padding:8px;border-radius:4px}
 button{background:#0e639c;color:#fff;border:0;padding:7px 10px;border-radius:4px;cursor:pointer;margin:4px 4px 0 0}
-.hint{color:#6e6e6e}
+.hint{color:var(--vscode-descriptionForeground,#b0b0b0)}
 .tool{font-family:ui-monospace,monospace;font-size:11px;color:#9cdcfe;border:1px solid #333;padding:6px 8px;border-radius:6px;margin:0 0 6px;display:flex;justify-content:space-between}
+#tasks{max-height:35vh;overflow:auto;overflow-wrap:anywhere}
 #tasks h4{margin:0 0 6px;font-size:11px;display:flex;justify-content:space-between}
 #task-list{margin:0;padding:0;list-style:none}
 </style></head><body>
@@ -544,7 +551,7 @@ button{background:#0e639c;color:#fff;border:0;padding:7px 10px;border-radius:4px
   <button id="copy">复制提示词</button>
   <button id="reset">重置密钥</button>
 </div>
-<div class="card" id="tasks" style="display:none">
+<div class="card" id="tasks">
   <h4><span>Tasks</span><span id="task-count">0/0</span></h4>
   <ul id="task-list"></ul>
 </div>
@@ -562,8 +569,8 @@ document.getElementById('copy').onclick = () => {
 };
 document.getElementById('reset').onclick = () => vscode.postMessage({ type:'reset' });
 function paintTasks(todos){
-  const list = Array.isArray(todos) ? todos.filter(t => t && typeof t === 'object').slice(0, 500) : [];
-  document.getElementById('tasks').style.display = list.length ? 'block' : 'none';
+  const list = Array.isArray(todos) ? todos.filter(t => t && typeof t === 'object').slice(0, 800) : [];
+  document.getElementById('tasks').style.display = 'block';
   const done = list.filter(t => t.status === 'completed').length;
   document.getElementById('task-count').textContent = done + '/' + list.length;
   const box = document.getElementById('task-list');
@@ -574,6 +581,18 @@ function paintTasks(todos){
       + (typeof t.title === 'string' ? t.title : '');
     box.appendChild(item);
   });
+}
+function paintBridgeTasks(groups){
+  const states = (Array.isArray(groups) ? groups : []).filter(g => g && typeof g === 'object').slice(0,16);
+  const todos = states.flatMap(g => (Array.isArray(g.todos) ? g.todos : []).filter(t => t && typeof t === 'object').slice(0,50).map(t => ({...t, title: '会话 '+g.sessionId+' · '+t.title+' · '+t.status})));
+  paintTasks(todos);
+  const box = document.getElementById('task-list');
+  states.filter(g => g.lastMessage).forEach(g => {
+    const item = document.createElement('li'); item.textContent = '会话 '+g.sessionId+' · '+g.lastMessage+'（Agent报告 '+g.progress+'%）'; box.appendChild(item);
+  });
+  const note = document.createElement('li'); note.className = 'hint';
+  note.textContent = states.length ? 'Agent上报计划，不是工具执行或测试通过的自动证明。' : '尚未收到任务计划；外部Agent需调用 set_todos / report_progress，工具调用不会自动生成任务。';
+  box.appendChild(note);
 }
 function paintLogs(logs){
   const box = document.getElementById('stream');
@@ -604,7 +623,8 @@ window.addEventListener('message', e => {
   status = e.data.status && typeof e.data.status === 'object' ? e.data.status : {};
   document.getElementById('url').textContent = status.mcpUrl || status.error || '—';
   document.getElementById('pill').textContent = status.error ? ('离线 ' + status.error) : (status.bridgeRunning ? 'Bridge 运行中' : '已连接 agent-host');
-  paintTasks(status.taskState && status.taskState.todos);
+  if (!status.error) paintBridgeTasks(status.bridgeTaskStates);
+  else document.getElementById('task-count').textContent = '同步失败，当前状态未知';
   paintLogs(status.recentLogs);
 });
 setInterval(() => vscode.postMessage({ type:'refresh' }), 4000);

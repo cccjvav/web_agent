@@ -9,7 +9,7 @@ ES imports首先填ui，后执行boot。WS_BACKOFF_MIN/MAX为1/30秒，wsBackoff
 - **setWsStatus(text)**找底栏节点；文本非空则显示，否则清空hidden；缺节点静默返回。
 - **scheduleWsReconnect()**已有timer不再安排，显示重连；当前delay用于这次，下一次翻倍最高30秒；timeout回调清timer并connectWs，没有随机抖动。
 - **connectWs()**依据当前location.protocol选ws/wss，使用location.host的`/ws`，不是硬写localhost。清timer，已有CONNECTING/OPEN则返回；try new WebSocket。
-- socket **onopen**重置退避并隐藏状态；**onmessage**JSON解析失败忽略，command_output送terminal；file_patched刷新树；todos_updated重画任务；只有source=Bridge-Remote的tool_call_end触发logBridgeTool拉取主机快照；bridge_round_reset也触发同步。不会执行服务器发来的JS。**onclose**只对同socket清引用，然后安排重连；构造异常也安排。无独立onerror处理，依赖close推进恢复。
+- socket **onopen**重置退避并隐藏状态；**onmessage**JSON解析失败忽略，command_output送terminal；file_patched刷新树；todos_updated按source分流：本地重画Chat，远程拉取Bridge快照；只有source=Bridge-Remote的tool_call_end触发logBridgeTool拉取主机快照；bridge_round_reset也触发同步。不会执行服务器发来的JS。**onclose**只对同socket清引用，然后安排重连；构造异常也安排。无独立onerror处理，依赖close推进恢复。
 - **boot()**先try initEditorSafety+bind，错误console.error但继续；setAgentMode(code)、paintTabs/paintChat/terminal提示；先connectWs，再立即refreshBridgeActivity并每3秒定时调用（单飞、5秒超时）；即使WS不可用也能从本机受保护API补回统计。随后Promise.allSettled并发status/tree/skills/custom/Monaco；每个load经Promise.then捕获同步异常。部分失败console记录并toast，仍activateTab；事件流不被初次HTTP/CDN失败阻断。
 
 没有本模块级页面卸载socket/timer清理；浏览器关闭页面通常销毁上下文，但不要解释成显式可靠离线协议。
@@ -66,3 +66,10 @@ npm test --prefix webagent-core/agent-host -- --filter=editorRuntime
 app.js新增operations.js副作用导入，向ui登记审批页面方法，不自动接入或执行外部工具。
 
 帮助页新增builtin-guide与adoption-guide静态新手步骤和根目录文档定位。既有顶部帮助和欢迎引导打开同一页面；没有把文档文件名伪装成能跨工作区打开的链接。
+
+
+## 远程Tasks与本地Chat分开
+
+paintTodos现在只更新chat-tasks，最多50项；不能把Chat计划顺手画到Bridge。**paintBridgeTasks(groups,unavailable)**绘制最多16组远程计划、每组50项，按会话摘要显示上报时间、todo状态和报告进度；所有动态文字escapeHtml。没有报告时仍显示set_todos/report_progress说明，完成计数只统计Agent声明completed，并注明非自动核验。unavailable可标最近快照同步失败。
+
+bridge.paintBridgeActivity在日志revision快速返回前也绘制任务，保证TTL清理或重复版本的任务状态可刷新；活动请求失败标任务状态未知，保留最近画面。app.onmessage不再让远程todos覆盖本地Chat。验证见taskProgress、workbenchRuntime与真实浏览器测试。
