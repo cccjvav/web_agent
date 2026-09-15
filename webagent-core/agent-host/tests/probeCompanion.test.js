@@ -33,9 +33,10 @@ async function main() {
     await assert.rejects(request(origin, 'GET', '/api/diagnostics', undefined, abort.signal));
   } finally { await new Promise(resolve => server.close(resolve)); }
 
-  const commands = new Map(), output = [], copied = [], calls = [];
+  const commands = new Map(), output = [], copied = [], calls = [], drafts = [];
   let input = JSON.stringify(observation), confirmation = '复制', clock = Date.now(), configuredBase = 'http://127.0.0.1:48271';
-  let selectedFiles;
+  let selectedFiles, pick;
+  const saved = new Map();
   let inputGate = null, releaseInput, holdNetwork = false, lastSignal;
   const identity = { hostInstanceId: 'fixture-host', workspaceRoot: '/fixture', version: 'test' };
   const vscode = {
@@ -46,9 +47,9 @@ async function main() {
     window: {
       createOutputChannel: () => ({ clear() { output.length = 0; }, appendLine(value) { output.push(value); }, show() {}, dispose() {} }),
       showWarningMessage: async () => confirmation, showInformationMessage: async () => {}, showInputBox: async () => inputGate ? await inputGate : input,
-      showQuickPick: async () => undefined, showOpenDialog: async () => selectedFiles
+      showQuickPick: async choices => pick ? pick(choices) : undefined, showOpenDialog: async () => selectedFiles
     },
-    commands: { registerCommand(name, handler) { commands.set(name, handler); return { dispose() { commands.delete(name); } }; }, executeCommand: async () => {} }
+    commands: { registerCommand(name, handler) { commands.set(name, handler); return { dispose() { commands.delete(name); } }; }, executeCommand: async (name, args) => drafts.push({name, args}) }
   };
   const fakeRequest = async (base, method, route, body, signal) => {
     lastSignal = signal;
@@ -58,9 +59,9 @@ async function main() {
     if (method === 'POST') return { identity, checkId: 'b'.repeat(32), challenge: 'c'.repeat(64), expiresAt: clock + 120000 };
     return { identity, checkId: 'b'.repeat(32), status: 'echo-confirmed', challenge: 'NEVER-LOG' };
   };
-  const sandbox = { module: { exports: {} }, require: name => name === 'vscode' ? vscode : name === './analysis' ? require(path.join(root, 'analysis')) : { localBase, parseObservation, request: fakeRequest }, AbortController, Date: { now: () => clock } };
+  const sandbox = { module: { exports: {} }, require: name => name === 'vscode' ? vscode : ['./analysis', './history'].includes(name) ? require(path.join(root, name)) : { localBase, parseObservation, request: fakeRequest }, AbortController, TextEncoder, Date: { now: () => clock } };
   vm.runInNewContext(fs.readFileSync(path.join(root, 'extension.js'), 'utf8'), sandbox);
-  const context = { subscriptions: [] }; sandbox.module.exports.activate(context);
+  const context = { subscriptions: [], workspaceState: {get: key => saved.get(key), update: async (key, value) => value === undefined ? saved.delete(key) : saved.set(key, value)} }; sandbox.module.exports.activate(context);
   assert.strictEqual(calls.length, 0, 'Activation must not connect');
   const invoke = action => commands.get('webagentProbe.' + action)();
   const fixtureDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'probe-ui-analysis-'));
@@ -71,6 +72,19 @@ async function main() {
     await invoke('analyze');
     assert.strictEqual(calls.length, 0, 'Offline analysis must not contact the host');
     assert.ok(output.join('').includes('webagent-model-analysis/v1') && output.join('').includes('ui-fixture-model'));
+    assert.strictEqual(saved.size, 0, 'Analysis must not automatically persist');
+    confirmation = undefined; await invoke('shareReference'); assert.strictEqual(drafts.length, 0);
+    confirmation = '填入草稿'; await invoke('shareReference');
+    assert.strictEqual(drafts[0].name, 'workbench.action.chat.open');
+    assert.strictEqual(drafts[0].args.isPartialQuery, true);
+    assert.ok(drafts[0].args.query.startsWith('@webagent /ask '));
+    assert.strictEqual(calls.length, 0);
+    confirmation = '保存参考'; await invoke('saveHistory'); await invoke('saveHistory');
+    pick = choices => choices[0]; await invoke('history'); assert.ok(output.join('').includes('historicalView'));
+    pick = choices => choices.slice(0, 2); await invoke('compareHistory'); assert.ok(output.join('').includes('webagent-reference-comparison/v1'));
+    pick = choices => choices[0]; confirmation = '删除此参考'; await invoke('deleteHistory'); await invoke('deleteHistory');
+    assert.strictEqual(saved.size, 0); assert.strictEqual(calls.length, 0);
+    pick = null; confirmation = '复制';
   } finally { fs.rmSync(fixtureDirectory, { recursive: true, force: true }); }
   await invoke('diagnostics'); assert.ok(!output.join('').includes('NEVER-LOG')); assert.ok(output.join('').includes('模型线索分析'));
   vscode.workspace.isTrusted = false; await invoke('import'); assert.strictEqual(calls.length, 1);
@@ -96,6 +110,7 @@ async function main() {
   await invoke('import'); clock += 120001;
   const beforeExpiry = calls.length; await invoke('copy'); await invoke('refresh'); assert.strictEqual(calls.length, beforeExpiry);
   holdNetwork = true; const unfinished = invoke('diagnostics');
+  await invoke('cancel'); await unfinished; assert.strictEqual(lastSignal.aborted, true);
   for (const subscription of context.subscriptions) subscription.dispose();
   await unfinished; assert.strictEqual(lastSignal.aborted, true);
   assert.strictEqual(commands.size, 0);

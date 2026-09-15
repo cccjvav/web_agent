@@ -3,7 +3,7 @@
   "displayName": "WebAgent Probe Companion",
   "description": "Model-reference analysis using the original probe engine, plus local connection diagnostics. Full browser integration in progress.",
   "publisher": "webagent",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -51,6 +51,30 @@
       {
         "command": "webagentProbe.forget",
         "title": "WebAgent Probe: 丢弃当前核对记录"
+      },
+      {
+        "command": "webagentProbe.saveHistory",
+        "title": "WebAgent Probe: 保存本次分析到工作区历史"
+      },
+      {
+        "command": "webagentProbe.history",
+        "title": "WebAgent Probe: 查看工作区参考历史"
+      },
+      {
+        "command": "webagentProbe.compareHistory",
+        "title": "WebAgent Probe: 对比两条历史参考"
+      },
+      {
+        "command": "webagentProbe.deleteHistory",
+        "title": "WebAgent Probe: 删除单条参考历史"
+      },
+      {
+        "command": "webagentProbe.cancel",
+        "title": "WebAgent Probe: 停止正在进行的分析或核对请求"
+      },
+      {
+        "command": "webagentProbe.shareReference",
+        "title": "WebAgent Probe: 把参考填入WebAgent只读草稿"
       }
     ]
   },

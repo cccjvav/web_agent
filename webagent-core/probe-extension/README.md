@@ -1,4 +1,4 @@
-# WebAgent Probe Companion 0.3.0
+# WebAgent Probe Companion 0.4.0
 
 本项目的目标是**完整保留原型探测能力，为你提供模型参考**，不要求绝对真实。0.3.0在0.2原型分析基础上加入Trace Inspector证据导入，不再只有连接核对；完整浏览器控制、历史与自动化等仍在实施，不能把本版称作“完整版已完成”。具体进度见源码根目录《探针完整整合实施与验收.md》。Chat模式API背后的模型确切验证排在完整探针整合之后。
 
@@ -13,14 +13,14 @@
 
 ## 安装（桌面VS Code）
 
-已拿到VSIX，直接在扩展面板“…”→“从VSIX安装”选择0.3.0安装包。与WebAgent在同一个Profile启用。原本安装0.1.x时使用同一扩展ID升级，不另建副本。
+已拿到VSIX，直接在扩展面板“…”→“从VSIX安装”选择0.4.0安装包。与WebAgent在同一个Profile启用。原本安装0.1.x时使用同一扩展ID升级，不另建副本。
 
 从源码构建时，在VS Code集成CMD、既有Conda环境执行：
 
 ```cmd
 conda activate 你的既有环境名
 python webagent-core\probe-extension\package_vsix.py --verify
-code --install-extension webagent-core\probe-extension\dist\webagent-probe-companion-0.3.0.vsix
+code --install-extension webagent-core\probe-extension\dist\webagent-probe-companion-0.4.0.vsix
 ```
 
 使用Python标准库，无pip依赖、不新建venv、不自动发布Marketplace或安装到Windows产品包。没有`code`命令时使用上述界面安装。
@@ -79,7 +79,8 @@ code --install-extension webagent-core\probe-extension\dist\webagent-probe-compa
 | [analysisWorker.mjs](analysisWorker.mjs) | 8 个函数/类节点 |
 | [browserReference.mjs](browserReference.mjs) | 11 个函数/类节点 |
 | [client.js](client.js) | 9 个函数/类节点 |
-| [extension.js](extension.js) | 12 个函数/类节点 |
+| [extension.js](extension.js) | 15 个函数/类节点 |
+| [history.js](history.js) | 21 个函数/类节点 |
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
 | [package_browser.py](package_browser.py) | 文件级登记；未做符号完整性证明 |
 | [package_vsix.py](package_vsix.py) | 文件级登记；未做符号完整性证明 |
@@ -89,3 +90,16 @@ code --install-extension webagent-core\probe-extension\dist\webagent-probe-compa
 
 ## 0.3双引擎与浏览器包
 现支持arena-trace-inspector证据抽屉“下载证据 JSON”的单run文件；不是批量会话历史或原始trace。逐span复用Inspector白名单/用量算法和Probe分类/命名，不合并同型号不同调用，不假造没有的正文/分词基准。浏览器整合包以Inspector为唯一采集器，同时显示Probe参考；操作与限制见[浏览器整合说明](浏览器整合说明.md)。VSIX不启动浏览器/网络，浏览器包需用户另行安装并明确开启监听。
+
+## 0.4本地参考历史（浏览器包继续使用0.3）
+
+1. 先执行“分析模型线索文件”，成功后执行“保存本次分析到工作区历史”。确认后才保存，不自动保存每次分析。
+2. “查看工作区参考历史”查看持久化参考摘要；明确标记非重新检测。
+3. “对比两条历史参考”恰好勾选两条，查看共有/各自出现的模型标签及原记录；不会把差异定性为后端换模型，也不自动匹配两个run。
+4. “删除单条参考历史”只删除当前VSCode工作区内选中的一条，需确认；不删除浏览器历史、不归档网站会话。“丢弃当前核对记录”仍只清内存状态。
+5. “停止正在进行的分析或核对请求”可直接从命令面板调用，不被busy挡住；文件读取或已开始的本地保存不保证中止，不自动重试写入。
+
+历史保存到VS Code workspaceState，不设置同步键；依平台工作区标识隔离。同一多根工作区共享历史，增删根目录不会自动清除；不是对WebAgent主机工作区的认证。最多50条、单条64KiB、总1MiB，满额拒绝新保存，不静默删除旧记录。保存候选、来源、逐调用标签/时间/数值和冲突的白名单摘要，不保存原始响应/令牌，不保证保存完整分析报告。模型名与run ID本身仍可能私密；本地存储不是加密保险箱，删除不保证清除磁盘备份。当前未提供历史库批量迁移或实时跨端同步。
+
+### 交给WebAgent解释（草稿，不自动发送）
+成功分析后执行“把参考填入WebAgent只读草稿”，确认后打开 `@webagent /ask` 草稿，先自行审阅再按发送。未按发送不会调用主机/模型API。草稿仅白名单摘要，限16KiB；不含原始响应，名称等仍可能私密。按发送之后由现有WebAgent配置处理，内置Agent不会因此变成完整语言模型。这是人工确认的交接入口，不是实时Bridge，不绕过既有权限。

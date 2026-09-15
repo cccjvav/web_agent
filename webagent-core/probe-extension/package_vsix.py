@@ -33,6 +33,11 @@ def verify_archive(output):
         script += ('analyze(' + json.dumps(trace) + ').then(r=>{'
                    + 'if(r.calls.length!==1 || r.calls[0].reference.source!=="local.history.model") throw Error("Packaged trace analysis mismatch");'
                    + 'console.log("Packaged trace analysis passed");}).catch(e=>{console.error(e);process.exitCode=1;});')
+        script += ('const {createHistory}=require(' + json.dumps(str(extension / 'history.js')) + ');'
+                   + 'let data;const state={get:()=>data,update:async(k,v)=>{data=v}};'
+                   + 'createHistory(state).save({schema:"webagent-model-analysis/v1",candidate:{modelId:"history-fixture"}})'
+                   + '.then(()=>createHistory(state).list()).then(r=>{if(r.length!==1)throw Error("Packaged history mismatch");console.log("Packaged history passed");})'
+                   + '.catch(e=>{console.error(e);process.exitCode=1;});')
         subprocess.run(['node', '-e', script], cwd=directory, check=True, timeout=30)
 
 
@@ -52,7 +57,7 @@ def build(verify=False):
     content_types = '''<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="json" ContentType="application/json"/><Default Extension="js" ContentType="application/javascript"/><Default Extension="mjs" ContentType="application/javascript"/><Default Extension="md" ContentType="text/markdown"/><Default Extension="vsixmanifest" ContentType="text/xml"/><Override PartName="/extension/LICENSE" ContentType="text/plain"/></Types>'''
     trace_sources = ['evidence.js', 'usage.js']
     sources = ['registry.js', 'classify.js', 'probe.js', 'learned.js', 'interceptor.js']
-    local_files = ['package.json', 'extension.js', 'client.js', 'analysis.js', 'traceInput.js', 'analysisWorker.mjs', 'README.md', 'LICENSE']
+    local_files = ['package.json', 'extension.js', 'client.js', 'analysis.js', 'traceInput.js', 'history.js', 'analysisWorker.mjs', 'README.md', 'LICENSE']
     with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
         archive.writestr('extension.vsixmanifest', vsix)
         archive.writestr('[Content_Types].xml', content_types)

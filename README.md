@@ -105,7 +105,7 @@ run-tests.cmd
 
 bash 入口与 `.cmd` 一样：缺 Node/npm 会退出；默认 `workspace/` 不存在则创建；自定义路径必须已经存在。
 
-**VS Code配套探针**：[安装、分工与验收](webagent-core/probe-extension/README.md)。与WebAgent并装；0.3.0组合Probe参考与Trace Inspector单run证据分析，并提供单采集器浏览器包。完整浏览器采集、历史和授权自动化仍按完整能力表推进。
+**VS Code配套探针**：[安装、分工与验收](webagent-core/probe-extension/README.md)。与WebAgent并装；Companion0.4提供双引擎分析、工作区参考历史与WebAgent只读草稿交接；浏览器包继续使用0.3单采集器。完整浏览器采集、历史和授权自动化仍按完整能力表推进。
 
 **能力范围纠正**：0.1.x曾只有连接核对；0.2.0移植离线内核，0.3.0接入Inspector及同流双解析；完整实时控制/跨端历史/自动化仍在实施。完整参考能力是目标，不以绝对身份认证为前提。见[探针能力对照与迁移边界](探针能力对照与迁移边界.md)。
 
