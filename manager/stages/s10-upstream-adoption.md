@@ -55,3 +55,5 @@ Tasks代码批已交付；当前清理过时产品正文，不再只在旧文后
 第二组继续：全文重写管理经验，纠正破坏性恢复建议与Bridge恒text；完整对照文档站app/serve/index复核其逐函数说明，修复预构建矛盾与全景页旧文案。比较后删除重复外部报告归档，保留原稿Git证据与对照稿，修复引用。范围明细见语义台账；其余文档仍待审。
 
 验证续记：第一组c38ead31c5323ee3787ea55a3ecab5909c31c75e的CI35036910154九项成功（含真实Chromium、Windows矩阵和安装编译）。第二组本地75文件、文档生成校验与diff通过；第二组远端结果不沿用第一组。
+
+第二组远端确认：149a951a7b80893b0107ce27170aebc06a1296df，CI35037123530全部九项成功：https://github.com/cccjvav/web_agent/actions/runs/35037123530 。CI另提示checkout/setup-node v4的Action运行时弃用警告；这与主机Node测试矩阵不同，未擅自升级工作流。
