@@ -3144,7 +3144,7 @@
 
 ## webagent-core/probe-extension/package_browser.py
 
-[目录说明](../webagent-core/probe-extension/README.md) · SHA-256 `dab9228ee3fc5aaa621bcdc1ee7069799e6ef2914dd496c133a149268ce9a10a`
+[目录说明](../webagent-core/probe-extension/README.md) · SHA-256 `354571d1c104a580cbf95fa7680762f5b40926aec20908b08dea17e4878c5992`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 

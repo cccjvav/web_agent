@@ -7,9 +7,11 @@ import tempfile
 import subprocess
 import shutil
 import sys
+import os
 
 
 def replace_once(text, old, new):
+    text = text.replace('\r\n', '\n')
     if text.count(old) != 1:
         raise ValueError('Browser integration anchor changed: ' + old[:60])
     return text.replace(old, new, 1)
@@ -66,6 +68,7 @@ def build(verify=False):
     payload['browserReference.mjs'] = reference.encode()
     for name in ['classify.js', 'registry.js', 'learned.js', 'probe.js', 'interceptor.js']:
         payload['engine/' + name] = (root.parent.parent / 'arena-model-probe/src' / name).read_bytes()
+    payload['LICENSE'] = (root / 'LICENSE').read_bytes()
     payload['README.md'] = (root / '浏览器整合说明.md').read_bytes()
     payload['package.json'] = b'{"type":"module","private":true}'
     payload['source-hashes.json'] = json.dumps({'inspectorInputs': hashes, 'payload': {name: hashlib.sha256(data).hexdigest() for name, data in payload.items()}}, indent=2).encode()
@@ -75,6 +78,7 @@ def build(verify=False):
         for name, data in payload.items():
             archive.writestr('webagent-arena-inspector/' + name, data)
     if verify:
+        assert replace_once('first\r\nsecond', 'first\nsecond', 'ok') == 'ok'
         with tempfile.TemporaryDirectory(prefix='unified-inspector-') as temp:
             with zipfile.ZipFile(output) as archive:
                 archive.extractall(temp)
@@ -99,7 +103,16 @@ test('unified bundle keeps sampled response and trace references separate', asyn
 });
 ''')
             tests = sorted(str(p) for p in (directory / 'tests').glob('*.test.mjs'))
-            subprocess.run(['node', '--test', *tests], cwd=directory, check=True, timeout=90)
+            result = subprocess.run(['node', '--test', *tests], cwd=directory, timeout=90,
+                                    capture_output=True, text=True, encoding='utf-8', errors='replace')
+            print(result.stdout)
+            if result.returncode:
+                lines = result.stdout.splitlines()
+                failed = next((i for i, line in enumerate(lines) if line.startswith('not ok')), 0)
+                detail = ('\n'.join(lines[failed:failed + 35]) + result.stderr)[:1800]
+                if os.environ.get('GITHUB_ACTIONS') == 'true':
+                    print('::error title=Unified browser tests::' + detail.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))
+                raise RuntimeError('Unified browser tests failed')
     print(output)
     return output
 

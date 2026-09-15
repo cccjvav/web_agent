@@ -22544,8 +22544,8 @@
     {
       "path": "webagent-core/probe-extension/package_browser.py",
       "doc": "webagent-core/probe-extension/README.md",
-      "sha256": "dab9228ee3fc5aaa621bcdc1ee7069799e6ef2914dd496c133a149268ce9a10a",
-      "lineCount": 109,
+      "sha256": "354571d1c104a580cbf95fa7680762f5b40926aec20908b08dea17e4878c5992",
+      "lineCount": 122,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
