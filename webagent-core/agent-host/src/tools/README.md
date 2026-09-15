@@ -73,7 +73,7 @@ read_files返回带行号的content和hash；offset从1开始，不是字节位�
 ## 协作、Skill与缓存
 board从调用上下文获取当前peer，不相信参数任意指定owner；先认领再更新受保护任务状态。Plan和progress仍有共享全局状态，不是全部按客户端隔离。
 
-用户Skill限定在工作区允许路径，普通文件128KiB上限，读取前缀时明确truncated；内置Skill来自产品目录。Skill是说明文本，不等于后台插件执行器。
+用户Skill限定在工作区允许路径，普通UTF8文件128KiB上限；每页最多8000 UTF16字符，用nextOffset/expectedHash续读。来源ID区分工作区根与内置产品目录，引用/脚本资源只读。Skill是说明文本，不等于后台插件执行器；详见技能与隐藏规则详解。
 
 readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，不具备models/store那样的损坏拒绝策略；不要把缓存当完整事务日志。
 

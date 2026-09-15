@@ -2365,7 +2365,7 @@
 
 ## webagent-core/agent-host/tests/workbench.browser.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `9d0497d3145f1749de22a55850e638b383483c0bfe8777bcb9552b090969120b`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `d62b9837b286302b27b51814acc3f01e0d1fccc4c2e7c7123ae11bd7c50b3331`
 
 - `freePort` — FunctionDeclaration，[L10–L16](../webagent-core/agent-host/tests/workbench.browser.js#L10-L16)
 - `freePort/anonymous@12:20` — ArrowFunctionExpression，[L12–L12](../webagent-core/agent-host/tests/workbench.browser.js#L12-L12)

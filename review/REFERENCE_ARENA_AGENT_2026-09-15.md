@@ -146,3 +146,5 @@ MCP客户端的`_command_allowed`主要核对命令名称/路径basename，如no
 [LICENSE](https://github.com/IvanSkainet/arena-agent/blob/46d97048a75ed2fe7227a5ca6f2a85778d32ccd9/LICENSE)为MIT，含IvanSkainet的版权声明。未来若复制或实质改编代码，需要保留许可和版权通知，记录来源提交，并另查打包依赖和资源的许可证；MIT不等于删除署名，也不是安全担保。
 
 本轮只新增本审阅报告及索引入口，不改产品代码、不安装第三方运行时、不更新用户验收通过项。未运行第三方测试；引用的测试仅证明存在相应测试代码，不声明它们在本环境通过。
+
+2026-09-15验证补充：功能提交f23ac42已推送；GitHub Actions [34956256898](https://github.com/cccjvav/web_agent/actions/runs/34956256898)九项全部成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、安装器、真实浏览器）。这是该提交的CI证据，不代替用户11.3。后续小补丁仅加强脚本无执行fixture的绝对路径标记并纠正文档旧提示，其CI不由这个run代签。

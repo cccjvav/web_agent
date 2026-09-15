@@ -167,3 +167,5 @@
 ## 2026-09-15 受控执行增量
 
 P0提交6ac5f92的GitHub CI已通过。新增本机审批、回环HTTP(S) MCP客户端、固定工作流及真实浏览器审批回归。首次实现不是任意MCP兼容：无stdio/互联网接入/安装/自动重试，外部结果只标记external-reported；用户Windows11.3仍待实机验收。审批输入结果只在内存有限保留。完整行为见受控工具与工作流详解。
+
+2026-09-15验证补充：功能提交f23ac42已推送；GitHub Actions [34956256898](https://github.com/cccjvav/web_agent/actions/runs/34956256898)九项全部成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、安装器、真实浏览器）。这是该提交的CI证据，不代替用户11.3。后续小补丁仅加强脚本无执行fixture的绝对路径标记并纠正文档旧提示，其CI不由这个run代签。

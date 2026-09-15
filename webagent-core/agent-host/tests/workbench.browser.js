@@ -23,7 +23,7 @@ async function main() {
   const skillBody = '---\ndescription: Browser skill fixture <img src=x onerror=alert(1)>\n---\n# Review\n' + '正文'.repeat(4500) + '\nEND-SKILL';
   fs.writeFileSync(path.join(skillDir, 'SKILL.md'), skillBody);
   fs.writeFileSync(path.join(skillDir, 'references/check.md'), 'REFERENCE-EVIDENCE');
-  fs.writeFileSync(path.join(skillDir, 'scripts/run.js'), 'require("fs").writeFileSync("UNAUTHORIZED-SKILL", "bad")');
+  fs.writeFileSync(path.join(skillDir, 'scripts/run.js'), `require("fs").writeFileSync(${JSON.stringify(path.join(workspace, 'UNAUTHORIZED-SKILL'))}, "bad")`);
   fs.writeFileSync(path.join(skillDir, 'workflow.json'), JSON.stringify({ steps: [{ id: 'write', tool: 'write_file', arguments: { filePath: 'skill-produced.txt', content: 'REQUIRES-APPROVAL' } }] }));
   const uiPort = await freePort(), mcpPort = await freePort();
   const child = spawn(process.execPath, ['src/index.js'], {
