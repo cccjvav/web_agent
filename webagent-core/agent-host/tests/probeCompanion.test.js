@@ -61,7 +61,7 @@ async function main() {
   const context = { subscriptions: [] }; sandbox.module.exports.activate(context);
   assert.strictEqual(calls.length, 0, 'Activation must not connect');
   const invoke = action => commands.get('webagentProbe.' + action)();
-  await invoke('diagnostics'); assert.ok(!output.join('').includes('NEVER-LOG'));
+  await invoke('diagnostics'); assert.ok(!output.join('').includes('NEVER-LOG')); assert.ok(output.join('').includes('未实现模型探测'));
   vscode.workspace.isTrusted = false; await invoke('import'); assert.strictEqual(calls.length, 1);
   vscode.workspace.isTrusted = true; vscode.env.remoteName = 'ssh-remote'; await invoke('import'); assert.strictEqual(calls.length, 1); delete vscode.env.remoteName;
   vscode.env.uiKind = 2; await invoke('import'); assert.strictEqual(calls.length, 1); vscode.env.uiKind = 1;

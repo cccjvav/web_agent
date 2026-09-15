@@ -15,7 +15,7 @@ function activate(context) {
   };
   const show = value => {
     if (!allowed()) return;
-    output.clear(); output.appendLine('仅核对连接，不验证实际模型/人物身份，不新增执行权限。');
+    output.clear(); output.appendLine('本版未实现模型探测：仅核对连接，不验证实际模型/人物身份，不新增执行权限。');
     output.appendLine(JSON.stringify(value, null, 2)); output.show(true);
   };
   const identityView = identity => {
@@ -74,7 +74,7 @@ function activate(context) {
   for (const action of ['diagnostics', 'import', 'copy', 'refresh', 'forget']) context.subscriptions.push(vscode.commands.registerCommand('webagentProbe.' + action, () => run(action)));
   context.subscriptions.push(vscode.commands.registerCommand('webagentProbe.open', async () => {
     const choices = [['查看主机与工作区', 'diagnostics'], ['导入最小页面摘要', 'import'], ['复制一次性核对请求', 'copy'], ['查询核对结果', 'refresh'], ['丢弃本扩展当前记录（主机记录按TTL过期）', 'forget'], ['打开 WebAgent Bridge', 'bridge']];
-    const choice = await vscode.window.showQuickPick(choices.map(([label, action]) => ({ label, action })), { title: 'Probe Companion · 非模型鉴定；只在点击后操作' });
+    const choice = await vscode.window.showQuickPick(choices.map(([label, action]) => ({ label, action })), { title: 'Probe Companion · 连接诊断，不含模型探测；只在点击后操作' });
     if (choice) await run(choice.action);
   }));
 }

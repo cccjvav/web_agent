@@ -1,5 +1,7 @@
 # WebAgent Probe Companion（VS Code配套扩展）
 
+**本版未实现模型线索探测，只做连接诊断。未移植原型功能确实影响探测覆盖；它不是原型完整移植。** 源码根目录《探针能力对照与迁移边界.md》逐项说明缺口与采样取舍。0.1.1只澄清界面/文档范围，没有新增模型探测。
+
 这是上传探针的**安全连接诊断适配版**，不是把原型全部搬到VS Code，也不是浏览器网络嗅探器或模型鉴定工具。可以和`webagent.webagent-core`同时安装，两者ID不同，不覆盖旧扩展。
 
 ## 谁负责什么
@@ -20,7 +22,7 @@
 ```cmd
 conda activate 你的既有环境名
 python webagent-core\probe-extension\package_vsix.py
-code --install-extension webagent-core\probe-extension\dist\webagent-probe-companion-0.1.0.vsix
+code --install-extension webagent-core\probe-extension\dist\webagent-probe-companion-0.1.1.vsix
 ```
 
 这里用Conda现有Python标准库，不新建venv，不下载包。`code`不在PATH时，在VS Code扩展面板右上角“…”选择“从VSIX安装”，选上面生成的文件。构建文件是本地产物，不在Git保存，不自动打进Windows安装器；未发布Marketplace，不依赖在线下载。

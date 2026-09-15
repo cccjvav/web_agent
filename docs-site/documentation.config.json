@@ -437,6 +437,11 @@
       "id": "probe-companion-implementation",
       "path": "webagent-core/probe-extension/实现详解.md",
       "group": "实现"
+    },
+    {
+      "id": "probe-capability-boundaries",
+      "path": "探针能力对照与迁移边界.md",
+      "group": "使用"
     }
   ],
   "sourceSnapshotExclusions": [

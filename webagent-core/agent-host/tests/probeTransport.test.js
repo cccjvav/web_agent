@@ -91,7 +91,26 @@ const assert = require('assert');
       count(type) { return this.handlers.get(type)?.size || 0; }
       getBoundingClientRect() { return { left: 0, top: 0 }; }
     }
-    const { scheduleBoot } = await import('../../../arena-model-probe/src/lifecycle.js');
+    const { scheduleBoot, oncePerObservation } = await import('../../../arena-model-probe/src/lifecycle.js');
+    // Synthetic accounting only; do not run the original behavior-probe battery.
+    BUS.evidence.length = 0;
+    let notices = 0;
+    const offBudget = BUS.on(() => notices++);
+    const account = oncePerObservation(observation => BUS.push({ source: 'fixture', detail: observation.text }, false));
+    const completed = { text: 'neutral fixture' };
+    for (let i = 0; i < 1000; i++) account(completed);
+    assert.strictEqual(BUS.evidence.length, 1); assert.strictEqual(notices, 0);
+    for (let i = 0; i < 1000; i++) account({ text: 'independent fixture' });
+    assert.ok(BUS.evidence.length <= 500);
+    BUS.push({ source: 'fixture' }); assert.strictEqual(notices, 1); offBudget();
+    let reentries = 0;
+    const recursive = oncePerObservation(observation => { reentries++; recursive(observation); });
+    recursive(completed); assert.strictEqual(reentries, 1);
+    let attempts = 0;
+    const failing = oncePerObservation(() => { attempts++; throw new Error('fixture'); });
+    assert.throws(() => failing(completed)); assert.strictEqual(failing(completed), false); assert.strictEqual(attempts, 1);
+    assert.strictEqual(account(null), false); assert.strictEqual(account('not-an-observation'), false);
+    BUS.evidence.length = 0;
     let boots = 0;
     const doc = new Target(); doc.readyState = 'loading'; const win = {};
     assert.strictEqual(scheduleBoot(win, doc, 'one', () => boots++), true);
@@ -133,6 +152,9 @@ const assert = require('assert');
     assert.ok(uiSource.includes('非认证概率') && uiSource.includes('未独立核验'));
     const mainSource = require('fs').readFileSync(require('path').resolve(__dirname, '../../../arena-model-probe/src/main.js'), 'utf8');
     assert.ok(mainSource.includes('modelIdentityVerified: false'));
+    assert.ok(!mainSource.includes('BUS.evidence.push('));
+    assert.ok(mainSource.includes('const appendCanaries = oncePerObservation('));
+    assert.ok(mainSource.indexOf('appendCanaries(state.lastObservation)') < mainSource.indexOf('const evidence = BUS.evidence.filter(e => !e.stale)'));
     assert.ok(!mainSource.includes('realName: true') && !mainSource.includes('真实模型名'));
     console.log('probe transport: original Response, bounded capture/parser/history, cancellation, constructor constants/subclassing and XHR reuse passed offline');
   } finally {

@@ -32,10 +32,10 @@ export const BUS = {
     this.observations.push(obs);
     if (this.observations.length > 20) this.observations.splice(0, this.observations.length - 20);
   },
-  push(e) {
+  push(e, notify = true) {
     this.evidence.push(e);
     if (this.evidence.length > 500) this.evidence.splice(0, 200);
-    this.emit({ kind: 'evidence', data: e });
+    if (notify) this.emit({ kind: 'evidence', data: e });
   },
 };
 

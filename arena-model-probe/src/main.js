@@ -5,7 +5,7 @@
  * 预算：从页面发消息到 HUD 出首判，目标 < 800ms（首帧即判）。
  */
 
-import { scheduleBoot } from './lifecycle.js';
+import { scheduleBoot, oncePerObservation } from './lifecycle.js';
 import { BUS, installFetchHook, installXHRHook, installSocketHook } from './interceptor.js';
 import { classify } from './classify.js';
 import { learnFromObservation, listLearned, exportLearned, backfillNames,
@@ -38,6 +38,16 @@ export function boot(opts = {}) {
   installSocketHook();
 
   const state = { hud: null, lastVerdict: null, lastObservation: null, slots: {}, t0: performance.now() };
+
+  const appendCanaries = oncePerObservation(observation => {
+    if (typeof observation.text !== 'string' || !observation.text) return;
+    for (const c of runCanaries(observation.text)) {
+      if (c.family || c.weight >= 0.3) {
+        // Keep the central history budget without causing recursive UI events.
+        BUS.push({ ...c, source: c.source, url: observation.url, t: performance.now() }, false);
+      }
+    }
+  });
 
   if (cfg.showHUD && typeof document !== 'undefined' && document.documentElement) {
     state.hud = new HUD(document.documentElement);
@@ -153,6 +163,8 @@ export function boot(opts = {}) {
       if (n && state.hud) state.hud.log(`UUID 还原 ${n} 个模型名`);
     } catch { /* noop */ }
 
+    // Analyze a completed observation once, before taking the evidence snapshot.
+    appendCanaries(state.lastObservation);
     const evidence = BUS.evidence.filter(e => !e.stale);
     let verdict = classify(evidence);
 
@@ -205,16 +217,6 @@ export function boot(opts = {}) {
     let tokenizer = null;
     if (state.lastObservation && state.lastObservation.promptTokens) {
       tokenizer = matchTokenizer(state.lastObservation.promptTokens);
-    }
-
-    // 主动探针：对响应文本跑 canary 判定，作为家族级旁证
-    if (state.lastObservation && state.lastObservation.text) {
-      const cand = runCanaries(state.lastObservation.text);
-      for (const c of cand) {
-        if (c.family || c.weight >= 0.3) {
-          BUS.evidence.push({ ...c, source: c.source, url: state.lastObservation.url, t: performance.now() });
-        }
-      }
     }
 
     if (state.hud) {

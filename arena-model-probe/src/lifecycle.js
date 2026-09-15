@@ -23,3 +23,16 @@ export function scheduleBoot(win, doc, version, start) {
   else run();
   return true;
 }
+
+/** Completed observations are object snapshots, not new evidence on every render.
+ * Mark before invoking the synchronous callback to prevent re-entrant duplication.
+ * A thrown callback is not automatically replayed; a new observation is required. */
+export function oncePerObservation(consume) {
+  const seen = new WeakSet();
+  return observation => {
+    if (!observation || typeof observation !== 'object' || seen.has(observation)) return false;
+    seen.add(observation);
+    consume(observation);
+    return true;
+  };
+}

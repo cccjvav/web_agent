@@ -59,7 +59,7 @@ jobs:
       - name: Build standalone Probe Companion VSIX (no installation)
         run: |
           python webagent-core/probe-extension/package_vsix.py
-          python -m zipfile -t webagent-core/probe-extension/dist/webagent-probe-companion-0.1.0.vsix
+          python -m zipfile -t webagent-core/probe-extension/dist/webagent-probe-companion-0.1.1.vsix
       - name: Compile Windows input helpers and validate script syntax
         shell: powershell
         run: |
