@@ -12,7 +12,7 @@ function observation(input) {
   if (!input || Array.isArray(input) || typeof input !== 'object' || Buffer.byteLength(JSON.stringify(input)) > 2048
     || Object.keys(input).sort().join(',') !== 'observedAt,origin,pageDigest,pageKind,schema'
     || input.schema !== 'webagent-browser-observation/v1' || input.origin !== 'https://arena.ai'
-    || !['agent', 'other'].includes(input.pageKind) || !/^[a-f0-9]{64}$/.test(input.pageDigest)
+    || !['agent', 'other'].includes(input.pageKind) || typeof input.pageDigest !== 'string' || !/^[a-f0-9]{64}$/.test(input.pageDigest)
     || typeof input.observedAt !== 'string' || !Number.isFinite(Date.parse(input.observedAt))
     || Date.parse(input.observedAt) > Date.now() + 30000 || Date.now() - Date.parse(input.observedAt) > 600000) {
     throw new Error('Invalid or stale browser observation; export again. No tokens/raw captures accepted.');

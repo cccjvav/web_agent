@@ -10,7 +10,7 @@ const { callTool } = require('../src/tools');
   const input = { schema: 'webagent-browser-observation/v1', origin: 'https://arena.ai', observedAt: new Date().toISOString(), pageKind: 'agent', pageDigest: 'a'.repeat(64) };
   const options = { remote: true, callerKey: 'peer:authenticated-fixture' };
   try {
-    for (const bad of [{ ...input, token: 'secret' }, { ...input, origin: 'https://evil.example' }, { ...input, observedAt: 'bad' }, { ...input, pageDigest: '../x' }, { ...input, observedAt: new Date(Date.now() - 700000).toISOString() }]) assert.throws(() => checks.create(bad));
+    for (const bad of [{ ...input, pageDigest: [input.pageDigest] }, { ...input, token: 'secret' }, { ...input, origin: 'https://evil.example' }, { ...input, observedAt: 'bad' }, { ...input, pageDigest: '../x' }, { ...input, observedAt: new Date(Date.now() - 700000).toISOString() }]) assert.throws(() => checks.create(bad));
     const record = checks.create(input);
     record.observation.origin = 'tampered';
     assert.strictEqual(checks.inspect(record.checkId).observation.origin, input.origin);

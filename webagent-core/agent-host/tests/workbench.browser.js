@@ -231,6 +231,7 @@ async function main() {
     await page.waitForFunction(() => !document.querySelector('#ops-servers').textContent);
     assert.deepStrictEqual(errors, []);
     // Minimal browser observation + authenticated MCP echo, without visiting Arena or collecting credentials.
+    await page.click('#modal-close');
     await page.click('#rb-bridge-tab'); await page.click('#btn-host-diagnostics');
     const observation = { schema: 'webagent-browser-observation/v1', origin: 'https://arena.ai', observedAt: new Date().toISOString(), pageKind: 'agent', pageDigest: 'b'.repeat(64) };
     await page.fill('#connection-observation', JSON.stringify(observation));
@@ -253,7 +254,8 @@ async function main() {
     await page.click('#btn-clear-connection-check');
     await page.waitForFunction(() => document.querySelector('#connection-check-result').textContent.includes('已清除核对记录'));
     await page.click('#modal-close');
-    console.log('Browser PASS: help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');
+    assert.deepStrictEqual(errors, []);
+    console.log('Browser PASS: minimal page observation + authenticated connection echo/forged session rejection/clear, help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');
   } finally {
     if (browser) await browser.close();
     if (child.exitCode === null) child.kill();

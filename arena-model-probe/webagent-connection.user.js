@@ -19,10 +19,11 @@
   button.onclick = async () => {
     button.disabled = true;
     try {
-      const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(location.pathname));
+      const origin = location.origin, pathname = location.pathname, observedAt = new Date().toISOString();
+      const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pathname));
       const pageDigest = [...new Uint8Array(bytes)].map(value => value.toString(16).padStart(2, '0')).join('');
-      text.value = JSON.stringify({ schema: 'webagent-browser-observation/v1', origin: location.origin,
-        observedAt: new Date().toISOString(), pageKind: /^\/agent(?:\/|$)/.test(location.pathname) ? 'agent' : 'other', pageDigest }, null, 2);
+      text.value = JSON.stringify({ schema: 'webagent-browser-observation/v1', origin,
+        observedAt, pageKind: /^\/agent(?:\/|$)/.test(pathname) ? 'agent' : 'other', pageDigest }, null, 2);
       text.focus(); text.select();
     } catch (_) { text.value = '生成失败；请检查页面是否为HTTPS且浏览器支持Web Crypto。'; }
     finally { button.disabled = false; }
