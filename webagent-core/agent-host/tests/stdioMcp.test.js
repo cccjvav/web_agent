@@ -84,15 +84,20 @@ async function main() {
     assert.ok(!alive(JSON.parse(fs.readFileSync(path.join(root, 'stdio-started.json'))).pid));
     stage = 'budgets';
     for (const mode of ['bad-json', 'large-line', 'stderr', 'frames', 'total', 'exit']) {
-      stage = mode; const launch = prepared(mode);
+      stage = mode;
+      fs.rmSync(path.join(root, 'stdio-started.json'), { force: true }); fs.rmSync(path.join(root, 'stdio-received.txt'), { force: true });
+      const launch = prepared(mode);
       if (mode === 'stderr') await external.startStdio({ previewId: launch.previewId, confirmed: true }).catch(() => {});
-      else await assert.rejects(external.startStdio({ previewId: launch.previewId, confirmed: true }), undefined, mode);
+      else await assert.rejects(external.startStdio({ previewId: launch.previewId, confirmed: true }), mode === 'exit' ? /Stdio (process exited|input closed)/ : /Stdio protocol or output budget/, mode);
+      assert.ok(fs.existsSync(path.join(root, 'stdio-started.json')), 'Budget test must actually start its fixture');
       await until(() => !alive(JSON.parse(fs.readFileSync(path.join(root, 'stdio-started.json'))).pid));
       for (const client of external.list()) { assert.strictEqual(client.status, 'stopped'); external.remove(client.serverId); }
       assert.deepStrictEqual(external.list(), []);
     }
     for (const mode of ['fragmented', 'server-request']) {
-      stage = mode; const launch = prepared(mode); await external.startStdio({ previewId: launch.previewId, confirmed: true });
+      stage = mode;
+      fs.rmSync(path.join(root, 'stdio-started.json'), { force: true }); fs.rmSync(path.join(root, 'stdio-received.txt'), { force: true });
+      const launch = prepared(mode); await external.startStdio({ previewId: launch.previewId, confirmed: true });
       if (mode === 'server-request') {
         await until(() => fs.existsSync(path.join(root, 'stdio-server-request.json')));
         assert.strictEqual(JSON.parse(fs.readFileSync(path.join(root, 'stdio-server-request.json'))).error.code, -32601);

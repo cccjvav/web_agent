@@ -43,6 +43,10 @@ public static class WebAgentStdioBridge
         foreach (string key in envKeys) { string value = Environment.GetEnvironmentVariable(key); if (value != null) info.EnvironmentVariables[key] = value; }
         info.UseShellExecute = false; info.CreateNoWindow = true;
         info.RedirectStandardInput = true; info.RedirectStandardOutput = true; info.RedirectStandardError = true;
+        // Do not let PowerShell's startup input processing race the binary relay.
+        // The parent queues requests until this guarded C# entry point is ready.
+        byte[] ready = Encoding.UTF8.GetBytes("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/webagent/stdio-ready\"}\n");
+        var control = Console.OpenStandardOutput(); control.Write(ready, 0, ready.Length); control.Flush();
         using (var child = Process.Start(info)) {
             // Each synchronous pipe pump owns a thread: no stream async implementation
             // may block startup of another direction on Windows PowerShell/.NET Framework.

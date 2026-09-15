@@ -13,12 +13,13 @@ function open(launch, onStopped = () => {}) {
     : [path.join(__dirname, 'stdioSupervisor.js')];
   const child = spawn(program, args, { cwd: launch.cwd, shell: false, detached: !win, windowsHide: true,
     stdio: ['pipe', 'pipe', 'pipe'], env: { ...launch.env, WEBAGENT_STDIO_LAUNCH: spec } });
+  let ready = !win, queuedBytes = 0; const queued = [];
   const pending = new Map(); let buffer = Buffer.alloc(0), totalBytes = 0, stderrBytes = 0, frames = 0, stopped = false, closed = false, stopReason = '';
   let resolveClosed;
   const done = new Promise(resolve => { resolveClosed = resolve; });
   function stop(reason = 'Stdio server stopped') {
     if (stopped) return done;
-    stopped = true; stopReason = reason; buffer = Buffer.alloc(0);
+    stopped = true; stopReason = reason; buffer = Buffer.alloc(0); queued.length = 0; queuedBytes = 0;
     for (const entry of pending.values()) entry.reject(new Error(reason));
     pending.clear();
     child.stdin.destroy();
@@ -34,13 +35,20 @@ function open(launch, onStopped = () => {}) {
   }
   function send(message) {
     const encoded = Buffer.from(JSON.stringify(message) + '\n');
-    if (encoded.length > 32768 || child.stdin.writableLength + encoded.length > 256 * 1024) throw new Error('Stdio input budget exceeded');
+    if (encoded.length > 32768 || queuedBytes + child.stdin.writableLength + encoded.length > 256 * 1024) throw new Error('Stdio input budget exceeded');
+    if (!ready) { queued.push(encoded); queuedBytes += encoded.length; return; }
     child.stdin.write(encoded, error => { if (error) stop('Stdio input closed'); });
   }
   function frame(bytes) {
-    if (++frames > 4096) throw new Error('Stdio session frame budget exceeded');
     const message = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
     if (!message || message.jsonrpc !== '2.0' || Array.isArray(message)) throw new Error('Invalid stdio JSON-RPC frame');
+    if (!ready) {
+      if (message.method !== 'notifications/webagent/stdio-ready' || Object.keys(message).length !== 2) throw new Error('Expected guarded stdio readiness');
+      ready = true;
+      for (const bytes of queued) child.stdin.write(bytes, error => { if (error) stop('Stdio input closed'); });
+      queued.length = 0; queuedBytes = 0; return;
+    }
+    if (++frames > 4096) throw new Error('Stdio session frame budget exceeded');
     if (typeof message.method === 'string') {
       // No sampling, roots, elicitation or server-initiated tools are authorized.
       if (Object.hasOwn(message, 'id')) send({ jsonrpc: '2.0', id: message.id, error: { code: -32601, message: 'Server requests are not supported' } });
@@ -100,7 +108,7 @@ function open(launch, onStopped = () => {}) {
       catch (_) { stop('Stdio request exceeded input budget'); }
     });
   }
-  const transport = { request, stop, closed: done, status: () => ({ pid: child.pid, stopped, closed, stopReason, stdoutAndStderrBytes: totalBytes, stderrBytes, frames, pending: pending.size }) };
+  const transport = { request, stop, closed: done, status: () => ({ pid: child.pid, stopped, closed, ready, queuedBytes, stopReason, stdoutAndStderrBytes: totalBytes, stderrBytes, frames, pending: pending.size }) };
   live.add(transport);
   return transport;
 }

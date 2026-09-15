@@ -89,7 +89,7 @@ POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连
 | [stdioBridge.ps1](stdioBridge.ps1) | 文件级登记；未做符号完整性证明 |
 | [stdioLaunch.js](stdioLaunch.js) | 11 个函数/类节点 |
 | [stdioSupervisor.js](stdioSupervisor.js) | 2 个函数/类节点 |
-| [stdioTransport.js](stdioTransport.js) | 27 个函数/类节点 |
+| [stdioTransport.js](stdioTransport.js) | 28 个函数/类节点 |
 <!-- docs-inventory:end -->
 
 
