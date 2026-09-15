@@ -6,7 +6,8 @@
 
 | 文件 | 留它当… |
 |---|---|
-| [REFERENCE_ARENA_AGENT_2026-09-15.md](REFERENCE_ARENA_AGENT_2026-09-15.md) | Skainet Bridge定向源码审阅：借鉴优先级、不能照搬的安全/重试策略及验收建议；未移植代码 |
+| [UPSTREAM_ADOPTION_MAP_2026-09-15.md](UPSTREAM_ADOPTION_MAP_2026-09-15.md) | 全树发现覆盖、26类采纳机会、阅读深度与持续实施队列（不是全审认证） |
+| [REFERENCE_ARENA_AGENT_2026-09-15.md](REFERENCE_ARENA_AGENT_2026-09-15.md) | Skainet Bridge定向源码审阅：借鉴优先级、不能照搬的安全/重试策略及验收建议及分批实现记录 |
 | [CURRENT_AUDIT.md](CURRENT_AUDIT.md) | 本轮统一结论：逐项处置、验证证据、保留边界与产品决策 |
 | [AUDIT_ROUND3_2026-09-13.md](AUDIT_ROUND3_2026-09-13.md) | 原第三份报告＋文末逐批施工记录；最终处置看CURRENT_AUDIT，原文不视为全部属实 |
 | [AUDIT_2026-09-13.md](AUDIT_2026-09-13.md) | 第二份外部审查原文，已逐项处置，结论看CURRENT_AUDIT |

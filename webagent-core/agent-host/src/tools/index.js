@@ -127,11 +127,11 @@ const TOOLS = [
   tool({
     name: 'recall',
     aliases: [],
-    description: 'Read persisted agent memory. Call before repeating research.',
+    description: 'Read bounded workspace memory; optional query ranks literal normalized terms (including Chinese), not semantic facts. Query results include file/line sources. Verify against current evidence; truncated means incomplete.',
     mode: ['ask', 'plan', 'code'],
     inputSchema: {
       type: 'object',
-      properties: { limit: { type: 'number' }, day: { type: 'string' } }
+      properties: { limit: { type: 'number' }, day: { type: 'string' }, query: { type: 'string', maxLength: 200 } }
     },
     handler: recall
   }),

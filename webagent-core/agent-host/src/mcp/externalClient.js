@@ -3,7 +3,7 @@
 // No npx/uvx installation, child process spawning, arbitrary URL tools or auto-retry.
 const { randomUUID } = require('crypto');
 const { config } = require('../config');
-const { currentSignal, checkCancelled } = require('../utils/requestScope');
+const { currentSignal, checkCancelled, runWithSignal } = require('../utils/requestScope');
 const approvals = require('../utils/operatorQueue');
 const clients = new Map();
 const MAX_BYTES = 256 * 1024;
@@ -21,18 +21,23 @@ function endpoint(value) {
 async function responseMessage(response, id) {
   const reader = response.body?.getReader();
   if (!reader) throw new Error('Empty MCP response');
-  const sse = (response.headers.get('content-type') || '').includes('text/event-stream');
-  let bytes = 0, text = '';
-  const decoder = new TextDecoder();
+  const sse = (response.headers.get('content-type') || '').toLowerCase().includes('text/event-stream');
+  let bytes = 0, text = '', pendingCR = false;
+  const decoder = new TextDecoder('utf-8', { fatal: true });
   try {
     for (;;) {
       const chunk = await reader.read();
       if (chunk.done) break;
       bytes += chunk.value.byteLength;
       if (bytes > MAX_BYTES) throw new Error('MCP response exceeds 256 KiB');
-      text += decoder.decode(chunk.value, { stream: true });
+      let decoded = decoder.decode(chunk.value, { stream: true });
+      if (sse && decoded) {
+        if (pendingCR && decoded.startsWith('\n')) decoded = decoded.slice(1);
+        pendingCR = decoded.endsWith('\r');
+        decoded = decoded.replace(/\r\n?/g, '\n');
+      }
+      text += decoded;
       if (sse) {
-        text = text.replace(/\r\n/g, '\n');
         let end;
         while ((end = text.indexOf('\n\n')) >= 0) {
           const frame = text.slice(0, end); text = text.slice(end + 2);
@@ -75,7 +80,7 @@ async function rpc(client, method, params, notification = false) {
     }
     if (notification) { await response.body?.cancel(); return {}; }
     const message = await responseMessage(response, id);
-    if (message.jsonrpc !== '2.0' || message.error || !message.result || typeof message.result !== 'object') throw new Error('External MCP protocol error');
+    if (message.jsonrpc !== '2.0' || message.error || !message.result || typeof message.result !== 'object' || Array.isArray(message.result)) throw new Error('External MCP protocol error');
     return message.result;
   } finally {
     controller.abort();
@@ -84,7 +89,30 @@ async function rpc(client, method, params, notification = false) {
 }
 function list(local = false) {
   return [...clients.values()].map(client => ({ serverId: client.id, name: client.name, status: client.status,
-    tools: client.tools.map(tool => ({ ...tool })), ...(local ? { endpoint: client.url } : {}) }));
+    tools: JSON.parse(JSON.stringify(client.tools)), ...(local ? { endpoint: client.url } : {}) }));
+}
+async function discoverTools(client) {
+  const tools = [], names = new Set(), cursors = new Set();
+  let cursor, bytes = 0;
+  for (let page = 0; page < 10; page++) {
+    const result = await rpc(client, 'tools/list', cursor == null ? {} : { cursor });
+    checkCancelled();
+    bytes += Buffer.byteLength(JSON.stringify(result));
+    if (bytes > MAX_BYTES) throw new Error('Tool inventory exceeds 256 KiB across pages');
+    if (!Array.isArray(result.tools) || tools.length + result.tools.length > 100) throw new Error('Tool inventory requires an array of at most 100 tools');
+    for (const tool of result.tools) {
+      if (!tool || typeof tool.name !== 'string' || !/^[a-zA-Z0-9_.-]{1,120}$/.test(tool.name) || names.has(tool.name)) throw new Error('Invalid or duplicate tool name');
+      const schema = tool.inputSchema === undefined ? { type: 'object' } : tool.inputSchema;
+      if (!schema || typeof schema !== 'object' || Array.isArray(schema) || schema.type !== 'object') throw new Error('Tool inputSchema must describe an object');
+      names.add(tool.name);
+      tools.push({ name: tool.name, description: String(tool.description || '').slice(0, 500), inputSchema: schema, requiresApproval: true });
+    }
+    if (result.nextCursor == null) return tools;
+    cursor = result.nextCursor;
+    if (typeof cursor !== 'string' || !cursor || cursor.length > 1024 || cursors.has(cursor)) throw new Error('Invalid or repeated tool inventory cursor');
+    cursors.add(cursor);
+  }
+  throw new Error('Tool inventory exceeds ten pages');
 }
 async function add({ name, url, token = '' }) {
   if (clients.size >= 8) throw new Error('At most eight external servers');
@@ -92,22 +120,25 @@ async function add({ name, url, token = '' }) {
   const client = { id: randomUUID(), name: String(name || 'Local MCP').slice(0, 120), url: endpoint(url), token,
     controllers: new Set(), tools: [], status: 'connecting', session: '', protocol: '' };
   clients.set(client.id, client);
+  const registration = new AbortController(), parent = currentSignal();
+  const abort = () => registration.abort();
+  parent?.addEventListener('abort', abort, { once: true });
+  if (parent?.aborted) abort();
+  client.controllers.add(registration);
+  const timer = setTimeout(abort, 30000);
   try {
-    const initialized = await rpc(client, 'initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'WebAgent-approved-client', version: config.version } });
-    if (!['2024-11-05', '2025-03-26', '2025-06-18'].includes(initialized.protocolVersion)) throw new Error('Unsupported MCP protocol');
-    client.protocol = initialized.protocolVersion;
-    await rpc(client, 'notifications/initialized', {}, true);
-    const discovered = await rpc(client, 'tools/list', {});
-    if (!Array.isArray(discovered.tools) || discovered.nextCursor || discovered.tools.length > 100) throw new Error('Unsupported/oversized tool inventory; at most 100 tools, no pagination');
-    const names = new Set();
-    client.tools = discovered.tools.map(tool => {
-      if (typeof tool.name !== 'string' || !/^[a-zA-Z0-9_.-]{1,120}$/.test(tool.name) || names.has(tool.name)) throw new Error('Invalid or duplicate tool name');
-      names.add(tool.name);
-      return { name: tool.name, description: String(tool.description || '').slice(0, 500), inputSchema: tool.inputSchema || { type: 'object' }, requiresApproval: true };
+    return await runWithSignal(registration.signal, async () => {
+      const initialized = await rpc(client, 'initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'WebAgent-approved-client', version: config.version } });
+      if (!['2024-11-05', '2025-03-26', '2025-06-18'].includes(initialized.protocolVersion)) throw new Error('Unsupported MCP protocol');
+      client.protocol = initialized.protocolVersion;
+      await rpc(client, 'notifications/initialized', {}, true);
+      client.tools = await discoverTools(client);
+      checkCancelled();
+      client.status = 'discovered';
+      return list(true).find(item => item.serverId === client.id);
     });
-    client.status = 'discovered';
-    return list(true).find(item => item.serverId === client.id);
   } catch (error) { remove(client.id); throw error; }
+  finally { clearTimeout(timer); parent?.removeEventListener('abort', abort); client.controllers.delete(registration); }
 }
 function remove(id) {
   const client = clients.get(id);

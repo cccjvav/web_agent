@@ -3,6 +3,7 @@ const path = require('path');
 const { config } = require('../config');
 const { resolveSafePath } = require('../tools/patchEngine');
 const { ProtocolError } = require('../mcp/errors');
+const { readBoundedText } = require('../utils/boundedFile');
 
 function memoryDir() {
   return resolveSafePath('.webagent/memory');
@@ -28,41 +29,63 @@ function remember({ text, day } = {}) {
   return { ok: true, path: path.relative(config.workspaceRoot, file) };
 }
 
-function recall({ limit = 40, day } = {}) {
+function memoryFiles(dir, selectedFile) {
+  if (selectedFile) return { files: [selectedFile], truncated: false };
+  if (!fs.existsSync(dir)) return { files: [], truncated: false };
+  const names = [], handle = fs.opendirSync(dir);
+  let scanned = 0, truncated = false, entry;
+  try {
+    while ((entry = handle.readSync())) {
+      if (++scanned > 512) { truncated = true; break; }
+      if (entry.isFile() && /^\d{4}-\d{2}-\d{2}\.md$/.test(entry.name)) names.push(entry.name);
+    }
+  } finally { handle.closeSync(); }
+  const files = [];
+  for (const name of names.sort().reverse()) {
+    try { files.push(dayFile(name.slice(0, -3))); }
+    catch (_) { truncated = true; }
+  }
+  return { files: files.slice(0, 30), truncated: truncated || files.length > 30 };
+}
+function memoryScore(text, terms) {
+  const normalized = text.normalize('NFKC').toLowerCase();
+  return terms.reduce((score, term) => score + Number(normalized.includes(term)), 0);
+}
+function recall({ limit = 40, day, query = '' } = {}) {
   const selectedFile = day == null ? null : dayFile(day);
   const dir = memoryDir();
-  const cap = Math.max(1, Math.min(200, Number(limit) || 40));
-  const files = selectedFile
-    ? [selectedFile]
-    : (fs.existsSync(dir) ? fs.readdirSync(dir) : [])
-      .filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f)).sort().reverse()
-      .map((f) => dayFile(f.slice(0, -3)));
-  const bullets = [];
-  let truncated = false;
-  for (const file of files) {
+  if (typeof query !== 'string' || query.length > 200) throw new ProtocolError('E_BAD_ARGS', 'query must be a string of at most 200 characters');
+  const terms = [...new Set(query.normalize('NFKC').toLowerCase().trim().split(/\s+/).filter(Boolean))];
+  if (terms.length > 20) throw new ProtocolError('E_BAD_ARGS', 'query supports at most 20 distinct whitespace-separated terms');
+  const cap = Math.floor(Math.max(1, Math.min(200, Number(limit) || 40)));
+  const catalog = memoryFiles(dir, selectedFile), records = [], files = [], warnings = [];
+  let truncated = catalog.truncated, bytesLeft = 2 * 1024 * 1024, scannedLines = 0;
+  for (const file of catalog.files) {
     if (!fs.existsSync(file)) continue;
-    const body = fs.readFileSync(file, 'utf8');
-    for (const line of body.split('\n')) {
+    if (bytesLeft <= 0 || scannedLines >= 5000) { truncated = true; break; }
+    const relative = path.relative(config.workspaceRoot, file);
+    let body;
+    try { body = readBoundedText(file, Math.min(256 * 1024, bytesLeft)); }
+    catch (_) { truncated = true; warnings.push(`${relative}: unreadable or exceeds remaining text budget`); continue; }
+    bytesLeft -= Buffer.byteLength(body);
+    files.push(relative);
+    for (const [index, line] of body.split('\n').entries()) {
+      if (++scannedLines > 5000) { truncated = true; break; }
       if (!/^\s*-\s/.test(line)) continue;
-      if (bullets.length >= cap) {
-        truncated = true;
-        break;
-      }
-      bullets.push(line.trim());
+      const text = line.trim(), score = terms.length ? memoryScore(text, terms) : 1;
+      if (score) records.push({ text, score, source: `${relative}:${index + 1}` });
     }
-    if (truncated) break;
+    // Keep the old date/file order without a query; query scans the bounded corpus.
+    if (!terms.length && records.length > cap) { truncated = true; break; }
   }
-  let text = bullets.join('\n') || '(empty memory)';
-  if (text.length > 8000) {
-    text = `${text.slice(0, 7920)}\n…`;
-    truncated = true;
-  }
-  return {
-    files: files.map((f) => path.relative(config.workspaceRoot, f)),
-    text,
-    count: bullets.length,
-    truncated
-  };
+  if (terms.length) records.sort((a, b) => b.score - a.score);
+  const selected = records.slice(0, cap);
+  truncated ||= records.length > cap;
+  let text = selected.map(item => terms.length ? `${item.text} [${item.source}]` : item.text).join('\n') || '(empty memory)';
+  if (text.length > 8000) { text = `${text.slice(0, 7920)}\n…`; truncated = true; }
+  return { files, text, count: selected.length, truncated, warnings,
+    ranking: terms.length ? 'literal normalized term matches; not semantic search or verified facts' : 'date-descending, then file order',
+    ...(terms.length ? { query } : {}) };
 }
 
 module.exports = { remember, recall, memoryDir };
