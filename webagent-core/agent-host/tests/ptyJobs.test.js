@@ -10,10 +10,10 @@ const { handleRpc } = require('../src/mcp/server');
 
 ptyJobs.resetForTests();
 
-assert.strictEqual(getToolList().length, 30);
+assert.strictEqual(getToolList().length, 35);
 assert.ok(!getToolList().map((t) => t.name).includes('send_command_input'));
 const hidden = getToolList(null, { includeHidden: true }).map((t) => t.name);
-assert.strictEqual(hidden.length, 31);
+assert.strictEqual(hidden.length, 36);
 assert.ok(hidden.includes('send_command_input'));
 
 async function main() {

@@ -95,7 +95,7 @@ readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，
 | [fileOps.js](fileOps.js) | 30 个函数/类节点 |
 | [findFiles.js](findFiles.js) | 3 个函数/类节点 |
 | [gitOps.js](gitOps.js) | 6 个函数/类节点 |
-| [index.js](index.js) | 16 个函数/类节点 |
+| [index.js](index.js) | 19 个函数/类节点 |
 | [normalize.js](normalize.js) | 4 个函数/类节点 |
 | [patchEngine.js](patchEngine.js) | 33 个函数/类节点 |
 | [planRound.js](planRound.js) | 10 个函数/类节点 |
@@ -105,5 +105,9 @@ readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，
 | [searchWorker.js](searchWorker.js) | 0 个函数/类节点 |
 | [sensitive.js](sensitive.js) | 12 个函数/类节点 |
 | [skills.js](skills.js) | 11 个函数/类节点 |
+| [workflows.js](workflows.js) | 10 个函数/类节点 |
 | [workspaceInfo.js](workspaceInfo.js) | 3 个函数/类节点 |
 <!-- docs-inventory:end -->
+
+
+受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。仅回环HTTP(S)，每次本机批准，无stdio安装启动或自动重试。

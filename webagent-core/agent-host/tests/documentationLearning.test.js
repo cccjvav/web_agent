@@ -9,6 +9,12 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/src/utils/operatorQueue.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
+  ["webagent-core/agent-host/src/mcp/externalClient.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
+  ["webagent-core/agent-host/src/tools/workflows.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
+  ["webagent-core/workbench/js/operations.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
+  ["webagent-core/agent-host/tests/approvedOperations.test.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
+
   ["webagent-core/agent-host/tests/workbench.browser.js", "webagent-core/agent-host/src/utils/主机诊断与调用追踪详解.md"],
   ['webagent-core/agent-host/src/utils/hostDiagnostics.js', 'webagent-core/agent-host/src/utils/主机诊断与调用追踪详解.md'],
   ['webagent-core/agent-host/src/utils/toolTrace.js', 'webagent-core/agent-host/src/utils/主机诊断与调用追踪详解.md'],

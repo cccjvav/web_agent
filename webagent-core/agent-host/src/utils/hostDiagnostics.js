@@ -38,6 +38,8 @@ function diagnostics() {
       { id: 'commands', status: 'unverified', reason: '命令工具已注册；尚未执行诊断命令。受模式/危险命令/进程树规则约束，不是OS沙箱。' },
       { id: 'desktop-pty', status: ptyLive ? 'unverified' : 'unavailable', reason: ptyLive ? '收到匹配工作区的扩展心跳；执行仍需实际验证与审批。' : '未收到匹配工作区的桌面扩展近期心跳。' },
       { id: 'desktop-input', status: powershell ? 'unverified' : 'unavailable', reason: powershell ? '发现PowerShell；未截图或操作键鼠，真机能力未验收。' : '此诊断未发现Windows桌面输入的必要平台/PowerShell条件。' },
+      { id: 'external-mcp', status: require('../mcp/externalClient').list().length ? 'unverified' : 'unavailable', reason: '仅支持操作者登记的回环HTTP(S) MCP；发现工具不等于批准执行。每次调用需本机审批，不自动安装或启动第三方程序。' },
+      { id: 'approved-workflows', status: 'ready', reason: '可校验/预览并提交审批；不执行命令、删除、外部或嵌套工作流，无自动重试。ready不代表某项工作流已验收。' },
       { id: 'browser-automation', status: 'unavailable', reason: '经典工作台仅有连接指引，不把它冒充可控浏览器。' }
     ] };
 }

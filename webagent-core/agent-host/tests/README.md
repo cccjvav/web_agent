@@ -79,6 +79,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
 | [apiFiles.test.js](apiFiles.test.js) | 13 个函数/类节点 |
+| [approvedOperations.test.js](approvedOperations.test.js) | 9 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 17 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
 | [board.test.js](board.test.js) | 4 个函数/类节点 |
@@ -127,7 +128,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 13 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 25 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 25 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 28 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 68 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 11 个函数/类节点 |
@@ -135,3 +136,6 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 
 ## 真实浏览器回归（不是DOM fixture）
 `npm run test:browser --prefix webagent-core/agent-host`运行workbench.browser.js；首次需在agent-host运行`npx playwright install chromium`（Linux还需系统库）。CI有独立workbench-browser任务，安装浏览器依赖后运行。普通npm test仍跑跨平台基础套件，未运行浏览器命令不能声称浏览器验收。逐函数说明见utils/主机诊断与调用追踪详解。
+
+
+受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。仅回环HTTP(S)，每次本机批准，无stdio安装启动或自动重试。

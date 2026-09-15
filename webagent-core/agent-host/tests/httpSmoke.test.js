@@ -174,7 +174,7 @@ async function main() {
     assert.strictEqual(status.status, 200);
     assert.ok(status.json.secretKey);
     assert.ok(status.json.prompt.includes('快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。'));
-    assert.ok(Array.isArray(status.json.tools) && status.json.tools.length === 30);
+    assert.ok(Array.isArray(status.json.tools) && status.json.tools.length === 35);
     assert.ok(status.json.tools.every((t) => t.name && t.inputSchema === undefined));
     assert.ok(Array.isArray(status.json.clients) && status.json.clients.some((c) => c.id === 'arena' && !c.needsPlus));
     assert.ok(status.json.clients.some((c) => c.id === 'deepseek' && c.connectMode === 'extension-http' && !c.needsPlus && c.supportsMcp));
@@ -221,7 +221,7 @@ async function main() {
     assert.ok(names.includes('apply_patch'));
     assert.ok(names.includes('start_command'));
     assert.ok(names.includes('workspace_info'));
-    assert.strictEqual(names.length, 30);
+    assert.strictEqual(names.length, 35);
 
     const bare = await request('POST', `http://127.0.0.1:${mcpPort}/mcp`, {
       jsonrpc: '2.0',
@@ -332,6 +332,10 @@ async function main() {
       Origin: 'https://evil.example'
     });
     assert.strictEqual(evilUi.status, 404);
+    for (const route of ['/operations/example/approve', '/external/servers', '/workflows/request']) {
+      const blocked = await request('POST', `http://127.0.0.1:${workbenchPort}/api${route}`, { confirm: true }, { Origin: 'https://evil.example' });
+      assert.strictEqual(blocked.status, 404);
+    }
 
     const preflightBad = await request('OPTIONS', `http://127.0.0.1:${mcpPort}/mcp/${secret}`, undefined, {
       Origin: 'https://evil.example',

@@ -51,9 +51,13 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 | [boundedFile.js](boundedFile.js) | 1 个函数/类节点 |
 | [corsAllow.js](corsAllow.js) | 14 个函数/类节点 |
 | [diff.js](diff.js) | 1 个函数/类节点 |
-| [eventBus.js](eventBus.js) | 14 个函数/类节点 |
+| [eventBus.js](eventBus.js) | 15 个函数/类节点 |
 | [hostDiagnostics.js](hostDiagnostics.js) | 3 个函数/类节点 |
 | [localControl.js](localControl.js) | 7 个函数/类节点 |
+| [operatorQueue.js](operatorQueue.js) | 17 个函数/类节点 |
 | [requestScope.js](requestScope.js) | 5 个函数/类节点 |
 | [toolTrace.js](toolTrace.js) | 10 个函数/类节点 |
 <!-- docs-inventory:end -->
+
+
+受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。仅回环HTTP(S)，每次本机批准，无stdio安装启动或自动重试。

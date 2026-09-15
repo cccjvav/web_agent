@@ -18,6 +18,7 @@ export function logBridgeTool() {
 export function paintBridgeActivity(snapshot) {
   if (!snapshot || !snapshot.stats || !Array.isArray(snapshot.logs)) return;
   if ($('#bridge-host') && snapshot.identity) $('#bridge-host').textContent = `${snapshot.identity.hostInstanceId} · ${snapshot.identity.workspaceRoot} · v${snapshot.identity.version}`;
+  if ($('#btn-operations')) $('#btn-operations').textContent = `工具接入与审批（待批 ${snapshot.pendingApprovals || 0}）`;
   const version = `${snapshot.epoch}:${snapshot.revision}`;
   if (version === activityVersion) return;
   activityVersion = version;

@@ -9,6 +9,7 @@ function onClick(id, handler) {
 }
 
 export function bind() {
+  ui.initOperations();
   onClick('#btn-host-diagnostics', () => { ui.openModal('diagnostics'); ui.refreshDiagnostics(); });
   onClick('#btn-refresh-diagnostics', () => ui.refreshDiagnostics());
   onClick('#btn-compare-host', () => ui.compareHost());

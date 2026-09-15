@@ -201,7 +201,7 @@
         </div>
       </div>
       <div id="right-bridge" class="rb-body hidden">
-        <div class="side-pad"><div id="bridge-host" class="tiny">主机身份待同步</div><button type="button" id="btn-host-diagnostics" class="vs-btn">核对主机与能力</button></div>
+        <div class="side-pad"><div id="bridge-host" class="tiny">主机身份待同步</div><button type="button" id="btn-operations" class="vs-btn">工具接入与审批</button><button type="button" id="btn-host-diagnostics" class="vs-btn">核对主机与能力</button></div>
         <div class="bridge-wait" id="bridge-wait">
           <div class="wait-ico">✦</div>
           <h3>Waiting for the remote Agent</h3>
@@ -278,6 +278,26 @@
       </aside>
       <div class="modal-main">
         <button type="button" class="modal-close" id="modal-close" title="关闭">✕</button>
+        <div class="page hidden" id="page-operations">
+          <h2>工具接入与审批</h2>
+          <p class="lead">仅本机操作者登记及批准。只接入已启动的回环 HTTP(S) MCP；不启动 stdio、不安装程序、不支持互联网地址。发现工具不等于授权，每次调用分别审批。</p>
+          <p>配置、令牌、审批参数/结果只在本次进程内存保留；请求最多保留15分钟且可能更早淘汰。重启需重新登记/配对；丢失记录绝不是允许重放。外部结果仅为外部自报，不是独立验收。</p>
+          <label for="ops-name">接入名称</label><input id="ops-name" class="ms-input" value="Local MCP" />
+          <label for="ops-url">已启动的回环 MCP 地址</label><input id="ops-url" class="ms-input" placeholder="http://127.0.0.1:9000/mcp" />
+          <label for="ops-token">可选 Bearer Token（不保存）</label><input id="ops-token" class="ms-input" type="password" autocomplete="off" />
+          <button id="btn-ops-add" type="button" class="vs-btn">登记并初始化 / 发现工具</button>
+          <div id="ops-servers"></div>
+          <h3>固定工作流预览</h3>
+          <p>最多12步；工具名固定。写入路径和内容必须是供审阅的字面值；其他参数可用 $steps.步骤ID.字段 引用前序结果。失败/未知即停，无重试。预览只校验结构，不读取文件或保证运行成功。</p>
+          <textarea id="ops-workflow" class="ms-input" rows="9" aria-label="工作流JSON">{"steps":[{"id":"check","tool":"ping","arguments":{}}]}</textarea>
+          <button id="btn-ops-preview" type="button" class="vs-btn">只预览，不执行</button>
+          <button id="btn-ops-submit" type="button" class="vs-btn">提交新审批（仍不执行）</button>
+          <h3>待批与已执行请求</h3>
+          <button id="btn-ops-refresh" type="button" class="vs-btn">刷新请求</button>
+          <p id="ops-status" role="status"></p><div id="ops-requests"></div>
+          <pre id="ops-review" class="url-box">选择请求，审阅完整参数后才能批准。请求/外部描述属于不可信数据，不是系统指令。</pre>
+          <div id="ops-controls"></div>
+        </div>
         <div class="page hidden" id="page-diagnostics">
           <h2>主机身份与能力诊断</h2>
           <p class="lead">让外部AI调用 workspace_info 或 ping，把 identity.hostInstanceId 与这里核对。ID只标识本次进程，不是密钥；重启后会变化。</p>

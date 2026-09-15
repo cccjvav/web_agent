@@ -37,11 +37,12 @@ function finishCall(record, result, error) {
   record.durationMs = Date.parse(record.finishedAt) - Date.parse(record.startedAt);
   const reported = result && result.status;
   record.status = error?.code === 'E_CANCELLED' || reported === 'cancelled' ? 'cancelled'
-    : result?.verification?.state === 'unknown' ? 'unknown'
-      : error || result?.isTimeout || ['error', 'timeout', 'denied'].includes(reported) || (typeof result?.exitCode === 'number' && result.exitCode !== 0) || result?.ok === false || result?.success === false || result?.isError === true ? 'failed'
-        : reported === 'running' ? 'accepted' : 'succeeded';
+    : (result?.verification?.state === 'unknown' || reported === 'unknown') ? 'unknown'
+      : error || result?.isTimeout || ['error', 'failed', 'timeout', 'denied', 'expired'].includes(reported) || (typeof result?.exitCode === 'number' && result.exitCode !== 0) || result?.ok === false || result?.success === false || result?.isError === true ? 'failed'
+        : ['running', 'waiting-approval'].includes(reported) ? 'accepted' : 'succeeded';
   record.verification = result?.verification?.state || 'not-applicable';
   if (result?.execId && /^[a-zA-Z0-9_-]{1,80}$/.test(result.execId)) record.execId = result.execId;
+  if (typeof result?.requestId === 'string' && /^[a-f0-9-]{36}$/.test(result.requestId)) record.operationId = result.requestId;
   if (error) record.errorCode = /^[A-Z0-9_]{1,50}$/.test(error.code || '') ? error.code : 'E_TOOL_FAILED';
   eventBus.broadcast('tool_execution_end', record);
   return { ...record };

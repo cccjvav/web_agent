@@ -15,6 +15,9 @@ const boardTools = require('./board');
 const { workspaceInfo } = require('./workspaceInfo');
 const { resolveToolName, normalizeToolArgs } = require('./normalize');
 const trace = require('../utils/toolTrace');
+const externalClient = require('../mcp/externalClient');
+const workflows = require('./workflows');
+const operatorQueue = require('../utils/operatorQueue');
 const { hostIdentity, diagnostics } = require('../utils/hostDiagnostics');
 const { assertCommandAllowed } = require('./dangerous');
 
@@ -60,6 +63,12 @@ function getTaskStatus() {
 }
 
 const TOOLS = [
+  tool({ name: 'external_servers', aliases: [], description: 'List operator-configured loopback MCP servers and untrusted tool schemas. Registration does not authorize execution.', mode: ['ask', 'plan', 'code'], inputSchema: { type: 'object', properties: {} }, handler: () => ({ servers: externalClient.list(), requiresApproval: true }) }),
+  tool({ name: 'external_request', aliases: [], description: 'Request one external tool call. NEVER executes until a local operator approves. Use stable requestKey, then stop and wait; do not resubmit. Remote callers must initialize an HTTP MCP session.', mode: ['code'], inputSchema: { type: 'object', properties: { serverId: { type: 'string' }, tool: { type: 'string' }, arguments: { type: 'object' }, requestKey: { type: 'string' } }, required: ['serverId', 'tool', 'arguments', 'requestKey'] }, handler: externalClient.request }),
+  tool({ name: 'operation_result', aliases: [], description: 'Read your own approved-operation state/result by requestId. Unknown is not success and must not be automatically retried.', mode: ['ask', 'plan', 'code'], inputSchema: { type: 'object', properties: { requestId: { type: 'string' } }, required: ['requestId'] }, handler: (args, options) => operatorQueue.result(args.requestId, options) }),
+  tool({ name: 'workflow_preview', aliases: [], description: 'Validate/preview a bounded workflow without execution. Only explicit filesystem steps; no commands, deletion, external/nested workflows or retries.', mode: ['ask', 'plan', 'code'], inputSchema: { type: 'object', properties: { definition: { type: 'object' } }, required: ['definition'] }, handler: args => workflows.preview(args.definition) }),
+  tool({ name: 'workflow_request', aliases: [], description: 'Request local operator approval for an immutable workflow. Submission is not execution. Query operation_result afterwards; never automatically replay failed writes.', mode: ['code'], inputSchema: { type: 'object', properties: { definition: { type: 'object' }, requestKey: { type: 'string' } }, required: ['definition', 'requestKey'] }, handler: workflows.request }),
+
   tool({
     name: 'ping',
     aliases: [],
@@ -540,7 +549,7 @@ async function callTool(name, args = {}, currentMode = null, opts = {}) {
   const resolved = resolveToolName(name);
   const record = trace.beginCall(toolRegistry.has(resolved) ? resolved : 'unknown-tool', opts);
   try {
-    const result = await dispatchTool(name, args, currentMode, opts);
+    const result = await dispatchTool(name, args, currentMode, { ...opts, taskId: record.taskId });
     const detail = trace.finishCall(record, result);
     return clipJson({ ...result, trace: detail });
   } catch (err) {

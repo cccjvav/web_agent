@@ -66,6 +66,7 @@ class BridgeEventBus extends EventEmitter {
   getBridgeActivity() {
     return { epoch: this.bridgeEpoch, revision: this.bridgeRevision,
       identity: require('./hostDiagnostics').hostIdentity(),
+      pendingApprovals: require('./operatorQueue').list().filter(job => job.status === 'waiting-approval').length,
       executions: require('./toolTrace').snapshot('Bridge-Remote'),
       stats: { ...this.bridgeActivity.stats }, logs: this.bridgeActivity.logs.slice() };
   }

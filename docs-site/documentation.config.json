@@ -398,6 +398,11 @@
       "id": "host-diagnostics-trace",
       "path": "webagent-core/agent-host/src/utils/主机诊断与调用追踪详解.md",
       "group": "实现"
+    },
+    {
+      "id": "approved-operations-guide",
+      "path": "webagent-core/agent-host/src/utils/受控工具与工作流详解.md",
+      "group": "源码学习"
     }
   ],
   "sourceSnapshotExclusions": [

@@ -59,3 +59,8 @@ npm test --prefix webagent-core/agent-host -- --filter=editorRuntime
 ```
 
 测试中成功模拟事件不能替代网络断流、手机会话或模型真实响应。这里暴露的HTTP/尾行/编辑同步限制未通过文档工作悄悄改变实现。
+
+
+## 受控执行增量
+
+app.js新增operations.js副作用导入，向ui登记审批页面方法，不自动接入或执行外部工具。

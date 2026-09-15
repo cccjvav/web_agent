@@ -6,6 +6,7 @@ import './js/chat.js';
 import './js/bridge.js';
 import './js/settings.js';
 import './js/bind.js';
+import './js/operations.js';
 
 const WS_BACKOFF_MIN = 1000;
 const WS_BACKOFF_MAX = 30000;

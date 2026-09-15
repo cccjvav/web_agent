@@ -1,3 +1,6 @@
+const operatorQueue = require('../utils/operatorQueue');
+const externalClient = require('../mcp/externalClient');
+const workflows = require('../tools/workflows');
 const { diagnostics, hostIdentity } = require('../utils/hostDiagnostics');
 const { readBoundedText, MAX_TEXT_BYTES } = require('../utils/boundedFile');
 const express = require('express');
@@ -75,6 +78,22 @@ function mcpInfo(req) {
     tunnel: tunnel.snapshot()
   };
 }
+
+function operationApi(handler) {
+  return async (req, res) => {
+    try { res.json(await handler(req)); }
+    catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+  };
+}
+router.get('/operations', operationApi(() => ({ requests: operatorQueue.list(), servers: externalClient.list(true) })));
+router.get('/operations/:id', operationApi(req => operatorQueue.inspect(req.params.id)));
+router.post('/operations/:id/approve', operationApi(req => operatorQueue.approve(req.params.id, req.body?.confirm === true)));
+router.post('/operations/:id/cancel', operationApi(req => operatorQueue.cancel(req.params.id)));
+router.post('/external/servers', operationApi(req => externalClient.add(req.body || {})));
+router.delete('/external/servers/:id', operationApi(req => externalClient.remove(req.params.id)));
+router.post('/external/request', operationApi(req => externalClient.request(req.body || {}, { callerKey: 'local' })));
+router.post('/workflows/preview', operationApi(req => workflows.preview(req.body?.definition)));
+router.post('/workflows/request', operationApi(req => workflows.request(req.body || {}, { callerKey: 'local' })));
 
 router.get('/diagnostics', (req, res) => res.json(diagnostics()));
 

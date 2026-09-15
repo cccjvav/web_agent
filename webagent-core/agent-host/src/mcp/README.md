@@ -77,9 +77,13 @@ POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连
 | [budget.js](budget.js) | 6 个函数/类节点 |
 | [clients.js](clients.js) | 5 个函数/类节点 |
 | [errors.js](errors.js) | 6 个函数/类节点 |
+| [externalClient.js](externalClient.js) | 18 个函数/类节点 |
 | [instructions.js](instructions.js) | 3 个函数/类节点 |
 | [oauth.js](oauth.js) | 45 个函数/类节点 |
 | [resources.js](resources.js) | 5 个函数/类节点 |
 | [server.js](server.js) | 32 个函数/类节点 |
 | [session.js](session.js) | 14 个函数/类节点 |
 <!-- docs-inventory:end -->
+
+
+受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。仅回环HTTP(S)，每次本机批准，无stdio安装启动或自动重试。
