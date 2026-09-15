@@ -30,7 +30,7 @@ def build(verify=False):
     payload = {name: (source / name).read_bytes() for name in names}
     hashes = {name: hashlib.sha256(data).hexdigest() for name, data in payload.items()}
     manifest = json.loads(payload['manifest.json'])
-    manifest.update(name='WebAgent Arena Inspector', version='0.5.0', description='Arena trace 标签、调用统计与 Probe 模型参考；显式监听、离线导入 VS Code。')
+    manifest.update(name='WebAgent Arena Inspector', version='0.5.1', description='Arena trace 标签、调用统计与 Probe 模型参考；显式监听、离线导入 VS Code。')
     manifest['optional_host_permissions'] = ['http://127.0.0.1/*']
     manifest['content_scripts'][0]['js'].append('browserActions.js')
     payload['manifest.json'] = json.dumps(manifest, ensure_ascii=False, indent=2).encode()
@@ -88,7 +88,7 @@ def build(verify=False):
     payload['README.md'] = (root / '浏览器整合说明.md').read_bytes()
     payload['package.json'] = b'{"type":"module","private":true}'
     payload['source-hashes.json'] = json.dumps({'inspectorInputs': hashes, 'payload': {name: hashlib.sha256(data).hexdigest() for name, data in payload.items()}}, indent=2).encode()
-    output = root / 'dist' / 'webagent-arena-inspector-0.5.0.zip'
+    output = root / 'dist' / 'webagent-arena-inspector-0.5.1.zip'
     output.parent.mkdir(exist_ok=True)
     with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
         for name, data in payload.items():
@@ -102,6 +102,13 @@ def build(verify=False):
             for name, digest in json.loads((directory / 'source-hashes.json').read_text())['payload'].items():
                 if hashlib.sha256((directory / name).read_bytes()).hexdigest() != digest:
                     raise ValueError('Browser payload hash mismatch')
+            # Execute race fixtures against the actual extracted modules, not repository copies.
+            for test_name, module_name in [('probeCaptureLifecycle.test.js', 'genericCapture.mjs'), ('probePairLifecycle.test.js', 'browserBridge.mjs')]:
+                test_source = (root.parent / 'agent-host/tests' / test_name).read_text(encoding='utf-8')
+                test_source = replace_once(test_source, "import('../../probe-extension/" + module_name + "')", "import('./" + module_name + "')")
+                test_file = directory / (test_name + '.cjs')
+                test_file.write_text(test_source, encoding='utf-8')
+                subprocess.run(['node', str(test_file)], cwd=directory, check=True, timeout=30)
             shutil.copytree(source / 'tests', directory / 'tests')
             fixture = directory / 'tests' / 'background.test.mjs'
             with fixture.open('a', encoding='utf-8') as handle:

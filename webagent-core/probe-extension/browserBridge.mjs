@@ -1,6 +1,6 @@
 // Ephemeral browser-to-host channel. No token is persisted or put into a URL.
 export function createBrowserBridge(services) {
-  let connection = null, timer = null, busy = false;
+  let connection = null, timer = null, busy = false, generation = 0;
   const running = new Map();
   async function post(link, body) {
     const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 10000);
@@ -14,7 +14,8 @@ export function createBrowserBridge(services) {
       return JSON.parse(new TextDecoder().decode(joined));
     } finally { clearTimeout(timeout); }
   }
-  async function disconnect() {
+  async function disconnect(invalidate = true) {
+    if (invalidate) generation++;
     const old = connection; connection = null; clearTimeout(timer);
     for (const [id, controller] of running) { controller.abort(); void services.cancel(old?.tabId, id); }
     running.clear();
@@ -51,14 +52,19 @@ export function createBrowserBridge(services) {
   }
   return {
     async connect(input, tabId) {
+      const ticket = ++generation;
       const url = new URL(input?.base);
       if (input?.schema !== 'webagent-probe-pair/v1' || url.origin !== input.base || url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || url.username || url.password || !/^[a-f0-9]{64}$/.test(input.token || '') || !Number.isFinite(input.expiresAt) || input.expiresAt <= Date.now() || input.expiresAt > Date.now() + 16 * 60000 || !Number.isInteger(tabId)) throw new Error('Invalid pairing');
-      await services.current(tabId); await disconnect(); connection = {...input, tabId, seen: new Set()}; void tick(); return {connected: true};
+      await services.current(tabId);
+      if(ticket!==generation)throw Error('Pairing superseded');
+      await disconnect(false);
+      if(ticket!==generation)throw Error('Pairing cancelled');
+      connection = {...input, tabId, seen: new Set()}; void tick(); return {connected: true};
     },
     disconnect,
     status() { return {connected: !!connection, expiresAt: connection?.expiresAt, tabId: connection?.tabId}; },
     async request(action, text, tabId, sessionId) {
-      if (!connection || connection.tabId !== tabId) throw new Error('No paired current tab');
+      if (!connection || connection.expiresAt <= Date.now() || connection.tabId !== tabId) throw new Error('No paired current tab');
       return post(connection, {type:'request', action, text, tabId, sessionId, requestKey:crypto.randomUUID()});
     }
   };

@@ -1,4 +1,4 @@
-# WebAgent Probe Companion 0.5.0
+# WebAgent Probe Companion 0.5.1
 
 这是给模型身份提供**参考**的工具，不是认证器。它保留 Inspector 的 run/span、字段来源、调用和用量，同时复用 Probe 的字段、UUID、协议、行为、指纹和 tokenizer 算法。分数不是正确率，自报身份不是证明。Chat 模式 API 后端的确切验证仍是后续任务。
 
@@ -20,7 +20,7 @@
 conda activate 你的既有环境名
 python webagent-core\probe-extension\package_vsix.py --verify
 python webagent-core\probe-extension\package_browser.py --verify
-code --install-extension webagent-core\probe-extension\dist\webagent-probe-companion-0.5.0.vsix
+code --install-extension webagent-core\probe-extension\dist\webagent-probe-companion-0.5.1.vsix
 ```
 
 不创建 venv、不需要 pip 依赖。没有 `code` 命令时，扩展面板“…”→“从VSIX安装”。主机须更新到含本版路由的源码/安装包并重启。浏览器 ZIP 解压后加载其中 `webagent-arena-inspector` 文件夹；停用单独的旧 Probe/Inspector，避免重复采集。详见《浏览器整合说明.md》。测试通过不代表已经在用户 Windows 或实际 Arena 账户验证。
@@ -40,9 +40,9 @@ code --install-extension webagent-core\probe-extension\dist\webagent-probe-compa
 
 ## 离线观测和 tokenizer
 
-命令 `分析模型线索文件（离线参考）` 支持 `sample-observation.json` 的合成示例、`webagent-model-observation/v1` 和 Inspector `schemaVersion:1` 单次证据。原版任意完整 dump 不是这个格式；请用规定的证据或历史导出路径，不能改个 schema 名硬导入。
+命令 `分析模型线索文件（离线参考）` 支持 `sample-observation.json` 的合成示例、`webagent-model-observation/v1` 和 Inspector `schemaVersion:1` 单次证据。0.5.1还识别原版 `buildDump` 导出的 `probe:"arena-model-probe"` 文件：只转换当前 observation，忽略全局 evidence、slots 和缓存 verdict，避免把前次/另一侧的线索混进来。原导出最多保留4000字符，达到边界或截断状态未知都按截断处理；报告中的 observedAt 是导出时间，原请求时间不可证，provenance 和 historical 会明确标注并随摘要保存。没有当前 observation、来源不符或超预算会拒绝；不是接受任意形状的 dump。
 
-观测要求：`requestId`、`observedAt`、固定 `origin:"https://arena.ai"`、`truncated`、`evidence`、`text`；可提供 UUID `models:[{id,publicName}]`、计时和 token 数。文件256KiB、文本200000字符、证据100条、映射1000条、frames64条。非法来源/任意权重拒绝；冲突映射不强选。允许的来源和完整字段检查见 `analysis.js`。
+观测要求：`requestId`、`observedAt`、固定 `origin:"https://arena.ai"`、`truncated`、`evidence`、`text`；可提供 UUID `models:[{id,publicName}]`、计时和 token 数。文件256KiB（旧原生dump也适用）、标准观测文本200000字符、证据100条、映射1000条、frames64条。非法来源/任意权重拒绝；冲突映射不强选。允许的来源和完整字段检查见 `analysis.js`。
 
 主动题组包含 tokenizer 原始基准文本。**只有确认发送了完整基准、且拿到对应 prompt/input token 数时**，离线观测才设 `tokenizerBenchmark:true` 并填写 `promptTokens`。总 token、输出 token、包含系统提示/历史的输入计数不能冒充纯基准计数。没有可比计数就没有有效测量；系统不会把普通消息 token 套上基准结果。
 
@@ -70,7 +70,7 @@ code --install-extension webagent-core\probe-extension\dist\webagent-probe-compa
 
 | 源码 | 定位证据 |
 |---|---|
-| [analysis.js](analysis.js) | 13 个函数/类节点 |
+| [analysis.js](analysis.js) | 14 个函数/类节点 |
 | [analysisWorker.mjs](analysisWorker.mjs) | 10 个函数/类节点 |
 | [browserActions.js](browserActions.js) | 17 个函数/类节点 |
 | [browserBridge.mjs](browserBridge.mjs) | 13 个函数/类节点 |
@@ -80,7 +80,7 @@ code --install-extension webagent-core\probe-extension\dist\webagent-probe-compa
 | [catalog.mjs](catalog.mjs) | 5 个函数/类节点 |
 | [client.js](client.js) | 9 个函数/类节点 |
 | [extension.js](extension.js) | 17 个函数/类节点 |
-| [genericCapture.mjs](genericCapture.mjs) | 10 个函数/类节点 |
+| [genericCapture.mjs](genericCapture.mjs) | 13 个函数/类节点 |
 | [history.js](history.js) | 27 个函数/类节点 |
 | [historyClustering.js](historyClustering.js) | 12 个函数/类节点 |
 | [historyTransfer.js](historyTransfer.js) | 5 个函数/类节点 |
@@ -93,3 +93,6 @@ code --install-extension webagent-core\probe-extension\dist\webagent-probe-compa
 | [sample-observation.json](sample-observation.json) | 文件级登记；未做符号完整性证明 |
 | [traceInput.js](traceInput.js) | 7 个函数/类节点 |
 <!-- docs-inventory:end -->
+
+### 0.5.1复核修正
+通用采样等待CDP流式启用完成后再处理结束事件；异步返回核对监听实例、generation、会话和具体entry，停止/导航/ID复用后的旧响应不能发布或删除新样本。标准/轻量限额同时应用于WS、流块和完整响应，按UTF-8字节计算；base64完整响应正确按UTF-8解码。配对使用独立代次，等待期间断开或新选择会使旧配对失效。新增竞态回归不代表真实站点已验收。

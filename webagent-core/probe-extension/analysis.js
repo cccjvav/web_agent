@@ -1,20 +1,41 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const {createHash} = require('crypto');
 const { Worker } = require('worker_threads');
 const LIMIT = 262144;
 const { validateTraceExport } = require('./traceInput');
 const SOURCES = ['request.body.model', 'response.header.model', 'response.json.model', 'sse.chunk.model', 'run.trace.model', 'url.path.model', 'self.report'];
+function convertLegacyDump(input) {
+  const observation=input.observation;
+  if(input.probe!=='arena-model-probe'||typeof input.version!=='string'||input.version.length>64
+    ||typeof input.at!=='string'||input.at.length>40||!Number.isFinite(Date.parse(input.at))||!observation||Array.isArray(observation)
+    ||typeof observation.text!=='string'||observation.text.length>4000)throw Error('Invalid legacy Probe dump');
+  if(observation.truncated!==undefined&&typeof observation.truncated!=='boolean')throw Error('Legacy truncation flag');
+  const page=new URL(input.href), source=new URL(observation.url,page);
+  if(page.origin!=='https://arena.ai'||source.origin!==page.origin||page.username||page.password||source.username||source.password)throw Error('Legacy dump origin');
+  const evidence=[];
+  if(observation.requestModel!=null){if(typeof observation.requestModel!=='string'||observation.requestModel.length<2||observation.requestModel.length>120)throw Error('Legacy request model');evidence.push({source:'request.body.model',modelId:observation.requestModel});}
+  // Global BUS evidence and slots are not request-scoped. Even equal slot names
+  // may refer to successive requests; never transfer them into this observation.
+  const result={schema:'webagent-model-observation/v1',requestId:'legacy-'+createHash('sha256').update(JSON.stringify([input.at,observation.text,evidence])).digest('hex'),
+    observedAt:input.at,origin:page.origin,truncated:observation.truncated!==false||observation.text.length>=4000,
+    evidence,text:observation.text,legacyDumpExport:true};
+  for(const key of ['promptTokens','completionTokens','reasoningTokens','ttftMs','totalMs'])if(observation[key]!=null)result[key]=observation[key];
+  return result;
+}
 function validateObservation(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input) || Buffer.byteLength(JSON.stringify(input)) > LIMIT) throw new Error('Invalid analysis input');
+  if (input.probe === 'arena-model-probe') return validateObservation(convertLegacyDump(input));
   if (input.schemaVersion === 1 && Array.isArray(input.calls)) return validateTraceExport(input);
-  const keys = ['schema', 'requestId', 'observedAt', 'origin', 'truncated', 'evidence', 'text', 'models', 'promptTokens', 'completionTokens', 'reasoningTokens', 'ttftMs', 'totalMs', 'frames', 'tokenizerBenchmark'];
+  const keys = ['schema', 'requestId', 'observedAt', 'origin', 'truncated', 'evidence', 'text', 'models', 'promptTokens', 'completionTokens', 'reasoningTokens', 'ttftMs', 'totalMs', 'frames', 'tokenizerBenchmark', 'legacyDumpExport'];
   if (Object.keys(input).some(key => !keys.includes(key)) || input.schema !== 'webagent-model-observation/v1'
     || typeof input.requestId !== 'string' || !/^[\w.-]{1,128}$/.test(input.requestId)
-    || typeof input.observedAt !== 'string' || !Number.isFinite(Date.parse(input.observedAt))
+    || typeof input.observedAt !== 'string' || input.observedAt.length > 40 || !Number.isFinite(Date.parse(input.observedAt))
     || input.origin !== 'https://arena.ai' || typeof input.truncated !== 'boolean'
     || !Array.isArray(input.evidence) || input.evidence.length > 100
     || typeof input.text !== 'string' || input.text.length > 200000) throw new Error('Invalid analysis schema');
+  if(input.legacyDumpExport !== undefined && input.legacyDumpExport !== true)throw Error('Invalid legacy marker');
   if(input.tokenizerBenchmark !== undefined && typeof input.tokenizerBenchmark !== 'boolean')throw Error('Invalid benchmark declaration');
   for (const item of input.evidence) {
     if (!item || Object.keys(item).sort().join(',') !== 'modelId,source' || !SOURCES.includes(item.source)
@@ -71,4 +92,4 @@ function analyze(input, signal) {
     worker.once('exit', () => { if (!settled) finish(new Error('Analysis worker exited')); });
   });
 }
-module.exports = { validateObservation, readObservation, analyze };
+module.exports = { convertLegacyDump, validateObservation, readObservation, analyze };

@@ -36,7 +36,7 @@ function activate(context) {
     busy = true;
     try {
       if (action === 'analyze') {
-        const files = await vscode.window.showOpenDialog({ title: '选择模型观测或 Trace Inspector 单运行证据 JSON（离线，不上传）', canSelectMany: false, filters: { JSON: ['json'] } });
+        const files = await vscode.window.showOpenDialog({ title: '选择模型观测、旧Probe导出或Inspector单运行证据JSON（离线，不上传）', canSelectMany: false, filters: { JSON: ['json'] } });
         if (!files?.length || files[0].scheme !== 'file' || files[0].authority || !allowed()) return;
         lastReport = null; output.clear();
         const controller = new AbortController(); controllers.add(controller);

@@ -62,7 +62,7 @@ const verdict = engine.classify(classificationInput);
 const report = {
   schema: 'webagent-model-analysis/v1', requestId: observation.requestId, observedAt: observation.observedAt,
   registryVersion: registry.REGISTRY_VERSION, truncated: observation.truncated || Boolean(tap.truncated), parserLimit: tap.truncated,
-  provenance: 'user-imported; not independently verified', modelIdentityVerified: false, permissionsChanged: false,
+  provenance: observation.legacyDumpExport ? 'legacy-dump-export-time; original observation time unavailable' : 'user-imported; not independently verified', modelIdentityVerified: false, permissionsChanged: false,
   candidate: { mode: verdict.mode, modelId: verdict.modelId, family: verdict.family, label: verdict.label, heuristicScore: verdict.confidence },
   alternatives: (verdict.alternatives || []).map(({ confidence, ...item }) => ({ ...item, heuristicScore: confidence })),
   sources: unique.map(item => ({ source: item.source, modelId: item.modelId || null, family: item.family || null })),
@@ -73,6 +73,8 @@ const report = {
   tokenizer: observation.tokenizerBenchmark === true && observation.promptTokens > 0 ? probe.matchTokenizer(observation.promptTokens) : null,
   warnings: ['Scores are uncalibrated heuristics, not identity probabilities.', 'Imported source labels and mappings can be forged.', 'Tokenizer comparison is meaningful only for the original benchmark input.']
 };
+if(observation.legacyDumpExport)report.historical=true;
+if(observation.legacyDumpExport)report.warnings.push('Legacy dump: observedAt is the export time, not a proven request timestamp. Global BUS evidence, slots and cached verdict were excluded; the native dump retains only up to 4000 response characters.');
 if (report.truncated) report.warnings.push('Input was truncated; missing evidence may change the result.');
 parentPort.postMessage(report);
 

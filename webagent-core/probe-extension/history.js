@@ -7,7 +7,7 @@ const MAX_BYTES = 1024 * 1024;
 const candidate = {source:100, modelId: 200, family: 100, mode: 80, heuristicScore: 'number'};
 const label = {path: 200, value: 200, observedAt: 40};
 const evidence = {schemaVersion: 'number', source: 100, spanName: 100, model: label, provider: label, tokens: label, cost: label};
-const spec = {schema: 80, requestId: 128, runId: 128, observedAt: 40, checkedAt: 40, historical: 'boolean',
+const spec = {provenance:200, schema: 80, requestId: 128, runId: 128, observedAt: 40, checkedAt: 40, historical: 'boolean',
   registryVersion: 100, mappingSource:100, protocol:[{family:100,label:120,heuristicScore:'number'}],behavior:[{family:100,source:120,heuristicScore:'number'}], fingerprint:Object.fromEntries(DIMS.map(key=>[key,'number'])), truncated: 'boolean', candidate,
   sources: [{source: 100, modelId: 200, family: 100}],
   mappingConflicts: [128],

@@ -38,6 +38,13 @@ def verify_archive(output):
                    + 'createHistory(state).save({schema:"webagent-model-analysis/v1",candidate:{modelId:"history-fixture"}})'
                    + '.then(()=>createHistory(state).list()).then(r=>{if(r.length!==1)throw Error("Packaged history mismatch");console.log("Packaged history passed");})'
                    + '.catch(e=>{console.error(e);process.exitCode=1;});')
+        legacy = {'probe':'arena-model-probe','version':'fixture','at':'2026-09-15T00:00:00Z','href':'https://arena.ai/agent/fixture',
+                  'observation':{'url':'https://arena.ai/fixture','text':'data: {"model":"legacy-package-fixture"}\n\n','truncated':False},
+                  'evidence':[{'source':'run.trace.model','modelId':'other-request','weight':999}]}
+        script += ('analyze(' + json.dumps(legacy) + ').then(r=>{'
+                   + 'if(r.candidate.modelId!=="legacy-package-fixture" || r.historical!==true || !r.provenance.includes("export-time"))throw Error("Packaged legacy mismatch");'
+                   + 'return createHistory({get:()=>undefined,update:async(k,v)=>{if(!v.entries[0].report.provenance.includes("export-time"))throw Error("Lost provenance");}}).save(r);})'
+                   + '.then(()=>console.log("Packaged legacy import and saved provenance passed")).catch(e=>{console.error(e);process.exitCode=1;});')
         subprocess.run(['node', '-e', script], cwd=directory, check=True, timeout=30)
 
 
