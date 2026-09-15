@@ -16,6 +16,7 @@ try {
     fs.copyFileSync(path.join(root, rel), dest);
   }
   const forbidden = ['webagent-core/admin-host/data/admin-token.txt', 'webagent-core/agent-host/node_modules/private.json',
+    'arena-model-probe/recon/raw.json', 'arena-model-probe/src/main.js', 'arena-model-probe/arena_probe.py',
     'workspace/.webagent/config.json', 'webagent-repro/server.js', '.config/code-server/config.yaml', 'manager/privacy.md'];
   for (const rel of forbidden) {
     const dest = path.join(source, rel); fs.mkdirSync(path.dirname(dest), { recursive: true });
@@ -24,6 +25,7 @@ try {
   const output = path.join(tmp, 'payload');
   const manifest = stage(source, output);
   assert.ok(manifest.files.length > 50);
+  assert.deepStrictEqual(manifest.files.filter(f => f.path.startsWith('arena-model-probe/')).map(f => f.path), ['arena-model-probe/webagent-connection.user.js']);
   assert.ok(manifest.files.some(f => f.path === 'installer/launch.js'));
   for (const file of ['stdioBridge.cs', 'stdioBridge.ps1', 'stdioSupervisor.js', 'stdioTransport.js', 'stdioLaunch.js']) assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/src/mcp/' + file));
   assert.ok(manifest.files.some(f => f.path === 'computer-use/win/input.cs'));

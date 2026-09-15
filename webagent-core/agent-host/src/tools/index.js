@@ -17,6 +17,7 @@ const { resolveToolName, normalizeToolArgs } = require('./normalize');
 const trace = require('../utils/toolTrace');
 const externalClient = require('../mcp/externalClient');
 const workflows = require('./workflows');
+const connectionCheck = require('../utils/connectionCheck');
 const operatorQueue = require('../utils/operatorQueue');
 const { hostIdentity, diagnostics } = require('../utils/hostDiagnostics');
 const { assertCommandAllowed } = require('./dangerous');
@@ -69,6 +70,7 @@ const TOOLS = [
   tool({ name: 'workflow_preview', aliases: [], description: 'Validate/preview a bounded workflow without execution. Optional step.before checks explicit file exists/contains/sha256 before that step; step.expect checks afterwards. Preview lists write guards without reading files. No commands, deletion, external/nested workflows or retries.', mode: ['ask', 'plan', 'code'], inputSchema: { type: 'object', properties: { definition: { type: 'object' } }, required: ['definition'] }, handler: args => workflows.preview(args.definition) }),
   tool({ name: 'workflow_request', aliases: [], description: 'Request local operator approval for an immutable workflow. Submission is not execution. Query operation_result afterwards; never automatically replay failed writes.', mode: ['code'], inputSchema: { type: 'object', properties: { definition: { type: 'object' }, requestKey: { type: 'string' } }, required: ['definition', 'requestKey'] }, handler: workflows.request }),
 
+  tool({ name: 'confirm_connection', aliases: [], description: 'Echo a local operator-issued one-time connection challenge over this authenticated MCP session. No new permissions; does not verify model/person identity. Never supply credentials.', mode: ['ask', 'plan', 'code'], inputSchema: { type: 'object', properties: { challenge: { type: 'string', pattern: '^[a-f0-9]{64}$' } }, required: ['challenge'], additionalProperties: false }, handler: connectionCheck.confirm }),
   tool({
     name: 'ping',
     aliases: [],

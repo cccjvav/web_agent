@@ -311,6 +311,15 @@
         </div>
         <div class="page hidden" id="page-diagnostics">
           <h2>主机身份与能力诊断</h2>
+          <section class="block">
+            <h3>外部页面与已认证连接核对</h3>
+            <p>在Arena页面使用可选的 webagent-connection.user.js 手动导出最小摘要，再粘贴于此。不是原始抓包，不要粘贴Cookie/JWT。摘要是浏览器自报，不证明真实模型。</p>
+            <textarea id="connection-observation" class="ms-input" rows="5" aria-label="页面最小摘要"></textarea>
+            <button id="btn-create-connection-check" class="vs-btn" type="button">创建两分钟一次性核对</button>
+            <button id="btn-refresh-connection-check" class="vs-btn" type="button">查询核对结果</button>
+            <button id="btn-clear-connection-check" class="vs-btn" type="button">清除核对记录</button>
+            <pre id="connection-check-result" class="url-box">尚未创建。记录仅内存保留，不授予新权限。</pre>
+          </section>
           <p class="lead">让外部AI调用 workspace_info 或 ping，把 identity.hostInstanceId 与这里核对。ID只标识本次进程，不是密钥；重启后会变化。</p>
           <pre id="diagnostic-identity" class="url-box">尚未加载</pre>
           <label class="field-label" for="expected-host">外部工具返回的 hostInstanceId</label>

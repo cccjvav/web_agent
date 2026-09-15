@@ -41,3 +41,8 @@ manager/privacy.md
 
 # installer build output (never part of the product)
 installer/output/
+
+# User probe raw captures and interpreter caches: may contain credentials/private traffic.
+arena-model-probe/recon/
+arena-model-probe/**/__pycache__/
+arena-model-probe/dist/

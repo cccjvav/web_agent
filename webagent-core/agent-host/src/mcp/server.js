@@ -194,9 +194,9 @@ async function handleRpc(req) {
       eventBus.broadcast('tool_call_start', { tool: name, args: toolArgs, source: 'Bridge-Remote' });
       const started = Date.now();
       // 第六阶段：把会话身份（clientName@ip）穿给工具层，多 Agent 任务板靠它记归属
-      if (['board_create', 'board_claim', 'board_update'].includes(name) && !keyForReq(req)) {
+      if (['board_create', 'board_claim', 'board_update', 'external_request', 'workflow_request', 'confirm_connection'].includes(name) && !keyForReq(req)) {
         eventBus.broadcast('tool_call_end', { source: 'Bridge-Remote', tool: name, success: false, durationMs: Date.now() - started });
-        return { content: [{ type: 'text', text: JSON.stringify({ ok: false, error: 'E_SESSION_REQUIRED', detail: 'Initialize and retain Mcp-Session-Id before modifying board state' }) }], isError: true };
+        return { content: [{ type: 'text', text: JSON.stringify({ ok: false, error: 'E_SESSION_REQUIRED', detail: 'Initialize and retain Mcp-Session-Id before session-bound operations' }) }], isError: true };
       }
       const callerKey = keyForReq(req) || sessionKeyFallback(req);
       const sess0 = touch(req, { key: callerKey });

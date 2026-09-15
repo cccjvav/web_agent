@@ -97,6 +97,11 @@ router.post('/external/request', operationApi(req => externalClient.request(req.
 router.post('/workflows/preview', operationApi(req => workflows.preview(req.body?.definition)));
 router.post('/workflows/request', operationApi(req => workflows.request(req.body || {}, { callerKey: 'local' })));
 
+const connectionCheck = require('../utils/connectionCheck');
+router.post('/connection-checks', operationApi(req => connectionCheck.create(req.body)));
+router.get('/connection-checks/:id', operationApi(req => connectionCheck.inspect(req.params.id)));
+router.delete('/connection-checks', operationApi(() => connectionCheck.clear()));
+
 router.get('/diagnostics', (req, res) => res.json(diagnostics()));
 
 router.get('/bridge/activity', (req, res) => res.json(eventBus.getBridgeActivity()));

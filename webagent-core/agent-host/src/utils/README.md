@@ -49,6 +49,7 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 | 源码 | 定位证据 |
 |---|---|
 | [boundedFile.js](boundedFile.js) | 1 个函数/类节点 |
+| [connectionCheck.js](connectionCheck.js) | 9 个函数/类节点 |
 | [corsAllow.js](corsAllow.js) | 14 个函数/类节点 |
 | [diff.js](diff.js) | 1 个函数/类节点 |
 | [eventBus.js](eventBus.js) | 15 个函数/类节点 |

@@ -230,6 +230,29 @@ async function main() {
     await page.locator('#ops-servers button').first().click();
     await page.waitForFunction(() => !document.querySelector('#ops-servers').textContent);
     assert.deepStrictEqual(errors, []);
+    // Minimal browser observation + authenticated MCP echo, without visiting Arena or collecting credentials.
+    await page.click('#rb-bridge-tab'); await page.click('#btn-host-diagnostics');
+    const observation = { schema: 'webagent-browser-observation/v1', origin: 'https://arena.ai', observedAt: new Date().toISOString(), pageKind: 'agent', pageDigest: 'b'.repeat(64) };
+    await page.fill('#connection-observation', JSON.stringify(observation));
+    await page.click('#btn-create-connection-check');
+    await page.waitForFunction(() => document.querySelector('#connection-check-result').textContent.includes('toolRequest'));
+    const check = JSON.parse(await page.locator('#connection-check-result').textContent());
+    const spoof = await fetch(`http://127.0.0.1:${mcpPort}/mcp/${status.secretKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 'spoof', method: 'tools/call', params: { ...check.toolRequest, clientInfo: { name: 'peer:forged' } } }) });
+    assert.strictEqual((await spoof.json()).result.isError, true);
+    const initResponse = await fetch(`http://127.0.0.1:${mcpPort}/mcp/${status.secretKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 'connection-init', method: 'initialize', params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'connection-browser-fixture', version: '1' } } }) });
+    const sessionId = initResponse.headers.get('mcp-session-id'); assert.ok(sessionId);
+    const echoResponse = await fetch(`http://127.0.0.1:${mcpPort}/mcp/${status.secretKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Mcp-Session-Id': sessionId }, body: JSON.stringify({ jsonrpc: '2.0', id: 'connection-echo', method: 'tools/call', params: check.toolRequest }) });
+    const echo = JSON.parse((await echoResponse.json()).result.content[0].text);
+    assert.strictEqual(echo.observationHash, check.observationHash);
+    assert.strictEqual(echo.modelIdentityVerified, false);
+    await page.click('#btn-refresh-connection-check');
+    await page.waitForFunction(() => document.querySelector('#connection-check-result').textContent.includes('echo-confirmed'));
+    assert.ok(!(await page.locator('#connection-check-result').textContent()).includes(check.challenge));
+    const crossOrigin = await fetch(base + '/api/connection-checks', { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://evil.example' }, body: JSON.stringify(observation) });
+    assert.strictEqual(crossOrigin.status, 403);
+    await page.click('#btn-clear-connection-check');
+    await page.waitForFunction(() => document.querySelector('#connection-check-result').textContent.includes('已清除核对记录'));
+    await page.click('#modal-close');
     console.log('Browser PASS: help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');
   } finally {
     if (browser) await browser.close();

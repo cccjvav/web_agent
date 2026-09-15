@@ -39,6 +39,29 @@ async function refreshOperations() {
   $('#ops-status').textContent = `${data.servers.length} 个接入；${data.requests.length} 条进程内请求。waiting-approval 不代表执行成功。`;
 }
 function initOperations() {
+  let checkId = null, checkGeneration = 0;
+  async function connectionAction(callback) {
+    const generation = ++checkGeneration;
+    try { await callback(generation); }
+    catch (error) { if (generation === checkGeneration) $('#connection-check-result').textContent = error.message; }
+  }
+  $('#btn-create-connection-check').onclick = () => connectionAction(async generation => {
+    checkId = null;
+    const text = $('#connection-observation').value; $('#connection-observation').value = '';
+    const result = await api('/connection-checks', 'POST', JSON.parse(text));
+    if (generation !== checkGeneration) return;
+    checkId = result.checkId;
+    $('#connection-check-result').textContent = JSON.stringify({ ...result, toolRequest: { name: 'confirm_connection', arguments: { challenge: result.challenge } } }, null, 2);
+  });
+  $('#btn-refresh-connection-check').onclick = () => connectionAction(async generation => {
+    if (!checkId) throw new Error('请先创建本机核对；页面刷新后需重新创建');
+    const result = await api('/connection-checks/' + checkId);
+    if (generation === checkGeneration) $('#connection-check-result').textContent = JSON.stringify(result, null, 2);
+  });
+  $('#btn-clear-connection-check').onclick = () => connectionAction(async generation => {
+    checkId = null; await api('/connection-checks', 'DELETE');
+    if (generation === checkGeneration) $('#connection-check-result').textContent = '已清除核对记录（不会注销MCP或改变权限）';
+  });
   let stdioPreview = null, launchRequest = 0;
   $('#ops-stdio-config').oninput = () => { launchRequest++; stdioPreview = null; $('#btn-stdio-start').disabled = true; };
   $('#btn-stdio-preview').onclick = () => action(async () => {
