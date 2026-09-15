@@ -58,3 +58,5 @@
 `tools/build.mjs`把lifecycle列入构建/哈希模块清单。测试覆盖同版/不同版重复排队、重复DOMContentLoaded、已有旧API、启动异常、排队后被旧实例占用，以及退订快照、async rejection、blur/mouseup/重复拖动/幂等destroy。这里只把boot替身计数，未调用真正main.boot；不运行令牌/轨迹链。
 
 后续仍需全局停止的所有权设计和真实浏览器原型验证；目前保留“禁用注入后刷新”的退出方式。此前列出的SSE多行、证据归属及轮询竞态没有被这批生命周期测试覆盖。
+
+新增workbench.browser的隔离HUD浏览器回归：只加载ui.js到空白页、拦截全部网络，验证实际Shadow DOM拖动/失焦/关闭按钮/销毁后的行为。不加载原型main、采集层、账户或轨迹模块。其结果以最新提交CI为准，不将本地语法检查冒充浏览器通过。

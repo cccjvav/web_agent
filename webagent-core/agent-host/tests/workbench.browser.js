@@ -14,6 +14,43 @@ async function freePort() {
   await new Promise(resolve => server.close(resolve));
   return port;
 }
+async function probeHudBrowser(browser) {
+  // Only the standalone UI module, in an empty page with all network blocked.
+  // Never inject main.js, the interceptor or any credential/trace modules.
+  const fixture = await browser.newPage();
+  const errors = []; fixture.on('pageerror', error => errors.push(error.message));
+  try {
+    await fixture.route('**/*', route => route.abort());
+    const source = fs.readFileSync(path.resolve(__dirname, '../../../arena-model-probe/src/ui.js'), 'utf8');
+    await fixture.addScriptTag({ content: source.replace(/^export /gm, '') + '\nwindow.fixtureHUD = new HUD(document.body);' });
+    const result = await fixture.evaluate(() => {
+      const hud = window.fixtureHUD;
+      const beginDrag = () => {
+        const rect = hud.root.getBoundingClientRect();
+        hud.root.querySelector('.hd').dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0, clientX: rect.left + 5, clientY: rect.top + 5 }));
+      };
+      beginDrag();
+      document.dispatchEvent(new MouseEvent('mousemove', { clientX: 300, clientY: 200 }));
+      const moved = hud.root.style.left;
+      window.dispatchEvent(new Event('blur'));
+      document.dispatchEvent(new MouseEvent('mousemove', { clientX: 400, clientY: 300 }));
+      const afterBlur = hud.root.style.left;
+      beginDrag();
+      const close = hud.root.querySelector('[data-act="close"]');
+      const warning = close.title; close.click();
+      const closedLeft = hud.root.style.left;
+      beginDrag(); // Detached root must no longer start document-level listeners.
+      document.dispatchEvent(new MouseEvent('mousemove', { clientX: 500, clientY: 400 }));
+      hud.render(null); hud.log('must not retain this'); hud.destroy();
+      return { moved, afterBlur, closedLeft, afterClose: hud.root.style.left, warning, removed: !document.getElementById('amp-hud'), destroyed: hud.destroyed, logs: hud.logs.length };
+    });
+    assert.strictEqual(result.moved, '295px');
+    assert.strictEqual(result.afterBlur, result.moved);
+    assert.strictEqual(result.afterClose, result.closedLeft);
+    assert.ok(result.removed && result.destroyed && result.warning.includes('不停止采集'));
+    assert.strictEqual(result.logs, 0); assert.deepStrictEqual(errors, []);
+  } finally { await fixture.close(); }
+}
 async function main() {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-browser-'));
   fs.writeFileSync(path.join(workspace, 'acceptance.txt'), 'REAL-BROWSER-EVIDENCE\n');
@@ -55,6 +92,7 @@ async function main() {
     };
     await rpc('ping'); // History exists before the page opens.
     browser = await chromium.launch({ headless: true, ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
+    await probeHudBrowser(browser);
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.route('https://cdn.jsdelivr.net/**', route => route.abort());
