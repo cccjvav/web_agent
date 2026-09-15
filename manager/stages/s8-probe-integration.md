@@ -18,8 +18,9 @@
 ## 证据管理
 
 - 前一已交付基线：6d5d059 / CI35014925412九项成功，Companion0.4/浏览器0.3。
-- 本轮：0.5两端构建；新增probeBridge/probeIntegration，主机测试文件总数68。本地全量68文件通过；精确提交CI待推送后记录。失败的中途回归不当作成功。
+- 本轮：0.5两端构建及解包验证通过；新增probeBridge/probeIntegration，主机测试文件总数68。本地全量68文件通过；代码提交bed754754a7be88c9a4eee185ce981c23b125496，CI35020288953九项成功（https://github.com/cccjvav/web_agent/actions/runs/35020288953）。失败的中途回归不当作成功。
 - 不隐瞒限制：任意旧Probe完整dump不是单次输入契约；未保存agent会话不得远控；CDP解压返回不具硬内存界；历史是投影，不是所有原始细节备份。
+- 发行包：webagent-probe-companion-0.5.0.vsix、webagent-arena-inspector-0.5.0.zip；额外从解包模块验证popup配对→当前trace快照→命令执行→回执→断开（合成Chrome/fetch，不是实机）。
 - 后续关闭要求：上述实机项有真实记录；若发现站点变化、数据迁移或控制差距，继续修复，不把未实现项永久排除。
 
 ## 管理修正
