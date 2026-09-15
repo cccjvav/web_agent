@@ -362,18 +362,29 @@ function grepSearch(args = {}) {
     let worker;
     try { worker = new Worker(path.join(__dirname, 'searchWorker.js'), { workerData: { workspaceRoot: config.workspaceRoot, args }, resourceLimits: { maxOldGenerationSizeMb: 64 } }); }
     catch (err) { activeSearches--; reject(err); return; }
-    let done = false;
+    let done = false, started = false, startupTimer = null, scanTimer = null;
     const signal = currentSignal();
     const finish = (err, value) => {
-      if (done) return; done = true; clearTimeout(timer);
+      if (done) return; done = true; clearTimeout(startupTimer); clearTimeout(scanTimer);
       if (signal) signal.removeEventListener('abort', abort);
       worker.terminate().catch(() => {}).finally(() => { activeSearches--; });
       if (err) reject(err); else resolve(value);
     };
     const abort = () => finish(new ProtocolError('E_CANCELLED', 'Search cancelled'));
-    const timer = setTimeout(() => finish(new ProtocolError('E_TIMEOUT', 'Search exceeded 2 second deadline; narrow the path/pattern')), 2000);
+    startupTimer = setTimeout(() => finish(new ProtocolError('E_TIMEOUT', 'Search worker startup exceeded 10 second deadline', { phase: 'startup' })), 10000);
     if (signal) signal.addEventListener('abort', abort, { once: true });
-    worker.once('message', msg => finish(msg.error ? new ProtocolError(msg.error.code || 'E_BAD_ARGS', msg.error.message) : null, msg.result));
+    worker.on('message', msg => {
+      if (done) return;
+      if (msg && msg.ready === true && !started) {
+        started = true; clearTimeout(startupTimer);
+        scanTimer = setTimeout(() => finish(new ProtocolError('E_TIMEOUT', 'Search scanning exceeded 2 second deadline; narrow the path/pattern', { phase: 'scan' })), 2000);
+        worker.postMessage({ type: 'start' });
+        return;
+      }
+      if (msg && msg.ready === true) return; // Duplicate readiness cannot extend the scan budget.
+      if (!started || !msg || (!Object.hasOwn(msg, 'result') && !msg.error)) return finish(new Error('Invalid search worker response'));
+      finish(msg.error ? new ProtocolError(msg.error.code || 'E_BAD_ARGS', msg.error.message) : null, msg.result);
+    });
     worker.once('error', err => finish(err));
     worker.once('exit', code => { if (!done) finish(new Error('Search worker exited without result: ' + code)); });
   });

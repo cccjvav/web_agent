@@ -126,6 +126,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [resourceBudget.test.js](resourceBudget.test.js) | 14 个函数/类节点 |
 | [runChat.test.js](runChat.test.js) | 27 个函数/类节点 |
 | [sandbox.test.js](sandbox.test.js) | 3 个函数/类节点 |
+| [searchWorkerLifecycle.test.js](searchWorkerLifecycle.test.js) | 14 个函数/类节点 |
 | [skillsLifecycle.test.js](skillsLifecycle.test.js) | 19 个函数/类节点 |
 | [skipWorkbench.test.js](skipWorkbench.test.js) | 16 个函数/类节点 |
 | [stateIntegrity.test.js](stateIntegrity.test.js) | 24 个函数/类节点 |
