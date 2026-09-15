@@ -7,6 +7,15 @@ const approvals = require('../utils/operatorQueue');
 const READ = new Set(['ping', 'workspace_info', 'read_files', 'list_directory', 'search_files', 'find_files', 'git_status', 'git_diff']);
 const WRITE = new Set(['write_file', 'apply_patch']);
 
+function validateCondition(condition, label) {
+  if (!condition || typeof condition !== 'object' || Array.isArray(condition)
+    || Object.keys(condition).some(key => !['path', 'exists', 'contains', 'sha256'].includes(key))
+    || !['exists', 'contains', 'sha256'].some(key => Object.hasOwn(condition, key))
+    || typeof condition.path !== 'string' || !condition.path || condition.path.startsWith('$steps.')
+    || (Object.hasOwn(condition, 'sha256') && (typeof condition.sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(condition.sha256)))
+    || (Object.hasOwn(condition, 'contains') && (typeof condition.contains !== 'string' || condition.contains.length > 2000))
+    || (Object.hasOwn(condition, 'exists') && typeof condition.exists !== 'boolean')) throw new Error('Invalid explicit file ' + label);
+}
 function validate(definition) {
   if (!definition || typeof definition !== 'object' || Array.isArray(definition)
     || Buffer.byteLength(JSON.stringify(definition)) > 32 * 1024
@@ -17,6 +26,7 @@ function validate(definition) {
     if (!READ.has(step.tool) && !WRITE.has(step.tool)) throw new Error('Unsupported workflow tool: commands, deletion, external tools and nested workflows are not allowed');
     if (!step.arguments || typeof step.arguments !== 'object' || Array.isArray(step.arguments)) throw new Error('Step arguments must be an object');
     if ('retry' in step) throw new Error('Automatic retry is not supported');
+    if (Object.keys(step).some(key => !['id', 'tool', 'arguments', 'expect', 'before'].includes(key))) throw new Error('Unknown workflow step field');
     if (WRITE.has(step.tool)) {
       if (typeof step.arguments.filePath !== 'string' || step.arguments.filePath.startsWith('$steps.')) throw new Error('Write paths must be explicit literals');
       const body = step.tool === 'write_file' ? step.arguments.content : step.arguments.patch;
@@ -27,12 +37,8 @@ function validate(definition) {
     for (const match of encoded.matchAll(/\$steps\.([a-zA-Z][a-zA-Z0-9_-]*)\./g)) {
       if (!ids.has(match[1])) throw new Error('References must point to an earlier step');
     }
-    if (step.expect) {
-      if (!['exists', 'contains', 'sha256'].some(key => Object.hasOwn(step.expect, key)) || typeof step.expect.path !== 'string' || step.expect.path.startsWith('$steps.')
-        || (step.expect.sha256 != null && !/^[0-9a-f]{64}$/.test(step.expect.sha256))
-        || (step.expect.contains != null && (typeof step.expect.contains !== 'string' || step.expect.contains.length > 2000))
-        || (step.expect.exists != null && typeof step.expect.exists !== 'boolean')) throw new Error('Invalid explicit file postcondition');
-    }
+    if (Object.hasOwn(step, 'expect')) validateCondition(step.expect, 'postcondition');
+    if (Object.hasOwn(step, 'before')) validateCondition(step.before, 'precondition');
     ids.add(step.id);
   }
   return JSON.parse(JSON.stringify(definition));
@@ -40,6 +46,9 @@ function validate(definition) {
 function preview(definition) {
   const checked = validate(definition);
   return { ok: true, requiresApproval: true, risk: checked.steps.some(step => WRITE.has(step.tool)) ? 'writes-workspace' : 'reads-workspace',
+    writeChecks: checked.steps.filter(step => WRITE.has(step.tool)).map(step => ({ stepId: step.id, path: step.arguments.filePath,
+      guard: step.before ? 'explicit-precondition' : step.arguments.expectedHash ? 'tool-hash' : 'unguarded',
+      note: 'Review the actual condition/path/hash. Preconditions are point-in-time checks, not a transaction; use expectedHash for existing-file writes.' })),
     steps: checked.steps, constraints: 'No commands, automatic retries, dynamic write paths/content, nested or external tools. Failure/unknown stops remaining steps.' };
 }
 function resolveValues(value, outputs) {
@@ -74,6 +83,11 @@ async function execute({ definition }, options) {
   for (const step of checked.steps) {
     try {
       checkCancelled();
+      try { checkExpectation(step.before); }
+      catch (_) {
+        steps.push({ id: step.id, tool: step.tool, status: 'failed', execution: 'not-started', errorCode: 'E_PRECONDITION' });
+        return { ok: false, status: 'failed', steps, stoppedAt: step.id, error: 'Precondition failed; this step and later steps were not executed. Earlier effects, if any, remain. No retry or rollback performed.' };
+      }
       const args = resolveValues(step.arguments, outputs);
       const output = await require('./index').callTool(step.tool, args, WRITE.has(step.tool) ? 'code' : 'ask', options);
       outputs[step.id] = output;

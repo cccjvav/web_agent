@@ -170,8 +170,21 @@ async function main() {
     fs.appendFileSync(path.join(skillDir, 'SKILL.md'), '\nNEW-REVISION');
     assert.strictEqual((await rpc('load_skill', { name: skillPage.id, offset: skillPage.nextOffset, expectedHash: skillPage.hash })).isError, true);
     assert.strictEqual((await page.request.get(`http://127.0.0.1:${uiPort}/api/skills/load?name=workspace%3Abrowser-review&offset=1111&expectedHash=${skillPage.hash}`)).status(), 409);
+    await page.fill('#ops-workflow', JSON.stringify({ steps: [{ id: 'create', tool: 'write_file',
+      arguments: { filePath: 'guard-target.txt', content: 'must not overwrite', confirm_overwrite: true },
+      before: { path: 'guard-target.txt', exists: false } }] }));
+    await page.click('#btn-ops-preview');
+    await page.waitForFunction(() => document.querySelector('#ops-review').textContent.includes('explicit-precondition'));
+    assert.ok(!fs.existsSync(path.join(workspace, 'guard-target.txt')));
+    await page.click('#btn-ops-submit');
+    await page.waitForFunction(() => document.querySelector('#ops-review').textContent.includes('waiting-approval'));
+    fs.writeFileSync(path.join(workspace, 'guard-target.txt'), 'created by another program');
+    page.once('dialog', dialog => dialog.accept());
+    await page.locator('#ops-controls button').first().click();
+    await page.waitForFunction(() => document.querySelector('#ops-review').textContent.includes('E_PRECONDITION'));
+    assert.strictEqual(fs.readFileSync(path.join(workspace, 'guard-target.txt'), 'utf8'), 'created by another program');
     assert.deepStrictEqual(errors, []);
-    console.log('Browser PASS: help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change');
+    console.log('Browser PASS: help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift');
   } finally {
     if (browser) await browser.close();
     if (child.exitCode === null) child.kill();
