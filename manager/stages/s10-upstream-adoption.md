@@ -27,3 +27,13 @@
 借鉴08继续落地新文件可读diff、现有/新文件预览版本hash及漂移拒绝回归；没有把可读预览当成完整回退实现。公网MCP、保护回退与目录变化通知等继续保留，不谎报全部完成。
 
 本批还纠正MCP旧工作流提示“拿STALE_FILE的currentHash直接重试”，改为停止本次写入、重读并协调新内容，冲突询问操作者，未知效果不重放。不是放宽哈希检查来让测试通过。
+
+
+### 本批验证结论
+
+代码99f46e9628546d6f787262784e8d91082b7c82ea，CI35033494833九项成功：https://github.com/cccjvav/web_agent/actions/runs/35033494833 。本地完整75文件通过，232受管源码/28目录/109排除，生成站点同步。
+
+- 工作台：真实Chromium经MCP上报Tasks，禁用WS仍轮询显示；刷新恢复、completed更新、第二会话隔离、本地Chat不串入，均通过。
+- 桌面/code-server/App：核心扩展同源及发行副本一致；真实生成的Bridge Webview脚本在VM验证分组/空提示/转义，HTTP服务快照经测试。未在真实桌面VSCode或code-server窗口操作，不冒充可视实机验收。
+- 新文件/已有文件dryRun预览、哈希与漂移拒绝通过；回退尚未实现。
+- 中途5eb354b的回归错用了只含连接URL的getBootstrapPrompt，断言失败；99f46e9改为真实getInstructions后全绿。保留失败事实，不借旧绿灯覆盖。沙箱Chromium下载仍ECONNRESET，本次真实浏览器证据来自上述CI，而非本地。
