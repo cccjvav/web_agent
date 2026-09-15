@@ -4,10 +4,10 @@
 
 | 能力 | 当前实现 | 证据/待验 |
 |---|---|---|
-| 单采集器/字段/协议/行为 | Inspector独占CDP；trace双解析及同源Fetch/XHR/EventSource/文本WS采样；标准/轻量预设 | 解包78项；通用采样合成回归；实际流格式待验 |
+| 单采集器/字段/协议/行为 | Inspector独占CDP；trace双解析及同源Fetch/XHR/EventSource/文本WS采样；标准/轻量预设 | 解包78项及采集竞态脚本；实际流格式待验 |
 | trace/run/span/用量 | 原范围链保留；独立响应不硬绑run；跨端快照标注预算截断 | traceIntegration及原Inspector测试；真实标签/缺字段待验 |
-| 离线分析/参考历史 | Worker、50条摘要、比较/删除、整库导出导入、旧浏览器批量迁移 | probeHistory/probeIntegration；实机持久化待验 |
-| 实时浏览器→WebAgent→VSCode | 15分钟扩展Origin能力、单tab/工作区、2秒同步、明确订阅trace或response、过期停止 | probeBridge真实回环HTTP + 合成浏览器driver；Chrome权限/MV3待验 |
+| 离线分析/参考历史 | Worker、旧Probe原生导入、50条摘要、比较/删除、整库导出导入、旧浏览器批量迁移 | probeHistory/probeIntegration/probeLegacyImport；实机持久化待验 |
+| 实时浏览器→WebAgent→VSCode | 15分钟扩展Origin能力、单tab/工作区、2秒同步、明确订阅trace或response、过期停止 | probeBridge真实回环HTTP + 合成浏览器driver；配对取消竞态通过；Chrome权限/MV3待验 |
 | 统一操作审批 | probe_request → operatorQueue → 单次命令；网页写操作再确认；取消/撤销/未知不重放 | 回环审批/所有权/幂等/撤销与DOM adapter桩；真实页面待验 |
 | 公开映射刷新 | 固定公开源、无Cookie/跳转、预算/取消、缓存日期/冲突、当前UUID应用、目录导出 | 真实解析器合成输入；实际网页可用性待验 |
 | 主动题组/tokenizer | 选择完整题目后逐次批准发送；拒答题安全替换；基准声明+prompt计数才测 | DOM adapter及tokenizer门槛回归；账户计费/可比计数待验 |
@@ -20,7 +20,10 @@
 - 修复通用采样异步初始化/结束次序、导航/停止/同ID替换后的旧结果；所有传输执行预设UTF8字节限额。
 - 修复配对等待期间断开后仍可能连上的竞态；新配对选择使旧票据失效。
 - 新增旧Probe buildDump转换，隔离全局缓存证据并保留时间来源/历史/截断说明。
-- 新增probeCaptureLifecycle、probePairLifecycle、probeLegacyImport测试；本地全量71文件通过，浏览器解包78项及两项竞态脚本通过，VSIX解包旧导入/历史来源验证通过。精确SHA CI在推送后登记。
+- 新增probeCaptureLifecycle、probePairLifecycle、probeLegacyImport测试；本地全量71文件通过，浏览器解包78项及两项竞态脚本通过，VSIX解包旧导入/历史来源验证通过。代码03dcb151e01fce1f8a3050609382438cffb1b6f1，CI35021798531九项成功：https://github.com/cccjvav/web_agent/actions/runs/35021798531 。
+
+- 0.5.1匿名公开目录实测尝试：沙箱Node运行真实refreshCatalog入口，首个请求报ECONNRESET，未取得页面内容；不是解析成功，也不能据此判定用户Chrome或网站不可用。真实目录验收保持待办。
+- 0.5.1发行包：webagent-probe-companion-0.5.1.vsix、webagent-arena-inspector-0.5.1.zip。
 
 ## 证据管理
 
