@@ -89,6 +89,8 @@ router.get('/operations', operationApi(() => ({ requests: operatorQueue.list(), 
 router.get('/operations/:id', operationApi(req => operatorQueue.inspect(req.params.id)));
 router.post('/operations/:id/approve', operationApi(req => operatorQueue.approve(req.params.id, req.body?.confirm === true)));
 router.post('/operations/:id/cancel', operationApi(req => operatorQueue.cancel(req.params.id)));
+router.post('/external/stdio/preview', operationApi(req => externalClient.previewStdio(req.body || {})));
+router.post('/external/stdio/start', operationApi(req => externalClient.startStdio(req.body || {})));
 router.post('/external/servers', operationApi(req => externalClient.add(req.body || {})));
 router.delete('/external/servers/:id', operationApi(req => externalClient.remove(req.params.id)));
 router.post('/external/request', operationApi(req => externalClient.request(req.body || {}, { callerKey: 'local' })));

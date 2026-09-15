@@ -56,7 +56,10 @@ jobs:
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
-          Add-Type -Path 'webagent-core/agent-host/src/tools/commandJob.cs'
+          Add-Type -Path @('webagent-core/agent-host/src/tools/commandJob.cs', 'webagent-core/agent-host/src/mcp/stdioBridge.cs')
+          $tokens=$null; $parseErrors=$null
+          [void][System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD 'webagent-core/agent-host/src/mcp/stdioBridge.ps1'),[ref]$tokens,[ref]$parseErrors)
+          if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
           foreach ($file in @('capture.cs','mark.cs')) {
             Add-Type -Path (Join-Path 'computer-use/win' $file) -ReferencedAssemblies System.Drawing
           }

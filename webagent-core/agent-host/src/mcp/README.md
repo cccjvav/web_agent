@@ -1,5 +1,7 @@
 # MCP：远程客户端协议、认证与工具结果
 
+stdio/受控外部接入：[受控工具与工作流详解](../utils/受控工具与工作流详解.md)。
+
 逐函数/类方法阅读：[会话与结果详解](会话与结果详解.md) · [资源与客户端详解](资源与客户端详解.md) · [请求分发详解](请求分发详解.md) · [OAuth授权详解](OAuth授权详解.md)。
 
 
@@ -77,12 +79,17 @@ POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连
 | [budget.js](budget.js) | 6 个函数/类节点 |
 | [clients.js](clients.js) | 5 个函数/类节点 |
 | [errors.js](errors.js) | 6 个函数/类节点 |
-| [externalClient.js](externalClient.js) | 19 个函数/类节点 |
+| [externalClient.js](externalClient.js) | 23 个函数/类节点 |
 | [instructions.js](instructions.js) | 3 个函数/类节点 |
 | [oauth.js](oauth.js) | 45 个函数/类节点 |
 | [resources.js](resources.js) | 5 个函数/类节点 |
 | [server.js](server.js) | 32 个函数/类节点 |
 | [session.js](session.js) | 14 个函数/类节点 |
+| [stdioBridge.cs](stdioBridge.cs) | 文件级登记；未做符号完整性证明 |
+| [stdioBridge.ps1](stdioBridge.ps1) | 文件级登记；未做符号完整性证明 |
+| [stdioLaunch.js](stdioLaunch.js) | 11 个函数/类节点 |
+| [stdioSupervisor.js](stdioSupervisor.js) | 2 个函数/类节点 |
+| [stdioTransport.js](stdioTransport.js) | 25 个函数/类节点 |
 <!-- docs-inventory:end -->
 
 

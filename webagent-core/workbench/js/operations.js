@@ -39,6 +39,23 @@ async function refreshOperations() {
   $('#ops-status').textContent = `${data.servers.length} 个接入；${data.requests.length} 条进程内请求。waiting-approval 不代表执行成功。`;
 }
 function initOperations() {
+  let stdioPreview = null, launchRequest = 0;
+  $('#ops-stdio-config').oninput = () => { launchRequest++; stdioPreview = null; $('#btn-stdio-start').disabled = true; };
+  $('#btn-stdio-preview').onclick = () => action(async () => {
+    const ticket = ++launchRequest;
+    stdioPreview = null; $('#btn-stdio-start').disabled = true;
+    const launch = JSON.parse($('#ops-stdio-config').value);
+    $('#ops-stdio-config').value = JSON.stringify({ ...launch, env: undefined }, null, 2);
+    const result = await api('/external/stdio/preview', 'POST', launch);
+    if (ticket !== launchRequest) return;
+    $('#ops-stdio-review').textContent = JSON.stringify(result, null, 2);
+    stdioPreview = result.previewId; $('#btn-stdio-start').disabled = false;
+  });
+  $('#btn-stdio-start').onclick = () => action(async () => {
+    if (!stdioPreview || !confirm('启动本身会执行所审阅程序，拥有当前系统用户权限。不是OS沙箱。确认信任该程序、参数和依赖，并启动一次？')) return;
+    const previewId = stdioPreview; stdioPreview = null; $('#btn-stdio-start').disabled = true;
+    await api('/external/stdio/start', 'POST', { previewId, confirmed: true });
+  });
   $('#btn-operations').onclick = () => { ui.openModal('operations'); action(refreshOperations); };
   $('#btn-ops-refresh').onclick = () => action(refreshOperations);
   $('#btn-ops-add').onclick = () => action(async () => {

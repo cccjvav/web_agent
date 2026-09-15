@@ -64,3 +64,6 @@ editorRuntime/workbenchRuntime/monacoLoading用实际模块或函数fixture检�
 
 ## Skills渐进查看
 技能页按来源ID/用途搜索；正文每页最大8000字符，续页使用hash，资源只在Skill目录内按需读取。脚本显示源码而不运行；填入Ask保留草稿且不发送；workflow.json完整读取后只转到现有工作流结构预览，不自动申请/批准执行。模型上下文仅首20条元数据，更多目录及正文通过load_skill分页。
+
+## stdio程序接入
+本机“工具接入与审批”支持启动JSON只读预览→二次确认启动；启动是OS用户代码执行，不是只读发现/沙箱。程序与显式reviewFiles hash绑定，env值不持久化，工具调用仍逐次审批。取消/超限停止整服务，不自动重启。详见使用指南和受控工具与工作流详解。

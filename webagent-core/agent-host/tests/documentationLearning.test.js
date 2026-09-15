@@ -9,6 +9,13 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/src/mcp/stdioLaunch.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
+  ["webagent-core/agent-host/src/mcp/stdioTransport.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
+  ["webagent-core/agent-host/src/mcp/stdioSupervisor.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
+  ["webagent-core/agent-host/tests/stdioMcp.test.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
+  ["webagent-core/agent-host/tests/stdioServerFixture.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
+  ["webagent-core/agent-host/tests/stdioOwnerFixture.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
+
   ["webagent-core/agent-host/tests/workflowPreconditions.test.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
   ["webagent-core/agent-host/tests/externalDiscovery.test.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
   ["webagent-core/agent-host/tests/memoryRecall.test.js", "webagent-core/agent-host/src/models/画像与记忆详解.md"],
@@ -207,6 +214,9 @@ for (const [source, guide] of pairs) {
 }
 // File-level evidence for non-JS prose: no semantic or selector completeness claim.
 const artifactPairs = [
+  ["webagent-core/agent-host/src/mcp/stdioBridge.cs", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
+  ["webagent-core/agent-host/src/mcp/stdioBridge.ps1", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
+
   ["webagent-core/agent-host/src/tools/commandJob.cs", "webagent-core/agent-host/src/tools/命令与PTY详解.md"],
   ["computer-use/win/capture.cs", "computer-use/win/截图标记与OCR详解.md"],
   ["computer-use/win/snap.ps1", "computer-use/win/截图标记与OCR详解.md"],

@@ -84,3 +84,6 @@ Windows CI额外编译agent-host/src/tools/commandJob.cs，并在全量任务后
 CI同时运行非阻断npm audit --omit=dev：用于提示最新生产依赖公告，不因临时注册表网络失败把代码测试误报失败；安全告警仍需维护者处理。本轮本地审计返回0项已知漏洞，并非永久安全保证。
 
 为核对engines >=18的最低声明，另加Ubuntu Node18兼容任务，不表示推荐使用已结束维护的Node版本；日常继续使用受维护的Node，用户当前24无需降级。Windows编译检查覆盖全部五个computer-use C#文件及commandJob.cs（Drawing文件引用System.Drawing），并解析全部受管PowerShell脚本；不调用截图/鼠标/键盘来冒充桌面验收。
+
+### stdio桥的Windows构建检查
+test.yml的Windows安装器任务同时Add-Type编译commandJob.cs与stdioBridge.cs，并ParseFile检查stdioBridge.ps1；Node矩阵里的stdioMcp.test.js实际运行监督器/传输/取消和宿主强杀回收。不是只语法通过就宣称进程生命周期正确，也不替代用户11.3。

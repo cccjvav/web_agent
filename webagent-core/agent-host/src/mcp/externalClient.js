@@ -1,10 +1,12 @@
 'use strict';
-// Deliberately HTTP-only, loopback-only, operator-configured, and memory-only.
-// No npx/uvx installation, child process spawning, arbitrary URL tools or auto-retry.
+// Operator-configured, memory-only HTTP loopback or explicitly confirmed stdio.
+// No package installation, arbitrary remote launch configuration, or auto-retry.
 const { randomUUID } = require('crypto');
 const { config } = require('../config');
 const { currentSignal, checkCancelled, runWithSignal } = require('../utils/requestScope');
 const approvals = require('../utils/operatorQueue');
+const stdioLaunch = require('./stdioLaunch');
+const stdioTransport = require('./stdioTransport');
 const clients = new Map();
 const MAX_BYTES = 256 * 1024;
 
@@ -58,6 +60,7 @@ async function responseMessage(response, id) {
 async function rpc(client, method, params, notification = false) {
   checkCancelled();
   if (clients.get(client.id) !== client) throw new Error('Server removed');
+  if (client.transport) return client.transport.request(method, params, notification);
   const controller = new AbortController(), parent = currentSignal();
   const abort = () => controller.abort();
   parent?.addEventListener('abort', abort, { once: true });
@@ -88,8 +91,8 @@ async function rpc(client, method, params, notification = false) {
   }
 }
 function list(local = false) {
-  return [...clients.values()].map(client => ({ serverId: client.id, name: client.name, status: client.status,
-    tools: JSON.parse(JSON.stringify(client.tools)), ...(local ? { endpoint: client.url } : {}) }));
+  return [...clients.values()].map(client => ({ serverId: client.id, name: client.name, status: client.status, transport: client.transport ? 'stdio' : 'http',
+    tools: JSON.parse(JSON.stringify(client.tools)), ...(local ? client.transport ? { launch: JSON.parse(JSON.stringify(client.launch)), process: client.transport.status() } : { endpoint: client.url } : {}) }));
 }
 async function discoverTools(client) {
   const tools = [], names = new Set(), cursors = new Set();
@@ -119,6 +122,17 @@ async function add({ name, url, token = '' }) {
   if (typeof token !== 'string' || token.length > 4096 || /[\r\n]/.test(token)) throw new Error('Invalid bearer token');
   const client = { id: randomUUID(), name: String(name || 'Local MCP').slice(0, 120), url: endpoint(url), token,
     controllers: new Set(), tools: [], status: 'connecting', session: '', protocol: '' };
+  return establish(client);
+}
+async function startStdio(input) {
+  if (clients.size >= 8) throw new Error('At most eight external servers');
+  const launch = stdioLaunch.consume(input);
+  const client = { id: randomUUID(), name: launch.name, controllers: new Set(), tools: [], status: 'connecting', protocol: '',
+    launch: { program: launch.program, args: [...launch.args], cwd: launch.cwd, envKeys: Object.keys(launch.env) } };
+  client.transport = stdioTransport.open(launch, () => { client.status = 'stopped'; });
+  return establish(client);
+}
+async function establish(client) {
   clients.set(client.id, client);
   const registration = new AbortController(), parent = currentSignal();
   const abort = () => registration.abort();
@@ -137,14 +151,15 @@ async function add({ name, url, token = '' }) {
       client.status = 'discovered';
       return list(true).find(item => item.serverId === client.id);
     });
-  } catch (error) { remove(client.id); throw error; }
+  } catch (error) { remove(client.id); if (client.transport) await client.transport.closed; throw error; }
   finally { clearTimeout(timer); parent?.removeEventListener('abort', abort); client.controllers.delete(registration); }
 }
 function remove(id) {
   const client = clients.get(id);
   if (client) for (const controller of client.controllers) controller.abort();
+  if (client?.transport) client.transport.stop('Server removed');
   clients.delete(id);
-  return { removed: Boolean(client) };
+  return { removed: Boolean(client), ...(client?.transport ? { stopping: true } : {}) };
 }
 function request({ serverId, tool, arguments: args = {}, requestKey }, options = {}) {
   const client = clients.get(serverId);
@@ -154,9 +169,14 @@ function request({ serverId, tool, arguments: args = {}, requestKey }, options =
 }
 async function execute(input) {
   const client = clients.get(input.serverId);
-  if (!client || !client.tools.some(tool => tool.name === input.tool)) return { ok: false, error: 'Server removed or tool unavailable; not executed' };
+  if (!client || client.status !== 'discovered' || !client.tools.some(tool => tool.name === input.tool)) return { ok: false, error: 'Server removed or tool unavailable; not executed' };
   const output = await rpc(client, 'tools/call', { name: input.tool, arguments: input.arguments });
   return { ...output, ok: output.isError !== true, verification: { state: 'external-reported', note: 'External tool output is not an independent verification of effects.' } };
 }
 approvals.register('external-mcp', execute);
-module.exports = { endpoint, responseMessage, add, remove, list, request };
+async function closeAll() {
+  stdioLaunch.clear();
+  for (const id of [...clients.keys()]) remove(id);
+  await stdioTransport.closeAll();
+}
+module.exports = { endpoint, responseMessage, add, remove, list, request, startStdio, previewStdio: stdioLaunch.preview, closeAll };

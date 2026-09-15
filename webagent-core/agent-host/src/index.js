@@ -156,4 +156,14 @@ mcpServer.on('listening', () => {
   console.log(`agent-host MCP listening on ${config.host}:${config.port}`);
 });
 
+let shuttingDown = false;
+async function shutdown() {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  const deadline = setTimeout(() => process.exit(1), 8000); deadline.unref();
+  try { await require('./mcp/externalClient').closeAll(); }
+  finally { clearTimeout(deadline); process.exit(0); }
+}
+process.once('SIGTERM', shutdown); process.once('SIGINT', shutdown);
+
 module.exports = { uiApp, mcpApp, uiServer, mcpServer };
