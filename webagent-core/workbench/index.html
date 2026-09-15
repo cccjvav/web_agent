@@ -201,6 +201,7 @@
         </div>
       </div>
       <div id="right-bridge" class="rb-body hidden">
+        <div class="side-pad"><div id="bridge-host" class="tiny">主机身份待同步</div><button type="button" id="btn-host-diagnostics" class="vs-btn">核对主机与能力</button></div>
         <div class="bridge-wait" id="bridge-wait">
           <div class="wait-ico">✦</div>
           <h3>Waiting for the remote Agent</h3>
@@ -277,6 +278,18 @@
       </aside>
       <div class="modal-main">
         <button type="button" class="modal-close" id="modal-close" title="关闭">✕</button>
+        <div class="page hidden" id="page-diagnostics">
+          <h2>主机身份与能力诊断</h2>
+          <p class="lead">让外部AI调用 workspace_info 或 ping，把 identity.hostInstanceId 与这里核对。ID只标识本次进程，不是密钥；重启后会变化。</p>
+          <pre id="diagnostic-identity" class="url-box">尚未加载</pre>
+          <label class="field-label" for="expected-host">外部工具返回的 hostInstanceId</label>
+          <input id="expected-host" class="ms-input" placeholder="只填主机UUID，不要填MCP地址或密钥" />
+          <button type="button" id="btn-compare-host" class="vs-btn">核对</button>
+          <p id="host-comparison" role="status"></p>
+          <button type="button" id="btn-refresh-diagnostics" class="vs-btn">重新执行只读诊断</button>
+          <div id="diagnostic-capabilities"></div>
+          <p class="hint">ready仅表示本项条件已探测；unverified不是验收通过。不自动安装、执行命令或操作桌面。</p>
+        </div>
         <div class="page hidden" id="page-help">
           <h2>开始使用本机工作台</h2>
           <ol class="guide-steps">

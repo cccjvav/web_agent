@@ -95,7 +95,7 @@ readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，
 | [fileOps.js](fileOps.js) | 30 个函数/类节点 |
 | [findFiles.js](findFiles.js) | 3 个函数/类节点 |
 | [gitOps.js](gitOps.js) | 6 个函数/类节点 |
-| [index.js](index.js) | 15 个函数/类节点 |
+| [index.js](index.js) | 16 个函数/类节点 |
 | [normalize.js](normalize.js) | 4 个函数/类节点 |
 | [patchEngine.js](patchEngine.js) | 33 个函数/类节点 |
 | [planRound.js](planRound.js) | 10 个函数/类节点 |

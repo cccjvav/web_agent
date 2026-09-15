@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const { hostIdentity } = require('../utils/hostDiagnostics');
 const { config } = require('../config');
 const { loadCustom } = require('../models/customizations');
 const { resolveEnvironment, resolveTechStack } = require('../models/profile');
@@ -36,6 +37,7 @@ function workspaceInfo() {
   }
   return {
     root: config.workspaceRoot,
+    identity: hostIdentity(),
     packageName,
     git: {
       available: git.available,

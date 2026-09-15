@@ -1,5 +1,6 @@
 const express = require('express');
 const { getToolList, callTool } = require('../tools');
+const { hostIdentity } = require('../utils/hostDiagnostics');
 const { config } = require('../config');
 const { loadCustom } = require('../models/customizations');
 const eventBus = require('../utils/eventBus');
@@ -162,6 +163,7 @@ async function handleRpc(req) {
           logging: {}
         },
         serverInfo: { name: config.serverName, version: config.version },
+        _meta: { identity: hostIdentity() },
         instructions: getInstructions()
       };
     }
@@ -199,7 +201,7 @@ async function handleRpc(req) {
       const callerKey = keyForReq(req) || sessionKeyFallback(req);
       const sess0 = touch(req, { key: callerKey });
       try {
-        const result = await callTool(name, toolArgs || {}, remoteToolMode(params), { remote: true, callerKey: sess0.key });
+        const result = await callTool(name, toolArgs || {}, remoteToolMode(params), { remote: true, callerKey: sess0.key, taskId: params?._meta?.['webagent/taskId'] });
         const failed = Boolean(result && (result.ok === false || result.success === false));
         const clipped = clipJson(result);
         const durationMs = Date.now() - started;
@@ -227,6 +229,7 @@ async function handleRpc(req) {
         }
         return {
           content,
+          _meta: { trace: result.trace },
           isError: failed
         };
       } catch (err) {
@@ -237,6 +240,7 @@ async function handleRpc(req) {
         eventBus.broadcast('tool_call_end', { source: 'Bridge-Remote', tool: name, success: false, durationMs, error: info });
         return {
           content: [{ type: 'text', text: JSON.stringify(info, null, 2) }],
+          _meta: { trace: err.trace },
           isError: true
         };
       }

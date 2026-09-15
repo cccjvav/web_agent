@@ -9,6 +9,9 @@ function onClick(id, handler) {
 }
 
 export function bind() {
+  onClick('#btn-host-diagnostics', () => { ui.openModal('diagnostics'); ui.refreshDiagnostics(); });
+  onClick('#btn-refresh-diagnostics', () => ui.refreshDiagnostics());
+  onClick('#btn-compare-host', () => ui.compareHost());
   if (ui.initTheme) ui.initTheme();
   onClick('#btn-theme', () => {
     const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';

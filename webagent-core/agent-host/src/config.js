@@ -7,6 +7,8 @@ const workspaceRoot = path.resolve(
 );
 
 const config = {
+  hostInstanceId: crypto.randomUUID(),
+  startedAt: new Date().toISOString(),
   port: parseInt(process.env.AGENT_HOST_PORT || '48271', 10),
   workbenchPort: parseInt(process.env.WORKBENCH_PORT || '3000', 10),
   host: process.env.WEBAGENT_BIND || '127.0.0.1',

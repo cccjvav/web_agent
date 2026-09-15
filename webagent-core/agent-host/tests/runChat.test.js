@@ -32,6 +32,18 @@ async function main() {
     'const assert = require("assert");\nconst { greet } = require("../src/app");\nassert.strictEqual(greet(), "hi");\nconsole.log("ok");\n'
   );
 
+  fs.writeFileSync(path.join(tmp, 'explicit-evidence.txt'), 'EXPLICIT-READ-EVIDENCE');
+  const explicit = collect();
+  await runChat({ mode: 'ask', message: '只读取 `explicit-evidence.txt`' }, explicit.emit);
+  assert.ok(explicit.events.some(event => event.type === 'message' && event.text.includes('EXPLICIT-READ-EVIDENCE')));
+  const explicitReads = explicit.events.filter(event => event.type === 'tool' && event.name === 'read_files');
+  assert.strictEqual(explicitReads.length, 1);
+  assert.deepStrictEqual(explicitReads[0].args.paths, ['explicit-evidence.txt']);
+  const missing = collect();
+  await runChat({ mode: 'ask', message: '读取 `absent.txt`' }, missing.emit);
+  assert.ok(missing.events.some(event => event.type === 'message' && event.text.includes('未读取：absent.txt')));
+  assert.ok(!missing.events.some(event => event.type === 'tool' && event.name === 'read_files'));
+
   const ask = collect();
   await runChat({ mode: 'ask', message: '分析当前项目实现了什么功能' }, ask.emit);
   const askTools = ask.events.filter((e) => e.type === 'tool').map((e) => e.name);

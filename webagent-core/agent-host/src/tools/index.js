@@ -14,6 +14,8 @@ const { loadSkill } = require('./skills');
 const boardTools = require('./board');
 const { workspaceInfo } = require('./workspaceInfo');
 const { resolveToolName, normalizeToolArgs } = require('./normalize');
+const trace = require('../utils/toolTrace');
+const { hostIdentity, diagnostics } = require('../utils/hostDiagnostics');
 const { assertCommandAllowed } = require('./dangerous');
 
 function tool(def) {
@@ -21,10 +23,10 @@ function tool(def) {
 }
 
 function pingHost() {
-  return { ok: true, ts: Date.now(), ...snapshot() };
+  return { ok: true, ts: Date.now(), identity: hostIdentity(), ...snapshot() };
 }
 
-const LOG_KEEP = new Set(['tool', 'success', 'durationMs', 'execId', 'status', 'truncated']);
+const LOG_KEEP = new Set(['tool', 'success', 'durationMs', 'execId', 'status', 'truncated', 'callId', 'taskId', 'sessionId', 'hostInstanceId', 'verification']);
 
 function getLogs({ maxLines = 50 } = {}) {
   const n = Math.min(200, Math.max(1, Number(maxLines) || 50));
@@ -41,8 +43,9 @@ function getLogs({ maxLines = 50 } = {}) {
 
 function getCapabilities() {
   return {
-    tools: getToolList().map((t) => ({ name: t.name, description: t.description })),
-    session: snapshot()
+    tools: getToolList().map((t) => ({ name: t.name, description: t.description, modes: toolRegistry.get(t.name).mode.slice() })),
+    session: snapshot(),
+    ...diagnostics()
   };
 }
 
@@ -488,7 +491,7 @@ function getToolList(currentMode = null, opts = {}) {
     .map(({ name, description, inputSchema }) => ({ name, description, inputSchema }));
 }
 
-async function callTool(name, args = {}, currentMode = null, opts = {}) {
+async function dispatchTool(name, args = {}, currentMode = null, opts = {}) {
   require('../utils/requestScope').checkCancelled();
   const resolved = resolveToolName(name);
   const toolDef = toolRegistry.get(resolved) || toolRegistry.get(name);
@@ -530,7 +533,20 @@ async function callTool(name, args = {}, currentMode = null, opts = {}) {
     result.code = 'E_TIMEOUT';
     result.suggestedWaitMs = 0;
   }
-  return clipJson(result);
+  return trace.verifyMutation(toolDef.name, input, result);
+}
+
+async function callTool(name, args = {}, currentMode = null, opts = {}) {
+  const resolved = resolveToolName(name);
+  const record = trace.beginCall(toolRegistry.has(resolved) ? resolved : 'unknown-tool', opts);
+  try {
+    const result = await dispatchTool(name, args, currentMode, opts);
+    const detail = trace.finishCall(record, result);
+    return clipJson({ ...result, trace: detail });
+  } catch (err) {
+    err.trace = trace.finishCall(record, null, err);
+    throw err;
+  }
 }
 
 module.exports = {

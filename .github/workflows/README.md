@@ -21,3 +21,5 @@ Linux安装锁定依赖后执行npm test；文档清单检查是其中的测试�
 |---|---|
 | [test.yml](test.yml) | 文件级登记；未做符号完整性证明 |
 <!-- docs-inventory:end -->
+
+新增workbench-browser：Ubuntu/Node22，独立10分钟限时；npm ci、Playwright Chromium及系统库安装、npm run test:browser。它实际操作浏览器和认证MCP，不代替Windows桌面输入或用户手机验收。

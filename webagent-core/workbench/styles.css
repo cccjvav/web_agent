@@ -549,3 +549,6 @@ html[data-theme="light"] .diff-del { background: #fce5e5; color: var(--danger); 
 }
 
 button.walk-card { width: 100%; text-align: left; color: var(--text); font: inherit; }
+
+#bridge-host, .trace-detail { overflow-wrap: anywhere; }
+.trace-detail { padding: 6px 8px; }

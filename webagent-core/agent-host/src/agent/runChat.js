@@ -1,4 +1,6 @@
 const path = require('path');
+const { withTask } = require('../utils/toolTrace');
+const { resolveSafePath } = require('../tools/patchEngine');
 const { config } = require('../config');
 const { callTool } = require('../tools');
 const { draftLocalBranch, mergeLocalBranches } = require('../tools/consensusEngine');
@@ -67,7 +69,8 @@ function pickExisting(relPaths) {
   const fs = require('fs');
   const found = [];
   for (const rel of relPaths) {
-    const full = path.join(config.workspaceRoot, rel);
+    let full;
+    try { full = resolveSafePath(rel); } catch (_) { continue; }
     if (fs.existsSync(full) && fs.statSync(full).isFile()) found.push(rel.replace(/\\/g, '/'));
   }
   return found;
@@ -111,8 +114,15 @@ function stripLineNumbers(content) {
     .join('\n');
 }
 
+function requestedFiles(message) {
+  const text = String(message || '');
+  const quoted = [...text.matchAll(/`([^`\r\n]+)`|"([^"\r\n]+)"/g)].map(match => match[1] || match[2]).filter(value => /\.[a-z0-9_-]+$/i.test(value));
+  const bare = text.match(/[a-zA-Z0-9_./\\-]+\.[a-zA-Z0-9]{1,12}/g) || [];
+  return [...new Set([...quoted, ...bare].map(value => value.replace(/\\/g, '/')))].slice(0, 6);
+}
+
 async function explore(emit, mode, message) {
-  const facts = { files: [], readme: '', pkg: '', testCmd: 'npm test', testOutput: '' };
+  const facts = { files: [], readme: '', pkg: '', testCmd: 'npm test', testOutput: '', requested: requestedFiles(message), evidence: [] };
 
   const listed = await timedTool(emit, mode, 'list_directory', { dirPath: '.', recursive: true, maxDepth: 3 });
   if (listed.ok) {
@@ -154,8 +164,8 @@ async function explore(emit, mode, message) {
     'Cargo.toml',
     'go.mod'
   ];
-  const toRead = pickExisting(candidates);
-  for (const f of facts.files) {
+  const toRead = pickExisting(facts.requested.length ? facts.requested : candidates);
+  for (const f of facts.requested.length ? [] : facts.files) {
     if (toRead.length >= 6) break;
     if (!toRead.includes(f) && !SKIP_DIRS.has(f.split('/')[0])) toRead.push(f);
   }
@@ -167,6 +177,7 @@ async function explore(emit, mode, message) {
       for (const file of files) {
         if (!file || file.error) continue;
         const body = stripLineNumbers(file.content);
+        facts.evidence.push({ filePath: file.filePath, content: clip(body, 1200) });
         if (/readme/i.test(file.filePath)) facts.readme = body;
         if (/package\.json$/i.test(file.filePath)) facts.pkg = body;
       }
@@ -185,6 +196,8 @@ function summarizeAsk(message, facts) {
     '',
     `你问的是：${message}`,
     '',
+    '内置探索：固定工具流程，不是通用语言模型。扫描/读取有数量上限。',
+    ...(facts.requested?.length ? ['**显式文件读取证据**', ...facts.evidence.map(item => `文件 ${item.filePath}\n\`\`\`text\n${item.content}\n\`\`\``), ...facts.requested.filter(file => !facts.evidence.some(item => item.filePath === file)).map(file => `未读取：${file}（不存在、不允许或读取失败；不猜测内容）`)] : []),
     '**当前能看到的文件**',
     tree,
     facts.files.length > 30 ? `- …共 ${facts.files.length} 个文件` : '',
@@ -529,7 +542,7 @@ async function runPlanRound(payload, emit, cfg) {
   }
 }
 
-async function runChat(payload = {}, emit) {
+async function runChatBody(payload = {}, emit) {
   const send = typeof emit === 'function' ? emit : payload.emit;
   const cfg = store.load();
   const mode = payload.mode || 'ask';
@@ -563,4 +576,7 @@ async function runChat(payload = {}, emit) {
   return runBuiltin(payload, send);
 }
 
+function runChat(payload = {}, emit) {
+  return withTask({ source: 'Chat' }, () => runChatBody(payload, emit));
+}
 module.exports = { runChat, planRound };

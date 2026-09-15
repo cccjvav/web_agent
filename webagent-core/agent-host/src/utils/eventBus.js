@@ -1,5 +1,5 @@
 const EventEmitter = require('events');
-const { randomUUID } = require('crypto');
+const { config } = require('../config');
 
 const MAX_STR = 4000;
 const MAX_FIELD = 500;
@@ -50,7 +50,7 @@ class BridgeEventBus extends EventEmitter {
     this.idleTimers = new WeakMap();
     this.logs = [];
     this.maxLogs = 500;
-    this.bridgeEpoch = randomUUID();
+    this.bridgeEpoch = config.hostInstanceId;
     this.bridgeRevision = 0;
     this.resetBridgeActivity();
   }
@@ -65,6 +65,8 @@ class BridgeEventBus extends EventEmitter {
 
   getBridgeActivity() {
     return { epoch: this.bridgeEpoch, revision: this.bridgeRevision,
+      identity: require('./hostDiagnostics').hostIdentity(),
+      executions: require('./toolTrace').snapshot('Bridge-Remote'),
       stats: { ...this.bridgeActivity.stats }, logs: this.bridgeActivity.logs.slice() };
   }
 
@@ -106,7 +108,8 @@ class BridgeEventBus extends EventEmitter {
       payload: sanitizePayload(payload)
     };
 
-    if (type === 'bridge_round_reset') this.resetBridgeActivity();
+    if (type === 'bridge_round_reset') { this.resetBridgeActivity(); require('./toolTrace').clearCompleted(); }
+    if (['tool_execution_start', 'tool_execution_end'].includes(type) && payload.source === 'Bridge-Remote') this.bridgeRevision += 1;
     if (type === 'tool_call_end' && payload.source === 'Bridge-Remote') {
       const stats = this.bridgeActivity.stats;
       const record = { tool: clipStr(payload.tool || 'unknown', 200),

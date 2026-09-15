@@ -1,0 +1,52 @@
+'use strict';
+const assert = require('assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { config } = require('../src/config');
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'host-diagnostics-'));
+config.workspaceRoot = tmp;
+const { hostIdentity, diagnostics } = require('../src/utils/hostDiagnostics');
+const trace = require('../src/utils/toolTrace');
+const { callTool } = require('../src/tools');
+(async () => {
+  try {
+    const identity = hostIdentity();
+    assert.ok(/^[0-9a-f-]{36}$/.test(identity.hostInstanceId));
+    const before = fs.readdirSync(tmp);
+    const report = diagnostics();
+    assert.deepStrictEqual(fs.readdirSync(tmp), before, 'diagnostics must not create probe files');
+    assert.deepStrictEqual(report.identity, identity);
+    assert.strictEqual(report.capabilities.find(cap => cap.id === 'workspace-write').status, 'unverified');
+    const ping = await callTool('ping', {}, 'ask', { remote: true, callerKey: 'peer:private-session' });
+    assert.deepStrictEqual(ping.identity, identity);
+    assert.ok(!JSON.stringify(trace.snapshot()).includes('private-session'));
+    const caps = await callTool('get_capabilities', {}, 'ask');
+    assert.deepStrictEqual(caps.identity, identity);
+    assert.ok(caps.tools.every(tool => Array.isArray(tool.modes)));
+    let first, second;
+    await trace.withTask({ source: 'Chat' }, async () => {
+      first = await callTool('write_file', { filePath: 'evidence.txt', content: 'actual data' }, 'code');
+      second = await callTool('read_files', { filePath: 'evidence.txt' }, 'ask');
+    });
+    assert.strictEqual(first.verification.state, 'verified');
+    assert.strictEqual(first.trace.taskId, second.trace.taskId);
+    assert.notStrictEqual(first.trace.callId, second.trace.callId);
+    assert.strictEqual(first.trace.hostInstanceId, identity.hostInstanceId);
+    const unknown = trace.verifyMutation('write_file', { filePath: 'evidence.txt' }, { success: true, hash: 'not-the-file-hash' });
+    assert.strictEqual(unknown.verification.state, 'unknown');
+    assert.strictEqual(unknown.ok, false);
+    assert.strictEqual(fs.readFileSync(path.join(tmp, 'evidence.txt'), 'utf8'), 'actual data', 'verification never replays a write');
+    await assert.rejects(callTool('write_file', { filePath: 'blocked.txt', content: 'x' }, 'ask'));
+    assert.ok(trace.snapshot().some(record => record.status === 'failed'));
+    assert.ok(!JSON.stringify(trace.snapshot()).includes('actual data'));
+    const cancel = new AbortController(); cancel.abort();
+    await assert.rejects(require('../src/utils/requestScope').runWithSignal(cancel.signal, () => callTool('ping')));
+    assert.ok(trace.snapshot().some(record => record.status === 'cancelled'));
+    const id = trace.beginCall('running-fixture');
+    trace.clearCompleted();
+    assert.ok(trace.snapshot().some(record => record.callId === id.callId));
+    trace.finishCall(id, { ok: true });
+    console.log('host identity, honest read-only diagnostics, trace association and postcondition regressions passed');
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+})().catch(err => { console.error(err); process.exitCode = 1; });

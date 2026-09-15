@@ -58,3 +58,6 @@ npm test --prefix webagent-core/agent-host -- --filter=profile
 HTTP状态/并发、真实剪贴板与公网连接的界限应按上述实现理解；自动化与Windows/手机人工验收分开计，不把演示页面称为真实Arena登录。
 
 会话数显示sessions (≤24h)，不是当前正在执行的任务数；后端snapshot已主动清理过期会话，alive另按10秒心跳窗口判断。
+
+## 身份与追踪界面
+paintBridgeActivity先显示snapshot.identity，存在executions时优先展示进行中/完成的工具追踪、任务/会话/callId、核验与execId，而不是只列完成摘要；状态文本均转义。**refreshDiagnostics()**先清旧身份，GET只读诊断后显示identity/capabilities，失败不能沿用旧身份做匹配。**compareHost()**校验用户填的UUID与当前主机一致性，不接收密钥；不一致要求停止修改任务并核对工作区。

@@ -1,3 +1,4 @@
+const { diagnostics, hostIdentity } = require('../utils/hostDiagnostics');
 const { readBoundedText, MAX_TEXT_BYTES } = require('../utils/boundedFile');
 const express = require('express');
 const path = require('path');
@@ -75,12 +76,15 @@ function mcpInfo(req) {
   };
 }
 
+router.get('/diagnostics', (req, res) => res.json(diagnostics()));
+
 router.get('/bridge/activity', (req, res) => res.json(eventBus.getBridgeActivity()));
 
 router.get('/status', (req, res) => {
   const cfg = store.load();
   res.json({
     status: 'online',
+    identity: hostIdentity(),
     version: config.version,
     serverName: config.serverName,
     productName: config.productName,
@@ -365,7 +369,8 @@ router.put('/files/content', async (req, res) => {
       confirm_overwrite: true,
       expectedHash: req.body.expectedHash || undefined
     }, 'code');
-    res.json({ success: true, path: filePath, hash: result.hash });
+    if (result.success === false) return res.status(409).json({ error: result.error, code: result.code, verification: result.verification });
+    res.json({ success: true, path: filePath, hash: result.hash, verification: result.verification });
   } catch (err) {
     const stale = err.code === 'E_STALE_FILE' || /STALE_FILE/.test(String(err.message || ''));
     res.status(stale ? 409 : 400).json({

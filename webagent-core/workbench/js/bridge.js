@@ -17,15 +17,18 @@ export function logBridgeTool() {
 
 export function paintBridgeActivity(snapshot) {
   if (!snapshot || !snapshot.stats || !Array.isArray(snapshot.logs)) return;
+  if ($('#bridge-host') && snapshot.identity) $('#bridge-host').textContent = `${snapshot.identity.hostInstanceId} · ${snapshot.identity.workspaceRoot} · v${snapshot.identity.version}`;
   const version = `${snapshot.epoch}:${snapshot.revision}`;
   if (version === activityVersion) return;
   activityVersion = version;
   state.stats = { ...snapshot.stats };
   ui.paintStats();
   const log = $('#bridge-log');
-  if (log) log.innerHTML = snapshot.logs.slice().reverse().map(record =>
-    `<div class="tool-card${record.success ? '' : ' fail'}"><header><span>${escapeHtml(record.tool)}</span>`
-    + `<span class="dur">${escapeHtml(record.success ? `${record.durationMs} ms` : 'Failed')} · ${escapeHtml(formatClock(Date.parse(record.timestamp)))}</span></header></div>`
+  const entries = Array.isArray(snapshot.executions) ? snapshot.executions : snapshot.logs;
+  if (log) log.innerHTML = entries.slice().reverse().map(record =>
+    `<div class="tool-card${record.status === 'failed' || record.success === false ? ' fail' : ''}"><header><span>${escapeHtml(record.tool)}</span>`
+    + `<span class="dur">${escapeHtml(record.status || (record.success ? 'succeeded' : 'failed'))} · ${escapeHtml(String(record.durationMs ?? '—'))} ms</span></header>`
+    + `<div class="tiny trace-detail">${escapeHtml(record.callId || '')}<br>任务 ${escapeHtml(record.taskId || '—')} · 会话 ${escapeHtml(record.sessionId || '—')}<br>核验 ${escapeHtml(record.verification || 'not-applicable')}${record.execId ? ` · 命令 ${escapeHtml(record.execId)}` : ''}</div></div>`
   ).join('');
   if (log) log.scrollTop = log.scrollHeight;
   const wait = $('#bridge-wait');
@@ -362,3 +365,30 @@ ui.refreshStatus = refreshStatus;
 
 ui.refreshBridgeActivity = refreshBridgeActivity;
 ui.paintBridgeActivity = paintBridgeActivity;
+
+let currentDiagnostics = null;
+export async function refreshDiagnostics() {
+  currentDiagnostics = null;
+  $('#host-comparison').textContent = '';
+  try {
+    const response = await fetch('/api/diagnostics');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    currentDiagnostics = await response.json();
+    $('#diagnostic-identity').textContent = JSON.stringify(currentDiagnostics.identity, null, 2);
+    $('#diagnostic-capabilities').innerHTML = currentDiagnostics.capabilities.map(cap =>
+      `<article class="block"><strong>${escapeHtml(cap.id)} · ${escapeHtml(cap.status)}</strong><p>${escapeHtml(cap.reason)}</p></article>`
+    ).join('');
+  } catch (_) {
+    $('#diagnostic-identity').textContent = '诊断读取失败；无法确认当前主机。';
+    $('#diagnostic-capabilities').textContent = '';
+  }
+}
+export function compareHost() {
+  const expected = $('#expected-host').value.trim();
+  $('#host-comparison').textContent = !currentDiagnostics ? '请先成功读取诊断。'
+    : !/^[a-f0-9-]{36}$/i.test(expected) ? '请填写工具返回的主机UUID，不要填写凭据。'
+      : expected === currentDiagnostics.identity.hostInstanceId ? '匹配：外部工具和此页面属于同一个主机进程。'
+        : '不匹配：可能连接到另一实例，或主机已经重启。先停止修改任务并核对工作区。';
+}
+ui.refreshDiagnostics = refreshDiagnostics;
+ui.compareHost = compareHost;

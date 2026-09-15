@@ -124,3 +124,6 @@ npm test --prefix webagent-core/agent-host -- --filter=planRound
 modelLifecycle 用假 fetch 检查服务失败不重放修改、超8项工具反馈、旧轮次与合并期间新增分支；不是真实供应商认证或全部并发排列。完整测试与人工验收仍分别执行。
 
 本篇揭示的 UI措辞/测试命令猜测/Plan回退差异是**当前行为**，本轮不为让文档漂亮而修改运行语义。继续读[模型与截图详解](模型调用详解.md)、[Plan 状态与本地共识](../tools/Plan状态详解.md)。
+
+## 内置诚实读取与任务关联更新
+原入口主体改名**runChatBody()**；**runChat()**用withTask(source=Chat)保持同一次对话任务ID。**requestedFiles(message)**提取反引号/双引号路径及基础文件名，去重最多6项；pickExisting改为先resolveSafePath后stat，不探测工作区外路径。有显式路径时只读这些路径，缺失不退而读取其他候选；无显式路径才采用原候选扫描。explore保存读取证据；summarizeAsk明确确定性流程、截断证据和未读取项，不伪造一般推理能力。

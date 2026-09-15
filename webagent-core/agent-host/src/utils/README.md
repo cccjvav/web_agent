@@ -8,6 +8,8 @@
 
 逐函数阅读：[requestScope 与 boundedFile 详解](函数详解.md)。其他文件不因此视为已逐函数讲完。
 
+逐函数新增：[主机诊断与调用追踪](主机诊断与调用追踪详解.md)。
+
 ## 职责与文件分工
 这些模块为API、MCP和工具提供公共能力，不独立监听HTTP或运行模型。
 
@@ -50,6 +52,8 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 | [corsAllow.js](corsAllow.js) | 14 个函数/类节点 |
 | [diff.js](diff.js) | 1 个函数/类节点 |
 | [eventBus.js](eventBus.js) | 14 个函数/类节点 |
+| [hostDiagnostics.js](hostDiagnostics.js) | 3 个函数/类节点 |
 | [localControl.js](localControl.js) | 7 个函数/类节点 |
 | [requestScope.js](requestScope.js) | 5 个函数/类节点 |
+| [toolTrace.js](toolTrace.js) | 10 个函数/类节点 |
 <!-- docs-inventory:end -->
