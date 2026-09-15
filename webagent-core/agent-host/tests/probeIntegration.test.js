@@ -1,0 +1,48 @@
+'use strict';
+const assert=require('assert');
+const fs=require('fs'), os=require('os'), path=require('path');
+const {createHistory}=require('../../probe-extension/history');
+const {readArchive,writeArchive,convertBrowserHistory}=require('../../probe-extension/historyTransfer');
+const {clusterHistory,mapHistory}=require('../../probe-extension/historyClustering');
+const {DIMS,validateReference}=require('../../probe-extension/referenceInput');
+const {activateLive}=require('../../probe-extension/liveCommands');
+async function main(){
+  const {refreshCatalog}=await import('../../probe-extension/catalog.mjs');
+  const id='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';let urls=[];
+  const catalog=await refreshCatalog(async(url,opts)=>{urls.push(url);assert.strictEqual(opts.credentials,'omit');assert.strictEqual(opts.redirect,'error');return new Response(JSON.stringify({id,publicName:'fixture-model'}));},new AbortController().signal);
+  assert.strictEqual(urls.length,3);assert.deepStrictEqual(catalog.models,[{id,publicName:'fixture-model'}]);
+  let calls=0;const conflicting=await refreshCatalog(async()=>new Response(JSON.stringify({id,publicName:++calls===1?'a':'b'})),new AbortController().signal);assert.deepStrictEqual(conflicting.models,[]);assert.deepStrictEqual(conflicting.conflicts,[id]);
+  const controller=new AbortController();controller.abort();await assert.rejects(refreshCatalog(()=>{throw Error('must not fetch');},controller.signal));
+  const {setCatalog,createStreamProbe}=await import('../../probe-extension/browserReference.mjs');setCatalog(catalog.models);
+  const stream=createStreamProbe('fixture');stream.push('data: '+JSON.stringify({model:id,object:'chat.completion'})+'\n\n');stream.finish();assert.strictEqual(stream.snapshot().modelId,'fixture-model');
+  const fp=stream.snapshot().fingerprint;assert.deepStrictEqual(Object.keys(fp),DIMS);
+  const report=validateReference({schema:'webagent-model-analysis/v1',requestId:'fixture',observedAt:new Date().toISOString(),truncated:false,candidate:{modelId:'fixture-model',family:null,mode:'RESOLVED',heuristicScore:0.9},fingerprint:fp,rawResponse:'SECRET',modelIdentityVerified:true});assert.ok(!JSON.stringify(report).includes('SECRET'));assert.strictEqual(report.modelIdentityVerified,false);
+  let data;const history=createHistory({get:()=>data,update:async(k,v)=>{data=v;}});await history.save(report);await history.save({...report,requestId:'second'});
+  const groups=await clusterHistory(await history.list());assert.strictEqual(groups.groups.length,1);assert.strictEqual(groups.groups[0].samples.length,2);assert.strictEqual(groups.modelIdentityVerified,false);
+  const mapped=await mapHistory([{id:'original',report:{...report,candidate:{...report.candidate,modelId:id}}}],catalog);assert.strictEqual(mapped.entries[0].report.candidate.modelId,'fixture-model');assert.strictEqual(mapped.entries[0].report.historical,true);assert.strictEqual(mapped.entries[0].report.modelIdentityVerified,false);
+  const archive=await history.exportArchive();await history.importArchive(archive);assert.strictEqual((await history.list()).length,2);
+  const bad=structuredClone(archive);bad.entries[0].report.requestId='changed';await assert.rejects(history.importArchive(bad));assert.strictEqual((await history.list())[0].report.requestId,'fixture');
+  const browser=await convertBrowserHistory({schemaVersion:1,exportedAt:'2026-09-15T00:00:00Z',conversations:[{sessionId:'fixture-session',runs:[{runId:'run_fixture',spans:[{spanId:'span',model:'fixture-model'}]}]}]});
+  await history.importArchive(browser);await history.importArchive(browser);assert.strictEqual((await history.list()).length,3);assert.strictEqual(browser.entries[0].report.historical,true);
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'probe-transfer-'));try{const file=path.join(dir,'history.json');await writeArchive(file,archive);assert.deepStrictEqual(await readArchive(file),archive);await assert.rejects(writeArchive(file,archive));}finally{fs.rmSync(dir,{recursive:true,force:true});}
+  const handlers=new Map(),requests=[];let copied;
+  const vscode={workspace:{workspaceFolders:[{uri:{scheme:'file',fsPath:dir}}]},commands:{registerCommand:(name,fn)=>{handlers.set(name,fn);return{dispose(){}};}},env:{clipboard:{writeText:async text=>{copied=text;}}},window:{showInputBox:async()=> 'a'.repeat(32),showWarningMessage:async()=> '复制配对'}};
+  const context={subscriptions:[]};activateLive(vscode,context,{allowed:()=>true,base:()=> 'http://localhost:3000',show(){},onReport(){},controllers:new Set()},async(base,method,route)=>{requests.push({method,route});return{schema:'webagent-probe-pair/v1',id:'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',token:'a'.repeat(64),expiresAt:Date.now()+900000,workspaceRoot:dir,hostInstanceId:'fixture',secret:'DO_NOT_COPY'};});
+  assert.strictEqual(requests.length,0);await handlers.get('webagentProbe.pairBrowser')();assert.strictEqual(requests.length,1);assert.ok(!copied.includes('DO_NOT_COPY'));assert.strictEqual(JSON.parse(copied).base,'http://127.0.0.1:3000');for(const sub of context.subscriptions)sub.dispose();
+  const {createGenericCapture}=await import('../../probe-extension/genericCapture.mjs');let updates=0;const owner={};
+  const capture=createGenericCapture({command:async()=>({bufferedData:Buffer.from('data: {"model":"passive-fixture"}\n\n').toString('base64')}),isTrace:()=>false,publishUpdate:()=>updates++});
+  assert.strictEqual(await capture(1,owner,'Network.responseReceived',{requestId:'generic',type:'Fetch',response:{url:'https://evil.invalid/x'}}),false);
+  await capture(1,owner,'Network.responseReceived',{requestId:'generic',type:'Fetch',response:{url:'https://arena.ai/public-fixture',headers:{}}});await capture(1,owner,'Network.loadingFinished',{requestId:'generic',encodedDataLength:100});assert.strictEqual(owner.probeStream.modelId,'passive-fixture');assert.ok(updates);capture.stop(owner);
+  const vm=require('vm');let listener,renames=0;
+  const sandbox={ArenaConversationRename:{rename:async args=>{assert.strictEqual(args.model,'approved title');assert.ok(args.isCurrent());renames++;},archive:async()=>{},sessionFromPath:()=> 'fixture-session'},location:{pathname:'/agent/fixture-session',origin:'https://arena.ai'},confirm:()=>true,Date,Set,chrome:{runtime:{id:'a',sendMessage:async()=>({connected:true}),onMessage:{addListener:fn=>{listener=fn;}}}}};
+  vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,'../../probe-extension/browserActions.js'),'utf8'),sandbox);await Promise.resolve();
+  const action={id:'fixture-action',deadline:Date.now()+30000,sessionId:'fixture-session',action:'rename',text:'approved title'};
+  const result=await new Promise(resolve=>listener({type:'WA_EXECUTE',command:action},{id:'a'},resolve));assert.strictEqual(result.ok,true);assert.strictEqual(renames,1);
+  listener({type:'WA_CANCEL',id:'cancelled'},{id:'a'},()=>{});
+  const cancelled=await new Promise(resolve=>listener({type:'WA_EXECUTE',command:{...action,id:'cancelled'}},{id:'a'},resolve));assert.strictEqual(cancelled.ok,false);assert.strictEqual(renames,1);
+  await assert.rejects(sandbox.ArenaConversationRename.rename({model:'pending'}));assert.strictEqual(renames,1,'Pending approval must not invoke native rename');
+  const {analyze}=require('../../probe-extension/analysis');const observation={schema:'webagent-model-observation/v1',requestId:'benchmark',observedAt:new Date().toISOString(),origin:'https://arena.ai',truncated:false,evidence:[],text:'hello',promptTokens:20};
+  assert.strictEqual((await analyze(observation)).tokenizer,null);assert.ok((await analyze({...observation,tokenizerBenchmark:true})).tokenizer);
+  console.log('Probe integration: public catalog, conflicts/cancel, UUID application, projected fingerprints, clusters, batch migration/no-clobber, explicit Companion pairing, and passive generic capture passed');
+}
+main().catch(error=>{console.error(error);process.exitCode=1;});

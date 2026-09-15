@@ -1,13 +1,14 @@
 'use strict';
 const {randomUUID} = require('crypto');
+const {DIMS,fingerprint} = require('./referenceInput');
 const KEY = 'webagent.probe.referenceHistory.v1';
 const MAX_BYTES = 1024 * 1024;
 // Deliberate projection: arbitrary fields/raw response/token headers never get persisted.
-const candidate = {modelId: 200, family: 100, mode: 80, heuristicScore: 'number'};
+const candidate = {source:100, modelId: 200, family: 100, mode: 80, heuristicScore: 'number'};
 const label = {path: 200, value: 200, observedAt: 40};
 const evidence = {schemaVersion: 'number', source: 100, spanName: 100, model: label, provider: label, tokens: label, cost: label};
 const spec = {schema: 80, requestId: 128, runId: 128, observedAt: 40, checkedAt: 40, historical: 'boolean',
-  registryVersion: 100, truncated: 'boolean', candidate,
+  registryVersion: 100, mappingSource:100, protocol:[{family:100,label:120,heuristicScore:'number'}],behavior:[{family:100,source:120,heuristicScore:'number'}], fingerprint:Object.fromEntries(DIMS.map(key=>[key,'number'])), truncated: 'boolean', candidate,
   sources: [{source: 100, modelId: 200, family: 100}],
   mappingConflicts: [128],
   calls: [{spanId: 128, model: 200, provider: 100, tokens: 'number', costUsd: 'number', tokensApproximate: 'boolean',
@@ -34,6 +35,7 @@ function project(value, shape) {
 function snapshot(report) {
   if (!['webagent-model-analysis/v1', 'webagent-trace-analysis/v1'].includes(report?.schema)) throw new Error('Unknown report');
   const result = project(report, spec);
+  if(result.fingerprint)result.fingerprint=fingerprint(result.fingerprint);
   result.modelIdentityVerified = false;
   if (Buffer.byteLength(JSON.stringify(result)) > 65536) throw new Error('History report exceeds 64 KiB');
   return result;
@@ -66,6 +68,20 @@ function createHistory(state) {
   };
   return {
     async list() { await queue; return read(); },
+    async exportArchive() { await queue; return {schema:'webagent-reference-history/v1',exportedAt:new Date().toISOString(),entries:read()}; },
+    async importArchive(input) {
+      if (input?.schema !== 'webagent-reference-history/v1' || typeof input.exportedAt !== 'string' || !Number.isFinite(Date.parse(input.exportedAt))) throw Error('Invalid history archive');
+      const incoming = await createHistory({get:()=>({version:1,entries:input.entries})}).list();
+      return mutate(entries => {
+        const next = [...entries];
+        for (const entry of incoming) {
+          const old = next.find(item=>item.id===entry.id);
+          if (old && JSON.stringify(old.report)!==JSON.stringify(entry.report)) throw Error('History ID conflict; original retained');
+          if (!old) next.push(entry);
+        }
+        return next;
+      });
+    },
     save(report) { const entry = {id: randomUUID(), savedAt: new Date().toISOString(), report: snapshot(report)}; return mutate(entries => [...entries, entry]); },
     remove(id) { return mutate(entries => entries.filter(entry => entry.id !== id)); }
   };

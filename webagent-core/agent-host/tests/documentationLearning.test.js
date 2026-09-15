@@ -9,6 +9,20 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/src/utils/probeBridge.js", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/agent-host/tests/probeBridge.test.js", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/agent-host/tests/probeIntegration.test.js", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/probe-extension/browserBridge.mjs", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/probe-extension/browserIntegration.mjs", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/probe-extension/browserActions.js", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/probe-extension/browserPopup.mjs", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/probe-extension/catalog.mjs", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/probe-extension/genericCapture.mjs", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/probe-extension/liveClient.js", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/probe-extension/liveCommands.js", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/probe-extension/referenceInput.js", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/probe-extension/historyTransfer.js", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/probe-extension/historyClustering.js", "webagent-core/probe-extension/实现详解.md"],
   ["webagent-core/probe-extension/history.js", "webagent-core/probe-extension/实现详解.md"],
   ["webagent-core/agent-host/tests/probeHistory.test.js", "webagent-core/probe-extension/实现详解.md"],
   ["webagent-core/probe-extension/traceInput.js", "webagent-core/probe-extension/实现详解.md"],

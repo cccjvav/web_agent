@@ -16,10 +16,12 @@ if (observation.schemaVersion === 1) {
   const calls = observation.calls.map(call => {
     const labels = sanitizeEvidence(call.evidence);
     const model = labels?.model?.value || call.model;
-    const source = labels?.model ? 'run.trace.model' : 'local.history.model';
-    const verdict = engine.classify(model ? [{source, modelId: model, weight: source === 'run.trace.model' ? engine.SOURCE_WEIGHTS[source] : 0.4}] : []);
+    const matches = new Set((observation.models || []).filter(item=>item.id.toLowerCase() === model?.toLowerCase()).map(item=>item.publicName));
+    const mapped = matches.size === 1 ? [...matches][0] : null;
+    const source = mapped ? 'idmap.resolve' : labels?.model ? 'run.trace.model' : 'local.history.model';
+    const verdict = engine.classify(model ? [{source, modelId: mapped || model, weight: engine.SOURCE_WEIGHTS[source] || 0.4}] : []);
     return {...call, evidence: labels, provenance: labels?.model ? 'imported-observed-trace-label' : 'legacy-local-record-no-model-label',
-      conflicts: labels?.model && call.model && model !== call.model ? ['Stored model differs from observed model label'] : [],
+      conflicts: [...(labels?.model && call.model && model !== call.model ? ['Stored model differs from observed model label'] : []), ...(matches.size > 1 ? ['Conflicting UUID mapping; no forced resolution'] : [])],
       reference: {source, modelId: verdict.modelId, family: verdict.family, mode: verdict.mode, heuristicScore: verdict.confidence,
         codename: model ? learned.parseCodename(model) : null}};
   });
@@ -68,7 +70,7 @@ const report = {
   mappingConflicts: [...new Set(conflicts)],
   codename: verdict.modelId ? learned.parseCodename(verdict.modelId) : null,
   fingerprint: engine.fingerprintVector(observation),
-  tokenizer: observation.promptTokens > 0 ? probe.matchTokenizer(observation.promptTokens) : null,
+  tokenizer: observation.tokenizerBenchmark === true && observation.promptTokens > 0 ? probe.matchTokenizer(observation.promptTokens) : null,
   warnings: ['Scores are uncalibrated heuristics, not identity probabilities.', 'Imported source labels and mappings can be forged.', 'Tokenizer comparison is meaningful only for the original benchmark input.']
 };
 if (report.truncated) report.warnings.push('Input was truncated; missing evidence may change the result.');

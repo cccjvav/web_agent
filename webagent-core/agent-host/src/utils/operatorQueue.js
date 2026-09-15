@@ -61,9 +61,9 @@ async function approve(id, confirmed) {
   const timer = setTimeout(() => job.controller.abort(), 60000);
   let execution;
   try {
-    execution = beginCall(job.kind === 'workflow' ? 'approved_workflow' : 'approved_external_call', { ...job.options, taskId: job.taskId });
+    execution = beginCall(job.kind === 'workflow' ? 'approved_workflow' : job.kind === 'probe-browser' ? 'approved_browser_operation' : 'approved_external_call', { ...job.options, taskId: job.taskId });
     execution.operationId = job.id;
-    const output = await runWithSignal(job.controller.signal, () => withTask({ source: 'Workflow', taskId: job.taskId }, () => {
+    const output = await runWithSignal(job.controller.signal, () => withTask({ source: job.kind === 'probe-browser' ? 'BrowserProbe' : 'Workflow', taskId: job.taskId }, () => {
       checkCancelled();
       return handlers.get(job.kind)(clone(job.input), { ...job.options, taskId: job.taskId });
     }));

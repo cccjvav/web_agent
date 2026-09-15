@@ -5,6 +5,8 @@ const path = require('path');
 const crypto = require('crypto');
 const root = path.resolve(__dirname, '..');
 const files = [
+  'webagent-core/probe-extension/traceInput.js',
+  'webagent-core/probe-extension/referenceInput.js',
   'LICENSE', '双向连接核对使用指南.md', 'arena-model-probe/webagent-connection.user.js', '内置探索Agent使用指南.md', '借鉴优化说明（新手版）.md', 'Bridge统计与刷新排查.md', 'SECURITY.md', 'README.md', '使用指南.md', '技术实现.md', '架构导读.md', '组件说明.md',
   'Conda环境说明.md', '代码复盘指南.md', 'Windows新手逐步验收.md', 'review/CHECKLIST_WINDOWS.md',
   'installer/README.md', 'installer/函数详解.md',

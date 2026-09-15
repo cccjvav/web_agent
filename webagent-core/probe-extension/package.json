@@ -3,7 +3,7 @@
   "displayName": "WebAgent Probe Companion",
   "description": "Model-reference analysis using the original probe engine, plus local connection diagnostics. Full browser integration in progress.",
   "publisher": "webagent",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -75,6 +75,50 @@
       {
         "command": "webagentProbe.shareReference",
         "title": "WebAgent Probe: 把参考填入WebAgent只读草稿"
+      },
+      {
+        "command": "webagentProbe.pairBrowser",
+        "title": "WebAgent Probe: 配对浏览器到当前主机工作区"
+      },
+      {
+        "command": "webagentProbe.watchBrowser",
+        "title": "WebAgent Probe: 订阅实时浏览器参考"
+      },
+      {
+        "command": "webagentProbe.stopWatch",
+        "title": "WebAgent Probe: 停止实时参考订阅"
+      },
+      {
+        "command": "webagentProbe.revokeBrowser",
+        "title": "WebAgent Probe: 撤销浏览器配对"
+      },
+      {
+        "command": "webagentProbe.requestBrowser",
+        "title": "WebAgent Probe: 申请浏览器操作"
+      },
+      {
+        "command": "webagentProbe.approveBrowser",
+        "title": "WebAgent Probe: 审批一次浏览器操作"
+      },
+      {
+        "command": "webagentProbe.cancelBrowser",
+        "title": "WebAgent Probe: 取消浏览器操作"
+      },
+      {
+        "command": "webagentProbe.importHistory",
+        "title": "WebAgent Probe: 导入参考历史或浏览器批量记录"
+      },
+      {
+        "command": "webagentProbe.exportHistory",
+        "title": "WebAgent Probe: 导出工作区参考历史到新文件"
+      },
+      {
+        "command": "webagentProbe.clusterHistory",
+        "title": "WebAgent Probe: 按协议指纹查看参考样本簇"
+      },
+      {
+        "command": "webagentProbe.mapHistory",
+        "title": "WebAgent Probe: 用公开UUID目录追加历史映射参考"
       }
     ]
   },

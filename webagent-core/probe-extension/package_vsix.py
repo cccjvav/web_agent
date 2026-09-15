@@ -57,7 +57,7 @@ def build(verify=False):
     content_types = '''<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="json" ContentType="application/json"/><Default Extension="js" ContentType="application/javascript"/><Default Extension="mjs" ContentType="application/javascript"/><Default Extension="md" ContentType="text/markdown"/><Default Extension="vsixmanifest" ContentType="text/xml"/><Override PartName="/extension/LICENSE" ContentType="text/plain"/></Types>'''
     trace_sources = ['evidence.js', 'usage.js']
     sources = ['registry.js', 'classify.js', 'probe.js', 'learned.js', 'interceptor.js']
-    local_files = ['package.json', 'extension.js', 'client.js', 'analysis.js', 'traceInput.js', 'history.js', 'analysisWorker.mjs', 'README.md', 'LICENSE']
+    local_files = ['package.json', 'extension.js', 'client.js', 'analysis.js', 'traceInput.js', 'history.js', 'referenceInput.js', 'historyTransfer.js', 'historyClustering.js', 'liveClient.js', 'liveCommands.js', 'analysisWorker.mjs', 'README.md', 'LICENSE']
     with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
         archive.writestr('extension.vsixmanifest', vsix)
         archive.writestr('[Content_Types].xml', content_types)

@@ -1,3 +1,4 @@
+const probeBridge = require('../utils/probeBridge');
 const operatorQueue = require('../utils/operatorQueue');
 const externalClient = require('../mcp/externalClient');
 const workflows = require('../tools/workflows');
@@ -85,6 +86,11 @@ function operationApi(handler) {
     catch (error) { res.status(400).json({ ok: false, error: error.message }); }
   };
 }
+router.post('/probe/links', operationApi(req => probeBridge.pair(req.body)));
+router.get('/probe/links', operationApi(() => probeBridge.list()));
+router.get('/probe/links/:id/reports/:tabId', operationApi(req => probeBridge.report(req.params.id, req.params.tabId)));
+router.delete('/probe/links/:id', operationApi(req => { probeBridge.drop(req.params.id); return {ok: true}; }));
+router.post('/probe/actions', operationApi(req => probeBridge.request(req.body)));
 router.get('/operations', operationApi(() => ({ requests: operatorQueue.list(), servers: externalClient.list(true) })));
 router.get('/operations/:id', operationApi(req => operatorQueue.inspect(req.params.id)));
 router.post('/operations/:id/approve', operationApi(req => operatorQueue.approve(req.params.id, req.body?.confirm === true)));

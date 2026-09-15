@@ -140,11 +140,11 @@ export function evidenceFromHeaders(headerObj, url = '') {
     }
     if (key === 'server' || key === 'x-served-by' || key === 'via') {
       const vd = vendorFromUrl(String(v));
-      if (vd.vendor) ev.push({ source: 'response.header.provider', weight: 0.5, family: vd.vendor, detail: `${key}: ${v}` });
+      if (vd?.vendor) ev.push({ source: 'response.header.provider', weight: 0.5, family: vd.vendor, detail: `${key}: ${v}` });
     }
   }
   const vd = vendorFromUrl(url);
-  if (vd.vendor) ev.push({ source: 'url.host.vendor', weight: vd.weight, family: vd.vendor, detail: `host ${vd.host}` });
+  if (vd?.vendor) ev.push({ source: 'url.host.vendor', weight: vd.weight, family: vd.vendor, detail: `host ${vd.host}` });
   return ev;
 }
 

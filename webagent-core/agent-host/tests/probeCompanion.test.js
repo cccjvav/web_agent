@@ -59,7 +59,7 @@ async function main() {
     if (method === 'POST') return { identity, checkId: 'b'.repeat(32), challenge: 'c'.repeat(64), expiresAt: clock + 120000 };
     return { identity, checkId: 'b'.repeat(32), status: 'echo-confirmed', challenge: 'NEVER-LOG' };
   };
-  const sandbox = { module: { exports: {} }, require: name => name === 'vscode' ? vscode : ['./analysis', './history'].includes(name) ? require(path.join(root, name)) : { localBase, parseObservation, request: fakeRequest }, AbortController, TextEncoder, Date: { now: () => clock } };
+  const sandbox = { module: { exports: {} }, require: name => name === 'vscode' ? vscode : ['./analysis', './history', './liveCommands', './historyTransfer', './historyClustering'].includes(name) ? require(path.join(root, name)) : { localBase, parseObservation, request: fakeRequest }, AbortController, TextEncoder, Date: { now: () => clock } };
   vm.runInNewContext(fs.readFileSync(path.join(root, 'extension.js'), 'utf8'), sandbox);
   const context = { subscriptions: [], workspaceState: {get: key => saved.get(key), update: async (key, value) => value === undefined ? saved.delete(key) : saved.set(key, value)} }; sandbox.module.exports.activate(context);
   assert.strictEqual(calls.length, 0, 'Activation must not connect');

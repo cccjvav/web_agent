@@ -23,10 +23,16 @@ def build(verify=False):
     names = ['manifest.json', 'background.js', 'core.js', 'evidence.js', 'usage.js', 'history.js',
              'restore.js', 'trace-reader.js', 'hud-preferences.js', 'view-model.js', 'panel.js',
              'hud-layout.js', 'conversation-rename.js', 'hud.js', 'popup.js', 'popup.css', 'popup.html']
+    checked = [source / name for name in names] + [root / name for name in ['browserReference.mjs','browserBridge.mjs','browserActions.js','browserIntegration.mjs','browserPopup.mjs','catalog.mjs','genericCapture.mjs','LICENSE','浏览器整合说明.md']] + [root.parent.parent / 'arena-model-probe/src' / name for name in ['idmap.js','classify.js','registry.js','learned.js','probe.js','interceptor.js']]
+    for item in checked:
+        if item.resolve() != item.absolute() or not item.is_file():
+            raise ValueError('Browser input must be a regular non-symlink file: ' + str(item))
     payload = {name: (source / name).read_bytes() for name in names}
     hashes = {name: hashlib.sha256(data).hexdigest() for name, data in payload.items()}
     manifest = json.loads(payload['manifest.json'])
-    manifest.update(name='WebAgent Arena Inspector', version='0.3.0', description='Arena trace 标签、调用统计与 Probe 模型参考；显式监听、离线导入 VS Code。')
+    manifest.update(name='WebAgent Arena Inspector', version='0.5.0', description='Arena trace 标签、调用统计与 Probe 模型参考；显式监听、离线导入 VS Code。')
+    manifest['optional_host_permissions'] = ['http://127.0.0.1/*']
+    manifest['content_scripts'][0]['js'].append('browserActions.js')
     payload['manifest.json'] = json.dumps(manifest, ensure_ascii=False, indent=2).encode()
     background = payload['background.js'].decode()
     background = "import {referencesForRun, createStreamProbe} from './browserReference.mjs';\n" + background
@@ -47,9 +53,16 @@ def build(verify=False):
     }
     s.streams.delete(p.requestId);
   }""")
+    background = "import {createIntegration} from './browserIntegration.mjs';\n" + background
+    background = replace_once(background, 'chrome.runtime.onMessage.addListener((msg, sender, reply) => {', 'const integration = createIntegration({start,stop,restoreForTab,history,storageReady});\nchrome.runtime.onMessage.addListener((msg, sender, reply) => {\n  if (integration.handle(msg,sender,reply)) return true;')
+    background = "import {createGenericCapture} from './genericCapture.mjs';\n" + background
+    background = replace_once(background, 'async function onNetwork(tabId, method, p) {', "const genericCapture = createGenericCapture({command,isTrace:streamSession,publishUpdate(tabId) {const s=sessions.get(tabId);if(s){s.hasCapture=true;update(tabId,s,{probeStream:s.probeStream,probeCaptureNotice:s.probeCaptureNotice});}}});\nasync function onNetwork(tabId, method, p) {")
+    background = replace_once(background, "  if (!s) return;\n  if (method === 'Network.responseReceived')", "  if (!s) return;\n  if (await genericCapture(tabId,s,method,p)) return;\n  if (method === 'Network.responseReceived')")
+    background = replace_once(background, '  sessions.delete(tabId);', '  genericCapture.stop(s);\n  sessions.delete(tabId);')
     payload['background.js'] = background.encode()
     view = payload['view-model.js'].decode()
-    view = replace_once(view, 'return {runId: run?.runId', 'return {probeStream: selectedRunId || state.historical ? null : state.probeStream, probeReferences: (state.probeReferences || []).filter(r => r.runId === run?.runId), runId: run?.runId')
+    view = replace_once(view, 'return {runId: run?.runId', 'return {probeStream: selectedRunId ? null : state.probeStream, probeReferences: (state.probeReferences || []).filter(r => r.runId === run?.runId), runId: run?.runId')
+    view = replace_once(view, 'spanId:c.spanId,model:c.model,provider:c.provider', "spanId:c.spanId,model:c.model??'',provider:c.provider??''")
     payload['view-model.js'] = view.encode()
     panel = payload['panel.js'].decode()
     panel = replace_once(panel, '      if(options.onRename){', '''      if (view.probeStream) {
@@ -66,13 +79,16 @@ def build(verify=False):
     payload['panel.js'] = panel.encode()
     reference = (root / 'browserReference.mjs').read_text().replace('../../arena-model-probe/src/', './engine/')
     payload['browserReference.mjs'] = reference.encode()
-    for name in ['classify.js', 'registry.js', 'learned.js', 'probe.js', 'interceptor.js']:
+    for name in ['browserBridge.mjs','browserActions.js','browserIntegration.mjs','browserPopup.mjs','catalog.mjs','genericCapture.mjs']:
+        payload[name] = (root / name).read_text(encoding='utf-8').replace('../../arena-model-probe/src/', './engine/').encode()
+    payload['popup.html'] = payload['popup.html'].decode().replace('</body>', '<script type="module" src="browserPopup.mjs"></script></body>').encode()
+    for name in ['idmap.js', 'classify.js', 'registry.js', 'learned.js', 'probe.js', 'interceptor.js']:
         payload['engine/' + name] = (root.parent.parent / 'arena-model-probe/src' / name).read_bytes()
     payload['LICENSE'] = (root / 'LICENSE').read_bytes()
     payload['README.md'] = (root / '浏览器整合说明.md').read_bytes()
     payload['package.json'] = b'{"type":"module","private":true}'
     payload['source-hashes.json'] = json.dumps({'inspectorInputs': hashes, 'payload': {name: hashlib.sha256(data).hexdigest() for name, data in payload.items()}}, indent=2).encode()
-    output = root / 'dist' / 'webagent-arena-inspector-0.3.0.zip'
+    output = root / 'dist' / 'webagent-arena-inspector-0.5.0.zip'
     output.parent.mkdir(exist_ok=True)
     with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
         for name, data in payload.items():

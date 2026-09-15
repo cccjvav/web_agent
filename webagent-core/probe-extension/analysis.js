@@ -8,13 +8,14 @@ const SOURCES = ['request.body.model', 'response.header.model', 'response.json.m
 function validateObservation(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input) || Buffer.byteLength(JSON.stringify(input)) > LIMIT) throw new Error('Invalid analysis input');
   if (input.schemaVersion === 1 && Array.isArray(input.calls)) return validateTraceExport(input);
-  const keys = ['schema', 'requestId', 'observedAt', 'origin', 'truncated', 'evidence', 'text', 'models', 'promptTokens', 'completionTokens', 'reasoningTokens', 'ttftMs', 'totalMs', 'frames'];
+  const keys = ['schema', 'requestId', 'observedAt', 'origin', 'truncated', 'evidence', 'text', 'models', 'promptTokens', 'completionTokens', 'reasoningTokens', 'ttftMs', 'totalMs', 'frames', 'tokenizerBenchmark'];
   if (Object.keys(input).some(key => !keys.includes(key)) || input.schema !== 'webagent-model-observation/v1'
     || typeof input.requestId !== 'string' || !/^[\w.-]{1,128}$/.test(input.requestId)
     || typeof input.observedAt !== 'string' || !Number.isFinite(Date.parse(input.observedAt))
     || input.origin !== 'https://arena.ai' || typeof input.truncated !== 'boolean'
     || !Array.isArray(input.evidence) || input.evidence.length > 100
     || typeof input.text !== 'string' || input.text.length > 200000) throw new Error('Invalid analysis schema');
+  if(input.tokenizerBenchmark !== undefined && typeof input.tokenizerBenchmark !== 'boolean')throw Error('Invalid benchmark declaration');
   for (const item of input.evidence) {
     if (!item || Object.keys(item).sort().join(',') !== 'modelId,source' || !SOURCES.includes(item.source)
       || typeof item.modelId !== 'string' || item.modelId.length < 2 || item.modelId.length > 120) throw new Error('Invalid evidence');

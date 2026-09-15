@@ -4,11 +4,14 @@ function validateTraceExport(input) {
   const fail = () => { throw new Error('Invalid Trace Inspector evidence export'); };
   const date = value => value === '' || value === null || (typeof value === 'string' && value.length <= 40 && Number.isFinite(Date.parse(value)));
   const text = (value, max) => typeof value === 'string' && value.length <= max;
-  const keys = ['schemaVersion', 'exportedAt', 'runId', 'checkedAt', 'historical', 'scope', 'calls'];
+  const keys = ['schemaVersion', 'exportedAt', 'runId', 'checkedAt', 'historical', 'scope', 'calls', 'models'];
   if (!input || input.schemaVersion !== 1 || Object.keys(input).some(k => !keys.includes(k))
     || typeof input.runId !== 'string' || !/^run_[a-zA-Z0-9_-]{1,120}$/.test(input.runId || '') || !date(input.checkedAt) || (typeof input.exportedAt !== 'string' || !input.exportedAt || !date(input.exportedAt))
     || typeof input.historical !== 'boolean' || !text(input.scope, 200)
     || !Array.isArray(input.calls) || input.calls.length > 100) fail();
+  const models = input.models || [];
+  if (!Array.isArray(models) || models.length > 1000) fail();
+  for (const model of models) if (!model || Object.keys(model).sort().join(',') !== 'id,publicName' || typeof model.id !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(model.id) || !text(model.publicName,120) || !model.publicName) fail();
   const ids = new Set();
   const calls = input.calls.map(call => {
     if (!call || !text(call.spanId, 128) || !call.spanId || ids.has(call.spanId)
@@ -46,6 +49,6 @@ function validateTraceExport(input) {
     return out;
   });
   return {schemaVersion: 1, runId: input.runId, checkedAt: input.checkedAt, exportedAt: input.exportedAt,
-    historical: input.historical, scope: input.scope, calls};
+    historical: input.historical, scope: input.scope, calls, ...(models.length ? {models: models.map(model=>({...model}))} : {})};
 }
 module.exports = {validateTraceExport};

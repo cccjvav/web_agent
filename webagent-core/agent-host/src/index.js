@@ -30,6 +30,7 @@ function applyCommon(app, { mcp = false } = {}) {
     res.setHeader('Cache-Control', 'no-store');
     next();
   });
+  app.use('/probe-link', require('./utils/probeBridge').transport());
   // Reject nonlocal API and unauthenticated MCP before allocating/parsing bodies.
   app.use('/api', rejectUnlessLocalControl, rejectCrossSiteApi);
   if (mcp) {

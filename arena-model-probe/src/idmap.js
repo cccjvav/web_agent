@@ -103,10 +103,11 @@ export function parseInitialModels(html) {
   if (!text) text = html.replace(/\\"/g, '"');
 
   // 2) 对每个 {"id" 锚点做括号配平 + JSON.parse
-  let i = 0;
+  let i = 0, scans = 0;
   while (true) {
     const j = text.indexOf('{"id"', i);
     if (j < 0) break;
+    if (++scans > 2000) throw new Error('Public catalog candidate budget');
     i = j + 1;
     const end = balancedEnd(text, j);
     if (end < 0) continue;
@@ -123,7 +124,7 @@ export function parseInitialModels(html) {
 /** 从 start（'{'）开始找配平的对象结尾，正确处理字符串与转义 */
 function balancedEnd(s, start) {
   let depth = 0, inStr = false;
-  for (let i = start; i < s.length; i++) {
+  for (let i = start; i < Math.min(s.length, start + 16384); i++) {
     const c = s[i];
     if (inStr) {
       if (c === '\\') { i++; continue; }
