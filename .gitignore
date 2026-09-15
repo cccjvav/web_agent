@@ -49,3 +49,7 @@ arena-model-probe/dist/
 
 # Locally built standalone VS Code companion
 webagent-core/probe-extension/dist/
+
+# Python build/import caches (Conda or system Python)
+__pycache__/
+*.py[cod]
