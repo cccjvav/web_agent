@@ -34,7 +34,14 @@ public static class WebAgentStdioBridge
         using (var child = Process.Start(info)) {
             Task output = child.StandardOutput.BaseStream.CopyToAsync(Console.OpenStandardOutput());
             Task error = child.StandardError.BaseStream.CopyToAsync(Console.OpenStandardError());
-            Task.Run(delegate() { try { Console.OpenStandardInput().CopyTo(child.StandardInput.BaseStream); child.StandardInput.Close(); } catch (System.IO.IOException) { } });
+            Task.Run(delegate() {
+                try {
+                    var input = Console.OpenStandardInput(); var target = child.StandardInput.BaseStream;
+                    byte[] buffer = new byte[65536]; int count;
+                    while ((count = input.Read(buffer, 0, buffer.Length)) > 0) { target.Write(buffer, 0, count); target.Flush(); }
+                    child.StandardInput.Close();
+                } catch (System.IO.IOException) { }
+            });
             child.WaitForExit();
             Task.WaitAll(new Task[] { output, error }, 2000);
             return child.ExitCode;

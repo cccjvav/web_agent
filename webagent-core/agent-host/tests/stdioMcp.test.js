@@ -30,6 +30,7 @@ async function until(predicate) {
 function prepared(mode = 'normal', extra = {}) {
   return external.previewStdio({ program: process.execPath, args: [fixture, mode], ...extra });
 }
+let stage = 'validation';
 async function main() {
   let owner;
   try {
@@ -54,6 +55,7 @@ async function main() {
     assert.ok(!fs.existsSync(path.join(root, 'stdio-started.json')), 'Preview never starts the executable');
     preview.launch.args.push('mutable-output-must-not-change-start');
     await assert.rejects(external.startStdio({ previewId: preview.previewId, confirmed: false }), /confirmation/);
+    stage = 'normal launch';
     const registered = await external.startStdio({ previewId: preview.previewId, confirmed: true });
     await assert.rejects(external.startStdio({ previewId: preview.previewId, confirmed: true }), /missing/);
     assert.strictEqual(registered.transport, 'stdio');
@@ -76,8 +78,9 @@ async function main() {
     assert.strictEqual(queue.inspect(hanging.requestId).status, 'unknown');
     await external.closeAll();
     assert.ok(!alive(JSON.parse(fs.readFileSync(path.join(root, 'stdio-started.json'))).pid));
+    stage = 'budgets';
     for (const mode of ['bad-json', 'large-line', 'stderr', 'frames', 'total', 'exit']) {
-      const launch = prepared(mode);
+      stage = mode; const launch = prepared(mode);
       if (mode === 'stderr') await external.startStdio({ previewId: launch.previewId, confirmed: true }).catch(() => {});
       else await assert.rejects(external.startStdio({ previewId: launch.previewId, confirmed: true }), undefined, mode);
       await until(() => !alive(JSON.parse(fs.readFileSync(path.join(root, 'stdio-started.json'))).pid));
@@ -85,13 +88,14 @@ async function main() {
       assert.deepStrictEqual(external.list(), []);
     }
     for (const mode of ['fragmented', 'server-request']) {
-      const launch = prepared(mode); await external.startStdio({ previewId: launch.previewId, confirmed: true });
+      stage = mode; const launch = prepared(mode); await external.startStdio({ previewId: launch.previewId, confirmed: true });
       if (mode === 'server-request') {
         await until(() => fs.existsSync(path.join(root, 'stdio-server-request.json')));
         assert.strictEqual(JSON.parse(fs.readFileSync(path.join(root, 'stdio-server-request.json'))).error.code, -32601);
       }
       await external.closeAll();
     }
+    stage = 'concurrency';
     const directPreview = prepared(); const direct = transports.open(launches.consume({ previewId: directPreview.previewId, confirmed: true }));
     await direct.request('initialize', {});
     const controller = new AbortController();
@@ -99,6 +103,7 @@ async function main() {
     await assert.rejects(direct.request('tools/list', {}), /eight/);
     controller.abort(); assert.ok((await Promise.all(pending)).every(item => item === 'rejected')); await direct.closed;
     // Killing only the owner must not leave the server or ordinary descendants alive.
+    stage = 'owner death';
     owner = fork(path.join(__dirname, 'stdioOwnerFixture.js'), [], { env: { ...process.env, WORKSPACE_ROOT: root }, stdio: ['ignore', 'ignore', 'pipe', 'ipc'] });
     await new Promise((resolve, reject) => { owner.once('message', resolve); owner.once('exit', () => reject(new Error('Owner fixture exited before launch'))); });
     await until(() => fs.existsSync(path.join(root, 'stdio-grandchild.json')));
@@ -114,4 +119,4 @@ async function main() {
     fs.rmSync(root, { recursive: true, force: true });
   }
 }
-main().catch(error => { console.error(error); process.exitCode = 1; });
+main().catch(error => { console.error('stdio failure stage:', stage); console.error(error); process.exitCode = 1; });

@@ -13,12 +13,12 @@ function open(launch, onStopped = () => {}) {
     : [path.join(__dirname, 'stdioSupervisor.js')];
   const child = spawn(program, args, { cwd: launch.cwd, shell: false, detached: !win, windowsHide: true,
     stdio: ['pipe', 'pipe', 'pipe'], env: { ...launch.env, WEBAGENT_STDIO_LAUNCH: spec } });
-  const pending = new Map(); let buffer = Buffer.alloc(0), totalBytes = 0, stderrBytes = 0, frames = 0, stopped = false, closed = false;
+  const pending = new Map(); let buffer = Buffer.alloc(0), totalBytes = 0, stderrBytes = 0, frames = 0, stopped = false, closed = false, stopReason = '';
   let resolveClosed;
   const done = new Promise(resolve => { resolveClosed = resolve; });
   function stop(reason = 'Stdio server stopped') {
     if (stopped) return done;
-    stopped = true; buffer = Buffer.alloc(0);
+    stopped = true; stopReason = reason; buffer = Buffer.alloc(0);
     for (const entry of pending.values()) entry.reject(new Error(reason));
     pending.clear();
     child.stdin.destroy();
@@ -100,7 +100,7 @@ function open(launch, onStopped = () => {}) {
       catch (_) { stop('Stdio request exceeded input budget'); }
     });
   }
-  const transport = { request, stop, closed: done, status: () => ({ pid: child.pid, stopped, closed, stdoutAndStderrBytes: totalBytes, stderrBytes, frames, pending: pending.size }) };
+  const transport = { request, stop, closed: done, status: () => ({ pid: child.pid, stopped, closed, stopReason, stdoutAndStderrBytes: totalBytes, stderrBytes, frames, pending: pending.size }) };
   live.add(transport);
   return transport;
 }
