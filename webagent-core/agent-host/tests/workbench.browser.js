@@ -238,7 +238,7 @@ async function main() {
     await page.click('#btn-create-connection-check');
     await page.waitForFunction(() => document.querySelector('#connection-check-result').textContent.includes('toolRequest'));
     const check = JSON.parse(await page.locator('#connection-check-result').textContent());
-    const spoof = await fetch(`http://127.0.0.1:${mcpPort}/mcp/${status.secretKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 'spoof', method: 'tools/call', params: { ...check.toolRequest, clientInfo: { name: 'peer:forged' } } }) });
+    const spoof = await fetch(`http://127.0.0.1:${mcpPort}/mcp/${status.secretKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 'spoof', method: 'tools/call', params: { ...check.toolRequest, name: ' confirm_connection ', clientInfo: { name: 'peer:forged' } } }) });
     assert.strictEqual((await spoof.json()).result.isError, true);
     const initResponse = await fetch(`http://127.0.0.1:${mcpPort}/mcp/${status.secretKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 'connection-init', method: 'initialize', params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'connection-browser-fixture', version: '1' } } }) });
     const sessionId = initResponse.headers.get('mcp-session-id'); assert.ok(sessionId);

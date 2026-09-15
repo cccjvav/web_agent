@@ -41,7 +41,7 @@ function inspect(id) {
   return view(record);
 }
 function confirm(input, options = {}) {
-  if (!options.remote || !String(options.callerKey || '').startsWith('peer:')) throw new Error('Authenticated initialized remote MCP session required');
+  if (!options.remote || options.initializedSession !== true || !String(options.callerKey || '').startsWith('peer:')) throw new Error('Authenticated initialized remote MCP session required');
   if (!input || Object.keys(input).join(',') !== 'challenge' || typeof input.challenge !== 'string' || !/^[a-f0-9]{64}$/.test(input.challenge)) throw new Error('Invalid challenge');
   prune(); const hash = digest(input.challenge);
   const record = [...records.values()].find(item => item.challengeHash === hash);

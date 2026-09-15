@@ -8,7 +8,7 @@ const checks = require('../src/utils/connectionCheck');
 const { callTool } = require('../src/tools');
 (async () => {
   const input = { schema: 'webagent-browser-observation/v1', origin: 'https://arena.ai', observedAt: new Date().toISOString(), pageKind: 'agent', pageDigest: 'a'.repeat(64) };
-  const options = { remote: true, callerKey: 'peer:authenticated-fixture' };
+  const options = { remote: true, initializedSession: true, callerKey: 'peer:authenticated-fixture' };
   try {
     for (const bad of [{ ...input, pageDigest: [input.pageDigest] }, { ...input, token: 'secret' }, { ...input, origin: 'https://evil.example' }, { ...input, observedAt: 'bad' }, { ...input, pageDigest: '../x' }, { ...input, observedAt: new Date(Date.now() - 700000).toISOString() }]) assert.throws(() => checks.create(bad));
     const record = checks.create(input);
@@ -17,6 +17,7 @@ const { callTool } = require('../src/tools');
     assert.ok(!JSON.stringify(checks.inspect(record.checkId)).includes(record.challenge));
     await assert.rejects(callTool('confirm_connection', { challenge: record.challenge }, 'ask'));
     await assert.rejects(callTool('confirm_connection', { challenge: record.challenge }, 'ask', { remote: true, callerKey: 'ip:unauthenticated' }));
+    await assert.rejects(callTool('confirm_connection', { challenge: record.challenge }, 'ask', { remote: true, callerKey: 'peer:forged' }));
     const result = await callTool('confirm_connection', { challenge: record.challenge }, 'ask', options);
     assert.strictEqual(result.modelIdentityVerified, false);
     assert.strictEqual(result.permissionsChanged, false);
