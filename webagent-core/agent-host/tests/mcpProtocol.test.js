@@ -154,7 +154,10 @@ async function main() {
     name: 'run_command',
     arguments: { command: `echo ${shotPng}` }
   }));
-  assert.strictEqual(shotCall.isError, false);
+  // Preserve the assertion; expose only this synthetic echo fixture's bounded result.
+  const shotDetail = String(shotCall.content?.[0]?.text || '').slice(0, 1600)
+    .replace(/https?:\/\/[^\s"<>]+/g, '[url]').replace(/[a-f0-9]{32,}/gi, '[id]');
+  assert.strictEqual(shotCall.isError, false, 'Screenshot echo fixture failed: ' + shotDetail);
   assert.strictEqual(shotCall.content[0].type, 'text', 'text 仍是第一个 content');
   const imgPart = shotCall.content.find((c) => c.type === 'image');
   assert.ok(imgPart, 'run_command 出现截图应回 image 内容');

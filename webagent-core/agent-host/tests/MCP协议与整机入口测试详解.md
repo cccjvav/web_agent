@@ -54,3 +54,5 @@ httpSmoke增加真实HTTP早期边界：未认证MCP提交JSON字符串（严格
 
 ## 整机Bridge活动接口回归补充
 httpSmoke在真实认证MCP ping完成后GET活动快照，确认calls非零、包含成功ping，且摘要无args/result。重复读取deepEqual不重计；带隧道头读取返回404；本地reset-round之后stats归零且logs为空。不要求打开浏览器才能记录。
+
+截图回传的echo夹具断言仍要求isError=false；shotDetail只在失败时提供该合成调用首个text结果最多1600字符，并替换URL和长十六进制ID，避免只看到true!==false无法定位。不增加超时、不自动重跑命令、不放宽结果断言。
