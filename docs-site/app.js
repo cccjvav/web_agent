@@ -71,17 +71,17 @@
 
   function renderMap() {
     $('.main').innerHTML = `
-      ${pageChrome('本机车间，云上只下工单', '仓库不整包上传。网页只填工单；真正改磁盘的是你电脑上的 agent-host。开了隧道后，拿到 MCP 地址等于拿到施工证。')}
+      ${pageChrome('本机车间，云上只下工单', '程序不自动整包上传仓库，但工具结果可能包含代码。外部客户端经认证 MCP 请求本机操作，完整密钥地址应保密。')}
       <div class="hero-grid">
         <div class="card">
           <h3>电脑上同时活着谁</h3>
-          <p class="muted" style="margin-top:0">同一进程、两套 Express、两扇门。点一层可跳到导读对应节。</p>
+          <p class="muted" style="margin-top:0">经典模式中主机同一进程提供两套 Express；code-server 是另一个进程。点一层跳到导读。</p>
           <div class="arch">
             <div class="layer remote" data-jump="#/guide/临时门牌隧道">
               <div class="tag">远端</div>
               <div>
                 <strong>网页 AI</strong>
-                <p>Arena / DeepSeek++ / Chat Plus / ChatGPT 连接器。看不见 D:\\code。</p>
+                <p>具备兼容 MCP 工具通道的客户端；通过工具访问文件，不是直接挂载本机磁盘。</p>
               </div>
               <span class="port">HTTPS</span>
             </div>
@@ -94,12 +94,12 @@
               </div>
               <span class="port">:48271</span>
             </div>
-            <div class="connector">↓ 同一进程 · 店堂 3000 的 /api · /ws；后厨公网只收 /mcp</div>
+            <div class="connector">↓ 同一进程 · 店堂 3000 的 /api · /ws；公网提供认证 MCP/OAuth；/api 仅本机</div>
             <div class="layer shop" data-jump="#/guide/三条路一把扳手">
               <div class="tag">店堂</div>
               <div>
                 <strong>工作台 或 网页 VS Code</strong>
-                <p>按钮改不了磁盘。Chat 打 POST /api/chat；Bridge 只开门、看卡片。</p>
+                <p>界面通过 API 请求主机操作磁盘；Chat 使用 /api/chat，Bridge 显示连接、统计和任务。</p>
               </div>
               <span class="port">:3000</span>
             </div>
@@ -109,10 +109,10 @@
           <h3>三个不能混的东西</h3>
           <div class="timeline">
             <div class="tl"><div class="n">1</div><div class="body"><b>Git 仓库 web_agent</b><p>工具箱。程序源码。</p></div></div>
-            <div class="tl"><div class="n">2</div><div class="body"><b>工作区</b><p>源码默认仓库根目录，也可以是 D:\\code\\my-app。扳手只能改这里。</p></div></div>
-            <div class="tl"><div class="n">3</div><div class="body"><b>网页上的 AI</b><p>只会聊天、下工单。127.0.0.1 是它自己那台机器。</p></div></div>
+            <div class="tl"><div class="n">2</div><div class="body"><b>工作区</b><p>源码默认仓库根目录，也可以是 D:\\code\\my-app。文件工具限制在这里；命令不是 OS 沙箱。</p></div></div>
+            <div class="tl"><div class="n">3</div><div class="body"><b>网页上的 AI</b><p>云端执行器的127.0.0.1指云端自身；本机浏览器扩展是不同请求位置。</p></div></div>
           </div>
-          <p class="faint">沙箱：<code>patchEngine.resolveSafePath</code>。逃出工作区就拒绝。</p>
+          <p class="faint">文件路径保护：<code>patchEngine.resolveSafePath</code>；不等于任意命令的权限隔离。</p>
         </div>
       </div>
       <div class="card">
@@ -123,7 +123,7 @@
           <button type="button" class="chip" data-path="c">C 网页 VS Code</button>
         </div>
         <div id="path-flow"></div>
-        <p class="faint" style="margin-top:12px">Named / ngrok 会 spawn（要 Token / Authtoken）。Plan 没 Key 时是本机草案，不假装 97%。不要把愿望写成已经接上。</p>
+        <p class="faint" style="margin-top:12px">Named / ngrok 会 spawn（要 Token / Authtoken）。明确选择 builtin 才用本机草案；合并配置失败回退差异见技术实现。不要把愿望写成已经接上。</p>
       </div>
       <div class="hero-grid" style="margin-top:18px">
         <div class="card">
@@ -143,8 +143,8 @@
             <li>网页 VS Code 默认要登录口令，trusted-origins 不再是 *</li>
             <li>工作台保存走 write_file，写不进 .env，错 hash 会 409</li>
             <li>挂别人的 Git 仓库时，MCP 密钥和 API Key 会自动 gitignore</li>
-            <li>Plan 没 Key 时是本机草案/拼接；有 Key 才调模型。没有假 97%</li>
-            <li>Bridge「登录」是本机演示授权，不是 GitHub OAuth，没有「永久顺」</li>
+            <li>非 builtin 分支缺配置会停止；merge目前仍有本机拼接差异，不能写成全面统一</li>
+            <li>Bridge默认本机演示授权；可选GitHub验证不等于模型账户登录</li>
           </ul>
         </div>
       </div>
@@ -162,7 +162,7 @@
     a: [
       ['你', '工作台右侧 CHAT'],
       ['js/chat.js', 'POST :3000 /api/chat'],
-      ['runChat.js', '无 Key → runBuiltin'],
+      ['runChat.js', '明确builtin → runBuiltin；非builtin缺配置停止'],
       ['callTool', 'Ask 只读 / Code 可写'],
       ['磁盘', '工作区文件变了']
     ],
@@ -171,7 +171,7 @@
       ['trycloudflare', '/mcp/<密钥>；公网 /api 404'],
       ['mcp/server.js', 'requireAuth → handleRpc'],
       ['callTool', '默认 code'],
-      ['磁盘', 'BRIDGE 经 /ws 出卡片']
+      ['磁盘', 'BRIDGE读取主机快照，WS辅助触发刷新']
     ],
     c: [
       ['run-webagent-vscode', 'ensure code-server'],
@@ -194,8 +194,8 @@
       ['tools/call 或 Chat', 'resolveToolName'],
       ['callTool', '模式锁 / 危险闸'],
       ['applyPatch', '沙箱 + 哈希'],
-      ['tmp + rename', '原子替换'],
-      ['eventBus', '工作台刷 Diff']
+      ['临时文件发布', '按目标类型保护发布'],
+      ['eventBus', '通知状态变化；不等于磁盘回滚']
     ];
     $('#patch-flow').innerHTML = `<div class="flow">${steps.map((s, i) =>
       `<div class="step"><b>${s[0]}</b>${s[1]}</div>${i < steps.length - 1 ? '<span class="arrow">→</span>' : ''}`

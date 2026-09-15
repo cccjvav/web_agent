@@ -4,7 +4,7 @@
 
 审查范围：全部源码（js/py/ps1/cmd/sh/html/css）、全部文档（含 `.config/`、`installer/`、`docs-site/`、`manager/`）、打包后的安装载荷、CI 工作流。
 基线：`npm test` **52/52 通过**；`node docs-site/check-docs.js` 166 文件 / 25 目录文档 / 37 排除，**0 漂移**；工作树干净。
-去重：本轮结论**不重复** `review/AUDIT_CROSSCHECK_2026-09-11.md`（F01–F38、X01–X35）与原根报告（现归档 `review/archive/project_audit_report.md`）。X07/X08/X30 谈的是 patchEngine 的 EOL/occurrence/unified-diff，X26 谈的是 Monaco 加载反馈，F37 谈的是 computer-use 错误传播——本轮的对应条目是**不同缺陷**。
+去重：本轮结论**不重复** `review/AUDIT_CROSSCHECK_2026-09-11.md`（F01–F38、X01–X35）与原根报告（重复归档已于2026-09-16清理，保留对照稿为 `review/01a08d85-web-agent-audit.md`，原稿在Git历史）。X07/X08/X30 谈的是 patchEngine 的 EOL/occurrence/unified-diff，X26 谈的是 Monaco 加载反馈，F37 谈的是 computer-use 错误传播——本轮的对应条目是**不同缺陷**。
 
 标注：**[已验证]** = 本轮跑代码/跑命令复现过；**[读码]** = 静态确认，未运行。
 

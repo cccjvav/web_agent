@@ -20,7 +20,7 @@
 | build.js | 保留历史页面ID，自动收录清单中的README，转换Markdown及源码快照 |
 | index.html / app.js / styles.css | 文档浏览壳、导航、搜索与源码展示 |
 | content.js | 构建生成物，不直接修改 |
-| serve.js / serve.cmd | 重建后提供本目录静态文件，默认回环4173 |
+| serve.js / serve.cmd | 源码模式构建后提供静态文件；安装版使用预构建快照，默认回环4173 |
 
 ## 生成与启动流程
 先安装开发依赖，审查对应源码和正文，再从仓库根运行：
@@ -32,7 +32,7 @@ node docs-site/build.js
 node docs-site/serve.js
 ```
 
-打开http://127.0.0.1:4173。serve会运行build，但不会替你刷新过期的源码清单；build发现源码hash漂移会拒绝生成。DOCS_HOST/DOCS_PORT可覆盖监听，文档预览与产品本机控制面不是同一服务。
+打开http://127.0.0.1:4173。源码checkout的serve会运行build；安装载荷的bundled.json有效时直接使用预构建content.js，不在Program Files重建。serve不会替你刷新过期的源码清单；build发现源码hash漂移会拒绝生成。DOCS_HOST/DOCS_PORT可覆盖监听，文档预览与产品本机控制面不是同一服务。
 
 ## 页面与阅读路径
 - 架构导读：发生了什么、为什么这样拆。

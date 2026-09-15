@@ -94,7 +94,7 @@
 
 ## docs-site/app.js
 
-[目录说明](README.md) · SHA-256 `d656524faa44caecd40cb07be8b5c07b592ecd4888fdce2372f5d25d1fe8d660`
+[目录说明](README.md) · SHA-256 `c14d54b08a98c03abf242f553a6eb2cc557d791756218bb4161a47cc9aea0f33`
 
 - `anonymous@2:1` — FunctionExpression，[L2–L385](app.js#L2-L385)
 - `anonymous@2:1/$` — ArrowFunctionExpression，[L3–L3](app.js#L3-L3)
