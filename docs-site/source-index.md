@@ -2201,9 +2201,9 @@
 
 ## webagent-core/agent-host/tests/probeTransport.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `600beafd61ed94af97950410df8efbecadd0eee149a33f14795c22d636c54ecb`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `9b7dbdf85abdfcd89a6406a9650a2bb9c08f1597e73c61a44f46f5a9d3620d30`
 
-- `anonymous@4:1` — ArrowFunctionExpression，[L4–L79](../webagent-core/agent-host/tests/probeTransport.test.js#L4-L79)
+- `anonymous@4:1` — ArrowFunctionExpression，[L4–L141](../webagent-core/agent-host/tests/probeTransport.test.js#L4-L141)
 - `anonymous@4:1/bytes` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/probeTransport.test.js#L8-L8)
 - `anonymous@4:1/start` — FunctionExpression，[L19–L19](../webagent-core/agent-host/tests/probeTransport.test.js#L19-L19)
 - `anonymous@4:1/cancel` — FunctionExpression，[L19–L19](../webagent-core/agent-host/tests/probeTransport.test.js#L19-L19)
@@ -2231,7 +2231,32 @@
 - `anonymous@4:1/Xhr/send` — FunctionExpression，[L61–L61](../webagent-core/agent-host/tests/probeTransport.test.js#L61-L61)
 - `anonymous@4:1/Xhr/addEventListener` — FunctionExpression，[L62–L62](../webagent-core/agent-host/tests/probeTransport.test.js#L62-L62)
 - `anonymous@4:1/Xhr/removeEventListener` — FunctionExpression，[L63–L63](../webagent-core/agent-host/tests/probeTransport.test.js#L63-L63)
-- `anonymous@79:11` — ArrowFunctionExpression，[L79–L79](../webagent-core/agent-host/tests/probeTransport.test.js#L79-L79)
+- `anonymous@4:1/repeated` — ArrowFunctionExpression，[L71–L71](../webagent-core/agent-host/tests/probeTransport.test.js#L71-L71)
+- `anonymous@4:1/anonymous@76:28` — ArrowFunctionExpression，[L76–L76](../webagent-core/agent-host/tests/probeTransport.test.js#L76-L76)
+- `anonymous@4:1/anonymous@77:23` — ArrowFunctionExpression，[L77–L77](../webagent-core/agent-host/tests/probeTransport.test.js#L77-L77)
+- `anonymous@4:1/anonymous@80:28` — ArrowFunctionExpression，[L80–L80](../webagent-core/agent-host/tests/probeTransport.test.js#L80-L80)
+- `anonymous@4:1/anonymous@81:29` — ArrowFunctionExpression，[L81–L81](../webagent-core/agent-host/tests/probeTransport.test.js#L81-L81)
+- `anonymous@4:1/anonymous@82:36` — ArrowFunctionExpression，[L82–L82](../webagent-core/agent-host/tests/probeTransport.test.js#L82-L82)
+- `anonymous@4:1/anonymous@84:18` — ArrowFunctionExpression，[L84–L84](../webagent-core/agent-host/tests/probeTransport.test.js#L84-L84)
+- `anonymous@4:1/Target` — ClassDeclaration，[L86–L93](../webagent-core/agent-host/tests/probeTransport.test.js#L86-L93)
+- `anonymous@4:1/Target/constructor` — FunctionExpression，[L87–L87](../webagent-core/agent-host/tests/probeTransport.test.js#L87-L87)
+- `anonymous@4:1/Target/addEventListener` — FunctionExpression，[L88–L88](../webagent-core/agent-host/tests/probeTransport.test.js#L88-L88)
+- `anonymous@4:1/Target/removeEventListener` — FunctionExpression，[L89–L89](../webagent-core/agent-host/tests/probeTransport.test.js#L89-L89)
+- `anonymous@4:1/Target/fire` — FunctionExpression，[L90–L90](../webagent-core/agent-host/tests/probeTransport.test.js#L90-L90)
+- `anonymous@4:1/Target/count` — FunctionExpression，[L91–L91](../webagent-core/agent-host/tests/probeTransport.test.js#L91-L91)
+- `anonymous@4:1/Target/getBoundingClientRect` — FunctionExpression，[L92–L92](../webagent-core/agent-host/tests/probeTransport.test.js#L92-L92)
+- `anonymous@4:1/anonymous@97:53` — ArrowFunctionExpression，[L97–L97](../webagent-core/agent-host/tests/probeTransport.test.js#L97-L97)
+- `anonymous@4:1/anonymous@98:53` — ArrowFunctionExpression，[L98–L98](../webagent-core/agent-host/tests/probeTransport.test.js#L98-L98)
+- `anonymous@4:1/anonymous@99:53` — ArrowFunctionExpression，[L99–L99](../webagent-core/agent-host/tests/probeTransport.test.js#L99-L99)
+- `anonymous@4:1/anonymous@104:53` — ArrowFunctionExpression，[L104–L104](../webagent-core/agent-host/tests/probeTransport.test.js#L104-L104)
+- `anonymous@4:1/anonymous@107:18` — ArrowFunctionExpression，[L107–L107](../webagent-core/agent-host/tests/probeTransport.test.js#L107-L107)
+- `anonymous@4:1/anonymous@107:18/anonymous@107:57` — ArrowFunctionExpression，[L107–L107](../webagent-core/agent-host/tests/probeTransport.test.js#L107-L107)
+- `anonymous@4:1/anonymous@109:56` — ArrowFunctionExpression，[L109–L109](../webagent-core/agent-host/tests/probeTransport.test.js#L109-L109)
+- `anonymous@4:1/anonymous@111:39` — ArrowFunctionExpression，[L111–L111](../webagent-core/agent-host/tests/probeTransport.test.js#L111-L111)
+- `anonymous@4:1/remove` — FunctionExpression，[L118–L118](../webagent-core/agent-host/tests/probeTransport.test.js#L118-L118)
+- `anonymous@4:1/closest` — ArrowFunctionExpression，[L119–L119](../webagent-core/agent-host/tests/probeTransport.test.js#L119-L119)
+- `anonymous@4:1/contains` — ArrowFunctionExpression，[L119–L119](../webagent-core/agent-host/tests/probeTransport.test.js#L119-L119)
+- `anonymous@141:11` — ArrowFunctionExpression，[L141–L141](../webagent-core/agent-host/tests/probeTransport.test.js#L141-L141)
 
 ## webagent-core/agent-host/tests/profile.test.js
 

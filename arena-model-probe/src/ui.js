@@ -72,8 +72,10 @@ export class HUD {
   }
 
   _draggable() {
-    this.root.addEventListener('mousedown', (e) => {
-      const hd = e.target.closest('.hd');
+    const down = (e) => {
+      if (this.destroyed || e.button !== 0) return;
+      if (this._dragCleanup) this._dragCleanup();
+      const hd = e.target.closest?.('.hd');
       if (!hd || e.target.classList.contains('mini')) return;
       const r = this.root.getBoundingClientRect();
       const dx = e.clientX - r.left, dy = e.clientY - r.top;
@@ -82,13 +84,31 @@ export class HUD {
         this.root.style.top = (ev.clientY - dy) + 'px';
         this.root.style.right = 'auto';
       };
-      const up = () => { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); };
+      const up = () => {
+        document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up);
+        window.removeEventListener('blur', up);
+        if (this._dragCleanup === up) this._dragCleanup = null;
+      };
+      this._dragCleanup = up;
       document.addEventListener('mousemove', mv);
       document.addEventListener('mouseup', up);
-    });
+      window.addEventListener('blur', up);
+    };
+    this.root.addEventListener('mousedown', down);
+    this._offDragStart = () => this.root.removeEventListener('mousedown', down);
+  }
+
+  destroy() {
+    if (this.destroyed) return;
+    this.destroyed = true;
+    if (this._dragCleanup) this._dragCleanup();
+    if (this._offDragStart) this._offDragStart();
+    this.onAction = null; this.logs.length = 0;
+    this.host.remove();
   }
 
   log(msg, kind = 'info') {
+    if (this.destroyed) return;
     const t = new Date().toTimeString().slice(0, 8);
     this.logs.unshift(`<div>[${t}] ${esc(msg)}</div>`);
     if (this.logs.length > 60) this.logs.pop();
@@ -99,6 +119,7 @@ export class HUD {
   confidenceClass(c) { return c >= 0.8 ? 'ok' : c >= 0.5 ? 'inf' : 'warn'; }
 
   render(v, extras = {}) {
+    if (this.destroyed) return;
     const dotCls = !v ? '' : v.mode === 'RESOLVED' ? '' : v.mode === 'INFERRED' ? 'warn' : 'bad';
     const vd = v || {
       mode: 'WARMING', modelId: null, family: null, gen: null,
@@ -153,7 +174,7 @@ export class HUD {
       <div class="hd"><span class="dot ${dotCls}"></span>
         <span class="ttl">模型探针 · arena-model-probe</span>
         <span class="mini" data-act="toggle">—</span>
-        <span class="mini" data-act="close">✕</span>
+        <span class="mini" data-act="close" title="关闭面板，不停止采集；彻底停止请禁用注入并刷新页面">✕</span>
       </div>
       <div class="bd">
         ${realBlock}
@@ -194,7 +215,7 @@ export class HUD {
       el.addEventListener('click', () => {
         const act = el.getAttribute('data-act');
         if (act === 'toggle') this.root.classList.toggle('hide');
-        else if (act === 'close') this.host.remove();
+        else if (act === 'close') this.destroy();
         else if (this.onAction) this.onAction(act);
       });
     });

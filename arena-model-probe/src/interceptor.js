@@ -16,8 +16,18 @@ export const BUS = {
   evidence: [],      // 结构化证据
   observations: [],  // 每次完整对话的观测（用于指纹建档）
   listeners: [],
-  on(fn) { this.listeners.push(fn); },
-  emit(evt) { for (const fn of this.listeners) { try { fn(evt); } catch { /* noop */ } } },
+  on(fn) {
+    if (typeof fn !== 'function') throw new TypeError('Listener must be a function');
+    const listener = evt => fn(evt);
+    this.listeners.push(listener);
+    return () => { const i = this.listeners.indexOf(listener); if (i >= 0) this.listeners.splice(i, 1); };
+  },
+  emit(evt) {
+    // Snapshot: subscriptions changed by a callback take effect on the next event.
+    for (const fn of [...this.listeners]) {
+      try { Promise.resolve(fn(evt)).catch(() => {}); } catch { /* isolate observers */ }
+    }
+  },
   addObservation(obs) {
     this.observations.push(obs);
     if (this.observations.length > 20) this.observations.splice(0, this.observations.length - 20);

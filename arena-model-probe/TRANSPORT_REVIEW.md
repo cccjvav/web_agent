@@ -25,7 +25,7 @@
 
 ## 尚未完成，不能称全扩展无bug
 
-- main版本替换仍缺完整销毁协议：仅移除HUD不等于清除所有订阅、定时器、网络钩子；本轮没有伪造一个“stop成功”承诺。
+- main仍缺完整销毁协议；后续生命周期修复已禁止热替换叠加实例，更新需要刷新。HUD销毁不等于清除订阅、定时器和网络钩子。
 - SSETap不是完整标准SSE实现，尤其多行data/CR换行、内容与事件关联需单独协议测试。
 - XHR非文本responseType、错误/中断与跨请求归属仍需扩展测试；原页面自身的大响应下载不受探针采样预算约束。
 - 分类权重、相似度及协议归属未经统计校准；多来源可能共享同一上游，不能算独立证明。
@@ -46,3 +46,15 @@
 已补齐main.js全文阅读，runmodel.js只读自动编排/轮询/重置段，ui.js追加拖动段；不把这些标作全模块审计。运行标签的HUD日志和note也改为未核验；主入口返回的verdict显式modelIdentityVerified:false，旧的realName:true改为reportedName:true（仓库内没有其他消费者）。既有realModel/realModels函数名暂保留兼容，只返回来源报告的名称；历史VERIFIED存档枚举不构成认证，后续需独立数据迁移而非伪造验证。
 
 补充待修候选：quickVerdict把不同请求的modelId证据混用；recompute每次可能重复加入同一canary证据且绕过BUS.push上限；自动轮询读取可变全局run状态，跨请求归属与重置的竞态尚待隔离测试。没有为了通过测试而执行真实令牌/轨迹。这些仍影响原型判定可靠性，因此原型仍不随产品启用。
+
+## 生命周期续修
+
+已修复三个可复现问题，仍只运行隔离fixture：
+
+1. `BUS.on`以前不返回退订函数，emit直接遍历可变数组且漏掉async rejection。现在每次注册拥有独立包装函数，返回幂等退订；emit使用订阅快照，隔离同步异常及异步拒绝。本次事件开始时的订阅仍收一次事件，增删在下一次生效。它不自动取消监听内部已启动的异步工作。
+2. HUD只监听document mouseup，失焦/拖动中关闭会残留mousemove。新增`destroy`清理起始/移动/结束/blur监听、动作回调与日志；重复mousedown先释放前次拖动，非左键忽略。关闭按钮调用destroy，后续render/log不再操作被销毁面板。**关闭面板不停止采集**，按钮说明与README已明确。
+3. 旧main在DOMContentLoaded前没有启动预约，重复注入可注册多个boot；换版仅移除旧HUD却保留旧后台任务。新`lifecycle.js.scheduleBoot(win,doc,version,start)`同步登记pending票据；run先核对票据/占用，再依次标starting/ready。异常标failed且不重试，已有实例/预约不替换。main.boot也拒绝重复的半启动实例，同一已有实例直接返回。
+
+`tools/build.mjs`把lifecycle列入构建/哈希模块清单。测试覆盖同版/不同版重复排队、重复DOMContentLoaded、已有旧API、启动异常、排队后被旧实例占用，以及退订快照、async rejection、blur/mouseup/重复拖动/幂等destroy。这里只把boot替身计数，未调用真正main.boot；不运行令牌/轨迹链。
+
+后续仍需全局停止的所有权设计和真实浏览器原型验证；目前保留“禁用注入后刷新”的退出方式。此前列出的SSE多行、证据归属及轮询竞态没有被这批生命周期测试覆盖。

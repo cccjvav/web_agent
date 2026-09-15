@@ -67,6 +67,68 @@ const assert = require('assert');
     for (let i = 0; i < 10; i++) { xhr.open('POST', '/chat'); xhr.send('{}'); }
     assert.strictEqual(xhr.listeners.size, 1, 'reusing XHR must not stack stale listeners');
     xhr.open('GET', ''); xhr.send(); assert.strictEqual(xhr.listeners.size, 0);
+    // Event bus registration ownership and asynchronous observer isolation.
+    const calls = []; const repeated = () => calls.push('same');
+    const offA = BUS.on(repeated), offB = BUS.on(repeated);
+    offA(); offA(); BUS.emit({ kind: 'fixture' });
+    assert.deepStrictEqual(calls, ['same']); offB();
+    let offSecond;
+    const offFirst = BUS.on(() => { calls.push('first'); offSecond(); });
+    offSecond = BUS.on(() => calls.push('second'));
+    BUS.emit({}); BUS.emit({}); offFirst();
+    assert.deepStrictEqual(calls.slice(1), ['first', 'second', 'first']);
+    const offThrow = BUS.on(() => { throw new Error('fixture'); });
+    const offReject = BUS.on(async () => { throw new Error('fixture'); });
+    BUS.emit({}); await new Promise(resolve => setImmediate(resolve));
+    offThrow(); offReject(); assert.strictEqual(BUS.listeners.length, 0);
+    assert.throws(() => BUS.on(null), TypeError);
+
+    class Target {
+      constructor() { this.handlers = new Map(); this.style = {}; }
+      addEventListener(type, fn) { if (!this.handlers.has(type)) this.handlers.set(type, new Set()); this.handlers.get(type).add(fn); }
+      removeEventListener(type, fn) { this.handlers.get(type)?.delete(fn); }
+      fire(type, event = {}) { for (const fn of [...(this.handlers.get(type) || [])]) fn(event); }
+      count(type) { return this.handlers.get(type)?.size || 0; }
+      getBoundingClientRect() { return { left: 0, top: 0 }; }
+    }
+    const { scheduleBoot } = await import('../../../arena-model-probe/src/lifecycle.js');
+    let boots = 0;
+    const doc = new Target(); doc.readyState = 'loading'; const win = {};
+    assert.strictEqual(scheduleBoot(win, doc, 'one', () => boots++), true);
+    assert.strictEqual(scheduleBoot(win, doc, 'one', () => boots++), false);
+    assert.strictEqual(scheduleBoot(win, doc, 'two', () => boots++), false);
+    assert.strictEqual(doc.count('DOMContentLoaded'), 1);
+    doc.fire('DOMContentLoaded'); doc.fire('DOMContentLoaded');
+    assert.strictEqual(boots, 1); assert.strictEqual(win.__MODEL_PROBE_START__.phase, 'ready');
+    const oldApi = { version: 'old' }, old = { __MODEL_PROBE__: oldApi };
+    assert.strictEqual(scheduleBoot(old, doc, 'new', () => boots++), false);
+    assert.strictEqual(old.__MODEL_PROBE__, oldApi);
+    const failed = {}; doc.readyState = 'complete';
+    assert.throws(() => scheduleBoot(failed, doc, 'one', () => { throw new Error('partial startup'); }));
+    assert.strictEqual(failed.__MODEL_PROBE_START__.phase, 'failed');
+    assert.strictEqual(scheduleBoot(failed, doc, 'one', () => boots++), false);
+    const late = {}, lateDoc = new Target(); lateDoc.readyState = 'loading';
+    scheduleBoot(late, lateDoc, 'one', () => boots++);
+    late.__MODEL_PROBE__ = oldApi; lateDoc.fire('DOMContentLoaded');
+    assert.strictEqual(late.__MODEL_PROBE_START__.phase, 'blocked'); assert.strictEqual(boots, 1);
+
+    const { HUD } = await import('../../../arena-model-probe/src/ui.js');
+    global.window = new Target(); global.document = new Target();
+    const hud = Object.create(HUD.prototype); hud.root = new Target(); hud.logs = [];
+    let removed = 0; hud.host = { remove() { removed++; } };
+    const down = { button: 0, clientX: 5, clientY: 5, target: { closest: () => true, classList: { contains: () => false } } };
+    hud._draggable();
+    hud.root.fire('mousedown', { ...down, button: 2 }); assert.strictEqual(document.count('mousemove'), 0);
+    hud.root.fire('mousedown', down); hud.root.fire('mousedown', down);
+    assert.strictEqual(document.count('mousemove'), 1); assert.strictEqual(window.count('blur'), 1);
+    window.fire('blur'); assert.strictEqual(document.count('mousemove'), 0);
+    hud.root.fire('mousedown', down); document.fire('mouseup');
+    assert.strictEqual(window.count('blur'), 0);
+    hud.root.fire('mousedown', down); hud.destroy(); hud.destroy(); hud.log('ignored'); hud.render(null);
+    assert.strictEqual(removed, 1); assert.strictEqual(hud.logs.length, 0);
+    assert.strictEqual(hud.root.count('mousedown'), 0);
+    assert.strictEqual(document.count('mousemove'), 0); assert.strictEqual(document.count('mouseup'), 0); assert.strictEqual(window.count('blur'), 0);
+
     const uiSource = require('fs').readFileSync(require('path').resolve(__dirname, '../../../arena-model-probe/src/ui.js'), 'utf8');
     assert.ok(uiSource.includes('非认证概率') && uiSource.includes('未独立核验'));
     const mainSource = require('fs').readFileSync(require('path').resolve(__dirname, '../../../arena-model-probe/src/main.js'), 'utf8');

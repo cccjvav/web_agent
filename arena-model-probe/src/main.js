@@ -5,6 +5,7 @@
  * 预算：从页面发消息到 HUD 出首判，目标 < 800ms（首帧即判）。
  */
 
+import { scheduleBoot } from './lifecycle.js';
 import { BUS, installFetchHook, installXHRHook, installSocketHook } from './interceptor.js';
 import { classify } from './classify.js';
 import { learnFromObservation, listLearned, exportLearned, backfillNames,
@@ -20,6 +21,10 @@ import { REGISTRY_VERSION } from './registry.js';
 export const VERSION = '1.0.0';
 
 export function boot(opts = {}) {
+  if (window.__MODEL_PROBE__) return window.__MODEL_PROBE__;
+  if (window.__MODEL_PROBE_BOOTED__) throw new Error('Probe startup is incomplete; reload the page before retrying.');
+  // Keep a failure marker too: partially installed hooks must not be stacked.
+  window.__MODEL_PROBE_BOOTED__ = VERSION;
   const cfg = {
     showHUD: true,
     learn: true,
@@ -335,35 +340,10 @@ function copy(text) {
   try { navigator.clipboard.writeText(text); } catch { /* noop */ }
 }
 
-// 自动启动。
-//
-// 版本感知：若页面里已存在【不同版本】的探针实例，说明代码已更新，
-// 此时不要因为 BOOTED 标记就跳过——否则改了探针但页面仍跑旧版
-// （实测踩过：新增的协议指纹一直不生效，因为跑的是旧注入）。
+// Re-injection never silently replaces a live/partial instance. Reload to update.
 if (typeof window !== 'undefined') {
-  const prevBooted = window.__MODEL_PROBE_BOOTED__;
-  const prevVersion = (typeof window.__MODEL_PROBE__ === 'object' && window.__MODEL_PROBE__)
-    ? window.__MODEL_PROBE__.version : null;
-
-  // 同版本重复注入 → 直接跳过，避免叠加监听
-  if (prevBooted === VERSION && prevVersion === VERSION) {
-    // no-op：已是最新版本
-  } else {
-    if (prevBooted && prevBooted !== VERSION) {
-      // 旧版本实例：挪到备用全局名，不销毁它的 DOM（销毁会干扰 React 状态）
-      try {
-        if (window.__MODEL_PROBE__) window.__MODEL_PROBE_OLD__ = window.__MODEL_PROBE__;
-      } catch { /* noop */ }
-      try {
-        const old = document.getElementById('amp-hud');
-        if (old) old.remove();
-      } catch { /* noop */ }
-    }
-    const start = () => {
-      window.__MODEL_PROBE_BOOTED__ = VERSION;
-      boot();
-    };
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
-    else start();
+  const scheduled = scheduleBoot(window, document, VERSION, () => boot());
+  if (!scheduled && window.__MODEL_PROBE__?.version !== VERSION) {
+    console.warn('[amp] Existing or pending probe retained; reload the page to update. No second instance was started.');
   }
 }

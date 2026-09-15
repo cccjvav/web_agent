@@ -18,7 +18,7 @@ const SRC = resolve(ROOT, 'src');
 const DIST = resolve(ROOT, 'dist');
 
 const ENTRY = 'main.js';
-const MODULES = ['registry.js', 'classify.js', 'interceptor.js', 'idmap.js', 'runmodel.js', 'learned.js', 'probe.js', 'ui.js', 'main.js'];
+const MODULES = ['lifecycle.js', 'registry.js', 'classify.js', 'interceptor.js', 'idmap.js', 'runmodel.js', 'learned.js', 'probe.js', 'ui.js', 'main.js'];
 
 const idOf = (file) => basename(file, '.js');
 
