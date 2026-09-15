@@ -13,7 +13,9 @@
 
 ## 安装（Windows VS Code集成CMD + Conda）
 
-先按项目现有指南启动本机WebAgent并安装原有WebAgent扩展。然后在仓库根目录执行：
+先按项目现有指南启动本机WebAgent并安装原有WebAgent扩展。两个扩展应在同一个VS Code配置文件（Profile）内启用。已拿到VSIX时直接使用扩展面板“从VSIX安装”，不必安装Python或重新构建。
+
+以下命令仅供从源码构建，在仓库根目录执行：
 
 ```cmd
 conda activate 你的既有环境名
@@ -38,7 +40,7 @@ code --install-extension webagent-core\probe-extension\dist\webagent-probe-compa
 
 ## 实现与验证
 
-见同目录《实现详解.md》。本机Node隔离测试和打包检查不等于VS Code实机验收。请在扩展面板确认两个扩展并存，验证菜单、正确/错误摘要、取消剪贴板确认、超时、窗口重载、未信任/远程工作区拒绝，再记录实际结果。VS Code不会提供浏览器页面网络访问权，本版没有把缺失能力伪装成已实现。
+见源码仓库同目录《实现详解.md》（不在精简VSIX内）。本机Node隔离测试和打包检查不等于VS Code实机验收。请在扩展面板确认两个扩展并存，验证菜单、正确/错误摘要、取消剪贴板确认、超时、窗口重载、未信任/远程工作区拒绝，再记录实际结果。VS Code不会提供浏览器页面网络访问权，本版没有把缺失能力伪装成已实现。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航

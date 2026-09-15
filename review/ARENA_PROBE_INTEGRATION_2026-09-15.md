@@ -45,3 +45,5 @@ connectionCheck隔离测试涵盖原始额外字段/错误来源/过期拒绝、
 ## VS Code配套扩展首版
 
 用户授权做可并装的VS Code版本。新增webagent-core/probe-extension独立ID与VSIX白名单构建，复用既有本机HTTP核对接口和WebAgent Bridge命令，不新增host工具/执行权限，不自动启动浏览器原型。模型推断、原始流量、令牌和后台轨迹未移植。验证分为隔离HTTP/VSCode API桩、VSIX包结构、真实桌面人工验收；最后一项仍待用户执行。原型的SSE多行/证据混用等未完成项仍保留。
+
+首版91337db的本机62文件测试和全部9项CI通过（https://github.com/cccjvav/web_agent/actions/runs/34978616519），含Windows独立VSIX构建/ZIP校验。后续补充忙状态防重复、配置变化绑定旧地址、主机重启丢弃记录、过期不请求、卸载取消在途请求测试；失败清空旧显示，避免把旧成功误当新结论。真实VS Code安装/API及两扩展同时运行仍待桌面验收。

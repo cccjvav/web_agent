@@ -2201,9 +2201,9 @@
 
 ## webagent-core/agent-host/tests/probeCompanion.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `90cbc91b6e2277629baa96f1a250c3170b3d2eda141b4ccb1ec17e6352133236`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `3ebab43fac0dd84015d27ce6435bd538679f59b988d77fba19f3eb62aaf1ee34`
 
-- `main` — FunctionDeclaration，[L9–L77](../webagent-core/agent-host/tests/probeCompanion.test.js#L9-L77)
+- `main` — FunctionDeclaration，[L9–L92](../webagent-core/agent-host/tests/probeCompanion.test.js#L9-L92)
 - `main/anonymous@12:194` — ArrowFunctionExpression，[L12–L12](../webagent-core/agent-host/tests/probeCompanion.test.js#L12-L12)
 - `main/anonymous@14:214` — ArrowFunctionExpression，[L14–L14](../webagent-core/agent-host/tests/probeCompanion.test.js#L14-L14)
 - `main/anonymous@15:16` — ArrowFunctionExpression，[L15–L15](../webagent-core/agent-host/tests/probeCompanion.test.js#L15-L15)
@@ -2211,27 +2211,31 @@
 - `main/anonymous@18:35` — ArrowFunctionExpression，[L18–L24](../webagent-core/agent-host/tests/probeCompanion.test.js#L18-L24)
 - `main/anonymous@25:20` — ArrowFunctionExpression，[L25–L25](../webagent-core/agent-host/tests/probeCompanion.test.js#L25-L25)
 - `main/anonymous@33:32` — ArrowFunctionExpression，[L33–L33](../webagent-core/agent-host/tests/probeCompanion.test.js#L33-L33)
-- `main/getConfiguration` — ArrowFunctionExpression，[L40–L40](../webagent-core/agent-host/tests/probeCompanion.test.js#L40-L40)
-- `main/getConfiguration/get` — ArrowFunctionExpression，[L40–L40](../webagent-core/agent-host/tests/probeCompanion.test.js#L40-L40)
-- `main/writeText` — ArrowFunctionExpression，[L41–L41](../webagent-core/agent-host/tests/probeCompanion.test.js#L41-L41)
-- `main/getExtension` — ArrowFunctionExpression，[L42–L42](../webagent-core/agent-host/tests/probeCompanion.test.js#L42-L42)
-- `main/createOutputChannel` — ArrowFunctionExpression，[L44–L44](../webagent-core/agent-host/tests/probeCompanion.test.js#L44-L44)
-- `main/createOutputChannel/clear` — FunctionExpression，[L44–L44](../webagent-core/agent-host/tests/probeCompanion.test.js#L44-L44)
-- `main/createOutputChannel/appendLine` — FunctionExpression，[L44–L44](../webagent-core/agent-host/tests/probeCompanion.test.js#L44-L44)
-- `main/createOutputChannel/show` — FunctionExpression，[L44–L44](../webagent-core/agent-host/tests/probeCompanion.test.js#L44-L44)
-- `main/createOutputChannel/dispose` — FunctionExpression，[L44–L44](../webagent-core/agent-host/tests/probeCompanion.test.js#L44-L44)
-- `main/showWarningMessage` — ArrowFunctionExpression，[L45–L45](../webagent-core/agent-host/tests/probeCompanion.test.js#L45-L45)
-- `main/showInformationMessage` — ArrowFunctionExpression，[L45–L45](../webagent-core/agent-host/tests/probeCompanion.test.js#L45-L45)
-- `main/showInputBox` — ArrowFunctionExpression，[L45–L45](../webagent-core/agent-host/tests/probeCompanion.test.js#L45-L45)
-- `main/showQuickPick` — ArrowFunctionExpression，[L46–L46](../webagent-core/agent-host/tests/probeCompanion.test.js#L46-L46)
-- `main/registerCommand` — FunctionExpression，[L48–L48](../webagent-core/agent-host/tests/probeCompanion.test.js#L48-L48)
-- `main/registerCommand/dispose` — FunctionExpression，[L48–L48](../webagent-core/agent-host/tests/probeCompanion.test.js#L48-L48)
-- `main/executeCommand` — ArrowFunctionExpression，[L48–L48](../webagent-core/agent-host/tests/probeCompanion.test.js#L48-L48)
-- `main/fakeRequest` — ArrowFunctionExpression，[L50–L55](../webagent-core/agent-host/tests/probeCompanion.test.js#L50-L55)
-- `main/require` — ArrowFunctionExpression，[L56–L56](../webagent-core/agent-host/tests/probeCompanion.test.js#L56-L56)
-- `main/invoke` — ArrowFunctionExpression，[L60–L60](../webagent-core/agent-host/tests/probeCompanion.test.js#L60-L60)
-- `main/anonymous@73:24` — ArrowFunctionExpression，[L73–L73](../webagent-core/agent-host/tests/probeCompanion.test.js#L73-L73)
-- `anonymous@78:13` — ArrowFunctionExpression，[L78–L78](../webagent-core/agent-host/tests/probeCompanion.test.js#L78-L78)
+- `main/getConfiguration` — ArrowFunctionExpression，[L41–L41](../webagent-core/agent-host/tests/probeCompanion.test.js#L41-L41)
+- `main/getConfiguration/get` — ArrowFunctionExpression，[L41–L41](../webagent-core/agent-host/tests/probeCompanion.test.js#L41-L41)
+- `main/writeText` — ArrowFunctionExpression，[L42–L42](../webagent-core/agent-host/tests/probeCompanion.test.js#L42-L42)
+- `main/getExtension` — ArrowFunctionExpression，[L43–L43](../webagent-core/agent-host/tests/probeCompanion.test.js#L43-L43)
+- `main/createOutputChannel` — ArrowFunctionExpression，[L45–L45](../webagent-core/agent-host/tests/probeCompanion.test.js#L45-L45)
+- `main/createOutputChannel/clear` — FunctionExpression，[L45–L45](../webagent-core/agent-host/tests/probeCompanion.test.js#L45-L45)
+- `main/createOutputChannel/appendLine` — FunctionExpression，[L45–L45](../webagent-core/agent-host/tests/probeCompanion.test.js#L45-L45)
+- `main/createOutputChannel/show` — FunctionExpression，[L45–L45](../webagent-core/agent-host/tests/probeCompanion.test.js#L45-L45)
+- `main/createOutputChannel/dispose` — FunctionExpression，[L45–L45](../webagent-core/agent-host/tests/probeCompanion.test.js#L45-L45)
+- `main/showWarningMessage` — ArrowFunctionExpression，[L46–L46](../webagent-core/agent-host/tests/probeCompanion.test.js#L46-L46)
+- `main/showInformationMessage` — ArrowFunctionExpression，[L46–L46](../webagent-core/agent-host/tests/probeCompanion.test.js#L46-L46)
+- `main/showInputBox` — ArrowFunctionExpression，[L46–L46](../webagent-core/agent-host/tests/probeCompanion.test.js#L46-L46)
+- `main/showQuickPick` — ArrowFunctionExpression，[L47–L47](../webagent-core/agent-host/tests/probeCompanion.test.js#L47-L47)
+- `main/registerCommand` — FunctionExpression，[L49–L49](../webagent-core/agent-host/tests/probeCompanion.test.js#L49-L49)
+- `main/registerCommand/dispose` — FunctionExpression，[L49–L49](../webagent-core/agent-host/tests/probeCompanion.test.js#L49-L49)
+- `main/executeCommand` — ArrowFunctionExpression，[L49–L49](../webagent-core/agent-host/tests/probeCompanion.test.js#L49-L49)
+- `main/fakeRequest` — ArrowFunctionExpression，[L51–L58](../webagent-core/agent-host/tests/probeCompanion.test.js#L51-L58)
+- `main/fakeRequest/anonymous@53:40` — ArrowFunctionExpression，[L53–L53](../webagent-core/agent-host/tests/probeCompanion.test.js#L53-L53)
+- `main/fakeRequest/anonymous@53:40/anonymous@53:94` — ArrowFunctionExpression，[L53–L53](../webagent-core/agent-host/tests/probeCompanion.test.js#L53-L53)
+- `main/require` — ArrowFunctionExpression，[L59–L59](../webagent-core/agent-host/tests/probeCompanion.test.js#L59-L59)
+- `main/now` — ArrowFunctionExpression，[L59–L59](../webagent-core/agent-host/tests/probeCompanion.test.js#L59-L59)
+- `main/invoke` — ArrowFunctionExpression，[L63–L63](../webagent-core/agent-host/tests/probeCompanion.test.js#L63-L63)
+- `main/anonymous@77:24` — ArrowFunctionExpression，[L77–L77](../webagent-core/agent-host/tests/probeCompanion.test.js#L77-L77)
+- `main/anonymous@78:26` — ArrowFunctionExpression，[L78–L78](../webagent-core/agent-host/tests/probeCompanion.test.js#L78-L78)
+- `anonymous@93:13` — ArrowFunctionExpression，[L93–L93](../webagent-core/agent-host/tests/probeCompanion.test.js#L93-L93)
 
 ## webagent-core/agent-host/tests/probeTransport.test.js
 
@@ -3024,20 +3028,20 @@
 
 ## webagent-core/probe-extension/extension.js
 
-[目录说明](../webagent-core/probe-extension/README.md) · SHA-256 `b39e7c3a5f6b43d182e044f70fb83fd2563bf8726d450c8ba2ed1fa38dd2614f`
+[目录说明](../webagent-core/probe-extension/README.md) · SHA-256 `569fe9c0e593066216a6cd6c36f9c013f9a7d76175aaf56bda10268b3fe41aac`
 
-- `activate` — FunctionDeclaration，[L4–L79](../webagent-core/probe-extension/extension.js#L4-L79)
+- `activate` — FunctionDeclaration，[L4–L80](../webagent-core/probe-extension/extension.js#L4-L80)
 - `activate/allowed` — ArrowFunctionExpression，[L8–L8](../webagent-core/probe-extension/extension.js#L8-L8)
 - `activate/base` — ArrowFunctionExpression，[L9–L9](../webagent-core/probe-extension/extension.js#L9-L9)
 - `activate/api` — ArrowFunctionExpression，[L10–L15](../webagent-core/probe-extension/extension.js#L10-L15)
 - `activate/show` — ArrowFunctionExpression，[L16–L20](../webagent-core/probe-extension/extension.js#L16-L20)
 - `activate/identityView` — ArrowFunctionExpression，[L21–L26](../webagent-core/probe-extension/extension.js#L21-L26)
-- `activate/run` — ArrowFunctionExpression，[L27–L71](../webagent-core/probe-extension/extension.js#L27-L71)
-- `activate/dispose` — FunctionExpression，[L72–L72](../webagent-core/probe-extension/extension.js#L72-L72)
-- `activate/anonymous@73:165` — ArrowFunctionExpression，[L73–L73](../webagent-core/probe-extension/extension.js#L73-L73)
-- `activate/anonymous@74:83` — ArrowFunctionExpression，[L74–L78](../webagent-core/probe-extension/extension.js#L74-L78)
-- `activate/anonymous@74:83/anonymous@76:65` — ArrowFunctionExpression，[L76–L76](../webagent-core/probe-extension/extension.js#L76-L76)
-- `deactivate` — FunctionDeclaration，[L80–L80](../webagent-core/probe-extension/extension.js#L80-L80)
+- `activate/run` — ArrowFunctionExpression，[L27–L72](../webagent-core/probe-extension/extension.js#L27-L72)
+- `activate/dispose` — FunctionExpression，[L73–L73](../webagent-core/probe-extension/extension.js#L73-L73)
+- `activate/anonymous@74:165` — ArrowFunctionExpression，[L74–L74](../webagent-core/probe-extension/extension.js#L74-L74)
+- `activate/anonymous@75:83` — ArrowFunctionExpression，[L75–L79](../webagent-core/probe-extension/extension.js#L75-L79)
+- `activate/anonymous@75:83/anonymous@77:65` — ArrowFunctionExpression，[L77–L77](../webagent-core/probe-extension/extension.js#L77-L77)
+- `deactivate` — FunctionDeclaration，[L81–L81](../webagent-core/probe-extension/extension.js#L81-L81)
 
 ## webagent-core/probe-extension/package.json
 

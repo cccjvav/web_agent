@@ -33,27 +33,30 @@ async function main() {
   } finally { await new Promise(resolve => server.close(resolve)); }
 
   const commands = new Map(), output = [], copied = [], calls = [];
-  let input = JSON.stringify(observation), confirmation = '复制', clock = Date.now();
+  let input = JSON.stringify(observation), confirmation = '复制', clock = Date.now(), configuredBase = 'http://127.0.0.1:48271';
+  let inputGate = null, releaseInput, holdNetwork = false, lastSignal;
   const identity = { hostInstanceId: 'fixture-host', workspaceRoot: '/fixture', version: 'test' };
   const vscode = {
     UIKind: { Desktop: 1, Web: 2 },
-    workspace: { isTrusted: true, getConfiguration: () => ({ get: () => 'http://127.0.0.1:48271' }) },
+    workspace: { isTrusted: true, getConfiguration: () => ({ get: () => configuredBase }) },
     env: { uiKind: 1, clipboard: { writeText: async value => copied.push(value) } },
     extensions: { getExtension: () => true },
     window: {
       createOutputChannel: () => ({ clear() { output.length = 0; }, appendLine(value) { output.push(value); }, show() {}, dispose() {} }),
-      showWarningMessage: async () => confirmation, showInformationMessage: async () => {}, showInputBox: async () => input,
+      showWarningMessage: async () => confirmation, showInformationMessage: async () => {}, showInputBox: async () => inputGate ? await inputGate : input,
       showQuickPick: async () => undefined
     },
     commands: { registerCommand(name, handler) { commands.set(name, handler); return { dispose() { commands.delete(name); } }; }, executeCommand: async () => {} }
   };
-  const fakeRequest = async (base, method, route) => {
+  const fakeRequest = async (base, method, route, body, signal) => {
+    lastSignal = signal;
+    if (holdNetwork) return new Promise((resolve, reject) => signal.addEventListener('abort', () => reject(new Error('fixture cancelled')), { once: true }));
     calls.push({ base, method, route });
     if (route === '/api/diagnostics') return { identity, secretKey: 'NEVER-LOG' };
     if (method === 'POST') return { identity, checkId: 'b'.repeat(32), challenge: 'c'.repeat(64), expiresAt: clock + 120000 };
     return { identity, checkId: 'b'.repeat(32), status: 'echo-confirmed', challenge: 'NEVER-LOG' };
   };
-  const sandbox = { module: { exports: {} }, require: name => name === 'vscode' ? vscode : { localBase, parseObservation, request: fakeRequest }, AbortController, Date };
+  const sandbox = { module: { exports: {} }, require: name => name === 'vscode' ? vscode : { localBase, parseObservation, request: fakeRequest }, AbortController, Date: { now: () => clock } };
   vm.runInNewContext(fs.readFileSync(path.join(root, 'extension.js'), 'utf8'), sandbox);
   const context = { subscriptions: [] }; sandbox.module.exports.activate(context);
   assert.strictEqual(calls.length, 0, 'Activation must not connect');
@@ -68,10 +71,22 @@ async function main() {
   confirmation = undefined; await invoke('copy'); assert.strictEqual(copied.length, 0);
   confirmation = '复制'; await invoke('copy'); await invoke('copy'); assert.strictEqual(copied.length, 1);
   assert.strictEqual(JSON.parse(copied[0]).name, 'confirm_connection');
-  await invoke('refresh'); assert.ok(output.join('').includes('echo-confirmed')); assert.ok(!output.join('').includes('NEVER-LOG'));
+  configuredBase = 'http://127.0.0.1:49999';
+  await invoke('refresh'); assert.strictEqual(calls[calls.length - 1].base, 'http://127.0.0.1:48271'); assert.ok(output.join('').includes('echo-confirmed')); assert.ok(!output.join('').includes('NEVER-LOG'));
   await invoke('forget'); await invoke('refresh'); assert.strictEqual(calls.length, 3);
   assert.ok(calls.every(call => !call.route.includes('/mcp')));
+  inputGate = new Promise(resolve => { releaseInput = resolve; });
+  const first = invoke('import'); await invoke('import');
+  assert.strictEqual(calls.length, 3, 'Second command must not queue another POST');
+  releaseInput(input); await first; inputGate = null; assert.strictEqual(calls.length, 4);
+  identity.hostInstanceId = 'restarted-fixture';
+  await invoke('refresh'); assert.ok(!output.join('').includes('echo-confirmed'));
+  const afterMismatch = calls.length; await invoke('refresh'); assert.strictEqual(calls.length, afterMismatch);
+  await invoke('import'); clock += 120001;
+  const beforeExpiry = calls.length; await invoke('copy'); await invoke('refresh'); assert.strictEqual(calls.length, beforeExpiry);
+  holdNetwork = true; const unfinished = invoke('diagnostics');
   for (const subscription of context.subscriptions) subscription.dispose();
+  await unfinished; assert.strictEqual(lastSignal.aborted, true);
   assert.strictEqual(commands.size, 0);
   console.log('probe companion: loopback/schema/redirect/size/abort, explicit activation/import/copy, no self-confirmation, trust/remote rejection and disposal passed');
 }

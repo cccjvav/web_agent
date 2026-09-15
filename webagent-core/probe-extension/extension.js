@@ -56,7 +56,7 @@ function activate(context) {
         } else {
           const result = await api(pending.origin, 'GET', '/api/connection-checks/' + pending.checkId);
           const identity = identityView(result.identity);
-          if (identity.hostInstanceId !== pending.hostInstanceId || result.checkId !== pending.checkId || !['waiting', 'echo-confirmed'].includes(result.status)) throw new Error('Host/check changed');
+          if (identity.hostInstanceId !== pending.hostInstanceId || result.checkId !== pending.checkId || !['waiting', 'echo-confirmed'].includes(result.status)) { pending = null; throw new Error('Host/check changed'); }
           if (result.status === 'echo-confirmed') delete pending.challenge;
           show({ status: result.status, checkId: result.checkId, identity, modelIdentityVerified: false, permissionsChanged: false });
         }
@@ -66,6 +66,7 @@ function activate(context) {
         await vscode.commands.executeCommand('webagent.openBridge');
       }
     } catch (_) {
+      if (!disposed) { output.clear(); output.appendLine('最近操作未完成；没有取得新的核对结论。请按指南检查后再明确操作。'); }
       if (!disposed) await vscode.window.showWarningMessage('操作未完成。检查本机主机、地址、摘要格式/时效或记录是否过期。不会自动重试；详情及敏感响应不会写入日志。');
     } finally { busy = false; }
   };
