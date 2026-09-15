@@ -18136,8 +18136,8 @@
     {
       "path": "webagent-core/agent-host/tests/workbench.browser.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "93fdc2aaa39878c08cf7cf3a8eaa0ab162c2f3661ce5730e609edb48114ce47e",
-      "lineCount": 267,
+      "sha256": "ea69bb53508e7c36a4b8afeb469d019ad63ae99b3b600d26a8e6b269053fe2a4",
+      "lineCount": 274,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -18617,7 +18617,7 @@
           "name": "anonymous@266:13",
           "kind": "ArrowFunctionExpression",
           "startLine": 266,
-          "endLine": 266,
+          "endLine": 273,
           "parameters": [
             "error"
           ]

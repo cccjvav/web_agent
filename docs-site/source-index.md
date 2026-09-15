@@ -2566,7 +2566,7 @@
 
 ## webagent-core/agent-host/tests/workbench.browser.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `93fdc2aaa39878c08cf7cf3a8eaa0ab162c2f3661ce5730e609edb48114ce47e`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `ea69bb53508e7c36a4b8afeb469d019ad63ae99b3b600d26a8e6b269053fe2a4`
 
 - `freePort` — FunctionDeclaration，[L10–L16](../webagent-core/agent-host/tests/workbench.browser.js#L10-L16)
 - `freePort/anonymous@12:20` — ArrowFunctionExpression，[L12–L12](../webagent-core/agent-host/tests/workbench.browser.js#L12-L12)
@@ -2621,7 +2621,7 @@
 - `main/anonymous@239:31` — ArrowFunctionExpression，[L239–L239](../webagent-core/agent-host/tests/workbench.browser.js#L239-L239)
 - `main/anonymous@250:31` — ArrowFunctionExpression，[L250–L250](../webagent-core/agent-host/tests/workbench.browser.js#L250-L250)
 - `main/anonymous@255:31` — ArrowFunctionExpression，[L255–L255](../webagent-core/agent-host/tests/workbench.browser.js#L255-L255)
-- `anonymous@266:13` — ArrowFunctionExpression，[L266–L266](../webagent-core/agent-host/tests/workbench.browser.js#L266-L266)
+- `anonymous@266:13` — ArrowFunctionExpression，[L266–L273](../webagent-core/agent-host/tests/workbench.browser.js#L266-L273)
 
 ## webagent-core/agent-host/tests/workbenchHtml.test.js
 

@@ -263,4 +263,11 @@ async function main() {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 }
-main().catch(error => { console.error(error); process.exitCode = 1; });
+main().catch(error => {
+  console.error(error);
+  if (process.env.GITHUB_ACTIONS === 'true') {
+    const detail = String(error.stack || error).slice(0, 2400).replace(/https?:\/\/[^\s)]+/g, '[url]').replace(/[a-f0-9]{32,}/gi, '[id]').replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+    console.log(`::error title=Browser regression::${detail}`);
+  }
+  process.exitCode = 1;
+});
