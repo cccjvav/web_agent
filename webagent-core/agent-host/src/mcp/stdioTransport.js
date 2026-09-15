@@ -21,7 +21,7 @@ function open(launch, onStopped = () => {}) {
   }
   const child = spawn(program, args, { cwd: launch.cwd, shell: false, detached: !win, windowsHide: true,
     stdio: ['pipe', 'pipe', 'pipe'], env: helperEnv });
-  let ready = !win, queuedBytes = 0; const queued = [];
+  let ready = !win, queuedBytes = 0, bootstrapStage = win ? 'starting' : 'not-required'; const queued = [];
   const pending = new Map(); let buffer = Buffer.alloc(0), totalBytes = 0, stderrBytes = 0, frames = 0, stopped = false, closed = false, stopReason = '';
   let resolveClosed;
   const done = new Promise(resolve => { resolveClosed = resolve; });
@@ -51,6 +51,11 @@ function open(launch, onStopped = () => {}) {
     const message = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
     if (!message || message.jsonrpc !== '2.0' || Array.isArray(message)) throw new Error('Invalid stdio JSON-RPC frame');
     if (!ready) {
+      if (message.method === 'notifications/webagent/stdio-bootstrap') {
+        const next = { starting: 'script', script: 'config', config: 'compiled' }[bootstrapStage];
+        if (!next || message.params?.stage !== next || Object.keys(message).length !== 3 || Object.keys(message.params).length !== 1) throw new Error('Invalid bootstrap stage');
+        bootstrapStage = next; return;
+      }
       if (message.method !== 'notifications/webagent/stdio-ready' || Object.keys(message).length !== 2) throw new Error('Expected guarded stdio readiness');
       ready = true;
       for (const bytes of queued) child.stdin.write(bytes, error => { if (error) stop('Stdio input closed'); });
@@ -116,7 +121,7 @@ function open(launch, onStopped = () => {}) {
       catch (_) { stop('Stdio request exceeded input budget'); }
     });
   }
-  const transport = { request, stop, closed: done, status: () => ({ pid: child.pid, stopped, closed, ready, queuedBytes, stopReason, stdoutAndStderrBytes: totalBytes, stderrBytes, frames, pending: pending.size }) };
+  const transport = { request, stop, closed: done, status: () => ({ pid: child.pid, stopped, closed, ready, queuedBytes, bootstrapStage, stopReason, stdoutAndStderrBytes: totalBytes, stderrBytes, frames, pending: pending.size }) };
   live.add(transport);
   return transport;
 }
