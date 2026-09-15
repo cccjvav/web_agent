@@ -5179,8 +5179,8 @@
     {
       "path": "webagent-core/agent-host/src/mcp/stdioBridge.cs",
       "doc": "webagent-core/agent-host/src/mcp/README.md",
-      "sha256": "024b09b93b01affc117b33831b81a15a9fb97e77f81a159715c619460e4fe298",
-      "lineCount": 51,
+      "sha256": "b1710c11d770c4cbb397d28b7b5c9772d12125372007d93c91dbe1fd9e900038",
+      "lineCount": 58,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -16961,7 +16961,7 @@
     {
       "path": "webagent-core/agent-host/tests/stdioMcp.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "b41f93c9e6a6ae5d6a522941f382d7331990105b604a4316aebd786478250921",
+      "sha256": "c55d2bd5cb0fe248255b3a88167ac5a35ef18838b4207f3c1f5bf367868bd994",
       "lineCount": 129,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -17207,8 +17207,8 @@
     {
       "path": "webagent-core/agent-host/tests/stdioServerFixture.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "3b3aa5a3d0ac1d73ffc965af88de4391f0089b141183687715c7a5e59a4b688e",
-      "lineCount": 39,
+      "sha256": "68db4238792ea24a6b3a9ca970a1487727b1f25f815211df2802ca4da7b01a30",
+      "lineCount": 40,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -17235,7 +17235,7 @@
           "name": "anonymous@23:62",
           "kind": "ArrowFunctionExpression",
           "startLine": 23,
-          "endLine": 38,
+          "endLine": 39,
           "parameters": [
             "line"
           ]

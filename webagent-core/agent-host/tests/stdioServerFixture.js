@@ -22,6 +22,7 @@ if (mode === 'total') for (let i = 0; i < 500; i++) send({ jsonrpc: '2.0', metho
 if (mode === 'server-request') send({ jsonrpc: '2.0', id: 'server-request', method: 'sampling/createMessage', params: {} });
 readline.createInterface({ input: process.stdin }).on('line', line => {
   const message = JSON.parse(line);
+  fs.appendFileSync('stdio-received.txt', 'frame\n');
   if (message.id === 'server-request') { fs.writeFileSync('stdio-server-request.json', JSON.stringify(message)); return; }
   if (!message.id) return;
   if (mode === 'exit') process.exit(3);

@@ -3,7 +3,7 @@ using System;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
+using System.IO;
 public static class WebAgentStdioBridge
 {
     public static string Quote(string value)
@@ -16,6 +16,18 @@ public static class WebAgentStdioBridge
             slashes = 0;
         }
         result.Append('\\', slashes * 2); result.Append('"'); return result.ToString();
+    }
+    private static Thread Pump(Stream source, Stream target, bool closeTarget)
+    {
+        var thread = new Thread(delegate() {
+            try {
+                byte[] buffer = new byte[65536]; int count;
+                while ((count = source.Read(buffer, 0, buffer.Length)) > 0) { target.Write(buffer, 0, count); target.Flush(); }
+                if (closeTarget) target.Close();
+            } catch (IOException) { Environment.Exit(125); }
+              catch (ObjectDisposedException) { Environment.Exit(125); }
+        });
+        thread.IsBackground = true; thread.Start(); return thread;
     }
     public static int Run(string program, string[] args, string cwd, int parentPid, string[] envKeys)
     {
@@ -32,18 +44,13 @@ public static class WebAgentStdioBridge
         info.UseShellExecute = false; info.CreateNoWindow = true;
         info.RedirectStandardInput = true; info.RedirectStandardOutput = true; info.RedirectStandardError = true;
         using (var child = Process.Start(info)) {
-            Task output = child.StandardOutput.BaseStream.CopyToAsync(Console.OpenStandardOutput());
-            Task error = child.StandardError.BaseStream.CopyToAsync(Console.OpenStandardError());
-            Task.Run(delegate() {
-                try {
-                    var input = Console.OpenStandardInput(); var target = child.StandardInput.BaseStream;
-                    byte[] buffer = new byte[65536]; int count;
-                    while ((count = input.Read(buffer, 0, buffer.Length)) > 0) { target.Write(buffer, 0, count); target.Flush(); }
-                    child.StandardInput.Close();
-                } catch (System.IO.IOException) { }
-            });
+            // Each synchronous pipe pump owns a thread: no stream async implementation
+            // may block startup of another direction on Windows PowerShell/.NET Framework.
+            Thread output = Pump(child.StandardOutput.BaseStream, Console.OpenStandardOutput(), false);
+            Thread error = Pump(child.StandardError.BaseStream, Console.OpenStandardError(), false);
+            Pump(Console.OpenStandardInput(), child.StandardInput.BaseStream, true);
             child.WaitForExit();
-            Task.WaitAll(new Task[] { output, error }, 2000);
+            output.Join(2000); error.Join(2000);
             return child.ExitCode;
         }
     }

@@ -785,7 +785,7 @@
 
 ## webagent-core/agent-host/src/mcp/stdioBridge.cs
 
-[目录说明](../webagent-core/agent-host/src/mcp/README.md) · SHA-256 `024b09b93b01affc117b33831b81a15a9fb97e77f81a159715c619460e4fe298`
+[目录说明](../webagent-core/agent-host/src/mcp/README.md) · SHA-256 `b1710c11d770c4cbb397d28b7b5c9772d12125372007d93c91dbe1fd9e900038`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -2391,7 +2391,7 @@
 
 ## webagent-core/agent-host/tests/stdioMcp.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `b41f93c9e6a6ae5d6a522941f382d7331990105b604a4316aebd786478250921`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `c55d2bd5cb0fe248255b3a88167ac5a35ef18838b4207f3c1f5bf367868bd994`
 
 - `alive` — FunctionDeclaration，[L19–L25](../webagent-core/agent-host/tests/stdioMcp.test.js#L19-L25)
 - `until` — FunctionDeclaration，[L26–L29](../webagent-core/agent-host/tests/stdioMcp.test.js#L26-L29)
@@ -2427,11 +2427,11 @@
 
 ## webagent-core/agent-host/tests/stdioServerFixture.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `3b3aa5a3d0ac1d73ffc965af88de4391f0089b141183687715c7a5e59a4b688e`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `68db4238792ea24a6b3a9ca970a1487727b1f25f815211df2802ca4da7b01a30`
 
 - `send` — FunctionDeclaration，[L9–L16](../webagent-core/agent-host/tests/stdioServerFixture.js#L9-L16)
 - `send/next` — FunctionDeclaration，[L13–L13](../webagent-core/agent-host/tests/stdioServerFixture.js#L13-L13)
-- `anonymous@23:62` — ArrowFunctionExpression，[L23–L38](../webagent-core/agent-host/tests/stdioServerFixture.js#L23-L38)
+- `anonymous@23:62` — ArrowFunctionExpression，[L23–L39](../webagent-core/agent-host/tests/stdioServerFixture.js#L23-L39)
 
 ## webagent-core/agent-host/tests/testRunner.test.js
 

@@ -33,7 +33,7 @@ function prepared(mode = 'normal', extra = {}) {
 let stage = 'validation';
 async function main() {
   let owner;
-  const progress = setInterval(() => console.log('stdio stage:', stage, JSON.stringify(transports.snapshot())), 5000); progress.unref();
+  const progress = setInterval(() => console.log('stdio stage:', stage, JSON.stringify(transports.snapshot()), 'fixtureStarted:', fs.existsSync(path.join(root, 'stdio-started.json')), 'fixtureReceived:', fs.existsSync(path.join(root, 'stdio-received.txt'))), 5000); progress.unref();
   try {
     assert.throws(() => prepared('normal', { program: 'node' }), /absolute/);
     assert.throws(() => prepared('normal', { cwd: '../' }));
