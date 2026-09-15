@@ -5,8 +5,8 @@
     {
       "path": ".github/workflows/test.yml",
       "doc": ".github/workflows/README.md",
-      "sha256": "55cf32e55cb46223ec009426d269716fc5331972d985a6b7588e5b3a872cab94",
-      "lineCount": 113,
+      "sha256": "a462aca3addb7af4998bbeab9ac5a120cba5d9fe3f80be9ea3cde27720ad505d",
+      "lineCount": 115,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -1079,8 +1079,8 @@
     {
       "path": "docs-site/documentation.config.json",
       "doc": "docs-site/README.md",
-      "sha256": "44e697c7be3f662f84bc13140986ce2c3ced7a22e9c1b4eef357e54cc2794287",
-      "lineCount": 459,
+      "sha256": "c9f3090e410754c6e6aa7e1ad9decc4f380e99dccceb0a3719555dab814c0913",
+      "lineCount": 468,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -12590,8 +12590,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLearning.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "a1695c192661fc35ee717ada85fd8a014ec2e36f892045161d2938c601ee7238",
-      "lineCount": 338,
+      "sha256": "4038425e7e94058d0d919e37059927e6eda5a01e9f9ea417bc37cc865678d3a7",
+      "lineCount": 342,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -12619,49 +12619,49 @@
           "id": "namedFunctions",
           "name": "namedFunctions",
           "kind": "FunctionDeclaration",
-          "startLine": 198,
-          "endLine": 213,
+          "startLine": 201,
+          "endLine": 216,
           "parameters": [
             "node",
             "result = new Set()"
           ]
         },
         {
-          "id": "namedFunctions/anonymous@209:44",
-          "name": "anonymous@209:44",
+          "id": "namedFunctions/anonymous@212:44",
+          "name": "anonymous@212:44",
           "kind": "ArrowFunctionExpression",
-          "startLine": 209,
-          "endLine": 209,
+          "startLine": 212,
+          "endLine": 212,
           "parameters": [
             "child"
           ]
         },
         {
-          "id": "anonymous@303:66",
-          "name": "anonymous@303:66",
+          "id": "anonymous@307:66",
+          "name": "anonymous@307:66",
           "kind": "ArrowFunctionExpression",
-          "startLine": 303,
-          "endLine": 303,
+          "startLine": 307,
+          "endLine": 307,
           "parameters": [
             "pair"
           ]
         },
         {
-          "id": "anonymous@308:43",
-          "name": "anonymous@308:43",
+          "id": "anonymous@312:43",
+          "name": "anonymous@312:43",
           "kind": "ArrowFunctionExpression",
-          "startLine": 308,
-          "endLine": 308,
+          "startLine": 312,
+          "endLine": 312,
           "parameters": [
             "p"
           ]
         },
         {
-          "id": "anonymous@308:68",
-          "name": "anonymous@308:68",
+          "id": "anonymous@312:68",
+          "name": "anonymous@312:68",
           "kind": "ArrowFunctionExpression",
-          "startLine": 308,
-          "endLine": 308,
+          "startLine": 312,
+          "endLine": 312,
           "parameters": [
             "p"
           ]
@@ -18685,6 +18685,52 @@
       "symbols": []
     },
     {
+      "path": "webagent-core/agent-host/tests/traceIntegration.test.js",
+      "doc": "webagent-core/agent-host/tests/README.md",
+      "sha256": "c97f01f75a3403fe931b9d87844c50dc5b5b6ba1bce55d7d266db601599838b6",
+      "lineCount": 32,
+      "structure": "javascript-ast",
+      "semanticReview": "not-certified",
+      "symbols": [
+        {
+          "id": "main",
+          "name": "main",
+          "kind": "FunctionDeclaration",
+          "startLine": 7,
+          "endLine": 30,
+          "parameters": []
+        },
+        {
+          "id": "main/anonymous@11:31",
+          "name": "anonymous@11:31",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 11,
+          "endLine": 12,
+          "parameters": [
+            "spanId"
+          ]
+        },
+        {
+          "id": "main/anonymous@27:170",
+          "name": "anonymous@27:170",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 27,
+          "endLine": 27,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@31:13",
+          "name": "anonymous@31:13",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 31,
+          "endLine": 31,
+          "parameters": [
+            "error"
+          ]
+        }
+      ]
+    },
+    {
       "path": "webagent-core/agent-host/tests/tunnel.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
       "sha256": "d61fb6bdde7500515bd9fd4c16af125e6d52fa004eb0a118f3de26fb640239ef",
@@ -21933,8 +21979,8 @@
     {
       "path": "webagent-core/probe-extension/analysis.js",
       "doc": "webagent-core/probe-extension/README.md",
-      "sha256": "092cdc595f157687ece1d6091171d444415e675533f065f5070498db9d0b706d",
-      "lineCount": 72,
+      "sha256": "71ea42bfafd7eec3059c92d787834fbc5098cb8fee06d938bb8d623b74f17b5f",
+      "lineCount": 74,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -21942,28 +21988,28 @@
           "id": "validateObservation",
           "name": "validateObservation",
           "kind": "FunctionDeclaration",
-          "startLine": 7,
-          "endLine": 31,
+          "startLine": 8,
+          "endLine": 33,
           "parameters": [
             "input"
           ]
         },
         {
-          "id": "validateObservation/anonymous@10:30",
-          "name": "anonymous@10:30",
+          "id": "validateObservation/anonymous@12:30",
+          "name": "anonymous@12:30",
           "kind": "ArrowFunctionExpression",
-          "startLine": 10,
-          "endLine": 10,
+          "startLine": 12,
+          "endLine": 12,
           "parameters": [
             "key"
           ]
         },
         {
-          "id": "validateObservation/anonymous@29:115",
-          "name": "anonymous@29:115",
+          "id": "validateObservation/anonymous@31:115",
+          "name": "anonymous@31:115",
           "kind": "ArrowFunctionExpression",
-          "startLine": 29,
-          "endLine": 29,
+          "startLine": 31,
+          "endLine": 31,
           "parameters": [
             "frame"
           ]
@@ -21972,8 +22018,8 @@
           "id": "readObservation",
           "name": "readObservation",
           "kind": "FunctionDeclaration",
-          "startLine": 32,
-          "endLine": 46,
+          "startLine": 34,
+          "endLine": 48,
           "parameters": [
             "file"
           ]
@@ -21982,83 +22028,83 @@
           "id": "analyze",
           "name": "analyze",
           "kind": "FunctionDeclaration",
-          "startLine": 47,
-          "endLine": 70,
+          "startLine": 49,
+          "endLine": 72,
           "parameters": [
             "input",
             "signal"
           ]
         },
         {
-          "id": "analyze/anonymous@52:21",
-          "name": "anonymous@52:21",
+          "id": "analyze/anonymous@54:21",
+          "name": "anonymous@54:21",
           "kind": "ArrowFunctionExpression",
-          "startLine": 52,
-          "endLine": 69,
+          "startLine": 54,
+          "endLine": 71,
           "parameters": [
             "resolve",
             "reject"
           ]
         },
         {
-          "id": "analyze/anonymous@52:21/finish",
+          "id": "analyze/anonymous@54:21/finish",
           "name": "finish",
           "kind": "ArrowFunctionExpression",
-          "startLine": 57,
-          "endLine": 62,
+          "startLine": 59,
+          "endLine": 64,
           "parameters": [
             "error",
             "result"
           ]
         },
         {
-          "id": "analyze/anonymous@52:21/finish/anonymous@60:31",
-          "name": "anonymous@60:31",
+          "id": "analyze/anonymous@54:21/finish/anonymous@62:31",
+          "name": "anonymous@62:31",
           "kind": "ArrowFunctionExpression",
-          "startLine": 60,
-          "endLine": 60,
+          "startLine": 62,
+          "endLine": 62,
           "parameters": []
         },
         {
-          "id": "analyze/anonymous@52:21/abort",
+          "id": "analyze/anonymous@54:21/abort",
           "name": "abort",
           "kind": "ArrowFunctionExpression",
-          "startLine": 63,
-          "endLine": 63,
+          "startLine": 65,
+          "endLine": 65,
           "parameters": []
         },
         {
-          "id": "analyze/anonymous@52:21/anonymous@64:29",
-          "name": "anonymous@64:29",
-          "kind": "ArrowFunctionExpression",
-          "startLine": 64,
-          "endLine": 64,
-          "parameters": []
-        },
-        {
-          "id": "analyze/anonymous@52:21/anonymous@66:27",
-          "name": "anonymous@66:27",
+          "id": "analyze/anonymous@54:21/anonymous@66:29",
+          "name": "anonymous@66:29",
           "kind": "ArrowFunctionExpression",
           "startLine": 66,
           "endLine": 66,
+          "parameters": []
+        },
+        {
+          "id": "analyze/anonymous@54:21/anonymous@68:27",
+          "name": "anonymous@68:27",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 68,
+          "endLine": 68,
           "parameters": [
             "result"
           ]
         },
         {
-          "id": "analyze/anonymous@52:21/anonymous@67:25",
-          "name": "anonymous@67:25",
+          "id": "analyze/anonymous@54:21/anonymous@69:25",
+          "name": "anonymous@69:25",
           "kind": "ArrowFunctionExpression",
-          "startLine": 67,
-          "endLine": 67,
+          "startLine": 69,
+          "endLine": 69,
           "parameters": []
         },
         {
-          "id": "analyze/anonymous@52:21/anonymous@68:24",
-          "name": "anonymous@68:24",
+          "id": "analyze/anonymous@54:21/anonymous@70:24",
+          "name": "anonymous@70:24",
           "kind": "ArrowFunctionExpression",
-          "startLine": 68,
-          "endLine": 68,
+          "startLine": 70,
+          "endLine": 70,
           "parameters": []
         }
       ]
@@ -22066,8 +22112,8 @@
     {
       "path": "webagent-core/probe-extension/analysisWorker.mjs",
       "doc": "webagent-core/probe-extension/README.md",
-      "sha256": "787eb336ca0129ea5af13ed81d6f4b94e708dfd237abedbcf321fa3079ffd48b",
-      "lineCount": 55,
+      "sha256": "82f3eade649b5bb4a800fb658d4f604056d1b2aab57449612642d47367bfe51b",
+      "lineCount": 78,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -22082,53 +22128,103 @@
           ]
         },
         {
-          "id": "anonymous@15:42",
-          "name": "anonymous@15:42",
+          "id": "traceLoad",
+          "name": "traceLoad",
           "kind": "ArrowFunctionExpression",
-          "startLine": 15,
-          "endLine": 15,
+          "startLine": 13,
+          "endLine": 13,
+          "parameters": [
+            "name"
+          ]
+        },
+        {
+          "id": "anonymous@16:38",
+          "name": "anonymous@16:38",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 16,
+          "endLine": 25,
+          "parameters": [
+            "call"
+          ]
+        },
+        {
+          "id": "anonymous@36:42",
+          "name": "anonymous@36:42",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 36,
+          "endLine": 36,
           "parameters": [
             "item"
           ]
         },
         {
-          "id": "anonymous@37:42",
-          "name": "anonymous@37:42",
+          "id": "anonymous@58:42",
+          "name": "anonymous@58:42",
           "kind": "ArrowFunctionExpression",
-          "startLine": 37,
-          "endLine": 37,
+          "startLine": 58,
+          "endLine": 58,
           "parameters": [
             "item"
           ]
         },
         {
-          "id": "anonymous@44:49",
-          "name": "anonymous@44:49",
+          "id": "anonymous@65:49",
+          "name": "anonymous@65:49",
           "kind": "ArrowFunctionExpression",
-          "startLine": 44,
-          "endLine": 44,
+          "startLine": 65,
+          "endLine": 65,
           "parameters": [
             "{ confidence, ...item }"
           ]
         },
         {
-          "id": "anonymous@45:22",
-          "name": "anonymous@45:22",
+          "id": "anonymous@66:22",
+          "name": "anonymous@66:22",
           "kind": "ArrowFunctionExpression",
-          "startLine": 45,
-          "endLine": 45,
+          "startLine": 66,
+          "endLine": 66,
           "parameters": [
             "item"
           ]
         },
         {
-          "id": "anonymous@46:25",
-          "name": "anonymous@46:25",
+          "id": "anonymous@67:25",
+          "name": "anonymous@67:25",
           "kind": "ArrowFunctionExpression",
-          "startLine": 46,
-          "endLine": 46,
+          "startLine": 67,
+          "endLine": 67,
           "parameters": [
             "item"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "webagent-core/probe-extension/browserReference.mjs",
+      "doc": "webagent-core/probe-extension/README.md",
+      "sha256": "c11c757624e496f8bec99299d724a2c575e054be7dbc1b66a9611b3bafd3b41b",
+      "lineCount": 13,
+      "structure": "javascript-ast",
+      "semanticReview": "not-certified",
+      "symbols": [
+        {
+          "id": "referencesForRun",
+          "name": "referencesForRun",
+          "kind": "FunctionDeclaration",
+          "startLine": 4,
+          "endLine": 12,
+          "parameters": [
+            "run"
+          ]
+        },
+        {
+          "id": "referencesForRun/anonymous@5:46",
+          "name": "anonymous@5:46",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 5,
+          "endLine": 11,
+          "parameters": [
+            "span"
           ]
         }
       ]
@@ -22236,7 +22332,7 @@
     {
       "path": "webagent-core/probe-extension/extension.js",
       "doc": "webagent-core/probe-extension/README.md",
-      "sha256": "25585c61eae055e3e194cc722a85101ce7cb1f3a49be44e754448692fde9e351",
+      "sha256": "b642c9fc39d443f4c844ac79a720d80235f0c056a2621bd0fd3be7453f2d6db1",
       "lineCount": 95,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -22357,8 +22453,17 @@
     {
       "path": "webagent-core/probe-extension/package.json",
       "doc": "webagent-core/probe-extension/README.md",
-      "sha256": "031a8bc099e8f42865553e83e1dec016dbfae55825ce430a47db946605544345",
+      "sha256": "26a47cf4f00b9c4472548c99a6302eb6cc293fb77cf8a0fa65b1648ac73627da",
       "lineCount": 59,
+      "structure": "file-only",
+      "semanticReview": "not-certified",
+      "symbols": []
+    },
+    {
+      "path": "webagent-core/probe-extension/package_browser.py",
+      "doc": "webagent-core/probe-extension/README.md",
+      "sha256": "c3535c8e198745dca3ef95aaef4b72dc3d2bb32ab83ec58501f9722b870937ad",
+      "lineCount": 73,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -22366,8 +22471,8 @@
     {
       "path": "webagent-core/probe-extension/package_vsix.py",
       "doc": "webagent-core/probe-extension/README.md",
-      "sha256": "f1a309ea5e7eeeac0f820e11ce944b1d06a3b176c1da9c963427f73d83ca3c71",
-      "lineCount": 79,
+      "sha256": "593b1661c1aade5fe998bed2f5d3ebb8919bc96bd0225b688220fb7184cdb66e",
+      "lineCount": 98,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -22380,6 +22485,75 @@
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
+    },
+    {
+      "path": "webagent-core/probe-extension/traceInput.js",
+      "doc": "webagent-core/probe-extension/README.md",
+      "sha256": "5f738e2b46025931512940827fea799da88cc8017678b84f17ec71d2b4c1a1aa",
+      "lineCount": 52,
+      "structure": "javascript-ast",
+      "semanticReview": "not-certified",
+      "symbols": [
+        {
+          "id": "validateTraceExport",
+          "name": "validateTraceExport",
+          "kind": "FunctionDeclaration",
+          "startLine": 3,
+          "endLine": 50,
+          "parameters": [
+            "input"
+          ]
+        },
+        {
+          "id": "validateTraceExport/fail",
+          "name": "fail",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 4,
+          "endLine": 4,
+          "parameters": []
+        },
+        {
+          "id": "validateTraceExport/date",
+          "name": "date",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 5,
+          "endLine": 5,
+          "parameters": [
+            "value"
+          ]
+        },
+        {
+          "id": "validateTraceExport/text",
+          "name": "text",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 6,
+          "endLine": 6,
+          "parameters": [
+            "value",
+            "max"
+          ]
+        },
+        {
+          "id": "validateTraceExport/anonymous@8:69",
+          "name": "anonymous@8:69",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 8,
+          "endLine": 8,
+          "parameters": [
+            "k"
+          ]
+        },
+        {
+          "id": "validateTraceExport/anonymous@13:32",
+          "name": "anonymous@13:32",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 13,
+          "endLine": 47,
+          "parameters": [
+            "call"
+          ]
+        }
+      ]
     },
     {
       "path": "webagent-core/scripts/codeServerAuth.js",
@@ -26089,6 +26263,134 @@
     {
       "path": "arena-model-probe/webagent-connection.user.js",
       "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
+    },
+    {
+      "path": "arena-trace-inspector/background.js",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/conversation-rename.js",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/core.js",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/evidence.js",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/history.js",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/hud-layout.js",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/hud-preferences.js",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/hud.js",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/manifest.json",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/package.json",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/panel.js",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/popup.css",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/popup.html",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/popup.js",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/restore.js",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/tests/auto-rename.test.mjs",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/tests/background.test.mjs",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/tests/conversation-archive.test.mjs",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/tests/conversation-rename.test.mjs",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/tests/core.test.mjs",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/tests/evidence.test.mjs",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/tests/history.test.mjs",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/tests/hud-dom-fixture.mjs",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/tests/hud-layout.test.mjs",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/tests/hud-recovery.test.mjs",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/tests/popup-layout.test.mjs",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/tests/restore.test.mjs",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/tests/trace-reader.test.mjs",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/tests/usage.test.mjs",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/trace-reader.js",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/usage.js",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "arena-trace-inspector/view-model.js",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
     },
     {
       "path": "bin/code-server-runtime/package.json",

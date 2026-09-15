@@ -1,3 +1,4 @@
+import {readTraceText} from './trace-reader.js';
 import {isArena, streamSession, decode64, validateToken, SSEParser, publicTokens, extractModels} from './core.js';
 import {createHistoryStore, conversationUrl, createAutoRenameStore} from './history.js';
 import {extractUsage, mergeUsage, summarizeUsage, formatUsage} from './usage.js';
@@ -129,20 +130,21 @@ async function lookup(tabId, s, token, sessionId) {
     if (!live()) return;
     if (Date.now() / 1000 >= claims.exp - 5) { s.token = null; update(tabId, s, {status: '令牌已过期，请发送新的消息'}); return; }
     attempt++;
-    s.abort = new AbortController();
-    const timeout = setTimeout(() => s.abort?.abort(), 10000);
+    const controller = new AbortController();
+    s.abort = controller;
+    const timeout = setTimeout(() => controller.abort(), 10000);
     try {
       // Fixed origin, exact run scope, no redirects, cookies or write endpoints.
       const response = await fetch('https://api.trigger.dev/api/v1/runs/' + encodeURIComponent(claims.runId) + '/events', {
         method: 'GET', headers: {Authorization: 'Bearer ' + s.token, Accept: 'application/json'},
-        credentials: 'omit', redirect: 'error', cache: 'no-store', signal: s.abort.signal
+        credentials: 'omit', redirect: 'error', cache: 'no-store', signal: controller.signal
       });
       if (!live()) return;
       if (!response.ok) {
         const labels = {401: '令牌被拒绝或已过期', 403: '该令牌无权读取 trace', 404: '运行 trace 不存在', 429: '接口限流，已停止查询'};
         throw new Error(labels[response.status] || ('trace 返回 HTTP ' + response.status));
       }
-      const text = await response.text();
+      const text = await readTraceText(response, controller.signal);
       if (!live()) return;
       if (text.length > 4 * 1024 * 1024) throw new Error('trace 超过 4 MB，停止解析');
       const trace = JSON.parse(text);
@@ -179,7 +181,7 @@ async function lookup(tabId, s, token, sessionId) {
     } catch (e) {
       if (live()) {
         s.token = null; s.lastToken = null;
-        const known = /令牌|trace|接口|运行|无权/.test(e.message || '');
+        const known = ['令牌被拒绝或已过期', '该令牌无权读取 trace', '运行 trace 不存在', '接口限流，已停止查询', 'trace 超过读取预算，停止解析', 'trace 请求已取消', 'trace 正文不可读取', 'trace 格式不符合预期', 'trace 超过 4 MB，停止解析'].includes(e.message) || /^trace 返回 HTTP \d{3}$/.test(e.message || '');
         update(tabId, s, {status: known ? e.message : 'trace 请求失败或超时，请检查网络和扩展站点权限'});
       }
     } finally { clearTimeout(timeout); }
@@ -235,6 +237,7 @@ async function onNetwork(tabId, method, p) {
     if (!stream.tapped) {
       try {
         const r = await command(tabId, 'Network.getResponseBody', {requestId: p.requestId});
+        if (sessions.get(tabId) !== s || s.streams.get(p.requestId) !== stream) return;
         stream.parser.push(r.base64Encoded ? decode64(r.body) : new TextEncoder().encode(r.body));
       } catch { update(tabId, s, {status: '响应正文不可用，请重新发送测试消息'}); }
     }

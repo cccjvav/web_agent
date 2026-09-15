@@ -9,6 +9,27 @@ const learned = await load('learned.js');
 const registry = await load('registry.js');
 const { BUS, SSETap } = await load('interceptor.js');
 const observation = workerData.observation;
+if (observation.schemaVersion === 1) {
+  const traceLoad = name => import(pathToFileURL(path.join(workerData.traceRoot, name)).href);
+  const { sanitizeEvidence } = await traceLoad('evidence.js');
+  const { summarizeUsage } = await traceLoad('usage.js');
+  const calls = observation.calls.map(call => {
+    const labels = sanitizeEvidence(call.evidence);
+    const model = labels?.model?.value || call.model;
+    const source = labels?.model ? 'run.trace.model' : 'local.history.model';
+    const verdict = engine.classify(model ? [{source, modelId: model, weight: source === 'run.trace.model' ? engine.SOURCE_WEIGHTS[source] : 0.4}] : []);
+    return {...call, evidence: labels, provenance: labels?.model ? 'imported-observed-trace-label' : 'legacy-local-record-no-model-label',
+      conflicts: labels?.model && call.model && model !== call.model ? ['Stored model differs from observed model label'] : [],
+      reference: {source, modelId: verdict.modelId, family: verdict.family, mode: verdict.mode, heuristicScore: verdict.confidence,
+        codename: model ? learned.parseCodename(model) : null}};
+  });
+  parentPort.postMessage({schema: 'webagent-trace-analysis/v1', runId: observation.runId,
+    checkedAt: observation.checkedAt, exportedAt: observation.exportedAt, historical: observation.historical,
+    scope: observation.scope, registryVersion: registry.REGISTRY_VERSION, modelIdentityVerified: false, permissionsChanged: false,
+    calls, totals: summarizeUsage([{runId: observation.runId, spans: calls}]),
+    warnings: ['Imported trace labels and Probe heuristic references are separate; neither certifies identity.',
+      'Totals cover captured calls only; trace cost is not an invoice.', 'No response body was supplied: protocol, behavior and tokenizer analysis were not run.']});
+} else {
 // Each worker starts fresh; no previous request, token, mapping or localStorage state.
 const tap = new SSETap({ url: observation.origin, slot: observation.requestId });
 tap.feed(observation.text); tap.finish();
@@ -52,3 +73,5 @@ const report = {
 };
 if (report.truncated) report.warnings.push('Input was truncated; missing evidence may change the result.');
 parentPort.postMessage(report);
+
+}

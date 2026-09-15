@@ -3,9 +3,11 @@ const fs = require('fs');
 const path = require('path');
 const { Worker } = require('worker_threads');
 const LIMIT = 262144;
+const { validateTraceExport } = require('./traceInput');
 const SOURCES = ['request.body.model', 'response.header.model', 'response.json.model', 'sse.chunk.model', 'run.trace.model', 'url.path.model', 'self.report'];
 function validateObservation(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input) || Buffer.byteLength(JSON.stringify(input)) > LIMIT) throw new Error('Invalid analysis input');
+  if (input.schemaVersion === 1 && Array.isArray(input.calls)) return validateTraceExport(input);
   const keys = ['schema', 'requestId', 'observedAt', 'origin', 'truncated', 'evidence', 'text', 'models', 'promptTokens', 'completionTokens', 'reasoningTokens', 'ttftMs', 'totalMs', 'frames'];
   if (Object.keys(input).some(key => !keys.includes(key)) || input.schema !== 'webagent-model-observation/v1'
     || typeof input.requestId !== 'string' || !/^[\w.-]{1,128}$/.test(input.requestId)
@@ -51,7 +53,7 @@ function analyze(input, signal) {
     ? path.join(__dirname, 'engine') : path.resolve(__dirname, '../../arena-model-probe/src');
   return new Promise((resolve, reject) => {
     const worker = new Worker(path.join(__dirname, 'analysisWorker.mjs'), {
-      workerData: { observation, engineRoot }, resourceLimits: { maxOldGenerationSizeMb: 64, maxYoungGenerationSizeMb: 16 }
+      workerData: { observation, engineRoot, traceRoot: fs.existsSync(path.join(__dirname, 'trace-engine/package.json')) ? path.join(__dirname, 'trace-engine') : path.resolve(__dirname, '../../arena-trace-inspector') }, resourceLimits: { maxOldGenerationSizeMb: 64, maxYoungGenerationSizeMb: 16 }
     });
     let settled = false;
     const finish = (error, result) => {

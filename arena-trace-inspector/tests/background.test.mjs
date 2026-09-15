@@ -23,7 +23,7 @@ globalThis.fetch = async(url,options) => {
   if(fetchMode==='deferred') await new Promise(resolve=>{release=resolve;});
   return {
     ok:fetchMode!=='401',status:fetchMode==='401'?401:200,
-    text:async()=>JSON.stringify({events:[{runId:'run_test',message:'ai.streamText.doStream',spanId:'testspan',style:{icon:'ai-provider-xai',accessory:{items:[{text:'example-model',icon:'tabler-cube'}]}}}]})
+    body:new Response(JSON.stringify({events:[{runId:'run_test',message:'ai.streamText.doStream',spanId:'testspan',style:{icon:'ai-provider-xai',accessory:{items:[{text:'example-model',icon:'tabler-cube'}]}}}]})).body
   };
 };
 await import('../background.js');
@@ -114,4 +114,17 @@ test('HUD rejects foreign senders, frames, invalid booleans and off-origin messa
 test('HUD refuses a stale page request after target tab navigates off Arena',async()=>{
  const original=chrome.tabs.get;chrome.tabs.get=async()=>({url:'https://arena.ai/agent',pendingUrl:'https://example.org/'});
  try{const result=await new Promise(resolve=>hooks.message({type:'ATI_SET_LISTENING',enabled:true},{id:'test-extension',url:'https://arena.ai/agent',frameId:0,tab:{id:44}},resolve));assert.equal(result.enabled,false);assert.match(result.error,/页面已变化/);}finally{chrome.tabs.get=original;}
+});
+
+test('JSON parse failures never expose response fragments in the HUD', async () => {
+  const savedFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response('trace PRIVATE_RESPONSE_FRAGMENT');
+  try {
+    buffered = Buffer.from(sse()).toString('base64');
+    await message('ATI_TOGGLE', 912); response(912); await tick(); await tick(); await tick();
+    const state = await message('ATI_STATUS', 912);
+    assert.equal(JSON.stringify(state).includes('PRIVATE_RESPONSE_FRAGMENT'), false);
+    assert.match(state.status, /失败|超时/);
+    await message('ATI_TOGGLE', 912);
+  } finally { globalThis.fetch = savedFetch; }
 });

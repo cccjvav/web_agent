@@ -31,7 +31,7 @@ function activate(context) {
     busy = true;
     try {
       if (action === 'analyze') {
-        const files = await vscode.window.showOpenDialog({ title: '选择你有权处理的模型观测JSON（离线分析，不上传）', canSelectMany: false, filters: { JSON: ['json'] } });
+        const files = await vscode.window.showOpenDialog({ title: '选择模型观测或 Trace Inspector 单运行证据 JSON（离线，不上传）', canSelectMany: false, filters: { JSON: ['json'] } });
         if (!files?.length || files[0].scheme !== 'file' || files[0].authority || !allowed()) return;
         output.clear();
         const controller = new AbortController(); controllers.add(controller);
@@ -85,7 +85,7 @@ function activate(context) {
   context.subscriptions.push(output, { dispose() { disposed = true; pending = null; for (const controller of controllers) controller.abort(); controllers.clear(); } });
   for (const action of ['analyze', 'diagnostics', 'import', 'copy', 'refresh', 'forget']) context.subscriptions.push(vscode.commands.registerCommand('webagentProbe.' + action, () => run(action)));
   context.subscriptions.push(vscode.commands.registerCommand('webagentProbe.open', async () => {
-    const choices = [['离线分析模型线索JSON（原型引擎）', 'analyze'], ['查看主机与工作区', 'diagnostics'], ['导入最小页面摘要', 'import'], ['复制一次性核对请求', 'copy'], ['查询核对结果', 'refresh'], ['丢弃本扩展当前记录（主机记录按TTL过期）', 'forget'], ['打开 WebAgent Bridge', 'bridge']];
+    const choices = [['离线分析模型观测 / Trace Inspector 证据（双引擎）', 'analyze'], ['查看主机与工作区', 'diagnostics'], ['导入最小页面摘要', 'import'], ['复制一次性核对请求', 'copy'], ['查询核对结果', 'refresh'], ['丢弃本扩展当前记录（主机记录按TTL过期）', 'forget'], ['打开 WebAgent Bridge', 'bridge']];
     const choice = await vscode.window.showQuickPick(choices.map(([label, action]) => ({ label, action })), { title: 'Probe Companion · 模型线索分析与连接诊断（完整移植进行中）' });
     if (choice) await run(choice.action);
   }));

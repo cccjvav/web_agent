@@ -58,6 +58,8 @@ jobs:
       - run: node installer/package.js
       - name: Build standalone Probe Companion VSIX (no installation)
         run: python webagent-core/probe-extension/package_vsix.py --verify
+      - name: Build and verify unified browser Inspector
+        run: python webagent-core/probe-extension/package_browser.py --verify
       - name: Compile Windows input helpers and validate script syntax
         shell: powershell
         run: |

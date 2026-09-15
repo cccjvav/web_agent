@@ -135,6 +135,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [stdioServerFixture.js](stdioServerFixture.js) | 3 个函数/类节点 |
 | [testRunner.test.js](testRunner.test.js) | 1 个函数/类节点 |
 | [toolLabel.test.js](toolLabel.test.js) | 0 个函数/类节点 |
+| [traceIntegration.test.js](traceIntegration.test.js) | 4 个函数/类节点 |
 | [tunnel.test.js](tunnel.test.js) | 11 个函数/类节点 |
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 13 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |

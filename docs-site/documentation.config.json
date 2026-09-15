@@ -58,6 +58,10 @@
     {
       "prefix": "arena-model-probe/",
       "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
+    },
+    {
+      "prefix": "arena-trace-inspector/",
+      "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
     }
   ],
   "rootScriptDoc": "启动脚本说明.md",
@@ -446,6 +450,11 @@
     {
       "id": "probe-full-integration",
       "path": "探针完整整合实施与验收.md",
+      "group": "使用"
+    },
+    {
+      "id": "probe-browser-integration",
+      "path": "webagent-core/probe-extension/浏览器整合说明.md",
       "group": "使用"
     }
   ],

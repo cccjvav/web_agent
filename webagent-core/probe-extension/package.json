@@ -3,7 +3,7 @@
   "displayName": "WebAgent Probe Companion",
   "description": "Model-reference analysis using the original probe engine, plus local connection diagnostics. Full browser integration in progress.",
   "publisher": "webagent",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "engines": {
     "vscode": "^1.90.0"
   },

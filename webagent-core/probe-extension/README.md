@@ -1,6 +1,6 @@
-# WebAgent Probe Companion 0.2.0
+# WebAgent Probe Companion 0.3.0
 
-本项目的目标是**完整保留原型探测能力，为你提供模型参考**，不要求绝对真实。0.2.0已开始移植实际分析引擎，不再只有连接核对；完整浏览器控制、历史与自动化等仍在实施，不能把本版称作“完整版已完成”。具体进度见源码根目录《探针完整整合实施与验收.md》。Chat模式API背后的模型确切验证排在完整探针整合之后。
+本项目的目标是**完整保留原型探测能力，为你提供模型参考**，不要求绝对真实。0.3.0在0.2原型分析基础上加入Trace Inspector证据导入，不再只有连接核对；完整浏览器控制、历史与自动化等仍在实施，不能把本版称作“完整版已完成”。具体进度见源码根目录《探针完整整合实施与验收.md》。Chat模式API背后的模型确切验证排在完整探针整合之后。
 
 ## 本版能做什么
 
@@ -13,14 +13,14 @@
 
 ## 安装（桌面VS Code）
 
-已拿到VSIX，直接在扩展面板“…”→“从VSIX安装”选择0.2.0安装包。与WebAgent在同一个Profile启用。原本安装0.1.x时使用同一扩展ID升级，不另建副本。
+已拿到VSIX，直接在扩展面板“…”→“从VSIX安装”选择0.3.0安装包。与WebAgent在同一个Profile启用。原本安装0.1.x时使用同一扩展ID升级，不另建副本。
 
 从源码构建时，在VS Code集成CMD、既有Conda环境执行：
 
 ```cmd
 conda activate 你的既有环境名
 python webagent-core\probe-extension\package_vsix.py --verify
-code --install-extension webagent-core\probe-extension\dist\webagent-probe-companion-0.2.0.vsix
+code --install-extension webagent-core\probe-extension\dist\webagent-probe-companion-0.3.0.vsix
 ```
 
 使用Python标准库，无pip依赖、不新建venv、不自动发布Marketplace或安装到Windows产品包。没有`code`命令时使用上述界面安装。
@@ -76,10 +76,16 @@ code --install-extension webagent-core\probe-extension\dist\webagent-probe-compa
 | 源码 | 定位证据 |
 |---|---|
 | [analysis.js](analysis.js) | 13 个函数/类节点 |
-| [analysisWorker.mjs](analysisWorker.mjs) | 6 个函数/类节点 |
+| [analysisWorker.mjs](analysisWorker.mjs) | 8 个函数/类节点 |
+| [browserReference.mjs](browserReference.mjs) | 2 个函数/类节点 |
 | [client.js](client.js) | 9 个函数/类节点 |
 | [extension.js](extension.js) | 12 个函数/类节点 |
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
+| [package_browser.py](package_browser.py) | 文件级登记；未做符号完整性证明 |
 | [package_vsix.py](package_vsix.py) | 文件级登记；未做符号完整性证明 |
 | [sample-observation.json](sample-observation.json) | 文件级登记；未做符号完整性证明 |
+| [traceInput.js](traceInput.js) | 6 个函数/类节点 |
 <!-- docs-inventory:end -->
+
+## 0.3双引擎与浏览器包
+现支持arena-trace-inspector证据抽屉“下载证据 JSON”的单run文件；不是批量会话历史或原始trace。逐span复用Inspector白名单/用量算法和Probe分类/命名，不合并同型号不同调用，不假造没有的正文/分词基准。浏览器整合包以Inspector为唯一采集器，同时显示Probe参考；操作与限制见[浏览器整合说明](浏览器整合说明.md)。VSIX不启动浏览器/网络，浏览器包需用户另行安装并明确开启监听。

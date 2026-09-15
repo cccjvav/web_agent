@@ -93,3 +93,5 @@ test.yml的Windows安装器任务同时Add-Type编译commandJob.cs与stdioBridge
 Windows installer job追加独立Probe Companion VSIX白名单构建及zipfile完整性检查，使用runner已有Python标准库，不安装到VS Code、不执行扩展。VSIX实机安装和API交互仍需人工验收，不能冒称该步骤已覆盖。
 
 Probe Companion的0.2.0 VSIX白名单新增共享原型分析源码与hash；Worker只离线调用，不运行自动入口。Windows的单条--verify构建命令还解包到临时目录，以固定合成样本验证包内引擎独立运行和hash，失败直接使步骤失败。构建成功不等于全能力整合或真实模型准确率验证。
+
+0.3浏览器整合新增Windows安装器任务步骤：package_browser.py --verify构建白名单ZIP，解包核对摘要后复制Inspector合成测试到临时目录运行（非真实账号）。VSIX验证同时计算普通观测与Inspector单run证据，核对两套引擎摘要；不代替桌面扩展验收。
