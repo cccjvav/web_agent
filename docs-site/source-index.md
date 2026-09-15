@@ -791,7 +791,7 @@
 
 ## webagent-core/agent-host/src/mcp/stdioBridge.ps1
 
-[目录说明](../webagent-core/agent-host/src/mcp/README.md) · SHA-256 `5b02fc85ac36caa6174bc6c1d91d737493e1391c118626952dd220017de20ed0`
+[目录说明](../webagent-core/agent-host/src/mcp/README.md) · SHA-256 `672a6cbca6bb6cc09b2032e695066a5d3b88f053af240fa7ab9719a397d94252`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 

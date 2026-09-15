@@ -1,10 +1,10 @@
 $ErrorActionPreference = 'Stop'
 try {
   [Console]::Out.WriteLine('{"jsonrpc":"2.0","method":"notifications/webagent/stdio-bootstrap","params":{"stage":"script"}}'); [Console]::Out.Flush()
-  $launch = $env:WEBAGENT_STDIO_LAUNCH | ConvertFrom-Json
-  Remove-Item Env:\WEBAGENT_STDIO_LAUNCH
+  $launch = $env:WEBAGENT_STDIO_LAUNCH | Microsoft.PowerShell.Utility\ConvertFrom-Json
+  [Environment]::SetEnvironmentVariable('WEBAGENT_STDIO_LAUNCH', $null, 'Process')
   [Console]::Out.WriteLine('{"jsonrpc":"2.0","method":"notifications/webagent/stdio-bootstrap","params":{"stage":"config"}}'); [Console]::Out.Flush()
-  Add-Type -Path @((Join-Path $PSScriptRoot '..\tools\commandJob.cs'), (Join-Path $PSScriptRoot 'stdioBridge.cs')) -ErrorAction Stop
+  Microsoft.PowerShell.Utility\Add-Type -Path @([IO.Path]::Combine($PSScriptRoot, '..\tools\commandJob.cs'), [IO.Path]::Combine($PSScriptRoot, 'stdioBridge.cs')) -ErrorAction Stop
   [Console]::Out.WriteLine('{"jsonrpc":"2.0","method":"notifications/webagent/stdio-bootstrap","params":{"stage":"compiled"}}'); [Console]::Out.Flush()
   $result = [WebAgentStdioBridge]::Run([string]$launch.program, [string[]]@($launch.args), [string]$launch.cwd, [int]$launch.parentPid, [string[]]@($launch.envKeys))
   exit $result
