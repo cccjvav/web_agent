@@ -1,0 +1,379 @@
+{
+  "at": "2026-09-15T14:09:02",
+  "url": "https://arena.ai/agent",
+  "results": [
+    {
+      "question": "用一句话说明什么是二分查找。",
+      "ok": true,
+      "verdict": {
+        "mode": "UNKNOWN",
+        "modelId": null,
+        "family": null,
+        "gen": null,
+        "label": "未识别",
+        "frontier": null,
+        "confidence": 0,
+        "evidence": [
+          {
+            "source": "protocol.framing",
+            "weight": 0.12,
+            "family": "__sse_generic",
+            "detail": "通用 SSE（无家族特征） [SSE 分帧]",
+            "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60/out",
+            "slot": "B",
+            "t": 32606.699999999255
+          },
+          {
+            "source": "protocol.framing",
+            "weight": 0.12,
+            "family": "__sse_generic",
+            "detail": "通用 SSE（无家族特征） [SSE 分帧]",
+            "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60/out",
+            "slot": "B",
+            "t": 181490.8999999985
+          }
+        ],
+        "protocol": null,
+        "alternatives": [],
+        "note": "尚未捕获到可判定的网络证据。请在页面发一条消息后重试。"
+      },
+      "observation": {
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60/out",
+        "ttftMs": 0,
+        "totalMs": 21803,
+        "chunks": 13,
+        "promptTokens": null,
+        "completionTokens": null,
+        "reasoningTokens": null,
+        "modelSeen": null,
+        "frames": [],
+        "textHead": "event: ping\ndata: {\"timestamp\":1789452504334,\"tail\":{\"seq_num\":13,\"timestamp\":1789452377223}}\n\nevent: ping\ndata: {\"timestamp\":1789452516853,\"tail\":{\"seq_num\":13,\"timestamp\":1789452377223}}\n\nevent: batch\nid: 13,1,99\ndata: {\"records\":[{\"seq_num\":13,\"timestamp\":1789452519021,\"body\":\"{\\\"data\\\":{\\\"type\\\":\\\"start\\\",\\\"messageId\\\":\\\"01a0a3ae-8593-7b92-9659-e7e56cd546f3\\\"},\\\"id\\\":\\\"MmMIH8O\\\"}\"}],\"tail\":{\"seq_num\":14,\"timestamp\":1789452519021}}\n\nevent: batch\nid: 15,3,229\ndata: {\"records\":[{\"seq_num\":14,\"timestamp\":1789452523240,\"body\":\"{\\\"data\\\":{\\\"type\\\":\\\"start-step\\\"},\\\"id\\\":\\\"eBRLk2c\\\"}\"},{\"seq_num\""
+      },
+      "evidenceCount": 2
+    }
+  ],
+  "networkHits": [
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452371456&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥][ã¶þ+S]~HªÂ\u0019¸ì<ml'ÙÄve\u0013¯]µ\u001e\n×n¦%Q¦¨n·]þïûZ\u0000\u0011_<M\u0001 ppp®ß\u0001øõîphõÝý]^\\\u0010¡2\"(Í*JHVWyU,/h%­àJÜýáÎ<íæ}öhÄ°\u0011;<ÛõÝÎôCköw÷¿Þ}Öáwß·[Ý½ìñ+þ^=~ßv[</r÷HöøÍôøûëVõÝ¾³Ã»/õq¿ióÜ*³\u001a^w\u0006¿aöOCçÞòÙÐnÌ/ÝÖ=ýrP\u001fþòõ·Y=¾ê¬Ý\u001bL.£uçêÐ÷ìêÐ¯Ñåq\u0018vûû\u000f\u001f\u0004÷¢ý \u001eðã·e\u0017(³XÉëL\u0010[á¹Ì5\u001fgüØíÝ²O½Ý£\u0018\u001e·bãæóõâeuÀúWc7Gîv½\u0016\u001fØûüÝï¤{÷Í·ïü}þÇwxÀé\u001fßýÌéïßý×n·6ß\u001bù÷vøÀHõðw¿ûû_¿ýú«?¼[·OæÝ_zê~ÿîóÇ¾Û\u000f\u0005#ï1\u0004Fý°¢oO]@ëóo³\r9o\u0014~=^íÃ\u0001ÅTÍ6ûßÍ»~[ízcÛÇ&î÷½êÙ®\u001eMûð5Ö\u001f¾´zx\u001c_Âñð¹5/»®\u001fÞÚVùÅãSë¼¬ñxÝJ¼ãÅH÷\u0012ü1g.¬í¸ v¹\r«µ7å³5B÷O­Ëµy<1\r¬ê²ðú=\u001d\u0017|d¾ùQeUÓLBe´,ri\u0014\u0015S\f¥ÛýÐnÕñ]®SCÉlQØ¬\u0012Vf²\u0001G(Sq¡HÅh¥¦ùµC+Öí/bÀÜWÓtîÊ¼äYÞd\u0005û6ç÷9»§\u0018-ÿÏõPÝÖ¶\u000fÞèÕÞìÝÇ^ÝaXmpâ:wÿ¡¡PCûlVXòÖ+»\u0016\u000føý»ý¡6¯Ù ú\u0007\u0019?d,gBXk©Ã~è6x×HØÆ<¯)?7ÒmoÔ©G1d¶ëÉÖÝC»ÍÌÏ»¬\f\rRÓ¼¶²fÔ,¼ÉÔLæJ%\u0016\u001aYJµ¢ªFj¬¡ÊÚÌæüÜjÓeF·C¨\u0007«sÎËRØüÜ\u0003'4\u0003%²®²ëî\u0005OÅaèÌ³XgZ¼\u0016\u0014Û-äØô8Ût\u001a[:¼f\u0010\u0012rmtèM\\×E#I)gsó\u001a\u0015\u0004¬r.F%m\n]òÏFf\u0018LÙ¶ß\u000fn;Lß­rrÕïÞ\u0014R*^Õå¹;+v»ÛØ\u0014Ã°6«=è¶¯Óÿ7lñL¾\u0003uÖÁ],yQ0Aë¥õ1cËºÆ>²s£v\u0003!2nP¦Ä`\u001e:LÝéQF:Ò\f-w\u0019þ4ýxjB#kYVh¡päN#[Ì9;ìÖp;rÜÒçnl/\u000fÃÐmÝ{\u0002Ç£¡ÔêZ\u00143Îßn3Ù\rÙ^azÛP7I\nÁ\u000bÝ¨\u0019+Ik2±Ù\u0003\u0016\u0016<d5­iS\u0019»´ßMNyÉ¸æK¬_Æ\nJiléQ\u0018S7F\u0016'u¶'½½Øºæ\nü\rA»zéÛ\u0001Ê¹TW«VÚÉa\b¶\u0016ÚrÅ\u0016Tð\u0006\u000bgÌ8ÐgÓ\\qjsÏVÝwëµûMuvÝ6{\u000eÊ\u001d®Z7¤ªª7ä´)qþI1[¸Ï\fZ*\rq)F*J3RÔv÷1\u0015#9\u0014ÒÒH²Ê­¢½ÎY\f'A»\u0011mðôAK\b2mÿt° \u0014ÎP°\u0013Åfië¥Í2/MMr(Ài7+mKK\u0016\u001aq­\u0019¶¡òÜÈ\u001dïu\u0006\u0002½ÒõÙ®oq¾ HÇçîtBáÝ\u0000Á>\u0012áx&ùðØ\u000eë¬7û\u001d\u000e³É¶è\u0016<ÓÐ\t´©®\u000f\u0019B°Kõ^#\u0004\nÛ% \n\n_Kcf\"Ä?²\\Â`Ëf\u001c.[íÚ]ö\"Â\näÎà&¯£Â\u001fÿ\u001cÌVO=a¬]*aw,,Ãª:W¦iN\bF¡µ*ó¹bs\u001c63\u0004S'\u0019öíh=O,\u0011\rÍÈêFY£¬Ôà\u0010_\u0014sÃ¨Z¢3,\u0002jY^5K\u001cÜ\bª­*.L\u0007\u000b\u0019s\u0014û\u001aÇÖô²\u0013½£æQ\u0006fë\u001bÊ6\u0018­u"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "23"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452371456&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "GET",
+      "url": "https://arena.ai/rive/thinking-dark.riv",
+      "postData": ""
+    },
+    {
+      "method": "GET",
+      "url": "https://arena.ai/rive/thinking-dark.riv",
+      "postData": ""
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452376461&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥][ã¶þ+S]~HªÂ\u0019\u0000xé<ml'Ù$ve\u0013¯]µ\u001e\n×nº%Q¦¨n·]þïûZ\u0000\u0011_ÆM\u0001 ppp®ß\u0001¿ÿõîphõÝý\u001dÉ\u0005\u0011T¨i¥²J[5LLëÚXÉkm*{÷;ól¶\u0003öÙ£\u0011ÃFìðl×w;Ó\u000f­ÙßÝÿz÷Yî¾k·º{ÙãWü½z6ý¾í¶x\u0013÷HöøÍôøû«VõÝ¾³Ã»/õq¿ióÜ*³\u001a^w\u0006¿aöOCçÞòÙÐnÌ/ÝÖ=ýrP\u001fþòÕ7Y=¾ê¬Ý\u001bL.c5Ásuè{Lvuè×èò8\f»ýý\u000f\u0002ÏÄ{Ñ~\u0010\u000føñÃÛ²ó\\\u0014YE-ÏdUêLP[á¹$º\u001cgüØíÝ²O½Ý£\u0018\u001e·bãæóõâeuÀúWc7Gîv½\u0016\u001fø{òîwGÒ½ûúw9yOþø\u000e\u000fJöÇw?ì÷ïþk·[ïü{;|à´zOËw¿ûû_¿ùê\u001fx·nÌ»¿\u0018õÔýþÝç}·1\u001frNßc\búoaEßºÖçßf\u001brÞ(ü:{¼\u0016Û\u0003&©mö¿ÿw9ý¶ÚõÆ¶?MÜï{Õ\u001b³]=öá\u0011k¬Kv~øÒêáq|IÏ­yÙuýðÖ¶\"\u0017O­IQãñºxÇî%øcÎ\\XÛqAí\u0016s\u001bV#kÓ_\u000fû\u001fÛ¼î\u001f6²íOL!«ºa¼ \u0015}ÎÌ7?\u001123ªÈq\"J\tã\u00149F1aJ¡t»\u001fÚ­:¾Ëuj1ÍsUÂÊL6à\beªR(ZqV©i~íÐuû\u00180÷Õ4»\u0014eF,çßòð{V¿g¬ø?×Cu[Û>\u001cz£W{³w+\u001e{uaµÁËkâþCC¡öÙ¬,Î'Z¯ìZ<à÷ïïöþÙ¼fè\u001f\ffüqÂ°h©Ã~è6x×HØÆRBjV\u001bé¶7jÈÔ£\u00182ÛõÊdëî¡Ýfæç]V\u0006©\u0019©­¬93\u000bo25¤dRF1n­¨ª¥\u001ak26³9?·ÚtÑí\u0010êÁkRE!,9÷À\tÍÀf`ì¥ëìº{ÁSq\u0018:ó,Ö\u0016¯y&Åv\u000b96=Î6Æ\u000e¯\u0019\\\u001b\u001dzS©ë¼´³¹yr\nFV¤\u0014ÍB£5¹.Êº$Í0>³m¿\u001fÜv¾5[åäªß½É¥TeU\u0017çîX®ØíVncWR\fÃÚ¬ö ÛJ¾Nÿn:Ùâ\u0012}\u0007ê¬»XyÎ\u0005«ÖÇ-ê\u001aûÈÏÚ\rÈ¸A\u0012yè0u§?F\u0019éHk2´ÜeøÓôã©\t¬eQX¡\u0005tØÛÈ\u0016sÎ\u000e»u'Ü\u001c·ô¹\u001bÛËÃ0t[÷Àñh\u0018³º\u0016ùó·ÛLvC¶WÞö!ÔMÒ\\¹nÔ¤5ØÊì\u0001\u000b\u000b\u001e²Õ¬©]Úï°²à¥.X¿.\u0015\u001a1;ÓØÒ#£.1¦n(,NêlOz#{±uÍ\u0015ø\u001bvõÒ·\u0003s7©®V­´Ã>\u0011l-´-U¹´ ¼l°pNé\u0003}6%ªd\b2[uß­×î7ÕmvNÚuÛì9(wJÕÔº¡UU-¼°¦Àù§ùlá>3h©4Ä¥X\u001a©È+Íi^Û%Þ\u0017ÆT\u0012#ôÒH²\"V±\\Î^ç, Ý6xú Î%GAfÛ?\u001d,'3\u0014ìÄ°YÚ\u0012½´YRÂÔ@\u0001.L»¥Ò¶ñx»Q©5çÒ6L\u001b¹ã½Î R Wº>Ûõ-Î\u0017\u0004éøÜN(\u001c±\u001b °ÓG\"\u001c\u000fÓ$\u001f\u001eÛaõf¿Ãa6Ù\u0016Ýg\u001a:5µÑÕ\u0012ñ!C(v©\u0013ÑkDIA¡ÐJ»Ä\u0010TAákiÌLøG¶Ô0Ø²\u0019ËVgû§v½°Â¢Ä\u0019\u0013¥!uTøã\u0007³ÕáSO9¯aJØ\u001d\u000bË°ª&Ê4ÍÒ\tÁ(¬V\u0005+6ÇqÙh3C\u00009uaßÖCøÄRÑ`\u0018Yò\u0019YÝ(«q\u001aDPäeY\u001aÎÔ\u0012a\u00110ËIÕ,qp#¶*¿0\u001d,dÌaRìk\u001c[ÓËNôG\u0019­o(#ÖPj4<¨"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "22"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452376461&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "GET",
+      "url": "https://arena.ai/api/chat/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60/workspace/latest?includeManifest=true",
+      "postData": ""
+    },
+    {
+      "method": "GET",
+      "url": "https://arena.ai/api/chat/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60/preview",
+      "postData": ""
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452381467&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥][ã¶þ+S]~HªÂ\u0019¸§í$Ø®lâµ«ÖãRáÚÍ´$Ê\u0014Õí¶Ëÿ}?R\u0012 \u0012Sñ§)\u0000\u0004\u000e\u000eÎõ;à\u000f¿Þ\u001d\u000e¹»¿Ë\u000bK\"uÆ\u000b&3a+)¢YV°Ú2Uà×ßýáÎ>Ûmæ}öhe¿;<ÛuíÎv}c÷w÷¿Þ}Öâwß7[Ó¾ìñ+þ^=Ûnß´[</rÿHuøÍvøûëFwí¾uý»/Íõ¿\u0019ûÜh»ê_w\u0016¿a÷O}ëßòYßlì/íÖ?ý²×\u001fþòõ·Y5}¾jÛ[L.£UçúÐuìêÐ­Ñå±ïwûû\u000f\u001f$É÷²ù \u001fðã·ece&c\u0012Üd8ç*7|ñc»÷Ë>õöv²ÜÊÏ'\u000eÖÉÕ\u0001ë_\rÝ<\u0015Ú_õZ~`ïów¿;îÝ7ß¾+ò÷ù\u001fßá\u0001§|÷3§¿÷_»ÝÚ~oÕßþ\u0003#â=áï~÷÷¿~ûõWx·nì»¿XýÔþþÝç]»±\u001f\nFÞc\bú/éd×ºÖçß&\u001brÞ(ü:y¼Û\u0003&©Úmö¿ÿv9ý¶ÚuÖ5?\u000fMüï{ÝY»]=Úæá\u0011k¬8=?|iLÿ8¼ãásc_vm×¿µ\u0015ùÅãSë¼¬ðxÝ(¼ãÅ*ÿ\u0012ü1e.¬í¸ f¹õ«µ«zÿújC÷Mg\u000f'¦Á¢ª)+¨ÞSVoz\"TfuYdÂpI[èE®¬¦Òr¡L³ï­>¾Ëwª©µ+\n\téT¦jp¶KM\u0004£BókúF®_d¹¯ÆéÜyÉ³¼Æ¡û6ç÷9»§\u0018-ÿÏ÷ÐíÖ5\u000fÎÕÞîý^í¡_mpâ*÷ÿ¡¡Ô}ólW\u000eç\u0013­Wn-\u001fðû\u000fwûC÷l_³^v\u000f\u00163~ÈXÎ¤t674Ó}ßnð tµ#y^Q~nd@EÝgúQök;m³uûÐl3ûó.+cT4¯ª\u0018µ3o²\u0015S9§JËFRæ\u0014bn¤ÚYªmiìdÎÏ±mfMÓÇz°*ç¼,¥ËÏ=pB3°\u0019X\"{i»'·n_ðT\u001eúÖ>Ëufäk)¹ÝB³Mk°¥ýk\u0006!¡ÖÖÄÞÄMUÔj2· QAÀÈ:ç²iTÒº0%¯ød$eûÞvkº}ï·ÃvÝj/WÃîu¡æ¢*ÏÝ±\\¹Û­üÆ®ìûµ]íA·z\u001dÿ¿iUgZv-¨³îbÉ\u000bh\u0010ZÍ­YWV\u0015ö\u001b5\u001b\ba2-{ûÐbê^\f2ÒÖfh¹Ëð§íS\u0013\u001bÙ¨²tÒH#w\u001aÙaÎÙa·n¥ßã>·C{uèûvëß\u00139\u001e5¥ÎT²pþv©¶Ïö\u001aÓÛ>Äº)RH^ZOXI9É­Ê\u001e°°è!«hEkaÝÜ~×9å%ãÏ±~UZ')±rr¦±¥GFcLS[Y:ÔÉtVurëkð7\u0004íê¥kz(çvT]^\u0019/C\"¸J\u001aÇ5[PÁk,\u00112áÀMsÍ©Ëe>Yu×®×þ7Ýnv^ÚµÛì9*w¸®+S\u0013!ÄÌ\u001brZ8ÿ¤,<d\u0006£´¸s#0\u0014ã}i­`$·ÒÌ¤Dî4-ÔäuÞb8\tÚl¢§\u000fâ\\AxùdûÇ\u0005ñ¤q¢(6Ë¸ÜÌmRyi+C\u0001ÎL»V\\\u001bW:2Ó\u001bÃr5UçFþx¯3\u0014è¶Ëv]ó\u0005A:<÷§\u0013\nGîz\b&ìô\bÇÃ4ÊÇ¦_gÝïpm¶E·èN ue#>d\bÁ.US\"\u0006H^\u0012(4îæ\u0018h(|£¬ðÈrSJ-p¸jL¶jvÙ+,{cÛ¼Z\u0014þøgo·&~ê\tc\u0015ìR\u0005»cf\u0019NW¹¶u=wB0\n­tO\u0015ç¸l°!¼:É°oGë!~b¬1âlBV?Êj\u0018e¥{\u0019$\u0005çÜ2ªçè\f:zkIÓÅéà c\u000e£b_ãØÚNµ²óÔ<ÊÀl}C\u0019Ñ\u0010k©¦<ò(aÝ"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "22"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452381467&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452386467&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥][ã¶þ+S]~HªÂ\u0019¸ì<ml'ÙÄve\u0013¯]µ\u001e\n×n¦%Q¦¨n·]þïûZ\u0000Ê¼ô\u0004Aààà\\¿\u0003þðëÝáÐ»û;K\"©ÔYÉÊJ£óLºÌ¸\u0013RS[Õ»?ÜÙg»íÑü³Ï\u001e­ì7rk»®ÝÙ®oìþîþ×»ÏZü¹û¾Ùöe»ø½z¶Ý¾i·¸\u0013Iu¸g;üþºÑ]»o]ÿîKó`ý=c\u001bmWýëÎâþ\u0017vÿÔ·þ-õÍÆþÒnýÕ/{ýá/_UÓë«Ö¹½Åà2V\u0011\\×®Ã`WnG\u001eû~·¿ÿðAâ|/\u000fò\u00017?¼M;ÏeÔñLÂdº\u0012×\u00151b\u0018ñc»÷Ó>=í/ídÿ¸\u001b?Oì¬/«\u0003æ¿\u001a\u001eóThiÖkù¿'ï~w$Ý»o¾}÷äïpA°?¾ûY°ß¿û¯Ýnm¿·êïMÿÓò=\u0015ï~÷÷¿~ûõWx·nì»¿XýÔþþÝç]»±\u001frNß£\u000bôú/éd×\u001e\u0001­Ï÷&\u000br^(Ü\\^ËíÃ\u0001ÅPí6ûßM\u001f9Ý[í:ë&þþ^wÖnW¶yxÄ\u001c+ÁÎ\u0017_\u001aÓ?\u000e/\u0011¸øÜØ]ÛõomKrqùÔ\u0014\u0015.¯\u001bw¼Xå_\u001fSæÂÜ\u0013j¶\u0018[¿\u001aX»ou©êG!Ù\u000by~*OL.Ëªf¼ \u0015}?gæî\bY]äØ\u0011eÒæ:cENÕLZÁÐiö}³ÕÇwùjfmæòÜe¥t*S58BÛÒï£³RãkúF®_d±¯ÆáÜ\u0015¤\u0010\u0019©³KÄ=á÷¬zÏXñþ\tÝn]ópè¬YííÞÏxxª=ô«\rv\\^\u0011ÿ\u000f\r¥îg»rØh½rkùû?Üí\u000fÝ³}ÍzÙ=Xø!ãKé,1,Ó}ßnð tµ£TL\u001b¦³ºÏô£ì3×vÚfëö¡Ùföç]VÄ:©\u0018©ª8³3o²\u0015WD0¥åL#Ç\u0018wNå\\Oµ³LÛÂØÉ\u001bcÛÌ¦=Á+\"DQHGÎO`f`3°DöÒvOnÝ¾àª<ô­}ëÌÈWH¹ÝB³Mk°¤ýk\u0006!¡ÖÖÄÞ$L×\u0016j2¶ QNÁÈ\bYÏ4*XBTbÒ²}o»Ì5Ý¾÷Ëa»Ænµ«áãu®\u0016eU\u001fÇtån·ò\u000b»R²ï×vµ\u0007ÝVêuü»iUkZv-¨³®b!òKVÍÍ[WT\u0015Ö\u001b5\u001b\ba2-{ûÐbè^\f2ÒÖfh¹ËðÓvÃ®õlTQ8i¤Æ;õì0æì°[·Ò¯ÈqIÛ¡½:ô}»õïl1g*O8»ÍTÛg{ám\u001fb)KZOXI9É­Ê\u001e0±è&«XÅêÒº¹õ®\t\u0013\u0005\u0017FÌ±~UX'\u0019µr²§±¤GFcLS[Y8ìÔÉtVurëkð7\u0004íê¥kz(çvT]^\u0019/C\"¸J\u001a'´P.jLS:áÀM\u0016Ì\u0011I&³îÚõÚßÓífç¥]»Í£rGèº25-Ëræ\rÕ\u0005ö?Í'\u0013\u000fÁ(m .å\\OE^\u001aNóÊÍñ¾´¶äXiæzR%qåjò:o1\u0004íF6ÑÝ\u0007q® <\n2YþqcA<iì¡èC\fe\u001c1s¥\u0014)lE\t\u0014àÌ°k%´q£31+W3unä·÷:H^i»l×5Ø_\u0010¤Ãu¿;¡pä®`ÂJ\u001fpÜL£|xlúuÖÙý\u000eÙf[<\u0016ÝÓÐ\t¬®¬)ç\u000f\u0019B±JÕA#J`6p&Ü\u001cCP\roµ\u0013\u0011\u0012nYa\ni±d\u0013\u000eWÉöOÍ.{qE7&%Õ¢ðÇ{»5ñ]O9¯`*Ø\u001d3Ópº\"ÚÖõÜ\u000eA/¬Ò\u0005*6ÏqÙ`3C\u0000yuaÝÖC|ÇRY£\u001b%ø¬¾ÕÐËJ÷2*Ir!å\fNËí\u0001Â\"`²ãàZ2ãt~a:8ÈÃ¨Ø×Ø¶¶S­ì<520[ßPF¬¦Ô\u001acª)<JX÷"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "22"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452386467&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452391473&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥][ã¶þ+S]~HªÂ\u0019¸§í$Ä©lâuªÖãRáÚM·$Ê\u0014Õí\u001eÿû~ ¥\u0016%@$¦â\u0017OS\u0000\b\u001c\u001cëwÀï¹;\u001c\u001asw\u00172Dê¬ªx\tªIV\u0015u\u0011J6º\u0016¶tw¿»³ÏvÛ£ù\u0017_<ZÙoä\u000eÏv]»³]ßØýÝý/w_´øßÝ¿­i_öø\u0015¯m·oÚ-\u0017¹¤:üf;üýM£»vßºþÝ×æÁúß}n´]õ¯;ß¿²û§¾õoù¢o6öS»õO¿îõ?}ómVM¯Zçö\u0016Ëhã¹>t\u001d&»:tktyìûÝþþÃ\u0007gò½l>È\u0007üøámÙE!ËL\u0010Ç2%¸É$q\u0002ÏUnø0ãÇvï}êí\u001fídÿ¸\u001b?Ï\u001c¬/«\u0003Ö¿\u001aºy*´õZ~`ïów¿9îÝß¿}Wäïóß¿Ã\u0003NÿîgNûî¿v»µý·Umú\u000f÷¿ûÍ_ÿüí7ûÝ»uódßýÉê§ö·ï¾|ìÚýP0ò\u001eC`ÔI'»æÔ\u0005´>ÿ6ÙóFá×ÉãµÜ>\u001c0YLÕn³ÿý×´Ëé·Õ®³®ùyhâßëÎÚíêÑ6\u000fXcÅéùáKcúÇá%\u001c\u000f\u001bû²k»þ­­È/\u001eZçeÇëFá\u001d/Vùà)samÇ\u00055[Ì­_\r¬ý©}væÇFº×2)__NL!EUSVªzO83ßôD¨Ìê²Èá4¶Ð\u0019-\\YM¥å\u0014Cfß7[}|ïTSk3W\u0014.\u0013Ò©LÕà\bm\u0005\bF\u001eç×ô\\7d¹¯ÆéÜyÉ³¼Î\nömÎïsvO11Zþï¡Û­k\u001e\u000e5«½Ýû\u0015\u000f½ÚC¿ÚàÄ\u0015UîÿCC©ûæÙ®\u001cÎ'Z¯ÜZ>à÷ïïöîÙ¾f½ì\u001e,fü±Iélnh¦\u000fû¾Ýà5A#éjGò¼¢üÜÈ4Õ}¦\u001fe¹¶Ó6[·\u000fÍ6³?ï²26HEóÊ©Q;ó&[1sª´iä(eÎI!æFª¥ÚÆNæüÜ\u0018ÛfÖ4}¬\u0007«rÎËRºüÜ\u0003'4\u0003%²¶{rëÖs<ô­}ëÌÈ×\"Sr»\u001c\u001b\u001fgÖ`Kû×\fBB­­½\u001bUEJ5[Ð¨ `dsYÏ4*i]W|2²}o»Ì5Ý¾÷Ûa»Ænµ«a÷ºPJsQçîX®ÜíV~cWJöýÚ®ö ÛJ½ÿß´ªÁ3-»\u0016ÔYGw±äEÁ$­æÖÇ¬+«\nûÈÎ\rÈ°A½}h1u¯?\u0006\u0019éIk3´ÜeøÓvÃ©lTY:i¤Æ;ì0çì°[·ÒïÈqKÛ¡½:ô}»õï\u001cRg*YL8»ÍTÛg{ém\u001fbÝ\u0014)$/L­'¬¤ÍäVe\u000fXXôU´¢P±nn¿ëòqÃçX¿*­X99ÓØÒ#£Î1¦©­,\u001dNêdO:«:¹õÍ5ø\u001bvõÒ5=s;ª®F¯Ã!\u0011\\%ãÏ-¨à5\u0016Î\bp`È¦¹æÔå2¬ºk×kÿn7;/íÚmö\u001c;\\×©\u0010bæ\r9­KRL\u0016\u001e2\u0015\u0004q)çF*\u000ba\u0018)*7ÇûÒZÁHn¥\u001bIÜiZ¨Éë¼Åp\u0012´\u001bÙDO\u001fÄ¹ð(óÉö\u0007\u000bâIã\fE;Qlq¹Û,¥òÒV$\u0002v­¸6®td¦\u001171åjªÎüñ^g\u0010)Ð+míº\u0006ç\u000btxîO'\u0014Üõ\u0010LØé#\u0011i\u000fM¿Î:»ßá0ÛlnÑ3\r@ëÊ\u001a1G|È\u0010]ª¦D\f\u001a\u001cf\u0003£ÜÍ1\u0004ÑPøFY;\u0011!áå¦\u0016[6ápÕlÿÔì²\u0017\u0019WX$÷Æ\u0004·yµ(üñÏÞnMüÔ\u0013Æ*Ø¥\nvÇÌ2®rmëzî`\u0014Zé2*6ÏqÙ`3C\u0000yuaßÖCüÄ\u0012Yc\u0018ÅÙ¬~Õ0ÊJ÷2*I\nÎ¹eTÏÑ\u0019\u0016\u0001u,\u0017õ\u001c\u0007×\u001a§\u000bÓÁAÆ\u001cFÅ¾Æ±µjeç©yÙú2¢5!Ö\u0018SMyäQ"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "23"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452391473&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452416463&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥][ã¶þ+S]~HªÂ\u0019¸ì<ml'ÙÄve\u0013¯]µ\u001e\n×n¦%Q¦¨n·]þïûZ\u0000\u0011_ÆM\u0001 ppp®ß\u0001øõîphõÝý]^\\\u0010¡2#\nU,T<ÏxY\u0010ü¡Ê¨»?Üg³\u001dÐü³Ï\u001e\u00186bg»¾Û~hÍþîþ×»Ï:üs÷}»ÕÝË\u001e¿âïÕ³é÷m·Åó\"wdßL¿¿nUßí;;¼ûR?\u0018÷6Ï­2«áugðû\u0017fÿ4tî-\ríÆüÒmÝÓ/\u0007õá/_Õóç«ÎÚ½Áä2Zçx®\u000e}É®\u000eý\u001a]\u001ea·¿ÿðAàx/Ú\u000fâ\u0001?~x[vQ2«e¬¸Î\u0004±\u0015Ë\\óqÆÝÞ-ûÔÛ=Úáq+6n>8X/^V\u0007¬5vsTè~i×kñ½ÏßýîHºwß|û®Èßç|\u0007þñÝÏþþÝívkó½o\u000fTï\t÷»¿ÿõÛ¯¿úÃ»uûdÞýÅ¨§î÷ï>ì»ùP0ò\u001eC`Ô\t+úöÔ\u0005´>ÿ6ÛóFá×ÙãµØ>\u001c0YLÕl³ÿý×¼Ëé·Õ®7¶ýylâ~ß«ÞíêÑ´\u000fXcÍéùáK«Çñ%\u001c\u000f[ó²ëúá­m_<>µÎË\u001a×­Ä;^t/Á\u001fsæÂÚ\u000bj·Û°\u001aY[ìí\u0003\u001d\u0018¯\u000eZÏõ\u001bÓ`Èªn(+iAÞS÷Ê#ïÍ\u000fÌ*¬ÒfÂ\u0014*£eK£¨0b$Ýîv«¯r\u001ajLfÂf°8E\r\u0018B\u000bE*F+w0½vhÅºýE\fújÍ]<Ë¬`ßæü>g÷´~Oiù®ê¶¶}8ôF¯öfï\u0016<öê\u000eÃj\u0003WÔ¹û\u000f\r\u001aÚg³²8h½²kñß¸Û\u001fúgó\r¢0ñCÆr&5¹¦:ìn×xm,Éóòs#ÝöF\rz\u0014Cf»^lÝ=´ÛÌü¼ËÊÐ 5Ík+kFÍÂLÍdÎ©Tb¡¥Y+ªji¤Æ\u001aªL©ÍlÎÏ­6]ft;z°:ç¼,ÍÏ=p@3p\u0019X\"{éú'»î^ðT\u001cÎ<u¦ÅkI±ÝBM³M§±¥Ãk\u0006\u0019!×FÞÄu]4r67¯QAÀÇ*ç¢YhTÒ¦Ð%¯ùl$iÁômûýà¶Ãô­Ù*'VýîM!!à«º<wÇrÅn·r\u001b»b\u0018Öfµ\u0007ÝVòuúwÓÉ\u0016Ïè;Pg\u001dÜÅ\u0017\u0005\u0013´^Z\u001f3¶¬kì#;7j7!ã\u0006eJ\fæ¡ÃÔú\u0018E¤#­ÉÐráOÓ§&4²ei\u0016\nGî4²Å³ÃnÝ\t·#Ç-}îÆöò0\fÝÖ½'p<\u001aJ­®E1ãüí6Ýí\u0015¦·}\bu¤\u0010¼Ð±´&\u0013[=`aÁCVÓ6±KûÝäk¾Äúui¬ ÄÙÆ\u001e\u0019u1ucDiqRg{Ò\u001bÙ­k®Àß³«¾\u001d »Isµj¥\u0018ö`k¡-W|iA\u0005o°pFÈ\u0003}6Í\u0015§6\u0017ùlÕ}·^»ßT·Ù9i×m³ç Üáª©uCªªZxCN\u0012ç\u0014³ûÌ ¥Ò\u0010bi¤²¨4#Emx_\u0018S1\u001b¡FUn\u0015-äìuÎ`8\tÚh§\u000fâ\\Bxùlû§\u0005ñ¤p(6KÛ\\/myijC\u0001.L»\\i[Z²ÐkÍ´\rçFîx¯3\u0014è®Ïv}ó\u0005A:>w§\u0013\nGì\u0006\b&ìô\bÇÃ4ÉÇvXg½ÙïpM¶E·àN MmtµD|È\u0010]ªçDô\u001a¼$PhÜ.1\u0004QPøZ\u001a3\u0013!þåº\u0014\u0006[6ãpÙêlÿÔî²\u0017\u0011VX$wÆ\u00047y\u001d\u0015þøßÁluøÔ\u0013Æj¥\u0012vÇÂ2¬ªsefé`\u0014ZÃK+6ÇqÙh2C\u00009uaßÖCøÄ\u0012Ñ`\u0018ÉÙ¬nÕ8ÊJ\r\"(I\nÎ¹aT-Ñ\u0019\u0016\u0001µ,¯%\u000en\u0004ÕV\u0015\u0017¦9L}ckzÙÞQó(\u0003³õ\reD\u001bBÖº"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "22"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452416463&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452426468&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥]Ýã¶~©._$Uæ\fH\u0000\u0004Ù¹ÚØN²±ÇMfíªõ¸TøífZ\u0012eêvËï¾\u001fH©\u0012 \u0012Sñ§)\u0000\u0004\u000e\u000eÎïwÀ~»9\u001c\u001ass{CrI$&Ëó¢È\u0004Õ:S³¬¢º ÖjSðâæË\u001bûh·=ñÅ½ýFîðl×µ;ÛõÝßÜþvóEÿÝüØlMû´Ç¯ø{õh»}Ónñ<'þêðíð÷ûFwí¾uýoÌõ¿\u0019ûØh»êw\u0016¿m÷\u000f}ëßòEßlì§vë~Óëw}ÿ!«¦ÏW­s{Ée¬\"x®\u000f]É®\u000eÝ\u001a]îû~·¿}÷Nâ|+wò\u000e?¾;.[cÙÒ/ÛñLÒd:çrñ}»÷Ë>õöv²¿ßÊÏg\u000eÖÉ§Õ\u0001ë_\rÝ<\u0015ÚOÍz-ßñ·äÍ\u001f¤{óý79yKþô\u0006\u000fJö§7¿ìoþk·[Û\u001f­ú¶éßq*ÞÒòÍ\u001f¾ýÛ÷ß}ùfÝ<Ø7µú¡ýã¯î»vcßå¾Å\u0010\u0018õ_ÒÉ®9u\u0001­_lÈëFá×ÉãµÜÞ\u001d0YLÕn³ÿý×´Ëé·Õ®³®ùuhâßëÎÚíêÞ6w÷XcU²×OéïxøØØ§]Ûõ/m\u00059{|jM\n×Â;¬ò/Á\u001fSæÂÚ\u000bj¶[¿\u001aX{'û;jLi7ùýÓó°yi0¤¨jÆ\u000bVÐ·ûÁÌ7=\u0011*³ºÈ3aJIë\u00159QV3iK¡L³ï­>¾ËwªµËs\téT¦jp¶¢\nÎ\u001eç×ô\\7d¹¯ÆéÜ\u0014¤(3Rg9ÿ@Ê[ÂoYõ±âÿ|\u000fÝn]swè¬YííÞ¯xèÕ\u001eúÕ\u0006'.¯ÿ\u000f\r¥îG»r8h½rkyßºÙ\u001fºGûõ²»³ñ]Æ\tÒYbX¦\u000fû¾Ýà5A#éjG\t©XùÚÈ4Õ}¦ïe¹¶Ó6[·wÍ6³¿î2/$A*F*§*ÎìÌlÅ\u0015)Òr¦c;'\u001b©vi[\u0018;ócclYÓô±\u001e¼\"eY\u0014Ò×\u001e8¡\u0019Ø\f,=µÝ[·Ox*\u000f}k\u001få:3ò9ÏÜn!ÇÆÇÙ¦5ØÒþ9Pkkbo*M×\u0016j2· QNÁÈ²iT°:7EYí{Ûe®éö½ß\u000eÛ5v«½\\\r»×¹Rº\u0014UñÚ\u001dË»ÝÊoìJÉ¾_ÛÕ\u001et[©çñÿV5x¦e×:ëè.\u0016esÉª¹õqëªÂ>ò×FÍ\u0006BdØ LËÞÞµº×\u001fô¤µ\u0019Zî2üi»áÔÄF6ª(4\u0012êëed9gÝº~G[úØ\u000eíÕ¡ïÛ­OäxÔ9SÉ|ÂùÛm¦Ú>ÛkLo{\u0017ë¦h.ËÜÔzÂJÊÙLnUvE\u000fYÅ*V\u000bëæö»&¬,x\t16Ó¨*¬Z99ÓØÒ#£Î1¦©­,\u001cNêdO:«:¹õÍ5ø\u001bvõÔ5=s;ª®F¯Ã!\u0011\\%+u9· ¼¬±pNé\u0003C6%ºdH2Yu×®×þ7Ýnv^ÚµÛì1*wJ]W¦¦B7\u0010V\u00178ÿ4,<d\u0006£´¸s#\u0015¹0æã}i­àXZ3#)Af¹¼Î[\f'A»MôôA+\bL¶<X\u0010O\u001ag(Úa³#fn³\"­(\u0002v­Jm\\áèL£Ò\u0018Î«zmä÷:H^i»l×58_\u0010¤Ãs:¡pä®`ÂN\u001fp<L£|¸oúuÖÙý\u000eÙf[tiè\u0004VWÖ9âCPìR5%bÐB¡n!¨Â7ÊÚ\b\tli\ni±e\u0013\u000eWÉö\u000fÍ.{qE7&JKªEáövkâ§r^Á.U°;fátE´­ë¹\u0013QX¥\u000b2Ulã²Áf\u0000òê$Ã¾\u001d­ø¥²Æ0ªä\u0013²úQVÃ(+ÝË¨$ÉË²´é9:Ã\"`\u0013QÏqp-q:?3\u001d\u001cdÌaTìk\u001c[Û©VvG\u0019­¯(#VSj1"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "24"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452426468&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "GET",
+      "url": "https://arena.ai/api/me/pulse",
+      "postData": ""
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/api/chat/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60/review-feedback",
+      "postData": "{\"sessionNodeId\":\"01a0a3ac-52e6-7474-a2a2-b83d4a43182b\",\"recaptchaV3Token\":\"0cAFcWeA7xAMRT8SeDL1LQpgHUN7Y5wY8PGqdV1KFrcx0tE5uRlrlpDFZrrI4x2NdA5G9-aMLVaObgg0iHm8zF6MJFp6oaa7rpf4sKt-ctONrFp1z1j12-IDurK6-W5E38F54Y1D8AShQ8ZeahXkC2QKrIR7iZqQdCB0DzzLtbdwR03WUQ4xZy6L5e8kRZdVFZKB16hFvtQSo7TbWHav2-ysjyzBEjmW7dle_sk2ezMfklY65uqTqUz7km7Q96pDxt1TkEyPhsbjYmegY_XBxuX8nAuQke9RmqB3qkpBAyWsH_a95Y54g58_HIHnuu_s3Mo-y6VFwJZ7TqKXpmsTlD8coLyDosYdLsBsOfnL5GDYRZ7ROhKhkvtz9tXYYcSdi6QeUA1sm18WZyEuLPb2spuwggJIggVX6uKvGl7dnGANodUrTVZbLaVxAy-lLK8ajI7JKbT3IfwzDA8G5gYfdZf1C9aRxj4gtvCQH6M2amMqKHj26LzgPodqfcl-tNIWsVn6tGBLhplkEKNkTOcdzixVgP9JMvqpaTGjmaOg2GcC4q3ek_Nfky0V_TVYAGsKyNXz8JiKHPJj8BSLmm2x4BvhKjkteOpn4GBiC6YWqRm-G9AXRxNsN0FDBFu5Q1cE7DpwAz3p-j78W1K0U5C3tRNHfzZlNrDYhcP_n5g-BJt0gNA8pvQeH6OyhgtjXsm4vUraZgofyEdJPSlQ-bIFI7z7aWaxPK_KkDraihBEGqTOVS2NoybKwcGV25xCGpX4h7tb5n5amvPBu1Rmo8gMvUEQf1hqHqKeDzdOQZB_59IuFG2Rk3jYtSmxPCCdNGM5soEJRv_lH3dlRCdeRXEe_rapfl7OC0hvtDYA7obqy4wFI7nr8gEltNU-4gTlnXSaMCJQ5yK45NVMDgzVvPZmkMhDQc3A5XM2WxiB4MFxT9KojXTzs6C8lM8CUQJaZrHeSq2psh98xs9QXg10aXdNlmWTaUMG0wyNz9xIHcE8mnqsPoXIoaYU8V1jtLHrBRaTXV6Rt5CBAPiMEXdAWIkYR_Daye5x9lmVIpRqtzhJDv9JukrlKagzKat0LdD1_6jqeXhbv9rDlI4TJcYKB6m6oO0Y9N1p9OtoLQKG4P0eF_y23LtluvAeT2LihCc4cNB1mJkz6JTpghrEnzyamF8uW2k7SvbgObsQMN2to0mm8S4MOFZ-Qt_SOZFRiwnFj0fmJJZjRTSW24xYtKa0ViuhHsYfD9aggknR54YhImZnHL_zmt6yAVW_721Nrq33lhUBVU4g7eFIjMTpya9jB8fTl3L1LF5QrX5uZHxCQ9VAbVFmgq5cdOUns1CdWVtKFOAYuvNNuApUPz_ehfjlZfhhIq5xOaUFraVcnAwjaNFPPwibcm7Tu7Vq097JYyEHH_opuJF7THArvec3GcOE"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452431467&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003í][ã¶þ+S]~HªÂ\u0019^p!;O\u001bÛI6SÙÄëT­Ç¥ÂµnI)ªÛmÿû~ ¥\u0016%@$¦v«\u0007úÅÓ\u0014\u0000ÀÁ¹~\u0007çÛï\u000eZßÝß¥HE!t\u0013Q%åUR¥¥Jt\u0012¢\u0015ÕÌð»ßÜg³íÐü³Ï\u001eè6bg»¶Ù¶«Íþîþç»Ï\u001aüïîõV7/{ü¿WÏ¦Ý×Í\u0016Ï³Ô=-~3-þþªVm³ol÷îKý`ÜoÚ<×Ê¬º×Áï_ýS×¸·|ÖÕ\u001bóS³uO¿ìÔ?|õuR¯\u001ak÷\u0006KHâ¹:´-&»:´ktyìºÝþþÃ\u0007gâ½¨?\u0007üøáøÙ*É2'¼°4éD\u0014ã¹L5ëgüØìÝgz»G;Ñ=nÅÆÍç\u0013\u0007kÅËêï_õÝÜ*4?Õëµø@ß§ï~u\\ºwýú]¾Oû\u000e\u000f\u0018ùí»\u001f\u0019ùõ»ÿØíÖæFþ¹î>Ð¿/Ø»_ýù_õß¼[×OæÝ\u001fzj~ýîóÇ¶Ù\u000f\u0019-Þc\bú\u000faE[º`­Ï¿6ä¼Qøuôx-¶\u000f\u0007L\u0016S5Ûä¿ÿ1îrúmµk­ì¸ß÷ª5f»z4õÃ#¾±däüð¥ÖÝcÿ\u0012ÏµyÙ5m÷Ö§\u0017O­Ó¼Äãu-ñ\u0017#ÝKðÇ¸ðmÇ\u000fª·[·êIûñG¡l^Ù¢\u0007µ=\u0011\räeEhNòò=¡üL|ã\u0013!\u0013£ò,áDL%$ÏRi\u0014\u0011\u0011\f¥ë}WoÕñ]®SEIlÙ\u000b+\u0013Y\"áL¨SÂÕ0¿º«ÅºþItûjÎ]æ,I«$£_§ì>¥÷\u0004\u0013#ùÿ¸\u001eªÙÚúáÐ\u001a½Ú½ûâ¾WsèV\u001b¸¬LÝh(TW?ÅùDë]\u0007üþíÝþÐ>×¤\u0013íÁ\u001f\u0012R!¬I5IÔaß5\u001b¼Æk$le4-\t;7ÒukT¨GÑ%¶iIÖÍC½MÌ»$\u000f\rR´´²¤ÄL¼ÉT¦H%&\u001aYB¨µó©*k2¹6£9?×Ú4Ñu\u0017êAË±<\u00176=÷À\tM@f ä¥iìºyÁSqè\u001aó,Ö\u0016¯Y\"Åv\u000b>6<N6Æv¯\t\\\u001b\u001dz\u0013ÓeVÉ\"£¹y²\u0002¬R\u0006N|»QNªLç¬d£¤é:Ó&¶n÷Û\u000eÓÖf«\u001c_õ»Wñ2?wÇçÝnå6v%E×­Íju[É×áÿFÖx¦DÛ`uÖÁ]ÌYQAÊ©ï£Ææe}¤çFõ\u0006L¤ß DÎ<4º\u001f=tKk\u0012´Ü%øÓ´ý©\t¬e[¡Â;l1çä°[7ÂíÈqK¾½<t]³uï\t\u001c\u0010«K(»MdÓ%{ém\u001fBÝd\téJHIZ­L\u001eðaÁCVTÜØ©ý®RÂrÊ '\u001a¹±\u0014FÎ4¶ôH¨S©+#r:ÚÖÈVl]s\u0005ú\u0006£]½´u\u0007áÜ\f¢«V+íø°¿\b¶\u0014Ú2Å¦>(c\u0015>\u0016Å\u0002}2M\u0015#6\u0015éè«Ûf½v¿©f³sÜ®Ù&ÏA¾ÃTUêªàO¼!%Uó_d£\u000f÷AK¥Á.ÅÔHyÆ5-²ÒNÑ¾0Ó\"5Pµ&F<µdrô:§1\u0018íFÔÁÓ\u0007v.Á< ³]\u001f,°'3\u0014ìD°YÚ¦zj³¤LsS\u0016)\u0004àÄ´+É¶¹-&\u001a1­)¶\"òÜÈ\u001dïu\u0002\u0002¹Ò´É®­q¾ÀHûçîtBà]\u0007Æ>.Âñ0\rüá±îÖIkö;\u001cflÑ-x¦!\u0013HU\u001aÍ§\u0016\u001f<¤À.ãEô\u001a\u0015i^@ 1;E\u0010À×Ò\u0011\u000bñ,Ó¹0Ø²\u0011ËZ'û§z¼°À*R§L0³Ì\u001fÿìÌVO}Ai\t½TBïø\f«ÊTª:!\u0018*OÇÍQ\\ÒëÌ`@N$Ø·£ö\u0010>±¨0dt´¬nU?ÊJu\"ÈI2Æ¡DM­34\u0002biÊ«)\n®\u0004ÑVe\u0017ª\u00059\f}ckZÙÖ­æ\u0007&ë"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "24"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452431467&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452434714&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003í][ã6þ+B\u001ef¨[\u0012)RªyÚI2×$É&À¦\u0003×*¥lË-ËU©\u000eòß÷£dWÉ&-±±À`\u001etÉ$Eçú\u001d\u001f½9\u001cj}s{f\"\u0015DèdL8Ïó¤ÊRJ1«hU\u0010ß|~c\u001eÍ¶Csu/ºÕcÓÕþ ÙïñÛ®mv¦íj³¿¹ýõæ³\u0006ÿ»ù¡ÞêæÉý¿W¦Ý×Í\u0016Ï³Ô=-~3-þþ¦Vm³ol÷æ+}gÜoÚ<ÖÊ¬ºçÁï_ýC×ìÜ\u000f]½1\u001f­{úU§Þýùïrü|ÕX»7dBË\u0014ÏÕ¡m1éÕ¡]£Ë}×íö·ïÞ\t<\u0013oEýNÜáÇwÇÏWI<áÄ\u0016äL'Xç2Õ¬ñ}³wêí\u001eíDw¿\u0015\u001b7O\u001c¬\u0015O«\u0003¾Õws«Ð|¬×kñ®x¾ùÝqéÞ|ûÝ,}þá\r\u001e0ú7¿0úû7ÿµÛ­Í\u000fFþ½îÞ\u0015¿%ìÍïþþï¾ùúó7ëúÁ¼ù³Q\u000fÍïß|qß6\u001bó.+È[\fQÿ%¬hëS\u0017¬õëo£\ryÝ(ü:z¼\u0016Û»\u0003&©mò?ÿ\u001aw9ý¶ÚµÆÖ¿ôMÜï{Õ\u001a³]Ýúî\u001eßX2úúð©ÖÝ}ÿ\u0012µyÚ5m÷Ò§gO­Ó¼Äãu-ñ'#ÝKðÇ¸ðmÇ\u000fª·[·êI¼}8<Ö´Õiý3Í>ìD4\u0018\u0015-rJ²·<å¯Ä7>\u00198\n*Ï\u0012®\u0019MÉTBs\u000f£¨0b(]ï»z«ïr*jLb³Ì&\\XÈ\n\u0014¡\fgB\u0011^P®ùÕ]-ÖõGÑaî«a:7y³$­¬ø.e·iqKË·æÿëz¨fkë»CkôjswêÕ\u001cºÕ\u0006'.+S÷\u001f\u001a\nÕÕfeèÐze×â\u000e¿ÿx³?´æ9éD{g0ã»¤H\u000b!¬I5MÔaß5\u001b¼Æk$leI½6ÒukT8^Ø¦U&Y7wõ61¿ì\u0012Ç,¼AJV\u00055\u0013o2e!SF¥\u0012\u0013,¥µó©*k¨2¹6£9?ÖÚ4Ñu\u0017êQ)cy.lúÚ\u0003'4\u0001$§¦}°ëæ\tOÅ¡kÌ£X'Z<g\u0014Û-øØð8Ù4\u001a[Ú='`\u0012rmtèMLY%I.Gsó\u001ae\u0004¬R&ªF9­2³F¦ëLØºÝwn;L[­r|Õï^eR*ÆËüµ;>Wìv«ÉKÑuk°y¬ÛJ>\u000fÿß4²Æ3%Ú\u0006«³\u000eîbÎ²¬\u0010´ú¾ÂØ¼,±Åk£z\u0003&ÒoP¢Dgî\u001aLÝÉGº¥5\tZî\u0012üiÚþÔFÖ2Ï­ÐBáÈF¶srØ­\u001bávä¸¥a®½<t]³uï\t\u001cR«K(»MdÓ%{émïBÝ$É\u0004Ët¥F¤$­IÄV&wø°à!+iI+nìÔ~W)eyÁ4\"ý27VPbÄèLcK:Eº2\"·8©£=ilÅÖ5W o0ÚÕS[CöwÍ ºjµÒ\u000fû`K¡-Slê2VáÃ\u000bBF\u0014èiª\u0018µ©HG_Ý6ëµûM5ãvÍ6y\fò\u001d¦ªRWs>ñV9Î?ô)ÕRi°K15Rq]¬´S´/á\u0005I\rT®$O¡}erô:§1\u0018íFÔÁÓ\u0007v.Á<òt´ýÃÁ\u0002{R8CÁN\u0014¥mª§6KÊ47%I!\u0000'¦]I¦´Í-hÄ´.\ni+*_\u001b¹ã½NÀR W6Ùµ5Î\u0017\u0018iÿÜN\b\u001c±ëÀ°ÓÇE8\u001e¦?Ü×Ý:iÍ~Ãl-º\u0005Ï4d\u0002­J£ùÔâ\u0010ìR9^D¯\u0011Is\u0002Æì\u0014A\u0010\u0005¯¥1#\u0016â\u001fY¦sa°e#\nµNö\u000fõ.y\u0012aER§L0³Ì\u001fÿìÌVO=)\u0012z©Þ1ñ\u0019V©2U5uB0\n-U\u0005£¸¤×Á8I°oGí!|b¨0dÅhYÝ(«~êDd1SP5µÎÐ\b¨-R^MQp%¨¶*;S\u001d,xÌa\u0010ìk\u001c[ÓÊF´n5<"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "24"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452434714&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452446458&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥][ã¶þ+S]~HªÌ\u0019¸ì<ml'Ù$ve\u0013¯]µ\u001e\n×n¦%Q¦¨n·]þïûZ\u0000_<M\u0001 ppp®ß\u0001øõîphÌÝý\u001dÉ%T;ê²²Îu¦êd\\JQríJ)ÌÝçwöÙn{4ÿì³G+ûÜáÙ®kw¶ë\u001b»¿»ÿõî³\u0016ÿ»û¾Ùöe_ñ÷êÙvû¦ÝâyNü#Õá7Ûáï¯\u001bÝµûÖõï¾2\u000fÖÿfìs£íªÝYüþ¥Ý?õ­Ëg}³±¿´[ÿô«^øó×ßfÕôùªuno1¹U\u0004Ïõ¡ë0ÙÕ¡[£Ëcßïö÷\u001f>H<ïeóA>àÇ\u000fÇeë,ÏeÔñLÂdbÅT*bÄ0ãÇvï}êí\u001fídÿ¸\u001b?O\u001c¬/«\u0003Ö¿\u001aºy*´¿4ëµüÀßw¿;îÝ7ß¾ËÉ{òwx Ø\u001fÞý,Øïßý×n·¶ß[õ·¦ÿÀiùw¿ûÛ_¾ýúï¿[7OöÝ­~jÿîÇ®ÝØ\u000f9§ï1\u0004Fýt²kN]@ëóo\r9o\u0014~<^ËíÃ\u0001ÅTí6ûßM»~[í:ë&þ÷½î¬Ý®\u001emóð5V\u001f¾4¦\u001c^\"ðð¹±/»¶ëßÚäâñ©5)*<^7\nïx±Ê¿\u0004L\u000bk;.¨Ùbnýj`ímîvÎ4]^\nV6ô0dYÕ\u0017Ñ÷ó3óMOÊ¬.ò¬4eÒâX°\"'Êj&­`\u0018Ê4û¾Ùêã»|§Y¹<Ç1Ná\u0018#´-Ô´ä¬Ôãü¾ëæ\u0017Ùcî«q:w\u0005)DFê,çß\u0012qOø=«Þ3Vüï¡Û­k\u001e\u000e5«½Ýû\u0015\u000f½ÚC¿ÚàÄå\u0015ñÿ¡¡Ô}ólW\u000eç\u0013­Wn-\u001fðû\u000fwûC÷l_³^v\u000f\u00163~È8Ááv\u0018éÃ¾o7xMÐHºÚQB*&Î@K«ûL?Ê>sm§m¶n\u001fmfÞeElÊ©3;ó&[qE\u0004SZÎ4rqçdYÎT;Ë´-Ìù¹1¶Í¬iúX\u000f^\u0011!B:rî\u0013ÍÀ\u0012ÙKÛ=¹uû§òÐ·öY®3#_óLÉí\u0016rl|mZ-í_3\b\tµ¶^^\u0006o\u0012¦ÊkE\u000b5[Ð(§`dM¬g\u001a\u0015¬ÎM!*1\u0019IÙ¾·]ænßûí°]c·ÚËÕ°{+¥EY\u0015çîX®ÜíV~cWJöýÚ®ö ÛJ½ÿß´ªÁ3-»\u0016ÔYGw±\u0010yÎ%«æÖÇ­+ª\nûÈÏ\rÈ°A½}h1u¯?\u0006\u0019éIk3´ÜeøÓvÃ©lTQ8i¤Æ;ì0çì°[·ÒïÈqKÛ¡½:ô}»õï\u001c1g*O8»ÍTÛg{ém\u001fbÝ\u0014Í¥ÈM­'¬¤ÍäVe\u000fXXôU¬buiÝÜ~×\u000b#æX¿*¬Z99ÓØÒ#£Î1¦©­,\u001cNêdO:«:¹õÍ5ø\u001bvõÒ5=s;ª®F¯Ã!\u0011\\%\u0013ZÌ-(\u00175\u0016Î)p`È¦D\u000bæ$UwízíÓífç¥]»Í£rGèº25-Ëræ\rÕ\u0005Î?Í'\u000b\u000fÁ(m .åÜHE^\u001aNóÊÍñ¾´¶äXZ3#©8Ír5y·\u0018Nv#èé8W\u0010\u001e\u0005lÿx° 4ÎP´\u0013Ãf\u0019GÌÜf)E\n[Q\u0002\u000583íZ\tm\\áèL#a\fçÊÕL\u001bùã½Î R WÚ.Ûu\rÎ\u0017\u0004éðÜN(\u001c¹ë!°ÓG\"\u001c\u000fÓ(\u001f\u001e~uv¿Ãa¶Ù\u0016Ý¢g\u001a:Õ5å\u001cñ!C(v©\u00121hDIA¡Ðc\bª¡ð²v\"BÂ#+L!-¶lÂáª1Ùþ©Ùe/2®°(ñÆ°¤Z\u0014þøgo·&~ê)ç\u0015ìR\u0005»cf\u0019NWDÛº;!\u0018Uº SÅæ9.\u001blf\b ¯N2ìÛÑzX*k\f£\u0004Õ²\u001aFYé^F%I.°é9:Ã\"`²ãàZ2ãt~a:8ÈÃ¨Ø×8¶¶S­ì<520[ßPF¬¦Ô\u001acª)<JX"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "23"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452446458&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452451464&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥][ã¶þ+S]ó°©\ngHâFv6¶l\u0012§²×©ZKk7Ó(ST·{\\þïûZ\u0000Z¿x\u0002@ààà\\¿\u0003þðËÝáÐ»û»¼¹$Òd¢Ô\"\u0013²T´Tdª´¬,ê\u0019ßýöÎ>Ûmæïß?ZÙoä\u000eÏv]»³]ßØýÝý/wï[üïî_ÍÖ´/{ü¿WÏ¶Û7í\u0016Ï\u000b?È{Õá7Ûáïo\u001bÝµûÖõï¾1\u000fÖÿfìs£íªÝYüþµÝ?õ­Ëû¾ÙØÏíÖ?ý¦×\u001fÿøíwY5}¾jÛ[L.£UçúÐuìêÐ­Ñå±ïwûû\u001f%É\u000f²ù(\u001fðãÇã²uV\u0014²Ì\u0004q,SL\u0012'ð\\å\u000f3~l÷~Ù§ÞþÑNö[¹ñóùÂÁ:ù²:`ý«¡§Bû¹Y¯åGö!÷\u001fGÒ½ûÛwïüCþ»wxÀéïÞýÌéoÞýçn·¶ÿ²ê/Mÿ\u0011ñðwÿñ?}÷í_ûnÝ<Ùw´ú©ýÍ»¯\u001e»vc?\u0016|À\u0010\u0018õÒÉ®9u\u0001­Ï¿M6ä¼Qøuòx-·\u000f\u0007L\u0016SµÛìþ9írúmµë¬k~\u001eøß÷º³v»z´ÍÃ#ÖXqz~øÒþqx\tÇÃçÆ¾ìÚ®k+òÇ§ÖyYáñºQxÇUþ%øcÊ\\XÛqAÍ\u0016sëW\u0003k;.ÿíöþùv¯ígsb\u001a\f)ª²Òê\u0003eìÌ|Ó\u0013¡2«Ë\"\u0013SBg´,re5S\fe}ßlõñ]¾SM­Í\\Q8\u001c#§2U#´\u0015\\j\"\u0018\u0015z_Ó7rÝ|=æ¾\u001a§sWæ%Ïò:+Øw9¿ÏÙ½\u0018-ÿ×÷ÐíÖ5\u000fÎÕÞîý^í¡_mpâ*÷ÿ¡¡Ô}ólW\u000eç\u0013­Wn-\u001fðû\u000fwûC÷l_³^v\u000f\u00163~ÈXÎ¤t674Ó}ßnð tµ#y^Q~ndÎê>Ó²Ï\\Ûi­ÛfÙwY\u0019\u001b¤¢yåTÅ¨y­Ê9UZÎ4r2ç¤\u0010s#ÕÎRmKc's~nm3k>ÖU9çe)]~î\u0013ÍÀ\u0012ÙKÛ=¹uû§òÐ·öY®3#_LÉí\u0016rl|mZ-í_3\b\tµ¶Ñ7qS\u0015µ\"¥Ì-hT\u00100²Î¹¬g\u001a´.LÉ+>\u0019IÙ¾·]ænßûí°]c·ÚËÕ°{](¥¹¨Êsw,Wîv+¿±+%û~mW{Ðm¥^ÇÿoZÕà]\u000bê¬£»Xò¢`VsëcÖU}dçFÍ\u0006BdØ LËÞ>´º×\u001fô¤µ\u0019Zî2üi»áÔÄF6ª,4RãÈFvsvØ­[éwä¸¥ÏíÐ^\u001dú¾Ýú÷DGM©3,&¿Ýfªí³½Æô¶\u000f±n\u0014\u0017¦Ö\u0013VRÎfr«²\u0007,,zÈ*ZÑZX7·ßuNyÉ¸ás¬_ÖIJ¬iléQç\u0018ÓÔV\u000e'u²'UÜúæ\u001aü\rA»zé\u001eÊ¹\u001dUW£WÆËá\b®ÆqÍç\u0016Tð\u001a\u000bgL80dÓ\\sêrOVÝµëµÿM·ví6{Ê\u001d®ëÊÔD\b1óÖ%Î?)&\u000b\u000fÁ(m .åÜHe!\f#Eåæx_Z+\u0018É-L­È¦¼Î[\f'A»MôôA+\b2lÿx° 4ÎP´\u0013Åf\u0019¹ÍR*/mEr(Ài×kãJGf\u001aqc\u0018S®¦êÜÈ\u001fïu\u0006\u0002½ÒvÙ®kp¾ HçþtBáÈ]\u000fÁ>\u0012áxFùðØôë¬³û\u001d\u000e³Í¶è\u0016=ÓÐ\t´®¬\u0011sÄ\f!Ø¥jJÄ \u0011ÉK\u0002ÆÝ\u001cC\u0010\roµ\u0013\u0011\u0012\u001eYnJi±e\u0013\u000eWÉöOÍ.{qEroLpWÂ\u001fÿìíÖÄO=a¬]ª`wÌ,Ãé*×¶®çN\bF¡.ó©bó\u001c\r63\u0004W'\u0019öíh=ÄO,5QMÈêGY\r£¬t/£¤à[Fõ\u001ca\u0011PÇrQÏqp-©qº¸0\u001d\u001cdÌaTìk\u001c[Û©VvG\u0019­o(#Z\u0013b1Õ"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "23"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452451464&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452456477&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥][ã¶þ+S]~HªÌ\u0019¸ì<ml'Ù$ve\u0013¯]µ\u001e\n×n¦%Q¦¨n·]þïûZ\u0000\u0011_<M\u0001 ppp®ß\u0001øõîphõÝý]^\\\u0010¡³SU¹¦Y]ê:cpU4\u0005¡Ý}~gÍv@óÏ>{4bØ\u001díúngú¡5û»û_ï>ëð¿»ïÛ­î^öø\u0015¯M¿o»-\u0017¹{${üfzüýu«únßÙáÝWúÁ¸ß´ynY\r¯;ß¿4û§¡soùlh7ænë~5¨\u000fþúÛ¬?_uÖî\r&Ñ:Çsuè{Lvuè×èò8\f»ýý\u000f\u0002ÏÄ{Ñ~\u0010\u000føñÃqÙ*+\nQf\u0015±,\u0015× ¶Âsk>Îø±Û»ez»G;1<nÅÆÍç\u0013\u0007ëÅËêõ¯Æn\nÝ/íz->°÷ù»ß\u001dI÷îoß\u0015ùûü\u000fïðÓ?¼ûÓß¿û¯Ýnm¾7òoíðê=áï~÷·¿|ûõß?·nÌ»?\u001bõÔýþÝ\u0017}·1\u001f\nFÞc\bú/aEßºÖçßf\u001brÞ(ü:{¼\u0016Û\u0003&©mö¿ÿw9ý¶ÚõÆ¶?MÜï{Õ\u001b³]=öá\u0011k\u0004[\u001f¾´zx\u001c_Âñð¹5/»®\u001fÞÚVùÅãSë¼¬ñxÝJ¼ãÅH÷\u0012ü1g.¬í¸ v¹\r«µÉSI~þÙlø#-écCNL!«º¡¬¤ \u0005en~Gæ\b\u0019U\u0016Y¥9Í)TFË\"FQa8ÅPºÝ\u000fíV\u001dßå:5ÔÌ\u0016Í*ae&\u001bp2\u0015\u0017TVj_;´bÝþ\"\u0006Ì}5Mç®ÌKåMV°os~³{Z¿§´ü?×Cu[Û>\u001cz£W{³w+\u001e{uaµÁ+êÜýB\rí³YYO´^ÙµxÀï?Üí\u000fý³yÍ\u0006Ñ?\u0018Ìø!c9\u0013Â\u001awÔÕa?t\u001b¼Æk$lcI×\u001bé¶7jÈÔ£\u00182ÛõÊdëî¡Ýfæç]V\u0006©i^[Y3HÛo259§RF\u0016bÈZQUK#5ÖPeJmfs~nµé2£Û!ÔÕ9çe)l~î\u0013ÍÀ\u0012ÙK×?Ùu÷§â0tæY¬3-^Lí\u0016rlzm:-\u001d^3\b\t¹6:ô&®ë¢¤³¹y\n\u0002FV9\u0017ÍB£6.yÍg#I3\f¦ÏlÛï\u0007·\u001d¦oÍV9¹êwo\n)\u0015¯êòÜ\u001dË\u0015»ÝÊmìJaXÕ\u001et[É×éÿN¶x¦Dß:ëà.¼( õÒú±e]c\u001fÙ¹Q»\u0010\u00197(Sb0\u000f\u001d¦îôÇ(#\u001diM»\f~<5¡µ,K+´P8r§-æ\u001dvëN¸\u001d9nés7¶aè¶î=ãÑPju-\u0019ço·ìl¯0½íC¨$ànÔ¤5ØÊì\u0001\u000b\u000b\u001e²Ö´©]Úï&§¼d\\ó%Ö¯Kc\u0005%FÌÎ4¶ôÈ¨K©\u001b#J:ÛÞÈ^l]s\u0005þ ]½ôí\u0000åÜMª«U+íä°O\u0004[\u000bm¹âK\u000b*x3Bf\u001cè³i®8µ¹Èg«î»õÚý¦ºÍÎI»n=\u0007å\u000eWM­\u001bRUÕÂ\u001brÚ8ÿ¤-Üg\u0006-¸\u0014K#E¥\u0019)j»ÄûÂÜÀÔZ\u0018IV¹U´³×9á$h7¢\r>s\táQæ³í\u000e\u0016ÄÂ\u0019\nv¢Ø,ms½´YRæ¥©I\u000e\u0005¸0íFr¥miÉB#®5cÒ6T\u001b¹ã½Î R Wº>Ûõ-Î\u0017\u0004éøÜN(\u001c±\u001b °ÓG\"\u001c\u000fÓ$\u001f\u001eÛaõf¿Ãa6Ù\u0016Ýg\u001a:6µÑÕ\u0012ñ!C\bv©\u0013ÑkDò@¡q»Ä\u0010DAákiÌLøGëR\u0018lÙÃe«³ýS»Ë^DXaÜ\u0019\u0013ÜäuTøãÙêð©'Õ°K%ìeXUçÊ4ÍÒ\tÁ(´Ve>Wlã²Ñf\u0000rê$Ã¾\u001d­ð%¢Á0³\u0019YÝ(«q\u001aDP\u0014sÃ¨Z¢3,\u0002jY^5K\u001cÜ\bª­*.L\u0007\u000b\u0019s\u0014û\u001aÇÖô²\u0013½£æQ\u0006fë\u001bÊ6\u0018"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "22"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452456477&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452472396&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥][ã¶þ+S]~HªÂ\u0019¸ì<mlÇÙØãÊ&³vÕz\\*\\»D¢ºÝãòß\u000f¤ÔM\t\u0010©øÅÓ\u0014\u0000\u0002\u0007\u0007çú\u001dð§ßn\u000eÆÜÜÞ\\\u0012I¥É4«hVRå2EÊ\nW«R\u0010ZÒ²¼ùÓ}´Û\u001eÍ¿øâÞÊ~#wx¶ëÚíúÆîon»ù¢Åÿn~l¶¦}ÚãWü½z´Ý¾i·x\u0013ÿHuøÍvøû}£»vßºþÍ×æÎúß}l´]õÏ;ß¿²û¾õoù¢o6öS»õO¿îõ»oÞÈªéóUëÜÞbr\u0019«\bëC×a²«C·Fû¾ßíoß½x&ßÊæ¼ÃïËÖYË\u0002Ëv<ÃrM&©+ñ\\\u0011#\u0019ß·{¿ìSoÿh'ûû­Üøù|æ`|Z\u001d°þÕÐÍS¡ýÔ¬×ò\u001dKÞüáHº7ßx·äÏoð@°?¿ùU°?¾ù¯Ýnm´êÛ¦Çiù7øöo\u001fÞ÷§7ëæÁ¾ùÆêöo¾¼ïÚ}sú\u0016C`ÔI'»æÔ\u0005´~ým²!¯\u001b_'×r{wÀd1U»Íþ÷_Ó.§ßV»Îºæ×¡ÿ}¯;k·«{ÛÜÝc`¯\u000f\u001aÓß\u000f/\u0011xøØØ§]Ûõ/mKröøÔ\u0014\u0015\u001e¯\u001bw<Yå_?¦Ìµ\u001d\u0017Ôl1·~5°öSÿÐÐM±VÛ_êö^\u000e³óL!Ëªf¼`¢~KýØGÞ\u001e\bY]äYi\u0004Ë¤ÍuÆ(«´a$Óìûf«¯òjfmæòÜe¥t*S5\u0018BÛRHMKÎJ=N¯é\u001b¹n>É\u001eS_³¹)H!2Rg9ÿ@Ä-á·¬zËXñ¾n·®¹;tÖ¬övï\u0017<ôj\u000fýj\u0003WÄÿR÷Í£]9\u001cO´^¹µ¼Ãï?Ýì\u000fÝ£}ÎzÙÝYÌø.ãKé,1,Ó}ßnð tµ£TL¼62Mgué{Ùg®í´ÍÖí]³Íì¯»¬\rR1R9UqfgÞd+®`JËF1î,Ë¹jg¶±9?6Æ¶5M\u001fëÁ+\"DQHG^{àfà2°DöÔv\u000fnÝ>á©<ô­}ëÌÈç<Sr»\u0018\u001b\u001fgÖ`Kûç\f2B­­½I*¯\u0015-ÔdnA£5\u0011²iT°:7¨Äd$eûÞvkº}ï·ÃvÝj/VÃîu®\u0016eU¼vÇrån·ò\u001b»R²ï×vµ\u0007ÝVêyüÿ¦U\riÙµ Î:ºÈs.Y5·>n]QUØGþÚ¨Ù@\f\u001biÙÛ»\u0016S÷êc\u0010´6CË]?m7ØÈF\u0015Fj\u001c¹ÓÈ\u000esÎ\u000e»u+ý\u001c·ô±\u001dÚ«Cß·[ÿÈñ¨\u0019s¦ùó·ÛLµ}¶×Þö.ÖMÑ\\ÜÔzÂJÊÙLnUvE\u000fYÅ*VÖÍíwM(¸0bõ«Â:É¨3-=2ê\u001ccÚÊÂá¤Nö¤³ª[ß\\¿!gWO]ÓC7·£æjôÊx1\u001c\u0012ÁUÒ8¡ÅÜrQcáÒ\t\u0007lJ´`H2Yu×®×þ7Ýnv^ÚµÛì1*w®+SÃp)gÞ@X]àüÓ|²ð\u0019Ò\u0006âRÎTä¥á4¯Ü\u001cïKkKNõÖõTIf¹¼Î\u001b\f'A»MôôA+\bL¶<X\u0010O\u001ag(Úa³#fn³\"­(\u0002v­6®pt¦0såj¦^\u001bùã½Î R WÚ.Ûu\rÎ\u0017\u0004éðÜN(\u001c¹ë!°ÓG\"\u001c\u000fÓ(\u001fî~uv¿Ãa¶Ù\u0016Ý¢g\u001a:Õ5å\u001cñ!C(v©\u00121hDIA¡Ðc\bª¡ð²v\"BÂ#+L!-¶lÂáª1Ùþ¡ÙeO2®°(ñÆ°¤Z\u0014þøgo·&~ê)ç\u0015ÌR\u0005»cf\u0019NWDÛº;!\u0018Uº SÅæ9.\u001bLf\b ¯N2ìÛÑzX*k\f£\u0004Õ²\u001aFYé^F%I.°é9:Ã\"`²ãàZ2ãt~f:8ÈÃ¨Ø×8¶¶S­ì<520[_QF¬¦Ô\u001acª)"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "24"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452472396&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452487394&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥][ã¶þ+S]~HªÂ\u0019\u0000xé<ml'Ù$Ne\u0013¯]µ\u001e\n×n¦%Q¦¨n÷¸üß÷\u0003)µ(\u0001\"0y\u0016\tÀÁÁ¹~\u0007üá»Ã¡Õw÷w$\u0017DP¡3kó\"«*Veµ <Ën©(cyy÷»;ól¶\u0003ñÅ£\u0011ÃFìpm×w;Ó\u000f­ÙßÝÿr÷Eÿî¾o·º{Ùã.~¯M¿o»-®çÄ]=î\u001e¿¿iUßí;;¼ûZ?\u0018wOçVÕðº3¸ÿÙ?\r{Ë\u0017C»1º­»úõ >üéo³z~}ÕY»7\u0018\\ÆjëêÐ÷\u0018ìêÐ¯ñÈã0ìö÷\u001f>\b\\\u0013ïEûA<àæã´Uç\u0002Ó¦g²*u&¨­p]\u0012]#~ìönÚ§§Ý¥\u0018\u001e·bãÆóõâeuÀüWãc\nÝ§v½\u0016\u001fø{òî7GÒ½ûû·ïròüþ\u001d.ì÷ï~.Ùoßý×n·6ß\u001bù×vøÀiõï~ó×?ûÍß~÷nÝ>w2ê©ûí»/\u001fûnc>ä¾G\u0017èõ_Â¾==\u0002ZïÍ\u0016ä¼P¸;»¼\u0016Û\u0003\u0006¡mö¿ÿ?rº·ÚõÆ¶?MÜý½êÙ®\u001eMûð9Ö%;_|iõð8¾¤ÄÅçÖ¼ìº~xk[Ë§Ö¤¨qyÝJ¼ãÅH÷\u0012ü3\u0017ævP»ÅØÕÈÚZÿ<èO|÷Óæ§OMb\u001atYÕ\rã\u0005«Ù{Zågæï\b\u0019UäY¥K\t«\u00159F1aJ®t»\u001fÚ­:¾Ë=Ô0c2ç6«lÀ\u0011ÊT¥P´â¬RÓøÚ¡\u0015ëö\u00180öÕ4»\u0014eF,çßòð{V¿g¬ø?÷ê¶¶}8ôF¯öfïf<>Õ\u001dÕ\u0006;.¯ûB\rí³YYìO´^ÙµxÀý\u001fîöþÙ¼fè\u001f\fFüqÂ°h©Ã~è6x×HØÆRBjV\u001bé¶7jÈÔ£\u00182ÛõÊdëî¡Ýfæç]V:©\u0019©­¬93\u000bo25¤dRF1n­¨ª¥\u001ak26³1?·ÚtÑí\u0010z×¤,BXr~\u0002;4\u0003%²®²ëî\u0005WÅaèÌ³XgZ¼æ\u0014Û-äØt9Ût\u001aK:¼f\u0010\u0012rmtèM¥®óFÒBÎÆæ5Ê)\u0018YR4\u000b\nÖäº(ërÖ4Ã`úÌ¶ý~pËaúÖl«þãM.¥*«º8?éÝnå\u0016v%Å0¬Íj\u000fº­äëôÿ¦-®)Ñw Î:¸Eç\\°zi~ÜØ¢®±üÜ¨Ý@\u000b)1\u000eCwúc´&CË]¦\u001fwM¨g-Â\n-\u0014¶Ü©g1gÝº\u0013nEKúÜíåa\u0018º­{O`{4Y]|ÆùÛm&»!Û+\foû\u0010zLÒ\\¹nÔ¤5ØÊì\u0001\u0013\u000bn²\u001a\"¨©]Zï°²à¥.X¿.\u0015\u001a1ÛÓXÒ#£.1¦n(,vêlMz#{±uÍ\u0015ø\u001bvõÒ·\u0003s7©®V­´Ã>\u0011l-´-U¹4¡¼l0qNé\u0003}6%ªd\b2uß­×îê6;'íºmö\u001c;¥jjÝÐªª\u0016Þ@XS`ÿÓ|6q\u0019´T\u001aâR,õTäæ4¯í\u0012ï\u000bc*N©µÐ¬U,³×9á$h7¢\rî>s\táQÙòO\u001b\u000bâIa\u000f\u0005\u001fbX,m^Z,)IajJ \u0000\u0017ÝÈRi[XºÐ¨Ôsi\u001b&ÏÜö^g\u0010)Ð+]íú\u0016û\u000bt¼îv'\u0014Ø\r\u0010LXé#\u0011i\u000fí°Îz³ßa3lÇ{\u001a:5µÑÕ\u0012ñ!C(V©\u0013ÑkDIA¡ÐJ»Ä\u0010TAákiÌLø[¶Ô0X²\u0019ËVgû§v½°Â¢Ä\u0019\u0013¥!uTøãÏÁlux×SÎkØ¥\u0012vÇÂ4¬ª2M³´CÐ\u000b«UAæÍq\\6ÚÌ\u0010@NdX·£õ\u0010Þ±T4èF|FV×Ëjìe¥\u0006\u0011$yY3µDgX\u0004ÌrR5K\u001cÜ\b¦­Ê/L\u0007\u000b\u0019s\u0014û\u001aÛÖô²\u0013½£æQ\u0006fë\u001bÊ5\u001a"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "23"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452487394&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452492379&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥][ã¶þ+S]óT3 q!ÙyÚØN²IÊ&^»j=.\u0015®ÝLK¢LQÝn»üß÷\u0003)µ(\u0001\"1\u0015¿x\u0002@ààà\\¿\u0003~ÿËÝáÐ»û;K\"©´Y^ÔuV\u0016FeJWuVLºJTäîwwöÙn{4ÿþÑÊ~#wx¶ëÚíúÆîïî¹{ßâwß5[Ó¾ìñ+þ^=Ûnß´[<Ïý ïUßl¿¿nt×î[×¿ûÊ<Xÿ±Ï¶«þugñûvÿÔ·þ-ïûfcn·þéW½þø§¯¿ÉªéóUëÜÞbr\u0019«\bëC×a²«C·FÇ¾ßíï?~x&?Èæ£|À\u001fËÖYË\"+©ã*É$u%+bÄ0ãÇvï}êí\u001fídÿ¸\u001b?Ï\u001c¬/«\u0003Ö¿\u001aºy*´?7ëµüÈ?w¿9îÝß¿y\u000fä÷ïð@°ß¿ûI°ß¾û¯Ýnm¿³ê¯MÿÓò\u0003\u0015ï~ó×?óõß~÷nÝ<Ùw²ú©ýí»/\u001e»vc?æ~À\u0010\u0018õ_ÒÉ®9u\u0001­Ï¿M6ä¼Qøuòx-·\u000f\u0007L\u0016SµÛìÿ5írúmµë¬k~\u001aøß÷º³v»z´ÍÃ#ÖX\tv~øÒþqxÀÃçÆ¾ìÚ®k[Ç§Ö¤¨ðxÝ(¼ãÅ*ÿ\u0012ü1e.¬í¸ f¹õ«µ«õ.âÇ¼¬óôf}b\u001a\fYV5ã\u0005«ê\u000f´<óÞô@¨Ìê\"ÏJ#X&m®3VäDYÍ¤\u0015\f#fß7[}|ïT3k3ç.+¥Ã)ªÁ\u0010ÚBjZrVêqzMßÈuó³ì1õÕ8»\u0014\"#uóo¸'üU\u001f\u0018+þÏ÷ÐíÖ5\u000fÎÕÞîý^í¡_mpàòøÿÐPê¾y¶+ãÖ+·\u000føýû»ý¡{¶¯Y/»\u0007\u0019?dp)%eú°ïÛ\r^\u00134®vs#ÓtV÷~}æÚNÛlÝ>4ÛÌþ´ËØ \u0015#S\u0015gvæM¶â\b¦´iä\u0018ãÎÉ²\u001b©vi[\u0018;ósclYÓô±\u001e¼\"B\u0014täÜ\u0003\u00074\u0003%²¶{rëö\u0005Oå¡oí³\\gF¾æÛ-ÄØø8Û´\u0006[Ú¿f\u0011jmMìMÂTy­h¡&s\u000b\u001aå\u0014|¬õL£Õ¹)D%&#)Û÷¶Ë\\Óí{¿\u001d¶kìV{±\u001av¯s¥´(«âÜ\u001dË»ÝÊoìJÉ¾_ÛÕ\u001et[©×ñÿV5x¦e×:þ\u001c»X<çUsëãÖ\u0015U}äçFÍ\u00062dØ LËÞ>´ºW\u001fô¤µ\u0019Zî2üi»áÔÄF6ª(4RãÈFvsvØ­[éwä¸¥ÏíÐ^\u001dú¾Ýú÷DGÍ3Ì'¿Ýfªí³½Æô¶\u000f±nBÖä¦Ö\u0013VRÎfr«²\u0007,,zÈ*V±º´nn¿kÂDÁ\u0011s¬_\u0015ÖIF­iléQç\u0018ÓÔV\u0016\u000e'u²'UÜúæ\u001aü\r9»zé\u001eº¹\u001d5W£WÆá\b®Æ\t-æ\u0016\u001a\u000bçN80dS¢\u0005sDÉª»v½ö¿év³óÒ®ÝfÏQ¹#t]e9ó\u0006Âê\u0002çæÌ`6\u0010rn¤\"/\r§yåæx_Z[rJ¬4s#©8Ír5y7\u0018Nv#èé8W\u0010\u001e\u0005lÿx° 4ÎP´\u0013Ãf\u0019GÌÜf)E\n[Q\u0002\u000583íZ\tm\\áèL#a\fçÊÕL\u001bùã½Î R WÚ.Ûu\rÎ\u0017\u0004éðÜN(\u001c¹ë!°ÓG\"\u001c\u000fÓ(\u001f\u001e~uv¿Ãa¶Ù\u0016Ý¢g\u001a:Õ5å\u001cñ!C`\u0007ÛjJÄ \u0011%\u0005B\u0013n!¨Â7ÊÚ\b\t¬0´Ø²\t«Ædû§f½È¸Â¢Ä\u001b\u0013ÂjQøã½Ýø©§W0K\u0015ìe8]\u0011mëzî`\u0014VéL\u0015ç¸l0!¼:É°oGë!~b©¬1\u0012|BV?Êj\u0018e¥{\u0019$¹\u0010Âr¦çè\f9NÊzkÉÓùéà c\u000e£b_ãØÚNµ²óÔ<ÊÀl}C\u0019±Rk©¦<"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "23"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452492379&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452497378&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥]Ýã¶~©._$Uá\fI\u0000\u0004Ù¹ÚØN²IÊ&^»j=.\u0015~»D¢ºÝãò»ï\u0007RjQ\u0002D`*¾ñ4\u0005ÀÁÁùý\u000eøÃ/wC«ïîïòBä\bUÉ3Þ\bÕÆ\u0014eº \u0012ÚTõÝïîÌ³Ù\u000ehþÅ\u0017F\f\u001b±Ã³]ßíL?´fwÿËÝ\u0017\u001dþw÷}»ÕÝË\u001e¿âïÕ³é÷m·Åó\"wdßL¿¿iUßí;;¼ûZ?\u0018÷6Ï­2«áugðûWfÿ4tî-_\fíÆ|ê¶îé×úð§o¾ÍÜÞ¯:k÷\u0006Ëhã¹:ô=&»:ôkty\u001cÝþþÃ\u0007gâ½h?\u0007üøá¸l\u0015(3N,Ë$¯t&åx.s]3~ìönÙ§ÞîÑN\f[±qóùÌÁzñ²:`ý«±£B÷©]¯Å\u0007ö>÷#éÞýýÛwEþ>ÿý;<¨èïßý\\Ñß¾û¯Ýnm¾7ò¯íð\u0011þTï~ó×?ûÍß~÷nÝ>w2ê©ûí»/\u001fûnc>\u0014¼Ç\u0010\u0018õ_Â¾=u\u0001­Ï¿Í6ä¼Qøuöx-¶\u000f\u0007L\u0016S5Ûìÿ5ïrúmµëm\u001e¸ß÷ª7f»z4íÃ#ÖXWôüð¥ÕÃãø\n\u000f[ó²ëúá­-Ï/\u001eZçeÇëVâ\u001d/Fºà9samÇ\u0005µ[ÌmX¬ýÜw[ÕU\u0001\r­úÔ\u0006Còº¡¬¤\r}O8;3ßüDÈÌ¨²È¸®h&L¡2Z\u0016¹4\nSQ\f¥ÛýÐnÕñ]®SCÉlQØ\u000b+3Ù#áPx\tåj_;´bÝ~\u0012\u0003æ¾¦sWæeåMV°oóê>g÷´~Oiù®ê¶¶}8ôF¯öfïV<öê\u000eÃj\u0013WÔ¹û\u000f\r\u001aÚg³²8h½²kñß¸Û\u001fúgó\r¢0ñCÆr&5¹¦:ìn×xm,ÉóVçFºí\u001a2õ(Ìv½2Ùº{h·ùy¡Aj×VÖ7É¼¢RFRf­à|i¤Æ\u001aªL©ÍlÎÏ­6]ft;z°:¯ª²\u00146?÷À\tÍÀf`ì¥ëìº{ÁSq\u0018:ó,Ö\u0016¯E&Åv\u000b96=Î6Æ\u000e¯\u0019\\\u001b\u001dzS¥ë¢¤³¹y\n\u0002FVy%F`ÛBU]ÍFf\u0000g¶í÷Û\u000eÓ·f«\\õ»7ªâuyîåÝnå6v%Å0¬Íj\u000fº­äëôÿM'[<S¢ï@up\u0017Ëª( õÒú±e]c\u001fÙ¹Q»\u0010\u00197(Sb0\u000f\u001d¦îôÇ(#\u001diM»\f~<5¡µ,K+´P8r§-æ\u001dvëN¸\u001d9nés7¶aè¶î=ãÑPju-\u0019ço·ìl¯0½íC¨$¨\nÝ¨\u0019+Ik2±Ù\u0003\u0016\u0016<d5­iÃ]Úï&§UÉ*]-±~]\u001a+(1bv¦±¥GF]bLÝ\u0018QZÔÙôFöbë+ð7\u0004íê¥o\u0007(çnR]­Zi'}\"ØZh[©jiAEÕ`á\u0019\u0007úl«Ú\\ä³U÷Ýzí~SÝfç¤]·Ír§RM­\u001bÂ9_xCN\u0012ç\u0014³ûÌ ¥Ò\u0010bi¤²à¢¶K¼/áäFè¥$Ï­¢½ÎY\f'A»\u0011mðôAK\b2mÿt° \u0014ÎP°\u0013Åfië¥Í2/MMr(Ài7²RÚ,4ª´fLÚÊs#w¼×\u0019D\nôJ×g»¾Åù \u001d»Ó\t#v\u0003\u0004\u0013vúHãaäÃc;¬³Þìw8Ì&Û¢[ðLC'Ð¦6/\u0011\u001f2\u0004°©çDô\u001a¼$Ph]b\b¢ ðµtvôÂ­t)\f¶lÆá²ÕÙþ©Ýe/\"¬°HîÊäuTøãÙêð©'Õ°K%ìeXUçÊ4ÍÒ\tÁ(´Ve>Wlã²Ñf\u0000rê$Ã¾\u001d­ð%¢Á0²b3²ºQVã(+5 $)ªª2ª%:Ã\" å¼YâàFPmUqa:XÈÃ¤Ø×8¶¦è\u001d520[ßPF´!Äh"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "31"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452497378&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452502386&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥]msã¶µþ+;ýÐÎ»$\u0001\u0010¤ûé6IÛÛ6Þ67¹Ù\u0006¯6kIT(Ê7ÿ~\u001fM\t\u0010\u0001Oó%k\n\u0000óú\u001cðÇ_o\u000eVßÜÞäÈ\u0005\u0011&#¬2ÎkÕ¦YY©Ê\nV¼07_ÜG³\u001dÐüýû{#ØáÙ®ïv¦\u001fZ³¿¹ýõæ}ÿÝüÐnu÷´Ç¯ø{õhú}Ûmñ¼ÈÝ#Ùã7ÓãïoZÕwûÎ\u000eï¾Öwî\u0005ïµylY\rÏ;ß¿2û¡soy?´\u001bó¹Ûº§_\u000fêã¿ù.«çÏWµ{Ée´Îñ\\\u001dú\u001e]\u001dú5ºÜ\u000fÃnûñ£À3ñA´\u001fÅ\u001d~üx\\¶ÊB\u0019'eW:\u0013Är<¹®Æ\u0019ßw{·ìSo÷h'û­Ø¸ù¼q°^<­\u000eXÿjìæ¨Ð}n×kñ}ÈßýîHºwß~÷®È?äx\u0007\u0015ýÃ»_*úûwÿµÛ­Í\u000fFþ­\u001d>2Â?êÝïþöï¾ùû\u0017ïÖíy÷g£\u001eºß¿ûò¾ï6æcÁÈ\u0007\fQÿ%¬èÛS\u0017Ðúõ·Ù¼n\u0014~=^íÝ\u0001ÅTÍ6ûßÍ»~[ízcÛ_Æ&î÷½êÙ®îM{w5Ö\u0015}}øÔêá~|I­yÚuýðÒçgO­ó²Æãu+ñ'#ÝKðÇ¹°¶ãÚ-æ6¬FÖ>üÜî)×ägµQ?\u0006Còº¡¬¤MóÔå+óÍOÌ*ëfÂ\u0014*£eK£¨0\u0015ÅPºÝ\u000fíV\u001dßå:5ÔÌ\u0016Í¸°2\r8B\u0019^\tE8£\\MókV¬ÛÏbÀÜWÓtnÊ¼¬²¼É\nö]^ÝæìÖ\u001f(-ÿÏõPÝÖ¶wÞèÕÞìÝÇ^ÝaXmpâ:wÿ¡¡PCûhV\u0016ç\u0013­Wv-îðû7ûCÿh³Aôw\u00063¾ËXÎ°&Ç)WýÐmð\u001a¯°%y^Óêµn{£LÝ!³]¯L¶îîÚmf~Ùeehæµ5£fáM¦f2¯¨Tb¡¥Y+8_\u001a©±*Sj3óc«M\u0019Ý\u000e¡\u001e¬Î«ª,Í_{àf`3°DöÔõ\u000fvÝ=á©8\fy\u0014ëLç\"b»\u001c\u001egNcKç\fBB®\u000e½©ÒuÑHRBÈ^_@AÀÈ*¯D³Ð\bl[è²ª«ÙHÒ\fé3ÛöûÁmé[³UN®úÝBJUñº|íåÝnå6v%Å0¬Íj\u000fº­äóôÿM'[<S¢ï@up\u0017Ëª( õÒú±e]c\u001fÙk£v\u0003!2nP¦Ä`î:LÝéQF:Ò\f-w\u0019þ4ýxjB#kYVh¡päN#[Ì9;ìÖp;rÜÒÇnl/\u000fÃÐmÝ{\u0002Ç£¡ÔêZ\u00143Îßn3Ù\rÙ^azÛ»P7I\nQ\u0015ºQ3VÖdb+³;,,xÈjZÓ\u001b»´ßMN«UºZbýº4VPbÄìLcKºÄº1¢´8©³=éìÅÖ5Wào\bÚÕSß\u000ePÎÝ¤ºZµÒN\u000eûD°µÐ\u0016¦ÃÒªÁÂ\u0019!3\u000eôÙ4W\u0015µ¹Èg«î»õÚý¦ºÍÎI»n=\u0006åN¥Z7s¾ð6%Î?)f\u000b÷AK¥!.ÅÒHeÁ5#Emx_\u0018Ã\u0019ÉÐK#I[E\u000b9{³\u0018Nv#Úàé8\u0010\u001ee>Ûþé`A<)¡`'ÍÒ6×K%e^äP\u000bÓí¨´--YhTiÍ´\r¯Üñ^g\u0010)Ð+]íú\u0016ç\u000bt|îN'\u0014Ø\r\u0010LØé#\u0011i\u000f÷í°Îz³ßá0lnÁ3\r@Úh¾D|È\u0010\u0018Â¦\u0013ÑkDò@¡Uv!Â×Ò\bñl¥Ka°e3\u000e­Îö\u000fí.{\u0012aErgLT&¯£Â\u001fÿ\u001cÌVO=a¬]*aw,,Ãª:W¦iN\bF¡µ*ó¹bs\u001c63\u0004S'\u0019öíh=O,\u0011\r\u0015Õ²\u001aGY©A\u0004%IQUaT-Ñ\u0019\u0016\u0001µ,çÍ\u0012\u00077j«3ÓÁBÆ\u001c&Å¾Æ±5½ìDï¨yÙú2¢\r"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "24"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452502386&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60/in/append",
+      "postData": "{\"kind\":\"message\",\"payload\":{\"message\":{\"parts\":[{\"type\":\"text\",\"text\":\"用一句话说明什么是二分查找。\"}],\"id\":\"01a0a3ae-4aa9-7e44-8002-52aecdcf3d6d\",\"role\":\"user\"},\"chatId\":\"01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60\",\"trigger\":\"submit-message\",\"messageId\":\"01a0a3ae-4aa9-7e44-8002-52aecdcf3d6d\",\"metadata\":{\"originHost\":\"arena.ai\",\"timezone\":\"Etc/GMT-8\",\"arenaVisitId\":\"01a0a3aa-b47a-758d-a284-090fb343f01e\",\"submissionSource\":\"chat_input\",\"recaptchaV3Token\":\"0cAFcWeA7XsOiH3Cfm2IPO3R4BKfrn0hehZdlzYZMTRfF5otEKBmfPrgVuXBgEtHncPIg9Ir9ku4FV15zJYIjUSF0LrsVQZcsMbb3Do3KEcTdDgPZPtZXVBg6THf2Sqong5-PlyRABJsJfqN6bJR-EV8xdLCeJtIHNSvWB-2_BGSzI6v4jsl1rTttPi4f_qKQPo3utJQTdzd1qt8aSjMUVl_mobxMKId7fcd6ttkcBmrIk9v8l2LvqyQZ3UKJMtrdNwyrb343TqmMse7GcXtKzflHevNlQAOcqeb7trMDFP6l7Wccx7xQ8GdYor4F69yFJ_okQRwX11iR_AYIfBx5BDxaN9WtzVpRgmmgzuzwf6T6odYO2c6deansWy4v2VSE5XAJogvagMhqbiKgTiEWOg8As2GAKXaNmP3EjQvDsLN4tnKqUAKb6Tjzk51I16T49yTvO5aC5hOKlW9NNBkpUMVyKN4PBKSk1zLpnL6Vas_bxHGzy8l-H7yypEJ_0Z2cGGmPY56YpfWJsAJ3FzgUYdkA_yzQeooRY0k6P0JochesWj7VtpaDzqFt3XtBj6yffF4VFMwMZIcNTWeTKvu474mE3TMo29Fot_fYn1o-Cg3L1dBdkCisKNY3RrFWGe12v1iNDdc2xoD-FbRfx82a0aSmQGqfqK5ogbqL_RUd0140e-FqEVGwT3-EoKVCX6d9ybIfaVdcTtRmPN-W0l-MB-qufMnXw-DOcwsMkrksnJ4rIlKSpoV9GqknLL5wHqz5gzb_DTzmz6CPkmLT0q7AJRxWTDfEyzWQuNfcAuVBxMyAF028eJ8TXswLaky7VPmdMWSeN617sxHJC4sMBOrY1k06YuEnPfO3BL1MvQihdt3DFRPsLfVHG_9xZTKfn6s9Z8JNC4LjYsX9PYmYutGxWYf6lkdmQw9Eq3pBFziMbvQDMEWmRivLrhAEOWnTK9iol9heIIxDhTAqiGOQJDIVoMaBAyC1GTBje2Dc2-7LO_SVb02f-lmJ24oZgO9O0lMxfkSiR86Vtdl5jUdTU96w-oM8RkITdL5IyRN"
+    },
+    {
+      "method": "GET",
+      "url": "https://arena.ai/rive/thinking-dark.riv",
+      "postData": ""
+    },
+    {
+      "method": "GET",
+      "url": "https://arena.ai/rive/thinking-dark.riv",
+      "postData": ""
+    },
+    {
+      "method": "GET",
+      "url": "https://arena.ai/rive/thinking-dark.riv",
+      "postData": ""
+    },
+    {
+      "method": "GET",
+      "url": "https://arena.ai/rive/thinking-dark.riv",
+      "postData": ""
+    },
+    {
+      "method": "GET",
+      "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60/out",
+      "postData": ""
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452506727&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003í]Ýä¶~AÃ\u0017\t`ÍH\"%J«í$ÄF6ñÚÀz\u0002»å®ÊªÛ=ß}?JUÕê\"KbcE.ä\u001bO«H\"\u000fÏïwx~øõæp¨ÔÍíMð\u0013®#Ê9X§Q©8Rf\bI¨ºÈn>¿ÑºîÑ\\Þó~Ó\u001dÄ®êñtß6{Ýöînn½ù¬Áÿn¾¯jÕ<uø\u0015o\u001euÛUMçIl\u001f\u0016¿é\u0016]É¶é\u001aÓ¿ûJÝiûÒÔþy¯ñûº{è½ý¡¯vúSSÛ§_õòÃ¿þ6*¦Ï71Æô\"ZÄx.\u000fmén\u000eí\u0016]îû~ßÝ~øÀñ¿çÕ\u0007~\u001f?\u001c?\\FIÂÓ\u0011Eå*âÄ0<\u0017±Ê\u0019ß7ýðSoûhÏûûïì|Þ8XË6\u0007|ÿfèfW¡ùTm·üCö>~÷»ãÒ½ûæÛwIü>þÃ;<Èé\u001fÞýÓß¿ûý~«¿×âoUÿ!#ì=Éßýîoùöë¿þn[=èwÖò¡ùý»/îÛf§?$\u0019y!0ê¿¸ámuêµ~ùm²!/\u001b_'·¼¾;`²ª®£ÿþ×´Ëé·Í¾Õ¦úehbïd«u½¹×ÕÝ=¾±ÈéËÃ§Jõ÷ÃKr<|¬ôÓ¾iûs[\u0016¿z|j\u001d§\u0005\u001eo+w<ia_?¦Äo;~PUcnýf î®Þ?uí!®Ë\u001dÑHz\"\u001a\fÉfi\u0016÷,±ï<\u0012ßôLHË4ÊiÄu\"#&±ÐrS\f¥ª®¯jy|íTR­#$&bÜH \b©YÎ%a\u0019er_ÕW|[}â=æ¾\u0019§sÆi\u001eÅedßÆùmÝÒâ=¥éÿØ\u001e²©MuwhµÚtº³_<ôj\u000eýf\u0013\u0014±ý\u000f\r¹ì«G½1÷h½1[~ß¸é\u000eí£~zÞÞiÌø.Êâs£cE#yèúf×8¸)\rãæ/TÕjÙG\u000bD¦i¥¶Í]UGú}dW×\u0019¤ qaDQ=ó&°\u0018\u0011çTH>ÓÈP\u0019Ã\u0019\u001b©4J*=óc¥t\u0013i5p,w)8ÏÓø¥\u0007Nh\u00042\u0003IDOMû`¶Í\u0013òCßèG¾\u0014N\"Áë\u001a|l|\u001cí\u001a-í#0\t±ÕÊ÷¦\\\u0015I)H*&ss\u001a%\u0004,ã3RZ&*Í|2Ð}¯ÛÈTm×ÛíÐm¥kiùªÛ½L9+Òîø\\¾ßo\u0006ö.xßoõ¦ÃºmÄóøÿ]#*<¼m°:[ï.¦yd\u0016sßi\u0016\u0005ö1{iTíÀD\r$ïõ]©[ù1ðH»´:BË}?u;\u001aßÈJ¤©áK\u001c¹ÓÈ\u0006s\u000eûmÃí\u001c·ô±\u0019ÚCß7µ}çx\u001aUðdBùu\u001d¦:éÕw¾n$<OT)'¤$x-¢;|÷\u0015´ %Ófn¿Ëæi«|ôT\u001bNì>7Â\u001e\tu0U©yjpR'{ÒjÑòÚ6 o0ÚÍS[õ\u0010ÎÍ(º*¹Q\u000f»`\n®L.ó¹\u000fJò\u0012\u001f\u00112¡@LcS\u0013óxòÕm³ÝÚßd³Û[n×ÔÑ£ïä²,TI\u0018c3oiâüdòá.1(!\u0015Ø%\u001b)MÊHR9ÚçZ³Ä«¹\u0004¤¼Îj\f'F»ã÷ô\u000b04lÿx°À$Î·\u0013Åf)\u0013«¹Í\u0012\"NuAb\bÀi\"Ê¤Ì4ÊÊ2aJ*^\u001aÙã½ÀR W6Ú·\u0015Î\u0017\u0018éðÜN\b\u001c¾ïÁ°ÓÇE8\u001e¦?ÜWý6ju·ÇaÖQnÞ3\r@ËB+6·øà!Pu1]D§\u0011S\u00029 \u0012\u0002_\t­',Ä=²¹J¹ÆM(\\T*ê\u001eª}ôÄý\u0002ÄVÈu\\,2ü³×µòze\u0005ôR\u0001½cæ3,b©Ërî`\u0014ZÈ4\n6KqÑ 3\u0001Yq\u0012aßÚÿÄ\u0012^b\u0018geµ£lQ6²ç^Näy®3*çÖ\u0019\u001a\u00015YÌÊ9\n.9UF&¯T\u0007\u0003\u001es\u0018\u0005û\u0016ÇV·¢á­]Í#"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "24"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452506727&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452512370&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥][ã¶þ+S]~HªÌ\u0019¸§í$\u001b{\\ÙdÖ®ZKk7Ó(ST·{\\þïûº)\u0001\"1\u0015¿x\u0002@ààà\\¿\u0003þôÛÍáÐÛ¼¹$Òf<WU&\nÃ³ÚQÑ²¨jSjY*}óå}´Û\u001eÍ¿øâÞÊ~#wx¶ëÚíúÆîon»ù¢Åÿn~l¶¦}ÚãWü½z´Ý¾i·x^äþêðíð÷ûFwí¾uýoÌõ¿\u0019ûØh»êw\u0016¿m÷\u000f}ëßòEßlì§vë~Óëw}ÿ!«¦ÏW­s{Ée´Êñ\\\u001fº\u000e]\u001dº5ºÜ÷ýnûîÄ3ùV6ïä\u001d~|w\\¶ÎB eJpIâ\u0004«ÜðaÆ÷íÞ/ûÔÛ?ÚÉþ~+7~>9X'V\u0007¬5tóTh?5ëµ|ÇÞæoþp$Ýï?¼)ò·ùÞà\u0001§zó+§|ó_»ÝÚþhÕ·Mÿ\u0011ñð7øöo\u001fÞ÷åuó`ßüÕêöo¾ºïÚ}W0ò\u0016C`ÔI'»æÔ\u0005´~ým²!¯\u001b_'×r{wÀd1U»Íþ÷_Ó.§ßV»Îºæ×¡ÿ}¯;k·«{ÛÜÝc\u0015§¯\u000f\u001aÓß\u000f/áxøØØ§]Ûõ/mE~öøÔ:/+<^7\nïx²Ê¿\u0004L\u000bk;.¨Ùbnýj`íö@\u0005¿oé·=y.ùi0¤¨jÊJ×èé\u0007?2ßôD¨Ìê²Èá4¶ÐþDäÊj*-§\u0018Ê4û¾Ùêã»|§Z¹¢pNeª\u0006Gh+¸ÔD0*ü1Âü¾ëæì1÷Õ82/y×YÁ>äü6g·´zKiù¾n·®¹;tÖ¬övïW<ôj\u000fýj\u0013WT¹ÿ\u000f\r¥îG»r8h½rkyßºÙ\u001fºGûõ²»³ñ]Ær&¥³¹¡>ìûv×\u0004¤«\u001dÉó\n¢à¥i:«ûLßË>sm§m¶nïmfÝeelæS\u0015£væM¶b*çTi9ÓÈQÊBÌT;Kµ-Ìù±1¶Í¬iúX\u000fVå¥tùk\u000fÐ\fl\u0006ÈÚîÁ­Û'<¾µr\u0019ù\\dJn·cããlÓ\u001aliÿAH¨µ5±7qS\u0015µ\"¥Ì-hT\u00100²Î¹¬g\u001a´.LÉ+>\u0019IÙ¾·]ænßûí°]c·ÚËÕ°{](¥¹¨Ê×îX®ÜíV~cWJöýÚ®ö ÛJ=ÿß´ªÁ3-»\u0016ÔYGw±äEÁ$­æÖÇ¬+«\nûÈ^\u001b5\u001b\ba2-{{×bê^\f2ÒÖfh¹Ëð§íS\u0013\u001bÙ¨²tÒH#w\u001aÙaÎÙa·n¥ßã>¶C{uèûvëß\u00139\u001e5¥ÎT²pþv©¶Ïö\u001aÓÛÞÅº)RH^ZOXI9É­Êî°°è!«hEkaÝÜ~×9å%ãÏ±~UZ')±rr¦±¥GFcLS[Y:ÔÉtVurëkð7\u0004íê©kz(çvT]^\u0019/C\"¸J\u001aÇ5[PÁk,\u00112áÀMsÍ©Ëe>Yu×®×þ7Ýnv^ÚµÛì1*w¸®+S\u0013!ÄÌ\u001brZ8ÿ¤,<d\u0006£´¸s#0\u0014ã}i­`$·ÒÌ¤Dî4-ÔäuÞb8\tÚl¢§\u000fâ\\AxùdûÇ\u0005ñ¤q¢(6Ë¸ÜÌmRyi+C\u0001ÎL»V\\\u001bW:2Ó\u001bÃr5U¯üñ^g\u0010)Ð+míº\u0006ç\u000btxîO'\u0014Üõ\u0010LØé#\u0011i\u000f÷M¿Î:»ßá0ÛlnÑ3\r@ëÊ\u001a1G|È\u0010\u0018Â¶\u00121hDò@¡q7Ç\u0010DCá\u001beíDGRZlÙÃUc²ýC³Ëd\\aÜ\u001b\u0013ÜæÕ¢ðÇ?{»5ñSO\u0018«`*Ø\u001d3ËpºÊµ­ë¹\u0013Qh¥Ë|ªØ<ÇeÍ\f\u0001äÕI};Z\u000fñ\u0013Kda\u0014g\u0013²úQVÃ(+ÝË¨$)8çQ=GgX\u0004Ô±\\Ôs\u001c\\Kj.ÎL\u0007\u0007\u0019s\u0018\u0015û\u001aÇÖvª§æQ\u0006fë+ÊÖXcL5å"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "22"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452512370&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452517370&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥][ã¶þ+S]~HªÂ\u0019¸ì<ml'Ù$Ne\u0013¯]µ\u001e\n×n¦%Q¦¨n÷¸üß÷\u0003)µ(\u0001\"0\u0015¿x\u0002@ààà\\¿\u0003þðËÝáÐê»û»¼\u0010¹ Âd\u0015%6«Ê²Î¤0<«%e\u0015/¹(¹½ûÝy6Û\u0001Í¿øâÑa#vx¶ë»éÖìïî¹û¢Ãÿî¾o·º{ÙãWü½z6ý¾í¶x^äîìñéñ÷7­ê»}gw_ë\u0007ã~Óæ¹Uf5¼î\f~ÿÊìÎ½å¡ÝOÝÖ=ýzP\u001fþôÍ·Y=¾ê¬Ý\u001bL.£uçêÐ÷ìêÐ¯Ñåq\u0018vûû\u000f\u001f\u0004÷¢ý \u001eðãã²UV\u0014¢Ì*bY&+®3Alç2×|ñc·wË>õvvbxÜÏg\u000eÖÕ\u0001ë_Ý\u001c\u0015ºOíz->°÷ù»ß\u001cI÷îïß¾+ò÷ùïßá\u0001§¿÷3§¿}÷_»ÝÚ|oä_Ûá\u0003#Õ{Âßýæ¯þö¿ýîÝº}2ïþdÔS÷Ûw_>öÝÆ|(\u0018y!0ê¿\u0015}{ê\u0002ZmÈy£ðëìñZl\u001f\u000e,¦j¶ÙÿþkÞåôÛj×\u001bÛþ<6q¿ïUoÌvõhÚG¬±æôüð¥ÕÃãø\u0012Ï­yÙuýðÖ¶Ê/\u001eZçeÇëVâ\u001d/Fºà9samÇ\u0005µ[ÌmX¬ýé§\u0003íw/}÷úX~úyw81\r¬ê²\u0015\u0014=«3óÍOÌ*¬ÒfÂ\u0014*£eK£(N\u0007ÅPºÝ\u000fíV\u001dßå:5ÔÌ\u0016\u0005°2\r8B\u000bE*F+5Í¯\u001dZ±n?\u0001s_MÓ¹+ógy\u0015ìÛßçìÖï)-ÿÏõPÝÖ¶\u000fÞèÕÞìÝÇ^ÝaXmpâ:wÿ¡¡PCûlV\u0016ç\u0013­Wv-\u001eðû\u000fwûCÿl^³Aô\u000f\u00063~ÈXÎ°&×4SýÐmð\u001a¯°%y^S~n¤ÛÞ¨!SbÈl×+­»vwY\u0019\u001a¤¦ymeÍ¨Yx©Ì9J,4²2kEU-ÔXC)5Ä×[£çV.3º\u001dB=Xs^Âæç\u001e8¡\u0019Ø\f,½tý]w/x*\u000eCgÅ:ÓâµÜn!Ç¦ÇÙ¦ÓØÒá5k£Coâº.\u001aIJ9×¨ `dsÑ,4*iSè×|64Ã`úÌ¶ý~pÛaúÖl«~÷¦Rñª.ÏÝ±\\±Û­ÜÆ®¤\u0018µYíA·|þ¿édgJô\u001d¨³\u000eîbÉ\tZ/­\u0019[Ö5ö\u001bµ\u001b\bq2%\u0006óÐaêN2ÒÖdh¹Ëð§éÇS\u0013\u001aYË²´B\u000b#w\u001aÙbÎÙa·îÛã>wc{y\u0018nëÞ\u00138\u001e\r¥V×¢qþvÉnÈö\nÓÛ>ºIR\b^èFÍXIZ­Ì\u001e°°à!«iMÊØ¥ýnrÊKÆ5_býº4VPbÄìLcKºÄº1¢´8©³=éìÅÖ5Wào\bÚÕKß\u000ePÎÝ¤ºZµÒN\u000eûD°µÐ+¾´ 7X8#dÆ>æS|¶ê¾[¯ÝoªÛì´ë¶ÙsPîpÕÔº!UU-¼!§MóOÙÂ}fÐRiK±4RYT¢¶K¼/©\u0018ÉÐK#É*·\u0016rö:g1\u0004íF´ÁÓ\u0007q.!<Ê|¶ýÓÁxR8CÁN\u0014¥m®6KÊ¼45É¡\u0000\u0017¦ÝH®´--YhÄµfLÚÊs#w¼×\u0019D\nôJ×g»¾Åù \u001d»Ó\t#v\u0003\u0004\u0013vúHãaäÃc;¬³Þìw8Ì&Û¢[ðLC'Ð¦6ºZ\">d\b\faSÏè5\"yI Ð¸]b\b¢ ðµ4f&Bü#Ëu)\f¶lÆá²ÕÙþ©Ýe/\"¬°Hî\tnò:*üñÏÁluøÔ\u0013ÆjØ¥\u0012vÇÂ2¬ªsefé`\u0014Z«2+6ÇqÙh3C\u00009uaßÖCøÄ\u0012Ñ`\u0018ÉÙ¬nÕ8ÊJ\r\"(I\nÎ¹aT-Ñ\u0019\u0016\u0001µ,¯%\u000en\u0004ÕV\u0015\u0017¦9L}ckzÙÞQó(\u0003³õ\reD\u001bB"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "23"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452517370&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "GET",
+      "url": "https://arena.ai/rive/thinking-dark.riv",
+      "postData": ""
+    },
+    {
+      "method": "GET",
+      "url": "https://arena.ai/rive/thinking-dark.riv",
+      "postData": ""
+    },
+    {
+      "method": "GET",
+      "url": "https://arena.ai/api/chat/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60/workspace/latest?includeManifest=true",
+      "postData": ""
+    },
+    {
+      "method": "GET",
+      "url": "https://arena.ai/api/chat/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60/preview",
+      "postData": ""
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452530290&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003][ã¶þ+S]yHªÂ\u0019¸§í$Ä©lâµ«ÖãRáÚÍ´$Ê$Õí¶Ëÿ}?R7%@$f^zD ppp®ß\u0001¿ÿåîxlÌÝÇ»¼¹$Òf+\tªË¬\u0012´Ê­¹ÐÎÊÚ\u0016w¿¿³Ov? ¹~Ã¦?ª]ãÿhmû\u001ew\u000f]{°ÝÐØþîã/w¿iñçî»foÚg\u0017¿7O¶ëvëEî/©\u000e÷lß_7ºkûÖ\rï¾2÷Öß3ö©Ñv3¼\u001c,îiûÇ¡=ø\u001bC³³?·{õ«Aøó×ßdÕüú¦u®·\u0018fF«\u001c×õ±ë0ìÍ±Ûâa8ô\u001f?|¸&ßËæ¼ÇÍ\u000f'\u0002è¬(d\tâX¦\u00047$NàºÊ\r\u001fGüÐö\u0000ç§ý¥\u001c\u001eörçÇóuòysÄü7ãc\níÏÍv+?°÷ù»ßH÷î\u001fß¼+ò÷ù\u001fÞá\u0002§x÷\u0013§¿{÷_ÃÖ~gÕßá\u0003#â=áï~û·¿|óõßÿnÛ<Úw¶ú±ýÝ»/\u001eºvg?\u0014¼G\u0017èõßÒÉ®9?\u0002Z¿Ý-ÈÛBáîìòVîï\u0018,j÷Ùÿþ{þÈùÞæÐY×ü46ñ÷{ÝY»ß<Øæþ\u0001s¬8}»øÜáa|\tÇÅ§Æ>\u001fÚnxm+òËçÖyYáò¶QxÇ³Uþ%ø1g.Ìí4¡f±\rÉM5\bÞäÝé}ÇÍiÐ¥¨jÊJV÷eå'|b¾ùÞPÕe\tÃi&m¡3Z\u0016¹²JË)º2M?4{}z¨¦Öf®(\\&¤SªÁ\u0011Ú\n.5\u0011\n=¯\u0019\u001a¹m~\u0003Æ¾sWæ%Ïò:+Ø79ÿ³´zOiùþ\tÝî]sì¬ÙôØwç§Úã°ÙaÇ\u0015Uîÿ¡¡ÔCód7Ø¼\u0003ZoÜVÞãþ÷wý±{²/Ù »{\u0011ßg,gR:\u001béc?´;¼&h$]íHW¿52Mgõyi¹¶Ó6Û¶÷Í>³?\u001d²2ÖIEóÊ©Q»ð&[1sª´\\hä(eÎI!zª¥ÚÆÎÆüÔ\u0018ÛfÖ4Cì\tVå¥tùÛ\u0013Ø¡\u0019Ø\f,=·Ý£Û¶Ï¸*Ckä63ò¥ÈÜï!Ç¦ËÙ®5XÒá%P[ë\u0019-x\u00137UQ+RªÙØF\u0005\u0001#ëËz¡QIëÂ¼â³\u001d\u0006Ûe®éúÁ/í\u001a»×^®×Rª|{\u001cÓÃf\u0014óJ\u000eÃÖnzÐm£^¦¿»V5¸¦e×:Ûè*¼(¤ÕÒüueUa\u001dÙ[£f\u0007!2.P¦å`ï[\fÝëQFzÒÚ\f-\u000f\u0019~ÚnÜ5±*K'ÔØrç\u001dÆ\u001d\u000fÛVú\u00159-éS;¶WÇah÷þ=íQSêL%\u0019çï÷j¬×\u0018Þþ>ö\"ä©õÝ«ì\u001e\u0013n²V´\u0016Ö-­wS^2nø\u0012ëW¥u\u0012+g{\u001aKzbÔ%Æ4µ¥ÃN­IgU'÷¾¹\u0006CÐn»frn'ÕÕèñr8$«¤q\\ó¥\t\u0015¼ÆÄ\u0019!3\u000e\fÙ4×º\\æ³YwívëïévwðÒ®ÝgOQ¹Ãu]\b!\u0016ÞÓºÄþ'Ålâ!3\u0018¥\rÄ¥\\ê©,a¤¨Ü\u0012ïKk\u0005#¹f©'%r§i¡f¯ó\u0016ÃYÐîd\u0013Ý}\u0010ç\nÂ£ÌgË?m,'=\u0014}b±ËÍÒb)¶\"9\u0014àÂ°kÅµq¥#\u000b¸1)WSõÖÈoïm\u0006\u0002½ÒvÙ¡k°¿ HÇë~wBáÈÃ\u0000Á>\u0011á´&ùðÐ\fÛ¬³ý\u0001Ùf{<\u0016ÝÓÐ\t´®¬\u0011KÄ\fIl«9\u0011F$/\t\u0014\u001awK\fA4\u0014¾QÖÎDH¸e¹)¥ÅÍ8\\5&ë\u001fCö,ã\näÞà6¯V?þ;Ø½ïzÂX\u0005»TÁîXÓU®m]/í\u0010ôB+]æsÅæ9.\u001bmf\b ¯N2¬ÛÉzïX\"kt£8Õ÷²\u0019{ÙèAF%IÁ9·ê%:Ã\" å¢^âàZRãtqa:8Èã¤Ø·Ø¶¶S­ì<5O20ÛÞPF´&Ä\u001acª9"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "23"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452530290&ver=1.360.0&compression=gzip-js"
+    },
+    {
+      "method": "POST",
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452537380&ver=1.360.0&compression=gzip-js",
+      "postData": "\u001f\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003¥]Ýã¶~©._$Uá\fI\u0000\u0004Ù¹ÚØN²IìÊ&^»j=.\u0015~»éD¢ºÝvùÝ÷\u0003)µ(\u0001\"0¹\u0016\tÀÁÁùý\u000eøý¯wC«ïîïòBä\b©²¢\u0019¯¬Í$+ËL\b%E+ÃHy÷;ól¶\u0003öÙ£\u0011ÃFìpm×w;Ó\u000f­ÙßÝÿz÷Yÿî¾k·º{Ùã.~¯M¿o»-®\u0017¹»${Ü3=~Õª¾Ûwvx÷¥~0î6Ï­2«áugpÿ\u000b³\u001a:÷Ïvc~é¶îêúð¯¾ÉêùõUgíÞ`p\u0019­s\\W¾Ç`W~G\u001ea·¿ÿðAàx/Ú\u000fâ\u00017?\u001c§­²¢\u0010eÆeäÎ\u0004±\u001c×e®«qÄÝÞMûô´»´\u0013ÃãVlÜx>±³^¼¬\u000eÿj|ÌQ¡û¥]¯Å\u0007ö>÷»#éÞ}ýÍ»\"ÿñ\u001d.Tôï~®èïßý×n·6ß\u0019ù÷vøÀ\bOªw¿ûû_¿ùê\u001fx·nÌ»¿\u0018õÔýþÝç}·1\u001f\nFÞ£\u000bôúoaEß\u001e\u0001­Ï÷f\u000br^(Ü]^íÃ\u0001ÅPÍ6ûßÏ\u001f9Ý[ízcÛÇ&îþ^õÆlW¦}xÄ\u001cë/¾´zx\u001c_Ráâsk^v]?¼µåùÅåSë¼¬qyÝJ¼ãÅH÷\u0012ü3\u0017ævP»ÅØÕÈÚº~.\u000fÛ½¥¯;ùãfûtb\u001atÉë²\u0011úðòÌ|ó\u001d!3£Ê\"ã\u001aÛBBe´,ri\u0014\u0015¦¢èJ·û¡Ýªã»ÜC\r5&³Ea3.¬Ìd\u0003PWB\u0011Î(WÓøÚ¡\u0015ëö\u00171`ì«i8we^VYÞd\u0005û&¯îsvOë÷ÿçPÝÖ¶\u000fÞèÕÞìÝÇ§ºÃ°Ú`Ç\u0015uîþ¡¡PCûlV\u0016û\u0013­Wv-\u001epÿû»ý¡6¯Ù ú\u0007\u0011?d,gBXk©Ã~è6x×HØÆ<¯iun¤ÛÞ¨!SbÈl×+­»vw\u0013\u0012^'5Ík+kF!^n¾ÉÔLæ\u0015J,4²2k\u0005çK=5ÖPeJmfc~nµé2£Û!ô\u0004«óª*Kaóó\u0013Ø¡\u0019Ø\f,½tý]w/¸*\u000eCgÅ:ÓâµÈ¤Øn!Ç¦ËÙ¦ÓXÒá5k£Coªt]4r66¯QAÀÈ*¯D³Ð¨¤M¡Ëª®f=I3\f¦ÏlÛï\u0007·\u001c¦oÍV9¹ê?Þ\u0014Rª×åùqLWìv+·°+)amV{Ðm%_§ÿ7lqM¾\u0003uÖÁU,«¢`ÖKócÆuudçFí\u0006Bd\\ LÁ<t\u0018ºÓ\u001f£t¤5\u0019Zî2ü4ý¸kB=kYVh¡°åN=[9;ìÖp+r\\Òçnl/\u000fÃÐmÝ{\u0002Û£¡ÔêZ\u00143Îßn3Ù\rÙ^axÛÐc\u0014¢*t£f¬$­ÉÄVf\u000fXpÕ´¦\r7vi½V%«tµÄúui¬ ÄÙÆ\u001e\u0019u1ucDi±SgkÒ\u001bÙ­k®Àß\u0010´«¾\u001d »Iuµj¥\u001cö`k¡m¥ª¥\t\u0015U3Bf\u001cè³i®*jsÏfÝwëµ»§ºÍÎI»n=\u0007åN¥Z7s¾ð6%ö?)f\u0013÷AK¥!.ÅROeÁ5#Emx_\u0018Ã\u0019ÉÐK=I[E\u000b9{³\u0018Nv#Úàî8\u0010\u001ee>[þicA<)ì¡àC\u0014¥m®\u0016KÊ¼45É¡\u0000\u0017ÝÈJi[Z²Ð¨Ò1i\u001b*ÏÜö^g\u0010)Ð+]íú\u0016û\u000bt¼îv'\u0014Ø\r\u0010LXé#\u0011i\u000fí°Îz³ßa3lÇ{\u001a:6µÑ|ø!0M='¢×ä%B«ì\u0012C\u0010\u0005¯¥13\u0011âoÙJÂ`Éf\u001c.[íÚ]ö\"Â\näÎ¨L^G?þ\u001cÌVw=a¬]*aw,LÃª\u001a\u001e@Ó,í\u0010ôBkUæsÅæ8.\u001bmf\b §N2¬ÛÑz\bïX\"\u001at#+6#«ëe5ö²R\bJ¢ª*Ã¨Z¢3,\u0002jYÎ%\u000en\u0004ÕV\u0015\u0017¦9L}mkzÙÞQó(\u0003³õ\re"
+    },
+    {
+      "responseHeaders": {
+        "x-envoy-upstream-service-time": "22"
+      },
+      "url": "https://arena.ai/rpc/i/v0/e/?ip=0&_=1789452537380&ver=1.360.0&compression=gzip-js"
+    }
+  ]
+}

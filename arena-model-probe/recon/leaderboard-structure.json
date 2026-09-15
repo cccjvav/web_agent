@@ -1,0 +1,31 @@
+{
+  "len": 1788763,
+  "samples": {
+    "orgCtx": null,
+    "\"model_name\"": null,
+    "\"publicName\"": null,
+    "\"modelId\"": null,
+    "\"model_id\"": null,
+    "\"arenaId\"": null,
+    "\"displayName\"": null,
+    "uuidCtx": "-0 antialiased\\\",\\\"children\\\":[[\\\"$\\\",\\\"$L23\\\",null,{}],[\\\"$\\\",\\\"$c\\\",null,{\\\"fallback\\\":[\\\"$\\\",\\\"$L24\\\",null,{}],\\\"children\\\":\\\"$L25\\\"}],false]}]]}]\\n\"])</script><script>self.__next_f.push([1,\"12:[\\\"$\\\",\\\"$L26\\\",null,{\\\"initialState\\\":\\\"$undefined\\\",\\\"children\\\":[\\\"$\\\",\\\"$L27\\\",null,{\\\"children\\\":[\\\"$\\\",\\\"$L28\\\",null,{\\\"initialModels\\\":[{\\\"id\\\":\\\"019b24bb-5caf-71c3-b854-37d0c7086f21\\\",\\\"organization\\\":\\\"boss-bandit\\\",\\\"provider\\\":\\\"boss-bandit\\\",\\\"publicName\\\":\\\"Max\\\",\\\"name\\\":\\\"boss-bandit\\\",\\\"displayName\\\":\\\"Max\\\",\\\"capabilities\\\":{\\\"inputCapabilities\\\":{\\\"text\\\":true,\\\"image\\\":{\\\"multipleImages\\\":true}},\\\"outputCapabilities\\\":{\\\"text\\\":true,\\\"web\\\":true,\\\"image\\\":{\\\"aspectRatios\\\":[\\\"1:1",
+    "brandCtx": "ties\\\":{\\\"inputCapabilities\\\":{\\\"text\\\":true,\\\"image\\\":true},\\\"outputCapabilities\\\":{\\\"text\\\":true}},\\\"userSelectable\\\":true,\\\"rankByModality\\\":{\\\"chat\\\":9007199254740991}},{\\\"id\\\":\\\"01a07d42-938f-7267-9398-4529e857491c\\\",\\\"organization\\\":\\\"openai\\\",\\\"provider\\\":\\\"openaiResponses\\\",\\\"publicName\\\":\\\"gpt-6-astra-medium\\\",\\\"name\\\":\\\"gpt-6-astra-medium\\\",\\\"displayName\\\":\\\"gpt-6-astra-medium\\\",\\\"capabilities\\\":{\\\"inputCapabilities\\\":{\\\"text\\\":true,\\\"image\\\":true,\\\"file\\\":true},\\\"outputCapabilities\\\":{\\\"text\\\":true}},\\\"userSelectable\\\":false,\\\"rankByModality\\\":{\\\"chat\\\":9007199254740991}},{\\\"id\\\":\\\"01a03fe7-b31e-7d79"
+  },
+  "keyFreq": {
+    "name": 9,
+    "acceptedAnswer": 7,
+    "text": 7,
+    "dark": 2,
+    "url": 2,
+    "children": 1,
+    "id": 1,
+    "light": 1,
+    "description": 1,
+    "dateModified": 1,
+    "keywords": 1,
+    "creator": 1,
+    "measurementTechnique": 1,
+    "variableMeasured": 1,
+    "mainEntity": 1
+  }
+}

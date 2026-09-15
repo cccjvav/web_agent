@@ -1,0 +1,209 @@
+{
+  "at": "2026-09-15T14:53:42",
+  "question": "什么是二叉搜索树？一句话。",
+  "rawBytes": 61209,
+  "flatBytes": 114684,
+  "modelishKeys": {},
+  "brands": {},
+  "topKeys": {
+    "id": 1140,
+    "data": 590,
+    "type": 590,
+    "delta": 510,
+    "timestamp": 428,
+    "seq_num": 419,
+    "body": 301,
+    "tail": 113,
+    "records": 108,
+    "headers": 11,
+    "messageId": 10,
+    "messageMetadata": 10,
+    "nodeId": 10,
+    "manifestNodeId": 10,
+    "pending": 10,
+    "requiresReview": 10
+  },
+  "events": [
+    "batch",
+    "ping"
+  ],
+  "frames": [
+    "start",
+    "start-step",
+    "reasoning-start",
+    "reasoning-delta",
+    "reasoning-end",
+    "text-start",
+    "text-delta",
+    "text-end",
+    "finish-step",
+    "finish"
+  ],
+  "verdict": {
+    "mode": "INFERRED",
+    "modelId": null,
+    "family": "openai",
+    "gen": null,
+    "label": "openai 家族（具体版本未暴露）",
+    "frontier": null,
+    "confidence": 0.741,
+    "evidence": [
+      {
+        "source": "protocol.framing",
+        "weight": 0.741,
+        "family": "openai",
+        "detail": "Vercel AI SDK UI Message Stream [start 帧|start-step 帧|finish-step 帧|text-start 帧|text-delta 帧|text-end 帧|reasoning-start 帧|reasoning-delta 帧]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "B",
+        "t": 65869.30000000075
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.285,
+        "family": "__realtime_batch",
+        "detail": "自定义 realtime batch 传输层 [event: batch|records[].seq_num|tail.seq_num|event: ping]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "B",
+        "t": 65869.39999999851
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.12,
+        "family": "__sse_generic",
+        "detail": "通用 SSE（无家族特征） [SSE 分帧]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "B",
+        "t": 65869.39999999851
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.741,
+        "family": "openai",
+        "detail": "Vercel AI SDK UI Message Stream [start 帧|start-step 帧|finish-step 帧|text-start 帧|text-delta 帧|text-end 帧|reasoning-start 帧|reasoning-delta 帧]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "A",
+        "t": 277009.5
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.285,
+        "family": "__realtime_batch",
+        "detail": "自定义 realtime batch 传输层 [event: batch|records[].seq_num|tail.seq_num|event: ping]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "A",
+        "t": 277009.5
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.12,
+        "family": "__sse_generic",
+        "detail": "通用 SSE（无家族特征） [SSE 分帧]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "A",
+        "t": 277009.5
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.741,
+        "family": "openai",
+        "detail": "Vercel AI SDK UI Message Stream [start 帧|start-step 帧|finish-step 帧|text-start 帧|text-delta 帧|text-end 帧|reasoning-start 帧|reasoning-delta 帧]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "A",
+        "t": 567312.8999999985
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.285,
+        "family": "__realtime_batch",
+        "detail": "自定义 realtime batch 传输层 [event: batch|records[].seq_num|tail.seq_num|event: ping]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "A",
+        "t": 567312.8999999985
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.12,
+        "family": "__sse_generic",
+        "detail": "通用 SSE（无家族特征） [SSE 分帧]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "A",
+        "t": 567312.8999999985
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.285,
+        "family": "__realtime_batch",
+        "detail": "自定义 realtime batch 传输层 [event: batch|records[].seq_num|tail.seq_num|event: ping]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "B",
+        "t": 638932
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.12,
+        "family": "__sse_generic",
+        "detail": "通用 SSE（无家族特征） [SSE 分帧]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "B",
+        "t": 638932.0999999978
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.741,
+        "family": "openai",
+        "detail": "Vercel AI SDK UI Message Stream [start 帧|start-step 帧|finish-step 帧|text-start 帧|text-delta 帧|text-end 帧|reasoning-start 帧|reasoning-delta 帧]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "A",
+        "t": 679735.6999999993
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.285,
+        "family": "__realtime_batch",
+        "detail": "自定义 realtime batch 传输层 [event: batch|records[].seq_num|tail.seq_num|event: ping]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "A",
+        "t": 679735.6999999993
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.12,
+        "family": "__sse_generic",
+        "detail": "通用 SSE（无家族特征） [SSE 分帧]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "A",
+        "t": 679735.6999999993
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.741,
+        "family": "openai",
+        "detail": "Vercel AI SDK UI Message Stream [start 帧|start-step 帧|finish-step 帧|text-start 帧|text-delta 帧|text-end 帧|reasoning-start 帧|reasoning-delta 帧]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "A",
+        "t": 794324.5999999978
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.285,
+        "family": "__realtime_batch",
+        "detail": "自定义 realtime batch 传输层 [event: batch|records[].seq_num|tail.seq_num|event: ping]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "A",
+        "t": 794324.5999999978
+      },
+      {
+        "source": "protocol.framing",
+        "weight": 0.12,
+        "family": "__sse_generic",
+        "detail": "通用 SSE（无家族特征） [SSE 分帧]",
+        "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+        "slot": "A",
+        "t": 794324.5999999978
+      }
+    ],
+    "protocol": "Vercel AI SDK UI Message Stream [start 帧|start-step 帧|finish-step 帧|text-start 帧|text-delta 帧|text-end 帧|reasoning-start 帧|reasoning-delta 帧]",
+    "alternatives": [],
+    "note": "上游 model 字段被网关抹除；如需精确到版本，启用主动探针或在 MITM 模式捕获请求体。"
+  }
+}

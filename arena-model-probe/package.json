@@ -1,0 +1,15 @@
+{
+  "name": "arena-model-probe",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "页面内实时模型探针：网络证据 + 协议指纹 + 行为探针 + 未知模型自动建档",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "test": "node tools/selftest.mjs",
+    "e2e": "node tools/e2e.mjs",
+    "smoke": "node tools/boot-smoke.mjs",
+    "verify": "node tools/verify.mjs",
+    "inspect": "node tools/cdp-inspect.mjs"
+  }
+}

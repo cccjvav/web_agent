@@ -1,0 +1,11 @@
+{
+  "at": "2026-09-15T14:54:03",
+  "results": [
+    {
+      "id": "identity-direct",
+      "ok": false,
+      "detail": "键入未生效（编辑器内容: '\\n'）"
+    }
+  ],
+  "familyVotes": {}
+}

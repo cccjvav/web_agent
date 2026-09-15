@@ -1,0 +1,354 @@
+{
+  "home": {
+    "url": "https://arena.ai/",
+    "title": "Arena AI: The Official AI Ranking & LLM Leaderboard",
+    "textLen": 632,
+    "textHead": "New Chat\nLeaderboard\nSearch\nJoin us on YouTube\n\nProduct walkthroughs, model analysis, and researcher insights from the frontier.\n\nWatch now\nHide this\nsytrus720@gmail.com\nTerms of Use\nPrivacy Policy\nCookies\nFollow us for the latest in AI news and advancements\n\nBattle Mode\n\nWhat would you like to do?\nGet started\nCreate a landing page\nCreate a sleek, modern landing page\nBuild a dashboard\nTurn data into interactive charts\nMake a game\nBuild a playable browser game\nDesign to Code\nUpload an image and have AI build it\nBuild a fullstack app\nCreate a templated full-stack app\nLaunch a storefront\nCreate a beautiful online shop\nAdd files",
+    "buttons": [
+      {
+        "text": "",
+        "aria": "Toggle Sidebar",
+        "testid": "",
+        "vis": true,
+        "w": 16,
+        "h": 706
+      },
+      {
+        "text": "Hide this",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 206,
+        "h": 34
+      },
+      {
+        "text": "sytrus720@gmail.com",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 223,
+        "h": 40
+      },
+      {
+        "text": "Cookies",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 36,
+        "h": 15
+      },
+      {
+        "text": "",
+        "aria": "Dismiss banner",
+        "testid": "",
+        "vis": true,
+        "w": 16,
+        "h": 16
+      },
+      {
+        "text": "",
+        "aria": "Open sidebar",
+        "testid": "",
+        "vis": false,
+        "w": 0,
+        "h": 0
+      },
+      {
+        "text": "Battle Mode",
+        "aria": "",
+        "testid": "",
+        "vis": false,
+        "w": 0,
+        "h": 0
+      },
+      {
+        "text": "Battle Mode",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 149,
+        "h": 29
+      },
+      {
+        "text": "Create a landing page\nCreate a sleek, mo",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 219,
+        "h": 47
+      },
+      {
+        "text": "Build a dashboard\nTurn data into interac",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 219,
+        "h": 47
+      },
+      {
+        "text": "Make a game\nBuild a playable browser gam",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 219,
+        "h": 47
+      },
+      {
+        "text": "Design to Code\nUpload an image and have ",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 219,
+        "h": 47
+      },
+      {
+        "text": "Build a fullstack app\nCreate a templated",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 219,
+        "h": 47
+      },
+      {
+        "text": "Launch a storefront\nCreate a beautiful o",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 219,
+        "h": 47
+      },
+      {
+        "text": "Add files",
+        "aria": "Add files and more",
+        "testid": "",
+        "vis": true,
+        "w": 94,
+        "h": 32
+      },
+      {
+        "text": "",
+        "aria": "Code",
+        "testid": "",
+        "vis": true,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "text": "",
+        "aria": "Search",
+        "testid": "",
+        "vis": true,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "text": "",
+        "aria": "Image",
+        "testid": "",
+        "vis": true,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "text": "",
+        "aria": "Video",
+        "testid": "",
+        "vis": true,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "text": "",
+        "aria": "Send message",
+        "testid": "",
+        "vis": true,
+        "w": 32,
+        "h": 32
+      }
+    ],
+    "editors": [
+      {
+        "tag": "TEXTAREA",
+        "ph": "Ask anything…",
+        "vis": true
+      }
+    ],
+    "modelNamesInDom": []
+  },
+  "afterClick": {
+    "url": "https://arena.ai/",
+    "title": "Arena AI: The Official AI Ranking & LLM Leaderboard",
+    "textLen": 426,
+    "textHead": "Follow us for the latest in AI news and advancements\n\nBattle Mode\n\nWhat would you like to do?\nGet started\nCreate a landing page\nCreate a sleek, modern landing page\nBuild a dashboard\nTurn data into interactive charts\nMake a game\nBuild a playable browser game\nDesign to Code\nUpload an image and have AI build it\nBuild a fullstack app\nCreate a templated full-stack app\nLaunch a storefront\nCreate a beautiful online shop\nAdd files",
+    "buttons": [
+      {
+        "text": "",
+        "aria": "Toggle Sidebar",
+        "testid": "",
+        "vis": true,
+        "w": 16,
+        "h": 706
+      },
+      {
+        "text": "",
+        "aria": "Expand sidebar",
+        "testid": "",
+        "vis": true,
+        "w": 55,
+        "h": 448
+      },
+      {
+        "text": "",
+        "aria": "User profile",
+        "testid": "",
+        "vis": true,
+        "w": 40,
+        "h": 40
+      },
+      {
+        "text": "",
+        "aria": "Privacy and legal",
+        "testid": "",
+        "vis": true,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "text": "",
+        "aria": "Dismiss banner",
+        "testid": "",
+        "vis": true,
+        "w": 16,
+        "h": 16
+      },
+      {
+        "text": "",
+        "aria": "Open sidebar",
+        "testid": "",
+        "vis": false,
+        "w": 0,
+        "h": 0
+      },
+      {
+        "text": "Battle Mode",
+        "aria": "",
+        "testid": "",
+        "vis": false,
+        "w": 0,
+        "h": 0
+      },
+      {
+        "text": "Battle Mode",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 149,
+        "h": 29
+      },
+      {
+        "text": "Create a landing page\nCreate a sleek, mo",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 219,
+        "h": 47
+      },
+      {
+        "text": "Build a dashboard\nTurn data into interac",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 219,
+        "h": 47
+      },
+      {
+        "text": "Make a game\nBuild a playable browser gam",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 219,
+        "h": 47
+      },
+      {
+        "text": "Design to Code\nUpload an image and have ",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 219,
+        "h": 47
+      },
+      {
+        "text": "Build a fullstack app\nCreate a templated",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 219,
+        "h": 47
+      },
+      {
+        "text": "Launch a storefront\nCreate a beautiful o",
+        "aria": "",
+        "testid": "",
+        "vis": true,
+        "w": 219,
+        "h": 47
+      },
+      {
+        "text": "Add files",
+        "aria": "Add files and more",
+        "testid": "",
+        "vis": true,
+        "w": 94,
+        "h": 32
+      },
+      {
+        "text": "",
+        "aria": "Code",
+        "testid": "",
+        "vis": true,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "text": "",
+        "aria": "Search",
+        "testid": "",
+        "vis": true,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "text": "",
+        "aria": "Image",
+        "testid": "",
+        "vis": true,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "text": "",
+        "aria": "Video",
+        "testid": "",
+        "vis": true,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "text": "",
+        "aria": "Send message",
+        "testid": "",
+        "vis": true,
+        "w": 32,
+        "h": 32
+      }
+    ],
+    "editors": [
+      {
+        "tag": "TEXTAREA",
+        "ph": "Ask anything…",
+        "vis": true
+      }
+    ],
+    "modelNamesInDom": []
+  }
+}

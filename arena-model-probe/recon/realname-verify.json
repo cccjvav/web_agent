@@ -1,0 +1,60 @@
+{
+  "version": "1.0.0+3072162a",
+  "runId": "run_06ga850mkeok40f592kk72ih01",
+  "tokenExp": 1789462781000,
+  "modelName": "gemini-3.8-flash",
+  "lastError": null,
+  "fetchCount": 1,
+  "history": [
+    {
+      "name": "gemini-3.8-flash",
+      "all": [
+        "gemini-3.8-flash"
+      ],
+      "at": 1789459200255
+    }
+  ],
+  "verdict": {
+    "mode": "RESOLVED",
+    "modelId": "gemini-3.8-flash",
+    "family": "google",
+    "gen": "gemini-3.8",
+    "label": "Gemini 3.8 代",
+    "frontier": true,
+    "confidence": 0.96,
+    "evidence": [
+      {
+        "source": "run.trace.model",
+        "detail": "Trigger.dev run run_06ga850mkeok40f592kk72ih01 的 streamText span 标签（worker 写入）"
+      }
+    ],
+    "protocol": null,
+    "alternatives": []
+  },
+  "evidence": [
+    {
+      "source": "protocol.framing",
+      "family": "__realtime_batch",
+      "weight": 0.285,
+      "detail": "自定义 realtime batch 传输层 [event: batch|records[].seq_num|tail.seq_num|event: ping]"
+    },
+    {
+      "source": "protocol.framing",
+      "family": "__sdk_wire",
+      "weight": 0.27,
+      "detail": "Vercel AI SDK UI Message Stream（传输层） [start 帧|start-step 帧|finish-step 帧|text-start 帧|text-delta 帧|text-end 帧]"
+    },
+    {
+      "source": "protocol.framing",
+      "family": "__sse_generic",
+      "weight": 0.12,
+      "detail": "通用 SSE（无家族特征） [SSE 分帧]"
+    },
+    {
+      "source": "run.trace.model",
+      "modelId": "gemini-3.8-flash",
+      "weight": 0.96,
+      "detail": "Trigger.dev run run_06ga850mkeok40f592kk72ih01 的 streamText span 标签（worker 写入）"
+    }
+  ]
+}

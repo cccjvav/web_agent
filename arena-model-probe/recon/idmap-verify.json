@@ -1,0 +1,116 @@
+{
+  "at": "2026-09-15T15:02:06",
+  "probeVersion": "1.0.0+798cc9fc",
+  "mapLoad": {
+    "ok": true,
+    "loaded": 3174,
+    "pages": 3,
+    "stats": {
+      "loaded": 3174,
+      "builtAt": 1789455705178,
+      "source": "leaderboard-rsc",
+      "names": 888
+    }
+  },
+  "resolveTests": [
+    {
+      "id": "01a06ebf-809f-7e34-9abc-53b0fc8761a9",
+      "expect": "gpt-6-astra-high",
+      "got": "gpt-6-astra-high",
+      "org": "openai",
+      "ok": true
+    },
+    {
+      "id": "019f9593-b5a9-7575-aff0-5971ff479f88",
+      "expect": "claude-opus-5-max",
+      "got": "claude-opus-5-max",
+      "org": "anthropic",
+      "ok": true
+    },
+    {
+      "id": "01a0681c-b561-76b6-b338-a44ff0cff460",
+      "expect": "gemini-3.8-flash-high",
+      "got": "gemini-3.8-flash-high",
+      "org": "google",
+      "ok": true
+    },
+    {
+      "id": "01a05e31-fc9d-76dc-b6bf-ab5b6781d4c3",
+      "expect": "claude-fable-5.1-high",
+      "got": "claude-fable-5.1-high",
+      "org": "anthropic",
+      "ok": true
+    }
+  ],
+  "resolvePassed": 4,
+  "sessionScan": {
+    "totalEvidence": 5,
+    "uuidModelIds": [],
+    "namedModelIds": [],
+    "verdict": {
+      "mode": "INFERRED",
+      "modelId": null,
+      "family": "openai",
+      "gen": null,
+      "label": "openai 家族（具体版本未暴露）",
+      "frontier": null,
+      "confidence": 0.741,
+      "evidence": [
+        {
+          "source": "protocol.framing",
+          "weight": 0.285,
+          "family": "__realtime_batch",
+          "detail": "自定义 realtime batch 传输层 [event: batch|records[].seq_num|tail.seq_num|event: ping]",
+          "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+          "slot": "B",
+          "t": 178581.1000000015
+        },
+        {
+          "source": "protocol.framing",
+          "weight": 0.12,
+          "family": "__sse_generic",
+          "detail": "通用 SSE（无家族特征） [SSE 分帧]",
+          "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+          "slot": "B",
+          "t": 178581.20000000298
+        },
+        {
+          "source": "protocol.framing",
+          "weight": 0.741,
+          "family": "openai",
+          "detail": "Vercel AI SDK UI Message Stream [start 帧|start-step 帧|finish-step 帧|text-start 帧|text-delta 帧|text-end 帧|reasoning-start 帧|reasoning-delta 帧]",
+          "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+          "slot": "A",
+          "t": 208337.90000000224
+        },
+        {
+          "source": "protocol.framing",
+          "weight": 0.285,
+          "family": "__realtime_batch",
+          "detail": "自定义 realtime batch 传输层 [event: batch|records[].seq_num|tail.seq_num|event: ping]",
+          "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+          "slot": "A",
+          "t": 208338
+        },
+        {
+          "source": "protocol.framing",
+          "weight": 0.12,
+          "family": "__sse_generic",
+          "detail": "通用 SSE（无家族特征） [SSE 分帧]",
+          "url": "https://arena.ai/ai-proxy/realtime/v1/sessions/01a0a3cc-58bf-7371-a7bc-36453ed2470c/out",
+          "slot": "A",
+          "t": 208338
+        }
+      ],
+      "protocol": "自定义 realtime batch 传输层 [event: batch|records[].seq_num|tail.seq_num|event: ping]",
+      "alternatives": [],
+      "note": "上游 model 字段被网关抹除；如需精确到版本，启用主动探针或在 MITM 模式捕获请求体。"
+    },
+    "stats": {
+      "loaded": 3174,
+      "builtAt": 1789455705178,
+      "source": "leaderboard-rsc",
+      "names": 888
+    }
+  }
+}

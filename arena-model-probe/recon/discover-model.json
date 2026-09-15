@@ -1,0 +1,150 @@
+{
+  "endpoints": [
+    {
+      "method": "GET",
+      "url": "/api/me",
+      "status": 200,
+      "contentType": "application/json",
+      "len": 371,
+      "keys": [
+        "$.user.id=\"01a094ee-f11f-7afb-b9ac-ce76ac37547c\"",
+        "$.user.supabaseUserId=\"b70f192a-19d4-428e-9793-2e2e02cd2775\"",
+        "$.user.emailProvider=\"google\"",
+        "$.user.username=null"
+      ],
+      "bodyHead": "{\"user\":{\"id\":\"01a094ee-f11f-7afb-b9ac-ce76ac37547c\",\"supabaseUserId\":\"b70f192a-19d4-428e-9793-2e2e02cd2775\",\"touConsentTimestamp\":\"2026-09-12 09:25:17.846+00\",\"avatarUrl\":\"https://lh3.googleusercontent.com/a/ACg8ocIDaILkQED3osqv4DofibxpmvxjCrlprGwKejJkpZe2r9banw=s96-c\",\"email\":\"sytrus720@gmail.com\",\"emailProvider\":\"google\",\"username\":null,\"marketingSubscribed\":false}}"
+    },
+    {
+      "method": "GET",
+      "url": "/api/history/unified?limit=5&includeArchived=false",
+      "status": 200,
+      "contentType": "application/json",
+      "len": 345,
+      "keys": [
+        "$.entries[0].id=\"01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60\""
+      ],
+      "bodyHead": "{\"entries\":[{\"type\":\"agentic\",\"id\":\"01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60\",\"title\":\"用一句话说明什么是二分查找。\",\"createdAt\":\"2026-09-15 06:05:58.940028+00\",\"updatedAt\":\"2026-09-15 06:08:46.340469+00\",\"archivedAt\":null,\"productMode\":\"chat\",\"codingSessionStatus\":null}],\"pagination\":{\"hasMore\":false,\"cursor\":null,\"limit\":5},\"partial\":false,\"failedSources\":[]}"
+    },
+    {
+      "method": "GET",
+      "url": "/api/chat/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60",
+      "status": 403,
+      "contentType": "application/json",
+      "len": 29,
+      "keys": [],
+      "bodyHead": "{\"error\":\"Route not allowed\"}"
+    },
+    {
+      "method": "GET",
+      "url": "/api/chat/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60?includeMessages=true",
+      "status": 403,
+      "contentType": "application/json",
+      "len": 29,
+      "keys": [],
+      "bodyHead": "{\"error\":\"Route not allowed\"}"
+    },
+    {
+      "method": "GET",
+      "url": "/api/chat/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60/preview",
+      "status": 200,
+      "contentType": "application/json",
+      "len": 90,
+      "keys": [],
+      "bodyHead": "{\"registered\":false,\"sandboxState\":\"none\",\"processes\":[],\"ports\":[],\"leaseExpiresAt\":null}"
+    },
+    {
+      "method": "GET",
+      "url": "/api/chat/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60/workspace/latest?includeManifest=true",
+      "status": 200,
+      "contentType": "application/json",
+      "len": 94,
+      "keys": [
+        "$.manifestNodeId=null",
+        "$.leafMessageId=\"01a0a3ae-8593-7b92-9659-e7e56cd546f3\""
+      ],
+      "bodyHead": "{\"manifestNodeId\":null,\"leafMessageId\":\"01a0a3ae-8593-7b92-9659-e7e56cd546f3\",\"manifest\":null}"
+    },
+    {
+      "method": "GET",
+      "url": "/api/chat/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60/messages",
+      "status": 400,
+      "contentType": "application/json",
+      "len": 162,
+      "keys": [
+        "$.error.name=\"ZodError\""
+      ],
+      "bodyHead": "{\"success\":false,\"error\":{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"string\",\"received\":\"undefined\",\"path\":[\"cursor\"],\"message\":\"Required\"}],\"name\":\"ZodError\"}}"
+    },
+    {
+      "method": "GET",
+      "url": "/api/chat/01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60/model",
+      "status": 403,
+      "contentType": "application/json",
+      "len": 29,
+      "keys": [],
+      "bodyHead": "{\"error\":\"Route not allowed\"}"
+    },
+    {
+      "method": "GET",
+      "url": "/api/models",
+      "status": 403,
+      "contentType": "application/json",
+      "len": 29,
+      "keys": [],
+      "bodyHead": "{\"error\":\"Route not allowed\"}"
+    },
+    {
+      "method": "GET",
+      "url": "/api/agents",
+      "status": 403,
+      "contentType": "application/json",
+      "len": 29,
+      "keys": [],
+      "bodyHead": "{\"error\":\"Route not allowed\"}"
+    },
+    {
+      "method": "GET",
+      "url": "/api/config",
+      "status": 403,
+      "contentType": "application/json",
+      "len": 29,
+      "keys": [],
+      "bodyHead": "{\"error\":\"Route not allowed\"}"
+    },
+    {
+      "method": "GET",
+      "url": "/nextjs-api/models",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "len": 33211,
+      "keys": [],
+      "bodyHead": "<!DOCTYPE html><html data-dpl-id=\"dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR\" lang=\"en\" class=\"m-0 h-svh w-full p-0\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/34hdm9kt4hxb_.css?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR\" data-precedence=\"next\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/10vqy4i8p4-b1.css?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/3q9oe7fy-pzzp.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR\"/><script src=\"/_next/static/chunks/1_qx_g6zeg7_0.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR\" async=\"\"></script><script src=\"/_next/static/chunks/0l8ny7lx4h-e8.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR\" async=\"\"></script><script src=\"/_next/static/chunks/2rg642spyo85z.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR\" async=\"\"></script><script src=\"/_next/static/chunks/turbopack-1ro9g-ezd90gv.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR\" async=\"\"></script><script src=\"/_next/static/chunks/1zovzp2st7wa1.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR\" async=\"\"></script><script src=\"/_next/static/chunks/0"
+    }
+  ],
+  "streamSample": null,
+  "localStorage": {
+    "app_banner_state": "{\"id\":\"social-follow\",\"firstSeenTimestamp\":1789452268695}",
+    "arena-open-tabs:v1": "{\"tabs\":{\"693c844a-1b9d-46c4-a4bc-0543e5a4917e\":1789452558478}}",
+    "_grecaptcha": "09AKhCRwi4J7nFt_kJ8mi9r7dS5Asscz3bBWGXty9x_XS5y6wAPo8wncd78Fsa15-H4MphYyHbi2JEYdXVO-LBUz8F26LLIuqO0AtNDtLh2AW7uoVnA1_r8ntip3R71hISj9venn0snZjN1CAp4672kb2vaTxbGEjdY7b7qeHlqhggc-PwO3tGvSGC5rro",
+    "ph_phc_LG7IJbVJqBsk584rbcKca0D5lV2vHguiijDrVji7yDM_posthog": "{\"$device_id\":\"01a0a3ab-ec21-7d64-ae1c-4210bec4ae64\",\"distinct_id\":\"01a094ee-f11f-7afb-b9ac-ce76ac37547c\",\"$sesid\":[1789452539366,\"01a0a3aa-b49b-70bd-b75a-ea9194266f20\",1789452268698],\"$initial_person_info\":{\"r\":\"$direct\",\"u\":\"https://arena.ai/agent\"},\"$user_state\":\"identified\",\"$initialization_time\":\"2026-09-15T06:05:48.442Z\",\"$configured_session_timeout_ms\":1800000,\"$active_feature_flags\":[\"survey-targeting-505aafe0d4-custom\",\"survey-targeting-af9f300846-custom\",\"direct-chat-force-login-exp-2\",\"survey-targeting-8408fb854e-custom\",\"survey-targeting-e85b064bca-custom\",\"survey-targeting-f445ffa77e-custom\",\"survey-targeting-9fe4ce2de6-custom\",\"video-edit\",\"survey-targeting-5806622af0-custom\",\"use-webdev-workflow\",\"autoeval-day1-banner\",\"auto-modality-enabled\",\"survey-targeting-6d819b32b6-custom\",\"survey-targeting-13360c06a9-custom\",\"survey-targeting-2491d26866-custom\",\"better-first-experience\",\"survey-targeting-291bbc6782-custom\",\"webapp_chat_battle_side_by_side_mobile_carousel\",\"survey-targeting-e26115a486-custom\",\"survey-targeting-5ef288ffa5-custom\",\"image-edit-categories\",\"agent-mode-stop-generation\",\"survey-targeting-db22fadacc-custom\",\"file-upload\",\"webdev-voting-buttons\",\"survey-targeting-50944fd8a1-custom\",\"dnn-bot-scoring\",\"survey-targeting-b31a61d9c0-custom\",\"bfe-anb-gate\",\"survey-targeting-a848497ef9-custom\",\"survey-targeting-9046256d6e-custom\",\"survey-targeting-82efa43ea4-custom\",\"app-banner-enabled\",\"survey-targeting-d9ea2f8405-custom\",\"rebrand\",\"cutover_write_to_agentic_db\",\"survey-targeting-bf8adf6c69-custom\",\"survey-targeting-169a845332-custom\",\"survey-targeting-20c64f0a0e-custom\",\"rolling-compaction-v2\",\"survey-targeting-6c98d93777-custom\",\"survey-targeting-0492580315-custom\",\"survey-targeting-5dbcd5aaa7-custom\",\"survey-targeting-217d5318f6-custom\",\"survey-targeting-aee7530ead-custom\",\"survey-targeting-2b70fc41b7-custom\",\"user-login-email\",\"survey-targeting-afeb133204-custom\",\"image-to-code\",\"survey-targeting-a48addf0d9-custom\",\"survey-targeting-bb02e8",
+    "amp.learned.v1": "{\"version\":\"2026.09.1\",\"entries\":[{\"id\":\"c_zaxdrz\",\"modelIds\":[],\"resolved\":null,\"family\":\"__sse_generic\",\"firstSeen\":1789452378388,\"lastSeen\":1789452527272,\"count\":3,\"vec\":{\"ttft_ms\":0.0004998333703641888,\"tok_per_sec\":0,\"out_in_ratio\":0,\"len_chars\":0.17659460766575993,\"p_openai_chat\":0,\"p_openai_resp\":0,\"p_anthropic\":0,\"p_google\":0,\"has_reasoning_field\":0,\"has_cached_tokens\":0,\"has_cache_creation\":0,\"has_system_fingerprint\":0,\"has_toolu\":0,\"has_call\":0,\"has_fc\":0,\"prompt_tokens\":0,\"completion_tokens\":0,\"reasoning_ratio\":0},\"known\":false,\"status\":\"ANON_CLUSTER\"}],\"updated\":1789452527272}",
+    "coding-repo-connect-panel": "{\"isOpen\":false,\"attachedRepoId\":null,\"attachedRepoFullName\":null,\"attachedBranch\":null}"
+  },
+  "cookies": [
+    "user_country_code",
+    "sidebar_state",
+    "arena-auth-prod-v1-code-verifier",
+    "arena-auth-prod-v1",
+    "arena-auth-prod-v1.0",
+    "arena-auth-prod-v1.1",
+    "arena_visit_id",
+    "_dd_s",
+    "ph_phc_LG7IJbVJqBsk584rbcKca0D5lV2vHguiijDrVji7yDM_posthog"
+  ],
+  "openTabs": {
+    "tabs": {
+      "693c844a-1b9d-46c4-a4bc-0543e5a4917e": 1789452558478
+    }
+  },
+  "chatId": "01a0a3ac-11a2-73f5-b76d-a3f7a3ab0d60"
+}

@@ -1,0 +1,565 @@
+{
+  "globals": [
+    {
+      "key": "0",
+      "type": "object",
+      "keys": [
+        "window",
+        "self",
+        "document",
+        "name",
+        "location",
+        "customElements",
+        "history",
+        "navigation",
+        "locationbar",
+        "menubar",
+        "personalbar",
+        "scrollbars",
+        "statusbar",
+        "toolbar",
+        "status",
+        "closed",
+        "frames",
+        "length",
+        "top",
+        "opener",
+        "parent",
+        "frameElement",
+        "navigator",
+        "origin",
+        "external"
+      ]
+    },
+    {
+      "key": "1",
+      "type": "object",
+      "keys": [
+        "0"
+      ]
+    },
+    {
+      "key": "2",
+      "type": "object",
+      "keys": [
+        "window",
+        "self",
+        "document",
+        "name",
+        "location",
+        "customElements",
+        "history",
+        "navigation",
+        "locationbar",
+        "menubar",
+        "personalbar",
+        "scrollbars",
+        "statusbar",
+        "toolbar",
+        "status",
+        "closed",
+        "frames",
+        "length",
+        "top",
+        "opener",
+        "parent",
+        "frameElement",
+        "navigator",
+        "origin",
+        "external"
+      ]
+    },
+    {
+      "key": "window",
+      "type": "object",
+      "keys": [
+        "0",
+        "1",
+        "2",
+        "window",
+        "self",
+        "document",
+        "name",
+        "location",
+        "customElements",
+        "history",
+        "navigation",
+        "locationbar",
+        "menubar",
+        "personalbar",
+        "scrollbars",
+        "statusbar",
+        "toolbar",
+        "status",
+        "closed",
+        "frames",
+        "length",
+        "top",
+        "opener",
+        "parent",
+        "frameElement"
+      ]
+    },
+    {
+      "key": "self",
+      "type": "object",
+      "keys": [
+        "0",
+        "1",
+        "2",
+        "window",
+        "self",
+        "document",
+        "name",
+        "location",
+        "customElements",
+        "history",
+        "navigation",
+        "locationbar",
+        "menubar",
+        "personalbar",
+        "scrollbars",
+        "statusbar",
+        "toolbar",
+        "status",
+        "closed",
+        "frames",
+        "length",
+        "top",
+        "opener",
+        "parent",
+        "frameElement"
+      ]
+    },
+    {
+      "key": "document",
+      "type": "object",
+      "keys": [
+        "location",
+        "__reactContainer$k2z5rjfcvfq",
+        "_reactListeningdvrw4zxxyga",
+        "__reactResources$k2z5rjfcvfq",
+        "a-xbwqp5k679wy"
+      ]
+    },
+    {
+      "key": "location",
+      "type": "object",
+      "keys": [
+        "ancestorOrigins",
+        "href",
+        "origin",
+        "protocol",
+        "host",
+        "hostname",
+        "port",
+        "pathname",
+        "search",
+        "hash",
+        "assign",
+        "reload",
+        "replace",
+        "toString"
+      ]
+    },
+    {
+      "key": "history",
+      "type": "object",
+      "keys": [
+        "pushState",
+        "replaceState",
+        "nuqs"
+      ]
+    },
+    {
+      "key": "frames",
+      "type": "object",
+      "keys": [
+        "0",
+        "1",
+        "2",
+        "window",
+        "self",
+        "document",
+        "name",
+        "location",
+        "customElements",
+        "history",
+        "navigation",
+        "locationbar",
+        "menubar",
+        "personalbar",
+        "scrollbars",
+        "statusbar",
+        "toolbar",
+        "status",
+        "closed",
+        "frames",
+        "length",
+        "top",
+        "opener",
+        "parent",
+        "frameElement"
+      ]
+    },
+    {
+      "key": "top",
+      "type": "object",
+      "keys": [
+        "0",
+        "1",
+        "2",
+        "window",
+        "self",
+        "document",
+        "name",
+        "location",
+        "customElements",
+        "history",
+        "navigation",
+        "locationbar",
+        "menubar",
+        "personalbar",
+        "scrollbars",
+        "statusbar",
+        "toolbar",
+        "status",
+        "closed",
+        "frames",
+        "length",
+        "top",
+        "opener",
+        "parent",
+        "frameElement"
+      ]
+    },
+    {
+      "key": "parent",
+      "type": "object",
+      "keys": [
+        "0",
+        "1",
+        "2",
+        "window",
+        "self",
+        "document",
+        "name",
+        "location",
+        "customElements",
+        "history",
+        "navigation",
+        "locationbar",
+        "menubar",
+        "personalbar",
+        "scrollbars",
+        "statusbar",
+        "toolbar",
+        "status",
+        "closed",
+        "frames",
+        "length",
+        "top",
+        "opener",
+        "parent",
+        "frameElement"
+      ]
+    },
+    {
+      "key": "localStorage",
+      "type": "object",
+      "keys": [
+        "app_banner_state",
+        "l-agcta",
+        "amp.learned.v1",
+        "coding-repo-connect-panel",
+        "arena-open-tabs:v1",
+        "coding-github-promo-dismissed",
+        "_grecaptcha",
+        "ph_phc_LG7IJbVJqBsk584rbcKca0D5lV2vHguiijDrVji7yDM_posthog",
+        "arena:autoeval-release-dismissed-keys"
+      ]
+    },
+    {
+      "key": "sessionStorage",
+      "type": "object",
+      "keys": [
+        "ph_phc_LG7IJbVJqBsk584rbcKca0D5lV2vHguiijDrVji7yDM_posthog",
+        "ph_phc_LG7IJbVJqBsk584rbcKca0D5lV2vHguiijDrVji7yDM_window_id",
+        "ph_phc_LG7IJbVJqBsk584rbcKca0D5lV2vHguiijDrVji7yDM_primary_window_exists"
+      ]
+    },
+    {
+      "key": "chrome",
+      "type": "object",
+      "keys": [
+        "loadTimes",
+        "csi",
+        "app"
+      ]
+    },
+    {
+      "key": "__next_s",
+      "type": "object",
+      "keys": [
+        "0"
+      ]
+    },
+    {
+      "key": "_posthogChunkIds",
+      "type": "object",
+      "keys": [
+        "Error\n    at https://arena.ai/_next/static/chunks/1_qx_g6zeg7_0.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/1_qx_g6zeg7_0.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/0l8ny7lx4h-e8.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/0l8ny7lx4h-e8.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/2rg642spyo85z.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/2rg642spyo85z.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/turbopack-1ro9g-ezd90gv.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/turbopack-1ro9g-ezd90gv.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/1zovzp2st7wa1.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/1zovzp2st7wa1.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/0paphhvoxk4_9.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/0paphhvoxk4_9.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/0-bk72awe8id0.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/0-bk72awe8id0.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/1m2vps_6n3pjj.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/1m2vps_6n3pjj.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/0epulj68hk2mn.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/0epulj68hk2mn.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/2k3bq0tqyj798.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/2k3bq0tqyj798.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/1rvjjhr42mzks.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/1rvjjhr42mzks.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/1zn5ilzbq8fd9.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/1zn5ilzbq8fd9.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/10lo0b84qrzlm.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/10lo0b84qrzlm.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/3bi769yd3bkb3.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/3bi769yd3bkb3.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/13w27x7e30p8h.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/13w27x7e30p8h.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/0c9g1bw9g4lc9.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/0c9g1bw9g4lc9.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/3q7t7e8ha9eui.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/3q7t7e8ha9eui.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/28vem-jel0hka.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/28vem-jel0hka.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/2b7ydn75lsy1o.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/2b7ydn75lsy1o.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/2rdgp-u-7-mcd.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/2rdgp-u-7-mcd.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/113acmyrswe1l.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/113acmyrswe1l.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/162qjm0p1syty.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/162qjm0p1syty.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/35aw2b6cdkw98.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/35aw2b6cdkw98.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/2hygvs0j73iw1.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/2hygvs0j73iw1.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307",
+        "Error\n    at https://arena.ai/_next/static/chunks/3bg88hmibxgnr.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:169\n    at https://arena.ai/_next/static/chunks/3bg88hmibxgnr.js?dpl=dpl_CuF2si35ytcTy6B96t2hTt2ZwXhR:1:307"
+      ]
+    },
+    {
+      "key": "TURBOPACK",
+      "type": "object",
+      "keys": [
+        "push"
+      ]
+    },
+    {
+      "key": "next",
+      "type": "object",
+      "keys": [
+        "version",
+        "appDir",
+        "turbopack",
+        "router",
+        "__internal_src_page"
+      ]
+    },
+    {
+      "key": "grecaptcha",
+      "type": "object",
+      "keys": [
+        "enterprise",
+        "getPageId"
+      ]
+    },
+    {
+      "key": "__next_f",
+      "type": "object",
+      "keys": [
+        "push"
+      ]
+    },
+    {
+      "key": "DD_LOGS",
+      "type": "object",
+      "keys": [
+        "version",
+        "onReady",
+        "logger",
+        "init",
+        "setTrackingConsent",
+        "getGlobalContext",
+        "setGlobalContext",
+        "setGlobalContextProperty",
+        "removeGlobalContextProperty",
+        "clearGlobalContext",
+        "createLogger",
+        "getLogger",
+        "getInitConfiguration",
+        "getInternalContext",
+        "setUser",
+        "getUser",
+        "setUserProperty",
+        "removeUserProperty",
+        "clearUser",
+        "setAccount",
+        "getAccount",
+        "setAccountProperty",
+        "removeAccountProperty",
+        "clearAccount"
+      ]
+    },
+    {
+      "key": "DD_RUM",
+      "type": "object",
+      "keys": [
+        "version",
+        "onReady",
+        "init",
+        "setTrackingConsent",
+        "setViewName",
+        "setViewContext",
+        "setViewContextProperty",
+        "getViewContext",
+        "getInternalContext",
+        "getInitConfiguration",
+        "addAction",
+        "startAction",
+        "stopAction",
+        "startResource",
+        "stopResource",
+        "addError",
+        "addTiming",
+        "setGlobalContext",
+        "getGlobalContext",
+        "setGlobalContextProperty",
+        "removeGlobalContextProperty",
+        "clearGlobalContext",
+        "setUser",
+        "getUser",
+        "setUserProperty"
+      ]
+    },
+    {
+      "key": "__PosthogExtensions__",
+      "type": "object",
+      "keys": [
+        "loadExternalDependency",
+        "loadSiteApp",
+        "postHogWebVitalsCallbacksByFlavor",
+        "postHogWebVitalsCallbacks",
+        "loadWebVitalsCallbacks",
+        "errorWrappingFunctions",
+        "initDeadClicksAutocapture",
+        "generateSurveys"
+      ]
+    },
+    {
+      "key": "__NuqsAdapterContext",
+      "type": "object",
+      "keys": [
+        "$$typeof",
+        "_currentValue",
+        "_currentValue2",
+        "_threadCount",
+        "Provider",
+        "Consumer",
+        "displayName"
+      ]
+    },
+    {
+      "key": "posthog",
+      "type": "object",
+      "keys": [
+        "webPerformance",
+        "fi",
+        "version",
+        "pi",
+        "ci",
+        "_calculate_event_properties",
+        "config",
+        "SentryIntegration",
+        "sentryIntegration",
+        "__request_queue",
+        "__loaded",
+        "analyticsDefaultEndpoint",
+        "gi",
+        "mi",
+        "bi",
+        "yi",
+        "scrollManager",
+        "pageViewManager",
+        "rateLimiter",
+        "requestRouter",
+        "consent",
+        "externalIntegrations",
+        "featureFlags",
+        "toolbar",
+        "surveys"
+      ]
+    },
+    {
+      "key": "postHogWebVitalsCallbacks",
+      "type": "object",
+      "keys": [
+        "onLCP",
+        "onCLS",
+        "onFCP",
+        "onINP"
+      ]
+    },
+    {
+      "key": "posthogErrorWrappingFunctions",
+      "type": "object",
+      "keys": [
+        "wrapOnError",
+        "wrapUnhandledRejection",
+        "wrapConsoleError"
+      ]
+    },
+    {
+      "key": "_POSTHOG_REMOTE_CONFIG",
+      "type": "object",
+      "keys": [
+        "phc_LG7IJbVJqBsk584rbcKca0D5lV2vHguiijDrVji7yDM"
+      ]
+    },
+    {
+      "key": "dataLayer",
+      "type": "object",
+      "keys": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "key": "___grecaptcha_cfg",
+      "type": "object",
+      "keys": [
+        "enterprise",
+        "enterprise2fa",
+        "render",
+        "anchor-ms",
+        "execute-ms",
+        "gor",
+        "es",
+        "count",
+        "isolated_count",
+        "clients",
+        "auto_render_clients",
+        "pid",
+        "onload",
+        "fns"
+      ]
+    },
+    {
+      "key": "recaptcha",
+      "type": "object",
+      "keys": [
+        "anchor",
+        "frame"
+      ]
+    },
+    {
+      "key": "closure_lm_79858",
+      "type": "object",
+      "keys": [
+        "src",
+        "R",
+        "l"
+      ]
+    }
+  ],
+  "fiberHits": [],
+  "domHits": [],
+  "storeHits": []
+}

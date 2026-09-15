@@ -1,0 +1,63 @@
+{
+  "modelLabels": [
+    "Hy-dev0826-arena"
+  ],
+  "modelPillCounts": {
+    "Hy-dev0826-arena": 8
+  },
+  "modelPills": [
+    {
+      "text": "Hy-dev0826-arena",
+      "icon": "tabler-cube",
+      "startTime": "1789454480318000000"
+    },
+    {
+      "text": "Hy-dev0826-arena",
+      "icon": "tabler-cube",
+      "startTime": "1789454689158000000"
+    },
+    {
+      "text": "Hy-dev0826-arena",
+      "icon": "tabler-cube",
+      "startTime": "1789454979409000000"
+    },
+    {
+      "text": "Hy-dev0826-arena",
+      "icon": "tabler-cube",
+      "startTime": "1789455091431000000"
+    },
+    {
+      "text": "Hy-dev0826-arena",
+      "icon": "tabler-cube",
+      "startTime": "1789455203875000000"
+    },
+    {
+      "text": "Hy-dev0826-arena",
+      "icon": "tabler-cube",
+      "startTime": "1789455269945000000"
+    },
+    {
+      "text": "Hy-dev0826-arena",
+      "icon": "tabler-cube",
+      "startTime": "1789455635403000000"
+    },
+    {
+      "text": "Hy-dev0826-arena",
+      "icon": "tabler-cube",
+      "startTime": "1789455716669000000"
+    }
+  ],
+  "tokenPills": [
+    "6.8k",
+    "7.1k",
+    "7.2k",
+    "7.3k",
+    "7.3k",
+    "7.7k",
+    "7.8k",
+    "8.0k"
+  ],
+  "providers": {
+    "OpenAICompatibleChatLanguageModel": 3
+  }
+}
