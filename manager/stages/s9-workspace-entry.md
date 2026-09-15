@@ -10,8 +10,10 @@
 - 更新逐函数说明、新手操作、源码清单/生成站点和发行扩展副本。
 
 ## 验证与剩余
-workspaceEntry测试源码入口默认值和真实BridgeView VM，bridgeTunnel真实HTTP测试绑定拒绝无隧道/授权副作用，workbenchRuntime检查旧页面/409/断网拒绝。本地完整73测试文件、计算器6项及Shell语法检查通过；精确提交CI结果推送后独立核对；VM/CI不是用户桌面弹窗验收。
+workspaceEntry测试源码入口默认值和真实BridgeView VM，bridgeTunnel真实HTTP测试绑定拒绝无隧道/授权副作用，workbenchRuntime检查旧页面/409/断网拒绝。本地完整73测试文件、计算器6项及Shell语法检查通过；代码ca9484524508d0d8da0ed40c0de427b16ce3a8d9的CI35027620432九项全部成功；VM/CI不是用户桌面弹窗验收。
 
 新增人工验证在唯一CHECKLIST_WINDOWS清单，尚未代用户执行。旧根目录若剩本地忽略文件要先备份，不把Git删除跟踪文件误说为删除了用户全部数据。
 
-本地真实浏览器本轮未执行：Playwright浏览器缓存缺失，下载Chrome153时报TLS前ECONNRESET；没有把旧浏览器结果当本轮成功。由远端workbench-browser任务补核对，远端结果未查前不标通过。
+本地真实浏览器本轮未执行：Playwright浏览器缓存缺失，下载Chrome153时报TLS前ECONNRESET；没有把旧浏览器结果当本轮成功。远端workbench-browser任务随后成功，补上本提交的真实Chromium回归；本地下载失败事实保留，不改写为本地通过。
+
+远端证据：https://github.com/cccjvav/web_agent/actions/runs/35027620432 。九项包括Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器/探针产物解包验证和workbench-browser。仍不能替代用户Windows桌面/Chrome账户/手机11.3及新增W清单。
