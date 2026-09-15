@@ -250,7 +250,8 @@ async function main() {
     await page.waitForFunction(() => document.querySelector('#connection-check-result').textContent.includes('echo-confirmed'));
     assert.ok(!(await page.locator('#connection-check-result').textContent()).includes(check.challenge));
     const crossOrigin = await fetch(base + '/api/connection-checks', { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://evil.example' }, body: JSON.stringify(observation) });
-    assert.strictEqual(crossOrigin.status, 403);
+    assert.strictEqual(crossOrigin.status, 404); // Local API deliberately conceals denied routes.
+    assert.deepStrictEqual(await crossOrigin.json(), { error: 'not found' });
     await page.click('#btn-clear-connection-check');
     await page.waitForFunction(() => document.querySelector('#connection-check-result').textContent.includes('已清除核对记录'));
     await page.click('#modal-close');

@@ -157,7 +157,7 @@ const US_HEADER = `// ==UserScript==
 // @name         Arena Model Probe · 模型探针
 // @namespace    local.amp
 // @version      1.0.0.${FP}
-// @description  在页面内实时判定当前对话使用的是哪个模型（网络证据 + 协议指纹 + 行为探针 + 未知模型自动建档）
+// @description  汇总页面模型标识与协议线索（启发式候选，不是后台模型身份认证）
 // @author       local
 // @match        *://arena.ai/*
 // @match        *://*.arena.ai/*

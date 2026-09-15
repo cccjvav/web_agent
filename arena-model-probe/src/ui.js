@@ -111,7 +111,7 @@ export class HUD {
     const real = extras.realModel;
     const realBlock = real
       ? `<div class="verdict" style="border-color:#238636;background:#0d1f12">
-           <div class="mode" style="color:#7ee787">真实模型名（run trace）</div>
+           <div class="mode" style="color:#7ee787">运行标签自报（未独立核验）</div>
            <div class="model" style="color:#7ee787">${esc(real.name)}</div>
            <div class="ev" style="opacity:.85">runId: ${esc(real.runId || '-')}${real.tokens && real.tokens.length ? ' · tokens ' + esc(real.tokens.join(',')) : ''}</div>
            ${real.all && real.all.length > 1
@@ -119,7 +119,7 @@ export class HUD {
          </div>`
       : (extras.runInfo
         ? `<div class="verdict" style="border-color:#9e6a03;background:#1f1a0d">
-             <div class="mode" style="color:#e3b341">真实模型名 获取中…</div>
+             <div class="mode" style="color:#e3b341">运行标签读取中（不是身份认证）…</div>
              <div class="ev">runId: ${esc(extras.runInfo.runId || '-')}${extras.runInfo.reason ? ' · ' + esc(extras.runInfo.reason) : ''}</div>
            </div>`
         : '');
@@ -163,7 +163,7 @@ export class HUD {
           ${vd.modelId && vd.label && vd.modelId !== vd.label ? `<div class="ev">id: <b>${esc(vd.modelId)}</b></div>` : ''}
           <div class="bar"><i style="width:${conf}%"></i></div>
           <div class="meta">
-            <span class="tag ${this.confidenceClass(vd.confidence || 0)}">置信 ${conf}%</span>
+            <span class="tag ${this.confidenceClass(vd.confidence || 0)}">线索分 ${conf}/100（非认证概率）</span>
             ${vd.family ? `<span class="tag">${esc(vd.family)}</span>` : ''}
             ${vd.gen ? `<span class="tag">${esc(vd.gen)}</span>` : ''}
             ${vd.frontier === true ? `<span class="tag ok">最新代际</span>` : ''}

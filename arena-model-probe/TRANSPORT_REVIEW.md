@@ -1,0 +1,42 @@
+# 采集层审阅与修复（2026-09-15）
+
+本轮完整读取interceptor.js；读取main.js生命周期/导出段和ui.js结果呈现段、classify.js前85行、selftest.mjs入口。没有跑原型的启动、登录、CDP、主动提问或后台轨迹功能；新测试只导入不自动启动的interceptor/classify/registry，数据由隔离fixture提供。
+
+## 已确认并修复
+
+| 问题 | 修复 | 验证 |
+|---|---|---|
+| fetch流分支返回new Response，丢失原Response的url/redirected/type等语义 | 原对象原样返回，采样使用clone，不包装成替代响应 | 严格对象相等、url、请求参数和正文仍可读 |
+| 缓冲区只有text截断，buf遇到无换行长流会增长 | 每次捕获1MiB/4096块，每行65536字符、最多4096行；越界标truncated并停止采样 | 长行、单块超额、单字节持续输入、单块很多行 |
+| clone().json/text可能读取整份大响应，旁路读没有并发/时间上限 | readCapture统一4路、15秒、字节/块预算；JSON截断不当完整证据解析 | 容量、截止回调、取消与释放；不取消页面自身的请求 |
+| XHR复用叠加load回调，旧请求上下文可能被再次记录 | send前移除旧回调，新监听只消费一次；空URL也清理旧监听 | 同一个XHR反复open/send只剩一个监听 |
+| XHR正文/观察记录不受原SSE保留上限约束 | 正文最多200000字符，BUS.addObservation统一最近20条 | 30次写入只保留20条 |
+| WebSocket/EventSource包装丢静态常量、允许不用new调用、子类构造语义不稳 | 继承原构造器静态属性，用Reflect.construct传递new.target | OPEN/CLOSED常量、无new拒绝、子类instanceof/参数 |
+| UI把启发式权重当成“置信%”，把标签当已核实真名 | 改称线索分、非认证概率、运行标签自报未独立核验 | 静态标签回归；未评估真实分类准确率 |
+
+## 函数与预算说明
+
+- `readCapture(body, consume)`取得clone reader后登记activeCaptures，启动15秒计时器；read循环先核对累计bytes/chunks，再调用consume。consume返回false结束解析；异常取消旁路，finally清计时器/登记并释放锁。tee分支的cancel可能等原页面消费，所以不await cancel；不是终止页面传输。
+- `stopCaptures()`只停止当前旁路读取，**不是卸载所有钩子/停止整个原型**，后续请求仍可能被采集。
+- `SSETap.feed/handleLine/finish`检查字节/块/行上限；遇限丢弃残留半行、记录truncated、只发布一次观测。事件/帧类型各最多64个、每项128字符。usage只扫描最近8192字符，可能漏掉较早数据，不承诺完整账单统计。
+- `BUS.addObservation`统一限制条数；它保留的原型观测仍可能含正文和敏感内容，不等于脱敏器，不能把它的dump导入本机连接核对。
+- fetch hook只旁路采样最多32768字符的疑似推理请求体；clone读取达到容量时跳过，不改变页面响应。响应/请求过滤仍是启发式。
+- socket消息只检查大小，不能因此认为它已经具备按用途的隐私隔离。
+
+## 尚未完成，不能称全扩展无bug
+
+- main版本替换仍缺完整销毁协议：仅移除HUD不等于清除所有订阅、定时器、网络钩子；本轮没有伪造一个“stop成功”承诺。
+- SSETap不是完整标准SSE实现，尤其多行data/CR换行、内容与事件关联需单独协议测试。
+- XHR非文本responseType、错误/中断与跨请求归属仍需扩展测试；原页面自身的大响应下载不受探针采样预算约束。
+- 分类权重、相似度及协议归属未经统计校准；多来源可能共享同一上游，不能算独立证明。
+- 自动令牌/轨迹解析、原始dump隐私、Python脚本、真实站点/浏览器兼容尚未全审。新代码不会自动运行这些路径。
+
+测试入口（产品源码目录）：`node webagent-core/agent-host/tests/probeTransport.test.js`，已加入npm test自动发现。不要把这组离线通过写成真实Arena会话或具体模型身份验证。
+
+另已纠正文档：document-start元数据不等于main实际已安装钩子（当前仍可能等DOMContentLoaded），单次DevTools注入不会跨刷新保留。这里只修正错误操作说明，启动时序代码尚未重构。
+
+## 本轮执行记录
+
+- 本机完整`npm test --prefix webagent-core/agent-host`：61个测试文件全部通过。
+- 完整静态读取tools/build.mjs后执行纯本地构建，再对两个产物运行`node --check`：均通过。没有执行/注入产物；dist保持忽略，不随安装包带入原型。构建成功不代表浏览器运行成功。
+- 浏览器接入回归的精确提交CI结果另记在集成报告，不拿本轮单元测试代替。

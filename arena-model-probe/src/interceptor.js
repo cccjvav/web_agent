@@ -1,9 +1,9 @@
 /**
- * interceptor.js — 页面内网络采集层（passive, 零侵入）
+ * interceptor.js — 页面内网络采集层（有界旁路采样，不承诺零侵入）
  *
  * 原理：模型身份最硬的证据是"页面自己发出去/收回来的网络流量"。
  * 所以我们在页面最早的时机接管 fetch / XHR / EventSource，旁路读取（clone），
- * 不改变任何请求行为，避免破坏页面。
+ * 保留原Response对象；旁路采样仍有资源和时序成本，不能保证任意网站无影响。
  *
  * 目标：< 800ms 内给出首判（第一个 SSE chunk 到达即可判定）。
  */
@@ -18,6 +18,10 @@ export const BUS = {
   listeners: [],
   on(fn) { this.listeners.push(fn); },
   emit(evt) { for (const fn of this.listeners) { try { fn(evt); } catch { /* noop */ } } },
+  addObservation(obs) {
+    this.observations.push(obs);
+    if (this.observations.length > 20) this.observations.splice(0, this.observations.length - 20);
+  },
   push(e) {
     this.evidence.push(e);
     if (this.evidence.length > 500) this.evidence.splice(0, 200);
@@ -26,6 +30,28 @@ export const BUS = {
 };
 
 const now = () => performance.now();
+export const CAPTURE_LIMITS = Object.freeze({ bytes: 1024 * 1024, line: 65536, chunks: 4096, text: 200000, active: 4, deadlineMs: 15000 });
+const activeCaptures = new Set();
+export function stopCaptures() { for (const stop of [...activeCaptures]) stop('stopped'); }
+export async function readCapture(body, consume) {
+  if (!body || activeCaptures.size >= CAPTURE_LIMITS.active) return 'capacity-or-no-body';
+  const reader = body.getReader(); let reason = null, bytes = 0, chunks = 0;
+  const stop = why => { reason = reason || why; reader.cancel().catch(() => {}); };
+  activeCaptures.add(stop);
+  const timer = setTimeout(() => stop('deadline'), CAPTURE_LIMITS.deadlineMs);
+  try {
+    for (;;) {
+      const part = await reader.read();
+      if (part.done || reason) break;
+      if (++chunks > CAPTURE_LIMITS.chunks) { stop('chunk-limit'); break; }
+      bytes += part.value.byteLength;
+      if (bytes > CAPTURE_LIMITS.bytes) { stop('byte-limit'); break; }
+      if (consume(part.value) === false) { stop('parser-limit'); break; }
+    }
+  } catch (_) { stop('read-failed'); }
+  finally { clearTimeout(timer); activeCaptures.delete(stop); reader.releaseLock(); }
+  return reason;
+}
 
 /**
  * 判断是否像 AI 推理请求（避免把静态资源也解析）
@@ -100,32 +126,37 @@ export class SSETap {
     this.reasoningTokens = null;
     this.modelSeen = null;
     this.done = false;
+    this.bytes = 0; this.linesSeen = 0; this.truncated = null;
   }
 
   feed(bytes) {
     if (this.done) return;
+    this.bytes += typeof bytes === 'string' ? new TextEncoder().encode(bytes).byteLength : bytes.byteLength;
+    if (this.bytes > CAPTURE_LIMITS.bytes || this.chunks >= CAPTURE_LIMITS.chunks) { this.truncated = 'input-limit'; this.buf = ''; this.finish(); return; }
     const s = typeof bytes === 'string' ? bytes : this.decoder.decode(bytes, { stream: true });
     if (!s) return;
     if (!this.ttft) this.ttft = now() - this.t0;
     this.chunks++;
     this.text += s;
-    if (this.text.length > 400000) this.text = this.text.slice(-200000);
+    if (this.text.length > CAPTURE_LIMITS.text) this.text = this.text.slice(-CAPTURE_LIMITS.text);
 
     this.buf += s;
     const lines = this.buf.split('\n');
     this.buf = lines.pop();
-    for (const line of lines) this.handleLine(line.trim());
+    if (this.buf.length > CAPTURE_LIMITS.line || lines.some(line => line.length > CAPTURE_LIMITS.line)) { this.truncated = 'line-limit'; this.buf = ''; this.finish(); return; }
+    for (const line of lines) { if (this.done) break; this.handleLine(line.trim()); }
     this.scanUsage();
   }
 
   handleLine(line) {
+    if (++this.linesSeen > CAPTURE_LIMITS.chunks) { this.truncated = 'frame-limit'; this.buf = ''; this.finish(); return; }
     if (!line || line.startsWith(':')) return;
     // 记录事件名（realtime batch 协议靠 event: batch 识别）
     if (line.startsWith('event:')) {
-      const ev = line.slice(6).trim();
+      const ev = line.slice(6).trim().slice(0, 128);
       if (ev) {
         this.events = this.events || [];
-        if (!this.events.includes(ev)) this.events.push(ev);
+        if (this.events.length < 64 && !this.events.includes(ev)) this.events.push(ev);
       }
       return;
     }
@@ -199,7 +230,7 @@ export class SSETap {
     // 2) 协议帧类型（Vercel AI SDK stream parts 与各家原生帧）
     this.frames = this.frames || [];
     const tag = obj.type || obj.object || (Array.isArray(obj.candidates) ? 'candidates' : null);
-    if (typeof tag === 'string' && !this.frames.includes(tag)) this.frames.push(tag);
+    if (typeof tag === 'string' && this.frames.length < 64 && !this.frames.includes(tag)) this.frames.push(tag.slice(0, 128));
 
     // 3) 递归解包常见的嵌套容器
     for (const key of ['data', 'delta', 'message', 'response', 'payload', 'event']) {
@@ -212,7 +243,7 @@ export class SSETap {
   }
 
   scanUsage() {
-    const t = this.text;
+    const t = this.text.slice(-8192);
     const pick = (re) => { const m = t.match(re); return m ? Number(m[1]) : null; };
     const p = pick(/"prompt_tokens"\s*:\s*(\d+)/) ?? pick(/"input_tokens"\s*:\s*(\d+)/) ?? pick(/"promptTokenCount"\s*:\s*(\d+)/);
     const c = pick(/"completion_tokens"\s*:\s*(\d+)/) ?? pick(/"output_tokens"\s*:\s*(\d+)/) ?? pick(/"candidatesTokenCount"\s*:\s*(\d+)/);
@@ -225,7 +256,7 @@ export class SSETap {
   finish() {
     if (this.done) return;
     this.done = true;
-    if (this.buf) this.handleLine(this.buf.trim());
+    if (this.buf && !this.truncated) this.handleLine(this.buf.trim());
 
     const obs = {
       url: this.ctx.url,
@@ -235,7 +266,7 @@ export class SSETap {
       ttftMs: Math.round(this.ttft),
       totalMs: Math.round(now() - this.t0),
       chunks: this.chunks,
-      text: this.text,
+      text: this.text, truncated: this.truncated,
       frames: this.frames || [],
       events: this.events || [],
       modelSeen: this.modelSeen,
@@ -249,8 +280,7 @@ export class SSETap {
       BUS.push({ source: 'protocol.framing', weight: p.score, family: p.family, detail: `${p.label} [${p.matched.join('|')}]`, url: this.ctx.url, slot: this.ctx.slot, t: now() });
     }
 
-    BUS.observations.push(obs);
-    if (BUS.observations.length > 100) BUS.observations.shift();
+    BUS.addObservation(obs);
     BUS.emit({ kind: 'observation', data: obs });
   }
 }
@@ -296,7 +326,7 @@ export function installFetchHook() {
     try {
       url = typeof input === 'string' ? input : (input && input.url) || '';
       const body = init && init.body;
-      if (typeof body === 'string') {
+      if (typeof body === 'string' && body.length <= 32768 && isLikelyLLMUrl(url)) {
         reqHeaders = headersToObj(init.headers);
         try {
           const j = JSON.parse(body);
@@ -326,33 +356,22 @@ export function installFetchHook() {
             // 首帧快判：把证据立刻喂给判定器并由 UI 呈现
             BUS.emit({ kind: 'fast-verdict', data: { url: res.url || url, slot, modelSeen: t.modelSeen } });
           });
-          if (res.body && typeof res.body.getReader === 'function') {
-            const [a, b] = res.body.tee();
-            (async () => {
-              const reader = b.getReader();
-              try {
-                for (;;) {
-                  const { done, value } = await reader.read();
-                  if (done) break;
-                  tap.feed(value);
-                }
-              } catch { /* stream aborted */ } finally { tap.finish(); }
-            })();
-            return new Response(a, { status: res.status, statusText: res.statusText, headers: res.headers });
+          if (res.body && activeCaptures.size < CAPTURE_LIMITS.active) {
+            readCapture(res.clone().body, bytes => { tap.feed(bytes); return !tap.done; })
+              .then(reason => { tap.truncated = tap.truncated || reason; tap.finish(); }).catch(() => {});
           }
-          // 无 body 流：退化为整体文本读取
-          res.clone().text().then(t => { tap.feed(t); tap.finish(); }).catch(() => {});
           return res;
         }
-        res.clone().json().then(j => {
-          for (const h of collectModelFields(j)) {
-            BUS.push({ source: 'response.json.model', weight: 0.93, modelId: h.value, detail: h.path, url: res.url || url, slot, t: now() });
-          }
-          const txt = JSON.stringify(j).slice(0, 300000);
-          for (const p2 of protocolFingerprint(txt)) {
-            BUS.push({ source: 'protocol.framing', weight: p2.score, family: p2.family, detail: p2.label, url, slot, t: now() });
-          }
-        }).catch(() => {});
+        if (res.body && activeCaptures.size < CAPTURE_LIMITS.active) {
+          let text = ''; const decoder = new TextDecoder();
+          readCapture(res.clone().body, bytes => { text += decoder.decode(bytes, { stream: true }); })
+            .then(reason => {
+              if (reason) return; // Never classify a truncated JSON document as complete evidence.
+              const j = JSON.parse(text + decoder.decode());
+              for (const h of collectModelFields(j)) BUS.push({ source: 'response.json.model', weight: 0.93, modelId: h.value, detail: h.path, url: res.url || url, slot, t: now() });
+              for (const p2 of protocolFingerprint(text.slice(0, CAPTURE_LIMITS.text))) BUS.push({ source: 'protocol.framing', weight: p2.score, family: p2.family, detail: p2.label, url, slot, t: now() });
+            }).catch(() => {});
+        }
         return res;
       } catch { return res; }
     });
@@ -378,13 +397,14 @@ export function installXHRHook() {
   XO.prototype.send = function (body) {
     const url = this.__probeUrl || '';
     const slot = inferSlot();
+    if (this.__probeOnLoad) this.removeEventListener('load', this.__probeOnLoad);
     // 注意：send 阶段拿不到响应头，所以不能在这里用内容类型过滤，
     // 否则匿名网关路径的 XHR 会被整体漏掉。改为广挂 load 监听，
     // 真正的过滤放在 load 里按 content-type 做（成本可忽略）。
     if (url) {
       if (isLikelyLLMUrl(url)) {
         try {
-          if (typeof body === 'string') {
+          if (typeof body === 'string' && body.length <= 32768) {
             const j = JSON.parse(body);
             if (j && typeof j.model === 'string') {
               BUS.push({ source: 'request.body.model', weight: 1.0, modelId: j.model, detail: 'xhr body .model', url, slot, t: now() });
@@ -393,7 +413,7 @@ export function installXHRHook() {
         } catch { /* noop */ }
       }
 
-      this.addEventListener('load', () => {
+      this.__probeOnLoad = () => {
         try {
           const hdrs = {};
           (this.getAllResponseHeaders() || '').split(/\r?\n/).forEach(l => {
@@ -402,7 +422,7 @@ export function installXHRHook() {
           });
           if (!shouldInspect(this.responseURL || url, hdrs['content-type'])) return;
           for (const e of evidenceFromHeaders(hdrs, this.responseURL || url)) BUS.push({ ...e, slot, t: now() });
-          const text = typeof this.responseText === 'string' ? this.responseText : '';
+          const text = typeof this.responseText === 'string' ? this.responseText.slice(0, CAPTURE_LIMITS.text) : '';
           if (text) {
             for (const v of scanTextForModel(text)) {
               BUS.push({ source: 'response.json.model', weight: 0.88, modelId: v, detail: 'xhr regex', url, slot, t: now() });
@@ -410,15 +430,16 @@ export function installXHRHook() {
             for (const p of protocolFingerprint(text)) {
               BUS.push({ source: 'protocol.framing', weight: p.score, family: p.family, detail: p.label, url, slot, t: now() });
             }
-            BUS.observations.push({
-              url, slot, ttftMs: 0, totalMs: 0, text,
+            BUS.addObservation({
+              url, slot, ttftMs: 0, totalMs: 0, text, truncated: this.responseText.length > CAPTURE_LIMITS.text ? 'text-limit' : null,
               promptTokens: null, completionTokens: null, reasoningTokens: null,
               modelSeen: scanTextForModel(text)[0] || null, frames: [],
             });
             BUS.emit({ kind: 'observation', data: BUS.observations[BUS.observations.length - 1] });
           }
         } catch { /* noop */ }
-      });
+      };
+      this.addEventListener('load', this.__probeOnLoad, { once: true });
     }
     return origSend.apply(this, arguments);
   };
@@ -433,12 +454,13 @@ export function installSocketHook() {
   if (window.WebSocket && !window.WebSocket.__probeWrapped) {
     const OW = window.WebSocket;
     const W = function (url, protocols) {
-      const ws = new OW(url, protocols);
+      if (!new.target) throw new TypeError('WebSocket requires new');
+      const ws = Reflect.construct(OW, Array.from(arguments), new.target);
       const slot = inferSlot();
       try {
         ws.addEventListener('message', (ev) => {
           const d = typeof ev.data === 'string' ? ev.data : '';
-          if (!d || d.length < 4) return;
+          if (!d || d.length < 4 || d.length > CAPTURE_LIMITS.line) return;
           for (const v of scanTextForModel(d)) {
             BUS.push({ source: 'sse.chunk.model', weight: 0.85, modelId: v, detail: 'ws message', url, slot, t: now() });
           }
@@ -449,7 +471,7 @@ export function installSocketHook() {
       } catch { /* noop */ }
       return ws;
     };
-    W.prototype = OW.prototype;
+    W.prototype = OW.prototype; Object.setPrototypeOf(W, OW);
     W.__probeWrapped = true;
     window.WebSocket = W;
   }
@@ -457,12 +479,13 @@ export function installSocketHook() {
   if (window.EventSource && !window.EventSource.__probeWrapped) {
     const OE = window.EventSource;
     const E = function (url, cfg) {
-      const es = new OE(url, cfg);
+      if (!new.target) throw new TypeError('EventSource requires new');
+      const es = Reflect.construct(OE, Array.from(arguments), new.target);
       const slot = inferSlot();
       try {
         es.addEventListener('message', (ev) => {
           const d = typeof ev.data === 'string' ? ev.data : '';
-          if (!d) return;
+          if (!d || d.length > CAPTURE_LIMITS.line) return;
           for (const v of scanTextForModel(d)) {
             BUS.push({ source: 'sse.chunk.model', weight: 0.86, modelId: v, detail: 'eventsource', url, slot, t: now() });
           }
@@ -473,7 +496,7 @@ export function installSocketHook() {
       } catch { /* noop */ }
       return es;
     };
-    E.prototype = OE.prototype;
+    E.prototype = OE.prototype; Object.setPrototypeOf(E, OE);
     E.__probeWrapped = true;
     window.EventSource = E;
   }

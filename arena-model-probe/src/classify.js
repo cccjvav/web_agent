@@ -1,12 +1,12 @@
 /**
  * classify.js — 证据融合与判定引擎
  *
- * 原理：模型身份不是"猜"出来的，是从多层证据里"收敛"出来的。
+ * 原理：汇总多层线索进行候选排序，不构成后台模型身份认证。
  * 每一条证据 = { source, weight, modelId?, family?, detail }
  * 判定 = 按 modelId 聚合 → 取最高权重链路 → 用来源权威性折算置信度。
  *
  * 关键设计：区分两类判定
- *   - RESOLVED  ：拿到权威 model 字符串（请求体/响应体/响应头）→ 高置信
+ *   - RESOLVED  ：拿到可匹配model字符串（请求体/响应体/响应头），不等于验证执行者
  *   - INFERRED  ：只拿到协议/行为指纹 → 家族级判定 + 代际推断，不谎报具体版本
  */
 
@@ -19,10 +19,10 @@ import {
  * 证据来源权威性权重（上限，实际取 min(上限, 该来源具体权重)）
  * ------------------------------------------------------------------ */
 export const SOURCE_WEIGHTS = {
-  // 真实模型名：来自 Trigger.dev run 的 streamText span 标签，由 worker 写入，
-  // 不经任何网关改写 —— 这是当前能拿到的最权威来源，故置于最高权重。
+  // 运行标签自报：可能由worker/网关写入，未独立核验。
+  // 以下是历史启发式排序权重，不是正确率或已认证身份概率。
   'run.trace.model':           1.00,
-  'request.body.model':        1.00, // 我们发出去的请求体，同样可信
+  'request.body.model':        1.00, // 客户端意图，不证明实际执行者
   'response.header.model':     0.95,
   'response.json.model':       0.93,
   'idmap.resolve':             0.92, // UUID → 官方模型名（来自排行榜 initialModels 映射）
