@@ -64,3 +64,5 @@ npm test --prefix webagent-core/agent-host -- --filter=editorRuntime
 ## 受控执行增量
 
 app.js新增operations.js副作用导入，向ui登记审批页面方法，不自动接入或执行外部工具。
+
+帮助页新增builtin-guide与adoption-guide静态新手步骤和根目录文档定位。既有顶部帮助和欢迎引导打开同一页面；没有把文档文件名伪装成能跨工作区打开的链接。

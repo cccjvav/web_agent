@@ -58,3 +58,5 @@
 | [runChat.js](runChat.js) | 44 个函数/类节点 |
 | [toolLabel.js](toolLabel.js) | 1 个函数/类节点 |
 <!-- docs-inventory:end -->
+
+新手操作见根目录内置探索Agent使用指南.md。explore不再预设npm test冒充已探测；无声明且无tests目录时testCmd为空，Ask如实说明未探测到测试命令。runChat回归增加空工作区不运行命令检查。

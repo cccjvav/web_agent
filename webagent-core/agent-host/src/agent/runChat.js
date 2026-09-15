@@ -122,7 +122,7 @@ function requestedFiles(message) {
 }
 
 async function explore(emit, mode, message) {
-  const facts = { files: [], readme: '', pkg: '', testCmd: 'npm test', testOutput: '', requested: requestedFiles(message), evidence: [] };
+  const facts = { files: [], readme: '', pkg: '', testCmd: '', testOutput: '', requested: requestedFiles(message), evidence: [] };
 
   const listed = await timedTool(emit, mode, 'list_directory', { dirPath: '.', recursive: true, maxDepth: 3 });
   if (listed.ok) {
@@ -207,7 +207,7 @@ function summarizeAsk(message, facts) {
     '',
     facts.testCmd ? `探测到的测试命令：\`${facts.testCmd}\`` : '没有探测到标准测试命令。',
     '',
-    '这是只读 Ask：没有改文件。要落地补丁切到 **Web Agent Code**（配置 API Key 后走模型工具循环；没 Key 时会跑测试并尝试应用你消息里的补丁）。'
+    '这是只读 Ask：没有改文件。要落地补丁切到 **Web Agent Code**（配置 API Key 后走模型工具循环；内置模式仅在探测到测试命令时运行测试，并可应用你消息里的明确写入/补丁）。'
   ]
     .filter((line) => line !== '')
     .join('\n');

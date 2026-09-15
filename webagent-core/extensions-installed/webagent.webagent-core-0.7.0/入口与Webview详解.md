@@ -83,3 +83,5 @@ npm test --prefix webagent-core/agent-host -- --filter=pty
 ```
 
 这些自动化检查使用静态/Mock宿主环境；不能代替Windows真实扩展加载、Chat participant可用性、菜单焦点、终端输出和手机MCP。源码里的实际限制已解释，本次没有为了让描述好看而暗改运行逻辑。
+
+chatHtml在日志区外增加原生details使用帮助，首屏可见且不随聊天清空；不新增消息指令/自动发送。说明扩展跟随host模型，Ask不是模型选择器。发行副本同步。

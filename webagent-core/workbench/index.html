@@ -321,6 +321,19 @@
         </div>
         <div class="page hidden" id="page-help">
           <h2>开始使用本机工作台</h2>
+          <section class="block" id="builtin-guide">
+            <h3>内置探索 Agent：第一次使用</h3>
+            <p>无需 API Key，但不是本地大模型，也不是你正在 Arena 对话的 Agent。先核对工作区，右侧 Chat 选“内置探索 Agent”，模式选 Ask，再发送下面的例子（文件必须真实存在）：</p>
+            <pre><code>读取 `README.md`</code></pre>
+            <p>展开 Read 工具卡核对正文。指定文件仍会扫描目录/Git/搜索；一次最多六个文件、每个最多120行，回答摘录还会缩短。没读到会说明原因，不等于审完项目。</p>
+            <p><strong>新手先用 Ask：</strong>不改项目文件、不执行测试。Plan是规则草案；Code可能写文件和运行探测到的测试命令，不能当只读模式。复杂推理需要另选真实模型，Skill不会让内置探索器自动变成大模型。</p>
+            <p>仓库根完整文档：<strong>内置探索Agent使用指南.md</strong>；VS Code中按 Ctrl+P 输入此文件名，打开后按 Ctrl+Shift+V 预览Markdown。若当前打开的是自己的项目，应去本产品源码目录找。</p>
+          </section>
+          <section class="block" id="adoption-guide">
+            <h3>借鉴优化：对你有什么用</h3>
+            <p>主机诊断帮助确认连对电脑；调用证据帮助核对是否真的执行；Skills让作业说明可查可读；外部MCP接入先审阅启动再批准调用；工作流before防止动手前文件已变化；记忆检索提供关键词与来源；Windows进程回收和跨平台回归减少遗留进程与假成功。</p>
+            <p>不是整仓复制，也不是全部候选已完成。公网MCP、通用网站适配、独立OS沙箱、发布签名仍待做。逐项“改了什么/怎么用/哪些没做”见仓库根 <strong>借鉴优化说明（新手版）.md</strong>。</p>
+          </section>
           <ol class="guide-steps">
             <li>左侧资源管理器打开当前工作区文件；编辑后按 Ctrl+S 保存。工作区由启动命令指定。</li>
             <li>右侧 Chat 的模型按钮选“内置探索 Agent”，模式选 Ask；发送读取要求，展开 Read 工具卡核对正文。无需 API Key。</li>

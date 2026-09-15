@@ -16,6 +16,10 @@ function collect() {
 }
 
 async function main() {
+  const empty = collect();
+  await runChat({ mode: 'ask', message: '查看项目' }, empty.emit);
+  assert.ok(empty.events.some(event => event.type === 'message' && event.text.includes('没有探测到标准测试命令')));
+  assert.ok(!empty.events.some(event => event.type === 'tool' && event.name === 'run_command'));
   fs.writeFileSync(
     path.join(tmp, 'README.md'),
     '# Widget\n\nThis workspace greets the user from src/app.js.\n'

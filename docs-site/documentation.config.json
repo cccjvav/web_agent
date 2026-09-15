@@ -403,6 +403,16 @@
       "id": "approved-operations-guide",
       "path": "webagent-core/agent-host/src/utils/受控工具与工作流详解.md",
       "group": "源码学习"
+    },
+    {
+      "id": "builtin-explorer-guide",
+      "path": "内置探索Agent使用指南.md",
+      "group": "使用"
+    },
+    {
+      "id": "adoption-beginner-guide",
+      "path": "借鉴优化说明（新手版）.md",
+      "group": "使用"
     }
   ],
   "sourceSnapshotExclusions": [

@@ -65,3 +65,6 @@ assert.ok(!context.window.DOCS.sources['webagent-core/agent-host/tests/installer
 const appSrc = fs.readFileSync(path.join(repoRoot, 'docs-site/app.js'), 'utf8');
 assert.ok(appSrc.includes('arenaConnect 仅显示连接指引'), 'connection guidance must not claim to execute MCP');
 assert.ok(!appSrc.includes('arenaConnect 打的是本机 /mcp'), 'stale Arena behavior must not return');
+
+assert.ok(context.window.DOCS.files['builtin-explorer-guide'].html.includes('不是本地部署'));
+assert.ok(context.window.DOCS.files['adoption-beginner-guide'].html.includes('不是整仓复制'));

@@ -21,6 +21,8 @@ const vm = require('vm');
   });
   vm.runInContext(source + '\nmodule.exports.test = { chatHtml, bridgeHtml, validWebviewMessage, ChatView, BridgeView };', host);
   const { chatHtml, bridgeHtml, validWebviewMessage, ChatView, BridgeView } = host.module.exports.test;
+  assert.ok(chatHtml().includes('内置探索 Agent 使用帮助'));
+  assert.ok(chatHtml().includes('切 Ask 不等于切换模型'));
   for (const msg of [null, undefined, [], 'send', {}, { type: 'unknown' }, { type: 'send', text: 'task', mode: 'admin' }, { type: 'send', mode: 'code', text: {} }]) {
     assert.strictEqual(validWebviewMessage(msg, 'chat'), false);
   }

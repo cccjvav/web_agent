@@ -79,3 +79,5 @@ JS/CJS/MJS用Acorn提取节点；其他语言只有文件级登记。链接检�
 
 ## 安装载荷的预构建模式
 serve.js先检查bundled.json；存在则要求format=1/prebuilt=true/content.js存在，不运行build.js。不含此标记的源码checkout保持启动前重建。标记是发行模式选择，不是访问控制；服务默认仍回环、只读。安装包只带运行站点所需文件，源码与解释来自已生成的content.js快照。
+
+新手直达：文档列表搜索「内置探索Agent使用指南」或「借鉴优化说明（新手版）」；路由分别为#/files/builtin-explorer-guide与#/files/adoption-beginner-guide。

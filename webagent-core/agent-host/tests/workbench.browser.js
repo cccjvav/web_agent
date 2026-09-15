@@ -61,7 +61,10 @@ async function main() {
     await page.routeWebSocket('**/ws', ws => ws.close()); // Polling must work without WS.
     await page.goto(base);
     await page.waitForFunction(() => document.querySelector('#stat-calls').textContent === '1');
-    await page.click('#menu-help'); await page.locator('#page-help').waitFor({ state: 'visible' }); await page.click('#modal-close');
+    await page.click('#menu-help'); await page.locator('#page-help').waitFor({ state: 'visible' });
+    assert.ok((await page.locator('#builtin-guide').textContent()).includes('读取 `README.md`'));
+    assert.ok((await page.locator('#adoption-guide').textContent()).includes('不是全部候选已完成'));
+    await page.click('#modal-close');
     await page.click('#walk-start'); await page.locator('#page-help').waitFor({ state: 'visible' }); await page.click('#modal-close');
     await page.click('#rb-bridge-tab'); await page.click('#btn-host-diagnostics');
     await page.waitForFunction(() => document.querySelector('#diagnostic-identity').textContent.includes('hostInstanceId'));

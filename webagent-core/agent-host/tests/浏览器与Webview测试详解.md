@@ -62,3 +62,5 @@ workbenchRuntime续测：openSite配startBridge抛错替身，仍能打开站点
 
 ## Bridge活动前端回归补充
 在同一VM调用真实paintBridgeActivity：快照calls7但只一条日志仍显示累计7；同epoch/revision不重绘、不叠加；工具名HTML转义。注入AbortController和fetch替身，refreshBridgeActivity同时两次调用必须返回同一个Promise，只请求一次；503显示同步失败，下一次成功即使revision相同也恢复文字；新revision清零，全部请求清除超时timer。真实浏览器与认证MCP链路另行测试，不由此fixture替代。
+
+新增回归核对经典工作台帮助里的读取示例/未完成边界，以及扩展chatHtml里独立模型与模式说明；不把扩展VM静态检查称作真实Windows VS Code点击验收。
