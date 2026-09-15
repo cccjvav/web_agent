@@ -40,8 +40,8 @@
       "reason": "第三方运行时"
     },
     {
-      "prefix": "workspace/",
-      "reason": "示例工作区和用户数据；维护规范另由docs-sync Skill引用"
+      "prefix": "examples/calculator/",
+      "reason": "可选计算器示例（非默认工作区）；不计产品代码覆盖"
     },
     {
       "prefix": ".config/",

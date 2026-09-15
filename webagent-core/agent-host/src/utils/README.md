@@ -59,6 +59,7 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 | [probeBridge.js](probeBridge.js) | 23 个函数/类节点 |
 | [requestScope.js](requestScope.js) | 5 个函数/类节点 |
 | [toolTrace.js](toolTrace.js) | 10 个函数/类节点 |
+| [workspaceBinding.js](workspaceBinding.js) | 2 个函数/类节点 |
 <!-- docs-inventory:end -->
 
 

@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const { productVersion } = require('./extensionVersion');
 
 const workspaceRoot = path.resolve(
-  process.env.WORKSPACE_ROOT || path.join(__dirname, '../../../workspace')
+  process.env.WORKSPACE_ROOT || path.resolve(__dirname, '../../..')
 );
 
 const config = {

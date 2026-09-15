@@ -16,7 +16,6 @@ const files = [
   'run-admin.cmd', 'install-vscode-extension.cmd', 'installer/launch.js',
   'webagent-core/agent-host/package.json', 'webagent-core/agent-host/package-lock.json',
   'webagent-core/admin-host/index.js', 'webagent-core/admin-host/app.js',
-  'workspace/README.md',
   'docs-site/index.html', 'docs-site/app.js', 'docs-site/styles.css', 'docs-site/content.js', 'docs-site/serve.js', 'docs-site/README.md'
 ];
 const trees = ['webagent-core/agent-host/src', 'webagent-core/workbench', 'webagent-core/scripts',

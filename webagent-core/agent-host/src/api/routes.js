@@ -1,3 +1,4 @@
+const {assertWorkspaceBinding} = require('../utils/workspaceBinding');
 const probeBridge = require('../utils/probeBridge');
 const operatorQueue = require('../utils/operatorQueue');
 const externalClient = require('../mcp/externalClient');
@@ -174,6 +175,8 @@ router.post('/bridge/reset-secret', (req, res) => {
 });
 
 router.post('/bridge/start', async (req, res) => {
+  try { assertWorkspaceBinding(req.body, config); }
+  catch(error) { return res.status(409).json({success:false,error:error.message}); }
   const bridgeTicket = ++bridgeGeneration;
   const cfg = store.load();
   if (!cfg.bridge.loggedIn || !cfg.bridge.deviceAuthorized) {
@@ -298,6 +301,10 @@ router.post('/tool/call', async (req, res) => {
 });
 
 router.post('/chat', async (req, res) => {
+  if(req.body?.client==='vscode-extension'){
+    try { assertWorkspaceBinding(req.body, config); }
+    catch(error){ return res.status(409).json({success:false,error:error.message}); }
+  }
   const controller = new AbortController();
   const abort = () => controller.abort();
   const timeout = setTimeout(abort, 5 * 60 * 1000);

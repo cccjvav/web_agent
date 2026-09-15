@@ -34,7 +34,7 @@ setlocal EnableExtensions，title设置窗口标题，cd /d `%~dp0`可跨盘。w
 
 ### run-webagent.sh
 
-[源码](run-webagent.sh)：#!/bin/bash、set -e；ROOT通过脚本所在目录子shell cd+pwd求绝对路径。首参数非空则覆盖WORKSPACE_ROOT，否则环境/默认ROOT/workspace；端口默认48271/3000。command -v分别查node/npm，缺失stderr提示exit1。目录不存在时，显式参数报错，未显式参数则mkdir -p（包括环境指定目录）。打印地址后cd agent-host，express缺失npm install，最后exec node src/index.js替换Shell进程。
+[源码](run-webagent.sh)：#!/bin/bash、set -e；ROOT通过脚本所在目录子shell cd+pwd求绝对路径。首参数非空则覆盖WORKSPACE_ROOT，否则环境/默认ROOT（仓库根目录）；端口默认48271/3000。command -v分别查node/npm，缺失stderr提示exit1。目录不存在或不是目录时一律退出，不悄悄创建错误的环境指定目录。打印地址后cd agent-host，express缺失npm install，最后exec node src/index.js替换Shell进程。
 
 注意：首参数**没规范成绝对路径**，目录检查发生在调用者cwd，之后cd agent-host再启动，相对WORKSPACE_ROOT可能改变解释基准；它不具备CMD新版launch.js完全相同的相对路径保证。本次如实记录，不隐式重构脚本。set -e使多数失败停止，但不是所有Shell复合语句的事务保证。
 
@@ -95,3 +95,7 @@ Windows installer job追加独立Probe Companion VSIX白名单构建及zipfile�
 Probe Companion的0.2.0 VSIX白名单新增共享原型分析源码与hash；Worker只离线调用，不运行自动入口。Windows的单条--verify构建命令还解包到临时目录，以固定合成样本验证包内引擎独立运行和hash，失败直接使步骤失败。构建成功不等于全能力整合或真实模型准确率验证。
 
 0.3浏览器整合新增Windows安装器任务步骤：package_browser.py --verify构建白名单ZIP，解包核对摘要后复制Inspector合成测试到临时目录运行（非真实账号）。VSIX验证同时计算普通观测与Inspector单run证据，核对两套引擎摘要；不代替桌面扩展验收。
+
+## 根package.json开发入口
+
+name为webagent-project，version与核心入口本次0.7.1对应，private=true防误发布，description说明源码入口。scripts.start调用installer/launch.js classic；start:vscode选择vscode模式；test委托agent-host完整测试；test:example仅跑examples/calculator；docs:check检查文档清单，不自动重写。没有新增依赖；首次测试仍先npm ci --prefix webagent-core/agent-host。验证workspaceEntry执行真实launch.main但替换进程启动，另用Node子进程检查配置默认根；不冒充Windows GUI启动验收。

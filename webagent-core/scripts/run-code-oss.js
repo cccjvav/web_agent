@@ -6,12 +6,12 @@ const { ensure, syncExtension, repoRoot } = require('./ensure-code-server');
 const { resolveAuth, trustedOrigins } = require('./codeServerAuth');
 
 const workspace = path.resolve(
-  process.argv[2] || process.env.WORKSPACE_ROOT || path.join(repoRoot, 'workspace')
+  process.argv[2] || process.env.WORKSPACE_ROOT || repoRoot
 );
 const mcpPort = parseInt(process.env.AGENT_HOST_PORT || '48271', 10);
 const codePort = parseInt(process.env.CODE_SERVER_PORT || '3000', 10);
 
-if (!fs.existsSync(workspace)) {
+if (!fs.existsSync(workspace) || !fs.statSync(workspace).isDirectory()) {
   console.error(`工作区不存在: ${workspace}`);
   process.exit(1);
 }

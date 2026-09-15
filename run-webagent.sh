@@ -4,7 +4,7 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 if [ -n "${1-}" ]; then
   export WORKSPACE_ROOT="$1"
 fi
-export WORKSPACE_ROOT="${WORKSPACE_ROOT:-$ROOT/workspace}"
+export WORKSPACE_ROOT="${WORKSPACE_ROOT:-$ROOT}"
 case "$WORKSPACE_ROOT" in
   /*) ;;
   *) export WORKSPACE_ROOT="$PWD/$WORKSPACE_ROOT" ;;
@@ -26,12 +26,8 @@ if ! command -v npm >/dev/null 2>&1; then
 fi
 
 if [ ! -d "$WORKSPACE_ROOT" ]; then
-  if [ -n "${1-}" ]; then
-    echo "[error] workspace does not exist: $WORKSPACE_ROOT" >&2
-    echo "Pass an existing folder, e.g. ./run-webagent.sh /path/to/my-app" >&2
-    exit 1
-  fi
-  mkdir -p "$WORKSPACE_ROOT"
+  echo "[error] workspace must be an existing directory: $WORKSPACE_ROOT" >&2
+  exit 1
 fi
 
 echo "Workspace  $WORKSPACE_ROOT"

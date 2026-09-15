@@ -54,7 +54,7 @@ GitHub 默认分支 `main` 目前仍是更早的原型快照。现行工作台�
 | 目录 | 现在用不用 | 职责 |
 |---|---|---|
 | `webagent-core/` | **现行主程序** | 工作台 UI + 独立 agent-host（MCP / 工具 / 隧道） |
-| `workspace/` | 默认演示工作区 | 计算器示例；`.webagent`（含 `docs-sync` 等 Skill）在这里，不在仓库根 |
+| `examples/calculator/` | 可选计算器示例 | 不是默认工作区；共用Skills在根目录`.webagent/skills` |
 | `webagent-repro/` | 不用 | 更早一版纯 Bridge 原型 |
 | `bin/code-server-runtime/` | 第二种跑法下载到这里 | npm 完整 code-server，不进 Git |
 | `run-webagent-appwindow.cmd` | 可选App样式窗口 | 网页VS Code就绪后打开独立浏览器窗口 |
@@ -103,10 +103,31 @@ run-tests.cmd
 ./run-webagent.sh /path/to/my-app
 ```
 
-bash 入口与 `.cmd` 一样：缺 Node/npm 会退出；默认 `workspace/` 不存在则创建；自定义路径必须已经存在。
+bash 入口与 `.cmd` 一样：缺 Node/npm 会退出；默认使用仓库根目录；显式路径必须已经存在。
 
 **VS Code配套探针**：[安装、分工与验收](webagent-core/probe-extension/README.md)。与WebAgent并装；Companion0.4提供双引擎分析、工作区参考历史与WebAgent只读草稿交接；浏览器包继续使用0.3单采集器。完整浏览器采集、历史和授权自动化仍按完整能力表推进。
 
 **能力范围纠正**：0.1.x曾只有连接核对；0.2.0移植离线内核，0.3.0接入Inspector及同流双解析；完整实时控制/跨端历史/自动化仍在实施。完整参考能力是目标，不以绝对身份认证为前提。见[探针能力对照与迁移边界](探针能力对照与迁移边界.md)。
 
 **当前优先级**：[完整探针整合实施与验收](探针完整整合实施与验收.md)。先完成原型完整参考能力；Chat API背后模型确切验证在此之后。
+
+
+## 工作区入口（现行规则）
+
+源码版所有受支持启动器默认以本仓库根目录为工作区，方便另一个AI读取产品代码、管理文档并辅助验收。命令参数优先于WORKSPACE_ROOT，二者都未提供才默认根目录。根目录`npm start`/`npm run start:vscode`也是入口；`npm test`转调产品测试，`npm run test:example`才运行可选计算器。
+
+独立打开桌面VSCode时可以先不开文件夹，但启动Bridge或工作区Chat前必须打开与主机匹配的本地文件夹；否则弹窗并拒绝。多个文件夹时主机根必须是首个本地文件夹（与现有PTY归属一致），主机不自动切换目录。源码网页IDE入口不传参数会直接打开仓库根目录，并非延迟创建无工作区主机。
+
+安装版仍默认使用用户数据目录的workspace，不把Program Files当可写项目。旧根`workspace`的示例已移至examples/calculator，共用Skills移到根`.webagent/skills`；已有运行数据只留在旧示例的本地位置，不自动复制账户/密钥到新工作区。新根目录的`.webagent/config.json`等运行数据继续忽略。详见[启动说明](启动脚本说明.md)。
+
+根package.json为private开发入口，无额外依赖；start调用只读程序/用户可写运行时的launch.main，test委托agent-host，docs:check检查文档漂移，不自动部署或发布。第一次测试仍须先安装agent-host的完整依赖。
+
+<!-- docs-inventory:start -->
+## 自动源码导航
+
+此区块由工具生成；登记和AST提取不等于语义审查通过。不要手改。
+
+| 源码 | 定位证据 |
+|---|---|
+| [package.json](package.json) | 文件级登记；未做符号完整性证明 |
+<!-- docs-inventory:end -->

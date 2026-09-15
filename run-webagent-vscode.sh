@@ -4,7 +4,7 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 if [ -n "${1-}" ]; then
   export WORKSPACE_ROOT="$1"
 fi
-export WORKSPACE_ROOT="${WORKSPACE_ROOT:-$ROOT/workspace}"
+export WORKSPACE_ROOT="${WORKSPACE_ROOT:-$ROOT}"
 case "$WORKSPACE_ROOT" in
   /*) ;;
   *) export WORKSPACE_ROOT="$PWD/$WORKSPACE_ROOT" ;;

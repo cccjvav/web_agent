@@ -1,0 +1,13 @@
+{
+  "name": "webagent-project",
+  "version": "0.7.1",
+  "private": true,
+  "description": "Source checkout entry points; not a published package",
+  "scripts": {
+    "start": "node installer/launch.js classic",
+    "start:vscode": "node installer/launch.js vscode",
+    "test": "npm --prefix webagent-core/agent-host test",
+    "test:example": "npm --prefix examples/calculator test",
+    "docs:check": "node docs-site/check-docs.js"
+  }
+}

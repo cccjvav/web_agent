@@ -66,7 +66,7 @@ window message只接受status，规范对象后更新URL/状态pill，paintTasks
 
 [modeFromChatRequest.js](modeFromChatRequest.js)唯一函数 **modeFromChatRequest(request)**：request.command合法值优先，其次prompt首部/ask、/plan、/code，默认code；不因普通文字包含ask就切换。UI所说Ask只读主要指工作区文件，内部任务/记忆元数据权限以后端注册表为准。
 
-[workspaceMatch.js](workspaceMatch.js)：**normalizePath(p)**字符串化、反斜杠改正斜杠、去尾斜杠、全小写；**sameWorkspace(vscodeFolder,hostRoot)**空路径false，否则比较规范文本。这不是realpath/inode验证，非Windows大小写敏感文件系统可能误判；PTY cwdFor还额外realpath检查边界，不应据此函数声称所有平台路径已严格同一。
+[workspaceMatch.js](workspaceMatch.js)：**normalizePath(p)**字符串化、反斜杠改正斜杠、去尾斜杠；只在Windows或Windows盘符/UNC文本时转小写；**sameWorkspace(vscodeFolder,hostRoot)**空路径false，否则比较规范文本。这不是realpath/inode验证，POSIX路径保留大小写，但符号链接别名仍可能被保守拒绝；PTY cwdFor还额外realpath检查边界，不应据此函数声称所有平台路径已严格同一。
 
 ## 8. package.json与SVG（非JS也属于实现）
 
@@ -85,3 +85,12 @@ npm test --prefix webagent-core/agent-host -- --filter=pty
 这些自动化检查使用静态/Mock宿主环境；不能代替Windows真实扩展加载、Chat participant可用性、菜单焦点、终端输出和手机MCP。源码里的实际限制已解释，本次没有为了让描述好看而暗改运行逻辑。
 
 chatHtml在日志区外增加原生details使用帮助，首屏可见且不随聊天清空；不新增消息指令/自动发送。说明扩展跟随host模型，Ask不是模型选择器。发行副本同步。
+
+
+## 10. 工作区绑定与启动拒绝（0.7.1）
+
+**workspacePaths()**先检查workspace.isTrusted；要求首文件夹为file URI并有fsPath，空窗口/虚拟目录直接抛中文提醒。返回本地文件夹路径。**workspaceBinding()**先取before，再请求实时/api/status，核对HTTP、workspaceRoot及identity.hostInstanceId，之后再取after；内部**matches**按sameWorkspace比较首文件夹。前后任一不匹配则拒绝。首根规则与revealWorkspaceFile和PTY identity一致；多根项目建议将目标单独打开，不支持运行中自动改绑主机。
+
+BridgeView启动、原生Chat handler及ChatView send都先await workspaceBinding，然后把两个绑定字段随POST送往主机；失败showErrorMessage以modal=true弹窗，Bridge还校验HTTP及success。Chat校验后才登记历史，取消后不发送；postNdjson遇HTTP错误明确reject，不能把409正文吞成完成。refreshBar对空/不信任/首根不匹配给出警告，工作区变更会刷新，轮询仍保留。
+
+验证：workspaceEntry的真实扩展VM处理器覆盖空窗口无请求、首根不匹配不启动、不信任和查询期间关闭文件夹；bridgeTunnel真实HTTP覆盖缺失/过期绑定409且不改变隧道/授权。VM不等于真实桌面VSCode弹窗验收。服务器收到的字段是客户端声明，不是后台读取IDE的证明，也不是认证或OS隔离。

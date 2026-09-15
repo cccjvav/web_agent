@@ -31,7 +31,7 @@ const FILE_DOCS = [
   { id: 'extension', path: 'webagent-core/extension/README.md', group: '界面' },
   { id: 'ext-installed', path: 'webagent-core/extensions-installed/README.md', group: '界面' },
   { id: 'scripts', path: 'webagent-core/scripts/README.md', group: '界面' },
-  { id: 'workspace', path: 'workspace/README.md', group: '工作区' },
+  { id: 'workspace', path: 'examples/calculator/README.md', group: '工作区' },
   { id: 'bin', path: 'bin/README.md', group: '运行时' },
   { id: 'repro', path: 'webagent-repro/README.md', group: '冻结' },
   { id: 'code-server-cfg', path: '.config/code-server/README.md', group: '运行时' },

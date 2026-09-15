@@ -4,6 +4,10 @@ const fs = require('fs');
 const path = require('path');
 const { WebSocketServer } = require('ws');
 const { config, persistIdentity } = require('./config');
+if (!fs.existsSync(config.workspaceRoot) || !fs.statSync(config.workspaceRoot).isDirectory()) {
+  console.error('WORKSPACE_ROOT 必须是已存在的文件夹，请重新选择工作区。');
+  process.exit(1);
+}
 const mcpRouter = require('./mcp/server');
 const oauth = require('./mcp/oauth');
 const apiRouter = require('./api/routes');
@@ -16,13 +20,6 @@ const tracker = require('./usage/tracker');
 persistIdentity(store);
 tracker.startReporter();
 
-if (!fs.existsSync(config.workspaceRoot)) {
-  if (process.env.WORKSPACE_ROOT) {
-    console.error(`WORKSPACE_ROOT 不存在: ${config.workspaceRoot}`);
-    process.exit(1);
-  }
-  fs.mkdirSync(config.workspaceRoot, { recursive: true });
-}
 
 function applyCommon(app, { mcp = false } = {}) {
   app.disable('x-powered-by');

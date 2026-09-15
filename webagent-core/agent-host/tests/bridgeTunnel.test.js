@@ -14,7 +14,8 @@ const ngrok = require('../src/tunnel/ngrok');
 const apiRouter = require('../src/api/routes');
 const store = require('../src/models/store');
 
-function request(server, method, urlPath, body) {
+function request(server, method, urlPath, body, bind = true) {
+  if(bind && urlPath==='/api/bridge/start') body={workspaceRoot:config.workspaceRoot,hostInstanceId:config.hostInstanceId,...body};
   return new Promise((resolve, reject) => {
     const addr = server.address();
     const payload = body == null ? null : JSON.stringify(body);
@@ -86,6 +87,16 @@ async function main() {
 
   try {
     store.patch({ bridge: { loggedIn: true, deviceAuthorized: true } });
+
+    const beforeBinding = JSON.stringify(store.load());
+    for(const body of [{},{workspaceRoot:tmp,hostInstanceId:'stale'},{workspaceRoot:os.tmpdir(),hostInstanceId:config.hostInstanceId},{workspaceRoot:'.',hostInstanceId:config.hostInstanceId}]) {
+      const rejected=await request(server,'POST','/api/bridge/start',body,false);
+      assert.equal(rejected.status,409);assert.equal(rejected.json.success,false);
+    }
+    const chatRejected=await request(server,'POST','/api/chat',{client:'vscode-extension',mode:'code',message:'must not execute'});
+    assert.equal(chatRejected.status,409);
+    assert.equal(startCalls+namedCalls+ngrokCalls+stopCalls,0,'binding rejection must not start or stop tunnels');
+    assert.equal(JSON.stringify(store.load()),beforeBinding,'binding rejection must not mutate authorization/config');
 
     const started = await request(server, 'POST', '/api/bridge/start', { tunnelProvider: 'cloudflare' });
     assert.strictEqual(started.status, 200);

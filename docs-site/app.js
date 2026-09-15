@@ -109,7 +109,7 @@
           <h3>三个不能混的东西</h3>
           <div class="timeline">
             <div class="tl"><div class="n">1</div><div class="body"><b>Git 仓库 web_agent</b><p>工具箱。程序源码。</p></div></div>
-            <div class="tl"><div class="n">2</div><div class="body"><b>工作区</b><p>默认 workspace/，也可以是 D:\\code\\my-app。扳手只能改这里。</p></div></div>
+            <div class="tl"><div class="n">2</div><div class="body"><b>工作区</b><p>源码默认仓库根目录，也可以是 D:\\code\\my-app。扳手只能改这里。</p></div></div>
             <div class="tl"><div class="n">3</div><div class="body"><b>网页上的 AI</b><p>只会聊天、下工单。127.0.0.1 是它自己那台机器。</p></div></div>
           </div>
           <p class="faint">沙箱：<code>patchEngine.resolveSafePath</code>。逃出工作区就拒绝。</p>

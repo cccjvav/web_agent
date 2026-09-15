@@ -24,23 +24,23 @@
 
 ## 2. 文件级详细说明书
 
-### 📄 文件名：`webagent.webagent-core-0.7.0/package.json`
+### 📄 文件名：`webagent.webagent-core-0.7.1/package.json`
 
-- **文件职责：** 安装后的插件清单副本。Key 与 `../extension/package.json` 相同（`name=webagent-core`，`version=0.7.0`，`publisher=webagent`，Chat 参与者 `webagent.agent` 等）。逐 Key 表见 extension 说明书，不在此重复。
+- **文件职责：** 安装后的插件清单副本。Key 与 `../extension/package.json` 相同（`name=webagent-core`，`version=0.7.1`，`publisher=webagent`，Chat 参与者 `webagent.agent` 等）。逐 Key 表见 extension 说明书，不在此重复。
 
-### 📄 文件名：`webagent.webagent-core-0.7.0/extension.js`
+### 📄 文件名：`webagent.webagent-core-0.7.1/extension.js`
 
 - **文件职责：** `activate` 等函数的副本。以 `../extension/extension.js` 为准。
 
-### 📄 文件名：`webagent.webagent-core-0.7.0/modeFromChatRequest.js`
+### 📄 文件名：`webagent.webagent-core-0.7.1/modeFromChatRequest.js`
 
 - **文件职责：** Chat 模式解析副本。以 `../extension/modeFromChatRequest.js` 为准。`extension.js` 会 `require('./modeFromChatRequest')`。
 
-### 📄 文件名：`webagent.webagent-core-0.7.0/workspaceMatch.js`
+### 📄 文件名：`webagent.webagent-core-0.7.1/workspaceMatch.js`
 
 - **文件职责：** 工作区路径比对副本。以 `../extension/workspaceMatch.js` 为准。
 
-### 📄 文件名：`webagent.webagent-core-0.7.0/resources/icon.svg`
+### 📄 文件名：`webagent.webagent-core-0.7.1/resources/icon.svg`
 
 - **文件职责：** 活动栏图标副本。
 
@@ -53,6 +53,6 @@
 ## 3. 执行逻辑流（仅本目录）
 
 1. `run-webagent-vscode.cmd` → `scripts/run-code-oss.js` → `syncExtension()`。
-2. 覆盖拷贝 `extension/` → `webagent.webagent-core-0.7.0/`。
+2. 覆盖拷贝 `extension/` → `webagent.webagent-core-0.7.1/`。
 3. 写 `extensions.json`（gitignore）。
 4. code-server 从本目录加载插件，HTTP 打 agent-host `:48271`。

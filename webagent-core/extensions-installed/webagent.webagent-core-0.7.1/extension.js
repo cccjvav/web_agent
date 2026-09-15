@@ -56,6 +56,25 @@ function requestJson(method, url, body) {
   });
 }
 
+function workspacePaths() {
+  if (vscode.workspace.isTrusted === false) throw new Error('请先信任当前工作区，再启动 Bridge 或工作区任务。');
+  const folders = vscode.workspace.workspaceFolders || [];
+  if (folders.length && folders[0].uri?.scheme !== 'file') throw new Error('请将本地项目文件夹作为首工作区，不能用虚拟或远程文件夹绑定本机主机。');
+  const paths = folders.filter(folder => folder.uri?.scheme === 'file' && folder.uri.fsPath).map(folder => folder.uri.fsPath);
+  if (!paths.length) throw new Error('未打开工作区，已阻止启动 Bridge/任务。请先通过 文件 → 打开文件夹 选择项目根目录。');
+  return paths;
+}
+async function workspaceBinding() {
+  const before = workspacePaths();
+  const response = await requestJson('GET', `${agentHostUrl()}/api/status`);
+  const status = response.json;
+  if (response.status !== 200 || !status?.workspaceRoot || !status.identity?.hostInstanceId) throw new Error('主机未就绪，请启动对应项目的 agent-host。');
+  const after = workspacePaths();
+  const matches = folder => sameWorkspace(folder, status.workspaceRoot);
+  if (!matches(before[0]) || !matches(after[0])) throw new Error(`工作区与主机不一致，已阻止操作。主机工作区：${status.workspaceRoot}。请将该文件夹作为首工作区（建议单独打开），或为目标项目重新启动主机。`);
+  return {workspaceRoot:status.workspaceRoot, hostInstanceId:status.identity.hostInstanceId};
+}
+
 function postNdjson(url, body, onEvent, signal) {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
@@ -72,6 +91,7 @@ function postNdjson(url, body, onEvent, signal) {
         headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
       },
       (res) => {
+        if (res.statusCode >= 400) { res.resume(); reject(new Error('主机拒绝任务，请刷新并重新核对工作区、主机状态及授权。')); return; }
         let buf = '';
         res.setEncoding('utf8');
         res.on('data', (chunk) => {
@@ -149,9 +169,11 @@ function registerChatParticipant(context) {
     }
     stream.progress(mode === 'code' ? 'Agent 正在搜-读-补丁-再测…' : `Web Agent ${mode}…`);
     try {
+      const binding = await workspaceBinding();
+      if (token.isCancellationRequested) return;
       await postNdjson(
         `${agentHostUrl()}/api/chat`,
-        { mode, message, history: historyFromChatContext(chatContext), client: 'vscode-extension' },
+        { mode, message, history: historyFromChatContext(chatContext), client: 'vscode-extension', ...binding },
         (ev) => {
           if (token.isCancellationRequested) return;
           dispatchPty(ev);
@@ -175,7 +197,8 @@ function registerChatParticipant(context) {
         }, controller.signal
       );
     } catch (err) {
-      stream.markdown(`连不上 agent-host：${err.message}\n\n确认 run-webagent.cmd 或 run-webagent-vscode.cmd 已启动 agent-host（:48271）。`);
+      vscode.window.showErrorMessage(err.message, {modal:true});
+      stream.markdown(`任务未完成：${err.message}\n\n确认 run-webagent.cmd 或 run-webagent-vscode.cmd 已启动 agent-host（:48271）。`);
     } finally { subscription.dispose(); }
   };
   const participant = vscode.chat.createChatParticipant('webagent.agent', handler);
@@ -206,12 +229,16 @@ function activate(context) {
     try {
       const r = await requestJson('GET', `${agentHostUrl()}/api/status`);
       if (!r.json || r.status >= 400) throw new Error('http ' + r.status);
-      const folder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0];
-      const folderPath = folder && folder.uri && folder.uri.fsPath;
-      if (r.json.workspaceRoot && folderPath && !sameWorkspace(folderPath, r.json.workspaceRoot)) {
+      let folders;
+      try { folders = workspacePaths(); }
+      catch(error) {
+        statusBar.text = '$(warning) Web Agent 工作区未就绪';
+        statusBar.tooltip = error.message;
+        return;
+      }
+      if (!r.json.workspaceRoot || !sameWorkspace(folders[0], r.json.workspaceRoot)) {
         statusBar.text = '$(warning) Web Agent 工作区不一致';
-        statusBar.tooltip =
-          `VS Code 打开的是 ${folderPath}，agent-host 改的是 ${r.json.workspaceRoot}。请打开同一个文件夹，或用 run-webagent.cmd 带上这个路径启动。`;
+        statusBar.tooltip = `请打开主机对应文件夹 ${r.json.workspaceRoot || '（未指定）'}，或为目标项目重新启动主机。`;
         return;
       }
       const running = r.json.bridgeRunning;
@@ -223,6 +250,7 @@ function activate(context) {
     }
   }
   refreshBar();
+  if (vscode.workspace.onDidChangeWorkspaceFolders) context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(refreshBar));
   const timer = setInterval(refreshBar, 5000);
   context.subscriptions.push({ dispose: () => clearInterval(timer) });
 
@@ -286,12 +314,14 @@ class ChatView {
       const { mode, text } = msg;
       this._view.webview.postMessage({ type: 'user', text });
       const history = this.history.slice(-12);
-      this.history.push({ role: 'user', content: text });
       let assistantText = '';
       try {
+        const binding = await workspaceBinding();
+        if (this.controller.signal.aborted) return;
+        this.history.push({ role: 'user', content: text });
         await postNdjson(
           `${agentHostUrl()}/api/chat`,
-          { mode, message: text, history, client: 'vscode-extension' },
+          { mode, message: text, history, client: 'vscode-extension', ...binding },
           (ev) => {
             dispatchPty(ev);
             this._view.webview.postMessage({ type: 'event', ev });
@@ -303,6 +333,7 @@ class ChatView {
         );
         if (assistantText) this.history.push({ role: 'assistant', content: assistantText });
       } catch (err) {
+        vscode.window.showErrorMessage(err.message, {modal:true});
         this._view.webview.postMessage({
           type: 'event',
           ev: { type: 'error', message: err.message + '（确认 run-webagent.cmd 或 run-webagent-vscode.cmd 已启动 agent-host :48271）' }
@@ -325,7 +356,9 @@ class BridgeView {
       try {
         if (msg.type === 'refresh') return this.refresh();
         if (msg.type === 'start') {
-          await requestJson('POST', `${agentHostUrl()}/api/bridge/start`, { tunnelProvider: 'cloudflare' });
+          const binding = await workspaceBinding();
+          const result = await requestJson('POST', `${agentHostUrl()}/api/bridge/start`, { tunnelProvider: 'cloudflare', ...binding });
+          if(result.status >= 400 || !result.json?.success) throw new Error(result.json?.error || 'Bridge 启动被拒绝');
           return this.refresh();
         }
         if (msg.type === 'stop') {
@@ -340,7 +373,7 @@ class BridgeView {
           await vscode.commands.executeCommand('webagent.resetSecret');
         }
       } catch (e) {
-        vscode.window.showErrorMessage(e.message);
+        vscode.window.showErrorMessage(e.message, {modal:true});
       }
     });
     this.refresh();

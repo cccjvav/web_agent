@@ -113,7 +113,7 @@ async function main() {
   const home = userHome();
   const runtime = prepareRuntime();
   const workspace = resolveWorkspace(process.argv[3] || process.env.WORKSPACE_ROOT, process.cwd(),
-    runtime.installed ? path.join(home, 'workspace') : path.join(runtime.root, 'workspace'));
+    runtime.installed ? path.join(home, 'workspace') : runtime.root);
   const env = { ...process.env, WORKSPACE_ROOT: workspace };
   if (runtime.installed) {
     env.WEBAGENT_USER_DATA_DIR = path.join(home, 'code-server');

@@ -212,8 +212,15 @@ export async function openSite(key) {
 }
 
 export async function startBridge() {
+  try {
+  const expected = state.status;
   const provider = ($('input[name="tunnel"]:checked') || {}).value || 'cloudflare';
-  const body = { tunnelProvider: provider };
+  const statusResponse = await fetch('/api/status', {cache:'no-store'});
+  const binding = await statusResponse.json();
+  if (!statusResponse.ok || !binding.workspaceRoot || !binding.identity?.hostInstanceId || expected?.workspaceRoot !== binding.workspaceRoot || expected?.identity?.hostInstanceId !== binding.identity.hostInstanceId) {
+    window.alert('工作区尚未确认或主机已变化，不能启动 Bridge。请使用项目文件夹启动主机后刷新页面并核对工作区。'); return false;
+  }
+  const body = { tunnelProvider: provider, workspaceRoot:binding.workspaceRoot, hostInstanceId:binding.identity.hostInstanceId };
   if (provider === 'cloudflare-named' || provider === 'named') {
     body.namedDomain = ($('#named-domain') && $('#named-domain').value) || '';
     body.namedToken = ($('#named-token') && $('#named-token').value) || '';
@@ -228,7 +235,7 @@ export async function startBridge() {
     body: JSON.stringify(body)
   });
   const data = await res.json();
-  if (!data.success) { ui.toast(data.error || '无法启动'); return false; }
+  if (!data.success) { if(res.status===409)window.alert(data.error || '工作区未就绪'); else ui.toast(data.error || '无法启动'); return false; }
   if (data.note) ui.toast(data.note.slice(0, 180));
   state.stats.healthLine = '';
   await ui.refreshStatus();
@@ -237,6 +244,7 @@ export async function startBridge() {
   ui.setRight('bridge');
   $('#sess-dot').classList.add('on');
   return true;
+  } catch (error) { window.alert(error.message || 'Bridge 启动失败，请检查主机和工作区。'); return false; }
 }
 
 export async function stopBridge() {

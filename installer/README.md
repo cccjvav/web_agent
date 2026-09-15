@@ -25,7 +25,7 @@
 | 数据 | 默认位置/策略 |
 |---|---|
 | runtime | releases/<manifest-hash> |
-| 默认工作区 | workspace；显式参数或WORKSPACE_ROOT优先 |
+| 默认工作区 | 源码为仓库根；安装版为用户数据workspace；参数/WORKSPACE_ROOT优先 |
 | code-server设置/密码 | code-server目录，跨升级保留 |
 | 统计后台 | admin目录 |
 | App窗口启动日志 | startup.log |

@@ -4,6 +4,20 @@
 
 你的使用方式：**Windows 桌面 VS Code → 集成 CMD → 激活 Conda，Node.js 安装在系统中**。你已反馈完整重启 VS Code 后 npm/npx 恢复，符合旧 PATH 继承问题；这里只记录该问题已解决，不代替 E1 的完整解释器核对或其他验收。
 
+## 新增：让另一个AI检查产品本身（源码0.7.1）
+
+在桌面VSCode“文件 → 打开文件夹”选web_agent仓库根，并信任它；保持已有Conda环境，在集成CMD依次执行：
+
+```bat
+cd /d 你的web_agent完整路径
+set WORKSPACE_ROOT=
+install-vscode-extension.cmd
+```
+
+安装结束后重载VSCode窗口，再在仓库根的集成CMD运行`run-webagent.cmd`（不传参数）。`set WORKSPACE_ROOT=`只清除本终端旧覆盖；有意使用其他项目时不要清除。确认启动打印的Workspace是仓库根。打开本机工作台完成授权，再启动Bridge并按原路线连接MCP；让AI先调用workspace_info并读取README.md、manager/CONTEXT.md，核对项目再做辅助验收。根`npm test`是产品测试，`npm run test:example`才是可选计算器。不要把根目录拿来做破坏性边界实验，下文临时验收目录仍保留。
+
+若VSCode空窗口、首文件夹不是主机根或工作区未信任，点击Bridge启动应弹窗且不启动；先正确打开文件夹，不要绕过提示。为下文临时目录验收时，需要把IDE也打开到那个目录，并停止旧Bridge/主机后带临时路径重启，不能只换IDE目录期待主机跟随。经典页面遇主机重启/项目变化也会拒绝，刷新整页核对后重连。新根工作区不会自动带入旧示例中的模型密钥/账户配置。
+
 ## 0. 先选路线，并认识两个窗口
 
 - **推荐路线**：第 1–7 步准备、自动测试、本机编辑；再做第 8–11 步可选 MCP 连接；最后按第 12 步停止。第 13–18 步是分开的进阶验收。

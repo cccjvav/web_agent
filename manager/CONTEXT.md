@@ -1,13 +1,11 @@
 # Web Agent · 项目管理索引
 
 ## 当前阶段
-- **阶段8：双探针完整整合，进行中**。不是以0.4历史功能替代完整交付。
-- 用户要求原Probe全部参考能力与Inspector取长补短，再融入WebAgent；Chat API确切核验后置。
-- 0.5.2继续分离页面采集/轨迹查询代次、加强题目发送前不变性检查，并重写仍停留在旧阶段的能力对照文档；实机验收仍待进行。
-- 当前已验证代码：`a7cc6fc`，Companion/浏览器0.5.2；本地72测试文件，CI35025795772九项成功。
-- 0.5两端：同一个CDP采集器、trace与通用响应参考；VSCode显式实时订阅/历史与审批入口。真实Chrome/Arena/手机11.3仍未验收。
-- 未完成的完整能力及本轮状态以[阶段8](stages/s8-probe-integration.md)为唯一项目管理进度表。
-- 当前阶段关闭条件：能力表逐项有代码和验证证据；真实桌面/网站未验证项单列，不标完成。
+- **阶段9：工作区入口治理**，核心0.7.1；源码默认仓库根，IDE缺少/错误项目阻止Bridge并弹窗。见[阶段9](stages/s9-workspace-entry.md)。
+- **阶段8仍进行中**：双探针Companion/浏览器0.5.2主体与自动回归已交付，真实Chrome/Arena/目录源/桌面及手机11.3仍待验收，不以切换阶段掩盖未完成。
+- **阶段7也不是“全部优化完成”**：已确认缺陷和若干增强已落实，但26类借鉴中仍有未实现/待深入候选，详见阶段7与UPSTREAM_ADOPTION_MAP。
+- 上一已验证整仓基线a7cc6fc，CI35025795772九项成功；本次新提交必须独立核验CI，不借旧绿灯代签。
+- 持久登录仍延期；Chat API确切后端身份是用户约定的后续任务。启发式结果提供参考，不承诺绝对鉴定。
 
 ## 阶段导航
 | 阶段 | 状态与范围 | 记录 |
@@ -18,8 +16,9 @@
 | 4 终端 | 已实现并持续修正 | [终端](stages/s4-terminal.md) |
 | 5 体验对齐 | 原阶段记录；后续修复见阶段7 | [体验](stages/s5-experience-parity.md) |
 | 6 多Agent任务板 | 已实现；没有宣称通用多Agent协作完成 | [任务板](stages/s6-multi-agent-board.md) |
-| 7 平台审计与可靠性 | 已有修复/CI，Windows11.3仍待用户验收 | [平台可靠性](stages/s7-platform-reliability.md) |
-| 8 双探针完整整合 | 进行中 | [当前能力与验收](stages/s8-probe-integration.md) |
+| 7 平台审计与可靠性 | 缺陷修复有证据；借鉴候选未全部落地 | [平台可靠性](stages/s7-platform-reliability.md) |
+| 8 双探针完整整合 | 主体已交付；实机验收未关闭 | [当前能力与验收](stages/s8-probe-integration.md) |
+| 9 工作区入口治理 | 核心0.7.1实现与回归，新增人工项未代签 | [工作区与防错绑](stages/s9-workspace-entry.md) |
 
 ## 用户环境与验收
 - Windows桌面VSCode集成CMD，已有Conda环境，系统Node；不是默认Anaconda Prompt，不用venv。

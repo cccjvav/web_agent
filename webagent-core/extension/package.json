@@ -2,7 +2,7 @@
   "name": "webagent-core",
   "displayName": "Web Agent & Bridge",
   "description": "Web Agent Chat / Agent / Bridge. Talks to the local agent-host process.",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "publisher": "webagent",
   "engines": {
     "vscode": "^1.90.0"

@@ -57,7 +57,7 @@ Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./w
 | `webagent-core/agent-host/src/utils/localControl.js` | 本机控制面闸：隧道头 / 公网 Host 挡 48271 `/api` |
 | `webagent-core/agent-host/tests/localControl.test.js` | 回环 / CF 头 / trycloudflare Host |
 
-现：**123 / 123**（含 `tests/workbenchHtml.test.js`、`.github/workflows/test.yml`）。工作台把原来的单文件 `app.js` IIFE 拆成 `js/state.js`、`js/dom.js`、`js/tabs.js`、`js/chat.js`、`js/bridge.js`、`js/settings.js`、`js/bind.js`（+7），均写入 [`workbench/README.md`](./webagent-core/workbench/README.md)。P0 后又加 `src/utils/localControl.js` 与 `tests/localControl.test.js`。P1 加 `tests/sandbox.test.js`、`src/utils/corsAllow.js` 与 `tests/corsAllow.test.js`、`scripts/codeServerAuth.js` 与 `tests/codeServerAuth.test.js`、`tests/apiFiles.test.js`（`PUT /files/content` 走 `write_file`）。其后补回：`src/auth/github.js`、`src/usage/tracker.js`、`admin-host/app.js`+`index.js`、`run-admin.cmd/.sh`、`tests/githubAuth.test.js`、`usageTracker.test.js`、`adminHost.test.js`、`providers.test.js`。仓库级约定是 Skill [`docs-sync`](./workspace/.webagent/skills/docs-sync/SKILL.md)（`load_skill` 名 `docs-sync`），不是仓库根 `文档约定.md`。测绿就提交、勿攒未提交树：[`commit-now`](./workspace/.webagent/skills/commit-now/SKILL.md)。该 Skill 还要求：动到「为什么这样装」时按四层写法改根目录 [`架构导读.md`](./架构导读.md)（产品文，不计入上面的代码文件数）。
+现：**123 / 123**（含 `tests/workbenchHtml.test.js`、`.github/workflows/test.yml`）。工作台把原来的单文件 `app.js` IIFE 拆成 `js/state.js`、`js/dom.js`、`js/tabs.js`、`js/chat.js`、`js/bridge.js`、`js/settings.js`、`js/bind.js`（+7），均写入 [`workbench/README.md`](./webagent-core/workbench/README.md)。P0 后又加 `src/utils/localControl.js` 与 `tests/localControl.test.js`。P1 加 `tests/sandbox.test.js`、`src/utils/corsAllow.js` 与 `tests/corsAllow.test.js`、`scripts/codeServerAuth.js` 与 `tests/codeServerAuth.test.js`、`tests/apiFiles.test.js`（`PUT /files/content` 走 `write_file`）。其后补回：`src/auth/github.js`、`src/usage/tracker.js`、`admin-host/app.js`+`index.js`、`run-admin.cmd/.sh`、`tests/githubAuth.test.js`、`usageTracker.test.js`、`adminHost.test.js`、`providers.test.js`。仓库级约定是 Skill [`docs-sync`](./.webagent/skills/docs-sync/SKILL.md)（`load_skill` 名 `docs-sync`），不是仓库根 `文档约定.md`。测绿就提交、勿攒未提交树：[`commit-now`](./.webagent/skills/commit-now/SKILL.md)。该 Skill 还要求：动到「为什么这样装」时按四层写法改根目录 [`架构导读.md`](./架构导读.md)（产品文，不计入上面的代码文件数）。
 
 其后补桌面 VS Code 侧载：`webagent-core/scripts/install-desktop-extension.js`、`webagent-core/extension/workspaceMatch.js`、`webagent-core/agent-host/tests/desktopExtension.test.js`、根 `install-vscode-extension.cmd`，写入 [scripts/README.md](./webagent-core/scripts/README.md)、[extension/README.md](./webagent-core/extension/README.md)、[tests/README.md](./webagent-core/agent-host/tests/README.md)、[启动脚本说明.md](./启动脚本说明.md)。
 
@@ -69,7 +69,7 @@ Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./w
 | `extensions-installed/*.js` | 是 `extension/` 的拷贝，行级见 [`extension/README.md`](./webagent-core/extension/README.md) |
 | 根 `README.md` | GitHub 首页，不改成行级模板 |
 
-工作区 Skill 文本（`workspace/.webagent/skills/*/SKILL.md`）不是代码，已在 [`workspace/README.md`](./workspace/README.md) 说明。
+工作区 Skill 文本（`.webagent/skills/*/SKILL.md`）不是代码，使用方式见[技能指南](./技能使用指南.md)，evidence-check的workflow.json另有源码登记。
 
 ---
 
@@ -77,7 +77,7 @@ Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./w
 
 脚本解析全部 Markdown 链接（方括号标题 + 圆括号相对路径）：
 
-- 子模块「查看详情」均为 `./webagent-core/.../README.md` 或 `./workspace/README.md` 等，**没有**写成 `../`（`总览.md` 在仓库根，`./` 正确）。
+- 子模块「查看详情」均为 `./webagent-core/.../README.md` 或 `./examples/calculator/README.md` 等，**没有**写成 `../`（`总览.md` 在仓库根，`./` 正确）。
 - 快速导航锚点指向各 README 的 `### 📄 文件名` 标题；GitHub slug 一般为 `文件名xxxjs`。若渲染器去不掉 emoji，点标题仍可在该文件内搜索文件名。
 - 外部链接仅 `https://nodejs.org/`。
 
@@ -113,7 +113,7 @@ Bridge 工具链之后新增 2 个 `.js`，均写入 [`src/tools/README.md`](./w
 | `webagent-core/extension/` | [README](./webagent-core/extension/README.md) |
 | `webagent-core/extensions-installed/` | [README](./webagent-core/extensions-installed/README.md) |
 | `webagent-core/scripts/` | [README](./webagent-core/scripts/README.md) |
-| `workspace/` | [README](./workspace/README.md) |
+| `examples/calculator/` | [README](./examples/calculator/README.md) |
 | `bin/` | [README](./bin/README.md) |
 | `webagent-repro/` | [README](./webagent-repro/README.md) |
 | `.config/code-server/` | [README](./.config/code-server/README.md) |

@@ -9,6 +9,8 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/src/utils/workspaceBinding.js", "webagent-core/agent-host/src/utils/函数详解.md"],
+  ["webagent-core/agent-host/tests/workspaceEntry.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
   ["webagent-core/agent-host/tests/probeQuestionGuard.test.js", "webagent-core/probe-extension/实现详解.md"],
   ["webagent-core/agent-host/tests/probeCaptureLifecycle.test.js", "webagent-core/probe-extension/实现详解.md"],
   ["webagent-core/agent-host/tests/probePairLifecycle.test.js", "webagent-core/probe-extension/实现详解.md"],
@@ -248,6 +250,8 @@ for (const [source, guide] of pairs) {
 }
 // File-level evidence for non-JS prose: no semantic or selector completeness claim.
 const artifactPairs = [
+  ["package.json", "平台启动与CI详解.md"],
+  [".webagent/skills/evidence-check/workflow.json", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
   ["webagent-core/probe-extension/package_browser.py", "webagent-core/probe-extension/实现详解.md"],
   ["webagent-core/probe-extension/sample-observation.json", "webagent-core/probe-extension/实现详解.md"],
   ["webagent-core/probe-extension/package.json", "webagent-core/probe-extension/实现详解.md"],

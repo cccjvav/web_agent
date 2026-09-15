@@ -184,5 +184,23 @@ if (!process.argv.includes('--vm-child')) {
   assert.strictEqual(sockets, 1, 'initial request failure must not prevent websocket startup');
   assert.strictEqual(activated, 1, 'initial tab must still activate');
   assert.strictEqual(warnings, 1, 'partial initialization failure must be visible');
+  // Bridge start binds the visible project, not a different host returned after restart.
+  let starts = 0, alerts = 0;
+  const boundStatus = {workspaceRoot:'/fixture/project',identity:{hostInstanceId:'current'},mcpUrl:'/mcp/fixture'};
+  context.window.alert = () => { alerts++; };
+  context.navigator = {clipboard:{writeText:async()=>{}}};
+  button.classList = {add(){},remove(){}};
+  state.namespace.ui.refreshStatus = async()=>{};
+  context.fetch = async url => url==='/api/status' ? {ok:true,json:async()=>boundStatus} : (++starts,{status:200,json:async()=>({success:true})});
+  state.namespace.state.status = null;
+  assert.equal(await bridge.namespace.startBridge(),false);assert.equal(starts,0);
+  state.namespace.state.status = {...boundStatus,identity:{hostInstanceId:'stale'}};
+  assert.equal(await bridge.namespace.startBridge(),false);assert.equal(starts,0);
+  state.namespace.state.status = boundStatus;
+  assert.equal(await bridge.namespace.startBridge(),true);assert.equal(starts,1);
+  context.fetch = async url => url==='/api/status' ? {ok:true,json:async()=>boundStatus} : {status:409,json:async()=>({success:false,error:'stale'})};
+  assert.equal(await bridge.namespace.startBridge(),false);assert.equal(alerts,3);
+  context.fetch = async()=>{throw new Error('offline');};
+  assert.equal(await bridge.namespace.startBridge(),false);assert.equal(alerts,4);
   console.log('workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });
