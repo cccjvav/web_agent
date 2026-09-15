@@ -56,6 +56,10 @@ jobs:
           node docs-site/check-docs.js
       - run: node webagent-core/agent-host/tests/installerPackaging.test.js
       - run: node installer/package.js
+      - name: Build standalone Probe Companion VSIX (no installation)
+        run: |
+          python webagent-core/probe-extension/package_vsix.py
+          python -m zipfile -t webagent-core/probe-extension/dist/webagent-probe-companion-0.1.0.vsix
       - name: Compile Windows input helpers and validate script syntax
         shell: powershell
         run: |

@@ -104,3 +104,5 @@ run-tests.cmd
 ```
 
 bash 入口与 `.cmd` 一样：缺 Node/npm 会退出；默认 `workspace/` 不存在则创建；自定义路径必须已经存在。
+
+**VS Code配套探针**：[安装、分工与验收](webagent-core/probe-extension/README.md)。与WebAgent并装；首版只做本机连接诊断及最小摘要核对，不把原型网络钩子/令牌/轨迹能力搬入VS Code。

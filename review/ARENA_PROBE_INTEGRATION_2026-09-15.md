@@ -41,3 +41,7 @@ connectionCheck隔离测试涵盖原始额外字段/错误来源/过期拒绝、
 ## 原型生命周期续修
 
 上一提交8f12e24的全部9项CI也已通过（https://github.com/cccjvav/web_agent/actions/runs/34974802592）。本轮继续修复BUS可退订/异步拒绝隔离、HUD拖动清理、重复启动预约与拒绝旧版热叠加，详见原型TRANSPORT_REVIEW。HUD关闭不等于全局停止；未测试真实账号，也未改动原型轮询读取能力。
+
+## VS Code配套扩展首版
+
+用户授权做可并装的VS Code版本。新增webagent-core/probe-extension独立ID与VSIX白名单构建，复用既有本机HTTP核对接口和WebAgent Bridge命令，不新增host工具/执行权限，不自动启动浏览器原型。模型推断、原始流量、令牌和后台轨迹未移植。验证分为隔离HTTP/VSCode API桩、VSIX包结构、真实桌面人工验收；最后一项仍待用户执行。原型的SSE多行/证据混用等未完成项仍保留。

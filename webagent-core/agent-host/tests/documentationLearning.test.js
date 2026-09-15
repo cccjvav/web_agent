@@ -9,6 +9,9 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/probe-extension/client.js", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/probe-extension/extension.js", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/agent-host/tests/probeCompanion.test.js", "webagent-core/probe-extension/实现详解.md"],
   ["webagent-core/agent-host/tests/probeTransport.test.js", "webagent-core/agent-host/tests/浏览器与Webview测试详解.md"],
   ["webagent-core/agent-host/src/utils/connectionCheck.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
   ["webagent-core/agent-host/tests/connectionCheck.test.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
@@ -217,6 +220,8 @@ for (const [source, guide] of pairs) {
 }
 // File-level evidence for non-JS prose: no semantic or selector completeness claim.
 const artifactPairs = [
+  ["webagent-core/probe-extension/package.json", "webagent-core/probe-extension/实现详解.md"],
+  ["webagent-core/probe-extension/package_vsix.py", "webagent-core/probe-extension/实现详解.md"],
   ["webagent-core/agent-host/src/mcp/stdioBridge.cs", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
   ["webagent-core/agent-host/src/mcp/stdioBridge.ps1", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
 

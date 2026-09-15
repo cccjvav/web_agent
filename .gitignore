@@ -46,3 +46,6 @@ installer/output/
 arena-model-probe/recon/
 arena-model-probe/**/__pycache__/
 arena-model-probe/dist/
+
+# Locally built standalone VS Code companion
+webagent-core/probe-extension/dist/

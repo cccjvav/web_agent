@@ -89,3 +89,5 @@ CI同时运行非阻断npm audit --omit=dev：用于提示最新生产依赖公�
 test.yml的Windows安装器任务同时Add-Type编译commandJob.cs与stdioBridge.cs，并ParseFile检查stdioBridge.ps1；Node矩阵里的stdioMcp.test.js实际运行监督器/传输/取消和宿主强杀回收。不是只语法通过就宣称进程生命周期正确，也不替代用户11.3。
 
 2026-09-15 stdio回归：Windows矩阵原ptyLifecycle五轮不变，追加stdioMcp两轮；连同npm test一轮，在Node20/22/24各执行三轮显式启动、协议预算、取消和宿主死亡测试。仍使用run-tests文件级deadline，任一轮非零立即退出。
+
+Windows installer job追加独立Probe Companion VSIX白名单构建及zipfile完整性检查，使用runner已有Python标准库，不安装到VS Code、不执行扩展。VSIX实机安装和API交互仍需人工验收，不能冒称该步骤已覆盖。

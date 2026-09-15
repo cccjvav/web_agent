@@ -1,0 +1,23 @@
+{
+  "name": "webagent-probe-companion",
+  "displayName": "WebAgent Probe Companion",
+  "description": "Local connection diagnostics and explicit browser observation import. Not model identity verification.",
+  "publisher": "webagent",
+  "version": "0.1.0",
+  "engines": { "vscode": "^1.90.0" },
+  "categories": ["Other"],
+  "main": "./extension.js",
+  "extensionKind": ["ui"],
+  "capabilities": { "untrustedWorkspaces": { "supported": false }, "virtualWorkspaces": { "supported": false } },
+  "contributes": {
+    "commands": [
+      { "command": "webagentProbe.open", "title": "WebAgent Probe: 打开配套诊断" },
+      { "command": "webagentProbe.diagnostics", "title": "WebAgent Probe: 查看本机主机诊断" },
+      { "command": "webagentProbe.import", "title": "WebAgent Probe: 导入最小页面摘要" },
+      { "command": "webagentProbe.copy", "title": "WebAgent Probe: 复制一次性核对请求" },
+      { "command": "webagentProbe.refresh", "title": "WebAgent Probe: 查询核对结果" },
+      { "command": "webagentProbe.forget", "title": "WebAgent Probe: 丢弃当前核对记录" }
+    ]
+  },
+  "license": "ISC"
+}
