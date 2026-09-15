@@ -1,0 +1,6 @@
+{
+  "steps": [
+    { "id": "host", "tool": "ping", "arguments": {} },
+    { "id": "workspace", "tool": "workspace_info", "arguments": {} }
+  ]
+}

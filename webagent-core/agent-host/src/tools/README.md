@@ -104,7 +104,7 @@ readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，
 | [readCache.js](readCache.js) | 10 个函数/类节点 |
 | [searchWorker.js](searchWorker.js) | 0 个函数/类节点 |
 | [sensitive.js](sensitive.js) | 12 个函数/类节点 |
-| [skills.js](skills.js) | 11 个函数/类节点 |
+| [skills.js](skills.js) | 20 个函数/类节点 |
 | [workflows.js](workflows.js) | 10 个函数/类节点 |
 | [workspaceInfo.js](workspaceInfo.js) | 3 个函数/类节点 |
 <!-- docs-inventory:end -->

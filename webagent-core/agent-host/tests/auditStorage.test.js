@@ -103,7 +103,8 @@ async function main() {
     fs.mkdirSync(path.join(skills, 'prefix'));
     fs.writeFileSync(path.join(skills, 'prefix', 'SKILL.md'), '中'.repeat(30000));
     const prefix = loadSkill({ name: 'prefix' });
-    assert.strictEqual(prefix.content.length, 28000);
+    assert.strictEqual(prefix.content.length, 8000);
+    assert.strictEqual(prefix.nextOffset, 8000);
     assert.strictEqual(prefix.truncated, true);
     const external = path.join(root, 'external-skill');
     fs.mkdirSync(external);

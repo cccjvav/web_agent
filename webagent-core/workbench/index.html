@@ -423,7 +423,22 @@
             <button type="button" class="vs-btn" data-tpl="review">代码审查</button>
             <button type="button" class="vs-btn" data-tpl="release">发版</button>
           </div>
+          <label class="field-label" for="skill-search">搜索名称、描述或来源</label>
+          <input id="skill-search" class="ms-input" placeholder="review / 测试 / bundled" />
+          <button type="button" id="btn-refresh-skills" class="vs-btn">重新扫描</button>
+          <p id="skills-scan-note" class="hint"></p>
           <div id="skills-list"></div>
+          <section id="skill-reader" class="block hidden" aria-label="技能只读查看器">
+            <h3 id="skill-reader-title"></h3>
+            <p id="skill-reader-note" class="hint" role="status"></p>
+            <pre id="skill-reader-content" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:320px;overflow:auto"></pre>
+            <div class="row-btns">
+              <button type="button" id="btn-skill-more" class="vs-btn">读取下一页</button>
+              <button type="button" id="btn-skill-workflow" class="vs-btn" disabled>转到工作流预览（不执行）</button>
+              <button type="button" id="btn-skill-use" class="vs-btn">填入 Ask 对话（不发送）</button>
+            </div>
+            <div id="skill-resources" class="row-btns"></div>
+          </section>
           <label class="field-label">1. 名称</label>
           <input id="sk-name" class="ms-input" placeholder="fix-tests" />
           <label class="field-label">2. 何时使用</label>

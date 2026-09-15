@@ -142,14 +142,81 @@ export async function saveCustom(partial) {
   return state.custom;
 }
 
+let skillCatalog = [], openedSkill = null, skillRequest = 0, skillController = null;
+
+export function paintSkills() {
+  const query = ($('#skill-search').value || '').toLowerCase();
+  const rows = skillCatalog.filter(skill => `${skill.id} ${skill.description || ''}`.toLowerCase().includes(query));
+  $('#skills-list').innerHTML = rows.map(skill => `<article class="block"><h4>${escapeHtml(skill.name)}</h4>`
+    + `<p class="hint">${escapeHtml(skill.id)} · 说明型 · 不自动执行${skill.shadowed ? ' · 存在同名项，请使用完整ID' : ''}</p>`
+    + `<p>${escapeHtml(skill.description || skill.preview)}</p>`
+    + `<button type="button" class="vs-btn" data-skill-id="${escapeHtml(skill.id)}">查看正文与资源</button></article>`).join('') || '<p class="hint">没有匹配的 Skill。</p>';
+}
+
+export async function readSkillPage(id, resource = 'SKILL.md', offset = 0, hash = '') {
+  const ticket = ++skillRequest;
+  if (skillController) skillController.abort();
+  const controller = new AbortController(); skillController = controller;
+  const timer = setTimeout(() => controller.abort(), 5000);
+  if (!offset) { openedSkill = null; $('#skill-reader-content').textContent = ''; $('#skill-resources').innerHTML = ''; }
+  $('#skill-reader').classList.remove('hidden');
+  $('#btn-skill-more').disabled = true; $('#btn-skill-use').disabled = true; $('#btn-skill-workflow').disabled = true;
+  $('#skill-reader-note').textContent = '正在只读加载…';
+  try {
+    const response = await fetch('/api/skills/load?' + new URLSearchParams({ name: id, resource, offset: String(offset), expectedHash: hash }), { signal: controller.signal });
+    const data = await response.json();
+    if (ticket !== skillRequest) return;
+    if (!response.ok || !data.found) throw new Error(data.error || data.hint || `HTTP ${response.status}`);
+    $('#skill-reader-content').textContent = offset && openedSkill?.id === id && openedSkill?.resource === resource
+      ? $('#skill-reader-content').textContent + data.content : data.content;
+    openedSkill = data;
+    $('#skill-reader-title').textContent = `${data.id} / ${data.resource}`;
+    $('#skill-reader-note').textContent = `SHA256 ${data.hash} · 已读至 ${data.nextOffset ?? data.totalChars}/${data.totalChars} 字符。仅查看说明/源码；没有执行或安装。${data.resourcesTruncated ? '资源目录已截断，可按已知相对路径单独读取。' : ''}`;
+    $('#btn-skill-more').disabled = data.nextOffset == null;
+    $('#btn-skill-use').disabled = false;
+    $('#btn-skill-workflow').disabled = data.resource !== 'workflow.json' || data.nextOffset != null || data.fileBytes > 32 * 1024;
+    if (!offset) $('#skill-resources').innerHTML = `<button type="button" class="vs-btn" data-resource="SKILL.md">重新读取 SKILL.md</button>`
+      + (data.resources || []).map(item => `<button type="button" class="vs-btn" data-resource="${escapeHtml(item.path)}" ${item.readable ? '' : 'disabled'}>${escapeHtml(item.path)}（只读）</button>`).join('');
+  } catch (error) {
+    if (ticket === skillRequest) { openedSkill = null; $('#skill-reader-note').textContent = `加载失败：${error.message}。重新选择目录项，从第一页读取。`; }
+  } finally { clearTimeout(timer); if (ticket === skillRequest) skillController = null; }
+}
+
 export async function loadSkills() {
-  const res = await fetch('/api/skills');
-  const data = await res.json();
-  const list = data.skills || [];
-  $('#cnt-skills').textContent = list.length ? String(list.length) : '';
-  $('#skills-list').innerHTML = list.length
-    ? list.map((s) => `<article class="block"><h4>${escapeHtml(s.name)}</h4><p class="hint">${escapeHtml(s.skillFile || s.path)}</p><pre style="white-space:pre-wrap;font-size:12px">${escapeHtml(s.preview)}</pre></article>`).join('')
-    : '<p class="hint">还没有 Skill。把文件夹放到 .webagent/skills/ 即可。</p>';
+  try {
+    const res = await fetch('/api/skills');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json(); skillCatalog = data.skills || [];
+    $('#cnt-skills').textContent = skillCatalog.length ? String(skillCatalog.length) : '';
+    $('#skills-scan-note').textContent = `${skillCatalog.length} 项；来源仅表示位置，不表示授权。${data.truncated ? '扫描达到目录/数量上限，目录不完整。' : ''} ${(data.warnings || []).join(' ')}`;
+    paintSkills();
+  } catch (error) { $('#skills-scan-note').textContent = `扫描失败：${error.message}`; }
+  $('#skill-search').oninput = paintSkills;
+  $('#btn-refresh-skills').onclick = loadSkills;
+  $('#skills-list').onclick = event => {
+    const button = event.target.closest('[data-skill-id]');
+    if (button) readSkillPage(button.dataset.skillId);
+  };
+  $('#btn-skill-more').onclick = () => {
+    if (openedSkill?.nextOffset != null) readSkillPage(openedSkill.id, openedSkill.resource, openedSkill.nextOffset, openedSkill.hash);
+  };
+  $('#skill-resources').onclick = event => {
+    const button = event.target.closest('[data-resource]');
+    if (button && openedSkill) readSkillPage(openedSkill.id, button.dataset.resource);
+  };
+  $('#btn-skill-workflow').onclick = () => {
+    if (!openedSkill || openedSkill.resource !== 'workflow.json' || openedSkill.nextOffset != null || openedSkill.fileBytes > 32 * 1024) return;
+    $('#ops-workflow').value = $('#skill-reader-content').textContent;
+    ui.openModal('operations');
+    $('#btn-ops-preview').click(); // Existing schema/risk preview only; submission/approval remain separate.
+  };
+  $('#btn-skill-use').onclick = () => {
+    if (!openedSkill) return;
+    const input = $('#chat-input');
+    input.value += `${input.value ? '\n\n' : ''}请先调用 load_skill，name 为 ${JSON.stringify(openedSkill.id)}，读取说明并判断是否适用。先给出计划；未经本次授权不要写入、运行脚本或安装依赖。`;
+    ui.setAgentMode('ask'); ui.setRight('chat'); ui.closeModal(); input.focus();
+    ui.toast('已填入 Ask，尚未发送。内置探索不解释任意Skill；按技能推理需配置模型或使用外部AI。');
+  };
 }
 
 ui.rowList = rowList;

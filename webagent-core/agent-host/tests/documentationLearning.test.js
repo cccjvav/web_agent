@@ -9,6 +9,7 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/tests/skillsLifecycle.test.js", "webagent-core/agent-host/src/tools/技能与隐藏规则详解.md"],
   ["webagent-core/agent-host/src/utils/operatorQueue.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
   ["webagent-core/agent-host/src/mcp/externalClient.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
   ["webagent-core/agent-host/src/tools/workflows.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],

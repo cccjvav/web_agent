@@ -16,7 +16,7 @@ const { listRemoteModels } = require('../agent/providers');
 const store = require('../models/store');
 const { loadCustom, patchCustom } = require('../models/customizations');
 const { detectEnvironment, detectTechStack } = require('../models/profile');
-const { listSkills } = require('../tools/skills');
+const { listSkills, discoverSkills } = require('../tools/skills');
 const eventBus = require('../utils/eventBus');
 const { snapshot: mcpSnapshot, reset: mcpReset } = require('../mcp/session');
 const { resetHashes, rememberHash } = require('../tools/readCache');
@@ -400,16 +400,15 @@ router.put('/files/content', async (req, res) => {
   }
 });
 
-router.get('/skills', (req, res) => {
-  res.json({
-    skills: listSkills().map(({ name, path: p, preview, skillFile, skillFileAbs }) => ({
-      name,
-      path: p,
-      preview,
-      skillFile,
-      skillFileAbs
-    }))
-  });
+router.get('/skills', (req, res) => res.json(discoverSkills()));
+
+router.get('/skills/load', async (req, res) => {
+  try {
+    const args = { name: req.query.name, resource: req.query.resource || 'SKILL.md', expectedHash: req.query.expectedHash };
+    for (const key of ['offset', 'limit', 'cursor', 'pageSize']) if (req.query[key] != null) args[key] = Number(req.query[key]);
+    const result = await callTool('load_skill', args, 'ask');
+    res.status(result.found === false ? 404 : 200).json(result);
+  } catch (error) { res.status(error.code === 'E_STALE_FILE' ? 409 : 400).json({ error: error.message, code: error.code }); }
 });
 
 router.post('/providers/probe', async (req, res) => {

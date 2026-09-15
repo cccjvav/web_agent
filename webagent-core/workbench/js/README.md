@@ -37,7 +37,7 @@ agent-host测试中的editorRuntime、workbenchRuntime、monacoLoading执行实�
 | [monaco.js](monaco.js) | 9 个函数/类节点 |
 | [operations.js](operations.js) | 19 个函数/类节点 |
 | [picker.js](picker.js) | 16 个函数/类节点 |
-| [settings.js](settings.js) | 25 个函数/类节点 |
+| [settings.js](settings.js) | 35 个函数/类节点 |
 | [state.js](state.js) | 2 个函数/类节点 |
 | [tabs.js](tabs.js) | 39 个函数/类节点 |
 <!-- docs-inventory:end -->

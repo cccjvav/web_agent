@@ -150,3 +150,6 @@
 3. 用户或 Agent 执行 `npm test` → `tests/calculator.test.js` 调 `src/calculator.js`。
 4. `load_skill` 扫描 `.webagent/skills/*/SKILL.md`；`getInstructions` 拼 `customizations.json` 的 instructions。
 5. 换工作区：`run-webagent.cmd D:\code\my-repo`，就不再用本演示树。
+
+## Skills证据检查示例
+`.webagent/skills/evidence-check/`含说明、按需引用和只读工作流示例。仅在使用本演示工作区时自动发现；其他工作区需用户审阅后自行复制，不自动安装。读取/预览不执行，工作流仍需独立本机批准。

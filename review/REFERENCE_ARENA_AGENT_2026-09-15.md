@@ -4,6 +4,39 @@
 
 上游：[IvanSkainet/arena-agent](https://github.com/IvanSkainet/arena-agent)，本次读取的master提交：`46d97048a75ed2fe7227a5ca6f2a85778d32ccd9`。以下源码链接固定到这个提交，避免上游后来变化影响结论。
 
+## 2026-09-15追加：实施状态与Skills深读
+
+前述2400ad9是最初**审阅时**基线，下文原建议保留历史语境。后续6ac5f92已完成主机诊断、调用追踪、核验与真实浏览器CI；9fb68d2/656fd3c增加逐次本机审批、回环HTTP MCP客户端、有限工作流与认证远程请求归属。本批继续实现Skills闭环，不重复声称这些已有能力尚未开始。
+
+### Skills还可以吸收什么
+
+| 上游固定版本源码 | 实际观察 | 本项目选择 |
+|---|---|---|
+| [registry.py](https://github.com/IvanSkainet/arena-agent/blob/46d97048a75ed2fe7227a5ca6f2a85778d32ccd9/arena/skills/registry.py) | manifest描述/版本回退SKILL正文，区分类别/第三方；有标记才纳入嵌套包，避免资源文件夹全成技能 | 采用有界分层发现、用途元数据与source-qualified ID；只以SKILL.md认定说明型Skill，不把run.py存在等同授权；同名项不隐身。来源位置不代表可信 |
+| [runner.py](https://github.com/IvanSkainet/arena-agent/blob/46d97048a75ed2fe7227a5ca6f2a85778d32ccd9/arena/skills/runner.py) | 区分脚本、prompt-only、agentctl fallback；有Windows运行器选择和错误提示 | 吸收“说明和可执行程序要区分”的契约。不移植入口猜测/自动run。原prompt-only一次返回完整正文，我们改为hash绑定分页、附属资源按需加载 |
+| [cache.py](https://github.com/IvanSkainet/arena-agent/blob/46d97048a75ed2fe7227a5ca6f2a85778d32ccd9/arena/skills/cache.py) | 5秒TTL、锁、递归相关文件mtime与主动reload | 保留即时重扫，无缓存；当前有界小目录未证明缓存收益，不为对齐功能引入失效/删除文件旧状态问题 |
+| [runtime.py](https://github.com/IvanSkainet/arena-agent/blob/46d97048a75ed2fe7227a5ca6f2a85778d32ccd9/arena/skills/runtime.py) / [handlers.py](https://github.com/IvanSkainet/arena-agent/blob/46d97048a75ed2fe7227a5ca6f2a85778d32ccd9/arena/skills/handlers.py) | 运行时依赖注入、认证的列表/重扫/安装/运行入口分工 | 保持既有callTool统一模式/追踪，本机只读查看路由不变成另一个执行端点。MCP原有认证与审批归属不变 |
+| [cli_run.py](https://github.com/IvanSkainet/arena-agent/blob/46d97048a75ed2fe7227a5ca6f2a85778d32ccd9/arena/skills/cli_run.py) | CLI有pre/post hook、manifest超时及退出/耗时记录；与HTTP runner不是同一套分支 | 不引入读取即触发hook，也不以“有timeout”当进程树/输出隔离；复用现有任务追踪和批准工作流，不另造平行任务系统 |
+| [install.py](https://github.com/IvanSkainet/arena-agent/blob/46d97048a75ed2fe7227a5ca6f2a85778d32ccd9/arena/skills/install.py) | 独立Git/ZIP安装与限定third_party卸载，有路径/清理逻辑 | 安装是供应链问题，不只是一个下载按钮；保留以后做来源/固定版本/许可证/内容预审的方向。本批不接入下载、依赖安装、卸载或自动更新；没有完整认证其解压及网络边界 |
+
+这里只采用设计思路，自行实现Node工具与原生页面；没有复制上游源码、执行第三方Skill、安装上游依赖或运行上游测试。runner的capture_output先收集再裁尾、继承环境再叠加字段，都不能直接当成我们的输出硬预算或环境隔离保证；这是静态机制区别，不是已复现漏洞结论。
+
+### 已落地的使用闭环
+
+- 目录：workspace/shared/bundled来源ID，最多3层、512条目、128工作区项，超限可见。shared仅指当前工作区skills目录，不是多工作区共享。
+- 正文：128KiB普通UTF8文件、每页最多8000 UTF16字符，nextOffset + expectedHash续读；改变后拒绝混版。拒二进制、FIFO、敏感/越界和符号链接资源；这是有限路径边界，不是抵御恶意宿主并发改盘的OS沙箱。
+- 资源：最多20个引用/脚本目录项，按需读取，源码纯文本显示。没有猜入口、执行脚本或安装包。
+- 上下文：只放前20条用途目录，不预塞全部正文；精确ID消歧，不根据目录文字授予权限。目录与工具整体上下文预算仍是软预算，不能宣称所有元数据组合严格小于16000字符。
+- UI：搜索/刷新/正文/下一页/资源；填入Ask保留草稿、不发送。内置固定探索器不能解释任意Skill，需实际模型或外部AI做规划。
+- 工作流：完整读取的小型workflow.json只转现有预览，不提交或批准。继续使用schema白名单、明确参数、单次本机批准和写后核验；没有任意第三方manifest兼容层。
+- 示例：演示工作区evidence-check包含说明/引用/只读工作流；不自动搬到用户业务工作区。技能使用指南已补Windows资源管理器步骤、MCP参数和安全边界，逐函数文档同步。
+
+### 验证与还没做完的部分
+
+本批本地产品测试55个文件通过；独立真实Chromium回归通过，覆盖技能搜索、分页原文一致、脚本无执行、Ask无自动发送、工作流只预览无写入，以及认证MCP续读/旧hash失败和REST 404/400/409。原帮助/Bridge/主题/保存/WS恢复/本机及认证远程审批用例继续通过。生成文档库存为178源文件、25目录、39排除。这里不是用户Windows或手机实机验收，也不先宣布远端CI成功。
+
+仍未实现：外部MCP stdio进程客户端/公网服务器接入、任意非原生MCP聊天网站的通用扩展适配、第三方Skill下载安装与独立执行沙箱；工作流仅固定白名单，不支持任意嵌套/条件/重试。多工作区隔离、持久登录、后台自启仍按原决定延期。用户11.3仍未完成，不能用Linux/CI代签。
+
 ## 1. 结论与审阅边界
 
 **值得学习，但应学习真实执行、诊断和验证的工程方法，而不是复制它的全部功能、名称或体量。** 它不只是README：浏览器扩展、MCP客户端、能力探测、任务队列、自定义工具组合、执行隔离和审计都有实现文件。但源码存在不等于在用户Windows、浏览器账号和网络条件下可用。

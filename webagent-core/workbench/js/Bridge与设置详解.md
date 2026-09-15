@@ -45,7 +45,9 @@
 
 **loadCustomizations()**GET/json入state.custom再paintCustom，未检查HTTP状态。**saveCustom(partial)**把旧state.custom与partial浅合并PUT，响应data.customizations替换state，再paint并返回。部分对象不是递归merge；并发两个保存可能都基于旧快照，无前端CAS/version锁。
 
-**loadSkills()**GET skills、取data.skills或空，数量徽标和map article(name/path/preview转义)，没有就提示目录；显示preview不等于模型已load完整Skill。所有函数底部挂ui同名引用。
+**loadSkills()**获取带来源/截断/错误提示的目录，并绑定搜索、重扫、查看、下一页、资源和填入对话按钮。**paintSkills()**按id/description过滤并转义生成卡片，显示来源和同名项。**readSkillPage(id,resource,offset,hash)**调用受保护的GET `/api/skills/load`，5秒AbortController超时；新请求取消上一个且用ticket忽略迟到响应。第一页清旧正文；后续页按同id/resource拼接，服务端校验expectedHash防混版；错误清选择并提示从头读取，不允许继续操作旧内容。正文textContent展示，不执行Markdown/脚本。只将loadSkills作为原ui启动入口，新增导出也可供测试直接调用。
+
+“填入Ask”保留已有草稿，追加明确load_skill ID和授权限制，切Ask并聚焦，**不发送**；提示内置探索不能解释任意Skill。完整读完≤32KiB的`workflow.json`才启用转工作流按钮；只复制已读取的文本到现有operations页并触发结构/风险预览，不提交审批、不执行；现有流程仍需另外提交和本机批准。其他资源只是参考文本，不根据run.py/run.sh名字自动启动。
 
 ## 4. 验证
 

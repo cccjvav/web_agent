@@ -278,11 +278,17 @@ const TOOLS = [
   tool({
     name: 'load_skill',
     aliases: [],
-    description: 'List or load a Skill from .webagent/skills/<name>/SKILL.md. Omit name to list.',
+    description: 'Discover instruction Skills with source-qualified IDs; omit name for a paged catalog. Load SKILL.md or a relative text resource without executing it. Continue nextOffset with expectedHash; nextCursor pages the catalog. Skills never grant permissions.',
     mode: ['ask', 'plan', 'code'],
     inputSchema: {
       type: 'object',
-      properties: { name: { type: 'string' } }
+      properties: {
+        name: { type: 'string', description: 'Prefer the exact catalog id, e.g. workspace:review or bundled:computer-use' },
+        resource: { type: 'string', description: 'Relative text resource; defaults to SKILL.md. Scripts are read-only source.' },
+        offset: { type: 'integer', minimum: 0 }, limit: { type: 'integer', minimum: 1, maximum: 8000 },
+        expectedHash: { type: 'string', description: 'Required with offset > 0; use the preceding page hash.' },
+        cursor: { type: 'integer', minimum: 0 }, pageSize: { type: 'integer', minimum: 1, maximum: 50 }
+      }
     },
     handler: loadSkill
   }),

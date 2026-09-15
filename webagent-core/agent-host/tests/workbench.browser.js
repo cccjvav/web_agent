@@ -17,6 +17,14 @@ async function freePort() {
 async function main() {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-browser-'));
   fs.writeFileSync(path.join(workspace, 'acceptance.txt'), 'REAL-BROWSER-EVIDENCE\n');
+  const skillDir = path.join(workspace, '.webagent/skills/browser-review');
+  fs.mkdirSync(path.join(skillDir, 'references'), { recursive: true });
+  fs.mkdirSync(path.join(skillDir, 'scripts'));
+  const skillBody = '---\ndescription: Browser skill fixture <img src=x onerror=alert(1)>\n---\n# Review\n' + '正文'.repeat(4500) + '\nEND-SKILL';
+  fs.writeFileSync(path.join(skillDir, 'SKILL.md'), skillBody);
+  fs.writeFileSync(path.join(skillDir, 'references/check.md'), 'REFERENCE-EVIDENCE');
+  fs.writeFileSync(path.join(skillDir, 'scripts/run.js'), 'require("fs").writeFileSync("UNAUTHORIZED-SKILL", "bad")');
+  fs.writeFileSync(path.join(skillDir, 'workflow.json'), JSON.stringify({ steps: [{ id: 'write', tool: 'write_file', arguments: { filePath: 'skill-produced.txt', content: 'REQUIRES-APPROVAL' } }] }));
   const uiPort = await freePort(), mcpPort = await freePort();
   const child = spawn(process.execPath, ['src/index.js'], {
     cwd: path.resolve(__dirname, '..'), env: { ...process.env, WORKSPACE_ROOT: workspace, WORKBENCH_PORT: String(uiPort), AGENT_HOST_PORT: String(mcpPort) },
@@ -123,8 +131,47 @@ async function main() {
     page.once('dialog', dialog => dialog.accept()); await page.locator('#ops-controls button').first().click();
     await page.waitForFunction(() => document.querySelector('#ops-review').textContent.includes('succeeded'));
     assert.strictEqual(fs.readFileSync(path.join(workspace, 'remote-approved.txt'), 'utf8'), 'REMOTE-APPROVED');
+    await page.click('#modal-close'); await page.click('#rb-chat-tab');
+    await page.fill('#chat-input', 'KEEP-DRAFT');
+    await page.click('#menu-help'); await page.click('.modal-nav [data-page="skills"]');
+    await page.fill('#skill-search', 'browser-review');
+    assert.strictEqual(await page.locator('#skills-list img').count(), 0);
+    await page.click('[data-skill-id="workspace:browser-review"]');
+    await page.waitForFunction(() => document.querySelector('#skill-reader-note').textContent.includes('SHA256'));
+    await page.click('#btn-skill-more');
+    await page.waitForFunction(() => document.querySelector('#skill-reader-content').textContent.endsWith('END-SKILL'));
+    assert.strictEqual(await page.locator('#skill-reader-content').textContent(), skillBody);
+    await page.click('[data-resource="references/check.md"]');
+    await page.waitForFunction(() => document.querySelector('#skill-reader-content').textContent === 'REFERENCE-EVIDENCE');
+    await page.click('[data-resource="SKILL.md"]');
+    await page.click('[data-resource="scripts/run.js"]');
+    await page.waitForFunction(() => document.querySelector('#skill-reader-content').textContent.includes('UNAUTHORIZED-SKILL'));
+    assert.ok(!fs.existsSync(path.join(workspace, 'UNAUTHORIZED-SKILL')));
+    let skillChatRequests = 0;
+    page.on('request', request => { if (request.url().endsWith('/api/chat')) skillChatRequests++; });
+    await page.click('#btn-skill-use');
+    await page.locator('#modal').waitFor({ state: 'hidden' });
+    assert.ok((await page.locator('#chat-input').inputValue()).includes('KEEP-DRAFT'));
+    assert.ok((await page.locator('#chat-input').inputValue()).includes('workspace:browser-review'));
+    assert.strictEqual(await page.locator('#mode-select').inputValue(), 'ask');
+    assert.strictEqual(skillChatRequests, 0);
+    await page.click('#menu-help'); await page.click('.modal-nav [data-page="skills"]');
+    await page.click('[data-skill-id="workspace:browser-review"]');
+    await page.click('[data-resource="workflow.json"]');
+    await page.click('#btn-skill-workflow');
+    await page.waitForFunction(() => document.querySelector('#ops-review').textContent.includes('requiresApproval'));
+    assert.ok(!fs.existsSync(path.join(workspace, 'skill-produced.txt')), 'Skill workflow preview never executes');
+    assert.strictEqual((await page.request.get(`http://127.0.0.1:${uiPort}/api/skills/load?name=missing-skill`)).status(), 404);
+    assert.strictEqual((await page.request.get(`http://127.0.0.1:${uiPort}/api/skills/load?name=workspace%3Abrowser-review&limit=9000`)).status(), 400);
+    const skillPage = JSON.parse((await rpc('load_skill', { name: 'workspace:browser-review', limit: 1111 })).content[0].text);
+    assert.strictEqual(skillPage.content, skillBody.slice(0, 1111));
+    const skillNext = JSON.parse((await rpc('load_skill', { name: skillPage.id, offset: skillPage.nextOffset, expectedHash: skillPage.hash, limit: 1111 })).content[0].text);
+    assert.strictEqual(skillNext.content, skillBody.slice(1111, 2222));
+    fs.appendFileSync(path.join(skillDir, 'SKILL.md'), '\nNEW-REVISION');
+    assert.strictEqual((await rpc('load_skill', { name: skillPage.id, offset: skillPage.nextOffset, expectedHash: skillPage.hash })).isError, true);
+    assert.strictEqual((await page.request.get(`http://127.0.0.1:${uiPort}/api/skills/load?name=workspace%3Abrowser-review&offset=1111&expectedHash=${skillPage.hash}`)).status(), 409);
     assert.deepStrictEqual(errors, []);
-    console.log('Browser PASS: help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval');
+    console.log('Browser PASS: help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change');
   } finally {
     if (browser) await browser.close();
     if (child.exitCode === null) child.kill();
