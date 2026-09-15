@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 const http = require('http');
+const os = require('os');
 const root = path.resolve(__dirname, '../../probe-extension');
 const { localBase, parseObservation, request } = require(path.join(root, 'client'));
 async function main() {
@@ -34,6 +35,7 @@ async function main() {
 
   const commands = new Map(), output = [], copied = [], calls = [];
   let input = JSON.stringify(observation), confirmation = '复制', clock = Date.now(), configuredBase = 'http://127.0.0.1:48271';
+  let selectedFiles;
   let inputGate = null, releaseInput, holdNetwork = false, lastSignal;
   const identity = { hostInstanceId: 'fixture-host', workspaceRoot: '/fixture', version: 'test' };
   const vscode = {
@@ -44,7 +46,7 @@ async function main() {
     window: {
       createOutputChannel: () => ({ clear() { output.length = 0; }, appendLine(value) { output.push(value); }, show() {}, dispose() {} }),
       showWarningMessage: async () => confirmation, showInformationMessage: async () => {}, showInputBox: async () => inputGate ? await inputGate : input,
-      showQuickPick: async () => undefined
+      showQuickPick: async () => undefined, showOpenDialog: async () => selectedFiles
     },
     commands: { registerCommand(name, handler) { commands.set(name, handler); return { dispose() { commands.delete(name); } }; }, executeCommand: async () => {} }
   };
@@ -56,12 +58,21 @@ async function main() {
     if (method === 'POST') return { identity, checkId: 'b'.repeat(32), challenge: 'c'.repeat(64), expiresAt: clock + 120000 };
     return { identity, checkId: 'b'.repeat(32), status: 'echo-confirmed', challenge: 'NEVER-LOG' };
   };
-  const sandbox = { module: { exports: {} }, require: name => name === 'vscode' ? vscode : { localBase, parseObservation, request: fakeRequest }, AbortController, Date: { now: () => clock } };
+  const sandbox = { module: { exports: {} }, require: name => name === 'vscode' ? vscode : name === './analysis' ? require(path.join(root, 'analysis')) : { localBase, parseObservation, request: fakeRequest }, AbortController, Date: { now: () => clock } };
   vm.runInNewContext(fs.readFileSync(path.join(root, 'extension.js'), 'utf8'), sandbox);
   const context = { subscriptions: [] }; sandbox.module.exports.activate(context);
   assert.strictEqual(calls.length, 0, 'Activation must not connect');
   const invoke = action => commands.get('webagentProbe.' + action)();
-  await invoke('diagnostics'); assert.ok(!output.join('').includes('NEVER-LOG')); assert.ok(output.join('').includes('未实现模型探测'));
+  const fixtureDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'probe-ui-analysis-'));
+  try {
+    const sampleFile = path.join(fixtureDirectory, 'observation.json');
+    fs.writeFileSync(sampleFile, JSON.stringify({ schema: 'webagent-model-observation/v1', requestId: 'ui-fixture', observedAt: '2026-09-15T00:00:00Z', origin: 'https://arena.ai', truncated: false, evidence: [], text: 'data: {"model":"ui-fixture-model"}\n\n' }));
+    selectedFiles = [{ scheme: 'file', authority: '', fsPath: sampleFile }];
+    await invoke('analyze');
+    assert.strictEqual(calls.length, 0, 'Offline analysis must not contact the host');
+    assert.ok(output.join('').includes('webagent-model-analysis/v1') && output.join('').includes('ui-fixture-model'));
+  } finally { fs.rmSync(fixtureDirectory, { recursive: true, force: true }); }
+  await invoke('diagnostics'); assert.ok(!output.join('').includes('NEVER-LOG')); assert.ok(output.join('').includes('模型线索分析')); 
   vscode.workspace.isTrusted = false; await invoke('import'); assert.strictEqual(calls.length, 1);
   vscode.workspace.isTrusted = true; vscode.env.remoteName = 'ssh-remote'; await invoke('import'); assert.strictEqual(calls.length, 1); delete vscode.env.remoteName;
   vscode.env.uiKind = 2; await invoke('import'); assert.strictEqual(calls.length, 1); vscode.env.uiKind = 1;

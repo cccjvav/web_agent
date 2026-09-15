@@ -1,0 +1,9 @@
+{
+  "schema": "webagent-model-observation/v1",
+  "requestId": "example-not-a-real-session",
+  "observedAt": "2026-09-15T00:00:00Z",
+  "origin": "https://arena.ai",
+  "truncated": false,
+  "evidence": [],
+  "text": "data: {\"model\":\"reference-example-model\"}\n\n"
+}

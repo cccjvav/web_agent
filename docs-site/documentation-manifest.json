@@ -5,8 +5,8 @@
     {
       "path": ".github/workflows/test.yml",
       "doc": ".github/workflows/README.md",
-      "sha256": "ca6cda3ce0b6ab34ff52057846f19d070c09c1dc6dad280539c58f45f93b0634",
-      "lineCount": 115,
+      "sha256": "55cf32e55cb46223ec009426d269716fc5331972d985a6b7588e5b3a872cab94",
+      "lineCount": 113,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -1079,8 +1079,8 @@
     {
       "path": "docs-site/documentation.config.json",
       "doc": "docs-site/README.md",
-      "sha256": "8c73b3d7fae6351cc1982ee24d401b7de18d3a28e867df92d7c631fd6b1416ca",
-      "lineCount": 454,
+      "sha256": "44e697c7be3f662f84bc13140986ce2c3ced7a22e9c1b4eef357e54cc2794287",
+      "lineCount": 459,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -12571,8 +12571,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLearning.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "1b967b114d1d2a24c55ae92b65e7f38194482b5ce45b7a54316b258e394add01",
-      "lineCount": 333,
+      "sha256": "7cb95079a606c9e65a23f4b87fffdffc6b1f38981bc9a529949d14e4a18680ca",
+      "lineCount": 337,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -12600,49 +12600,49 @@
           "id": "namedFunctions",
           "name": "namedFunctions",
           "kind": "FunctionDeclaration",
-          "startLine": 194,
-          "endLine": 209,
+          "startLine": 197,
+          "endLine": 212,
           "parameters": [
             "node",
             "result = new Set()"
           ]
         },
         {
-          "id": "namedFunctions/anonymous@205:44",
-          "name": "anonymous@205:44",
+          "id": "namedFunctions/anonymous@208:44",
+          "name": "anonymous@208:44",
           "kind": "ArrowFunctionExpression",
-          "startLine": 205,
-          "endLine": 205,
+          "startLine": 208,
+          "endLine": 208,
           "parameters": [
             "child"
           ]
         },
         {
-          "id": "anonymous@298:66",
-          "name": "anonymous@298:66",
+          "id": "anonymous@302:66",
+          "name": "anonymous@302:66",
           "kind": "ArrowFunctionExpression",
-          "startLine": 298,
-          "endLine": 298,
+          "startLine": 302,
+          "endLine": 302,
           "parameters": [
             "pair"
           ]
         },
         {
-          "id": "anonymous@303:43",
-          "name": "anonymous@303:43",
+          "id": "anonymous@307:43",
+          "name": "anonymous@307:43",
           "kind": "ArrowFunctionExpression",
-          "startLine": 303,
-          "endLine": 303,
+          "startLine": 307,
+          "endLine": 307,
           "parameters": [
             "p"
           ]
         },
         {
-          "id": "anonymous@303:68",
-          "name": "anonymous@303:68",
+          "id": "anonymous@307:68",
+          "name": "anonymous@307:68",
           "kind": "ArrowFunctionExpression",
-          "startLine": 303,
-          "endLine": 303,
+          "startLine": 307,
+          "endLine": 307,
           "parameters": [
             "p"
           ]
@@ -15499,10 +15499,10 @@
       ]
     },
     {
-      "path": "webagent-core/agent-host/tests/probeCompanion.test.js",
+      "path": "webagent-core/agent-host/tests/probeAnalysis.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "86b61662fd387c0b4498178f90ea001e60755195df9722bab83796ba18c210bb",
-      "lineCount": 94,
+      "sha256": "21a1078042ad95c1764f731617089e712c9c0c4bcac290f586c29a17b01b0697",
+      "lineCount": 40,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -15510,29 +15510,87 @@
           "id": "main",
           "name": "main",
           "kind": "FunctionDeclaration",
-          "startLine": 9,
-          "endLine": 92,
+          "startLine": 7,
+          "endLine": 38,
           "parameters": []
         },
         {
-          "id": "main/anonymous@12:194",
-          "name": "anonymous@12:194",
+          "id": "main/anonymous@10:340",
+          "name": "anonymous@10:340",
           "kind": "ArrowFunctionExpression",
-          "startLine": 12,
-          "endLine": 12,
+          "startLine": 10,
+          "endLine": 10,
           "parameters": []
         },
         {
-          "id": "main/anonymous@14:214",
-          "name": "anonymous@14:214",
+          "id": "main/anonymous@15:31",
+          "name": "anonymous@15:31",
           "kind": "ArrowFunctionExpression",
-          "startLine": 14,
-          "endLine": 14,
+          "startLine": 15,
+          "endLine": 15,
+          "parameters": [
+            "item"
+          ]
+        },
+        {
+          "id": "main/anonymous@16:47",
+          "name": "anonymous@16:47",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 16,
+          "endLine": 16,
+          "parameters": [
+            "item"
+          ]
+        },
+        {
+          "id": "main/anonymous@19:54",
+          "name": "anonymous@19:54",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 19,
+          "endLine": 19,
+          "parameters": [
+            "name"
+          ]
+        },
+        {
+          "id": "anonymous@39:13",
+          "name": "anonymous@39:13",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 39,
+          "endLine": 39,
+          "parameters": [
+            "error"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "webagent-core/agent-host/tests/probeCompanion.test.js",
+      "doc": "webagent-core/agent-host/tests/README.md",
+      "sha256": "e28a64ab0ee572bb33db6c95e547233fb949dc1d45d591e05196f30a06097a31",
+      "lineCount": 105,
+      "structure": "javascript-ast",
+      "semanticReview": "not-certified",
+      "symbols": [
+        {
+          "id": "main",
+          "name": "main",
+          "kind": "FunctionDeclaration",
+          "startLine": 10,
+          "endLine": 103,
           "parameters": []
         },
         {
-          "id": "main/anonymous@15:16",
-          "name": "anonymous@15:16",
+          "id": "main/anonymous@13:194",
+          "name": "anonymous@13:194",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 13,
+          "endLine": 13,
+          "parameters": []
+        },
+        {
+          "id": "main/anonymous@15:214",
+          "name": "anonymous@15:214",
           "kind": "ArrowFunctionExpression",
           "startLine": 15,
           "endLine": 15,
@@ -15547,32 +15605,40 @@
           "parameters": []
         },
         {
-          "id": "main/anonymous@18:35",
-          "name": "anonymous@18:35",
+          "id": "main/anonymous@17:16",
+          "name": "anonymous@17:16",
           "kind": "ArrowFunctionExpression",
-          "startLine": 18,
-          "endLine": 24,
+          "startLine": 17,
+          "endLine": 17,
+          "parameters": []
+        },
+        {
+          "id": "main/anonymous@19:35",
+          "name": "anonymous@19:35",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 19,
+          "endLine": 25,
           "parameters": [
             "req",
             "res"
           ]
         },
         {
-          "id": "main/anonymous@25:20",
-          "name": "anonymous@25:20",
+          "id": "main/anonymous@26:20",
+          "name": "anonymous@26:20",
           "kind": "ArrowFunctionExpression",
-          "startLine": 25,
-          "endLine": 25,
+          "startLine": 26,
+          "endLine": 26,
           "parameters": [
             "resolve"
           ]
         },
         {
-          "id": "main/anonymous@33:32",
-          "name": "anonymous@33:32",
+          "id": "main/anonymous@34:32",
+          "name": "anonymous@34:32",
           "kind": "ArrowFunctionExpression",
-          "startLine": 33,
-          "endLine": 33,
+          "startLine": 34,
+          "endLine": 34,
           "parameters": [
             "resolve"
           ]
@@ -15581,24 +15647,24 @@
           "id": "main/getConfiguration",
           "name": "getConfiguration",
           "kind": "ArrowFunctionExpression",
-          "startLine": 41,
-          "endLine": 41,
+          "startLine": 43,
+          "endLine": 43,
           "parameters": []
         },
         {
           "id": "main/getConfiguration/get",
           "name": "get",
           "kind": "ArrowFunctionExpression",
-          "startLine": 41,
-          "endLine": 41,
+          "startLine": 43,
+          "endLine": 43,
           "parameters": []
         },
         {
           "id": "main/writeText",
           "name": "writeText",
           "kind": "ArrowFunctionExpression",
-          "startLine": 42,
-          "endLine": 42,
+          "startLine": 44,
+          "endLine": 44,
           "parameters": [
             "value"
           ]
@@ -15607,32 +15673,32 @@
           "id": "main/getExtension",
           "name": "getExtension",
           "kind": "ArrowFunctionExpression",
-          "startLine": 43,
-          "endLine": 43,
+          "startLine": 45,
+          "endLine": 45,
           "parameters": []
         },
         {
           "id": "main/createOutputChannel",
           "name": "createOutputChannel",
           "kind": "ArrowFunctionExpression",
-          "startLine": 45,
-          "endLine": 45,
+          "startLine": 47,
+          "endLine": 47,
           "parameters": []
         },
         {
           "id": "main/createOutputChannel/clear",
           "name": "clear",
           "kind": "FunctionExpression",
-          "startLine": 45,
-          "endLine": 45,
+          "startLine": 47,
+          "endLine": 47,
           "parameters": []
         },
         {
           "id": "main/createOutputChannel/appendLine",
           "name": "appendLine",
           "kind": "FunctionExpression",
-          "startLine": 45,
-          "endLine": 45,
+          "startLine": 47,
+          "endLine": 47,
           "parameters": [
             "value"
           ]
@@ -15641,56 +15707,64 @@
           "id": "main/createOutputChannel/show",
           "name": "show",
           "kind": "FunctionExpression",
-          "startLine": 45,
-          "endLine": 45,
+          "startLine": 47,
+          "endLine": 47,
           "parameters": []
         },
         {
           "id": "main/createOutputChannel/dispose",
           "name": "dispose",
           "kind": "FunctionExpression",
-          "startLine": 45,
-          "endLine": 45,
+          "startLine": 47,
+          "endLine": 47,
           "parameters": []
         },
         {
           "id": "main/showWarningMessage",
           "name": "showWarningMessage",
           "kind": "ArrowFunctionExpression",
-          "startLine": 46,
-          "endLine": 46,
+          "startLine": 48,
+          "endLine": 48,
           "parameters": []
         },
         {
           "id": "main/showInformationMessage",
           "name": "showInformationMessage",
           "kind": "ArrowFunctionExpression",
-          "startLine": 46,
-          "endLine": 46,
+          "startLine": 48,
+          "endLine": 48,
           "parameters": []
         },
         {
           "id": "main/showInputBox",
           "name": "showInputBox",
           "kind": "ArrowFunctionExpression",
-          "startLine": 46,
-          "endLine": 46,
+          "startLine": 48,
+          "endLine": 48,
           "parameters": []
         },
         {
           "id": "main/showQuickPick",
           "name": "showQuickPick",
           "kind": "ArrowFunctionExpression",
-          "startLine": 47,
-          "endLine": 47,
+          "startLine": 49,
+          "endLine": 49,
+          "parameters": []
+        },
+        {
+          "id": "main/showOpenDialog",
+          "name": "showOpenDialog",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 49,
+          "endLine": 49,
           "parameters": []
         },
         {
           "id": "main/registerCommand",
           "name": "registerCommand",
           "kind": "FunctionExpression",
-          "startLine": 49,
-          "endLine": 49,
+          "startLine": 51,
+          "endLine": 51,
           "parameters": [
             "name",
             "handler"
@@ -15700,24 +15774,24 @@
           "id": "main/registerCommand/dispose",
           "name": "dispose",
           "kind": "FunctionExpression",
-          "startLine": 49,
-          "endLine": 49,
+          "startLine": 51,
+          "endLine": 51,
           "parameters": []
         },
         {
           "id": "main/executeCommand",
           "name": "executeCommand",
           "kind": "ArrowFunctionExpression",
-          "startLine": 49,
-          "endLine": 49,
+          "startLine": 51,
+          "endLine": 51,
           "parameters": []
         },
         {
           "id": "main/fakeRequest",
           "name": "fakeRequest",
           "kind": "ArrowFunctionExpression",
-          "startLine": 51,
-          "endLine": 58,
+          "startLine": 53,
+          "endLine": 60,
           "parameters": [
             "base",
             "method",
@@ -15727,30 +15801,30 @@
           ]
         },
         {
-          "id": "main/fakeRequest/anonymous@53:40",
-          "name": "anonymous@53:40",
+          "id": "main/fakeRequest/anonymous@55:40",
+          "name": "anonymous@55:40",
           "kind": "ArrowFunctionExpression",
-          "startLine": 53,
-          "endLine": 53,
+          "startLine": 55,
+          "endLine": 55,
           "parameters": [
             "resolve",
             "reject"
           ]
         },
         {
-          "id": "main/fakeRequest/anonymous@53:40/anonymous@53:94",
-          "name": "anonymous@53:94",
+          "id": "main/fakeRequest/anonymous@55:40/anonymous@55:94",
+          "name": "anonymous@55:94",
           "kind": "ArrowFunctionExpression",
-          "startLine": 53,
-          "endLine": 53,
+          "startLine": 55,
+          "endLine": 55,
           "parameters": []
         },
         {
           "id": "main/require",
           "name": "require",
           "kind": "ArrowFunctionExpression",
-          "startLine": 59,
-          "endLine": 59,
+          "startLine": 61,
+          "endLine": 61,
           "parameters": [
             "name"
           ]
@@ -15759,46 +15833,46 @@
           "id": "main/now",
           "name": "now",
           "kind": "ArrowFunctionExpression",
-          "startLine": 59,
-          "endLine": 59,
+          "startLine": 61,
+          "endLine": 61,
           "parameters": []
         },
         {
           "id": "main/invoke",
           "name": "invoke",
           "kind": "ArrowFunctionExpression",
-          "startLine": 63,
-          "endLine": 63,
+          "startLine": 65,
+          "endLine": 65,
           "parameters": [
             "action"
           ]
         },
         {
-          "id": "main/anonymous@77:24",
-          "name": "anonymous@77:24",
+          "id": "main/anonymous@88:24",
+          "name": "anonymous@88:24",
           "kind": "ArrowFunctionExpression",
-          "startLine": 77,
-          "endLine": 77,
+          "startLine": 88,
+          "endLine": 88,
           "parameters": [
             "call"
           ]
         },
         {
-          "id": "main/anonymous@78:26",
-          "name": "anonymous@78:26",
+          "id": "main/anonymous@89:26",
+          "name": "anonymous@89:26",
           "kind": "ArrowFunctionExpression",
-          "startLine": 78,
-          "endLine": 78,
+          "startLine": 89,
+          "endLine": 89,
           "parameters": [
             "resolve"
           ]
         },
         {
-          "id": "anonymous@93:13",
-          "name": "anonymous@93:13",
+          "id": "anonymous@104:13",
+          "name": "anonymous@104:13",
           "kind": "ArrowFunctionExpression",
-          "startLine": 93,
-          "endLine": 93,
+          "startLine": 104,
+          "endLine": 104,
           "parameters": [
             "error"
           ]
@@ -21697,6 +21771,209 @@
       ]
     },
     {
+      "path": "webagent-core/probe-extension/analysis.js",
+      "doc": "webagent-core/probe-extension/README.md",
+      "sha256": "092cdc595f157687ece1d6091171d444415e675533f065f5070498db9d0b706d",
+      "lineCount": 72,
+      "structure": "javascript-ast",
+      "semanticReview": "not-certified",
+      "symbols": [
+        {
+          "id": "validateObservation",
+          "name": "validateObservation",
+          "kind": "FunctionDeclaration",
+          "startLine": 7,
+          "endLine": 31,
+          "parameters": [
+            "input"
+          ]
+        },
+        {
+          "id": "validateObservation/anonymous@10:30",
+          "name": "anonymous@10:30",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 10,
+          "endLine": 10,
+          "parameters": [
+            "key"
+          ]
+        },
+        {
+          "id": "validateObservation/anonymous@29:115",
+          "name": "anonymous@29:115",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 29,
+          "endLine": 29,
+          "parameters": [
+            "frame"
+          ]
+        },
+        {
+          "id": "readObservation",
+          "name": "readObservation",
+          "kind": "FunctionDeclaration",
+          "startLine": 32,
+          "endLine": 46,
+          "parameters": [
+            "file"
+          ]
+        },
+        {
+          "id": "analyze",
+          "name": "analyze",
+          "kind": "FunctionDeclaration",
+          "startLine": 47,
+          "endLine": 70,
+          "parameters": [
+            "input",
+            "signal"
+          ]
+        },
+        {
+          "id": "analyze/anonymous@52:21",
+          "name": "anonymous@52:21",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 52,
+          "endLine": 69,
+          "parameters": [
+            "resolve",
+            "reject"
+          ]
+        },
+        {
+          "id": "analyze/anonymous@52:21/finish",
+          "name": "finish",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 57,
+          "endLine": 62,
+          "parameters": [
+            "error",
+            "result"
+          ]
+        },
+        {
+          "id": "analyze/anonymous@52:21/finish/anonymous@60:31",
+          "name": "anonymous@60:31",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 60,
+          "endLine": 60,
+          "parameters": []
+        },
+        {
+          "id": "analyze/anonymous@52:21/abort",
+          "name": "abort",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 63,
+          "endLine": 63,
+          "parameters": []
+        },
+        {
+          "id": "analyze/anonymous@52:21/anonymous@64:29",
+          "name": "anonymous@64:29",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 64,
+          "endLine": 64,
+          "parameters": []
+        },
+        {
+          "id": "analyze/anonymous@52:21/anonymous@66:27",
+          "name": "anonymous@66:27",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 66,
+          "endLine": 66,
+          "parameters": [
+            "result"
+          ]
+        },
+        {
+          "id": "analyze/anonymous@52:21/anonymous@67:25",
+          "name": "anonymous@67:25",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 67,
+          "endLine": 67,
+          "parameters": []
+        },
+        {
+          "id": "analyze/anonymous@52:21/anonymous@68:24",
+          "name": "anonymous@68:24",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 68,
+          "endLine": 68,
+          "parameters": []
+        }
+      ]
+    },
+    {
+      "path": "webagent-core/probe-extension/analysisWorker.mjs",
+      "doc": "webagent-core/probe-extension/README.md",
+      "sha256": "787eb336ca0129ea5af13ed81d6f4b94e708dfd237abedbcf321fa3079ffd48b",
+      "lineCount": 55,
+      "structure": "javascript-ast",
+      "semanticReview": "not-certified",
+      "symbols": [
+        {
+          "id": "load",
+          "name": "load",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 5,
+          "endLine": 5,
+          "parameters": [
+            "name"
+          ]
+        },
+        {
+          "id": "anonymous@15:42",
+          "name": "anonymous@15:42",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 15,
+          "endLine": 15,
+          "parameters": [
+            "item"
+          ]
+        },
+        {
+          "id": "anonymous@37:42",
+          "name": "anonymous@37:42",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 37,
+          "endLine": 37,
+          "parameters": [
+            "item"
+          ]
+        },
+        {
+          "id": "anonymous@44:49",
+          "name": "anonymous@44:49",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 44,
+          "endLine": 44,
+          "parameters": [
+            "{ confidence, ...item }"
+          ]
+        },
+        {
+          "id": "anonymous@45:22",
+          "name": "anonymous@45:22",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 45,
+          "endLine": 45,
+          "parameters": [
+            "item"
+          ]
+        },
+        {
+          "id": "anonymous@46:25",
+          "name": "anonymous@46:25",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 46,
+          "endLine": 46,
+          "parameters": [
+            "item"
+          ]
+        }
+      ]
+    },
+    {
       "path": "webagent-core/probe-extension/client.js",
       "doc": "webagent-core/probe-extension/README.md",
       "sha256": "c554b227a44304409487d5c5dd76d0c26343b8adde3cdac4c4ef7439bdb7fd62",
@@ -21799,8 +22076,8 @@
     {
       "path": "webagent-core/probe-extension/extension.js",
       "doc": "webagent-core/probe-extension/README.md",
-      "sha256": "2a6a3462af51c7460f0bc0fbeba113b75bb9eec8ab20b8ffddfb019da9b15fff",
-      "lineCount": 83,
+      "sha256": "25585c61eae055e3e194cc722a85101ce7cb1f3a49be44e754448692fde9e351",
+      "lineCount": 95,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -21808,8 +22085,8 @@
           "id": "activate",
           "name": "activate",
           "kind": "FunctionDeclaration",
-          "startLine": 4,
-          "endLine": 80,
+          "startLine": 5,
+          "endLine": 92,
           "parameters": [
             "context"
           ]
@@ -21818,24 +22095,24 @@
           "id": "activate/allowed",
           "name": "allowed",
           "kind": "ArrowFunctionExpression",
-          "startLine": 8,
-          "endLine": 8,
+          "startLine": 9,
+          "endLine": 9,
           "parameters": []
         },
         {
           "id": "activate/base",
           "name": "base",
           "kind": "ArrowFunctionExpression",
-          "startLine": 9,
-          "endLine": 9,
+          "startLine": 10,
+          "endLine": 10,
           "parameters": []
         },
         {
           "id": "activate/api",
           "name": "api",
           "kind": "ArrowFunctionExpression",
-          "startLine": 10,
-          "endLine": 15,
+          "startLine": 11,
+          "endLine": 16,
           "parameters": [
             "origin",
             "method",
@@ -21847,8 +22124,8 @@
           "id": "activate/show",
           "name": "show",
           "kind": "ArrowFunctionExpression",
-          "startLine": 16,
-          "endLine": 20,
+          "startLine": 17,
+          "endLine": 21,
           "parameters": [
             "value"
           ]
@@ -21857,8 +22134,8 @@
           "id": "activate/identityView",
           "name": "identityView",
           "kind": "ArrowFunctionExpression",
-          "startLine": 21,
-          "endLine": 26,
+          "startLine": 22,
+          "endLine": 27,
           "parameters": [
             "identity"
           ]
@@ -21867,8 +22144,8 @@
           "id": "activate/run",
           "name": "run",
           "kind": "ArrowFunctionExpression",
-          "startLine": 27,
-          "endLine": 72,
+          "startLine": 28,
+          "endLine": 84,
           "parameters": [
             "action"
           ]
@@ -21877,32 +22154,32 @@
           "id": "activate/dispose",
           "name": "dispose",
           "kind": "FunctionExpression",
-          "startLine": 73,
-          "endLine": 73,
+          "startLine": 85,
+          "endLine": 85,
           "parameters": []
         },
         {
-          "id": "activate/anonymous@74:165",
-          "name": "anonymous@74:165",
+          "id": "activate/anonymous@86:176",
+          "name": "anonymous@86:176",
           "kind": "ArrowFunctionExpression",
-          "startLine": 74,
-          "endLine": 74,
+          "startLine": 86,
+          "endLine": 86,
           "parameters": []
         },
         {
-          "id": "activate/anonymous@75:83",
-          "name": "anonymous@75:83",
+          "id": "activate/anonymous@87:83",
+          "name": "anonymous@87:83",
           "kind": "ArrowFunctionExpression",
-          "startLine": 75,
-          "endLine": 79,
+          "startLine": 87,
+          "endLine": 91,
           "parameters": []
         },
         {
-          "id": "activate/anonymous@75:83/anonymous@77:65",
-          "name": "anonymous@77:65",
+          "id": "activate/anonymous@87:83/anonymous@89:65",
+          "name": "anonymous@89:65",
           "kind": "ArrowFunctionExpression",
-          "startLine": 77,
-          "endLine": 77,
+          "startLine": 89,
+          "endLine": 89,
           "parameters": [
             "[label, action]"
           ]
@@ -21911,8 +22188,8 @@
           "id": "deactivate",
           "name": "deactivate",
           "kind": "FunctionDeclaration",
-          "startLine": 81,
-          "endLine": 81,
+          "startLine": 93,
+          "endLine": 93,
           "parameters": []
         }
       ]
@@ -21920,8 +22197,8 @@
     {
       "path": "webagent-core/probe-extension/package.json",
       "doc": "webagent-core/probe-extension/README.md",
-      "sha256": "4a5ba3fbd8368aa4be789003631964b72869451ac8c25c504ebb0204f9d00b7a",
-      "lineCount": 55,
+      "sha256": "031a8bc099e8f42865553e83e1dec016dbfae55825ce430a47db946605544345",
+      "lineCount": 59,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -21929,8 +22206,17 @@
     {
       "path": "webagent-core/probe-extension/package_vsix.py",
       "doc": "webagent-core/probe-extension/README.md",
-      "sha256": "de2f7cfe8c18177a099a027d56eb14f3ab58de6cf0e1c3962285ba26d9801536",
-      "lineCount": 40,
+      "sha256": "f1a309ea5e7eeeac0f820e11ce944b1d06a3b176c1da9c963427f73d83ca3c71",
+      "lineCount": 79,
+      "structure": "file-only",
+      "semanticReview": "not-certified",
+      "symbols": []
+    },
+    {
+      "path": "webagent-core/probe-extension/sample-observation.json",
+      "doc": "webagent-core/probe-extension/README.md",
+      "sha256": "7c07337e8d8990dad048fb88b4ee9b1821caa69d1cdf76ac06a011350ec71572",
+      "lineCount": 10,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -25490,159 +25776,159 @@
     },
     {
       "path": "arena-model-probe/active_probe.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/agent_model_id.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/arena_probe.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/extract_catalog.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/extract_model_labels.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/extract_model_map2.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/final_e2e.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/final_report.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/full_capture2.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/get_token.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/new_tab.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/package.json",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/src/classify.js",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/src/idmap.js",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/src/interceptor.js",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/src/learned.js",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/src/lifecycle.js",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/src/main.js",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/src/probe.js",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/src/registry.js",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/src/runmodel.js",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/src/ui.js",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/sync_catalog.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/tools/boot-smoke.mjs",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/tools/build.mjs",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/tools/cdp-inspect.mjs",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/tools/cdp.mjs",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/tools/e2e.mjs",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/tools/recon.mjs",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/tools/selftest.mjs",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/tools/tabs.mjs",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/tools/verify-auth.mjs",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/tools/verify.mjs",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/tools/wait-ready.mjs",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/trigger_full.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/verify_idmap.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/verify_realname.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/wait_login.py",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "arena-model-probe/webagent-connection.user.js",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     },
     {
       "path": "bin/code-server-runtime/package.json",

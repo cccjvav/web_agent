@@ -57,7 +57,7 @@
     },
     {
       "prefix": "arena-model-probe/",
-      "reason": "用户上传的独立研究原型，仅静态审阅；原始采集不嵌入文档或安装包，可选最小摘要脚本由专门接入指南与隔离测试覆盖，不宣称原型全量审计"
+      "reason": "用户原型独立源不计全量审计；原始采集不嵌入文档，VSIX按白名单复用分析模块并记录hash，浏览器自动入口和授权访问链按完整能力表单独实现/验收。"
     }
   ],
   "rootScriptDoc": "启动脚本说明.md",
@@ -441,6 +441,11 @@
     {
       "id": "probe-capability-boundaries",
       "path": "探针能力对照与迁移边界.md",
+      "group": "使用"
+    },
+    {
+      "id": "probe-full-integration",
+      "path": "探针完整整合实施与验收.md",
       "group": "使用"
     }
   ],

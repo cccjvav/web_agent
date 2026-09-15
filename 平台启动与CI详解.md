@@ -91,3 +91,5 @@ test.yml的Windows安装器任务同时Add-Type编译commandJob.cs与stdioBridge
 2026-09-15 stdio回归：Windows矩阵原ptyLifecycle五轮不变，追加stdioMcp两轮；连同npm test一轮，在Node20/22/24各执行三轮显式启动、协议预算、取消和宿主死亡测试。仍使用run-tests文件级deadline，任一轮非零立即退出。
 
 Windows installer job追加独立Probe Companion VSIX白名单构建及zipfile完整性检查，使用runner已有Python标准库，不安装到VS Code、不执行扩展。VSIX实机安装和API交互仍需人工验收，不能冒称该步骤已覆盖。
+
+Probe Companion的0.2.0 VSIX白名单新增共享原型分析源码与hash；Worker只离线调用，不运行自动入口。Windows的单条--verify构建命令还解包到临时目录，以固定合成样本验证包内引擎独立运行和hash，失败直接使步骤失败。构建成功不等于全能力整合或真实模型准确率验证。

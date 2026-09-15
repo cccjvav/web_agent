@@ -1,9 +1,9 @@
 {
   "name": "webagent-probe-companion",
   "displayName": "WebAgent Probe Companion",
-  "description": "Connection diagnostics only; model detection is not implemented in this companion.",
+  "description": "Model-reference analysis using the original probe engine, plus local connection diagnostics. Full browser integration in progress.",
   "publisher": "webagent",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -24,6 +24,10 @@
   },
   "contributes": {
     "commands": [
+      {
+        "command": "webagentProbe.analyze",
+        "title": "WebAgent Probe: 分析模型线索文件（离线参考）"
+      },
       {
         "command": "webagentProbe.open",
         "title": "WebAgent Probe: 打开配套诊断"
