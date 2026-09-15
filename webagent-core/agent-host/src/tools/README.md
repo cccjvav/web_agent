@@ -92,7 +92,7 @@ readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，
 | [consensusEngine.js](consensusEngine.js) | 7 个函数/类节点 |
 | [dangerous.js](dangerous.js) | 1 个函数/类节点 |
 | [executor.js](executor.js) | 31 个函数/类节点 |
-| [fileOps.js](fileOps.js) | 30 个函数/类节点 |
+| [fileOps.js](fileOps.js) | 31 个函数/类节点 |
 | [findFiles.js](findFiles.js) | 3 个函数/类节点 |
 | [gitOps.js](gitOps.js) | 6 个函数/类节点 |
 | [index.js](index.js) | 19 个函数/类节点 |
@@ -102,7 +102,7 @@ readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，
 | [progressTracker.js](progressTracker.js) | 5 个函数/类节点 |
 | [ptyJobs.js](ptyJobs.js) | 22 个函数/类节点 |
 | [readCache.js](readCache.js) | 10 个函数/类节点 |
-| [searchWorker.js](searchWorker.js) | 0 个函数/类节点 |
+| [searchWorker.js](searchWorker.js) | 1 个函数/类节点 |
 | [sensitive.js](sensitive.js) | 12 个函数/类节点 |
 | [skills.js](skills.js) | 20 个函数/类节点 |
 | [workflows.js](workflows.js) | 15 个函数/类节点 |
