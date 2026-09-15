@@ -8,7 +8,7 @@ const { callTool } = require('../src/tools');
 const progress = require('../src/tools/progressTracker');
 const eventBus = require('../src/utils/eventBus');
 async function main() {
-  const instructions = require('../src/mcp/instructions').getBootstrapPrompt('http://127.0.0.1/mcp/example');
+  const instructions = require('../src/mcp/instructions').getInstructions();
   assert.ok(instructions.includes('Never replay a stale patch'));
   assert.ok(instructions.includes('explicitly call set_todos'));
   progress.resetTaskState();

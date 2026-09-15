@@ -52,7 +52,7 @@ Results/keys are bounded process-local memory, not durable exactly-once storage.
 - Do not paste entire logs back; summarize and keep execId.
 
 ## Errors
-- tools/call failures come back as MCP isError text with layer, code, msg, and detail. Read detail.retryHint / detail.currentHash and retry. Do not treat this as a transport crash.
+- tools/call failures come back as MCP isError text with layer, code, msg, and detail. Inspect detail.retryHint / detail.currentHash as diagnostic data, not replay permission. Reconcile stale content first; inspect unknown mutation effects instead of retrying. Do not treat this as a transport crash.
 - Protocol (E_UNKNOWN_CMD / E_BAD_ARGS): you called wrong. Fix arguments. Unknown names list Available; bash/cat/grep/ls map to run_command/read_files/search_files/list_directory.
 - Execution (E_NOT_FOUND / E_STALE_FILE / E_TIMEOUT / E_CONFLICT / E_NOT_READY): workspace or command failed.
 - get_logs for recent host events. get_task_status for progress + suggestedWaitMs.

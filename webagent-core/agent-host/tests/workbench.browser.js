@@ -298,12 +298,22 @@ async function main() {
     assert.ok((await page.locator('#bridge-tasks').textContent()).includes('set_todos'));
     await rpc('set_todos',{todos:[{id:'plan-1',title:'REMOTE-TASK-SNAPSHOT',status:'in_progress'}]});
     await page.waitForFunction(()=>document.querySelector('#bridge-todo-list').textContent.includes('REMOTE-TASK-SNAPSHOT'));
-    await page.request.post(base+'/api/tool/call',{data:{name:'set_todos',arguments:{todos:[{title:'LOCAL-PLAN-ONLY'}]},mode:'ask'}});
+    const localPlan = await page.request.post(base+'/api/tool/call',{data:{name:'set_todos',arguments:{todos:[{title:'LOCAL-PLAN-ONLY'}]},mode:'ask'}});
+    assert.equal((await localPlan.json()).success,true);
+    assert.equal((await (await page.request.get(base+'/api/status')).json()).taskState.todos[0].title,'LOCAL-PLAN-ONLY');
     assert.ok(!(await page.locator('#bridge-todo-list').textContent()).includes('LOCAL-PLAN-ONLY'));
     await page.reload();await page.click('#rb-bridge-tab');
     await page.waitForFunction(()=>document.querySelector('#bridge-todo-list').textContent.includes('REMOTE-TASK-SNAPSHOT'));
     await rpc('set_todos',{todos:[{id:'plan-1',title:'REMOTE-TASK-SNAPSHOT',status:'completed'}]});
     await page.waitForFunction(()=>document.querySelector('#bridge-task-count').textContent.includes('1/1'));
+    const secondPlan=await fetch(`http://127.0.0.1:${mcpPort}/mcp/${status.secretKey}`,{method:'POST',headers:{'Content-Type':'application/json','Mcp-Session-Id':sessionId},body:JSON.stringify({jsonrpc:'2.0',id:'second-plan',method:'tools/call',params:{name:'set_todos',arguments:{todos:[{title:'SECOND-SESSION-PLAN',status:'pending'}]}}})});
+    assert.ok(!(await secondPlan.json()).result.isError);
+    await page.waitForFunction(()=>document.querySelector('#bridge-todo-list').textContent.includes('SECOND-SESSION-PLAN'));
+    assert.ok((await page.locator('#bridge-todo-list').textContent()).includes('REMOTE-TASK-SNAPSHOT'));
+    const taskSnapshot=await (await page.request.get(base+'/api/status')).json();
+    assert.equal(taskSnapshot.bridgeTaskStates.length,2);
+    assert.notEqual(taskSnapshot.bridgeTaskStates[0].sessionId,taskSnapshot.bridgeTaskStates[1].sessionId);
+
     assert.deepStrictEqual(errors, []);
     console.log('Browser PASS: minimal page observation + authenticated connection echo/forged session rejection/clear, help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');
   } finally {
