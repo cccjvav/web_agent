@@ -4,7 +4,7 @@
 
 ## .github/workflows/test.yml
 
-[目录说明](../.github/workflows/README.md) · SHA-256 `e0dc22d6d9527366f6a8a752d57138e99a28282595cda66c45748c4a2b7d5c1d`
+[目录说明](../.github/workflows/README.md) · SHA-256 `8457f2b56c06de2a944aaf8690b788fa00042551f0bcbeacf312a41c717d967e`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -820,7 +820,7 @@
 
 ## webagent-core/agent-host/src/mcp/stdioTransport.js
 
-[目录说明](../webagent-core/agent-host/src/mcp/README.md) · SHA-256 `226fdb888f379f8ccac62e59ced1b7ddf073e83a17ceaf39b4f043251012c9d7`
+[目录说明](../webagent-core/agent-host/src/mcp/README.md) · SHA-256 `b49eec0993eb18955614707b18a042519e8a5a5dd80d4b4fce3d5cacafe2eea8`
 
 - `open` — FunctionDeclaration，[L8–L127](../webagent-core/agent-host/src/mcp/stdioTransport.js#L8-L127)
 - `open/anonymous@8:34` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/src/mcp/stdioTransport.js#L8-L8)
@@ -2393,32 +2393,32 @@
 
 ## webagent-core/agent-host/tests/stdioMcp.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `0bd6929b905e3256cd4aa227a7bd1e9a1a1122fc33f2c7d0ee5bd452799baf36`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `0d5d1375907203afe236ce1640e48a04b6e893e6a6f484c3a1fde1099d78685d`
 
 - `alive` — FunctionDeclaration，[L19–L25](../webagent-core/agent-host/tests/stdioMcp.test.js#L19-L25)
 - `until` — FunctionDeclaration，[L26–L29](../webagent-core/agent-host/tests/stdioMcp.test.js#L26-L29)
 - `until/anonymous@28:121` — ArrowFunctionExpression，[L28–L28](../webagent-core/agent-host/tests/stdioMcp.test.js#L28-L28)
 - `prepared` — FunctionDeclaration，[L30–L32](../webagent-core/agent-host/tests/stdioMcp.test.js#L30-L32)
-- `main` — FunctionDeclaration，[L34–L132](../webagent-core/agent-host/tests/stdioMcp.test.js#L34-L132)
+- `main` — FunctionDeclaration，[L34–L134](../webagent-core/agent-host/tests/stdioMcp.test.js#L34-L134)
 - `main/anonymous@36:31` — ArrowFunctionExpression，[L36–L36](../webagent-core/agent-host/tests/stdioMcp.test.js#L36-L36)
 - `main/anonymous@38:18` — ArrowFunctionExpression，[L38–L38](../webagent-core/agent-host/tests/stdioMcp.test.js#L38-L38)
 - `main/anonymous@39:18` — ArrowFunctionExpression，[L39–L39](../webagent-core/agent-host/tests/stdioMcp.test.js#L39-L39)
 - `main/anonymous@40:18` — ArrowFunctionExpression，[L40–L40](../webagent-core/agent-host/tests/stdioMcp.test.js#L40-L40)
 - `main/anonymous@41:18` — ArrowFunctionExpression，[L41–L41](../webagent-core/agent-host/tests/stdioMcp.test.js#L41-L41)
 - `main/anonymous@51:21` — ArrowFunctionExpression，[L51–L51](../webagent-core/agent-host/tests/stdioMcp.test.js#L51-L51)
-- `main/anonymous@79:16` — ArrowFunctionExpression，[L79–L79](../webagent-core/agent-host/tests/stdioMcp.test.js#L79-L79)
-- `main/anonymous@90:111` — ArrowFunctionExpression，[L90–L90](../webagent-core/agent-host/tests/stdioMcp.test.js#L90-L90)
-- `main/anonymous@93:18` — ArrowFunctionExpression，[L93–L93](../webagent-core/agent-host/tests/stdioMcp.test.js#L93-L93)
-- `main/anonymous@102:20` — ArrowFunctionExpression，[L102–L102](../webagent-core/agent-host/tests/stdioMcp.test.js#L102-L102)
-- `main/anonymous@111:46` — ArrowFunctionExpression，[L111–L111](../webagent-core/agent-host/tests/stdioMcp.test.js#L111-L111)
-- `main/anonymous@111:46/anonymous@111:85` — ArrowFunctionExpression，[L111–L111](../webagent-core/agent-host/tests/stdioMcp.test.js#L111-L111)
-- `main/anonymous@111:46/anonymous@111:172` — ArrowFunctionExpression，[L111–L111](../webagent-core/agent-host/tests/stdioMcp.test.js#L111-L111)
-- `main/anonymous@113:69` — ArrowFunctionExpression，[L113–L113](../webagent-core/agent-host/tests/stdioMcp.test.js#L113-L113)
-- `main/anonymous@117:22` — ArrowFunctionExpression，[L117–L117](../webagent-core/agent-host/tests/stdioMcp.test.js#L117-L117)
-- `main/anonymous@117:22/anonymous@117:96` — ArrowFunctionExpression，[L117–L117](../webagent-core/agent-host/tests/stdioMcp.test.js#L117-L117)
-- `main/anonymous@118:16` — ArrowFunctionExpression，[L118–L118](../webagent-core/agent-host/tests/stdioMcp.test.js#L118-L118)
-- `main/anonymous@123:39` — ArrowFunctionExpression，[L123–L123](../webagent-core/agent-host/tests/stdioMcp.test.js#L123-L123)
-- `anonymous@133:13` — ArrowFunctionExpression，[L133–L133](../webagent-core/agent-host/tests/stdioMcp.test.js#L133-L133)
+- `main/anonymous@81:16` — ArrowFunctionExpression，[L81–L81](../webagent-core/agent-host/tests/stdioMcp.test.js#L81-L81)
+- `main/anonymous@92:111` — ArrowFunctionExpression，[L92–L92](../webagent-core/agent-host/tests/stdioMcp.test.js#L92-L92)
+- `main/anonymous@95:18` — ArrowFunctionExpression，[L95–L95](../webagent-core/agent-host/tests/stdioMcp.test.js#L95-L95)
+- `main/anonymous@104:20` — ArrowFunctionExpression，[L104–L104](../webagent-core/agent-host/tests/stdioMcp.test.js#L104-L104)
+- `main/anonymous@113:46` — ArrowFunctionExpression，[L113–L113](../webagent-core/agent-host/tests/stdioMcp.test.js#L113-L113)
+- `main/anonymous@113:46/anonymous@113:85` — ArrowFunctionExpression，[L113–L113](../webagent-core/agent-host/tests/stdioMcp.test.js#L113-L113)
+- `main/anonymous@113:46/anonymous@113:172` — ArrowFunctionExpression，[L113–L113](../webagent-core/agent-host/tests/stdioMcp.test.js#L113-L113)
+- `main/anonymous@115:69` — ArrowFunctionExpression，[L115–L115](../webagent-core/agent-host/tests/stdioMcp.test.js#L115-L115)
+- `main/anonymous@119:22` — ArrowFunctionExpression，[L119–L119](../webagent-core/agent-host/tests/stdioMcp.test.js#L119-L119)
+- `main/anonymous@119:22/anonymous@119:96` — ArrowFunctionExpression，[L119–L119](../webagent-core/agent-host/tests/stdioMcp.test.js#L119-L119)
+- `main/anonymous@120:16` — ArrowFunctionExpression，[L120–L120](../webagent-core/agent-host/tests/stdioMcp.test.js#L120-L120)
+- `main/anonymous@125:39` — ArrowFunctionExpression，[L125–L125](../webagent-core/agent-host/tests/stdioMcp.test.js#L125-L125)
+- `anonymous@135:13` — ArrowFunctionExpression，[L135–L135](../webagent-core/agent-host/tests/stdioMcp.test.js#L135-L135)
 
 ## webagent-core/agent-host/tests/stdioOwnerFixture.js
 

@@ -30,12 +30,16 @@ jobs:
         continue-on-error: true
         run: npm audit --omit=dev
       - run: npm test
-      - name: Repeat Windows cancellation lifecycle
+      - name: Repeat Windows cancellation and stdio lifecycle
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           1..5 | ForEach-Object {
             node scripts/run-tests.js --filter=ptyLifecycle
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          1..2 | ForEach-Object {
+            node scripts/run-tests.js --filter=stdioMcp
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 

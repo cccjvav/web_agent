@@ -60,6 +60,8 @@ async function main() {
     const registered = await external.startStdio({ previewId: preview.previewId, confirmed: true });
     await assert.rejects(external.startStdio({ previewId: preview.previewId, confirmed: true }), /missing/);
     assert.strictEqual(registered.transport, 'stdio');
+    assert.strictEqual(registered.process.ready, true); assert.strictEqual(registered.process.queuedBytes, 0);
+    assert.strictEqual(registered.process.bootstrapStage, process.platform === 'win32' ? 'compiled' : 'not-required');
     assert.deepStrictEqual(JSON.parse(fs.readFileSync(path.join(root, 'stdio-started.json'))).args, special);
     assert.ok(!fs.existsSync(path.join(root, 'stdio-calls.txt')));
     assert.ok(!JSON.stringify(external.list()).includes(fixture));

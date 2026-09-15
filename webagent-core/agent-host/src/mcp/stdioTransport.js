@@ -56,7 +56,7 @@ function open(launch, onStopped = () => {}) {
         if (!next || message.params?.stage !== next || Object.keys(message).length !== 3 || Object.keys(message.params).length !== 1) throw new Error('Invalid bootstrap stage');
         bootstrapStage = next; return;
       }
-      if (message.method !== 'notifications/webagent/stdio-ready' || Object.keys(message).length !== 2) throw new Error('Expected guarded stdio readiness');
+      if (bootstrapStage !== 'compiled' || message.method !== 'notifications/webagent/stdio-ready' || Object.keys(message).length !== 2) throw new Error('Expected guarded stdio readiness');
       ready = true;
       for (const bytes of queued) child.stdin.write(bytes, error => { if (error) stop('Stdio input closed'); });
       queued.length = 0; queuedBytes = 0; return;
