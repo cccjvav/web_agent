@@ -114,6 +114,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [monacoLoading.test.js](monacoLoading.test.js) | 12 个函数/类节点 |
 | [oauth.test.js](oauth.test.js) | 15 个函数/类节点 |
 | [oauthClientAuth.test.js](oauthClientAuth.test.js) | 19 个函数/类节点 |
+| [oauthRateLimit.test.js](oauthRateLimit.test.js) | 15 个函数/类节点 |
 | [patchEngine.test.js](patchEngine.test.js) | 7 个函数/类节点 |
 | [planRound.test.js](planRound.test.js) | 6 个函数/类节点 |
 | [probeAnalysis.test.js](probeAnalysis.test.js) | 6 个函数/类节点 |

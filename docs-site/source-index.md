@@ -202,7 +202,7 @@
 
 ## docs-site/documentation.config.json
 
-[目录说明](README.md) · SHA-256 `2dc8bab7bb990a7f76c59cc012fce8875de76f55dc80ef0c849a9d888c93a345`
+[目录说明](README.md) · SHA-256 `04f6cbdee6d481ac0b2d3a124092453ba8e97c3b4379e73f5d4614712ed922be`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -689,7 +689,7 @@
 
 ## webagent-core/agent-host/src/mcp/oauth.js
 
-[目录说明](../webagent-core/agent-host/src/mcp/README.md) · SHA-256 `b2205b36f094bd6d1210cba66f048491ca397efd040abc036db6ddc247600e2c`
+[目录说明](../webagent-core/agent-host/src/mcp/README.md) · SHA-256 `509bf686d789edd4a771a84f401be7e0f6b73babd67b2f55cebd51f72f28daf9`
 
 - `now` — FunctionDeclaration，[L21–L23](../webagent-core/agent-host/src/mcp/oauth.js#L21-L23)
 - `randomToken` — FunctionDeclaration，[L25–L27](../webagent-core/agent-host/src/mcp/oauth.js#L25-L27)
@@ -726,16 +726,18 @@
 - `handleToken` — FunctionDeclaration，[L375–L436](../webagent-core/agent-host/src/mcp/oauth.js#L375-L436)
 - `tokenResponse` — FunctionDeclaration，[L438–L446](../webagent-core/agent-host/src/mcp/oauth.js#L438-L446)
 - `clientIp` — FunctionDeclaration，[L450–L454](../webagent-core/agent-host/src/mcp/oauth.js#L450-L454)
-- `rateLimit` — FunctionDeclaration，[L456–L477](../webagent-core/agent-host/src/mcp/oauth.js#L456-L477)
-- `sendError` — FunctionDeclaration，[L479–L484](../webagent-core/agent-host/src/mcp/oauth.js#L479-L484)
-- `anonymous@486:54` — ArrowFunctionExpression，[L486–L488](../webagent-core/agent-host/src/mcp/oauth.js#L486-L488)
-- `anonymous@489:52` — ArrowFunctionExpression，[L489–L491](../webagent-core/agent-host/src/mcp/oauth.js#L489-L491)
-- `anonymous@492:56` — ArrowFunctionExpression，[L492–L494](../webagent-core/agent-host/src/mcp/oauth.js#L492-L494)
-- `registerHandler` — FunctionDeclaration，[L496–L503](../webagent-core/agent-host/src/mcp/oauth.js#L496-L503)
-- `anonymous@507:31` — ArrowFunctionExpression，[L507–L514](../webagent-core/agent-host/src/mcp/oauth.js#L507-L514)
-- `anonymous@516:32` — ArrowFunctionExpression，[L516–L526](../webagent-core/agent-host/src/mcp/oauth.js#L516-L526)
-- `anonymous@528:28` — ArrowFunctionExpression，[L528–L535](../webagent-core/agent-host/src/mcp/oauth.js#L528-L535)
-- `anonymous@537:29` — ArrowFunctionExpression，[L537–L549](../webagent-core/agent-host/src/mcp/oauth.js#L537-L549)
+- `rateLimit` — FunctionDeclaration，[L456–L475](../webagent-core/agent-host/src/mcp/oauth.js#L456-L475)
+- `rateLimit/anonymous@462:63` — ArrowFunctionExpression，[L462–L462](../webagent-core/agent-host/src/mcp/oauth.js#L462-L462)
+- `retryHeader` — FunctionDeclaration，[L477–L481](../webagent-core/agent-host/src/mcp/oauth.js#L477-L481)
+- `sendError` — FunctionDeclaration，[L483–L489](../webagent-core/agent-host/src/mcp/oauth.js#L483-L489)
+- `anonymous@491:54` — ArrowFunctionExpression，[L491–L493](../webagent-core/agent-host/src/mcp/oauth.js#L491-L493)
+- `anonymous@494:52` — ArrowFunctionExpression，[L494–L496](../webagent-core/agent-host/src/mcp/oauth.js#L494-L496)
+- `anonymous@497:56` — ArrowFunctionExpression，[L497–L499](../webagent-core/agent-host/src/mcp/oauth.js#L497-L499)
+- `registerHandler` — FunctionDeclaration，[L501–L508](../webagent-core/agent-host/src/mcp/oauth.js#L501-L508)
+- `anonymous@512:31` — ArrowFunctionExpression，[L512–L519](../webagent-core/agent-host/src/mcp/oauth.js#L512-L519)
+- `anonymous@521:32` — ArrowFunctionExpression，[L521–L532](../webagent-core/agent-host/src/mcp/oauth.js#L521-L532)
+- `anonymous@534:28` — ArrowFunctionExpression，[L534–L541](../webagent-core/agent-host/src/mcp/oauth.js#L534-L541)
+- `anonymous@543:29` — ArrowFunctionExpression，[L543–L555](../webagent-core/agent-host/src/mcp/oauth.js#L543-L555)
 
 ## webagent-core/agent-host/src/mcp/resources.js
 
@@ -1859,15 +1861,15 @@
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `adc677a8ac5e1dffa824cd7564529f542fecbe34e61ef9b23db7f797e117ce47`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `b58fb451baee4b986ae6c7775eeccb48c0db1b37cbb4da27491b3c796cb5b9dd`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)
-- `namedFunctions` — FunctionDeclaration，[L224–L239](../webagent-core/agent-host/tests/documentationLearning.test.js#L224-L239)
-- `namedFunctions/anonymous@235:44` — ArrowFunctionExpression，[L235–L235](../webagent-core/agent-host/tests/documentationLearning.test.js#L235-L235)
-- `anonymous@332:66` — ArrowFunctionExpression，[L332–L332](../webagent-core/agent-host/tests/documentationLearning.test.js#L332-L332)
-- `anonymous@337:43` — ArrowFunctionExpression，[L337–L337](../webagent-core/agent-host/tests/documentationLearning.test.js#L337-L337)
-- `anonymous@337:68` — ArrowFunctionExpression，[L337–L337](../webagent-core/agent-host/tests/documentationLearning.test.js#L337-L337)
+- `namedFunctions` — FunctionDeclaration，[L225–L240](../webagent-core/agent-host/tests/documentationLearning.test.js#L225-L240)
+- `namedFunctions/anonymous@236:44` — ArrowFunctionExpression，[L236–L236](../webagent-core/agent-host/tests/documentationLearning.test.js#L236-L236)
+- `anonymous@333:66` — ArrowFunctionExpression，[L333–L333](../webagent-core/agent-host/tests/documentationLearning.test.js#L333-L333)
+- `anonymous@338:43` — ArrowFunctionExpression，[L338–L338](../webagent-core/agent-host/tests/documentationLearning.test.js#L338-L338)
+- `anonymous@338:68` — ArrowFunctionExpression，[L338–L338](../webagent-core/agent-host/tests/documentationLearning.test.js#L338-L338)
 
 ## webagent-core/agent-host/tests/documentationPolicy.test.js
 
@@ -2230,6 +2232,26 @@
 - `anonymous@5:1/anonymous@93:20` — ArrowFunctionExpression，[L93–L94](../webagent-core/agent-host/tests/oauthClientAuth.test.js#L93-L94)
 - `anonymous@5:1/anonymous@118:32` — ArrowFunctionExpression，[L118–L118](../webagent-core/agent-host/tests/oauthClientAuth.test.js#L118-L118)
 - `anonymous@119:11` — ArrowFunctionExpression，[L119–L119](../webagent-core/agent-host/tests/oauthClientAuth.test.js#L119-L119)
+
+## webagent-core/agent-host/tests/oauthRateLimit.test.js
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `919631a56304fc3198ac7484324b9547b4f2163e3b5c12f3b6fc9e10fcb8acd9`
+
+- `main` — FunctionDeclaration，[L8–L50](../webagent-core/agent-host/tests/oauthRateLimit.test.js#L8-L50)
+- `main/now` — ArrowFunctionExpression，[L11–L11](../webagent-core/agent-host/tests/oauthRateLimit.test.js#L11-L11)
+- `main/anonymous@17:39` — ArrowFunctionExpression，[L17–L17](../webagent-core/agent-host/tests/oauthRateLimit.test.js#L17-L17)
+- `main/anonymous@17:67` — ArrowFunctionExpression，[L17–L17](../webagent-core/agent-host/tests/oauthRateLimit.test.js#L17-L17)
+- `main/anonymous@19:30` — ArrowFunctionExpression，[L19–L19](../webagent-core/agent-host/tests/oauthRateLimit.test.js#L19-L19)
+- `main/anonymous@19:57` — ArrowFunctionExpression，[L19–L19](../webagent-core/agent-host/tests/oauthRateLimit.test.js#L19-L19)
+- `main/anonymous@23:16` — ArrowFunctionExpression，[L23–L23](../webagent-core/agent-host/tests/oauthRateLimit.test.js#L23-L23)
+- `main/anonymous@23:50` — ArrowFunctionExpression，[L23–L23](../webagent-core/agent-host/tests/oauthRateLimit.test.js#L23-L23)
+- `main/anonymous@32:36` — ArrowFunctionExpression，[L32–L32](../webagent-core/agent-host/tests/oauthRateLimit.test.js#L32-L32)
+- `main/anonymous@32:62` — ArrowFunctionExpression，[L32–L32](../webagent-core/agent-host/tests/oauthRateLimit.test.js#L32-L32)
+- `main/anonymous@38:33` — ArrowFunctionExpression，[L38–L38](../webagent-core/agent-host/tests/oauthRateLimit.test.js#L38-L38)
+- `main/anonymous@38:33/anonymous@38:76` — ArrowFunctionExpression，[L38–L38](../webagent-core/agent-host/tests/oauthRateLimit.test.js#L38-L38)
+- `main/post` — ArrowFunctionExpression，[L39–L39](../webagent-core/agent-host/tests/oauthRateLimit.test.js#L39-L39)
+- `main/anonymous@48:31` — ArrowFunctionExpression，[L48–L48](../webagent-core/agent-host/tests/oauthRateLimit.test.js#L48-L48)
+- `anonymous@51:13` — ArrowFunctionExpression，[L51–L51](../webagent-core/agent-host/tests/oauthRateLimit.test.js#L51-L51)
 
 ## webagent-core/agent-host/tests/patchEngine.test.js
 

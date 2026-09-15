@@ -1,7 +1,7 @@
 # 多报告交叉验证与修复台账（2026-09-11）
 
 **输入基线**：`049b08e`（用户上传报告；产品代码与 `7c9bde5` 一致）。
-**外部报告**：[project_audit_report.md](../project_audit_report.md)，原文保留，不修改他人的审查结论。
+**外部报告**：[project_audit_report.md](archive/project_audit_report.md)，原文保留，不修改他人的审查结论。
 **另一输入**：本会话 2026-09-11 审查，编号 F01–F38、D01–D06；本文件保留其问题索引及最新状态。
 **分支**：`arena/01a08d85-web-agent`。
 

@@ -16,4 +16,4 @@ workspaceEntry测试源码入口默认值和真实BridgeView VM，bridgeTunnel�
 
 本地真实浏览器本轮未执行：Playwright浏览器缓存缺失，下载Chrome153时报TLS前ECONNRESET；没有把旧浏览器结果当本轮成功。远端workbench-browser任务随后成功，补上本提交的真实Chromium回归；本地下载失败事实保留，不改写为本地通过。
 
-远端证据：https://github.com/cccjvav/web_agent/actions/runs/35027620432 。九项包括Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器/探针产物解包验证和workbench-browser。仍不能替代用户Windows桌面/Chrome账户/手机11.3及新增W清单。
+远端证据：https://github.com/cccjvav/web_agent/actions/runs/35027620432 。九项包括Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器/探针产物解包验证和workbench-browser。仍不能替代用户Windows桌面/Chrome账户及新增W清单。

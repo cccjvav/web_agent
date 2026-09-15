@@ -1,5 +1,8 @@
 # 网页 VS Code（code-server）使用指南
 
+> 2026-09-16说明：文中第三方Chat Plus/DeepSeek++仅为候选客户端，不是当前兼容性认证。现行前置条件见各自指南；本机扩展不一律要求隧道，认证以实际协议为准。探针三种入口的实装范围见[入口矩阵](./探针入口与实际可用范围.md)。
+
+
 这是本仓库的 **第二条运行方式**：浏览器里打开 **真正的 VS Code**，左侧活动栏有 **Web Agent** 插件，插件连本机 `agent-host`。ChatGPT / Arena 改磁盘仍然走 Bridge + cloudflared，和第一种方式相同。
 
 | | 方式 A：自绘工作台 | 方式 B：网页 VS Code | 方式 C：本机桌面 VS Code |
@@ -98,7 +101,7 @@ Chat / Bridge / 编辑文件不受影响。
 
 1. 已安装 cloudflared（`check-env.cmd`）
 2. 侧栏 Bridge → **启动 Bridge**，等到 `https://….trycloudflare.com/mcp/…`
-3. **Arena 类：** **复制提示词**，整段作为新对话第一句。**DeepSeek 网页：** 把 MCP 地址填进本机 Chrome/Edge 的 DeepSeek++ 侧边栏，见 [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md)
+3. **Arena 类：** **复制提示词**，整段作为新对话第一句。**DeepSeek第三方候选：** 先核对当前版本/权限/认证，不保证只填URL即可使用，见 [网页DeepSeek使用指南.md](./网页DeepSeek使用指南.md)
 
 密钥仍在工作区 `.webagent\config.json`。Quick Tunnel 域名每次启动都会变。
 

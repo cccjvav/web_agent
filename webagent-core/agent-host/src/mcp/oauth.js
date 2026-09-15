@@ -448,9 +448,9 @@ function tokenResponse(issued) {
 const rateHits = new Map();
 
 function clientIp(req) {
-  return String((req && (req.ip || (req.headers && req.headers['x-forwarded-for']))) || 'local')
-    .split(',')[0]
-    .trim();
+  // Express derives req.ip from its explicitly configured trust-proxy policy.
+  // Never fall back to an attacker-supplied forwarding header.
+  return String(req?.ip || req?.socket?.remoteAddress || 'local');
 }
 
 function rateLimit(key, max, windowMs) {
@@ -459,24 +459,29 @@ function rateLimit(key, max, windowMs) {
     if (hit.expiresAt <= t) rateHits.delete(id);
   }
   if (!rateHits.has(key) && rateHits.size >= 1000) {
-    const err = new Error('rate limiter capacity reached'); err.status = 429; throw err;
+    const earliest = Math.min(...Array.from(rateHits.values(), hit => hit.expiresAt));
+    const err = new Error('rate limiter capacity reached');
+    err.status = 429; err.retryAfter = Math.max(1, Math.ceil((earliest - t) / 1000));
+    throw err;
   }
   const rec = rateHits.get(key) || { n: 0, start: t, expiresAt: t + windowMs };
-  if (t - rec.start > windowMs) {
-    rec.n = 0;
-    rec.start = t;
-    rec.expiresAt = t + windowMs;
+  if (rec.n >= max) {
+    const err = new Error('too many requests');
+    err.status = 429; err.retryAfter = Math.max(1, Math.ceil((rec.expiresAt - t) / 1000));
+    throw err; // Rejected requests do not increment or renew this window.
   }
   rec.n += 1;
   rateHits.set(key, rec);
-  if (rec.n > max) {
-    const err = new Error('too many requests');
-    err.status = 429;
-    throw err;
+}
+
+function retryHeader(res, err) {
+  if (err.status === 429 && Number.isSafeInteger(err.retryAfter) && err.retryAfter > 0) {
+    res.setHeader('Retry-After', String(err.retryAfter));
   }
 }
 
 function sendError(res, err) {
+  retryHeader(res, err);
   const status = err.status || 500;
   if (status === 401) res.setHeader('WWW-Authenticate', 'Basic realm="Web Agent OAuth"');
   const error = err.oauthError || (status === 429 ? 'slow_down' : status === 400 ? 'invalid_request' : 'server_error');
@@ -519,6 +524,7 @@ router.post('/oauth/authorize', (req, res) => {
     const loc = completeAuthorize(req.body || {});
     res.redirect(302, loc);
   } catch (err) {
+    retryHeader(res, err);
     res.status(err.status || 400);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(authorizeHtml(req.body, err.message));

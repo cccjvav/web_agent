@@ -49,3 +49,10 @@ refresh同样检查机密客户端缺认证401，再正确认证200，旧access�
 分别filter oauth/oauthClientAuth/githubAuth或完整`npm test --prefix webagent-core/agent-host`。实际用户配对与手机Arena连接仍需按Windows验收清单执行。
 
 跨客户端配对回归：第二个注册者连续六次错误输入，只消耗自己的尝试预算，快照code保持不变；合法注册者仍可用原码完成配对。未测大规模流量DoS。
+
+
+## oauthRateLimit.test.js
+
+**main**以createRequire加载真实oauth源码到VM，仅把Date.now替换成可控clock；追加fixture访问器只存在测试VM，不从产品导出内部状态。clientIp检查不直接信任X-Forwarded-For；重复500次拒绝后n与expiresAt不变，恰好过期时恢复。1000个key后新key拒绝但旧key剩余额度可用，窗口到期释放容量。固定LCG seed生成2000个跨7个客户端/时间推进事件，对照独立model的count/until，不引入随机网络不稳定。
+
+真实Express挂载该VM的router，**post**发HTTP并每次消耗响应体；注册两个别名共用预算、伪造头不能分裂来源，授权HTML错误与JSON错误都有Retry-After。时钟前进60秒恢复为正常校验400而非429。finally关闭本测试server；不联网第三方、不验证实际代理用户隔离。验证不等同通用性质/变异测试门禁。

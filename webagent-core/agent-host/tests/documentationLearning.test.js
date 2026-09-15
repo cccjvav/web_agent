@@ -9,6 +9,7 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/tests/oauthRateLimit.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
   ["webagent-core/agent-host/src/utils/workspaceBinding.js", "webagent-core/agent-host/src/utils/函数详解.md"],
   ["webagent-core/agent-host/tests/workspaceEntry.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
   ["webagent-core/agent-host/tests/probeQuestionGuard.test.js", "webagent-core/probe-extension/实现详解.md"],

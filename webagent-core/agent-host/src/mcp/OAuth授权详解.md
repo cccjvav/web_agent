@@ -114,7 +114,7 @@ issueAccess生成access/refresh，创建含两个截止的共享记录，同时�
 
 ## 8. 限流、错误和所有路由回调
 
-**clientIp(req)**取req.ip/转发头/local，逗号首项trim；代理配置决定实际粒度。**rateLimit(key,max,windowMs)**固定窗口计数，超max抛429；每次调用按expiresAt清除过期key；最多1000项，新key遇满时429，已有key仍按自身窗口计数。不同端点前缀不共用次数，授权GET/POST共用auth前缀。
+**clientIp(req)**只取Express按明确trust-proxy策略解析的req.ip，再回退socket.remoteAddress/local；不直接相信转发头。默认未设trust proxy，隧道后的多个真实用户可能共用同一代理IP预算。**rateLimit(key,max,windowMs)**固定窗口计数，超max抛429；每次调用按expiresAt清除过期key；最多1000项，新key遇满时429，已有key仍可使用剩余额度；拒绝请求不增加计数、不延长窗口。不同端点前缀不共用次数，授权GET/POST共用auth前缀。
 
 **sendError(res,err)**status默认500；401附Basic挑战；oauthError优先，否则429 slow_down、400 invalid_request、其他server_error，附error_description。不是JSON-RPC错误外壳。
 
@@ -140,3 +140,12 @@ npm test --prefix webagent-core/agent-host -- --filter=oauth
 ### 本轮安全边界
 
 公开GET不能再自动续发配对码；issuePairing/ensurePairing仍供本机控制面使用。错误预算现按已注册clientId隔离，避免另一注册者作废正常码；客户端ID不是秘密，攻击者若已知道目标ID仍可针对其尝试预算或进行流量DoS，不把此称为完整抗DoS。重启仍重新配对，不引入持久化密钥。单客户端令牌族数量、所有可能代理部署、真实Arena/手机回调尚未穷举验收。
+
+
+## 限流恢复与公平性（2026-09-16）
+
+rateLimit在expiresAt<=now时清理；n达到max先抛429，不写回n。容量仍限1000个key；新key遇满时retryAfter取最早过期窗口的秒数向上取整、最少1；已有key不因新key容量满而被清空。**retryHeader(res,err)**只对429及正安全整数设置Retry-After，sendError JSON路径和授权POST的HTML错误路径都调用。该数字表示可重试时间，不保证届时请求一定成功，也不触发客户端自动重放。
+
+验证oauthRateLimit.test：固定时钟边界、大量拒绝后窗口不漂移、1000项容量/旧key可用、2000步生成调度对照独立模型，以及真实HTTP端点伪造X-Forwarded-For仍共用预算、JSON/HTML均返回Retry-After和过期恢复。没有更改默认代理信任或按未经认证client_id任意拆预算；共享NAT/隧道IP下的按用户公平性仍未实现，需另做可信身份/部署设计。
+
+计数指“通过限流门槛”的请求；后续OAuth业务校验返回400/401仍消耗额度。只有限流本身拒绝的请求不增加计数，不能用无效凭据绕开预算。

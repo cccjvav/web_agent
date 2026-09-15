@@ -456,6 +456,11 @@
       "id": "probe-browser-integration",
       "path": "webagent-core/probe-extension/浏览器整合说明.md",
       "group": "使用"
+    },
+    {
+      "id": "probe-entry-map",
+      "path": "探针入口与实际可用范围.md",
+      "group": "使用"
     }
   ],
   "sourceSnapshotExclusions": [
