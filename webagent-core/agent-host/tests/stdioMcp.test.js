@@ -70,7 +70,7 @@ async function main() {
     assert.ok(!fs.existsSync(path.join(root, 'stdio-calls.txt')));
     await queue.approve(waiting.requestId, true);
     const output = JSON.parse(queue.inspect(waiting.requestId).result.content[0].text);
-    assert.deepStrictEqual(output.args, special); assert.strictEqual(output.hostSecret, false); assert.strictEqual(output.launchSpec, false); assert.strictEqual(output.explicitKey, true);
+    assert.deepStrictEqual(output.args, special); assert.strictEqual(output.hostSecret, false); assert.strictEqual(output.hostProfile, false); assert.strictEqual(output.launchSpec, false); assert.strictEqual(output.explicitKey, true);
     await queue.approve(waiting.requestId, true);
     assert.strictEqual(fs.readFileSync(path.join(root, 'stdio-calls.txt'), 'utf8'), 'call\n');
     stage = 'cancel call';

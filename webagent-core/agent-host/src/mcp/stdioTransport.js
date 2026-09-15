@@ -11,8 +11,16 @@ function open(launch, onStopped = () => {}) {
   const program = win ? path.join(process.env.SystemRoot || 'C:\\Windows', 'System32/WindowsPowerShell/v1.0/powershell.exe') : process.execPath;
   const args = win ? ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', path.join(__dirname, 'stdioBridge.ps1')]
     : [path.join(__dirname, 'stdioSupervisor.js')];
+  const helperEnv = { ...launch.env, WEBAGENT_STDIO_LAUNCH: spec };
+  if (win) {
+    // Runtime/cache locations belong to the product bootstrap, not to the target.
+    for (const [key, value] of Object.entries(process.env)) {
+      if (/^(USERPROFILE|APPDATA|LOCALAPPDATA|HOMEDRIVE|HOMEPATH)$/i.test(key) && !Object.keys(helperEnv).some(existing => existing.toUpperCase() === key.toUpperCase())) helperEnv[key] = value;
+    }
+    helperEnv.PSModulePath = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32/WindowsPowerShell/v1.0/Modules');
+  }
   const child = spawn(program, args, { cwd: launch.cwd, shell: false, detached: !win, windowsHide: true,
-    stdio: ['pipe', 'pipe', 'pipe'], env: { ...launch.env, WEBAGENT_STDIO_LAUNCH: spec } });
+    stdio: ['pipe', 'pipe', 'pipe'], env: helperEnv });
   let ready = !win, queuedBytes = 0; const queued = [];
   const pending = new Map(); let buffer = Buffer.alloc(0), totalBytes = 0, stderrBytes = 0, frames = 0, stopped = false, closed = false, stopReason = '';
   let resolveClosed;
