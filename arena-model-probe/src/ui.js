@@ -106,8 +106,8 @@ export class HUD {
     };
     const conf = Math.round((vd.confidence || 0) * 100);
 
-    // ---- 真实模型名（来自 Trigger.dev run trace）最高优先显示 ----
-    // 这是用户最需要的信息：具体是哪个模型，例如 qwen3.8-max-0902
+    // ---- 来源报告的标签（未独立核验） ----
+    // 不把上游标签或线索排序分当作真实模型身份认证。
     const real = extras.realModel;
     const realBlock = real
       ? `<div class="verdict" style="border-color:#238636;background:#0d1f12">

@@ -69,6 +69,9 @@ const assert = require('assert');
     xhr.open('GET', ''); xhr.send(); assert.strictEqual(xhr.listeners.size, 0);
     const uiSource = require('fs').readFileSync(require('path').resolve(__dirname, '../../../arena-model-probe/src/ui.js'), 'utf8');
     assert.ok(uiSource.includes('非认证概率') && uiSource.includes('未独立核验'));
+    const mainSource = require('fs').readFileSync(require('path').resolve(__dirname, '../../../arena-model-probe/src/main.js'), 'utf8');
+    assert.ok(mainSource.includes('modelIdentityVerified: false'));
+    assert.ok(!mainSource.includes('realName: true') && !mainSource.includes('真实模型名'));
     console.log('probe transport: original Response, bounded capture/parser/history, cancellation, constructor constants/subclassing and XHR reuse passed offline');
   } finally {
     stopCaptures(); global.window = originalWindow; global.document = originalDocument;

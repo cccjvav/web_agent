@@ -65,10 +65,10 @@ export function boot(opts = {}) {
     }
   })();
 
-  /* ---------------- 自动解析真实模型名（核心能力） ---------------- */
+  /* ---------------- 自动解析运行标签（未核验）（核心能力） ---------------- */
   // 流程：流里出现 public-access-token → 解出 run id → 轮询 run trace
   //       → 提取 ai.streamText.doStream span 的模型标签 → 回灌为最高权重证据。
-  // 这样探针就能直接显示 qwen3.8-max-0902 这类真实模型名，而不只是"家族未知"。
+  // 这样探针就能直接显示 qwen3.8-max-0902 这类运行标签（未核验），而不只是"家族未知"。
   startAutoResolve({ initialDelayMs: 8000, maxMs: 180000, intervalMs: 6000 });
 
   BUS.on((evt) => {
@@ -98,16 +98,16 @@ export function boot(opts = {}) {
 
     if (evt.kind === 'run-model') {
       const name = evt.data && evt.data.name;
-      state.hud.log(`★ 真实模型名: ${name}`);
-      // 把已验证的真名单独存档：这类名字（如 qwen-latest-series-invite-202608-m4）
-      // 常不在公开目录里，指纹无法归类，但真名是确定的，必须原样记住。
+      state.hud.log(`★ 运行标签（未核验）: ${name}`);
+      // 把原始报告标签单独存档（历史VERIFIED状态不等于认证）：这类名字（如 qwen-latest-series-invite-202608-m4）
+      // 常不在公开目录里，指纹无法归类，但这些只是来源自报的字符串。
       try {
         const r = recordRealModel(name, { runId: evt.data && evt.data.runId });
         if (r && r.kind === 'VERIFIED_NEW') {
-          state.hud.log(`已存档真实模型名: ${name}`);
+          state.hud.log(`已存档运行标签（未核验）: ${name}`);
         }
       } catch { /* noop */ }
-      // 关键：真实模型名到达时必须立刻重算并刷新 HUD。
+      // 关键：运行标签（未核验）到达时必须立刻重算并刷新 HUD。
       // 否则界面会停留在旧的「模型家族未知」上（实测踩过的坑）。
       recompute('run-model');
     }
@@ -141,7 +141,7 @@ export function boot(opts = {}) {
 
   /* ---------------- 完整判定 + 建档 ---------------- */
   function recompute(trigger) {
-    // 先把 UUID 形态的 modelId 还原成真实模型名（揭示机制），
+    // 先把 UUID 形态的 modelId 还原成运行标签（未核验）（揭示机制），
     // 再把还原结果纳入证据链 —— 这一步决定了能否给出「具体版本号」。
     try {
       const n = resolveEvidence(BUS.evidence);
@@ -151,12 +151,12 @@ export function boot(opts = {}) {
     const evidence = BUS.evidence.filter(e => !e.stale);
     let verdict = classify(evidence);
 
-    // ---- 真实模型名优先：只要 run trace 给了名字，就直接作为结论 ----
+    // ---- 运行标签（未核验）优先：只要 run trace 给了名字，就直接作为结论 ----
     //
     // 为什么需要这层兜底：classify 依赖证据链融合，若新名字不在注册表里
     // （如 qwen-latest-series-invite-202608-m4），融合结果会给出
     // RESOLVED 但 family/label 为空，HUD 仍显示"未知"。
-    // 真实模型名由 worker 直接写入 run，权威性最高，应当无条件展示。
+    // 运行标签（未核验）由 worker 直接写入 run，仅为来源自报，不证明真实执行者。
     const rs = runState();
     if (rs.modelName) {
       const matched = classify([{ source: 'run.trace.model', weight: 1.0, modelId: rs.modelName }]);
@@ -167,10 +167,10 @@ export function boot(opts = {}) {
         label: matched.label || rs.modelName,     // 未归类时直接显示名字
         confidence: Math.max(verdict.confidence || 0, 0.96),
         note: matched.family
-          ? `真实模型名来自 Trigger.dev run trace（worker 写入）`
-          : `真实模型名来自 Trigger.dev run trace；该名称未收录于本地注册表，已按原样显示`,
+          ? `运行标签（未核验）来自 Trigger.dev run trace（worker 写入）`
+          : `运行标签（未核验）来自 Trigger.dev run trace；该名称未收录于本地注册表，已按原样显示`,
         source: 'run.trace.model',
-        realName: true,
+        reportedName: true, // The trace reports a label; it does not authenticate an executor.
         evidence: [
           { source: 'run.trace.model', detail: `run ${rs.runId || '?'} 的 streamText span 标签` },
           ...(verdict.evidence || []).slice(0, 5),
@@ -178,6 +178,7 @@ export function boot(opts = {}) {
       };
     }
 
+    verdict = { ...verdict, modelIdentityVerified: false };
     state.lastVerdict = verdict;
     state.slots = splitBySlot(evidence);
 
@@ -246,7 +247,7 @@ export function boot(opts = {}) {
     bus: BUS,
     hud: state.hud,
     state,
-    classify: () => classify(BUS.evidence),
+    classify: () => ({ ...classify(BUS.evidence), modelIdentityVerified: false }),
     observations: () => BUS.observations,
     learned: () => listLearned(),
     export: () => exportLearned(),
@@ -266,7 +267,7 @@ export function boot(opts = {}) {
     /** 判断是否 UUID */
     isUuid,
 
-    // ---- 真实模型名（Trigger.dev run trace）----
+    // ---- 运行标签（未核验）（Trigger.dev run trace）----
     /** 当前 run 状态（token / runId / 已解析出的模型名 / 历史） */
     runState: () => runState(),
     /** 手动触发一次 trace 读取 */
@@ -275,13 +276,13 @@ export function boot(opts = {}) {
     pollRunModels: (opts) => pollRunModels(opts),
     /** 从 trace 文本提取模型标签（离线可用） */
     extractFromTrace: (text) => extractModelLabels(text),
-    /** 当前真实模型名（最常需要的接口） */
+    /** 当前运行标签（未核验）（最常需要的接口） */
     realModel: () => runState().modelName,
     /** 手动喂入 token（调试用） */
     acceptToken: (name, value) => acceptToken(name, value),
-    /** 已存档的真实模型名列表 */
+    /** 已存档的运行标签（未核验）列表 */
     realModels: () => listRealModels(),
-    /** 手动记录一个真实模型名 */
+    /** 手动记录一个运行标签（未核验） */
     recordRealModel: (name, meta) => recordRealModel(name, meta),
   };
   try { window.__MODEL_PROBE__ = api; } catch { /* noop */ }

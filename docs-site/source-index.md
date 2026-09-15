@@ -2201,9 +2201,9 @@
 
 ## webagent-core/agent-host/tests/probeTransport.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `a97dc9149e07bec6257ced5f8563ca1da87cc7e1c116fb1107a3eb422f365058`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `600beafd61ed94af97950410df8efbecadd0eee149a33f14795c22d636c54ecb`
 
-- `anonymous@4:1` — ArrowFunctionExpression，[L4–L76](../webagent-core/agent-host/tests/probeTransport.test.js#L4-L76)
+- `anonymous@4:1` — ArrowFunctionExpression，[L4–L79](../webagent-core/agent-host/tests/probeTransport.test.js#L4-L79)
 - `anonymous@4:1/bytes` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/probeTransport.test.js#L8-L8)
 - `anonymous@4:1/start` — FunctionExpression，[L19–L19](../webagent-core/agent-host/tests/probeTransport.test.js#L19-L19)
 - `anonymous@4:1/cancel` — FunctionExpression，[L19–L19](../webagent-core/agent-host/tests/probeTransport.test.js#L19-L19)
@@ -2231,7 +2231,7 @@
 - `anonymous@4:1/Xhr/send` — FunctionExpression，[L61–L61](../webagent-core/agent-host/tests/probeTransport.test.js#L61-L61)
 - `anonymous@4:1/Xhr/addEventListener` — FunctionExpression，[L62–L62](../webagent-core/agent-host/tests/probeTransport.test.js#L62-L62)
 - `anonymous@4:1/Xhr/removeEventListener` — FunctionExpression，[L63–L63](../webagent-core/agent-host/tests/probeTransport.test.js#L63-L63)
-- `anonymous@76:11` — ArrowFunctionExpression，[L76–L76](../webagent-core/agent-host/tests/probeTransport.test.js#L76-L76)
+- `anonymous@79:11` — ArrowFunctionExpression，[L79–L79](../webagent-core/agent-host/tests/probeTransport.test.js#L79-L79)
 
 ## webagent-core/agent-host/tests/profile.test.js
 

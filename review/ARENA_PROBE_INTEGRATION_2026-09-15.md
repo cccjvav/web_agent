@@ -30,3 +30,10 @@ connectionCheck隔离测试涵盖原始额外字段/错误来源/过期拒绝、
 
 ## 中断后续审
 用户明确允许审查原型bug。新增采集层完整阅读、Response兼容/读取预算/XHR复用/socket构造器修复和离线probeTransport回归；详见arena-model-probe/TRANSPORT_REVIEW.md。原始模型鉴定、真实站点兼容、整个main销毁链仍未认证。上一接入浏览器回归失败定位为测试误把本机跨站拒绝断言为403；现有rejectCrossSiteApi按安全策略返回404且不执行，改断言为精确404/not found，未放宽服务端。
+
+## 已验证的精确提交
+
+- b5d7fab3da3ffa58d34d2baf68d0865c84da7e66：本机61个测试文件通过；GitHub Actions https://github.com/cccjvav/web_agent/actions/runs/34974399282 全9任务成功，包括真实浏览器连接核对/跨站拒绝/已初始化MCP回传、七个Linux/Windows Node组合和Windows安装器。
+- 浏览器原失败0ad3693的annotation明确指向workbench.browser.js:253，404 !== 403，修正的是测试契约而不是放宽接口。
+- 后续仅补充未核验标签/API显式标志及记录，也需按后续提交CI状态区分，不冒用上面的SHA结果。
+- 仍需用户真实Windows11.3及第三方包验收；上面不是实际账号/模型身份或整份原型全审证明。

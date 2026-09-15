@@ -15501,8 +15501,8 @@
     {
       "path": "webagent-core/agent-host/tests/probeTransport.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "a97dc9149e07bec6257ced5f8563ca1da87cc7e1c116fb1107a3eb422f365058",
-      "lineCount": 77,
+      "sha256": "600beafd61ed94af97950410df8efbecadd0eee149a33f14795c22d636c54ecb",
+      "lineCount": 80,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -15511,7 +15511,7 @@
           "name": "anonymous@4:1",
           "kind": "ArrowFunctionExpression",
           "startLine": 4,
-          "endLine": 76,
+          "endLine": 79,
           "parameters": []
         },
         {
@@ -15752,11 +15752,11 @@
           ]
         },
         {
-          "id": "anonymous@76:11",
-          "name": "anonymous@76:11",
+          "id": "anonymous@79:11",
+          "name": "anonymous@79:11",
           "kind": "ArrowFunctionExpression",
-          "startLine": 76,
-          "endLine": 76,
+          "startLine": 79,
+          "endLine": 79,
           "parameters": [
             "error"
           ]

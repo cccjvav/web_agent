@@ -40,3 +40,9 @@
 - 本机完整`npm test --prefix webagent-core/agent-host`：61个测试文件全部通过。
 - 完整静态读取tools/build.mjs后执行纯本地构建，再对两个产物运行`node --check`：均通过。没有执行/注入产物；dist保持忽略，不随安装包带入原型。构建成功不代表浏览器运行成功。
 - 浏览器接入回归的精确提交CI结果另记在集成报告，不拿本轮单元测试代替。
+
+## 后续交叉核查
+
+已补齐main.js全文阅读，runmodel.js只读自动编排/轮询/重置段，ui.js追加拖动段；不把这些标作全模块审计。运行标签的HUD日志和note也改为未核验；主入口返回的verdict显式modelIdentityVerified:false，旧的realName:true改为reportedName:true（仓库内没有其他消费者）。既有realModel/realModels函数名暂保留兼容，只返回来源报告的名称；历史VERIFIED存档枚举不构成认证，后续需独立数据迁移而非伪造验证。
+
+补充待修候选：quickVerdict把不同请求的modelId证据混用；recompute每次可能重复加入同一canary证据且绕过BUS.push上限；自动轮询读取可变全局run状态，跨请求归属与重置的竞态尚待隔离测试。没有为了通过测试而执行真实令牌/轨迹。这些仍影响原型判定可靠性，因此原型仍不随产品启用。
