@@ -111,8 +111,20 @@ async function main() {
     await page.setViewportSize({ width: 1280, height: 900 }); await page.click('#rb-bridge-tab');
     await rpc('unknown-fixture-tool'); await page.waitForFunction(() => document.querySelector('#stat-fail').textContent === '1');
     await page.click('#btn-reset-round'); await page.waitForFunction(() => document.querySelector('#stat-calls').textContent === '0');
+    const endpoint = `http://127.0.0.1:${mcpPort}/mcp/${status.secretKey}`;
+    const initialized = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 7, method: 'initialize', params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'browser-approval-fixture', version: '1' } } }) });
+    const session = initialized.headers.get('mcp-session-id'); assert.ok(session); await initialized.json();
+    const queued = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Mcp-Session-Id': session }, body: JSON.stringify({ jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'workflow_request', arguments: { requestKey: 'browser-remote-approval', definition: { steps: [{ id: 'remote', tool: 'write_file', arguments: { filePath: 'remote-approved.txt', content: 'REMOTE-APPROVED' } }] } } } }) });
+    const pending = JSON.parse((await queued.json()).result.content[0].text);
+    assert.strictEqual(pending.status, 'waiting-approval');
+    assert.ok(!fs.existsSync(path.join(workspace, 'remote-approved.txt')));
+    await page.click('#btn-operations');
+    await page.locator('#ops-requests button').filter({ hasText: pending.requestId }).click();
+    page.once('dialog', dialog => dialog.accept()); await page.locator('#ops-controls button').first().click();
+    await page.waitForFunction(() => document.querySelector('#ops-review').textContent.includes('succeeded'));
+    assert.strictEqual(fs.readFileSync(path.join(workspace, 'remote-approved.txt'), 'utf8'), 'REMOTE-APPROVED');
     assert.deepStrictEqual(errors, []);
-    console.log('Browser PASS: help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset');
+    console.log('Browser PASS: help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval');
   } finally {
     if (browser) await browser.close();
     if (child.exitCode === null) child.kill();

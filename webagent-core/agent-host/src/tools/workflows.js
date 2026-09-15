@@ -77,9 +77,9 @@ async function execute({ definition }, options) {
       const args = resolveValues(step.arguments, outputs);
       const output = await require('./index').callTool(step.tool, args, WRITE.has(step.tool) ? 'code' : 'ask', options);
       outputs[step.id] = output;
-      const failed = output.ok === false || output.success === false || output.isError === true;
+      const failed = output.ok === false || output.success === false || output.isError === true || ['failed', 'unknown', 'cancelled'].includes(output.trace.status);
       steps.push({ id: step.id, tool: step.tool, status: output.trace.status, callId: output.trace.callId, verification: output.verification?.state || 'not-applicable' });
-      if (failed) return { ok: false, status: output.verification?.state === 'unknown' ? 'unknown' : 'failed', steps, stoppedAt: step.id };
+      if (failed) return { ok: false, status: output.trace.status === 'unknown' || output.verification?.state === 'unknown' ? 'unknown' : output.trace.status === 'cancelled' ? 'cancelled' : 'failed', steps, stoppedAt: step.id };
       try { checkExpectation(step.expect); }
       catch (_) { steps[steps.length - 1].verification = 'unknown'; return { ok: false, status: 'unknown', steps, stoppedAt: step.id, error: 'Postcondition failed after execution; inspect existing effects. No retry performed.' }; }
     } catch (error) {

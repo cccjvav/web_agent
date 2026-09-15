@@ -79,7 +79,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
 | [apiFiles.test.js](apiFiles.test.js) | 13 个函数/类节点 |
-| [approvedOperations.test.js](approvedOperations.test.js) | 9 个函数/类节点 |
+| [approvedOperations.test.js](approvedOperations.test.js) | 10 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 17 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
 | [board.test.js](board.test.js) | 4 个函数/类节点 |
@@ -128,7 +128,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 13 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 25 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 28 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 30 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 68 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 11 个函数/类节点 |

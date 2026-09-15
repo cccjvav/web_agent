@@ -11,7 +11,7 @@ const { callTool } = require('../src/tools');
 const queue = require('../src/utils/operatorQueue');
 const external = require('../src/mcp/externalClient');
 const workflows = require('../src/tools/workflows');
-let calls = 0;
+let calls = 0, onHangingCall;
 const server = http.createServer(async (req, res) => {
   let text = ''; for await (const chunk of req) text += chunk;
   const message = JSON.parse(text);
@@ -20,7 +20,9 @@ const server = http.createServer(async (req, res) => {
   let result;
   if (message.method === 'initialize') result = { protocolVersion: '2025-03-26', capabilities: {} };
   if (message.method === 'tools/list') result = { tools: [{ name: 'count', inputSchema: { type: 'object' } }] };
-  if (message.method === 'tools/call') { calls++; result = { content: [{ type: 'text', text: 'executed' }] }; }
+  if (message.method === 'tools/call') { calls++;
+    if (message.params.arguments.hang) { res.setHeader('Content-Type', 'application/json'); res.write('{'); onHangingCall(); return; }
+    result = { content: [{ type: 'text', text: 'executed' }] }; }
   res.setHeader('Content-Type', 'application/json'); res.setHeader('Mcp-Session-Id', 'fixture-session');
   res.end(JSON.stringify({ jsonrpc: '2.0', id: message.id, result }));
 });
@@ -58,8 +60,13 @@ const server = http.createServer(async (req, res) => {
     assert.throws(() => workflows.preview({ steps: [{ id: 'bad', tool: 'run_command', arguments: { command: 'echo nope' } }] }));
     assert.throws(() => workflows.resolveValues('$steps.x.__proto__', { x: {} }));
     assert.deepEqual(workflows.resolveValues('$steps.x.hash', { x: { hash: 'abc' } }), 'abc');
+    const waiting = new Promise(resolve => { onHangingCall = resolve; });
+    const hanging = external.request({ ...args, arguments: { hang: true }, requestKey: 'request-hang' }, options);
+    const execution = queue.approve(hanging.requestId, true); await waiting; queue.cancel(hanging.requestId); await execution;
+    assert.equal(queue.inspect(hanging.requestId).status, 'unknown'); assert.equal(calls, 2);
+    await queue.approve(hanging.requestId, true); assert.equal(calls, 2);
     const removed = external.request({ ...args, requestKey: 'request-003' }, options); external.remove(registered.serverId);
-    await queue.approve(removed.requestId, true); assert.equal(queue.inspect(removed.requestId).status, 'failed'); assert.equal(calls, 1);
+    await queue.approve(removed.requestId, true); assert.equal(queue.inspect(removed.requestId).status, 'failed'); assert.equal(calls, 2);
     const streamed = new Response('data: {"jsonrpc":"2.0","id":"sse","result":{}}\n\n', { headers: { 'content-type': 'text/event-stream' } });
     assert.deepEqual((await external.responseMessage(streamed, 'sse')).result, {});
     await assert.rejects(external.responseMessage(new Response('x'.repeat(256 * 1024 + 1)), 'large'));
