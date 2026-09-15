@@ -8,14 +8,14 @@
 | | 方式 A：自绘工作台 | 方式 B：网页 VS Code | 方式 C：本机桌面 VS Code |
 |---|---|---|---|
 | 启动 | `run-webagent.cmd` | `run-webagent-vscode.cmd` | `run-webagent.cmd` + `install-vscode-extension.cmd` |
-| 界面 | 仿 VS Code 的工作台 | **官方 code-server / Code-OSS** | 已安装的微软 VS Code |
+| 界面 | 仿 VS Code 的工作台 | code-server（基于 Code-OSS） | 已安装的微软 VS Code |
 | 端口 3000 | 工作台 UI | code-server | **不占用**（可与 A 同时开） |
 | 端口 48271 | agent-host MCP | 同样 | 同样（插件打这扇门） |
 | 改文件的引擎 | 同一套 MCP 工具 | 同一套 | 同一套 |
 | 同时开 A 与 B | **不要**（抢 3000） | **不要** | C 不抢 3000 |
 
 官方 [coder/code-server](https://github.com/coder/code-server) **不发布 Windows 安装包**。Git 里也不再内嵌 code-server。  
-**做法：** 第一次启动时用 **npm** 下载完整的 `code-server@4.135.0`（带 `out/`），装到 `bin/code-server-runtime/`（不进 Git）。Node 22 LTS 可以跑，尽管上游标注 Node 24。
+**做法：** 第一次启动时用 **npm** 下载完整的 `code-server@4.135.0`（带 `out/`），装到 `bin/code-server-runtime/`（不进 Git）。主机的 Node 测试矩阵不等于 code-server 运行时兼容矩阵；应按所用 code-server 版本核对 Node 要求，不忽略 engines 警告作为验收办法。
 
 ---
 
@@ -59,7 +59,7 @@ run-webagent-vscode.cmd
 左侧活动栏最上方（或扩展图标附近）点 **Web Agent**：
 
 - **Web Agent Chat & Agent**（侧栏，像 Copilot）：输入框下 **Agent ▾** 默认 **Web Agent Code**。发任务就会对当前文件夹搜、读、改、测。
-- **VS Code 原生 Chat**（和 Copilot 同一个 Chat 面板）：打开 Chat，输入 `@webagent` 后发任务。`/ask` 只读，`/plan` 多模型分支（换模型后再发同一任务；没 Key 是本机草案），默认就是 Agent（`/code`）。打补丁后会在编辑器里打开文件。命令 **Web Agent: 打开 Agent Chat** 或点状态栏也会打开这块。
+- **VS Code 原生 Chat**（和 Copilot 同一个 Chat 面板）：打开 Chat，输入 `@webagent` 后发任务。`/ask` 只读，`/plan` 多模型分支（换模型后再发同一任务；明确选择 builtin 时是本机草案），默认就是 Agent（`/code`）。打补丁后会在编辑器里打开文件。命令 **Web Agent: 打开 Agent Chat** 或点状态栏也会打开这块。
 - **Bridge 模式**：启动 Bridge、复制提示词（内容与截图 5 那两行一致）
 
 ### Chat 里的 Agent（对照 Copilot）
@@ -69,11 +69,11 @@ run-webagent-vscode.cmd
 1. **原生 Chat `@webagent`**（插件 `chatParticipants`，`isDefault`）。不写 slash 就是 **Agent / Code**。`/ask`、`/plan`、`/code` 对应 Copilot 的只读 / 方案 / 动手。工具轨迹会写成 Chat 消息；`apply_patch` 后在编辑器打开该文件。
 2. **活动栏 Web Agent 侧栏** 输入框下的 **Agent · Web Agent Code ▾**，同一套 Ask / Plan / Code。
 
-两边都打本机 `http://127.0.0.1:48271/api/chat`。填了 API Key 会走模型工具循环；没 Key 时内置探索 Agent 仍会搜、读、必要时打补丁并跑测试。
+两边都打本机 `http://127.0.0.1:48271/api/chat`。填了 API Key 会走模型工具循环；明确选择内置探索 Agent 时可以执行确定性探索；非 builtin 配置不足则停止，不自动换成内置模型。
 
 GitHub Copilot 自己的 Ask/Edit/Agent 下拉是 Copilot 扩展私有 UI，第三方扩展开不进去。若你同时装了 Copilot，请用 **`@webagent`** 或左侧 **Web Agent** 侧栏，不要指望 Copilot 的 Agent 下拉里出现 Web Agent。
 
-齿轮 → **智能体自定义设置** 里可填 **环境偏好**、**技术栈**，并用 **技能引导** 建 `SKILL.md`。这些会写进工作区 `.webagent/`，原生 Chat `@webagent` 和 Bridge 都会带上。Skills 逐步见 [技能使用指南.md](./技能使用指南.md)。
+这些完整设置页属于**经典工作台**，不是 code-server 的 VS Code 齿轮菜单。需要编辑环境偏好、技术栈或使用技能引导时，先停止 code-server 入口，再以同一工作区启动 `run-webagent.cmd` 配置，完成后停下并切回；不要同时启动两个主机。这些会写进工作区 `.webagent/`，原生 Chat `@webagent` 和 Bridge 都会带上。Skills 逐步见 [技能使用指南.md](./技能使用指南.md)。
 
 工作区就是你传入的文件夹，VS Code 资源管理器、编辑器、搜索都是真的。
 
@@ -93,7 +93,7 @@ GitHub Copilot 自己的 Ask/Edit/Agent 下拉是 Copilot 扩展私有 UI，第�
 - 侧栏 Chat，切到 **CODE**，让 Agent `run_command` / `npm test`（agent-host 走 PowerShell）
 - 或本机另开一个 CMD
 
-Chat / Bridge / 编辑文件不受影响。
+终端模块失败不必然表示所有其他功能失败；Chat、Bridge 和编辑器仍须分别验证，不能由启动成功推断可用。
 
 ---
 
@@ -179,7 +179,7 @@ agent-host 没起来。看黑色窗口报错；防火墙是否拦了 Node。
 看启动窗口「登录密码」那一行，或打开 `.local\\share\\code-server\\webagent-password`。
 
 **页面提示 Node 版本**  
-忽略 engines 警告即可。本仓库用 `--ignore-scripts` + Node 22 已验证能打开工作台。
+核对当前 code-server 包的 Node 要求与完整启动日志；不要仅忽略 engines 警告，也不要把 agent-host CI 当作真实网页 VS Code 验收。
 
 ---
 
@@ -197,7 +197,7 @@ agent-host 没起来。看黑色窗口报错；防火墙是否拦了 Node。
 
 1. 仓库根双击 `install-vscode-extension.cmd`（拷到 `%USERPROFILE%\.vscode\extensions\webagent.webagent-core-<版本>`，不要 vsix）。
 2. `run-webagent.cmd D:\code\my-app`，黑色窗口保持开着。
-3. 完全退出 VS Code 再打开；**文件 → 打开文件夹** = 第 2 步那个路径（不要打开 `web_agent` 源码仓）。
+3. 完全退出 VS Code 再打开；**文件 → 打开文件夹** = 第 2 步那个路径（默认启动时可以是 `web_agent` 源码根；显式指定其他项目时打开那个目录）。
 4. 活动栏 **Web Agent**；Chat 里 `@webagent`。状态栏「未连接 48271」= 引擎没起来；「工作区不一致」= 打开的文件夹和 `Workspace` 不是同一个。
 
 逐步与排错见 [使用指南.md](./使用指南.md) 第 5 节。

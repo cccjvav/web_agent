@@ -631,7 +631,7 @@
     {
       "path": "docs-site/build.js",
       "doc": "docs-site/README.md",
-      "sha256": "ba801253ee2b01e317e56421c37ffd238d6d596580510dbc9db1a319a12cd536",
+      "sha256": "f0709e52f5f8d6bba92efca14e46d8c82374e467f052c3ecafaec9263a40e98d",
       "lineCount": 414,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -12951,8 +12951,8 @@
     {
       "path": "webagent-core/agent-host/tests/docsSite.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "ed141ae0a1f632776741903dba26814ad45c8346f1039d5e0302192671c97637",
-      "lineCount": 71,
+      "sha256": "ab409074032707026b2be19431315665988d243177f7916b4c7a0a45ea30fda1",
+      "lineCount": 72,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -12997,31 +12997,31 @@
           "parameters": []
         },
         {
-          "id": "anonymous@53:45",
-          "name": "anonymous@53:45",
+          "id": "anonymous@54:45",
+          "name": "anonymous@54:45",
           "kind": "ArrowFunctionExpression",
-          "startLine": 53,
-          "endLine": 53,
+          "startLine": 54,
+          "endLine": 54,
           "parameters": [
             "doc"
           ]
         },
         {
-          "id": "anonymous@57:47",
-          "name": "anonymous@57:47",
+          "id": "anonymous@58:47",
+          "name": "anonymous@58:47",
           "kind": "ArrowFunctionExpression",
-          "startLine": 57,
-          "endLine": 57,
+          "startLine": 58,
+          "endLine": 58,
           "parameters": [
             "doc"
           ]
         },
         {
-          "id": "anonymous@60:56",
-          "name": "anonymous@60:56",
+          "id": "anonymous@61:56",
+          "name": "anonymous@61:56",
           "kind": "ArrowFunctionExpression",
-          "startLine": 60,
-          "endLine": 60,
+          "startLine": 61,
+          "endLine": 61,
           "parameters": [
             "doc"
           ]

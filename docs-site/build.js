@@ -12,7 +12,7 @@ const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(__dirname, 'content.js');
 
 const FILE_DOCS = [
-  { id: 'summary', path: 'DOCUMENTATION_SUMMARY.md', group: '产品' },
+  { id: 'summary', path: 'review/SEMANTIC_REVIEW_2026-09-16.md', group: '产品' },
   { id: 'webagent-core', path: 'webagent-core/README.md', group: '产品' },
   { id: 'agent-host', path: 'webagent-core/agent-host/README.md', group: '产品' },
   { id: 'src', path: 'webagent-core/agent-host/src/README.md', group: '进程' },

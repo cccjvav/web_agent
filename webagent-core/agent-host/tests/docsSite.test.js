@@ -49,7 +49,8 @@ console.log('docs-site content.js matches build.js');
 
 const context = { window: {} };
 require('vm').runInNewContext(after, context);
-assert.ok(context.window.DOCS.files.summary.html, 'summary route must have real content');
+assert.ok(context.window.DOCS.files.summary.html.includes('文档语义审查台账'), 'legacy summary route must show the current review ledger, not retired statistics');
+assert.ok(!fs.existsSync(path.join(repoRoot, 'DOCUMENTATION_SUMMARY.md')), 'retired duplicate statistics must not return');
 assert.ok(context.window.DOCS.fileIndex.some(doc => doc.id === 'summary'));
 
 const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, 'docs-site/documentation-manifest.json'), 'utf8'));

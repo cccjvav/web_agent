@@ -1,23 +1,28 @@
 # 怎么改这个仓库
 
-不需要另装工具链。改完测绿再提交。
+## 环境与测试
 
-## 跑测试
+主程序使用 Node.js/npm；开发校验还需要 agent-host 的开发依赖，包括文档解析所用的 Acorn。Windows 用户使用桌面 VS Code 集成 CMD；Python 项目继续使用已有 Conda 环境，不要求另建 venv。
 
-Windows：仓库根 `run-tests.cmd`。其它环境：
+从仓库根准备完整依赖：
 
-```bash
-cd webagent-core/agent-host
-npm test
+```sh
+npm ci --include=dev --prefix webagent-core/agent-host
 ```
 
-不要在仓库根再放一份 `tests/`。不要为了绿灯去改 `webagent-repro/` 的 JS（已冻结）。
+Windows 可以执行 `run-tests.cmd`；跨平台可以执行：
 
-## 改功能时改说明书
+```sh
+npm test --prefix webagent-core/agent-host
+```
 
-唯一规范见 [代码文档维护规范](manager/docs/documentation.md)。源码旁README负责本目录；根用户指南不复制。docs-sync Skill只是操作入口。
+产品启动器安装的生产依赖不等于测试环境。浏览器回归、Windows 安装器编译等还有各自前置条件，见[测试说明](测试说明.md)及 CI 工作流。必须检查测试真实退出码，不能仅凭日志尾部判定成功。
 
-先审查相应正文，然后运行：
+## 修改与文档闭环
+
+[代码文档维护规范](manager/docs/documentation.md)是唯一维护规则：目录 README 解释本模块，复杂函数详解保留在其主解释位置，根指南不再复制完整实现清单。
+
+先逐句核对涉及的正文与源码，直接删除或更正错误句子，不在矛盾正文后追加免责声明。然后从仓库根执行：
 
 ```sh
 node docs-site/check-docs.js --write
@@ -26,14 +31,13 @@ node docs-site/check-docs.js
 npm test --prefix webagent-core/agent-host
 ```
 
-生成器需要agent-host开发依赖（先npm ci）。清单与索引自动生成，缺README、漂移和受检本地文件链接错误会阻断测试。结构通过不等于语义正确；无需修改正文时在PR说明依据。设计原因变更仍同步架构导读。
+生成器只维护清单、源码 hash、符号及导航，不认证语义。删除文档时同时修复链接、站点页面和测试；已完成审查与待审范围分别记录。源码无变更也不表示旧说明天然正确。
 
-## 不要做的
+## 保持的边界
 
-- 把演示钮改回「使用 GitHub 登录」，或把 Plan 改回假 97%
-- 假装 Codex OAuth 已经接上；Named / ngrok 缺 Token 时不要写成已经开了 Quick Tunnel
-- 从 `/api/status` 拿掉 `secretKey`（工作台靠它拼 MCP 地址）
-- 拆成多把 secret、接钥匙串、OS 命令沙箱、按客户端隔离全部全局状态——**不是漏修**，理由见 [架构导读.md](./架构导读.md) 第 12 节
-- 提交 `node_modules/`、`bin/code-server-runtime/` 里下载的包、`image-search/`
-
-许可证 [ISC](./LICENSE)。安全边界 [SECURITY.md](./SECURITY.md)。
+- 只在当前 Arena 固定分支工作并及时推送经过验证的批次；不覆盖未核实的本地修改。
+- 不为绿灯改冻结的 `webagent-repro/`，不另复制根 `tests/`。
+- 不把内置探索器、演示授权、探针参考或 Plan 拼接包装成真实大模型、GitHub 登录、模型身份证明或投票共识。
+- 模型故障明确停止；不得自动切模型、扩大权限或重放可能已有副作用的操作。
+- 本机 `/api/status` 返回连接所需秘密，不能因此开放远程控制面。权限与网络边界见 [SECURITY](SECURITY.md)。
+- 不提交依赖、下载运行时、输出包、有效令牌或原始抓包。许可证见 [ISC](LICENSE)。
