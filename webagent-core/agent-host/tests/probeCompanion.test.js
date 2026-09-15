@@ -72,7 +72,7 @@ async function main() {
     assert.strictEqual(calls.length, 0, 'Offline analysis must not contact the host');
     assert.ok(output.join('').includes('webagent-model-analysis/v1') && output.join('').includes('ui-fixture-model'));
   } finally { fs.rmSync(fixtureDirectory, { recursive: true, force: true }); }
-  await invoke('diagnostics'); assert.ok(!output.join('').includes('NEVER-LOG')); assert.ok(output.join('').includes('模型线索分析')); 
+  await invoke('diagnostics'); assert.ok(!output.join('').includes('NEVER-LOG')); assert.ok(output.join('').includes('模型线索分析'));
   vscode.workspace.isTrusted = false; await invoke('import'); assert.strictEqual(calls.length, 1);
   vscode.workspace.isTrusted = true; vscode.env.remoteName = 'ssh-remote'; await invoke('import'); assert.strictEqual(calls.length, 1); delete vscode.env.remoteName;
   vscode.env.uiKind = 2; await invoke('import'); assert.strictEqual(calls.length, 1); vscode.env.uiKind = 1;

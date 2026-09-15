@@ -15567,7 +15567,7 @@
     {
       "path": "webagent-core/agent-host/tests/probeCompanion.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "e28a64ab0ee572bb33db6c95e547233fb949dc1d45d591e05196f30a06097a31",
+      "sha256": "2f9d9e0db482d4547a7e07542ce7ae9eec12a66a8f360be68d4eaaa301c49637",
       "lineCount": 105,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",

@@ -2212,7 +2212,7 @@
 
 ## webagent-core/agent-host/tests/probeCompanion.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `e28a64ab0ee572bb33db6c95e547233fb949dc1d45d591e05196f30a06097a31`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `2f9d9e0db482d4547a7e07542ce7ae9eec12a66a8f360be68d4eaaa301c49637`
 
 - `main` — FunctionDeclaration，[L10–L103](../webagent-core/agent-host/tests/probeCompanion.test.js#L10-L103)
 - `main/anonymous@13:194` — ArrowFunctionExpression，[L13–L13](../webagent-core/agent-host/tests/probeCompanion.test.js#L13-L13)
