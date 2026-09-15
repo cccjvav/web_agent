@@ -413,6 +413,11 @@
       "id": "adoption-beginner-guide",
       "path": "借鉴优化说明（新手版）.md",
       "group": "使用"
+    },
+    {
+      "id": "bridge-refresh-guide",
+      "path": "Bridge统计与刷新排查.md",
+      "group": "使用"
     }
   ],
   "sourceSnapshotExclusions": [

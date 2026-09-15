@@ -221,18 +221,20 @@
             <span class="chev" id="sess-chev">▾</span>
           </button>
           <div class="sess-body" id="sess-body">
-            <p class="sess-note" id="sess-note">Start the Bridge here, then connect the configured MCP URL from the external client.</p>
+            <p class="sess-note" id="sess-note">正在从本机主机同步工具统计；刷新页面不会清除本轮。</p>
             <div class="sess-actions">
               <button type="button" id="btn-stop-bridge-rb" class="vs-btn sess-btn">Stop Bridge</button>
               <button type="button" id="btn-bridge-health" class="vs-btn sess-btn">Health</button>
               <button type="button" id="btn-reset-round" class="vs-btn sess-btn" title="清除本轮统计">Clear log</button>
             </div>
             <div class="sess-grid">
-              <div><label>Tool calls</label><span id="stat-calls">0</span></div>
-              <div><label>Average response</label><span id="stat-avg">0.0 s</span></div>
-              <div><label>Failures</label><span id="stat-fail">0</span></div>
-              <div><label>Success rate</label><span id="stat-ok">100.0%</span></div>
+              <div><label>本轮外部工具调用</label><span id="stat-calls">—</span></div>
+              <div><label>Average response</label><span id="stat-avg">—</span></div>
+              <div><label>Failures</label><span id="stat-fail">—</span></div>
+              <div><label>Success rate</label><span id="stat-ok">—</span></div>
             </div>
+            <p class="tiny" id="activity-origin">统计来源：等待主机响应</p>
+            <button type="button" id="btn-refresh-activity" class="vs-btn">重新同步统计（不清零）</button>
             <p class="tiny" id="sess-meta">Streamable HTTP</p>
             <p class="sess-foot" id="sess-foot">Bridge mode is output-only here. Continue the conversation in the external client.</p>
           </div>
@@ -340,6 +342,7 @@
             <li>内置探索是固定工具流程，不是本机大模型。Ask 扫描和读取；Plan 生成本机草案；Code 可能应用明确的补丁或写入格式、执行测试。只读验收请选择 Ask。</li>
             <li>需要真正的大模型推理时，到左侧 API Provider 配置；失败会停止，不自动换模型执行。</li>
             <li>外部 AI 连接在 Bridge 设置进行。它必须真实调用本机 MCP 工具；仅发聊天、发现工具或调用其他服务不会增加这里的工具计数。</li>
+            <li>刷新后计数异常时，先看是否为“—”或同步失败，点“重新同步统计”；核对主机ID与本轮起点。详细步骤见仓库根 Bridge统计与刷新排查.md。</li>
             <li>Bridge 统计来自当前主机进程，保留最近100条工具完成摘要；刷新页面可恢复，重启主机或清除本轮会重置。统计同步失败时检查本机服务和工作区，不要公开管理页面。</li>
           </ol>
           <p class="lead">完整 IDE、交互式终端与调试请使用桌面 VS Code 扩展。经典工作台不提供附件上传、网站代登录或插件市场。</p>

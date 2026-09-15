@@ -63,3 +63,5 @@ HTTP状态/并发、真实剪贴板与公网连接的界限应按上述实现理
 
 ## 身份与追踪界面
 paintBridgeActivity先显示snapshot.identity，存在executions时优先展示进行中/完成的工具追踪、任务/会话/callId、核验与execId，而不是只列完成摘要；状态文本均转义。**refreshDiagnostics()**先清旧身份，GET只读诊断后显示identity/capabilities，失败不能沿用旧身份做匹配。**compareHost()**校验用户填的UUID与当前主机一致性，不接收密钥；不一致要求停止修改任务并核对工作区。
+
+paintBridgeActivity校验epoch/revision和非负统计，渲染完成后才提交activityVersion；失败仍可重试。同一版本避免日志重绘。activityInfo保存当前页已取得的主机身份/本轮起点；paintStats在未同步时显示—，统一更新Bridge摘要，不再把完成数叫活动请求。paintBridge不再覆盖sess-note，避免一般状态和活动快照竞态。refreshBridgeActivity使用cache:no-store，无效快照同HTTP失败一样显示错误且不清除已知计数。

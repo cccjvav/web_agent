@@ -96,6 +96,19 @@ async function main() {
     await page.waitForFunction(() => document.querySelector('#stat-calls').textContent === '3');
     assert.ok((await page.locator('#bridge-log').textContent()).includes(write._meta.trace.callId));
     assert.ok((await page.locator('#bridge-log').textContent()).includes('verified'));
+    const activityBefore = await (await fetch(base + '/api/bridge/activity')).json();
+    await page.route('**/api/bridge/activity', route => route.fulfill({ status: 503, body: 'temporary failure' }));
+    await page.reload();
+    await page.waitForFunction(() => document.querySelector('#sess-note').textContent.includes('同步失败'));
+    assert.strictEqual(await page.locator('#stat-calls').textContent(), '—', 'not loaded is not zero');
+    await page.unroute('**/api/bridge/activity');
+    await page.click('#rb-bridge-tab'); await page.click('#btn-refresh-activity');
+    await page.waitForFunction(() => document.querySelector('#stat-calls').textContent === '3');
+    const activityAfter = await (await fetch(base + '/api/bridge/activity')).json();
+    assert.strictEqual(activityAfter.epoch, activityBefore.epoch);
+    assert.strictEqual(activityAfter.resetAt, activityBefore.resetAt);
+    assert.strictEqual(activityAfter.stats.calls, 3);
+    assert.ok((await page.locator('#bridge-log').textContent()).includes(write._meta.trace.callId));
     await page.reload(); await page.waitForFunction(() => document.querySelector('#stat-calls').textContent === '3');
     await page.click('[data-left="explorer"]'); await page.click('.tree-item[data-path="acceptance.txt"]');
     await page.locator('#editor-fallback').waitFor({ state: 'visible' });
@@ -122,6 +135,7 @@ async function main() {
     await page.setViewportSize({ width: 1280, height: 900 }); await page.click('#rb-bridge-tab');
     await rpc('unknown-fixture-tool'); await page.waitForFunction(() => document.querySelector('#stat-fail').textContent === '1');
     await page.click('#btn-reset-round'); await page.waitForFunction(() => document.querySelector('#stat-calls').textContent === '0');
+    assert.strictEqual((await (await fetch(base + '/api/bridge/activity')).json()).resetReason, 'operator-cleared');
     const endpoint = `http://127.0.0.1:${mcpPort}/mcp/${status.secretKey}`;
     const initialized = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 7, method: 'initialize', params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'browser-approval-fixture', version: '1' } } }) });
     const session = initialized.headers.get('mcp-session-id'); assert.ok(session); await initialized.json();

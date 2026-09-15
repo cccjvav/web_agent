@@ -142,7 +142,7 @@ if (!process.argv.includes('--vm-child')) {
   assert.strictEqual(state.namespace.state.stats.calls, 7, 'restore the server total, not the visible log length');
   assert.ok(button.innerHTML.includes('&lt;read_files&gt;'));
   context.AbortController = AbortController;
-  context.fetch = async () => { activityRequests++; return { ok: true, json: async () => activity }; };
+  context.fetch = async (url, options) => { assert.strictEqual(options.cache, 'no-store'); activityRequests++; return { ok: true, json: async () => activity }; };
   const firstRefresh = bridge.namespace.refreshBridgeActivity();
   assert.strictEqual(bridge.namespace.refreshBridgeActivity(), firstRefresh, 'polls/events share one in-flight request');
   await firstRefresh;
@@ -153,6 +153,10 @@ if (!process.argv.includes('--vm-child')) {
   context.fetch = async () => ({ ok: true, json: async () => activity });
   await bridge.namespace.refreshBridgeActivity();
   assert.ok(!button.textContent.includes('同步失败'), 'same revision recovers the error message');
+  context.fetch = async () => ({ ok: true, json: async () => ({}) });
+  await bridge.namespace.refreshBridgeActivity();
+  assert.ok(button.textContent.includes('同步失败'));
+  assert.strictEqual(state.namespace.state.stats.calls, 7, 'bad snapshot must not erase known statistics');
   bridge.namespace.paintBridgeActivity({ ...activity, revision: 2, stats: { calls: 0, fail: 0, totalMs: 0 }, logs: [] });
   assert.strictEqual(state.namespace.state.stats.calls, 0);
   assert.strictEqual(button.innerHTML, '');

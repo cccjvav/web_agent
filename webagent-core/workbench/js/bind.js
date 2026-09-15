@@ -84,6 +84,7 @@ export function bind() {
   $('#menu-api').onclick = () => ui.openModal('api');
   $('#menu-bridge').onclick = () => ui.openModal('bridge');
   $('#btn-agent-window').onclick = () => ui.openAgentWindow();
+  onClick('#btn-refresh-activity', () => ui.refreshBridgeActivity());
   onClick('#walk-start', () => ui.openModal('help'));
   $('#walk-basics').onclick = () => ui.openModal('overview');
   $('#walk-local-chat').onclick = () => ui.openAgentWindow();

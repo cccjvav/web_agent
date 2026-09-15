@@ -10,18 +10,22 @@ function formatClock(ms) {
 
 let activityPending = null;
 let activityVersion = '';
+let activityInfo = null;
 
 export function logBridgeTool() {
   return refreshBridgeActivity();
 }
 
 export function paintBridgeActivity(snapshot) {
-  if (!snapshot || !snapshot.stats || !Array.isArray(snapshot.logs)) return;
+  if (!snapshot || typeof snapshot.epoch !== 'string' || !Number.isSafeInteger(snapshot.revision) || !snapshot.stats || !Array.isArray(snapshot.logs)
+    || !Number.isSafeInteger(snapshot.stats.calls) || snapshot.stats.calls < 0
+    || !Number.isSafeInteger(snapshot.stats.fail) || snapshot.stats.fail < 0 || snapshot.stats.fail > snapshot.stats.calls
+    || !Number.isFinite(snapshot.stats.totalMs) || snapshot.stats.totalMs < 0) throw new Error('Invalid activity snapshot');
   if ($('#bridge-host') && snapshot.identity) $('#bridge-host').textContent = `${snapshot.identity.hostInstanceId} · ${snapshot.identity.workspaceRoot} · v${snapshot.identity.version}`;
   if ($('#btn-operations')) $('#btn-operations').textContent = `工具接入与审批（待批 ${snapshot.pendingApprovals || 0}）`;
   const version = `${snapshot.epoch}:${snapshot.revision}`;
   if (version === activityVersion) return;
-  activityVersion = version;
+  activityInfo = { identity: snapshot.identity, resetAt: snapshot.resetAt, resetReason: snapshot.resetReason };
   state.stats = { ...snapshot.stats };
   ui.paintStats();
   const log = $('#bridge-log');
@@ -35,7 +39,8 @@ export function paintBridgeActivity(snapshot) {
   const wait = $('#bridge-wait');
   if (wait) wait.classList.toggle('hidden', snapshot.stats.calls > 0);
   const note = $('#sess-note');
-  if (note) note.textContent = `本次主机进程已完成 ${snapshot.stats.calls} 次 MCP 工具调用；显示最近 ${snapshot.logs.length} 条。不是实时连接证明。`;
+  if (note) note.textContent = `本轮已完成 ${snapshot.stats.calls} 次 MCP 工具调用；显示最近 ${snapshot.logs.length} 条。刷新页面不清零；重启主机或清除本轮会重置。不是实时连接证明。`;
+  activityVersion = version; // Only mark rendered after all UI updates succeed.
 }
 
 export function refreshBridgeActivity() {
@@ -44,7 +49,7 @@ export function refreshBridgeActivity() {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 5000);
     try {
-      const response = await fetch('/api/bridge/activity', { signal: controller.signal });
+      const response = await fetch('/api/bridge/activity', { signal: controller.signal, cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       paintBridgeActivity(await response.json());
     } catch (_) {
@@ -58,6 +63,14 @@ export function refreshBridgeActivity() {
 
 export function paintStats() {
   const s = state.stats;
+  if (!activityInfo) {
+    for (const id of ['#stat-calls', '#stat-fail', '#stat-ok', '#stat-avg']) if ($(id)) $(id).textContent = '—';
+    if ($('#bridge-sub') && state.status?.bridgeRunning) $('#bridge-sub').textContent = '远程端点已开启 · 工具统计尚未同步';
+    return;
+  }
+  if ($('#bridge-sub') && state.status?.bridgeRunning) $('#bridge-sub').textContent = `远程端点已开启 · 本轮完成 ${s.calls} 次工具调用（非活动请求数）`;
+  const identity = activityInfo.identity;
+  if ($('#activity-origin')) $('#activity-origin').textContent = `主机 ${identity?.hostInstanceId || '未知'} · 启动 ${identity?.startedAt || '未知'} · 本轮起点 ${activityInfo.resetAt || '未知'}（${activityInfo.resetReason === 'operator-cleared' ? '操作者清除本轮' : '主机启动'}）`;
   if ($('#stat-calls')) $('#stat-calls').textContent = String(s.calls);
   if ($('#stat-fail')) $('#stat-fail').textContent = String(s.fail);
   const rate = s.calls ? (1 - s.fail / s.calls) * 100 : 100;
@@ -242,7 +255,7 @@ export function paintBridge() {
   $('#mcp-block').classList.toggle('hidden', !running);
   $('#mcp-url').textContent = s.mcpUrl || '—';
   $('#bridge-sub').textContent = running
-    ? `远程端点已开启 · ${state.stats.calls} 个活动请求`
+    ? '远程端点已开启 · 工具统计尚未同步'
     : '启动 Bridge 后：Quick Tunnel 给临时 trycloudflare 地址；Named Tunnel / ngrok 用你填的主机名。';
   $('#sb-bridge').textContent = running ? 'Bridge 运行中' : 'Bridge 已停止';
   $('#install-id').textContent = s.installId || '—';
@@ -292,19 +305,6 @@ export function paintBridge() {
     const rate = u.successRate == null ? '—' : (u.successRate + '%');
     $('#usage-line').textContent = `今日 Bridge 工具调用 ${u.toolCalls || 0}，成功率 ${rate}`
       + (u.telemetryConfigured ? '（已配置上报）' : '（未配置 WEBAGENT_TELEMETRY_URL，不上报）');
-  }
-  const sess = s.mcpSession;
-  const note = $('#sess-note');
-  if (note) {
-    if (sess && sess.alive) {
-      note.textContent = 'Connected · the external Agent can call Web Agent tools';
-    } else if (sess && sess.latest) {
-      note.textContent = 'Idle · last MCP client went quiet. Call ping or retry initialize.';
-    } else {
-      note.textContent = running
-        ? 'Waiting · Bridge is running. Connect the MCP URL from the external client.'
-        : 'Stopped · Start the Bridge here, then connect the configured MCP URL from the external client.';
-    }
   }
   ui.paintStats();
 }

@@ -55,9 +55,10 @@ class BridgeEventBus extends EventEmitter {
     this.resetBridgeActivity();
   }
 
-  resetBridgeActivity() {
+  resetBridgeActivity(reason = 'host-started') {
     this.bridgeRevision += 1;
     this.bridgeActivity = {
+      resetAt: new Date().toISOString(), resetReason: reason,
       stats: { calls: 0, fail: 0, totalMs: 0, lastTool: '', lastToolAt: 0, healthLine: '' },
       logs: []
     };
@@ -65,6 +66,7 @@ class BridgeEventBus extends EventEmitter {
 
   getBridgeActivity() {
     return { epoch: this.bridgeEpoch, revision: this.bridgeRevision,
+      resetAt: this.bridgeActivity.resetAt, resetReason: this.bridgeActivity.resetReason,
       identity: require('./hostDiagnostics').hostIdentity(),
       pendingApprovals: require('./operatorQueue').list().filter(job => job.status === 'waiting-approval').length,
       executions: require('./toolTrace').snapshot('Bridge-Remote'),
@@ -109,7 +111,7 @@ class BridgeEventBus extends EventEmitter {
       payload: sanitizePayload(payload)
     };
 
-    if (type === 'bridge_round_reset') { this.resetBridgeActivity(); require('./toolTrace').clearCompleted(); }
+    if (type === 'bridge_round_reset') { this.resetBridgeActivity('operator-cleared'); require('./toolTrace').clearCompleted(); }
     if (['tool_execution_start', 'tool_execution_end'].includes(type) && payload.source === 'Bridge-Remote') this.bridgeRevision += 1;
     if (type === 'tool_call_end' && payload.source === 'Bridge-Remote') {
       const stats = this.bridgeActivity.stats;
