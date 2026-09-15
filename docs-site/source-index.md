@@ -2627,12 +2627,12 @@
 
 ## webagent-core/agent-host/tests/traceIntegration.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `c97f01f75a3403fe931b9d87844c50dc5b5b6ba1bce55d7d266db601599838b6`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `071a9c0e38b2167d1ff7fdbd0c692caad86f73e0b73ff12ab3918f6f50afd70e`
 
-- `main` — FunctionDeclaration，[L7–L30](../webagent-core/agent-host/tests/traceIntegration.test.js#L7-L30)
+- `main` — FunctionDeclaration，[L7–L38](../webagent-core/agent-host/tests/traceIntegration.test.js#L7-L38)
 - `main/anonymous@11:31` — ArrowFunctionExpression，[L11–L12](../webagent-core/agent-host/tests/traceIntegration.test.js#L11-L12)
-- `main/anonymous@27:170` — ArrowFunctionExpression，[L27–L27](../webagent-core/agent-host/tests/traceIntegration.test.js#L27-L27)
-- `anonymous@31:13` — ArrowFunctionExpression，[L31–L31](../webagent-core/agent-host/tests/traceIntegration.test.js#L31-L31)
+- `main/anonymous@35:170` — ArrowFunctionExpression，[L35–L35](../webagent-core/agent-host/tests/traceIntegration.test.js#L35-L35)
+- `anonymous@39:13` — ArrowFunctionExpression，[L39–L39](../webagent-core/agent-host/tests/traceIntegration.test.js#L39-L39)
 
 ## webagent-core/agent-host/tests/tunnel.test.js
 
@@ -3091,10 +3091,19 @@
 
 ## webagent-core/probe-extension/browserReference.mjs
 
-[目录说明](../webagent-core/probe-extension/README.md) · SHA-256 `c11c757624e496f8bec99299d724a2c575e054be7dbc1b66a9611b3bafd3b41b`
+[目录说明](../webagent-core/probe-extension/README.md) · SHA-256 `71a283e043409c9818dd447f4674d0a7cffccd1fbb5db790c181b7ef129a4715`
 
 - `referencesForRun` — FunctionDeclaration，[L4–L12](../webagent-core/probe-extension/browserReference.mjs#L4-L12)
 - `referencesForRun/anonymous@5:46` — ArrowFunctionExpression，[L5–L11](../webagent-core/probe-extension/browserReference.mjs#L5-L11)
+- `createStreamProbe` — FunctionDeclaration，[L18–L49](../webagent-core/probe-extension/browserReference.mjs#L18-L49)
+- `createStreamProbe/clear` — ArrowFunctionExpression，[L21–L21](../webagent-core/probe-extension/browserReference.mjs#L21-L21)
+- `createStreamProbe/collect` — ArrowFunctionExpression，[L22–L28](../webagent-core/probe-extension/browserReference.mjs#L22-L28)
+- `createStreamProbe/push` — FunctionExpression，[L30–L30](../webagent-core/probe-extension/browserReference.mjs#L30-L30)
+- `createStreamProbe/finish` — FunctionExpression，[L31–L31](../webagent-core/probe-extension/browserReference.mjs#L31-L31)
+- `createStreamProbe/snapshot` — FunctionExpression，[L32–L47](../webagent-core/probe-extension/browserReference.mjs#L32-L47)
+- `createStreamProbe/snapshot/anonymous@36:55` — ArrowFunctionExpression，[L36–L36](../webagent-core/probe-extension/browserReference.mjs#L36-L36)
+- `createStreamProbe/snapshot/anonymous@44:31` — ArrowFunctionExpression，[L44–L44](../webagent-core/probe-extension/browserReference.mjs#L44-L44)
+- `createStreamProbe/snapshot/anonymous@45:31` — ArrowFunctionExpression，[L45–L45](../webagent-core/probe-extension/browserReference.mjs#L45-L45)
 
 ## webagent-core/probe-extension/client.js
 
@@ -3135,7 +3144,7 @@
 
 ## webagent-core/probe-extension/package_browser.py
 
-[目录说明](../webagent-core/probe-extension/README.md) · SHA-256 `c3535c8e198745dca3ef95aaef4b72dc3d2bb32ab83ec58501f9722b870937ad`
+[目录说明](../webagent-core/probe-extension/README.md) · SHA-256 `dab9228ee3fc5aaa621bcdc1ee7069799e6ef2914dd496c133a149268ce9a10a`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 

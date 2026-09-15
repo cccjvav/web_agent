@@ -18687,8 +18687,8 @@
     {
       "path": "webagent-core/agent-host/tests/traceIntegration.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "c97f01f75a3403fe931b9d87844c50dc5b5b6ba1bce55d7d266db601599838b6",
-      "lineCount": 32,
+      "sha256": "071a9c0e38b2167d1ff7fdbd0c692caad86f73e0b73ff12ab3918f6f50afd70e",
+      "lineCount": 40,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -18697,7 +18697,7 @@
           "name": "main",
           "kind": "FunctionDeclaration",
           "startLine": 7,
-          "endLine": 30,
+          "endLine": 38,
           "parameters": []
         },
         {
@@ -18711,19 +18711,19 @@
           ]
         },
         {
-          "id": "main/anonymous@27:170",
-          "name": "anonymous@27:170",
+          "id": "main/anonymous@35:170",
+          "name": "anonymous@35:170",
           "kind": "ArrowFunctionExpression",
-          "startLine": 27,
-          "endLine": 27,
+          "startLine": 35,
+          "endLine": 35,
           "parameters": []
         },
         {
-          "id": "anonymous@31:13",
-          "name": "anonymous@31:13",
+          "id": "anonymous@39:13",
+          "name": "anonymous@39:13",
           "kind": "ArrowFunctionExpression",
-          "startLine": 31,
-          "endLine": 31,
+          "startLine": 39,
+          "endLine": 39,
           "parameters": [
             "error"
           ]
@@ -22202,8 +22202,8 @@
     {
       "path": "webagent-core/probe-extension/browserReference.mjs",
       "doc": "webagent-core/probe-extension/README.md",
-      "sha256": "c11c757624e496f8bec99299d724a2c575e054be7dbc1b66a9611b3bafd3b41b",
-      "lineCount": 13,
+      "sha256": "71a283e043409c9818dd447f4674d0a7cffccd1fbb5db790c181b7ef129a4715",
+      "lineCount": 50,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -22225,6 +22225,88 @@
           "endLine": 11,
           "parameters": [
             "span"
+          ]
+        },
+        {
+          "id": "createStreamProbe",
+          "name": "createStreamProbe",
+          "kind": "FunctionDeclaration",
+          "startLine": 18,
+          "endLine": 49,
+          "parameters": [
+            "requestId"
+          ]
+        },
+        {
+          "id": "createStreamProbe/clear",
+          "name": "clear",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 21,
+          "endLine": 21,
+          "parameters": []
+        },
+        {
+          "id": "createStreamProbe/collect",
+          "name": "collect",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 22,
+          "endLine": 28,
+          "parameters": []
+        },
+        {
+          "id": "createStreamProbe/push",
+          "name": "push",
+          "kind": "FunctionExpression",
+          "startLine": 30,
+          "endLine": 30,
+          "parameters": [
+            "bytes"
+          ]
+        },
+        {
+          "id": "createStreamProbe/finish",
+          "name": "finish",
+          "kind": "FunctionExpression",
+          "startLine": 31,
+          "endLine": 31,
+          "parameters": []
+        },
+        {
+          "id": "createStreamProbe/snapshot",
+          "name": "snapshot",
+          "kind": "FunctionExpression",
+          "startLine": 32,
+          "endLine": 47,
+          "parameters": []
+        },
+        {
+          "id": "createStreamProbe/snapshot/anonymous@36:55",
+          "name": "anonymous@36:55",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 36,
+          "endLine": 36,
+          "parameters": [
+            "p"
+          ]
+        },
+        {
+          "id": "createStreamProbe/snapshot/anonymous@44:31",
+          "name": "anonymous@44:31",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 44,
+          "endLine": 44,
+          "parameters": [
+            "p"
+          ]
+        },
+        {
+          "id": "createStreamProbe/snapshot/anonymous@45:31",
+          "name": "anonymous@45:31",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 45,
+          "endLine": 45,
+          "parameters": [
+            "p"
           ]
         }
       ]
@@ -22462,8 +22544,8 @@
     {
       "path": "webagent-core/probe-extension/package_browser.py",
       "doc": "webagent-core/probe-extension/README.md",
-      "sha256": "c3535c8e198745dca3ef95aaef4b72dc3d2bb32ab83ec58501f9722b870937ad",
-      "lineCount": 73,
+      "sha256": "dab9228ee3fc5aaa621bcdc1ee7069799e6ef2914dd496c133a149268ce9a10a",
+      "lineCount": 109,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []

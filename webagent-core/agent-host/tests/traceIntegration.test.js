@@ -11,7 +11,15 @@ async function main() {
   const spans = ['a', 'b'].map(spanId => ({spanId, model: 'fixture-model', provider: 'fixture', tokens: 10, costUsd: 0, partial: false,
     evidence: {schemaVersion: 1, model: {value: 'fixture-model', observedAt: checkedAt}}}));
   const input = context.ArenaTraceView.exportEvidence(context.ArenaTraceView.build({runId: 'run_fixture', run: {runId: 'run_fixture', checkedAt, spans}}));
-  const {referencesForRun} = await import('../../probe-extension/browserReference.mjs');
+  const {referencesForRun, createStreamProbe} = await import('../../probe-extension/browserReference.mjs');
+  const left = createStreamProbe('left'), right = createStreamProbe('right');
+  left.push(new TextEncoder().encode('data: {"model":"left-fixture","secret":"NEVER_EXPORT"}\n\n'));
+  right.push(new TextEncoder().encode('data: {"model":"right-fixture"}\n\n'));
+  left.finish(); right.finish();
+  assert.strictEqual(left.snapshot().modelId, 'left-fixture');
+  assert.strictEqual(right.snapshot().modelId, 'right-fixture');
+  assert.ok(!JSON.stringify(left.snapshot()).includes('NEVER_EXPORT'));
+  assert.ok(!JSON.stringify(left.snapshot()).includes('right-fixture'));
   const references = referencesForRun({runId: 'run_fixture', spans});
   assert.strictEqual(references.length, 2); assert.strictEqual(references[0].modelId, 'fixture-model');
   const report = await analyze(input);

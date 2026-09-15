@@ -77,7 +77,7 @@ code --install-extension webagent-core\probe-extension\dist\webagent-probe-compa
 |---|---|
 | [analysis.js](analysis.js) | 13 个函数/类节点 |
 | [analysisWorker.mjs](analysisWorker.mjs) | 8 个函数/类节点 |
-| [browserReference.mjs](browserReference.mjs) | 2 个函数/类节点 |
+| [browserReference.mjs](browserReference.mjs) | 11 个函数/类节点 |
 | [client.js](client.js) | 9 个函数/类节点 |
 | [extension.js](extension.js) | 12 个函数/类节点 |
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
