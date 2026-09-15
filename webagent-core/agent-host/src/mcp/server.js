@@ -1,3 +1,5 @@
+const { isToolFailure } = require('../utils/toolTrace');
+const lifecycle = require('./requestLifecycle').createLifecycle();
 const express = require('express');
 const { getToolList, callTool } = require('../tools');
 const { hostIdentity } = require('../utils/hostDiagnostics');
@@ -170,8 +172,11 @@ async function handleRpc(req) {
     }
 
     case 'notifications/initialized':
-    case 'notifications/cancelled':
     case 'logging/setLevel':
+      return {};
+
+    case 'notifications/cancelled':
+      lifecycle.cancel(lifecycle.owner(keyForReq(req), extractToken(req)), params?.requestId);
       return {};
 
     case 'ping': {
@@ -204,7 +209,7 @@ async function handleRpc(req) {
       const sess0 = touch(req, { key: callerKey });
       try {
         const result = await callTool(name, toolArgs || {}, remoteToolMode(params), { remote: true, initializedSession: Boolean(initializedKey), callerKey: sess0.key, taskId: params?._meta?.['webagent/taskId'] });
-        const failed = Boolean(result && (result.ok === false || result.success === false));
+        const failed = isToolFailure(result);
         const clipped = clipJson(result);
         const durationMs = Date.now() - started;
         sessTouch(req, { incCall: true, incFail: failed });
@@ -320,7 +325,7 @@ function invalidRpc(id, message) {
   };
 }
 
-async function dispatchOne(req, body) {
+async function dispatchOne(req, body, res) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
     return { kind: 'response', payload: invalidRpc(null, 'Invalid Request'), httpStatus: 400 };
   }
@@ -335,7 +340,9 @@ async function dispatchOne(req, body) {
   const notify = body.id === undefined || (method && String(method).startsWith('notifications/'));
   req.body = body;
   try {
-    const result = await handleRpc(req);
+    const result = body.method === 'tools/call'
+      ? await lifecycle.run(lifecycle.owner(keyForReq(req), extractToken(req)), body.id, res, () => handleRpc(req))
+      : await handleRpc(req);
     if (notify) return { kind: 'notification' };
     return { kind: 'response', payload: { jsonrpc: '2.0', id: body.id, result }, httpStatus: 200 };
   } catch (err) {
@@ -372,7 +379,7 @@ async function handlePost(req, res) {
   let lastHttp = 200;
   try {
     for (const item of items) {
-      const out = await dispatchOne(req, item);
+      const out = await dispatchOne(req, item, res);
       if (out.kind === 'response') {
         responses.push(out.payload);
         lastHttp = out.httpStatus;

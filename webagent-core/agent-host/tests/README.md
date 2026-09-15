@@ -108,6 +108,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [installerPackaging.test.js](installerPackaging.test.js) | 20 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 6 个函数/类节点 |
+| [mcpCancellation.test.js](mcpCancellation.test.js) | 12 个函数/类节点 |
 | [mcpProtocol.test.js](mcpProtocol.test.js) | 31 个函数/类节点 |
 | [memoryRecall.test.js](memoryRecall.test.js) | 4 个函数/类节点 |
 | [modelLifecycle.test.js](modelLifecycle.test.js) | 21 个函数/类节点 |
@@ -131,8 +132,9 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [providers.test.js](providers.test.js) | 11 个函数/类节点 |
 | [ptyJobs.test.js](ptyJobs.test.js) | 12 个函数/类节点 |
 | [ptyLifecycle.test.js](ptyLifecycle.test.js) | 59 个函数/类节点 |
+| [requestLifecycle.test.js](requestLifecycle.test.js) | 12 个函数/类节点 |
 | [resourceBudget.test.js](resourceBudget.test.js) | 14 个函数/类节点 |
-| [runChat.test.js](runChat.test.js) | 27 个函数/类节点 |
+| [runChat.test.js](runChat.test.js) | 29 个函数/类节点 |
 | [sandbox.test.js](sandbox.test.js) | 3 个函数/类节点 |
 | [searchWorkerLifecycle.test.js](searchWorkerLifecycle.test.js) | 14 个函数/类节点 |
 | [skillsLifecycle.test.js](skillsLifecycle.test.js) | 19 个函数/类节点 |
@@ -162,3 +164,6 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 
 
 受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。仅回环HTTP(S)，每次本机批准，无stdio安装启动或自动重试。
+
+## 请求取消与失败外包回归
+requestLifecycle.test.js：按会话/凭据和带类型RPC ID隔离取消；重复与容量拒绝、超时/断连/抛错清理；共享失败判定正反例。mcpCancellation.test.js：真实Express/认证HTTP、两个同名初始化客户端、取消ID=0、未认证拒绝、ID复用与直接API结果式失败。工具使用受控可取消夹具，不冒称真实桌面进程或第三方兼容性。runChat.test.js增加无效/缺配置合并模型不产生consensus/工具调用、不改变已有分支，随后明确builtin可合并。

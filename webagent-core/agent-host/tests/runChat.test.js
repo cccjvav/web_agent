@@ -91,6 +91,18 @@ async function main() {
   planRound.reset();
   await runChat({ mode: 'plan', message: '两支再总结' }, collect().emit);
   await runChat({ mode: 'plan', planAction: 'branch' }, collect().emit);
+  const store = require('../src/models/store');
+  const cfg = store.load();
+  for (const model of [{id:'incomplete',protocol:'openai',modelId:'fixture',baseUrl:'',apiKey:''}, {id:'missing',protocol:'openai'}]) {
+    store.patch({models:[...cfg.models, ...(model.id === 'missing' ? [] : [model])],multiModel:{...cfg.multiModel,mergeModel:model.id}});
+    const stopped = collect();
+    await runChat({mode:'plan',planAction:'merge'},stopped.emit);
+    assert.ok(stopped.events.some(e=>e.type==='error' && /总结已停止/.test(e.message)));
+    assert.ok(!stopped.events.some(e=>e.type==='consensus' || e.type==='tool'));
+    assert.strictEqual(planRound.snapshot().merged,false);
+    assert.strictEqual(planRound.snapshot().branches.length,2);
+  }
+  store.patch(cfg);
   const planMerge = collect();
   await runChat({ mode: 'plan', planAction: 'merge' }, planMerge.emit);
   const consensus = planMerge.events.find((e) => e.type === 'consensus');

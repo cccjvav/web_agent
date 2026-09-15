@@ -20,6 +20,7 @@ class ExecutionError extends Error {
 
 function classifyToolError(err) {
   if (err instanceof ProtocolError || err instanceof ExecutionError) return err;
+  if (err?.code === 'E_CANCELLED') return new ExecutionError('E_CANCELLED', err.message);
   const msg = String(err && err.message ? err.message : err);
   if (/not found|No such file/i.test(msg)) return new ExecutionError('E_NOT_FOUND', msg);
   if (/Unknown tool/i.test(msg)) return new ProtocolError('E_UNKNOWN_CMD', msg);

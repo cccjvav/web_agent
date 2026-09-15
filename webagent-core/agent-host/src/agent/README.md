@@ -17,8 +17,8 @@
 
 ## 执行流程
 ### 普通 Chat
-1. `runChat` 读取工作区配置；指定模型ID存在时选中它，否则按当前活动模型/列表首项选择。因此无效ID并不是严格的“模型不存在”异常。
-2. 非builtin模型缺少调用字段时，发送error并停止。已发出的模型请求失败时也停止，交由用户选择重试或换模型；不会自动重放成内置文件修改。
+1. `runChat` 读取工作区配置；按明确模型ID或当前活动模型ID精确查找；无效ID不再回退到列表首项。
+2. 模型不存在或非builtin模型缺少调用字段时，发送error并停止。已发出的模型请求失败时也停止，交由用户选择重试或换模型；不会自动重放成内置文件修改。
 3. 选中builtin时，`runBuiltin` 扫描目录、搜索并读取有限文件。Ask输出探索摘要；Code只识别消息中的明确文件正文/补丁意图，必要时执行探测到的测试命令。它不是通用大模型。
 4. `timedTool` 把抛出的异常及结果中的 `ok:false` / `success:false` 转成失败工具事件，返回 `{ok:false,error}`。调用方必须检查结果，不能把“不抛异常”当成功。
 
@@ -33,7 +33,7 @@
 - `start` 创建全局当前轮次，`branch` 追加分支，`reset` 清空；关闭多模型时使用single草案，不是“只有一支就自动总结”。
 - 至少两支才可merge，分支上限由配置限制在2–8。分支返回前检查原round对象；总结还检查分支数，拒绝将迟到结果写入新轮次。
 - 远程分支使用只读工具；builtin草案明确标 `simulated:true`。总结结果不是统计意义上的一致率证明。
-- **现有差异**：分支遇到非builtin配置不完整会停止，但merge路径在 `canCallModel(mergeModel)` 为false时仍进入 `mergeLocalBranches`，尚未统一成严格配置失败。这是实际行为，不应概括成“Plan所有入口均失败停止”。
+- 分支及merge遇到不存在/非builtin配置不完整的模型均停止；只有明确选中builtin才允许本机草案或mergeLocalBranches。失败不会标记轮次已合并，不修改待办；用户可补齐配置后主动再总结。
 
 ## 截图与数据边界
 截图候选必须在允许的工作区或computer-use目录真实路径内，单图上限6MiB。Chat只给标记vision的模型附 `image_url`；未标记时提示看不到图。MCP使用同一截图辅助，但以MCP image内容返回。base64不经事件总线广播。
@@ -55,7 +55,7 @@
 | [computerUse.js](computerUse.js) | 7 个函数/类节点 |
 | [openai.js](openai.js) | 11 个函数/类节点 |
 | [providers.js](providers.js) | 6 个函数/类节点 |
-| [runChat.js](runChat.js) | 44 个函数/类节点 |
+| [runChat.js](runChat.js) | 43 个函数/类节点 |
 | [toolLabel.js](toolLabel.js) | 1 个函数/类节点 |
 <!-- docs-inventory:end -->
 

@@ -13,7 +13,7 @@
 |---|---|---|
 | `/status`、`/logs` | GET | 状态快照、日志；status包含本机连接所需信息，不应当成可公开接口 |
 | `/bridge/start`、`/bridge/stop`、`/bridge/logout` | POST | 启停隧道或注销；代次控制拒绝迟到启动 |
-| `/bridge/reset-secret`、`/bridge/reset-round` | POST | 重置连接身份，或清MCP会话/读取hash缓存；不是同一个操作 |
+| `/bridge/reset-secret`、`/bridge/reset-round` | POST | 重置连接身份，或清MCP会话/读取hash缓存（旧reset-round接口）；不是同一个操作；不是同一个操作 |
 | `/bridge/login`、`/bridge/token` | POST | 本机演示授权，或验证用户提供的GitHub身份 |
 | `/bridge/device`、`/bridge/device/poll`、`/bridge/github/clear` | POST | GitHub设备流及清理；不等同MCP OAuth配对 |
 | `/chat` | POST | 本机Chat的NDJSON事件流 |
@@ -38,7 +38,7 @@ stop/logout等待停止Promise，失败不能当成功。没有公网隧道时�
 **done是流处理结束，不是整个任务成功的保证。** runChat可以先发送error再返回，router随后仍发送done。客户端应同时处理error、工具ok状态和done，不能只等到done就显示“全部成功”。
 
 ### 直接工具调用
-`/tool/call`异常返回400。当前实现对正常返回的对象外包 `success:true`，即使内部result可能包含 `ok:false`；事件统计也采用这一外层成功口径。这与MCP按业务失败标记isError不同，调用者须读取result，本轮文档审查未改变该行为。
+`/tool/call`异常返回400；正常返回保留HTTP200，但通过共享isToolFailure判断业务结果并同步外层success与完成事件。显式失败、非零退出、超时、取消、unknown均不包装为成功；running/等待审批只表示已受理，不证明工作完成。MCP复用相同失败判定。
 
 ### 文件保存
 GET经安全路径和有界读取返回content/hash；PUT将路径、内容、覆盖确认及expectedHash传给write_file。旧hash冲突映射为409，其他保存异常为400。浏览器应保留未保存缓冲区，再读取新磁盘状态，而不是无条件强制覆盖。

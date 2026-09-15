@@ -1,3 +1,4 @@
+const { isToolFailure } = require('../utils/toolTrace');
 const {assertWorkspaceBinding} = require('../utils/workspaceBinding');
 const probeBridge = require('../utils/probeBridge');
 const operatorQueue = require('../utils/operatorQueue');
@@ -285,8 +286,9 @@ router.post('/tool/call', async (req, res) => {
   try {
     eventBus.broadcast('tool_call_start', { tool: name, args: toolArgs, source: `Chat-${mode}` });
     const result = await callTool(name, toolArgs, mode);
-    eventBus.broadcast('tool_call_end', { tool: name, success: true, result });
-    res.json({ success: true, result });
+    const success = !isToolFailure(result);
+    eventBus.broadcast('tool_call_end', { tool: name, success, result });
+    res.json({ success, result });
   } catch (err) {
     eventBus.broadcast('tool_call_end', { tool: name, success: false, error: err.message });
     res.status(400).json({ success: false, error: err.message });

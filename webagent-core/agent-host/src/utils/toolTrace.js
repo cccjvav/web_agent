@@ -47,6 +47,14 @@ function finishCall(record, result, error) {
   eventBus.broadcast('tool_execution_end', record);
   return { ...record };
 }
+// Returned failures and indeterminate mutations must not become transport success.
+function isToolFailure(result) {
+  return Boolean(result && (result.ok === false || result.success === false || result.isError === true || result.isTimeout
+    || result.verification?.state === 'unknown'
+    || ['failed', 'cancelled', 'unknown'].includes(result.trace?.status)
+    || ['error', 'failed', 'timeout', 'denied', 'expired', 'cancelled', 'unknown'].includes(result.status)
+    || (typeof result.exitCode === 'number' && result.exitCode !== 0)));
+}
 function snapshot(source) {
   return [...records.values()].filter(record => !source || record.source === source).map(record => ({ ...record })).reverse();
 }
@@ -73,4 +81,4 @@ function verifyMutation(tool, input, result) {
       verification: { state: 'unknown', method: 'postcondition' } };
   }
 }
-module.exports = { withTask, beginCall, finishCall, snapshot, clearCompleted, verifyMutation };
+module.exports = { isToolFailure, withTask, beginCall, finishCall, snapshot, clearCompleted, verifyMutation };

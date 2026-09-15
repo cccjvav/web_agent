@@ -123,7 +123,7 @@
           <button type="button" class="chip" data-path="c">C 网页 VS Code</button>
         </div>
         <div id="path-flow"></div>
-        <p class="faint" style="margin-top:12px">Named / ngrok 会 spawn（要 Token / Authtoken）。明确选择 builtin 才用本机草案；合并配置失败回退差异见技术实现。不要把愿望写成已经接上。</p>
+        <p class="faint" style="margin-top:12px">Named / ngrok 会 spawn（要 Token / Authtoken）。明确选择 builtin 才用本机草案；合并配置不足停止，不自动换模型。不要把愿望写成已经接上。</p>
       </div>
       <div class="hero-grid" style="margin-top:18px">
         <div class="card">
@@ -143,7 +143,7 @@
             <li>网页 VS Code 默认要登录口令，trusted-origins 不再是 *</li>
             <li>工作台保存走 write_file，写不进 .env，错 hash 会 409</li>
             <li>挂别人的 Git 仓库时，MCP 密钥和 API Key 会自动 gitignore</li>
-            <li>非 builtin 分支缺配置会停止；merge目前仍有本机拼接差异，不能写成全面统一</li>
+            <li>非 builtin 分支缺配置会停止；merge也拒绝无效配置，仅明确builtin才本机拼接</li>
             <li>Bridge默认本机演示授权；可选GitHub验证不等于模型账户登录</li>
           </ul>
         </div>

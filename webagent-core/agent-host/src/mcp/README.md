@@ -10,6 +10,7 @@ MCP使外部Agent在认证后调用当前工作区工具；它不开放本机 `/
 
 | 文件 | 主要职责 |
 |---|---|
+| `requestLifecycle.js` | 有界在途请求、按peer和凭据绑定的取消、断连/期限与清理 |
 | `server.js` | HTTP/JSON-RPC分发、认证入口、会话、tools/resources/prompts及SSE |
 | `oauth.js` | 动态客户端注册、配对授权、PKCE、token认证/轮换/撤销 |
 | `session.js` | MCP HTTP会话及心跳/调用统计；提供协作任务板的peer标识 |
@@ -35,11 +36,11 @@ HTTP会话有24小时TTL及200上限。进程重启会丢失内存会话；客�
 ## 请求、通知与结果
 - POST支持单个JSON-RPC请求或batch。batch逐项执行；仅通知无返回结果时为204；空batch拒绝。HTTP200不意味着其中每个RPC/工具成功。
 - `tools/list`返回可见工具schema；`tools/call`最终经过共享callTool，远程命令权限与本机审批不同。
-- 工具返回 `ok:false` 或 `success:false` 时，MCP结果带 `isError:true`；抛出的异常也变成失败内容。客户端应检查isError及错误对象，而非只看HTTP状态。
+- 工具结果经共享isToolFailure检查，显式失败、非零退出、超时、取消或unknown时，MCP结果带 `isError:true`；抛出的异常也变成失败内容。客户端应检查isError及错误对象，而非只看HTTP状态。
 - 公共工具错误含layer、code、msg、detail；未分类错误可能归为E_INTERNAL。错误分类器的字符串匹配不是完整异常类型系统。
 - run_command可附截图image内容；无可用截图则只有文本，识别图片失败不应把文本结果丢掉。图片有真实路径和6MiB边界，base64不广播到日志。
 
-**取消差异**：当前 `notifications/cancelled` 只是被接收并返回空处理结果，没有建立RPC请求ID到执行AbortController的映射。不能把本机Chat的取消实现宣传为MCP协议级取消已经贯通。远程命令仍依赖自身超时或受支持的命令取消工具。
+**请求取消**：HTTP tools/call通过requestLifecycle在requestScope中执行；通知仅可取消相同初始化peer＋相同凭据＋同类型RPC ID的在途调用。无会话兼容调用没有可寻址取消键；仍有断连和5分钟abort信号。通知始终无查询结果，不泄露其他调用是否存在。信号是协作式取消，不回滚已执行修改；已返回execId的start_command不再属于在途RPC。完整逐函数边界见[请求分发详解](请求分发详解.md)。
 
 ### SSE
 POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连接/心跳，最多32路，15秒发送心跳，10分钟定时结束。这里的结束计时不因心跳刷新，不能描述成永久事件订阅或可靠消息重放。
@@ -82,8 +83,9 @@ POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连
 | [externalClient.js](externalClient.js) | 23 个函数/类节点 |
 | [instructions.js](instructions.js) | 3 个函数/类节点 |
 | [oauth.js](oauth.js) | 47 个函数/类节点 |
+| [requestLifecycle.js](requestLifecycle.js) | 7 个函数/类节点 |
 | [resources.js](resources.js) | 5 个函数/类节点 |
-| [server.js](server.js) | 32 个函数/类节点 |
+| [server.js](server.js) | 33 个函数/类节点 |
 | [session.js](session.js) | 14 个函数/类节点 |
 | [stdioBridge.cs](stdioBridge.cs) | 文件级登记；未做符号完整性证明 |
 | [stdioBridge.ps1](stdioBridge.ps1) | 文件级登记；未做符号完整性证明 |

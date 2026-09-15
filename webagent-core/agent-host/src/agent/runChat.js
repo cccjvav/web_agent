@@ -335,11 +335,7 @@ function capturingEmit(emit) {
 
 function pickModel(cfg, id) {
   const models = cfg.models || [];
-  if (id) {
-    const hit = models.find((m) => m.id === id);
-    if (hit) return hit;
-  }
-  return models.find((m) => m.id === cfg.activeModelId) || models[0];
+  return models.find((m) => m.id === (id || cfg.activeModelId));
 }
 
 function canCallModel(m) {
@@ -359,7 +355,7 @@ function resolvePlanAction(payload, mm) {
 }
 
 async function runPlanBranch({ emit, model, thinkLevel, task, history }) {
-  if (model && model.protocol !== 'builtin' && !canCallModel(model)) throw new Error('模型配置不完整，Plan任务已停止');
+  if (!model || (model.protocol !== 'builtin' && !canCallModel(model))) throw new Error('模型配置不完整，Plan任务已停止');
   if (canCallModel(model)) {
     const cap = capturingEmit(emit);
     const out = await runOpenAI({
@@ -469,6 +465,9 @@ async function runPlanRound(payload, emit, cfg) {
       const mergeVersion = live.branches.length;
       const mergeId = mm.mergeModel === 'auto' ? 'active' : mm.mergeModel || 'active';
       const mergeModel = mergeId === 'active' ? pickModel(cfg, cfg.activeModelId) : pickModel(cfg, mergeId);
+      if (!mergeModel || (mergeModel.protocol !== 'builtin' && !canCallModel(mergeModel))) {
+        throw new Error('合并模型不存在或配置不完整，Plan总结已停止；请明确选择模型，不会自动本机拼接。');
+      }
       let result;
       if (canCallModel(mergeModel)) {
         const pack = live.branches
@@ -554,7 +553,7 @@ async function runChatBody(payload = {}, emit) {
     return runPlanRound(payload, send, cfg);
   }
   const active = pickModel(cfg, payload.modelId);
-  if (active && active.protocol !== 'builtin' && !canCallModel(active)) {
+  if (!active || (active.protocol !== 'builtin' && !canCallModel(active))) {
     if (send) send('error', { message: '所选模型配置不完整，任务已停止；不会自动切换到内置执行。' });
     return { ok: false, error: 'model configuration incomplete' };
   }

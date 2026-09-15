@@ -34,7 +34,7 @@ for (const file of docs) {
 }
 const read = rel => fs.readFileSync(path.join(root, rel), 'utf8');
 assert.ok(!read('webagent-core/agent-host/src/agent/README.md').includes('失败改 builtin'));
-assert.ok(read('webagent-core/agent-host/src/mcp/README.md').includes('没有建立RPC请求ID到执行AbortController的映射'));
+assert.ok(read('webagent-core/agent-host/src/mcp/README.md').includes('相同初始化peer＋相同凭据＋同类型RPC ID'));
 assert.ok(read('webagent-core/agent-host/src/models/README.md').includes('不是四文件事务'));
 assert.ok(read('webagent-core/agent-host/src/api/README.md').includes('done是流处理结束'));
 assert.ok(read('webagent-core/agent-host/README.md').includes('开发依赖含Acorn'));

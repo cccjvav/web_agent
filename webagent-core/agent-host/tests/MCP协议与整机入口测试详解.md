@@ -56,3 +56,11 @@ httpSmoke增加真实HTTP早期边界：未认证MCP提交JSON字符串（严格
 httpSmoke在真实认证MCP ping完成后GET活动快照，确认calls非零、包含成功ping，且摘要无args/result。重复读取deepEqual不重计；带隧道头读取返回404；本地reset-round之后stats归零且logs为空。不要求打开浏览器才能记录。
 
 截图回传的echo夹具断言仍要求isError=false；shotDetail只在失败时提供该合成调用首个text结果最多1600字符，并替换URL和长十六进制ID，避免只看到true!==false无法定位。不增加超时、不自动重跑命令、不放宽结果断言。
+
+## requestLifecycle.test.js：生命周期单元回归
+main创建短期限与容量实例，owner分别改变会话或凭据；wait订阅currentSignal的abort，避免用sleep猜测是否取消。ID=0与字符串0不得混同，重复ID拒绝，错误owner取消无影响。正确取消后await完成并复用ID，确认没有取消墓碑；EventEmitter模拟close，断连和异常后监听数归零。两个在途占满后第三个拒绝，取消释放再继续。10ms期限配1s引用watchdog防止unref导致测试提前退出，checkCancelled必须抛E_CANCELLED。最后分别枚举失败/unknown与已受理/available:false正反例；catch仅设置进程失败码。
+
+## mcpCancellation.test.js：真实HTTP边界
+main在临时工作区挂真实MCP与API router，rpc使用fetch编码JSON和凭据；init建立两个同名但不同ID会话。唯一受控替身是workspace_info的handler：普通调用返回结果式失败，wait调用订阅当前请求信号并通过started通知夹具已进入工具。它不模拟Windows进程，也不更改工具权限。
+
+cancel通知从另一会话返回204但不触发信号；无认证请求401；同owner重复活动ID返回协议错误。正确取消使原调用保留ID=0、isError和cancelled trace；完成后同ID可以重用。observe回调收集tool_call_end，断言后移除监听；直接REST调用要保留HTTP200和内部错误细节，但success及tool_call_end都为false。finally恢复原handler、关闭连接/服务器并删除临时工作区；测试并不开放产品本机控制面，真实回环/Origin保护另有专门测试。

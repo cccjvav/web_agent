@@ -16,7 +16,7 @@ Plan 直接委托 runPlanRound。普通模式 pickModel；选中非 builtin 但�
 
 ### pickModel(cfg, id)
 
-从 cfg.models 查显式 id；找不到再查 activeModelId，仍无则取首项。两个 find 回调都是精确 id 比较。返回模型对象引用或 undefined，不复制对象、不验证字段；无效 id 并非严格报错。
+从cfg.models按显式id或cfg.activeModelId精确find，未命中返回undefined，不回退列表首项。普通Chat、Plan分支与merge在调用模型或builtin前检查不存在/配置不足并停止；reset不需要实际调用模型。
 
 ### canCallModel(m)
 
@@ -103,11 +103,11 @@ Plan 直接委托 runPlanRound。普通模式 pickModel；选中非 builtin 但�
 - reset 清空 round，发空快照和消息。
 - start 对消息 trim 后 planRound.start，再 addLiveBranch、emitRound。
 - branch 在原 live 上 addLiveBranch、emitRound。
-- merge 至少要求两支。记录 live 引用和分支数 mergeVersion；`auto` 映射当前活动模型，其他 id 仍通过 pickModel 的回退选取。
+- merge 至少要求两支。记录 live 引用和分支数 mergeVersion；`auto` 映射当前活动模型，其他id精确查找，不自动回退。
 
 可调用合并模型时，把分支 map 成带标题的长文本（这里没有额外总字符裁剪）；用 plan 模式、空历史，mergeAllowsRead 控制工具声明及提示。返回结构刻意保留 `agreementRate:null`、`consensusReached:false`，不能当投票统计。participants 的 map 把分支身份/答案转结果格式。
 
-**合并模型不能调用时，仍会走 mergeLocalBranches 本地拼接**；这与分支缺配置即失败不同。得到结果后，再检查同一轮次、未 merged、分支数未变；通过才 markMerged、更新 todos，再发 planRound/consensus/message。catch 转发 error，通常返回 undefined。
+**仅明确选择builtin才走mergeLocalBranches**；模型不存在或非builtin配置不足抛错，由catch发送error，保留未合并轮次与现有分支。得到结果后，再检查同一轮次、未 merged、分支数未变；通过才 markMerged、更新 todos，再发 planRound/consensus/message。catch 转发 error，通常返回 undefined。
 
 检查之后的 set_todos 仍可能失败但不会回滚已 markMerged 的 round。轮次是全进程共享内存，不按浏览器隔离，服务重启即丢失。
 
@@ -123,7 +123,7 @@ npm test --prefix webagent-core/agent-host -- --filter=planRound
 
 modelLifecycle 用假 fetch 检查服务失败不重放修改、超8项工具反馈、旧轮次与合并期间新增分支；不是真实供应商认证或全部并发排列。完整测试与人工验收仍分别执行。
 
-本篇揭示的 UI措辞/测试命令猜测/Plan回退差异是**当前行为**，本轮不为让文档漂亮而修改运行语义。继续读[模型与截图详解](模型调用详解.md)、[Plan 状态与本地共识](../tools/Plan状态详解.md)。
+旧Plan自动回退差异已通过配置失败回归修复；其他未核对的UI或探索行为不因此获得全面认证。继续读[模型与截图详解](模型调用详解.md)、[Plan 状态与本地共识](../tools/Plan状态详解.md)。
 
 ## 内置诚实读取与任务关联更新
 原入口主体改名**runChatBody()**；**runChat()**用withTask(source=Chat)保持同一次对话任务ID。**requestedFiles(message)**提取反引号/双引号路径及基础文件名，去重最多6项；pickExisting改为先resolveSafePath后stat，不探测工作区外路径。有显式路径时只读这些路径，缺失不退而读取其他候选；无显式路径才采用原候选扫描。explore保存读取证据；summarizeAsk明确确定性流程、截断证据和未读取项，不伪造一般推理能力。
