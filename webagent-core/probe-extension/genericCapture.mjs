@@ -7,8 +7,9 @@ export function setCaptureProfile(value){if(!Object.hasOwn(profiles,value))throw
 export function createGenericCapture({command,publishUpdate,isTrace}) {
   const owners=new WeakMap(), encoder=new TextEncoder();
   const trusted=url=>{try{const u=new URL(url);return u.hostname==='arena.ai'&&['https:','wss:'].includes(u.protocol);}catch{return false;}};
+  const epoch=owner=>owner.captureGeneration ?? owner.generation;
   function state(owner){if(!owners.has(owner))owners.set(owner,{streams:new Map(),requests:new Map()});return owners.get(owner);}
-  function current(owner,db,id,entry){return owners.get(owner)===db && db.streams.get(id)===entry && entry.generation===owner.generation && entry.pageSession===owner.pageSession;}
+  function current(owner,db,id,entry){return owners.get(owner)===db && db.streams.get(id)===entry && entry.generation===epoch(owner) && entry.pageSession===owner.pageSession;}
   function discard(db,id,entry){clearTimeout(entry.timer);entry.pending=[];if(db.streams.get(id)===entry)db.streams.delete(id);}
   function feed(entry,data){
     if(typeof data!=='string'||data.length>Math.ceil(entry.limit/3)*4)throw Error('Stream budget');
@@ -53,7 +54,7 @@ export function createGenericCapture({command,publishUpdate,isTrace}) {
         if(db.requests.size>=64)db.requests.delete(db.requests.keys().next().value);
         const evidence=[];const body=p.request.postData;
         if(typeof body==='string'&&body.length<=32768){try{for(const hit of collectModelFields(JSON.parse(body)).slice(0,100))evidence.push({source:'request.body.model',modelId:hit.value,weight:SOURCE_WEIGHTS['request.body.model']});}catch{}}
-        db.requests.set(id,{evidence,generation:owner.generation,pageSession:owner.pageSession});
+        db.requests.set(id,{evidence,generation:epoch(owner),pageSession:owner.pageSession});
       }
       return false;
     }
@@ -62,9 +63,9 @@ export function createGenericCapture({command,publishUpdate,isTrace}) {
       const request=db.requests.get(id);db.requests.delete(id);
       if(db.streams.size>=profiles[profile].streams){owner.probeCaptureNotice='Generic sample concurrency limit reached; omitted';publishUpdate(tabId);return true;}
       const tap=createStreamProbe(String(id).slice(0,128));
-      const evidence=request&&request.generation===owner.generation&&request?.pageSession===owner.pageSession?request.evidence:[];
+      const evidence=request&&request.generation===epoch(owner)&&request?.pageSession===owner.pageSession?request.evidence:[];
       tap.add([...evidence,...evidenceFromHeaders(p.response?.headers)]);
-      const entry={tap,limit:profiles[profile].bytes,generation:owner.generation,pageSession:owner.pageSession,bytes:0,streamed:false,pending:[],pendingBytes:0,ready:false,decoder:new TextDecoder(),socket:method==='Network.webSocketCreated',truncated:false};
+      const entry={tap,limit:profiles[profile].bytes,generation:epoch(owner),pageSession:owner.pageSession,bytes:0,streamed:false,pending:[],pendingBytes:0,ready:false,decoder:new TextDecoder(),socket:method==='Network.webSocketCreated',truncated:false};
       db.streams.set(id,entry);
       entry.timer=setTimeout(()=>finish(tabId,owner,db,id,entry,true),profiles[profile].ms);
       if(!entry.socket){

@@ -51,6 +51,17 @@ async function main(){
     await capture(1,owner,'Network.requestWillBeSent',{requestId:'meta',request:{url:'https://arena.ai/sample',postData:'{"model":"old-page-selection"}'}});
     owner.generation++;owner.pageSession='three';
     await capture(1,owner,'Network.responseReceived',response('meta'));await capture(1,owner,'Network.loadingFinished',ended('meta'));assert.equal(owner.probeStream.modelId,'中文模型');
+    capture.stop(owner);owner={generation:0,captureGeneration:0,pageSession:'same'};
+    const lookup=deferred();capture=createGenericCapture({isTrace:()=>false,publishUpdate:()=>{},command:()=>lookup.promise});
+    const openingLookup=capture(1,owner,'Network.responseReceived',response('lookup'));
+    owner.generation++; // Trace lookup restarted, but this is still the same page capture.
+    lookup.resolve({bufferedData:encode('data: {"model":"same-page"}\n\n')});await openingLookup;
+    await capture(1,owner,'Network.loadingFinished',ended('lookup'));assert.equal(owner.probeStream.modelId,'same-page');
+    const navigationEpoch=deferred();capture.stop(owner);capture=createGenericCapture({isTrace:()=>false,publishUpdate:()=>{throw Error('Old visit published');},command:()=>navigationEpoch.promise});
+    const oldVisit=capture(1,owner,'Network.responseReceived',response('visit'));
+    owner.captureGeneration+=2; // Away and back: same pathname, different visit.
+    navigationEpoch.resolve({bufferedData:encode('data: {"model":"old-visit"}\n\n')});await oldVisit;
+    await capture(1,owner,'Network.loadingFinished',ended('visit'));assert.equal(owner.probeStream.modelId,'same-page');
   }finally{capture.stop(owner);setCaptureProfile('standard');}
   console.log('Probe capture lifecycle: setup/completion order, navigation, ID reuse, stop, UTF-8 budgets and metadata ownership passed');
 }
