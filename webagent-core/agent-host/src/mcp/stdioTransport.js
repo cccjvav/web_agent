@@ -104,6 +104,7 @@ function open(launch, onStopped = () => {}) {
   live.add(transport);
   return transport;
 }
+function snapshot() { return [...live].map(transport => transport.status()); }
 function closeAll() { return Promise.all([...live].map(transport => transport.stop('Host stopping'))); }
 process.once('exit', () => { for (const transport of live) transport.stop('Host exited'); });
-module.exports = { open, closeAll };
+module.exports = { open, closeAll, snapshot };

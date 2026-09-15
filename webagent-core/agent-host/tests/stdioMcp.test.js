@@ -33,6 +33,7 @@ function prepared(mode = 'normal', extra = {}) {
 let stage = 'validation';
 async function main() {
   let owner;
+  const progress = setInterval(() => console.log('stdio stage:', stage, JSON.stringify(transports.snapshot())), 5000); progress.unref();
   try {
     assert.throws(() => prepared('normal', { program: 'node' }), /absolute/);
     assert.throws(() => prepared('normal', { cwd: '../' }));
@@ -62,6 +63,7 @@ async function main() {
     assert.deepStrictEqual(JSON.parse(fs.readFileSync(path.join(root, 'stdio-started.json'))).args, special);
     assert.ok(!fs.existsSync(path.join(root, 'stdio-calls.txt')));
     assert.ok(!JSON.stringify(external.list()).includes(fixture));
+    stage = 'approval';
     const input = { serverId: registered.serverId, tool: 'echo', arguments: { text: 'hello' }, requestKey: 'stdio-call-001' };
     await assert.rejects(callTool('external_request', input, 'ask', { callerKey: 'local' }));
     const waiting = external.request(input, { callerKey: 'local' });
@@ -71,11 +73,13 @@ async function main() {
     assert.deepStrictEqual(output.args, special); assert.strictEqual(output.hostSecret, false); assert.strictEqual(output.launchSpec, false); assert.strictEqual(output.explicitKey, true);
     await queue.approve(waiting.requestId, true);
     assert.strictEqual(fs.readFileSync(path.join(root, 'stdio-calls.txt'), 'utf8'), 'call\n');
+    stage = 'cancel call';
     const hanging = external.request({ ...input, arguments: { hang: true }, requestKey: 'stdio-hang-001' }, { callerKey: 'local' });
     const execution = queue.approve(hanging.requestId, true);
     await until(() => fs.readFileSync(path.join(root, 'stdio-calls.txt'), 'utf8') === 'call\ncall\n');
     queue.cancel(hanging.requestId); await execution;
     assert.strictEqual(queue.inspect(hanging.requestId).status, 'unknown');
+    stage = 'cancel cleanup';
     await external.closeAll();
     assert.ok(!alive(JSON.parse(fs.readFileSync(path.join(root, 'stdio-started.json'))).pid));
     stage = 'budgets';
@@ -110,13 +114,15 @@ async function main() {
     const childPid = JSON.parse(fs.readFileSync(path.join(root, 'stdio-started.json'))).pid;
     const grandPid = JSON.parse(fs.readFileSync(path.join(root, 'stdio-grandchild.json'))).pid;
     assert.ok(alive(childPid) && alive(grandPid));
+    stage = 'owner killed';
     owner.kill('SIGKILL'); await until(() => !alive(childPid) && !alive(grandPid));
     console.log('stdio MCP: preview/hash/confirmation, quoting, minimal env, approval, cancellation, framing budgets and owner-death tree cleanup passed');
   } finally {
+    stage = 'cleanup after ' + stage;
     owner?.kill('SIGKILL'); await external.closeAll(); await transports.closeAll(); config.workspaceRoot = previous;
     if (envBefore.token == null) delete process.env.GH_TOKEN; else process.env.GH_TOKEN = envBefore.token;
     if (envBefore.secret == null) delete process.env.WEBAGENT_STDIO_TEST_SECRET; else process.env.WEBAGENT_STDIO_TEST_SECRET = envBefore.secret;
-    fs.rmSync(root, { recursive: true, force: true });
+    fs.rmSync(root, { recursive: true, force: true }); clearInterval(progress);
   }
 }
 main().catch(error => { console.error('stdio failure stage:', stage); console.error(error); process.exitCode = 1; });
