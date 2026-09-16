@@ -150,7 +150,7 @@ function activate(context) {
   context.subscriptions.push(vscode.commands.registerCommand('webagentProbe.cancel', () => { stopLive(); for (const controller of controllers) controller.abort(); }));
   context.subscriptions.push(vscode.commands.registerCommand('webagentProbe.open', async () => {
     const choices = [['离线分析模型观测 / Trace Inspector 证据（双引擎）', 'analyze'], ['把本次参考填入WebAgent /ask草稿', 'shareReference'], ['保存本次分析到工作区历史', 'saveHistory'], ['查看工作区参考历史', 'history'], ['导入参考历史/浏览器历史', 'importHistory'], ['导出工作区参考历史', 'exportHistory'], ['按协议指纹查看样本簇', 'clusterHistory'], ['用公开UUID目录追加历史参考', 'mapHistory'], ['对比两条历史参考', 'compareHistory'], ['删除单条参考历史', 'deleteHistory'], ['查看主机与工作区', 'diagnostics'], ['导入最小页面摘要', 'import'], ['复制一次性核对请求', 'copy'], ['查询核对结果', 'refresh'], ['丢弃本扩展当前记录（主机记录按TTL过期）', 'forget'], ['打开 WebAgent Bridge', 'bridge']];
-    const choice = await vscode.window.showQuickPick(choices.map(([label, action]) => ({ label, action })), { title: 'Probe Companion · 模型线索分析与连接诊断（完整移植进行中）' });
+    const choice = await vscode.window.showQuickPick(choices.map(([label, action]) => ({ label, action })), { title: 'Probe Companion · 模型参考与可选连接诊断' });
     if (choice) await run(choice.action);
   }));
 }

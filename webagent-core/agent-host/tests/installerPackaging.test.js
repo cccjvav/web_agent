@@ -25,6 +25,8 @@ try {
   const output = path.join(tmp, 'payload');
   const manifest = stage(source, output);
   assert.ok(manifest.files.length > 50);
+  for (const guide of ['Bridge权限与工作模式.md', '探针入口与实际可用范围.md', '使用指南.md']) assert.ok(manifest.files.some(f => f.path === guide));
+  assert.ok(!manifest.files.some(f => f.path === '双向连接核对使用指南.md' || f.path.startsWith('review/archive/')));
   assert.deepStrictEqual(manifest.files.filter(f => f.path.startsWith('arena-model-probe/')).map(f => f.path), ['arena-model-probe/webagent-connection.user.js']);
   assert.ok(manifest.files.some(f => f.path === 'installer/launch.js'));
   for (const file of ['stdioBridge.cs', 'stdioBridge.ps1', 'stdioSupervisor.js', 'stdioTransport.js', 'stdioLaunch.js']) assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/src/mcp/' + file));

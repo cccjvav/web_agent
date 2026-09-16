@@ -47,7 +47,7 @@ code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容�
 |---|---|
 | 按动作逐步验收 | [Windows 新手逐步验收](Windows新手逐步验收.md)、[人工清单](review/CHECKLIST_WINDOWS.md) |
 | 环境安装与维护 | [Conda 环境](Conda环境说明.md)、[启动入口](启动脚本说明.md)、[安装器](installer/README.md) |
-| 公网 Bridge | [隧道配置](隧道使用指南.md)、[双向连接核对](双向连接核对使用指南.md) |
+| 公网 Bridge | [隧道配置](隧道使用指南.md)、[当前权限与工作模式](Bridge权限与工作模式.md) |
 | 本机探索、Skills | [内置探索 Agent](内置探索Agent使用指南.md)、[技能指南](技能使用指南.md) |
 | 了解模块与学习函数 | [总览](总览.md)、[组件](组件说明.md)、[架构](架构导读.md)、[技术实现](技术实现.md)、[代码复盘](代码复盘指南.md) |
 | 开发与测试 | [贡献说明](CONTRIBUTING.md)、[测试说明](测试说明.md)、[平台启动与 CI](平台启动与CI详解.md) |

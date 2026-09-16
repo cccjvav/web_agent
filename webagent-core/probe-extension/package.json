@@ -1,7 +1,7 @@
 {
   "name": "webagent-probe-companion",
   "displayName": "WebAgent Probe Companion",
-  "description": "Model-reference analysis using the original probe engine, plus local connection diagnostics. Full browser integration in progress.",
+  "description": "Offline and paired-browser model references, history, and optional MCP connection diagnostics. Not identity authentication.",
   "publisher": "webagent",
   "version": "0.5.2",
   "engines": {

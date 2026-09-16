@@ -428,11 +428,6 @@
       "group": "使用"
     },
     {
-      "id": "connection-check-guide",
-      "path": "双向连接核对使用指南.md",
-      "group": "使用"
-    },
-    {
       "id": "probe-companion-guide",
       "path": "webagent-core/probe-extension/README.md",
       "group": "使用"

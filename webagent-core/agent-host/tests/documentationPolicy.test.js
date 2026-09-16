@@ -7,6 +7,13 @@ const { execFileSync } = require('child_process');
 const { run, extractSymbols, replaceBlock } = require('../../../docs-site/check-docs');
 const root = path.resolve(__dirname, '../../..');
 assert.ok(run({ root }).files > 100, 'real checkout is covered');
+// Retired guides must not return to current navigation or packaging as stale instructions.
+assert.ok(!fs.existsSync(path.join(root, '双向连接核对使用指南.md')));
+const documentation = JSON.parse(fs.readFileSync(path.join(root, 'docs-site/documentation.config.json'), 'utf8'));
+assert.ok(!documentation.extraSiteDocs.some(entry => entry.id === 'connection-check-guide' || entry.path.startsWith('review/archive/')));
+assert.ok(fs.readFileSync(path.join(root, '使用指南.md'), 'utf8').includes('可选诊断：核对已认证MCP会话'));
+assert.ok(fs.readFileSync(path.join(root, 'review/archive/ARENA_PROBE_INTEGRATION_2026-09-15.md'), 'utf8').includes('历史归档'));
+
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-docs-'));
 const put = (p, text) => { fs.mkdirSync(path.dirname(path.join(tmp, p)), { recursive: true }); fs.writeFileSync(path.join(tmp, p), text); };
 try {
