@@ -73,3 +73,7 @@ startBridge工作区校验（0.7.1）：记录页面state.status，再fetch实�
 
 
 0.7.2 paintBridgeActivity在日志版本短路前更新远程Tasks；refreshBridgeActivity沿用3秒单飞轮询，在错误时给任务计数标“同步失败，当前状态未知”。计划独立于工具日志，不根据工具名称生成。Tasks只读Agent报告并显示会话和更新时间，重启丢失、30分钟未更新过期。
+
+## 所有者模式/权限控件
+
+**paintExecutionControl()**从status.executionControl画主机模式/请求数；没有新主机字段显示未知，存在未保存草稿则不覆盖勾选和revision。**initExecutionControl()**绑定两模式按钮、四项复选框、保存与重新读取。内部**change(value)** POST /api/execution-control，带当前workspaceRoot、identity.hostInstanceId，权限附草稿revision；仅成功后清dirty并刷新主机。出错显示原因，不假装切换成功。Read关会在草稿关Edit；缺Read/Edit/Capture会关Execute并提示，不自动扩大权限。保存才实际生效。refreshStatus调用paintExecutionControl，bind经ui.initExecutionControl接线。验证见executionControl.test与浏览器回归，不能视为真实Windows控件验收。

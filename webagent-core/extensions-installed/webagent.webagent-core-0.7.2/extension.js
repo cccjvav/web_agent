@@ -289,6 +289,7 @@ function validWebviewMessage(msg, surface) {
       && typeof msg.text === 'string' && msg.text.trim().length > 0 && msg.text.length <= 128000;
   }
   if (surface !== 'bridge') return false;
+  if (msg.type === 'control') return Boolean(['chat','bridge'].includes(msg.workMode) || (typeof msg.revision === 'string' && /^[a-f0-9]{64}$/.test(msg.revision) && msg.permissions && Object.keys(msg.permissions).length === 4 && ['read','edit','execute','capture'].every(k => typeof msg.permissions[k] === 'boolean')));
   if (msg.type === 'copy') return typeof msg.text === 'string' && msg.text.length <= 128000;
   return ['refresh', 'start', 'stop', 'reset'].includes(msg.type);
 }
@@ -355,6 +356,14 @@ class BridgeView {
       if (!validWebviewMessage(msg, 'bridge')) return;
       try {
         if (msg.type === 'refresh') return this.refresh();
+        if (msg.type === 'control') {
+          const binding = await workspaceBinding();
+          const data = ['chat','bridge'].includes(msg.workMode) ? {workMode:msg.workMode} : {permissions:msg.permissions,revision:msg.revision};
+          const result = await requestJson('POST', `${agentHostUrl()}/api/execution-control`, {...binding,...data});
+          if (result.status >= 400 || !result.json?.success) throw Error(result.json?.error || '设置失败');
+          this._view.webview.postMessage({type:'controlSaved'});
+          return this.refresh();
+        }
         if (msg.type === 'start') {
           const binding = await workspaceBinding();
           const result = await requestJson('POST', `${agentHostUrl()}/api/bridge/start`, { tunnelProvider: 'cloudflare', ...binding });
@@ -551,6 +560,16 @@ button{background:#0e639c;color:#fff;border:0;padding:7px 10px;border-radius:4px
   <button id="copy">复制提示词</button>
   <button id="reset">重置密钥</button>
 </div>
+<div class="card">
+  <strong>工作模式与 Bridge 权限</strong><p id="execution-mode">待同步</p>
+  <button id="mode-chat">切换 Chat</button><button id="mode-bridge">切换 Bridge</button>
+  <fieldset style="display:flex;flex-wrap:wrap;gap:8px"><legend>仅限制远端Bridge</legend>
+    <label><input id="access-read" type="checkbox">Read</label><label><input id="access-edit" type="checkbox">Edit</label>
+    <label><input id="access-execute" type="checkbox">Execute</label><label><input id="access-capture" type="checkbox">Capture</label>
+  </fieldset>
+  <p class="hint">Edit需要Read；任意Execute可读写/截图，须同时允许四项。不是OS沙箱。切换前先结束任务及后台程序、停止隧道。</p>
+  <button id="save-access">保存权限</button><button id="refresh-access">重新读取</button><p id="access-result" role="status"></p>
+</div>
 <div class="card" id="tasks">
   <h4><span>Tasks</span><span id="task-count">0/0</span></h4>
   <ul id="task-list"></ul>
@@ -559,7 +578,19 @@ button{background:#0e639c;color:#fff;border:0;padding:7px 10px;border-radius:4px
 <p class="hint" id="hint">启动后等 trycloudflare.com。Arena：把提示词整段当第一句。ChatGPT：不要贴进聊天栏，走设置里的自制 MCP 插件。</p>
 <script nonce="${nonce}">
 const vscode = acquireVsCodeApi();
-let status = {};
+let status = {}, policyDirty = false, policyRevision = '';
+document.getElementById('mode-chat').onclick = () => vscode.postMessage({type:'control',workMode:'chat'});
+document.getElementById('mode-bridge').onclick = () => vscode.postMessage({type:'control',workMode:'bridge'});
+document.getElementById('refresh-access').onclick = () => {policyDirty=false;vscode.postMessage({type:'refresh'});};
+document.getElementById('save-access').onclick = () => vscode.postMessage({type:'control',revision:policyRevision,permissions:Object.fromEntries(['read','edit','execute','capture'].map(k=>[k,document.getElementById('access-'+k).checked]))});
+for (const k of ['read','edit','execute','capture']) document.getElementById('access-'+k).onchange = () => {
+  policyDirty=true;
+  if (!document.getElementById('access-read').checked) document.getElementById('access-edit').checked=false;
+  if (['read','edit','capture'].some(key=>!document.getElementById('access-'+key).checked)) {
+    document.getElementById('access-execute').checked=false;
+    document.getElementById('access-result').textContent='Execute要求Read/Edit/Capture全开；未自动扩大权限。保存后才生效。';
+  }
+};
 const CONNECT = '快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。';
 document.getElementById('start').onclick = () => vscode.postMessage({ type:'start' });
 document.getElementById('stop').onclick = () => vscode.postMessage({ type:'stop' });
@@ -619,8 +650,12 @@ function paintLogs(logs){
   }
 }
 window.addEventListener('message', e => {
+  if (e.data?.type === 'controlSaved') {policyDirty=false;document.getElementById('access-result').textContent='已由主机应用';return;}
   if (!e.data || e.data.type !== 'status') return;
   status = e.data.status && typeof e.data.status === 'object' ? e.data.status : {};
+  const ctl = status.executionControl;
+  document.getElementById('execution-mode').textContent=ctl ? ('主机模式：'+ctl.mode+'；Chat在途'+ctl.active.chat+'，Bridge在途'+ctl.active.bridge) : '模式/权限未知，请更新主机';
+  if (ctl && !policyDirty) {policyRevision=ctl.revision;for(const key of ['read','edit','execute','capture']) document.getElementById('access-'+key).checked=ctl.permissions[key];}
   document.getElementById('url').textContent = status.mcpUrl || status.error || '—';
   document.getElementById('pill').textContent = status.error ? ('离线 ' + status.error) : (status.bridgeRunning ? 'Bridge 运行中' : '已连接 agent-host');
   if (!status.error) paintBridgeTasks(status.bridgeTaskStates);

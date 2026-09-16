@@ -576,6 +576,6 @@ async function runChatBody(payload = {}, emit) {
 }
 
 function runChat(payload = {}, emit) {
-  return withTask({ source: 'Chat' }, () => runChatBody(payload, emit));
+  return require('../utils/executionControl').run('chat', () => withTask({ source: 'Chat' }, () => runChatBody(payload, emit)));
 }
 module.exports = { runChat, planRound };

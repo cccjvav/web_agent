@@ -126,6 +126,6 @@ modelLifecycle 用假 fetch 检查服务失败不重放修改、超8项工具反
 旧Plan自动回退差异已通过配置失败回归修复；其他未核对的UI或探索行为不因此获得全面认证。继续读[模型与截图详解](模型调用详解.md)、[Plan 状态与本地共识](../tools/Plan状态详解.md)。
 
 ## 内置诚实读取与任务关联更新
-原入口主体改名**runChatBody()**；**runChat()**用withTask(source=Chat)保持同一次对话任务ID。**requestedFiles(message)**提取反引号/双引号路径及基础文件名，去重最多6项；pickExisting改为先resolveSafePath后stat，不探测工作区外路径。有显式路径时只读这些路径，缺失不退而读取其他候选；无显式路径才采用原候选扫描。explore保存读取证据；summarizeAsk明确确定性流程、截断证据和未读取项，不伪造一般推理能力。
+原入口主体改名**runChatBody()**；**runChat()**先用executionControl.run(chat)获得主机模式租约，再用withTask(source=Chat)保持同一次对话任务ID；Bridge模式时拒绝，finally释放请求计数，不自动取消后台命令。**requestedFiles(message)**提取反引号/双引号路径及基础文件名，去重最多6项；pickExisting改为先resolveSafePath后stat，不探测工作区外路径。有显式路径时只读这些路径，缺失不退而读取其他候选；无显式路径才采用原候选扫描。explore保存读取证据；summarizeAsk明确确定性流程、截断证据和未读取项，不伪造一般推理能力。
 
 新手指南对齐：facts.testCmd初始为空，仅detectTestCommand成功才填值，避免空工作区也声称发现npm test。Ask只展示命令信息，不执行测试。操作例子与读取截断边界见仓库根内置探索Agent使用指南.md。

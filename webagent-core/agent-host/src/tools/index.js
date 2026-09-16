@@ -510,6 +510,7 @@ function getToolList(currentMode = null, opts = {}) {
   return TOOLS
     .filter((t) => !currentMode || t.mode.includes(currentMode))
     .filter((t) => (opts && opts.includeHidden) || !t.hidden)
+    .filter(t => !opts.remote || require('../utils/executionControl').allowed(t.name))
     .map(({ name, description, inputSchema }) => ({ name, description, inputSchema }));
 }
 
@@ -533,6 +534,7 @@ async function dispatchTool(name, args = {}, currentMode = null, opts = {}) {
   }
   const input = normalizeToolArgs(toolDef.name, args || {});
   const remote = Boolean(opts && opts.remote);
+  if (remote) require('../utils/executionControl').assertAllowed(toolDef.name);
   if (remote && toolDef.name === 'send_command_input') {
     throw new ProtocolError(
       'E_FORBIDDEN',

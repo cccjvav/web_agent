@@ -394,6 +394,8 @@ async function main() {
     const mcpRoot = await request('GET', `http://127.0.0.1:${mcpPort}/`);
     assert.ok(!(mcpRoot.raw || '').includes('btn-agent-pick'));
 
+    const switched = await request('POST', `http://127.0.0.1:${workbenchPort}/api/execution-control`, {workMode:'chat',workspaceRoot:status.json.workspaceRoot,hostInstanceId:status.json.identity.hostInstanceId});
+    assert.strictEqual(switched.status, 200, switched.raw);
     const chat = await request('POST', `http://127.0.0.1:${workbenchPort}/api/chat`, {
       mode: 'ask',
       message: '分析当前项目实现了什么功能'

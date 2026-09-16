@@ -1,3 +1,4 @@
+const control = require('../utils/executionControl');
 const { isToolFailure } = require('../utils/toolTrace');
 const {assertWorkspaceBinding} = require('../utils/workspaceBinding');
 const probeBridge = require('../utils/probeBridge');
@@ -80,6 +81,16 @@ function operationApi(handler) {
     catch (error) { res.status(400).json({ ok: false, error: error.message }); }
   };
 }
+router.get('/execution-control', (req, res) => res.json(control.snapshot()));
+router.post('/execution-control', (req, res) => {
+  try {
+    assertWorkspaceBinding(req.body, config);
+    if (req.body.permissions !== undefined && req.body.workMode !== undefined) throw Error('模式与权限请分开修改');
+    const result = req.body.workMode !== undefined ? control.selectMode(req.body.workMode) : control.updatePermissions(req.body.permissions, req.body.revision);
+    eventBus.broadcast('execution_control_changed', result);
+    res.json({success:true, ...result});
+  } catch(error) { res.status(error.status || 409).json({success:false,error:error.message,code:error.code}); }
+});
 router.post('/probe/links', operationApi(req => probeBridge.pair(req.body)));
 router.get('/probe/links', operationApi(() => probeBridge.list()));
 router.get('/probe/links/:id/reports/:tabId', operationApi(req => probeBridge.report(req.params.id, req.params.tabId)));
@@ -110,6 +121,7 @@ router.get('/status', (req, res) => {
   const cfg = store.load();
   res.json({
     status: 'online',
+    executionControl: control.snapshot(),
     identity: hostIdentity(),
     version: config.version,
     serverName: config.serverName,
@@ -171,89 +183,94 @@ router.post('/bridge/reset-secret', (req, res) => {
 router.post('/bridge/start', async (req, res) => {
   try { assertWorkspaceBinding(req.body, config); }
   catch(error) { return res.status(409).json({success:false,error:error.message}); }
-  const bridgeTicket = ++bridgeGeneration;
   const cfg = store.load();
   if (!cfg.bridge.loggedIn || !cfg.bridge.deviceAuthorized) {
     return res.status(403).json({ success: false, error: '需要先点本机演示授权或完成 GitHub 验证。Chat 不受影响。' });
   }
-  const body = req.body || {};
-  const provider = body.tunnelProvider || cfg.bridge.tunnelProvider || 'cloudflare';
-  const named = isNamedTunnelProvider(provider);
-  const ngrokProv = isNgrokProvider(provider);
-  const namedDomain = String(body.namedDomain != null ? body.namedDomain : (cfg.bridge.namedDomain || '')).trim();
-  const bodyToken = String(body.namedToken || '').trim();
-  const namedToken = bodyToken || String(cfg.bridge.namedToken || '').trim();
-  const ngrokDomain = String(body.ngrokDomain != null ? body.ngrokDomain : (cfg.bridge.ngrokDomain || '')).trim();
-  const bodyNgrokTok = String(body.ngrokToken || '').trim();
-  const ngrokToken = bodyNgrokTok || String(cfg.bridge.ngrokToken || '').trim();
-  const bridgePatch = { tunnelProvider: provider, namedDomain, ngrokDomain };
-  if (bodyToken) bridgePatch.namedToken = bodyToken;
-  if (bodyNgrokTok) bridgePatch.ngrokToken = bodyNgrokTok;
-  store.patch({ bridge: bridgePatch });
-  config.bridgeRunning = false;
-  config.publicTunnelUrl = null;
-  config.tunnelProvider = provider;
-  oauth.ensurePairing();
+  try { control.assertIdle(); control.selectMode('bridge'); }
+  catch(error) { return res.status(409).json({success:false,error:error.message}); }
+  const releaseMode = control.enter('bridge');
+  try {
+    const bridgeTicket = ++bridgeGeneration;
+    const body = req.body || {};
+    const provider = body.tunnelProvider || cfg.bridge.tunnelProvider || 'cloudflare';
+    const named = isNamedTunnelProvider(provider);
+    const ngrokProv = isNgrokProvider(provider);
+    const namedDomain = String(body.namedDomain != null ? body.namedDomain : (cfg.bridge.namedDomain || '')).trim();
+    const bodyToken = String(body.namedToken || '').trim();
+    const namedToken = bodyToken || String(cfg.bridge.namedToken || '').trim();
+    const ngrokDomain = String(body.ngrokDomain != null ? body.ngrokDomain : (cfg.bridge.ngrokDomain || '')).trim();
+    const bodyNgrokTok = String(body.ngrokToken || '').trim();
+    const ngrokToken = bodyNgrokTok || String(cfg.bridge.ngrokToken || '').trim();
+    const bridgePatch = { tunnelProvider: provider, namedDomain, ngrokDomain };
+    if (bodyToken) bridgePatch.namedToken = bodyToken;
+    if (bodyNgrokTok) bridgePatch.ngrokToken = bodyNgrokTok;
+    store.patch({ bridge: bridgePatch });
+    config.bridgeRunning = false;
+    config.publicTunnelUrl = null;
+    config.tunnelProvider = provider;
+    oauth.ensurePairing();
 
-  let tunnelError = null;
-  try { await tunnel.stopTunnel(); } catch (err) { tunnelError = err.message; }
-  if (bridgeTicket !== bridgeGeneration) return res.status(409).json({ success: false, running: false, error: 'Bridge start superseded' });
-  if (!tunnelError && provider === 'cloudflare') {
-    try {
-      await tunnel.startQuickTunnel({ port: config.port });
-    } catch (err) {
-      tunnelError = err && err.message ? err.message : String(err);
+    let tunnelError = null;
+    try { await tunnel.stopTunnel(); } catch (err) { tunnelError = err.message; }
+    if (bridgeTicket !== bridgeGeneration) return res.status(409).json({ success: false, running: false, error: 'Bridge start superseded' });
+    if (!tunnelError && provider === 'cloudflare') {
+      try {
+        await tunnel.startQuickTunnel({ port: config.port });
+      } catch (err) {
+        tunnelError = err && err.message ? err.message : String(err);
+      }
+    } else if (!tunnelError && named) {
+      try {
+        await tunnel.startNamedTunnel({
+          hostname: namedDomain,
+          token: namedToken,
+          port: config.port
+        });
+      } catch (err) {
+        tunnelError = err && err.message ? err.message : String(err);
+      }
+    } else if (!tunnelError && ngrokProv) {
+      try {
+        await ngrok.startNgrokTunnel({
+          hostname: ngrokDomain,
+          token: ngrokToken,
+          port: config.port
+        });
+      } catch (err) {
+        tunnelError = err && err.message ? err.message : String(err);
+      }
     }
-  } else if (!tunnelError && named) {
-    try {
-      await tunnel.startNamedTunnel({
-        hostname: namedDomain,
-        token: namedToken,
-        port: config.port
-      });
-    } catch (err) {
-      tunnelError = err && err.message ? err.message : String(err);
-    }
-  } else if (!tunnelError && ngrokProv) {
-    try {
-      await ngrok.startNgrokTunnel({
-        hostname: ngrokDomain,
-        token: ngrokToken,
-        port: config.port
-      });
-    } catch (err) {
-      tunnelError = err && err.message ? err.message : String(err);
-    }
-  }
 
-  if (bridgeTicket !== bridgeGeneration) return res.status(409).json({ success: false, running: false, error: 'Bridge start superseded by a newer request' });
-  const info = mcpInfo(req);
-  const tunnelUrl = !tunnelError && config.publicTunnelUrl;
-  config.bridgeRunning = Boolean(tunnelUrl);
-  let note;
-  if (tunnelUrl) {
-    note = named
-      ? `Named Tunnel 已就绪：${tunnelUrl}`
-      : (ngrokProv ? `ngrok 已就绪：${tunnelUrl}` : `Quick Tunnel 已就绪：${tunnelUrl}`);
-  } else if (tunnelError) {
-    note = `${tunnelError} 远程Bridge未就绪；MCP仅可通过本机48271端口访问。`;
-  } else if (named) {
-    note = '未启动 Named Tunnel。MCP仅可通过本机48271端口访问。';
-  } else if (ngrokProv) {
-    note = '未启动 ngrok。MCP仅可通过本机48271端口访问。';
-  } else {
-    note = '未启动 Quick Tunnel（cloudflare / Named Tunnel / ngrok 才会拉起对应进程）。MCP仅可通过本机48271端口访问。';
-  }
+    if (bridgeTicket !== bridgeGeneration) return res.status(409).json({ success: false, running: false, error: 'Bridge start superseded by a newer request' });
+    const info = mcpInfo(req);
+    const tunnelUrl = !tunnelError && config.publicTunnelUrl;
+    config.bridgeRunning = Boolean(tunnelUrl);
+    let note;
+    if (tunnelUrl) {
+      note = named
+        ? `Named Tunnel 已就绪：${tunnelUrl}`
+        : (ngrokProv ? `ngrok 已就绪：${tunnelUrl}` : `Quick Tunnel 已就绪：${tunnelUrl}`);
+    } else if (tunnelError) {
+      note = `${tunnelError} 远程Bridge未就绪；MCP仅可通过本机48271端口访问。`;
+    } else if (named) {
+      note = '未启动 Named Tunnel。MCP仅可通过本机48271端口访问。';
+    } else if (ngrokProv) {
+      note = '未启动 ngrok。MCP仅可通过本机48271端口访问。';
+    } else {
+      note = '未启动 Quick Tunnel（cloudflare / Named Tunnel / ngrok 才会拉起对应进程）。MCP仅可通过本机48271端口访问。';
+    }
 
-  eventBus.broadcast(config.bridgeRunning ? 'bridge_started' : 'bridge_failed', { provider, tunnelUrl: tunnelUrl || null, tunnelError });
-  res.json({
-    success: config.bridgeRunning,
-    running: config.bridgeRunning,
-    provider,
-    tunnelError,
-    note,
-    ...info
-  });
+    eventBus.broadcast(config.bridgeRunning ? 'bridge_started' : 'bridge_failed', { provider, tunnelUrl: tunnelUrl || null, tunnelError });
+    res.json({
+      success: config.bridgeRunning,
+      running: config.bridgeRunning,
+      provider,
+      tunnelError,
+      note,
+      ...info
+    });
+  } finally { releaseMode(); }
 });
 
 router.post('/bridge/stop', async (req, res) => {
@@ -274,7 +291,7 @@ router.post('/bridge/reset-round', (req, res) => {
 router.post('/consensus/run', async (req, res) => {
   const { taskDescription } = req.body || {};
   try {
-    const result = await runMultiModelConsensus({ taskDescription });
+    const result = await control.run('chat', () => runMultiModelConsensus({ taskDescription }));
     res.json({ success: true, result });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -285,7 +302,7 @@ router.post('/tool/call', async (req, res) => {
   const { name, arguments: toolArgs, mode = 'code' } = req.body || {};
   try {
     eventBus.broadcast('tool_call_start', { tool: name, args: toolArgs, source: `Chat-${mode}` });
-    const result = await callTool(name, toolArgs, mode);
+    const result = await control.run('chat', () => callTool(name, toolArgs, mode));
     const success = !isToolFailure(result);
     eventBus.broadcast('tool_call_end', { tool: name, success, result });
     res.json({ success, result });

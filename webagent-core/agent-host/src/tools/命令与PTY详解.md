@@ -22,7 +22,7 @@ running≥8拒绝，prune，生成execId与运行记录；验证cwd，算至少1
 
 保存child后接入当前请求signal。内部 **abort()**先标cancelled/ok=false，killChild，再2秒force回调；deadline回调设isTimeout、发送停止并2秒升级。计时器支持unref。
 
-**append(field,chunk)**追加保留尾200Ki字符、广播原chunk；stdout/stderr data回调转换字符串。**done Promise**的error回调移除signal、清timer、删children、更新错误/耗时、广播并reject；close回调同样清理，保存code/signal/耗时，仅仍running时改为done/error/timeout，算ok并resolve publicRecord。取消状态不被普通close覆盖。
+**append(field,chunk)**追加保留尾200Ki字符、广播原chunk；stdout/stderr data回调转换字符串。**done Promise**的error回调移除signal、清timer、仅在未成功启动或已有退出状态时删children、更新错误/耗时、广播并reject；close回调同样清理，保存code/signal/耗时，仅仍running时改为done/error/timeout，算ok并resolve publicRecord。取消状态不被普通close覆盖。
 
 返回 `{rec,done}`，其中rec是可变记录。spawn成功不是业务成功；事件回调异常不都被隔离。killChild在Windows有3秒spawnSync超时，且“cancelled记录”不等于等待真实退出。
 
@@ -52,7 +52,7 @@ running≥8拒绝，prune，生成execId与运行记录；验证cwd，算至少1
 | canonical(value) | 路径→比较键 | resolve，尽力realpath，Windows小写；失败不是路径存在证明 |
 | noteClient(info) | client信息→boolean | 有info时校验8–80字符ID、workspace canonical匹配；新ID超128删最早Map项；更新clients与全局clientSeenAt。无info仍更新全局时间 |
 | hasClient() | 无→boolean | 最近seen不足8秒；不是某指定客户端可用证明 |
-| prune() | 无→undefined | done超过15分钟删除，clients超8秒删；jobs≥256优先删done到阈值下，活任务另由enqueue限32 |
+| prune() | 无→undefined | done且无cancelRequested超过15分钟删除，clients超8秒删；jobs≥256只删已确认done到阈值下，未确认取消与活任务一起由enqueue限32 |
 | publicJob(job) | 内部任务→展示对象 | ID/类型/命令/目录/输入/时限/状态/取消请求，不给resolve与计时器 |
 | listPending(clientId) | ID→列表 | prune后filter未done（或该客户端取消待确认），只给无owner/同owner；map publicJob |
 | snapshot() | 无→摘要 | clientLive、pending、retained；调用listPending会清理状态 |
@@ -61,7 +61,7 @@ running≥8拒绝，prune，生成execId与运行记录；验证cwd，算至少1
 
 **armTimer(job,ms)**清旧timer，至少1秒；到期若未done，将有owner任务标cancelRequested，finish(timeout)。计时器只更新队列状态，真正停止终端仍靠扩展观察。
 
-**enqueue(kind,payload={})**：先checkCancelled/prune；command≤128000、input≤64000字符，未done少于32。随机jobId，Promise执行器建queued记录、timeoutSec限1–600、owner=null并存Map。内部 **abort()**标取消请求并finish(cancelled)，**cleanup()**移除signal监听；注册后再次检查已aborted。当前ctx.emit发pty_request；run等90秒审批，其他任务15秒。Promise正常resolve为最终业务结果；超限返回拒绝。emit抛错可能让Promise拒绝但已有记录需后续清理，不能说所有失败自动撤销入队。
+**enqueue(kind,payload={})**：先checkCancelled/prune；command≤128000、input≤64000字符，未done及cancelRequested合计少于32。随机jobId，Promise执行器建queued记录、timeoutSec限1–600、owner=null并存Map。内部 **abort()**标取消请求并finish(cancelled)，**cleanup()**移除signal监听；注册后再次检查已aborted。当前ctx.emit发pty_request；run等90秒审批，其他任务15秒。Promise正常resolve为最终业务结果；超限返回拒绝。emit抛错可能让Promise拒绝但已有记录需后续清理，不能说所有失败自动撤销入队。
 
 **finish(jobId,result={})**：找不到/已done返回false；标done/finishedAt、清timer/cleanup，合并尾200Ki输出。只有status=done、ok非false、outputCaptured非false，并且run.exitCode===0（非run要求ok===true）才成功；不满足将done转换error。resolve一次，然后清resolve/onChunk/cleanup引用。耗时含审批等待。
 
@@ -101,3 +101,9 @@ WEBAGENT_DEBUG_PROCESS=1仅用于进程排错，输出子进程exit与close分�
 - 验证：Windows矩阵运行真实取消用例，包含确认Node已启动后取消；仅Linux通过不能证明P/Invoke/Job Object可用。
 
 Windows taskkill失败/超时/抛错时会用持有的ChildProcess句柄终止根进程；用户命令开始前已加入Job Object，因此不需要靠失效PID重新枚举后代。该回退与commandJob必须共同理解，不适用于任意未纳入job的外部进程。
+
+## 模式切换的activeCount验证
+
+executor.activeCount取countRunning与children.size较大值，cancelled记录不能遮住未close子进程。PTY.activeCount统计未done或cancelRequested；prune不得因TTL/容量淘汰未确认取消项，32项入队预算包含它们。确认依赖PTY所有者报告，失联不能自动当作停止。executionControl同时检查这些后台状态和stdio未closed，而不只看工具Promise已返回。真实Node后台命令和PTY确认夹具见executionControl.test；不是任意脱离OS进程隔离证明。
+
+子进程error不必然表示退出（如停止失败）；已有pid且未退出时保留children直至close。cancelCommand在仍持有child时允许再次明确停止，即使记录已非running；不自动重放命令。

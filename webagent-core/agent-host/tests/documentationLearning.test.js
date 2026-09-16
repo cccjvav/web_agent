@@ -9,6 +9,7 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ['webagent-core/agent-host/tests/executionControl.test.js', 'webagent-core/agent-host/src/utils/执行控制详解.md'],
   ["webagent-core/agent-host/src/mcp/requestLifecycle.js", "webagent-core/agent-host/src/mcp/请求分发详解.md"],
   ["webagent-core/agent-host/tests/requestLifecycle.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
   ["webagent-core/agent-host/tests/mcpCancellation.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
@@ -221,6 +222,7 @@ const pairs = [
   ['installer/launch.js', 'installer/函数详解.md'],
   ['installer/package.js', 'installer/函数详解.md'],
   ['webagent-core/agent-host/src/index.js', 'webagent-core/agent-host/src/入口详解.md'],
+  ['webagent-core/agent-host/src/utils/executionControl.js', 'webagent-core/agent-host/src/utils/执行控制详解.md'],
   ['webagent-core/agent-host/src/utils/requestScope.js', 'webagent-core/agent-host/src/utils/函数详解.md'],
   ['webagent-core/agent-host/src/utils/boundedFile.js', 'webagent-core/agent-host/src/utils/函数详解.md'],
   ['webagent-core/agent-host/src/tunnel/stopProcess.js', 'webagent-core/agent-host/src/tunnel/停止进程详解.md'],

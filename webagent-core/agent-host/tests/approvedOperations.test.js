@@ -52,6 +52,7 @@ const server = http.createServer(async (req, res) => {
     assert.equal(fs.existsSync(path.join(tmp, 'proof.txt')), false);
     await queue.approve(workflow.requestId, true);
     assert.equal(queue.result(workflow.requestId, options).status, 'succeeded'); assert.equal(fs.readFileSync(path.join(tmp, 'proof.txt'), 'utf8'), 'approved only');
+    require('../src/utils/executionControl').selectMode('chat');
     const stopped = workflows.request({ definition: { steps: [
       { id: 'check', tool: 'ping', arguments: {}, expect: { path: 'missing.txt', exists: true } },
       { id: 'never', tool: 'write_file', arguments: { filePath: 'never.txt', content: 'no' } }
@@ -61,6 +62,7 @@ const server = http.createServer(async (req, res) => {
     assert.throws(() => workflows.resolveValues('$steps.x.__proto__', { x: {} }));
     assert.deepEqual(workflows.resolveValues('$steps.x.hash', { x: { hash: 'abc' } }), 'abc');
     const waiting = new Promise(resolve => { onHangingCall = resolve; });
+    require('../src/utils/executionControl').selectMode('bridge');
     const hanging = external.request({ ...args, arguments: { hang: true }, requestKey: 'request-hang' }, options);
     const execution = queue.approve(hanging.requestId, true); await waiting; queue.cancel(hanging.requestId); await execution;
     assert.equal(queue.inspect(hanging.requestId).status, 'unknown'); assert.equal(calls, 2);
@@ -71,6 +73,7 @@ const server = http.createServer(async (req, res) => {
     assert.deepEqual((await external.responseMessage(streamed, 'sse')).result, {});
     await assert.rejects(external.responseMessage(new Response('x'.repeat(256 * 1024 + 1)), 'large'));
     // Approval grants execution, never permission to misreport its result.
+    require('../src/utils/executionControl').selectMode('chat');
     let fixtureRuns = 0;
     queue.register('outcome-fixture', async input => { fixtureRuns++; return input; });
     const outcomes = [

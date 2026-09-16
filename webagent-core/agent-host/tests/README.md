@@ -1,6 +1,6 @@
 # 测试导航：测了什么，以及没有证明什么
 
-全部52个测试文件已有逐fixture/断言正文。下表是阅读入口，不代表真机验收通过。
+下表列出已有逐fixture/断言正文的阅读入口；测试持续新增，不以历史52项计数冒充当前全部测试的逐句认证，也不代表真机验收通过。
 
 ## 逐测试详解
 
@@ -99,6 +99,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [documentationQuality.test.js](documentationQuality.test.js) | 9 个函数/类节点 |
 | [editorRuntime.test.js](editorRuntime.test.js) | 33 个函数/类节点 |
 | [eventBus.test.js](eventBus.test.js) | 9 个函数/类节点 |
+| [executionControl.test.js](executionControl.test.js) | 28 个函数/类节点 |
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
 | [externalDiscovery.test.js](externalDiscovery.test.js) | 12 个函数/类节点 |
 | [githubAuth.test.js](githubAuth.test.js) | 8 个函数/类节点 |
@@ -151,7 +152,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 13 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 63 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 70 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 86 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 5 个函数/类节点 |
@@ -167,3 +168,5 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 
 ## 请求取消与失败外包回归
 requestLifecycle.test.js：按会话/凭据和带类型RPC ID隔离取消；重复与容量拒绝、超时/断连/抛错清理；共享失败判定正反例。mcpCancellation.test.js：真实Express/认证HTTP、两个同名初始化客户端、取消ID=0、未认证拒绝、ID复用与直接API结果式失败。工具使用受控可取消夹具，不冒称真实桌面进程或第三方兼容性。runChat.test.js增加无效/缺配置合并模型不产生consensus/工具调用、不改变已有分支，随后明确builtin可合并。
+
+新增[执行控制源码与测试解释](../src/utils/执行控制详解.md)对应executionControl.test.js，覆盖模式互斥与持久权限，不代表Windows/手机新控件实测。

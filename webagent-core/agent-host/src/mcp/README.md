@@ -85,7 +85,7 @@ POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连
 | [oauth.js](oauth.js) | 47 个函数/类节点 |
 | [requestLifecycle.js](requestLifecycle.js) | 7 个函数/类节点 |
 | [resources.js](resources.js) | 5 个函数/类节点 |
-| [server.js](server.js) | 33 个函数/类节点 |
+| [server.js](server.js) | 34 个函数/类节点 |
 | [session.js](session.js) | 14 个函数/类节点 |
 | [stdioBridge.cs](stdioBridge.cs) | 文件级登记；未做符号完整性证明 |
 | [stdioBridge.ps1](stdioBridge.ps1) | 文件级登记；未做符号完整性证明 |

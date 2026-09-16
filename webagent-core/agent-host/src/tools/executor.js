@@ -201,7 +201,7 @@ ${command}`;
     child.on('error', (err) => {
       if (requestSignal) requestSignal.removeEventListener('abort', abort);
       clearTimeout(timer);
-      children.delete(String(execId));
+      if (!child.pid || child.exitCode !== null || child.signalCode !== null) children.delete(String(execId));
       rec.durationMs = Date.now() - startTime;
       rec.stderr += err.message;
       if (rec.status === 'running') rec.status = 'error';
@@ -344,7 +344,7 @@ async function cancelCommand({ execId } = {}) {
   const child = children.get(id);
   if (ptyJobs.wantsPty()) {
     if (!rec) return { execId: id, found: false };
-    if (rec.status !== 'running') {
+    if (rec.status !== 'running' && !child) {
       return { execId: rec.execId, status: rec.status, cancelled: false, message: 'Command is not running.' };
     }
     rec.status = 'cancelled';
@@ -357,7 +357,7 @@ async function cancelCommand({ execId } = {}) {
     return { execId: rec.execId, cancelled: true, status: 'cancelled', execution: 'pty' };
   }
   if (!rec) return { execId: id, found: false };
-  if (rec.status !== 'running') {
+  if (rec.status !== 'running' && !child) {
     return { execId: rec.execId, status: rec.status, cancelled: false, message: 'Command is not running.' };
   }
   rec.status = 'cancelled';
@@ -385,7 +385,10 @@ function wait({ ms = 800 } = {}) {
   });
 }
 
+function activeCount() { return Math.max(countRunning(), children.size); }
+
 module.exports = {
+  activeCount,
   executeCommand,
   startCommand,
   getCommandOutput,

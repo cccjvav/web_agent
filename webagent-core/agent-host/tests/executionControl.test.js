@@ -1,0 +1,113 @@
+'use strict';
+const assert = require('assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { spawnSync } = require('child_process');
+const express = require('express');
+const { config } = require('../src/config');
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'execution-control-'));
+config.workspaceRoot = tmp;
+const control = require('../src/utils/executionControl');
+const tools = require('../src/tools');
+const queue = require('../src/utils/operatorQueue');
+const executor = require('../src/tools/executor');
+const pty = require('../src/tools/ptyJobs');
+const app = express(); app.use(express.json());
+app.use('/api', require('../src/api/routes')); app.use('/mcp', require('../src/mcp/server'));
+const server = app.listen(0, '127.0.0.1');
+async function main() {
+  await new Promise(resolve => server.once('listening', resolve));
+  const base = 'http://127.0.0.1:' + server.address().port;
+  const binding = {workspaceRoot:tmp,hostInstanceId:config.hostInstanceId};
+  async function post(url, body, headers = {}) {
+    const response = await fetch(base+url,{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify(body)});
+    return {status:response.status,body:await response.json(),headers:response.headers};
+  }
+  let id=0, session;
+  const rpc = (method, params={}) => post('/mcp',{jsonrpc:'2.0',id:++id,method,params},{Authorization:'Bearer '+config.secretKey,...(session?{'Mcp-Session-Id':session}:{})});
+  const policy = permissions => post('/api/execution-control',{...binding,permissions,revision:control.snapshot().revision});
+  const full = {read:true,edit:true,execute:true,capture:true}, readOnly = {read:true,edit:false,execute:false,capture:false};
+  assert.equal(control.snapshot().mode,'idle');
+  const init = await rpc('initialize'); session=init.headers.get('mcp-session-id'); assert.ok(session);
+  assert.equal(control.snapshot().mode,'bridge');
+  assert.equal((await post('/api/tool/call',{name:'ping'})).status,400);
+  assert.equal((await post('/api/execution-control',{workMode:'chat'})).status,409);
+  assert.equal((await post('/api/execution-control',{...binding,hostInstanceId:'wrong',workMode:'chat'})).status,409);
+  assert.equal((await policy({...full,read:false})).status,409);
+  assert.equal((await policy({...full,capture:'false'})).status,409);
+  assert.equal((await policy(readOnly)).status,200);
+  assert.equal((await post('/api/execution-control',{...binding,permissions:full,revision:'stale'})).status,409);
+  const names = (await rpc('tools/list')).body.result.tools.map(t=>t.name);
+  assert.ok(names.includes('read_files')); assert.ok(!names.includes('write_file')); assert.ok(!names.includes('run_command'));
+  for(const name of ['write_file','move_file','execute_command','bash','external_request','probe_request']) {
+    const r = await rpc('tools/call',{name,arguments:{filePath:'forbidden.txt',content:'no',command:'echo nope'},_meta:{mode:'code',permissions:full,remote:false}});
+    assert.equal(r.body.result.isError,true,name); assert.match(r.body.result.content[0].text,/E_FORBIDDEN/,name);
+  }
+  assert.ok(!fs.existsSync(path.join(tmp,'forbidden.txt')));
+  assert.equal((await policy({read:false,edit:false,execute:false,capture:false})).status,200);
+  const alias = await rpc('tools/call',{name:'cat',arguments:{filePath:'secret.txt'}});
+  assert.match(alias.body.result.content[0].text,/E_FORBIDDEN/);
+  for(const method of ['resources/read','prompts/get']) assert.match((await rpc(method,{uri:'webagent://instructions',name:'agent-rules'})).body.error.message,/E_FORBIDDEN/);
+  assert.equal((await policy(full)).status,200);
+  const options={remote:true,callerKey:'peer:'+session};
+  const definition={steps:[{id:'write',tool:'write_file',arguments:{filePath:'queued.txt',content:'no'}}]};
+  const job=await tools.callTool('workflow_request',{definition,requestKey:'queued-policy'},'code',options);
+  assert.throws(()=>control.selectMode('chat'),/在途/);
+  assert.equal((await policy(readOnly)).status,200,'waiting approvals allow explicit revocation');
+  assert.equal((await queue.approve(job.requestId,true)).status,'failed');
+  assert.ok(!fs.existsSync(path.join(tmp,'queued.txt')),'nested write must recheck current policy');
+  await queue.approve(job.requestId,true); assert.ok(!fs.existsSync(path.join(tmp,'queued.txt')),'terminal outcome never replayed');
+  let opaqueCalls=0; queue.register('opaque-fixture',async()=>{opaqueCalls++;return{ok:true};});
+  const opaque=queue.submit('opaque-fixture',{},options,'opaque-policy');
+  assert.equal((await queue.approve(opaque.requestId,true)).status,'failed');assert.equal(opaqueCalls,0);
+  // Real HTTP requests can overlap within Bridge, but cannot switch or revoke mid-handler.
+  const target=tools.TOOLS.find(t=>t.name==='workspace_info'), original=target.handler;
+  let finish; const blocked = new Promise(resolve=>{finish=resolve;}); let began=0;
+  target.handler=async()=>{began++;await blocked;return{ok:true};};
+  const first=rpc('tools/call',{name:'workspace_info'}),second=rpc('tools/call',{name:'workspace_info'});
+  const deadline=Date.now()+3000; while(began<2 && Date.now()<deadline) await new Promise(r=>setTimeout(r,5));
+  assert.equal(began,2);assert.equal(control.snapshot().active.bridge,2);
+  assert.equal((await post('/api/execution-control',{...binding,workMode:'chat'})).status,409);
+  assert.equal((await policy(full)).status,409);
+  finish();await Promise.all([first,second]); target.handler=original;
+  assert.equal(control.snapshot().active.bridge,0);
+  assert.equal((await policy(full)).status,200);
+  // Async accepted results do not release background command ownership.
+  const command='"'+process.execPath+'" -e "setTimeout(()=>{},30000)"';
+  const accepted=await tools.callTool('start_command',{command},'code',options);
+  assert.ok(executor.activeCount()>0); assert.throws(()=>control.selectMode('chat'),/在途/);
+  await tools.callTool('cancel_command',{execId:accepted.execId},'code',options);
+  const stopDeadline=Date.now()+5000;while(executor.activeCount() && Date.now()<stopDeadline)await new Promise(r=>setTimeout(r,10));
+  assert.equal(executor.activeCount(),0);
+  control.selectMode('chat');
+  assert.match((await rpc('tools/call',{name:'ping'})).body.error.message,/E_MODE_CONFLICT/);
+  let release;const barrier=new Promise(r=>{release=r;});
+  const chats=[control.run('chat',()=>barrier),control.run('chat',()=>barrier)];
+  assert.equal(control.snapshot().active.chat,2);assert.throws(()=>control.selectMode('bridge'),/在途/);
+  release();await Promise.all(chats);
+  control.selectMode('bridge');config.bridgeRunning=true;assert.throws(()=>control.selectMode('chat'),/停止Bridge/);config.bridgeRunning=false;control.selectMode('chat');
+  const transport=require('../src/mcp/stdioTransport'), originalSnapshot=transport.snapshot;
+  transport.snapshot=()=>[{stopped:true,closed:false}];assert.throws(()=>control.selectMode('bridge'),/在途/);transport.snapshot=originalSnapshot;
+  // Reserve Bridge before the first tunnel await; startup failure does not auto-switch back.
+  const tunnel=require('../src/tunnel/cloudflared'), originalStop=tunnel.stopTunnel;
+  let tunnelStarted, tunnelFinish;const tunnelBegan=new Promise(r=>{tunnelStarted=r;});
+  tunnel.stopTunnel=()=>{tunnelStarted();return new Promise(r=>{tunnelFinish=r;});};
+  require('../src/models/store').patch({bridge:{loggedIn:true,deviceAuthorized:true}});
+  const starting=post('/api/bridge/start',{...binding,tunnelProvider:'local'});await tunnelBegan;
+  assert.equal(control.snapshot().mode,'bridge');assert.equal((await post('/api/execution-control',{...binding,workMode:'chat'})).status,409);
+  tunnelFinish();await starting;tunnel.stopTunnel=originalStop;control.selectMode('chat');
+  // A cancelled terminal is still unsettled until its actual owner reports completion.
+  const clientId='fixture-client';pty.noteClient({clientId,workspace:tmp});
+  const terminal=pty.enqueue('run',{execId:'pty-control',command:'echo fixture'});
+  const pending=pty.listPending(clientId)[0];pty.report(pending.jobId,{state:'claimed'},clientId);pty.cancelExec('pty-control');await terminal;
+  assert.equal(pty.activeCount(),1);assert.throws(()=>control.selectMode('bridge'),/在途/);
+  pty.report(pending.jobId,{state:'cancelled'},clientId);assert.equal(pty.activeCount(),0);
+  control.selectMode('bridge');
+  assert.equal((await policy(readOnly)).status,200);
+  const child=spawnSync(process.execPath,['-e',`require('./src/config').config.workspaceRoot=process.argv[1]; console.log(JSON.stringify(require('./src/utils/executionControl').snapshot()))`,tmp],{cwd:path.resolve(__dirname,'..'),encoding:'utf8'});
+  assert.equal(child.status,0,child.stderr);const restarted=JSON.parse(child.stdout.trim());
+  assert.deepEqual(restarted.permissions,readOnly);assert.equal(restarted.mode,'idle');
+  console.log('execution control: owner binding, strict persisted ACL, aliases/elevation/nested revocation, same-type HTTP concurrency, live command and PTY barriers passed');
+}
+main().catch(error=>{console.error(error);process.exitCode=1;}).finally(async()=>{pty.resetForTests();server.closeAllConnections();await new Promise(r=>server.close(r));fs.rmSync(tmp,{recursive:true,force:true});});

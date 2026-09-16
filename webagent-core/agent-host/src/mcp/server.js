@@ -1,3 +1,4 @@
+const control = require('../utils/executionControl');
 const { isToolFailure } = require('../utils/toolTrace');
 const lifecycle = require('./requestLifecycle').createLifecycle();
 const express = require('express');
@@ -167,7 +168,7 @@ async function handleRpc(req) {
         },
         serverInfo: { name: config.serverName, version: config.version },
         _meta: { identity: hostIdentity() },
-        instructions: getInstructions()
+        instructions: control.permissions().read ? getInstructions() : 'Bridge文件读取已被本机操作者禁止。'
       };
     }
 
@@ -192,7 +193,7 @@ async function handleRpc(req) {
 
     case 'tools/list':
       sessTouch(req);
-      return { tools: getToolList() };
+      return { tools: getToolList(null, { remote: true }) };
 
     case 'tools/call': {
       const { name, arguments: toolArgs } = params || {};
@@ -219,7 +220,7 @@ async function handleRpc(req) {
         const content = [{ type: 'text', text }];
         // 第三阶段（已获用户书面同意）：run_command 产生的截图附为 image 内容。
         // base64 只进 MCP 响应，不经 eventBus 广播；认不出截图就只回文本，不让调用失败。
-        if (name === 'run_command') {
+        if (resolveToolName(name) === 'run_command' && control.permissions().capture) {
           try {
             const shot = collectShot({
               command: String((toolArgs && toolArgs.command) || ''),
@@ -257,6 +258,7 @@ async function handleRpc(req) {
       return { resources: listResources() };
 
     case 'resources/read': {
+      control.assertAllowed('read_files');
       const uri = params && params.uri;
       const doc = readResource(uri);
       if (!doc) throw new ProtocolError('E_NOT_FOUND', `Unknown resource ${uri}`);
@@ -264,9 +266,11 @@ async function handleRpc(req) {
     }
 
     case 'prompts/list':
+      control.assertAllowed('read_files');
       return { prompts: promptsFromCustom() };
 
     case 'prompts/get': {
+      control.assertAllowed('read_files');
       const name = params && params.name;
       if (name === 'connect') {
         return {
@@ -304,9 +308,9 @@ function hostStatus() {
     server: config.serverName,
     version: config.version,
     workspace: config.workspaceRoot,
-    tools: getToolList().map((t) => t.name),
+    tools: getToolList(null, { remote: true }).map((t) => t.name),
     resources: listResources().map((r) => r.uri),
-    instructions: getInstructions(),
+    instructions: control.permissions().read ? getInstructions() : 'Bridge文件读取已被本机操作者禁止。' ,
     session: snapshot(),
     transports: ['streamable-http', 'sse'],
     auth: ['url-secret', 'bearer', 'oauth']
@@ -340,9 +344,9 @@ async function dispatchOne(req, body, res) {
   const notify = body.id === undefined || (method && String(method).startsWith('notifications/'));
   req.body = body;
   try {
-    const result = body.method === 'tools/call'
+    const result = await control.run('bridge', async () => body.method === 'tools/call'
       ? await lifecycle.run(lifecycle.owner(keyForReq(req), extractToken(req)), body.id, res, () => handleRpc(req))
-      : await handleRpc(req);
+      : await handleRpc(req));
     if (notify) return { kind: 'notification' };
     return { kind: 'response', payload: { jsonrpc: '2.0', id: body.id, result }, httpStatus: 200 };
   } catch (err) {
@@ -398,6 +402,8 @@ async function handlePost(req, res) {
 }
 
 function handleGet(req, res) {
+  try { const release = control.enter('bridge'); release(); }
+  catch(error) { return res.status(409).json({error:error.message}); }
   const bound = bindHttpSession(req, { createIfMissing: wantsSse(req) });
   if (!bound.ok) return rejectUnknownSession(req, res);
 

@@ -53,6 +53,7 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 | [corsAllow.js](corsAllow.js) | 14 个函数/类节点 |
 | [diff.js](diff.js) | 1 个函数/类节点 |
 | [eventBus.js](eventBus.js) | 15 个函数/类节点 |
+| [executionControl.js](executionControl.js) | 22 个函数/类节点 |
 | [hostDiagnostics.js](hostDiagnostics.js) | 4 个函数/类节点 |
 | [localControl.js](localControl.js) | 7 个函数/类节点 |
 | [operatorQueue.js](operatorQueue.js) | 17 个函数/类节点 |
@@ -64,3 +65,7 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 
 
 受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。仅回环HTTP(S)，每次本机批准，无stdio安装启动或自动重试。
+
+## 工作模式与权限
+
+[执行控制详解](执行控制详解.md)逐函数解释executionControl.js：Chat/Bridge租约互斥、同类型并行、所有者持久权限和后台/审批屏障。权限不是OS沙箱。

@@ -27,10 +27,10 @@ function noteClient(info) {
 }
 function hasClient() { return Date.now() - clientSeenAt < CLIENT_TTL_MS; }
 function prune() {
-  for (const [id, job] of jobs) if (job.state === 'done' && Date.now() - job.finishedAt > KEEP_MS) jobs.delete(id);
+  for (const [id, job] of jobs) if (job.state === 'done' && !job.cancelRequested && Date.now() - job.finishedAt > KEEP_MS) jobs.delete(id);
   for (const [id, time] of clients) if (Date.now() - time > CLIENT_TTL_MS) clients.delete(id);
   if (jobs.size >= 256) for (const [id, job] of jobs) {
-    if (job.state === 'done') jobs.delete(id);
+    if (job.state === 'done' && !job.cancelRequested) jobs.delete(id);
     if (jobs.size < 256) break;
   }
 }
@@ -44,6 +44,7 @@ function listPending(clientId) {
   return [...jobs.values()].filter(job => (job.state !== 'done' || (clientId && job.cancelRequested))
     && (!clientId || !job.owner || job.owner === clientId)).map(publicJob);
 }
+function activeCount() { return [...jobs.values()].filter(job => job.state !== 'done' || job.cancelRequested).length; }
 function snapshot() { return { clientLive: hasClient(), pending: listPending().length, retained: jobs.size }; }
 function armTimer(job, ms) {
   if (job.timer) clearTimeout(job.timer);
@@ -57,7 +58,7 @@ function armTimer(job, ms) {
 function enqueue(kind, payload = {}) {
   checkCancelled(); prune();
   if (String(payload.command || '').length > 128000 || String(payload.input || '').length > 64000) return Promise.reject(new Error('PTY input too large'));
-  if ([...jobs.values()].filter(j => j.state !== 'done').length >= 32) return Promise.reject(new Error('Too many pending PTY jobs'));
+  if (activeCount() >= 32) return Promise.reject(new Error('Too many pending PTY jobs'));
   const jobId = crypto.randomBytes(8).toString('hex');
   return new Promise(resolve => {
     const job = { jobId, execId: String(payload.execId || jobId), kind: kind || 'run', command: payload.command,
@@ -138,4 +139,4 @@ function resetForTests() {
   for (const job of jobs.values()) finish(job.jobId, { status: 'cancelled', ok: false, message: 'resetForTests' });
   jobs.clear(); clients.clear(); clientSeenAt = 0;
 }
-module.exports = { runWithPty, ptyContext, wantsPty, noteClient, hasClient, listPending, snapshot, enqueue, finish, report, cancelExec, resetForTests };
+module.exports = { activeCount, runWithPty, ptyContext, wantsPty, noteClient, hasClient, listPending, snapshot, enqueue, finish, report, cancelExec, resetForTests };

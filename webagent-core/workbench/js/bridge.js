@@ -341,6 +341,7 @@ export async function checkBridgeHealth() {
 export async function refreshStatus() {
   const res = await fetch('/api/status');
   state.status = await res.json();
+  paintExecutionControl();
   ui.paintBridge();
   const sel = $('#model-select');
   const cur = sel.value;
@@ -403,3 +404,39 @@ export function compareHost() {
 }
 ui.refreshDiagnostics = refreshDiagnostics;
 ui.compareHost = compareHost;
+
+let controlDirty = false, controlRevision = '';
+export function paintExecutionControl() {
+  const current = state.status?.executionControl;
+  if (!$('#execution-mode')) return;
+  $('#execution-mode').textContent = current ? `主机模式：${current.mode}；Chat在途${current.active.chat}，Bridge在途${current.active.bridge}` : '主机尚未提供模式/权限，请更新后重启';
+  if (!current || controlDirty) return;
+  controlRevision = current.revision;
+  for (const key of ['read','edit','execute','capture']) $('#access-' + key).checked = current.permissions[key];
+}
+export function initExecutionControl() {
+  if (!$('#execution-save')) return;
+  async function change(value) {
+    try {
+      const response = await fetch('/api/execution-control', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...value,workspaceRoot:state.status?.workspaceRoot,hostInstanceId:state.status?.identity?.hostInstanceId})});
+      const data = await response.json();
+      if (!response.ok || !data.success) throw Error(data.error || '设置失败');
+      controlDirty = false;
+      await ui.refreshStatus();
+      $('#execution-result').textContent = '已由主机应用；没有自动取消或重放任务';
+    } catch(error) { $('#execution-result').textContent = error.message; }
+  }
+  $('#execution-chat').onclick = () => change({workMode:'chat'});
+  $('#execution-bridge').onclick = () => change({workMode:'bridge'});
+  $('#execution-save').onclick = () => change({revision:controlRevision,permissions:Object.fromEntries(['read','edit','execute','capture'].map(key => [key,$('#access-'+key).checked]))});
+  $('#execution-refresh').onclick = () => {controlDirty=false;ui.refreshStatus().catch(error=>{$('#execution-result').textContent=error.message;});};
+  for (const key of ['read','edit','execute','capture']) $('#access-'+key).onchange = () => {
+    controlDirty=true;
+    if (!$('#access-read').checked) $('#access-edit').checked=false;
+    if (!$('#access-read').checked || !$('#access-edit').checked || !$('#access-capture').checked) {
+      $('#access-execute').checked=false;
+      $('#execution-result').textContent='Execute要求同时允许Read/Edit/Capture；未自动扩大权限。点击保存才生效。';
+    }
+  };
+}
+ui.initExecutionControl = initExecutionControl;

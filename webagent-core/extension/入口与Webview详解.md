@@ -101,3 +101,7 @@ BridgeView启动、原生Chat handler及ChatView send都先await workspaceBindin
 BridgeView.refresh以refreshPending合并并行请求、拒绝HTTP错误，避免轮询重叠导致旧状态倒灌；finally释放单飞状态。服务端status.bridgeTaskStates是远程报告，status.taskState只属于本地Chat，不能混读。Bridge页**paintBridgeTasks(groups)**规范最多16组/每组50项，带会话摘要把todo交给paintTasks（Bridge最多800条，Chat仍500）；追加报告进度及空状态/非自动核验说明，所有文字textContent渲染，不接受HTML。
 
 Bridge任务区域不再因空列表隐藏，限制35vh并滚动/长词换行，颜色使用VSCode主题变量。请求失败保留最近计划但标记“同步失败，当前状态未知”；4秒消息刷新保留。code-server和桌面都加载该核心扩展，发行副本字节一致由extensionCopy验证。这里只说明代码/VM覆盖，未声称已在用户桌面或code-server窗口实测。
+
+## Bridge所有者控件
+
+BridgeView的control消息只接受chat/bridge，或含64字符revision与四个布尔permissions。宿主调用workspaceBinding（包含工作区信任和主机核对），仅发固定字段到/api/execution-control；失败弹错误，成功发controlSaved并刷新。bridgeHtml保存policyDirty/policyRevision，周期status不覆盖未保存草稿；重新读取主动放弃草稿。控件依赖提示不自动增权。经典和code-server核心扩展共享策略；这是权限界面，不是新增探针入口。验证见webviewRuntime与executionControl；真实桌面显示仍需另验。

@@ -552,3 +552,8 @@ button.walk-card { width: 100%; text-align: left; color: var(--text); font: inhe
 
 #bridge-host, .trace-detail { overflow-wrap: anywhere; }
 .trace-detail { padding: 6px 8px; }
+
+/* Owner controls, Tasks and session controls must remain reachable on short screens. */
+#right-bridge { overflow-y: auto; }
+#right-bridge > * { flex-shrink: 0; }
+#right-bridge .bridge-log { min-height: 100px; }

@@ -115,6 +115,7 @@ async function main() {
   try {
     const secret = config.secretKey;
     for (const cmd of VARIANTS) {
+      require('../src/utils/executionControl').selectMode('bridge');
       const mcp = await request(server, 'POST', `/mcp/${secret}`, {
         jsonrpc: '2.0',
         id: 7,
@@ -125,6 +126,7 @@ async function main() {
       assert.strictEqual(mcp.json.result.isError, true, `mcp HTTP isError ${cmd}`);
       assert.ok(/E_FORBIDDEN|blocked on remote/i.test(mcp.json.result.content[0].text), `mcp HTTP forbid ${cmd}`);
 
+      require('../src/utils/executionControl').selectMode('chat');
       const api = await request(server, 'POST', '/api/tool/call', {
         name: 'run_command',
         arguments: { command: cmd },
@@ -134,6 +136,7 @@ async function main() {
       assert.ok(/confirm_dangerous/i.test(String((api.json && api.json.error) || api.raw)), `local /api confirm: ${cmd}`);
     }
 
+    require('../src/utils/executionControl').selectMode('bridge');
     const ok = await request(server, 'POST', `/mcp/${secret}`, {
       jsonrpc: '2.0',
       id: 8,

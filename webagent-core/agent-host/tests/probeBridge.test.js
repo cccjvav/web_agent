@@ -29,6 +29,7 @@ async function main() {
     await queue.approve(job.requestId,true);assert.strictEqual(executions,1,'No replay');
     assert.throws(()=>queue.result(job.requestId,{callerKey:'peer:other',remote:true}));
     assert.throws(()=>bridge.request({...input,sessionId:'wrong',requestKey:'wrong-session'},{}));
+    require('../src/utils/executionControl').selectMode('chat');
     const denied=bridge.request({...input,requestKey:'denied-command'},{});queue.cancel(denied.requestId);await queue.approve(denied.requestId,true);assert.strictEqual(executions,1);
     await client.disconnect();assert.strictEqual(bridge.list().length,0);
     assert.strictEqual((await post({type:'sync',tabId:1,sessionId:'one'})).status,403);

@@ -154,6 +154,9 @@ async function main() {
     const saved = page.waitForResponse(response => response.url().includes('/api/files/content') && response.request().method() === 'PUT');
     await page.keyboard.press('Control+s'); assert.strictEqual((await saved).status(), 200);
     assert.ok(fs.readFileSync(path.join(workspace, 'acceptance.txt'), 'utf8').includes('SAVED-FROM-BROWSER'));
+    await page.click('#rb-bridge-tab'); await page.click('#execution-chat');
+    await page.waitForFunction(()=>document.querySelector('#execution-mode').textContent.includes('主机模式：chat'));
+    await page.click('#rb-chat-tab');
     await page.click('#model-pick-btn'); await page.locator('.mp-row').filter({ hasText: '内置探索' }).click();
     await page.click('#btn-agent-pick'); await page.click('#agent-pick-menu [data-mode="ask"]');
     await page.fill('#chat-input', '只读取 `acceptance.txt`');
@@ -171,6 +174,8 @@ async function main() {
       }
     }
     await page.setViewportSize({ width: 1280, height: 900 }); await page.click('#rb-bridge-tab');
+    await page.click('#execution-bridge');
+    await page.waitForFunction(()=>document.querySelector('#execution-mode').textContent.includes('主机模式：bridge'));
     await rpc('unknown-fixture-tool'); await page.waitForFunction(() => document.querySelector('#stat-fail').textContent === '1');
     await page.click('#btn-reset-round'); await page.waitForFunction(() => document.querySelector('#stat-calls').textContent === '0');
     assert.strictEqual((await (await fetch(base + '/api/bridge/activity')).json()).resetReason, 'operator-cleared');
@@ -298,12 +303,14 @@ async function main() {
     assert.ok((await page.locator('#bridge-tasks').textContent()).includes('set_todos'));
     await rpc('set_todos',{todos:[{id:'plan-1',title:'REMOTE-TASK-SNAPSHOT',status:'in_progress'}]});
     await page.waitForFunction(()=>document.querySelector('#bridge-todo-list').textContent.includes('REMOTE-TASK-SNAPSHOT'));
+    await page.click('#execution-chat');await page.waitForFunction(()=>document.querySelector('#execution-mode').textContent.includes('主机模式：chat'));
     const localPlan = await page.request.post(base+'/api/tool/call',{data:{name:'set_todos',arguments:{todos:[{title:'LOCAL-PLAN-ONLY'}]},mode:'ask'}});
     assert.equal((await localPlan.json()).success,true);
     assert.equal((await (await page.request.get(base+'/api/status')).json()).taskState.todos[0].title,'LOCAL-PLAN-ONLY');
     assert.ok(!(await page.locator('#bridge-todo-list').textContent()).includes('LOCAL-PLAN-ONLY'));
     await page.reload();await page.click('#rb-bridge-tab');
     await page.waitForFunction(()=>document.querySelector('#bridge-todo-list').textContent.includes('REMOTE-TASK-SNAPSHOT'));
+    await page.click('#execution-bridge');await page.waitForFunction(()=>document.querySelector('#execution-mode').textContent.includes('主机模式：bridge'));
     await rpc('set_todos',{todos:[{id:'plan-1',title:'REMOTE-TASK-SNAPSHOT',status:'completed'}]});
     await page.waitForFunction(()=>document.querySelector('#bridge-task-count').textContent.includes('1/1'));
     const secondPlan=await fetch(`http://127.0.0.1:${mcpPort}/mcp/${status.secretKey}`,{method:'POST',headers:{'Content-Type':'application/json','Mcp-Session-Id':sessionId},body:JSON.stringify({jsonrpc:'2.0',id:'second-plan',method:'tools/call',params:{name:'set_todos',arguments:{todos:[{title:'SECOND-SESSION-PLAN',status:'pending'}]}}})});
@@ -315,6 +322,19 @@ async function main() {
     assert.notEqual(taskSnapshot.bridgeTaskStates[0].sessionId,taskSnapshot.bridgeTaskStates[1].sessionId);
 
     assert.deepStrictEqual(errors, []);
+    // Real owner permission UI: no draft overwrite, save/readback, denied direct MCP alias.
+    await page.uncheck('#access-edit');
+    assert.equal(await page.isChecked('#access-execute'),false);
+    await page.uncheck('#access-capture');
+    await page.evaluate(async()=>{await (await import('/js/bridge.js')).refreshStatus();});
+    assert.equal(await page.isChecked('#access-edit'),false,'poll must preserve unsaved draft');
+    await page.click('#execution-save');
+    await page.waitForFunction(()=>document.querySelector('#execution-result').textContent.includes('已由主机应用'));
+    assert.equal((await rpc('execute_command',{command:'echo forbidden'})).isError,true);
+    await page.reload();await page.click('#rb-bridge-tab');
+    assert.equal(await page.isChecked('#access-edit'),false);assert.equal(await page.isChecked('#access-execute'),false);
+    for(const key of ['read','edit','capture','execute']) await page.check('#access-'+key);
+    await page.click('#execution-save');await page.waitForFunction(()=>document.querySelector('#execution-result').textContent.includes('已由主机应用'));
     console.log('Browser PASS: minimal page observation + authenticated connection echo/forged session rejection/clear, help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');
   } finally {
     if (browser) await browser.close();

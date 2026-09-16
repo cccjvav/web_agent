@@ -66,3 +66,5 @@ code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容�
 |---|---|
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
 <!-- docs-inventory:end -->
+
+主机模式与所有者权限：[Bridge权限与工作模式](Bridge权限与工作模式.md)。Chat/Bridge互斥，同类型可并行；远端Read/Edit/Execute/Capture由本机保存，Execute不是OS沙箱。

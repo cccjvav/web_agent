@@ -51,6 +51,7 @@ async function main() {
   const bus = require('../src/utils/eventBus');
   const observe = payload => events.push(payload);
   bus.on('tool_call_end', observe);
+  require('../src/utils/executionControl').selectMode('chat');
   const rest = await fetch(base + '/api/tool/call', {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:'workspace_info'})});
   assert.strictEqual(rest.status,200);
   const failure = await rest.json();
@@ -58,6 +59,7 @@ async function main() {
   assert.strictEqual(events.at(-1).success, false);
   assert.strictEqual(failure.success,false);
   assert.strictEqual(failure.result.detail,'fixture business failure');
+  require('../src/utils/executionControl').selectMode('bridge');
   const done = await (await rpc({jsonrpc:'2.0',id:0,method:'tools/call',params:{name:'workspace_info'}},a)).json();
   assert.strictEqual(done.result.isError,true); // ID released, no duplicate error
   console.log('authenticated HTTP cancellation and direct API failure tests passed');

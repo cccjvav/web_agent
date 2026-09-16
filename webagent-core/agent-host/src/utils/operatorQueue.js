@@ -27,6 +27,9 @@ function publicJob(job, details = false) {
 }
 function submit(kind, input, options, requestKey) {
   checkCancelled(); prune();
+  const control = require('./executionControl');
+  const workMode = options.remote || control.snapshot().mode === 'bridge' ? 'bridge' : 'chat';
+  const release = control.enter(workMode); release();
   if (!handlers.has(kind)) throw new Error('Unsupported operation');
   if (!/^[a-zA-Z0-9_-]{8,80}$/.test(requestKey || '')) throw new Error('requestKey requires 8–80 letters/digits/_/-; reuse it only for the same operation');
   const caller = owner(options);
@@ -38,7 +41,7 @@ function submit(kind, input, options, requestKey) {
     return publicJob(job);
   }
   if ([...jobs.values()].filter(job => ['waiting-approval', 'running'].includes(job.status)).length >= 20) throw new Error('Too many outstanding approvals');
-  const job = { id: randomUUID(), kind, owner: caller, options: { remote: Boolean(options.remote), callerKey: caller },
+  const job = { id: randomUUID(), kind, workMode, owner: caller, options: { remote: Boolean(options.remote), callerKey: caller },
     taskId: options.taskId || randomUUID(), input: JSON.parse(encoded), digest, requestKey,
     status: 'waiting-approval', createdAt: Date.now(), result: null };
   jobs.set(job.id, job);
@@ -57,6 +60,8 @@ async function approve(id, confirmed) {
   if (!job) throw new Error('Unknown operation');
   if (job.status !== 'waiting-approval') return publicJob(job); // Never execute twice, even after failure.
   if ([...jobs.values()].filter(item => item.status === 'running').length >= 4) throw new Error('Too many running operations');
+  const control = require('./executionControl');
+  const releaseMode = control.enter(job.workMode);
   job.status = 'running'; job.controller = new AbortController();
   const timer = setTimeout(() => job.controller.abort(), 60000);
   let execution;
@@ -65,6 +70,7 @@ async function approve(id, confirmed) {
     execution.operationId = job.id;
     const output = await runWithSignal(job.controller.signal, () => withTask({ source: job.kind === 'probe-browser' ? 'BrowserProbe' : 'Workflow', taskId: job.taskId }, () => {
       checkCancelled();
+      if (job.options.remote) control.assertAllowed(job.kind === 'workflow' ? 'workflow_request' : 'external_request');
       return handlers.get(job.kind)(clone(job.input), { ...job.options, taskId: job.taskId });
     }));
     const encoded = JSON.stringify(output);
@@ -72,12 +78,13 @@ async function approve(id, confirmed) {
     job.result = output == null ? null : JSON.parse(encoded);
     job.status = output?.status === 'cancelled' ? 'cancelled' : output?.status === 'unknown' || output?.verification?.state === 'unknown' ? 'unknown'
       : isToolFailure(output) ? 'failed' : 'succeeded';
-  } catch (_) {
+  } catch (error) {
     job.status = 'unknown';
     job.result = { ok: false, status: 'unknown', error: 'Execution interrupted, failed or exceeded a budget. Effects may already exist; inspect before submitting anything again.' };
+    if (error.code === 'E_FORBIDDEN') { job.status = 'failed'; job.result = {ok:false,status:'failed',error:error.message}; }
   } finally {
-    if (execution) finishCall(execution, { ...job.result, status: job.status, requestId: job.id });
-    clearTimeout(timer); job.controller = null;
+    try { if (execution) finishCall(execution, { ...job.result, status: job.status, requestId: job.id }); }
+    finally { clearTimeout(timer); job.controller = null; releaseMode(); }
   }
   return publicJob(job);
 }

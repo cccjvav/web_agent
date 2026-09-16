@@ -201,6 +201,19 @@
         </div>
       </div>
       <div id="right-bridge" class="rb-body hidden">
+        <div class="side-pad" id="execution-controls">
+          <strong>工作模式与 Bridge 权限</strong><p id="execution-mode" class="tiny">待同步</p>
+          <button id="execution-chat" class="vs-btn">切换 Chat</button><button id="execution-bridge" class="vs-btn">切换 Bridge</button>
+          <fieldset style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"><legend>仅限制远端 Bridge</legend>
+            <label><input type="checkbox" id="access-read">Read 读取</label>
+            <label><input type="checkbox" id="access-edit">Edit 修改</label>
+            <label><input type="checkbox" id="access-execute">Execute 命令/不透明工具</label>
+            <label><input type="checkbox" id="access-capture">Capture 附图</label>
+          </fieldset>
+          <p class="tiny">Edit需要Read。任意Execute能读写和截图，必须四项同时允许；不是OS沙箱。切换模式前先停止隧道、任务及后台程序。</p>
+          <button id="execution-save" class="vs-btn">保存权限</button><button id="execution-refresh" class="vs-btn">重新读取</button>
+          <p id="execution-result" class="tiny" role="status"></p>
+        </div>
         <div class="side-pad"><div id="bridge-host" class="tiny">主机身份待同步</div><button type="button" id="btn-operations" class="vs-btn">工具接入与审批</button><button type="button" id="btn-host-diagnostics" class="vs-btn">核对主机与能力</button></div>
         <div class="bridge-wait" id="bridge-wait">
           <div class="wait-ico">✦</div>

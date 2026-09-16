@@ -466,6 +466,16 @@
       "id": "bridge-task-guide",
       "path": "Bridge任务栏说明.md",
       "group": "使用"
+    },
+    {
+      "id": "bridge-owner-access",
+      "path": "Bridge权限与工作模式.md",
+      "group": "使用"
+    },
+    {
+      "id": "execution-control-details",
+      "path": "webagent-core/agent-host/src/utils/执行控制详解.md",
+      "group": "实现"
     }
   ],
   "sourceSnapshotExclusions": [
