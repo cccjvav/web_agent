@@ -187,3 +187,5 @@ Playwright并未删除：当前Node开发依赖1.63.0，浏览器任务独立安
 完整读取技能使用指南276行、skills.js198行，核对创建API/UI与图像候选读取路径，修来源ID/frontmatter、旧示例工作区与四篇说法，删未验证第三方比较。实际修API默认覆盖同名Skill（含规范化重名），内部createOnly在写路径锁内拒绝已有文件；新建按钮确认HTTP和业务结果，不再失败也成功。真实HTTP覆盖同名并发保留成功者，Chromium点按钮核对400错误；OS进程竞态、桌面真实窗口、当前MCP接入仍未代签。
 
 第18组ae97f65e20f2b23f2ca3838aa9131934ad0471d4，CI35124844106九项逐项成功。第19组36ff82f4b21ee4714dcacd9ff0cd657c47e88def本地82测试文件通过，CI35125290301首轮8/9成功、整体失败：Windows22 npm test中mcpProtocol命令echo约30.5秒超时、patchEngine搜索worker启动10秒超时；浏览器/安装器/其余六组主机成功。日志下载EOF，check-run annotations提供具体错误；诊断性rerun请求被拒绝，未实际重跑。未放宽超时/删断言/自动重试，根因未证实，后续绿灯不抹去首轮失败。
+
+后续证据提交e470d5ff7efbdcfe3ef03d86f42519f147003a9a，[CI35125876577](https://github.com/cccjvav/web_agent/actions/runs/35125876577)九项逐项成功，包括Windows22与新增Chromium失败响应测试。未改实现/放宽断言，仅新完整运行未再现上一轮超时；原失败与未定位根因仍保留。
