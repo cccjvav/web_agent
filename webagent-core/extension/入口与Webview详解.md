@@ -105,3 +105,28 @@ Bridge任务区域不再因空列表隐藏，限制35vh并滚动/长词换行，
 ## Bridge所有者控件
 
 BridgeView的control消息只接受chat/bridge，或含64字符revision与四个布尔permissions。宿主调用workspaceBinding（包含工作区信任和主机核对），仅发固定字段到/api/execution-control；失败弹错误，成功发controlSaved并刷新。bridgeHtml保存policyDirty/policyRevision，周期status不覆盖未保存草稿；重新读取主动放弃草稿。控件依赖提示不自动增权。经典和code-server核心扩展共享策略；这是权限界面，不是新增探针入口。验证见webviewRuntime与executionControl；真实桌面显示仍需另验。
+
+## editorReview.js：原生单文件草稿预览与恢复
+
+这是用户在命令面板显式执行的本地编辑器操作，不调用agent-host、不启动Chat、不成为远程MCP工具，也不绕过Bridge所有者策略替模型执行任务。支持桌面VS Code以及运行同一核心扩展的code-server；不是经典工作台按钮。命令注册由activate调用registerEditorReview。
+
+- **diskSnapshot(vscode,doc)**：要求可信工作区、未关闭file文档，getWorkspaceFolder确认归属；root/file真实路径再检查包含关系，拒绝指向工作区外的符号链接。打开普通文件、fstat后按最多65537字节增量读取，超过64KiB拒绝；严格UTF-8解码，拒绝NUL/BOM。不支持未保存的新文件、远程虚拟文件、非UTF-8或二进制。finally关闭fd。O_NOFOLLOW/O_NONBLOCK按平台支持启用；路径父目录恶意替换仍不是OS沙箱或原子事务。
+- **registerEditorReview(vscode,context)**：登记两条命令及只读TextDocumentContentProvider，context负责释放；busy防止同一扩展同时打开多个恢复确认。**prune()**按15分钟惰性TTL清理，最多16份64KiB文本；**snapshot(text)**用随机URI存不可变文本。**provideTextDocumentContent(uri)**只返回该快照，过期显示重新预览提示；不是可任意读盘的URL处理器。dispose清内存并使尚未确认的恢复失效，已经打开的VS Code虚拟文档副本由编辑器管理，不承诺内存安全擦除。
+- **review(restore)**：捕获原编辑器、document.version、草稿与磁盘文本，通过vscode.diff显示两份只读快照。预览不修改/保存文件；差异窗口不是实时追踪磁盘。恢复另需模态确认，自动保存必须off，再核对信任/工作区、文档未关闭、版本/草稿与磁盘文本未变。editor.edit以单次replace及undoStopBefore/After建立原生撤销边界；不调用save、不强制覆盖、不自动重试。原生编辑器处理版本冲突，拒绝时显示错误。编辑器可能规范化行尾；这是文本草稿恢复，不保证原始字节/元数据恢复。
+- 命令回调统一捕获错误并showErrorMessage；finally释放busy。磁盘在最终检查后仍可能被其他程序修改，自动保存设置也可能由其他扩展随后改变；不是文件锁/保存事务。未来手动保存仍须遵从VS Code磁盘冲突提示。
+
+### 新手操作与验收
+
+1. 在可信本地工作区打开一个已保存、无BOM的UTF-8小文本文件（≤64KiB）。先备份；使用无重要数据的临时文件。
+2. 修改正文但不要保存，Ctrl+Shift+P运行“Web Agent: 预览当前草稿与磁盘差异”。左侧是读取时磁盘，右侧是草稿快照，两侧只读；磁盘不应变化。
+3. 关闭差异或返回原文件，关闭自动保存。运行“Web Agent: 预览并恢复当前草稿为磁盘版本”，审阅后确认。原文件草稿变为读到的磁盘文本，不主动保存。
+4. 返回原文件，Ctrl+Z应恢复刚才草稿；可继续使用VS Code原生redo。撤销栈由VS Code管理，关闭文档/重载/其他编辑可影响它，不提供长期保证。
+5. 在确认期间修改原文件草稿或由另一程序修改磁盘，再确认必须拒绝；取消应零修改。自动保存开启、未信任、超预算和不支持编码也应明确拒绝。
+
+**不是Agent修改历史或经典保存回退**：只恢复当前未保存草稿到当时磁盘文本。已保存的Agent多文件修改、创建/删除/重命名/shell副作用、事务补偿仍不在此范围。不会凭这个功能宣称通用回滚完成。
+
+### editorReview.test.js
+
+**main()**使用真实临时磁盘与注入的VS Code API替身；**run(restore)**调用实际注册命令。断言只读左右快照、取消零编辑、自动保存拒绝、确认期间草稿/磁盘/信任变化拒绝、明确确认后仅一次editor.edit、undoStopBefore/After与无直接磁盘写入；严格编码、BOM/NUL、大小和非file失败。替身中的executeCommand、edit/replace和showWarningMessage只记录/触发状态变化，不能证明真实VS Code diff/撤销栈可视交互通过。真实桌面/code-server五步验收仍待，不把VM测试当作实机结果。
+
+夹具细节：onConfirm在模态确认返回前注入草稿/磁盘/信任变化；getText/positionAt返回模拟文档文本和位置；Range的constructor保存起止位置。parse/toString只包装虚拟URI，getWorkspaceFolder/getConfiguration/get提供临时工作区和自动保存值；registerTextDocumentContentProvider保存provider，registerCommand保存真实回调。showErrorMessage收集错误，showInformationMessage不触发真实UI；dispose清理由测试finally统一执行。替身不负责模拟操作系统并发或完整编辑器行为。

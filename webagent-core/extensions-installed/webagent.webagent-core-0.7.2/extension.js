@@ -210,6 +210,7 @@ function registerChatParticipant(context) {
 }
 
 function activate(context) {
+  require('./editorReview').registerEditorReview(vscode, context);
   ptyHost = startPtyHost(context, { agentHostUrl, requestJson });
   const chat = new ChatView();
   const bridge = new BridgeView();

@@ -48,6 +48,7 @@ try {
   assert.ok(fs.existsSync(path.join(installed.dest, 'package.json')));
   assert.ok(fs.existsSync(path.join(installed.dest, 'extension.js')));
   assert.ok(fs.existsSync(path.join(installed.dest, 'workspaceMatch.js')));
+  assert.ok(fs.existsSync(path.join(installed.dest, 'editorReview.js')));
   assert.ok(fs.existsSync(path.join(installed.dest, 'modeFromChatRequest.js')));
   assert.ok(fs.existsSync(path.join(installed.dest, 'ptyHost.js')));
   assert.ok(fs.existsSync(path.join(installed.dest, 'ptyPolicy.js')));

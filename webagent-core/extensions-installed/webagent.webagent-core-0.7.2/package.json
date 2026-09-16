@@ -7,8 +7,14 @@
   "engines": {
     "vscode": "^1.90.0"
   },
-  "categories": ["Other", "Chat"],
-  "activationEvents": ["*", "onChatParticipant:webagent.agent"],
+  "categories": [
+    "Other",
+    "Chat"
+  ],
+  "activationEvents": [
+    "*",
+    "onChatParticipant:webagent.agent"
+  ],
   "main": "./extension.js",
   "contributes": {
     "configuration": {
@@ -30,9 +36,18 @@
         "isSticky": true,
         "isDefault": true,
         "commands": [
-          { "name": "ask", "description": "只读探查，不改文件" },
-          { "name": "plan", "description": "多模型博弈出方案，不改文件" },
-          { "name": "code", "description": "Agent：搜-读-补丁-再测" }
+          {
+            "name": "ask",
+            "description": "只读探查，不改文件"
+          },
+          {
+            "name": "plan",
+            "description": "多模型博弈出方案，不改文件"
+          },
+          {
+            "name": "code",
+            "description": "Agent：搜-读-补丁-再测"
+          }
         ]
       }
     ],
@@ -71,6 +86,14 @@
       {
         "command": "webagent.resetSecret",
         "title": "Web Agent: 重置 Bridge Secret"
+      },
+      {
+        "command": "webagent.previewEditorChanges",
+        "title": "Web Agent: 预览当前草稿与磁盘差异"
+      },
+      {
+        "command": "webagent.restoreEditorDraft",
+        "title": "Web Agent: 预览并恢复当前草稿为磁盘版本"
       }
     ]
   }

@@ -1919,7 +1919,7 @@
 
 ## webagent-core/agent-host/tests/desktopExtension.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `706b9d7c8b9f5ab35bc87dbf5bf7e3ebc673713eba35597c109077414ebb8032`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `f97d95fdf376d3c2ac2525808bb8f8578b634a1534647836c430e1d4ddb5cfc2`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -1956,15 +1956,15 @@
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `44d4d72f7544d0e00ef603031631b9a1c723938c02fac1a877b0cc5beea2f67c`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `b43a56dbf37104f3e884916c8eaa5e60be976b0c2aa767883f7bd65db7d6e6a5`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)
-- `namedFunctions` — FunctionDeclaration，[L234–L249](../webagent-core/agent-host/tests/documentationLearning.test.js#L234-L249)
-- `namedFunctions/anonymous@245:44` — ArrowFunctionExpression，[L245–L245](../webagent-core/agent-host/tests/documentationLearning.test.js#L245-L245)
-- `anonymous@342:66` — ArrowFunctionExpression，[L342–L342](../webagent-core/agent-host/tests/documentationLearning.test.js#L342-L342)
-- `anonymous@347:43` — ArrowFunctionExpression，[L347–L347](../webagent-core/agent-host/tests/documentationLearning.test.js#L347-L347)
-- `anonymous@347:68` — ArrowFunctionExpression，[L347–L347](../webagent-core/agent-host/tests/documentationLearning.test.js#L347-L347)
+- `namedFunctions` — FunctionDeclaration，[L236–L251](../webagent-core/agent-host/tests/documentationLearning.test.js#L236-L251)
+- `namedFunctions/anonymous@247:44` — ArrowFunctionExpression，[L247–L247](../webagent-core/agent-host/tests/documentationLearning.test.js#L247-L247)
+- `anonymous@344:66` — ArrowFunctionExpression，[L344–L344](../webagent-core/agent-host/tests/documentationLearning.test.js#L344-L344)
+- `anonymous@349:43` — ArrowFunctionExpression，[L349–L349](../webagent-core/agent-host/tests/documentationLearning.test.js#L349-L349)
+- `anonymous@349:68` — ArrowFunctionExpression，[L349–L349](../webagent-core/agent-host/tests/documentationLearning.test.js#L349-L349)
 
 ## webagent-core/agent-host/tests/documentationPolicy.test.js
 
@@ -1996,6 +1996,40 @@
 - `go` — ArrowFunctionExpression，[L51–L51](../webagent-core/agent-host/tests/documentationQuality.test.js#L51-L51)
 - `getElementById` — ArrowFunctionExpression，[L52–L52](../webagent-core/agent-host/tests/documentationQuality.test.js#L52-L52)
 - `getElementById/scrollIntoView` — FunctionExpression，[L52–L52](../webagent-core/agent-host/tests/documentationQuality.test.js#L52-L52)
+
+## webagent-core/agent-host/tests/editorReview.test.js
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `ffddbbd2d4edee9c6db84fb84906b263cb6812534424569cb67d6f477fa7890d`
+
+- `main` — FunctionDeclaration，[L4–L39](../webagent-core/agent-host/tests/editorReview.test.js#L4-L39)
+- `main/onConfirm` — ArrowFunctionExpression，[L7–L7](../webagent-core/agent-host/tests/editorReview.test.js#L7-L7)
+- `main/getText` — ArrowFunctionExpression，[L9–L9](../webagent-core/agent-host/tests/editorReview.test.js#L9-L9)
+- `main/positionAt` — ArrowFunctionExpression，[L9–L9](../webagent-core/agent-host/tests/editorReview.test.js#L9-L9)
+- `main/parse` — ArrowFunctionExpression，[L12–L12](../webagent-core/agent-host/tests/editorReview.test.js#L12-L12)
+- `main/parse/toString` — ArrowFunctionExpression，[L12–L12](../webagent-core/agent-host/tests/editorReview.test.js#L12-L12)
+- `main/Range` — ClassExpression，[L12–L12](../webagent-core/agent-host/tests/editorReview.test.js#L12-L12)
+- `main/Range/constructor` — FunctionExpression，[L12–L12](../webagent-core/agent-host/tests/editorReview.test.js#L12-L12)
+- `main/getWorkspaceFolder` — ArrowFunctionExpression，[L13–L13](../webagent-core/agent-host/tests/editorReview.test.js#L13-L13)
+- `main/getConfiguration` — ArrowFunctionExpression，[L13–L13](../webagent-core/agent-host/tests/editorReview.test.js#L13-L13)
+- `main/getConfiguration/get` — ArrowFunctionExpression，[L13–L13](../webagent-core/agent-host/tests/editorReview.test.js#L13-L13)
+- `main/registerTextDocumentContentProvider` — FunctionExpression，[L14–L14](../webagent-core/agent-host/tests/editorReview.test.js#L14-L14)
+- `main/registerTextDocumentContentProvider/dispose` — FunctionExpression，[L14–L14](../webagent-core/agent-host/tests/editorReview.test.js#L14-L14)
+- `main/edit` — FunctionExpression，[L15–L15](../webagent-core/agent-host/tests/editorReview.test.js#L15-L15)
+- `main/edit/replace` — FunctionExpression，[L15–L15](../webagent-core/agent-host/tests/editorReview.test.js#L15-L15)
+- `main/showWarningMessage` — FunctionExpression，[L16–L16](../webagent-core/agent-host/tests/editorReview.test.js#L16-L16)
+- `main/showInformationMessage` — FunctionExpression，[L16–L16](../webagent-core/agent-host/tests/editorReview.test.js#L16-L16)
+- `main/showErrorMessage` — FunctionExpression，[L16–L16](../webagent-core/agent-host/tests/editorReview.test.js#L16-L16)
+- `main/registerCommand` — FunctionExpression，[L17–L17](../webagent-core/agent-host/tests/editorReview.test.js#L17-L17)
+- `main/registerCommand/dispose` — FunctionExpression，[L17–L17](../webagent-core/agent-host/tests/editorReview.test.js#L17-L17)
+- `main/executeCommand` — FunctionExpression，[L17–L17](../webagent-core/agent-host/tests/editorReview.test.js#L17-L17)
+- `main/run` — ArrowFunctionExpression，[L19–L19](../webagent-core/agent-host/tests/editorReview.test.js#L19-L19)
+- `main/anonymous@25:34` — ArrowFunctionExpression，[L25–L25](../webagent-core/agent-host/tests/editorReview.test.js#L25-L25)
+- `main/anonymous@26:16` — ArrowFunctionExpression，[L26–L26](../webagent-core/agent-host/tests/editorReview.test.js#L26-L26)
+- `main/anonymous@27:16` — ArrowFunctionExpression，[L27–L27](../webagent-core/agent-host/tests/editorReview.test.js#L27-L27)
+- `main/anonymous@28:51` — ArrowFunctionExpression，[L28–L28](../webagent-core/agent-host/tests/editorReview.test.js#L28-L28)
+- `main/anonymous@33:51` — ArrowFunctionExpression，[L33–L33](../webagent-core/agent-host/tests/editorReview.test.js#L33-L33)
+- `main/anonymous@35:47` — ArrowFunctionExpression，[L35–L35](../webagent-core/agent-host/tests/editorReview.test.js#L35-L35)
+- `anonymous@40:13` — ArrowFunctionExpression，[L40–L40](../webagent-core/agent-host/tests/editorReview.test.js#L40-L40)
 
 ## webagent-core/agent-host/tests/editorRuntime.test.js
 
@@ -3430,9 +3464,24 @@
 - `isDangerousCommand` — FunctionDeclaration，[L157–L164](../webagent-core/extension/dangerousPolicy.js#L157-L164)
 - `isDangerousCommand/anonymous@163:21` — ArrowFunctionExpression，[L163–L163](../webagent-core/extension/dangerousPolicy.js#L163-L163)
 
+## webagent-core/extension/editorReview.js
+
+[目录说明](../webagent-core/extension/README.md) · SHA-256 `5cdb572ed7818aa845597ae23d71967c3c4fe81725f68db87f001cb76edcdb43`
+
+- `diskSnapshot` — FunctionDeclaration，[L7–L25](../webagent-core/extension/editorReview.js#L7-L25)
+- `registerEditorReview` — FunctionDeclaration，[L26–L63](../webagent-core/extension/editorReview.js#L26-L63)
+- `registerEditorReview/prune` — FunctionDeclaration，[L28–L31](../webagent-core/extension/editorReview.js#L28-L31)
+- `registerEditorReview/snapshot` — FunctionDeclaration，[L32–L35](../webagent-core/extension/editorReview.js#L32-L35)
+- `registerEditorReview/provideTextDocumentContent` — FunctionExpression，[L37–L37](../webagent-core/extension/editorReview.js#L37-L37)
+- `registerEditorReview/dispose` — FunctionExpression，[L38–L38](../webagent-core/extension/editorReview.js#L38-L38)
+- `registerEditorReview/review` — FunctionDeclaration，[L39–L59](../webagent-core/extension/editorReview.js#L39-L59)
+- `registerEditorReview/review/anonymous@55:35` — ArrowFunctionExpression，[L55–L55](../webagent-core/extension/editorReview.js#L55-L55)
+- `registerEditorReview/anonymous@61:72` — ArrowFunctionExpression，[L61–L61](../webagent-core/extension/editorReview.js#L61-L61)
+- `registerEditorReview/anonymous@61:72/anonymous@61:100` — ArrowFunctionExpression，[L61–L61](../webagent-core/extension/editorReview.js#L61-L61)
+
 ## webagent-core/extension/extension.js
 
-[目录说明](../webagent-core/extension/README.md) · SHA-256 `d8c98cece7791770749f82d68170897df41e52e73ab3ec7697b2cdd89c1c2df4`
+[目录说明](../webagent-core/extension/README.md) · SHA-256 `fe95876d9cda15b5aee4c375f9372197f7faecdf77c19a716abedb8ca187135f`
 
 - `dispatchPty` — FunctionDeclaration，[L12–L16](../webagent-core/extension/extension.js#L12-L16)
 - `agentHostUrl` — FunctionDeclaration，[L18–L21](../webagent-core/extension/extension.js#L18-L21)
@@ -3462,27 +3511,27 @@
 - `registerChatParticipant/handler` — ArrowFunctionExpression，[L156–L203](../webagent-core/extension/extension.js#L156-L203)
 - `registerChatParticipant/handler/anonymous@158:55` — ArrowFunctionExpression，[L158–L158](../webagent-core/extension/extension.js#L158-L158)
 - `registerChatParticipant/handler/anonymous@177:8` — ArrowFunctionExpression，[L177–L197](../webagent-core/extension/extension.js#L177-L197)
-- `activate` — FunctionDeclaration，[L212–L281](../webagent-core/extension/extension.js#L212-L281)
-- `activate/refreshBar` — FunctionDeclaration，[L228–L251](../webagent-core/extension/extension.js#L228-L251)
-- `activate/dispose` — ArrowFunctionExpression，[L255–L255](../webagent-core/extension/extension.js#L255-L255)
-- `activate/anonymous@258:59` — ArrowFunctionExpression，[L258–L260](../webagent-core/extension/extension.js#L258-L260)
-- `activate/anonymous@261:62` — ArrowFunctionExpression，[L261–L270](../webagent-core/extension/extension.js#L261-L270)
-- `activate/anonymous@271:60` — ArrowFunctionExpression，[L271–L279](../webagent-core/extension/extension.js#L271-L279)
-- `validWebviewMessage` — FunctionDeclaration，[L284–L295](../webagent-core/extension/extension.js#L284-L295)
-- `validWebviewMessage/anonymous@292:271` — ArrowFunctionExpression，[L292–L292](../webagent-core/extension/extension.js#L292-L292)
-- `ChatView` — ClassDeclaration，[L297–L348](../webagent-core/extension/extension.js#L297-L348)
-- `ChatView/constructor` — FunctionExpression，[L298–L300](../webagent-core/extension/extension.js#L298-L300)
-- `ChatView/resolveWebviewView` — FunctionExpression，[L302–L347](../webagent-core/extension/extension.js#L302-L347)
-- `ChatView/resolveWebviewView/anonymous@306:44` — ArrowFunctionExpression，[L306–L346](../webagent-core/extension/extension.js#L306-L346)
-- `ChatView/resolveWebviewView/anonymous@306:44/anonymous@326:10` — ArrowFunctionExpression，[L326–L333](../webagent-core/extension/extension.js#L326-L333)
-- `BridgeView` — ClassDeclaration，[L350–L406](../webagent-core/extension/extension.js#L350-L406)
-- `BridgeView/resolveWebviewView` — FunctionExpression，[L351–L389](../webagent-core/extension/extension.js#L351-L389)
-- `BridgeView/resolveWebviewView/anonymous@355:44` — ArrowFunctionExpression，[L355–L387](../webagent-core/extension/extension.js#L355-L387)
-- `BridgeView/refresh` — FunctionExpression，[L391–L404](../webagent-core/extension/extension.js#L391-L404)
-- `BridgeView/refresh/anonymous@394:27` — ArrowFunctionExpression，[L394–L402](../webagent-core/extension/extension.js#L394-L402)
-- `chatHtml` — FunctionDeclaration，[L408–L535](../webagent-core/extension/extension.js#L408-L535)
-- `bridgeHtml` — FunctionDeclaration，[L537–L668](../webagent-core/extension/extension.js#L537-L668)
-- `deactivate` — ArrowFunctionExpression，[L670–L670](../webagent-core/extension/extension.js#L670-L670)
+- `activate` — FunctionDeclaration，[L212–L282](../webagent-core/extension/extension.js#L212-L282)
+- `activate/refreshBar` — FunctionDeclaration，[L229–L252](../webagent-core/extension/extension.js#L229-L252)
+- `activate/dispose` — ArrowFunctionExpression，[L256–L256](../webagent-core/extension/extension.js#L256-L256)
+- `activate/anonymous@259:59` — ArrowFunctionExpression，[L259–L261](../webagent-core/extension/extension.js#L259-L261)
+- `activate/anonymous@262:62` — ArrowFunctionExpression，[L262–L271](../webagent-core/extension/extension.js#L262-L271)
+- `activate/anonymous@272:60` — ArrowFunctionExpression，[L272–L280](../webagent-core/extension/extension.js#L272-L280)
+- `validWebviewMessage` — FunctionDeclaration，[L285–L296](../webagent-core/extension/extension.js#L285-L296)
+- `validWebviewMessage/anonymous@293:271` — ArrowFunctionExpression，[L293–L293](../webagent-core/extension/extension.js#L293-L293)
+- `ChatView` — ClassDeclaration，[L298–L349](../webagent-core/extension/extension.js#L298-L349)
+- `ChatView/constructor` — FunctionExpression，[L299–L301](../webagent-core/extension/extension.js#L299-L301)
+- `ChatView/resolveWebviewView` — FunctionExpression，[L303–L348](../webagent-core/extension/extension.js#L303-L348)
+- `ChatView/resolveWebviewView/anonymous@307:44` — ArrowFunctionExpression，[L307–L347](../webagent-core/extension/extension.js#L307-L347)
+- `ChatView/resolveWebviewView/anonymous@307:44/anonymous@327:10` — ArrowFunctionExpression，[L327–L334](../webagent-core/extension/extension.js#L327-L334)
+- `BridgeView` — ClassDeclaration，[L351–L407](../webagent-core/extension/extension.js#L351-L407)
+- `BridgeView/resolveWebviewView` — FunctionExpression，[L352–L390](../webagent-core/extension/extension.js#L352-L390)
+- `BridgeView/resolveWebviewView/anonymous@356:44` — ArrowFunctionExpression，[L356–L388](../webagent-core/extension/extension.js#L356-L388)
+- `BridgeView/refresh` — FunctionExpression，[L392–L405](../webagent-core/extension/extension.js#L392-L405)
+- `BridgeView/refresh/anonymous@395:27` — ArrowFunctionExpression，[L395–L403](../webagent-core/extension/extension.js#L395-L403)
+- `chatHtml` — FunctionDeclaration，[L409–L536](../webagent-core/extension/extension.js#L409-L536)
+- `bridgeHtml` — FunctionDeclaration，[L538–L669](../webagent-core/extension/extension.js#L538-L669)
+- `deactivate` — ArrowFunctionExpression，[L671–L671](../webagent-core/extension/extension.js#L671-L671)
 
 ## webagent-core/extension/modeFromChatRequest.js
 
@@ -3492,7 +3541,7 @@
 
 ## webagent-core/extension/package.json
 
-[目录说明](../webagent-core/extension/README.md) · SHA-256 `1a6d9dc093c9ed52d4a09d8ebfeea229ccd6b0319ce3341483206bcd2c5bfc08`
+[目录说明](../webagent-core/extension/README.md) · SHA-256 `ebfc808492dcf23e65045864d13261654c71c9c626f8f6622a34aa5ea755cd66`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 

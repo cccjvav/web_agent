@@ -50,6 +50,7 @@ agentHostUrl优先读取VS Code设置`webagent.agentHostUrl`，其次扩展进�
 | 源码 | 定位证据 |
 |---|---|
 | [dangerousPolicy.js](dangerousPolicy.js) | 31 个函数/类节点 |
+| [editorReview.js](editorReview.js) | 10 个函数/类节点 |
 | [extension.js](extension.js) | 49 个函数/类节点 |
 | [modeFromChatRequest.js](modeFromChatRequest.js) | 1 个函数/类节点 |
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
@@ -57,3 +58,5 @@ agentHostUrl优先读取VS Code设置`webagent.agentHostUrl`，其次扩展进�
 | [ptyPolicy.js](ptyPolicy.js) | 5 个函数/类节点 |
 | [workspaceMatch.js](workspaceMatch.js) | 2 个函数/类节点 |
 <!-- docs-inventory:end -->
+
+原生单文件草稿支持命令面板“预览当前草稿与磁盘差异”及“预览并恢复当前草稿为磁盘版本”；后者明确确认、自动保存关闭、版本复查后以原生编辑器修改，可用Ctrl+Z。仅可信本地工作区64KiB内无BOM UTF-8文件，不是已保存修改历史/跨文件回滚。操作及人工验收见[入口与Webview详解](入口与Webview详解.md#editorreviewjs原生单文件草稿预览与恢复)。

@@ -26,7 +26,7 @@
 | 05 | 审批、工作流与副作用 | mcp/custom_tools.py；scenarios/runtime.py（前批专项） | 已有固定白名单工作流、单次本机批准、失败/未知停止 | 已部分吸收；不照搬可重放副作用的retry。条件分支/补偿不是本批功能 |
 | 06 | 记忆相关性及来源 | memory/recall_score.py（完整函数）、recall_sources.py（前100行）、profiles.py（完整） | 原recall只按日期、整文件读取；上游tokenizer为拉丁/西里尔字母范围，不能直接满足中文 | 本批字面关键词检索、NFKC规范化、文件行号、输入扫描预算；不是embedding语义库，不跨工作区自动召回 |
 | 07 | 启发式规划的诚实契约 | planner/logic.py:infer_memory_profile/build_plan（前100行） | 我们有模型规划/Plan与确定性builtin，不能再把规则模板叫通用推理 | 候选：建议步骤标依据/风险/需哪些工具，实际权限再校验；中文与模糊任务需回归 |
-| 08 | 安全编辑的预览/确认/回退 | files/safe_edit.py:build_edit_preview/create_preview/apply_preview（前150行） | 我们已有hash冲突、补丁与审批；上游应用前比对原内容、预览有TTL | 已部分吸收：工作流before显式前置条件、写保护提示及严格条件schema；新文件可读diff与新旧文件预览baseHash/proposedHash已在0.7.2补齐；完整预览交互/受保护回退仍待做。回退也必须检查当前版本，不能无条件覆盖。未认证其并发回退安全 |
+| 08 | 安全编辑的预览/确认/回退 | files/safe_edit.py:build_edit_preview/create_preview/apply_preview（前150行） | 我们已有hash冲突、补丁与审批；上游应用前比对原内容、预览有TTL | 已部分吸收：工作流before显式前置条件、写保护提示及严格条件schema；新文件可读diff与新旧文件预览baseHash/proposedHash已在0.7.2补齐；经典草稿预览/单次保存回退已交付，原生编辑器现补只读差异及受保护草稿恢复；通用/跨文件回滚仍未完成。回退也必须检查当前版本，不能无条件覆盖。未认证其并发回退安全 |
 | 09 | 文件变化与失效处理 | filewatch/runtime.py:_snapshot/_resolve_target（前120行） | 目前Skill即时重扫、编辑器hash保护；不存在跨工作区watch服务 | 候选：用户启用的目录失效提示、去抖/背压、删除检测；扫描上限要算访问条目而非仅匹配文件 |
 | 10 | 后台异步生命周期 | async_lifecycle.py（全文） | 已有请求Abort、命令进程树、隧道生命周期；Python强引用机制不能机械移植Node | 本批MCP登记父取消/总截止时间/清理；后续核对全宿主关闭时所有后台资源归属，不能把取消说成副作用回滚 |
 | 11 | 限流恢复与公平性 | rate_limit.py（全文） | 已有MCP入口边界与资源限制，但不能由限流名称推断有会话公平性 | 2026-09-16已部分落地：拒绝不增计数、JSON/HTML Retry-After、1000-key恢复与生成/真实HTTP回归；可信代理下的用户/会话公平性仍待实现，不按不可信头任意取身份 |
@@ -209,3 +209,5 @@ recall新增query，NFKC/大小写规范化后按空白分词做字面匹配，�
 修复提交d28c6216e2c744c42b263c5844449f03979a037e的[CI34965636564](https://github.com/cccjvav/web_agent/actions/runs/34965636564)九项全部成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、安装器、Chromium。此前5e488ae及后续诊断提交曾失败；最初只查stdin刷新并不足以解决。固定阶段诊断最终将卡点定位到PowerShell脚本已进入、JSON/环境清理尚未完成；显式Utility模块限定调用和.NET环境/路径API之后全矩阵通过。保留独立二进制线程、Flush、启动屏障、辅助环境与目标环境隔离，以及不含原始stderr的阶段/停止原因。未放宽30秒请求期限或120秒测试文件期限。
 
 测试不再用旧夹具PID或任意启动失败冒充预算触发；每个预算模式清理标记、要求真实启动，并核对预期错误。当前追加Windows stdio重复两轮、就绪完整顺序断言与本文档更新；上述链接只认证d28c621，不代签后续提交。用户11.3和实际第三方软件包仍待真实验收，公网MCP/网站兼容/独立OS隔离/发布签名及其余借鉴项并未宣布完成。
+
+2026-09-16续作：核心扩展新增原生单文件草稿只读diff及明确确认恢复命令，64KiB/UTF-8/信任与真实路径边界、版本/磁盘复查、自动保存关闭、editor.edit撤销边界；不主动保存，不是已保存的Agent历史回滚。真实VS Code/code-server窗口验收仍待，测试只证明API契约。
