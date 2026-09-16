@@ -67,3 +67,5 @@ Tasks代码批已交付；当前清理过时产品正文，不再只在旧文后
 ## 配置审查续作
 
 完整核对store与config/extensionVersion两篇详解，整合过期秘密名单和错误的启动顺序。另发现并修复generateNewSecret吞掉保存失败：先保存成功再发布内存新密钥，失败不上报成功；新增坏JSON与EACCES保留旧密钥回归。未承诺跨进程/断电事务。models主README定制保存契约同步改正文，其他部分未计全文。
+
+验证确认：0465073a489fe30d968964dbab791df473174a27 / CI35038038886、faeaa1f60dfd780598a1ffeb43c4a0c8a5f5feb5 / CI35038187350分别全部九项成功，均本地77文件通过。最新代码CI：https://github.com/cccjvav/web_agent/actions/runs/35038187350 。其余施工及全仓语义审查不关闭。

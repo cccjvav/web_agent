@@ -30,9 +30,9 @@
 
 | 类型 | 项目 | 证据与下一步 |
 |---|---|---|
-| 本次已修，待本次CI绑定 | Plan merge仅明确builtin才本机拼接 | `agent/runChat.js` action=merge的canCallModel/else；已对无效/不完整配置停止补回归，保留原轮次与分支 |
-| 本次已修，待本次CI绑定 | 直接`/api/tool/call`与MCP共享业务失败判定 | `api/routes.js`对应路由；已统一success/isError与完成事件，保留原结果；HTTP200不代表业务成功 |
-| 本次已修，待本次CI绑定 | MCP notifications/cancelled接入在途调用信号 | `mcp/server.js` notification分支；已按初始化peer/同一凭据/带类型ID隔离；已写文件不回滚，不自动重放 |
+| 本次已修，代码CI已通过 | Plan merge仅明确builtin才本机拼接 | `agent/runChat.js` action=merge的canCallModel/else；已对无效/不完整配置停止补回归，保留原轮次与分支 |
+| 本次已修，代码CI已通过 | 直接`/api/tool/call`与MCP共享业务失败判定 | `api/routes.js`对应路由；已统一success/isError与完成事件，保留原结果；HTTP200不代表业务成功 |
+| 本次已修，代码CI已通过 | MCP notifications/cancelled接入在途调用信号 | `mcp/server.js` notification分支；已按初始化peer/同一凭据/带类型ID隔离；已写文件不回滚，不自动重放 |
 | 既定施工尚未完成 | 公网出站MCP | HTTPS、DNS与实际连接一致、重定向、凭据隔离、审批和测试；当前本机HTTP/stdio不是公网实现 |
 | 既定施工尚未完成 | 受保护回滚、完整预览UX | 已有dryRun/baseHash/proposedHash，不等于回滚；恢复前必须核对当前版本 |
 | 借鉴候选，尚非全部承诺施工 | 文件变化通知、可信代理下公平性、OCR/图像预处理、桌面目标加固、性质/变异测试、发布签名 | 各自设计与权限前置条件见上游26类队列，不把候选一概报成产品缺陷 |
@@ -79,3 +79,11 @@
 全文核对`src/运行配置详解.md`与config/extensionVersion，纠正再次出现的“身份初始化早于目录验证”。发现generateNewSecret仍先改内存再吞保存错误：这会让重置看似成功，重启却恢复旧密钥。现改为先保存再发布内存，失败向上抛出；hostPersist增加真实坏JSON及注入EACCES回归，证明失败不换内存密钥、不覆盖原文件。不是磁盘断电/所有发布后故障的形式化保证。
 
 本组新增全文完成2篇；与第三组2篇合计，本次续作全文对照了4篇实现详解。其他相关文件是章节修订，全仓审查仍进行中。
+
+## 本次续作验证结论
+
+- 模型/结果/MCP取消：0465073a489fe30d968964dbab791df473174a27，CI35038038886九项成功。
+- 密钥轮换/配置文档：faeaa1f60dfd780598a1ffeb43c4a0c8a5f5feb5，CI35038187350九项成功。
+- 两批均本地77测试文件通过，235纳入源码/28目录/109排除，文档构建/受检链接/diff通过。第二批diff检查曾发现文件末尾多余空行，已清理后提交。
+- 远端覆盖Ubuntu/Windows主机矩阵、安装编译、真实Chromium；新增取消自身使用受控工具夹具，不借CI名称宣称第三方客户端或真实桌面进程取消已经验收。
+- 当前仍未施工完：公网出站MCP、保护回滚与完整预览UX；候选设计、延期事项和全仓未审正文不因这四项修复关闭。
