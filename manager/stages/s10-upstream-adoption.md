@@ -90,4 +90,4 @@ Tasks代码批已交付；当前清理过时产品正文，不再只在旧文后
 
 新增executionControl真实HTTP/后台命令/PTY/隧道夹具，旧混合模式测试改为明确切换；浏览器用实际控件切换、保存、回读与拒绝别名，Webview模拟轮询不覆盖草稿。新增操作手册与逐函数解释；命令/PTY、协议、Chat、API及审批相关章节同步，测试README陈旧“全部52项”改为真实范围。不宣称全仓逐句完成，公网出站MCP/受保护回退等原队列仍保留。
 
-验证状态：本地78测试文件全部通过，237源码/28目录/109排除，文档构建及diff检查通过；本批提交后的CI另记。浏览器本地运行因缺Chromium无法启动，Playwright下载TLS前ECONNRESET失败；不能声称真实浏览器已通过，待本分支CI确认。新增控件Windows/手机人工验收未做。
+验证状态：本地78测试文件全部通过，237源码/28目录/109排除，文档构建及diff检查通过；产品提交348ce98a80af2bfe7fb81eba3a366a74ad51dfef已推送；CI35097629168九项成功，含workbench-browser真实Chromium、Windows安装器、Ubuntu Node18/20/22/24及Windows20/22/24：https://github.com/cccjvav/web_agent/actions/runs/35097629168 。浏览器本地运行因缺Chromium无法启动，Playwright下载TLS前ECONNRESET失败；本地不能声称真实浏览器通过；随后本分支CI真实Chromium已成功，两处证据来源分开。新增控件Windows/手机人工验收未做。
