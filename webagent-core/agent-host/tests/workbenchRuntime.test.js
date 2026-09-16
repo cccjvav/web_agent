@@ -38,7 +38,7 @@ if (!process.argv.includes('--vm-child')) {
   context.localStorage.setItem = () => { throw new Error('storage unavailable'); };
   assert.doesNotThrow(() => dom.namespace.initTheme());
   assert.strictEqual(state.namespace.ui.applyTheme, dom.namespace.applyTheme);
-  // Exercise the actual picker, geometry and resource cleanup without adding a browser dependency to CI.
+  // Exercise the actual picker, geometry and resource cleanup separately from the real Chromium CI job.
   const listeners = new Map(), timers = new Map();
   let serial = 0, box, focused;
   function listen(target) {
@@ -191,7 +191,7 @@ if (!process.argv.includes('--vm-child')) {
   context.navigator = {clipboard:{writeText:async()=>{}}};
   button.classList = {add(){},remove(){}};
   state.namespace.ui.refreshStatus = async()=>{};
-  context.fetch = async url => url==='/api/status' ? {ok:true,json:async()=>boundStatus} : (++starts,{status:200,json:async()=>({success:true})});
+  context.fetch = async url => url==='/api/status' ? {ok:true,json:async()=>boundStatus} : (++starts,{ok:true,status:200,json:async()=>({success:true})});
   state.namespace.state.status = null;
   assert.equal(await bridge.namespace.startBridge(),false);assert.equal(starts,0);
   state.namespace.state.status = {...boundStatus,identity:{hostInstanceId:'stale'}};
@@ -202,6 +202,34 @@ if (!process.argv.includes('--vm-child')) {
   assert.equal(await bridge.namespace.startBridge(),false);assert.equal(alerts,3);
   context.fetch = async()=>{throw new Error('offline');};
   assert.equal(await bridge.namespace.startBridge(),false);assert.equal(alerts,4);
+  const bridgeNotices = [];
+  let refreshed = 0, removed = 0, copied = 0;
+  state.namespace.ui.toast = message => bridgeNotices.push(message);
+  state.namespace.ui.refreshStatus = async () => { refreshed++; };
+  context.navigator.clipboard.writeText = async () => { copied++; };
+  button.classList.remove = () => { removed++; };
+  for (const reason of [{tunnelError:'fixture cloudflared missing'}, {note:'fixture tunnel not ready'}]) {
+    context.fetch = async url => url === '/api/status' ? {ok:true,json:async()=>boundStatus} :
+      {ok:true,status:200,json:async()=>({success:false,...reason})};
+    assert.equal(await bridge.namespace.startBridge(), false);
+    assert.ok(bridgeNotices.at(-1).startsWith('fixture '), 'show actionable server failure, not generic failure');
+  }
+  assert.equal(refreshed, 2, 'failed restart refreshes stale public URL state');
+  assert.equal(copied, 0, 'failure must not copy a fallback URL');
+  context.fetch = async () => ({ok:false,status:500,json:async()=>({success:true,error:'fixture stop rejected'})});
+  assert.equal(await bridge.namespace.stopBridge(), false);
+  assert.equal(removed, 0, 'HTTP failure cannot extinguish the indicator as if stop succeeded');
+  assert.equal(bridgeNotices.at(-1), 'fixture stop rejected');
+  context.fetch = async () => ({ok:true,json:async()=>({success:false,error:'fixture still running'})});
+  assert.equal(await bridge.namespace.stopBridge(), false);
+  assert.equal(removed, 0);
+  context.fetch = async () => { throw new Error('fixture lost response'); };
+  assert.equal(await bridge.namespace.stopBridge(), false);
+  assert.equal(removed, 0);
+  context.fetch = async () => ({ok:true,json:async()=>({success:true})});
+  assert.equal(await bridge.namespace.stopBridge(), true);
+  assert.equal(removed, 1);
+  assert.equal(refreshed, 3);
   const taskNodes = new Map();
   context.document.querySelector = selector => {
     if (!taskNodes.has(selector)) taskNodes.set(selector,{innerHTML:'',textContent:'',classList:{remove(){},toggle(){}}});

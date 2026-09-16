@@ -88,3 +88,5 @@ stdio审批回归必须等待具体requestId的approve响应为succeeded，再�
 ### docsViewerBrowser(browser)
 
 使用真实Chromium单独页面，通过route白名单提供实际docs-site/index.html/app.js/content.js/styles.css，其他请求中止；不连接外网服务。验证有结果→无匹配替换→清空移除，坏guide百分号不阻断全文，以及真实MCP详解含斜线标题的目标。覆写scrollIntoView仅记录被调用元素ID，不把它当滚动动画/视觉验收；pageerror收集未处理错误，finally关页面。此用例使用真实DOM/脚本，不是VM，但也不覆盖静态服务器网络/全部浏览器或所有标题语法。
+
+workbenchRuntime新增实际Bridge模块VM失败路径：HTTP200/success:false的tunnelError与note可见、失败重启刷新状态且不复制URL；停止时HTTP失败、业务失败、响应丢失都不假灭灯，成功才刷新/灭灯。它使用模拟fetch/DOM，不是公网提供商或Windows进程验收。

@@ -60,7 +60,7 @@ function findNgrok() {
 
 function installHint() {
   if (process.platform === 'win32') {
-    return '未找到 ngrok。在 Windows 终端执行：winget install Ngrok.Ngrok   装完后关掉本窗口再运行 run-webagent.cmd。也可从 https://ngrok.com/download 下载 ngrok.exe 并加入 PATH，或设 NGROK_PATH。';
+    return '未找到 ngrok。在 Windows 终端执行：winget install Ngrok.Ngrok   装完后完全退出并重开 VS Code，再新建集成 CMD 运行 run-webagent.cmd（独立 CMD 请重新打开）。也可从 https://ngrok.com/download 下载 ngrok.exe 并加入 PATH，或设 NGROK_PATH。';
   }
   return '未找到 ngrok。macOS: brew install ngrok/ngrok/ngrok；其它系统见 https://ngrok.com/download';
 }

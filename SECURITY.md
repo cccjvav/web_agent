@@ -33,13 +33,13 @@ Read控制工具/资源/提示词读取；Edit控制文件、记忆和任务板�
 
 点「启动 Bridge」并装了对应隧道程序之后，会给 48271 办一张公网门牌：默认是临时的 `*.trycloudflare.com`；选 Named Tunnel 则是你在 Cloudflare 登记的主机名；选 ngrok 则是 `*.ngrok*` 或你预留的域名。
 
-拿到完整 MCP 地址（`/mcp/<密钥>`）的人可以：
+持有有效 MCP 地址（`/mcp/<密钥>`）且满足当前主人权限和模式限制的客户端可以：
 
 - 读工作区里未标敏感的文件
-- 打补丁、跑**非破坏性**命令（Windows 上是 PowerShell；`rm -rf` / `rm -r -f` / `find -delete` / `git push` / `curl | sh` 一类即使带 `confirm_dangerous` 也会被远程拒绝，只能在本机 Chat 确认。这是常见写法拦截，不是操作系统沙箱）
+- 在Edit/Execute等权限允许时打补丁、执行命令（**不保证非破坏性**）（Windows 上是 PowerShell；`rm -rf` / `rm -r -f` / `find -delete` / `git push` / `curl | sh` 一类即使带 `confirm_dangerous` 也会被远程拒绝，只能在本机 Chat 确认。这是常见写法拦截，不是操作系统沙箱）
 - 在你这台电脑上执行 Code 模式允许的其它工具
 
-**不要**把 `trycloudflare.com/mcp/...`、ngrok 地址或 Named 的 `https://你的域名/mcp/...` 发到群、Issue、截图网盘。Quick Tunnel（以及未预留的 ngrok）域名每次启动都可能变，旧地址作废，但当次有效期内等同施工证。Named Token 与 ngrok Authtoken 不要贴进聊天或日志。
+**不要**把 `trycloudflare.com/mcp/...`、ngrok 地址或 Named 的 `https://你的域名/mcp/...` 发到群、Issue、截图网盘。Quick Tunnel或ngrok地址可能变化，重启后始终核对当前地址；不要把停隧道等同密钥轮换或保证旧域名永不复用。当次有效地址等同施工证。Named Token 与 ngrok Authtoken 不要贴进聊天或日志。
 
 公网请求打 `/api` 或 `/ws` 会 404；本机 Chat 走 3000，不经过隧道。CORS 白名单**不是**门卡，URL 里的密钥仍要保管。
 

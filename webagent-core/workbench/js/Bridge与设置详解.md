@@ -23,9 +23,9 @@
 
 ## 2. bridge.js启动/停止/状态函数
 
-**startBridge()**读取tunnel radio默认cloudflare；named加domain/token，ngrok加对应字段；POST JSON。data.success假则toast并false；成功note截180、healthLine清、await refreshStatus，显示banner，尝试复制mcpUrl、切右Bridge并点亮灯，true。网络/JSON解析异常不在此捕获，按调用者传播；token只提交后端，不写localStorage。
+**startBridge()**先核对页面与实时status的workspaceRoot/hostInstanceId，再按radio构造provider和可选凭据、POST绑定字段。HTTP或业务失败按error→tunnelError→note→默认文案选择原因，409弹窗，其余toast截180字符；刷新主机状态清掉失败重启后的旧URL，不复制本机fallback URL。成功才显示banner、尝试复制MCP地址并切Bridge。网络/JSON/刷新异常在catch弹窗并false；Token只提交后端，不写localStorage。
 
-**stopBridge()**POST后清healthLine/刷新/灭灯，未统一检查HTTP业务状态。
+**stopBridge()**等待POST和JSON，HTTP及success均成功才清healthLine、刷新并灭灯、true。失败显示error/note或默认提示、false，不因收到HTTP响应就假报停止；网络/JSON/刷新异常catch弹窗、false。丢失响应时实际进程状态未知，应核对主机，不自动重试或强杀。
 
 **paintBridge()**把state.status映射为运行pill/toggle/MCP块/URL/底栏/installId，domain空输入才回填，radio规范named别名；paintClients。按provider/URL判断隧道类型，显示就绪文案；账目信息区GitHub实际身份、演示授权、未授权分开，deviceAvailable控制按钮；usage显示今日工具计数及是否配置上报；mcpSession.alive/latest/空决定Connected/Idle/Waiting/Stopped，最后paintStats。
 

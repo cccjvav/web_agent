@@ -424,6 +424,18 @@ async function main() {
     assert.equal(publicRegistration.hostInstanceId,status.identity.hostInstanceId);assert.equal(publicRegistration.workspaceRoot,status.workspaceRoot);
     assert.equal(publicRegistration.token,'public-ui-fixture');
     await page.unroute('**/api/external/servers');await page.click('#modal-close');
+    // Real page/module + intercepted failures: no external tunnel process is started.
+    await page.route('**/api/bridge/start', route => route.fulfill({ status: 200, contentType: 'application/json',
+      body: JSON.stringify({success:false,running:false,tunnelError:'fixture cloudflared unavailable'}) }));
+    assert.equal(await page.evaluate(async () => (await import('/js/bridge.js')).startBridge()), false);
+    assert.equal(await page.locator('#toast').textContent(), 'fixture cloudflared unavailable');
+    await page.unroute('**/api/bridge/start');
+    await page.route('**/api/bridge/stop', route => route.fulfill({ status: 500, contentType: 'application/json',
+      body: JSON.stringify({success:false,error:'fixture stop not confirmed'}) }));
+    assert.equal(await page.evaluate(async () => (await import('/js/bridge.js')).stopBridge()), false);
+    assert.equal(await page.locator('#toast').textContent(), 'fixture stop not confirmed');
+    await page.unroute('**/api/bridge/stop');
+    assert.deepStrictEqual(errors, []);
     console.log('Browser PASS: minimal page observation + authenticated connection echo/forged session rejection/clear, help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');
   } finally {
     if (browser) await browser.close();

@@ -175,3 +175,9 @@ f6a7bff267c1678a26fcbfa90f20f601ad1f2574的CI35116022251九项成功。文档站
 Playwright并未删除：当前Node开发依赖1.63.0，浏览器任务独立安装Chromium并运行test:browser，普通运行与Arena连接不依赖它。Conda/测试/CI指南补清晰操作和边界，不要求Python Playwright或venv。对照实际脚本修平台指南中express旧检查/Shell相对路径/两job/不编译Drawing文件等过时正文；对照实际根package.json修总览误述。check-env输出同步提醒VSCode父进程PATH。新回归核对依赖版本、入口、链接、关键提示与隐藏控制字符。整篇阅读不等于Windows/Conda实机验收。
 
 第17组代码/文档23ce0a3345d4d55685d9a21202f3ec0f6a440e98，[CI35120320368](https://github.com/cccjvav/web_agent/actions/runs/35120320368)九项已逐项确认成功（七组主机Node、Windows安装器、Chromium）；本地82测试文件、246源码/28目录/110排除。上述CI不证明用户Conda/Windows新操作已执行。
+
+## 第十八组：隧道实义对照与最终MCP验收入口
+
+完成隧道指南/模块README/生命周期与停止说明整篇读取，对照实际三份源码、API启停与经典UI。修正文档旧HTTP200成功/回退3000/每次域名必变、System32安装与父进程PATH说明；安全说明的非破坏性命令承诺与域名段同步，不冒充安全全文完成。经典UI实际修复启动丢失具体原因、停止无HTTP/业务检查；失败刷新与不复制URL、停止失败不假灭灯有真实模块VM，新Chromium使用实际页面模块与拦截失败响应验证，公网提供商/Windows进程未执行。
+
+用户安排最终本机项目根MCP验收，已进入管理索引及清单M1–M5：先实际工具/主机/根核对，不读取密钥、不覆盖源码改动、不代签原生窗口和断连后的进程状态；当前无本机MCP接入，不提前标通过。

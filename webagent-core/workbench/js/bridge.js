@@ -237,7 +237,13 @@ export async function startBridge() {
     body: JSON.stringify(body)
   });
   const data = await res.json();
-  if (!data.success) { if(res.status===409)window.alert(data.error || '工作区未就绪'); else ui.toast(data.error || '无法启动'); return false; }
+  if (!res.ok || !data.success) {
+    const message = String(data.error || data.tunnelError || data.note || '无法启动 Bridge');
+    if (res.status === 409) window.alert(message);
+    else ui.toast(message.slice(0, 180));
+    await ui.refreshStatus();
+    return false;
+  }
   if (data.note) ui.toast(data.note.slice(0, 180));
   state.stats.healthLine = '';
   await ui.refreshStatus();
@@ -250,10 +256,21 @@ export async function startBridge() {
 }
 
 export async function stopBridge() {
-  await fetch('/api/bridge/stop', { method: 'POST' });
-  state.stats.healthLine = '';
-  await ui.refreshStatus();
-  $('#sess-dot').classList.remove('on');
+  try {
+    const response = await fetch('/api/bridge/stop', { method: 'POST' });
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      ui.toast(String(data.error || data.note || 'Bridge 停止失败，请核对隧道进程').slice(0, 180));
+      return false;
+    }
+    state.stats.healthLine = '';
+    await ui.refreshStatus();
+    $('#sess-dot').classList.remove('on');
+    return true;
+  } catch (error) {
+    window.alert(error.message || 'Bridge 停止状态未知，请核对主机和隧道进程');
+    return false;
+  }
 }
 
 export function paintBridge() {

@@ -44,7 +44,7 @@ function findCloudflared() {
 
 function installHint() {
   if (process.platform === 'win32') {
-    return '未找到 cloudflared。在 Windows 终端执行：winget install --id Cloudflare.cloudflared   装完后关掉本窗口再运行 run-webagent.cmd，然后点「启动 Bridge」。也可从 https://github.com/cloudflare/cloudflared/releases 下载 cloudflared-windows-amd64.exe，改名为 cloudflared.exe 并加入 PATH。';
+    return '未找到 cloudflared。在 Windows 终端执行：winget install --id Cloudflare.cloudflared   装完后完全退出并重开 VS Code，再新建集成 CMD 运行 run-webagent.cmd（独立 CMD 请重新打开），然后点「启动 Bridge」。也可从 https://github.com/cloudflare/cloudflared/releases 下载 cloudflared-windows-amd64.exe，改名为 cloudflared.exe 并加入 PATH。';
   }
   return '未找到 cloudflared。macOS: brew install cloudflared；Linux: 见 https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/';
 }

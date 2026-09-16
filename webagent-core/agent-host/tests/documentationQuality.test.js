@@ -46,6 +46,13 @@ for (const name of ['测试说明.md', 'Conda环境说明.md', '平台启动与C
 assert.ok(!read('总览.md').includes('源码根无统一npm包入口'));
 assert.ok(read('平台启动与CI详解.md').includes('三个job定义'));
 assert.ok(read('check-env.cmd').includes('完全退出并重开 VS Code'));
+const tunnelGuide = read('隧道使用指南.md');
+for (const stale of ['失败时按钮仍会成功', 'C:\\Windows\\System32', '每次启动 Bridge 都变']) assert.ok(!tunnelGuide.includes(stale));
+for (const contract of ['success:false', '停止失败', 'workspace_info', '完全退出并重开 VS Code']) assert.ok(tunnelGuide.includes(contract));
+assert.ok(!read('SECURITY.md').includes('跑**非破坏性**命令'));
+assert.ok(read('Windows新手逐步验收.md').includes('本机连接未建立'));
+assert.ok(read('review/CHECKLIST_WINDOWS.md').includes('M1'));
+
 
 for (const guide of ['架构导读.md', '组件说明.md', '总览.md']) {
   const body = read(guide);
