@@ -173,3 +173,5 @@ f6a7bff267c1678a26fcbfa90f20f601ad1f2574的CI35116022251九项成功。文档站
 ## 第十七组：Conda/平台CI全文复核
 
 Playwright并未删除：当前Node开发依赖1.63.0，浏览器任务独立安装Chromium并运行test:browser，普通运行与Arena连接不依赖它。Conda/测试/CI指南补清晰操作和边界，不要求Python Playwright或venv。对照实际脚本修平台指南中express旧检查/Shell相对路径/两job/不编译Drawing文件等过时正文；对照实际根package.json修总览误述。check-env输出同步提醒VSCode父进程PATH。新回归核对依赖版本、入口、链接、关键提示与隐藏控制字符。整篇阅读不等于Windows/Conda实机验收。
+
+第17组代码/文档23ce0a3345d4d55685d9a21202f3ec0f6a440e98，[CI35120320368](https://github.com/cccjvav/web_agent/actions/runs/35120320368)九项已逐项确认成功（七组主机Node、Windows安装器、Chromium）；本地82测试文件、246源码/28目录/110排除。上述CI不证明用户Conda/Windows新操作已执行。

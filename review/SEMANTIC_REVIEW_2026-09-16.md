@@ -64,13 +64,14 @@
 
 ## 验证与维护入口
 
-当前已核验基线8ed049663bb943a5880f873ba4a33cd3f5a9b8fc，[CI35116453656](https://github.com/cccjvav/web_agent/actions/runs/35116453656)九项成功，82测试文件、246源码/28目录/110排除。真实Chromium包含实际文档资源加载与搜索/guide/含斜线标题目标验证；不等于用户浏览器视觉或静态服务器验收。
+当前已核验基线23ce0a3345d4d55685d9a21202f3ec0f6a440e98，[CI35120320368](https://github.com/cccjvav/web_agent/actions/runs/35120320368)九项成功，82测试文件、246源码/28目录/110排除。真实Chromium包含实际文档资源加载与搜索/guide/含斜线标题目标验证；不等于用户浏览器视觉或静态服务器验收。
 
 | 本组提交 | 验证结果 | 说明 |
 |---|---|---|
 | f6a7bff267c1678a26fcbfa90f20f601ad1f2574 | CI35116022251九项成功 | 缺测试依赖前置拒绝、测试/复盘说明及台账整理 |
 | 6ed9adff87798dcfd21af9072a995cc5c1e233c9 | CI35116366728为2/9成功，整体失败 | 浏览器/安装器通过；本地定位新增docsViewerBrowser漏在登记指南中说明，未隐瞒失败提交 |
 | 8ed049663bb943a5880f873ba4a33cd3f5a9b8fc | CI35116453656九项成功 | 补齐实际登记指南后全量通过，未删除文档守卫或浏览器断言 |
+| 23ce0a3345d4d55685d9a21202f3ec0f6a440e98 | CI35120320368九项成功 | 第17组Conda/平台CI说明、Playwright边界和实际check-env提示，未代签Conda实机 |
 
 最新基线统一见[管理索引](../manager/CONTEXT.md)和[阶段10](../manager/stages/s10-upstream-adoption.md)。
 

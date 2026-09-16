@@ -5,7 +5,7 @@
 - 探针经典工作台/code-server入口补齐已按用户要求移出施工范围，仅保留接线说明。
 - **阶段8仍进行中**：双探针Companion/浏览器0.5.2主体与自动回归已交付，真实Chrome/Arena/目录源/桌面等仍需各自实机证据；11.3协作说明已由用户确认关闭，不以切换阶段掩盖未完成。
 - **阶段7也不是“全部优化完成”**：已确认缺陷和若干增强已落实，但26类借鉴中仍有未实现/待深入候选，详见阶段7与UPSTREAM_ADOPTION_MAP。
-- 当前产品代码8ed049663bb943a5880f873ba4a33cd3f5a9b8fc（测试前置拒绝、文档搜索/编码导航修复），[CI35116453656](https://github.com/cccjvav/web_agent/actions/runs/35116453656)九项成功：七组Node矩阵、安装器、Chromium（含实际文档站资源交互）。82测试文件通过，246源码/28目录/110排除；中途6ed9adf的2/9失败及修正保留阶段10。原生窗口/新增用户实机仍待，不继承旧手机验收。
+- 当前产品基线23ce0a3345d4d55685d9a21202f3ec0f6a440e98（Conda/平台CI复核与Playwright说明），[CI35120320368](https://github.com/cccjvav/web_agent/actions/runs/35120320368)九项成功：七组Node矩阵、安装器、Chromium。82测试文件通过，246源码/28目录/110排除。Playwright保留为Node开发依赖，非日常运行或Arena入站必需；不代签用户Windows/Conda实机。
 - 持久登录仍延期；Chat API确切后端身份是用户约定的后续任务。启发式结果提供参考，不承诺绝对鉴定。
 
 - 当前续作：Conda环境/平台启动CI整篇复核；明确Playwright已有且作为开发回归保留，包/Chromium/独立test:browser与日常运行分开。修Shell路径/CI任务/依赖说明，核对根private package入口并修总览，check-env提醒完整重开VSCode。其余逐句审查与用户实机仍未完成。
