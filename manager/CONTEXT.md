@@ -5,7 +5,7 @@
 - 探针经典工作台/code-server入口补齐已按用户要求移出施工范围，仅保留接线说明。
 - **阶段8仍进行中**：双探针Companion/浏览器0.5.2主体与自动回归已交付，真实Chrome/Arena/目录源/桌面等仍需各自实机证据；11.3协作说明已由用户确认关闭，不以切换阶段掩盖未完成。
 - **阶段7也不是“全部优化完成”**：已确认缺陷和若干增强已落实，但26类借鉴中仍有未实现/待深入候选，详见阶段7与UPSTREAM_ADOPTION_MAP。
-- 当前产品基线23ce0a3345d4d55685d9a21202f3ec0f6a440e98（Conda/平台CI复核与Playwright说明），[CI35120320368](https://github.com/cccjvav/web_agent/actions/runs/35120320368)九项成功：七组Node矩阵、安装器、Chromium。82测试文件通过，246源码/28目录/110排除。Playwright保留为Node开发依赖，非日常运行或Arena入站必需；不代签用户Windows/Conda实机。
+- 当前提交36ff82f4b21ee4714dcacd9ff0cd657c47e88def（Skill创建防覆盖/真实结果），本地82测试文件通过；[CI35125290301](https://github.com/cccjvav/web_agent/actions/runs/35125290301)首轮8/9成功、整体失败：Windows22命令回显和搜索worker启动超时，未定位根因，未放宽守卫。浏览器/安装器成功。最近完整绿灯ae97f65e20f2b23f2ca3838aa9131934ad0471d4的CI35124844106九项成功；不继承到后续提交。
 - 持久登录仍延期；Chat API确切后端身份是用户约定的后续任务。启发式结果提供参考，不承诺绝对鉴定。
 
 - 当前续作：第18–19组完成隧道及技能指南全文对照，修Bridge启停失败交互、Skill新建假成功与同名覆盖；新增真实HTTP并发/VM/Chromium验证。使用/安全其余正文、旧模块详解和候选施工仍待，尚非只差实机。
