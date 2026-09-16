@@ -404,12 +404,13 @@
 
 ## webagent-core/agent-host/scripts/run-tests.js
 
-[目录说明](../webagent-core/agent-host/scripts/README.md) · SHA-256 `6a14dd0d83811ec4065c02c3579efb2a3c1ac0e5adf57a047306faf42d9c7865`
+[目录说明](../webagent-core/agent-host/scripts/README.md) · SHA-256 `283042aa5e4e19b5570a124149eaa09e5feb4460daa137596d535fe4c1b5385b`
 
-- `anonymous@51:46` — ArrowFunctionExpression，[L51–L51](../webagent-core/agent-host/scripts/run-tests.js#L51-L51)
-- `anonymous@52:27` — ArrowFunctionExpression，[L52–L52](../webagent-core/agent-host/scripts/run-tests.js#L52-L52)
-- `anonymous@53:33` — ArrowFunctionExpression，[L53–L53](../webagent-core/agent-host/scripts/run-tests.js#L53-L53)
-- `anonymous@66:46` — ArrowFunctionExpression，[L66–L66](../webagent-core/agent-host/scripts/run-tests.js#L66-L66)
+- `anonymous@10:56` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/scripts/run-tests.js#L10-L10)
+- `anonymous@52:46` — ArrowFunctionExpression，[L52–L52](../webagent-core/agent-host/scripts/run-tests.js#L52-L52)
+- `anonymous@53:27` — ArrowFunctionExpression，[L53–L53](../webagent-core/agent-host/scripts/run-tests.js#L53-L53)
+- `anonymous@54:33` — ArrowFunctionExpression，[L54–L54](../webagent-core/agent-host/scripts/run-tests.js#L54-L54)
+- `anonymous@67:46` — ArrowFunctionExpression，[L67–L67](../webagent-core/agent-host/scripts/run-tests.js#L67-L67)
 
 ## webagent-core/agent-host/src/agent/computerUse.js
 
@@ -1888,7 +1889,7 @@
 
 ## webagent-core/agent-host/tests/codeServerNotRunnable.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `365b0df336d043285d3b365a99f7914e5341523ebf90e77a1ad7d2a40b976ea1`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `2f3bb6df82f732574a8cf4e9bb8feb623ae674bfa6efa4422dbf674bbd15a0f4`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -2007,7 +2008,7 @@
 
 ## webagent-core/agent-host/tests/documentationLinks.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `1d07551a0da408801a35e65353916a15bef34bb2fbf67efc487c7dda819badca`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `93cbbb142c3e5c31dfb74a83db9beed24dd9ceffafcb1a0b35084e8255715bec`
 
 - `read` — ArrowFunctionExpression，[L6–L6](../webagent-core/agent-host/tests/documentationLinks.test.js#L6-L6)
 - `checkLinks` — FunctionDeclaration，[L7–L17](../webagent-core/agent-host/tests/documentationLinks.test.js#L7-L17)
@@ -3182,9 +3183,9 @@
 
 ## webagent-core/agent-host/tests/testRunner.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `2790bdb800e464822c40a894527fa91c34ffb06e5515718a4921dc2c8526c7e4`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `d67c9c7efa8c32ad3f99278b96e31bd8487309bfad29f988abe038cc81123a2b`
 
-- `run` — FunctionDeclaration，[L6–L10](../webagent-core/agent-host/tests/testRunner.test.js#L6-L10)
+- `run` — FunctionDeclaration，[L7–L11](../webagent-core/agent-host/tests/testRunner.test.js#L7-L11)
 
 ## webagent-core/agent-host/tests/toolLabel.test.js
 

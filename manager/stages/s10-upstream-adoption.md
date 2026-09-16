@@ -159,3 +159,7 @@ editorUndo有限内存旧正文、保存后hash绑定；本机API预览及工作
 ### 第十五组验证证据
 
 代码c0ada67170558b6a9860739051f049f3668b3bfb，[CI35114310216](https://github.com/cccjvav/web_agent/actions/runs/35114310216)九项全部成功，逐项确认Ubuntu18/20/22/24、Windows20/22/24、安装器、Chromium回归。本地82文件通过，246源码/28目录/110排除。首次全量因旧docsSite VM用测试目录解析新anchors模块而失败；改createRequire(buildPath)后原CRLF逐字节断言仍保留并通过，不是跳过失败测试。新增导航守卫范围为五份核心根文档和明确标题子集，不是全仓Markdown/GFM认证或用户实机验收。
+
+## 第十六组：测试复盘与审查台账收拢
+
+测试说明、代码复盘指南全文复核，去旧测试数/无Playwright/手机完全未验结论，保留完整函数/fixture教学导航。当前语义台账重写为已交付能力、精确全文/章节范围和待审顺序；1–15组原始失败/CI移至review/archive，修相对链接，不销毁证据。runner补缺express/Acorn时退出2的明确前置检查，隔离副本回归不移动真实依赖。现行导航链接守卫扩至这两份指南和台账。

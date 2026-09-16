@@ -18,5 +18,5 @@ run-tests.js是npm test的统一入口，不是产品服务启动器。
 
 | 源码 | 定位证据 |
 |---|---|
-| [run-tests.js](run-tests.js) | 4 个函数/类节点 |
+| [run-tests.js](run-tests.js) | 5 个函数/类节点 |
 <!-- docs-inventory:end -->

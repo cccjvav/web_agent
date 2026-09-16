@@ -22,7 +22,7 @@ assert(!headingTargets(sample).has('not-a-heading')); assert(!headingTargets(sam
 assert.equal(resolveFragment(sample, 'missing'), null); assert.equal(resolveFragment(sample, '%xx'), null);
 assert.throws(() => checkLinks('总览.md', '[bad](技术实现.md#definitely-not-a-heading)'), /missing heading/);
 assert.throws(() => checkLinks('总览.md', '[bad](not-a-real-document.md)'), /missing/);
-for (const name of ['README.md', '架构导读.md', '组件说明.md', '总览.md', '技术实现.md']) checkLinks(name, read(name));
+for (const name of ['README.md', '架构导读.md', '组件说明.md', '总览.md', '技术实现.md', '测试说明.md', '代码复盘指南.md', 'review/SEMANTIC_REVIEW_2026-09-16.md']) checkLinks(name, read(name));
 const context = { window: {} }; vm.runInNewContext(read('docs-site/content.js'), context);
 const docs = context.window.DOCS;
 const guide = docs.fileIndex.find(item => item.path === 'webagent-core/extension/入口与Webview详解.md');
