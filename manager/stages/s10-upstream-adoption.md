@@ -79,3 +79,5 @@ Tasks代码批已交付；当前清理过时产品正文，不再只在旧文后
 继续审阅审批执行链，发现operatorQueue只按ok/success/isError判断失败，status=failed、非零退出或isTimeout可能被记为succeeded；已复用isToolFailure纠正，保留cancelled/unknown及终态不重放。补实际队列回归，不新增或扩大授权。
 
 本批本地验证：77测试文件通过；235源码/28目录/109排除，文档构建、受检链接与diff检查通过。手机通过来自用户实测反馈，与本批自动测试来源分开；本批没有新增权限开关或开放远程控制面。
+
+本批远端验证：98ad224d3d4ad103c4a2e2da8114b8eeae92f741，CI35085304002成功：https://github.com/cccjvav/web_agent/actions/runs/35085304002 。手机F2仍以用户报告为证据，不归功于CI；四分类权限开关仍未实现。
