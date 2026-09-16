@@ -70,6 +70,23 @@ const server = http.createServer(async (req, res) => {
     const streamed = new Response('data: {"jsonrpc":"2.0","id":"sse","result":{}}\n\n', { headers: { 'content-type': 'text/event-stream' } });
     assert.deepEqual((await external.responseMessage(streamed, 'sse')).result, {});
     await assert.rejects(external.responseMessage(new Response('x'.repeat(256 * 1024 + 1)), 'large'));
+    // Approval grants execution, never permission to misreport its result.
+    let fixtureRuns = 0;
+    queue.register('outcome-fixture', async input => { fixtureRuns++; return input; });
+    const outcomes = [
+      [{ status: 'failed' }, 'failed'], [{ exitCode: 2 }, 'failed'],
+      [{ isTimeout: true }, 'failed'], [{ isError: true }, 'failed'],
+      [{ status: 'cancelled' }, 'cancelled'], [{ verification: { state: 'unknown' } }, 'unknown'],
+      [{ ok: true, exitCode: 0 }, 'succeeded']
+    ];
+    for (const [index, [output, expected]] of outcomes.entries()) {
+      const job = queue.submit('outcome-fixture', output, {}, 'outcome-' + index);
+      const count = fixtureRuns;
+      assert.equal((await queue.approve(job.requestId, true)).status, expected);
+      assert.deepEqual(queue.inspect(job.requestId).result, output);
+      await queue.approve(job.requestId, true);
+      assert.equal(fixtureRuns, count + 1, 'no repeat execution after a terminal outcome');
+    }
     console.log('approved operations: real MCP discovery/call, gating, ownership, dedupe, workflow verification/stop and response bounds passed');
   } finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); fs.rmSync(tmp, { recursive: true, force: true }); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

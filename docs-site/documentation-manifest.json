@@ -10599,7 +10599,7 @@
     {
       "path": "webagent-core/agent-host/src/utils/operatorQueue.js",
       "doc": "webagent-core/agent-host/src/utils/README.md",
-      "sha256": "727698df4837b4bed3b587e109a217af2f15b0da886d237c537f3634cfe4bf09",
+      "sha256": "c58679fbbbc3c267167ba0f4cf9798e3cbd23a121b00f93c5a4936c3a0b73a60",
       "lineCount": 91,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -11467,8 +11467,8 @@
     {
       "path": "webagent-core/agent-host/tests/approvedOperations.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "b6a3271e24f46c07e4838f1ff4c93aa957dcf7034295d2793062fa715fbf444d",
-      "lineCount": 76,
+      "sha256": "96b785f47f4dfc86d76ca6d96bbfade085f95fcadf3b26b0e25201a48fe2b05b",
+      "lineCount": 93,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -11488,7 +11488,7 @@
           "name": "anonymous@29:1",
           "kind": "ArrowFunctionExpression",
           "startLine": 29,
-          "endLine": 75,
+          "endLine": 92,
           "parameters": []
         },
         {
@@ -11544,21 +11544,31 @@
           ]
         },
         {
-          "id": "anonymous@29:1/anonymous@74:62",
-          "name": "anonymous@74:62",
+          "id": "anonymous@29:1/anonymous@75:38",
+          "name": "anonymous@75:38",
           "kind": "ArrowFunctionExpression",
-          "startLine": 74,
-          "endLine": 74,
+          "startLine": 75,
+          "endLine": 75,
+          "parameters": [
+            "input"
+          ]
+        },
+        {
+          "id": "anonymous@29:1/anonymous@91:62",
+          "name": "anonymous@91:62",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 91,
+          "endLine": 91,
           "parameters": [
             "resolve"
           ]
         },
         {
-          "id": "anonymous@75:11",
-          "name": "anonymous@75:11",
+          "id": "anonymous@92:11",
+          "name": "anonymous@92:11",
           "kind": "ArrowFunctionExpression",
-          "startLine": 75,
-          "endLine": 75,
+          "startLine": 92,
+          "endLine": 92,
           "parameters": [
             "error"
           ]

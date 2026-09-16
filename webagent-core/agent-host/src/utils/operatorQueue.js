@@ -1,7 +1,7 @@
 'use strict';
 const { randomUUID, createHash } = require('crypto');
 const { runWithSignal, checkCancelled } = require('./requestScope');
-const { withTask, beginCall, finishCall } = require('./toolTrace');
+const { withTask, beginCall, finishCall, isToolFailure } = require('./toolTrace');
 const handlers = new Map(), jobs = new Map();
 const MAX_RESULT = 256 * 1024, MAX_INPUT = 32 * 1024, KEEP_MS = 15 * 60 * 1000;
 function register(kind, handler) { handlers.set(kind, handler); }
@@ -71,7 +71,7 @@ async function approve(id, confirmed) {
     if (Buffer.byteLength(encoded || '') > MAX_RESULT) throw new Error('Output budget exceeded');
     job.result = output == null ? null : JSON.parse(encoded);
     job.status = output?.status === 'cancelled' ? 'cancelled' : output?.status === 'unknown' || output?.verification?.state === 'unknown' ? 'unknown'
-      : output?.ok === false || output?.success === false || output?.isError === true ? 'failed' : 'succeeded';
+      : isToolFailure(output) ? 'failed' : 'succeeded';
   } catch (_) {
     job.status = 'unknown';
     job.result = { ok: false, status: 'unknown', error: 'Execution interrupted, failed or exceeded a budget. Effects may already exist; inspect before submitting anything again.' };

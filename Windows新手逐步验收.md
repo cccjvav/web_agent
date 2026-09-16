@@ -206,7 +206,7 @@ notepad "%USERPROFILE%\WebAgent-acceptance-beginner\acceptance.txt"
 
 ## 8. 可选：准备公网 MCP 隧道（F1）
 
-只做本机验收可跳到第 12 步。要连手机或远程 Agent 时，先确认它的**当前账号/会话确实有 MCP 配置入口**。找不到时先停，不必先安装隧道；普通聊天框不能配置工具。
+只做本机验收可跳到第 12 步。要连手机或远程 Agent 时，先确认它的**当前账号/会话具备 MCP 工具连接能力**。用户已实测手机浏览器Arena可沿用电脑上的WebAgent链接用法，不要求另找特定配置菜单。其他客户端按实际支持的连接流程操作；普通无工具聊天框不能因为收到URL而执行工具。
 
 本手册选 Cloudflare Quick Tunnel，其他模式见[隧道指南](隧道使用指南.md)。**CMD-B：**
 
