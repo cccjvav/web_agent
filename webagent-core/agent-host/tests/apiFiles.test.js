@@ -155,6 +155,14 @@ async function main() {
     });
     assert.strictEqual(skill.status, 200);
     assert.ok(fs.existsSync(path.join(tmp, '.webagent/skills/demo-skill/SKILL.md')));
+    const duplicateSkill = await request(server, 'POST', '/api/skills', {name:'demo skill',content:'MUST NOT OVERWRITE'});
+    assert.strictEqual(duplicateSkill.status, 400, 'normalized duplicate name is not overwrite consent');
+    assert.match(duplicateSkill.json.error, /already exists/);
+    assert.strictEqual(fs.readFileSync(path.join(tmp, '.webagent/skills/demo-skill/SKILL.md'), 'utf8'), '# Skill: demo\n');
+    const racingSkills = await Promise.all(['FIRST', 'SECOND'].map(content => request(server, 'POST', '/api/skills', {name:'concurrent-skill',content})));
+    assert.deepStrictEqual(racingSkills.map(result => result.status).sort(), [200,400]);
+    const winner = racingSkills[0].status === 200 ? 'FIRST' : 'SECOND';
+    assert.strictEqual(fs.readFileSync(path.join(tmp,'.webagent/skills/concurrent-skill/SKILL.md'),'utf8'), winner);
     const listed = await request(server, 'GET', '/api/skills');
     assert.strictEqual(listed.status, 200);
     const demoSkill = (listed.json.skills || []).find((s) => s.name === 'demo-skill');

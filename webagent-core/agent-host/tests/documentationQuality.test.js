@@ -52,6 +52,11 @@ for (const contract of ['success:false', '停止失败', 'workspace_info', '完�
 assert.ok(!read('SECURITY.md').includes('跑**非破坏性**命令'));
 assert.ok(read('Windows新手逐步验收.md').includes('本机连接未建立'));
 assert.ok(read('review/CHECKLIST_WINDOWS.md').includes('M1'));
+const skillGuide = read('技能使用指南.md');
+assert.ok(!skillGuide.includes('演示工作区里现成的四篇'));
+assert.ok(!skillGuide.includes('ShunCode 官方说法'));
+for (const contract of ['createOnly', 'frontmatter.name', 'evidence-check', '状态未知']) assert.ok(skillGuide.includes(contract), "Skill guide contract: " + contract);
+
 
 
 for (const guide of ['架构导读.md', '组件说明.md', '总览.md']) {

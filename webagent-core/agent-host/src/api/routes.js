@@ -548,7 +548,7 @@ router.post('/skills', async (req, res) => {
   const content = String((req.body && req.body.content) || `# Skill: ${name}\n\n把路径告诉模型就会用。\n`);
   const filePath = `.webagent/skills/${name}/SKILL.md`;
   try {
-    await callTool('write_file', { filePath, content, confirm_overwrite: true }, 'code');
+    await callTool('write_file', { filePath, content, createOnly: true }, 'code');
     res.json({ success: true, path: `.webagent/skills/${name}` });
   } catch (err) {
     res.status(400).json({ error: err.message });

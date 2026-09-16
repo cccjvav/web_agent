@@ -356,15 +356,26 @@ export function bind() {
     };
   }
   $('#btn-add-skill').onclick = async () => {
-    const name = $('#sk-name').value;
-    const content = $('#sk-body').value || skillMarkdown(name, $('#sk-when').value, $('#sk-steps').value);
-    await fetch('/api/skills', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, content })
-    });
-    await ui.loadSkills();
-    ui.toast('已创建 Skill 文件夹');
+    try {
+      const name = $('#sk-name').value;
+      const content = $('#sk-body').value || skillMarkdown(name, $('#sk-when').value, $('#sk-steps').value);
+      const response = await fetch('/api/skills', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, content })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        ui.toast(String(data.error || 'Skill 创建失败').slice(0, 180));
+        return false;
+      }
+      await ui.loadSkills();
+      ui.toast('已创建 Skill 文件夹');
+      return true;
+    } catch (error) {
+      ui.toast(('Skill 创建状态未知：' + (error.message || '请核对主机与目录')).slice(0, 180));
+      return false;
+    }
   };
   onClick('#btn-detect-env', async () => {
     const res = await fetch('/api/profile/detect');

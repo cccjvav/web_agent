@@ -243,6 +243,14 @@ async function main() {
     await page.click('#modal-close'); await page.click('#rb-chat-tab');
     await page.fill('#chat-input', 'KEEP-DRAFT');
     await page.click('#menu-help'); await page.click('.modal-nav [data-page="skills"]');
+    await page.route('**/api/skills', route => route.request().method() === 'POST' ? route.fulfill({
+      status:400,contentType:'application/json',body:JSON.stringify({error:'fixture skill create rejected'})
+    }) : route.continue());
+    await page.fill('#sk-name', 'rejected-browser-skill');
+    await page.click('#btn-add-skill');
+    await page.waitForFunction(() => document.querySelector('#toast').textContent === 'fixture skill create rejected');
+    assert.ok(!fs.existsSync(path.join(workspace,'.webagent/skills/rejected-browser-skill/SKILL.md')));
+    await page.unroute('**/api/skills');
     await page.fill('#skill-search', 'browser-review');
     assert.strictEqual(await page.locator('#skills-list img').count(), 0);
     await page.click('[data-skill-id="workspace:browser-review"]');

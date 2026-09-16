@@ -142,10 +142,11 @@ function writeFile(opts = {}) {
   return withWriteLock(opts.filePath, () => writeFileBody(opts));
 }
 
-function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = false, confirm_overwrite = false }) {
+function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = false, confirm_overwrite = false, createOnly = false }) {
   const fullPath = resolveSafePath(filePath);
   if (typeof content !== 'string' || Buffer.byteLength(content, 'utf8') > MAX_TEXT_BYTES) throw new ProtocolError('E_BAD_ARGS', 'write_file content exceeds text budget');
   const exists = fs.existsSync(fullPath);
+  if (createOnly && exists) throw new ProtocolError('E_BAD_ARGS', 'File already exists; choose a new name instead of overwriting');
   if (expectedHash && !exists) throw new ProtocolError('E_STALE_FILE', '文件已被删除，拒绝用旧版本重新创建');
   let overwriteOk = Boolean(confirmOverwrite || confirm_overwrite);
   let currentHash = null;
