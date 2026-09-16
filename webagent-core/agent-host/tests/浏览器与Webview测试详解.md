@@ -80,3 +80,5 @@ probeTransport的account通过oncePerObservation把中性完成观测写入BUS�
 editorRuntime对真实tabs模块增加草稿previewActive/savePreview：仅预览无PUT、确认后一次消费、修改草稿后拒绝、await期间编辑淘汰旧预览。workbench.browser使用文件菜单打开diff，先检查磁盘未变，再点击确认保存并核对实际正文。验证仍区分VM、CI Chromium与用户真实VS Code。
 
 editorRuntime验证保存句柄后的previewUndo/savePreview：回退期间在Monaco改稿，响应只更新磁盘基线，保留新草稿dirty；脏稿不发预览请求。真实浏览器回归通过文件菜单预览回退、确认按钮，再查磁盘去掉上一保存的新增行。
+
+公网接入UI回归拦截/api/external/servers，不访问真实第三方：默认复选框关闭，明确确认后请求包含publicHttps/confirmedPublic及实际主机/工作区绑定，令牌输入清空。DNS/TLS/审批实现在publicHttps隔离TLS测试验证，两种证据不能冒充公网供应商已验收。

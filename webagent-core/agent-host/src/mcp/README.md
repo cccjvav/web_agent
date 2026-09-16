@@ -83,6 +83,7 @@ POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连
 | [externalClient.js](externalClient.js) | 23 个函数/类节点 |
 | [instructions.js](instructions.js) | 3 个函数/类节点 |
 | [oauth.js](oauth.js) | 47 个函数/类节点 |
+| [publicHttps.js](publicHttps.js) | 9 个函数/类节点 |
 | [requestLifecycle.js](requestLifecycle.js) | 7 个函数/类节点 |
 | [resources.js](resources.js) | 5 个函数/类节点 |
 | [server.js](server.js) | 34 个函数/类节点 |
@@ -95,4 +96,6 @@ POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连
 <!-- docs-inventory:end -->
 
 
-受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。仅回环HTTP(S)，每次本机批准，无stdio安装启动或自动重试。
+受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。默认回环HTTP(S)，另支持本机显式确认的公网HTTPS及stdio启动；工具仍逐次本机批准，不自动安装或重试。
+
+[公网出站详解](公网出站详解.md)：逐函数解释publicHttps、明确外发确认、DNS/socket/TLS边界与隔离TLS测试。

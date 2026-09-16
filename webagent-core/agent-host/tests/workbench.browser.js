@@ -351,6 +351,22 @@ async function main() {
     assert.equal(await page.isChecked('#access-edit'),false);assert.equal(await page.isChecked('#access-execute'),false);
     for(const key of ['read','edit','capture','execute']) await page.check('#access-'+key);
     await page.click('#execution-save');await page.waitForFunction(()=>document.querySelector('#execution-result').textContent.includes('已由主机应用'));
+    await page.click('#btn-operations');
+    assert.equal(await page.isChecked('#ops-public-https'),false);
+    let publicRegistration;
+    await page.route('**/api/external/servers', async route=>{
+      publicRegistration=route.request().postDataJSON();
+      await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({serverId:'ui-fixture',publicHttps:true})});
+    });
+    await page.check('#ops-public-https');await page.fill('#ops-url','https://mcp.example.test/mcp');await page.fill('#ops-token','public-ui-fixture');
+    const publicRefresh=page.waitForResponse(response=>response.url().endsWith('/api/external/servers') && response.request().method()==='POST');
+    page.once('dialog',dialog=>dialog.accept());await page.click('#btn-ops-add');
+    await page.waitForFunction(()=>document.querySelector('#ops-token').value==='');
+    await publicRefresh;
+    assert.equal(publicRegistration.publicHttps,true);assert.equal(publicRegistration.confirmedPublic,true);
+    assert.equal(publicRegistration.hostInstanceId,status.identity.hostInstanceId);assert.equal(publicRegistration.workspaceRoot,status.workspaceRoot);
+    assert.equal(publicRegistration.token,'public-ui-fixture');
+    await page.unroute('**/api/external/servers');await page.click('#modal-close');
     console.log('Browser PASS: minimal page observation + authenticated connection echo/forged session rejection/clear, help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');
   } finally {
     if (browser) await browser.close();

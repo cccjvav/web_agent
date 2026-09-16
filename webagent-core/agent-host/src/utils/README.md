@@ -65,7 +65,7 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 <!-- docs-inventory:end -->
 
 
-受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。仅回环HTTP(S)，每次本机批准，无stdio安装启动或自动重试。
+受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。默认回环HTTP(S)，另支持本机显式确认的公网HTTPS及stdio启动；工具仍逐次本机批准，不自动安装或重试。
 
 ## 工作模式与权限
 

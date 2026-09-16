@@ -1,5 +1,5 @@
 'use strict';
-// Operator-configured, memory-only HTTP loopback or explicitly confirmed stdio.
+// Operator-configured, memory-only loopback HTTP, explicitly confirmed public HTTPS or stdio.
 // No package installation, arbitrary remote launch configuration, or auto-retry.
 const { randomUUID } = require('crypto');
 const { config } = require('../config');
@@ -10,11 +10,13 @@ const stdioTransport = require('./stdioTransport');
 const clients = new Map();
 const MAX_BYTES = 256 * 1024;
 
-function endpoint(value) {
+function endpoint(value, publicHttps = false) {
   if (typeof value !== 'string' || value.length > 2048) throw new Error('Invalid endpoint length');
   const url = new URL(value);
-  if (!['http:', 'https:'].includes(url.protocol) || !['127.0.0.1', '[::1]', 'localhost'].includes(url.hostname)
-    || url.username || url.password || url.search || url.hash) throw new Error('Use a loopback HTTP(S) MCP endpoint without credentials, query or fragment');
+  const local = ['127.0.0.1', '[::1]', 'localhost'].includes(url.hostname);
+  if ((publicHttps ? url.protocol !== 'https:' || local : !['http:', 'https:'].includes(url.protocol) || !local)
+    || url.username || url.password || url.search || url.hash) throw new Error('Use loopback HTTP(S), or explicitly authorize public HTTPS; URL credentials/query/fragment are forbidden');
+  if (publicHttps && config.publicTunnelUrl && url.origin === new URL(config.publicTunnelUrl).origin) throw new Error('Do not register this host public tunnel');
   const port = Number(url.port || (url.protocol === 'https:' ? 443 : 80));
   if ([config.port, config.workbenchPort].includes(port)) throw new Error('Do not register this host itself as an external MCP server');
   if (url.hostname === 'localhost') url.hostname = '127.0.0.1'; // Never depend on DNS for the loopback boundary.
@@ -73,8 +75,10 @@ async function rpc(client, method, params, notification = false) {
     if (client.token) headers.Authorization = `Bearer ${client.token}`;
     if (client.session) headers['Mcp-Session-Id'] = client.session;
     if (client.protocol) headers['MCP-Protocol-Version'] = client.protocol;
-    const response = await fetch(client.url, { method: 'POST', redirect: 'error', signal: controller.signal, headers,
-      body: JSON.stringify({ jsonrpc: '2.0', ...(notification ? {} : { id }), method, params }) });
+    const body = JSON.stringify({ jsonrpc: '2.0', ...(notification ? {} : { id }), method, params });
+    const response = client.publicHttps
+      ? await require('./publicHttps').post(client.url, {signal:controller.signal,headers,body})
+      : await fetch(client.url, {method:'POST',redirect:'error',signal:controller.signal,headers,body});
     if (!response.ok) { await response.body?.cancel(); throw new Error(`External MCP HTTP ${response.status}`); }
     const session = response.headers.get('mcp-session-id');
     if (session) {
@@ -91,7 +95,7 @@ async function rpc(client, method, params, notification = false) {
   }
 }
 function list(local = false) {
-  return [...clients.values()].map(client => ({ serverId: client.id, name: client.name, status: client.status, transport: client.transport ? 'stdio' : 'http',
+  return [...clients.values()].map(client => ({ serverId: client.id, name: client.name, status: client.status, transport: client.transport ? 'stdio' : 'http', publicHttps: Boolean(client.publicHttps),
     tools: JSON.parse(JSON.stringify(client.tools)), ...(local ? client.transport ? { launch: JSON.parse(JSON.stringify(client.launch)), process: client.transport.status() } : { endpoint: client.url } : {}) }));
 }
 async function discoverTools(client) {
@@ -117,10 +121,16 @@ async function discoverTools(client) {
   }
   throw new Error('Tool inventory exceeds ten pages');
 }
-async function add({ name, url, token = '' }) {
+async function add(input) {
+  const { name, url, token = '', publicHttps = false, confirmedPublic = false } = input;
+  if (typeof publicHttps !== 'boolean') throw new Error('publicHttps must be boolean');
+  if (publicHttps) {
+    if (confirmedPublic !== true) throw new Error('Explicit public HTTPS disclosure confirmation required');
+    require('../utils/workspaceBinding').assertWorkspaceBinding(input, config);
+  }
   if (clients.size >= 8) throw new Error('At most eight external servers');
   if (typeof token !== 'string' || token.length > 4096 || /[\r\n]/.test(token)) throw new Error('Invalid bearer token');
-  const client = { id: randomUUID(), name: String(name || 'Local MCP').slice(0, 120), url: endpoint(url), token,
+  const client = { id: randomUUID(), name: String(name || 'Local MCP').slice(0, 120), url: endpoint(url, publicHttps), token, publicHttps,
     controllers: new Set(), tools: [], status: 'connecting', session: '', protocol: '' };
   return establish(client);
 }

@@ -1,4 +1,4 @@
-import { $, ui } from './state.js';
+import { $, ui, state } from './state.js';
 
 async function api(path, method = 'GET', body) {
   const response = await fetch(`/api${path}`, { method, headers: { 'Content-Type': 'application/json' }, ...(body ? { body: JSON.stringify(body) } : {}) });
@@ -82,8 +82,10 @@ function initOperations() {
   $('#btn-operations').onclick = () => { ui.openModal('operations'); action(refreshOperations); };
   $('#btn-ops-refresh').onclick = () => action(refreshOperations);
   $('#btn-ops-add').onclick = () => action(async () => {
+    const publicHttps = $('#ops-public-https').checked;
+    if (publicHttps && !confirm('登记将连接该公网HTTPS主机并发送初始化信息及可选Bearer凭据。后续批准的工具参数也会离开本机。确认信任该服务？')) return;
     const token = $('#ops-token').value; $('#ops-token').value = '';
-    await api('/external/servers', 'POST', { name: $('#ops-name').value, url: $('#ops-url').value, token });
+    await api('/external/servers', 'POST', { name: $('#ops-name').value, url: $('#ops-url').value, token, publicHttps, confirmedPublic:publicHttps, workspaceRoot:state.status?.workspaceRoot, hostInstanceId:state.status?.identity?.hostInstanceId });
   });
   $('#btn-ops-preview').onclick = () => action(async () => {
     const result = await api('/workflows/preview', 'POST', { definition: JSON.parse($('#ops-workflow').value) });

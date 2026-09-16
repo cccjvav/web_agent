@@ -22,7 +22,7 @@
 | 01 | 能力、依赖与缺口解释 | capabilities.py；capability_gaps.py（前批专项） | 已有hostIdentity/diagnostics；缺依赖、未验证与已执行分开 | 已部分吸收；下一步把真实故障结构化为复现/验证记录，不自动安装 |
 | 02 | 调用、事件与任务证据 | observability/tracing_core.py；events/runtime.py（前批专项） | 已有taskId/callId、读回验证、进程内Bridge快照 | 已部分吸收；长时历史需先约定保留、脱敏与删除，不把WS当重放库 |
 | 03 | Skill注册、说明与资源 | skills/registry.py、runner.py、cache.py（前批专项） | 已有分层来源ID、hash分页、资源源码查看、Ask草稿 | 已落地；安装、hook、执行与说明继续分离 |
-| 04 | 真正接入第三方MCP | mcp_client/client.py:list_tools/request/stop（前后两批抽查） | 已有回环HTTP与单次审批；上游list_tools此处也只读单页，不应称它实现了分页 | 本批自行补有界分页、总预算/总截止时间、深拷贝目录、严格分片SSE；stdio本批已实现显式启动/回收；公网接入仍待做 |
+| 04 | 真正接入第三方MCP | mcp_client/client.py:list_tools/request/stop（前后两批抽查） | 已有回环HTTP与单次审批；上游list_tools此处也只读单页，不应称它实现了分页 | 本批自行补有界分页、总预算/总截止时间、深拷贝目录、严格分片SSE；stdio已实现显式启动/回收；现新增明确确认的公网HTTPS/Bearer及DNS固定连接，真实服务待验 |
 | 05 | 审批、工作流与副作用 | mcp/custom_tools.py；scenarios/runtime.py（前批专项） | 已有固定白名单工作流、单次本机批准、失败/未知停止 | 已部分吸收；不照搬可重放副作用的retry。条件分支/补偿不是本批功能 |
 | 06 | 记忆相关性及来源 | memory/recall_score.py（完整函数）、recall_sources.py（前100行）、profiles.py（完整） | 原recall只按日期、整文件读取；上游tokenizer为拉丁/西里尔字母范围，不能直接满足中文 | 本批字面关键词检索、NFKC规范化、文件行号、输入扫描预算；不是embedding语义库，不跨工作区自动召回 |
 | 07 | 启发式规划的诚实契约 | planner/logic.py:infer_memory_profile/build_plan（前100行） | 我们有模型规划/Plan与确定性builtin，不能再把规则模板叫通用推理 | 候选：建议步骤标依据/风险/需哪些工具，实际权限再校验；中文与模糊任务需回归 |
@@ -30,7 +30,7 @@
 | 09 | 文件变化与失效处理 | filewatch/runtime.py:_snapshot/_resolve_target（前120行） | 目前Skill即时重扫、编辑器hash保护；不存在跨工作区watch服务 | 候选：用户启用的目录失效提示、去抖/背压、删除检测；扫描上限要算访问条目而非仅匹配文件 |
 | 10 | 后台异步生命周期 | async_lifecycle.py（全文） | 已有请求Abort、命令进程树、隧道生命周期；Python强引用机制不能机械移植Node | 本批MCP登记父取消/总截止时间/清理；后续核对全宿主关闭时所有后台资源归属，不能把取消说成副作用回滚 |
 | 11 | 限流恢复与公平性 | rate_limit.py（全文） | 已有MCP入口边界与资源限制，但不能由限流名称推断有会话公平性 | 2026-09-16已部分落地：拒绝不增计数、JSON/HTML Retry-After、1000-key恢复与生成/真实HTTP回归；可信代理下的用户/会话公平性仍待实现，不按不可信头任意取身份 |
-| 12 | 公网URL、SSRF及重定向 | security_ssrf.py（前130行） | 外部MCP暂限IP回环，localhost固定为127.0.0.1，重定向拒绝 | 公网接入前置专项：非标准IP/IPv6映射、DNS解析与实际连接一致、重定向逐跳、凭据不跨源。未完成其所有调用链审计 |
+| 12 | 公网URL、SSRF及重定向 | security_ssrf.py（前130行） | 默认IP回环，另显式开启公网HTTPS；DNS全答案检查+固定socket lookup，全部重定向拒绝 | 公网接入前置专项：非标准IP/IPv6映射、DNS解析与实际连接一致、重定向逐跳、凭据不跨源。未完成其所有调用链审计 |
 | 13 | OCR/文本结果质量门槛 | document/structure.py:assess_text_quality（前125行） | 现有视觉模型与截图，没有通用OCR/结构化任务接口 | 候选：低置信度不编造任务；该词正则未包含中文，不能原样复制质量门槛 |
 | 14 | 图片预处理与可解释降级 | image/preprocess.py（前115行） | 现有截图大小/vision声明，没有Pillow/OpenCV流水线 | 候选：限定像素/字节、裁剪/缩放记录、可选依赖缺失说明；不为对齐而自动安装OpenCV |
 | 15 | 桌面目标窗口约束 | desktop/text_window_target.py（前115行） | 现有act.ps1窗口标题/句柄约束，不从零重做 | 候选：同名窗/进程/焦点变化拒绝、显示器坐标/DPI与截图变换核对；要Windows真实窗口证据，不以Linux模拟代签 |

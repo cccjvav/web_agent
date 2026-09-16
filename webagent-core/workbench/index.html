@@ -296,10 +296,11 @@
         <button type="button" class="modal-close" id="modal-close" title="关闭">✕</button>
         <div class="page hidden" id="page-operations">
           <h2>工具接入与审批</h2>
-          <p class="lead">仅本机操作者登记及批准。支持已启动的回环 HTTP(S)，或经本机预览/确认后启动的 stdio MCP；不自动安装程序、不支持互联网 MCP 地址。发现工具不等于授权，每次调用分别审批。</p>
+          <p class="lead">仅本机操作者登记及批准。支持已启动的回环 HTTP(S)，或经本机预览/确认后启动的 stdio MCP；或显式确认的公网HTTPS MCP；不自动安装程序。公网需DNS/实际连接地址检查、不跟随跳转，登记会发送初始化及可选凭据，后续参数须逐次审批。发现工具不等于授权，每次调用分别审批。</p>
           <p>配置、令牌、审批参数/结果只在本次进程内存保留；请求最多保留15分钟且可能更早淘汰。重启需重新登记/配对；丢失记录绝不是允许重放。外部结果仅为外部自报，不是独立验收。</p>
           <label for="ops-name">接入名称</label><input id="ops-name" class="ms-input" value="Local MCP" />
-          <label for="ops-url">已启动的回环 MCP 地址</label><input id="ops-url" class="ms-input" placeholder="http://127.0.0.1:9000/mcp" />
+          <label><input type="checkbox" id="ops-public-https">明确启用公网HTTPS（默认关闭）</label>
+          <label for="ops-url">已启动的 MCP 地址</label><input id="ops-url" class="ms-input" placeholder="http://127.0.0.1:9000/mcp" />
           <label for="ops-token">可选 Bearer Token（不保存）</label><input id="ops-token" class="ms-input" type="password" autocomplete="off" />
           <button id="btn-ops-add" type="button" class="vs-btn">登记并初始化 / 发现工具</button>
           <h3>stdio MCP（启动本机程序）</h3>
@@ -357,7 +358,7 @@
           <section class="block" id="adoption-guide">
             <h3>借鉴优化：对你有什么用</h3>
             <p>主机诊断帮助确认连对电脑；调用证据帮助核对是否真的执行；Skills让作业说明可查可读；外部MCP接入先审阅启动再批准调用；工作流before防止动手前文件已变化；记忆检索提供关键词与来源；Windows进程回收和跨平台回归减少遗留进程与假成功。</p>
-            <p>不是整仓复制，也不是全部候选已完成。公网MCP、通用网站适配、独立OS沙箱、发布签名仍待做。逐项“改了什么/怎么用/哪些没做”见仓库根 <strong>借鉴优化说明（新手版）.md</strong>。</p>
+            <p>不是整仓复制，也不是全部候选已完成。公网HTTPS出站已有显式确认及逐次审批，真实服务兼容性待验；通用网站适配、独立OS沙箱和发布签名未全部实施。逐项“改了什么/怎么用/哪些没做”见仓库根 <strong>借鉴优化说明（新手版）.md</strong>。</p>
           </section>
           <ol class="guide-steps">
             <li>左侧资源管理器打开当前工作区文件；编辑后按 Ctrl+S 保存。工作区由启动命令指定。</li>
@@ -603,7 +604,7 @@
             <div>
               <h2>Web Agent Bridge</h2>
               <p class="lead">把当前工作区变成 MCP，给<strong>任意</strong>能调工具的网页 Agent 用。不绑死 ChatGPT，也不需要 Plus。ChatGPT 聊天栏贴链接不行；要对接着设置里的自制 MCP 插件。</p>
-              <p class="hint" id="bridge-sub">本机 Chat 随时可用（可看图的模型收得到截图）。网页 Agent 要先启动 Bridge 拿到公网地址；Bridge 现在也会把 run_command 截图以图片回传（第三阶段用户签字），危险命令仍被拒。</p>
+              <p class="hint" id="bridge-sub">本机Chat与Bridge工作模式互斥（同类型可并行）。网页 Agent 要先启动 Bridge 拿到公网地址；Bridge 现在也会把 run_command 截图以图片回传（第三阶段用户签字），危险命令仍被拒。</p>
             </div>
             <span id="bridge-pill" class="status-pill stop">已停止</span>
           </div>

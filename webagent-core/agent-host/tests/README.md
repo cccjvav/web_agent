@@ -133,6 +133,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [providers.test.js](providers.test.js) | 11 个函数/类节点 |
 | [ptyJobs.test.js](ptyJobs.test.js) | 12 个函数/类节点 |
 | [ptyLifecycle.test.js](ptyLifecycle.test.js) | 59 个函数/类节点 |
+| [publicHttps.test.js](publicHttps.test.js) | 18 个函数/类节点 |
 | [requestLifecycle.test.js](requestLifecycle.test.js) | 12 个函数/类节点 |
 | [resourceBudget.test.js](resourceBudget.test.js) | 14 个函数/类节点 |
 | [runChat.test.js](runChat.test.js) | 29 个函数/类节点 |
@@ -152,7 +153,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 13 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 72 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 76 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 86 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 5 个函数/类节点 |
@@ -164,7 +165,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 `npm run test:browser --prefix webagent-core/agent-host`运行workbench.browser.js；首次需在agent-host运行`npx playwright install chromium`（Linux还需系统库）。CI有独立workbench-browser任务，安装浏览器依赖后运行。普通npm test仍跑跨平台基础套件，未运行浏览器命令不能声称浏览器验收。逐函数说明见utils/主机诊断与调用追踪详解。
 
 
-受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。仅回环HTTP(S)，每次本机批准，无stdio安装启动或自动重试。
+受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。默认回环HTTP(S)，另支持本机显式确认的公网HTTPS及stdio启动；工具仍逐次本机批准，不自动安装或重试。
 
 ## 请求取消与失败外包回归
 requestLifecycle.test.js：按会话/凭据和带类型RPC ID隔离取消；重复与容量拒绝、超时/断连/抛错清理；共享失败判定正反例。mcpCancellation.test.js：真实Express/认证HTTP、两个同名初始化客户端、取消ID=0、未认证拒绝、ID复用与直接API结果式失败。工具使用受控可取消夹具，不冒称真实桌面进程或第三方兼容性。runChat.test.js增加无效/缺配置合并模型不产生consensus/工具调用、不改变已有分支，随后明确builtin可合并。
