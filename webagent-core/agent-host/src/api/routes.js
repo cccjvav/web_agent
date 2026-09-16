@@ -1,4 +1,5 @@
 const editorUndo = require('../utils/editorUndo');
+const fileCheckpoints = require('../utils/fileCheckpoints');
 const control = require('../utils/executionControl');
 const { isToolFailure } = require('../utils/toolTrace');
 const {assertWorkspaceBinding} = require('../utils/workspaceBinding');
@@ -97,6 +98,11 @@ router.get('/probe/links', operationApi(() => probeBridge.list()));
 router.get('/probe/links/:id/reports/:tabId', operationApi(req => probeBridge.report(req.params.id, req.params.tabId)));
 router.delete('/probe/links/:id', operationApi(req => { probeBridge.drop(req.params.id); return {ok: true}; }));
 router.post('/probe/actions', operationApi(req => probeBridge.request(req.body)));
+router.get('/checkpoints', operationApi(() => fileCheckpoints.list()));
+router.post('/checkpoints', operationApi(req => fileCheckpoints.create(req.body || {})));
+router.post('/checkpoints/:id/preview', operationApi(req => fileCheckpoints.preview(req.params.id, req.body || {})));
+router.post('/checkpoints/:id/restore', operationApi(req => fileCheckpoints.restore(req.params.id, req.body || {})));
+router.post('/checkpoints/:id/remove', operationApi(req => fileCheckpoints.remove(req.params.id, req.body || {})));
 router.get('/operations', operationApi(() => ({ requests: operatorQueue.list(), servers: externalClient.list(true) })));
 router.get('/operations/:id', operationApi(req => operatorQueue.inspect(req.params.id)));
 router.post('/operations/:id/approve', operationApi(req => operatorQueue.approve(req.params.id, req.body?.confirm === true)));

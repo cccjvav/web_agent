@@ -29,6 +29,7 @@ try {
   assert.ok(!manifest.files.some(f => f.path === '双向连接核对使用指南.md' || f.path.startsWith('review/archive/')));
   assert.deepStrictEqual(manifest.files.filter(f => f.path.startsWith('arena-model-probe/')).map(f => f.path), ['arena-model-probe/webagent-connection.user.js']);
   assert.ok(manifest.files.some(f => f.path === 'installer/launch.js'));
+  assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/src/utils/fileCheckpoints.js'));
   for (const file of ['stdioBridge.cs', 'stdioBridge.ps1', 'stdioSupervisor.js', 'stdioTransport.js', 'stdioLaunch.js', 'publicHttps.js']) assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/src/mcp/' + file));
   assert.ok(manifest.files.some(f => f.path === 'computer-use/win/input.cs'));
   for (const f of manifest.files) assert.ok(!fs.readFileSync(path.join(output, f.path), 'utf8').includes('PRIVATE_FIXTURE_DO_NOT_PACKAGE'));

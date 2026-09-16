@@ -9,6 +9,8 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ['webagent-core/agent-host/src/utils/fileCheckpoints.js', 'webagent-core/agent-host/src/utils/编辑回退详解.md'],
+  ['webagent-core/agent-host/tests/fileCheckpoints.test.js', 'webagent-core/agent-host/src/utils/编辑回退详解.md'],
   ['webagent-core/extension/editorReview.js', 'webagent-core/extension/入口与Webview详解.md'],
   ['webagent-core/agent-host/tests/editorReview.test.js', 'webagent-core/extension/入口与Webview详解.md'],
   ['webagent-core/agent-host/src/mcp/publicHttps.js', 'webagent-core/agent-host/src/mcp/公网出站详解.md'],

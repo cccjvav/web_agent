@@ -51,6 +51,22 @@ async function main() {
   });
 
   try {
+    fs.writeFileSync(path.join(tmp, 'checkpoint-http.txt'), 'HTTP original');
+    const checkpointBinding = { workspaceRoot: tmp, hostInstanceId: config.hostInstanceId };
+    assert.equal((await request(server, 'POST', '/api/checkpoints', { paths: ['checkpoint-http.txt'], confirmed: true })).status, 400);
+    const checkpointCreated = await request(server, 'POST', '/api/checkpoints', { ...checkpointBinding, paths: ['checkpoint-http.txt'], confirmed: true });
+    assert.equal(checkpointCreated.status, 200);
+    const checkpointId = checkpointCreated.json.id;
+    fs.writeFileSync(path.join(tmp, 'checkpoint-http.txt'), 'HTTP modified');
+    const checkpointPreview = await request(server, 'POST', '/api/checkpoints/' + checkpointId + '/preview', checkpointBinding);
+    assert.equal(checkpointPreview.status, 200);
+    assert.equal((await request(server, 'POST', '/api/checkpoints/' + checkpointId + '/restore', { ...checkpointBinding, previewId: checkpointPreview.json.previewId, confirmed: 'true' })).status, 400);
+    const checkpointRestored = await request(server, 'POST', '/api/checkpoints/' + checkpointId + '/restore', { ...checkpointBinding, previewId: checkpointPreview.json.previewId, confirmed: true });
+    assert.equal(checkpointRestored.json.result.status, 'succeeded');
+    assert.equal(fs.readFileSync(path.join(tmp, 'checkpoint-http.txt'), 'utf8'), 'HTTP original');
+    assert.equal((await request(server, 'GET', '/api/checkpoints')).json.find(item => item.id === checkpointId).state, 'consumed');
+    assert.equal((await request(server, 'POST', '/api/checkpoints/' + checkpointId + '/remove', checkpointBinding)).status, 200);
+
     const created = await request(server, 'PUT', '/api/files/content', {
       path: 'notes.md',
       content: 'hello from editor'

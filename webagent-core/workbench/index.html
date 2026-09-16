@@ -313,6 +313,15 @@
           <button id="btn-stdio-start" type="button" class="vs-btn" disabled>确认并启动所审阅程序</button>
           <p class="hint">预览2分钟有效且只能用一次。启动后，每次工具调用仍需下方独立审批；取消调用会停止整个stdio进程，不保证撤回已发生的效果。</p>
           <div id="ops-servers"></div>
+          <h3>跨文件内容检查点（本机手动恢复）</h3>
+          <p>任务前选择1–12个已有UTF-8文件，每行一个工作区路径。原文只存本机内存15分钟，单文件64KiB、合计256KiB，重启丢失。先保存或保留编辑器草稿；不捕获未保存内容。</p>
+          <textarea id="checkpoint-paths" class="ms-input" rows="3" aria-label="检查点文件路径，每行一个" placeholder="src/example.js&#10;README.md"></textarea>
+          <button id="btn-checkpoint-create" class="vs-btn" type="button">确认建立任务前检查点</button>
+          <button id="btn-checkpoint-refresh" class="vs-btn" type="button">刷新检查点</button>
+          <div id="checkpoint-list"></div>
+          <pre id="checkpoint-review" class="url-box" style="max-height:400px;overflow:auto;white-space:pre-wrap">任务后先预览，再明确确认恢复。非原子事务；失败保留部分结果，不重放。</pre>
+          <div id="checkpoint-controls"></div>
+          <p class="hint">只恢复选定已有文件的磁盘内容，不撤销删除/重命名/新文件/命令外部效果。全部预检后逐文件写入，中途漂移仍可能部分完成。关闭未保存编辑器或先另行保留草稿，避免之后保存草稿覆盖恢复结果。</p>
           <h3>固定工作流预览</h3>
           <p>最多12步；工具名固定。写入路径和内容必须是供审阅的字面值；其他参数可用 $steps.步骤ID.字段 引用前序结果。失败/未知即停，无重试。预览只校验结构，不读取文件或保证运行成功。</p>
           <textarea id="ops-workflow" class="ms-input" rows="9" aria-label="工作流JSON">{"steps":[{"id":"check","tool":"ping","arguments":{}}]}</textarea>

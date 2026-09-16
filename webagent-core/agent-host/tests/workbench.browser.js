@@ -246,6 +246,28 @@ async function main() {
     fs.appendFileSync(path.join(skillDir, 'SKILL.md'), '\nNEW-REVISION');
     assert.strictEqual((await rpc('load_skill', { name: skillPage.id, offset: skillPage.nextOffset, expectedHash: skillPage.hash })).isError, true);
     assert.strictEqual((await page.request.get(`http://127.0.0.1:${uiPort}/api/skills/load?name=workspace%3Abrowser-review&offset=1111&expectedHash=${skillPage.hash}`)).status(), 409);
+    // Real checkpoint UI/API/disk; subscribing before clicking avoids stale UI text races.
+    fs.writeFileSync(path.join(workspace, 'checkpoint-a.txt'), 'before A');
+    fs.writeFileSync(path.join(workspace, 'checkpoint-b.txt'), 'before B');
+    await page.fill('#checkpoint-paths', 'checkpoint-a.txt\ncheckpoint-b.txt');
+    const createdCheckpoint = page.waitForResponse(response => response.url().endsWith('/api/checkpoints') && response.request().method() === 'POST');
+    page.once('dialog', dialog => dialog.accept()); await page.click('#btn-checkpoint-create');
+    const checkpoint = await (await createdCheckpoint).json(); assert.ok(checkpoint.id);
+    await page.waitForFunction(() => document.querySelector('#checkpoint-list').textContent.includes('checkpoint-a.txt'));
+    fs.writeFileSync(path.join(workspace, 'checkpoint-a.txt'), 'after A');
+    fs.writeFileSync(path.join(workspace, 'checkpoint-b.txt'), 'after B');
+    await page.locator('#checkpoint-list button').filter({ hasText: '只预览此检查点恢复差异' }).click();
+    await page.waitForFunction(() => document.querySelector('#checkpoint-review').textContent.includes('previewId'));
+    assert.strictEqual(fs.readFileSync(path.join(workspace, 'checkpoint-a.txt'), 'utf8'), 'after A');
+    page.once('dialog', dialog => dialog.dismiss()); await page.locator('#checkpoint-controls button').click();
+    assert.strictEqual(fs.readFileSync(path.join(workspace, 'checkpoint-a.txt'), 'utf8'), 'after A');
+    const restoredCheckpoint = page.waitForResponse(response => response.url().endsWith('/checkpoints/' + checkpoint.id + '/restore'));
+    page.once('dialog', dialog => dialog.accept()); await page.locator('#checkpoint-controls button').click();
+    assert.strictEqual((await (await restoredCheckpoint).json()).result.status, 'succeeded');
+    assert.strictEqual(fs.readFileSync(path.join(workspace, 'checkpoint-a.txt'), 'utf8'), 'before A');
+    assert.strictEqual(fs.readFileSync(path.join(workspace, 'checkpoint-b.txt'), 'utf8'), 'before B');
+    await page.click('#btn-checkpoint-refresh');
+    await page.waitForFunction(() => document.querySelector('#checkpoint-list').textContent.includes('consumed'));
     await page.fill('#ops-workflow', JSON.stringify({ steps: [{ id: 'create', tool: 'write_file',
       arguments: { filePath: 'guard-target.txt', content: 'must not overwrite', confirm_overwrite: true },
       before: { path: 'guard-target.txt', exists: false } }] }));

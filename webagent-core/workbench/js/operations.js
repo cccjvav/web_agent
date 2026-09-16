@@ -28,7 +28,45 @@ async function review(id) {
     await api(`/operations/${id}/cancel`, 'POST', {}); await review(id);
   }));
 }
+let checkpointGeneration = 0;
+function checkpointBinding() {
+  return { workspaceRoot: state.status?.workspaceRoot, hostInstanceId: state.status?.identity?.hostInstanceId };
+}
+async function reviewCheckpoint(id) {
+  const generation = ++checkpointGeneration, binding = checkpointBinding();
+  const controls = $('#checkpoint-controls'); controls.replaceChildren();
+  const preview = await api(`/checkpoints/${id}/preview`, 'POST', binding);
+  if (generation !== checkpointGeneration) return;
+  $('#checkpoint-review').textContent = JSON.stringify(preview, null, 2);
+  controls.append(button('已审阅全部差异，恢复一次', async () => {
+    if (generation !== checkpointGeneration || !confirm('将按上方差异覆盖所选文件。不是原子事务，中途失败会保留部分恢复。已另行保留未保存草稿，确认恢复一次？')) return;
+    const restoringGeneration = ++checkpointGeneration; controls.replaceChildren();
+    $('#checkpoint-review').textContent = '恢复请求已发送；结果未知时不要重放。刷新检查点查看逐文件记录。';
+    try {
+      const result = await api(`/checkpoints/${id}/restore`, 'POST', { ...binding, previewId: preview.previewId, confirmed: true });
+      if (restoringGeneration === checkpointGeneration) $('#checkpoint-review').textContent = JSON.stringify(result, null, 2);
+    } catch (error) {
+      if (restoringGeneration === checkpointGeneration) $('#checkpoint-review').textContent = '未取得完成结果：' + error.message + '。刷新检查点并核对磁盘；不要重放已执行/未知的恢复。';
+      throw error;
+    }
+  }));
+}
+async function refreshCheckpoints() {
+  const entries = await api('/checkpoints');
+  const list = $('#checkpoint-list'); list.replaceChildren();
+  for (const entry of entries) {
+    const row = document.createElement('div'), text = document.createElement('pre'); text.className = 'url-box';
+    text.textContent = JSON.stringify(entry, null, 2); row.append(text);
+    if (entry.state === 'ready') row.append(button('只预览此检查点恢复差异', () => reviewCheckpoint(entry.id)));
+    if (entry.state !== 'running') row.append(button('移除此检查点', async () => {
+      ++checkpointGeneration; $('#checkpoint-controls').replaceChildren();
+      await api(`/checkpoints/${entry.id}/remove`, 'POST', checkpointBinding());
+    }));
+    list.append(row);
+  }
+}
 async function refreshOperations() {
+  await refreshCheckpoints();
   const data = await api('/operations');
   const servers = $('#ops-servers'), requests = $('#ops-requests'); servers.replaceChildren(); requests.replaceChildren();
   for (const server of data.servers) {
@@ -39,6 +77,14 @@ async function refreshOperations() {
   $('#ops-status').textContent = `${data.servers.length} 个接入；${data.requests.length} 条进程内请求。waiting-approval 不代表执行成功。`;
 }
 function initOperations() {
+  $('#btn-checkpoint-refresh').onclick = () => action(refreshCheckpoints);
+  $('#btn-checkpoint-create').onclick = () => action(async () => {
+    const paths = $('#checkpoint-paths').value.split(/\r?\n/).map(value => value.trim()).filter(Boolean);
+    if (!confirm('确认将这些已有文件的当前磁盘原文暂存于本机内存？这不是永久备份，重启/过期会丢失。')) return;
+    const generation = ++checkpointGeneration; $('#checkpoint-controls').replaceChildren();
+    const record = await api('/checkpoints', 'POST', { ...checkpointBinding(), paths, confirmed: true });
+    if (generation === checkpointGeneration) $('#checkpoint-review').textContent = JSON.stringify(record, null, 2);
+  });
   let checkId = null, checkGeneration = 0;
   async function connectionAction(callback) {
     const generation = ++checkGeneration;
