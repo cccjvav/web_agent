@@ -161,3 +161,7 @@
 全文读取总览349行、技术实现112行，对照当前getToolList(remote权限筛选)、index启动顺序、config默认、执行控制、Chat契约及已交付恢复/出站代码；进程/API目录README全文对照其相关入口。改正文而不加相反附录：旧总览自动builtin、30工具、无Build、厂商菜单/兼容保证、0.0.0.0远程UI建议退役；有效模块/学习入口保留为现行详解链接。技术实现不再把2026-09-12报告当当前发现队列，补模式/出站/三种恢复；进程README的“先persistIdentity后检查工作区”与真实index相反，已修正。
 
 新增文档站anchors及根文档上下文/纯片段修正，函数/测试逐项说明。五份核心导航检查目标存在、标题子集有效，真实content.js链接落到实际id；负例先失败暴露上一批错误computer-use根README路径，已修正。这里不是全仓链接穷举，也不是GitHub完整解析器；其它详解/根指南仍需逐句覆盖，不因总览改写宣称全部完成。
+
+### 第十五组验证证据
+
+代码c0ada67170558b6a9860739051f049f3668b3bfb，[CI35114310216](https://github.com/cccjvav/web_agent/actions/runs/35114310216)九项全部成功，逐项确认Ubuntu18/20/22/24、Windows20/22/24、安装器、Chromium回归。本地82文件通过，246源码/28目录/110排除。首次全量因旧docsSite VM用测试目录解析新anchors模块而失败；改createRequire(buildPath)后原CRLF逐字节断言仍保留并通过，不是跳过失败测试。新增导航守卫范围为五份核心根文档和明确标题子集，不是全仓Markdown/GFM认证或用户实机验收。
