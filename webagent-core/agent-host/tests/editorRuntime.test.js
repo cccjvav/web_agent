@@ -151,5 +151,18 @@ if (!process.argv.includes('--vm-child')) {
   const loading=api.previewActive();two.model.setValue('edited while preview loads');
   completePreview(response({success:true,path:two.path,expectedHash:two.hash,diff:'old snapshot'}));await loading;
   assert.equal(state.activeTab,two.id);assert.ok(messages.at(-1).includes('未打开旧预览'));
+  // Confirmed save supplies a volatile undo handle; restore cannot overwrite later drafts.
+  state.status={workspaceRoot:'/fixture',identity:{hostInstanceId:'host-fixture'}};
+  responses.push(response({success:true,hash:hash('f'),undo:{id:'undo-fixture'}}));await api.saveActive();
+  const savedDraft=two.content;
+  responses.push(response({success:true,path:two.path,expectedHash:two.hash,diff:'undo preview'}));await api.previewUndo();
+  assert.ok(state.tabs.find(t=>t.id===state.activeTab).preview.undo);
+  let restoredResponse;responses.push(new Promise(resolve=>{restoredResponse=resolve;}));
+  const restoring=api.savePreview();
+  api.activateTab(two.id);two.model.setValue('draft written during restore');
+  restoredResponse(response({success:true,path:two.path,content:'restored disk content',hash:hash('a')}));await restoring;
+  assert.equal(two.savedContent,'restored disk content');assert.equal(two.content,'draft written during restore');assert.equal(two.dirty,true);
+  assert.equal(two.undo,null);assert.equal(calls.at(-1).body.confirmed,true);assert.equal(calls.at(-1).body.hostInstanceId,'host-fixture');
+  const noCall=calls.length;await api.previewUndo();assert.equal(calls.length,noCall);assert.ok(messages.at(-1).includes('未保存草稿'));
   console.log('editor runtime regressions passed (DOM/Monaco fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });

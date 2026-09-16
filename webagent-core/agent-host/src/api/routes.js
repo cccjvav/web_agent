@@ -1,3 +1,4 @@
+const editorUndo = require('../utils/editorUndo');
 const control = require('../utils/executionControl');
 const { isToolFailure } = require('../utils/toolTrace');
 const {assertWorkspaceBinding} = require('../utils/workspaceBinding');
@@ -425,6 +426,17 @@ router.post('/files/preview', (req, res) => {
   } catch (error) { res.status(400).json({ error: error.message }); }
 });
 
+router.get('/files/undo/:id', (req, res) => {
+  try { res.json(editorUndo.preview(req.params.id)); }
+  catch(error) { res.status(409).json({error:error.message}); }
+});
+router.post('/files/undo/:id', async (req, res) => {
+  try {
+    assertWorkspaceBinding(req.body, config);
+    res.json(await editorUndo.restore(req.params.id, req.body));
+  } catch(error) { res.status(409).json({error:error.message}); }
+});
+
 router.put('/files/content', async (req, res) => {
   try {
     const filePath = req.body && req.body.path;
@@ -432,6 +444,7 @@ router.put('/files/content', async (req, res) => {
     if (!filePath || typeof content !== 'string') {
       return res.status(400).json({ error: 'path and content required' });
     }
+    const undoSnapshot = editorUndo.capture(filePath, req.body.expectedHash, content);
     const result = await callTool('write_file', {
       filePath,
       content,
@@ -439,7 +452,9 @@ router.put('/files/content', async (req, res) => {
       expectedHash: req.body.expectedHash || undefined
     }, 'code');
     if (result.success === false) return res.status(409).json({ error: result.error, code: result.code, verification: result.verification });
-    res.json({ success: true, path: filePath, hash: result.hash, verification: result.verification });
+    let undo = null;
+    try { if (result.verification?.state === 'verified') undo = editorUndo.remember(undoSnapshot, result.hash); } catch (_) { /* Saved file remains successful even if optional undo allocation fails. */ }
+    res.json({ success: true, path: filePath, hash: result.hash, verification: result.verification, undo });
   } catch (err) {
     const stale = err.code === 'E_STALE_FILE' || /STALE_FILE/.test(String(err.message || ''));
     res.status(stale ? 409 : 400).json({

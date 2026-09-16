@@ -52,6 +52,7 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 | [connectionCheck.js](connectionCheck.js) | 9 个函数/类节点 |
 | [corsAllow.js](corsAllow.js) | 14 个函数/类节点 |
 | [diff.js](diff.js) | 1 个函数/类节点 |
+| [editorUndo.js](editorUndo.js) | 6 个函数/类节点 |
 | [eventBus.js](eventBus.js) | 15 个函数/类节点 |
 | [executionControl.js](executionControl.js) | 22 个函数/类节点 |
 | [hostDiagnostics.js](hostDiagnostics.js) | 4 个函数/类节点 |
@@ -69,3 +70,5 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 ## 工作模式与权限
 
 [执行控制详解](执行控制详解.md)逐函数解释executionControl.js：Chat/Bridge租约互斥、同类型并行、所有者持久权限和后台/审批屏障。权限不是OS沙箱。
+
+[编辑回退详解](编辑回退详解.md)解释editorUndo的本机显式回退、有限内存记录和hash冲突边界；不是持久备份或自动失败恢复。

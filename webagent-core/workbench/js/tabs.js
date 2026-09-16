@@ -100,8 +100,9 @@ export function openDiff(filePath, diff, preview = null) {
 }
 
 export function paintDiff(tab) {
-  $('#diff-title').textContent = (tab.path || 'Diff') + (tab.preview ? ' · 草稿预览，尚未保存' : '');
+  $('#diff-title').textContent = (tab.path || 'Diff') + (tab.preview?.undo ? ' · 回退预览，尚未执行' : tab.preview ? ' · 草稿预览，尚未保存' : '');
   $('#btn-preview-save').classList.toggle('hidden', !tab.preview);
+  $('#btn-preview-save').textContent = tab.preview?.undo ? '确认回退这次保存' : '确认保存这份预览';
   const lines = String(tab.diff || '').split('\n');
   $('#diff-body').innerHTML = lines.map((line) => {
     const cls = line.startsWith('+') && !line.startsWith('+++') ? 'diff-add'
@@ -235,6 +236,7 @@ async function saveFile(tab, content, expectedHash) {
     if (!res.ok || data.success !== true) throw new Error(data.error || '服务器未确认保存成功');
     if (!/^[a-f0-9]{64}$/.test(data.hash || '')) throw new Error('保存响应缺少版本号，请核对磁盘状态');
     tab.hash = data.hash;
+    tab.undo = data.undo || null;
     tab.savedContent = content;
     captureActiveFile();
     tab.dirty = tab.content !== tab.savedContent;
@@ -290,7 +292,47 @@ export async function savePreview() {
   // Consume the reviewed snapshot before dispatch; even an unknown response must not replay.
   tab.preview = null;
   paintDiff(tab);
-  await saveFile(source, preview.content, preview.expectedHash);
+  if (!preview.undo) return saveFile(source, preview.content, preview.expectedHash);
+  source.saving = true;
+  source.undo = null;
+  try {
+    const response = await fetch('/api/files/undo/' + encodeURIComponent(preview.undo), { method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({confirmed:true,expectedHash:preview.expectedHash,workspaceRoot:state.status?.workspaceRoot,hostInstanceId:state.status?.identity?.hostInstanceId}) });
+    const data = await response.json();
+    if (!response.ok || data.success !== true || data.path !== source.path || typeof data.content !== 'string' || !/^[a-f0-9]{64}$/.test(data.hash || '')) throw Error(data.error || '回退结果未知，请检查磁盘');
+    captureActiveFile();
+    source.hash = data.hash;
+    source.savedContent = data.content;
+    // Preserve any edits made while the restore request was pending.
+    if (source.content === preview.content) {
+      source.content = data.content;
+      if (source.model) source.model.setValue(data.content);
+      if (state.activeTab === source.id) applyEditor(source);
+    }
+    source.dirty = source.content !== source.savedContent;
+    ui.toast('已回退 ' + source.path + (source.dirty ? '（仍保留后续草稿）' : ''));
+  } catch(error) { ui.toast('回退未确认：' + error.message); }
+  finally { source.saving = false; paintTabs(); }
 }
 ui.previewActive = previewActive;
 ui.savePreview = savePreview;
+
+export async function previewUndo() {
+  captureActiveFile();
+  const tab = state.tabs.find(t => t.id === state.activeTab);
+  if (!tab || tab.kind !== 'file' || tab.saving || tab.previewing) return;
+  if (tab.dirty) return ui.toast('请先保留并处理未保存草稿，不能用回退覆盖草稿');
+  if (!tab.undo?.id) return ui.toast('此文件没有可回退记录（仅本页面近期的有版本号保存，非持久备份）');
+  const content = tab.content, expectedHash = tab.hash, id = tab.undo.id;
+  tab.previewing = true;
+  try {
+    const response = await fetch('/api/files/undo/' + encodeURIComponent(id));
+    const data = await response.json();
+    if (!response.ok || data.success !== true) throw Error(data.error || '回退预览失败');
+    captureActiveFile();
+    if (!state.tabs.includes(tab) || state.activeTab !== tab.id || tab.content !== content || tab.hash !== expectedHash || tab.undo?.id !== id) throw Error('草稿或版本变化，请重新核对');
+    if (data.path !== tab.path || data.expectedHash !== expectedHash || typeof data.diff !== 'string') throw Error('回退预览版本不一致');
+    openDiff(tab.path, data.diff, {source:tab,content,expectedHash,undo:id});
+  } catch(error) { ui.toast('未回退：' + error.message); }
+  finally { tab.previewing = false; }
+}
+ui.previewUndo = previewUndo;

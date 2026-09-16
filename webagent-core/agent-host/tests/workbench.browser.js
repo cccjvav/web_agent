@@ -166,6 +166,13 @@ async function main() {
     const previewSaved=page.waitForResponse(response=>response.url().endsWith('/api/files/content') && response.request().method()==='PUT');
     await page.click('#btn-preview-save');assert.equal((await previewSaved).status(),200);
     assert.ok(fs.readFileSync(path.join(workspace,'acceptance.txt'),'utf8').includes('PREVIEW-CONFIRMED'));
+    await page.locator('#tabs .tab').filter({hasText:'acceptance.txt'}).filter({hasNotText:'(diff)'}).locator('span').first().click();
+    await page.click('[data-menu="file"]');await page.click('[data-act="undo-save"]');
+    await page.locator('#btn-preview-save').filter({hasText:'确认回退'}).waitFor({state:'visible'});
+    assert.ok(fs.readFileSync(path.join(workspace,'acceptance.txt'),'utf8').includes('PREVIEW-CONFIRMED'));
+    const undoResponse=page.waitForResponse(response=>response.url().includes('/api/files/undo/') && response.request().method()==='POST');
+    await page.click('#btn-preview-save');assert.equal((await undoResponse).status(),200);
+    assert.ok(!fs.readFileSync(path.join(workspace,'acceptance.txt'),'utf8').includes('PREVIEW-CONFIRMED'));
     await page.click('#model-pick-btn'); await page.locator('.mp-row').filter({ hasText: '内置探索' }).click();
     await page.click('#btn-agent-pick'); await page.click('#agent-pick-menu [data-mode="ask"]');
     await page.fill('#chat-input', '只读取 `acceptance.txt`');

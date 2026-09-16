@@ -78,7 +78,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | 源码 | 定位证据 |
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
-| [apiFiles.test.js](apiFiles.test.js) | 13 个函数/类节点 |
+| [apiFiles.test.js](apiFiles.test.js) | 16 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 11 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 17 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
@@ -97,7 +97,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [documentationLearning.test.js](documentationLearning.test.js) | 7 个函数/类节点 |
 | [documentationPolicy.test.js](documentationPolicy.test.js) | 12 个函数/类节点 |
 | [documentationQuality.test.js](documentationQuality.test.js) | 9 个函数/类节点 |
-| [editorRuntime.test.js](editorRuntime.test.js) | 35 个函数/类节点 |
+| [editorRuntime.test.js](editorRuntime.test.js) | 37 个函数/类节点 |
 | [eventBus.test.js](eventBus.test.js) | 9 个函数/类节点 |
 | [executionControl.test.js](executionControl.test.js) | 28 个函数/类节点 |
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
@@ -152,7 +152,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 13 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 71 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 72 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 86 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 5 个函数/类节点 |

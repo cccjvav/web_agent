@@ -76,6 +76,37 @@ async function main() {
     assert.equal(changed.status,409); assert.equal(fs.readFileSync(path.join(tmp,'notes.md'),'utf8'),'another writer');
     fs.writeFileSync(path.join(tmp,'notes.md'),'hello from editor');
 
+    const baseline = created.json.hash;
+    const undoSaved = await request(server,'PUT','/api/files/content',{path:'notes.md',content:'undo target',expectedHash:baseline});
+    assert.ok(undoSaved.json.undo?.id);
+    const undoId = undoSaved.json.undo.id;
+    const undoPreview = await request(server,'GET','/api/files/undo/'+undoId);
+    assert.equal(undoPreview.status,200);assert.ok(undoPreview.json.diff.includes('+hello from editor'));
+    assert.equal(fs.readFileSync(path.join(tmp,'notes.md'),'utf8'),'undo target');
+    const restoreInput={confirmed:true,expectedHash:undoSaved.json.hash,workspaceRoot:tmp,hostInstanceId:config.hostInstanceId};
+    assert.equal((await request(server,'POST','/api/files/undo/'+undoId,{...restoreInput,hostInstanceId:'wrong'})).status,409);
+    assert.equal((await request(server,'POST','/api/files/undo/'+undoId,{...restoreInput,confirmed:'true'})).status,409);
+    fs.writeFileSync(path.join(tmp,'notes.md'),'external edit');
+    assert.equal((await request(server,'POST','/api/files/undo/'+undoId,restoreInput)).status,409);
+    assert.equal(fs.readFileSync(path.join(tmp,'notes.md'),'utf8'),'external edit');
+    fs.writeFileSync(path.join(tmp,'notes.md'),'undo target'); // Fixture restoration, never automatic product recovery.
+    const restored=await request(server,'POST','/api/files/undo/'+undoId,restoreInput);
+    assert.equal(restored.status,200);assert.equal(restored.json.hash,baseline);
+    assert.equal(fs.readFileSync(path.join(tmp,'notes.md'),'utf8'),'hello from editor');
+    assert.equal((await request(server,'POST','/api/files/undo/'+undoId,restoreInput)).status,409);
+    const undoStore=require('../src/utils/editorUndo');
+    assert.equal(undoStore.capture('notes.md',baseline,'x'.repeat(65537)),null);
+    assert.equal(undoStore.capture('notes.md',baseline,'hello from editor'),null);
+    assert.equal(undoStore.capture('.env',baseline,'x'),null);
+    const snapshot=undoStore.capture('notes.md',baseline,'capacity fixture');
+    const oldest=undoStore.remember(snapshot,snapshot.afterHash);
+    for(let n=0;n<16;n++) undoStore.remember(snapshot,snapshot.afterHash);
+    assert.throws(()=>undoStore.preview(oldest.id),/不存在/);
+    const expiring=undoStore.remember(snapshot,snapshot.afterHash);
+    const now=Date.now;
+    try { Date.now=()=>now()+16*60000;assert.throws(()=>undoStore.preview(expiring.id),/过期/); }
+    finally { Date.now=now; }
+
     const blocked = await request(server, 'PUT', '/api/files/content', {
       path: '.env',
       content: 'SECRET=1'

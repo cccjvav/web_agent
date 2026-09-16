@@ -471,6 +471,11 @@
       "id": "execution-control-details",
       "path": "webagent-core/agent-host/src/utils/执行控制详解.md",
       "group": "实现"
+    },
+    {
+      "id": "editor-undo-details",
+      "path": "webagent-core/agent-host/src/utils/编辑回退详解.md",
+      "group": "实现"
     }
   ],
   "sourceSnapshotExclusions": [
