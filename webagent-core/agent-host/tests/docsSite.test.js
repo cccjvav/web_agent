@@ -39,8 +39,9 @@ const fixtureFs = { ...fs,
     crlfBuild = data;
   }
 };
+const buildRequire = require('module').createRequire(buildPath);
 require('vm').runInNewContext(fs.readFileSync(buildPath, 'utf8'), {
-  require(name) { return name === 'fs' ? fixtureFs : require(name); },
+  require(name) { return name === 'fs' ? fixtureFs : buildRequire(name); },
   __dirname: path.dirname(buildPath), Buffer, console: { log() {} }
 });
 assert.ok(crlfBuild === after, 'Markdown CRLF must not change generated documentation bytes');

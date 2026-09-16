@@ -92,6 +92,15 @@
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
+## docs-site/anchors.js
+
+[目录说明](README.md) · SHA-256 `e9653628a9671c87e52a840dea267ce0883359a0df40886bc63579063856b420`
+
+- `slug` — FunctionDeclaration，[L3–L6](anchors.js#L3-L6)
+- `githubSlug` — FunctionDeclaration，[L7–L10](anchors.js#L7-L10)
+- `headingTargets` — FunctionDeclaration，[L11–L27](anchors.js#L11-L27)
+- `resolveFragment` — FunctionDeclaration，[L28–L32](anchors.js#L28-L32)
+
 ## docs-site/app.js
 
 [目录说明](README.md) · SHA-256 `622a5b1305c5f225a7cf0d76be06a52f301359264d49f5dead5a64a03db884b8`
@@ -149,7 +158,7 @@
 
 ## docs-site/build.js
 
-[目录说明](README.md) · SHA-256 `f0709e52f5f8d6bba92efca14e46d8c82374e467f052c3ecafaec9263a40e98d`
+[目录说明](README.md) · SHA-256 `914c5ffeb584d43dbd292e0b39235a5190e46a1e846208a4c341a414a63e22fb`
 
 - `anonymous@46:54` — ArrowFunctionExpression，[L46–L46](build.js#L46-L46)
 - `anonymous@48:22` — ArrowFunctionExpression，[L48–L48](build.js#L48-L48)
@@ -157,26 +166,30 @@
 - `anonymous@55:22` — ArrowFunctionExpression，[L55–L55](build.js#L55-L55)
 - `readUtf8` — FunctionDeclaration，[L58–L60](build.js#L58-L60)
 - `escapeHtml` — FunctionDeclaration，[L62–L68](build.js#L62-L68)
-- `slug` — FunctionDeclaration，[L70–L78](build.js#L70-L78)
-- `anonymous@81:47` — ArrowFunctionExpression，[L81–L81](build.js#L81-L81)
-- `rewriteHref` — FunctionDeclaration，[L82–L107](build.js#L82-L107)
-- `rewriteHref/anonymous@103:33` — ArrowFunctionExpression，[L103–L103](build.js#L103-L103)
-- `rewriteHref/anonymous@103:77` — ArrowFunctionExpression，[L103–L103](build.js#L103-L103)
-- `inline` — FunctionDeclaration，[L109–L152](build.js#L109-L152)
-- `mdToHtml` — FunctionDeclaration，[L154–L296](build.js#L154-L296)
-- `mdToHtml/closeList` — ArrowFunctionExpression，[L160–L165](build.js#L160-L165)
-- `mdToHtml/parseRow` — ArrowFunctionExpression，[L196–L201](build.js#L196-L201)
-- `mdToHtml/parseRow/anonymous@201:15` — ArrowFunctionExpression，[L201–L201](build.js#L201-L201)
-- `mdToHtml/anonymous@205:19` — ArrowFunctionExpression，[L205–L205](build.js#L205-L205)
-- `mdToHtml/anonymous@207:19` — ArrowFunctionExpression，[L207–L211](build.js#L207-L211)
-- `mdToHtml/anonymous@207:19/anonymous@209:18` — ArrowFunctionExpression，[L209–L209](build.js#L209-L209)
-- `tocFromMd` — FunctionDeclaration，[L298–L307](build.js#L298-L307)
-- `extractLayer` — FunctionDeclaration，[L309–L313](build.js#L309-L313)
-- `parseGuide` — FunctionDeclaration，[L315–L338](build.js#L315-L338)
-- `parseTerms` — FunctionDeclaration，[L340–L355](build.js#L340-L355)
-- `parseTerms/anonymous@351:11` — ArrowFunctionExpression，[L351–L351](build.js#L351-L351)
-- `anonymous@382:66` — ArrowFunctionExpression，[L382–L382](build.js#L382-L382)
-- `anonymous@405:27` — ArrowFunctionExpression，[L405–L405](build.js#L405-L405)
+- `anonymous@73:47` — ArrowFunctionExpression，[L73–L73](build.js#L73-L73)
+- `rewriteHref` — FunctionDeclaration，[L74–L104](build.js#L74-L104)
+- `rewriteHref/anonymous@100:33` — ArrowFunctionExpression，[L100–L100](build.js#L100-L100)
+- `rewriteHref/anonymous@100:77` — ArrowFunctionExpression，[L100–L100](build.js#L100-L100)
+- `inline` — FunctionDeclaration，[L106–L149](build.js#L106-L149)
+- `mdToHtml` — FunctionDeclaration，[L151–L293](build.js#L151-L293)
+- `mdToHtml/closeList` — ArrowFunctionExpression，[L157–L162](build.js#L157-L162)
+- `mdToHtml/parseRow` — ArrowFunctionExpression，[L193–L198](build.js#L193-L198)
+- `mdToHtml/parseRow/anonymous@198:15` — ArrowFunctionExpression，[L198–L198](build.js#L198-L198)
+- `mdToHtml/anonymous@202:19` — ArrowFunctionExpression，[L202–L202](build.js#L202-L202)
+- `mdToHtml/anonymous@204:19` — ArrowFunctionExpression，[L204–L208](build.js#L204-L208)
+- `mdToHtml/anonymous@204:19/anonymous@206:18` — ArrowFunctionExpression，[L206–L206](build.js#L206-L206)
+- `tocFromMd` — FunctionDeclaration，[L295–L304](build.js#L295-L304)
+- `extractLayer` — FunctionDeclaration，[L306–L310](build.js#L306-L310)
+- `parseGuide` — FunctionDeclaration，[L312–L335](build.js#L312-L335)
+- `parseTerms` — FunctionDeclaration，[L337–L352](build.js#L337-L352)
+- `parseTerms/anonymous@348:11` — ArrowFunctionExpression，[L348–L348](build.js#L348-L348)
+- `anonymous@379:66` — ArrowFunctionExpression，[L379–L379](build.js#L379-L379)
+- `renderDocument` — FunctionDeclaration，[L382–L386](build.js#L382-L386)
+- `anonymous@389:35` — ArrowFunctionExpression，[L389–L389](build.js#L389-L389)
+- `anonymous@393:36` — ArrowFunctionExpression，[L393–L393](build.js#L393-L393)
+- `anonymous@398:34` — ArrowFunctionExpression，[L398–L398](build.js#L398-L398)
+- `anonymous@403:36` — ArrowFunctionExpression，[L403–L403](build.js#L403-L403)
+- `anonymous@407:27` — ArrowFunctionExpression，[L407–L407](build.js#L407-L407)
 
 ## docs-site/check-docs.js
 
@@ -1970,27 +1983,37 @@
 
 ## webagent-core/agent-host/tests/docsSite.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `ab409074032707026b2be19431315665988d243177f7916b4c7a0a45ea30fda1`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `7190606dcf310daadf77475ab8c2532fc048402d7b4615718de598f2a6399550`
 
 - `readFileSync` — FunctionExpression，[L33–L36](../webagent-core/agent-host/tests/docsSite.test.js#L33-L36)
 - `writeFileSync` — FunctionExpression，[L37–L40](../webagent-core/agent-host/tests/docsSite.test.js#L37-L40)
-- `require` — FunctionExpression，[L43–L43](../webagent-core/agent-host/tests/docsSite.test.js#L43-L43)
-- `log` — FunctionExpression，[L44–L44](../webagent-core/agent-host/tests/docsSite.test.js#L44-L44)
-- `anonymous@54:45` — ArrowFunctionExpression，[L54–L54](../webagent-core/agent-host/tests/docsSite.test.js#L54-L54)
-- `anonymous@58:47` — ArrowFunctionExpression，[L58–L58](../webagent-core/agent-host/tests/docsSite.test.js#L58-L58)
-- `anonymous@61:56` — ArrowFunctionExpression，[L61–L61](../webagent-core/agent-host/tests/docsSite.test.js#L61-L61)
+- `require` — FunctionExpression，[L44–L44](../webagent-core/agent-host/tests/docsSite.test.js#L44-L44)
+- `log` — FunctionExpression，[L45–L45](../webagent-core/agent-host/tests/docsSite.test.js#L45-L45)
+- `anonymous@55:45` — ArrowFunctionExpression，[L55–L55](../webagent-core/agent-host/tests/docsSite.test.js#L55-L55)
+- `anonymous@59:47` — ArrowFunctionExpression，[L59–L59](../webagent-core/agent-host/tests/docsSite.test.js#L59-L59)
+- `anonymous@62:56` — ArrowFunctionExpression，[L62–L62](../webagent-core/agent-host/tests/docsSite.test.js#L62-L62)
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `81185586920bd66e41384a8743724e4c1b08985af54883acddf551d6f14f4e92`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `5571cc783e541f4db322375931c71335032c4b2e050cd37896d7c61218be4d57`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)
-- `namedFunctions` — FunctionDeclaration，[L238–L253](../webagent-core/agent-host/tests/documentationLearning.test.js#L238-L253)
-- `namedFunctions/anonymous@249:44` — ArrowFunctionExpression，[L249–L249](../webagent-core/agent-host/tests/documentationLearning.test.js#L249-L249)
-- `anonymous@346:66` — ArrowFunctionExpression，[L346–L346](../webagent-core/agent-host/tests/documentationLearning.test.js#L346-L346)
-- `anonymous@351:43` — ArrowFunctionExpression，[L351–L351](../webagent-core/agent-host/tests/documentationLearning.test.js#L351-L351)
-- `anonymous@351:68` — ArrowFunctionExpression，[L351–L351](../webagent-core/agent-host/tests/documentationLearning.test.js#L351-L351)
+- `namedFunctions` — FunctionDeclaration，[L240–L255](../webagent-core/agent-host/tests/documentationLearning.test.js#L240-L255)
+- `namedFunctions/anonymous@251:44` — ArrowFunctionExpression，[L251–L251](../webagent-core/agent-host/tests/documentationLearning.test.js#L251-L251)
+- `anonymous@348:66` — ArrowFunctionExpression，[L348–L348](../webagent-core/agent-host/tests/documentationLearning.test.js#L348-L348)
+- `anonymous@353:43` — ArrowFunctionExpression，[L353–L353](../webagent-core/agent-host/tests/documentationLearning.test.js#L353-L353)
+- `anonymous@353:68` — ArrowFunctionExpression，[L353–L353](../webagent-core/agent-host/tests/documentationLearning.test.js#L353-L353)
+
+## webagent-core/agent-host/tests/documentationLinks.test.js
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `1d07551a0da408801a35e65353916a15bef34bb2fbf67efc487c7dda819badca`
+
+- `read` — ArrowFunctionExpression，[L6–L6](../webagent-core/agent-host/tests/documentationLinks.test.js#L6-L6)
+- `checkLinks` — FunctionDeclaration，[L7–L17](../webagent-core/agent-host/tests/documentationLinks.test.js#L7-L17)
+- `anonymous@23:14` — ArrowFunctionExpression，[L23–L23](../webagent-core/agent-host/tests/documentationLinks.test.js#L23-L23)
+- `anonymous@24:14` — ArrowFunctionExpression，[L24–L24](../webagent-core/agent-host/tests/documentationLinks.test.js#L24-L24)
+- `anonymous@28:34` — ArrowFunctionExpression，[L28–L28](../webagent-core/agent-host/tests/documentationLinks.test.js#L28-L28)
 
 ## webagent-core/agent-host/tests/documentationPolicy.test.js
 
@@ -2011,7 +2034,7 @@
 
 ## webagent-core/agent-host/tests/documentationQuality.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `954b81dbbbe727912ff851a240ff0e9f4858712214e59e688e661f310cb7303a`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `ab865ae4d8e779139059bcc1819bb1215c7ea36daf59422dd5e90cc2fb6ce1e7`
 
 - `anonymous@10:88` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationQuality.test.js#L10-L10)
 - `read` — ArrowFunctionExpression，[L35–L35](../webagent-core/agent-host/tests/documentationQuality.test.js#L35-L35)

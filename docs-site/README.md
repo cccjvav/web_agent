@@ -60,8 +60,9 @@ JS/CJS/MJS用Acorn提取节点；其他语言只有文件级登记。链接检�
 
 | 源码 | 定位证据 |
 |---|---|
+| [anchors.js](anchors.js) | 4 个函数/类节点 |
 | [app.js](app.js) | 50 个函数/类节点 |
-| [build.js](build.js) | 26 个函数/类节点 |
+| [build.js](build.js) | 30 个函数/类节点 |
 | [check-docs.js](check-docs.js) | 17 个函数/类节点 |
 | [documentation.config.json](documentation.config.json) | 文件级登记；未做符号完整性证明 |
 | [index.html](index.html) | 文件级登记；未做符号完整性证明 |
@@ -81,3 +82,5 @@ JS/CJS/MJS用Acorn提取节点；其他语言只有文件级登记。链接检�
 serve.js先检查bundled.json；存在则要求format=1/prebuilt=true/content.js存在，不运行build.js。不含此标记的源码checkout保持启动前重建。标记是发行模式选择，不是访问控制；服务默认仍回环、只读。安装包只带运行站点所需文件，源码与解释来自已生成的content.js快照。
 
 新手直达：文档列表搜索「内置探索Agent使用指南」或「借鉴优化说明（新手版）」；路由分别为#/files/builtin-explorer-guide与#/files/adoption-beginner-guide。
+
+片段导航：anchors.js将常用GitHub风格标题片段映射到本站真实id；build逐根文档设置相对路径上下文，同文档#片段不解析到父目录。五份现行根导航有目标/标题负例守卫，并检查生成href与目标id对应。范围见[清单与构建详解](清单与构建详解.md)，不是全Markdown语法或全仓语义认证。

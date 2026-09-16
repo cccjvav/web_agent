@@ -17,7 +17,7 @@
 ## 配置入口
 | 环境项 | 作用 | 默认 |
 |---|---|---|
-| WORKSPACE_ROOT | 被编辑项目的根目录 | 仓库workspace |
+| WORKSPACE_ROOT | 被编辑项目的根目录 | 源码仓库根目录 |
 | AGENT_HOST_PORT | MCP/API端口 | 48271 |
 | WORKBENCH_PORT | 自绘工作台端口 | 3000 |
 | WEBAGENT_BIND | 监听地址 | 127.0.0.1 |
@@ -36,7 +36,7 @@ config.secretKey/installId先产生内存值，再由persistIdentity用磁盘配
 
 applyCommon关闭x-powered-by，设置no-store，JSON请求体限20MB；路由再按自己的语义验证。listen错误（包括端口占用）会打印并退出，不应把日志已输出当作服务已监听。
 
-**初始化顺序限制**：直接启动index.js时，persistIdentity先于工作区存在性检查；写配置可能先创建目录。因而不能声称“直接node启动时，不存在的显式工作区一定零副作用拒绝”。仓库Windows启动器会先resolveWorkspace验证，二者不是同一路径。
+**初始化顺序**：直接启动index.js时，先检查工作区存在且为目录，再加载MCP/API等模块并persistIdentity；显式错误目录不会为了保存身份而创建。Windows启动器也验证显式工作区，但安装版默认用户工作区首次创建是单独分支，不将两条路径混称为一条。
 
 ## 阅读导航
 | 任务 | 文档 |

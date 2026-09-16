@@ -33,7 +33,7 @@ for (const file of docs) {
   assert.ok(!inFence, file + ': balanced code fences');
 }
 const read = rel => fs.readFileSync(path.join(root, rel), 'utf8');
-for (const guide of ['架构导读.md', '组件说明.md']) {
+for (const guide of ['架构导读.md', '组件说明.md', '总览.md']) {
   const body = read(guide);
   for (const obsolete of ['工作区是仓库里那个带测试的小计算器', '没有浏览器自动点选测试', '不是 exe 安装包', '正好 **30** 个', 'GPL v3 会传染许可证']) assert.ok(!body.includes(obsolete), guide + ': obsolete current claim');
   assert.ok(body.includes('Chat') && body.includes('Bridge') && body.includes('互斥'), guide + ': mode contract');

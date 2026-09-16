@@ -13,14 +13,19 @@
 |---|---|---|
 | `/status`、`/logs` | GET | 状态快照、日志；status包含本机连接所需信息，不应当成可公开接口 |
 | `/bridge/start`、`/bridge/stop`、`/bridge/logout` | POST | 启停隧道或注销；代次控制拒绝迟到启动 |
-| `/bridge/reset-secret`、`/bridge/reset-round` | POST | 重置连接身份，或清MCP会话/读取hash缓存（旧reset-round接口）；不是同一个操作；不是同一个操作 |
+| `/bridge/reset-secret`、`/bridge/reset-round` | POST | 重置连接身份，或清MCP会话/读取hash缓存（旧reset-round接口）；不是同一个操作 |
 | `/bridge/login`、`/bridge/token` | POST | 本机演示授权，或验证用户提供的GitHub身份 |
 | `/bridge/device`、`/bridge/device/poll`、`/bridge/github/clear` | POST | GitHub设备流及清理；不等同MCP OAuth配对 |
 | `/chat` | POST | 本机Chat的NDJSON事件流 |
 | `/tool/call`、`/consensus/run`、`/tasks/reset` | POST | 直接调用工具、本机共识流程、清任务状态 |
 | `/pty/hello`、`/pty/jobs`、`/pty/jobs/:jobId` | POST / GET / POST | PTY客户端存活、取任务、报告状态 |
 | `/files/tree`、`/files/content` | GET | 文件导航与内容/hash读取 |
-| `/files/content` | PUT | 通过write_file保存，接受expectedHash |
+| `/files/content` | PUT | 通过write_file保存，接受expectedHash；可返回经典单次保存回退句柄 |
+| `/files/preview`、`/files/undo/:id` | POST / GET / POST | 有界只读diff、预览与明确确认版本绑定回退 |
+| `/checkpoints`、`/checkpoints/:id/preview`、`/checkpoints/:id/restore`、`/checkpoints/:id/remove` | GET / POST | 选定文件内存检查点、预览与一次恢复；各POST绑定工作区/host，不是多文件原子事务 |
+| `/execution-control` | GET / POST | 主机工作模式/Bridge权限，模式和权限分开变更，受在途/后台屏障保护 |
+| `/operations`、`/operations/:id`、`/operations/:id/approve`、`/operations/:id/cancel` | GET / POST | 本机查看/批准/取消有界请求，批准不等于执行成功 |
+| `/external/*`、`/workflows/*` | GET / POST / DELETE（依实际路由） | 接入/发现、stdio启动审阅、工作流预览/提交；不新增远程管理权 |
 | `/models` | GET / POST | 模型配置读取/更新；响应隐藏API Key正文 |
 | `/providers/probe`、`/profile/detect` | POST / GET | 探测模型、环境与技术栈 |
 | `/customizations` | GET / PUT | 自定义配置；其持久化保证见models说明 |

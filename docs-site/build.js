@@ -67,21 +67,14 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
-function slug(text) {
-  return String(text)
-    .trim()
-    .toLowerCase()
-    .replace(/[📄`]/g, '')
-    .replace(/[^\w\u4e00-\u9fff./-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 80);
-}
+const { slug, resolveFragment } = require('./anchors');
 
 let activeDocPath = 'README.md';
 const sourcePaths = new Set(manifest.files.map(file => file.path));
 function rewriteHref(href) {
   if (!href) return href;
-  const [rawPath, hash] = href.split('#');
+  const [rawPath, rawHash] = href.split('#');
+  let hash = rawHash;
   const p = rawPath || '';
   if (/^https?:\/\//i.test(p) || p.startsWith('mailto:')) return href;
   const map = {
@@ -96,7 +89,11 @@ function rewriteHref(href) {
     './DOCUMENTATION_SUMMARY.md': '#/files/summary',
     'DOCUMENTATION_SUMMARY.md': '#/files/summary'
   };
-  const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(activeDocPath), decodeURIComponent(p)));
+  const resolved = p ? path.posix.normalize(path.posix.join(path.posix.dirname(activeDocPath), decodeURIComponent(p))) : activeDocPath;
+  if (hash && resolved.endsWith('.md') && !resolved.startsWith('../') && !path.posix.isAbsolute(resolved)) {
+    const target = path.join(ROOT, resolved);
+    if (fs.existsSync(target)) hash = resolveFragment(fs.readFileSync(target, 'utf8'), hash) || hash;
+  }
   if (sourcePaths.has(resolved)) return `#/source/${encodeURIComponent(resolved)}${hash ? '/' + hash : ''}`;
   if (map[resolved]) return hash ? `${map[resolved]}/${hash}` : map[resolved];
   if (map[p]) return hash ? `${map[p]}/${hash}` : map[p];
@@ -382,23 +379,28 @@ for (const file of manifest.files) {
   const omitted = (docConfig.sourceSnapshotExclusions || []).find(rule => file.path.startsWith(rule.prefix));
   sources[file.path] = omitted ? { sha256, omitted: omitted.reason } : { text, sha256 };
 }
+function renderDocument(docPath, render) {
+  const previous = activeDocPath;
+  activeDocPath = docPath;
+  try { return render(); } finally { activeDocPath = previous; }
+}
 const payload = {
   sources,
-  guide: parseGuide(guideMd),
+  guide: renderDocument('架构导读.md', () => parseGuide(guideMd)),
   impl: {
     title: '技术实现：执行链与边界',
     toc: tocFromMd(implMd),
-    html: mdToHtml(implMd)
+    html: renderDocument('技术实现.md', () => mdToHtml(implMd))
   },
   overview: {
     title: '总览（知识图谱）',
     toc: tocFromMd(overviewMd),
-    html: mdToHtml(overviewMd)
+    html: renderDocument('总览.md', () => mdToHtml(overviewMd))
   },
   workflow: {
     title: '组件说明',
     toc: tocFromMd(workflowMd),
-    html: mdToHtml(workflowMd)
+    html: renderDocument('组件说明.md', () => mdToHtml(workflowMd))
   },
   terms: parseTerms(guideMd),
   files,
