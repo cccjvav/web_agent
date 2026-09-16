@@ -9,6 +9,9 @@ const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'public-mcp-'));config.workspaceR
 const cert=fs.readFileSync(path.join(__dirname,'fixtures/public-mcp-test-cert.pem'));
 const key=fs.readFileSync(path.join(__dirname,'fixtures/public-mcp-test-key.pem'));
 async function main() {
+  const listing=require('../src/tools').TOOLS.find(tool=>tool.name==='external_servers');
+  assert.match(listing.description,/explicitly approved public HTTPS/);
+  assert.match(listing.description,/Registration does not authorize execution/);
   const nodeStream=new (require('stream').PassThrough)();
   const reader=transport.webBody(nodeStream).getReader();
   await reader.cancel();

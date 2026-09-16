@@ -6,11 +6,14 @@ stdio/受控外部接入：[受控工具与工作流详解](../utils/受控工�
 
 
 ## 职责与文件分工
-MCP使外部Agent在认证后调用当前工作区工具；它不开放本机 `/api` 或WebSocket控制面，也不负责本机Chat的模型循环。
+入站MCP使外部Agent在认证后调用当前工作区工具；它不开放本机 `/api` 或WebSocket控制面，也不负责本机Chat的模型循环。出站客户端是另一职责：经本机登记/批准后调用第三方服务，WebAgent此时作为client。两条连接可串联，但出站不是Arena连接本机的前提。角色图与新手例子见[使用指南](../../../../使用指南.md#公网出站mcp不是手机连接本机的那条链路)。
 
 | 文件 | 主要职责 |
 |---|---|
 | `requestLifecycle.js` | 有界在途请求、按peer和凭据绑定的取消、断连/期限与清理 |
+| `externalClient.js` | 登记第三方回环HTTP(S)/公网HTTPS/stdio服务、发现目录、经审批调用；不把入站授权透传给第三方 |
+| `publicHttps.js` | 仅负责公网出站HTTPS：DNS全答案过滤、固定连接地址、正常TLS及有界消费所用流适配 |
+| `stdioLaunch.js` / `stdioTransport.js` | 本机程序启动审阅与受监督JSON行传输，不是OS沙箱 |
 | `server.js` | HTTP/JSON-RPC分发、认证入口、会话、tools/resources/prompts及SSE |
 | `oauth.js` | 动态客户端注册、配对授权、PKCE、token认证/轮换/撤销 |
 | `session.js` | MCP HTTP会话及心跳/调用统计；提供协作任务板的peer标识 |
