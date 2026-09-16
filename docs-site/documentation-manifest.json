@@ -14161,8 +14161,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationQuality.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "74d54f1257a8fc904b991314855df3fa691f4ae53b577fe94d5ea573c177765c",
-      "lineCount": 60,
+      "sha256": "954b81dbbbe727912ff851a240ff0e9f4858712214e59e688e661f310cb7303a",
+      "lineCount": 67,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -14190,48 +14190,48 @@
           "id": "$",
           "name": "$",
           "kind": "ArrowFunctionExpression",
-          "startLine": 50,
-          "endLine": 50,
+          "startLine": 57,
+          "endLine": 57,
           "parameters": []
         },
         {
           "id": "$$",
           "name": "$$",
           "kind": "ArrowFunctionExpression",
-          "startLine": 50,
-          "endLine": 50,
+          "startLine": 57,
+          "endLine": 57,
           "parameters": []
         },
         {
           "id": "route",
           "name": "route",
           "kind": "ArrowFunctionExpression",
-          "startLine": 50,
-          "endLine": 50,
+          "startLine": 57,
+          "endLine": 57,
           "parameters": []
         },
         {
           "id": "pageChrome",
           "name": "pageChrome",
           "kind": "ArrowFunctionExpression",
-          "startLine": 51,
-          "endLine": 51,
+          "startLine": 58,
+          "endLine": 58,
           "parameters": []
         },
         {
           "id": "go",
           "name": "go",
           "kind": "ArrowFunctionExpression",
-          "startLine": 51,
-          "endLine": 51,
+          "startLine": 58,
+          "endLine": 58,
           "parameters": []
         },
         {
           "id": "getElementById",
           "name": "getElementById",
           "kind": "ArrowFunctionExpression",
-          "startLine": 52,
-          "endLine": 52,
+          "startLine": 59,
+          "endLine": 59,
           "parameters": [
             "key"
           ]
@@ -14240,8 +14240,8 @@
           "id": "getElementById/scrollIntoView",
           "name": "scrollIntoView",
           "kind": "FunctionExpression",
-          "startLine": 52,
-          "endLine": 52,
+          "startLine": 59,
+          "endLine": 59,
           "parameters": []
         }
       ]

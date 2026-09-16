@@ -2011,17 +2011,17 @@
 
 ## webagent-core/agent-host/tests/documentationQuality.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `74d54f1257a8fc904b991314855df3fa691f4ae53b577fe94d5ea573c177765c`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `954b81dbbbe727912ff851a240ff0e9f4858712214e59e688e661f310cb7303a`
 
 - `anonymous@10:88` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationQuality.test.js#L10-L10)
 - `read` — ArrowFunctionExpression，[L35–L35](../webagent-core/agent-host/tests/documentationQuality.test.js#L35-L35)
-- `$` — ArrowFunctionExpression，[L50–L50](../webagent-core/agent-host/tests/documentationQuality.test.js#L50-L50)
-- `$$` — ArrowFunctionExpression，[L50–L50](../webagent-core/agent-host/tests/documentationQuality.test.js#L50-L50)
-- `route` — ArrowFunctionExpression，[L50–L50](../webagent-core/agent-host/tests/documentationQuality.test.js#L50-L50)
-- `pageChrome` — ArrowFunctionExpression，[L51–L51](../webagent-core/agent-host/tests/documentationQuality.test.js#L51-L51)
-- `go` — ArrowFunctionExpression，[L51–L51](../webagent-core/agent-host/tests/documentationQuality.test.js#L51-L51)
-- `getElementById` — ArrowFunctionExpression，[L52–L52](../webagent-core/agent-host/tests/documentationQuality.test.js#L52-L52)
-- `getElementById/scrollIntoView` — FunctionExpression，[L52–L52](../webagent-core/agent-host/tests/documentationQuality.test.js#L52-L52)
+- `$` — ArrowFunctionExpression，[L57–L57](../webagent-core/agent-host/tests/documentationQuality.test.js#L57-L57)
+- `$$` — ArrowFunctionExpression，[L57–L57](../webagent-core/agent-host/tests/documentationQuality.test.js#L57-L57)
+- `route` — ArrowFunctionExpression，[L57–L57](../webagent-core/agent-host/tests/documentationQuality.test.js#L57-L57)
+- `pageChrome` — ArrowFunctionExpression，[L58–L58](../webagent-core/agent-host/tests/documentationQuality.test.js#L58-L58)
+- `go` — ArrowFunctionExpression，[L58–L58](../webagent-core/agent-host/tests/documentationQuality.test.js#L58-L58)
+- `getElementById` — ArrowFunctionExpression，[L59–L59](../webagent-core/agent-host/tests/documentationQuality.test.js#L59-L59)
+- `getElementById/scrollIntoView` — FunctionExpression，[L59–L59](../webagent-core/agent-host/tests/documentationQuality.test.js#L59-L59)
 
 ## webagent-core/agent-host/tests/editorReview.test.js
 

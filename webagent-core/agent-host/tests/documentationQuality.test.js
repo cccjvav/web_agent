@@ -33,6 +33,13 @@ for (const file of docs) {
   assert.ok(!inFence, file + ': balanced code fences');
 }
 const read = rel => fs.readFileSync(path.join(root, rel), 'utf8');
+for (const guide of ['架构导读.md', '组件说明.md']) {
+  const body = read(guide);
+  for (const obsolete of ['工作区是仓库里那个带测试的小计算器', '没有浏览器自动点选测试', '不是 exe 安装包', '正好 **30** 个', 'GPL v3 会传染许可证']) assert.ok(!body.includes(obsolete), guide + ': obsolete current claim');
+  assert.ok(body.includes('Chat') && body.includes('Bridge') && body.includes('互斥'), guide + ': mode contract');
+  assert.ok(body.includes('检查点') && body.includes('部分'), guide + ': non-atomic recovery boundary');
+}
+
 assert.ok(!read('webagent-core/agent-host/src/agent/README.md').includes('失败改 builtin'));
 assert.ok(read('webagent-core/agent-host/src/mcp/README.md').includes('相同初始化peer＋相同凭据＋同类型RPC ID'));
 assert.ok(read('webagent-core/agent-host/src/models/README.md').includes('不是四文件事务'));
