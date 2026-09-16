@@ -16,7 +16,7 @@
 
 ## check-env.cmd
 
-[目录说明](../%E5%90%AF%E5%8A%A8%E8%84%9A%E6%9C%AC%E8%AF%B4%E6%98%8E.md) · SHA-256 `7c0b74a7f8818881bb992c0f011858be46c3b45955a6ca83d3f20d0474180891`
+[目录说明](../%E5%90%AF%E5%8A%A8%E8%84%9A%E6%9C%AC%E8%AF%B4%E6%98%8E.md) · SHA-256 `e3b97d68e3aafc89fcaad5209f0a5514a5276c3c18ae4da71c403ef7b07b1c72`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -2008,7 +2008,7 @@
 
 ## webagent-core/agent-host/tests/documentationLinks.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `0b36b8209cbf373fbcd9487b148d402f616135baa9dcb5c30271737f9ecaef77`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `a1ad4e5af11df2bec97d00dcd637452519b22df42ac506719d487c9ceff8b606`
 
 - `read` — ArrowFunctionExpression，[L6–L6](../webagent-core/agent-host/tests/documentationLinks.test.js#L6-L6)
 - `checkLinks` — FunctionDeclaration，[L7–L17](../webagent-core/agent-host/tests/documentationLinks.test.js#L7-L17)
@@ -2045,17 +2045,17 @@
 
 ## webagent-core/agent-host/tests/documentationQuality.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `ab865ae4d8e779139059bcc1819bb1215c7ea36daf59422dd5e90cc2fb6ce1e7`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `40abbf953fbb522407f6f70a838973040d58c7de59f373adb1b3fc9dc6a36ee8`
 
 - `anonymous@10:88` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationQuality.test.js#L10-L10)
 - `read` — ArrowFunctionExpression，[L35–L35](../webagent-core/agent-host/tests/documentationQuality.test.js#L35-L35)
-- `$` — ArrowFunctionExpression，[L57–L57](../webagent-core/agent-host/tests/documentationQuality.test.js#L57-L57)
-- `$$` — ArrowFunctionExpression，[L57–L57](../webagent-core/agent-host/tests/documentationQuality.test.js#L57-L57)
-- `route` — ArrowFunctionExpression，[L57–L57](../webagent-core/agent-host/tests/documentationQuality.test.js#L57-L57)
-- `pageChrome` — ArrowFunctionExpression，[L58–L58](../webagent-core/agent-host/tests/documentationQuality.test.js#L58-L58)
-- `go` — ArrowFunctionExpression，[L58–L58](../webagent-core/agent-host/tests/documentationQuality.test.js#L58-L58)
-- `getElementById` — ArrowFunctionExpression，[L59–L59](../webagent-core/agent-host/tests/documentationQuality.test.js#L59-L59)
-- `getElementById/scrollIntoView` — FunctionExpression，[L59–L59](../webagent-core/agent-host/tests/documentationQuality.test.js#L59-L59)
+- `$` — ArrowFunctionExpression，[L71–L71](../webagent-core/agent-host/tests/documentationQuality.test.js#L71-L71)
+- `$$` — ArrowFunctionExpression，[L71–L71](../webagent-core/agent-host/tests/documentationQuality.test.js#L71-L71)
+- `route` — ArrowFunctionExpression，[L71–L71](../webagent-core/agent-host/tests/documentationQuality.test.js#L71-L71)
+- `pageChrome` — ArrowFunctionExpression，[L72–L72](../webagent-core/agent-host/tests/documentationQuality.test.js#L72-L72)
+- `go` — ArrowFunctionExpression，[L72–L72](../webagent-core/agent-host/tests/documentationQuality.test.js#L72-L72)
+- `getElementById` — ArrowFunctionExpression，[L73–L73](../webagent-core/agent-host/tests/documentationQuality.test.js#L73-L73)
+- `getElementById/scrollIntoView` — FunctionExpression，[L73–L73](../webagent-core/agent-host/tests/documentationQuality.test.js#L73-L73)
 
 ## webagent-core/agent-host/tests/editorReview.test.js
 

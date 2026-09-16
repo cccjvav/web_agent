@@ -9,6 +9,6 @@ where git >nul 2>&1 && (for /f "tokens=*" %%i in ('git --version') do echo %%i) 
 where cloudflared >nul 2>&1 && (echo cloudflared 已在 PATH) || echo cloudflared 未安装  运行: winget install --id Cloudflare.cloudflared
 where ngrok >nul 2>&1 && (echo ngrok       已在 PATH) || echo ngrok       未安装  运行: winget install Ngrok.Ngrok
 echo.
-echo 检查完毕。缺什么就按上面的链接/命令安装，然后新开一个 CMD。
+echo 检查完毕。修改 PATH 后请完全退出并重开 VS Code，再新建集成 CMD；独立 CMD 请重新打开。
 echo.
 pause

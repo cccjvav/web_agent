@@ -120,7 +120,7 @@ node --version
 npm --version
 ```
 
-当前全量CI配置覆盖Ubuntu/Windows的Node20/22/24矩阵，另有Node22的Windows安装器任务；这不是“所有 Node 版本均已验收”。本轮沙箱没有 Conda，也没有 Windows 桌面；以上 Conda 路径仍需要按第 7 节在本机实测。
+当前全量CI配置覆盖Ubuntu/Windows的Node20/22/24矩阵、额外Ubuntu Node18兼容任务，另有Node22的Windows安装器与Ubuntu Chromium任务；这不是“所有 Node 版本均已验收”。本轮沙箱没有 Conda，也没有 Windows 桌面；以上 Conda 路径仍需要按第 7 节在本机实测。
 
 ## 3. 从源码运行
 
@@ -220,7 +220,7 @@ conda list --revisions
 
 ## 6. 产品测试与文档维护
 
-以下均在仓库根的已激活 Prompt 运行，每条成功再继续：
+以下均在仓库根的已激活 VS Code 集成 CMD 运行，每条成功再继续：
 
 ```bat
 node docs-site/check-docs.js
@@ -263,6 +263,33 @@ node docs-site/serve.js
 ```
 
 访问 `http://127.0.0.1:4173`。它只提供文档，不会启动产品，也不会激活 Conda。默认本机监听即可；不要为了手机 MCP 把工作台或文档服务器公开。
+
+### 6.1 Playwright已经存在，是否需要在本机安装
+
+**仓库已有Node Playwright开发依赖，当前package.json为1.63.0。** 旧文档“没有Playwright”是过期说明，不是现在删除了它。我们需要保留它做真实浏览器回归；你日常运行WebAgent、用Arena MCP操作本机，不需要为此下载测试浏览器。
+
+分清三件事：
+
+| 对象 | 安装/用途 | 不代表什么 |
+|---|---|---|
+| npm包playwright | --include=dev安装的Node测试库 | 不等于Chromium程序已在当前用户缓存里 |
+| Chromium及系统依赖 | 明确运行playwright install后准备 | 不是用户已有Chrome自动满足所有测试版本要求 |
+| test:browser | 独立浏览器测试入口 | npm test通过不等于本机浏览器测试也跑过 |
+
+如需在本机复现浏览器回归，先完成第3.1节依赖安装，再从仓库根逐条执行：
+
+```bat
+cd webagent-core\agent-host
+node -p "require('playwright/package.json').version"
+npx playwright install chromium
+npm run test:browser
+echo %ERRORLEVEL%
+cd ..\..
+```
+
+node -p只读取已安装包，不下载或运行浏览器。install会联网下载匹配Chromium，可能占用较多磁盘；下载失败要停下来保留错误，不关闭TLS校验、不称测试通过。npm test的前置检查主要确认express/Acorn，不能据此断言Playwright包/浏览器缓存完整。浏览器测试当前使用Node版Playwright，不需要pip install playwright或改建venv。
+
+CI自行安装并运行Chromium，不会替你的电脑下载浏览器。它目前主要验证产品交互，不会因为安装了Playwright就自动给Arena新增浏览器自动化工具。若只想使用已通过CI验证的WebAgent功能，可以不在本机执行这组开发测试。真实VSCode窗口、桌面输入与第三方MCP/探针账户仍按独立项目验收。
 
 ## 7. Conda 专项验收（E1–E6）
 

@@ -23,7 +23,7 @@
     {
       "path": "check-env.cmd",
       "doc": "启动脚本说明.md",
-      "sha256": "7c0b74a7f8818881bb992c0f011858be46c3b45955a6ca83d3f20d0474180891",
+      "sha256": "e3b97d68e3aafc89fcaad5209f0a5514a5276c3c18ae4da71c403ef7b07b1c72",
       "lineCount": 15,
       "structure": "file-only",
       "semanticReview": "not-certified",
@@ -14138,7 +14138,7 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLinks.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "0b36b8209cbf373fbcd9487b148d402f616135baa9dcb5c30271737f9ecaef77",
+      "sha256": "a1ad4e5af11df2bec97d00dcd637452519b22df42ac506719d487c9ceff8b606",
       "lineCount": 64,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -14401,8 +14401,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationQuality.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "ab865ae4d8e779139059bcc1819bb1215c7ea36daf59422dd5e90cc2fb6ce1e7",
-      "lineCount": 67,
+      "sha256": "40abbf953fbb522407f6f70a838973040d58c7de59f373adb1b3fc9dc6a36ee8",
+      "lineCount": 81,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -14430,48 +14430,48 @@
           "id": "$",
           "name": "$",
           "kind": "ArrowFunctionExpression",
-          "startLine": 57,
-          "endLine": 57,
+          "startLine": 71,
+          "endLine": 71,
           "parameters": []
         },
         {
           "id": "$$",
           "name": "$$",
           "kind": "ArrowFunctionExpression",
-          "startLine": 57,
-          "endLine": 57,
+          "startLine": 71,
+          "endLine": 71,
           "parameters": []
         },
         {
           "id": "route",
           "name": "route",
           "kind": "ArrowFunctionExpression",
-          "startLine": 57,
-          "endLine": 57,
+          "startLine": 71,
+          "endLine": 71,
           "parameters": []
         },
         {
           "id": "pageChrome",
           "name": "pageChrome",
           "kind": "ArrowFunctionExpression",
-          "startLine": 58,
-          "endLine": 58,
+          "startLine": 72,
+          "endLine": 72,
           "parameters": []
         },
         {
           "id": "go",
           "name": "go",
           "kind": "ArrowFunctionExpression",
-          "startLine": 58,
-          "endLine": 58,
+          "startLine": 72,
+          "endLine": 72,
           "parameters": []
         },
         {
           "id": "getElementById",
           "name": "getElementById",
           "kind": "ArrowFunctionExpression",
-          "startLine": 59,
-          "endLine": 59,
+          "startLine": 73,
+          "endLine": 73,
           "parameters": [
             "key"
           ]
@@ -14480,8 +14480,8 @@
           "id": "getElementById/scrollIntoView",
           "name": "scrollIntoView",
           "kind": "FunctionExpression",
-          "startLine": 59,
-          "endLine": 59,
+          "startLine": 73,
+          "endLine": 73,
           "parameters": []
         }
       ]

@@ -169,3 +169,7 @@ editorUndo有限内存旧正文、保存后hash绑定；本机API预览及工作
 ### 第十六组验证
 
 f6a7bff267c1678a26fcbfa90f20f601ad1f2574的CI35116022251九项成功。文档站交互续作6ed9adff87798dcfd21af9072a995cc5c1e233c9的CI35116366728仅浏览器/安装器成功（2/9），本地完整测试暴露docsViewerBrowser漏在登记的主指南说明，已补齐，未删除守卫。最终8ed049663bb943a5880f873ba4a33cd3f5a9b8fc，[CI35116453656](https://github.com/cccjvav/web_agent/actions/runs/35116453656)逐项九项成功；本地82测试文件、246源码/28目录/110排除。真实Chromium加载实际文档资源验证搜索、坏guide编码及带斜线标题目标；资源由白名单fixture提供，不伪称静态服务器网络或用户实机验收。
+
+## 第十七组：Conda/平台CI全文复核
+
+Playwright并未删除：当前Node开发依赖1.63.0，浏览器任务独立安装Chromium并运行test:browser，普通运行与Arena连接不依赖它。Conda/测试/CI指南补清晰操作和边界，不要求Python Playwright或venv。对照实际脚本修平台指南中express旧检查/Shell相对路径/两job/不编译Drawing文件等过时正文；对照实际根package.json修总览误述。check-env输出同步提醒VSCode父进程PATH。新回归核对依赖版本、入口、链接、关键提示与隐藏控制字符。整篇阅读不等于Windows/Conda实机验收。
