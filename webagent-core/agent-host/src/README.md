@@ -23,7 +23,7 @@
 | WEBAGENT_BIND | 监听地址 | 127.0.0.1 |
 | WEBAGENT_SKIP_WORKBENCH | 为code-server让出UI端口 | 非1时不跳过 |
 
-config.secretKey/installId先产生内存值，再由persistIdentity用磁盘配置替换或写回。generateNewSecret更新内存后尝试落盘，保存失败目前被捕获；不能保证每一次换钥匙都已持久化。
+config.secretKey/installId先产生内存值，再由persistIdentity用磁盘配置替换或写回。generateNewSecret先保存再更新内存，存储失败抛错并保留旧内存凭据；成功返回也不等于fsync或跨进程事务。
 
 ## 执行流程与路由边界
 ```text

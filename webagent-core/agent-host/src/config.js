@@ -24,11 +24,12 @@ const config = {
 };
 
 function generateNewSecret() {
-  config.secretKey = crypto.randomBytes(12).toString('hex');
-  try {
-    require('./models/store').patch({ secretKey: config.secretKey });
-  } catch (_) {}
-  return config.secretKey;
+  const nextSecret = crypto.randomBytes(12).toString('hex');
+  // Publish the new runtime credential only after storage accepted it.
+  // Do not report a durable rotation when a corrupt/unwritable config refused it.
+  require('./models/store').patch({ secretKey: nextSecret });
+  config.secretKey = nextSecret;
+  return nextSecret;
 }
 
 function persistIdentity(store) {

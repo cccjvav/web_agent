@@ -29,9 +29,9 @@
 GitHub身份验证后保存身份字段，不保存该流程的PAT。模型API Key和隧道Token则可能存在config.json中；不能笼统说“没有凭据落盘”。
 
 ### 自定义配置：保证不同
-`loadCustom`合并默认environment/techStack；**任何读取或解析异常当前都会退回defaults**。`saveCustom`直接顺序写JSON、instructions.md、preference.md、tech-stack.md，不使用store的原子写/损坏保留机制，也不是四文件事务。
+`loadCustom`通过有界读取合并默认environment/techStack；仅ENOENT回默认，坏JSON/非对象/其他读取错误抛E_CUSTOM_CORRUPT并保留原文件。saveCustom先读取旧配置，拒绝覆盖损坏配置，再通过独占临时文件和rename顺序写JSON及三份Markdown；不是四文件事务。
 
-因此“所有配置损坏都拒绝覆盖”并不成立。修改前备份重要自定义指令；相关损坏恢复保证仍需单独改善，不能由store测试代替。
+单文件替换保护不表示四份文件同时成功。后续派生文件失败时，前面的JSON可能已经改变；需要核查部分更新，不自动重试整个修改。对环境/技术栈的patch不是递归深合并，具体行为见逐函数说明。
 
 ### 环境与记忆
 profile先探测平台、package/lock/项目清单，再用用户非auto的值覆盖；推断出的测试命令不证明依赖已安装或命令能成功。hooks、外部MCP配置等列表的存在不代表运行时执行器已经实现。

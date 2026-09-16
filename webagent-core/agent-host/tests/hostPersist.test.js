@@ -39,6 +39,21 @@ function main() {
   assert.strictEqual(disk.secretKey, first);
   assert.strictEqual(config.secretKey, first);
 
+  const configFile = path.join(tmp, '.webagent', 'config.json');
+  const validConfig = fs.readFileSync(configFile, 'utf8');
+  fs.writeFileSync(configFile, '{bad json');
+  assert.throws(generateNewSecret, e => e.code === 'E_CONFIG_CORRUPT');
+  assert.strictEqual(config.secretKey, first, 'failed rotation must preserve runtime credential');
+  assert.strictEqual(fs.readFileSync(configFile, 'utf8'), '{bad json');
+  fs.writeFileSync(configFile, validConfig);
+  const originalPatch = store.patch;
+  try {
+    store.patch = () => { const err = new Error('fixture storage refusal'); err.code = 'EACCES'; throw err; };
+    assert.throws(generateNewSecret, e => e.code === 'EACCES');
+    assert.strictEqual(config.secretKey, first);
+    assert.strictEqual(fs.readFileSync(configFile, 'utf8'), validConfig);
+  } finally { store.patch = originalPatch; }
+
   const old = config.secretKey;
   config.secretKey = 'deadbeefdead';
   persistIdentity(store);

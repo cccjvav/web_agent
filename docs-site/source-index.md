@@ -584,10 +584,10 @@
 
 ## webagent-core/agent-host/src/config.js
 
-[目录说明](../webagent-core/agent-host/src/README.md) · SHA-256 `8d49e6c96f82f4cc2937dbaf204f34f614ebf81b8bf95571e0abb02e3cb478df`
+[目录说明](../webagent-core/agent-host/src/README.md) · SHA-256 `62eb6fe4b6f153ba911118655eb08c48f8ae8e13b309b8c15228cbafd741b56c`
 
-- `generateNewSecret` — FunctionDeclaration，[L26–L32](../webagent-core/agent-host/src/config.js#L26-L32)
-- `persistIdentity` — FunctionDeclaration，[L34–L46](../webagent-core/agent-host/src/config.js#L34-L46)
+- `generateNewSecret` — FunctionDeclaration，[L26–L33](../webagent-core/agent-host/src/config.js#L26-L33)
+- `persistIdentity` — FunctionDeclaration，[L35–L47](../webagent-core/agent-host/src/config.js#L35-L47)
 
 ## webagent-core/agent-host/src/extensionVersion.js
 
@@ -2025,11 +2025,14 @@
 
 ## webagent-core/agent-host/tests/hostPersist.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `1a26a8ef919b07ef5a228eca44398e805881e45faeca7dc795510a279006c609`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `dc465efa5ce0ed3ed2d5dfaaf518e4f87456ee2bfb43d304bc3c6d549c3dd5e3`
 
-- `main` — FunctionDeclaration，[L14–L113](../webagent-core/agent-host/tests/hostPersist.test.js#L14-L113)
-- `main/anonymous@92:25` — ArrowFunctionExpression，[L92–L92](../webagent-core/agent-host/tests/hostPersist.test.js#L92-L92)
-- `main/anonymous@94:27` — ArrowFunctionExpression，[L94–L94](../webagent-core/agent-host/tests/hostPersist.test.js#L94-L94)
+- `main` — FunctionDeclaration，[L14–L128](../webagent-core/agent-host/tests/hostPersist.test.js#L14-L128)
+- `main/anonymous@45:35` — ArrowFunctionExpression，[L45–L45](../webagent-core/agent-host/tests/hostPersist.test.js#L45-L45)
+- `main/anonymous@51:18` — ArrowFunctionExpression，[L51–L51](../webagent-core/agent-host/tests/hostPersist.test.js#L51-L51)
+- `main/anonymous@52:37` — ArrowFunctionExpression，[L52–L52](../webagent-core/agent-host/tests/hostPersist.test.js#L52-L52)
+- `main/anonymous@107:25` — ArrowFunctionExpression，[L107–L107](../webagent-core/agent-host/tests/hostPersist.test.js#L107-L107)
+- `main/anonymous@109:27` — ArrowFunctionExpression，[L109–L109](../webagent-core/agent-host/tests/hostPersist.test.js#L109-L109)
 
 ## webagent-core/agent-host/tests/httpSmoke.test.js
 
