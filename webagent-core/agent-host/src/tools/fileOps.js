@@ -162,7 +162,7 @@ function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = fal
         {
           filePath,
           currentHash,
-          retryHint: `Retry write_file with confirm_overwrite=true, or apply_patch with expectedHash=${currentHash}`
+          retryHint: 'Stop; read the file and review the intended change before explicitly authorizing a new write. Do not blindly reuse an error hash.'
         }
       );
     }
@@ -170,7 +170,7 @@ function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = fal
       throw new ExecutionError(
         'E_STALE_FILE',
         `STALE_FILE ${filePath}: expectedHash ${expectedHash} does not match. Re-read the file.`,
-        { filePath, currentHash, retryHint: `Re-run read_files then retry. currentHash=${currentHash}` }
+        { filePath, currentHash, retryHint: 'Stop this write; re-read and coordinate the changed content with the operator. Do not replay or blindly use currentHash.' }
       );
     }
   }

@@ -61,6 +61,21 @@ async function main() {
     assert.strictEqual(fs.readFileSync(path.join(tmp, 'notes.md'), 'utf8'), 'hello from editor');
     assert.ok(!fs.readdirSync(tmp).some((n) => n.includes('.tmp.')));
 
+    const preview = await request(server, 'POST', '/api/files/preview', {path:'notes.md',content:'reviewed draft',expectedHash:created.json.hash});
+    assert.equal(preview.status,200); assert.ok(preview.json.diff.includes('+reviewed draft'));
+    assert.equal(preview.json.expectedHash,created.json.hash);
+    assert.equal(fs.readFileSync(path.join(tmp,'notes.md'),'utf8'),'hello from editor','preview never writes');
+    assert.equal((await request(server,'POST','/api/files/preview',{path:'notes.md',content:'x'})).status,400);
+    assert.equal((await request(server,'POST','/api/files/preview',{path:'notes.md',content:'x',expectedHash:'0'.repeat(64)})).status,409);
+    assert.equal((await request(server,'POST','/api/files/preview',{path:'../escape',content:'x',expectedHash:created.json.hash})).status,400);
+    assert.equal((await request(server,'POST','/api/files/preview',{path:'.env',content:'x',expectedHash:created.json.hash})).status,400);
+    assert.equal((await request(server,'POST','/api/files/preview',{path:'notes.md',content:'x'.repeat(65537),expectedHash:created.json.hash})).status,413);
+    assert.equal((await request(server,'POST','/api/files/preview',{path:'notes.md',content:'\n'.repeat(2000),expectedHash:created.json.hash})).status,413);
+    fs.writeFileSync(path.join(tmp,'notes.md'),'another writer');
+    const changed = await request(server,'PUT','/api/files/content',{path:'notes.md',content:'reviewed draft',expectedHash:preview.json.expectedHash});
+    assert.equal(changed.status,409); assert.equal(fs.readFileSync(path.join(tmp,'notes.md'),'utf8'),'another writer');
+    fs.writeFileSync(path.join(tmp,'notes.md'),'hello from editor');
+
     const blocked = await request(server, 'PUT', '/api/files/content', {
       path: '.env',
       content: 'SECRET=1'
@@ -82,6 +97,8 @@ async function main() {
       expectedHash: 'deadbeef'
     });
     assert.strictEqual(stale.status, 409);
+    assert.match(stale.json.detail.retryHint, /Stop this write/);
+    assert.ok(!stale.json.detail.retryHint.includes('then retry'));
     assert.ok(/STALE_FILE/.test(String(stale.json && stale.json.error)));
     assert.strictEqual(fs.readFileSync(path.join(tmp, 'notes.md'), 'utf8'), 'hello from editor');
 

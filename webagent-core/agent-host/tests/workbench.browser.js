@@ -157,6 +157,15 @@ async function main() {
     await page.click('#rb-bridge-tab'); await page.click('#execution-chat');
     await page.waitForFunction(()=>document.querySelector('#execution-mode').textContent.includes('主机模式：chat'));
     await page.click('#rb-chat-tab');
+    // Review an existing-file draft through the actual menu, then explicitly save the snapshot.
+    await page.fill('#editor-fallback','REAL-BROWSER-EVIDENCE\nSAVED-FROM-BROWSER\nPREVIEW-CONFIRMED\n');
+    await page.click('[data-menu="file"]');await page.click('[data-act="preview"]');
+    await page.locator('#btn-preview-save').waitFor({state:'visible'});
+    assert.ok((await page.locator('#diff-body').textContent()).includes('+PREVIEW-CONFIRMED'));
+    assert.ok(!fs.readFileSync(path.join(workspace,'acceptance.txt'),'utf8').includes('PREVIEW-CONFIRMED'));
+    const previewSaved=page.waitForResponse(response=>response.url().endsWith('/api/files/content') && response.request().method()==='PUT');
+    await page.click('#btn-preview-save');assert.equal((await previewSaved).status(),200);
+    assert.ok(fs.readFileSync(path.join(workspace,'acceptance.txt'),'utf8').includes('PREVIEW-CONFIRMED'));
     await page.click('#model-pick-btn'); await page.locator('.mp-row').filter({ hasText: '内置探索' }).click();
     await page.click('#btn-agent-pick'); await page.click('#agent-pick-menu [data-mode="ask"]');
     await page.fill('#chat-input', '只读取 `acceptance.txt`');

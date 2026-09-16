@@ -343,7 +343,7 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
       {
         filePath,
         currentHash,
-        retryHint: `Retry apply_patch with expectedHash=${currentHash}`
+        retryHint: 'Stop and read the file before planning a new patch. Do not blindly reuse currentHash from this error.'
       }
     );
   }
@@ -352,7 +352,7 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
     throw new ExecutionError(
       'E_STALE_FILE',
       `STALE_FILE: file changed since last read. Re-run read_files for a fresh sha256. expected=${expectedHash} current=${currentHash}`,
-      { filePath, expectedHash, currentHash, retryHint: `Re-run read_files then apply_patch with expectedHash=${currentHash}` }
+      { filePath, expectedHash, currentHash, retryHint: 'Stop this patch; re-read and coordinate the changed content. Do not replay or blindly reuse currentHash.' }
     );
   }
 

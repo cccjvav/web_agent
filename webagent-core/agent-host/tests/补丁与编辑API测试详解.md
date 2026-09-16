@@ -40,3 +40,5 @@ finally关server、rm tmp；catch exit1。这里直挂router，不是完整index
 分别filter patchEngine/apiFiles，或`npm test --prefix webagent-core/agent-host`。CRLF fixture能在Linux执行，不代表真实Windows权限、杀毒软件占用或编辑器焦点验收。
 
 2026-09-14负例补充：新增截断补丁、完整块加截断尾块、孤立标记，分别对已有/新文件、dryRun真/假断言E_BAD_ARGS且原文件不变/新文件不存在。
+
+apiFiles新增POST /files/preview真实HTTP夹具：成功返回diff和基线hash且磁盘不变；缺hash、越界/敏感路径拒绝；旧hash409；文本64KiB/2000行预算拒绝。预览后模拟另一个写入者，再PUT旧hash必须409且保留别人内容。临时夹具恢复基线后继续原测试；不是自动产品回滚。

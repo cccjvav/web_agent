@@ -133,6 +133,7 @@ export function bind() {
     if (b.dataset.act === 'new') $('#lnk-new-file').click();
     if (b.dataset.act === 'open') $('#activitybar [data-left="explorer"]').click();
     if (b.dataset.act === 'save') ui.saveActive();
+    if (b.dataset.act === 'preview') ui.previewActive();
     if (b.dataset.act === 'welcome') ui.ensureWelcome();
     if (b.dataset.act === 'custom') ui.openModal('overview');
   };

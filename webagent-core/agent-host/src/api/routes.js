@@ -407,6 +407,24 @@ router.get('/files/content', (req, res) => {
   }
 });
 
+// Existing-file editor previews are read-only and bounded; saving rechecks the same hash.
+router.post('/files/preview', (req, res) => {
+  try {
+    const { path: filePath, content, expectedHash } = req.body || {};
+    if (typeof filePath !== 'string' || !filePath || typeof content !== 'string' || typeof expectedHash !== 'string' || !/^[a-f0-9]{64}$/.test(expectedHash || '')) return res.status(400).json({ error: 'path, content and expectedHash required' });
+    if (Buffer.byteLength(content) > 65536 || content.split('\n').length > 2000) return res.status(413).json({ error: '预览限每份文本64KiB/2000行，请缩小修改或使用桌面编辑器' });
+    const full = resolveSafePath(filePath);
+    if (!fs.existsSync(full)) return res.status(409).json({ error: '文件已删除，不能预览旧版本', code: 'E_STALE_FILE' });
+    const current = readBoundedText(full, 65536);
+    const hash = computeHash(current);
+    if (hash !== expectedHash) return res.status(409).json({ error: '文件已变化，请保留草稿并核对磁盘', code: 'E_STALE_FILE' });
+    if (current.split('\n').length > 2000) return res.status(413).json({ error: '磁盘文件超过预览行数预算' });
+    const diff = require('diff').createTwoFilesPatch('a/' + filePath, 'b/' + filePath, current, content, 'disk', 'draft', { timeout: 100, maxEditLength: 4000 });
+    if (typeof diff !== 'string' || Buffer.byteLength(diff) > 262144) return res.status(413).json({ error: '差异超过预览预算，未保存' });
+    res.json({ success: true, path: filePath, expectedHash: hash, newHash: computeHash(content), diff });
+  } catch (error) { res.status(400).json({ error: error.message }); }
+});
+
 router.put('/files/content', async (req, res) => {
   try {
     const filePath = req.body && req.body.path;

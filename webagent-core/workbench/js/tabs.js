@@ -31,6 +31,7 @@ export function initEditorSafety() {
   if (safetyBound) return;
   safetyBound = true;
   $('#editor-fallback').addEventListener('input', () => { captureActiveFile(); paintTabs(); });
+  $('#btn-preview-save').onclick = savePreview;
   window.addEventListener('beforeunload', event => {
     captureActiveFile();
     if (state.tabs.some(t => t.kind === 'file' && (t.dirty || t.saving))) {
@@ -85,7 +86,7 @@ export function openAgentWindow() {
   ui.paintChat();
 }
 
-export function openDiff(filePath, diff) {
+export function openDiff(filePath, diff, preview = null) {
   const id = 'diff:' + filePath;
   let tab = state.tabs.find((t) => t.id === id);
   if (!tab) {
@@ -94,11 +95,13 @@ export function openDiff(filePath, diff) {
   } else {
     tab.diff = diff;
   }
+  tab.preview = preview;
   activateTab(id);
 }
 
 export function paintDiff(tab) {
-  $('#diff-title').textContent = tab.path || 'Diff';
+  $('#diff-title').textContent = (tab.path || 'Diff') + (tab.preview ? ' · 草稿预览，尚未保存' : '');
+  $('#btn-preview-save').classList.toggle('hidden', !tab.preview);
   const lines = String(tab.diff || '').split('\n');
   $('#diff-body').innerHTML = lines.map((line) => {
     const cls = line.startsWith('+') && !line.startsWith('+++') ? 'diff-add'
@@ -216,13 +219,16 @@ export async function saveActive() {
   const tab = state.tabs.find(t => t.id === state.activeTab);
   if (!tab || tab.kind !== 'file' || tab.saving) return;
   if (!/^[a-f0-9]{64}$/.test(tab.hash || '')) return ui.toast('缺少文件版本号，不能安全保存');
-  const content = tab.content;
+  return saveFile(tab, tab.content, tab.hash);
+}
+
+async function saveFile(tab, content, expectedHash) {
   tab.saving = true;
   try {
     const res = await fetch('/api/files/content', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ path: tab.path, content, expectedHash: tab.hash })
+      body: JSON.stringify({ path: tab.path, content, expectedHash })
     });
     const data = await res.json();
     if (res.status === 409) throw new Error('磁盘文件已变化，未覆盖。请保留当前编辑并核对磁盘版本');
@@ -257,3 +263,34 @@ ui.applyEditor = applyEditor;
 ui.treeHtml = treeHtml;
 ui.loadTree = loadTree;
 ui.saveActive = saveActive;
+
+export async function previewActive() {
+  captureActiveFile();
+  const tab = state.tabs.find(t => t.id === state.activeTab);
+  if (!tab || tab.kind !== 'file' || tab.saving || tab.previewing) return;
+  const content = tab.content, expectedHash = tab.hash;
+  tab.previewing = true;
+  try {
+    const response = await fetch('/api/files/preview', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:tab.path,content,expectedHash}) });
+    const data = await response.json();
+    if (!response.ok || data.success !== true) throw Error(data.error || '预览失败');
+    captureActiveFile();
+    if (!state.tabs.includes(tab) || state.activeTab !== tab.id || tab.content !== content || tab.hash !== expectedHash) throw Error('草稿或标签已变化，未打开旧预览；请重新预览');
+    if (data.expectedHash !== expectedHash || data.path !== tab.path || typeof data.diff !== 'string') throw Error('预览响应与文件版本不一致');
+    openDiff(tab.path, data.diff, { source:tab, content, expectedHash });
+  } catch(error) { ui.toast('预览未保存：' + error.message); }
+  finally { tab.previewing = false; }
+}
+export async function savePreview() {
+  const tab = state.tabs.find(t => t.id === state.activeTab);
+  const preview = tab?.preview;
+  if (!preview) return;
+  const source = preview.source;
+  if (!state.tabs.includes(source) || source.saving || source.content !== preview.content || source.hash !== preview.expectedHash) return ui.toast('草稿或文件版本已变化，请重新预览；未保存');
+  // Consume the reviewed snapshot before dispatch; even an unknown response must not replay.
+  tab.preview = null;
+  paintDiff(tab);
+  await saveFile(source, preview.content, preview.expectedHash);
+}
+ui.previewActive = previewActive;
+ui.savePreview = savePreview;
