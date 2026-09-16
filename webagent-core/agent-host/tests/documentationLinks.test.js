@@ -37,3 +37,27 @@ vm.createContext(rewriteContext);
 vm.runInContext(source.slice(begin, end) + '\nactiveDocPath="技术实现.md"; result=rewriteHref("#2-启动与端口");', rewriteContext);
 assert.equal(rewriteContext.result, '#/impl/' + slug('2. 启动与端口'));
 console.log('documentationLinks: selected live navigation, negative targets, encoded/fenced headings and actual generated route targets passed');
+
+// Real viewer functions in a minimal DOM: do not claim an actual browser session.
+const app = read('docs-site/app.js');
+let searchHtml = '', query = 'needle', scrollTarget = null;
+const main = { innerHTML: '', insertAdjacentHTML(_position, html) { searchHtml = html; } };
+const viewer = {
+  window: { DOCS: { guide: { introHtml: '', sections: [{ title: 'needle <img src=x>', id: 'section', html: '' }] }, impl: { toc: [{ id: '中文/标题', text: 'other', level: 2 }], html: '' }, fileIndex: [], terms: [] } },
+  $: selector => selector === '#q' ? { value: query } : selector === '#search-hits' ? searchHtml ? { remove() { searchHtml = ''; }, set outerHTML(html) { searchHtml = html; } } : null : main,
+  pageChrome: () => '', route: () => ({ rest: ['%xx'] }),
+  document: { getElementById(id) { return { scrollIntoView() { scrollTarget = id; } }; } }
+};
+vm.createContext(viewer);
+vm.runInContext(app.slice(app.indexOf('  function escapeText('), app.indexOf('  function escapeAttr(')) +
+  app.slice(app.indexOf('  function renderGuide('), app.indexOf('  function renderFiles(')) +
+  app.slice(app.indexOf('  function onSearch('), app.indexOf('  function renderSource(')), viewer);
+vm.runInContext('onSearch()', viewer); assert(searchHtml.includes('&lt;img')); assert(!searchHtml.includes('<img'));
+query = 'no-match'; vm.runInContext('onSearch()', viewer); assert(searchHtml.includes('没有匹配')); assert(!searchHtml.includes('needle'));
+query = ''; vm.runInContext('onSearch()', viewer); assert.equal(searchHtml, '');
+query = 'needle'; vm.runInContext('onSearch()', viewer); query = 'n'; vm.runInContext('onSearch()', viewer); assert.equal(searchHtml, '');
+vm.runInContext('renderGuide()', viewer); assert(main.innerHTML.includes('架构') || main.innerHTML.includes('guide-sec')); assert.equal(scrollTarget, null);
+viewer.route = () => ({ rest: [encodeURIComponent('中文'), encodeURIComponent('标题')] });
+vm.runInContext('renderProsePage("impl", "title", "kicker")', viewer); assert.equal(scrollTarget, '中文/标题');
+viewer.route = () => ({ rest: ['%xx'] }); scrollTarget = null;
+vm.runInContext('renderProsePage("impl", "title", "kicker")', viewer); assert.equal(scrollTarget, null);

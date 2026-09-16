@@ -205,7 +205,8 @@
   function renderGuide() {
     const g = window.DOCS.guide;
     const r = route();
-    const focus = decodeURIComponent(r.rest.join('/') || '');
+    let focus;
+    try { focus = decodeURIComponent(r.rest.join('/') || ''); } catch (_) { focus = ''; }
     const compact = (s) => String(s || '').replace(/[^\w\u4e00-\u9fff]+/g, '');
     $('.main').innerHTML = `
       ${pageChrome('架构导读', '每一节四层：人话 → 比喻 → 落在仓库哪 → 行业叫法。不先甩缩写。')}
@@ -250,7 +251,8 @@
         <article class="prose card">${doc.html}</article>
       </div>
     `;
-    const id = route().rest[0];
+    let id;
+    try { id = decodeURIComponent(route().rest.join('/') || ''); } catch (_) { id = ''; }
     if (id) {
       const el = document.getElementById(id);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -285,7 +287,7 @@
     `;
     $$('[data-file]').forEach((b) => b.addEventListener('click', () => go(`files/${b.dataset.file}`)));
     let anchor;
-    try { anchor = decodeURIComponent(route().rest[1] || ''); } catch (_) { anchor = ''; }
+    try { anchor = decodeURIComponent(route().rest.slice(1).join('/') || ''); } catch (_) { anchor = ''; }
     if (anchor) {
       const target = document.getElementById(anchor);
       if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -304,32 +306,25 @@
 
   function onSearch() {
     const q = ($('#q').value || '').trim().toLowerCase();
-    if (!q) return;
+    const existing = $('#search-hits');
+    if (q.length < 2) { if (existing) existing.remove(); return; }
     const hits = [];
     window.DOCS.guide.sections.forEach((s) => {
       if (s.title.toLowerCase().includes(q)) hits.push({ label: '导读 · ' + s.title, to: 'guide/' + encodeURIComponent(s.title) });
     });
     window.DOCS.impl.toc.forEach((t) => {
-      if (t.text.toLowerCase().includes(q)) hits.push({ label: '直译 · ' + t.text, to: 'impl/' + t.id });
+      if (t.text.toLowerCase().includes(q)) hits.push({ label: '实现 · ' + t.text, to: 'impl/' + t.id });
     });
     window.DOCS.fileIndex.forEach((f) => {
-      if (f.path.toLowerCase().includes(q) || f.id.includes(q)) hits.push({ label: '说明书 · ' + f.path, to: 'files/' + f.id });
+      if (f.path.toLowerCase().includes(q) || f.id.toLowerCase().includes(q)) hits.push({ label: '说明书 · ' + f.path, to: 'files/' + f.id });
     });
     (window.DOCS.terms || []).forEach((t) => {
-      if (t.term.toLowerCase().includes(q) || t.meaning.toLowerCase().includes(q)) {
-        hits.push({ label: '术语 · ' + t.term, to: 'terms' });
-      }
+      if (t.term.toLowerCase().includes(q) || t.meaning.toLowerCase().includes(q)) hits.push({ label: '术语 · ' + t.term, to: 'terms' });
     });
-    if (!hits.length) return;
-    const box = $('.main');
-    if (q.length >= 2) {
-      const existing = $('#search-hits');
-      const html = `<div class="card" id="search-hits" style="margin-bottom:16px"><h3>搜索</h3>${hits.slice(0, 20).map((h) =>
-        `<div><a href="#/${h.to}">${h.label}</a></div>`
-      ).join('')}</div>`;
-      if (existing) existing.outerHTML = html;
-      else box.insertAdjacentHTML('afterbegin', html);
-    }
+    const results = hits.slice(0, 20).map(h => `<div><a href="#/${escapeText(h.to)}">${escapeText(h.label)}</a></div>`).join('');
+    const html = `<div class="card" id="search-hits" style="margin-bottom:16px"><h3>搜索</h3>${results || '<p>没有匹配的标题、文件或术语。</p>'}</div>`;
+    if (existing) existing.outerHTML = html;
+    else $('.main').insertAdjacentHTML('afterbegin', html);
   }
 
   function renderSource() {

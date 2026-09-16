@@ -14,6 +14,38 @@ async function freePort() {
   await new Promise(resolve => server.close(resolve));
   return port;
 }
+async function docsViewerBrowser(browser) {
+  const fixture = await browser.newPage(), errors = [];
+  fixture.on('pageerror', error => errors.push(error.message));
+  const docsRoot = path.resolve(__dirname, '../../../docs-site');
+  try {
+    await fixture.route('**/*', route => {
+      const url = new URL(route.request().url());
+      const name = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
+      const types = { 'index.html': 'text/html', 'app.js': 'text/javascript', 'content.js': 'text/javascript', 'styles.css': 'text/css' };
+      if (url.origin !== 'https://docs.example.test' || !types[name]) return route.abort();
+      return route.fulfill({ status: 200, contentType: types[name], body: fs.readFileSync(path.join(docsRoot, name)) });
+    });
+    await fixture.goto('https://docs.example.test/');
+    await fixture.fill('#q', '工作');
+    await fixture.locator('#search-hits a').first().waitFor();
+    await fixture.fill('#q', 'this-query-has-no-matches');
+    await fixture.waitForFunction(() => document.querySelector('#search-hits')?.textContent.includes('没有匹配'));
+    assert.equal(await fixture.locator('#search-hits a').count(), 0);
+    await fixture.fill('#q', ''); await fixture.locator('#search-hits').waitFor({ state: 'detached' });
+    await fixture.evaluate(() => { location.hash = '#/guide/%xx'; });
+    await fixture.locator('.guide-sec').first().waitFor();
+    const anchor = await fixture.evaluate(() => {
+      Element.prototype.scrollIntoView = function () { window.lastDocAnchor = this.id; };
+      const documentEntry = window.DOCS.fileIndex.find(item => item.path.endsWith('/请求分发详解.md'));
+      const target = window.DOCS.files[documentEntry.id].toc.find(item => item.id.includes('/'));
+      location.hash = '#/files/' + documentEntry.id + '/' + target.id;
+      return target.id;
+    });
+    await fixture.waitForFunction(target => window.lastDocAnchor === target, anchor);
+    assert.deepEqual(errors, [], 'actual docs browser reports no unhandled rendering errors');
+  } finally { await fixture.close(); }
+}
 async function probeHudBrowser(browser) {
   // Only the standalone UI module, in an empty page with all network blocked.
   // Never inject main.js, the interceptor or any credential/trace modules.
@@ -93,6 +125,7 @@ async function main() {
     await rpc('ping'); // History exists before the page opens.
     browser = await chromium.launch({ headless: true, ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
     await probeHudBrowser(browser);
+    await docsViewerBrowser(browser);
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.route('https://cdn.jsdelivr.net/**', route => route.abort());

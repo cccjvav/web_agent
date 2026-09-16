@@ -84,3 +84,7 @@ editorRuntime验证保存句柄后的previewUndo/savePreview：回退期间在Mo
 公网接入UI回归拦截/api/external/servers，不访问真实第三方：默认复选框关闭，明确确认后请求包含publicHttps/confirmedPublic及实际主机/工作区绑定，令牌输入清空。DNS/TLS/审批实现在publicHttps隔离TLS测试验证，两种证据不能冒充公网供应商已验收。
 
 stdio审批回归必须等待具体requestId的approve响应为succeeded，再核对结果显示与实际文件；不能仅等待输入参数中本来就有的STDIO-APPROVED文本来推断调用已结束。该竞态在b321432 CI暴露，保留严格文件证据。
+
+### docsViewerBrowser(browser)
+
+使用真实Chromium单独页面，通过route白名单提供实际docs-site/index.html/app.js/content.js/styles.css，其他请求中止；不连接外网服务。验证有结果→无匹配替换→清空移除，坏guide百分号不阻断全文，以及真实MCP详解含斜线标题的目标。覆写scrollIntoView仅记录被调用元素ID，不把它当滚动动画/视觉验收；pageerror收集未处理错误，finally关页面。此用例使用真实DOM/脚本，不是VM，但也不覆盖静态服务器网络/全部浏览器或所有标题语法。
