@@ -3,7 +3,6 @@
 const net = require('net');
 const https = require('https');
 const dns = require('dns').promises;
-const { Readable } = require('stream');
 const blocked = new net.BlockList();
 for (const [address, prefix] of [['0.0.0.0',8],['10.0.0.0',8],['100.64.0.0',10],['127.0.0.0',8],['169.254.0.0',16],['172.16.0.0',12],['192.0.0.0',24],['192.0.2.0',24],['192.88.99.0',24],['192.168.0.0',16],['198.18.0.0',15],['198.51.100.0',24],['203.0.113.0',24],['224.0.0.0',4],['240.0.0.0',4]]) blocked.addSubnet(address,prefix,'ipv4');
 for (const [address,prefix] of [['2001::',23],['2001:db8::',32],['2002::',16],['3fff::',20]]) blocked.addSubnet(address,prefix,'ipv6');
@@ -24,6 +23,24 @@ async function resolvePublic(hostname, signal, lookup = dns.lookup.bind(dns)) {
     return addresses[0];
   } finally {signal?.removeEventListener('abort',abort);}
 }
+function webBody(response) {
+  let terminal=false;
+  return new ReadableStream({
+    start(controller) {
+      response.pause();
+      response.on('data',chunk=>{
+        if (terminal) return;
+        controller.enqueue(new Uint8Array(chunk));
+        if (controller.desiredSize<=0) response.pause();
+      });
+      response.on('end',()=>{if (!terminal) {terminal=true;controller.close();}});
+      response.on('error',error=>{if (!terminal) {terminal=true;controller.error(error);}});
+      response.on('close',()=>{if (!terminal) {terminal=true;controller.error(Error('Public HTTPS response closed before end'));}});
+    },
+    pull() {if (!terminal) response.resume();},
+    cancel() {terminal=true;response.destroy();}
+  },{highWaterMark:1});
+}
 async function post(url, {headers,body,signal}, dependencies = {}) {
   const target=new URL(url);
   if (target.protocol!=='https:' || target.username || target.password || target.search || target.hash) throw Error('Public MCP requires HTTPS without URL credentials, query or fragment');
@@ -40,10 +57,10 @@ async function post(url, {headers,body,signal}, dependencies = {}) {
     }, response=>{
       const responseHeaders=new Headers();
       for (const [key,value] of Object.entries(response.headers)) if(value!==undefined) responseHeaders.set(key,Array.isArray(value)?value.join(', '):value);
-      resolve({ok:response.statusCode>=200 && response.statusCode<300,status:response.statusCode,headers:responseHeaders,body:Readable.toWeb(response)});
+      resolve({ok:response.statusCode>=200 && response.statusCode<300,status:response.statusCode,headers:responseHeaders,body:webBody(response)});
     });
     request.once('error',reject);
     request.end(body);
   });
 }
-module.exports={isPublic,resolvePublic,post};
+module.exports={isPublic,resolvePublic,webBody,post};

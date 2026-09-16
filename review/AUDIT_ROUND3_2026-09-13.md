@@ -721,7 +721,7 @@ P3-43及OPT-E3“新测试漏登记静默漏检/新增测试必使runner失败�
 
 ### 本轮收尾与统一结论
 
-最终逐项处置迁至 [CURRENT_AUDIT.md](CURRENT_AUDIT.md)，上面的失败/进行中条目是当时的时间线，不覆盖最新结论。
+最终逐项处置迁至 [CURRENT_AUDIT.md](archive/CURRENT_AUDIT_2026-09-15.md)，上面的失败/进行中条目是当时的时间线，不覆盖最新结论。
 
 代码基线1c1ff8c / CI34858920756八项任务通过（Ubuntu/Windows20/22/24、Ubuntu18兼容、Windows安装器），本地52/52、演示6/6、完整npm audit 0已知漏洞。Windows命令加入Job Object，taskkill有界/失败回退，取消及仅终止父进程回归不放宽10秒断言；扩展输出背压/临时清理、共享危险策略、扩展版本同步、安装预构建文档/链接、UI初次失败恢复、配对按clientId隔离及其他确认项已修。
 

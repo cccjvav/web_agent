@@ -9,6 +9,11 @@ const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'public-mcp-'));config.workspaceR
 const cert=fs.readFileSync(path.join(__dirname,'fixtures/public-mcp-test-cert.pem'));
 const key=fs.readFileSync(path.join(__dirname,'fixtures/public-mcp-test-key.pem'));
 async function main() {
+  const nodeStream=new (require('stream').PassThrough)();
+  const reader=transport.webBody(nodeStream).getReader();
+  await reader.cancel();
+  nodeStream.emit('data',Buffer.from('late'));nodeStream.emit('end');nodeStream.emit('error',Error('late failure'));nodeStream.emit('close');
+  assert.equal((await reader.read()).done,true,'late events cannot close/enqueue twice after cancellation');
   for(const ip of ['0.0.0.0','10.2.3.4','127.0.0.1','169.254.169.254','172.16.1.2','192.168.0.1','100.64.1.2','198.18.1.2','192.0.2.1','224.0.0.1','255.255.255.255','::1','::ffff:8.8.8.8','fc00::1','fe80::1','64:ff9b::808:808','2001:db8::1','2002:808:808::1','3fff::1','garbage']) assert.equal(transport.isPublic(ip),false,ip);
   for(const ip of ['8.8.8.8','1.1.1.1','2606:4700:4700::1111','2001:4860:4860::8888']) assert.equal(transport.isPublic(ip),true,ip);
   const abort=new AbortController();

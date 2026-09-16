@@ -282,8 +282,10 @@ async function main() {
     assert.ok(!fs.existsSync(path.join(workspace, 'stdio-calls.txt')));
     await page.click('#btn-ops-refresh');
     await page.locator('#ops-requests button').filter({ hasText: stdioPending.requestId }).click();
+    const stdioApproval=page.waitForResponse(response=>response.url().endsWith('/operations/'+stdioPending.requestId+'/approve') && response.request().method()==='POST');
     page.once('dialog', dialog => dialog.accept()); await page.locator('#ops-controls button').first().click();
-    await page.waitForFunction(() => document.querySelector('#ops-review').textContent.includes('STDIO-APPROVED'));
+    assert.equal((await (await stdioApproval).json()).status,'succeeded');
+    await page.waitForFunction(() => document.querySelector('#ops-review').textContent.includes('succeeded') && document.querySelector('#ops-review').textContent.includes('STDIO-APPROVED'));
     assert.strictEqual(fs.readFileSync(path.join(workspace, 'stdio-calls.txt'), 'utf8'), 'call\n');
     assert.ok(!(await page.locator('#ops-review').textContent()).includes('browser-private-stdio'));
     await page.locator('#ops-servers button').first().click();
