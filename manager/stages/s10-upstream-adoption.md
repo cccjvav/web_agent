@@ -517,7 +517,7 @@ Test/Add全流程与模型选择共用guard，捕获Endpoint/Key/manualId/vision
 
 后端15秒期限原已存在，本次修正文档中“无期限”旧断言；新增断连取消传播、逐块512KiB预算（非进程内存上限）、1–100项/字段预算、URL/key校验、拒跳转及错误正文不回显。发现只向用户明确指定的HTTP(S)端点发送Key，可含本机服务；没有套用externalMCP的公网DNS/SSRF隔离保证。旧ProviderKey更新/删除、其他状态消费者和R2剩余安全调用链仍未完成。
 
-验证：apiFiles、providers、workbenchRuntime和chatVision筛选通过；VM、真实回环HTTP、body停顿/跳转与配置保留已覆盖。新增浏览器点击fixture待本批CI；沙箱仍无Chromium，沿用第31组下载失败记录，不伪造本地浏览器通过。完整82测试文件、生成/构建/一致性检查通过（246源码/28目录/110排除），精确提交CI待推送核验；正式清单只扩大对应章节局部范围，不增加整篇通过数。
+验证：apiFiles、providers、workbenchRuntime和chatVision筛选通过；VM、真实回环HTTP、body停顿/跳转与配置保留已覆盖。新增浏览器点击fixture在本批CI实际通过；沙箱仍无Chromium，沿用第31组下载失败记录，不伪造本地浏览器通过。完整82测试文件、生成/构建/一致性检查通过（246源码/28目录/110排除），实现87b1e918ff153c64b510c38cee8b44e9b5fac33a已推当前固定分支，[CI35270917981](https://github.com/cccjvav/web_agent/actions/runs/35270917981)九项逐项成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium），不代签用户本机或关闭Windows旧超时根因；正式清单只扩大对应章节局部范围，不增加整篇通过数。
 
 ## 复盘
 
