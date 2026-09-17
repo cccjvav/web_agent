@@ -539,7 +539,7 @@ operations的详情/预览/提交共用审阅代次，先清旧控件、GET可�
 
 红测确认：检查点GET失败让审批GET次数为0；错ID预览仍生成恢复控件。两列表改独立并发加载/代次、错误隔离、整批形状与重复ID校验，先清旧控件，迟到JSON不能回滚列表，旧列表按钮不可复用；刷新按钮不再action导致二次刷新。检查点预览校验ID/ready/previewId/完整文件清单/hash/changed/diff，展示/恢复/结果发布核对工作区绑定；恢复响应核对consumed、同一文件集合与success/status/逐文件一致，缺失/矛盾响应只提示未确认，不重放。合法部分失败照实展示，不说HTTP200就是恢复成功。
 
-fileCheckpoints新增真实file_written回调抛错：磁盘已恢复第一文件、第二未开始、结果unknown且再次恢复拒绝；既有后端正确处理，未改后端代码。VM覆盖两个红测、双列表乱序JSON、无效整批/旧按钮、坏预览、绑定变化零POST、恢复null/错ID/矛盾结果、不重放与合法unknown/succeeded。新增checkpointResultsBrowser真实页面拦截场景；本地无Chromium，不代签已执行。最终本地82测试文件通过，文档生成/构建/一致性通过（246源码/28目录/110排除），git diff --check通过；精确CI待提交核验。
+fileCheckpoints新增真实file_written回调抛错：磁盘已恢复第一文件、第二未开始、结果unknown且再次恢复拒绝；既有后端正确处理，未改后端代码。VM覆盖两个红测、双列表乱序JSON、无效整批/旧按钮、坏预览、绑定变化零POST、恢复null/错ID/矛盾结果、不重放与合法unknown/succeeded。新增checkpointResultsBrowser真实页面拦截场景；本地无Chromium，不代签已执行。最终本地82测试文件通过，文档生成/构建/一致性通过（246源码/28目录/110排除），git diff --check通过；实现677f47ab22bdfebe18daa13561e6a93776d2d581已推当前固定分支，[CI35279294245](https://github.com/cccjvav/web_agent/actions/runs/35279294245)九项逐项成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium），新增checkpointResultsBrowser已实际执行通过；本地仍无Chromium，不代签用户实机。
 
 只扩大相关正文局部范围，未给整个编辑回退、审批长篇或API全链认证。下一包继续其余API写请求/状态消费者与检查点创建等尚未复核入口，R2穿插；权限/进程隔离、历史Windows超时根因、全仓逐句、用户实机仍未完成，探测继续暂停。
 
