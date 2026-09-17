@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-第30组彻底回归原管家结构：计划、工作包与交接纳入[现有阶段10](../manager/stages/s10-upstream-adoption.md#当前工作包与交接约束)，CONTEXT仍是唯一接手索引；不再保留根交接文件或单独路线。第29组OAuth指引/空prompt修复与验证仍看阶段历史；本次只整理管理文档，不增加语义完成数。
+第30组彻底回归原管家结构：计划、工作包与交接纳入[现有阶段10](../manager/stages/s10-upstream-adoption.md#当前工作包与交接约束)，CONTEXT仍是唯一接手索引；不再保留根交接文件或单独路线。第29组OAuth指引/空prompt修复与验证仍看阶段历史；本次只整理管理文档，不增加语义完成数。本地82测试文件通过；7439388ed80359bdcc814a8f0cfe3fb5a8267baf的[CI35266822926](https://github.com/cccjvav/web_agent/actions/runs/35266822926)九项成功，范围见阶段30组，不代替剩余审查或实机验收。
 
 第28组28f26e166be5294bc2963b30e195e800ef48f05d，[CI35263924819](https://github.com/cccjvav/web_agent/actions/runs/35263924819)逐项九项成功（Ubuntu18/20/22/24、Windows20/22/24、安装器、Chromium）。本地82测试文件通过，246源码/28目录/110排除。本次CI实际执行，不再把账户问题列为当前全局阻塞；不推断账单如何恢复，不删除25–27组未启动历史，也不据此关闭Windows旧超时根因或第三方实机验收。
 
