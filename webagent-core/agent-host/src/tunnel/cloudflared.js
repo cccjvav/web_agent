@@ -1,3 +1,4 @@
+const { StringDecoder } = require('string_decoder');
 const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -11,6 +12,37 @@ let child = null;
 let generation = 0, cancelPending = null;
 let stopping = Promise.resolve();
 let quickUrl = null;
+
+// One instance per pipe. Hold only a possible token prefix; never flush it raw on exit.
+function createTokenRedactor(token) {
+  const secret = String(token || '');
+  const decoder = new StringDecoder('utf8');
+  const prefix = new Uint32Array(secret.length);
+  for (let i = 1, j = 0; i < secret.length; i++) {
+    while (j && secret[i] !== secret[j]) j = prefix[j - 1];
+    if (secret[i] === secret[j]) j++;
+    prefix[i] = j;
+  }
+  let matched = 0;
+  return chunk => {
+    const text = decoder.write(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk)));
+    if (!secret) return text;
+    const output = [];
+    for (let i = 0; i < text.length; i++) {
+      const character = text[i];
+      while (matched && character !== secret[matched]) {
+        const next = prefix[matched - 1];
+        output.push(secret.slice(0, matched - next));
+        matched = next;
+      }
+      if (character === secret[matched]) {
+        matched++;
+        if (matched === secret.length) { output.push('[token]'); matched = 0; }
+      } else output.push(character);
+    }
+    return output.join('');
+  };
+}
 
 function parseTunnelUrl(chunk) {
   const m = String(chunk || '').match(URL_RE);
@@ -109,6 +141,7 @@ async function startNamedTunnel({ hostname, token, port = config.port, timeoutMs
       shell: needShell
     });
     child = proc;
+    const redactLogs = new Map([proc.stdout, proc.stderr].map(stream => [stream, createTokenRedactor(tok)]));
     let buf = '';
     let settled = false;
 
@@ -119,12 +152,12 @@ async function startNamedTunnel({ hostname, token, port = config.port, timeoutMs
       reject(new Error('cloudflared Named Tunnel 已启动但 25 秒内没有连上 Cloudflare。请确认 Token、Public Hostname 指到 ' + target + '，以及本机网络。'));
     }, timeoutMs);
 
-    const onData = (chunk) => {
+    const onData = (chunk, stream) => {
       if (child !== proc || ticket !== generation) return;
       const text = chunk.toString();
       buf = (buf + text).slice(-65536);
-      const safe = tok ? text.split(tok).join('[token]') : text;
-      eventBus.broadcast('tunnel_log', { chunk: safe.slice(0, 400) });
+      const safe = redactLogs.get(stream)(chunk);
+      if (safe) eventBus.broadcast('tunnel_log', { chunk: safe.slice(0, 400) });
       if (NAMED_READY_RE.test(buf) && !settled) {
         settled = true;
         clearTimeout(timer);
@@ -143,8 +176,8 @@ async function startNamedTunnel({ hostname, token, port = config.port, timeoutMs
       child = null; quickUrl = null; config.publicTunnelUrl = null; config.bridgeRunning = false;
       eventBus.broadcast('tunnel_stopped', {});
     };
-    proc.stdout.on('data', onData);
-    proc.stderr.on('data', onData);
+    proc.stdout.on('data', chunk => onData(chunk, proc.stdout));
+    proc.stderr.on('data', chunk => onData(chunk, proc.stderr));
     proc.on('error', (err) => {
       if (!proc.pid) clearActive();
       else if (child === proc && ticket === generation) stopTunnel().catch(() => {});
@@ -255,6 +288,7 @@ process.on('SIGINT', () => { stopTunnel().then(() => process.exit(0), () => proc
 process.on('SIGTERM', () => { stopTunnel().then(() => process.exit(0), () => process.exit(1)); });
 
 module.exports = {
+  createTokenRedactor,
   parseTunnelUrl,
   canonicalNamedUrl,
   findCloudflared,

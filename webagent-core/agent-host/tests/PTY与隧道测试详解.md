@@ -61,3 +61,9 @@ tmp假cloudflared文件，CLOUDFLARED_PATH指它；cp.spawn返回fake并记录�
 背压fixture：EventEmitter/constructor/fire/dispose与fakePty.spawn/onData/onExit/kill/write为替身；streamHost的postJob首个progress由releaseProgress阻塞，2000个输出块仍只有一请求在途，onExit等待释放再done且尾部≤200Ki。Windows读取scriptPath检查BOM，正常退出、spawn异常、无onExit的dispose均删除私有目录。
 
 另一个Windows用例让真实Node后代仅终止自己的PowerShell父进程（不调用taskkill /T）；根退出后必须10秒内关闭后代持有的管道，且必须先见到真实启动标记。这直接验证Job Object保障，不仅验证taskkill正常树枚举。
+
+## 隧道Token增量遮盖回归
+
+tunnel.test执行createTokenRedactor，遍历ASCII、重复前缀与中文Token的每个UTF-8字节切分位置，再逐字节喂入；完整Token遮盖，普通错配前缀仍输出。tunnelLifecycle以实际Named/ngrok启动回调及模拟ChildProcess事件交错stdout/stderr，检查分流游标、潜在秘密前缀不提前发布、正常ready、停止后旧数据拒绝、事件历史不含完整测试Token。未调用外部程序或真实账号，不代表Windows进程树/公网验收。
+
+collect(event)是tunnelLifecycle临时订阅回调，仅收集已脱敏的event.chunk供断言，finally移除监听；测试还恢复NGROK_PATH，避免污染后续环境。tunnel.test额外穷举长度0–8的二元文本、四种重叠Token，以整体split/join为对照验证逐字符输出；这是有界性质检查，不是任意输入形式化证明。

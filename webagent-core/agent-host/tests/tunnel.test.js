@@ -1,8 +1,35 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
-const { parseTunnelUrl, canonicalNamedUrl, startNamedTunnel } = require('../src/tunnel/cloudflared');
+const { parseTunnelUrl, canonicalNamedUrl, startNamedTunnel, createTokenRedactor } = require('../src/tunnel/cloudflared');
 const { parseNgrokUrl, startNgrokTunnel } = require('../src/tunnel/ngrok');
+
+// Exhaust every byte split, including multibyte UTF-8 and overlapping prefixes.
+for (const token of ['fixture-secret-123', 'ababaca', 'aaaab', '密钥-测试']) {
+  const text = 'normal: ' + token + ' / ' + token + ' end!';
+  const bytes = Buffer.from(text);
+  const expected = text.split(token).join('[token]');
+  for (let split = 0; split <= bytes.length; split++) {
+    const redact = createTokenRedactor(token);
+    assert.strictEqual(redact(bytes.subarray(0, split)) + redact(bytes.subarray(split)), expected);
+  }
+  const redact = createTokenRedactor(token);
+  assert.strictEqual([...bytes].map(byte => redact(Buffer.from([byte]))).join(''), expected);
+}
+// Bounded exhaustive oracle: overlapping prefixes and mismatch fallback preserve ordinary text.
+for (const token of ['aba', 'aaa', 'aab', 'abab']) {
+  for (let size = 0; size <= 8; size++) {
+    for (let mask = 0; mask < (1 << size); mask++) {
+      const text = Array.from({length:size}, (_, i) => (mask >> i) & 1 ? 'a' : 'b').join('') + '!';
+      const redact = createTokenRedactor(token);
+      assert.strictEqual([...text].map(character => redact(Buffer.from(character))).join(''), text.split(token).join('[token]'));
+    }
+  }
+}
+const partial = createTokenRedactor('secret-value');
+assert.strictEqual(partial(Buffer.from('log: secret-')), 'log: ', 'prefix must not escape before next chunk');
+assert.strictEqual(partial(Buffer.from('X!')), 'secret-X!', 'ordinary mismatched prefix is retained');
+assert.strictEqual(createTokenRedactor('')(Buffer.from('normal')), 'normal');
 
 const CAP = 'buf = (buf + text).slice(-65536)';
 function sliceHits(src) {

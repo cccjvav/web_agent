@@ -7,7 +7,7 @@ const path = require('path');
 const cp = require('child_process');
 const { stopProcess } = require('../src/tunnel/stopProcess');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-tunnel-life-'));
-const oldSpawn = cp.spawn, oldFind = cp.spawnSync, oldPath = process.env.CLOUDFLARED_PATH;
+const oldSpawn = cp.spawn, oldFind = cp.spawnSync, oldPath = process.env.CLOUDFLARED_PATH, oldNgrokPath = process.env.NGROK_PATH;
 function fake() {
   const proc = new EventEmitter(); proc.stdout = new EventEmitter(); proc.stderr = new EventEmitter();
   proc.exitCode = null; proc.signalCode = null; proc.signals = [];
@@ -48,9 +48,45 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
   const third = tunnel.startQuickTunnel(); const rejected = assert.rejects(third, /cancelled/); await tick();
   const stopping = tunnel.stopTunnel(); spawned[2].emit('exit', 0);
   await stopping; await rejected;
+  // Exercise actual provider callbacks, including interleaved stdout/stderr.
+  const bus = require('../src/utils/eventBus');
+  const logs = [];
+  const collect = event => logs.push(event.chunk);
+  bus.on('tunnel_log', collect);
+  try {
+    process.env.NGROK_PATH = bin;
+    const ngrok = require('../src/tunnel/ngrok');
+    for (const provider of ['named', 'ngrok']) {
+      const token = 'fixture-secret-' + provider;
+      const start = provider === 'named'
+        ? tunnel.startNamedTunnel({hostname:'mcp.example.test',token})
+        : ngrok.startNgrokTunnel({token});
+      await tick();
+      const proc = spawned.at(-1);
+      const beginning = logs.length;
+      proc.stdout.emit('data', Buffer.from('OUT: ' + token.slice(0, 10)));
+      proc.stderr.emit('data', Buffer.from('ERR: ' + token.slice(0, 7)));
+      assert.strictEqual(logs.slice(beginning).join(''), 'OUT: ERR: ');
+      proc.stdout.emit('data', Buffer.from(token.slice(10) + '!'));
+      proc.stderr.emit('data', Buffer.from(token.slice(7) + '!'));
+      assert.strictEqual(logs.slice(beginning).join(''), 'OUT: ERR: [token]![token]!');
+      proc.stdout.emit('data', Buffer.from(provider === 'named' ? ' Registered tunnel connection' : ' url=https://fixture.ngrok.app'));
+      await start;
+      const beforePartial = logs.length;
+      proc.stderr.emit('data', Buffer.from(token.slice(0, 8)));
+      assert.strictEqual(logs.length, beforePartial, 'unfinished token prefix is withheld');
+      const stopped = tunnel.stopTunnel();
+      proc.stdout.emit('data', Buffer.from(token));
+      proc.emit('exit', 0);
+      await stopped;
+      assert.ok(!logs.slice(beginning).join('').includes(token));
+      assert.ok(!JSON.stringify(bus.getRecentLogs(500)).includes(token), 'stored event history is also redacted');
+    }
+  } finally { bus.removeListener('tunnel_log', collect); }
   console.log('tunnel process reference/generation/start-stop regressions passed');
 })().catch(err => { console.error(err); process.exitCode = 1; }).finally(() => {
   cp.spawn = oldSpawn; cp.spawnSync = oldFind;
   if (oldPath === undefined) delete process.env.CLOUDFLARED_PATH; else process.env.CLOUDFLARED_PATH = oldPath;
+  if (oldNgrokPath === undefined) delete process.env.NGROK_PATH; else process.env.NGROK_PATH = oldNgrokPath;
   fs.rmSync(tmp, { recursive: true, force: true });
 });

@@ -4,7 +4,7 @@ const path = require('path');
 const { config } = require('../config');
 const eventBus = require('../utils/eventBus');
 const { stopProcess } = require('./stopProcess');
-const { canonicalNamedUrl } = require('./cloudflared');
+const { canonicalNamedUrl, createTokenRedactor } = require('./cloudflared');
 
 const NGROK_URL_RE = /https:\/\/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+/i;
 const NGROK_READY_RE = /started tunnel|Forwarding\s+https:\/\//i;
@@ -115,6 +115,7 @@ async function startNgrokTunnel({ hostname, token, port = config.port, timeoutMs
       env: { ...process.env, NGROK_AUTHTOKEN: tok }
     });
     child = proc;
+    const redactLogs = new Map([proc.stdout, proc.stderr].map(stream => [stream, createTokenRedactor(tok)]));
     let buf = '';
     let settled = false;
 
@@ -135,12 +136,12 @@ async function startNgrokTunnel({ hostname, token, port = config.port, timeoutMs
       resolve({ url, binary: bin, target: `http://${target}`, ngrok: true });
     };
 
-    const onData = (chunk) => {
+    const onData = (chunk, stream) => {
       if (child !== proc || ticket !== generation) return;
       const text = chunk.toString();
       buf = (buf + text).slice(-65536);
-      const safe = tok ? text.split(tok).join('[token]') : text;
-      eventBus.broadcast('tunnel_log', { chunk: safe.slice(0, 400) });
+      const safe = redactLogs.get(stream)(chunk);
+      if (safe) eventBus.broadcast('tunnel_log', { chunk: safe.slice(0, 400) });
       const parsed = parseNgrokUrl(buf);
       if (named && NGROK_READY_RE.test(buf)) return finish(named);
       if (parsed) return finish(parsed);
@@ -154,8 +155,8 @@ async function startNgrokTunnel({ hostname, token, port = config.port, timeoutMs
       child = null; ngrokUrl = null; config.publicTunnelUrl = null; config.bridgeRunning = false;
       eventBus.broadcast('tunnel_stopped', {});
     };
-    proc.stdout.on('data', onData);
-    proc.stderr.on('data', onData);
+    proc.stdout.on('data', chunk => onData(chunk, proc.stdout));
+    proc.stderr.on('data', chunk => onData(chunk, proc.stderr));
     proc.on('error', (err) => {
       if (!proc.pid) clearActive();
       else if (child === proc && ticket === generation) stopNgrok().catch(() => {});

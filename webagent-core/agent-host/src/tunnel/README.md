@@ -26,7 +26,7 @@
 
 已有pid的error仍走停止等待；没有成功spawn的error可以清理失败状态。替换必须等旧进程确认退出。停止失败会阻止后续替换，需要人工核对残留进程或重启主机，不能因为URL字段已清空就断言公网连接必然关闭。
 
-Named Token必须传给cloudflared命令行，因此可能对有本机进程查看权限的人可见；日志会替换Token。ngrok Authtoken放在子进程环境，不放argv。两者都不是秘密存储系统，勿将完整进程信息或凭据粘贴到公开日志。
+Named Token必须传给cloudflared命令行，因此可能对有本机进程查看权限的人可见；日志在逐pipe增量遮盖完整Token后再裁剪，分块前缀暂扣；结束时不输出未完成前缀。ngrok Authtoken放在子进程环境，不放argv。两者都不是秘密存储系统，勿将完整进程信息或凭据粘贴到公开日志。
 
 ## 验证与排查
 `tunnel`、`tunnelLifecycle`和`bridgeTunnel`测试覆盖解析、进程引用/代次、停止失败及API结果；进程事件fixture不等于Windows进程树或真实公网验收。
@@ -40,7 +40,7 @@ Named Token必须传给cloudflared命令行，因此可能对有本机进程查�
 
 | 源码 | 定位证据 |
 |---|---|
-| [cloudflared.js](cloudflared.js) | 39 个函数/类节点 |
-| [ngrok.js](ngrok.js) | 22 个函数/类节点 |
+| [cloudflared.js](cloudflared.js) | 44 个函数/类节点 |
+| [ngrok.js](ngrok.js) | 25 个函数/类节点 |
 | [stopProcess.js](stopProcess.js) | 8 个函数/类节点 |
 <!-- docs-inventory:end -->

@@ -11,13 +11,13 @@
 
 因此**不做**：操作系统级命令沙箱、系统钥匙串、把一把 URL 密钥拆成多把、**远程**交互式 PTY、按客户端隔离全部全局状态。理由见 [架构导读.md](./架构导读.md) 第 12 节。已经做的：文件工具路径不能跑出工作区、远程常见破坏性命令拒绝（词法归一后判定，编码/嵌套脚本仍可能绕过）、公网 `/api` 404（含 `/api/pty/*`）、带了不在白名单里的 Origin 打 `/mcp` 得 403、密钥 gitignore；若 Git 已经跟踪 `.webagent/config.json`，启动时会警告。桌面 Chat 的集成终端 PTY 只走本机 `/api/pty`（VS Code 插件，`client: vscode-extension`）；远程 `send_command_input` 是 `E_FORBIDDEN`。
 
-## 本机控制面与文件工具补充（2026-09-11）
+## 本机控制面与文件工具
 
 `/api`要求Host为localhost、127.0.0.1或[::1]（可带有效端口），且socket回环、无隧道特征头；外站Origin/Referer仍被拒绝。`/ws`在upgrade阶段也验证本机控制面和Origin；无Origin的本机Node客户端仍允许。`WEBAGENT_CORS_ORIGINS`只扩展MCP网页白名单，不能放开API或WS。
 
 文件路径检查同时验证逻辑路径和真实链接目标；内置敏感规则不区分大小写并覆盖嵌套目录。记忆day仅接收有效日历日期；用户Skill必须实际位于工作区内，产品固定bundled目录例外保留。这是应用层保护，不是OS沙箱，不承诺抵抗有本机文件系统写权限进程的所有竞态或硬链接操作。
 
-本轮只修复了一批问题；webview动态文本已改为DOM/textContent并加nonce CSP与宿主消息校验（真实VS Code验收尚待）；PTY已加入审批到期、取消与所有者绑定，具体边界见下文“请求与终端取消”；旧[交叉验证台账](./review/AUDIT_CROSSCHECK_2026-09-11.md)仅作历史来源，不作为未修清单。不要把新增回归通过视为整体安全验收完成。
+现有webview动态文本已改为DOM/textContent并加nonce CSP与宿主消息校验（真实VS Code验收尚待）；PTY已加入审批到期、取消与所有者绑定，具体边界见下文“请求与终端取消”；旧[交叉验证台账](./review/AUDIT_CROSSCHECK_2026-09-11.md)仅作历史来源，不作为未修清单。不要把新增回归通过视为整体安全验收完成。
 
 ## Bridge所有者权限与工作模式
 
@@ -45,6 +45,12 @@ Read控制工具/资源/提示词读取；Edit控制文件、记忆和任务板�
 
 MCP 认证优先用路径 `/mcp/<密钥>` 或请求头 `Authorization: Bearer`。还认查询串 `?secret=`，只是兜底；经公共隧道时 query 可能进边缘/代理访问日志，不要把密钥放在查询串里当主用法。
 
+### 隧道日志中的Token
+
+Named/ngrok的tunnel_log在进入事件总线前，对stdout/stderr各自进行增量精确Token遮盖，再裁剪到单次广播预算；同一流拆在不同chunk中的Token不会因分块先吐出候选前缀。UTF-8字节分割由解码器接续，退出/取消时不原样输出未完成前缀，因此普通尾部文本也可能保守省略。内部就绪判断不等脱敏输出，不以这个变化作公网验收。
+
+这只覆盖配置的Token在日志中的连续字面值，不保证URL编码/base64/插入控制符/其它未知秘密或提供商自行写入磁盘的日志得到处理。Named Token仍出现在cloudflared进程参数，ngrok Token仍在子进程环境，本机同用户进程与原始内部缓冲并不隔离。不要公开未经检查的进程信息或原始日志；之前可能留存的日志不会因升级被自动清洗，怀疑泄露应在提供商撤销/轮换相关Token。
+
 ## 本机密钥
 
 MCP 密钥和模型 API Key 写在工作区 `.webagent/config.json`（尽量 `chmod 0600`，并 gitignore）。不是系统钥匙串，也不搬到 `%APPDATA%`（密钥跟着这台「车」）。非 Git 场景（打包、备份、网盘同步、把工作区目录整个拷走）仍可能带上明文 Key。GitHub PAT 不会写入该文件。
@@ -63,7 +69,7 @@ ChatGPT 自制 MCP 插件用的 OAuth access / refresh **只在内存**。关掉
 
 Chat断开/停止会传递取消信号；每请求5分钟总期限，模型响应120秒期限。PTY基于客户端身份与工作区绑定，审批超时后不得执行；只读自动批准只接受保守完整命令。无可靠退出/输出捕获的fallback不执行，避免“已发送=成功”。这些是应用层控制，不保证对抗同机高权限进程或所有脱离进程组的子进程；真实Windows和VS Code仍待验收。
 
-## 第三轮审批与环境修正（2026-09-14）
+## 审批与执行环境
 - 常见cat/type/Get-Content、git diff/log/show正文读取需当次PTY审批，即使已允许会话/命令族；路径/符号链接/已跟踪密钥无法仅靠命令词判断安全。
 - 会话/命令族允许仍可能执行其他任意程序；规则是尽力识别，不是OS沙箱。不得向不受信任务授予宽授权。
 - executor与PTY共用ptyPolicy.scrubEnv，移除token/access-key/storage-key等凭据名称，保留PATH/Conda；shell-integration终端设置strictEnv防重新继承。未知命名/程序自行读取磁盘凭据不在此保证内。
