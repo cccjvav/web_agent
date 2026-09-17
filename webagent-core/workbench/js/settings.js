@@ -144,7 +144,7 @@ export async function saveModelSettings(partial) {
       return false;
     }
     ui.toast('已保存模型设置');
-    try { await ui.refreshStatus(); }
+    try { if (await ui.refreshStatus() === false) throw new Error('状态刷新已被更新请求取代'); }
     catch (_) { ui.toast('模型设置已保存，但状态刷新失败；请手动核对，不要重复保存。'); }
     return true;
   } catch (error) {

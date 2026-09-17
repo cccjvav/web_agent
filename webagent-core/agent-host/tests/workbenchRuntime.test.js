@@ -343,5 +343,145 @@ if (!process.argv.includes('--vm-child')) {
   state.namespace.state.selectedClient='chatgpt-free';
   state.namespace.state.status.prompt='MUST-NOT-FALL-BACK-TO-SECRET';
   assert.strictEqual(bridge.namespace.promptText(),'');
+  // R3: validate snapshots before publishing and never let an older GET win.
+  const statusNodes = new Map();
+  context.document.querySelector = selector => {
+    if (!statusNodes.has(selector)) statusNodes.set(selector, {
+      value: '', textContent: '', innerHTML: '', dataset: {}, style: {},
+      classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
+      addEventListener() {}, setAttribute() {}, querySelectorAll: () => []
+    });
+    return statusNodes.get(selector);
+  };
+  context.document.querySelectorAll = () => [];
+  context.document.getElementById = id => context.document.querySelector('#' + id);
+  const confirmedStatus = { status:'online', bridgeRunning:false, activeModelId:'old',
+    models:[{id:'old',name:'Old model'},{id:'new',name:'New model'},{id:'builtin',name:'内置探索 Agent',protocol:'builtin'}] };
+  state.namespace.state.status = confirmedStatus;
+  state.namespace.ui.paintBridge = () => {};
+  state.namespace.ui.paintProviderTable = () => {};
+  state.namespace.ui.paintPlanComposer = () => {};
+  state.namespace.ui.paintTodos = () => {};
+  context.document.querySelector('#model-select').value = 'old';
+  for (const response of [
+    {ok:false,status:503,json:async()=>({error:'unavailable'})},
+    {ok:true,json:async()=>({success:false})},
+    {ok:true,json:async()=>({...confirmedStatus,models:[null]})},
+    {ok:true,json:async()=>({...confirmedStatus,models:[{id:'bad',caps:{}}]})},
+    {ok:true,json:async()=>{throw new Error('invalid JSON')}}
+  ]) {
+    context.fetch = async () => response;
+    await assert.rejects(bridge.namespace.refreshStatus());
+    assert.strictEqual(state.namespace.state.status,confirmedStatus,'invalid GET must not replace the last snapshot');
+    assert.strictEqual(statusNodes.get('#model-select').value,'old');
+  }
+  assert.ok(statusNodes.get('#sb-bridge').textContent.includes('状态同步失败'));
+  let finishOlder, finishNewer, olderSignal;
+  context.fetch = (url, options) => { olderSignal=options?.signal; return new Promise(resolve=>{finishOlder=resolve}); };
+  const olderRead = bridge.namespace.refreshStatus();
+  context.fetch = () => new Promise(resolve=>{finishNewer=resolve});
+  const newerRead = bridge.namespace.refreshStatus();
+  finishNewer({ok:true,json:async()=>({...confirmedStatus,activeModelId:'new'})});
+  assert.strictEqual(await newerRead,true);
+  finishOlder({ok:true,json:async()=>confirmedStatus});
+  assert.strictEqual(await olderRead,false,'superseded refresh is not a successful synchronization');
+  assert.ok(olderSignal.aborted);
+  assert.strictEqual(state.namespace.state.status.activeModelId,'new');
+  assert.strictEqual(statusNodes.get('#model-select').value,'new');
+  assert.strictEqual(statusNodes.get('#model-pick-btn').textContent,'New model');
+  // A failing newer read still invalidates an older success; no stale fallback.
+  context.fetch = () => new Promise(resolve=>{finishOlder=resolve});
+  const staleRead = bridge.namespace.refreshStatus();
+  context.fetch = async () => {throw new Error('offline')};
+  await assert.rejects(bridge.namespace.refreshStatus());
+  finishOlder({ok:true,json:async()=>confirmedStatus});
+  assert.strictEqual(await staleRead,false);
+  assert.strictEqual(state.namespace.state.status.activeModelId,'new');
+  const beforeTimeout = new Set(timers.keys());
+  context.fetch = (url, options) => new Promise((resolve,reject) => options.signal.addEventListener('abort',()=>reject(new Error('timeout'))));
+  const timedRead = bridge.namespace.refreshStatus();
+  const readTimer = [...timers.keys()].find(id=>!beforeTimeout.has(id));
+  timers.get(readTimer)();
+  await assert.rejects(timedRead);
+  assert.ok(!timers.has(readTimer));
+  assert.strictEqual(state.namespace.state.status.activeModelId,'new');
+
+  // Guard after JSON as well as headers: a cancelled decoder can still resolve.
+  let finishBody, enteredBody;
+  const bodyEntered = new Promise(resolve=>{enteredBody=resolve});
+  context.fetch = async () => ({ok:true,json:()=>{enteredBody();return new Promise(resolve=>{finishBody=resolve});}});
+  const decodingRead = bridge.namespace.refreshStatus();
+  await bodyEntered;
+  context.fetch = async () => ({ok:true,json:async()=>({...confirmedStatus,activeModelId:'new'})});
+  await bridge.namespace.refreshStatus();
+  finishBody(confirmedStatus);
+  assert.strictEqual(await decodingRead,false);
+  assert.strictEqual(state.namespace.state.status.activeModelId,'new');
+  context.fetch = async () => ({ok:true,json:async()=>({...confirmedStatus,activeModelId:'missing'})});
+  assert.strictEqual(await bridge.namespace.refreshStatus(),true);
+  assert.strictEqual(statusNodes.get('#model-select').value,'');
+  assert.ok(statusNodes.get('#model-pick-btn').textContent.includes('模型不可用'));
+  assert.strictEqual(state.namespace.state.status.activeModelId,'missing','unknown model must not silently fall back to builtin');
+  statusNodes.get('#think-select').value='my-draft';
+  statusNodes.get('#think-select').dataset.touched='1';
+  context.fetch = async () => ({ok:true,json:async()=>({...confirmedStatus,activeModelId:'new',multiModel:{thinkLevel:'high'}})});
+  await bridge.namespace.refreshStatus();
+  assert.strictEqual(statusNodes.get('#think-select').value,'my-draft');
+
+  // Execute the real bind callbacks and shared save helper, not copied handlers.
+  const binding = new vm.SourceTextModule(fs.readFileSync(path.join(root,'bind.js'),'utf8'),{context});
+  await binding.link(specifier => specifier==='./state.js'?state:specifier==='./picker.js'?picker:dom);
+  await binding.evaluate();
+  state.namespace.ui.initOperations = () => {};
+  state.namespace.ui.initExecutionControl = () => {};
+  state.namespace.ui.initTheme = () => {};
+  binding.namespace.bind();
+  state.namespace.ui.saveModelSettings = settings.namespace.saveModelSettings;
+  state.namespace.ui.refreshStatus = bridge.namespace.refreshStatus;
+  const modelSelect = statusNodes.get('#model-select');
+  const beforeSelection = state.namespace.state.status;
+  let finishSelection, selectionCalls=0;
+  context.fetch = (url,options) => { selectionCalls++; return new Promise(resolve=>{finishSelection=resolve}); };
+  modelSelect.value='old';
+  const changing = modelSelect.onchange();
+  assert.strictEqual(modelSelect.value,'new','pending choice must not become the Chat request model');
+  assert.strictEqual(statusNodes.get('#model-pick-btn').textContent,'New model');
+  await statusNodes.get('#btn-use-builtin').onclick();
+  assert.strictEqual(selectionCalls,1,'builtin and composer share the model write guard');
+  assert.ok(!statusNodes.get('#model-status').textContent.includes('已改回'));
+  finishSelection({ok:false,status:409,json:async()=>({success:false,error:'selection rejected'})});
+  await changing;
+  assert.strictEqual(state.namespace.state.status,beforeSelection);
+  assert.strictEqual(modelSelect.value,'new');
+  context.fetch = async () => ({ok:true,json:async()=>({success:false,error:'builtin rejected'})});
+  await statusNodes.get('#btn-use-builtin').onclick();
+  assert.strictEqual(state.namespace.state.status,beforeSelection);
+  assert.ok(statusNodes.get('#model-status').textContent.includes('未确认'));
+  let selectedBody;
+  context.fetch = async (url,options) => {
+    if (url==='/api/models') { selectedBody=JSON.parse(options.body); return {ok:true,json:async()=>({success:true})}; }
+    return {ok:true,json:async()=>({...confirmedStatus,activeModelId:selectedBody.activeModelId})};
+  };
+  modelSelect.value='old'; await modelSelect.onchange();
+  assert.deepStrictEqual(selectedBody,{activeModelId:'old'});
+  assert.strictEqual(state.namespace.state.status.activeModelId,'old');
+  assert.strictEqual(modelSelect.value,'old');
+  assert.strictEqual(statusNodes.get('#model-pick-btn').textContent,'Old model');
+  await statusNodes.get('#btn-use-builtin').onclick();
+  assert.deepStrictEqual(selectedBody,{activeModelId:'builtin'});
+  assert.strictEqual(state.namespace.state.status.activeModelId,'builtin');
+  // A confirmed write with a failed/superseded read remains saved, never re-POSTed.
+  let savedCalls=0;
+  context.fetch = async url => {
+    if (url==='/api/models') {savedCalls++; return {ok:true,json:async()=>({success:true})};}
+    return {ok:false,status:500,json:async()=>({success:false})};
+  };
+  assert.strictEqual(await settings.namespace.saveModelSettings({activeModelId:'old'}),true);
+  assert.strictEqual(savedCalls,1);
+  assert.ok(notices.at(-1).includes('已保存，但状态刷新失败'));
+  assert.strictEqual(state.namespace.state.status.activeModelId,'builtin');
+  state.namespace.ui.refreshStatus = async () => false;
+  assert.strictEqual(await settings.namespace.saveModelSettings({activeModelId:'old'}),true);
+  assert.ok(notices.at(-1).includes('已保存，但状态刷新失败'));
   console.log('workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });

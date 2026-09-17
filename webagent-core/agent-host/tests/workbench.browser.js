@@ -83,6 +83,52 @@ async function probeHudBrowser(browser) {
     assert.strictEqual(result.logs, 0); assert.deepStrictEqual(errors, []);
   } finally { await fixture.close(); }
 }
+async function modelStateBrowser(browser, base) {
+  const fixture = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const errors = []; fixture.on('pageerror', error => errors.push(error.message));
+  const original = await (await fetch(base + '/api/status')).json();
+  let snapshot = { ...original, activeModelId:'builtin', models:[...original.models,
+    {id:'fixture-model',name:'Fixture model',protocol:'chat.completions',caps:[]}] };
+  let statusCode = 200, writes = 0;
+  try {
+    await fixture.route('https://cdn.jsdelivr.net/**', route => route.abort());
+    await fixture.route('**/api/status', route => route.fulfill({status:statusCode,contentType:'application/json',body:JSON.stringify(snapshot)}));
+    await fixture.route('**/api/models', route => {
+      writes++;
+      return route.fulfill({status:409,contentType:'application/json',body:JSON.stringify({success:false,error:'fixture model rejected'})});
+    });
+    await fixture.goto(base);
+    await fixture.waitForFunction(()=>document.querySelector('#model-pick-btn').textContent.includes('内置探索'));
+    await fixture.click('#model-pick-btn');
+    await fixture.locator('.mp-row[data-id="fixture-model"]').click();
+    await fixture.waitForFunction(()=>document.querySelector('#toast').textContent.includes('fixture model rejected'));
+    assert.equal(await fixture.locator('#model-select').inputValue(),'builtin');
+    assert.ok((await fixture.locator('#model-pick-btn').textContent()).includes('内置探索'));
+    assert.equal(writes,1);
+    snapshot = {...snapshot,activeModelId:'fixture-model'};
+    assert.equal(await fixture.evaluate(async () => (await import('/js/bridge.js')).refreshStatus()),true);
+    assert.equal(await fixture.locator('#model-select').inputValue(),'fixture-model');
+    assert.equal(await fixture.locator('#model-pick-btn').textContent(),'Fixture model');
+    await fixture.evaluate(async () => (await import('/js/state.js')).ui.openModal('api'));
+    await fixture.click('#btn-use-builtin');
+    await fixture.waitForFunction(()=>document.querySelector('#model-status').textContent.includes('未确认'));
+    assert.equal(await fixture.locator('#model-select').inputValue(),'fixture-model');
+    assert.equal(writes,2);
+    statusCode=503; snapshot={error:'status unavailable'};
+    assert.equal(await fixture.evaluate(async () => {
+      try { await (await import('/js/bridge.js')).refreshStatus(); return false; } catch (_) { return true; }
+    }),true);
+    assert.ok((await fixture.locator('#sb-bridge').textContent()).includes('状态同步失败'));
+    assert.equal(await fixture.locator('#model-select').inputValue(),'fixture-model');
+    assert.equal(await fixture.evaluate(async () => (await import('/js/state.js')).state.status.activeModelId),'fixture-model');
+    statusCode=200; snapshot={...original,activeModelId:'builtin'};
+    assert.equal(await fixture.evaluate(async () => (await import('/js/bridge.js')).refreshStatus()),true);
+    assert.ok(!(await fixture.locator('#sb-bridge').textContent()).includes('状态同步失败'));
+    assert.equal(await fixture.locator('#model-select').inputValue(),'builtin');
+    assert.equal(writes,2,'status recovery never replays a model write');
+    assert.deepStrictEqual(errors,[]);
+  } finally { await fixture.close(); }
+}
 async function main() {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-browser-'));
   fs.writeFileSync(path.join(workspace, 'acceptance.txt'), 'REAL-BROWSER-EVIDENCE\n');
@@ -126,6 +172,7 @@ async function main() {
     browser = await chromium.launch({ headless: true, ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
     await probeHudBrowser(browser);
     await docsViewerBrowser(browser);
+    await modelStateBrowser(browser, base);
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.route('https://cdn.jsdelivr.net/**', route => route.abort());

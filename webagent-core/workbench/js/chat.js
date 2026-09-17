@@ -206,7 +206,7 @@ export async function sendChat(text, opts = {}) {
     state.sending = false;
     state.chatAbort = null;
     if (sendButton) { sendButton.textContent = '↑'; sendButton.title = '发送'; }
-    ui.refreshStatus();
+    ui.refreshStatus().catch(() => ui.toast('状态刷新失败，请重新读取；没有重放对话。'));
     ui.loadTree();
   }
 }

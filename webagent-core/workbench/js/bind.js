@@ -101,7 +101,6 @@ export function bind() {
           sel.value = id;
           if (sel.onchange) sel.onchange();
         }
-        $('#model-pick-btn').textContent = ((state.status && state.status.models || []).find((m) => m.id === id) || {}).name || id;
       }
     });
   }
@@ -156,12 +155,9 @@ export function bind() {
     $('#model-select').onchange = async () => {
       const id = $('#model-select').value;
       if (!id) return;
-      await fetch('/api/models', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ activeModelId: id })
-      });
-      if (state.status) state.status.activeModelId = id;
+      // The hidden select feeds sendChat; keep the confirmed model while saving.
+      $('#model-select').value = state.status?.activeModelId || '';
+      await ui.saveModelSettings({ activeModelId: id });
     };
   }
   $('#btn-agent-send').onclick = () => {
@@ -550,9 +546,11 @@ export function bind() {
     await ui.refreshStatus();
   };
   $('#btn-use-builtin').onclick = async () => {
-    await fetch('/api/models', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ activeModelId: 'builtin' }) });
-    $('#model-status').textContent = '已改回内置探索 Agent。';
-    await ui.refreshStatus();
+    if (!await ui.saveModelSettings({ activeModelId: 'builtin' })) {
+      $('#model-status').textContent = '内置模型切换未确认；请核对主机状态，未自动重试。';
+      return;
+    }
+    $('#model-status').textContent = '内置探索 Agent 选择已保存；若状态刷新失败，请核对主机，不要重复保存。';
   };
 
   $('#lnk-new-file').onclick = async () => {

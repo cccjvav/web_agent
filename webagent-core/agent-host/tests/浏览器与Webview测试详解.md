@@ -24,6 +24,12 @@ loadMonaco状态先加载中；手动script.onerror→Promise false/纯文本提
 
 renderBrowser额外验证Arena是连接指引、不含arena-send伪按钮；javascript:地址不能成为href。URL为标准Node URL注入，不发外网请求。浏览器另行实测结果见CURRENT_AUDIT，不由本fixture冒充。
 
+### 第31组：状态刷新与模型切换
+
+同一VM新增statusNodes最小DOM，querySelector/getElementById按ID复用节点，bind需要的监听/样式方法仅为空替身。真实加载bridge/settings/bind/picker，执行实际回调而非复制函数。HTTP503、success:false、models坏项/错误caps、坏JSON和网络失败不能污染最近确认快照；finishOlder/finishNewer控制两次GET完成顺序（故意不服从Abort），较旧成功不能覆盖较新成功或较新失败。手动触发计时器验证超时清理。选择成功后，隐藏select和标签必须一致；选中项不存在时不代选builtin。
+
+模型选择在POST待定期间立即恢复确认select；并发点击builtin不增加POST。409/业务失败保留原状态、不报已切回；成功POST后用实际refreshStatus读取并同步标签。保存成功但读取HTTP500或被新请求取代时仍返回保存true、提示刷新失败，只写一次。picker按钮的真实点击负例另由modelStateBrowser覆盖。这里不验证跨标签页写锁、全部status嵌套schema或真实模型服务。
+
 ## editorRuntime.test.js
 
 [源码](editorRuntime.test.js)父进程15秒VM子模式。**element()**生成value/innerHTML/children/handlers，appendChild、querySelector、addEventListener等最小DOM；**get(id)**Map复用节点；window.confirm由布尔控制；fetch记录calls，从responses队列shift，没有计划响应直接assert失败，Error项抛错。

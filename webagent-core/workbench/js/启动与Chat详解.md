@@ -38,7 +38,7 @@ ES imports首先填ui，后执行boot。WS_BACKOFF_MIN/MAX为1/30秒，wsBackoff
 4. sending=true/新AbortController，按钮切停止；stayOnBridge来自opts，不要求转Chat时保留Bridge。取旧历史尾12，本轮非空用户才push历史；merge仅status。
 5. 从选择框/status取modelId、thinkLevel，POST `/api/chat`，请求含mode/message/history/modelId/thinkLevel/planAction，不把所有UI事件都发送。
 6. reader/TextDecoder逐块按换行解析NDJSON，半行留buf，坏JSON忽略；handleEvent并累计message正文。循环done后仅把累计助手正文入history。
-7. catch显示请求失败（包括AbortError）；finally清sending/controller/恢复按钮，触发refreshStatus/loadTree，未await它们。
+7. catch显示请求失败（包括AbortError）；finally清sending/controller/恢复按钮，触发refreshStatus/loadTree，未await它们；refreshStatus的reject由独立catch消费并提示重新读取，不重放对话。loadTree仍沿用原调用。
 
 **具体限制**：未检查res.ok；res.body空会进入catch；末尾buf无换行不会额外解析，decoder也无最终flush，不可声称任意NDJSON尾部都完整处理。失败前已执行的工具不会因abort自动回滚；前端没有自动选别的模型重放任务。
 

@@ -356,26 +356,69 @@ export async function checkBridgeHealth() {
   }
 }
 
+let statusRequest = 0, statusController = null;
+
+function isStatusSnapshot(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)
+    || value.status !== 'online' || value.success === false
+    || typeof value.bridgeRunning !== 'boolean' || typeof value.activeModelId !== 'string'
+    || !Array.isArray(value.models)) return false;
+  const ids = new Set();
+  return value.models.every(model => {
+    if (!model || typeof model !== 'object' || Array.isArray(model)
+      || typeof model.id !== 'string' || !model.id || ids.has(model.id)
+      || (model.name != null && typeof model.name !== 'string')
+      || (model.caps != null && !Array.isArray(model.caps))) return false;
+    ids.add(model.id);
+    return true;
+  });
+}
+
 export async function refreshStatus() {
-  const res = await fetch('/api/status');
-  state.status = await res.json();
-  paintExecutionControl();
-  ui.paintBridge();
-  const sel = $('#model-select');
-  const cur = sel.value;
-  sel.innerHTML = (state.status.models || []).map((m) =>
-    `<option value="${escapeHtml(m.id)}" ${m.id === state.status.activeModelId ? 'selected' : ''}>${escapeHtml(m.name)}</option>`
-  ).join('');
-  if (cur) sel.value = cur;
-  const pb = $('#model-pick-btn');
-  if (pb) pb.textContent = ((state.status.models || []).find((m) => m.id === state.status.activeModelId) || {}).name || '模型 ▾';
-  if (state.status.planRound) state.planRound = state.status.planRound;
-  if (ui.paintPlanComposer) ui.paintPlanComposer();
-  const think = $('#think-select');
-  const mm = state.status.multiModel || {};
-  if (think && mm.thinkLevel && !think.dataset.touched) think.value = mm.thinkLevel;
-  ui.paintProviderTable();
-  if (state.status && state.status.taskState) ui.paintTodos(state.status.taskState.todos || []);
+  const ticket = ++statusRequest;
+  if (statusController) statusController.abort();
+  const controller = new AbortController(); statusController = controller;
+  const timer = setTimeout(() => controller.abort(), 10000);
+  let published = false;
+  try {
+    const res = await fetch('/api/status', { cache: 'no-store', signal: controller.signal });
+    if (ticket !== statusRequest) return false;
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const snapshot = await res.json();
+    // Abort alone is not an ordering guarantee, especially during body decoding.
+    if (ticket !== statusRequest) return false;
+    if (controller.signal.aborted) throw new Error('状态读取超时');
+    if (!isStatusSnapshot(snapshot)) throw new Error('状态响应格式无效');
+    state.status = snapshot;
+    published = true;
+    paintExecutionControl();
+    ui.paintBridge();
+    const sel = $('#model-select');
+    sel.innerHTML = snapshot.models.map((m) =>
+      `<option value="${escapeHtml(m.id)}">${escapeHtml(m.name || m.id)}</option>`
+    ).join('');
+    const active = snapshot.models.find(m => m.id === snapshot.activeModelId);
+    // This select feeds Chat requests: never restore an obsolete local choice.
+    sel.value = active ? active.id : '';
+    const pb = $('#model-pick-btn');
+    if (pb) pb.textContent = active ? (active.name || active.id) : '模型不可用 ▾';
+    if (snapshot.planRound) state.planRound = snapshot.planRound;
+    if (ui.paintPlanComposer) ui.paintPlanComposer();
+    const think = $('#think-select');
+    const mm = snapshot.multiModel || {};
+    if (think && mm.thinkLevel && !think.dataset.touched) think.value = mm.thinkLevel;
+    ui.paintProviderTable();
+    if (snapshot.taskState) ui.paintTodos(snapshot.taskState.todos || []);
+    return true;
+  } catch (error) {
+    if (ticket !== statusRequest) return false;
+    if ($('#sb-bridge')) $('#sb-bridge').textContent = published
+      ? '状态显示失败，请重新读取' : '状态同步失败（保留旧快照，请重新读取）';
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    if (ticket === statusRequest) statusController = null;
+  }
 }
 
 ui.logBridgeTool = logBridgeTool;

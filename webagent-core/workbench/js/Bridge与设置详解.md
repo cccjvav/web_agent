@@ -33,7 +33,11 @@
 
 **checkBridgeHealth()**GET /health，JSON失败变空；refreshStatus，再拼工作台/Bridge/隧道摘要到healthLine；catch错误摘要；只检查本源，不从手机侧探测公网。
 
-**refreshStatus()**GET status→state.status，paintBridge；重建模型options后尝试保留旧select值，按钮显示后端activeModelId；有planRound更新并paintPlanComposer；think仅未touched才由后台设置；paintProviderTable与todos。HTTP错误未显式检查；并发刷新没有序号屏障，迟到响应可能覆盖新状态。
+**isStatusSnapshot(value)**验证本次消费的核心形状：online、非success:false、bridgeRunning布尔、activeModelId字符串、models数组；模型项须对象、id非空且不重复，name若有须字符串、caps若有须数组。允许当前ID不在列表，此时不偷偷选第一个或builtin。它不是整个status（包括权限/任务/客户端等嵌套对象）的完整schema、主机身份认证或模型兼容性验证。
+
+**refreshStatus()**只读GET `/api/status`，no-store、10秒AbortController；statusRequest递增并中止上次读取，在响应头和JSON解析后都检查ticket。只有最新请求HTTP成功且核心形状有效才发布state.status；被取代的请求返回false，即使新请求失败，也不接受旧请求迟到成功作为回退。超时/网络/解析/HTTP/核心形状失败保留最近快照，状态栏明确“状态同步失败”，并reject；成功显示完成返回true。finally清timer，仅最新请求清controller。取消仅是优化，序号才是发布屏障；没有自动重试或写入。
+
+发布后paintExecutionControl/paintBridge，重建模型options，隐藏select与按钮都按同一activeModelId设置，不再恢复旧select；不存在的ID令select空并显示模型不可用，后续Chat仍带原配置ID让后端明确拒绝，不回退内置。name空则用id。有planRound才更新并paintPlanComposer；think仅未touched才取后台设置；再画Provider与todos。渲染异常单独标“状态显示失败”并reject，已经发布的新快照/部分DOM不承诺事务回滚；此处不认证全部嵌套消费者。
 
 ## 3. settings.js全部函数
 
@@ -43,7 +47,7 @@
 
 **paintProviderTable()**排除builtin，空显示提示；forEach按group聚合，map组/行、caps复制补vision；active radio匹配status，所有动态显示escape。radio.onchange调用saveModelSettings提交activeModelId；失败恢复最近state.status确认的选中项，但未知写入仍须人工核对，不证明服务端没有改变。模型能力/定价来自声明/探测，不保证供应商实时价格或模型真实能力。
 
-**saveModelSettings(partial)**用于模型表格选择和多模型保存按钮；只POST本次字段，页面内modelSettingsBusy拒绝重叠请求，10秒AbortController限制保存等待。HTTP成功且success严格true才提示已保存并刷新状态；拒绝/业务错误/解析/网络/超时不假成功、不自动重试，未知效果需核对。保存已确认但刷新抛错，单独提示“已保存，但状态刷新失败”，仍返回true，不把保存重做一次。finally释放计时器与busy。不是跨标签页锁或服务端事务；refreshStatus自身的HTTP与并发语义另待审查，不能将它不抛错等同于快照已验证。模型新增等其他/api/models调用不由此自动覆盖。
+**saveModelSettings(partial)**用于模型表格选择、多模型保存、聊天模型选择及用户显式切回内置按钮；只POST本次字段，页面内modelSettingsBusy拒绝重叠请求，10秒AbortController限制保存等待。HTTP成功且success严格true才提示已保存并刷新状态；拒绝/业务错误/解析/网络/超时不假成功、不自动重试，未知效果需核对。保存已确认但刷新抛错或返回false（被新读取取代），单独提示“已保存，但状态刷新失败”，仍返回true，不把保存重做一次。finally释放计时器与busy。不是跨标签页锁或服务端事务；刷新只确认已实现的核心形状，不认证所有嵌套内容。Provider新增的探测/整表替换仍未接入本函数，不由本批自动覆盖。
 
 **isCustomSnapshot(value)**检查用于渲染的顶层对象、指令/偏好字符串、环境/技术栈对象和六类列表；列表项须非数组对象，plugins另允许字符串。不是后台所有字段的完整schema或业务真实性校验。
 

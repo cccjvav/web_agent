@@ -53,7 +53,7 @@
 3. 用git/gh核对远端当前分支和精确CI。新Arena会话若绑定了不同分支，遵守新会话绑定，不机械切回本文旧分支；同一会话内不得改分支。不要索要GitHub密码、PAT、OAuth Token或2FA。
 4. 若沙箱重建后HEAD看起来回到很旧的提交，但文件像最新版：**停止普通提交流程**。先获取远端、备份真实差异，按远端树逐文件核对。不要reset --hard、clean -fd或整树覆盖；是否恢复索引/指针必须有明确证据，不能把此经验变成自动恢复脚本。
 5. 安装本checkout开发依赖并跑基线检查，见第6节。依赖缺失不是产品测试已经失败，也不是可以跳过测试的理由；失败保留原始输出。
-6. 接手后按第4节实际状态选下一项：R1第24组首包已做，续R3其余API/工作流及R2安全依赖，不重做已交付批次；出现新的可复现高风险缺陷优先插队，先记复现与权限边界，再加回归修复。
+6. 接手后按第4节实际状态选下一项：R1第24组首包已做，R3第31组状态/选择首包已做，续Provider添加与其余API/工作流及R2安全依赖，不重做已交付批次；出现新的可复现高风险缺陷优先插队，先记复现与权限边界，再加回归修复。
 7. 完成一个可验证闭环就更新正文、生成站点、全量测试并及时推送。汇报用简明中文直接写聊天，用户不一定能可靠看到报告查看器。
 
 #### 3. 已交付内容：不要重新施工
@@ -85,7 +85,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 高，穿插 | 进行中：安全正文剩余实现对照 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27组定制设置及模型选择/多模型保存已修；继续其他模型入口、状态刷新及API/工作流长篇 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
+| R3 / 下一项，高 | 进行中：第25/27/31组定制设置、模型选择/多模型保存、状态刷新首包已修；下一包Provider添加的失败/超时/整表替换与API/工作流长篇 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -177,8 +177,8 @@ cd ..\..
 本会话的推送与核验例子：
 
 ```sh
-git push origin arena/01a08d85-web-agent
-gh run list --branch arena/01a08d85-web-agent --limit 5 --json databaseId,headSha,status,conclusion
+git push origin arena/01a0b0da-web-agent
+gh run list --branch arena/01a0b0da-web-agent --limit 5 --json databaseId,headSha,status,conclusion
 gh run view RUN_ID --json headSha,conclusion,jobs
 ```
 
@@ -218,7 +218,7 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 暂停/延期：探测待交接；其它边界是否改变。
 ```
 
-下一位助手可以直接按R3设置消费链与R2继续，无需用户重新复述此前授权和约束；如发现与实际代码不符，以核验结果修订交接，而不是照抄本页当绝对真相。
+下一位助手可以直接按R3的Provider添加/其余API工作流与R2继续，无需用户重新复述此前授权和约束；如发现与实际代码不符，以核验结果修订交接，而不是照抄本页当绝对真相。
 
 ### 实施批次与证据
 
@@ -494,6 +494,18 @@ R3实修saveModelSettings：表格选择和多模型保存共用HTTP/success严�
 原阶段的重复“当前剩余范围”表移除，唯一R0–R8/P表完整保留；日期批次证据保持，旧文件可从2f270e6追溯。同步所有内联引用、管理入口、站点路由和审查退役登记。没有取消剩余工作或增加语义完成数，本批不改产品运行逻辑。
 
 本地验证：82测试文件通过，文档246源码/28目录/110排除；生成与链接守卫通过，两个只读技能文件无改动。首次直接构建被源码快照漂移守卫拒绝，按规定先运行check-docs --write再构建通过，未绕过守卫。远端核验：7439388ed80359bdcc814a8f0cfe3fb5a8267baf的[CI35266822926](https://github.com/cccjvav/web_agent/actions/runs/35266822926)九项全部成功（七组Linux/Windows主机矩阵、Windows安装器、真实Chromium），不替代用户实机验收或Windows旧超时根因。
+
+#### 第31组：R3状态发布屏障与模型选择确认
+
+接手在固定arena/01a0b0da-web-agent上fetch并快进同步来源01a08d85的73456b5，干净工作树；该来源精确CI35267082732九项成功，本地基线82测试文件通过。本批不切换/推送来源分支，不重复已交付功能，探测施工保持暂停。
+
+对照GET status、POST models、store校验、bridge/settings/bind和Chat消费select链。先加真实VM负例，旧refreshStatus对HTTP503未reject而失败（Missing expected rejection），证实会发布错误JSON；实现加入核心形状验证、10秒/no-store、headers/body双序号屏障，新请求即使失败也不允许旧GET回填。成功显示后的select和按钮同用后台ID，未知ID不选builtin；读失败保留旧快照并标状态同步失败，渲染失败单独标注，不宣称DOM事务或全部嵌套schema已验。
+
+聊天picker不再乐观更新标签，隐藏select在保存前立即恢复最近确认值；聊天选择、表格、多模型和显式切内置共用saveModelSettings的HTTP/业务检查及页内互斥。内置失败不报已切回；保存确认后刷新reject或被新读取代仍报告“已保存但刷新失败”，不重新POST。Chat结束的后台刷新新增catch，不把读取失败变成对话重放。
+
+VM覆盖错误HTTP/业务/JSON/坏模型形状、网络、超时释放、乱序头/JSON迟到、新读失败不采纳旧成功、未知ID/think草稿、真实bind并发点击/失败与成功、一写后刷新失败。新增modelStateBrowser通过真实页面点击和拦截响应验证标签/select/错误提示及读恢复不重放；本沙箱Chromium下载因cdn.playwright.dev TLS握手前ECONNRESET失败，无可用浏览器，不将新增浏览器用例写成本地已执行。未降低TLS校验或改浏览器版本。
+
+验证：workbenchRuntime筛选通过；文档生成/构建与完整82测试文件通过，246源码/28目录/110排除，git diff --check通过。远端以本批精确提交CI为准，当前待推送核验。对应说明只认证已改章节，正式清单完成数不增加。Provider添加仍有探测HTTP/超时/失败消费、整表替换旧模型、写请求互斥等独立缺口，下一包先明确替换/保留边界并补回归；其他状态嵌套消费者、API/工作流、安全依赖、Windows旧超时及用户本机验收未关闭。
 
 ## 复盘
 

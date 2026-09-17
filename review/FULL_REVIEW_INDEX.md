@@ -18,6 +18,8 @@
 - F29-01 / F30：第29组仅搬入manager仍多出独立路线层，第30组彻底合并到原有阶段10的计划/交接章节，CONTEXT负责索引；删两个独立文件且保留R0–R8/P与证据。原198条加路线为199，本次合并退役2项，现存197项；退役不算审查通过。其余API/状态刷新、OAuth深审仍未闭环。
 - F27-03：设置文档模型选择/多模型保存段与settings.js、bind.js、POST /models对照；统一成功判断、页内互斥、超时/未知效果、成功保存与刷新失败分离，VM回归；不是全部API/工作流审完。
 
+- F31-01/02：状态GET错误发布、乱序头/JSON、隐藏select/标签不一致及聊天/内置选择失败消费已修；VM与说明对应段核对，新增浏览器fixture执行证据见阶段31组。Provider添加/其余API工作流与R2仍待；不增加整篇通过数。
+
 ## 逐文件状态
 
 基线为2f569c24b385ba58e0cd41229468878e2ff39a41后的本次工作区；本清单自身属于维护索引，不自我授予语义通过。新文件须登记；历史先前批次仅作证据，未自动标为本轮完成。
@@ -210,9 +212,9 @@
 | [webagent-core/scripts/README.md](../webagent-core/scripts/README.md) | 待逐句核对 | cc9b3ed05acaba8e | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/scripts/编辑器编排详解.md](../webagent-core/scripts/编辑器编排详解.md) | 待逐句核对 | 2799dc3c76bccb52 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/workbench/README.md](../webagent-core/workbench/README.md) | 待逐句核对 | bd6aa6866cb8cb32 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/workbench/js/Bridge与设置详解.md](../webagent-core/workbench/js/Bridge与设置详解.md) | 局部核对 | c5072a6d3de9a957 | F27-03：仅模型选择、多模型与定制保存段；其余待审 |
+| [webagent-core/workbench/js/Bridge与设置详解.md](../webagent-core/workbench/js/Bridge与设置详解.md) | 局部核对 | 4dced38933adf90e | F31-01/02：补状态刷新/聊天和内置选择段；保留F25/27局部范围；Provider/其余待审 |
 | [webagent-core/workbench/js/README.md](../webagent-core/workbench/js/README.md) | 待逐句核对 | 868e8ac660843ae1 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/workbench/js/交互绑定详解.md](../webagent-core/workbench/js/交互绑定详解.md) | 局部核对 | c0ed55d2986e031e | F27-03：仅模型选择、多模型与定制保存段；其余待审 |
+| [webagent-core/workbench/js/交互绑定详解.md](../webagent-core/workbench/js/交互绑定详解.md) | 局部核对 | 855d41f0c5827026 | F31-01/02：补状态刷新/聊天和内置选择段；保留F25/27局部范围；Provider/其余待审 |
 | [webagent-core/workbench/js/启动与Chat详解.md](../webagent-core/workbench/js/启动与Chat详解.md) | 待逐句核对 | 09bf0d599a296756 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/workbench/js/状态与编辑器详解.md](../webagent-core/workbench/js/状态与编辑器详解.md) | 待逐句核对 | d3f646fbe507694e | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/workbench/样式规则详解.md](../webagent-core/workbench/样式规则详解.md) | 待逐句核对 | 999054567aabb5e6 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |

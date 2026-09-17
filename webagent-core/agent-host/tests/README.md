@@ -37,6 +37,8 @@ npm test --prefix webagent-core/agent-host -- --filter=oauth
 
 也可直接node某个测试文件。筛选结果必须说明范围，不可把一次筛选通过写成全量通过；不要手工维护历史“总共多少测试”的固定列表，文件导航和runner输出才是当次事实。
 
+模型状态消费新增workbenchRuntime的HTTP/业务/乱序/超时与真实bind回调负例；独立test:browser中的modelStateBrowser用真实页面和拦截响应验证按钮、隐藏select与失败提示。后者不是npm test的一部分，不代表真实供应商验收。
+
 ## 按风险选择回归
 | 风险/模块 | 主要测试 | 证据类型与限制 |
 |---|---|---|
@@ -156,9 +158,9 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 103 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 116 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 135 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 195 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 5 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 15 个函数/类节点 |
