@@ -12,9 +12,11 @@
 
 ## providers.test.js
 
-[源码](providers.test.js)的**run()**先验证probeCaps不会因名字gpt-4o猜vision，显式capabilities才保留；probeContext无字段空，128000→128K、1000000→1M。然后保存global.fetch，替换为异步响应对象，其**text()**返回两模型JSON：一项只有名字，另一项有vision/context_window。
+[源码](providers.test.js)的**run()**先验证能力只依赖声明、上下文数字格式。保存global.fetch，替换为真实Response/ReadableStream形状的两模型fixture，检查未声明者caps/context空、有声明者vision/128K；finally恢复fetch。
 
-try内await listRemoteModels，两个find回调取相应记录，断言未声明者caps空/context空，声明者vision/128K。finally恢复fetch；run.catch打印并exit1。没有真实DNS/凭据、超时、错误响应或供应商协议完整测试；它防“按模型名字猜能力”的误报。
+负例：null/空/坏项/重复ID/数字ID/101项、非JSON、HTTP401不回显含Key错误正文、URL凭据/query/非HTTP/脱敏Key在fetch前拒绝。流fixture用**start(controller)**一次发512KiB+1，**cancel()**记取消；必须拒绝并取消而不是继续读。fetch替身检查redirect:error；另用信号监听和20ms期限验证headers等待中止，keepAlive维持事件循环并清理。
+
+恢复fetch后创建真实回环HTTP server，验证分片UTF8模型ID不损坏、302不访问target、200头和部分正文后停顿由500ms期限中止（bodyStarted证实已开始正文）；finally closeAllConnections再关server。固定fixture凭据只去临时回环端点，不访问真实提供商。这不证明供应商兼容、全部网络威胁或用户本机环境。
 
 ## profile.test.js
 
@@ -48,7 +50,5 @@ try内await listRemoteModels，两个find回调取相应记录，断言未声明
 ## 验证
 
 `npm test --prefix webagent-core/agent-host -- --filter=planRound`；其余可将filter替换chatMode、toolLabel、providers、profile。测试数据名字和日期不是实际用户/服务观测。
-
-2026-09-14新增：providers测试用fetch替身监听AbortSignal，timeoutMs20必须reject，keepAlive维持事件循环后finally清理，global.fetch恢复；不是提供商网络实测。
 
 toolLabel回归还要求read_files失败显示Read failed。

@@ -93,7 +93,7 @@ export function paintProviderTable() {
     box.innerHTML = '<p class="hint">还没有添加 API。Test 通过后点 Add API 会在此列出模型。</p>';
     return;
   }
-  const groups = {};
+  const groups = Object.create(null);
   models.forEach((m) => {
     const g = m.group || 'custom';
     (groups[g] = groups[g] || []).push(m);
@@ -128,9 +128,18 @@ export function paintProviderTable() {
 
 let modelSettingsBusy = false;
 
-export async function saveModelSettings(partial) {
+async function withModelSettings(action) {
   if (modelSettingsBusy) { ui.toast('模型设置请求进行中，请等待后再操作。'); return false; }
   modelSettingsBusy = true;
+  try { return await action(); }
+  finally { modelSettingsBusy = false; }
+}
+
+export async function saveModelSettings(partial) {
+  return withModelSettings(() => postModelSettings(partial));
+}
+
+async function postModelSettings(partial) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
@@ -139,8 +148,12 @@ export async function saveModelSettings(partial) {
       body: JSON.stringify(partial), signal: controller.signal
     });
     const data = await res.json();
-    if (!res.ok || data?.success !== true) {
-      ui.toast((data?.error || '模型设置保存未确认') + '；请核对状态，未自动重试。');
+    if (!res.ok || data?.success !== true
+      || (partial.addProvider && data.added !== partial.addProvider.models.length)) {
+      const reason = partial.addProvider
+        ? (data?.code === 'E_PROVIDER_EXISTS' ? '模型已存在，未覆盖旧密钥' : 'Provider添加未确认，请核对输入与已有配置')
+        : (data?.error || '模型设置保存未确认');
+      ui.toast(reason + '；请核对状态，未自动重试。');
       return false;
     }
     ui.toast('已保存模型设置');
@@ -148,9 +161,58 @@ export async function saveModelSettings(partial) {
     catch (_) { ui.toast('模型设置已保存，但状态刷新失败；请手动核对，不要重复保存。'); }
     return true;
   } catch (error) {
-    ui.toast('模型设置保存状态未知；保留输入，请核对后再操作，未自动重试：' + error.message);
+    ui.toast('模型设置保存状态未知；保留输入，请核对后再操作，未自动重试：' + (partial.addProvider ? '响应丢失、超时或格式无效' : error.message));
     return false;
-  } finally { clearTimeout(timer); modelSettingsBusy = false; }
+  } finally { clearTimeout(timer); }
+}
+
+async function probeProvider(input) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
+  try {
+    const res = await fetch('/api/providers/probe', {
+      method:'POST', headers:{'Content-Type':'application/json'}, signal:controller.signal,
+      body:JSON.stringify({baseUrl:input.baseUrl,apiKey:input.apiKey})
+    });
+    const data = await res.json();
+    if (controller.signal.aborted) throw new Error('模型发现超时');
+    if (!res.ok || data?.success !== true) throw new Error(data?.error || `HTTP ${res.status}`);
+    if (!Array.isArray(data.models) || !data.models.length || data.models.length > 100
+      || data.models.some(model => !model || typeof model.id !== 'string' || !model.id.trim())) {
+      throw new Error('模型发现响应无效，未写入');
+    }
+    return data.models;
+  } finally { clearTimeout(timer); }
+}
+
+export async function configureProvider(input, testOnly = false) {
+  // Snapshot before the first await: later edits belong to the next explicit action.
+  const draft = {...input};
+  return withModelSettings(async () => {
+    const note = $('#model-status');
+    try {
+      if (!draft.baseUrl || !draft.apiKey) throw new Error('请填写Endpoint和API Key');
+      note.textContent = testOnly ? '正在读取模型列表…' : '正在准备添加模型…';
+      const manual = !testOnly && !!draft.manualId;
+      const models = manual ? [{id:draft.manualId}] : await probeProvider(draft);
+      if (testOnly) {
+        note.textContent = `模型列表读取成功 · ${models.length} 项；未保存，也未验证Chat/工具/视觉兼容性。`;
+        return true;
+      }
+      const saved = await postModelSettings({addProvider:{baseUrl:draft.baseUrl,apiKey:draft.apiKey,vision:draft.vision,models}});
+      if (!saved) {
+        note.textContent = '添加未确认；请核对已有配置，未自动重试。';
+        return false;
+      }
+      if ($('#m-key').value.trim() === draft.apiKey) $('#m-key').value = '';
+      note.textContent = `已登记 ${models.length} 个模型，保留原模型/密钥，未切换当前模型。${manual ? '手动登记未做模型发现。' : ''}请明确选择模型后再使用；若刷新失败，请核对主机，不要重复保存。`;
+      return true;
+    } catch (_) {
+      // No fallback or echoed request/response text (it can contain the supplied key).
+      note.textContent = '模型发现或输入校验失败，未写入；请核对Endpoint、Key和模型列表。需要手动登记时，请明确填写模型ID后再点Add API。';
+      return false;
+    }
+  });
 }
 
 let customBusy = false;
@@ -293,4 +355,5 @@ ui.paintProviderTable = paintProviderTable;
 ui.loadCustomizations = loadCustomizations;
 ui.saveCustom = saveCustom;
 ui.saveModelSettings = saveModelSettings;
+ui.configureProvider = configureProvider;
 ui.loadSkills = loadSkills;

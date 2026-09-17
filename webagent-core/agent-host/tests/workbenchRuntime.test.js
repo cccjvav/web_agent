@@ -483,5 +483,88 @@ if (!process.argv.includes('--vm-child')) {
   state.namespace.ui.refreshStatus = async () => false;
   assert.strictEqual(await settings.namespace.saveModelSettings({activeModelId:'old'}),true);
   assert.ok(notices.at(-1).includes('已保存，但状态刷新失败'));
+  // Provider UI: HTTP success and business success are distinct; no implicit fallback.
+  const providerNodes = statusNodes;
+  for (const id of ['m-base','m-key','m-id','m-vision']) context.document.querySelector('#'+id);
+  providerNodes.get('#m-base').value='https://provider.test/v1';
+  providerNodes.get('#m-key').value='fixture-key';
+  providerNodes.get('#m-id').value='';
+  context.fetch = async () => ({ok:false,status:500,json:async()=>({success:true,models:[{id:'x'}]})});
+  await providerNodes.get('#btn-test-api').onclick();
+  assert.ok(providerNodes.get('#model-status').textContent.includes('失败'),'HTTP500 cannot report Test OK');
+  let providerWrites=0;
+  for (const response of [
+    {ok:false,status:400,json:async()=>({success:false,error:'denied'})},
+    {ok:true,json:async()=>({success:false})},
+    {ok:true,json:async()=>({success:true,models:[null]})},
+    {ok:true,json:async()=>{throw new Error('bad JSON')}}
+  ]) {
+    context.fetch = async url => {if(url==='/api/models') providerWrites++; return response;};
+    assert.strictEqual(await providerNodes.get('#btn-save-model').onclick(),false);
+    assert.equal(providerWrites,0);
+  }
+  context.fetch=async()=>{throw new Error('network SECRET fixture-key')};
+  assert.strictEqual(await providerNodes.get('#btn-save-model').onclick(),false);
+  assert.ok(!providerNodes.get('#model-status').textContent.includes('fixture-key'));
+  const providerTimers=new Set(timers.keys());
+  context.fetch=(url,options)=>new Promise((resolve,reject)=>options.signal.addEventListener('abort',()=>reject(new Error('timeout'))));
+  const providerTimeout=providerNodes.get('#btn-save-model').onclick();
+  const providerTimer=[...timers.keys()].find(id=>!providerTimers.has(id));
+  timers.get(providerTimer)();
+  assert.strictEqual(await providerTimeout,false);assert.ok(!timers.has(providerTimer));
+  let finishProbe, appendedBody, providerCalls=0, providerRefreshes=0;
+  state.namespace.ui.refreshStatus=async()=>{providerRefreshes++;};
+  providerNodes.get('#m-vision').checked=false;
+  context.fetch=async(url,options)=>{
+    providerCalls++;
+    if(url==='/api/providers/probe') return new Promise(resolve=>{finishProbe=resolve});
+    appendedBody=JSON.parse(options.body);
+    return {ok:true,json:async()=>({success:true,added:1})};
+  };
+  const addingProvider=providerNodes.get('#btn-save-model').onclick();
+  providerNodes.get('#m-base').value='https://new-draft.test/v1';
+  providerNodes.get('#m-key').value='newer-key-draft';
+  providerNodes.get('#m-vision').checked=true;
+  assert.strictEqual(await providerNodes.get('#btn-save-model').onclick(),false);
+  assert.strictEqual(await providerNodes.get('#btn-test-api').onclick(),false);
+  assert.strictEqual(await settings.namespace.saveModelSettings({activeModelId:'builtin'}),false);
+  assert.equal(providerCalls,1);
+  finishProbe({ok:true,json:async()=>({success:true,models:[{id:'discovered',caps:[]}]})});
+  assert.strictEqual(await addingProvider,true);
+  assert.equal(providerCalls,2);assert.equal(providerRefreshes,1);
+  assert.deepStrictEqual(appendedBody,{addProvider:{baseUrl:'https://provider.test/v1',apiKey:'fixture-key',vision:false,models:[{id:'discovered',caps:[]}]}});
+  assert.equal(providerNodes.get('#m-key').value,'newer-key-draft','do not clear a newer draft after saving old input');
+  assert.ok(providerNodes.get('#model-status').textContent.includes('未切换当前模型'));
+  providerNodes.get('#m-id').value='manual/id';
+  let manualCalls=0;
+  context.fetch=async(url,options)=>{
+    assert.equal(url,'/api/models','manual mode never implicitly discovers');manualCalls++;
+    appendedBody=JSON.parse(options.body);
+    return {ok:true,json:async()=>({success:true,added:1})};
+  };
+  assert.strictEqual(await providerNodes.get('#btn-save-model').onclick(),true);
+  assert.equal(manualCalls,1);
+  assert.equal(appendedBody.addProvider.models[0].id,'manual/id');
+  assert.equal(appendedBody.addProvider.vision,true);
+  assert.equal(providerNodes.get('#m-key').value,'');
+  providerNodes.get('#m-key').value='keep-on-error';
+  for (const response of [
+    {ok:false,status:409,json:async()=>({success:false,error:'exists'})},
+    {ok:true,json:async()=>({success:true})}, // An old host must not pretend to support addProvider.
+    {ok:true,json:async()=>{throw new Error('lost response keep-on-error')}}
+  ]) {
+    context.fetch=async()=>response;
+    assert.strictEqual(await providerNodes.get('#btn-save-model').onclick(),false);
+    assert.ok(providerNodes.get('#model-status').textContent.includes('未确认'));
+    assert.equal(providerNodes.get('#m-key').value,'keep-on-error');
+    assert.ok(!notices.at(-1).includes('keep-on-error'));
+  }
+  context.fetch=async()=>({ok:true,json:async()=>({success:true,models:[{id:'found'}]})});
+  assert.strictEqual(await providerNodes.get('#btn-test-api').onclick(),true);
+  assert.ok(providerNodes.get('#model-status').textContent.includes('未保存'));
+  state.namespace.state.status={models:[{id:'p',name:'Prototype group',group:'__proto__',caps:[]},{id:'c',name:'Constructor group',group:'constructor',caps:[]}]};
+  settings.namespace.paintProviderTable();
+  assert.ok(providerNodes.get('#provider-table').innerHTML.includes('Prototype group'));
+  assert.ok(providerNodes.get('#provider-table').innerHTML.includes('Constructor group'));
   console.log('workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });

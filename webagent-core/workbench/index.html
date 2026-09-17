@@ -558,13 +558,13 @@
         </div>
         <div class="page hidden" id="page-api">
           <h2>Add API Provider</h2>
-          <p class="lead">连接 OpenAI 兼容接口。填 Endpoint 和 Key 后点 Test 探测模型，再 Add API 写入本地密钥存储。</p>
+          <p class="lead">连接 OpenAI 兼容接口。Test 只读取模型列表，不验证 Chat/工具/视觉兼容性。Add API 仅追加，保留旧模型和密钥，不切换当前模型；同端点重复模型会拒绝，不用它更新旧密钥。</p>
           <label class="field-label">API Endpoint URL</label>
           <input id="m-base" class="ms-input" placeholder="https://api.example.com/v1" />
           <label class="field-label">API Key</label>
           <input id="m-key" class="ms-input" type="password" placeholder="sk-…" />
           <input id="m-name" type="hidden" value="自定义 API" />
-          <input id="m-id" class="ms-input" placeholder="可选：手动指定模型 ID（探测失败时用）" style="margin-top:8px" />
+          <input id="m-id" class="ms-input" placeholder="可选：手动模型 ID（填写后 Add API 跳过发现，仅登记此模型）" style="margin-top:8px" />
           <label class="field-label" style="margin-top:8px"><input type="checkbox" id="m-vision" /> 可看图（vision）——该端点的模型接受 image_url 才勾选；computer-use 看截图必需，未勾选时 Chat 会诚实拒绝看图</label>
           <div class="row-btns">
             <button type="button" id="btn-test-api" class="vs-btn">Test</button>

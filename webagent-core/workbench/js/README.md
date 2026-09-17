@@ -32,16 +32,16 @@ agent-host测试中的editorRuntime、workbenchRuntime、monacoLoading执行实�
 
 | 源码 | 定位证据 |
 |---|---|
-| [bind.js](bind.js) | 105 个函数/类节点 |
+| [bind.js](bind.js) | 101 个函数/类节点 |
 | [bridge.js](bridge.js) | 48 个函数/类节点 |
 | [chat.js](chat.js) | 38 个函数/类节点 |
 | [dom.js](dom.js) | 15 个函数/类节点 |
 | [monaco.js](monaco.js) | 9 个函数/类节点 |
 | [operations.js](operations.js) | 41 个函数/类节点 |
 | [picker.js](picker.js) | 16 个函数/类节点 |
-| [settings.js](settings.js) | 43 个函数/类节点 |
+| [settings.js](settings.js) | 51 个函数/类节点 |
 | [state.js](state.js) | 2 个函数/类节点 |
 | [tabs.js](tabs.js) | 46 个函数/类节点 |
 <!-- docs-inventory:end -->
 
-模型表格、多模型保存、聊天选择与显式切回内置共用saveModelSettings：HTTP与success双检查、页内互斥、保存等待10秒；失败不假成功，保存后刷新失败单独提示且不重放。refreshStatus检查HTTP及核心快照形状，10秒读取、序号屏障阻止旧响应覆盖；隐藏select和按钮同用后台确认模型。Provider添加仍是独立待审入口，嵌套状态消费者及安全依赖未全审，详见Bridge与设置详解。
+模型表格、多模型保存、聊天选择与显式切回内置共用saveModelSettings：HTTP与success双检查、页内互斥、保存等待10秒；失败不假成功，保存后刷新失败单独提示且不重放。refreshStatus检查HTTP及核心快照形状，10秒读取、序号屏障阻止旧响应覆盖；隐藏select和按钮同用后台确认模型。Provider Test/Add也共用模型guard，捕获本次输入、明确手动模式、仅追加保留旧Key/选择，后端15秒/512KiB/100项和断连取消已回归；其余嵌套状态消费者及安全依赖未全审，详见Bridge与设置详解。

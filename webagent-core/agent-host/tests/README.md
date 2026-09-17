@@ -39,6 +39,8 @@ npm test --prefix webagent-core/agent-host -- --filter=oauth
 
 模型状态消费新增workbenchRuntime的HTTP/业务/乱序/超时与真实bind回调负例；独立test:browser中的modelStateBrowser用真实页面和拦截响应验证按钮、隐藏select与失败提示。后者不是npm test的一部分，不代表真实供应商验收。
 
+Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突零写；providers验证回环流式预算、期限和拒跳转，workbenchRuntime覆盖发现失败不写、输入快照/页内互斥和显式手动登记。
+
 ## 按风险选择回归
 | 风险/模块 | 主要测试 | 证据类型与限制 |
 |---|---|---|
@@ -80,7 +82,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | 源码 | 定位证据 |
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
-| [apiFiles.test.js](apiFiles.test.js) | 19 个函数/类节点 |
+| [apiFiles.test.js](apiFiles.test.js) | 32 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 11 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 17 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
@@ -135,7 +137,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [probeQuestionGuard.test.js](probeQuestionGuard.test.js) | 31 个函数/类节点 |
 | [probeTransport.test.js](probeTransport.test.js) | 59 个函数/类节点 |
 | [profile.test.js](profile.test.js) | 8 个函数/类节点 |
-| [providers.test.js](providers.test.js) | 11 个函数/类节点 |
+| [providers.test.js](providers.test.js) | 30 个函数/类节点 |
 | [ptyJobs.test.js](ptyJobs.test.js) | 12 个函数/类节点 |
 | [ptyLifecycle.test.js](ptyLifecycle.test.js) | 59 个函数/类节点 |
 | [publicHttps.test.js](publicHttps.test.js) | 19 个函数/类节点 |
@@ -158,9 +160,9 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 116 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 120 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 195 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 220 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 5 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 15 个函数/类节点 |

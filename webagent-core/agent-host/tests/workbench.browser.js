@@ -89,13 +89,14 @@ async function modelStateBrowser(browser, base) {
   const original = await (await fetch(base + '/api/status')).json();
   let snapshot = { ...original, activeModelId:'builtin', models:[...original.models,
     {id:'fixture-model',name:'Fixture model',protocol:'chat.completions',caps:[]}] };
-  let statusCode = 200, writes = 0;
+  let statusCode = 200, writes = 0, providerRequests = 0, capturedProvider;
+  let modelReply = {status:409,contentType:'application/json',body:JSON.stringify({success:false,error:'fixture model rejected'})};
   try {
     await fixture.route('https://cdn.jsdelivr.net/**', route => route.abort());
     await fixture.route('**/api/status', route => route.fulfill({status:statusCode,contentType:'application/json',body:JSON.stringify(snapshot)}));
     await fixture.route('**/api/models', route => {
-      writes++;
-      return route.fulfill({status:409,contentType:'application/json',body:JSON.stringify({success:false,error:'fixture model rejected'})});
+      writes++; capturedProvider=route.request().postDataJSON();
+      return route.fulfill(modelReply);
     });
     await fixture.goto(base);
     await fixture.waitForFunction(()=>document.querySelector('#model-pick-btn').textContent.includes('内置探索'));
@@ -126,6 +127,28 @@ async function modelStateBrowser(browser, base) {
     assert.ok(!(await fixture.locator('#sb-bridge').textContent()).includes('状态同步失败'));
     assert.equal(await fixture.locator('#model-select').inputValue(),'builtin');
     assert.equal(writes,2,'status recovery never replays a model write');
+    await fixture.route('**/api/providers/probe',route=>{
+      providerRequests++;
+      return route.fulfill({status:500,contentType:'application/json',body:JSON.stringify({success:true,models:[{id:'not-confirmed'}]})});
+    });
+    await fixture.fill('#m-base','https://provider.test/v1');await fixture.fill('#m-key','UI-fixture-key');
+    await fixture.click('#btn-test-api');
+    await fixture.waitForFunction(()=>document.querySelector('#model-status').textContent.includes('失败'));
+    assert.equal(writes,2);
+    await fixture.fill('#m-id','manual-ui-model');await fixture.check('#m-vision');
+    await fixture.click('#btn-save-model');
+    await fixture.waitForFunction(()=>document.querySelector('#model-status').textContent.includes('未确认'));
+    assert.equal(writes,3);assert.equal(providerRequests,1,'manual registration does not retry discovery');
+    assert.equal(await fixture.locator('#m-key').inputValue(),'UI-fixture-key');
+    assert.deepStrictEqual(capturedProvider,{addProvider:{baseUrl:'https://provider.test/v1',apiKey:'UI-fixture-key',vision:true,models:[{id:'manual-ui-model'}]}});
+    modelReply={status:200,contentType:'application/json',body:JSON.stringify({success:true,added:1})};
+    await fixture.click('#btn-save-model');
+    await fixture.waitForFunction(()=>document.querySelector('#model-status').textContent.includes('已登记'));
+    assert.equal(writes,4);assert.equal(providerRequests,1);
+    assert.equal(await fixture.locator('#m-key').inputValue(),'');
+    assert.equal(await fixture.locator('#model-select').inputValue(),'builtin');
+    assert.ok((await fixture.locator('#model-status').textContent()).includes('未切换当前模型'));
+
     assert.deepStrictEqual(errors,[]);
   } finally { await fixture.close(); }
 }

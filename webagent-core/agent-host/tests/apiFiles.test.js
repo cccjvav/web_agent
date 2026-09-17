@@ -218,6 +218,67 @@ async function main() {
     assert.strictEqual(row.pricing, '$1/M');
     assert.strictEqual(row.hasKey, true);
     assert.ok(!('apiKey' in row));
+    // Disconnecting the local discovery request aborts its upstream signal.
+    const previousFetch=global.fetch;
+    let upstreamStarted, upstreamCancelled, disconnectTimer;
+    const started=new Promise(resolve=>{upstreamStarted=resolve});
+    const cancelled=new Promise(resolve=>{upstreamCancelled=resolve});
+    global.fetch=async(url,options)=>{
+      upstreamStarted();
+      return new Promise((resolve,reject)=>options.signal.addEventListener('abort',()=>{upstreamCancelled();reject(new Error('cancelled fixture'));},{once:true}));
+    };
+    try {
+      const discoveryRequest=http.request({hostname:'127.0.0.1',port:server.address().port,path:'/api/providers/probe',method:'POST',headers:{'Content-Type':'application/json'}});
+      discoveryRequest.on('error',()=>{});
+      discoveryRequest.end(JSON.stringify({baseUrl:'https://fixture.test/v1',apiKey:'fixture-key'}));
+      const watchdog=new Promise((resolve,reject)=>{disconnectTimer=setTimeout(()=>reject(new Error('discovery disconnect was not propagated')),2000);});
+      await Promise.race([started,watchdog]);
+      discoveryRequest.destroy();
+      await Promise.race([cancelled,watchdog]);
+    } finally {clearTimeout(disconnectTimer);global.fetch=previousFetch;}
+
+    // Add Provider is append-only and must never round-trip redacted old keys.
+    const store = require('../src/models/store');
+    const previous = store.load();
+    const providerInput = {baseUrl:'https://api.second.test/v1/',apiKey:'second-fixture-key',vision:true,
+      models:[{id:'same/name',name:'Second model',caps:[]},{id:'same-name',caps:['vision']}]};
+    const addedProvider = await request(server,'POST','/api/models',{addProvider:providerInput});
+    assert.equal(addedProvider.status,200);
+    assert.equal(addedProvider.json.success,true);
+    let afterProvider = store.load();
+    assert.equal(afterProvider.models.length,previous.models.length+2);
+    assert.equal(afterProvider.activeModelId,previous.activeModelId,'adding never changes the current choice');
+    assert.deepStrictEqual(afterProvider.models.slice(0,previous.models.length),previous.models);
+    assert.deepStrictEqual(afterProvider.bridge,previous.bridge);
+    const appended = afterProvider.models.slice(previous.models.length);
+    assert.notEqual(appended[0].id,appended[1].id,'normalization must not collapse distinct model IDs');
+    assert.ok(appended.every(m=>m.apiKey==='second-fixture-key' && m.vision));
+    assert.ok(!JSON.stringify(addedProvider.json).includes('fixture-key'));
+    const configPath=path.join(tmp,'.webagent/config.json');
+    const providerBytes=fs.readFileSync(configPath,'utf8');
+    const duplicateProvider=await request(server,'POST','/api/models',{addProvider:{...providerInput,apiKey:'replacement-key'}});
+    assert.equal(duplicateProvider.status,409);
+    assert.equal(fs.readFileSync(configPath,'utf8'),providerBytes);
+    const legacyCollision=await request(server,'POST','/api/models',{addProvider:{baseUrl:'https://example.com/v1/chat/completions',apiKey:'new-key',models:[{id:'demo-l'}]}});
+    assert.equal(legacyCollision.status,409,'legacy provider IDs also protect existing credentials');
+    for (const input of [null,{}, {...providerInput,models:[null]}, {...providerInput,models:[{id:'x'},{id:'x'}]},
+      {...providerInput,models:Array.from({length:101},(_,i)=>({id:String(i)}))},
+      {...providerInput,apiKey:'••••'}, {...providerInput,baseUrl:'https://user:password@example.test/v1'},
+      {...providerInput,baseUrl:'https://example.test/v1?api_key=secret'},
+      {...providerInput,models:[{id:'x',caps:{}}]}]) {
+      const bad=await request(server,'POST','/api/models',{addProvider:input});
+      assert.equal(bad.status,400);
+      assert.equal(fs.readFileSync(configPath,'utf8'),providerBytes);
+    }
+    assert.equal((await request(server,'POST','/api/models',{addProvider:providerInput,models:[]})).status,400);
+    assert.equal(fs.readFileSync(configPath,'utf8'),providerBytes);
+    // Two overlapping HTTP requests are serialized by the synchronous local save path.
+    const parallel=await Promise.all(['third','fourth'].map(name=>request(server,'POST','/api/models',{
+      addProvider:{baseUrl:`https://${name}.test/v1`,apiKey:`${name}-key`,models:[{id:'shared-model'}]}
+    })));
+    assert.ok(parallel.every(response=>response.status===200));
+    afterProvider=store.load();assert.equal(afterProvider.models.length,previous.models.length+4);
+    assert.equal(afterProvider.models.find(m=>m.id==='custom-1').apiKey,'sk-secret');
   } finally {
     await new Promise((r) => server.close(r));
     fs.rmSync(tmp, { recursive: true, force: true });

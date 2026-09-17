@@ -30,6 +30,10 @@ renderBrowser额外验证Arena是连接指引、不含arena-send伪按钮；java
 
 模型选择在POST待定期间立即恢复确认select；并发点击builtin不增加POST。409/业务失败保留原状态、不报已切回；成功POST后用实际refreshStatus读取并同步标签。保存成功但读取HTTP500或被新请求取代时仍返回保存true、提示刷新失败，只写一次。picker按钮的真实点击负例另由modelStateBrowser覆盖。这里不验证跨标签页写锁、全部status嵌套schema或真实模型服务。
 
+### 第32组：Provider失败消费和共享写入guard
+
+workbenchRuntime执行真实bind/settings：Test HTTP500即使JSON success:true也不能报OK；Add发现HTTP/业务/坏JSON/无效列表/网络/超时均不写，固定异常提示不含fixture Key。finishProbe控制在途请求，在此期间修改Endpoint/Key/vision，再重复Test/Add/模型选择不增加请求；实际保存只用原快照且不清新Key草稿。显式manualId只POST addProvider，不重跑发现、不携旧models/activeModelId；成功清未改动Key，409/坏JSON或旧服务器success:true但缺added则未确认且保留Key。Test有manualId也只读列表、不登记。provider-table用__proto__/constructor组名必须可渲染。
+
 ## editorRuntime.test.js
 
 [源码](editorRuntime.test.js)父进程15秒VM子模式。**element()**生成value/innerHTML/children/handlers，appendChild、querySelector、addEventListener等最小DOM；**get(id)**Map复用节点；window.confirm由布尔控制；fetch记录calls，从responses队列shift，没有计划响应直接assert失败，Error项抛错。

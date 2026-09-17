@@ -45,9 +45,15 @@
 
 **paintCustom({preserveDrafts=false}={})**读state.custom：填指令/偏好、environment、techStack；rowList回调分别渲染agents/prompts/hooks/mcpServers/plugins/quickLinks，动态值escape。prompts.onclick把data-insert填聊天但不发送，关modal切Chat；quickLinks.onclick以URL为ID建browser tab并激活。Codex状态明确未实现、不读写auth.json。多模型enabled先看custom后由status.multiModel覆盖；模型map options，active/auto都表示当前，填merge/think/readOnly/maxBranches。保存成功时传preserveDrafts:true，只重画登记列表，不覆盖指令/偏好/环境/技术栈或多模型表单，保留请求期间及其他页未提交的草稿；初始加载才填全部字段。此函数只是画登记项，不自动运行hook、连接MCP或安装插件。
 
-**paintProviderTable()**排除builtin，空显示提示；forEach按group聚合，map组/行、caps复制补vision；active radio匹配status，所有动态显示escape。radio.onchange调用saveModelSettings提交activeModelId；失败恢复最近state.status确认的选中项，但未知写入仍须人工核对，不证明服务端没有改变。模型能力/定价来自声明/探测，不保证供应商实时价格或模型真实能力。
+**paintProviderTable()**排除builtin，空显示提示；forEach用无原型字典按group聚合，__proto__/constructor也只是普通组名，map组/行、caps复制补vision；active radio匹配status，所有动态显示escape。radio.onchange调用saveModelSettings提交activeModelId；失败恢复最近state.status确认的选中项，但未知写入仍须人工核对，不证明服务端没有改变。模型能力/定价来自声明/探测，不保证供应商实时价格或模型真实能力。
 
-**saveModelSettings(partial)**用于模型表格选择、多模型保存、聊天模型选择及用户显式切回内置按钮；只POST本次字段，页面内modelSettingsBusy拒绝重叠请求，10秒AbortController限制保存等待。HTTP成功且success严格true才提示已保存并刷新状态；拒绝/业务错误/解析/网络/超时不假成功、不自动重试，未知效果需核对。保存已确认但刷新抛错或返回false（被新读取取代），单独提示“已保存，但状态刷新失败”，仍返回true，不把保存重做一次。finally释放计时器与busy。不是跨标签页锁或服务端事务；刷新只确认已实现的核心形状，不认证所有嵌套内容。Provider新增的探测/整表替换仍未接入本函数，不由本批自动覆盖。
+**withModelSettings(action)**页面内统一guard，忙时toast并返回false、不排队；否则await action，finally释放busy。覆盖模型选择/多模型/内置及Test/Add从准备、发现、保存到刷新整个过程，不是跨标签页或服务端锁。
+
+**saveModelSettings(partial)**供表格、多模型、聊天和内置选择使用，只通过withModelSettings委托内部postModelSettings。**postModelSettings(partial)**POST本次字段，10秒AbortController；HTTP成功且success严格true才确认，addProvider另要求added与提交数相等，防旧主机忽略新字段仍报成功。失败false、未知写入需核对，不自动重试；Provider失败仅用固定提示（冲突码单独解释），不回显响应错误/解析异常里的Key；确认后调用refreshStatus，reject/返回false单独提示“已保存但刷新失败”，仍返回保存true。finally清timer，不在此提前释放整个Provider动作的guard。
+
+**probeProvider(input)**位于settings.js，取已捕获的baseUrl/apiKey，POST providers/probe，20秒客户端等待（后台默认15秒）；检查HTTP、success和非空≤100项/非空字符串ID核心形状；完整记录schema由后台检查。超时/解析/网络失败throw，finally清timer。没有自动保存或失败后的隐式manual回退。
+
+**configureProvider(input,testOnly=false)**进入guard前浅拷贝四个原始字段，避免请求期间编辑串入本次保存；捕获输入只含字符串和vision布尔。Test总是发现，只报“模型列表读取成功，未保存/未验兼容”；Add有显式manualId时只登记该ID、不联网发现，无manualId才发现后登记。通过postModelSettings发送单独addProvider，后端从磁盘追加，不用status或脱敏models重建旧Key。不自动改当前模型、不覆盖重复模型/Key；失败只显示未确认/未写入的对应阶段，不重试。确认后仅当Key输入仍等于本次快照才清空，保留新草稿；发现异常用固定提示，不回显含Key的异常正文。新增模型需要操作者另行选择。
 
 **isCustomSnapshot(value)**检查用于渲染的顶层对象、指令/偏好字符串、环境/技术栈对象和六类列表；列表项须非数组对象，plugins另允许字符串。不是后台所有字段的完整schema或业务真实性校验。
 

@@ -18,7 +18,7 @@ const { getTaskState, getBridgeTaskStates, resetTaskState } = require('../tools/
 const { resolveSafePath, computeHash } = require('../tools/patchEngine');
 const { runChat } = require('../agent/runChat');
 const planRound = require('../tools/planRound');
-const { listRemoteModels } = require('../agent/providers');
+const { listRemoteModels, addProvider } = require('../agent/providers');
 const store = require('../models/store');
 const { loadCustom, patchCustom } = require('../models/customizations');
 const { detectEnvironment, detectTechStack } = require('../models/profile');
@@ -483,13 +483,16 @@ router.get('/skills/load', async (req, res) => {
 });
 
 router.post('/providers/probe', async (req, res) => {
-  const body = req.body || {};
+  const body = req.body || {}, controller = new AbortController();
+  const abort = () => controller.abort();
+  const disconnected = () => { if (!res.writableEnded) abort(); };
+  req.on('aborted', abort); res.on('close', disconnected);
   try {
-    const models = await listRemoteModels(body.baseUrl, body.apiKey);
-    res.json({ success: true, models });
+    const models = await runWithSignal(controller.signal, () => listRemoteModels(body.baseUrl, body.apiKey));
+    if (!res.destroyed) res.json({ success: true, models });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
-  }
+    if (!res.destroyed) res.status(400).json({ success: false, error: err.code === 'E_BAD_PROVIDER' ? err.message : '模型发现失败或超时，请核对Endpoint与凭据' });
+  } finally { req.removeListener('aborted', abort); res.removeListener('close', disconnected); }
 });
 
 router.get('/models', (req, res) => {
@@ -503,6 +506,11 @@ router.get('/models', (req, res) => {
 
 router.post('/models', (req, res) => {
   const body = req.body || {};
+  if (Object.hasOwn(body, 'addProvider')) {
+    if (Object.keys(body).length !== 1) return res.status(400).json({success:false,error:'addProvider不能与整表替换或其他设置混用'});
+    try { return res.json(addProvider(body.addProvider)); }
+    catch (error) { return res.status(error.status || 500).json({success:false,error:error.message,code:error.code || 'E_INTERNAL'}); }
+  }
   const cfg = store.load();
   if (body.activeModelId) cfg.activeModelId = body.activeModelId;
   if (Array.isArray(body.models)) cfg.models = body.models;

@@ -11,7 +11,7 @@
 |---|---|
 | `runChat.js` | `runChat` 选择普通 Chat 或 Plan；`runBuiltin` 做有限的规则式探索；`runPlanRound` 管理分支和总结 |
 | `openai.js` | `runOpenAI` 请求 OpenAI 兼容端点，循环处理工具结果；`systemPrompt` 组合模式、画像和自定义指令 |
-| `providers.js` | Add API 时探测 `/models`，从返回字段读取上下文与视觉能力，不靠模型名称猜测 |
+| `providers.js` | Provider模型列表发现（15秒/512KiB/最多100项、禁止跳转）及仅追加配置登记；不靠名字猜能力，不涉及身份探针 |
 | `computerUse.js` | 从命令和stdout识别截图路径，校验真实路径及图片大小，供Chat和MCP分别附图 |
 | `toolLabel.js` | 将工具结果转换为短标签；标签不替代结果对象中的失败状态 |
 
@@ -54,7 +54,7 @@
 |---|---|
 | [computerUse.js](computerUse.js) | 7 个函数/类节点 |
 | [openai.js](openai.js) | 11 个函数/类节点 |
-| [providers.js](providers.js) | 6 个函数/类节点 |
+| [providers.js](providers.js) | 18 个函数/类节点 |
 | [runChat.js](runChat.js) | 44 个函数/类节点 |
 | [toolLabel.js](toolLabel.js) | 1 个函数/类节点 |
 <!-- docs-inventory:end -->

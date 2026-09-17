@@ -482,69 +482,14 @@ export function bind() {
     ui.toast('已写入偏好');
   };
 
-  async function probeProvider() {
-    const baseUrl = $('#m-base').value.trim();
-    const apiKey = $('#m-key').value.trim();
-    const res = await fetch('/api/providers/probe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ baseUrl, apiKey })
-    });
-    return res.json();
-  }
-  $('#btn-test-api').onclick = async () => {
-    $('#model-status').textContent = 'Testing…';
-    const data = await probeProvider();
-    $('#model-status').textContent = data.success
-      ? `OK · 发现 ${data.models.length} 个模型`
-      : ('失败：' + (data.error || '无法连接'));
-  };
-  $('#btn-save-model').onclick = async () => {
-    const baseUrl = $('#m-base').value.trim();
-    const apiKey = $('#m-key').value.trim();
-    const manualId = $('#m-id').value.trim();
-    $('#model-status').textContent = 'Adding provider and loading models...';
-    const data = await probeProvider();
-    let discovered = data.success ? data.models : [];
-    if (!discovered.length && manualId) {
-      discovered = [{ id: manualId, name: manualId, group: 'custom', contextSize: '', caps: [], pricing: '' }];
-    }
-    if (!discovered.length) {
-      $('#model-status').textContent = '失败：' + (data.error || '没有模型。可手动填模型 ID 后再 Add API。');
-      return;
-    }
-    const group = discovered[0].group || 'custom';
-    $('#model-status').textContent = `Adding ${group} and loading models...`;
-    const builtin = ((state.status && state.status.models) || []).find((m) => m.id === 'builtin') || {
-      id: 'builtin', name: '内置探索 Agent', protocol: 'builtin', baseUrl: '', apiKey: '', modelId: 'webagent-explore'
+  function providerDraft() {
+    return {
+      baseUrl:$('#m-base').value.trim(), apiKey:$('#m-key').value.trim(),
+      manualId:$('#m-id').value.trim(), vision:$('#m-vision').checked
     };
-    const models = [
-      { ...builtin, apiKey: '' },
-      ...discovered.map((m) => ({
-        id: `${group}-${m.id}`.replace(/[^\w.-]+/g, '-'),
-        name: m.name || m.id,
-        protocol: 'chat.completions',
-        baseUrl,
-        apiKey,
-        modelId: m.id,
-        group,
-        contextSize: m.contextSize,
-        caps: m.caps,
-        // 「可看图」勾选 或 探测到的 caps 自带 vision → 模型记录带 vision:true（openai.js 据此决定发不发 image_url）
-        vision: Boolean($('#m-vision') && $('#m-vision').checked)
-          || (Array.isArray(m.caps) && m.caps.some((c) => /vision/i.test(String(c)))),
-        pricing: m.pricing || ''
-      }))
-    ];
-    const firstChat = models.find((m) => m.protocol !== 'builtin' && !/video|image/i.test(m.modelId || '')) || models[1];
-    await fetch('/api/models', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ activeModelId: firstChat.id, models })
-    });
-    $('#model-status').textContent = `已添加 ${group} · ${discovered.length} 个模型。Chat 将走该兼容 OpenAI 的接口。`;
-    await ui.refreshStatus();
-  };
+  }
+  $('#btn-test-api').onclick = () => ui.configureProvider(providerDraft(), true);
+  $('#btn-save-model').onclick = () => ui.configureProvider(providerDraft());
   $('#btn-use-builtin').onclick = async () => {
     if (!await ui.saveModelSettings({ activeModelId: 'builtin' })) {
       $('#model-status').textContent = '内置模型切换未确认；请核对主机状态，未自动重试。';

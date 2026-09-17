@@ -53,7 +53,7 @@
 3. 用git/gh核对远端当前分支和精确CI。新Arena会话若绑定了不同分支，遵守新会话绑定，不机械切回本文旧分支；同一会话内不得改分支。不要索要GitHub密码、PAT、OAuth Token或2FA。
 4. 若沙箱重建后HEAD看起来回到很旧的提交，但文件像最新版：**停止普通提交流程**。先获取远端、备份真实差异，按远端树逐文件核对。不要reset --hard、clean -fd或整树覆盖；是否恢复索引/指针必须有明确证据，不能把此经验变成自动恢复脚本。
 5. 安装本checkout开发依赖并跑基线检查，见第6节。依赖缺失不是产品测试已经失败，也不是可以跳过测试的理由；失败保留原始输出。
-6. 接手后按第4节实际状态选下一项：R1第24组首包已做，R3第31组状态/选择首包已做，续Provider添加与其余API/工作流及R2安全依赖，不重做已交付批次；出现新的可复现高风险缺陷优先插队，先记复现与权限边界，再加回归修复。
+6. 接手后按第4节实际状态选下一项：R1第24组首包已做，R3第31组状态/选择首包已做，Provider追加第32组已修，续其余API/工作流及R2安全依赖，不重做已交付批次；出现新的可复现高风险缺陷优先插队，先记复现与权限边界，再加回归修复。
 7. 完成一个可验证闭环就更新正文、生成站点、全量测试并及时推送。汇报用简明中文直接写聊天，用户不一定能可靠看到报告查看器。
 
 #### 3. 已交付内容：不要重新施工
@@ -85,7 +85,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 高，穿插 | 进行中：安全正文剩余实现对照 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27/31组定制设置、模型选择/多模型保存、状态刷新首包已修；下一包Provider添加的失败/超时/整表替换与API/工作流长篇 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
+| R3 / 下一项，高 | 进行中：第25/27/31/32组定制设置、模型选择/多模型保存、状态刷新及Provider追加首包已修；继续operatorQueue/workflows与其余API结果/状态消费者 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -218,7 +218,7 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 暂停/延期：探测待交接；其它边界是否改变。
 ```
 
-下一位助手可以直接按R3的Provider添加/其余API工作流与R2继续，无需用户重新复述此前授权和约束；如发现与实际代码不符，以核验结果修订交接，而不是照抄本页当绝对真相。
+下一位助手可以直接按R3的operatorQueue/workflows与其余API结果消费、R2继续，无需用户重新复述此前授权和约束；如发现与实际代码不符，以核验结果修订交接，而不是照抄本页当绝对真相。
 
 ### 实施批次与证据
 
@@ -506,6 +506,18 @@ R3实修saveModelSettings：表格选择和多模型保存共用HTTP/success严�
 VM覆盖错误HTTP/业务/JSON/坏模型形状、网络、超时释放、乱序头/JSON迟到、新读失败不采纳旧成功、未知ID/think草稿、真实bind并发点击/失败与成功、一写后刷新失败。新增modelStateBrowser通过真实页面点击和拦截响应验证标签/select/错误提示及读恢复不重放；本沙箱Chromium下载因cdn.playwright.dev TLS握手前ECONNRESET失败，无可用浏览器，不将新增浏览器用例写成本地已执行。未降低TLS校验或改浏览器版本。
 
 验证：workbenchRuntime筛选通过；文档生成/构建与完整82测试文件通过，246源码/28目录/110排除，git diff --check通过。实现78ebac2daac3904cd7d1ce71ea26a3c4152878a7已推当前固定分支；[CI35269106675](https://github.com/cccjvav/web_agent/actions/runs/35269106675)九项逐项成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium）。新增modelStateBrowser在CI实际执行通过；本地下载失败事实保留，不代签用户本机或Windows历史超时根因。对应说明只认证已改章节，正式清单完成数不增加。Provider添加仍有探测HTTP/超时/失败消费、整表替换旧模型、写请求互斥等独立缺口，下一包先明确替换/保留边界并补回归；其他状态嵌套消费者、API/工作流、安全依赖、Windows旧超时及用户本机验收未关闭。
+
+#### 第32组：Provider仅追加、发现期限与失败消费
+
+范围是本机API Provider的/models发现与配置，不是暂停的身份/轨迹探针。对照bind/settings、providers、POST models及store同步保存链，确认旧Add构建builtin+发现列表整表替换、忽略保存结果；VM先复现HTTP500但success:true仍报Test OK。新增addProvider合同的HTTP回归初次失败是旧路由忽略新字段只回success、并未追加，故前端另检查added防假兼容。最初VM夹具缺m-base节点导致TypeError，补齐夹具后得到真实产品失败；不把夹具错误当产品缺陷。
+
+决策：Add仅追加、不切换当前模型；同Endpoint/modelId（含旧版记录）冲突整批409，不覆盖密钥，不把脱敏旧列表提交回去。新ID由规范Endpoint+完整远端ID的SHA256生成，避免标点清洗碰撞；保留旧模型/Key、Bridge及其他配置。全部校验后单host同步load/check/save；不宣称跨进程CAS、旧模型更新/删除UI或完整配置schema已完成。通用POST models原整表能力保留兼容，只有新增分支严格禁止混用字段。
+
+Test/Add全流程与模型选择共用guard，捕获Endpoint/Key/manualId/vision快照；普通发现失败不保存，明确填manualId后Add只登记此项。POST必须HTTP/业务成功且added匹配才确认，保存后刷新失败不重放。确认后只清仍等于本次输入的Key，保留新草稿。Provider表用无原型字典避免__proto__/constructor组名崩溃；HTML和说明改成列表成功不等于Chat/工具/视觉兼容。
+
+后端15秒期限原已存在，本次修正文档中“无期限”旧断言；新增断连取消传播、逐块512KiB预算（非进程内存上限）、1–100项/字段预算、URL/key校验、拒跳转及错误正文不回显。发现只向用户明确指定的HTTP(S)端点发送Key，可含本机服务；没有套用externalMCP的公网DNS/SSRF隔离保证。旧ProviderKey更新/删除、其他状态消费者和R2剩余安全调用链仍未完成。
+
+验证：apiFiles、providers、workbenchRuntime和chatVision筛选通过；VM、真实回环HTTP、body停顿/跳转与配置保留已覆盖。新增浏览器点击fixture待本批CI；沙箱仍无Chromium，沿用第31组下载失败记录，不伪造本地浏览器通过。完整82测试文件、生成/构建/一致性检查通过（246源码/28目录/110排除），精确提交CI待推送核验；正式清单只扩大对应章节局部范围，不增加整篇通过数。
 
 ## 复盘
 

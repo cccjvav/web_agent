@@ -26,7 +26,7 @@
 | `/execution-control` | GET / POST | 主机工作模式/Bridge权限，模式和权限分开变更，受在途/后台屏障保护 |
 | `/operations`、`/operations/:id`、`/operations/:id/approve`、`/operations/:id/cancel` | GET / POST | 本机查看/批准/取消有界请求，批准不等于执行成功 |
 | `/external/*`、`/workflows/*` | GET / POST / DELETE（依实际路由） | 接入/发现、stdio启动审阅、工作流预览/提交；不新增远程管理权 |
-| `/models` | GET / POST | 模型配置读取/更新；响应隐藏API Key正文 |
+| `/models` | GET / POST | 模型配置读取/更新；新增独立addProvider仅追加、不改activeModelId、不覆盖旧Key；响应隐藏Key正文 |
 | `/providers/probe`、`/profile/detect` | POST / GET | 探测模型、环境与技术栈 |
 | `/customizations` | GET / PUT | 自定义配置；其持久化保证见models说明 |
 | `/skills` | GET / POST | 列出Skill或创建Skill正文 |
@@ -63,5 +63,5 @@ requestScope由 `/chat`显式创建，**不代表所有REST请求自动拥有同
 
 | 源码 | 定位证据 |
 |---|---|
-| [routes.js](routes.js) | 81 个函数/类节点 |
+| [routes.js](routes.js) | 84 个函数/类节点 |
 <!-- docs-inventory:end -->
