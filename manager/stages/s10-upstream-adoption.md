@@ -593,7 +593,7 @@ auditControl直接加载真实双server，保留原400对403红测并转绿；�
 
 逐句对照控制面与Origin详解所有段落/函数并补准确装配、无/坏Referer与非严格同源边界；正式清单该篇新增整篇核对1，其余入口/测试/SECURITY只记对应局部。纠正旧安全说明“WS统一404”和状态API似乎强制Origin的表述。全仓仍197项，已逐句6、局部21、待逐句113，其余边界不变。
 
-本地localControl/corsAllow/auditControl定向、完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）及git diff --check通过。本批CI待提交后按精确SHA核验，不继承前批绿色；本地无Chromium，本批未新增浏览器用例。下一项继续R2 OAuth凭据/issuer与剩余路由边界；R3其它消费者、Provider更新/删除、历史Windows超时根因及用户实机未完成，探测继续暂停。
+本地localControl/corsAllow/auditControl定向、完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）及git diff --check通过。实现ca7ab17df95adf1526c791176c0fc71cb748c8af已推当前固定分支，[CI35287587285](https://github.com/cccjvav/web_agent/actions/runs/35287587285)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、既有真实Chromium。本地无Chromium，本批未新增浏览器攻击用例；既有页面链通过不是跨站攻击复现或用户实机验收。下一项继续R2 OAuth凭据/issuer与剩余路由边界；R3其它消费者、Provider更新/删除、历史Windows超时根因及用户实机未完成，探测继续暂停。
 
 ## 复盘
 
