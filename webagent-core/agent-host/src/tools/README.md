@@ -9,6 +9,8 @@
 逐函数阅读：[Plan状态详解](Plan状态详解.md)。
 
 
+有限workflows入口见[受控工具与工作流详解](../utils/受控工具与工作流详解.md)：批准后逐步复核、写入派发后异常保守unknown，停止而不重放。
+
 ## 职责与入口
 MCP、本机Chat和部分REST操作复用 `index.js` 的callTool。它做工具名称/参数归一、模式检查、远程限制和结果预算，再调用具体handler。**schema用于描述接口，不代表这里有通用JSON Schema执行器**；参数边界仍由归一逻辑和handler检查。
 

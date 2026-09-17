@@ -566,5 +566,73 @@ if (!process.argv.includes('--vm-child')) {
   settings.namespace.paintProviderTable();
   assert.ok(providerNodes.get('#provider-table').innerHTML.includes('Prototype group'));
   assert.ok(providerNodes.get('#provider-table').innerHTML.includes('Constructor group'));
+  // Real operations module: delayed review A must not replace a newer review B.
+  function opsNode() {
+    return {textContent:'',value:'',children:[],disabled:false,
+      append(...nodes) {this.children.push(...nodes);},
+      replaceChildren(...nodes) {this.children=nodes;}};
+  }
+  const opsNodes=new Map();
+  context.document.querySelector=selector=>{
+    if (!opsNodes.has(selector)) opsNodes.set(selector,opsNode());
+    return opsNodes.get(selector);
+  };
+  context.document.createElement=()=>opsNode();
+  context.confirm=()=>true;
+  const operations=new vm.SourceTextModule(fs.readFileSync(path.join(root,'operations.js'),'utf8'),{context});
+  await operations.link(()=>state);await operations.evaluate();
+  state.namespace.ui.initOperations();
+  const opsJobs=['review-a','review-b'].map(requestId=>({requestId,kind:'workflow',status:'waiting-approval',input:{definition:{steps:[]}}}));
+  let finishReviewA, finishReviewB, finishApproval, finishSubmission, approvalCount=0, submissionCount=0, previewFailure=false;
+  context.crypto={randomUUID:()=>`fixture-key-${submissionCount}`};
+  function opsResponse(value) {return {ok:true,json:async()=>value};}
+  context.fetch=async(url)=>{
+    if(url==='/api/checkpoints') return opsResponse([]);
+    if(url==='/api/operations') return opsResponse({servers:[],requests:opsJobs});
+    if(url==='/api/operations/review-a') return new Promise(resolve=>{finishReviewA=resolve});
+    if(url==='/api/operations/review-b') return new Promise(resolve=>{finishReviewB=resolve});
+    if(url.endsWith('/approve')) {approvalCount++;return new Promise(resolve=>{finishApproval=resolve;});}
+    if(url==='/api/workflows/request') {submissionCount++;return new Promise(resolve=>{finishSubmission=resolve;});}
+    if(url==='/api/workflows/preview') return opsResponse(previewFailure ? {ok:false,error:'fixture rejected'} : {ok:true,steps:[],preview:'NEW DRAFT'});
+    throw new Error('Unexpected operation fixture URL '+url);
+  };
+  await state.namespace.ui.refreshOperations();
+  const firstReview=opsNodes.get('#ops-requests').children[0].onclick();
+  const secondReview=opsNodes.get('#ops-requests').children[1].onclick();
+  finishReviewB(opsResponse(opsJobs[1]));await secondReview;
+  finishReviewA(opsResponse(opsJobs[0]));await firstReview;
+  assert.equal(JSON.parse(opsNodes.get('#ops-review').textContent).requestId,'review-b','older response must not replace newer approval target');
+  const staleApprove=opsNodes.get('#ops-controls').children[0];
+  context.document.querySelector('#ops-workflow').value='{"steps":[]}';
+  await opsNodes.get('#btn-ops-preview').onclick();
+  assert.equal(opsNodes.get('#ops-controls').children.length,0,'draft preview invalidates old approval controls');
+  assert.ok(opsNodes.get('#ops-review').textContent.includes('NEW DRAFT'));
+  await staleApprove.onclick();assert.equal(approvalCount,0,'even detached old controls cannot approve');
+  const reopenB=opsNodes.get('#ops-requests').children[1].onclick();
+  finishReviewB(opsResponse(opsJobs[1]));await reopenB;
+  const approveB=opsNodes.get('#ops-controls').children[0];
+  const pendingApproval=approveB.onclick();
+  await approveB.onclick();assert.equal(approvalCount,1,'consume review before awaiting approval POST');
+  const reopenA=opsNodes.get('#ops-requests').children[0].onclick();
+  assert.equal(opsNodes.get('#ops-controls').children.length,0,'new inspection clears controls before its response');
+  finishReviewA(opsResponse(opsJobs[0]));await reopenA;
+  finishApproval(opsResponse({...opsJobs[1],status:'succeeded'}));await pendingApproval;
+  assert.equal(JSON.parse(opsNodes.get('#ops-review').textContent).requestId,'review-a','late approval result must not reopen older selection');
+  const mismatched=opsNodes.get('#ops-requests').children[0].onclick();
+  finishReviewA(opsResponse(opsJobs[1]));assert.equal(await mismatched,false);
+  assert.equal(opsNodes.get('#ops-controls').children.length,0,'mismatched request id cannot render approval');
+  previewFailure=true;
+  assert.equal(await opsNodes.get('#btn-ops-preview').onclick(),false,'HTTP 200 business failure is not success');
+  assert.equal(opsNodes.get('#ops-controls').children.length,0);
+  previewFailure=false;
+  const submit=opsNodes.get('#btn-ops-submit').onclick();
+  await opsNodes.get('#btn-ops-submit').onclick();assert.equal(submissionCount,1,'in-flight submission cannot mint a second request key');
+  finishSubmission(opsResponse(opsJobs[0]));
+  await new Promise(resolve=>setImmediate(resolve));
+  finishReviewA(opsResponse(opsJobs[0]));await submit;
+  const timedReview=opsNodes.get('#ops-requests').children[0].onclick();
+  [...timers.values()].at(-1)(); // Real fetch observes this signal; a late fixture response must also be ignored.
+  finishReviewA(opsResponse(opsJobs[0]));assert.equal(await timedReview,false);
+  assert.equal(opsNodes.get('#ops-controls').children.length,0,'timeout cannot reactivate stale approval controls');
   console.log('workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });

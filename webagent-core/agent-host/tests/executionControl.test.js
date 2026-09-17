@@ -57,6 +57,7 @@ async function main() {
   assert.equal((await policy(readOnly)).status,200,'waiting approvals allow explicit revocation');
   assert.equal((await queue.approve(job.requestId,true)).status,'failed');
   assert.ok(!fs.existsSync(path.join(tmp,'queued.txt')),'nested write must recheck current policy');
+  assert.equal(queue.inspect(job.requestId).result.steps[0].execution,'not-started','revocation is a known pre-dispatch refusal, not an uncertain write');
   await queue.approve(job.requestId,true); assert.ok(!fs.existsSync(path.join(tmp,'queued.txt')),'terminal outcome never replayed');
   let opaqueCalls=0; queue.register('opaque-fixture',async()=>{opaqueCalls++;return{ok:true};});
   const opaque=queue.submit('opaque-fixture',{},options,'opaque-policy');

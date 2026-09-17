@@ -3,6 +3,7 @@ const fs = require('fs');
 const { resolveSafePath, computeHash } = require('./patchEngine');
 const { readBoundedText } = require('../utils/boundedFile');
 const { checkCancelled } = require('../utils/requestScope');
+const { isToolFailure } = require('../utils/toolTrace');
 const approvals = require('../utils/operatorQueue');
 const READ = new Set(['ping', 'workspace_info', 'read_files', 'list_directory', 'search_files', 'find_files', 'git_status', 'git_diff']);
 const WRITE = new Set(['write_file', 'apply_patch']);
@@ -81,6 +82,7 @@ function request({ definition, requestKey }, options = {}) {
 async function execute({ definition }, options) {
   const checked = validate(definition), outputs = Object.create(null), steps = [];
   for (const step of checked.steps) {
+    let dispatched = false;
     try {
       checkCancelled();
       try { checkExpectation(step.before); }
@@ -89,16 +91,27 @@ async function execute({ definition }, options) {
         return { ok: false, status: 'failed', steps, stoppedAt: step.id, error: 'Precondition failed; this step and later steps were not executed. Earlier effects, if any, remain. No retry or rollback performed.' };
       }
       const args = resolveValues(step.arguments, outputs);
+      if (options.remote) require('../utils/executionControl').assertAllowed(step.tool);
+      dispatched = true;
       const output = await require('./index').callTool(step.tool, args, WRITE.has(step.tool) ? 'code' : 'ask', options);
+      const trace = output?.trace;
+      const status = !trace || !['succeeded','failed','cancelled','unknown'].includes(trace.status)
+        || output.verification?.state === 'unknown' || output.status === 'unknown' || trace.status === 'unknown'
+        || ['running','waiting-approval','accepted','pending'].includes(output.status) ? 'unknown'
+        : output.status === 'cancelled' || trace.status === 'cancelled' ? 'cancelled'
+          : isToolFailure(output) ? 'failed' : 'succeeded';
+      steps.push({ id: step.id, tool: step.tool, status, execution:'dispatched', callId:trace?.callId, verification: output?.verification?.state || 'not-applicable' });
+      if (status !== 'succeeded') return { ok:false, status, steps, stoppedAt:step.id, error:'Step completion was not confirmed as successful. Inspect effects; no retry or rollback performed.' };
       outputs[step.id] = output;
-      const failed = output.ok === false || output.success === false || output.isError === true || ['failed', 'unknown', 'cancelled'].includes(output.trace.status);
-      steps.push({ id: step.id, tool: step.tool, status: output.trace.status, callId: output.trace.callId, verification: output.verification?.state || 'not-applicable' });
-      if (failed) return { ok: false, status: output.trace.status === 'unknown' || output.verification?.state === 'unknown' ? 'unknown' : output.trace.status === 'cancelled' ? 'cancelled' : 'failed', steps, stoppedAt: step.id };
       try { checkExpectation(step.expect); }
       catch (_) { steps[steps.length - 1].verification = 'unknown'; return { ok: false, status: 'unknown', steps, stoppedAt: step.id, error: 'Postcondition failed after execution; inspect existing effects. No retry performed.' }; }
     } catch (error) {
-      steps.push({ id: step.id, tool: step.tool, status: error.code === 'E_CANCELLED' ? 'cancelled' : 'failed', errorCode: error.code || 'E_STEP_FAILED' });
-      return { ok: false, status: error.code === 'E_CANCELLED' ? 'cancelled' : 'failed', steps, stoppedAt: step.id };
+      // Once a write was dispatched, even an exception labelled cancellation can be post-write.
+      const status = dispatched && WRITE.has(step.tool) ? 'unknown' : error.code === 'E_CANCELLED' ? 'cancelled' : 'failed';
+      steps.push({ id: step.id, tool: step.tool, status, execution:dispatched ? 'dispatched' : 'not-started', errorCode:error.code || 'E_STEP_FAILED', ...(error.trace?.callId ? {callId:error.trace.callId} : {}) });
+      return { ok:false, status, steps, stoppedAt:step.id, error:status === 'unknown'
+        ? 'Write was dispatched but completion is unknown; effects may already exist. Inspect before any new request. No retry or rollback performed.'
+        : 'Stopped before the next step; earlier effects, if any, remain. No retry or rollback performed.' };
     }
   }
   return { ok: true, status: 'succeeded', steps, note: 'Only the specified point-in-time tool/file conditions were checked; not a general goal-completion proof.' };

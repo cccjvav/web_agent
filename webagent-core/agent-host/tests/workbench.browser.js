@@ -83,6 +83,47 @@ async function probeHudBrowser(browser) {
     assert.strictEqual(result.logs, 0); assert.deepStrictEqual(errors, []);
   } finally { await fixture.close(); }
 }
+async function approvalReviewBrowser(browser, base) {
+  const fixture=await browser.newPage({viewport:{width:1280,height:900}}), errors=[];
+  fixture.on('pageerror',error=>errors.push(error.message));
+  const jobs=['fixture-review-a','fixture-review-b'].map(requestId=>({requestId,kind:'workflow',status:'waiting-approval',input:{definition:{steps:[{id:'ping',tool:'ping',arguments:{}}]}}}));
+  let delayedReview, delayedSubmit, approvals=0, submissions=0, wrongId=false;
+  try {
+    await fixture.route('**/api/operations',route=>route.fulfill({json:{servers:[],requests:jobs}}));
+    await fixture.route('**/api/operations/**',route=>{
+      const url=route.request().url();
+      if(url.endsWith('/approve')) {approvals++;return route.fulfill({json:{...jobs[1],status:'succeeded'}});}
+      if(url.endsWith(jobs[0].requestId)) {delayedReview=route;return;}
+      return route.fulfill({json:wrongId ? jobs[0] : jobs[1]});
+    });
+    await fixture.route('**/api/workflows/request',route=>{submissions++;delayedSubmit=route;});
+    await fixture.goto(base);await fixture.click('#rb-bridge-tab');await fixture.click('#btn-operations');
+    await fixture.locator('#ops-requests button').nth(1).waitFor();
+    const requested=fixture.waitForRequest(base+'/api/operations/'+jobs[0].requestId);
+    await fixture.locator('#ops-requests button').first().click();await requested;
+    await fixture.locator('#ops-requests button').nth(1).click();
+    await fixture.waitForFunction(id=>document.querySelector('#ops-review').textContent.includes(id),jobs[1].requestId);
+    assert.equal(await fixture.locator('#ops-controls button').count(),2);
+    // New review aborts the old fetch; a held route may already have been cancelled by Chromium.
+    await delayedReview.fulfill({json:jobs[0]}).catch(()=>{});
+    assert.equal(JSON.parse(await fixture.locator('#ops-review').textContent()).requestId,jobs[1].requestId);
+    await fixture.fill('#ops-workflow',JSON.stringify(jobs[1].input.definition));
+    await fixture.click('#btn-ops-preview');
+    await fixture.waitForFunction(()=>document.querySelector('#ops-review').textContent.includes('requiresApproval'));
+    assert.equal(await fixture.locator('#ops-controls button').count(),0,'draft must not retain approval for a different request');
+    assert.equal(approvals,0);
+    wrongId=true;await fixture.locator('#ops-requests button').nth(1).click();
+    await fixture.waitForFunction(()=>document.querySelector('#ops-status').textContent.includes('ID不匹配'));
+    assert.equal(await fixture.locator('#ops-controls button').count(),0);
+    wrongId=false;
+    const submitted=fixture.waitForRequest(base+'/api/workflows/request');
+    await fixture.dblclick('#btn-ops-submit');await submitted;
+    assert.equal(submissions,1,'double click cannot create two waiting approvals');
+    await delayedSubmit.fulfill({json:jobs[1]});
+    await fixture.locator('#ops-controls button').first().waitFor();
+    assert.equal(approvals,0);assert.deepEqual(errors,[]);
+  } finally {await fixture.close();}
+}
 async function modelStateBrowser(browser, base) {
   const fixture = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const errors = []; fixture.on('pageerror', error => errors.push(error.message));
@@ -196,6 +237,7 @@ async function main() {
     await probeHudBrowser(browser);
     await docsViewerBrowser(browser);
     await modelStateBrowser(browser, base);
+    await approvalReviewBrowser(browser, base);
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.route('https://cdn.jsdelivr.net/**', route => route.abort());

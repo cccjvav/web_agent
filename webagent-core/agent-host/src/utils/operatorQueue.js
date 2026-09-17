@@ -22,7 +22,7 @@ function publicJob(job, details = false) {
   return { requestId: job.id, kind: job.kind, status: job.status, taskId: job.taskId,
     createdAt: job.createdAt, expiresAt: job.createdAt + KEEP_MS,
     nextAction: job.status === 'waiting-approval' ? 'Stop and wait for local operator approval; query operation_result, do not resubmit.' : 'Inspect result. Retention is bounded and process-local; an unknown/expired ID is never permission to replay.',
-    cancelRequested: Boolean(job.controller?.signal.aborted),
+    cancelRequested: Boolean(job.cancelRequested || job.controller?.signal.aborted),
     ...(details ? { input: clone(job.input), result: job.result == null ? null : clone(job.result) } : {}) };
 }
 function submit(kind, input, options, requestKey) {
@@ -56,7 +56,7 @@ function list() { prune(); return [...jobs.values()].reverse().map(job => public
 function inspect(id) { prune(); const job = jobs.get(id); if (!job) throw new Error('Unknown operation'); return publicJob(job, true); }
 async function approve(id, confirmed) {
   prune(); const job = jobs.get(id);
-  if (!confirmed) throw new Error('Explicit operator confirmation required');
+  if (confirmed !== true) throw new Error('Explicit operator confirmation required');
   if (!job) throw new Error('Unknown operation');
   if (job.status !== 'waiting-approval') return publicJob(job); // Never execute twice, even after failure.
   if ([...jobs.values()].filter(item => item.status === 'running').length >= 4) throw new Error('Too many running operations');
@@ -64,27 +64,33 @@ async function approve(id, confirmed) {
   const releaseMode = control.enter(job.workMode);
   job.status = 'running'; job.controller = new AbortController();
   const timer = setTimeout(() => job.controller.abort(), 60000);
-  let execution;
+  let execution, handlerDispatched = false;
   try {
     execution = beginCall(job.kind === 'workflow' ? 'approved_workflow' : job.kind === 'probe-browser' ? 'approved_browser_operation' : 'approved_external_call', { ...job.options, taskId: job.taskId });
     execution.operationId = job.id;
     const output = await runWithSignal(job.controller.signal, () => withTask({ source: job.kind === 'probe-browser' ? 'BrowserProbe' : 'Workflow', taskId: job.taskId }, () => {
       checkCancelled();
       if (job.options.remote) control.assertAllowed(job.kind === 'workflow' ? 'workflow_request' : 'external_request');
+      handlerDispatched = true;
       return handlers.get(job.kind)(clone(job.input), { ...job.options, taskId: job.taskId });
     }));
     const encoded = JSON.stringify(output);
     if (Buffer.byteLength(encoded || '') > MAX_RESULT) throw new Error('Output budget exceeded');
     job.result = output == null ? null : JSON.parse(encoded);
-    job.status = output?.status === 'cancelled' ? 'cancelled' : output?.status === 'unknown' || output?.verification?.state === 'unknown' ? 'unknown'
-      : isToolFailure(output) ? 'failed' : 'succeeded';
+    // Accepted/running is not completion: this queue cannot poll a handler's background work.
+    job.status = !output || typeof output !== 'object' || Array.isArray(output)
+      || ['running','waiting-approval','accepted','pending','unknown'].includes(output.status)
+      || (output.trace?.status != null && !['succeeded','failed','cancelled'].includes(output.trace.status))
+      || output.verification?.state === 'unknown' ? 'unknown'
+      : output.status === 'cancelled' || output.trace?.status === 'cancelled' ? 'cancelled'
+        : isToolFailure(output) ? 'failed' : 'succeeded';
   } catch (error) {
     job.status = 'unknown';
     job.result = { ok: false, status: 'unknown', error: 'Execution interrupted, failed or exceeded a budget. Effects may already exist; inspect before submitting anything again.' };
-    if (error.code === 'E_FORBIDDEN') { job.status = 'failed'; job.result = {ok:false,status:'failed',error:error.message}; }
+    if (!handlerDispatched && error.code === 'E_FORBIDDEN') { job.status = 'failed'; job.result = {ok:false,status:'failed',error:error.message}; }
   } finally {
     try { if (execution) finishCall(execution, { ...job.result, status: job.status, requestId: job.id }); }
-    finally { clearTimeout(timer); job.controller = null; releaseMode(); }
+    finally { clearTimeout(timer); job.cancelRequested = Boolean(job.controller?.signal.aborted); job.controller = null; releaseMode(); }
   }
   return publicJob(job);
 }

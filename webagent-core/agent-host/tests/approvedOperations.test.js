@@ -40,7 +40,8 @@ const server = http.createServer(async (req, res) => {
     assert.equal(pending.trace.status, 'accepted'); assert.equal(pending.taskId, pending.trace.taskId); assert.equal(calls, 0);
     assert.equal((await callTool('external_request', args, 'code', options)).requestId, pending.requestId);
     assert.throws(() => queue.result(pending.requestId, { remote: true, callerKey: 'peer:other' }));
-    await assert.rejects(queue.approve(pending.requestId, false));
+    for (const confirm of [false, 'true', 1, {}, []]) await assert.rejects(queue.approve(pending.requestId, confirm));
+    assert.equal(calls,0);
     await Promise.all([queue.approve(pending.requestId, true), queue.approve(pending.requestId, true)]);
     assert.equal(calls, 1); assert.equal(queue.result(pending.requestId, options).result.verification.state, 'external-reported');
     await queue.approve(pending.requestId, true); assert.equal(calls, 1);
@@ -78,6 +79,8 @@ const server = http.createServer(async (req, res) => {
     queue.register('outcome-fixture', async input => { fixtureRuns++; return input; });
     const outcomes = [
       [{ status: 'failed' }, 'failed'], [{ exitCode: 2 }, 'failed'],
+      [{status:'running'},'unknown'], [{status:'waiting-approval'},'unknown'],
+      [{trace:{status:'unknown'}},'unknown'], [null,'unknown'],
       [{ isTimeout: true }, 'failed'], [{ isError: true }, 'failed'],
       [{ status: 'cancelled' }, 'cancelled'], [{ verification: { state: 'unknown' } }, 'unknown'],
       [{ ok: true, exitCode: 0 }, 'succeeded']
@@ -90,6 +93,13 @@ const server = http.createServer(async (req, res) => {
       await queue.approve(job.requestId, true);
       assert.equal(fixtureRuns, count + 1, 'no repeat execution after a terminal outcome');
     }
+    queue.register('throw-after-effect', async () => {
+      fs.writeFileSync(path.join(tmp,'handler-effect.txt'),'kept');
+      const error=new Error('fixture after effect');error.code='E_FORBIDDEN';throw error;
+    });
+    const afterEffect=queue.submit('throw-after-effect',{}, {}, 'throw-after-effect');
+    assert.equal((await queue.approve(afterEffect.requestId,true)).status,'unknown','permission-like error after handler dispatch does not prove no execution');
+    assert.equal(fs.readFileSync(path.join(tmp,'handler-effect.txt'),'utf8'),'kept');
     console.log('approved operations: real MCP discovery/call, gating, ownership, dedupe, workflow verification/stop and response bounds passed');
   } finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); fs.rmSync(tmp, { recursive: true, force: true }); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

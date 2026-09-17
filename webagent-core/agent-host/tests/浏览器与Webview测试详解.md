@@ -108,3 +108,9 @@ R3定制设置回归：workbenchRuntime加载真实settings模块，先用400负
 F27-02的workbenchRuntime负例先复现null被paintClients显示“无需Plus”，修复后执行真实Bridge模块，断言待核对/未验证徽标以及DeepSeek指引无固定商店ID。DOM/HTTP回归不是真实浏览器安装第三方扩展或兼容验收。
 
 F28-01负例先复现配对码被说成仅ChatGPT需要；workbenchRuntime实际Bridge模块验证通用OAuth文案，以及unsupported卡片空prompt不泄落到全局连接文本。这里不连接真实厂商服务。
+
+## 第33组：审批审阅绑定与结果消费
+
+workbenchRuntime加载真实operations模块。opsNode建立textContent/value/disabled与children，append/replaceChildren模拟控件挂载/清除；opsResponse只构造HTTP/JSON响应。finishReviewA/B故意乱序，即使旧fetch忽略abort也不能覆盖新ID；草稿预览清掉批准按钮，持有的旧按钮调用也零POST。finishApproval延迟批准，验证先消费审阅、双击只一POST、期间切换新请求后旧回包不重开旧卡。ID错配不给控件，HTTP200/ok:false返回false；finishSubmission延迟提交，重复点击只生成一次请求，finally释放在途标志。计时器替身触发10秒中断，迟到详情不能复活按钮；不是实网计时精度验收。
+
+approvalReviewBrowser的真实页面夹具主解释见[主机诊断与调用追踪详解](../src/utils/主机诊断与调用追踪详解.md)的第33组测试段；VM不能代替它的实际执行证据。

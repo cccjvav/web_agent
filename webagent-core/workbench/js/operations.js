@@ -1,32 +1,71 @@
 import { $, ui, state } from './state.js';
 
-async function api(path, method = 'GET', body) {
-  const response = await fetch(`/api${path}`, { method, headers: { 'Content-Type': 'application/json' }, ...(body ? { body: JSON.stringify(body) } : {}) });
-  const result = await response.json();
-  if (!response.ok) throw new Error(result.error || '请求失败');
-  return result;
+async function api(path, method = 'GET', body, signal) {
+  const controller = new AbortController();
+  const onAbort = () => controller.abort();
+  if (signal?.aborted) onAbort(); else signal?.addEventListener('abort', onAbort, {once:true});
+  // Approval has a 60s server cancellation budget; transport abort never rolls back effects.
+  const timeout = path.endsWith('/approve') ? 70000 : method === 'POST' && ['/external/servers','/external/stdio/start'].includes(path) ? 40000 : 10000;
+  const timer = setTimeout(onAbort, timeout);
+  try {
+    const response = await fetch(`/api${path}`, {method,signal:controller.signal,headers:{'Content-Type':'application/json'},...(body ? {body:JSON.stringify(body)} : {})});
+    const result = await response.json();
+    if (controller.signal.aborted) throw new Error('请求中断，结果未确认；请查询原请求，不要重放。');
+    if (!response.ok || result?.ok === false || result?.success === false) throw new Error(result?.error || '请求失败');
+    return result;
+  } finally {clearTimeout(timer);signal?.removeEventListener('abort',onAbort);}
 }
 async function action(callback) {
-  try { await callback(); await refreshOperations(); }
-  catch (error) { $('#ops-status').textContent = error.message; }
+  try { if (await callback() === false) return false; await refreshOperations(); return true; }
+  catch (error) { $('#ops-status').textContent = error.message; return false; }
 }
 function button(label, callback) {
   const node = document.createElement('button'); node.type = 'button'; node.className = 'vs-btn'; node.textContent = label;
   node.onclick = () => action(callback); return node;
 }
+let reviewGeneration = 0, reviewController = null, workflowSubmitting = false;
+function invalidateReview(message) {
+  const ticket = ++reviewGeneration;
+  if (reviewController) reviewController.abort();
+  reviewController = null;
+  $('#ops-controls').replaceChildren();
+  $('#ops-review').textContent = message;
+  return ticket;
+}
+async function actOnReview(id, ticket, operation) {
+  if (ticket !== reviewGeneration) return false;
+  if (operation === 'approve' && !confirm('这会执行所展示的完整请求。外部工具可能有副作用，取消不能撤销。确认批准一次？')) return false;
+  // Consume the displayed review before the POST; detached/double-clicked buttons cannot replay it.
+  const actionTicket = invalidateReview(`请求 ${id}：已发送${operation === 'approve' ? '批准' : '停止'}请求，结果尚未确认。可重新读取同一请求；不要重复提交。`);
+  try {
+    await api(`/operations/${encodeURIComponent(id)}/${operation}`, 'POST', operation === 'approve' ? {confirm:true} : {});
+    if (actionTicket !== reviewGeneration) return false;
+    return await review(id);
+  } catch (_) {
+    if (actionTicket !== reviewGeneration) return false;
+    $('#ops-review').textContent = `请求 ${id}：未取得确认结果，请重新读取同一请求并核对已有副作用；不要重复批准或新建审批。`;
+    throw new Error('审批/停止结果未确认，请查询同一请求；没有自动重试。');
+  }
+}
 async function review(id) {
-  const job = await api(`/operations/${encodeURIComponent(id)}`);
-  $('#ops-review').textContent = JSON.stringify(job, null, 2);
-  const controls = $('#ops-controls'); controls.replaceChildren();
-  if (job.status === 'waiting-approval') controls.append(button('已审阅完整参数，批准执行一次', async () => {
-    if (!confirm('这会执行所展示的完整请求。外部工具可能有副作用，取消不能撤销。确认批准一次？')) return;
-    controls.replaceChildren();
-    $('#ops-status').textContent = '正在执行；不要重复提交。可刷新查看状态。';
-    await api(`/operations/${id}/approve`, 'POST', { confirm: true }); await review(id);
-  }));
-  if (['waiting-approval', 'running'].includes(job.status)) controls.append(button('拒绝 / 请求停止', async () => {
-    await api(`/operations/${id}/cancel`, 'POST', {}); await review(id);
-  }));
+  const ticket = invalidateReview('正在读取请求；旧审批控件已失效。');
+  const controller = new AbortController(); reviewController = controller;
+  try {
+    const job = await api(`/operations/${encodeURIComponent(id)}`, 'GET', undefined, controller.signal);
+    if (ticket !== reviewGeneration) return false;
+    if (controller.signal.aborted) throw new Error('请求读取超时');
+    if (!job || job.requestId !== id || !['waiting-approval','running','succeeded','failed','unknown','cancelled','denied','expired'].includes(job.status)
+      || !job.input || typeof job.input !== 'object' || Array.isArray(job.input)) throw new Error('请求详情无效或ID不匹配');
+    $('#ops-review').textContent = JSON.stringify(job, null, 2);
+    const controls = $('#ops-controls');
+    if (job.status === 'waiting-approval') controls.append(button('已审阅完整参数，批准执行一次', () => actOnReview(id, ticket, 'approve')));
+    if (['waiting-approval','running'].includes(job.status)) controls.append(button('拒绝 / 请求停止', () => actOnReview(id, ticket, 'cancel')));
+    return true;
+  } catch (error) {
+    if (ticket !== reviewGeneration) return false;
+    $('#ops-review').textContent = `请求 ${id} 读取失败，不能沿用旧审批；请重新选择并读取。`;
+    throw error;
+  } finally {if(ticket === reviewGeneration) reviewController = null;}
 }
 let checkpointGeneration = 0;
 function checkpointBinding() {
@@ -134,11 +173,30 @@ function initOperations() {
     await api('/external/servers', 'POST', { name: $('#ops-name').value, url: $('#ops-url').value, token, publicHttps, confirmedPublic:publicHttps, workspaceRoot:state.status?.workspaceRoot, hostInstanceId:state.status?.identity?.hostInstanceId });
   });
   $('#btn-ops-preview').onclick = () => action(async () => {
-    const result = await api('/workflows/preview', 'POST', { definition: JSON.parse($('#ops-workflow').value) });
-    $('#ops-review').textContent = JSON.stringify(result, null, 2); $('#ops-controls').replaceChildren();
+    const ticket = invalidateReview('正在预览草稿；旧审批控件已失效。');
+    try {
+      const result = await api('/workflows/preview', 'POST', { definition: JSON.parse($('#ops-workflow').value) });
+      if (ticket !== reviewGeneration) return false;
+      $('#ops-review').textContent = JSON.stringify(result, null, 2);
+    } catch (error) {if(ticket !== reviewGeneration) return false;$('#ops-review').textContent = '预览失败，当前没有可批准的审阅结果。';throw error;}
   });
   $('#btn-ops-submit').onclick = () => action(async () => {
-    const job = await api('/workflows/request', 'POST', { definition: JSON.parse($('#ops-workflow').value), requestKey: crypto.randomUUID() }); await review(job.requestId);
+    if (workflowSubmitting) { ui.toast('审批提交进行中，请等待结果并查询原请求，不要重复提交。'); return false; }
+    workflowSubmitting = true;
+    const ticket = invalidateReview('正在提交新审批，尚未执行；若响应丢失，请先刷新列表核对，不要重复创建。');
+    let submitted = false;
+    try {
+      const definition = JSON.parse($('#ops-workflow').value);
+      submitted = true;
+      const job = await api('/workflows/request', 'POST', {definition,requestKey:crypto.randomUUID()});
+      if (ticket !== reviewGeneration) return false;
+      if (!job || typeof job.requestId !== 'string' || !job.requestId) throw new Error('审批提交响应无效');
+      return await review(job.requestId);
+    } catch (_) {
+      if (ticket !== reviewGeneration) return false;
+      $('#ops-review').textContent = submitted ? '审批提交未确认；请先刷新列表并核对已有请求，不要再次创建；尚未自动批准或重试。' : '工作流JSON无效，未提交审批。';
+      throw new Error(submitted ? '审批提交未确认，请核对原请求。' : '工作流JSON无效，未提交审批。');
+    } finally {workflowSubmitting = false;}
   });
 }
 Object.assign(ui, { initOperations, refreshOperations });
