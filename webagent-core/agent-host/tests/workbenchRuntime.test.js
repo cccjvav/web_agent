@@ -712,5 +712,82 @@ if (!process.argv.includes('--vm-child')) {
   checkpointBodies[1]([]);await newCheckpoints;
   checkpointBodies[0]([checkpointRecord]);await oldCheckpoints;
   assert.equal(opsNodes.get('#checkpoint-list').children.length,0,'late checkpoint list cannot revive old ready records');
+  // Checkpoint creation must be a single in-flight snapshot, not one per click.
+  const createInput=context.document.querySelector('#checkpoint-paths');createInput.value='a.txt';
+  let finishCreate, checkpointCreates=0, checkpointCreateBody;
+  context.fetch=async(url,options={})=>{
+    if(url==='/api/checkpoints' && options.method==='POST') {
+      checkpointCreates++;checkpointCreateBody=JSON.parse(options.body);
+      return new Promise(resolve=>{finishCreate=resolve;});
+    }
+    if(url==='/api/checkpoints') return opsResponse([checkpointRecord]);
+    if(url==='/api/operations') return opsResponse({servers:[],requests:opsJobs});
+    throw new Error(url);
+  };
+  const createButton=opsNodes.get('#btn-checkpoint-create');
+  const pendingCreate=createButton.onclick(), duplicateCreate=createButton.onclick();
+  assert.equal(checkpointCreates,1,'repeated click must not create a second checkpoint while awaiting confirmation');
+  createInput.value='new-draft.txt';
+  finishCreate(opsResponse(checkpointRecord));await pendingCreate;await duplicateCreate;
+  assert.deepEqual(checkpointCreateBody.paths,['a.txt']);
+  assert.equal(createInput.value,'new-draft.txt','new input is not cleared by the earlier response');
+  assert.equal(JSON.parse(opsNodes.get('#checkpoint-review').textContent).id,'cp-a');
+  assert.equal(createButton.disabled,false);
+  for (const reply of [
+    {ok:false,json:async()=>({error:'fixture HTTP error'})},
+    opsResponse({ok:false,error:'fixture business failure'}),
+    {ok:true,json:async()=>{throw new Error('fixture invalid JSON');}},
+    opsResponse(null),opsResponse({...checkpointRecord,state:'consumed'}),
+    opsResponse({...checkpointRecord,paths:['a.txt','b.txt']}),opsResponse({...checkpointRecord,result:{status:'running'}})
+  ]) {
+    context.fetch=async()=>{checkpointCreates++;return reply;};
+    const count=checkpointCreates;assert.equal(await createButton.onclick(),false);
+    assert.equal(checkpointCreates,count+1,'failed creation must not automatically retry or refresh as success');
+    assert.match(opsNodes.get('#checkpoint-review').textContent,/创建未确认/);
+    assert.equal(createButton.disabled,false);assert.equal(createInput.value,'new-draft.txt');
+    assert.equal(opsNodes.get('#checkpoint-controls').children.length,0);
+  }
+  let creationLists=0;
+  context.fetch=async(url,options={})=>{
+    if(options.method==='POST') {checkpointCreates++;return opsResponse(checkpointRecord);}
+    creationLists++;throw new Error('fixture list unavailable');
+  };
+  const beforeConfirmedCreate=checkpointCreates;
+  assert.equal(await createButton.onclick(),true);
+  const confirmedCreate=JSON.parse(opsNodes.get('#checkpoint-review').textContent);
+  assert.equal(confirmedCreate.id,'cp-a');assert.match(confirmedCreate.note,/创建已确认.*列表刷新失败/);
+  assert.equal(checkpointCreates,beforeConfirmedCreate+1);assert.equal(creationLists,1);
+  const beforeRejectedCreate=checkpointCreates;
+  context.confirm=()=>false;assert.equal(await createButton.onclick(),false);
+  assert.equal(checkpointCreates,beforeRejectedCreate);assert.match(opsNodes.get('#checkpoint-review').textContent,/未发送/);
+  context.confirm=()=>true;
+  for(const input of ['', 'a.txt\na.txt',Array(13).fill('a.txt').join('\n')]) {
+    createInput.value=input;assert.equal(await createButton.onclick(),false);assert.match(opsNodes.get('#checkpoint-review').textContent,/未发送/);
+  }
+  assert.equal(checkpointCreates,beforeRejectedCreate);createInput.value='a.txt';
+  state.namespace.state.status.workspaceRoot='';assert.equal(await createButton.onclick(),false);
+  assert.equal(checkpointCreates,beforeRejectedCreate);state.namespace.state.status.workspaceRoot='/fixture';
+  // A late response may exist, but cannot claim creation in a different current workspace.
+  context.fetch=async()=>new Promise(resolve=>{finishCreate=resolve;});
+  const changedBindingCreate=createButton.onclick();state.namespace.state.status.workspaceRoot='/other';
+  finishCreate(opsResponse(checkpointRecord));assert.equal(await changedBindingCreate,false);
+  assert.match(opsNodes.get('#checkpoint-review').textContent,/创建未确认/);
+  state.namespace.state.status.workspaceRoot='/fixture';
+  const timedCreate=createButton.onclick();[...timers.values()].at(-1)();
+  finishCreate(opsResponse(checkpointRecord));assert.equal(await timedCreate,false);
+  assert.equal(createButton.disabled,false);assert.match(opsNodes.get('#checkpoint-review').textContent,/创建未确认/);
+  context.fetch=async(url,options={})=>{
+    if(url==='/api/checkpoints' && options.method==='POST') return new Promise(resolve=>{finishCreate=resolve;});
+    if(url==='/api/checkpoints') return opsResponse([checkpointRecord]);
+    if(url.endsWith('/preview')) return opsResponse(checkpointPreview);
+    if(url==='/api/operations') return opsResponse({servers:[],requests:opsJobs});
+    throw new Error(url);
+  };
+  await state.namespace.ui.refreshOperations();
+  const staleCreation=createButton.onclick();
+  await opsNodes.get('#checkpoint-list').children[0].children[1].onclick();
+  finishCreate(opsResponse(checkpointRecord));assert.equal(await staleCreation,false);
+  assert.equal(JSON.parse(opsNodes.get('#checkpoint-review').textContent).previewId,'preview-a','late creation cannot replace a newer restore preview');
+  assert.equal(createButton.disabled,false);
   console.log('workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });

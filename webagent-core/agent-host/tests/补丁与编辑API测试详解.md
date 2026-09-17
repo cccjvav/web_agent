@@ -56,3 +56,5 @@ GET /customizations坏JSON夹具返回500/E_CUSTOM_CORRUPT JSON，磁盘坏原�
 apiFiles用真实本地HTTP验证addProvider追加两模型，旧模型/真实fixture Key、Bridge与activeModelId保留；标点不同ID不碰撞，响应不含Key。重复端点模型（包括旧版自定义ID）409、错误/超量/重复输入及与整表字段混用400，配置字节不变；两端点并发追加都保留。单host同步保存，不是跨进程CAS。
 
 发现路由fixture暂时替换global.fetch以捕获上游signal，实际发本机HTTP请求、等待上游开始后destroy客户端；2000ms watchdog内必须收到abort。finally清timer并恢复fetch。不是用临时API直接挂载证明完整Origin/Host认证，也不调用真实提供商。
+
+第35组apiFiles检查点创建续测：提交./checkpoint-http.txt别名，返回规范路径checkpoint-http.txt、ready与result:null，原文件字节不变；已有文件加缺失文件的创建400后，GET元数据完整等于失败前，不留半条记录。后续原有预览/严格确认/真实恢复断言保留；这证明既有后端行为，不是本批新加幂等接口。

@@ -193,15 +193,49 @@ async function refreshOperations() {
   const results = await Promise.all([refreshCheckpoints(), refreshOperationList()]);
   return results.every(Boolean);
 }
+let checkpointCreating = false;
+async function createCheckpoint() {
+  if (checkpointCreating) { ui.toast('检查点正在创建，请等待并核对原请求，不要重复创建。'); return false; }
+  checkpointCreating = true;
+  const button = $('#btn-checkpoint-create'); button.disabled = true;
+  const generation = ++checkpointGeneration, binding = checkpointBinding();
+  const paths = $('#checkpoint-paths').value.split(/\r?\n/).map(value => value.trim()).filter(Boolean);
+  let dispatched = false;
+  $('#checkpoint-controls').replaceChildren();
+  $('#checkpoint-review').textContent = '准备创建新的检查点；尚未发送。';
+  try {
+    if (!sameCheckpointBinding(binding)) throw new Error('请先刷新并确认当前工作区和主机');
+    if (!paths.length || paths.length > 12 || paths.some(path => path.length > 2048) || new Set(paths).size !== paths.length) throw new Error('请选择1–12条不重复的已有文件路径，每条不超过2048字符');
+    if (!confirm('确认创建新的检查点，把所选已有文件的当前磁盘原文暂存于本机内存？这不是永久备份，重启/过期会丢失。上次结果未知时请先查询列表，不要当成失败重新创建。')) {
+      $('#checkpoint-review').textContent = '已取消创建，未发送请求。'; return false;
+    }
+    if (!sameCheckpointBinding(binding)) throw new Error('工作区绑定已变化，请重新确认');
+    dispatched = true;
+    $('#checkpoint-review').textContent = '正在创建检查点，尚未取得确认；响应丢失时先刷新列表核对，不要重复创建。';
+    const record = await api('/checkpoints', 'POST', { ...binding, paths, confirmed: true });
+    if (generation !== checkpointGeneration) return false;
+    if (!sameCheckpointBinding(binding) || !validCheckpointRecord(record) || record.state !== 'ready' || record.result !== null || record.paths.length !== paths.length) throw new Error('创建响应无效或工作区绑定已变化');
+    // Server paths are canonical: aliases may differ from the submitted spelling.
+    $('#checkpoint-review').textContent = JSON.stringify(record, null, 2);
+    const refreshed = await refreshCheckpoints();
+    if (generation !== checkpointGeneration) return false;
+    if (!sameCheckpointBinding(binding)) {
+      $('#checkpoint-review').textContent = `检查点 ${record.id} 已获创建确认，但工作区绑定现已变化；请在原工作区核对，不能据此操作当前工作区。`;
+      return false;
+    }
+    if (!refreshed) $('#checkpoint-review').textContent = JSON.stringify({ ...record, note:'创建已确认，但列表刷新失败或被新刷新取代；按此ID核对，不要重建。' }, null, 2);
+    return true;
+  } catch (error) {
+    if (generation !== checkpointGeneration) return false;
+    $('#checkpoint-review').textContent = dispatched
+      ? '检查点创建未确认，可能已经建立；请刷新列表核对原请求和文件路径，不要重复创建。没有自动重试。'
+      : `未发送创建请求：${error.message}。`;
+    return false;
+  } finally {checkpointCreating = false;button.disabled = false;}
+}
 function initOperations() {
   $('#btn-checkpoint-refresh').onclick = refreshCheckpoints;
-  $('#btn-checkpoint-create').onclick = () => action(async () => {
-    const paths = $('#checkpoint-paths').value.split(/\r?\n/).map(value => value.trim()).filter(Boolean);
-    if (!confirm('确认将这些已有文件的当前磁盘原文暂存于本机内存？这不是永久备份，重启/过期会丢失。')) return;
-    const generation = ++checkpointGeneration; $('#checkpoint-controls').replaceChildren();
-    const record = await api('/checkpoints', 'POST', { ...checkpointBinding(), paths, confirmed: true });
-    if (generation === checkpointGeneration) $('#checkpoint-review').textContent = JSON.stringify(record, null, 2);
-  });
+  $('#btn-checkpoint-create').onclick = createCheckpoint;
   let checkId = null, checkGeneration = 0;
   async function connectionAction(callback) {
     const generation = ++checkGeneration;

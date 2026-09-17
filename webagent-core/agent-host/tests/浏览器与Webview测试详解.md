@@ -120,3 +120,9 @@ approvalReviewBrowser的真实页面夹具主解释见[主机诊断与调用追�
 workbenchRuntime沿用opsNode/opsResponse加载真实operations模块。先复现检查点GET抛错使审批GET计数为0，以及返回其它ID的检查点预览仍出现恢复按钮；修复后分别为独立可刷新和零恢复控件。listBodies/checkpointBodies控制JSON完成顺序，旧列表不覆盖新列表；一条null记录拒绝整批，不发布部分按钮，detachedRequest也不能重新读取。checkpointRecord/checkpointPreview提供有绑定的结构夹具；缺previewId、空files、缺diff均拒绝。boundRestore在workspaceRoot变化后零POST；restoreValue覆盖null/错ID/成功但逐文件unknown的矛盾响应，保留“未取得可信完成结果”、消费按钮不重放；合法unknown和succeeded照实保留。这里是VM而非磁盘恢复测试。
 
 真实磁盘写后异常由fileCheckpoints.test.js验证；checkpointResultsBrowser的真实页面拦截测试说明位于[主机诊断与调用追踪详解](../src/utils/主机诊断与调用追踪详解.md)，执行证据按第34组精确CI记录。
+
+## 第35组：创建检查点的在途生命周期
+
+workbenchRuntime在已有真实operations模块上先用finishCreate挂起响应，连续调用实际onclick，旧实现checkpointCreates=2，新实现必须1。checkpointCreateBody证明发送原路径快照，等待中编辑createInput保留新草稿，确认后按钮恢复。reply表覆盖HTTP失败、业务失败、坏JSON、null、非ready、文件数不符和非空result：每次明确点击仅一POST，零自动刷新/重试、无恢复按钮、结果未确认。creationLists注入确认后的列表失败，ID仍在并有独立note。取消confirm、空/重复/过多路径、空绑定是未发送；绑定在await期间变化则不发布旧工作区成功。计时器替身触发10秒后，迟到有效JSON也不能假确认；创建期间选择另一个恢复预览，旧创建回包不能覆盖previewId。finally释放与草稿保留分别断言。这是VM而非实网截止时间证明。
+
+真实HTTP创建/失败零半条记录由apiFiles验证；checkpointCreateBrowser真实页面及真实后端创建场景主说明见[主机诊断与调用追踪详解](../src/utils/主机诊断与调用追踪详解.md)，实际执行按第35组CI记录。

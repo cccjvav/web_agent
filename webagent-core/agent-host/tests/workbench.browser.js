@@ -83,6 +83,50 @@ async function probeHudBrowser(browser) {
     assert.strictEqual(result.logs, 0); assert.deepStrictEqual(errors, []);
   } finally { await fixture.close(); }
 }
+async function checkpointCreateBrowser(browser, base, workspace) {
+  const fixture=await browser.newPage({viewport:{width:1280,height:900}}), errors=[];
+  fixture.on('pageerror',error=>errors.push(error.message));
+  const name='checkpoint-create-browser.txt', target=path.join(workspace,name);
+  fs.writeFileSync(target,'CHECKPOINT CREATION DOES NOT WRITE');
+  let posts=0, heldRoute, createdRecord, createBody, created;
+  const serverCreated=new Promise(resolve=>{created=resolve;});
+  try {
+    await fixture.route('**/api/checkpoints',async route=>{
+      if(route.request().method()!=='POST') return route.continue();
+      posts++;
+      if(posts>1) return route.fulfill({json:null});
+      createBody=route.request().postDataJSON();
+      const response=await route.fetch();
+      assert.equal(response.status(),200);createdRecord=await response.json();heldRoute=route;created();
+    });
+    await fixture.goto(base);
+    await fixture.waitForFunction(async()=>{const {state}=await import('/js/state.js');return Boolean(state.status?.workspaceRoot && state.status?.identity?.hostInstanceId);});
+    await fixture.click('#rb-bridge-tab');await fixture.click('#btn-operations');
+    await fixture.fill('#checkpoint-paths',name);
+    fixture.once('dialog',dialog=>dialog.accept());await fixture.click('#btn-checkpoint-create');await serverCreated;
+    assert.equal(await fixture.isDisabled('#btn-checkpoint-create'),true);
+    assert.equal(await fixture.evaluate(()=>document.querySelector('#btn-checkpoint-create').onclick()),false);
+    assert.equal(posts,1,'in-flight create guard applies to the actual page callback');
+    await fixture.fill('#checkpoint-paths','NEW UNSUBMITTED DRAFT.txt');
+    await heldRoute.fulfill({json:createdRecord});heldRoute=null;
+    await fixture.waitForFunction(id=>document.querySelector('#checkpoint-review').textContent.includes(id),createdRecord.id);
+    await fixture.waitForFunction(()=>!document.querySelector('#btn-checkpoint-create').disabled);
+    assert.equal(await fixture.inputValue('#checkpoint-paths'),'NEW UNSUBMITTED DRAFT.txt');
+    assert.deepEqual(createBody.paths,[name]);assert.equal(createdRecord.state,'ready');
+    assert.equal(fs.readFileSync(target,'utf8'),'CHECKPOINT CREATION DOES NOT WRITE');
+    fixture.once('dialog',dialog=>dialog.accept());await fixture.click('#btn-checkpoint-create');
+    await fixture.waitForFunction(()=>document.querySelector('#checkpoint-review').textContent.includes('创建未确认'));
+    assert.equal(posts,2);assert.equal(await fixture.locator('#checkpoint-controls button').count(),0);
+    assert.deepEqual(errors,[]);
+  } finally {
+    if(heldRoute) await heldRoute.abort().catch(()=>{});
+    if(createdRecord) {
+      const removed=await fixture.request.post(base+'/api/checkpoints/'+createdRecord.id+'/remove',{data:{workspaceRoot:createBody.workspaceRoot,hostInstanceId:createBody.hostInstanceId}});
+      assert.equal(removed.status(),200);
+    }
+    await fixture.close();fs.rmSync(target,{force:true});
+  }
+}
 async function checkpointResultsBrowser(browser, base) {
   const fixture=await browser.newPage({viewport:{width:1280,height:900}}), errors=[];
   fixture.on('pageerror',error=>errors.push(error.message));
@@ -270,6 +314,7 @@ async function main() {
     await modelStateBrowser(browser, base);
     await approvalReviewBrowser(browser, base);
     await checkpointResultsBrowser(browser, base);
+    await checkpointCreateBrowser(browser, base, workspace);
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.route('https://cdn.jsdelivr.net/**', route => route.abort());

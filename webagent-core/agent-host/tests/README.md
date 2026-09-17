@@ -45,6 +45,8 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 
 第34组补充列表失败隔离/乱序JSON/检查点错误合同的VM负例、真实写后事件异常保留效果，以及独立checkpointResultsBrowser页面拦截场景；后端检查点逻辑未因本批测试而改写。
 
+第35组补创建生命周期：workbenchRuntime先复现连点两次POST，再测快照/坏响应/绑定变化/超时与写后读失败分离；apiFiles验证规范路径和失败零半条记录，checkpointCreateBrowser另测真实页面/后端，不算Node测试的浏览器执行证据。
+
 ## 按风险选择回归
 | 风险/模块 | 主要测试 | 证据类型与限制 |
 |---|---|---|
@@ -164,9 +166,9 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 141 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 153 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 250 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 262 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 9 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 15 个函数/类节点 |

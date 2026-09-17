@@ -54,8 +54,14 @@ async function main() {
     fs.writeFileSync(path.join(tmp, 'checkpoint-http.txt'), 'HTTP original');
     const checkpointBinding = { workspaceRoot: tmp, hostInstanceId: config.hostInstanceId };
     assert.equal((await request(server, 'POST', '/api/checkpoints', { paths: ['checkpoint-http.txt'], confirmed: true })).status, 400);
-    const checkpointCreated = await request(server, 'POST', '/api/checkpoints', { ...checkpointBinding, paths: ['checkpoint-http.txt'], confirmed: true });
+    const checkpointCreated = await request(server, 'POST', '/api/checkpoints', { ...checkpointBinding, paths: ['./checkpoint-http.txt'], confirmed: true });
     assert.equal(checkpointCreated.status, 200);
+    assert.deepEqual(checkpointCreated.json.paths,['checkpoint-http.txt'],'creation reports canonical paths, not necessarily the submitted spelling');
+    assert.equal(checkpointCreated.json.state,'ready');assert.equal(checkpointCreated.json.result,null);
+    assert.equal(fs.readFileSync(path.join(tmp,'checkpoint-http.txt'),'utf8'),'HTTP original','creation never writes selected content');
+    const checkpointsBeforeFailure=(await request(server,'GET','/api/checkpoints')).json;
+    assert.equal((await request(server,'POST','/api/checkpoints',{...checkpointBinding,paths:['checkpoint-http.txt','checkpoint-missing.txt'],confirmed:true})).status,400);
+    assert.deepEqual((await request(server,'GET','/api/checkpoints')).json,checkpointsBeforeFailure,'a failed multi-file read cannot create a partial checkpoint');
     const checkpointId = checkpointCreated.json.id;
     fs.writeFileSync(path.join(tmp, 'checkpoint-http.txt'), 'HTTP modified');
     const checkpointPreview = await request(server, 'POST', '/api/checkpoints/' + checkpointId + '/preview', checkpointBinding);
