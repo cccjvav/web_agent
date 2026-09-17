@@ -68,6 +68,11 @@
   "rootDoc": "README.md",
   "extraSiteDocs": [
     {
+      "id": "handoff-roadmap",
+      "path": "交接与路线图.md",
+      "group": "维护"
+    },
+    {
       "id": "documentation-policy",
       "path": "manager/docs/documentation.md",
       "group": "维护"

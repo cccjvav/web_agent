@@ -215,7 +215,7 @@
 
 ## docs-site/documentation.config.json
 
-[目录说明](README.md) · SHA-256 `1dcd3c52dd4e2653cebc8c7d0e54791f3ed3de1c39b695299042fb240f63a84d`
+[目录说明](README.md) · SHA-256 `a69232d90e6fa3faa09948d13b8de2b44c6b5f7e5e17a5103499a0e46ab6579e`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -2017,23 +2017,24 @@
 
 ## webagent-core/agent-host/tests/documentationLinks.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `494cae61070e78730b42fb7bc51e310f1e9bf04869c8e621beecd6b3d200414e`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `e2d657081e2bea28a53f8d9c2bd3832af6cf4533229e2d2730978f2d9db70fb3`
 
 - `read` — ArrowFunctionExpression，[L6–L6](../webagent-core/agent-host/tests/documentationLinks.test.js#L6-L6)
 - `checkLinks` — FunctionDeclaration，[L7–L17](../webagent-core/agent-host/tests/documentationLinks.test.js#L7-L17)
 - `anonymous@23:14` — ArrowFunctionExpression，[L23–L23](../webagent-core/agent-host/tests/documentationLinks.test.js#L23-L23)
 - `anonymous@24:14` — ArrowFunctionExpression，[L24–L24](../webagent-core/agent-host/tests/documentationLinks.test.js#L24-L24)
-- `anonymous@28:34` — ArrowFunctionExpression，[L28–L28](../webagent-core/agent-host/tests/documentationLinks.test.js#L28-L28)
-- `insertAdjacentHTML` — FunctionExpression，[L44–L44](../webagent-core/agent-host/tests/documentationLinks.test.js#L44-L44)
-- `$` — ArrowFunctionExpression，[L47–L47](../webagent-core/agent-host/tests/documentationLinks.test.js#L47-L47)
-- `$/remove` — FunctionExpression，[L47–L47](../webagent-core/agent-host/tests/documentationLinks.test.js#L47-L47)
-- `$/outerHTML` — FunctionExpression，[L47–L47](../webagent-core/agent-host/tests/documentationLinks.test.js#L47-L47)
-- `pageChrome` — ArrowFunctionExpression，[L48–L48](../webagent-core/agent-host/tests/documentationLinks.test.js#L48-L48)
-- `route` — ArrowFunctionExpression，[L48–L48](../webagent-core/agent-host/tests/documentationLinks.test.js#L48-L48)
-- `getElementById` — FunctionExpression，[L49–L49](../webagent-core/agent-host/tests/documentationLinks.test.js#L49-L49)
-- `getElementById/scrollIntoView` — FunctionExpression，[L49–L49](../webagent-core/agent-host/tests/documentationLinks.test.js#L49-L49)
-- `anonymous@60:15` — ArrowFunctionExpression，[L60–L60](../webagent-core/agent-host/tests/documentationLinks.test.js#L60-L60)
-- `anonymous@62:15` — ArrowFunctionExpression，[L62–L62](../webagent-core/agent-host/tests/documentationLinks.test.js#L62-L62)
+- `anonymous@28:27` — ArrowFunctionExpression，[L28–L28](../webagent-core/agent-host/tests/documentationLinks.test.js#L28-L28)
+- `anonymous@29:34` — ArrowFunctionExpression，[L29–L29](../webagent-core/agent-host/tests/documentationLinks.test.js#L29-L29)
+- `insertAdjacentHTML` — FunctionExpression，[L45–L45](../webagent-core/agent-host/tests/documentationLinks.test.js#L45-L45)
+- `$` — ArrowFunctionExpression，[L48–L48](../webagent-core/agent-host/tests/documentationLinks.test.js#L48-L48)
+- `$/remove` — FunctionExpression，[L48–L48](../webagent-core/agent-host/tests/documentationLinks.test.js#L48-L48)
+- `$/outerHTML` — FunctionExpression，[L48–L48](../webagent-core/agent-host/tests/documentationLinks.test.js#L48-L48)
+- `pageChrome` — ArrowFunctionExpression，[L49–L49](../webagent-core/agent-host/tests/documentationLinks.test.js#L49-L49)
+- `route` — ArrowFunctionExpression，[L49–L49](../webagent-core/agent-host/tests/documentationLinks.test.js#L49-L49)
+- `getElementById` — FunctionExpression，[L50–L50](../webagent-core/agent-host/tests/documentationLinks.test.js#L50-L50)
+- `getElementById/scrollIntoView` — FunctionExpression，[L50–L50](../webagent-core/agent-host/tests/documentationLinks.test.js#L50-L50)
+- `anonymous@61:15` — ArrowFunctionExpression，[L61–L61](../webagent-core/agent-host/tests/documentationLinks.test.js#L61-L61)
+- `anonymous@63:15` — ArrowFunctionExpression，[L63–L63](../webagent-core/agent-host/tests/documentationLinks.test.js#L63-L63)
 
 ## webagent-core/agent-host/tests/documentationPolicy.test.js
 
@@ -2054,7 +2055,7 @@
 
 ## webagent-core/agent-host/tests/documentationQuality.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `51de1bdfb49b220405ca081c7b6f8f7e3297a379fa58ffc3fdc2375e93a1c440`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `11f2df508f19f53721f7cd0e11113b63abcec7ee9611dd2f5eabbb3bd4e6d733`
 
 - `anonymous@10:88` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationQuality.test.js#L10-L10)
 - `read` — ArrowFunctionExpression，[L35–L35](../webagent-core/agent-host/tests/documentationQuality.test.js#L35-L35)
