@@ -529,7 +529,9 @@ router.get('/profile/detect', (req, res) => {
 });
 
 router.get('/customizations', (req, res) => {
-  res.json(loadCustom());
+  res.setHeader('Cache-Control', 'no-store');
+  try { res.json(loadCustom()); }
+  catch (error) { res.status(500).json({ success: false, error: error.message, code: error.code || 'E_INTERNAL' }); }
 });
 
 router.put('/customizations', (req, res) => {

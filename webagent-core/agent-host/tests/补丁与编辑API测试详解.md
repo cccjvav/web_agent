@@ -48,3 +48,5 @@ apiFiles还验证本机保存undo句柄、预览无写入、错绑定/非布尔�
 apiFiles以真实本地HTTP测试Skill新建：规范化后重名返回400且保留原文；两个同名并发请求只有一个200、另一400，磁盘保留成功请求正文。这是主机内路径锁并发回归，不是外部OS进程隔离。
 
 apiFiles的PUT /customizations真实HTTP回归：先存shell+notes，再只改notes，shell保留；instructions对象返回400/success:false/E_BAD_ARGS，配置JSON逐字节不变。不由此认证完整浏览器设置交互或四文件事务。
+
+GET /customizations坏JSON夹具返回500/E_CUSTOM_CORRUPT JSON，磁盘坏原文保持，再由测试显式恢复基线；不是产品自动修复。

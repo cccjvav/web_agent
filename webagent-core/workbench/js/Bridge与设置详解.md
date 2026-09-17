@@ -39,11 +39,17 @@
 
 **rowList(items,render,empty)**空列表返回提示HTML，否则map(render).join；empty由调用者给固定文本，函数本身不转义render结果。
 
-**paintCustom()**读state.custom：填指令/偏好、environment、techStack；rowList回调分别渲染agents/prompts/hooks/mcpServers/plugins/quickLinks，动态值escape。prompts.onclick把data-insert填聊天但不发送，关modal切Chat；quickLinks.onclick以URL为ID建browser tab并激活。Codex状态明确未实现、不读写auth.json。多模型enabled先看custom后由status.multiModel覆盖；模型map options，active/auto都表示当前，填merge/think/readOnly/maxBranches。此函数只是画登记项，不自动运行hook、连接MCP或安装插件。
+**paintCustom({preserveDrafts=false}={})**读state.custom：填指令/偏好、environment、techStack；rowList回调分别渲染agents/prompts/hooks/mcpServers/plugins/quickLinks，动态值escape。prompts.onclick把data-insert填聊天但不发送，关modal切Chat；quickLinks.onclick以URL为ID建browser tab并激活。Codex状态明确未实现、不读写auth.json。多模型enabled先看custom后由status.multiModel覆盖；模型map options，active/auto都表示当前，填merge/think/readOnly/maxBranches。保存成功时传preserveDrafts:true，只重画登记列表，不覆盖指令/偏好/环境/技术栈或多模型表单，保留请求期间及其他页未提交的草稿；初始加载才填全部字段。此函数只是画登记项，不自动运行hook、连接MCP或安装插件。
 
 **paintProviderTable()**排除builtin，空显示提示；forEach按group聚合，map组/行、caps复制补vision；active radio匹配status，所有动态显示escape。radio.onchange POST activeModelId后refreshStatus；未检查HTTP成功/错误，也没有并发选择锁。模型能力/定价来自声明/探测，不保证供应商实时价格或模型真实能力。
 
-**loadCustomizations()**GET/json入state.custom再paintCustom，未检查HTTP状态。**saveCustom(partial)**把旧state.custom与partial浅合并PUT，响应data.customizations替换state，再paint并返回。部分对象不是递归merge；并发两个保存可能都基于旧快照，无前端CAS/version锁。
+**isCustomSnapshot(value)**检查用于渲染的顶层对象、指令/偏好字符串、环境/技术栈对象和六类列表；列表项须非数组对象，plugins另允许字符串。不是后台所有字段的完整schema或业务真实性校验。
+
+**loadCustomizations()**GET/no-store，HTTP成功且返回快照形状有效才替换state.custom并paintCustom。HTTP/业务/解析/网络错误保留旧state和当前表单，toast原因，返回false；成功返回快照。后端损坏配置返回500 JSON及E_CUSTOM_CORRUPT，原文件保留，不以默认值覆盖。
+
+**saveCustom(partial)**只PUT本次partial，不再携带缓存state.custom的其他字段；必须HTTP成功、success严格true且快照有效才更新state，并以preserveDrafts重画列表、返回快照。失败返回false并保留草稿；未知响应/网络/超时提示状态未知，服务端顺序发布可能部分完成，不能宣称回滚。bind中所有saveCustom调用都检查返回值，false立即结束，不继续写成功状态或toast。
+
+load/save共用页面内customBusy，已有请求时明确拒绝新请求而不排队；各用10秒AbortController和finally清timer/释放busy，避免迟到加载覆盖保存结果。取消等待不证明服务器未写入；不自动重放。它不是跨标签页/跨进程CAS，两个客户端修改同一字段或整列表仍可能后写覆盖前写；明确加载会重填表单，不是草稿恢复功能。
 
 **loadSkills()**获取带来源/截断/错误提示的目录，并绑定搜索、重扫、查看、下一页、资源和填入对话按钮。**paintSkills()**按id/description过滤并转义生成卡片，显示来源和同名项。**readSkillPage(id,resource,offset,hash)**调用受保护的GET `/api/skills/load`，5秒AbortController超时；新请求取消上一个且用ticket忽略迟到响应。第一页清旧正文；后续页按同id/resource拼接，服务端校验expectedHash防混版；错误清选择并提示从头读取，不允许继续操作旧内容。正文textContent展示，不执行Markdown/脚本。只将loadSkills作为原ui启动入口，新增导出也可供测试直接调用。
 

@@ -154,6 +154,13 @@ async function main() {
     const customPatched = await request(server,'PUT','/api/customizations',{environment:{notes:'second'}});
     assert.strictEqual(customPatched.json.customizations.environment.shell,'powershell');
     const beforeCustom = fs.readFileSync(path.join(tmp,'.webagent/customizations.json'));
+    fs.writeFileSync(path.join(tmp,'.webagent/customizations.json'),'{broken');
+    const badLoad = await request(server,'GET','/api/customizations');
+    assert.strictEqual(badLoad.status,500);
+    assert.strictEqual(badLoad.json.code,'E_CUSTOM_CORRUPT');
+    assert.strictEqual(fs.readFileSync(path.join(tmp,'.webagent/customizations.json'),'utf8'),'{broken');
+    fs.writeFileSync(path.join(tmp,'.webagent/customizations.json'),beforeCustom);
+
     const badCustom = await request(server,'PUT','/api/customizations',{instructions:{bad:true}});
     assert.strictEqual(badCustom.status,400);
     assert.strictEqual(badCustom.json.success,false);

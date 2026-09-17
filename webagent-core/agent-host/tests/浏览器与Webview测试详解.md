@@ -90,3 +90,5 @@ stdio审批回归必须等待具体requestId的approve响应为succeeded，再�
 使用真实Chromium单独页面，通过route白名单提供实际docs-site/index.html/app.js/content.js/styles.css，其他请求中止；不连接外网服务。验证有结果→无匹配替换→清空移除，坏guide百分号不阻断全文，以及真实MCP详解含斜线标题的目标。覆写scrollIntoView仅记录被调用元素ID，不把它当滚动动画/视觉验收；pageerror收集未处理错误，finally关页面。此用例使用真实DOM/脚本，不是VM，但也不覆盖静态服务器网络/全部浏览器或所有标题语法。
 
 workbenchRuntime新增实际Bridge模块VM失败路径：HTTP200/success:false的tunnelError与note可见、失败重启刷新状态且不复制URL；停止时HTTP失败、业务失败、响应丢失都不假灭灯，成功才刷新/灭灯。它使用模拟fetch/DOM，不是公网提供商或Windows进程验收。
+
+R3定制设置回归：workbenchRuntime加载真实settings模块，先用400负例复现旧保存返回undefined/污染state，再覆盖HTTP/业务/坏JSON/形状/网络失败保留旧值、超时AbortSignal与finally释放、忙时拒绝第二次加载/保存、只提交partial、保存响应不覆盖其他草稿、显式加载填表。计时器为VM替身，不是实际网络超时。workbench.browser点击实际指令保存按钮、拦截400响应，断言错误可见、草稿保留、不显示成功；不据此认证用户本机或所有设置按钮。

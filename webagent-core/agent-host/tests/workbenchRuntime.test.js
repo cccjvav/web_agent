@@ -248,5 +248,56 @@ if (!process.argv.includes('--vm-child')) {
   // Identical activity revisions must still refresh independent task expiry/snapshots.
   bridge.namespace.paintBridgeActivity({...activity,taskStates:[{sessionId:'b',todos:[{title:'Another task'}]}]});
   assert.ok(taskNodes.get('#bridge-todo-list').innerHTML.includes('Another task'));
+  const settings = new vm.SourceTextModule(fs.readFileSync(path.join(root,'settings.js'),'utf8'),{context});
+  await settings.link(specifier => specifier === './state.js' ? state : dom); await settings.evaluate();
+  const custom = {instructions:'saved',preference:'old',environment:{},techStack:{},agents:[],prompts:[],hooks:[],mcpServers:[],plugins:[],quickLinks:[]};
+  state.namespace.state.custom = custom;
+  const notices = []; state.namespace.ui.toast = message => notices.push(message);
+  context.fetch = async () => ({ok:false,status:400,json:async()=>({success:false,error:'fixture rejected'})});
+  assert.strictEqual(await settings.namespace.saveCustom({instructions:'draft'}), false);
+  assert.strictEqual(state.namespace.state.custom,custom);
+  assert.ok(notices.at(-1).includes('fixture rejected'));
+  for (const response of [
+    {ok:true,json:async()=>({success:false,error:'business rejection'})},
+    {ok:true,json:async()=>({success:true})},
+    {ok:true,json:async()=>{throw new Error('invalid JSON')}}
+  ]) {
+    context.fetch = async () => response;
+    assert.strictEqual(await settings.namespace.saveCustom({instructions:'draft'}),false);
+    assert.strictEqual(state.namespace.state.custom,custom);
+  }
+  context.fetch = async () => {throw new Error('network lost')};
+  assert.strictEqual(await settings.namespace.saveCustom({instructions:'draft'}),false);
+  assert.ok(notices.at(-1).includes('状态未知'));
+  assert.strictEqual(await settings.namespace.loadCustomizations(),false);
+  assert.strictEqual(state.namespace.state.custom,custom);
+  for (const data of [{success:false,error:'load rejected'},[],{...custom,hooks:[null]}]) {
+    context.fetch = async () => ({ok:true,json:async()=>data});
+    assert.strictEqual(await settings.namespace.loadCustomizations(),false);
+    assert.strictEqual(state.namespace.state.custom,custom);
+  }
+  context.fetch = async (url,options) => new Promise((resolve,reject) => options.signal.addEventListener('abort',()=>reject(new Error('timeout fixture'))));
+  const oldTimers = new Set(timers.keys());
+  const timedSave = settings.namespace.saveCustom({instructions:'timeout'});
+  const timeoutId = [...timers.keys()].find(id => !oldTimers.has(id));
+  timers.get(timeoutId)();
+  assert.strictEqual(await timedSave,false);
+  assert.ok(!timers.has(timeoutId));
+  assert.strictEqual(state.namespace.state.custom,custom);
+  let finishSave, sent, requests = 0;
+  context.fetch = async (url,options) => { requests++; sent=JSON.parse(options.body); return new Promise(resolve=>{finishSave=resolve}); };
+  taskNodes.get('#instr-text') || context.document.querySelector('#instr-text');
+  taskNodes.get('#instr-text').value='newer draft';
+  const saving = settings.namespace.saveCustom({preference:'changed'});
+  assert.strictEqual(await settings.namespace.saveCustom({instructions:'second'}),false);
+  assert.strictEqual(await settings.namespace.loadCustomizations(),false);
+  assert.strictEqual(requests,1);
+  assert.deepStrictEqual(sent,{preference:'changed'});
+  finishSave({ok:true,json:async()=>({success:true,customizations:{...custom,preference:'changed'}})});
+  assert.ok(await saving);
+  assert.strictEqual(taskNodes.get('#instr-text').value,'newer draft');
+  context.fetch = async () => ({ok:true,json:async()=>custom});
+  assert.ok(await settings.namespace.loadCustomizations());
+  assert.strictEqual(taskNodes.get('#instr-text').value,'saved');
   console.log('workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });

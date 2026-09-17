@@ -242,7 +242,17 @@ async function main() {
     assert.strictEqual(fs.readFileSync(path.join(workspace, 'remote-approved.txt'), 'utf8'), 'REMOTE-APPROVED');
     await page.click('#modal-close'); await page.click('#rb-chat-tab');
     await page.fill('#chat-input', 'KEEP-DRAFT');
-    await page.click('#menu-help'); await page.click('.modal-nav [data-page="skills"]');
+    await page.click('#menu-help'); await page.click('.modal-nav [data-page="instructions"]');
+    await page.fill('#instr-text','KEEP-CUSTOM-DRAFT');
+    await page.route('**/api/customizations', route => route.request().method() === 'PUT' ? route.fulfill({
+      status:400,contentType:'application/json',body:JSON.stringify({success:false,error:'fixture settings rejected'})
+    }) : route.continue());
+    await page.click('#btn-save-instr');
+    await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('fixture settings rejected'));
+    assert.strictEqual(await page.inputValue('#instr-text'),'KEEP-CUSTOM-DRAFT');
+    assert.ok(!(await page.locator('#toast').textContent()).includes('指令已保存'));
+    await page.unroute('**/api/customizations');
+    await page.click('.modal-nav [data-page="skills"]');
     await page.route('**/api/skills', route => route.request().method() === 'POST' ? route.fulfill({
       status:400,contentType:'application/json',body:JSON.stringify({error:'fixture skill create rejected'})
     }) : route.continue());

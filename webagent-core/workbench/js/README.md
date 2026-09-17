@@ -23,6 +23,8 @@ app.js初始化绑定并并行拉取状态、目录和配置。模块经ui注册
 ## 验证
 agent-host测试中的editorRuntime、workbenchRuntime、monacoLoading执行实际模块/函数fixture；HTML接线另有测试。真实浏览器焦点、页面卸载和无障碍仍需人工验收。
 
+定制设置加载/保存检查HTTP、业务及快照形状；只提交本次修改，页面内单请求、10秒取消等待，失败不假成功，保存响应不覆盖未提交表单。不是跨客户端版本锁或四文件事务，详见[Bridge与设置详解](Bridge与设置详解.md)。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -37,7 +39,7 @@ agent-host测试中的editorRuntime、workbenchRuntime、monacoLoading执行实�
 | [monaco.js](monaco.js) | 9 个函数/类节点 |
 | [operations.js](operations.js) | 41 个函数/类节点 |
 | [picker.js](picker.js) | 16 个函数/类节点 |
-| [settings.js](settings.js) | 35 个函数/类节点 |
+| [settings.js](settings.js) | 40 个函数/类节点 |
 | [state.js](state.js) | 2 个函数/类节点 |
 | [tabs.js](tabs.js) | 46 个函数/类节点 |
 <!-- docs-inventory:end -->

@@ -293,7 +293,7 @@ export function bind() {
       name: $('#ag-name').value || '未命名',
       role: $('#ag-role').value
     }];
-    await ui.saveCustom({ agents });
+    if (!await ui.saveCustom({ agents })) return;
     ui.toast('已新建智能体');
   };
   function skillMarkdown(name, when, steps) {
@@ -386,7 +386,7 @@ export function bind() {
     if ($('#env-status')) $('#env-status').textContent = `探测到 ${env.os} / ${env.shell}`;
   });
   onClick('#btn-save-env', async () => {
-    await ui.saveCustom({
+    if (!await ui.saveCustom({
       environment: {
         os: $('#env-os') ? $('#env-os').value : 'auto',
         shell: $('#env-shell') ? $('#env-shell').value : 'auto',
@@ -394,7 +394,7 @@ export function bind() {
         commitLanguage: $('#env-commit') ? $('#env-commit').value : 'zh-CN',
         notes: $('#env-notes') ? $('#env-notes').value : ''
       }
-    });
+    })) return;
     if ($('#env-status')) $('#env-status').textContent = '已写入 .webagent/preference.md';
     ui.toast('已保存环境偏好');
   });
@@ -411,7 +411,7 @@ export function bind() {
     }
   });
   onClick('#btn-save-stack', async () => {
-    await ui.saveCustom({
+    if (!await ui.saveCustom({
       techStack: {
         languages: $('#st-lang') ? $('#st-lang').value : '',
         frameworks: $('#st-fw') ? $('#st-fw').value : '',
@@ -419,12 +419,12 @@ export function bind() {
         testCommand: $('#st-test') ? $('#st-test').value : '',
         notes: $('#st-notes') ? $('#st-notes').value : ''
       }
-    });
+    })) return;
     if ($('#stack-status')) $('#stack-status').textContent = '已写入 .webagent/tech-stack.md';
     ui.toast('已保存技术栈');
   });
   $('#btn-save-instr').onclick = async () => {
-    await ui.saveCustom({ instructions: $('#instr-text').value });
+    if (!await ui.saveCustom({ instructions: $('#instr-text').value })) return;
     ui.toast('指令已保存到 .webagent/instructions.md');
   };
   $('#btn-add-prompt').onclick = async () => {
@@ -433,32 +433,32 @@ export function bind() {
       name: $('#pr-name').value || '提示',
       content: $('#pr-body').value
     }];
-    await ui.saveCustom({ prompts });
+    if (!await ui.saveCustom({ prompts })) return;
   };
   $('#btn-add-hook').onclick = async () => {
     const hooks = [...((state.custom && state.custom.hooks) || []), {
       event: $('#hk-event').value,
       command: $('#hk-cmd').value
     }];
-    await ui.saveCustom({ hooks });
+    if (!await ui.saveCustom({ hooks })) return;
   };
   $('#btn-add-mcp').onclick = async () => {
     const mcpServers = [...((state.custom && state.custom.mcpServers) || []), {
       name: $('#mcp-name').value,
       url: $('#mcp-endpoint').value
     }];
-    await ui.saveCustom({ mcpServers });
+    if (!await ui.saveCustom({ mcpServers })) return;
   };
   $('#btn-add-plugin').onclick = async () => {
     const plugins = [...((state.custom && state.custom.plugins) || []), { name: $('#pl-name').value }];
-    await ui.saveCustom({ plugins });
+    if (!await ui.saveCustom({ plugins })) return;
   };
   $('#btn-add-link').onclick = async () => {
     const quickLinks = [...((state.custom && state.custom.quickLinks) || []), {
       name: $('#ql-name').value,
       url: $('#ql-url').value
     }];
-    await ui.saveCustom({ quickLinks });
+    if (!await ui.saveCustom({ quickLinks })) return;
   };
   if ($('#btn-codex')) {
     $('#btn-codex').onclick = () => {
@@ -483,10 +483,10 @@ export function bind() {
     await ui.refreshStatus();
   };
   $('#btn-save-pref').onclick = async () => {
-    await ui.saveCustom({
+    if (!await ui.saveCustom({
       preference: $('#pref-input').value,
       instructions: $('#instr-text').value || $('#pref-input').value
-    });
+    })) return;
     ui.toast('已写入偏好');
   };
 

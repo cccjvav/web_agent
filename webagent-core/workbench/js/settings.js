@@ -6,22 +6,24 @@ export function rowList(items, render, empty) {
   return items.map(render).join('');
 }
 
-export function paintCustom() {
+export function paintCustom({ preserveDrafts = false } = {}) {
   const c = state.custom || {};
-  $('#instr-text').value = c.instructions || '';
-  if ($('#pref-input')) $('#pref-input').value = c.preference || '';
-  const env = c.environment || {};
-  if ($('#env-os')) $('#env-os').value = env.os || 'auto';
-  if ($('#env-shell')) $('#env-shell').value = env.shell || 'auto';
-  if ($('#env-reply')) $('#env-reply').value = env.replyLanguage || 'zh-CN';
-  if ($('#env-commit')) $('#env-commit').value = env.commitLanguage || 'zh-CN';
-  if ($('#env-notes')) $('#env-notes').value = env.notes || '';
-  const st = c.techStack || {};
-  if ($('#st-lang')) $('#st-lang').value = st.languages || '';
-  if ($('#st-fw')) $('#st-fw').value = st.frameworks || '';
-  if ($('#st-pm')) $('#st-pm').value = st.packageManager || '';
-  if ($('#st-test')) $('#st-test').value = st.testCommand || '';
-  if ($('#st-notes')) $('#st-notes').value = st.notes || '';
+  if (!preserveDrafts) {
+    $('#instr-text').value = c.instructions || '';
+    if ($('#pref-input')) $('#pref-input').value = c.preference || '';
+    const env = c.environment || {};
+    if ($('#env-os')) $('#env-os').value = env.os || 'auto';
+    if ($('#env-shell')) $('#env-shell').value = env.shell || 'auto';
+    if ($('#env-reply')) $('#env-reply').value = env.replyLanguage || 'zh-CN';
+    if ($('#env-commit')) $('#env-commit').value = env.commitLanguage || 'zh-CN';
+    if ($('#env-notes')) $('#env-notes').value = env.notes || '';
+    const st = c.techStack || {};
+    if ($('#st-lang')) $('#st-lang').value = st.languages || '';
+    if ($('#st-fw')) $('#st-fw').value = st.frameworks || '';
+    if ($('#st-pm')) $('#st-pm').value = st.packageManager || '';
+    if ($('#st-test')) $('#st-test').value = st.testCommand || '';
+    if ($('#st-notes')) $('#st-notes').value = st.notes || '';
+  }
   $('#agents-list').innerHTML = ui.rowList(c.agents, (a) =>
     `<div class="list-row"><div><strong>${escapeHtml(a.name)}</strong><div class="hint">${escapeHtml(a.role || '')}</div></div></div>`,
   '还没有自定义智能体');
@@ -63,6 +65,7 @@ export function paintCustom() {
   if ($('#codex-status')) {
     $('#codex-status').textContent = '未实现。不会读写 ~/.codex/auth.json。';
   }
+  if (preserveDrafts) return;
   if (typeof c.multiModelEnabled === 'boolean') $('#mm-enabled').checked = c.multiModelEnabled;
   const mm = (state.status && state.status.multiModel) || {};
   if ($('#mm-enabled') && typeof mm.enabled === 'boolean') $('#mm-enabled').checked = mm.enabled;
@@ -124,22 +127,61 @@ export function paintProviderTable() {
   });
 }
 
+let customBusy = false;
+
+function isCustomSnapshot(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  if (typeof value.instructions !== 'string' || typeof value.preference !== 'string') return false;
+  for (const key of ['environment', 'techStack']) {
+    if (!value[key] || typeof value[key] !== 'object' || Array.isArray(value[key])) return false;
+  }
+  return ['agents', 'prompts', 'hooks', 'mcpServers', 'plugins', 'quickLinks'].every(key =>
+    Array.isArray(value[key]) && value[key].every(item =>
+      (item && typeof item === 'object' && !Array.isArray(item)) || (key === 'plugins' && typeof item === 'string')));
+}
+
 export async function loadCustomizations() {
-  const res = await fetch('/api/customizations');
-  state.custom = await res.json();
-  ui.paintCustom();
+  if (customBusy) { ui.toast('设置请求进行中，请等待后再操作。'); return false; }
+  customBusy = true;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch('/api/customizations', { cache: 'no-store', signal: controller.signal });
+    const data = await res.json();
+    if (!res.ok || data?.success === false || !isCustomSnapshot(data)) throw new Error(data?.error || '设置响应无效');
+    state.custom = data;
+    ui.paintCustom();
+    return data;
+  } catch (error) {
+    ui.toast('设置加载失败，保留当前内容：' + error.message);
+    return false;
+  } finally { clearTimeout(timer); customBusy = false; }
 }
 
 export async function saveCustom(partial) {
-  const res = await fetch('/api/customizations', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...state.custom, ...partial })
-  });
-  const data = await res.json();
-  state.custom = data.customizations;
-  ui.paintCustom();
-  return state.custom;
+  if (customBusy) { ui.toast('设置请求进行中，请等待后再操作。'); return false; }
+  customBusy = true;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch('/api/customizations', {
+      method: 'PUT',
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(partial)
+    });
+    const data = await res.json();
+    if (!res.ok || data?.success !== true || !isCustomSnapshot(data.customizations)) {
+      ui.toast((data?.error || '保存响应无效') + '；保存未确认，可能部分写入，请核对磁盘；未自动重试。');
+      return false;
+    }
+    state.custom = data.customizations;
+    ui.paintCustom({ preserveDrafts: true });
+    return state.custom;
+  } catch (error) {
+    ui.toast('保存状态未知，保留草稿，请核对磁盘；未自动重试：' + error.message);
+    return false;
+  } finally { clearTimeout(timer); customBusy = false; }
 }
 
 let skillCatalog = [], openedSkill = null, skillRequest = 0, skillController = null;
