@@ -2,6 +2,8 @@
 
 ## 当前状态
 
+第28组28f26e166be5294bc2963b30e195e800ef48f05d，[CI35263924819](https://github.com/cccjvav/web_agent/actions/runs/35263924819)逐项九项成功（Ubuntu18/20/22/24、Windows20/22/24、安装器、Chromium）。本地82测试文件通过，246源码/28目录/110排除。本次CI实际执行，不再把账户问题列为当前全局阻塞；不推断账单如何恢复，不删除25–27组未启动历史，也不据此关闭Windows旧超时根因或第三方实机验收。
+
 第27组实现b07d41d552e6cd7ee2ccc5c1a757b79fab1a68c9，[CI35252848573](https://github.com/cccjvav/web_agent/actions/runs/35252848573)九任务annotation均为账户付款/支出上限问题，未启动测试；本地82测试文件通过，不代签Windows/Chromium，不自动重跑。
 
 正式全仓审查以[逐文件清单](FULL_REVIEW_INDEX.md)为覆盖入口；既有台账保留发现与证据，不将旧“已全文读取”批次直接当作本轮逐句通过。第27组继续R3模型设置失败消费，首批F27-01/02/03明确已核对、未闭环与局部范围。
