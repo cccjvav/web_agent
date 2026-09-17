@@ -578,7 +578,7 @@ externalPending按登记与remove:ID分别互斥，允许移除connecting接入�
 
 启动必须stdio/discovered、launch与预览一致、PID/ready/closed/stopped及工具审批目录合同通过；失败/非终态/矛盾/空响应只报未确认，可能已执行，不重启。确认后列表失败保留ID，新编辑后旧结果不覆盖警告。异常固定文案，不回显环境密钥；HTTP登记工具目录校验抽成validExternalTools共享，原合同保持。
 
-stdioMcp真实进程加强失败consume不可重用、原输入args/env事后修改不影响已审快照（仍验证原secret/参数），后端行为正确、源码不改。VM红转绿并补过期/绑定/草稿/忙拒绝/超时/丢结果/刷新失败；新增stdioLifecycleBrowser合成响应页面测试，main已有真实启动链保留。本地无Chromium，新增场景未宣称执行；最终本地82测试文件通过，文档生成/构建/一致性通过（246源码/28目录/110排除），git diff --check通过；精确CI待提交核验。
+stdioMcp真实进程加强失败consume不可重用、原输入args/env事后修改不影响已审快照（仍验证原secret/参数），后端行为正确、源码不改。VM红转绿并补过期/绑定/草稿/忙拒绝/超时/丢结果/刷新失败；新增stdioLifecycleBrowser合成响应页面测试，main已有真实启动链保留。本地无Chromium，新增场景未宣称执行；最终本地82测试文件通过，文档生成/构建/一致性通过（246源码/28目录/110排除），git diff --check通过；实现beb6d48fa355b5bef59d4bd9c4e2dd69a25a933b已推当前固定分支，[CI35284740947](https://github.com/cccjvav/web_agent/actions/runs/35284740947)九项逐项成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium）；新增stdioLifecycleBrowser和既有真实启动链已实际执行通过，本地仍无Chromium，不代签用户实机。
 
 仅扩大上述局部，未认证整个stdio长篇、依赖树或OS隔离。接下来按R2高风险穿插复核localControl/corsAllow及路由的本机控制面/跨站拒绝链，R3其它消费者继续保留；全仓逐句、旧Windows超时根因、用户实机未完成，探测专项暂停。
 
