@@ -82,6 +82,7 @@ async function main() {
     queue.cancel(hanging.requestId); await execution;
     assert.strictEqual(queue.inspect(hanging.requestId).status, 'unknown');
     stage = 'cancel cleanup';
+    assert.deepStrictEqual(external.remove(registered.serverId),{removed:true,stopping:true},'remove acknowledges a stop request, not observed exit');
     await external.closeAll();
     assert.ok(!alive(JSON.parse(fs.readFileSync(path.join(root, 'stdio-started.json'))).pid));
     stage = 'budgets';

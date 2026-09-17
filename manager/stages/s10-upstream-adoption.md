@@ -85,7 +85,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 高，穿插 | 进行中：安全正文剩余实现对照 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27/31–35组设置/模型/状态/Provider、审批、检查点结果及创建首包已修；继续外部接入登记/移除与其它API消费者 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
+| R3 / 下一项，高 | 进行中：第25/27/31–36组设置/模型/状态/Provider、审批、检查点及HTTP接入登记/移除首包已修；继续stdio预览/启动及其它API消费者 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -555,6 +555,19 @@ fileCheckpoints新增真实file_written回调抛错：磁盘已恢复第一文�
 VM红转绿，补HTTP/业务/JSON/形状/超时、忙拒绝、草稿、绑定、确认后刷新失败与旧回包负例。新增checkpointCreateBrowser真实页面/真实后端创建后暂扣响应，测试实际在途回调/草稿与null响应消费，最后清理临时检查点/文件。本地无Chromium，未声称执行；最终本地82测试文件通过，文档生成/构建/一致性通过（246源码/28目录/110排除），git diff --check通过；实现048a584df8d968d2515cf93c1714491e7b2c01ae已推当前固定分支，[CI35280644858](https://github.com/cccjvav/web_agent/actions/runs/35280644858)九项逐项成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium）；新增checkpointCreateBrowser已实际执行通过，本地仍无Chromium，不代签用户实机。
 
 只核对创建相关正文，未宣称整个API或安全链完成。下一包非探测的外部接入登记/移除与其余结果消费，R2穿插；正式全仓逐句、历史Windows超时、用户实机及暂停专项边界不变。
+
+
+#### 第36组：HTTP工具接入登记/移除结果与停止边界
+
+2026-09-18从340ab44干净工作区继续，探测专项不动。先对照externalClient.add/establish/remove、REST、本机页面和实际回归。VM红测：removed:false仍被onclick返回true；挂起首个登记时连点使POST=2。没有据此宣称原UI明确显示过“进程已完全停止”，原问题是缺业务确认/停止状态保留。
+
+externalHttpEndpoint做前端形式/规范地址检查，安全DNS/本机端口/隧道排除仍由后端；addExternalServer捕获全部表单/绑定、公网confirm、只清实际发送的旧Token。必须http/discovered/端点与公网选项匹配/有界唯一工具及审批schema才确认，固定异常提示不回显反射Token。独立结果区保留ID和未知提示，不被列表统计覆盖；确认后列表失败单独提示，不重放。
+
+externalPending按登记与remove:ID分别互斥，允许移除connecting接入，不用全局锁挡住停止；移除按钮绑定列表代次并一次消费/禁用，刷新同ID也不能并发重发。removed必须true，stopping:true仅说明停止请求，不是已观察退出。externalMutationGeneration阻止旧登记回包覆盖新移除。拆分锁时曾有文本替换造成server未定义的中间回归，已修复并重跑，未削弱断言。无后端新幂等合同或跨页锁。
+
+真实HTTP测试移除挂起发现、等待登记拒绝、再次remove=false，目标HTTP服务仍活着且后来显式登记可用；stdioMcp先检查移除回包，再closeAll/真实PID证明最终退出。既有后端行为正确，本批不改后端源码。VM定向通过，新增externalRegistrationBrowser拦截场景并补齐旧公网浏览器fixture合同；本地无Chromium，不宣称已执行。最终本地82测试文件通过，文档生成/构建/一致性通过（246源码/28目录/110排除），git diff --check通过；精确CI待提交核验。
+
+只扩大HTTP登记/移除及对应测试/页面段的局部审查；stdio预览/启动结果消费者留下一包，R2穿插。正式全仓逐句、历史Windows超时根因、真实提供商/用户实机仍未完成，探测保持暂停。
 
 ## 复盘
 

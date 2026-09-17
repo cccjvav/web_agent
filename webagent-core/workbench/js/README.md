@@ -7,7 +7,7 @@
 这些ES模块由上一级app.js加载，在浏览器内维护工作台。整体布局和启动流程见[工作台说明](../README.md)，这里负责模块分工；不承担后端授权。
 
 ## 文件分工
-- operations.js：工具接入、工作流与审批；详情/草稿共用审阅代次，审批按钮绑定已展示ID；审批/检查点列表独立校验发布，检查点恢复须核对完整差异及逐文件结果，创建检查点在途互斥并保留草稿，已确认创建与列表读取失败分开提示，失去确认不重放。逐函数说明见[受控工具与工作流详解](../../agent-host/src/utils/受控工具与工作流详解.md)。
+- operations.js：工具接入、工作流与审批；详情/草稿共用审阅代次，审批按钮绑定已展示ID；审批/检查点列表独立校验发布，检查点恢复须核对完整差异及逐文件结果，创建检查点在途互斥并保留草稿，已确认创建与列表读取失败分开提示，HTTP接入登记与按ID移除各自互斥，独立显示确认/未知/停止未确认，失去确认不重放。逐函数说明见[受控工具与工作流详解](../../agent-host/src/utils/受控工具与工作流详解.md)。
 - state.js：共享状态、DOM选择器及ui函数注册表。
 - dom.js：主题、文字转义、提示和基础DOM能力。
 - bind.js：界面事件与操作函数的接线。
@@ -38,7 +38,7 @@ agent-host测试中的editorRuntime、workbenchRuntime、monacoLoading执行实�
 | [chat.js](chat.js) | 38 个函数/类节点 |
 | [dom.js](dom.js) | 15 个函数/类节点 |
 | [monaco.js](monaco.js) | 9 个函数/类节点 |
-| [operations.js](operations.js) | 62 个函数/类节点 |
+| [operations.js](operations.js) | 70 个函数/类节点 |
 | [picker.js](picker.js) | 16 个函数/类节点 |
 | [settings.js](settings.js) | 51 个函数/类节点 |
 | [state.js](state.js) | 2 个函数/类节点 |

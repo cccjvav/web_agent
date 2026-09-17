@@ -20,7 +20,8 @@ const required = [
   'btn-copy-prompt',
   'btn-copy-rules',
   'chat-input',
-  'model-select'
+  'model-select',
+  'ops-external-result'
 ];
 for (const id of required) {
   assert.ok(html.includes(`id="${id}"`), `workbench HTML missing #${id}`);

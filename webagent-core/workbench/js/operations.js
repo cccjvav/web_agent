@@ -19,9 +19,9 @@ async function action(callback) {
   try { if (await callback() === false) return false; await refreshOperations(); return true; }
   catch (error) { $('#ops-status').textContent = error.message; return false; }
 }
-function button(label, callback) {
+function button(label, callback, refresh = true) {
   const node = document.createElement('button'); node.type = 'button'; node.className = 'vs-btn'; node.textContent = label;
-  node.onclick = () => action(callback); return node;
+  node.onclick = () => refresh ? action(callback) : callback(); return node;
 }
 let reviewGeneration = 0, reviewController = null, workflowSubmitting = false;
 function invalidateReview(message) {
@@ -178,7 +178,13 @@ async function refreshOperationList() {
     const rows = data.servers.map(server => {
       const row = document.createElement('div'), text = document.createElement('pre'); text.className = 'url-box';
       text.textContent = JSON.stringify(server, null, 2);
-      row.append(text, button('移除此接入（中止连接）', () => generation === operationsListGeneration ? api(`/external/servers/${encodeURIComponent(server.serverId)}`, 'DELETE') : false)); return row;
+      let removalUsed = false;
+      const removeButton = button('移除此接入（请求中止连接）', () => {
+        if (generation !== operationsListGeneration || removalUsed) return false;
+        if (externalPending.has('remove:' + server.serverId)) { ui.toast('此接入正在移除，请等待并核对原请求。'); return false; }
+        removalUsed = true; removeButton.disabled = true;
+        return removeExternalServer(server.serverId);
+      }, false); row.append(text, removeButton); return row;
     });
     const buttons = data.requests.map(job => button(`${job.kind} · ${job.status} · ${job.requestId}`, () => generation === operationsListGeneration ? review(job.requestId) : false));
     servers.replaceChildren(...rows); requests.replaceChildren(...buttons);
@@ -192,6 +198,76 @@ async function refreshOperationList() {
 async function refreshOperations() {
   const results = await Promise.all([refreshCheckpoints(), refreshOperationList()]);
   return results.every(Boolean);
+}
+const externalPending = new Set();
+let externalMutationGeneration = 0;
+function externalHttpEndpoint(value, publicHttps) {
+  if (typeof value !== 'string' || !value || value.length > 2048) throw new Error('Invalid endpoint');
+  const url = new URL(value), local = ['127.0.0.1','[::1]','localhost'].includes(url.hostname);
+  if (url.username || url.password || url.search || url.hash
+    || (publicHttps ? url.protocol !== 'https:' || local : !['http:','https:'].includes(url.protocol) || !local)) throw new Error('Invalid endpoint');
+  if (url.hostname === 'localhost') url.hostname = '127.0.0.1';
+  return url.href;
+}
+function validExternalRegistration(record, endpoint, publicHttps) {
+  return record && typeof record.serverId === 'string' && record.serverId.length > 0
+    && record.transport === 'http' && record.status === 'discovered' && record.endpoint === endpoint
+    && record.publicHttps === publicHttps && Array.isArray(record.tools) && record.tools.length <= 100
+    && record.tools.every(tool => tool && typeof tool.name === 'string' && /^[a-zA-Z0-9_.-]{1,120}$/.test(tool.name)
+      && tool.requiresApproval === true && tool.inputSchema && !Array.isArray(tool.inputSchema) && tool.inputSchema.type === 'object')
+    && new Set(record.tools.map(tool => tool.name)).size === record.tools.length;
+}
+async function externalMutation(label, callback, key = 'register') {
+  if (externalPending.has(key)) { ui.toast('此接入操作进行中，请等待并核对原请求。'); return false; }
+  externalPending.add(key); $('#btn-ops-add').disabled = externalPending.has('register');
+  const generation = ++externalMutationGeneration;
+  const target = $('#ops-external-result'); target.textContent = `${label}：准备中，尚未发送。`;
+  let dispatched = false;
+  const send = (path, method, body) => {
+    dispatched = true; if (generation === externalMutationGeneration) target.textContent = `${label}：请求已发送，结果尚未确认，请勿重复操作。`;
+    return api(path, method, body);
+  };
+  try {
+    const message = await callback(send);
+    if (generation !== externalMutationGeneration) return false;
+    if (message === false) { target.textContent = `${label}：已取消，未发送请求。`; return false; }
+    target.textContent = message;
+    const refreshed = await refreshOperationList();
+    if (generation !== externalMutationGeneration) return false;
+    if (!refreshed) target.textContent = message + '\n列表刷新失败或被更新的刷新取代；本次确认仍保留，按ID核对，不要重复操作。';
+    return true;
+  } catch (_) {
+    if (generation !== externalMutationGeneration) return false;
+    // Never echo transport/parser errors: an untrusted service may reflect the Bearer value.
+    target.textContent = dispatched
+      ? `${label}未确认；请求可能已生效。请刷新接入列表并核对原请求，不要重放。HTTP中断不证明外部服务未收到请求或进程已停止。`
+      : `${label}未发送；请核对地址、令牌格式及当前工作区绑定。`;
+    return false;
+  } finally {externalPending.delete(key);$('#btn-ops-add').disabled = externalPending.has('register');}
+}
+function addExternalServer() {
+  return externalMutation('HTTP接入登记', async send => {
+    const binding = checkpointBinding();
+    const input = {name:$('#ops-name').value,url:$('#ops-url').value,token:$('#ops-token').value,
+      publicHttps:Boolean($('#ops-public-https').checked),...binding};
+    const endpoint = externalHttpEndpoint(input.url,input.publicHttps);
+    if (input.token.length > 4096 || /[\r\n]/.test(input.token) || (input.publicHttps && !sameCheckpointBinding(binding))) throw new Error('Invalid registration input');
+    if (input.publicHttps && !confirm('登记将连接该公网HTTPS主机并发送初始化信息及可选Bearer凭据。后续批准的工具参数也会离开本机。确认信任该服务？')) return false;
+    if (input.publicHttps && !sameCheckpointBinding(binding)) throw new Error('Binding changed');
+    if ($('#ops-token').value === input.token) $('#ops-token').value = '';
+    const record = await send('/external/servers','POST',{...input,confirmedPublic:input.publicHttps});
+    if ((input.publicHttps && !sameCheckpointBinding(binding)) || !validExternalRegistration(record,endpoint,input.publicHttps)) throw new Error('Unconfirmed registration');
+    return `接入 ${record.serverId} 已确认登记，发现 ${record.tools.length} 个工具。仅说明本次发现完成，每次调用仍须独立审批；不代表工具效果已验证。`;
+  });
+}
+function removeExternalServer(id) {
+  return externalMutation(`接入 ${id} 移除`, async send => {
+    const result = await send(`/external/servers/${encodeURIComponent(id)}`,'DELETE');
+    if (result?.removed !== true || (result.stopping !== undefined && result.stopping !== true)) throw new Error('Unconfirmed removal');
+    return result.stopping === true
+      ? `接入 ${id} 的登记记录已移除，已请求停止stdio进程；尚未确认进程退出，不代表副作用已撤回。`
+      : `接入 ${id} 的登记记录已移除，已请求中止宿主连接；不代表外部服务已停止或副作用已撤回。`;
+  }, 'remove:' + id);
 }
 let checkpointCreating = false;
 async function createCheckpoint() {
@@ -278,12 +354,7 @@ function initOperations() {
   });
   $('#btn-operations').onclick = () => { ui.openModal('operations'); return refreshOperations(); };
   $('#btn-ops-refresh').onclick = refreshOperations;
-  $('#btn-ops-add').onclick = () => action(async () => {
-    const publicHttps = $('#ops-public-https').checked;
-    if (publicHttps && !confirm('登记将连接该公网HTTPS主机并发送初始化信息及可选Bearer凭据。后续批准的工具参数也会离开本机。确认信任该服务？')) return;
-    const token = $('#ops-token').value; $('#ops-token').value = '';
-    await api('/external/servers', 'POST', { name: $('#ops-name').value, url: $('#ops-url').value, token, publicHttps, confirmedPublic:publicHttps, workspaceRoot:state.status?.workspaceRoot, hostInstanceId:state.status?.identity?.hostInstanceId });
-  });
+  $('#btn-ops-add').onclick = addExternalServer;
   $('#btn-ops-preview').onclick = () => action(async () => {
     const ticket = invalidateReview('正在预览草稿；旧审批控件已失效。');
     try {

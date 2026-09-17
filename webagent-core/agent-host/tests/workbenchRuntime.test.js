@@ -789,5 +789,99 @@ if (!process.argv.includes('--vm-child')) {
   finishCreate(opsResponse(checkpointRecord));assert.equal(await staleCreation,false);
   assert.equal(JSON.parse(opsNodes.get('#checkpoint-review').textContent).previewId,'preview-a','late creation cannot replace a newer restore preview');
   assert.equal(createButton.disabled,false);
+  const externalServer={serverId:'external-fixture',name:'Fixture',transport:'http',status:'discovered',publicHttps:false,endpoint:'http://127.0.0.1:9000/mcp',tools:[]};
+  context.document.querySelector('#ops-name').value='Fixture';
+  context.document.querySelector('#ops-url').value='http://localhost:9000/mcp';
+  context.document.querySelector('#ops-token').value='private-fixture-token';
+  context.document.querySelector('#ops-public-https').checked=false;
+  let externalPosts=0, finishExternal, externalBody;
+  context.fetch=async(url,options={})=>{
+    if(options.method==='POST') {externalPosts++;externalBody=JSON.parse(options.body);return new Promise(resolve=>{finishExternal=resolve;});}
+    if(url==='/api/checkpoints') return opsResponse([]);
+    if(url==='/api/operations') return opsResponse({servers:[externalServer],requests:[]});
+    throw new Error(url);
+  };
+  const addExternal=opsNodes.get('#btn-ops-add');
+  const pendingExternal=addExternal.onclick(), repeatedExternal=addExternal.onclick();
+  assert.equal(externalPosts,1,'pending registration must not send a second initialization request');
+  opsNodes.get('#ops-url').value='http://127.0.0.1:9001/next';opsNodes.get('#ops-token').value='NEW TOKEN DRAFT';
+  finishExternal(opsResponse(externalServer));await pendingExternal;await repeatedExternal;
+  assert.equal(externalBody.url,'http://localhost:9000/mcp');assert.equal(externalBody.token,'private-fixture-token');
+  assert.equal(opsNodes.get('#ops-token').value,'NEW TOKEN DRAFT');
+  let externalDeletes=0;
+  context.fetch=async(url,options={})=>{
+    if(options.method==='DELETE') {externalDeletes++;return opsResponse({removed:false});}
+    if(url==='/api/checkpoints') return opsResponse([]);
+    if(url==='/api/operations') return opsResponse({servers:[externalServer],requests:[]});
+    throw new Error(url);
+  };
+  await state.namespace.ui.refreshOperations();
+  const removeExternal=opsNodes.get('#ops-servers').children[0].children[1];
+  assert.equal(await removeExternal.onclick(),false,'removed:false must not be consumed as confirmed removal');
+  await removeExternal.onclick();assert.equal(externalDeletes,1,'failed/unknown removal consumes the old button; refresh before any new decision');
+  assert.match(opsNodes.get('#ops-external-result').textContent,/移除未确认/);
+  opsNodes.get('#ops-url').value='http://127.0.0.1:9000/mcp';
+  for (const reply of [
+    {ok:false,json:async()=>({error:'private-fixture-token'})},
+    {ok:true,json:async()=>{throw new Error('private-fixture-token');}},opsResponse({ok:false,error:'private-fixture-token'}),opsResponse(null),
+    opsResponse({...externalServer,status:'connecting'}),opsResponse({...externalServer,endpoint:'http://127.0.0.1:9001/mcp'}),
+    opsResponse({...externalServer,tools:[{name:'unsafe',requiresApproval:false,inputSchema:{type:'object'}}]})
+  ]) {
+    context.fetch=async()=>{externalPosts++;return reply;};opsNodes.get('#ops-token').value='private-fixture-token';
+    const count=externalPosts;assert.equal(await addExternal.onclick(),false);assert.equal(externalPosts,count+1);
+    assert.match(opsNodes.get('#ops-external-result').textContent,/登记未确认/);
+    assert.ok(!opsNodes.get('#ops-external-result').textContent.includes('private-fixture-token'),'registration errors cannot reflect the Bearer value');
+    assert.equal(addExternal.disabled,false);
+  }
+  const beforeDisclosure=externalPosts;
+  opsNodes.get('#ops-public-https').checked=true;opsNodes.get('#ops-url').value='https://mcp.example.test/mcp';
+  opsNodes.get('#ops-token').value='UNSENT TOKEN';context.confirm=()=>false;
+  assert.equal(await addExternal.onclick(),false);assert.equal(externalPosts,beforeDisclosure);
+  assert.equal(opsNodes.get('#ops-token').value,'UNSENT TOKEN');context.confirm=()=>true;
+  opsNodes.get('#ops-public-https').checked=false;opsNodes.get('#ops-url').value='http://127.0.0.1:9000/mcp?token=private-fixture-token';
+  assert.equal(await addExternal.onclick(),false);assert.equal(externalPosts,beforeDisclosure);
+  assert.match(opsNodes.get('#ops-external-result').textContent,/未发送/);
+  opsNodes.get('#ops-url').value='http://127.0.0.1:9000/mcp';
+  context.fetch=async()=>new Promise(resolve=>{finishExternal=resolve;});
+  const timedExternal=addExternal.onclick();[...timers.values()].at(-1)();finishExternal(opsResponse(externalServer));
+  assert.equal(await timedExternal,false);assert.equal(addExternal.disabled,false);
+  let externalListReads=0;
+  context.fetch=async(url,options={})=>{
+    if(options.method==='POST') {externalPosts++;return opsResponse(externalServer);}
+    externalListReads++;throw new Error('fixture list unavailable');
+  };
+  assert.equal(await addExternal.onclick(),true);assert.equal(externalListReads,1);
+  assert.match(opsNodes.get('#ops-external-result').textContent,/已确认登记[\s\S]*列表刷新失败/);
+  let finishRemoval;
+  context.fetch=async(url,options={})=>{
+    if(options.method==='DELETE') {externalDeletes++;return new Promise(resolve=>{finishRemoval=resolve;});}
+    if(url==='/api/checkpoints') return opsResponse([]);
+    if(url==='/api/operations') return opsResponse({servers:[externalServer],requests:[]});
+    throw new Error(url);
+  };
+  await state.namespace.ui.refreshOperations();
+  const removalButton=opsNodes.get('#ops-servers').children[0].children[1], beforeRemoval=externalDeletes;
+  const pendingRemoval=removalButton.onclick();assert.equal(await removalButton.onclick(),false);
+  await state.namespace.ui.refreshOperations();
+  assert.equal(await opsNodes.get('#ops-servers').children[0].children[1].onclick(),false,'same server cannot be removed twice even via a refreshed list');
+  finishRemoval(opsResponse({removed:true,stopping:true}));assert.equal(await pendingRemoval,true);
+  assert.equal(externalDeletes,beforeRemoval+1);assert.equal(addExternal.disabled,false);
+  assert.match(opsNodes.get('#ops-external-result').textContent,/登记记录已移除.*尚未确认进程退出/);
+  await state.namespace.ui.refreshOperations();
+  assert.match(opsNodes.get('#ops-external-result').textContent,/尚未确认进程退出/,'list refresh does not erase stop uncertainty');
+  context.fetch=async(url,options={})=>{
+    if(options.method==='POST') return new Promise(resolve=>{finishExternal=resolve;});
+    if(options.method==='DELETE') {externalDeletes++;return opsResponse({removed:true});}
+    if(url==='/api/checkpoints') return opsResponse([]);
+    if(url==='/api/operations') return opsResponse({servers:[{...externalServer,status:'connecting'}],requests:[]});
+    throw new Error(url);
+  };
+  const interruptedRegistration=addExternal.onclick();
+  await state.namespace.ui.refreshOperations();
+  assert.equal(await opsNodes.get('#ops-servers').children[0].children[1].onclick(),true,'registration guard must not block removing a connecting server');
+  const removalNotice=opsNodes.get('#ops-external-result').textContent;
+  finishExternal(opsResponse(externalServer));assert.equal(await interruptedRegistration,false);
+  assert.equal(opsNodes.get('#ops-external-result').textContent,removalNotice,'late registration must not overwrite a newer removal result');
+  assert.equal(addExternal.disabled,false);
   console.log('workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });

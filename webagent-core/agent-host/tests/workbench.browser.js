@@ -83,6 +83,34 @@ async function probeHudBrowser(browser) {
     assert.strictEqual(result.logs, 0); assert.deepStrictEqual(errors, []);
   } finally { await fixture.close(); }
 }
+async function externalRegistrationBrowser(browser, base) {
+  const fixture=await browser.newPage({viewport:{width:1280,height:900}}), errors=[];
+  fixture.on('pageerror',error=>errors.push(error.message));
+  const record={serverId:'browser-external',name:'Fixture',transport:'http',status:'discovered',endpoint:'http://127.0.0.1:9000/mcp',publicHttps:false,tools:[]};
+  let registrationRoute, submitted, posts=0, deletes=0, registered=false, stop=false;
+  try {
+    await fixture.route('**/api/operations',route=>route.fulfill({json:{servers:registered ? [record] : [],requests:[]}}));
+    await fixture.route('**/api/external/servers',route=>{posts++;submitted=route.request().postDataJSON();registrationRoute=route;});
+    await fixture.route('**/api/external/servers/*',route=>{deletes++;if(stop) registered=false;return route.fulfill({json:stop ? {removed:true,stopping:true} : {removed:false}});});
+    await fixture.goto(base);await fixture.click('#rb-bridge-tab');await fixture.click('#btn-operations');
+    await fixture.fill('#ops-url','http://localhost:9000/mcp');await fixture.fill('#ops-token','PRIVATE FIXTURE TOKEN');
+    const sent=fixture.waitForRequest(response=>response.url().endsWith('/api/external/servers') && response.method()==='POST');
+    await fixture.click('#btn-ops-add');await sent;
+    assert.equal(await fixture.isDisabled('#btn-ops-add'),true);
+    assert.equal(await fixture.evaluate(()=>document.querySelector('#btn-ops-add').onclick()),false);assert.equal(posts,1);
+    await fixture.fill('#ops-url','http://127.0.0.1:9001/new');await fixture.fill('#ops-token','NEW TOKEN DRAFT');
+    registered=true;await registrationRoute.fulfill({json:record});registrationRoute=null;
+    await fixture.waitForFunction(()=>document.querySelector('#ops-external-result').textContent.includes('已确认登记') && !document.querySelector('#btn-ops-add').disabled);
+    assert.equal(submitted.url,'http://localhost:9000/mcp');assert.equal(submitted.token,'PRIVATE FIXTURE TOKEN');
+    assert.equal(await fixture.inputValue('#ops-token'),'NEW TOKEN DRAFT');
+    await fixture.locator('#ops-servers button').first().click();
+    await fixture.waitForFunction(()=>document.querySelector('#ops-external-result').textContent.includes('移除未确认'));
+    assert.equal(deletes,1);assert.equal(await fixture.locator('#ops-servers button').first().isDisabled(),true);
+    stop=true;await fixture.click('#btn-ops-refresh');await fixture.locator('#ops-servers button').first().click();
+    await fixture.waitForFunction(()=>document.querySelector('#ops-external-result').textContent.includes('尚未确认进程退出'));
+    assert.equal(deletes,2);assert.deepEqual(errors,[]);
+  } finally {if(registrationRoute) await registrationRoute.abort().catch(()=>{});await fixture.close();}
+}
 async function checkpointCreateBrowser(browser, base, workspace) {
   const fixture=await browser.newPage({viewport:{width:1280,height:900}}), errors=[];
   fixture.on('pageerror',error=>errors.push(error.message));
@@ -315,6 +343,7 @@ async function main() {
     await approvalReviewBrowser(browser, base);
     await checkpointResultsBrowser(browser, base);
     await checkpointCreateBrowser(browser, base, workspace);
+    await externalRegistrationBrowser(browser, base);
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.route('https://cdn.jsdelivr.net/**', route => route.abort());
@@ -620,13 +649,14 @@ async function main() {
     let publicRegistration;
     await page.route('**/api/external/servers', async route=>{
       publicRegistration=route.request().postDataJSON();
-      await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({serverId:'ui-fixture',publicHttps:true})});
+      await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({serverId:'ui-fixture',publicHttps:true,transport:'http',status:'discovered',endpoint:'https://mcp.example.test/mcp',tools:[]})});
     });
     await page.check('#ops-public-https');await page.fill('#ops-url','https://mcp.example.test/mcp');await page.fill('#ops-token','public-ui-fixture');
     const publicRefresh=page.waitForResponse(response=>response.url().endsWith('/api/external/servers') && response.request().method()==='POST');
     page.once('dialog',dialog=>dialog.accept());await page.click('#btn-ops-add');
     await page.waitForFunction(()=>document.querySelector('#ops-token').value==='');
     await publicRefresh;
+    await page.waitForFunction(()=>document.querySelector('#ops-external-result').textContent.includes('已确认登记'));
     assert.equal(publicRegistration.publicHttps,true);assert.equal(publicRegistration.confirmedPublic,true);
     assert.equal(publicRegistration.hostInstanceId,status.identity.hostInstanceId);assert.equal(publicRegistration.workspaceRoot,status.workspaceRoot);
     assert.equal(publicRegistration.token,'public-ui-fixture');

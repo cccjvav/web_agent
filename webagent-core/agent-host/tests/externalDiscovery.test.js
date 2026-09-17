@@ -59,6 +59,15 @@ async function main() {
     const registering = runWithSignal(controller.signal, () => external.add(options));
     const rejected = assert.rejects(registering); await started; controller.abort(); await rejected;
     assert.deepStrictEqual(external.list(), []);
+    const removalStarted = new Promise(resolve => { waiting = resolve; });
+    const removedRegistration = external.add(options), removalRejected = assert.rejects(removedRegistration);
+    await removalStarted;
+    const connecting = external.list()[0];assert.strictEqual(connecting.status,'connecting');
+    assert.deepStrictEqual(external.remove(connecting.serverId),{removed:true});await removalRejected;
+    assert.deepStrictEqual(external.list(),[]);assert.deepStrictEqual(external.remove(connecting.serverId),{removed:false});
+    assert.strictEqual(calls,0);assert.strictEqual(server.listening,true,'removing the host connection does not stop the external HTTP server');
+    mode='paged';const explicitlyReadded=await external.add(options);
+    assert.strictEqual(explicitlyReadded.status,'discovered');external.remove(explicitlyReadded.serverId);
     for (const ending of ['\r', '\r\n', '\n']) {
       const message = JSON.stringify({ jsonrpc: '2.0', id: 'wanted', result: { content: '中文🙂' } });
       const response = fragmentedResponse(`: heartbeat${ending}${ending}data: {"method":"notification"}${ending}${ending}data: ${message}${ending}${ending}`);

@@ -303,6 +303,7 @@
           <label for="ops-url">已启动的 MCP 地址</label><input id="ops-url" class="ms-input" placeholder="http://127.0.0.1:9000/mcp" />
           <label for="ops-token">可选 Bearer Token（不保存）</label><input id="ops-token" class="ms-input" type="password" autocomplete="off" />
           <button id="btn-ops-add" type="button" class="vs-btn">登记并初始化 / 发现工具</button>
+          <pre id="ops-external-result" class="url-box" aria-live="polite">登记会发送初始化及可选凭据；未知结果先查列表，不重复登记。移除记录不证明外部服务或进程已停止。</pre>
           <h3>stdio MCP（启动本机程序）</h3>
           <p class="hint">启动本身会执行第三方代码，不是只读发现，也不是OS沙箱。只启动你已安装并信任的程序；不会自动下载、安装或重启。程序仍有当前系统用户的文件和网络权限。</p>
           <label for="ops-stdio-config">启动配置 JSON（program填绝对路径；args是数组；cwd限工作区）</label>

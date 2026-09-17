@@ -126,3 +126,9 @@ workbenchRuntime沿用opsNode/opsResponse加载真实operations模块。先复�
 workbenchRuntime在已有真实operations模块上先用finishCreate挂起响应，连续调用实际onclick，旧实现checkpointCreates=2，新实现必须1。checkpointCreateBody证明发送原路径快照，等待中编辑createInput保留新草稿，确认后按钮恢复。reply表覆盖HTTP失败、业务失败、坏JSON、null、非ready、文件数不符和非空result：每次明确点击仅一POST，零自动刷新/重试、无恢复按钮、结果未确认。creationLists注入确认后的列表失败，ID仍在并有独立note。取消confirm、空/重复/过多路径、空绑定是未发送；绑定在await期间变化则不发布旧工作区成功。计时器替身触发10秒后，迟到有效JSON也不能假确认；创建期间选择另一个恢复预览，旧创建回包不能覆盖previewId。finally释放与草稿保留分别断言。这是VM而非实网截止时间证明。
 
 真实HTTP创建/失败零半条记录由apiFiles验证；checkpointCreateBrowser真实页面及真实后端创建场景主说明见[主机诊断与调用追踪详解](../src/utils/主机诊断与调用追踪详解.md)，实际执行按第35组CI记录。
+
+## 第36组：HTTP接入登记与移除结果
+
+workbenchRuntime先复现removed:false被实际onclick当true，以及finishExternal挂起时externalPosts从1变2。修后测试本次URL/Token快照、新Token草稿保留、HTTP/业务/坏JSON/null/connecting/端点错配/非审批工具拒绝，固定提示不包含反射的fixture Token；公网取消确认/非法URL零POST且不清未发送Token。VM计时器模拟40秒后晚回失败，成功登记但列表失败仍保留ID。移除按钮消费后不能复用，经刷新得到同ID新按钮也被externalPending挡住；stopping:true提示尚未确认退出，普通列表刷新不抹提示。允许在登记等待时移除connecting接入，旧登记回包不能覆盖更新的移除结果。计时器与响应均为fixture，不代替真实网络/进程退出证明。
+
+真实HTTP connecting移除与HTTP服务仍活着由externalDiscovery测试；stdioMcp先确认移除请求回包，再等closeAll与PID退出。真实页面externalRegistrationBrowser的主说明见[主机诊断与调用追踪详解](../src/utils/主机诊断与调用追踪详解.md)，是否执行以第36组精确CI为准。
