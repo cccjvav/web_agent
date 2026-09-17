@@ -47,6 +47,8 @@ async function main() {
   assert.strictEqual(noDiff.git, false);
 
   spawnSync('git', ['init'], { cwd: tmp, encoding: 'utf8' });
+  const unbornBranch = spawnSync('git', ['symbolic-ref', '--short', 'HEAD'], {cwd:tmp,encoding:'utf8'}).stdout.trim();
+  assert.strictEqual((await callTool('git_status', {}, 'ask')).branch, unbornBranch);
   spawnSync('git', ['config', 'user.email', 't@t'], { cwd: tmp });
   spawnSync('git', ['config', 'user.name', 't'], { cwd: tmp });
   fs.writeFileSync(path.join(tmp, 'keep.txt'), 'hello\n');
@@ -60,7 +62,89 @@ async function main() {
   assert.ok(st.branch);
   fs.writeFileSync(path.join(tmp, 'keep.txt'), 'hello world\n');
   const diff = await callTool('git_diff', { filePath: 'keep.txt' }, 'plan');
-  assert.ok(String(diff.diff).includes('hello world') || diff.totalLines >= 0);
+  assert.ok(String(diff.diff).includes('hello world'));
+  const globDiff = await callTool('git_diff', {filePath:'*.txt'}, 'ask');
+  assert.strictEqual(globDiff.diff, '', 'path is literal, not a Git wildcard');
+
+  // The fixture helper really runs with ordinary Git, but never via our read-only tools.
+  const helper = path.join(tmp, 'diff-helper.js');
+  const marker = path.join(tmp, 'helper-ran');
+  fs.writeFileSync(helper, 'require("fs").appendFileSync(' + JSON.stringify(marker) + ', "ran"); console.log("converted");');
+  const helperCommand = '"' + process.execPath.replace(/\\/g, '/') + '" "' + helper.replace(/\\/g, '/') + '"';
+  const oldExternalDiff = process.env.GIT_EXTERNAL_DIFF;
+  try {
+    process.env.GIT_EXTERNAL_DIFF = helperCommand;
+    await callTool('git_diff', {filePath:'keep.txt'}, 'ask');
+    assert.ok(!fs.existsSync(marker), 'GIT_EXTERNAL_DIFF must not run in Ask');
+    git(['diff', '--', 'keep.txt']);
+    assert.ok(fs.existsSync(marker), 'positive control: external diff fixture is executable');
+    fs.unlinkSync(marker);
+    delete process.env.GIT_EXTERNAL_DIFF;
+    git(['config', 'core.fsmonitor', helperCommand]);
+    await callTool('git_status', {}, 'ask');
+    assert.ok(!fs.existsSync(marker), 'configured fsmonitor hook must not run');
+    git(['config', '--unset', 'core.fsmonitor']);
+    fs.writeFileSync(path.join(tmp, '.gitattributes'), 'keep.txt diff=fixture\n');
+    git(['config', 'diff.fixture.textconv', helperCommand]);
+    await callTool('git_diff', {filePath:'keep.txt'}, 'plan');
+    assert.ok(!fs.existsSync(marker), 'textconv must not run in Plan');
+    git(['diff', '--textconv', '--', 'keep.txt']);
+    assert.ok(fs.existsSync(marker), 'positive control: textconv fixture really executes');
+    fs.unlinkSync(marker);
+    fs.writeFileSync(path.join(tmp, '.gitattributes'), 'keep.txt filter=fixture\n');
+    git(['config', 'filter.fixture.clean', helperCommand]);
+    git(['config', 'filter.fixture.required', 'true']);
+    try {
+      const rawDiff = await callTool('git_diff', {filePath:'keep.txt'}, 'ask');
+      assert.ok(rawDiff.diff.includes('hello world'));
+      assert.ok(!fs.existsSync(marker), 'clean filter is disabled, not merely external diff/textconv');
+      git(['diff', '--no-ext-diff', '--no-textconv', '--', 'keep.txt']);
+      assert.ok(fs.existsSync(marker), 'positive control: clean filter still executes with only diff helper flags');
+      fs.unlinkSync(marker);
+      git(['config', 'filter.fixture.process', helperCommand]);
+      await callTool('git_diff', {filePath:'keep.txt'}, 'plan');
+      assert.ok(!fs.existsSync(marker), 'persistent process filter must also be disabled');
+    } finally {
+      git(['config', '--unset', 'filter.fixture.clean']);
+      git(['config', '--unset', 'filter.fixture.required']);
+      git(['config', '--unset', 'filter.fixture.process']);
+    }
+
+  } finally {
+    if (oldExternalDiff === undefined) delete process.env.GIT_EXTERNAL_DIFF;
+    else process.env.GIT_EXTERNAL_DIFF = oldExternalDiff;
+    git(['config', '--unset', 'diff.fixture.textconv']);
+    fs.rmSync(path.join(tmp, '.gitattributes'), {force:true});
+    fs.rmSync(helper, {force:true}); fs.rmSync(marker, {force:true});
+  }
+
+  const unicodeName = '中文 file.txt';
+  fs.writeFileSync(path.join(tmp, unicodeName), 'unicode');
+  git(['add', unicodeName]);
+  git(['mv', 'keep.txt', 'renamed file.txt']);
+  const renamed = await callTool('git_status', {}, 'ask');
+  assert.ok(renamed.files.some(entry => entry.path === unicodeName));
+  assert.ok(renamed.files.some(entry => entry.path === 'renamed file.txt' && entry.originalPath === 'keep.txt'));
+  git(['mv', 'renamed file.txt', 'keep.txt']);
+  if (process.platform !== 'win32') {
+    const newlineName = 'line\n##not-a-branch.txt';
+    fs.writeFileSync(path.join(tmp, newlineName), 'newline');
+    const status = await callTool('git_status', {}, 'ask');
+    assert.ok(status.files.some(entry => entry.path === newlineName));
+    assert.strictEqual(status.branch, 'release/1.2.3');
+    fs.unlinkSync(path.join(tmp, newlineName));
+  }
+
+
+  const baseEntries = (await callTool('git_status', {}, 'ask')).files.length;
+  const limitFiles = Array.from({length:80-baseEntries}, (_, i) => 'limit-fixture-' + i + '.txt');
+  for (const name of limitFiles) fs.writeFileSync(path.join(tmp, name), 'limit');
+  const exactLimit = await callTool('git_status', {}, 'ask');
+  assert.strictEqual(exactLimit.files.length, 80);
+  assert.strictEqual(exactLimit.truncated, false);
+  fs.writeFileSync(path.join(tmp, 'limit-extra.txt'), 'extra');
+  assert.strictEqual((await callTool('git_status', {}, 'ask')).truncated, true);
+  for (const name of [...limitFiles, 'limit-extra.txt']) fs.unlinkSync(path.join(tmp, name));
 
   fs.mkdirSync(path.join(tmp, '.webagent', 'skills', 'demo'), { recursive: true });
   fs.writeFileSync(path.join(tmp, '.webagent', 'skills', 'demo', 'SKILL.md'), '# Skill: demo\nDo the demo.\n');

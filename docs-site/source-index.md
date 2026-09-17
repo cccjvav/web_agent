@@ -1016,7 +1016,7 @@
 
 ## webagent-core/agent-host/src/tools/board.js
 
-[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `e30e68a7b7685ee0b8af16528d72fc4736fd58f728c0cc02a1fa1f3c843bbfd9`
+[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `fd965b12ed0bb79c0ecc058519f87e3f6ab5e5234071aef6d0894589d83130b9`
 
 - `serial` — FunctionDeclaration，[L26–L30](../webagent-core/agent-host/src/tools/board.js#L26-L30)
 - `serial/anonymous@28:19` — ArrowFunctionExpression，[L28–L28](../webagent-core/agent-host/src/tools/board.js#L28-L28)
@@ -1148,18 +1148,17 @@
 
 ## webagent-core/agent-host/src/tools/gitOps.js
 
-[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `66ee044fba4ce0608ba080ed9c2fd5c20c12d755c937cd5681e0269b90dc07e6`
+[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `1a3d1f397656988a33a4628212666df2549a84e97e38f839b5c1dcb391dafca0`
 
 - `notGitResult` — FunctionDeclaration，[L7–L20](../webagent-core/agent-host/src/tools/gitOps.js#L7-L20)
-- `git` — FunctionDeclaration，[L22–L57](../webagent-core/agent-host/src/tools/gitOps.js#L22-L57)
-- `gitStatus` — FunctionDeclaration，[L59–L88](../webagent-core/agent-host/src/tools/gitOps.js#L59-L88)
-- `gitStatus/anonymous@66:14` — ArrowFunctionExpression，[L66–L66](../webagent-core/agent-host/src/tools/gitOps.js#L66-L66)
-- `gitStatus/anonymous@68:11` — ArrowFunctionExpression，[L68–L71](../webagent-core/agent-host/src/tools/gitOps.js#L68-L71)
-- `gitDiff` — FunctionDeclaration，[L90–L119](../webagent-core/agent-host/src/tools/gitOps.js#L90-L119)
+- `git` — FunctionDeclaration，[L22–L65](../webagent-core/agent-host/src/tools/gitOps.js#L22-L65)
+- `git/anonymous@29:77` — ArrowFunctionExpression，[L29–L29](../webagent-core/agent-host/src/tools/gitOps.js#L29-L29)
+- `gitStatus` — FunctionDeclaration，[L67–L100](../webagent-core/agent-host/src/tools/gitOps.js#L67-L100)
+- `gitDiff` — FunctionDeclaration，[L102–L131](../webagent-core/agent-host/src/tools/gitOps.js#L102-L131)
 
 ## webagent-core/agent-host/src/tools/index.js
 
-[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `9d3389089f5892cf7931e87f5e189ee9db02334c61d1bf04788dbf7e7dfc81fd`
+[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `6cb8d14a479135de0352a499701ce3cce4b7c9a57065f231ef9d84b80eea4d38`
 
 - `tool` — FunctionDeclaration，[L26–L28](../webagent-core/agent-host/src/tools/index.js#L26-L28)
 - `pingHost` — FunctionDeclaration，[L30–L32](../webagent-core/agent-host/src/tools/index.js#L30-L32)
@@ -3555,19 +3554,23 @@
 
 ## webagent-core/agent-host/tests/workspaceTools.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `869522e1815b03b52dc847c64543bc88a349f9c35ff9e1e08ff38dc41a34b9fd`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `3a4a88a1a4aaac09416f68fb6cd06e2777507f763e3c0a1c69a0d5781cf47746`
 
 - `git` — FunctionDeclaration，[L14–L17](../webagent-core/agent-host/tests/workspaceTools.test.js#L14-L17)
 - `pollOutput` — FunctionDeclaration，[L19–L28](../webagent-core/agent-host/tests/workspaceTools.test.js#L19-L28)
 - `pollOutput/anonymous@25:22` — ArrowFunctionExpression，[L25–L25](../webagent-core/agent-host/tests/workspaceTools.test.js#L25-L25)
-- `main` — FunctionDeclaration，[L30–L239](../webagent-core/agent-host/tests/workspaceTools.test.js#L30-L239)
+- `main` — FunctionDeclaration，[L30–L323](../webagent-core/agent-host/tests/workspaceTools.test.js#L30-L323)
 - `main/anonymous@31:34` — ArrowFunctionExpression，[L31–L31](../webagent-core/agent-host/tests/workspaceTools.test.js#L31-L31)
-- `main/anonymous@68:40` — ArrowFunctionExpression，[L68–L68](../webagent-core/agent-host/tests/workspaceTools.test.js#L68-L68)
-- `main/anonymous@78:33` — ArrowFunctionExpression，[L78–L78](../webagent-core/agent-host/tests/workspaceTools.test.js#L78-L78)
-- `main/anonymous@84:33` — ArrowFunctionExpression，[L84–L84](../webagent-core/agent-host/tests/workspaceTools.test.js#L84-L84)
-- `main/anonymous@160:45` — ArrowFunctionExpression，[L160–L160](../webagent-core/agent-host/tests/workspaceTools.test.js#L160-L160)
-- `main/anonymous@206:20` — ArrowFunctionExpression，[L206–L206](../webagent-core/agent-host/tests/workspaceTools.test.js#L206-L206)
-- `anonymous@241:13` — ArrowFunctionExpression，[L241–L244](../webagent-core/agent-host/tests/workspaceTools.test.js#L241-L244)
+- `main/anonymous@126:31` — ArrowFunctionExpression，[L126–L126](../webagent-core/agent-host/tests/workspaceTools.test.js#L126-L126)
+- `main/anonymous@127:31` — ArrowFunctionExpression，[L127–L127](../webagent-core/agent-host/tests/workspaceTools.test.js#L127-L127)
+- `main/anonymous@133:32` — ArrowFunctionExpression，[L133–L133](../webagent-core/agent-host/tests/workspaceTools.test.js#L133-L133)
+- `main/anonymous@140:57` — ArrowFunctionExpression，[L140–L140](../webagent-core/agent-host/tests/workspaceTools.test.js#L140-L140)
+- `main/anonymous@152:40` — ArrowFunctionExpression，[L152–L152](../webagent-core/agent-host/tests/workspaceTools.test.js#L152-L152)
+- `main/anonymous@162:33` — ArrowFunctionExpression，[L162–L162](../webagent-core/agent-host/tests/workspaceTools.test.js#L162-L162)
+- `main/anonymous@168:33` — ArrowFunctionExpression，[L168–L168](../webagent-core/agent-host/tests/workspaceTools.test.js#L168-L168)
+- `main/anonymous@244:45` — ArrowFunctionExpression，[L244–L244](../webagent-core/agent-host/tests/workspaceTools.test.js#L244-L244)
+- `main/anonymous@290:20` — ArrowFunctionExpression，[L290–L290](../webagent-core/agent-host/tests/workspaceTools.test.js#L290-L290)
+- `anonymous@325:13` — ArrowFunctionExpression，[L325–L328](../webagent-core/agent-host/tests/workspaceTools.test.js#L325-L328)
 
 ## webagent-core/extension/dangerousPolicy.js
 

@@ -161,7 +161,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 100 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 5 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
-| [workspaceTools.test.js](workspaceTools.test.js) | 11 个函数/类节点 |
+| [workspaceTools.test.js](workspaceTools.test.js) | 15 个函数/类节点 |
 <!-- docs-inventory:end -->
 
 ## 真实浏览器回归（不是DOM fixture）

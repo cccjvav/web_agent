@@ -20,12 +20,20 @@ function notGitResult(extra = {}) {
 }
 
 function git(args, timeoutMs = 8000) {
-  const r = spawnSync('git', ['-c', 'color.ui=never', ...args], {
-    cwd: config.workspaceRoot,
-    encoding: 'utf8',
-    timeout: timeoutMs,
-    maxBuffer: 512 * 1024
-  });
+  const started = Date.now();
+  const baseArgs = ['--no-optional-locks', '--literal-pathspecs', '-c', 'core.fsmonitor=false', '-c', 'color.ui=never'];
+  const options = { cwd: config.workspaceRoot, encoding: 'utf8', timeout: timeoutMs, maxBuffer: 512 * 1024 };
+  // Reading config does not execute drivers. Disable every configured filter before reading worktree data.
+  let r = spawnSync('git', [...baseArgs, 'config', '--null', '--name-only', '--get-regexp', '^filter\\..*\\.(clean|smudge|process|required)$'], options);
+  if (!r.error && (r.status === 0 || r.status === 1)) {
+    const drivers = new Set((r.stdout || '').split('\0').filter(Boolean).map(key => key.replace(/\.(clean|smudge|process|required)$/, '')));
+    const overrides = [];
+    for (const driver of drivers) {
+      for (const action of ['clean', 'smudge', 'process']) overrides.push('-c', driver + '.' + action + '=');
+      overrides.push('-c', driver + '.required=false');
+    }
+    r = spawnSync('git', [...baseArgs, ...overrides, ...args], { ...options, timeout: Math.max(1, timeoutMs - (Date.now() - started)) });
+  }
   if (r.error) {
     const err = new Error(`GIT_UNAVAILABLE: git failed to start: ${r.error.message}`);
     err.code = 'GIT_UNAVAILABLE';
@@ -58,17 +66,21 @@ function git(args, timeoutMs = 8000) {
 
 function gitStatus() {
   try {
-    const porcelain = git(['status', '--porcelain=v1', '-b']);
-    const lines = porcelain.split('\n').filter(Boolean);
-    const summary = lines[0] || '';
-    const branch = (summary.match(/^##\s+(\S+?)(?:\.\.\.|\s|$)/) || [])[1] || 'HEAD';
-    const files = lines
-      .filter((l) => !l.startsWith('##'))
-      .slice(0, 80)
-      .map((line) => ({
-        code: line.slice(0, 2),
-        path: line.slice(3)
-      }));
+    const porcelain = git(['status', '--porcelain=v1', '-z', '-b']);
+    const records = porcelain.split('\0');
+    const summary = records.shift() || '';
+    const branchText = summary.replace(/^## (?:No commits yet on |Initial commit on )?/, '');
+    const branch = (branchText.match(/^(\S+?)(?:\.\.\.|\s|$)/) || [])[1] || 'HEAD';
+    const entries = [];
+    for (let i = 0; i < records.length; i++) {
+      const record = records[i];
+      if (!record) continue;
+      const entry = { code: record.slice(0, 2), path: record.slice(3) };
+      // Porcelain -z emits rename destination first, then a separate source record.
+      if (/[RC]/.test(entry.code)) entry.originalPath = records[++i];
+      entries.push(entry);
+    }
+    const files = entries.slice(0, 80);
     return {
       ok: true,
       available: true,
@@ -77,7 +89,7 @@ function gitStatus() {
       dirty: files.length > 0,
       summary,
       files,
-      truncated: files.length === 80
+      truncated: entries.length > 80
     };
   } catch (err) {
     if (err.code === 'GIT_UNAVAILABLE' || /GIT_UNAVAILABLE/.test(err.message || '')) {
@@ -89,7 +101,7 @@ function gitStatus() {
 
 function gitDiff({ filePath, staged = false, stat = false } = {}) {
   try {
-    const args = ['diff'];
+    const args = ['diff', '--no-ext-diff', '--no-textconv'];
     if (staged) args.push('--cached');
     if (stat) args.push('--stat');
     args.push('--');

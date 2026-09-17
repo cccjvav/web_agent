@@ -1,12 +1,12 @@
 // 第六阶段：多 Agent 任务板（multi-agent board）。
 // 背景：Bridge 的 Streamable HTTP 本就允许多个网页 AI（MCP 客户端）同连（会话注册表见
-// mcp/session.js，键为 clientName@ip）。本模块把「互知」与「临时任务分配」变成 5 个 MCP 工具：
+// mcp/session.js，归属为初始化peer ID）。本模块把「互知」与「临时任务分配」变成 5 个 MCP 工具：
 //   peers_list / board_list / board_create / board_claim / board_update
 // 设计边界（用户 2026-09-08 提出的小白想法之工程化）：
 //   - 只共享**任务元数据**（标题/状态/归属/进度注），不共享对话内容、不共享密钥；
 //   - 不是协作协议：没有消息总线、没有锁步；认领制（claim）防双做，注记（note）供互通进度；
-//   - 板子是**临时**的：落在工作区 .webagent/board.json，随工作区走，卸载/删除即清；
-//   - 信任边界不变：拿隧道地址者即可读写板（与既有工具同边界），板内不得写密钥（sensitive 扫描不覆盖板，靠 SKILL 纪律 + 文案告诫）。
+//   - 板子是**临时**的：落在工作区 .webagent/board.json，随工作区保留，卸载默认保留用户数据，不自动清空；
+//   - 信任边界不变：有效MCP认证仍需当前模式与主人Read/Edit授权（与既有工具同边界），板内不得写密钥（sensitive 扫描不覆盖板，靠 SKILL 纪律 + 文案告诫）。
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');

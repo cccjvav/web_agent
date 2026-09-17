@@ -201,3 +201,7 @@ Playwright并未删除：当前Node开发依赖1.63.0，浏览器任务独立安
 安全说明全文读取，聚焦修复已披露的Named/ngrok跨chunk Token泄露：逐stdout/stderr的UTF-8/KMP状态先遮盖后裁剪，结束不flush候选前缀。新增所有字节切分、中文/重复前缀及实际提供商回调/历史/交错流/停止回归；不代表通用秘密扫描或清除历史日志，不改变argv/env信任边界。探测暂停保持，当前不需用户操作，其他安全实现对照及Windows超时仍未全部解决。
 
 第21组2e1bc29c280ab08b7cebe985bb6ba602c968f483，[CI35233048258](https://github.com/cccjvav/web_agent/actions/runs/35233048258)九项逐项成功，本地82测试文件、246源码/28目录/110排除。首轮本地遗漏collect函数说明导致1/82失败，补登记指南后全量通过，未推送失败版本。既有Windows历史超时根因不由本次通过代替，探测暂停不变。
+
+## 第22组：只读Git与工作区说明
+
+任务板/Git/工作区详解整篇对照。Git状态改NUL记录，保留中文/重命名originalPath、识别无提交分支且超过80才截断；差异使用字面pathspec，禁external diff/textconv/fsmonitor，补实测仍能执行的clean filter入口，发现配置键名后临时禁clean/smudge/process/required，保留总预算和配置本身。真实临时Git及自写辅助程序正反对照，无用户仓库/凭据参与。原Git环境与同用户竞态不是隔离保证；任务板坏文件保留等旧说明/注释已修，探测仍暂停。

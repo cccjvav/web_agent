@@ -217,7 +217,7 @@ const TOOLS = [
   tool({
     name: 'git_diff',
     aliases: [],
-    description: 'Read-only git diff. Optional filePath, staged, stat. Output is truncated. Same available:false shape as git_status when git is missing.',
+    description: 'Read-only git diff with literal filePath and external diff/textconv/custom filters disabled. May differ from terminal output using conversion drivers. Optional filePath, staged, stat. Output is truncated. Same available:false shape as git_status when git is missing.',
     mode: ['ask', 'plan', 'code'],
     inputSchema: {
       type: 'object',

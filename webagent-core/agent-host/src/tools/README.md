@@ -22,11 +22,11 @@ MCP、本机Chat和部分REST操作复用 `index.js` 的callTool。它做工具�
 | `sensitive.js` | 内置敏感文件及忽略规则，含真实目标检查 |
 | `findFiles.js` | 简化glob文件定位；不是完整shell glob实现 |
 | `searchWorker.js` | 在worker中执行fileOps.scanSearch，隔离主线程与可终止搜索 |
-| `gitOps.js` | 有超时的git status/diff，只读工作区状态 |
+| `gitOps.js` | 有预算的git status/diff；字面路径、NUL状态，禁外部diff/textconv/fsmonitor和已发现的自定义filter |
 | `executor.js` | 普通子进程和PTY转发的run/start/output/cancel/input行为 |
 | `ptyJobs.js` | 本机扩展任务队列、所有权、审批/执行期限与报告状态 |
 | `dangerous.js` | 常见危险命令的词法判断；不是操作系统命令沙箱 |
-| `progressTracker.js` | 单一共享任务/todo进度，不是多用户事务库 |
+| `progressTracker.js` | 按本机Chat/Bridge初始化会话隔离任务快照，不是多用户事务库 |
 | `planRound.js` / `consensusEngine.js` | 当前Plan轮次、本机草案/合并及相应状态 |
 | `board.js` | 根据peer身份调用共享任务板，处理认领和状态更新 |
 | `skills.js` | 用户与内置Skill发现、受限正文读取和元信息 |
@@ -94,7 +94,7 @@ readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，
 | [executor.js](executor.js) | 32 个函数/类节点 |
 | [fileOps.js](fileOps.js) | 31 个函数/类节点 |
 | [findFiles.js](findFiles.js) | 3 个函数/类节点 |
-| [gitOps.js](gitOps.js) | 6 个函数/类节点 |
+| [gitOps.js](gitOps.js) | 5 个函数/类节点 |
 | [index.js](index.js) | 22 个函数/类节点 |
 | [normalize.js](normalize.js) | 4 个函数/类节点 |
 | [patchEngine.js](patchEngine.js) | 33 个函数/类节点 |
