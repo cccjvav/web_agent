@@ -528,7 +528,7 @@ Test/Add全流程与模型选择共用guard，捕获Endpoint/Key/manualId/vision
 
 operations的详情/预览/提交共用审阅代次，先清旧控件、GET可取消、详情ID和状态/输入形状复核；按钮绑定已展示ID/代次并在POST前消费，迟到批准/停止回包不重开旧审阅。HTTP和顶层业务失败均拒绝，读取/工作流请求10秒、批准70秒，HTTP接入登记/stdio启动40秒留给后端30秒初始化。期限覆盖正文；网络取消不撤回服务端副作用。工作流提交在途guard避免连点新UUID，丢响应先查原列表/ID，不自动重放；明确下一次新提交仍是新请求，不承诺跨刷新/重启永久去重。批准中可重新读取同一请求再请求停止。
 
-验证过程：approvedOperations/workflowPreconditions/workbenchRuntime先红后绿；执行控制旧断言曾因过度保守把调用前撤权也记unknown而失败，修为显式调用前权限复查，保留原failed断言并加强not-started证明。全量初次81/82：新增approvalReviewBrowser说明误放测试副文档，主归属是主机诊断与调用追踪详解，只修其浏览器测试段，不开展暂停专项。新增真实Chromium fixture覆盖审阅切换、预览/错ID清控件与提交连点；本地无Chromium，未宣称执行。修正后最终本地82测试文件通过，文档生成/构建/一致性检查通过（246源码/28目录/110排除），git diff --check通过；精确CI待本批提交核验。
+验证过程：approvedOperations/workflowPreconditions/workbenchRuntime先红后绿；执行控制旧断言曾因过度保守把调用前撤权也记unknown而失败，修为显式调用前权限复查，保留原failed断言并加强not-started证明。全量初次81/82：新增approvalReviewBrowser说明误放测试副文档，主归属是主机诊断与调用追踪详解，只修其浏览器测试段，不开展暂停专项。新增真实Chromium fixture覆盖审阅切换、预览/错ID清控件与提交连点；本地无Chromium，未宣称执行。修正后最终本地82测试文件通过，文档生成/构建/一致性检查通过（246源码/28目录/110排除），git diff --check通过；实现70c55a5718412460df3ebcff6828435314066cfa已推当前固定分支，[CI35276596251](https://github.com/cccjvav/web_agent/actions/runs/35276596251)九项逐项成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium）；approvalReviewBrowser已实际执行通过，不代签用户实机。
 
 本批只对审批/工作流及相关UI段落作局部核对，不把含stdio/connectionCheck的长篇或R2全链盖章。下一包继续operations列表/检查点响应及其余API消费者，穿插R2。历史Windows超时根因、用户实机、正式全仓逐句审查仍未完成；身份/轨迹探测保持暂停。
 
