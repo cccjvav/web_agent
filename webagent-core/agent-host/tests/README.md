@@ -56,7 +56,7 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 |---|---|---|
 | 路径、写入、hash、补丁、Skill | patchEngine、workspaceTools、sandbox、auditStorage、apiFiles | 临时文件系统与HTTP；不是OS沙箱证明 |
 | 模型失败、工具结果、Plan | modelLifecycle、runChat、chatMode、planRound、toolLabel | 实际调度模块+模拟模型响应，不是提供商实测 |
-| MCP、OAuth、会话/board | mcpProtocol、oauth、oauthClientAuth、mcpBoard、board | 本地HTTP/模块协议回归，不是所有第三方客户端验收 |
+| MCP、OAuth、会话/board | mcpProtocol、oauth、oauthClientAuth、mcpBoard、board | 本地HTTP/模块协议回归，OAuth认证用真实index验证issuer/表单/撤销；不是第三方客户端验收 |
 | 本机控制面、WS、Origin | auditControl、localControl、corsAllow、httpSmoke | 真实入口双端口API门禁、MCP Origin/认证先于解析、预检与WS；代理/跨站浏览器须另测 |
 | PTY审批、取消、归属、捕获 | ptyLifecycle、ptyJobs、desktopExtension | 部分真实子进程+VS Code事件fixture；原生终端效果须另测 |
 | 隧道启停 | tunnel、bridgeTunnel、tunnelLifecycle | 解析、API及进程引用fixture；非真实公网隧道 |
@@ -132,7 +132,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [modelLifecycle.test.js](modelLifecycle.test.js) | 21 个函数/类节点 |
 | [monacoLoading.test.js](monacoLoading.test.js) | 12 个函数/类节点 |
 | [oauth.test.js](oauth.test.js) | 15 个函数/类节点 |
-| [oauthClientAuth.test.js](oauthClientAuth.test.js) | 19 个函数/类节点 |
+| [oauthClientAuth.test.js](oauthClientAuth.test.js) | 29 个函数/类节点 |
 | [oauthRateLimit.test.js](oauthRateLimit.test.js) | 15 个函数/类节点 |
 | [patchEngine.test.js](patchEngine.test.js) | 7 个函数/类节点 |
 | [planRound.test.js](planRound.test.js) | 6 个函数/类节点 |

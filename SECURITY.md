@@ -87,7 +87,7 @@ Chat断开/停止会传递取消信号；每请求5分钟总期限，模型响�
 
 注册最多80客户端，活跃令牌或授权码保护其注册；满时仅回收超过5分钟的无活动注册，否则503，不撤销正常连接来腾位置。回调最多16个、每个2048字符，只支持HTTPS或HTTP回环，精确匹配；不支持自定义URI scheme。公开授权GET不再生成/更新码，须从本机工作台生成。授权请求另有IP限流，五次错误预算按已注册clientId隔离，不能用另一注册者全局作废码；ID不是秘密，不声称消除针对已知目标ID或流量层的拒绝服务。
 
-OAuth issuer优先采用本机设置的publicTunnelUrl；没有该值时只接受本机Host，不信任转发Host/proto。自建反向代理须在本机控制面配置正确公网地址，不能只靠X-Forwarded-Host发现。客户端密钥POST/Basic和公开客户端PKCE均保留；授权仍在内存，重启重新配对。
+OAuth issuer优先采用本机设置的publicTunnelUrl；没有该值时只接受本机Host，不信任转发Host/proto。自建反向代理须在本机控制面配置正确公网地址，不能只靠X-Forwarded-Host发现。客户端密钥POST/Basic和公开客户端PKCE均保留；none仅核对已登记ID/方式，不证明持有客户端secret。OAuth revoke只删除匹配归属的已知access/refresh对，认证通过后的未知/他人token也返回200，不能据此认定目标已被删除；它不轮换长期MCP密钥。授权仍在内存，重启重新配对。
 
 ## 资源与文档站的补充边界
 

@@ -21,8 +21,8 @@
 | now() | 无→毫秒数 | Date.now包装，方便统一时间读取，不是独立单调时钟 |
 | randomToken(prefix,bytes=24) | 前缀/字节数→hex token | crypto.randomBytes，不读磁盘 |
 | randomPairingCode() | 无→8字符 | 随机8字节，map到去掉易混字符的字母数字表；不是从时间戳生成 |
-| safeOrigin(value) | 字符串→规范origin或null | 只接受HTTP(S)、无凭据/路径/查询/fragment/空白/反斜杠的地址；不是DNS信任校验 |
-| requestOrigin(req) | 请求→origin字符串 | 有效config.publicTunnelUrl优先；否则仅本机Host（localhost/127.0.0.1/[::1]），最后固定本机config.port。忽略转发Host/proto，远端必须由本机控制面设置公网origin |
+| safeOrigin(value) | 字符串→规范origin或null | 拒绝非字符串、空白和反斜杠；URL解析后仅HTTP(S)、无凭据、pathname为/且无查询/fragment，允许根路径尾斜杠与URL规范化；不是DNS信任校验 |
+| requestOrigin(req) | 请求→origin字符串 | 有效config.publicTunnelUrl优先；否则仅本机Host（localhost/127.0.0.1/[::1]），最后固定本机config.port。不直接读取转发Host/proto；协议取req.protocol，当前入口未启trust proxy。远端须由本机控制面设置公网origin，修改代理信任策略须重验 |
 | s256(verifier) | 字符串/Buffer→base64url摘要 | SHA-256；不在此检查verifier长度/字符集 |
 | timingSafeEqualString(a,b) | 两值→boolean | String转UTF8 Buffer，长度不同false，相等长度用crypto.timingSafeEqual；不把任意长度比较说成全流程常时 |
 
@@ -30,7 +30,7 @@
 
 **issuePairing()**覆盖全局pairing，写新code、createdAt、expiresAt、attempts为空Map，返回snapshotPairing。不会保留多个客户端各自的码。
 
-**snapshotPairing()**无值/已超时返回code:null、expired:true；否则返回实际code和四舍五入的剩余秒数，expired:false。它不主动删除过期对象；实际code只能通过本机控制面适当展示，不可公开日志。
+**snapshotPairing()**无值或expiresAt严格小于now时返回code:null、expired:true；否则返回实际code和四舍五入的剩余秒数，expired:false。它不主动删除过期对象；实际code只能通过本机控制面适当展示，不可公开日志。
 
 **ensurePairing()**若快照过期/无码则issue，否则返回当前快照。
 
@@ -48,7 +48,7 @@
 
 ### pruneExpiredTokens()
 
-分别按各自截止删除access/refresh，spentRefresh按记录时间超过7天删，authCodes按exp删；调用触发的清理，不是定时器。清一个access不自动清仍有效的refresh。
+分别在各自截止严格小于now时删除access/refresh，spentRefresh按记录时间超过7天删，authCodes按exp删；调用触发的清理，不是定时器。清一个access不自动清仍有效的refresh。
 
 ### revokeClientTokens(clientId)
 
@@ -92,9 +92,9 @@ issueAccess生成access/refresh，创建含两个截止的共享记录，同时�
 
 返回clientId，失败抛status401/oauthError=invalid_client。内部 **reject()**统一创建错误，**decode(value)**用于Basic中application/x-www-form-urlencoded风格的加号/百分号解码。
 
-默认clientId为body值或推断ID；有body.client_secret就采用post，否则none。有authorization时要求Basic形态且不混用body secret；base64解码后以首个冒号分隔，缺id失败；decode clientId/secret，并拒绝body.client_id与Basic id不一致。
+默认clientId为body值或推断ID；body.client_secret非null/undefined就采用post（包括空字符串），否则none。有authorization时要求Basic形态且不混用body secret；base64解码后以首个冒号分隔，缺id失败；decode clientId/secret，并拒绝body.client_id与Basic id不一致。
 
-查client并要求实际方式与注册方式一致；非none还要求secret是字符串且常时比较匹配。Basic解析异常走reject。这个函数不验证grant/code/PKCE，那些在handleToken；也不是GitHub confidential client的实现。
+查client并要求实际方式与注册方式一致；非none还要求secret是字符串且常时比较匹配。Basic解析异常走reject。none只核对已注册ID和方法，并不证明持有客户端secret；refresh/revoke可从已知token记录推断ID。这不是操作者身份认证。这个函数不验证grant/code/PKCE，那些在handleToken；也不是GitHub confidential client的实现。
 
 ## 7. handleToken(body={},authorization='')
 
@@ -108,7 +108,7 @@ issueAccess生成access/refresh，创建含两个截止的共享记录，同时�
 
 有效refresh需clientId一致；把旧refresh记入spentRefresh，删旧access和refresh，再签新的一对。不能把刷新说成延长旧access有效期，旧access已删除。
 
-无有效refresh但在spent中命中且归属已认证clientId时，revokeClientTokens(spent.clientId)，抛“重放检测、已撤销”；其撤销范围是该client所有access/refresh，不只是刚刷新的一个。无记录则invalid refresh。认证失败不会先做这条撤销，必须先证明客户端身份。
+无有效refresh但在spent中命中且归属已认证clientId时，revokeClientTokens(spent.clientId)，抛“重放检测、已撤销”；其撤销范围是该client所有access/refresh，不只是刚刷新的一个。无记录则invalid refresh。认证失败不会先做这条撤销，先走登记的认证方式；none并没有额外secret证明。
 
 不支持的grant抛400。没有落盘、跨进程共享或后台刷新；网络客户端自己保存新token并按协议请求。
 
@@ -125,9 +125,9 @@ issueAccess生成access/refresh，创建含两个截止的共享记录，同时�
 | GET oauth/authorize | 每IP授权限流30/分钟、validateAuthorize后返回HTML | 不生成或更新配对码；过期提示去本机工作台生成，不公开码；失败sendError |
 | POST oauth/authorize | 共用授权30/分钟限流、completeAuthorize，302 | catch按status或400重新渲染错误HTML，不任意跳到失败输入地址 |
 | POST oauth/token | IP每分钟60次，handleToken后json | catch sendError |
-| POST oauth/revoke | token/access_token中取目标，查两张Map，authenticateClient；匹配所属client才删这一对 | 成功统一200 revoked:true，未知token不泄露存在性；catch sendError |
+| POST oauth/revoke | token/access_token中取目标，查两张Map，authenticateClient；匹配所属client才删这一对 | 认证通过后，即使未知token或不属该client也200 revoked:true；认证失败仍sendError（401），不是匿名统一200 |
 
-revoke路由不是revokeAll，也不为该token新建spentRefresh重放记录。授权/撤销与注册/token的限流策略不同，不能写“所有OAuth端点统一限流”。
+revoke路由不是revokeAll，也不为该token新建spentRefresh重放记录。200仅表示撤销请求已处理，不能据此确认目标曾存在或已删除别人的令牌；只有已知且归属匹配才删除一对access/refresh。长期config.secretKey不在这两张表内，OAuth撤销不会轮换它。授权/撤销与注册/token的限流策略不同，不能写“所有OAuth端点统一限流”。
 
 ## 9. 验证与不冒充的保证
 
@@ -135,7 +135,7 @@ revoke路由不是revokeAll，也不为该token新建spentRefresh重放记录。
 npm test --prefix webagent-core/agent-host -- --filter=oauth
 ```
 
-此filter会匹配基础OAuth及client auth测试；涵盖发现、配对/PKCE、public与secret方式、刷新旋转/重放等断言。真实手机/第三方OAuth客户端是否接受字段和重定向，需人工F节。上文明确记录未全面校验的输入、Map容量与内存策略，不因此声称OAuth全标准认证，也不在文档任务中静默调整授权产品决策。
+此filter匹配oauth、oauthClientAuth、oauthRateLimit三个文件。oauthClientAuth现加载真实index双server：三种认证方式、刷新/撤销归属、撤销后MCP早期401、issuer/挑战一致性，以及表单授权→302（禁止自动跟随）→换码/拒绝重兑。伪造Host用node:http发送，避免fetch改写头导致假阳性；其余请求仍在本机，无第三方回调访问。单元部分继续覆盖登记容量、无效授权不消耗配对及公开GET不续发码；时间/限流独立VM回归不是实时时钟精度证明。真实手机/第三方OAuth客户端是否接受字段和重定向，需人工F节。上文明确记录未全面校验的输入、Map容量与内存策略，不因此声称OAuth全标准认证，也不在文档任务中静默调整授权产品决策。
 
 ### 本轮安全边界
 

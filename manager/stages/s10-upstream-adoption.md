@@ -84,7 +84,7 @@
 |---|---|---|---|
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
-| R2 / 下一项，高 | 进行中：第38组本机控制面/跨站拒绝与MCP解析前Origin门禁已核对；下一包OAuth凭据/issuer及剩余路由安全边界 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
+| R2 / 下一项，高 | 进行中：第38–39组控制面与OAuth凭据/issuer首包已核对；下一包MCP会话/peer与凭据绑定、任务归属/取消边界，先复现影响再决定修复 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
 | R3 / 高，继续 | 进行中：第25/27/31–37组设置/模型/状态/Provider、审批、检查点、HTTP接入及stdio消费首包已修；其余API消费者按风险继续 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
@@ -594,6 +594,19 @@ auditControl直接加载真实双server，保留原400对403红测并转绿；�
 逐句对照控制面与Origin详解所有段落/函数并补准确装配、无/坏Referer与非严格同源边界；正式清单该篇新增整篇核对1，其余入口/测试/SECURITY只记对应局部。纠正旧安全说明“WS统一404”和状态API似乎强制Origin的表述。全仓仍197项，已逐句6、局部21、待逐句113，其余边界不变。
 
 本地localControl/corsAllow/auditControl定向、完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）及git diff --check通过。实现ca7ab17df95adf1526c791176c0fc71cb748c8af已推当前固定分支，[CI35287587285](https://github.com/cccjvav/web_agent/actions/runs/35287587285)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、既有真实Chromium。本地无Chromium，本批未新增浏览器攻击用例；既有页面链通过不是跨站攻击复现或用户实机验收。下一项继续R2 OAuth凭据/issuer与剩余路由边界；R3其它消费者、Provider更新/删除、历史Windows超时根因及用户实机未完成，探测继续暂停。
+
+
+#### 第39组：OAuth凭据、issuer与生产路由回归
+
+2026-09-18从edf47d4干净工作区继续R2，OAuth实现、真实index及MCP验证入口、现有三份OAuth回归逐段对照。本轮没有复现产品认证绕过，未修改产品源码或认证策略；不为审查凑漏洞，也不重复第38组门禁修复。
+
+oauthClientAuth从自行拼Express改为临时工作区/双0端口的真实index，最终停tracker、关双server并清理。三种认证方式继续覆盖错误凭据/PKCE不消耗code，新增错client刷新不消耗、错client撤销200但保留目标、机密客户端缺认证401、已认证未知token200不影响有效token。匹配归属时分别以access/refresh撤销一对，真实/mcp ping由200变401、刷新为400；OAuth revoke不轮换长期URL secret。
+
+三条well-known与MCP解析前401挑战共同验证issuer：本机配置合法origin优先，恶意Host/转发头不能指定issuer，配置缺失/非法回本机，合法本机Host保留。最初用fetch设置Host时夹具失败（收到连接端口origin而非配置回退），改node:http明确发送该头后原断言通过；这不是产品漏洞红测，未放宽断言。真实urlencoded授权错误redirect返回400且无Location、配对码未消耗，HTML转义state且不回显码；合法请求302，禁止自动跟随回调，换code200、重兑400且原access保留。不访问第三方回调，不模拟浏览器点击。
+
+OAuth授权详解全段/函数逐句对照：补URL规范化及req.protocol/当前代理策略边界，明确none不是secret持有证明、撤销200不证明目标存在/已删除、长期密钥独立。MCP README修“仅机密客户端返回secret”的错误（none也返回但不校验），安全/测试对应段局部同步。正式197项：已逐句7、局部23、待逐句110，其余状态不变；完整OAuth标准、第三方兼容与多客户端隔离不随文档盖章。
+
+本地oauth筛选三文件、完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）及git diff --check通过。本批精确CI待提交后核验；本地无Chromium，本轮无新增浏览器场景。下一包复核MCP session/peer、凭据与任务/取消边界；已有取消按peer+凭据键隔离，不自动等同全部会话状态隔离。先查实际影响，不把源码候选提前记成漏洞。R3其余消费者/Provider更新删除、历史Windows超时根因、用户实机保留，探测继续暂停。
 
 ## 复盘
 

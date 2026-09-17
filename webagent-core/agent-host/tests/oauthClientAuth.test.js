@@ -1,11 +1,35 @@
 'use strict';
 const assert = require('assert');
-const express = require('express');
+const fs = require('fs');
+const http = require('http');
+const os = require('os');
+const path = require('path');
+const { config } = require('../src/config');
+const tracker = require('../src/usage/tracker');
 const oauth = require('../src/mcp/oauth');
+function metadataRequest(server, route, headers, body) {
+  // Use node:http: fetch may replace a supplied Host, which would weaken this fixture.
+  return new Promise((resolve, reject) => {
+    const req = http.request({ hostname: '127.0.0.1', port: server.address().port, path: route,
+      method: body === undefined ? 'GET' : 'POST', headers }, res => {
+      let text = '';
+      res.on('data', chunk => { text += chunk; });
+      res.on('error', reject);
+      res.on('end', () => {
+        try { resolve({ status: res.statusCode, headers: res.headers, json: JSON.parse(text) }); }
+        catch (error) { reject(error); }
+      });
+    });
+    req.setTimeout(3000, () => req.destroy(new Error('metadata request timed out')));
+    req.on('error', reject); req.end(body);
+  });
+}
 (async () => {
   oauth.revokeAll();
-  const app = express(); app.use(express.json()); app.use(oauth.router);
-  const server = await new Promise(resolve => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-oauth-boundaries-'));
+  config.workspaceRoot = tmp; config.host = '127.0.0.1'; config.port = 0; config.workbenchPort = 0;
+  const { uiServer, mcpServer: server } = require('../src/index');
+  await Promise.all([uiServer, server].map(s => s.listening ? null : new Promise(resolve => s.once('listening', resolve))));
   const endpoint = `http://127.0.0.1:${server.address().port}/oauth/token`;
   const verifier = 'test-verifier-'.repeat(5);
   const basic = client => 'Basic ' + Buffer.from(client.client_id + ':' + client.client_secret).toString('base64');
@@ -40,6 +64,51 @@ const oauth = require('../src/mcp/oauth');
       const rotated = await post(refresh, authorization);
       assert.strictEqual(rotated.status, 200);
       assert.ok(!oauth.verifyAccessToken(tokens.access_token));
+      const current = await rotated.json();
+      const ping = token => fetch(endpoint.replace('/oauth/token', '/mcp'), { method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 39, method: 'ping' }) });
+      const accepted = await ping(current.access_token);
+      assert.strictEqual(accepted.status, 200);
+      assert.ok((await accepted.json()).result);
+
+      const revoke = (payload, auth = authorization) => fetch(endpoint.replace('/token', '/revoke'), {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...(auth ? { Authorization: auth } : {}) }, body: JSON.stringify(payload)
+      });
+      const credentials = { client_id: client.client_id, ...(method === 'client_secret_post' ? { client_secret: client.client_secret } : {}) };
+      const outsider = oauth.registerClient({ redirect_uris: ['http://localhost/other'] });
+      const wrongRefresh = await post({ grant_type: 'refresh_token', client_id: outsider.client_id, refresh_token: current.refresh_token });
+      assert.strictEqual(wrongRefresh.status, 400);
+      await wrongRefresh.json();
+      assert.ok(oauth.verifyAccessToken(current.access_token), 'wrong-client refresh must not consume the pair');
+      const wrongOwner = await revoke({ client_id: outsider.client_id, token: current.refresh_token }, '');
+      assert.strictEqual(wrongOwner.status, 200);
+      await wrongOwner.json();
+      assert.ok(oauth.verifyAccessToken(current.access_token), 'another authenticated client cannot revoke this pair');
+      if (method !== 'none') {
+        const badAuth = await revoke({ client_id: client.client_id, token: current.access_token }, '');
+        assert.strictEqual(badAuth.status, 401);
+        assert.strictEqual((await badAuth.json()).error, 'invalid_client');
+        assert.ok(oauth.verifyAccessToken(current.access_token), 'failed revocation auth must preserve tokens');
+      }
+      const unknown = await revoke({ ...credentials, token: 'unknown-test-token' });
+      assert.strictEqual(unknown.status, 200);
+      assert.deepStrictEqual(await unknown.json(), { revoked: true });
+      assert.ok(oauth.verifyAccessToken(current.access_token));
+      const revoked = await revoke({ ...credentials, token: method === 'client_secret_post' ? current.refresh_token : current.access_token });
+      assert.strictEqual(revoked.status, 200);
+      assert.deepStrictEqual(await revoked.json(), { revoked: true });
+      assert.strictEqual(oauth.verifyAccessToken(current.access_token), null);
+      const rejected = await ping(current.access_token);
+      assert.strictEqual(rejected.status, 401, 'revoked access must fail the production MCP gate');
+      await rejected.json();
+      const afterRevoke = await post({ ...refresh, refresh_token: current.refresh_token }, authorization);
+      assert.strictEqual(afterRevoke.status, 400, 'revoking either known token deletes the pair');
+      await afterRevoke.json();
+      const staticSecret = await revoke({ ...credentials, token: config.secretKey });
+      assert.strictEqual(staticSecret.status, 200);
+      await staticSecret.json();
+      assert.strictEqual(oauth.verifyAccessToken(config.secretKey).kind, 'secret', 'OAuth revoke must not rotate the independent URL secret');
     }
     // Invalid registration must not mutate a full registry or revoke a live client.
     oauth.revokeAll();
@@ -101,7 +170,6 @@ const oauth = require('../src/mcp/oauth');
     assert.strictEqual(page.status, 200);
     assert.strictEqual(oauth.snapshotPairing().code, null, 'public GET must not generate pairing');
     assert.strictEqual((await fetch(authorize + '?client_id=unknown')).status, 400);
-    const { config } = require('../src/config');
     const savedOrigin = config.publicTunnelUrl;
     try {
       config.publicTunnelUrl = '';
@@ -113,7 +181,75 @@ const oauth = require('../src/mcp/oauth');
       config.publicTunnelUrl = 'https://trusted.example/';
       assert.strictEqual(oauth.requestOrigin({ headers: { host: 'evil.example' } }), 'https://trusted.example');
       assert.ok(!oauth.wwwAuthenticate('https://evil.example/", forged="yes').includes('forged'));
+      // Real production discovery and early 401 use the same trusted issuer.
+      const base = endpoint.replace('/oauth/token', '');
+      for (const configured of ['', 'https://trusted.example/', 'https://bad.example/path']) {
+        config.publicTunnelUrl = configured;
+        const expected = configured === 'https://trusted.example/' ? 'https://trusted.example' : fallback;
+        const headers = { Host: 'attacker.example', 'X-Forwarded-Host': 'forged.example', 'X-Forwarded-Proto': 'https' };
+        for (const route of ['/.well-known/oauth-authorization-server', '/.well-known/oauth-protected-resource', '/.well-known/oauth-protected-resource/mcp']) {
+          const response = await metadataRequest(server, route, headers);
+          assert.strictEqual(response.status, 200);
+          const metadata = response.json;
+          if (metadata.issuer) {
+            assert.strictEqual(metadata.issuer, expected);
+            assert.strictEqual(metadata.token_endpoint, expected + '/oauth/token');
+          } else {
+            assert.strictEqual(metadata.resource, expected + '/mcp');
+            assert.deepStrictEqual(metadata.authorization_servers, [expected]);
+          }
+        }
+        const challenged = await metadataRequest(server, '/mcp', { ...headers, 'Content-Type': 'application/json' }, '{');
+        assert.strictEqual(challenged.status, 401);
+        assert.strictEqual(challenged.headers['www-authenticate'], oauth.wwwAuthenticate(expected));
+
+      }
+      config.publicTunnelUrl = '';
+      const local = await metadataRequest(server, '/.well-known/oauth-authorization-server', { Host: 'localhost:8765', 'X-Forwarded-Proto': 'https' });
+      assert.strictEqual(local.json.issuer, 'http://localhost:8765');
+      // Full authorize POST -> code -> form token exchange, with redirects disabled:
+      // never contact the callback host or convert a failed request into a retry.
+      const client = oauth.registerClient({ redirect_uris: ['https://callback.example/cb'] });
+      const pair = oauth.issuePairing();
+      const state = '"><script>test</script>';
+      const form = { client_id: client.client_id, redirect_uri: client.redirect_uris[0], pairing_code: pair.code,
+        code_challenge: oauth.s256(verifier), code_challenge_method: 'S256', response_type: 'code', state };
+      const invalid = await fetch(base + '/oauth/authorize', { method: 'POST', redirect: 'manual',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ ...form, redirect_uri: 'https://wrong.example/cb' }) });
+      assert.strictEqual(invalid.status, 400);
+      assert.strictEqual(invalid.headers.get('location'), null);
+      const html = await invalid.text();
+      assert.ok(!html.includes('<script>test</script>'));
+      assert.ok(html.includes('&lt;script&gt;test&lt;/script&gt;'));
+      assert.ok(!html.includes(pair.code), 'error HTML must not reflect the supplied pairing code');
+      assert.strictEqual(oauth.snapshotPairing().code, pair.code);
+      const allowed = await fetch(base + '/oauth/authorize', { method: 'POST', redirect: 'manual',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(form) });
+      assert.strictEqual(allowed.status, 302);
+      const location = new URL(allowed.headers.get('location'));
+      assert.strictEqual(location.origin, 'https://callback.example');
+      assert.strictEqual(location.pathname, '/cb');
+      assert.strictEqual(location.searchParams.get('state'), state);
+      await allowed.text();
+      assert.strictEqual(oauth.snapshotPairing().code, null);
+      const exchangeBody = new URLSearchParams({ grant_type: 'authorization_code', client_id: client.client_id,
+        code: location.searchParams.get('code'), redirect_uri: form.redirect_uri, code_verifier: verifier });
+      const exchange = () => fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: exchangeBody });
+      const exchanged = await exchange();
+      assert.strictEqual(exchanged.status, 200);
+      const access = (await exchanged.json()).access_token;
+      assert.ok(oauth.verifyAccessToken(access));
+      const duplicate = await exchange();
+      assert.strictEqual(duplicate.status, 400);
+      await duplicate.json();
+      assert.ok(oauth.verifyAccessToken(access), 'failed code reuse does not revoke the issued access token');
+
     } finally { config.publicTunnelUrl = savedOrigin; }
     console.log('OAuth public/secret-post/secret-basic HTTP regressions passed');
-  } finally { await new Promise(resolve => server.close(resolve)); oauth.revokeAll(); }
+  } finally {
+    tracker.stopReporter();
+    await Promise.all([uiServer, server].map(s => new Promise(resolve => s.close(resolve))));
+    oauth.revokeAll();
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
 })().catch(err => { console.error(err); process.exitCode = 1; });

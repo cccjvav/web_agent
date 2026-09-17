@@ -26,13 +26,19 @@
 
 ## oauthClientAuth.test.js
 
-[源码](oauthClientAuth.test.js)异步IIFE开头revokeAll，本机Express装JSON/OAuth；固定长verifier用于测试。**basic(client)**将id:secret编码Basic header。unknown auth_method注册必须unsupported。
+[源码](oauthClientAuth.test.js)异步IIFE开头revokeAll，创建临时工作区并配置两个0端口，require真实index启动UI/MCP，等待两server监听；不再用重新拼装的Express夹具代替生产中间件顺序。固定长verifier用于测试。**basic(client)**将id:secret编码Basic header。unknown auth_method注册必须unsupported。
 
 循环none/client_secret_post/client_secret_basic：注册client、issuePairing、S256 completeAuthorize取code；局部**post(payload,authorization)**用真fetch JSON提交token端点。机密客户端缺secret→401 invalid_client，错误secret→401；Basic与body secret同时提交也401。之后用正确认证换码仍200，证明前述错误凭证没有消耗授权码，verifyAccessToken有效。
 
-refresh同样检查机密客户端缺认证401，再正确认证200，旧access失效。public none无需客户端secret，但仍走PKCE。finally关server/revokeAll，catch exitCode1。没有测试TLS或第三方连接器实际兼容性，也不证明穷举所有畸形Basic header。
+refresh同样检查机密客户端缺认证401，再正确认证200，旧access失效。public none无需客户端secret，但仍走PKCE。finally停tracker、关闭两server、revokeAll并删除临时工作区，catch exitCode1。没有测试TLS或第三方连接器实际兼容性，也不证明穷举所有畸形Basic header。
 
 新增回归：三种认证方式均验证有效授权码配错误类型/长度verifier为400，之后正确兑换仍成功；跨客户端提交spent refresh不会撤销持有者，同客户端重放仍撤销。填满80注册项后错误注册不得撤销最老有效token，有效新注册返回503；临时替换Date.now推进6分钟证明可回收空闲注册但保留活跃token，finally恢复时钟。危险scheme/非回环HTTP/凭据/fragment/空白/过长URI、过多回调和过长名字均拒绝；HTTPS、IPv4/IPv6回环允许。无效授权challenge/method/response_type/redirect/state不消耗配对码；成功后公开GET只显示页面不续发码，未知client返回400。origin测试临时替换config.publicTunnelUrl并finally恢复，验证伪造Host/转发头不能改变issuer、可信配置优先以及挑战头不接受注入字段。
+
+第39组新增：每种认证方式刷新后，**ping(token)**向生产/mcp发送只读协议ping确认200；**revoke(payload,auth)**请求真实撤销端点。其他已登记客户端刷新他人refresh为400且不消耗；撤销他人token返回200但原token仍有效；机密客户端缺认证401并保留令牌。已认证未知token为200且不影响现有token，匹配归属时分别覆盖access/refresh作为撤销目标，删除整对后MCP为401、再刷新为400。OAuth revoke传入主机长期密钥不会轮换该密钥；不把200 revoked:true当成目标一定存在或已删除的证明。
+
+**metadataRequest(server,route,headers,body)**使用node:http发送真实Host，默认GET、有body则POST；收集正文并解析JSON，解析/请求/响应错误均reject，3秒socket无活动destroy（不是全程期限）。发现测试最初用fetch发送自定义Host，实际回包是连接端口origin而非期望回退值；这是夹具头被改写，不是产品漏洞，改node:http后保留原边界断言通过。三条well-known和畸形JSON的/mcp早期401共同核对：恶意Host/转发头不选issuer，合法配置origin优先、无配置/坏配置回固定本机，合法本机Host保留且不信X-Forwarded-Proto。finally恢复publicTunnelUrl。
+
+真实form授权负例：错误redirect返回400、无Location、配对码仍可用，HTML中的state转义且不回显配对码。正确POST以redirect:manual接收302，只检查callback origin/path/state/code，不访问外站。随后**exchange()**用urlencoded换码200，再兑换同code为400且不撤销原access。没有浏览器点击、TLS、第三方认证或全面会话身份隔离证明；本轮产品认证实现未改。
 
 ## githubAuth.test.js
 

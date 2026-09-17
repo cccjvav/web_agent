@@ -49,11 +49,11 @@ HTTP会话有24小时TTL及200上限。进程重启会丢失内存会话；客�
 POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连接/心跳，最多32路，15秒发送心跳，10分钟定时结束。这里的结束计时不因心跳刷新，不能描述成永久事件订阅或可靠消息重放。
 
 ## OAuth授权流程与边界
-1. register登记redirect URI及token端点认证方式：none、client_secret_basic或client_secret_post。后两种返回客户端secret。
+1. register登记redirect URI及token端点认证方式：none、client_secret_basic或client_secret_post。三种方式都返回客户端secret，但none不校验该secret，不等于机密客户端认证。
 2. 用户完成配对授权，服务器核对已注册redirect URI、配对码及PKCE方式，只支持S256。
 3. 换token前先认证客户端，再验证code、redirect URI和code_verifier；验证通过才消费code。
 4. refresh成功轮换新access/refresh并作废旧访问令牌；重复使用已消费refresh会撤销该客户端令牌。
-5. revoke/reset清理相应内存状态。主机连接密钥和OAuth客户端secret各有用途，不应混用。
+5. revoke先按注册方式认证，仅对匹配client的已知token删除access/refresh对；未知或其他归属也返回200，不是已删除目标的证明。它不轮换主机连接密钥，revokeAll也只是清OAuth内存状态。主机密钥轮换走独立本机入口。
 
 | 对象 | 当前有效期/性质 |
 |---|---|
@@ -69,7 +69,7 @@ POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连
 因此不是所有响应都严格小于16k，也不是所有类型都带同样的截短标志。大文件、搜索和命令捕获的硬上限在各工具实现；需要更小返回应缩小查询范围或limit。
 
 ## 验证与排查
-`mcpProtocol`覆盖RPC、通知/batch和附图，`oauth`与`oauthClientAuth`覆盖PKCE/刷新/客户端认证，`mcpBoard`覆盖会话任务归属，`resourceBudget`覆盖schema与游标。测试不等同手机Arena、所有代理或第三方连接器的端到端验收。
+`mcpProtocol`覆盖RPC、通知/batch和附图，`oauth`与`oauthClientAuth`覆盖PKCE/刷新/客户端认证，后者直接加载真实index验证issuer/挑战、表单授权及撤销后MCP拒绝，`mcpBoard`覆盖会话任务归属，`resourceBudget`覆盖schema与游标。测试不等同手机Arena、所有代理或第三方连接器的端到端验收。
 
 排查顺序：本机健康 → 公网路由 → 认证 → initialize/session → tools/list → 只读工具 → 经明确授权的写入。精确工具模式和文件边界见[工具说明](../tools/README.md)。
 
