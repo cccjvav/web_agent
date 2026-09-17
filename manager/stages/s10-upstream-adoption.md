@@ -565,7 +565,7 @@ externalHttpEndpoint做前端形式/规范地址检查，安全DNS/本机端口/
 
 externalPending按登记与remove:ID分别互斥，允许移除connecting接入，不用全局锁挡住停止；移除按钮绑定列表代次并一次消费/禁用，刷新同ID也不能并发重发。removed必须true，stopping:true仅说明停止请求，不是已观察退出。externalMutationGeneration阻止旧登记回包覆盖新移除。拆分锁时曾有文本替换造成server未定义的中间回归，已修复并重跑，未削弱断言。无后端新幂等合同或跨页锁。
 
-真实HTTP测试移除挂起发现、等待登记拒绝、再次remove=false，目标HTTP服务仍活着且后来显式登记可用；stdioMcp先检查移除回包，再closeAll/真实PID证明最终退出。既有后端行为正确，本批不改后端源码。VM定向通过，新增externalRegistrationBrowser拦截场景并补齐旧公网浏览器fixture合同；本地无Chromium，不宣称已执行。最终本地82测试文件通过，文档生成/构建/一致性通过（246源码/28目录/110排除），git diff --check通过；精确CI待提交核验。
+真实HTTP测试移除挂起发现、等待登记拒绝、再次remove=false，目标HTTP服务仍活着且后来显式登记可用；stdioMcp先检查移除回包，再closeAll/真实PID证明最终退出。既有后端行为正确，本批不改后端源码。VM定向通过，新增externalRegistrationBrowser拦截场景并补齐旧公网浏览器fixture合同；本地无Chromium，不宣称已执行。最终本地82测试文件通过，文档生成/构建/一致性通过（246源码/28目录/110排除），git diff --check通过；实现0b79fc41ae3465b4259a065450e445168756d1c6已推当前固定分支，[CI35282860722](https://github.com/cccjvav/web_agent/actions/runs/35282860722)九项逐项成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium）；新增externalRegistrationBrowser已实际执行通过，本地仍无Chromium，不代签用户实机。
 
 只扩大HTTP登记/移除及对应测试/页面段的局部审查；stdio预览/启动结果消费者留下一包，R2穿插。正式全仓逐句、历史Windows超时根因、真实提供商/用户实机仍未完成，探测保持暂停。
 
