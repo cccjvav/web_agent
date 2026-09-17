@@ -87,7 +87,9 @@
 
 ## 验证与维护入口
 
-最新完整核验：e470d5ff7efbdcfe3ef03d86f42519f147003a9a，[CI35125876577](https://github.com/cccjvav/web_agent/actions/runs/35125876577)九项逐项成功。该提交仅记录上一轮证据，未修改实现或放宽测试；新的完整CI通过，先前Windows22超时根因仍未证明。
+第20组最新核验b4cd7ae4852c113e6d9cf51fdce3da6cf3ba279d，[CI35231427025](https://github.com/cccjvav/web_agent/actions/runs/35231427025)九项逐项成功（七组主机、安装器、Chromium）；本地82测试文件、246源码/28目录/110排除。仅验证本仓库变更，不认证外部探测项目，不证明此前Windows超时根因已修复。
+
+第19组完整核验：e470d5ff7efbdcfe3ef03d86f42519f147003a9a，[CI35125876577](https://github.com/cccjvav/web_agent/actions/runs/35125876577)九项逐项成功。该提交仅记录上一轮证据，未修改实现或放宽测试；新的完整CI通过，先前Windows22超时根因仍未证明。
 
 第18组ae97f65e20f2b23f2ca3838aa9131934ad0471d4，[CI35124844106](https://github.com/cccjvav/web_agent/actions/runs/35124844106)九项逐项成功。第19组36ff82f4b21ee4714dcacd9ff0cd657c47e88def本地82测试文件通过，但[CI35125290301](https://github.com/cccjvav/web_agent/actions/runs/35125290301)首轮8/9成功、整体失败；不能继承前一组绿灯。246源码/28目录/110排除。
 
