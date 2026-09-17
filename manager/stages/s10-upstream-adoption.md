@@ -606,7 +606,7 @@ oauthClientAuth从自行拼Express改为临时工作区/双0端口的真实index
 
 OAuth授权详解全段/函数逐句对照：补URL规范化及req.protocol/当前代理策略边界，明确none不是secret持有证明、撤销200不证明目标存在/已删除、长期密钥独立。MCP README修“仅机密客户端返回secret”的错误（none也返回但不校验），安全/测试对应段局部同步。正式197项：已逐句7、局部23、待逐句110，其余状态不变；完整OAuth标准、第三方兼容与多客户端隔离不随文档盖章。
 
-本地oauth筛选三文件、完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）及git diff --check通过。本批精确CI待提交后核验；本地无Chromium，本轮无新增浏览器场景。下一包复核MCP session/peer、凭据与任务/取消边界；已有取消按peer+凭据键隔离，不自动等同全部会话状态隔离。先查实际影响，不把源码候选提前记成漏洞。R3其余消费者/Provider更新删除、历史Windows超时根因、用户实机保留，探测继续暂停。
+本地oauth筛选三文件、完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）及git diff --check通过。测试/说明提交526dfadb1065d2de5f903cd4d47dd3bccd339f38已推当前固定分支，[CI35288609389](https://github.com/cccjvav/web_agent/actions/runs/35288609389)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、既有真实Chromium。本地无Chromium，本轮无新增浏览器场景，不代签真实第三方OAuth/用户实机。下一包复核MCP session/peer、凭据与任务/取消边界；已有取消按peer+凭据键隔离，不自动等同全部会话状态隔离。先查实际影响，不把源码候选提前记成漏洞。R3其余消费者/Provider更新删除、历史Windows超时根因、用户实机保留，探测继续暂停。
 
 ## 复盘
 
