@@ -534,8 +534,12 @@ router.get('/customizations', (req, res) => {
 
 router.put('/customizations', (req, res) => {
   const body = req.body || {};
-  const next = patchCustom(body);
-  res.json({ success: true, customizations: next });
+  try {
+    const next = patchCustom(body);
+    res.json({ success: true, customizations: next });
+  } catch (error) {
+    res.status(error.code === 'E_BAD_ARGS' ? 400 : 500).json({ success: false, error: error.message, code: error.code || 'E_INTERNAL' });
+  }
 });
 
 router.post('/skills', async (req, res) => {

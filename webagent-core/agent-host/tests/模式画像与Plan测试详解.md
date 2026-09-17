@@ -21,11 +21,12 @@ try内await listRemoteModels，两个find回调取相应记录，断言未声明
 [源码](profile.test.js)mkdtemp并把config.workspaceRoot指向临时目录；**main()**：
 
 1. detectEnvironment结果必须在支持的OS/Shell枚举，没证明与实际shell进程一定一致。
-2. 写package.json（express及test脚本），detectTechStack应识别JavaScript/Express/npm，测试入口归一为npm test而非直接取脚本正文。
+2. 写package.json（express及test脚本），识别JavaScript/Express/npm，测试入口归一为npm test而非脚本正文；jsconfig不猜TS、tsconfig才加入；数组/坏JSON/超过256KiB忽略；Python标记无pytest.ini不猜pytest。
 3. saveCustom写环境、技术栈、偏好、指令；断言两份Markdown实际存在及格式包含PowerShell/npm test。
-4. 写review/SKILL.md；formatWorkspaceContext(loadCustom,技能元数据)需含环境/技术栈/语言/Skill；getInstructions也须包含环境、Skills、review；readResource(webagent://profile)含技术栈。
+4. 局部patch只改notes仍保留shell/testCommand；数组/错误文本类型/8MiB输出超限均拒且四文件字节不变；坏environment旧JSON保留；临时工作区.webagent链接（Windows用junction）指向外部时拒绝保存且外部为空。
+5. 写review/SKILL.md；formatWorkspaceContext(loadCustom,技能元数据)需含环境/技术栈/语言/Skill；getInstructions也须包含环境、Skills、review；readResource(webagent://profile)含技术栈。
 
-末尾rm临时目录，不在finally；中途断言失败可能留下临时文件，但不改真实工作区。此链证明文件→上下文→MCP资源的连接，不证明模型遵循指令或真正运行声明的测试命令。
+外层finally恢复原config.workspaceRoot并rm临时目录；外部链接夹具有自己的finally，断言失败也清理，不改真实工作区。此链证明文件→上下文→MCP资源的连接，不证明模型遵循指令或真正运行声明的测试命令。
 
 ## planRound.test.js
 

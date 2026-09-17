@@ -20,12 +20,19 @@ function dayFile(day) {
 }
 
 function remember({ text, day } = {}) {
+  if (text != null && typeof text !== 'string') throw new ProtocolError('E_BAD_ARGS', 'memory text must be a string');
   const body = String(text || '').trim();
+  if (Buffer.byteLength(body, 'utf8') > 16 * 1024 || body.includes('\0')) throw new ProtocolError('E_BAD_ARGS', 'memory text must be at most 16 KiB and contain no NUL');
   if (!body) return { ok: false, error: 'text required' };
   const file = dayFile(day);
+  const line = `\n- ${new Date().toISOString()} ${body.replace(/[\r\n]+/g, ' ')}\n`;
+  let previous;
+  try { previous = fs.lstatSync(file); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  const addition = previous ? line : `# ${path.basename(file, '.md')}\n${line}`;
+  if (previous && !previous.isFile()) throw new ProtocolError('E_BAD_ARGS', 'memory target must be a regular file');
+  if ((previous ? previous.size : 0) + Buffer.byteLength(addition, 'utf8') > 256 * 1024) throw new ProtocolError('E_BAD_ARGS', 'memory day exceeds 256 KiB; preserve it and choose another explicit destination');
   fs.mkdirSync(memoryDir(), { recursive: true });
-  const line = `\n- ${new Date().toISOString()} ${body.replace(/\n+/g, ' ')}\n`;
-  fs.appendFileSync(file, fs.existsSync(file) ? line : `# ${path.basename(file, '.md')}\n${line}`, 'utf8');
+  fs.appendFileSync(file, addition, { encoding: 'utf8', mode: 0o600 });
   return { ok: true, path: path.relative(config.workspaceRoot, file) };
 }
 

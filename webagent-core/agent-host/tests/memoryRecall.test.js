@@ -10,6 +10,29 @@ config.workspaceRoot = root;
 try {
   assert.strictEqual(recall().count, 0);
   assert.ok(!fs.existsSync(path.join(root, '.webagent')), 'Reading does not create memory');
+  for (const text of ['x'.repeat(16385), '中'.repeat(5462), 'bad\0note', {}]) assert.throws(() => remember({text}), error => error.code === 'E_BAD_ARGS');
+  assert.ok(!fs.existsSync(path.join(root,'.webagent')), 'invalid note creates no directory');
+  const budgetDay = '2026-09-12';
+  remember({day:budgetDay,text:'one\r\ntwo\rthree'});
+  const budgetFile = path.join(root,'.webagent/memory',budgetDay+'.md');
+  assert.ok(fs.readFileSync(budgetFile,'utf8').includes('one two three'));
+  fs.writeFileSync(budgetFile,'x'.repeat(256*1024-100));
+  remember({day:budgetDay,text:'fits'});
+  const nearLimit = fs.readFileSync(budgetFile);
+  assert.throws(() => remember({day:budgetDay,text:'x'.repeat(16384)}), /256 KiB/);
+  assert.ok(fs.readFileSync(budgetFile).equals(nearLimit), 'full day is preserved, never rotated or truncated');
+  fs.unlinkSync(budgetFile);
+  if (process.platform !== 'win32') {
+    const outside = fs.mkdtempSync(path.join(os.tmpdir(),'memory-link-'));
+    try {
+      const target = path.join(outside,'MUST-NOT-CREATE.md');
+      fs.symlinkSync(target,budgetFile);
+      assert.throws(() => remember({day:budgetDay,text:'must not escape'}), /regular file/);
+      assert.ok(!fs.existsSync(target), 'dangling link cannot create an external target');
+      assert.ok(fs.lstatSync(budgetFile).isSymbolicLink(), 'rejected link is preserved');
+    } finally { fs.unlinkSync(budgetFile); fs.rmSync(outside,{recursive:true,force:true}); }
+  }
+
   remember({ day: '2026-09-15', text: 'ordinary note' });
   remember({ day: '2026-09-15', text: '中文验收 Windows 操作步骤' });
   remember({ day: '2026-09-14', text: 'Windows only' });

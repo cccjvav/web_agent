@@ -5,6 +5,7 @@ const path = require('path');
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-profile-'));
 const { config } = require('../src/config');
+const previousRoot = config.workspaceRoot;
 config.workspaceRoot = tmp;
 
 const {
@@ -14,7 +15,7 @@ const {
   markdownPreference,
   markdownTechStack
 } = require('../src/models/profile');
-const { saveCustom, loadCustom } = require('../src/models/customizations');
+const { saveCustom, loadCustom, patchCustom } = require('../src/models/customizations');
 const { getInstructions } = require('../src/mcp/instructions');
 const { readResource } = require('../src/mcp/resources');
 
@@ -33,6 +34,25 @@ function main() {
   assert.strictEqual(stack.packageManager, 'npm');
   assert.strictEqual(stack.testCommand, 'npm test');
 
+  fs.writeFileSync(path.join(tmp, 'jsconfig.json'), '{}');
+  assert.ok(!detectTechStack(tmp).languages.includes('TypeScript'));
+  fs.writeFileSync(path.join(tmp, 'tsconfig.json'), '{}');
+  assert.ok(detectTechStack(tmp).languages.includes('TypeScript'));
+  fs.unlinkSync(path.join(tmp, 'tsconfig.json'));
+  const packageBefore = fs.readFileSync(path.join(tmp, 'package.json'));
+  for (const body of ['[]', '{broken', '{"padding":"' + 'x'.repeat(256 * 1024) + '"}']) {
+    fs.writeFileSync(path.join(tmp, 'package.json'), body);
+    assert.strictEqual(detectTechStack(tmp).testCommand, '');
+    assert.strictEqual(detectTechStack(tmp).languages, '');
+  }
+  fs.unlinkSync(path.join(tmp, 'package.json'));
+  fs.writeFileSync(path.join(tmp, 'requirements.txt'), 'requests');
+  assert.strictEqual(detectTechStack(tmp).testCommand, '', 'Python alone does not prove pytest');
+  fs.writeFileSync(path.join(tmp, 'pytest.ini'), '[pytest]');
+  assert.strictEqual(detectTechStack(tmp).testCommand, 'python -m pytest -q');
+  fs.unlinkSync(path.join(tmp, 'requirements.txt')); fs.unlinkSync(path.join(tmp, 'pytest.ini'));
+  fs.writeFileSync(path.join(tmp, 'package.json'), packageBefore);
+
   const custom = saveCustom({
     preference: '改动必须带测试',
     environment: { os: 'windows', shell: 'powershell', replyLanguage: 'zh-CN', commitLanguage: 'zh-CN', notes: '不要用 bash' },
@@ -43,6 +63,33 @@ function main() {
   assert.ok(fs.existsSync(path.join(tmp, '.webagent/tech-stack.md')));
   assert.ok(markdownPreference(custom).includes('PowerShell') || markdownPreference(custom).includes('powershell'));
   assert.ok(markdownTechStack(custom).includes('npm test'));
+
+  patchCustom({environment:{notes:'changed note'},techStack:{notes:'changed stack note'}});
+  assert.strictEqual(loadCustom().environment.shell, 'powershell');
+  assert.strictEqual(loadCustom().techStack.testCommand, 'npm test');
+  const savedFiles = ['customizations.json','instructions.md','preference.md','tech-stack.md'];
+  const before = savedFiles.map(name => fs.readFileSync(path.join(tmp,'.webagent',name)));
+  for (const invalid of [[], {instructions:{}}, {environment:[]}, {environment:{shell:2}}, {techStack:{testCommand:[]}}, {instructions:'x'.repeat(8*1024*1024)}]) {
+    assert.throws(() => patchCustom(invalid), error => error.code === 'E_BAD_ARGS');
+    for (let n = 0; n < savedFiles.length; n++) assert.ok(fs.readFileSync(path.join(tmp,'.webagent',savedFiles[n])).equals(before[n]));
+  }
+  const jsonFile = path.join(tmp,'.webagent/customizations.json');
+  fs.writeFileSync(jsonFile, '{"environment":"invalid"}');
+  assert.throws(() => loadCustom(), error => error.code === 'E_CUSTOM_CORRUPT');
+  assert.throws(() => patchCustom({preference:'no overwrite'}), /CORRUPT/);
+  assert.strictEqual(fs.readFileSync(jsonFile,'utf8'), '{"environment":"invalid"}');
+  fs.writeFileSync(jsonFile, before[0]);
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(),'profile-outside-'));
+  try {
+    const probeRoot = fs.mkdtempSync(path.join(os.tmpdir(),'profile-link-'));
+    const oldRoot = config.workspaceRoot;
+    try {
+      fs.symlinkSync(outside, path.join(probeRoot,'.webagent'), process.platform === 'win32' ? 'junction' : 'dir');
+      config.workspaceRoot = probeRoot;
+      assert.throws(() => saveCustom({instructions:'MUST NOT ESCAPE'}));
+      assert.deepStrictEqual(fs.readdirSync(outside), []);
+    } finally { config.workspaceRoot = oldRoot; fs.rmSync(probeRoot,{recursive:true,force:true}); }
+  } finally { fs.rmSync(outside,{recursive:true,force:true}); }
 
   fs.mkdirSync(path.join(tmp, '.webagent/skills/review'), { recursive: true });
   fs.writeFileSync(
@@ -64,8 +111,7 @@ function main() {
   const profile = readResource('webagent://profile');
   assert.ok(profile && profile.text.includes('Tech stack'));
 
-  fs.rmSync(tmp, { recursive: true, force: true });
   console.log('profile tests passed');
 }
 
-main();
+try { main(); } finally { config.workspaceRoot = previousRoot; fs.rmSync(tmp, { recursive: true, force: true }); }

@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
+const { readBoundedText } = require('../utils/boundedFile');
 
 function detectEnvironment() {
   const plat = process.platform;
@@ -17,14 +18,16 @@ function detectEnvironment() {
 
 function readJson(file) {
   try {
-    return JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (fs.lstatSync(file).isSymbolicLink()) return null;
+    const value = JSON.parse(readBoundedText(file, 256 * 1024));
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : null;
   } catch {
     return null;
   }
 }
 
 function exists(root, rel) {
-  return fs.existsSync(path.join(root, rel));
+  try { return fs.lstatSync(path.join(root, rel)).isFile(); } catch (_) { return false; }
 }
 
 function detectTechStack(workspaceRoot) {
@@ -37,7 +40,7 @@ function detectTechStack(workspaceRoot) {
   const pkg = exists(root, 'package.json') ? readJson(path.join(root, 'package.json')) : null;
   if (pkg) {
     languages.push('JavaScript');
-    if (exists(root, 'tsconfig.json') || exists(root, 'jsconfig.json')) languages.push('TypeScript');
+    if (exists(root, 'tsconfig.json')) languages.push('TypeScript');
     const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
     if (deps.react || deps.next) frameworks.push(deps.next ? 'Next.js' : 'React');
     if (deps.vue || deps.nuxt) frameworks.push(deps.nuxt ? 'Nuxt' : 'Vue');
@@ -45,12 +48,12 @@ function detectTechStack(workspaceRoot) {
     if (exists(root, 'pnpm-lock.yaml')) packageManager = 'pnpm';
     else if (exists(root, 'yarn.lock')) packageManager = 'yarn';
     else packageManager = 'npm';
-    if (pkg.scripts && pkg.scripts.test) testCommand = `${packageManager} test`;
+    if (pkg.scripts && typeof pkg.scripts.test === 'string' && pkg.scripts.test.trim()) testCommand = `${packageManager} test`;
   }
   if (exists(root, 'pyproject.toml') || exists(root, 'requirements.txt') || exists(root, 'pytest.ini')) {
     languages.push('Python');
     if (!packageManager) packageManager = 'pip';
-    if (!testCommand) testCommand = 'python -m pytest -q';
+    if (!testCommand && exists(root, 'pytest.ini')) testCommand = 'python -m pytest -q';
   }
   if (exists(root, 'Cargo.toml')) {
     languages.push('Rust');

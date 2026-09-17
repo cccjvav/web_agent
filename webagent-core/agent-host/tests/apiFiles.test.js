@@ -149,6 +149,17 @@ async function main() {
     assert.ok(/STALE_FILE/.test(String(stale.json && stale.json.error)));
     assert.strictEqual(fs.readFileSync(path.join(tmp, 'notes.md'), 'utf8'), 'hello from editor');
 
+    const customSaved = await request(server,'PUT','/api/customizations',{environment:{shell:'powershell',notes:'first'}});
+    assert.strictEqual(customSaved.status,200);
+    const customPatched = await request(server,'PUT','/api/customizations',{environment:{notes:'second'}});
+    assert.strictEqual(customPatched.json.customizations.environment.shell,'powershell');
+    const beforeCustom = fs.readFileSync(path.join(tmp,'.webagent/customizations.json'));
+    const badCustom = await request(server,'PUT','/api/customizations',{instructions:{bad:true}});
+    assert.strictEqual(badCustom.status,400);
+    assert.strictEqual(badCustom.json.success,false);
+    assert.strictEqual(badCustom.json.code,'E_BAD_ARGS');
+    assert.ok(fs.readFileSync(path.join(tmp,'.webagent/customizations.json')).equals(beforeCustom));
+
     const skill = await request(server, 'POST', '/api/skills', {
       name: 'demo-skill',
       content: '# Skill: demo\n'
