@@ -106,7 +106,9 @@
 
 ## 验证与维护入口
 
-第22组最新核验52b2148b96bbb01431f0ead70352e7d4a90e4f64，[CI35235675274](https://github.com/cccjvav/web_agent/actions/runs/35235675274)九项逐项成功；本地82测试文件、246源码/28目录/110排除。真实Git临时仓库/自写辅助程序正反对照在主机矩阵通过；不等于用户项目的LFS配置或所有Git版本验收。
+第23组最新核验cd2a3eaa42831526e3a6ef7a504370144e857da5，[CI35243219647](https://github.com/cccjvav/web_agent/actions/runs/35243219647)九项逐项成功。本地82测试文件、246源码/28目录/110排除。首推0fac6f0漏带自动tests/README导航，CI35243193771仅1/9成功（浏览器）、整体失败；立即补齐而未删守卫，未将首推当绿灯。本组仅交接、导航与回归约束，无产品运行逻辑变更。
+
+第22组核验52b2148b96bbb01431f0ead70352e7d4a90e4f64，[CI35235675274](https://github.com/cccjvav/web_agent/actions/runs/35235675274)九项逐项成功；本地82测试文件、246源码/28目录/110排除。真实Git临时仓库/自写辅助程序正反对照在主机矩阵通过；不等于用户项目的LFS配置或所有Git版本验收。
 
 第21组核验2e1bc29c280ab08b7cebe985bb6ba602c968f483，[CI35233048258](https://github.com/cccjvav/web_agent/actions/runs/35233048258)九项逐项成功；本地82测试文件、246源码/28目录/110排除。包含真实提供商模块＋模拟进程事件的日志回归，不是实际Cloudflare/ngrok连接验收。
 
