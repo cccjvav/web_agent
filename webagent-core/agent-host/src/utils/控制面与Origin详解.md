@@ -5,10 +5,12 @@
 [localControl.js](localControl.js)判定是否本机控制请求；[corsAllow.js](corsAllow.js)区分浏览器来源。入口把它们放在API/WS/MCP不同路径，不能用“支持远程MCP”推断远程UI也开放。
 
 ```text
-API：本机socket + 本机Host + 无隧道标识 → 浏览器Origin/Referer检查 → 业务
-MCP：允许的Origin（或非浏览器无Origin） → token认证 → RPC
+API（双端口）：本机socket + 本机Host + 无隧道标识 → Origin/Referer检查 → 正文解析 → 路由复验 → 业务
+MCP（MCP端口）：Origin硬拒绝 → CORS（允许的OPTIONS在此结束） → 有效路径token认证 → 正文解析 → 路由复验 → RPC
 WS：本机控制面 + 允许API浏览器Origin → 握手/连接
 ```
+
+这是[入口](../index.js)的请求路径示意；MCP早期认证仅匹配`/mcp`与`/mcp/:secret`，跳过OPTIONS，不保证未知路径都经过认证。允许的浏览器预检无需密钥；不允许的Origin连预检也403。API与MCP路由前保留重复检查，不能靠仅移除CORS头阻止业务。
 
 ## 1. localControl.js全部函数
 
@@ -19,7 +21,7 @@ WS：本机控制面 + 允许API浏览器Origin → 握手/连接
 | hostName(req) | 请求→规范主机名 | Host取逗号首项、小写、去数字端口和方括号；内部辅助 |
 | publicTunnelHost() | 无→主机名 | 从config.publicTunnelUrl去协议/路径/端口/方括号；不是完整URL解析器 |
 | isPublicHost(req) | 请求→boolean | 本机名除外；识别常见Cloudflare/ngrok后缀或当前配置公网名 |
-| isLocalControlPlane(req) | 请求→boolean | 隧道标识直接拒绝；Host必须严格匹配localhost/127.0.0.1/[::1]及合法可选端口；再排公网名；最后优先socket.remoteAddress、否则req.ip，要求回环 |
+| isLocalControlPlane(req) | 请求→boolean | 隧道标识直接拒绝；Host必须严格匹配localhost/127.0.0.1/[::1]及1–65535的可选端口；再排公网名；最后优先socket.remoteAddress、否则req.ip，要求回环 |
 | rejectUnlessLocalControl(req,res,next) | 中间件 | 通过next；否则404 JSON not found，不在错误中暴露控制API细节 |
 
 本机socket是必要但不充分条件，Host也要匹配，不能只信任代理把请求转发到回环后的地址。该检查不认证操作系统用户、不提供浏览器页面登录，也不限制shell命令能访问哪些系统资源。
@@ -46,7 +48,9 @@ EXTENSION_PROTOCOLS列chrome/moz/safari扩展协议，PAGE_ORIGINS列当前维�
 
 **mcpCors()**：返回cors包中间件，内部origin(origin,cb)回调以 `cb(null,isAllowedMcpOrigin(origin))`决定CORS头。**仅不发CORS允许头不等于业务没有执行**，所以还有下一层硬拒绝。
 
-**rejectDisallowedMcpOrigin(req,res,next)**：无Origin或允许来源next，其他403 JSON；入口在MCP路由前使用，避免不允许的浏览器请求仍执行工具。它不验证Bearer，也不要求CLI伪造浏览器头。
+**rejectDisallowedMcpOrigin(req,res,next)**：无Origin或允许来源next，其他403 JSON。MCP端口的`applyCommon`在`/mcp`前缀先挂它，早于CORS、认证及JSON/表单解析；路由前也保留它。不允许的Origin即使携带有效凭据和畸形JSON也先403，而非解析器400；没有Origin或来源允许不代表免认证。它不验证Bearer，也不要求CLI伪造浏览器头。
+
+API有Origin优先，不用Referer覆盖它；无Origin才检查可解析Referer。两者缺失或Referer无法解析时仍允许本机请求，这是兼容CLI的既有策略，不是完整CSRF登录机制。不同本机HTTP(S)端口也被允许，不是严格同源隔离。`parseOrigin`用通用URL解析，可接受带路径/凭据等非规范Origin文本；本轮没有改为严格序列化Origin校验。浏览器生成Origin、非浏览器可伪造头，不能把人工构造文本被接受直接称为浏览器越权。
 
 ## 4. 验证与部署边界
 
@@ -56,4 +60,4 @@ npm test --prefix webagent-core/agent-host -- --filter=corsAllow
 npm test --prefix webagent-core/agent-host -- --filter=auditControl
 ```
 
-验证回环、Host/Origin与远程控制面拒绝等；真实代理配置仍需按部署路径验收。练习：逐层解释为什么手机可经认证MCP读测试文件，却不能因此访问本机/api；以及为什么不把WEBAGENT_CORS_ORIGINS设为任意站点来解决所有连接问题。
+localControl覆盖回环、严格Host、远程socket优先于伪造ip/转发头及缺失地址；corsAllow验证额外MCP来源不放开API。auditControl直接加载真实入口，在两端口验证恶意Host/隧道头/外站Origin与Referer的404早于正文解析，验证WS握手拒绝、MCP恶意来源403早于解析、允许预检204、缺密钥401及合法初始化。它们不是浏览器攻击复现；没有证明工具执行越权、全面代理识别或网络层抗DoS，真实代理配置仍需按部署路径验收。练习：逐层解释为什么手机可经认证MCP读测试文件，却不能因此访问本机/api；以及为什么不把WEBAGENT_CORS_ORIGINS设为任意站点来解决所有连接问题。

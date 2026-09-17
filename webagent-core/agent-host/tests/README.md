@@ -57,7 +57,7 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 | 路径、写入、hash、补丁、Skill | patchEngine、workspaceTools、sandbox、auditStorage、apiFiles | 临时文件系统与HTTP；不是OS沙箱证明 |
 | 模型失败、工具结果、Plan | modelLifecycle、runChat、chatMode、planRound、toolLabel | 实际调度模块+模拟模型响应，不是提供商实测 |
 | MCP、OAuth、会话/board | mcpProtocol、oauth、oauthClientAuth、mcpBoard、board | 本地HTTP/模块协议回归，不是所有第三方客户端验收 |
-| 本机控制面、WS、Origin | auditControl、localControl、corsAllow、httpSmoke | 本地真实HTTP/WS与fixture；代理部署须另测 |
+| 本机控制面、WS、Origin | auditControl、localControl、corsAllow、httpSmoke | 真实入口双端口API门禁、MCP Origin/认证先于解析、预检与WS；代理/跨站浏览器须另测 |
 | PTY审批、取消、归属、捕获 | ptyLifecycle、ptyJobs、desktopExtension | 部分真实子进程+VS Code事件fixture；原生终端效果须另测 |
 | 隧道启停 | tunnel、bridgeTunnel、tunnelLifecycle | 解析、API及进程引用fixture；非真实公网隧道 |
 | 文件编辑、webview、主题、Monaco | editorRuntime、webviewRuntime、workbenchRuntime、monacoLoading、workbenchHtml | 真实源码配DOM/Monaco/宿主fixture，不等同浏览器E2E |
@@ -94,7 +94,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
 | [apiFiles.test.js](apiFiles.test.js) | 32 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 12 个函数/类节点 |
-| [auditControl.test.js](auditControl.test.js) | 17 个函数/类节点 |
+| [auditControl.test.js](auditControl.test.js) | 20 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
 | [board.test.js](board.test.js) | 4 个函数/类节点 |
 | [bridgeTunnel.test.js](bridgeTunnel.test.js) | 20 个函数/类节点 |

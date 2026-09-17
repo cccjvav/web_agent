@@ -13,7 +13,7 @@
 
 ## 本机控制面与文件工具
 
-`/api`要求Host为localhost、127.0.0.1或[::1]（可带有效端口），且socket回环、无隧道特征头；外站Origin/Referer仍被拒绝。`/ws`在upgrade阶段也验证本机控制面和Origin；无Origin的本机Node客户端仍允许。`WEBAGENT_CORS_ORIGINS`只扩展MCP网页白名单，不能放开API或WS。
+`/api`要求Host为localhost、127.0.0.1或[::1]（可带有效端口），且socket回环、无隧道特征头；非本机Origin或无Origin时可解析的外站Referer被拒绝；两者缺失或Referer不可解析时仍允许本机CLI路径，不是严格同源登录机制。`/ws`在upgrade阶段也验证本机控制面和Origin；无Origin的本机Node客户端仍允许。`WEBAGENT_CORS_ORIGINS`只扩展MCP网页白名单，不能放开API或WS。
 
 文件路径检查同时验证逻辑路径和真实链接目标；内置敏感规则不区分大小写并覆盖嵌套目录。记忆day仅接收有效日历日期；用户Skill必须实际位于工作区内，产品固定bundled目录例外保留。这是应用层保护，不是OS沙箱，不承诺抵抗有本机文件系统写权限进程的所有竞态或硬链接操作。
 
@@ -41,7 +41,7 @@ Read控制工具/资源/提示词读取；Edit控制文件、记忆和任务板�
 
 **不要**把 `trycloudflare.com/mcp/...`、ngrok 地址或 Named 的 `https://你的域名/mcp/...` 发到群、Issue、截图网盘。Quick Tunnel或ngrok地址可能变化，重启后始终核对当前地址；不要把停隧道等同密钥轮换或保证旧域名永不复用。当次有效地址等同施工证。Named Token 与 ngrok Authtoken 不要贴进聊天或日志。
 
-公网请求打 `/api` 或 `/ws` 会 404；本机 Chat 走 3000，不经过隧道。CORS 白名单**不是**门卡，URL 里的密钥仍要保管。
+公网请求打 `/api` 会404；UI端口的`/ws`在upgrade拒绝不满足本机/Origin条件的握手（当前ws返回403），不是统一404；本机 Chat 走 3000，不经过隧道。CORS 白名单**不是**门卡，URL 里的密钥仍要保管。
 
 MCP 认证优先用路径 `/mcp/<密钥>` 或请求头 `Authorization: Bearer`。还认查询串 `?secret=`，只是兜底；经公共隧道时 query 可能进边缘/代理访问日志，不要把密钥放在查询串里当主用法。
 
@@ -57,7 +57,7 @@ MCP 密钥和模型 API Key 写在工作区 `.webagent/config.json`（尽量 `ch
 
 敏感路径拦截（`.env`、`*.pem`、`.ssh/`、`.webagent/config.json` 等）**只作用于文件工具**。`read_files ".env"` 会被拒；`run_command "cat .env"` 可以读出内容。
 
-工作台 `GET /api/status` **仍带** `secretKey`：本机拼 MCP 地址要用，且`/api`限制回环socket＋明确本机Host＋本机HTTP(S) Origin（允许本机不同端口，不是严格同源）。不另开 `/api/bridge/secret`。
+工作台 `GET /api/status` **仍带** `secretKey`：本机拼 MCP 地址要用，且`/api`限制回环socket＋明确本机Host＋如有Origin则要求本机HTTP(S)来源（允许本机不同端口，无Origin的CLI路径仍可用，不是严格同源）。不另开 `/api/bridge/secret`。
 
 ChatGPT 自制 MCP 插件用的 OAuth access / refresh **只在内存**。关掉 `run-webagent` 进程后要重新配对。
 
@@ -91,7 +91,7 @@ OAuth issuer优先采用本机设置的publicTunnelUrl；没有该值时只接�
 
 ## 资源与文档站的补充边界
 
-公网OAuth JSON/表单请求限制64KiB；MCP有效路径先认证再解析请求体，/api先检查本机与跨站边界。认证后的工具JSON仍保留20MiB，因为单文件文字预算8MiB且补丁/JSON转义需要余量，不按报告建议盲目降到几MB破坏兼容性。默认不把文件/命令正文静默脱敏后假装原始内容；敏感路径与环境过滤不能保证任何stdout都绝无秘密。
+公网OAuth JSON/表单请求限制64KiB；MCP端口的/mcp前缀先硬拒绝不允许的Origin，再处理CORS与有效路径认证，最后解析正文，/api先检查本机与跨站边界。允许的预检无需凭据；恶意Origin带合法凭据/畸形JSON也先403，缺凭据且Origin允许或缺失时仍先401。此顺序不保证未知路径全部先认证，也不提供网络层DoS防护；该解析顺序修正不是已证明的浏览器工具执行越权。认证后的工具JSON仍保留20MiB，因为单文件文字预算8MiB且补丁/JSON转义需要余量，不按报告建议盲目降到几MB破坏兼容性。默认不把文件/命令正文静默脱敏后假装原始内容；敏感路径与环境过滤不能保证任何stdout都绝无秘密。
 
 文档站content.js含产品源码快照，没有认证，默认回环。DOCS_HOST设成非回环会打印警告；不要把文档站接公网隧道。用户安装文档站直接使用预构建快照，不在Program Files重建。
 

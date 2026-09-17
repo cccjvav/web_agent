@@ -41,4 +41,18 @@ assert.strictEqual(isLocalControlPlane(req({ headers: { 'cf-ray': 'abc' } })), f
 assert.strictEqual(isLocalControlPlane(req({ host: 'foo.trycloudflare.com' })), false);
 assert.strictEqual(isLocalControlPlane(req({ ip: '10.0.0.8', host: '10.0.0.8:48271' })), false);
 
+// A valid Host must not mask a remote socket or a forged proxy/Express address.
+assert.strictEqual(isLocalControlPlane(req({ ip: '10.0.0.8' })), false);
+assert.strictEqual(isLocalControlPlane({
+  ...req(), socket: { remoteAddress: '10.0.0.8' },
+  headers: { host: 'localhost:48271', 'x-forwarded-for': '127.0.0.1' }
+}), false);
+assert.strictEqual(isLocalControlPlane({ headers: { host: 'localhost' }, ip: '127.0.0.1' }), true);
+assert.strictEqual(isLocalControlPlane({ headers: { host: 'localhost' } }), false);
+for (const host of ['localhost:0', 'localhost:65536', '127.1', '2130706433', 'localhost.', '[::1]:999999']) {
+  assert.strictEqual(isLocalControlPlane(req({ host })), false, host);
+}
+for (const host of ['localhost:1', 'LOCALHOST:65535', '[::1]:48271']) {
+  assert.strictEqual(isLocalControlPlane(req({ host })), true, host);
+}
 console.log('localControl tests passed');

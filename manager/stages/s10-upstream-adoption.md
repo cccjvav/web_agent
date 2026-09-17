@@ -84,7 +84,7 @@
 |---|---|---|---|
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
-| R2 / 下一项，高 | 进行中：安全正文剩余实现对照，先复核本机控制面/跨站拒绝链 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
+| R2 / 下一项，高 | 进行中：第38组本机控制面/跨站拒绝与MCP解析前Origin门禁已核对；下一包OAuth凭据/issuer及剩余路由安全边界 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
 | R3 / 高，继续 | 进行中：第25/27/31–37组设置/模型/状态/Provider、审批、检查点、HTTP接入及stdio消费首包已修；其余API消费者按风险继续 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
@@ -581,6 +581,19 @@ externalPending按登记与remove:ID分别互斥，允许移除connecting接入�
 stdioMcp真实进程加强失败consume不可重用、原输入args/env事后修改不影响已审快照（仍验证原secret/参数），后端行为正确、源码不改。VM红转绿并补过期/绑定/草稿/忙拒绝/超时/丢结果/刷新失败；新增stdioLifecycleBrowser合成响应页面测试，main已有真实启动链保留。本地无Chromium，新增场景未宣称执行；最终本地82测试文件通过，文档生成/构建/一致性通过（246源码/28目录/110排除），git diff --check通过；实现beb6d48fa355b5bef59d4bd9c4e2dd69a25a933b已推当前固定分支，[CI35284740947](https://github.com/cccjvav/web_agent/actions/runs/35284740947)九项逐项成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium）；新增stdioLifecycleBrowser和既有真实启动链已实际执行通过，本地仍无Chromium，不代签用户实机。
 
 仅扩大上述局部，未认证整个stdio长篇、依赖树或OS隔离。接下来按R2高风险穿插复核localControl/corsAllow及路由的本机控制面/跨站拒绝链，R3其它消费者继续保留；全仓逐句、旧Windows超时根因、用户实机未完成，探测专项暂停。
+
+
+#### 第38组：本机控制面回归与MCP解析前Origin拒绝
+
+2026-09-18从6639053干净工作区继续R2，不重做第37组、不进入探测。读取localControl/corsAllow、真实入口和API挂载后，用真实index服务复现：合法MCP密钥+不允许Origin+畸形JSON得到解析器400，预期应先403。原路由在解析后仍会拒绝业务，所以这是提前拒绝/资源处理顺序缺口，不是已证明的浏览器工具执行越权；跨站JSON通常还受浏览器预检限制。
+
+最小实现只在MCP端口applyCommon中把/mcp硬Origin门禁提前到CORS/认证/正文解析之前，路由前原复验保留。允许预检仍204且不需密钥；合法来源或CLI的有效路径仍须认证，缺凭据的坏JSON先401，正常初始化200。未知路径不保证认证前置，不承诺网络层抗DoS。没有改变Origin允许集合、通用URL解析策略或无头本机CLI兼容；探索性“空Origin必须拒绝”断言与当前合同不符，已撤回，不作为产品漏洞证据。
+
+auditControl直接加载真实双server，保留原400对403红测并转绿；覆盖/mcp与密钥路径GET/POST/OPTIONS拒绝、允许预检、CLI/Arena/扩展初始化；双端口API的非法Host/端口、CF/CDN头、外站Origin/Referer均在坏正文解析前404。WS补恶意Host/隧道头拒绝，并保留无Origin/本机Origin允许。localControl增加合法Host配远程socket、socket优先于伪造ip/转发头、缺地址与严格Host边界；corsAllow证明额外MCP来源不放开API。这些是Node HTTP/WS与纯函数证据，不冒充真实跨站浏览器或代理部署。
+
+逐句对照控制面与Origin详解所有段落/函数并补准确装配、无/坏Referer与非严格同源边界；正式清单该篇新增整篇核对1，其余入口/测试/SECURITY只记对应局部。纠正旧安全说明“WS统一404”和状态API似乎强制Origin的表述。全仓仍197项，已逐句6、局部21、待逐句113，其余边界不变。
+
+本地localControl/corsAllow/auditControl定向、完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）及git diff --check通过。本批CI待提交后按精确SHA核验，不继承前批绿色；本地无Chromium，本批未新增浏览器用例。下一项继续R2 OAuth凭据/issuer与剩余路由边界；R3其它消费者、Provider更新/删除、历史Windows超时根因及用户实机未完成，探测继续暂停。
 
 ## 复盘
 

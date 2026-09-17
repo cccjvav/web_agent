@@ -36,6 +36,8 @@ const prev = process.env.WEBAGENT_CORS_ORIGINS;
 process.env.WEBAGENT_CORS_ORIGINS = 'https://www.doubao.com, https://tongyi.aliyun.com';
 assert.strictEqual(isAllowedMcpOrigin('https://www.doubao.com'), true);
 assert.strictEqual(isAllowedMcpOrigin('https://tongyi.aliyun.com'), true);
+assert.strictEqual(isAllowedApiBrowserOrigin('https://www.doubao.com'), false);
+assert.strictEqual(isAllowedApiBrowserOrigin('https://tongyi.aliyun.com'), false);
 assert.strictEqual(isAllowedMcpOrigin('https://evil.example'), false);
 if (prev === undefined) delete process.env.WEBAGENT_CORS_ORIGINS;
 else process.env.WEBAGENT_CORS_ORIGINS = prev;

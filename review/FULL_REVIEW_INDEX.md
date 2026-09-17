@@ -32,11 +32,13 @@
 
 - F37：stdio预览/启动消费红测后修、后端快照与单次消费回归加强，范围及精确验证见阶段37组；只局部，不增整篇通过数。
 
+- F38：真实入口MCP解析前Origin门禁红转绿；控制面与Origin详解全段/函数逐句核对，新增整篇1，入口/安全/测试仅局部。具体失败与边界见阶段38组，不认证浏览器攻击或全部R2。
+
 ## 逐文件状态
 
 基线为2f569c24b385ba58e0cd41229468878e2ff39a41后的本次工作区；本清单自身属于维护索引，不自我授予语义通过。新文件须登记；历史先前批次仅作证据，未自动标为本轮完成。
 
-现存条目数：197（合并退役2项，不计通过）；状态：待逐句核对 118、暂停，只登记路径 15、生成定位，非语义认证 1、已逐句核对 5、待边界核对 7、只读规范副本 1、待历史定位核对 32、原始证据，受限 1、局部核对 17。这是文件计数，不是语义准确率。
+现存条目数：197（合并退役2项，不计通过）；状态：待逐句核对 113、暂停，只登记路径 15、生成定位，非语义认证 1、已逐句核对 6、待边界核对 7、只读规范副本 1、待历史定位核对 32、原始证据，受限 1、局部核对 21。这是文件计数，不是语义准确率。
 
 | 文件 | 状态 | SHA-256前16位 | 依据/下一动作 |
 |---|---|---|---|
@@ -49,11 +51,11 @@
 | [.webagent/skills/evidence-check/references/checklist.md](../.webagent/skills/evidence-check/references/checklist.md) | 待逐句核对 | 8e07e93c431a3c2b | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [.webagent/skills/fix-tests/SKILL.md](../.webagent/skills/fix-tests/SKILL.md) | 待逐句核对 | bc401dc72aada5ae | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [.webagent/skills/review/SKILL.md](../.webagent/skills/review/SKILL.md) | 待逐句核对 | d30d72094e8aa2e2 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [AGENTS.md](../AGENTS.md) | 待逐句核对 | bb0872845a7a3d6e | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [AGENTS.md](../AGENTS.md) | 待逐句核对 | 436905c57093ee1a | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | 待逐句核对 | 1a54f3466ead86dd | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [LICENSE](../LICENSE) | 待逐句核对 | 5aff5a5a5928fe3e | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [README.md](../README.md) | 待逐句核对 | b3f6f4e1bfd41996 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [SECURITY.md](../SECURITY.md) | 待逐句核对 | 5329435edae22a5e | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [README.md](../README.md) | 待逐句核对 | 2de158b2b9b26713 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [SECURITY.md](../SECURITY.md) | 局部核对 | 740a55e9639277cf | F38仅本机/WS拒绝、无Origin与MCP解析前门禁段；前批范围保留，非整篇安全认证 |
 | [arena-model-probe/README-PYTHON.md](../arena-model-probe/README-PYTHON.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
 | [arena-model-probe/README.md](../arena-model-probe/README.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
 | [arena-model-probe/TRANSPORT_REVIEW.md](../arena-model-probe/TRANSPORT_REVIEW.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
@@ -65,12 +67,12 @@
 | [computer-use/win/截图标记与OCR详解.md](../computer-use/win/截图标记与OCR详解.md) | 待逐句核对 | 1deb2309a14f2568 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [computer-use/win/鼠标键盘与剪贴板详解.md](../computer-use/win/鼠标键盘与剪贴板详解.md) | 待逐句核对 | 2f5dba67bb07f984 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs-site/README.md](../docs-site/README.md) | 待逐句核对 | 72c6c3ae4ad1d781 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [docs-site/source-index.md](../docs-site/source-index.md) | 生成定位，非语义认证 | 1223b7681c67deca | 检查生成一致性，逐函数含义另查主说明 |
+| [docs-site/source-index.md](../docs-site/source-index.md) | 生成定位，非语义认证 | 6e6946cb87388a96 | 检查生成一致性，逐函数含义另查主说明 |
 | [docs-site/样式规则详解.md](../docs-site/样式规则详解.md) | 待逐句核对 | 294d6015d16c6b6e | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs-site/浏览与服务详解.md](../docs-site/浏览与服务详解.md) | 待逐句核对 | 2e72d034f06c6f91 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs-site/清单与构建详解.md](../docs-site/清单与构建详解.md) | 待逐句核对 | 63b60e93bb1c59ca | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [docs/README.md](../docs/README.md) | 已逐句核对 | fce319adaa09b3b2 | F27-01：目录/归放规则/边界与实际路径一致 |
-| [docs/development/README.md](../docs/development/README.md) | 已逐句核对 | b9a092f0d812f978 | F27-01：目录/归放规则/边界与实际路径一致 |
+| [docs/README.md](../docs/README.md) | 已逐句核对 | c89e415eff942b9b | F27-01：目录/归放规则/边界与实际路径一致 |
+| [docs/development/README.md](../docs/development/README.md) | 已逐句核对 | e6e3efaad5c31918 | F27-01：目录/归放规则/边界与实际路径一致 |
 | [docs/development/代码复盘指南.md](../docs/development/代码复盘指南.md) | 待逐句核对 | 616d7a10f8e77b1a | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs/development/借鉴优化说明（新手版）.md](../docs/development/借鉴优化说明（新手版）.md) | 待逐句核对 | 9ebe206b9422dcac | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs/development/平台启动与CI详解.md](../docs/development/平台启动与CI详解.md) | 待逐句核对 | 971b7af5bd95712d | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
@@ -83,7 +85,7 @@
 | [docs/guides/Bridge权限与工作模式.md](../docs/guides/Bridge权限与工作模式.md) | 待逐句核对 | 939f1e237de312b3 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs/guides/Bridge统计与刷新排查.md](../docs/guides/Bridge统计与刷新排查.md) | 待逐句核对 | 2b8db632d81b0cab | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs/guides/Conda环境说明.md](../docs/guides/Conda环境说明.md) | 待逐句核对 | 563f5c01a267970b | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [docs/guides/README.md](../docs/guides/README.md) | 已逐句核对 | 093ab012b5f2b622 | F27-01：目录/归放规则/边界与实际路径一致 |
+| [docs/guides/README.md](../docs/guides/README.md) | 已逐句核对 | d46da3929bd2f0f0 | F27-01：目录/归放规则/边界与实际路径一致 |
 | [docs/guides/Windows新手逐步验收.md](../docs/guides/Windows新手逐步验收.md) | 待逐句核对 | 6f91ce6b2edbfa92 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs/guides/内置探索Agent使用指南.md](../docs/guides/内置探索Agent使用指南.md) | 待逐句核对 | 7d39608590b06355 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs/guides/技能使用指南.md](../docs/guides/技能使用指南.md) | 待逐句核对 | ceb23a42a9736616 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
@@ -96,17 +98,17 @@
 | [installer/README.md](../installer/README.md) | 待逐句核对 | f2edbd500219def5 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/函数详解.md](../installer/函数详解.md) | 待逐句核对 | e56bd9d538e2a089 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/安装声明详解.md](../installer/安装声明详解.md) | 待逐句核对 | 5c8566d2ce5b1bc8 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [manager/CONTEXT.md](../manager/CONTEXT.md) | 待逐句核对 | 383b9d051f69a181 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [manager/CONTEXT.md](../manager/CONTEXT.md) | 待逐句核对 | c4b9d77f752b5a27 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [manager/SKILL.md](../manager/SKILL.md) | 只读规范副本 | 5c8c93d50e52332b | 只核对引用与适用范围，不修改技能副本 |
-| [manager/agents.md](../manager/agents.md) | 待逐句核对 | 0e15bb59ab4f5cae | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [manager/docs/documentation.md](../manager/docs/documentation.md) | 待逐句核对 | 5ca34800737d3d49 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [manager/docs/experience.md](../manager/docs/experience.md) | 待逐句核对 | 24713b48c0b4fecb | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [manager/agents.md](../manager/agents.md) | 待逐句核对 | 4466f9c59524232f | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [manager/docs/documentation.md](../manager/docs/documentation.md) | 待逐句核对 | dff435c047431d16 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [manager/docs/experience.md](../manager/docs/experience.md) | 待逐句核对 | ebb7a67a90db6b0b | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [manager/stages/audit-2026-09-11.md](../manager/stages/audit-2026-09-11.md) | 待历史定位核对 | d6064bf51020b073 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/context-history-through-0.4.md](../manager/stages/context-history-through-0.4.md) | 待历史定位核对 | a4ccaf24eb17241b | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/documentation-2026-09-12.md](../manager/stages/documentation-2026-09-12.md) | 待历史定位核对 | c23c09e4b3615d99 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/probe-dual-integration-2026-09-15.md](../manager/stages/probe-dual-integration-2026-09-15.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
 | [manager/stages/s1-handoff.md](../manager/stages/s1-handoff.md) | 待历史定位核对 | cfc0e427dc08e55c | 核对归档/引用/证据，不将旧结论改成现状 |
-| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 待逐句核对 | 6ba5a69ea473f6ee | F30：现行计划/交接与历史证据合并；结构及保留边界核对，不认证整篇 |
+| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 待逐句核对 | 0d085955bbec323f | F30：现行计划/交接与历史证据合并；结构及保留边界核对，不认证整篇 |
 | [manager/stages/s2-shell.md](../manager/stages/s2-shell.md) | 待历史定位核对 | 5ac447fe582ce09e | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s3-bridge-image.md](../manager/stages/s3-bridge-image.md) | 待历史定位核对 | fbe64b3265d3cf1a | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s4-terminal.md](../manager/stages/s4-terminal.md) | 待历史定位核对 | 1cf1fcca01c51478 | 核对归档/引用/证据，不将旧结论改成现状 |
@@ -117,31 +119,31 @@
 | [manager/stages/s9-workspace-entry.md](../manager/stages/s9-workspace-entry.md) | 待历史定位核对 | 77367a885aa57c03 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [multi-agent-board/SKILL.md](../multi-agent-board/SKILL.md) | 待逐句核对 | 29b4015a8d562bfb | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [project-manager/SKILL.md](../project-manager/SKILL.md) | 待逐句核对 | 5c8c93d50e52332b | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [review/CHECKLIST_WINDOWS.md](../review/CHECKLIST_WINDOWS.md) | 待逐句核对 | ab7353aa3ef02689 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [review/README.md](../review/README.md) | 待逐句核对 | 39b659a2cf479dd4 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [review/SEMANTIC_REVIEW_2026-09-16.md](../review/SEMANTIC_REVIEW_2026-09-16.md) | 待逐句核对 | 444d068d2e37a267 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [review/CHECKLIST_WINDOWS.md](../review/CHECKLIST_WINDOWS.md) | 待逐句核对 | 6cbc79b4c85111ed | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [review/README.md](../review/README.md) | 待逐句核对 | 6aaa789c633b926b | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [review/SEMANTIC_REVIEW_2026-09-16.md](../review/SEMANTIC_REVIEW_2026-09-16.md) | 待逐句核对 | f9c87906522a4975 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [review/UPSTREAM_ADOPTION_MAP_2026-09-15.md](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md) | 待逐句核对 | e454a1ff6891f7bc | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [review/archive/01a08d85-web-agent-audit.md](../review/archive/01a08d85-web-agent-audit.md) | 待历史定位核对 | ace0ab3d1b1d6f53 | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/01a08d85-web-agent-audit.md](../review/archive/01a08d85-web-agent-audit.md) | 待历史定位核对 | 95fc2e2b61e4c58c | 核对归档/引用/证据，不将旧结论改成现状 |
 | [review/archive/ARENA_PROBE_INTEGRATION_2026-09-15.md](../review/archive/ARENA_PROBE_INTEGRATION_2026-09-15.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
-| [review/archive/AUDIT_2026-09-13.md](../review/archive/AUDIT_2026-09-13.md) | 待历史定位核对 | 7eca81ed28754f90 | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/AUDIT_CROSSCHECK_2026-09-11.md](../review/archive/AUDIT_CROSSCHECK_2026-09-11.md) | 待历史定位核对 | 21c1ef3d2ac0ce23 | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/AUDIT_ROUND3_2026-09-13.md](../review/archive/AUDIT_ROUND3_2026-09-13.md) | 待历史定位核对 | 5fab78e4f0abc149 | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/AUDIT_2026-09-13.md](../review/archive/AUDIT_2026-09-13.md) | 待历史定位核对 | b212a7844fccc611 | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/AUDIT_CROSSCHECK_2026-09-11.md](../review/archive/AUDIT_CROSSCHECK_2026-09-11.md) | 待历史定位核对 | c12028e97e33883c | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/AUDIT_ROUND3_2026-09-13.md](../review/archive/AUDIT_ROUND3_2026-09-13.md) | 待历史定位核对 | 17b783afe8daf785 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [review/archive/CURRENT_AUDIT_2026-09-15.md](../review/archive/CURRENT_AUDIT_2026-09-15.md) | 待历史定位核对 | 45a0b7f2e7884abd | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/DOC_QUALITY_2026-09-12.md](../review/archive/DOC_QUALITY_2026-09-12.md) | 待历史定位核对 | 59f73e57c57c2e36 | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/PROMPT_SHUNCODE.md](../review/archive/PROMPT_SHUNCODE.md) | 待历史定位核对 | a5dd710f0212f9e5 | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/README.md](../review/archive/README.md) | 待历史定位核对 | f279d0bc2ee211a0 | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/DOC_QUALITY_2026-09-12.md](../review/archive/DOC_QUALITY_2026-09-12.md) | 待历史定位核对 | 4fcacd89f0eb08d7 | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/PROMPT_SHUNCODE.md](../review/archive/PROMPT_SHUNCODE.md) | 待历史定位核对 | a087a76a82ea9f39 | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/README.md](../review/archive/README.md) | 待历史定位核对 | 7fc8be61d8d1f983 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [review/archive/REFERENCE_ARENA_AGENT_2026-09-15.md](../review/archive/REFERENCE_ARENA_AGENT_2026-09-15.md) | 待历史定位核对 | 440ba3bac277e9e4 | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/REPORT.md](../review/archive/REPORT.md) | 待历史定位核对 | 360302d9ff5c88e3 | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/REPORT_FULLAUDIT_2026-09-08.md](../review/archive/REPORT_FULLAUDIT_2026-09-08.md) | 待历史定位核对 | 345f07d14d87a99d | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/REPORT_SHUNCODE_S1.md](../review/archive/REPORT_SHUNCODE_S1.md) | 待历史定位核对 | edebdd55cbacde97 | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/REPORT_SHUNCODE_S2.md](../review/archive/REPORT_SHUNCODE_S2.md) | 待历史定位核对 | a04c9e4ae53f8358 | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/REPORT_SHUNCODE_S3.md](../review/archive/REPORT_SHUNCODE_S3.md) | 待历史定位核对 | 6b69c19b35209183 | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/REPORT_SHUNCODE_S4.md](../review/archive/REPORT_SHUNCODE_S4.md) | 待历史定位核对 | e1974aff781823eb | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/REPORT_v2.md](../review/archive/REPORT_v2.md) | 待历史定位核对 | 48db8b9fffa92e8a | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/REPORT_v3.md](../review/archive/REPORT_v3.md) | 待历史定位核对 | 5b7e77eaa61b928c | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/REPORT_v4.md](../review/archive/REPORT_v4.md) | 待历史定位核对 | 89e715a5aefa1bbc | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/REPORT_v5.md](../review/archive/REPORT_v5.md) | 待历史定位核对 | b07945725868f586 | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/REPORT_v6.md](../review/archive/REPORT_v6.md) | 待历史定位核对 | 2282f9b2a5373d3f | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/REPORT.md](../review/archive/REPORT.md) | 待历史定位核对 | 36f2670d09fa4624 | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/REPORT_FULLAUDIT_2026-09-08.md](../review/archive/REPORT_FULLAUDIT_2026-09-08.md) | 待历史定位核对 | f5bf537a7bdddb99 | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/REPORT_SHUNCODE_S1.md](../review/archive/REPORT_SHUNCODE_S1.md) | 待历史定位核对 | 2b3a15d8a2fac4f3 | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/REPORT_SHUNCODE_S2.md](../review/archive/REPORT_SHUNCODE_S2.md) | 待历史定位核对 | 087e2f46dc17f0ef | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/REPORT_SHUNCODE_S3.md](../review/archive/REPORT_SHUNCODE_S3.md) | 待历史定位核对 | fd9d8f8819a65d88 | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/REPORT_SHUNCODE_S4.md](../review/archive/REPORT_SHUNCODE_S4.md) | 待历史定位核对 | e7a835c60e829e1c | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/REPORT_v2.md](../review/archive/REPORT_v2.md) | 待历史定位核对 | b40c12e57f0a7ecb | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/REPORT_v3.md](../review/archive/REPORT_v3.md) | 待历史定位核对 | 58ffe90588854a35 | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/REPORT_v4.md](../review/archive/REPORT_v4.md) | 待历史定位核对 | 1c02b374cce0cc45 | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/REPORT_v5.md](../review/archive/REPORT_v5.md) | 待历史定位核对 | 82e1af3e703b2abe | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/REPORT_v6.md](../review/archive/REPORT_v6.md) | 待历史定位核对 | d95e82629f539f37 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [review/archive/SEMANTIC_BATCHES_01_15_2026-09-16.md](../review/archive/SEMANTIC_BATCHES_01_15_2026-09-16.md) | 待历史定位核对 | ef0de062d90e338f | 核对归档/引用/证据，不将旧结论改成现状 |
 | [review/shuncode-ui/README.md](../review/shuncode-ui/README.md) | 待逐句核对 | d0fe77f07fab6f11 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | `review/step5-tests.txt` | 原始证据，受限 | 不读取正文 | 不读取/改写个人路径和原始失败，核查归属与保留 |
@@ -151,25 +153,25 @@
 | [webagent-core/agent-host/README.md](../webagent-core/agent-host/README.md) | 待逐句核对 | 37629c9e85eaf2c0 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/scripts/README.md](../webagent-core/agent-host/scripts/README.md) | 待逐句核对 | 5bba04de80773ff6 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/scripts/运行器详解.md](../webagent-core/agent-host/scripts/运行器详解.md) | 待逐句核对 | 592c3004e0bc1673 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/src/README.md](../webagent-core/agent-host/src/README.md) | 待逐句核对 | 52890254feb29269 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [webagent-core/agent-host/src/README.md](../webagent-core/agent-host/src/README.md) | 局部核对 | 66b531b3c3417e03 | F38仅双端口门禁及解析顺序段；其它初始化/依赖未整篇认证 |
 | [webagent-core/agent-host/src/agent/Chat调度详解.md](../webagent-core/agent-host/src/agent/Chat调度详解.md) | 待逐句核对 | 9b6af3b8d4bd6259 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/src/agent/README.md](../webagent-core/agent-host/src/agent/README.md) | 待逐句核对 | 0b819265ea31f315 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/src/agent/模型调用详解.md](../webagent-core/agent-host/src/agent/模型调用详解.md) | 待逐句核对 | 2f0b95f09d983190 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/src/api/README.md](../webagent-core/agent-host/src/api/README.md) | 待逐句核对 | c84a96775eeb7d46 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/src/api/路由逐项详解.md](../webagent-core/agent-host/src/api/路由逐项详解.md) | 局部核对 | 32b09b2a4bbf6ae8 | F33仅operations HTTP与队列状态消费段；其余API仍待逐句
+| [webagent-core/agent-host/src/agent/README.md](../webagent-core/agent-host/src/agent/README.md) | 待逐句核对 | 865e9a790bf581f9 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [webagent-core/agent-host/src/agent/模型调用详解.md](../webagent-core/agent-host/src/agent/模型调用详解.md) | 待逐句核对 | 626c7c939e7c626f | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [webagent-core/agent-host/src/api/README.md](../webagent-core/agent-host/src/api/README.md) | 待逐句核对 | 45f8cacdadac4a37 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [webagent-core/agent-host/src/api/路由逐项详解.md](../webagent-core/agent-host/src/api/路由逐项详解.md) | 局部核对 | 32b09b2a4bbf6ae8 | F33仅operations HTTP与队列状态消费段；其余API仍待逐句 |
 | [webagent-core/agent-host/src/auth/GitHub身份详解.md](../webagent-core/agent-host/src/auth/GitHub身份详解.md) | 待逐句核对 | 8beb37193d9e8e38 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/auth/README.md](../webagent-core/agent-host/src/auth/README.md) | 待逐句核对 | 73967febc3ec9506 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/mcp/OAuth授权详解.md](../webagent-core/agent-host/src/mcp/OAuth授权详解.md) | 待逐句核对 | fa8899aa2185e898 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/src/mcp/README.md](../webagent-core/agent-host/src/mcp/README.md) | 待逐句核对 | d585534c9d3869c3 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [webagent-core/agent-host/src/mcp/README.md](../webagent-core/agent-host/src/mcp/README.md) | 待逐句核对 | 877040e2e25045de | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/mcp/会话与结果详解.md](../webagent-core/agent-host/src/mcp/会话与结果详解.md) | 待逐句核对 | bd09d07886a550b8 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/mcp/公网出站详解.md](../webagent-core/agent-host/src/mcp/公网出站详解.md) | 待逐句核对 | 1b892e6459f27979 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/mcp/请求分发详解.md](../webagent-core/agent-host/src/mcp/请求分发详解.md) | 待逐句核对 | ff420c9dbaf0d4d4 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/src/mcp/资源与客户端详解.md](../webagent-core/agent-host/src/mcp/资源与客户端详解.md) | 局部核对 | 4a0fdffed080e68c | F28：第三方卡片/三态资源/规则前言；其余资源与卡片待审 |
+| [webagent-core/agent-host/src/mcp/资源与客户端详解.md](../webagent-core/agent-host/src/mcp/资源与客户端详解.md) | 局部核对 | dc7618792cb8f5ab | F28：第三方卡片/三态资源/规则前言；其余资源与卡片待审 |
 | [webagent-core/agent-host/src/models/README.md](../webagent-core/agent-host/src/models/README.md) | 待逐句核对 | 0fb2581c85b8d01d | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/models/画像与记忆详解.md](../webagent-core/agent-host/src/models/画像与记忆详解.md) | 待逐句核对 | dd4fad1da5e31d80 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/models/配置存储详解.md](../webagent-core/agent-host/src/models/配置存储详解.md) | 待逐句核对 | fd8ac25586b827af | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/tools/Plan状态详解.md](../webagent-core/agent-host/src/tools/Plan状态详解.md) | 待逐句核对 | 41b1274526eaa6ee | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/src/tools/README.md](../webagent-core/agent-host/src/tools/README.md) | 局部核对 | 7c0ca9df93996bd3 | F33仅workflow有限步骤/未知结果导航段；其余仍待逐句
+| [webagent-core/agent-host/src/tools/README.md](../webagent-core/agent-host/src/tools/README.md) | 局部核对 | 7c0ca9df93996bd3 | F33仅workflow有限步骤/未知结果导航段；其余仍待逐句 |
 | [webagent-core/agent-host/src/tools/任务板与工作区详解.md](../webagent-core/agent-host/src/tools/任务板与工作区详解.md) | 待逐句核对 | 31700b0377ab42c7 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/tools/命令与PTY详解.md](../webagent-core/agent-host/src/tools/命令与PTY详解.md) | 待逐句核对 | aeb7d20fbb656250 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/tools/工具入口与命令策略详解.md](../webagent-core/agent-host/src/tools/工具入口与命令策略详解.md) | 待逐句核对 | 51aff54bc4ad24eb | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
@@ -182,33 +184,33 @@
 | [webagent-core/agent-host/src/tunnel/隧道生命周期详解.md](../webagent-core/agent-host/src/tunnel/隧道生命周期详解.md) | 待逐句核对 | 8ec14204b6ad1276 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/usage/README.md](../webagent-core/agent-host/src/usage/README.md) | 待逐句核对 | 07c4af39ec8eb89c | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/usage/用量上报详解.md](../webagent-core/agent-host/src/usage/用量上报详解.md) | 待逐句核对 | e71286c5a4ef2560 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/src/utils/README.md](../webagent-core/agent-host/src/utils/README.md) | 局部核对 | bc967ebe1badc569 | F33仅operatorQueue结果边界导航段；其余仍待逐句
-| [webagent-core/agent-host/src/utils/主机诊断与调用追踪详解.md](../webagent-core/agent-host/src/utils/主机诊断与调用追踪详解.md) | 局部核对 | fb29a7c0ca573ca4 | F37仅仅stdioLifecycleBrowser测试段，前批局部保留；探测专项暂停
+| [webagent-core/agent-host/src/utils/README.md](../webagent-core/agent-host/src/utils/README.md) | 局部核对 | 3f17ad1ed8524d2e | F38仅Origin解析前拒绝导航段；前批局部保留 |
+| [webagent-core/agent-host/src/utils/主机诊断与调用追踪详解.md](../webagent-core/agent-host/src/utils/主机诊断与调用追踪详解.md) | 局部核对 | fb29a7c0ca573ca4 | F37仅仅stdioLifecycleBrowser测试段，前批局部保留；探测专项暂停 |
 | [webagent-core/agent-host/src/utils/事件总线详解.md](../webagent-core/agent-host/src/utils/事件总线详解.md) | 待逐句核对 | f477dcc70d518fe1 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/utils/函数详解.md](../webagent-core/agent-host/src/utils/函数详解.md) | 待逐句核对 | 2f7cfa678bc04168 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/src/utils/受控工具与工作流详解.md](../webagent-core/agent-host/src/utils/受控工具与工作流详解.md) | 局部核对 | 67fcad04d4567cef | F37仅stdio预览/启动消费及快照单次回归段；前批局部范围保留，非OS/全链认证
+| [webagent-core/agent-host/src/utils/受控工具与工作流详解.md](../webagent-core/agent-host/src/utils/受控工具与工作流详解.md) | 局部核对 | 67fcad04d4567cef | F37仅stdio预览/启动消费及快照单次回归段；前批局部范围保留，非OS/全链认证 |
 | [webagent-core/agent-host/src/utils/差异展示详解.md](../webagent-core/agent-host/src/utils/差异展示详解.md) | 待逐句核对 | 24a14ba502a09366 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/src/utils/执行控制详解.md](../webagent-core/agent-host/src/utils/执行控制详解.md) | 局部核对 | afe6141f3466e194 | F33仅待批撤权/调用前not-started回归段；非全部授权链认证
-| [webagent-core/agent-host/src/utils/控制面与Origin详解.md](../webagent-core/agent-host/src/utils/控制面与Origin详解.md) | 待逐句核对 | 8ea3d616eec7d01c | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/src/utils/编辑回退详解.md](../webagent-core/agent-host/src/utils/编辑回退详解.md) | 局部核对 | fd0c59d4ec1f5014 | F35仅创建UI与规范路径/失败零半条记录回归段；前批局部范围保留
-| [webagent-core/agent-host/src/入口详解.md](../webagent-core/agent-host/src/入口详解.md) | 待逐句核对 | 5faac9f426f7eddb | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [webagent-core/agent-host/src/utils/执行控制详解.md](../webagent-core/agent-host/src/utils/执行控制详解.md) | 局部核对 | afe6141f3466e194 | F33仅待批撤权/调用前not-started回归段；非全部授权链认证 |
+| [webagent-core/agent-host/src/utils/控制面与Origin详解.md](../webagent-core/agent-host/src/utils/控制面与Origin详解.md) | 已逐句核对 | cb19caab2cdd774a | F38全部段落/函数对照localControl/corsAllow/真实入口及HTTP/WS回归；非完整浏览器攻击或代理验收 |
+| [webagent-core/agent-host/src/utils/编辑回退详解.md](../webagent-core/agent-host/src/utils/编辑回退详解.md) | 局部核对 | fd0c59d4ec1f5014 | F35仅创建UI与规范路径/失败零半条记录回归段；前批局部范围保留 |
+| [webagent-core/agent-host/src/入口详解.md](../webagent-core/agent-host/src/入口详解.md) | 局部核对 | edb6ad5c9b85ce6a | F38仅applyCommon和路由装配顺序；其它段待逐句，探测专项不审 |
 | [webagent-core/agent-host/src/运行配置详解.md](../webagent-core/agent-host/src/运行配置详解.md) | 待逐句核对 | e62dfc8755d52982 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/tests/Chat模型与图像测试详解.md](../webagent-core/agent-host/tests/Chat模型与图像测试详解.md) | 待逐句核对 | 344935b4f029176b | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md](../webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md) | 待逐句核对 | 53b3d65903be991b | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md](../webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md) | 待逐句核对 | b39a6af67c8c3ace | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/tests/OAuth与GitHub测试详解.md](../webagent-core/agent-host/tests/OAuth与GitHub测试详解.md) | 待逐句核对 | 94a94a37ae6253d6 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/tests/PTY与隧道测试详解.md](../webagent-core/agent-host/tests/PTY与隧道测试详解.md) | 待逐句核对 | 3bc8ed6f63312fe9 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/tests/README.md](../webagent-core/agent-host/tests/README.md) | 局部核对 | 30d70d4e8a1f8349 | F37仅stdio测试分列证据段；其余待逐句
+| [webagent-core/agent-host/tests/README.md](../webagent-core/agent-host/tests/README.md) | 局部核对 | c53ac9ee598d4be4 | F38仅本机边界测试范围表；前批局部保留 |
 | [webagent-core/agent-host/tests/fixtures/README.md](../webagent-core/agent-host/tests/fixtures/README.md) | 待逐句核对 | f12a23987a0213b4 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/tests/任务板与事件流测试详解.md](../webagent-core/agent-host/tests/任务板与事件流测试详解.md) | 待逐句核对 | 00ca46446aad70ae | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/tests/存储完整性与预算测试详解.md](../webagent-core/agent-host/tests/存储完整性与预算测试详解.md) | 待逐句核对 | 7462f148bf3cb763 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/tests/安装与运行器测试详解.md](../webagent-core/agent-host/tests/安装与运行器测试详解.md) | 待逐句核对 | 177b9c61b0d924b9 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/tests/工作区与命令安全测试详解.md](../webagent-core/agent-host/tests/工作区与命令安全测试详解.md) | 待逐句核对 | 044f6ccc1bb136eb | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/tests/文档守卫测试详解.md](../webagent-core/agent-host/tests/文档守卫测试详解.md) | 待逐句核对 | dc4aeb1a8af40adb | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/tests/本机边界与跨站测试详解.md](../webagent-core/agent-host/tests/本机边界与跨站测试详解.md) | 待逐句核对 | 4dc0800d11be2533 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/tests/模式画像与Plan测试详解.md](../webagent-core/agent-host/tests/模式画像与Plan测试详解.md) | 待逐句核对 | 57a2d6bd58938d94 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/tests/浏览器与Webview测试详解.md](../webagent-core/agent-host/tests/浏览器与Webview测试详解.md) | 局部核对 | f8f0b404833e108d | F37仅stdio预览/启动VM段；前批局部范围保留
+| [webagent-core/agent-host/tests/文档守卫测试详解.md](../webagent-core/agent-host/tests/文档守卫测试详解.md) | 待逐句核对 | 7f6b92bfe28617b5 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [webagent-core/agent-host/tests/本机边界与跨站测试详解.md](../webagent-core/agent-host/tests/本机边界与跨站测试详解.md) | 局部核对 | d1c307368e44ac98 | F38仅新增HTTP/WS与Host/socket回归及函数说明；其余测试段待逐句 |
+| [webagent-core/agent-host/tests/模式画像与Plan测试详解.md](../webagent-core/agent-host/tests/模式画像与Plan测试详解.md) | 待逐句核对 | ba7dfd66ace424fa | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [webagent-core/agent-host/tests/浏览器与Webview测试详解.md](../webagent-core/agent-host/tests/浏览器与Webview测试详解.md) | 局部核对 | f8f0b404833e108d | F37仅stdio预览/启动VM段；前批局部范围保留 |
 | [webagent-core/agent-host/tests/统计与文档测试详解.md](../webagent-core/agent-host/tests/统计与文档测试详解.md) | 待逐句核对 | eae0ac61c526af18 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/tests/补丁与编辑API测试详解.md](../webagent-core/agent-host/tests/补丁与编辑API测试详解.md) | 局部核对 | 0e09f3289490b413 | F35仅检查点创建别名/失败零半条记录的HTTP测试段；其余未逐句认证
+| [webagent-core/agent-host/tests/补丁与编辑API测试详解.md](../webagent-core/agent-host/tests/补丁与编辑API测试详解.md) | 局部核对 | 0e09f3289490b413 | F35仅检查点创建别名/失败零半条记录的HTTP测试段；其余未逐句认证 |
 | [webagent-core/extension/PTY扩展详解.md](../webagent-core/extension/PTY扩展详解.md) | 待逐句核对 | 326f33969dbf1704 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/extension/README.md](../webagent-core/extension/README.md) | 待逐句核对 | dea73f53c5040790 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/extension/resources/README.md](../webagent-core/extension/resources/README.md) | 待逐句核对 | 0d1d888d4b5b0bb1 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
@@ -223,16 +225,16 @@
 | [webagent-core/probe-extension/浏览器整合说明.md](../webagent-core/probe-extension/浏览器整合说明.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
 | [webagent-core/scripts/README.md](../webagent-core/scripts/README.md) | 待逐句核对 | cc9b3ed05acaba8e | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/scripts/编辑器编排详解.md](../webagent-core/scripts/编辑器编排详解.md) | 待逐句核对 | 2799dc3c76bccb52 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/workbench/README.md](../webagent-core/workbench/README.md) | 局部核对 | 3447f10a2c582e58 | F36仅HTTP登记/移除独立结果导航段；其余待逐句
+| [webagent-core/workbench/README.md](../webagent-core/workbench/README.md) | 局部核对 | 3447f10a2c582e58 | F36仅HTTP登记/移除独立结果导航段；其余待逐句 |
 | [webagent-core/workbench/js/Bridge与设置详解.md](../webagent-core/workbench/js/Bridge与设置详解.md) | 局部核对 | ac092822e0e0d662 | F31/F32：状态/选择/Provider段；保留F25/27局部范围，其余待审 |
-| [webagent-core/workbench/js/README.md](../webagent-core/workbench/js/README.md) | 局部核对 | 580aaa59c18623c0 | F37仅stdio完整快照与启动未知导航段；前批局部保留
+| [webagent-core/workbench/js/README.md](../webagent-core/workbench/js/README.md) | 局部核对 | 580aaa59c18623c0 | F37仅stdio完整快照与启动未知导航段；前批局部保留 |
 | [webagent-core/workbench/js/交互绑定详解.md](../webagent-core/workbench/js/交互绑定详解.md) | 局部核对 | c5a48ebdaab6fe9a | F31/F32：状态/选择/Provider段；保留F25/27局部范围，其余待审 |
-| [webagent-core/workbench/js/启动与Chat详解.md](../webagent-core/workbench/js/启动与Chat详解.md) | 待逐句核对 | 09bf0d599a296756 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [webagent-core/workbench/js/启动与Chat详解.md](../webagent-core/workbench/js/启动与Chat详解.md) | 待逐句核对 | dde21fe9fc647872 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/workbench/js/状态与编辑器详解.md](../webagent-core/workbench/js/状态与编辑器详解.md) | 待逐句核对 | d3f646fbe507694e | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/workbench/样式规则详解.md](../webagent-core/workbench/样式规则详解.md) | 待逐句核对 | 999054567aabb5e6 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/workbench/页面结构详解.md](../webagent-core/workbench/页面结构详解.md) | 局部核对 | 9071c8a544fd8879 | F36仅ops-external-result结构/aria-live与测试段；其余未认证
+| [webagent-core/workbench/页面结构详解.md](../webagent-core/workbench/页面结构详解.md) | 局部核对 | 9071c8a544fd8879 | F36仅ops-external-result结构/aria-live与测试段；其余未认证 |
 | [webagent-repro/README.md](../webagent-repro/README.md) | 待边界核对 | 64dae4453a269b66 | 冻结原型/示例/发行副本，不冒称产品主线语义认证 |
-| [使用指南.md](../使用指南.md) | 局部核对 | e7c8b5010fd27b94 | F37仅stdio预览失效/过期/忙拒绝与未知不重启段；前批局部保留
+| [使用指南.md](../使用指南.md) | 局部核对 | e7c8b5010fd27b94 | F37仅stdio预览失效/过期/忙拒绝与未知不重启段；前批局部保留 |
 | [启动脚本说明.md](../启动脚本说明.md) | 待逐句核对 | 36b62ac2985e3f29 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [探针入口与实际可用范围.md](../探针入口与实际可用范围.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
 | [探针完整整合实施与验收.md](../探针完整整合实施与验收.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |

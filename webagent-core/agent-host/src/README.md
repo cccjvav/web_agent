@@ -29,12 +29,12 @@ config.secretKey/installId先产生内存值，再由persistIdentity用磁盘配
 ```text
 启动入口 → config / 模块加载 → persistIdentity → reporter
   ├─ uiApp：health → 本机API → 工作台静态页/SPA → uiServer上的WS
-  └─ mcpApp：CORS → health/OAuth → 认证MCP → 仅本机可用的API
+  └─ mcpApp：公共门禁/解析 → health/OAuth → 复验Origin/认证的MCP → 仅本机可用的API
 ```
 
 两端口都对API使用localControl与跨站检查；MCP端口不挂工作台静态页。WS只挂uiServer，在upgrade校验本机来源和Origin，连接后的首事件不包含secretKey。
 
-applyCommon关闭x-powered-by，设置no-store，JSON请求体限20MB；路由再按自己的语义验证。listen错误（包括端口占用）会打印并退出，不应把日志已输出当作服务已监听。
+applyCommon关闭x-powered-by、设置no-store；/api先做本机与跨站检查，MCP端口/mcp先硬拒绝不允许的Origin，再CORS（允许预检可结束）和有效路径认证，最后才解析正文。普通JSON限20MiB，OAuth JSON/表单64KiB、表单最多32参数；未知路径不保证经过认证。路由仍复验并按自身语义验证，完整顺序见入口详解。listen错误（包括端口占用）会打印并退出，不应把日志已输出当作服务已监听。
 
 **初始化顺序**：直接启动index.js时，先检查工作区存在且为目录，再加载MCP/API等模块并persistIdentity；显式错误目录不会为了保存身份而创建。Windows启动器也验证显式工作区，但安装版默认用户工作区首次创建是单独分支，不将两条路径混称为一条。
 

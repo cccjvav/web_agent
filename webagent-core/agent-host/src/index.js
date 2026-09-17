@@ -28,9 +28,11 @@ function applyCommon(app, { mcp = false } = {}) {
     next();
   });
   app.use('/probe-link', require('./utils/probeBridge').transport());
-  // Reject nonlocal API and unauthenticated MCP before allocating/parsing bodies.
+  // Reject nonlocal/cross-site API and disallowed-origin/unauthenticated MCP before body parsing.
   app.use('/api', rejectUnlessLocalControl, rejectCrossSiteApi);
   if (mcp) {
+    // CORS headers alone do not reject a request; gate MCP before preflight and parsers.
+    app.use('/mcp', rejectDisallowedMcpOrigin);
     app.use(mcpCors());
     app.all(['/mcp', '/mcp/:secret'], (req, res, next) => {
       if (req.method === 'OPTIONS' || mcpRouter.isAuthorized(req)) return next();
