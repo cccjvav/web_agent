@@ -70,6 +70,18 @@ async function main() {
     assert.deepEqual(stopped.result.files.map(item => item.status), ['restored', 'not-started']);
     assert.equal(fs.readFileSync(file('b.txt'), 'utf8'), 'concurrent edit');
     tools.callTool = originalCall; checkpoints.remove(lateDrift.id, binding);
+    // Real disk publication followed by a throwing subscriber: unknown, never a rollback.
+    const interrupted = create();
+    fs.writeFileSync(file('a.txt'),'after checkpoint A');fs.writeFileSync(file('b.txt'),'after checkpoint B');
+    preview=checkpoints.preview(interrupted.id,binding);
+    require('../src/utils/eventBus').once('file_written',()=>{throw new Error('fixture after real checkpoint write');});
+    const uncertain=await checkpoints.restore(interrupted.id,{...binding,previewId:preview.previewId,confirmed:true});
+    assert.equal(uncertain.result.status,'unknown');
+    assert.deepEqual(uncertain.result.files.map(item=>item.status),['unknown','not-started']);
+    assert.equal(fs.readFileSync(file('a.txt'),'utf8'),'original A');
+    assert.equal(fs.readFileSync(file('b.txt'),'utf8'),'after checkpoint B');
+    await assert.rejects(checkpoints.restore(interrupted.id,{...binding,previewId:preview.previewId,confirmed:true}));
+    checkpoints.remove(interrupted.id,binding);
     const fresh = create();
     assert.throws(() => checkpoints.preview(fresh.id, { ...binding, hostInstanceId: 'other' }));
     Date.now = () => now() + 16 * 60 * 1000; assert.equal(checkpoints.list().length, 0); Date.now = now;

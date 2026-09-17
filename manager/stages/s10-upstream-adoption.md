@@ -85,7 +85,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 高，穿插 | 进行中：安全正文剩余实现对照 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27/31/32/33组设置/模型/状态/Provider和审批工作流结果首包已修；继续operations列表/检查点及其余API结果消费者 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
+| R3 / 下一项，高 | 进行中：第25/27/31–34组设置/模型/状态/Provider、审批及列表/检查点结果首包已修；继续其余API写请求与状态消费者 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -531,6 +531,17 @@ operations的详情/预览/提交共用审阅代次，先清旧控件、GET可�
 验证过程：approvedOperations/workflowPreconditions/workbenchRuntime先红后绿；执行控制旧断言曾因过度保守把调用前撤权也记unknown而失败，修为显式调用前权限复查，保留原failed断言并加强not-started证明。全量初次81/82：新增approvalReviewBrowser说明误放测试副文档，主归属是主机诊断与调用追踪详解，只修其浏览器测试段，不开展暂停专项。新增真实Chromium fixture覆盖审阅切换、预览/错ID清控件与提交连点；本地无Chromium，未宣称执行。修正后最终本地82测试文件通过，文档生成/构建/一致性检查通过（246源码/28目录/110排除），git diff --check通过；实现70c55a5718412460df3ebcff6828435314066cfa已推当前固定分支，[CI35276596251](https://github.com/cccjvav/web_agent/actions/runs/35276596251)九项逐项成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium）；approvalReviewBrowser已实际执行通过，不代签用户实机。
 
 本批只对审批/工作流及相关UI段落作局部核对，不把含stdio/connectionCheck的长篇或R2全链盖章。下一包继续operations列表/检查点响应及其余API消费者，穿插R2。历史Windows超时根因、用户实机、正式全仓逐句审查仍未完成；身份/轨迹探测保持暂停。
+
+
+#### 第34组：审批/检查点列表隔离与恢复响应消费
+
+第33组已完整交付，用户要求继续；从56a858f干净工作区续作，没有重复恢复Git或重做第33组。范围收窄到operations列表和检查点的预览/恢复消费者，后端fileCheckpoints/绑定/路径/hash/一次性ticket对照，不开展暂停探测专项。
+
+红测确认：检查点GET失败让审批GET次数为0；错ID预览仍生成恢复控件。两列表改独立并发加载/代次、错误隔离、整批形状与重复ID校验，先清旧控件，迟到JSON不能回滚列表，旧列表按钮不可复用；刷新按钮不再action导致二次刷新。检查点预览校验ID/ready/previewId/完整文件清单/hash/changed/diff，展示/恢复/结果发布核对工作区绑定；恢复响应核对consumed、同一文件集合与success/status/逐文件一致，缺失/矛盾响应只提示未确认，不重放。合法部分失败照实展示，不说HTTP200就是恢复成功。
+
+fileCheckpoints新增真实file_written回调抛错：磁盘已恢复第一文件、第二未开始、结果unknown且再次恢复拒绝；既有后端正确处理，未改后端代码。VM覆盖两个红测、双列表乱序JSON、无效整批/旧按钮、坏预览、绑定变化零POST、恢复null/错ID/矛盾结果、不重放与合法unknown/succeeded。新增checkpointResultsBrowser真实页面拦截场景；本地无Chromium，不代签已执行。最终本地82测试文件通过，文档生成/构建/一致性通过（246源码/28目录/110排除），git diff --check通过；精确CI待提交核验。
+
+只扩大相关正文局部范围，未给整个编辑回退、审批长篇或API全链认证。下一包继续其余API写请求/状态消费者与检查点创建等尚未复核入口，R2穿插；权限/进程隔离、历史Windows超时根因、全仓逐句、用户实机仍未完成，探测继续暂停。
 
 ## 复盘
 

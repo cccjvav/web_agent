@@ -83,6 +83,37 @@ async function probeHudBrowser(browser) {
     assert.strictEqual(result.logs, 0); assert.deepStrictEqual(errors, []);
   } finally { await fixture.close(); }
 }
+async function checkpointResultsBrowser(browser, base) {
+  const fixture=await browser.newPage({viewport:{width:1280,height:900}}), errors=[];
+  fixture.on('pageerror',error=>errors.push(error.message));
+  const record={id:'fixture-checkpoint',state:'ready',paths:['a.txt'],result:null};
+  const preview={...record,previewId:'fixture-preview',files:[{path:'a.txt',expectedHash:'a'.repeat(64),targetHash:'b'.repeat(64),changed:true,diff:'fixture full diff'}]};
+  let unavailable=true, wrongId=true, restores=0;
+  try {
+    await fixture.route('**/api/checkpoints',route=>route.fulfill(unavailable ? {status:503,json:{error:'fixture unavailable'}} : {json:[record]}));
+    await fixture.route('**/api/checkpoints/*/preview',route=>route.fulfill({json:{...preview,id:wrongId ? 'wrong-id' : record.id}}));
+    await fixture.route('**/api/checkpoints/*/restore',route=>{
+      restores++;return route.fulfill({json:{...record,state:'consumed',result:{success:true,status:'succeeded',files:[{path:'a.txt',status:'unknown'}]}}});
+    });
+    await fixture.route('**/api/operations',route=>route.fulfill({json:{servers:[],requests:[{requestId:'fixture-job',kind:'workflow',status:'waiting-approval'}]}}));
+    await fixture.goto(base);
+    await fixture.waitForFunction(async()=>{const {state}=await import('/js/state.js');return Boolean(state.status?.workspaceRoot && state.status?.identity?.hostInstanceId);});
+    await fixture.click('#rb-bridge-tab');await fixture.click('#btn-operations');
+    await fixture.locator('#ops-requests button').first().waitFor();
+    await fixture.waitForFunction(()=>document.querySelector('#checkpoint-list').textContent.includes('刷新失败'));
+    unavailable=false;await fixture.click('#btn-checkpoint-refresh');
+    await fixture.locator('#checkpoint-list button').first().waitFor();
+    await fixture.locator('#checkpoint-list button').first().click();
+    await fixture.waitForFunction(()=>document.querySelector('#checkpoint-review').textContent.includes('预览失败'));
+    assert.equal(await fixture.locator('#checkpoint-controls button').count(),0);
+    wrongId=false;await fixture.locator('#checkpoint-list button').first().click();
+    await fixture.locator('#checkpoint-controls button').first().waitFor();
+    fixture.once('dialog',dialog=>dialog.accept());await fixture.locator('#checkpoint-controls button').first().click();
+    await fixture.waitForFunction(()=>document.querySelector('#checkpoint-review').textContent.includes('未取得可信完成结果'));
+    assert.equal(await fixture.locator('#checkpoint-controls button').count(),0);assert.equal(restores,1);
+    assert.deepEqual(errors,[]);
+  } finally {await fixture.close();}
+}
 async function approvalReviewBrowser(browser, base) {
   const fixture=await browser.newPage({viewport:{width:1280,height:900}}), errors=[];
   fixture.on('pageerror',error=>errors.push(error.message));
@@ -238,6 +269,7 @@ async function main() {
     await docsViewerBrowser(browser);
     await modelStateBrowser(browser, base);
     await approvalReviewBrowser(browser, base);
+    await checkpointResultsBrowser(browser, base);
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.route('https://cdn.jsdelivr.net/**', route => route.abort());

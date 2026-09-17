@@ -114,3 +114,9 @@ F28-01负例先复现配对码被说成仅ChatGPT需要；workbenchRuntime实际
 workbenchRuntime加载真实operations模块。opsNode建立textContent/value/disabled与children，append/replaceChildren模拟控件挂载/清除；opsResponse只构造HTTP/JSON响应。finishReviewA/B故意乱序，即使旧fetch忽略abort也不能覆盖新ID；草稿预览清掉批准按钮，持有的旧按钮调用也零POST。finishApproval延迟批准，验证先消费审阅、双击只一POST、期间切换新请求后旧回包不重开旧卡。ID错配不给控件，HTTP200/ok:false返回false；finishSubmission延迟提交，重复点击只生成一次请求，finally释放在途标志。计时器替身触发10秒中断，迟到详情不能复活按钮；不是实网计时精度验收。
 
 approvalReviewBrowser的真实页面夹具主解释见[主机诊断与调用追踪详解](../src/utils/主机诊断与调用追踪详解.md)的第33组测试段；VM不能代替它的实际执行证据。
+
+## 第34组：独立列表与检查点响应
+
+workbenchRuntime沿用opsNode/opsResponse加载真实operations模块。先复现检查点GET抛错使审批GET计数为0，以及返回其它ID的检查点预览仍出现恢复按钮；修复后分别为独立可刷新和零恢复控件。listBodies/checkpointBodies控制JSON完成顺序，旧列表不覆盖新列表；一条null记录拒绝整批，不发布部分按钮，detachedRequest也不能重新读取。checkpointRecord/checkpointPreview提供有绑定的结构夹具；缺previewId、空files、缺diff均拒绝。boundRestore在workspaceRoot变化后零POST；restoreValue覆盖null/错ID/成功但逐文件unknown的矛盾响应，保留“未取得可信完成结果”、消费按钮不重放；合法unknown和succeeded照实保留。这里是VM而非磁盘恢复测试。
+
+真实磁盘写后异常由fileCheckpoints.test.js验证；checkpointResultsBrowser的真实页面拦截测试说明位于[主机诊断与调用追踪详解](../src/utils/主机诊断与调用追踪详解.md)，执行证据按第34组精确CI记录。

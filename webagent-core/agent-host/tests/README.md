@@ -43,6 +43,8 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 
 审批新增approvedOperations的非终态/unknown判定，workflowPreconditions的真实写后抛错与取消、executionControl的调用前撤权；workbenchRuntime的审阅代次/错ID/双击/超时。独立approvalReviewBrowser验证真实页面控件，与上述Node测试分列证据。
 
+第34组补充列表失败隔离/乱序JSON/检查点错误合同的VM负例、真实写后事件异常保留效果，以及独立checkpointResultsBrowser页面拦截场景；后端检查点逻辑未因本批测试而改写。
+
 ## 按风险选择回归
 | 风险/模块 | 主要测试 | 证据类型与限制 |
 |---|---|---|
@@ -110,7 +112,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [executionControl.test.js](executionControl.test.js) | 28 个函数/类节点 |
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
 | [externalDiscovery.test.js](externalDiscovery.test.js) | 12 个函数/类节点 |
-| [fileCheckpoints.test.js](fileCheckpoints.test.js) | 23 个函数/类节点 |
+| [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
 | [githubAuth.test.js](githubAuth.test.js) | 8 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
@@ -162,9 +164,9 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 130 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 141 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 237 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 250 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 9 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 15 个函数/类节点 |

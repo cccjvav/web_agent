@@ -67,56 +67,134 @@ async function review(id) {
     throw error;
   } finally {if(ticket === reviewGeneration) reviewController = null;}
 }
-let checkpointGeneration = 0;
+let checkpointGeneration = 0, checkpointListGeneration = 0, operationsListGeneration = 0;
 function checkpointBinding() {
   return { workspaceRoot: state.status?.workspaceRoot, hostInstanceId: state.status?.identity?.hostInstanceId };
+}
+function sameCheckpointBinding(binding) {
+  const current = checkpointBinding();
+  return Boolean(binding.workspaceRoot && binding.hostInstanceId && binding.workspaceRoot === current.workspaceRoot && binding.hostInstanceId === current.hostInstanceId);
+}
+function validCheckpointRecord(record) {
+  return record && typeof record.id === 'string' && record.id.length > 0
+    && ['ready','running','consumed'].includes(record.state) && Array.isArray(record.paths)
+    && record.paths.length > 0 && record.paths.length <= 12
+    && record.paths.every(path => typeof path === 'string' && path.length > 0)
+    && new Set(record.paths).size === record.paths.length;
+}
+function validCheckpointPreview(preview, id) {
+  return validCheckpointRecord(preview) && preview.id === id && preview.state === 'ready'
+    && typeof preview.previewId === 'string' && preview.previewId.length > 0
+    && Array.isArray(preview.files) && preview.files.length === preview.paths.length
+    && preview.files.every((file,index) => file && file.path === preview.paths[index]
+      && typeof file.expectedHash === 'string' && /^[a-f0-9]{64}$/.test(file.expectedHash)
+      && typeof file.targetHash === 'string' && /^[a-f0-9]{64}$/.test(file.targetHash)
+      && typeof file.changed === 'boolean' && file.changed === (file.expectedHash !== file.targetHash) && typeof file.diff === 'string' && file.diff.length > 0);
+}
+function validCheckpointRestore(record, preview) {
+  if (!validCheckpointRecord(record) || record.id !== preview.id || record.state !== 'consumed'
+    || record.paths.length !== preview.paths.length || record.paths.some((path,index) => path !== preview.paths[index])) return false;
+  const result = record.result;
+  if (!result || !Array.isArray(result.files) || result.files.length !== preview.files.length
+    || !result.files.every((file,index) => file && file.path === preview.files[index].path
+      && ['restored','unchanged','not-started','unknown'].includes(file.status))) return false;
+  if (result.status === 'succeeded') return result.success === true && result.files.every((file,index) => file.status === (preview.files[index].changed ? 'restored' : 'unchanged'));
+  return result.success === false && ['failed','unknown'].includes(result.status)
+    && (result.status === 'unknown' ? result.files.some(file => file.status === 'unknown') : !result.files.some(file => file.status === 'unknown'));
 }
 async function reviewCheckpoint(id) {
   const generation = ++checkpointGeneration, binding = checkpointBinding();
   const controls = $('#checkpoint-controls'); controls.replaceChildren();
-  const preview = await api(`/checkpoints/${id}/preview`, 'POST', binding);
-  if (generation !== checkpointGeneration) return;
-  $('#checkpoint-review').textContent = JSON.stringify(preview, null, 2);
-  controls.append(button('已审阅全部差异，恢复一次', async () => {
-    if (generation !== checkpointGeneration || !confirm('将按上方差异覆盖所选文件。不是原子事务，中途失败会保留部分恢复。已另行保留未保存草稿，确认恢复一次？')) return;
-    const restoringGeneration = ++checkpointGeneration; controls.replaceChildren();
-    $('#checkpoint-review').textContent = '恢复请求已发送；结果未知时不要重放。刷新检查点查看逐文件记录。';
-    try {
-      const result = await api(`/checkpoints/${id}/restore`, 'POST', { ...binding, previewId: preview.previewId, confirmed: true });
-      if (restoringGeneration === checkpointGeneration) $('#checkpoint-review').textContent = JSON.stringify(result, null, 2);
-    } catch (error) {
-      if (restoringGeneration === checkpointGeneration) $('#checkpoint-review').textContent = '未取得完成结果：' + error.message + '。刷新检查点并核对磁盘；不要重放已执行/未知的恢复。';
-      throw error;
-    }
-  }));
+  $('#checkpoint-review').textContent = '正在读取完整差异；旧恢复控件已失效。';
+  try {
+    const preview = await api(`/checkpoints/${encodeURIComponent(id)}/preview`, 'POST', binding);
+    if (generation !== checkpointGeneration) return false;
+    if (!sameCheckpointBinding(binding) || !validCheckpointPreview(preview,id)) throw new Error('检查点预览无效、ID不匹配或工作区绑定已变化');
+    $('#checkpoint-review').textContent = JSON.stringify(preview, null, 2);
+    controls.append(button('已审阅全部差异，恢复一次', async () => {
+      if (generation !== checkpointGeneration) return false;
+      if (!sameCheckpointBinding(binding)) {
+        ++checkpointGeneration; controls.replaceChildren();
+        $('#checkpoint-review').textContent = '工作区绑定已变化；请重新读取差异，未发送恢复。'; return false;
+      }
+      if (!confirm('将按上方差异覆盖所选文件。不是原子事务，中途失败会保留部分恢复。已另行保留未保存草稿，确认恢复一次？')) return false;
+      const restoringGeneration = ++checkpointGeneration; controls.replaceChildren();
+      $('#checkpoint-review').textContent = `检查点 ${id}：恢复请求已发送；结果未知时不要重放。刷新列表查看逐文件记录。`;
+      try {
+        const result = await api(`/checkpoints/${encodeURIComponent(id)}/restore`, 'POST', { ...binding, previewId: preview.previewId, confirmed: true });
+        if (restoringGeneration !== checkpointGeneration) return false;
+        if (!sameCheckpointBinding(binding) || !validCheckpointRestore(result,preview)) throw new Error('恢复响应无效或与所审阅文件不一致');
+        $('#checkpoint-review').textContent = JSON.stringify(result, null, 2);
+      } catch (_) {
+        if (restoringGeneration !== checkpointGeneration) return false;
+        $('#checkpoint-review').textContent = `检查点 ${id}：未取得可信完成结果。刷新列表并核对磁盘；不要重放已执行/未知的恢复。`;
+        return false;
+      }
+    }));
+    return true;
+  } catch (error) {
+    if (generation !== checkpointGeneration) return false;
+    $('#checkpoint-review').textContent = `检查点 ${id} 预览失败：${error.message}；不能恢复，请重新审阅。`;
+    return false;
+  }
 }
 async function refreshCheckpoints() {
-  const entries = await api('/checkpoints');
-  const list = $('#checkpoint-list'); list.replaceChildren();
-  for (const entry of entries) {
-    const row = document.createElement('div'), text = document.createElement('pre'); text.className = 'url-box';
-    text.textContent = JSON.stringify(entry, null, 2); row.append(text);
-    if (entry.state === 'ready') row.append(button('只预览此检查点恢复差异', () => reviewCheckpoint(entry.id)));
-    if (entry.state !== 'running') row.append(button('移除此检查点', async () => {
-      ++checkpointGeneration; $('#checkpoint-controls').replaceChildren();
-      await api(`/checkpoints/${entry.id}/remove`, 'POST', checkpointBinding());
-    }));
-    list.append(row);
+  const generation = ++checkpointListGeneration, list = $('#checkpoint-list');
+  list.replaceChildren(); list.textContent = '正在刷新检查点…';
+  try {
+    const entries = await api('/checkpoints');
+    if (generation !== checkpointListGeneration) return false;
+    if (!Array.isArray(entries) || !entries.every(validCheckpointRecord) || new Set(entries.map(entry => entry.id)).size !== entries.length) throw new Error('检查点列表格式无效');
+    const rows = entries.map(entry => {
+      const row = document.createElement('div'), text = document.createElement('pre'); text.className = 'url-box';
+      text.textContent = JSON.stringify(entry, null, 2); row.append(text);
+      if (entry.state === 'ready') row.append(button('只预览此检查点恢复差异', () => generation === checkpointListGeneration ? reviewCheckpoint(entry.id) : false));
+      if (entry.state !== 'running') row.append(button('移除此检查点', async () => {
+        if (generation !== checkpointListGeneration) return false;
+        ++checkpointGeneration; $('#checkpoint-controls').replaceChildren();
+        const result = await api(`/checkpoints/${encodeURIComponent(entry.id)}/remove`, 'POST', checkpointBinding());
+        if (result?.removed !== true) throw new Error('检查点移除未确认，请刷新列表核对');
+      }));
+      return row;
+    });
+    list.textContent = ''; list.replaceChildren(...rows); return true;
+  } catch (error) {
+    if (generation !== checkpointListGeneration) return false;
+    list.replaceChildren(); list.textContent = '检查点刷新失败：' + error.message; return false;
+  }
+}
+async function refreshOperationList() {
+  const generation = ++operationsListGeneration, servers = $('#ops-servers'), requests = $('#ops-requests');
+  servers.replaceChildren(); requests.replaceChildren(); $('#ops-status').textContent = '正在刷新接入与审批列表…';
+  try {
+    const data = await api('/operations');
+    if (generation !== operationsListGeneration) return false;
+    if (!data || !Array.isArray(data.servers) || !Array.isArray(data.requests)
+      || !data.servers.every(server => server && typeof server.serverId === 'string' && server.serverId)
+      || !data.requests.every(job => job && typeof job.requestId === 'string' && job.requestId && typeof job.kind === 'string'
+        && ['waiting-approval','running','succeeded','failed','unknown','cancelled','denied','expired'].includes(job.status))
+      || new Set(data.servers.map(server => server.serverId)).size !== data.servers.length
+      || new Set(data.requests.map(job => job.requestId)).size !== data.requests.length) throw new Error('接入或审批列表格式无效');
+    const rows = data.servers.map(server => {
+      const row = document.createElement('div'), text = document.createElement('pre'); text.className = 'url-box';
+      text.textContent = JSON.stringify(server, null, 2);
+      row.append(text, button('移除此接入（中止连接）', () => generation === operationsListGeneration ? api(`/external/servers/${encodeURIComponent(server.serverId)}`, 'DELETE') : false)); return row;
+    });
+    const buttons = data.requests.map(job => button(`${job.kind} · ${job.status} · ${job.requestId}`, () => generation === operationsListGeneration ? review(job.requestId) : false));
+    servers.replaceChildren(...rows); requests.replaceChildren(...buttons);
+    $('#ops-status').textContent = `${data.servers.length} 个接入；${data.requests.length} 条进程内请求。waiting-approval 不代表执行成功。`;
+    return true;
+  } catch (error) {
+    if (generation !== operationsListGeneration) return false;
+    servers.replaceChildren(); requests.replaceChildren(); $('#ops-status').textContent = '审批列表刷新失败：' + error.message; return false;
   }
 }
 async function refreshOperations() {
-  await refreshCheckpoints();
-  const data = await api('/operations');
-  const servers = $('#ops-servers'), requests = $('#ops-requests'); servers.replaceChildren(); requests.replaceChildren();
-  for (const server of data.servers) {
-    const row = document.createElement('div'), text = document.createElement('pre'); text.className = 'url-box';
-    text.textContent = JSON.stringify(server, null, 2); row.append(text, button('移除此接入（中止连接）', () => api(`/external/servers/${server.serverId}`, 'DELETE'))); servers.append(row);
-  }
-  for (const job of data.requests) requests.append(button(`${job.kind} · ${job.status} · ${job.requestId}`, () => review(job.requestId)));
-  $('#ops-status').textContent = `${data.servers.length} 个接入；${data.requests.length} 条进程内请求。waiting-approval 不代表执行成功。`;
+  const results = await Promise.all([refreshCheckpoints(), refreshOperationList()]);
+  return results.every(Boolean);
 }
 function initOperations() {
-  $('#btn-checkpoint-refresh').onclick = () => action(refreshCheckpoints);
+  $('#btn-checkpoint-refresh').onclick = refreshCheckpoints;
   $('#btn-checkpoint-create').onclick = () => action(async () => {
     const paths = $('#checkpoint-paths').value.split(/\r?\n/).map(value => value.trim()).filter(Boolean);
     if (!confirm('确认将这些已有文件的当前磁盘原文暂存于本机内存？这不是永久备份，重启/过期会丢失。')) return;
@@ -164,8 +242,8 @@ function initOperations() {
     const previewId = stdioPreview; stdioPreview = null; $('#btn-stdio-start').disabled = true;
     await api('/external/stdio/start', 'POST', { previewId, confirmed: true });
   });
-  $('#btn-operations').onclick = () => { ui.openModal('operations'); action(refreshOperations); };
-  $('#btn-ops-refresh').onclick = () => action(refreshOperations);
+  $('#btn-operations').onclick = () => { ui.openModal('operations'); return refreshOperations(); };
+  $('#btn-ops-refresh').onclick = refreshOperations;
   $('#btn-ops-add').onclick = () => action(async () => {
     const publicHttps = $('#ops-public-https').checked;
     if (publicHttps && !confirm('登记将连接该公网HTTPS主机并发送初始化信息及可选Bearer凭据。后续批准的工具参数也会离开本机。确认信任该服务？')) return;

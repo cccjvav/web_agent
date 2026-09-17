@@ -634,5 +634,83 @@ if (!process.argv.includes('--vm-child')) {
   [...timers.values()].at(-1)(); // Real fetch observes this signal; a late fixture response must also be ignored.
   finishReviewA(opsResponse(opsJobs[0]));assert.equal(await timedReview,false);
   assert.equal(opsNodes.get('#ops-controls').children.length,0,'timeout cannot reactivate stale approval controls');
+  state.namespace.state.status={workspaceRoot:'/fixture',identity:{hostInstanceId:'fixture-host'}};
+  const checkpointRecord={id:'cp-a',state:'ready',paths:['a.txt'],result:null};
+  const checkpointPreview={...checkpointRecord,previewId:'preview-a',files:[{path:'a.txt',expectedHash:'a'.repeat(64),targetHash:'b'.repeat(64),changed:true,diff:'reviewed diff'}]};
+  context.fetch=async url=>{
+    if(url==='/api/checkpoints') return opsResponse([checkpointRecord]);
+    if(url==='/api/operations') return opsResponse({servers:[],requests:opsJobs});
+    if(url==='/api/checkpoints/cp-a/preview') return opsResponse({...checkpointPreview,id:'cp-b'});
+    throw new Error(url);
+  };
+  await state.namespace.ui.refreshOperations();
+  await opsNodes.get('#checkpoint-list').children[0].children[1].onclick();
+  assert.equal(opsNodes.get('#checkpoint-controls').children.length,0,'mismatched checkpoint preview must not authorize restore');
+  // A failed checkpoint list must not block the independent approvals list.
+  let operationReads=0;
+  context.fetch=async url=>{
+    if(url==='/api/checkpoints') throw new Error('fixture checkpoints unavailable');
+    if(url==='/api/operations') {operationReads++;return opsResponse({servers:[],requests:opsJobs});}
+    throw new Error(url);
+  };
+  await state.namespace.ui.refreshOperations().catch(()=>{});
+  assert.equal(operationReads,1,'checkpoint failure must not prevent approval status refresh');
+  assert.match(opsNodes.get('#checkpoint-list').textContent,/刷新失败/);
+  assert.equal(opsNodes.get('#ops-requests').children.length,2,'healthy list is published despite sibling failure');
+  const listBodies=[];
+  context.fetch=async url=>url==='/api/checkpoints' ? opsResponse([]) : {ok:true,json:()=>new Promise(resolve=>listBodies.push(resolve))};
+  const olderList=state.namespace.ui.refreshOperations();
+  const newerList=state.namespace.ui.refreshOperations();
+  await new Promise(resolve=>setImmediate(resolve));
+  listBodies[1]({servers:[],requests:[opsJobs[1]]});await newerList;
+  listBodies[0]({servers:[],requests:[opsJobs[0]]});await olderList;
+  assert.ok(opsNodes.get('#ops-requests').children[0].textContent.includes('review-b'),'late JSON cannot roll back list');
+  const detachedRequest=opsNodes.get('#ops-requests').children[0];
+  context.fetch=async url=>url==='/api/checkpoints' ? opsResponse([]) : opsResponse({servers:[],requests:[opsJobs[0],null]});
+  await state.namespace.ui.refreshOperations();
+  assert.equal(opsNodes.get('#ops-requests').children.length,0,'invalid row rejects entire list, not a partial actionable snapshot');
+  assert.equal(await detachedRequest.onclick(),false,'detached list controls cannot act after refresh');
+  let previewValue=checkpointPreview, restoreValue, restoreCalls=0;
+  context.fetch=async url=>{
+    if(url==='/api/checkpoints') return opsResponse([checkpointRecord]);
+    if(url==='/api/operations') return opsResponse({servers:[],requests:opsJobs});
+    if(url.endsWith('/preview')) return opsResponse(previewValue);
+    if(url.endsWith('/restore')) {restoreCalls++;return opsResponse(restoreValue);}
+    throw new Error(url);
+  };
+  for (const invalid of [{...checkpointPreview,previewId:''},{...checkpointPreview,files:[]},{...checkpointPreview,files:[{...checkpointPreview.files[0],diff:null}]}]) {
+    previewValue=invalid;await state.namespace.ui.refreshOperations();
+    await opsNodes.get('#checkpoint-list').children[0].children[1].onclick();
+    assert.equal(opsNodes.get('#checkpoint-controls').children.length,0,'incomplete diff cannot create restore authorization');
+  }
+  previewValue=checkpointPreview;
+  await state.namespace.ui.refreshOperations();
+  await opsNodes.get('#checkpoint-list').children[0].children[1].onclick();
+  const boundRestore=opsNodes.get('#checkpoint-controls').children[0];
+  state.namespace.state.status.workspaceRoot='/other';await boundRestore.onclick();
+  assert.equal(restoreCalls,0,'changed workspace must re-review before dispatch');
+  state.namespace.state.status.workspaceRoot='/fixture';
+  for (const result of [null,{id:'wrong',state:'consumed',paths:['a.txt'],result:{success:true,status:'succeeded',files:[{path:'a.txt',status:'restored'}]}},
+    {...checkpointRecord,state:'consumed',result:{success:true,status:'succeeded',files:[{path:'a.txt',status:'unknown'}]}}]) {
+    restoreValue=result;await state.namespace.ui.refreshOperations();
+    await opsNodes.get('#checkpoint-list').children[0].children[1].onclick();
+    const restore=opsNodes.get('#checkpoint-controls').children[0];await restore.onclick();await restore.onclick();
+    assert.match(opsNodes.get('#checkpoint-review').textContent,/未取得可信完成结果/);
+    assert.equal(opsNodes.get('#checkpoint-controls').children.length,0);
+  }
+  assert.equal(restoreCalls,3,'uncertain responses cannot replay a consumed button');
+  for (const [status,success,fileStatus] of [['unknown',false,'unknown'],['succeeded',true,'restored']]) {
+    restoreValue={...checkpointRecord,state:'consumed',result:{status,success,files:[{path:'a.txt',status:fileStatus}]}};
+    await state.namespace.ui.refreshOperations();await opsNodes.get('#checkpoint-list').children[0].children[1].onclick();
+    await opsNodes.get('#checkpoint-controls').children[0].onclick();
+    assert.equal(JSON.parse(opsNodes.get('#checkpoint-review').textContent).result.status,status,'preserve validated partial/terminal results');
+  }
+  const checkpointBodies=[];
+  context.fetch=async url=>url==='/api/checkpoints' ? {ok:true,json:()=>new Promise(resolve=>checkpointBodies.push(resolve))} : opsResponse({servers:[],requests:opsJobs});
+  const oldCheckpoints=state.namespace.ui.refreshOperations(), newCheckpoints=state.namespace.ui.refreshOperations();
+  await new Promise(resolve=>setImmediate(resolve));
+  checkpointBodies[1]([]);await newCheckpoints;
+  checkpointBodies[0]([checkpointRecord]);await oldCheckpoints;
+  assert.equal(opsNodes.get('#checkpoint-list').children.length,0,'late checkpoint list cannot revive old ready records');
   console.log('workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });
