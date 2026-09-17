@@ -198,7 +198,9 @@ export function bind() {
     ui.toast('已复制 MCP 地址');
   };
   $('#btn-copy-prompt').onclick = async () => {
-    await navigator.clipboard.writeText(ui.promptText());
+    const prompt = ui.promptText();
+    if (!prompt) { ui.toast('此入口没有可复制的MCP连接配置，请核对客户端连接方式。'); return; }
+    await navigator.clipboard.writeText(prompt);
     const c = ui.selectedClientInfo();
     ui.toast(c && c.connectMode === 'extension-http'
       ? '已复制 MCP 地址；请先核对扩展版本、认证与兼容性，再填入连接配置'

@@ -619,7 +619,7 @@
           </div>
           <section class="block" id="client-recipes">
             <div class="block-h">怎么连到本机仓库</div>
-            <p class="hint">本机 Chat（无隧道）、Arena 贴 URL、DeepSeek++ / Chat Plus 为兼容性未验证的第三方候选，先核对版本和权限。ChatGPT：不要把地址贴进聊天栏；设置 → 插件 → 新建，服务器 URL + OAuth。</p>
+            <p class="hint">本机 Chat（无隧道）、Arena 贴 URL、DeepSeek++ / Chat Plus 为兼容性未验证的第三方候选，先核对版本和权限。OAuth连接器：先核对当前客户端版本、账户和正式入口，使用规范地址并授权，不按旧菜单盲配。</p>
             <div id="client-cards" class="client-cards"></div>
             <div id="client-detail" class="client-detail"></div>
             <p class="hint" id="pairing-line">配对码会在启动 Bridge 后出现，只给 ChatGPT 自制 MCP 插件的 OAuth 用。</p>
@@ -645,7 +645,7 @@
             <button type="button" class="vs-btn open-site" data-site="manus" title="在 Web Agent 内置浏览器中打开 manus.im">打开 Manus</button>
             <button type="button" class="vs-btn open-site" data-site="shunova" title="在 Web Agent 内置浏览器中打开 shunova.cc">打开 Shunova</button>
           </div>
-          <p class="hint" id="prompt-hint">网页 Agent：Quick Tunnel / Named Tunnel 先装 cloudflared；ngrok 先装 ngrok 并填 Authtoken。逐步说明见「docs/guides/隧道使用指南.md」。再按上面选中的客户端复制提示词。本机 Chat 不必走这一步。第三方扩展是否传递initialize.instructions须按版本核对；选中候选后可复制参考规则，不要贴进MCP地址框，也不据此放大权限。ChatGPT 自制插件会读 initialize.instructions。</p>
+          <p class="hint" id="prompt-hint">网页 Agent：Quick Tunnel / Named Tunnel 先装 cloudflared；ngrok 先装 ngrok 并填 Authtoken。逐步说明见「docs/guides/隧道使用指南.md」。再按上面选中的客户端复制提示词。本机 Chat 不必走这一步。第三方扩展是否传递initialize.instructions须按版本核对；选中候选后可复制参考规则，不要贴进MCP地址框，也不据此放大权限。OAuth兼容客户端是否使用initialize.instructions仍须核对实际结果。</p>
           <p class="warn-line">⚠ Bridge 等于给网页 AI 一把施工证：可读改工作区、跑非破坏性命令。一次任务可以挂几小时；做完请停 Bridge。请勿公开 MCP 地址。</p>
 
           <section class="block">

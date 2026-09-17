@@ -66,3 +66,5 @@ main在临时工作区挂真实MCP与API router，rpc使用fetch编码JSON和凭
 cancel通知从另一会话返回204但不触发信号；无认证请求401；同owner重复活动ID返回协议错误。正确取消使原调用保留ID=0、isError和cancelled trace；完成后同ID可以重用。observe回调收集tool_call_end，断言后移除监听；直接REST调用要保留HTTP200和内部错误细节，但success及tool_call_end都为false。finally恢复原handler、关闭连接/服务器并删除临时工作区；测试并不开放产品本机控制面，真实回环/Origin保护另有专门测试。
 
 F27-02回归：mcpProtocol/httpSmoke断言DeepSeek/Chat Plus为unverified，三项描述字段严格null，移除固定商店ID/构建命令；保留extension-http候选的地址和规则输出，规则不授权或建连。MCP clients资源必须显示Plus/tunnel unknown而非no。原把固定商店ID当产品合同的断言已替换为未知状态与安全前置条件，不代表第三方实测。
+
+F28-01协议/HTTP断言通用和OAuth连接器候选的未知状态、规范/mcp地址、S256 PKCE前置、无固定/plugins地址，替换旧开发者菜单断言；普通粘贴卡prompt为空。后端OAuth既有公有/秘密客户端回归继续保留，未放宽认证。

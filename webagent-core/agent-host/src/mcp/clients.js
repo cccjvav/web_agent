@@ -72,53 +72,53 @@ const CLIENTS = [
   },
   {
     id: 'generic',
-    name: '其它网页 Agent',
+    name: '其它 MCP 客户端（待核对）',
     url: null,
-    needsPlus: false,
-    needsTunnel: true,
-    supportsMcp: true,
+    needsPlus: null,
+    needsTunnel: null,
+    supportsMcp: null,
+    verification: 'unverified',
     connectMode: 'paste-url',
-    summary: 'WorkBuddy / Trae / Qwen / Manus / Claude 等：只要聊天栏能连自定义 MCP 或会跟提示词去调 Streamable HTTP，就可以。',
+    summary: '先确认具体客户端版本、账户和传输/认证能力。复制提示词只是候选配置材料，普通对话不等于建立MCP连接。',
     steps: [
-      '启动 Bridge，复制提示词',
-      '在该网站新对话里整段贴上',
-      '若该模型没有工具/MCP，它只能空谈，改不了磁盘——改用本机 Chat 或 Arena'
+      '查实际客户端的MCP配置入口与认证要求，不按产品名字推断兼容性或订阅条件',
+      '根据本机或云端请求位置选择可达地址；仅在客户端明确支持时使用复制内容，不公开密钥',
+      '先完成认证、发现工具、只读调用workspace_info并核对Bridge记录；不以聊天回复代替工具结果'
     ]
   },
   {
     id: 'chatgpt-free',
-    name: 'ChatGPT 聊天栏（贴链接不行）',
+    name: 'ChatGPT 普通粘贴（不是MCP配置）',
     url: 'https://chatgpt.com/',
-    needsPlus: false,
-    needsTunnel: true,
+    needsPlus: null,
+    needsTunnel: null,
     supportsMcp: false,
     connectMode: 'unsupported-mcp',
-    summary: '聊天栏里直接贴 MCP 地址、让它「登录」，免费和更高级账号都不会去调工具。要对接着自制 MCP 插件那张卡，或 Chat Plus 扩展当手。',
+    summary: '仅把链接贴进普通聊天不等于注册MCP连接、认证或授权。请核对当前版本和账户是否提供正式连接器入口；本卡不提供连接提示词。',
     steps: [
-      '不要把 trycloudflare.com/mcp/… 贴进 ChatGPT 输入框当第一句',
-      '任何档位的普通聊天栏都不会因此去连本机 MCP',
-      '要对接着「ChatGPT 自制 MCP 插件」：设置里新建插件，服务器 URL + OAuth',
-      '可评估未验收的第三方候选（见docs/guides/网页ChatPlus使用指南.md），不保证安装或兼容；也可选本机 Chat / Arena'
+      '不要把带密钥URL贴进 ChatGPT 输入框或公开对话来代替连接配置',
+      '核对当前官方文档和账户中的MCP入口、订阅、权限要求；不保证菜单位置或功能开放范围',
+      '也可选择本机 Chat 或已核对的兼容客户端，不能关闭主机鉴权来绕过客户端限制'
     ]
   },
   {
     id: 'chatgpt-plus',
-    name: 'ChatGPT 自制 MCP 插件',
-    url: 'https://chatgpt.com/plugins',
-    needsPlus: false,
-    needsTunnel: true,
-    supportsMcp: true,
+    name: 'OAuth MCP 连接器（ChatGPT等候选）',
+    url: 'https://chatgpt.com/',
+    needsPlus: null,
+    needsTunnel: null,
+    supportsMcp: null,
+    verification: 'unverified',
     connectMode: 'oauth-connector',
-    summary: 'ChatGPT 设置里的自制插件/连接器会调 MCP。服务器 URL 填规范地址 /mcp（不要带密钥），身份验证选 OAuth，配对码只出现在本机 Bridge 页。不是把链接贴进聊天栏。',
+    summary: '主机提供OAuth连接能力，不专属某厂商。具体客户端版本、账户和订阅是否支持须另验；使用规范/mcp地址而非带密钥URL。',
     steps: [
-      '启动 Bridge，记下本机配对码（不要发到公开地方）',
-      'ChatGPT 设置 → 账户安全与登录 → 打开开发者模式',
-      '设置 → 插件 → 新建插件（或打开 https://chatgpt.com/plugins ）',
-      '连接选「服务器 URL」。填规范地址 https://….trycloudflare.com/mcp（不要把密钥写进 URL）。表单示例有时写 /sse；本机 GET /mcp 在 Accept: text/event-stream 时就是 SSE',
-      '身份验证选 OAuth；勾选自定义 MCP 风险确认后创建。浏览器打开配对页，输入本机配对码',
-      '插件权限选允许操作，否则补丁和命令会被 ChatGPT 拦下'
+      '先核对实际客户端是否支持主机的Streamable HTTP、OAuth和S256 PKCE，以及客户端注册/认证方式',
+      '在经过核对的连接器入口填写可达的规范https://<主机>/mcp地址，不带密钥；不假定旧菜单或/plugins页面仍有效',
+      '启动Bridge后在本机查看配对码，只输入主机实际授权页；配对码适用于兼容OAuth客户端，不公开或贴入普通聊天',
+      '核对权限范围后再授权，只读工具成功并有主机记录后才考虑写入；不为方便直接授予全部操作权限'
     ]
   }
+
 ];
 
 function hydrateClient(client, urls) {

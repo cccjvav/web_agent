@@ -22,7 +22,7 @@ assert(!headingTargets(sample).has('not-a-heading')); assert(!headingTargets(sam
 assert.equal(resolveFragment(sample, 'missing'), null); assert.equal(resolveFragment(sample, '%xx'), null);
 assert.throws(() => checkLinks('docs/development/总览.md', '[bad](技术实现.md#definitely-not-a-heading)'), /missing heading/);
 assert.throws(() => checkLinks('docs/development/总览.md', '[bad](not-a-real-document.md)'), /missing/);
-for (const name of ['README.md', '交接与路线图.md', '使用指南.md', 'manager/stages/s8-probe-integration.md', 'docs/development/架构导读.md', 'docs/development/组件说明.md', 'docs/development/总览.md', 'docs/development/技术实现.md', 'docs/development/测试说明.md', 'docs/development/代码复盘指南.md', 'review/SEMANTIC_REVIEW_2026-09-16.md', 'docs/guides/Conda环境说明.md', 'docs/development/平台启动与CI详解.md', 'docs/guides/隧道使用指南.md', 'docs/guides/技能使用指南.md', 'docs/guides/Windows新手逐步验收.md', 'review/CHECKLIST_WINDOWS.md']) checkLinks(name, read(name));
+for (const name of ['README.md', '交接与路线图.md', 'manager/ROADMAP.md', '使用指南.md', 'manager/stages/s8-probe-integration.md', 'docs/development/架构导读.md', 'docs/development/组件说明.md', 'docs/development/总览.md', 'docs/development/技术实现.md', 'docs/development/测试说明.md', 'docs/development/代码复盘指南.md', 'review/SEMANTIC_REVIEW_2026-09-16.md', 'docs/guides/Conda环境说明.md', 'docs/development/平台启动与CI详解.md', 'docs/guides/隧道使用指南.md', 'docs/guides/技能使用指南.md', 'docs/guides/Windows新手逐步验收.md', 'review/CHECKLIST_WINDOWS.md']) checkLinks(name, read(name));
 for (const folder of ['docs/guides','docs/development']) {
   for (const name of fs.readdirSync(path.join(root,folder)).filter(name => name.endsWith('.md'))) {
     checkLinks(folder+'/'+name,read(folder+'/'+name));
@@ -34,6 +34,7 @@ assert(!fs.existsSync(path.join(root,'review/PROMPT.md')), 'obsolete task prompt
 const context = { window: {} }; vm.runInNewContext(read('docs-site/content.js'), context);
 const docs = context.window.DOCS;
 assert(docs.fileIndex.some(item => item.path === 'docs/README.md'), 'central index is available in actual viewer');
+assert(docs.fileIndex.some(item => item.path === 'manager/ROADMAP.md'), 'management roadmap is indexed');
 assert(docs.fileIndex.some(item => item.path === '交接与路线图.md'), 'handoff is available in actual generated viewer content');
 const guide = docs.fileIndex.find(item => item.path === 'webagent-core/extension/入口与Webview详解.md');
 const heading = resolveFragment(read(guide.path), 'editorreviewjs原生单文件草稿预览与恢复');

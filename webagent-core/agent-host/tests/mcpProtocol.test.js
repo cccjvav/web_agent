@@ -233,10 +233,13 @@ async function main() {
   assert.ok(gptBar && gptBar.connectMode === 'unsupported-mcp' && gptBar.supportsMcp === false);
   assert.ok(gptBar.steps.some((s) => /贴进 ChatGPT 输入框/.test(s)));
   const gptPlugin = catalog.find((c) => c.id === 'chatgpt-plus');
-  assert.ok(gptPlugin && gptPlugin.connectMode === 'oauth-connector' && gptPlugin.supportsMcp && !gptPlugin.needsPlus);
+  assert.ok(gptPlugin && gptPlugin.connectMode === 'oauth-connector' && gptPlugin.supportsMcp === null && gptPlugin.needsPlus === null && gptPlugin.verification === 'unverified');
   assert.strictEqual(gptPlugin.prompt.split('\n')[0], 'MCP 规范地址（给连接器用）：https://x.trycloudflare.com/mcp');
-  assert.ok(gptPlugin.steps.some((s) => /开发者模式/.test(s)));
-  assert.ok(gptPlugin.steps.some((s) => /新建插件/.test(s)));
+  assert.ok(gptPlugin.steps.some((s) => /S256 PKCE/.test(s)));
+  assert.ok(!JSON.stringify(gptPlugin).includes('chatgpt.com/plugins'));
+  assert.strictEqual(catalog.find(c => c.id === 'generic').supportsMcp,null);
+  assert.ok(gptPlugin.steps.some((s) => /兼容OAuth客户端/.test(s)));
+  assert.strictEqual(gptBar.prompt,'');
 
   function fakeRes() {
     return {

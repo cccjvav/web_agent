@@ -103,10 +103,13 @@ for (const obsolete of ['MCP 走当前页面源', 'MCP 仍走当前页面源', '
 }
 for (const contract of ['test:browser', '主人权限', '真实工具', '已跟踪', '完整重开VSCode']) assert.ok(usageGuide.includes(contract), contract);
 
-const handoff = read('交接与路线图.md');
+const entrypoint = read('交接与路线图.md');
+assert.ok(entrypoint.includes('manager/CONTEXT.md') && entrypoint.includes('manager/ROADMAP.md'));
+assert.ok(!/\| R[0-8] \/|最新核验|最近已核验实现/.test(entrypoint), 'root handoff does not duplicate live status');
+const handoff = read('manager/ROADMAP.md');
 for (const id of ['R0','R1','R2','R3','R4','R5','R6','R7','R8','P']) assert.ok(handoff.includes('| ' + id + ' / '), 'handoff route: ' + id);
 assert.strictEqual([...handoff.matchAll(/\| R[1-8] \/ 下一项/g)].length, 1, 'handoff has one current next package, not permanently R1');
-for (const contract of ['完成标准', '35235675274', '35125290301', '不自动', '探测', '暂停', '本机MCP', 'memoryRecall']) {
+for (const contract of ['完成标准', '35125290301', '不自动', '探测', '暂停', '本机MCP', 'memoryRecall']) {
   assert.ok(handoff.includes(contract), 'handoff contract: ' + contract);
 }
 for (const entry of ['README.md', 'AGENTS.md', 'manager/CONTEXT.md']) assert.ok(read(entry).includes('交接与路线图.md'), entry + ': discoverable handoff');

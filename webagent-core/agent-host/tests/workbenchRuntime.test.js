@@ -334,5 +334,14 @@ if (!process.argv.includes('--vm-child')) {
   bridge.namespace.renderBrowser({site:'deepseek',url:'https://chat.deepseek.com/'});
   assert.ok(clientNodes.get('#browser-page').innerHTML.includes('兼容性未验证'));
   assert.ok(!clientNodes.get('#browser-page').innerHTML.includes('kdmpkkahkhdmdhfkdihkopikgcocbpbf'));
+  state.namespace.state.status.bridgeRunning=true;
+  state.namespace.state.status.pairing={code:'FIXTURE',expiresInSec:120};
+  bridge.namespace.paintClients();
+  assert.ok(clientNodes.get('#pairing-line').textContent.includes('兼容OAuth客户端'));
+  assert.ok(!clientNodes.get('#pairing-line').textContent.includes('仅 ChatGPT'));
+  state.namespace.state.status.clients=[{id:'chatgpt-free',prompt:'',connectMode:'unsupported-mcp'}];
+  state.namespace.state.selectedClient='chatgpt-free';
+  state.namespace.state.status.prompt='MUST-NOT-FALL-BACK-TO-SECRET';
+  assert.strictEqual(bridge.namespace.promptText(),'');
   console.log('workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });

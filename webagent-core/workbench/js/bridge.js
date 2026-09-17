@@ -115,7 +115,7 @@ export function selectedClientInfo() {
 export function promptText() {
   const s = state.status || {};
   const c = ui.selectedClientInfo();
-  if (c && c.prompt) return c.prompt;
+  if (c) return c.prompt || '';
   return s.prompt || `${s.mcpUrl || ''}\n\n快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。`;
 }
 
@@ -151,9 +151,9 @@ export function paintClients() {
   const line = $('#pairing-line');
   if (line) {
     if (pair && pair.code && state.status.bridgeRunning) {
-      line.textContent = `OAuth 配对码 ${pair.code}（约 ${pair.expiresInSec}s 有效，仅 ChatGPT 自制 MCP 插件需要）`;
+      line.textContent = `OAuth 配对码 ${pair.code}（约 ${pair.expiresInSec}s 有效，供兼容OAuth客户端授权使用）`;
     } else {
-      line.textContent = '配对码会在启动 Bridge 后出现，只给 ChatGPT 自制 MCP 插件 OAuth 用。';
+      line.textContent = '配对码会在启动 Bridge 后出现，供兼容OAuth客户端授权使用。';
     }
   }
 }

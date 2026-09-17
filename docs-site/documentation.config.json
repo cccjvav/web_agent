@@ -501,6 +501,11 @@
       "id": "full-semantic-review",
       "path": "review/FULL_REVIEW_INDEX.md",
       "group": "维护"
+    },
+    {
+      "id": "management-roadmap",
+      "path": "manager/ROADMAP.md",
+      "group": "维护"
     }
   ],
   "sourceSnapshotExclusions": [

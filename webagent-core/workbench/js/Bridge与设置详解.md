@@ -14,7 +14,7 @@
 | resetRound() | 无→Promise<void> | 检查POST reset-round的HTTP成功，刷新状态，等待已有快照再取新快照；失败提示而不假装本地清零 |
 | selectedClientInfo() | 无→客户端或null | 当前selectedClient优先，否则arena；找不到null |
 | promptText() | 无→字符串 | 客户端专用prompt优先、status.prompt其次，再拼mcpUrl+连接说明；可能含密钥，不公开粘贴 |
-| paintClients() | 无→undefined | map卡片/步骤；needsPlus严格true/false/其他分别显示要Plus/无需Plus/待核对，verification=unverified加未验证徽标；click修改selectedClient并重画；copyRules按connectMode显示；配对码只在Bridge运行且有效信息存在时展示 |
+| paintClients() | 无→undefined | map卡片/步骤；needsPlus严格true/false/其他分别显示要Plus/无需Plus/待核对，verification=unverified加未验证徽标；click修改selectedClient并重画；copyRules按connectMode显示；配对码只在Bridge运行且有效信息存在时展示，供兼容OAuth客户端使用，不称某厂商专属 |
 | renderBrowser(tab) | tab→undefined | 绘连接指引页面，不是加载官方站点的真实浏览器进程；各分支如下 |
 | arenaConnect() | 无→Promise<void> | 仅切右Bridge、灭会话灯、提示去真实Arena配置；不发送任务给本机Code或外部Arena |
 | openSite(key) | 站点键→Promise<void> | 不启动隧道，仅尝试复制prompt，建/复用browser tab、关modal、切Bridge并激活；打开浏览器页不再隐式启动公网Bridge，用户另点启动Bridge |
@@ -85,3 +85,5 @@ startBridge工作区校验（0.7.1）：记录页面state.status，再fetch实�
 ## 所有者模式/权限控件
 
 **paintExecutionControl()**从status.executionControl画主机模式/请求数；没有新主机字段显示未知，存在未保存草稿则不覆盖勾选和revision。**initExecutionControl()**绑定两模式按钮、四项复选框、保存与重新读取。内部**change(value)** POST /api/execution-control，带当前workspaceRoot、identity.hostInstanceId，权限附草稿revision；仅成功后清dirty并刷新主机。出错显示原因，不假装切换成功。Read关会在草稿关Edit；缺Read/Edit/Capture会关Execute并提示，不自动扩大权限。保存才实际生效。refreshStatus调用paintExecutionControl，bind经ui.initExecutionControl接线。验证见executionControl.test与浏览器回归，不能视为真实Windows控件验收。
+
+promptText对已选卡片直接返回其prompt或空字符串；不支持普通粘贴/本机Chat的空prompt不能回退成全局带密钥连接提示。仅没有卡片时保留旧全局回退；复制按钮遇空文本提示无配置并退出，不假报已复制。

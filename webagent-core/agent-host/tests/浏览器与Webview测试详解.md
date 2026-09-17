@@ -96,3 +96,5 @@ R3定制设置回归：workbenchRuntime加载真实settings模块，先用400负
 正式审查首批：workbenchRuntime执行saveModelSettings真实模块，覆盖HTTP/业务/网络失败不刷新、保存请求互斥、成功刷新一次以及保存成功但刷新失败的独立提示。没有执行真实供应商模型切换，也不认证其他/api/models调用或refreshStatus的全部HTTP语义。
 
 F27-02的workbenchRuntime负例先复现null被paintClients显示“无需Plus”，修复后执行真实Bridge模块，断言待核对/未验证徽标以及DeepSeek指引无固定商店ID。DOM/HTTP回归不是真实浏览器安装第三方扩展或兼容验收。
+
+F28-01负例先复现配对码被说成仅ChatGPT需要；workbenchRuntime实际Bridge模块验证通用OAuth文案，以及unsupported卡片空prompt不泄落到全局连接文本。这里不连接真实厂商服务。

@@ -182,7 +182,7 @@ async function main() {
     assert.ok(status.json.clients.some((c) => c.id === 'deepseek' && c.rulesText && c.rulesText.includes('不要贴进 MCP 地址框')));
     assert.ok(status.json.clients.some((c) => c.id === 'arena' && c.rulesText === ''));
     assert.ok(status.json.clients.some((c) => c.id === 'chatgpt-free' && c.connectMode === 'unsupported-mcp' && !c.supportsMcp));
-    assert.ok(status.json.clients.some((c) => c.id === 'chatgpt-plus' && c.connectMode === 'oauth-connector' && !c.needsPlus && c.supportsMcp));
+    assert.ok(status.json.clients.some((c) => c.id === 'chatgpt-plus' && c.connectMode === 'oauth-connector' && c.needsPlus === null && c.supportsMcp === null && c.verification === 'unverified'));
     assert.ok(status.json.mcpCanonicalUrl && status.json.mcpCanonicalUrl.endsWith('/mcp'));
     assert.strictEqual(status.json.bridgeAccount.loggedIn, true);
     assert.strictEqual(status.json.bridgeAccount.provider, 'local-demo');

@@ -9,7 +9,7 @@
 | [逐句审查台账](SEMANTIC_REVIEW_2026-09-16.md) | 已核对范围、未审范围及每批实际证据 |
 | [Windows人工清单](CHECKLIST_WINDOWS.md) | 实机结果与未执行项；不由CI代签 |
 | [上游采用映射](UPSTREAM_ADOPTION_MAP_2026-09-15.md) | 26类机会、实现/候选/延期的区别 |
-| [全部待办与接力](../交接与路线图.md) | R0–R8/P与实际下一项 |
+| [管理路线与接力](../manager/ROADMAP.md) | R0–R8/P与实际下一项 |
 | [历史归档](archive/README.md) | 旧审查、授权、取舍、提交和CI；旧“当前”不生效 |
 | [参考截图](shuncode-ui/README.md) | 参考资料，不是本产品效果验收 |
 

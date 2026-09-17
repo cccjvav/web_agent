@@ -104,7 +104,7 @@ function readResource(uri) {
       const text = [
         '# Connecting web agents',
         '',
-        'This host is not ChatGPT-only. Pasting the MCP URL into the ChatGPT chat box does not connect (any plan). ChatGPT homemade plugins / connectors can, via OAuth + canonical /mcp. Also: local Chat and Arena; DeepSeek++ / Chat Plus are unverified third-party candidates.',
+        'This host is not ChatGPT-only. Compatible OAuth clients can use canonical /mcp after registration and authorization; vendor versions, menus and subscription availability require separate verification. Pasting a URL into ordinary chat is not connection setup or authorization.',
         '',
         ...rows.map((c) => `- **${c.name}**: ${c.summary} (Plus=${c.needsPlus === true ? 'yes' : c.needsPlus === false ? 'no' : 'unknown'}, tunnel=${c.needsTunnel === true ? 'yes' : c.needsTunnel === false ? 'no' : 'unknown'})`)
       ].join('\n');
