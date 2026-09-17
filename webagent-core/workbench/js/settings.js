@@ -117,14 +117,40 @@ export function paintProviderTable() {
   }).join('');
   box.querySelectorAll('input[name="active-model"]').forEach((r) => {
     r.onchange = async () => {
-      await fetch('/api/models', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ activeModelId: r.value })
-      });
-      await ui.refreshStatus();
+      if (!await saveModelSettings({ activeModelId: r.value })) {
+        box.querySelectorAll('input[name="active-model"]').forEach(node => {
+          node.checked = node.value === state.status?.activeModelId;
+        });
+      }
     };
   });
+}
+
+let modelSettingsBusy = false;
+
+export async function saveModelSettings(partial) {
+  if (modelSettingsBusy) { ui.toast('模型设置请求进行中，请等待后再操作。'); return false; }
+  modelSettingsBusy = true;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch('/api/models', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(partial), signal: controller.signal
+    });
+    const data = await res.json();
+    if (!res.ok || data?.success !== true) {
+      ui.toast((data?.error || '模型设置保存未确认') + '；请核对状态，未自动重试。');
+      return false;
+    }
+    ui.toast('已保存模型设置');
+    try { await ui.refreshStatus(); }
+    catch (_) { ui.toast('模型设置已保存，但状态刷新失败；请手动核对，不要重复保存。'); }
+    return true;
+  } catch (error) {
+    ui.toast('模型设置保存状态未知；保留输入，请核对后再操作，未自动重试：' + error.message);
+    return false;
+  } finally { clearTimeout(timer); modelSettingsBusy = false; }
 }
 
 let customBusy = false;
@@ -266,4 +292,5 @@ ui.paintCustom = paintCustom;
 ui.paintProviderTable = paintProviderTable;
 ui.loadCustomizations = loadCustomizations;
 ui.saveCustom = saveCustom;
+ui.saveModelSettings = saveModelSettings;
 ui.loadSkills = loadSkills;

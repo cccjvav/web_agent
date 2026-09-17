@@ -466,21 +466,15 @@ export function bind() {
     };
   }
   $('#btn-save-mm').onclick = async () => {
-    await fetch('/api/models', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        multiModel: {
-          enabled: $('#mm-enabled').checked,
-          mergeModel: $('#mm-merge').value,
-          thinkLevel: $('#mm-think').value,
-          mergeAllowsRead: $('#mm-readonly').checked,
-          maxBranches: Number($('#mm-branches').value) || 4
-        }
-      })
+    await ui.saveModelSettings({
+      multiModel: {
+        enabled: $('#mm-enabled').checked,
+        mergeModel: $('#mm-merge').value,
+        thinkLevel: $('#mm-think').value,
+        mergeAllowsRead: $('#mm-readonly').checked,
+        maxBranches: Number($('#mm-branches').value) || 4
+      }
     });
-    ui.toast('已保存多模型博弈设置');
-    await ui.refreshStatus();
   };
   $('#btn-save-pref').onclick = async () => {
     if (!await ui.saveCustom({

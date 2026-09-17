@@ -39,7 +39,9 @@ agent-host测试中的editorRuntime、workbenchRuntime、monacoLoading执行实�
 | [monaco.js](monaco.js) | 9 个函数/类节点 |
 | [operations.js](operations.js) | 41 个函数/类节点 |
 | [picker.js](picker.js) | 16 个函数/类节点 |
-| [settings.js](settings.js) | 40 个函数/类节点 |
+| [settings.js](settings.js) | 43 个函数/类节点 |
 | [state.js](state.js) | 2 个函数/类节点 |
 | [tabs.js](tabs.js) | 46 个函数/类节点 |
 <!-- docs-inventory:end -->
+
+模型表格选择和多模型保存共用saveModelSettings，HTTP与success双检查、页内互斥、保存等待10秒；失败不假成功，保存成功后刷新失败单独提示。其他模型入口及refreshStatus仍需独立审查，详见Bridge与设置详解。

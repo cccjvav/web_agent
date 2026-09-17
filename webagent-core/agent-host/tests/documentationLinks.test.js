@@ -71,3 +71,13 @@ viewer.route = () => ({ rest: [encodeURIComponent('中文'), encodeURIComponent(
 vm.runInContext('renderProsePage("impl", "title", "kicker")', viewer); assert.equal(scrollTarget, '中文/标题');
 viewer.route = () => ({ rest: ['%xx'] }); scrollTarget = null;
 vm.runInContext('renderProsePage("impl", "title", "kicker")', viewer); assert.equal(scrollTarget, null);
+
+// Formal review coverage is an inventory contract, never an automatic semantic approval.
+const tracked = require('child_process').execFileSync('git',['ls-files','--cached','--others','--exclude-standard','-z'],{cwd:root,encoding:'utf8'}).split('\0');
+const formal = read('review/FULL_REVIEW_INDEX.md');
+for (const name of new Set(tracked.filter(name => /\.(?:md|mdx|rst|adoc|txt)$/i.test(name) || /(?:^|\/)(?:LICENSE|NOTICE|COPYING)$/.test(name)))) {
+  if (name === 'review/FULL_REVIEW_INDEX.md') continue;
+  assert.ok(formal.includes('['+name+']') || formal.includes('`'+name+'`'), 'formal review inventory missing '+name);
+}
+assert.ok(formal.includes('F27-02') && formal.includes('未闭环'));
+assert.ok(docs.fileIndex.some(item => item.path === 'review/FULL_REVIEW_INDEX.md'));

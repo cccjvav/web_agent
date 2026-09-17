@@ -496,6 +496,11 @@
       "id": "development-guides-index",
       "path": "docs/development/README.md",
       "group": "文档导航"
+    },
+    {
+      "id": "full-semantic-review",
+      "path": "review/FULL_REVIEW_INDEX.md",
+      "group": "维护"
     }
   ],
   "sourceSnapshotExclusions": [

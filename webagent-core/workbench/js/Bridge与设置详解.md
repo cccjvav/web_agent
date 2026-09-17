@@ -41,7 +41,9 @@
 
 **paintCustom({preserveDrafts=false}={})**读state.custom：填指令/偏好、environment、techStack；rowList回调分别渲染agents/prompts/hooks/mcpServers/plugins/quickLinks，动态值escape。prompts.onclick把data-insert填聊天但不发送，关modal切Chat；quickLinks.onclick以URL为ID建browser tab并激活。Codex状态明确未实现、不读写auth.json。多模型enabled先看custom后由status.multiModel覆盖；模型map options，active/auto都表示当前，填merge/think/readOnly/maxBranches。保存成功时传preserveDrafts:true，只重画登记列表，不覆盖指令/偏好/环境/技术栈或多模型表单，保留请求期间及其他页未提交的草稿；初始加载才填全部字段。此函数只是画登记项，不自动运行hook、连接MCP或安装插件。
 
-**paintProviderTable()**排除builtin，空显示提示；forEach按group聚合，map组/行、caps复制补vision；active radio匹配status，所有动态显示escape。radio.onchange POST activeModelId后refreshStatus；未检查HTTP成功/错误，也没有并发选择锁。模型能力/定价来自声明/探测，不保证供应商实时价格或模型真实能力。
+**paintProviderTable()**排除builtin，空显示提示；forEach按group聚合，map组/行、caps复制补vision；active radio匹配status，所有动态显示escape。radio.onchange调用saveModelSettings提交activeModelId；失败恢复最近state.status确认的选中项，但未知写入仍须人工核对，不证明服务端没有改变。模型能力/定价来自声明/探测，不保证供应商实时价格或模型真实能力。
+
+**saveModelSettings(partial)**用于模型表格选择和多模型保存按钮；只POST本次字段，页面内modelSettingsBusy拒绝重叠请求，10秒AbortController限制保存等待。HTTP成功且success严格true才提示已保存并刷新状态；拒绝/业务错误/解析/网络/超时不假成功、不自动重试，未知效果需核对。保存已确认但刷新抛错，单独提示“已保存，但状态刷新失败”，仍返回true，不把保存重做一次。finally释放计时器与busy。不是跨标签页锁或服务端事务；refreshStatus自身的HTTP与并发语义另待审查，不能将它不抛错等同于快照已验证。模型新增等其他/api/models调用不由此自动覆盖。
 
 **isCustomSnapshot(value)**检查用于渲染的顶层对象、指令/偏好字符串、环境/技术栈对象和六类列表；列表项须非数组对象，plugins另允许字符串。不是后台所有字段的完整schema或业务真实性校验。
 
