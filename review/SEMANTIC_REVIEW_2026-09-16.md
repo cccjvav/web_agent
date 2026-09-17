@@ -114,7 +114,7 @@
 
 ## 第25组：R3定制设置失败消费
 
-真实模块VM先复现400返回undefined并污染state，修HTTP/业务/快照检查、失败false与所有按钮提前退出；只PUT本次字段，不重放旧state；保存响应不覆盖表单草稿。页面内busy/10秒AbortController，未知写入不自动重试；GET坏配置500 JSON保留文件。VM/HTTP及本地82测试通过，新增Chromium点击负例由精确提交CI核验；文档只认证上述章节，非全部设置/API完成。
+真实模块VM先复现400返回undefined并污染state，修HTTP/业务/快照检查、失败false与所有按钮提前退出；只PUT本次字段，不重放旧state；保存响应不覆盖表单草稿。页面内busy/10秒AbortController，未知写入不自动重试；GET坏配置500 JSON保留文件。VM/HTTP及本地82测试通过，实现483510a的CI35247957459九任务因GitHub账户付款/支出上限未启动，新增Chromium点击负例尚未执行；沙箱浏览器下载ECONNRESET，未冒充通过；文档只认证上述章节，非全部设置/API完成。
 
 ## 验证与维护入口
 

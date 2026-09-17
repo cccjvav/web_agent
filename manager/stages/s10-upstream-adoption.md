@@ -234,4 +234,10 @@ profile/API/记忆新增负例与字节保留断言；Windows外部目录用junc
 
 页面内load/save共用busy，拒绝而不排队；10秒AbortController超时、finally释放。不是跨客户端CAS；错误/超时可能已经部分写盘，明确核对、不自动重试、不宣称回滚。GET损坏配置统一500 JSON/no-store、保留原文件。
 
-VM覆盖HTTP/业务/JSON/形状/网络/超时、忙拒绝、partial与草稿；HTTP覆盖坏文件500和字节保留；Chromium新增真实保存按钮400/草稿/无假成功回归。相应正文、README、函数与测试教学直接同步。本地82通过，精确提交CI待推送核对。下一项继续R3模型选择/多模型设置等未检查响应的调用与工作流长篇；R2共享安全依赖、Windows旧超时和实机边界未关闭，探测保持暂停。
+VM覆盖HTTP/业务/JSON/形状/网络/超时、忙拒绝、partial与草稿；HTTP覆盖坏文件500和字节保留；Chromium新增真实保存按钮400/草稿/无假成功回归。相应正文、README、函数与测试教学直接同步。本地82通过；本批精确提交CI受账户级阻塞，证据如下。下一项继续R3模型选择/多模型设置等未检查响应的调用与工作流长篇；R2共享安全依赖、Windows旧超时和实机边界未关闭，探测保持暂停。
+
+### 第25组验证阻塞（不借旧绿灯）
+
+实现提交483510a64b02fc2e124523ce13a668199411f722，[CI35247957459](https://github.com/cccjvav/web_agent/actions/runs/35247957459)整体失败，逐项九任务annotation均为“The job was not started because recent account payments have failed or your spending limit needs to be increased.”；并非九项代码测试执行失败，未运行主机矩阵/安装器/Chromium。已告知用户由仓库所有者检查GitHub Billing & plans，不代调付费额度、不重跑到绿。日志下载EOF，注释提供阻塞原因。
+
+本地82测试文件、文档生成/构建/diff通过；包含实际ES模块VM与HTTP负例。沙箱无Chromium可执行文件，一次锁定版本的Playwright浏览器安装命令因cdn.playwright.dev TLS连接ECONNRESET失败，未执行新增浏览器用例。没有删除断言、放宽测试时限或冒充Windows/Chromium通过；解阻后核对包含本次实现的精确提交CI。
