@@ -552,7 +552,7 @@ fileCheckpoints新增真实file_written回调抛错：磁盘已恢复第一文�
 
 已确认创建后只刷新检查点列表一次；列表失败/被取代不抹掉ID，不触发第二次POST，绑定后续变化提示回原工作区核对。不是跨标签页或持久去重，无requestKey新合同；后端8条/15分钟内存/分别时点读取未改。apiFiles真实HTTP证明别名规范化、创建零写、部分读取失败不留半条记录，既有后端正确所以不改。
 
-VM红转绿，补HTTP/业务/JSON/形状/超时、忙拒绝、草稿、绑定、确认后刷新失败与旧回包负例。新增checkpointCreateBrowser真实页面/真实后端创建后暂扣响应，测试实际在途回调/草稿与null响应消费，最后清理临时检查点/文件。本地无Chromium，未声称执行；最终本地82测试文件通过，文档生成/构建/一致性通过（246源码/28目录/110排除），git diff --check通过；精确CI待提交核验。
+VM红转绿，补HTTP/业务/JSON/形状/超时、忙拒绝、草稿、绑定、确认后刷新失败与旧回包负例。新增checkpointCreateBrowser真实页面/真实后端创建后暂扣响应，测试实际在途回调/草稿与null响应消费，最后清理临时检查点/文件。本地无Chromium，未声称执行；最终本地82测试文件通过，文档生成/构建/一致性通过（246源码/28目录/110排除），git diff --check通过；实现048a584df8d968d2515cf93c1714491e7b2c01ae已推当前固定分支，[CI35280644858](https://github.com/cccjvav/web_agent/actions/runs/35280644858)九项逐项成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium）；新增checkpointCreateBrowser已实际执行通过，本地仍无Chromium，不代签用户实机。
 
 只核对创建相关正文，未宣称整个API或安全链完成。下一包非探测的外部接入登记/移除与其余结果消费，R2穿插；正式全仓逐句、历史Windows超时、用户实机及暂停专项边界不变。
 
