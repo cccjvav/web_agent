@@ -2010,7 +2010,7 @@
 
 ## webagent-core/agent-host/tests/documentationLinks.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `661b75977edc7d1386e003ad8c573f55007ce12287209d1bf4090b0e0ffcfd24`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `494cae61070e78730b42fb7bc51e310f1e9bf04869c8e621beecd6b3d200414e`
 
 - `read` — ArrowFunctionExpression，[L6–L6](../webagent-core/agent-host/tests/documentationLinks.test.js#L6-L6)
 - `checkLinks` — FunctionDeclaration，[L7–L17](../webagent-core/agent-host/tests/documentationLinks.test.js#L7-L17)
@@ -2047,7 +2047,7 @@
 
 ## webagent-core/agent-host/tests/documentationQuality.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `c008e8fb22a081b3362a922b8141f7fea9be014c4c92793eb1f5fc5113eaab91`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `51de1bdfb49b220405ca081c7b6f8f7e3297a379fa58ffc3fdc2375e93a1c440`
 
 - `anonymous@10:88` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationQuality.test.js#L10-L10)
 - `read` — ArrowFunctionExpression，[L35–L35](../webagent-core/agent-host/tests/documentationQuality.test.js#L35-L35)

@@ -36,7 +36,7 @@ code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容�
 - Bridge 统计和 Tasks 来自主机快照，刷新页面不清零。Tasks 是 Agent 显式上报的待办，不是工具日志，也不是完成质量证明。见[任务栏说明](Bridge任务栏说明.md)及[统计排查](Bridge统计与刷新排查.md)。
 - 文件补丁有 dryRun/hash 保护，经典工作台有草稿diff及单次保存回退，原生扩展有草稿diff/恢复；现增加任务前手动建立的跨文件内容检查点，任务后预览/确认恢复。都是有界、版本保护的文本恢复，不是全项目原子回滚或shell副作用撤销。见[使用指南](使用指南.md#跨文件内容检查点任务前备份任务后恢复)。
 - 出站外部 MCP 支持本机 HTTP、显式批准的 stdio，以及显式确认的公网 HTTPS（每次DNS/连接地址检查、拒绝跳转、工具逐次审批；真实供应商兼容性须另验）。这与公网客户端通过认证 Bridge **入站**连接本机是两回事。
-- 桌面探针保留完整研究能力；经典工作台和 code-server 的探针入口不施工。探针是参考证据，不鉴定真实后台模型。见[入口矩阵](探针入口与实际可用范围.md)。
+- 探测相关施工暂停，等待另一助手的外部整合项目正式交接；既有桌面探针保留，不提前宣称新工作台/code-server/VSCode整合已验收。见[暂停范围与交接门槛](manager/stages/s8-probe-integration.md)、[存量入口矩阵](探针入口与实际可用范围.md)。探针结果仍是参考，不鉴定真实后台模型。
 - 第三方 Chat Plus／DeepSeek 扩展只是候选接入，不能保证当前版本、站点、认证或订阅条件；分别见[Chat Plus](网页ChatPlus使用指南.md)、[DeepSeek](网页DeepSeek使用指南.md)。不要把聊天栏里的一条 URL 当作已经建立 MCP 连接。
 
 剩余施工、候选设计与人工验收分开记录在[阶段 10](manager/stages/s10-upstream-adoption.md)和[上游采用队列](review/UPSTREAM_ADOPTION_MAP_2026-09-15.md)。当前文档审查范围见[文档状态](review/SEMANTIC_REVIEW_2026-09-16.md)，不以索引生成或 CI 绿灯宣称全仓逐句审查完成。

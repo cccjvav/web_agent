@@ -14158,7 +14158,7 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLinks.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "661b75977edc7d1386e003ad8c573f55007ce12287209d1bf4090b0e0ffcfd24",
+      "sha256": "494cae61070e78730b42fb7bc51e310f1e9bf04869c8e621beecd6b3d200414e",
       "lineCount": 64,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -14421,8 +14421,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationQuality.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "c008e8fb22a081b3362a922b8141f7fea9be014c4c92793eb1f5fc5113eaab91",
-      "lineCount": 93,
+      "sha256": "51de1bdfb49b220405ca081c7b6f8f7e3297a379fa58ffc3fdc2375e93a1c440",
+      "lineCount": 105,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
