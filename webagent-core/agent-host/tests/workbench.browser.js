@@ -83,6 +83,39 @@ async function probeHudBrowser(browser) {
     assert.strictEqual(result.logs, 0); assert.deepStrictEqual(errors, []);
   } finally { await fixture.close(); }
 }
+async function stdioLifecycleBrowser(browser, base) {
+  const fixture=await browser.newPage({viewport:{width:1280,height:900}}), errors=[];
+  fixture.on('pageerror',error=>errors.push(error.message));
+  let malformed=true, starts=0, previewRequest;
+  const preview={previewId:'stdio-ui-fixture',expiresAt:Date.now()+120000,transport:'stdio',requiresConfirmation:true,
+    launch:{name:'Fixture',program:'/fixture/node',args:['server.js'],cwd:'/fixture',envKeys:['PATH']},
+    programStamp:{path:'/fixture/node',bytes:42,sha256:'a'.repeat(64)},reviewFiles:[]};
+  try {
+    await fixture.route('**/api/external/stdio/preview',route=>{previewRequest=route.request().postDataJSON();return route.fulfill({json:malformed ? {previewId:preview.previewId} : preview});});
+    await fixture.route('**/api/external/stdio/start',route=>{starts++;return route.fulfill({json:null});});
+    await fixture.goto(base);
+    await fixture.waitForFunction(async()=>{const {state}=await import('/js/state.js');return Boolean(state.status?.workspaceRoot && state.status?.identity?.hostInstanceId);});
+    await fixture.click('#rb-bridge-tab');await fixture.click('#btn-operations');
+    await fixture.fill('#ops-stdio-config',JSON.stringify({program:'/fixture/node',args:['server.js'],env:{FIXTURE_SECRET:'PRIVATE STDIO FIXTURE'}}));
+    await fixture.click('#btn-stdio-preview');
+    await fixture.waitForFunction(()=>document.querySelector('#ops-stdio-review').textContent.includes('预览未确认'));
+    assert.equal(await fixture.isDisabled('#btn-stdio-start'),true);assert.equal(starts,0);
+    assert.equal(previewRequest.env.FIXTURE_SECRET,'PRIVATE STDIO FIXTURE');
+    assert.ok(!(await fixture.inputValue('#ops-stdio-config')).includes('PRIVATE STDIO FIXTURE'));
+    malformed=false;await fixture.click('#btn-stdio-preview');
+    await fixture.waitForFunction(()=>!document.querySelector('#btn-stdio-start').disabled);
+    await fixture.fill('#ops-stdio-config',JSON.stringify({program:'/fixture/edited',args:[]}));
+    assert.equal(await fixture.isDisabled('#btn-stdio-start'),true);
+    assert.equal(await fixture.evaluate(()=>document.querySelector('#btn-stdio-start').onclick()),false);assert.equal(starts,0);
+    await fixture.fill('#ops-stdio-config',JSON.stringify({program:'/fixture/node',args:['server.js']}));
+    await fixture.click('#btn-stdio-preview');await fixture.waitForFunction(()=>!document.querySelector('#btn-stdio-start').disabled);
+    fixture.once('dialog',dialog=>dialog.accept());await fixture.click('#btn-stdio-start');
+    await fixture.waitForFunction(()=>document.querySelector('#ops-stdio-review').textContent.includes('启动结果未确认'));
+    assert.equal(await fixture.isDisabled('#btn-stdio-start'),true);assert.equal(starts,1);
+    assert.equal(await fixture.evaluate(()=>document.querySelector('#btn-stdio-start').onclick()),false);assert.equal(starts,1);
+    assert.deepEqual(errors,[]);
+  } finally {await fixture.close();}
+}
 async function externalRegistrationBrowser(browser, base) {
   const fixture=await browser.newPage({viewport:{width:1280,height:900}}), errors=[];
   fixture.on('pageerror',error=>errors.push(error.message));
@@ -344,6 +377,7 @@ async function main() {
     await checkpointResultsBrowser(browser, base);
     await checkpointCreateBrowser(browser, base, workspace);
     await externalRegistrationBrowser(browser, base);
+    await stdioLifecycleBrowser(browser, base);
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.route('https://cdn.jsdelivr.net/**', route => route.abort());

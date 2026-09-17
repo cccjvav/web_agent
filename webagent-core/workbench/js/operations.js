@@ -209,13 +209,16 @@ function externalHttpEndpoint(value, publicHttps) {
   if (url.hostname === 'localhost') url.hostname = '127.0.0.1';
   return url.href;
 }
+function validExternalTools(tools) {
+  return Array.isArray(tools) && tools.length <= 100
+    && tools.every(tool => tool && typeof tool.name === 'string' && /^[a-zA-Z0-9_.-]{1,120}$/.test(tool.name)
+      && tool.requiresApproval === true && tool.inputSchema && !Array.isArray(tool.inputSchema) && tool.inputSchema.type === 'object')
+    && new Set(tools.map(tool => tool.name)).size === tools.length;
+}
 function validExternalRegistration(record, endpoint, publicHttps) {
   return record && typeof record.serverId === 'string' && record.serverId.length > 0
     && record.transport === 'http' && record.status === 'discovered' && record.endpoint === endpoint
-    && record.publicHttps === publicHttps && Array.isArray(record.tools) && record.tools.length <= 100
-    && record.tools.every(tool => tool && typeof tool.name === 'string' && /^[a-zA-Z0-9_.-]{1,120}$/.test(tool.name)
-      && tool.requiresApproval === true && tool.inputSchema && !Array.isArray(tool.inputSchema) && tool.inputSchema.type === 'object')
-    && new Set(record.tools.map(tool => tool.name)).size === record.tools.length;
+    && record.publicHttps === publicHttps && validExternalTools(record.tools);
 }
 async function externalMutation(label, callback, key = 'register') {
   if (externalPending.has(key)) { ui.toast('此接入操作进行中，请等待并核对原请求。'); return false; }
@@ -309,6 +312,92 @@ async function createCheckpoint() {
     return false;
   } finally {checkpointCreating = false;button.disabled = false;}
 }
+let stdioBusy = false, stdioGeneration = 0, stdioPreview = null;
+function sameStringList(left, right) {
+  return Array.isArray(left) && Array.isArray(right) && left.length === right.length
+    && left.every((value,index) => typeof value === 'string' && value === right[index]);
+}
+function validLaunchStamp(stamp, maxBytes) {
+  return stamp && typeof stamp.path === 'string' && stamp.path.length > 0
+    && typeof stamp.sha256 === 'string' && /^[a-f0-9]{64}$/.test(stamp.sha256)
+    && Number.isSafeInteger(stamp.bytes) && stamp.bytes >= 0 && stamp.bytes <= maxBytes;
+}
+function validStdioPreview(record, input) {
+  const args = input.args === undefined ? [] : input.args, files = input.reviewFiles === undefined ? [] : input.reviewFiles;
+  const env = input.env === undefined ? {} : input.env, launch = record?.launch;
+  return record && typeof record.previewId === 'string' && record.previewId.length > 0 && record.transport === 'stdio'
+    && record.requiresConfirmation === true && Number.isFinite(record.expiresAt) && record.expiresAt > Date.now()
+    && launch && typeof launch.name === 'string' && typeof launch.program === 'string' && launch.program.length > 0
+    && typeof launch.cwd === 'string' && launch.cwd.length > 0 && sameStringList(launch.args,args) && args.length <= 64
+    && Array.isArray(launch.envKeys) && launch.envKeys.every(key => typeof key === 'string' && /^[A-Za-z_][A-Za-z0-9_]{0,79}$/.test(key))
+    && new Set(launch.envKeys).size === launch.envKeys.length && env && typeof env === 'object' && !Array.isArray(env)
+    && Object.keys(env).every(key => launch.envKeys.includes(key))
+    && validLaunchStamp(record.programStamp,256 * 1024 * 1024) && record.programStamp.path === launch.program
+    && Array.isArray(files) && files.length <= 8 && Array.isArray(record.reviewFiles) && record.reviewFiles.length === files.length
+    && record.reviewFiles.every(stamp => validLaunchStamp(stamp,4 * 1024 * 1024));
+}
+function validStdioRegistration(record, preview) {
+  const launch = record?.launch, reviewed = preview.launch;
+  return record && typeof record.serverId === 'string' && record.serverId.length > 0 && record.transport === 'stdio'
+    && record.status === 'discovered' && record.publicHttps === false && record.name === reviewed.name
+    && launch && launch.program === reviewed.program && launch.cwd === reviewed.cwd
+    && sameStringList(launch.args,reviewed.args) && sameStringList(launch.envKeys,reviewed.envKeys)
+    && record.process?.ready === true && record.process.stopped === false && record.process.closed === false
+    && Number.isSafeInteger(record.process.pid) && record.process.pid > 0 && validExternalTools(record.tools);
+}
+function invalidateStdio(message) {
+  ++stdioGeneration; stdioPreview = null; $('#btn-stdio-start').disabled = true;
+  $('#ops-stdio-review').textContent = message;
+  return stdioGeneration;
+}
+async function previewStdioLaunch() {
+  if (stdioBusy) { ui.toast('stdio请求进行中，请等待并核对原请求；不会再次预览或启动。'); return false; }
+  stdioBusy = true; $('#btn-stdio-preview').disabled = true;
+  const generation = invalidateStdio('正在读取启动预览，尚未发送启动。'), binding = checkpointBinding();
+  try {
+    const input = JSON.parse($('#ops-stdio-config').value);
+    if (!input || typeof input !== 'object' || Array.isArray(input) || !sameCheckpointBinding(binding)) throw new Error('Invalid launch draft or binding');
+    const draft = JSON.stringify({...input,env:undefined},null,2);
+    $('#ops-stdio-config').value = draft;
+    const record = await api('/external/stdio/preview','POST',input);
+    if (generation !== stdioGeneration) return false;
+    if ($('#ops-stdio-config').value !== draft || !sameCheckpointBinding(binding) || !validStdioPreview(record,input)) throw new Error('Unconfirmed preview');
+    stdioPreview = {record,binding,draft};
+    $('#ops-stdio-review').textContent = JSON.stringify(record,null,2);
+    $('#btn-stdio-start').disabled = false;
+    return true;
+  } catch (_) {
+    if (generation !== stdioGeneration) return false;
+    invalidateStdio('启动预览未确认；请核对JSON、工作区与完整程序/参数/hash后重新预览。没有发送启动请求，错误正文不会回显环境密钥。');
+    return false;
+  } finally {stdioBusy = false;$('#btn-stdio-preview').disabled = false;}
+}
+async function startStdioLaunch() {
+  if (stdioBusy) { ui.toast('stdio请求进行中，请查询原请求，不要再次启动。'); return false; }
+  const selected = stdioPreview;
+  const current = () => selected && stdioPreview === selected && sameCheckpointBinding(selected.binding)
+    && $('#ops-stdio-config').value === selected.draft && selected.record.expiresAt > Date.now();
+  if (!current()) { invalidateStdio('启动预览已失效、配置/绑定变化或已过期；未发送启动，请重新预览。'); return false; }
+  if (!confirm('启动本身会执行所审阅程序，拥有当前系统用户权限。不是OS沙箱。确认信任该程序、参数和依赖，并启动一次？')) return false;
+  if (!current()) { invalidateStdio('确认期间配置或绑定已变化；未发送启动，请重新预览。'); return false; }
+  stdioBusy = true; $('#btn-stdio-preview').disabled = true;
+  const generation = invalidateStdio('启动请求已发送，结果尚未确认。请勿重放；可刷新接入列表并移除正在连接的接入。');
+  try {
+    const record = await api('/external/stdio/start','POST',{previewId:selected.record.previewId,confirmed:true});
+    if (generation !== stdioGeneration) return false;
+    if (!sameCheckpointBinding(selected.binding) || !validStdioRegistration(record,selected.record)) throw new Error('Unconfirmed start');
+    const message = `接入 ${record.serverId} 已确认启动并完成工具发现；仅为此时的进程/发现状态，不保证持续运行或工具效果。每次调用仍须审批。`;
+    $('#ops-stdio-review').textContent = message;
+    const refreshed = await refreshOperationList();
+    if (generation !== stdioGeneration) return false;
+    if (!refreshed) $('#ops-stdio-review').textContent = message + '\n列表刷新失败或被取代；保留此ID供核对，不要再次启动。';
+    return true;
+  } catch (_) {
+    if (generation !== stdioGeneration) return false;
+    $('#ops-stdio-review').textContent = '启动结果未确认，程序可能已经执行。请刷新接入列表并核对进程；不要重新预览后盲目重启。没有自动重试，断开HTTP不等于停止程序。';
+    return false;
+  } finally {stdioBusy = false;$('#btn-stdio-preview').disabled = false;}
+}
 function initOperations() {
   $('#btn-checkpoint-refresh').onclick = refreshCheckpoints;
   $('#btn-checkpoint-create').onclick = createCheckpoint;
@@ -335,23 +424,9 @@ function initOperations() {
     checkId = null; await api('/connection-checks', 'DELETE');
     if (generation === checkGeneration) $('#connection-check-result').textContent = '已清除核对记录（不会注销MCP或改变权限）';
   });
-  let stdioPreview = null, launchRequest = 0;
-  $('#ops-stdio-config').oninput = () => { launchRequest++; stdioPreview = null; $('#btn-stdio-start').disabled = true; };
-  $('#btn-stdio-preview').onclick = () => action(async () => {
-    const ticket = ++launchRequest;
-    stdioPreview = null; $('#btn-stdio-start').disabled = true;
-    const launch = JSON.parse($('#ops-stdio-config').value);
-    $('#ops-stdio-config').value = JSON.stringify({ ...launch, env: undefined }, null, 2);
-    const result = await api('/external/stdio/preview', 'POST', launch);
-    if (ticket !== launchRequest) return;
-    $('#ops-stdio-review').textContent = JSON.stringify(result, null, 2);
-    stdioPreview = result.previewId; $('#btn-stdio-start').disabled = false;
-  });
-  $('#btn-stdio-start').onclick = () => action(async () => {
-    if (!stdioPreview || !confirm('启动本身会执行所审阅程序，拥有当前系统用户权限。不是OS沙箱。确认信任该程序、参数和依赖，并启动一次？')) return;
-    const previewId = stdioPreview; stdioPreview = null; $('#btn-stdio-start').disabled = true;
-    await api('/external/stdio/start', 'POST', { previewId, confirmed: true });
-  });
+  $('#ops-stdio-config').oninput = () => invalidateStdio('配置已编辑，旧预览失效。若已发送启动，请先查接入列表；修改草稿不会停止程序。');
+  $('#btn-stdio-preview').onclick = previewStdioLaunch;
+  $('#btn-stdio-start').onclick = startStdioLaunch;
   $('#btn-operations').onclick = () => { ui.openModal('operations'); return refreshOperations(); };
   $('#btn-ops-refresh').onclick = refreshOperations;
   $('#btn-ops-add').onclick = addExternalServer;

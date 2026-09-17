@@ -132,3 +132,11 @@ workbenchRuntime在已有真实operations模块上先用finishCreate挂起响应
 workbenchRuntime先复现removed:false被实际onclick当true，以及finishExternal挂起时externalPosts从1变2。修后测试本次URL/Token快照、新Token草稿保留、HTTP/业务/坏JSON/null/connecting/端点错配/非审批工具拒绝，固定提示不包含反射的fixture Token；公网取消确认/非法URL零POST且不清未发送Token。VM计时器模拟40秒后晚回失败，成功登记但列表失败仍保留ID。移除按钮消费后不能复用，经刷新得到同ID新按钮也被externalPending挡住；stopping:true提示尚未确认退出，普通列表刷新不抹提示。允许在登记等待时移除connecting接入，旧登记回包不能覆盖更新的移除结果。计时器与响应均为fixture，不代替真实网络/进程退出证明。
 
 真实HTTP connecting移除与HTTP服务仍活着由externalDiscovery测试；stdioMcp先确认移除请求回包，再等closeAll与PID退出。真实页面externalRegistrationBrowser的主说明见[主机诊断与调用追踪详解](../src/utils/主机诊断与调用追踪详解.md)，是否执行以第36组精确CI为准。
+
+## 第37组：stdio完整预览与启动确认
+
+workbenchRuntime先复现两处红测：只有previewId即启用启动，启动回null仍返回成功。launchPreview构造程序/hash/args/cwd/envKeys/审阅文件的完整元数据；stdioRecord构造已发现进程状态。覆盖requiresConfirmation:false、过期、缺stamp、参数不符、审阅文件数不符均不能启动；确认取消零POST且保留未消费授权，stdioClock推进VM时钟后过期零POST（finally恢复），程序化改草稿/绑定变化也零POST。启动connecting/closed/launch错配/无审批工具都未确认且不能重放；合法启动而列表失败保留ID。
+
+finishStdio挂起预览/启动，证明busy拒第二次预览（不能因首个请求清env而自动发无env的新预览）和第二次启动；编辑后旧回包不覆盖新草稿/警告。env值仅发送后从草稿去除，坏JSON/网络异常用固定提示不回显fixture密钥；VM计时器分别模拟预览10秒、启动40秒后晚回，失败不复活旧授权。真实后端一次性/快照由stdioMcp测试，不把VM模拟当实际进程启动。
+
+stdioLifecycleBrowser的实际页面合同负例主说明见[主机诊断与调用追踪详解](../src/utils/主机诊断与调用追踪详解.md)，实际执行看第37组精确CI；main已有真实进程/远端调用审批仍另作证据。

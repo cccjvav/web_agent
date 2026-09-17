@@ -43,6 +43,7 @@ async function main() {
     const stale = prepared('normal', { reviewFiles: ['entry.js'] }); fs.writeFileSync(reviewed, 'new');
     await assert.rejects(external.startStdio({ previewId: stale.previewId, confirmed: true }), /changed/);
     assert.ok(!fs.existsSync(path.join(root, 'stdio-started.json')));
+    await assert.rejects(external.startStdio({previewId:stale.previewId,confirmed:true}),/missing/,'failed consumption cannot reuse its token');
     const fakeProgram = path.join(root, 'reviewed-program.exe');
     fs.writeFileSync(fakeProgram, 'not executed'); fs.chmodSync(fakeProgram, 0o755);
     const changedProgram = prepared('normal', { program: fakeProgram }); fs.writeFileSync(fakeProgram, 'changed');
@@ -51,7 +52,9 @@ async function main() {
     try { Date.now = () => now() + 120001; await assert.rejects(external.startStdio({ previewId: expiring.previewId, confirmed: true }), /expired/); }
     finally { Date.now = now; }
     const special = ['', 'with spaces', 'quote"inside', 'trailing\\', '中文🙂'];
-    const preview = prepared('normal', { args: [fixture, 'normal', ...special], env: { FIXTURE_TOKEN: 'private-stdio-value' } });
+    const launchArgs=[fixture,'normal',...special], launchEnvDraft={FIXTURE_TOKEN:'private-stdio-value'};
+    const preview = prepared('normal', { args: launchArgs, env: launchEnvDraft });
+    launchArgs.push('edited-input-after-preview');launchEnvDraft.FIXTURE_TOKEN='edited-after-preview';
     assert.ok(!JSON.stringify(preview).includes('private-stdio-value'));
     assert.ok(!fs.existsSync(path.join(root, 'stdio-started.json')), 'Preview never starts the executable');
     preview.launch.args.push('mutable-output-must-not-change-start');

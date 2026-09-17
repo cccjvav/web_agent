@@ -883,5 +883,87 @@ if (!process.argv.includes('--vm-child')) {
   finishExternal(opsResponse(externalServer));assert.equal(await interruptedRegistration,false);
   assert.equal(opsNodes.get('#ops-external-result').textContent,removalNotice,'late registration must not overwrite a newer removal result');
   assert.equal(addExternal.disabled,false);
+  const stdioConfig=context.document.querySelector('#ops-stdio-config');
+  stdioConfig.value=JSON.stringify({program:'/fixture/node',args:['server.js'],env:{FIXTURE_SECRET:'SECRET STDIO VALUE'}});
+  const launchPreview={previewId:'stdio-preview',transport:'stdio',expiresAt:Date.now()+120000,requiresConfirmation:true,
+    launch:{name:'Fixture',program:'/fixture/node',args:['server.js'],cwd:'/fixture',envKeys:['PATH','FIXTURE_SECRET']},
+    programStamp:{path:'/fixture/node',bytes:42,sha256:'a'.repeat(64)},reviewFiles:[]};
+  let stdioStarts=0;
+  context.fetch=async(url)=>{
+    if(url==='/api/external/stdio/preview') return opsResponse(launchPreview);
+    if(url==='/api/external/stdio/start') {stdioStarts++;return opsResponse(null);}
+    if(url==='/api/checkpoints') return opsResponse([]);
+    if(url==='/api/operations') return opsResponse({servers:[],requests:[]});
+    throw new Error(url);
+  };
+  const stdioFetch=context.fetch;
+  context.fetch=async url=>url==='/api/external/stdio/preview' ? opsResponse({previewId:'only-id'}) : stdioFetch(url);
+  await opsNodes.get('#btn-stdio-preview').onclick();
+  assert.equal(opsNodes.get('#btn-stdio-start').disabled,true,'a token without a full launch review must not enable execution');
+  context.fetch=stdioFetch;
+  await opsNodes.get('#btn-stdio-preview').onclick();
+  assert.equal(await opsNodes.get('#btn-stdio-start').onclick(),false,'null launch response cannot confirm a started/discovered process');
+  assert.equal(stdioStarts,1);assert.match(opsNodes.get('#ops-stdio-review').textContent,/启动结果未确认/);
+  assert.equal(await opsNodes.get('#btn-stdio-start').onclick(),false);assert.equal(stdioStarts,1,'consumed launch cannot replay after unknown response');
+  const stdioStart=opsNodes.get('#btn-stdio-start'), stdioRead=opsNodes.get('#btn-stdio-preview');
+  const stdioRecord={serverId:'stdio-server',name:'Fixture',transport:'stdio',status:'discovered',publicHttps:false,
+    launch:{...launchPreview.launch},process:{pid:123,ready:true,stopped:false,closed:false},tools:[]};
+  let previewReply=launchPreview, startReply=stdioRecord, stdioReads=0, finishStdio, listFails=false;
+  context.fetch=async url=>{
+    if(url==='/api/external/stdio/preview') {stdioReads++;return opsResponse(previewReply);}
+    if(url==='/api/external/stdio/start') {stdioStarts++;return opsResponse(startReply);}
+    if(url==='/api/operations') {if(listFails) throw new Error('fixture list down');return opsResponse({servers:[],requests:[]});}
+    if(url==='/api/checkpoints') return opsResponse([]);
+    throw new Error(url);
+  };
+  for(const invalid of [{...launchPreview,requiresConfirmation:false},{...launchPreview,expiresAt:0},{...launchPreview,programStamp:null},
+    {...launchPreview,launch:{...launchPreview.launch,args:['different.js']}},{...launchPreview,reviewFiles:[{}]}]) {
+    previewReply=invalid;assert.equal(await stdioRead.onclick(),false);assert.equal(stdioStart.disabled,true);
+  }
+  previewReply=launchPreview;await stdioRead.onclick();
+  context.confirm=()=>false;const beforeStartCancel=stdioStarts;assert.equal(await stdioStart.onclick(),false);
+  assert.equal(stdioStarts,beforeStartCancel);assert.equal(stdioStart.disabled,false);context.confirm=()=>true;
+  const stdioClock=vm.runInContext('Date.now',context);
+  try {
+    vm.runInContext('Date.now = () => 9999999999999',context);
+    assert.equal(await stdioStart.onclick(),false);assert.equal(stdioStarts,beforeStartCancel,'expired preview refuses before any launch POST');
+  } finally {context.restoreStdioClock=stdioClock;vm.runInContext('Date.now = restoreStdioClock',context);delete context.restoreStdioClock;}
+  await stdioRead.onclick();
+  stdioConfig.value='{"program":"/other/node"}';
+  assert.equal(await stdioStart.onclick(),false,'even programmatic edits without an input event invalidate a stored draft');assert.equal(stdioStarts,beforeStartCancel);
+  stdioConfig.value=JSON.stringify({program:'/fixture/node',args:['server.js']});await stdioRead.onclick();
+  state.namespace.state.status.workspaceRoot='/other';assert.equal(await stdioStart.onclick(),false);assert.equal(stdioStarts,beforeStartCancel);
+  state.namespace.state.status.workspaceRoot='/fixture';
+  for(const invalid of [{...stdioRecord,status:'connecting'},{...stdioRecord,process:{...stdioRecord.process,closed:true}},
+    {...stdioRecord,launch:{...stdioRecord.launch,cwd:'/other'}},{...stdioRecord,tools:[{name:'unsafe'}]}]) {
+    startReply=invalid;await stdioRead.onclick();assert.equal(await stdioStart.onclick(),false);
+    assert.match(opsNodes.get('#ops-stdio-review').textContent,/启动结果未确认/);assert.equal(stdioStart.disabled,true);
+  }
+  startReply=stdioRecord;listFails=true;await stdioRead.onclick();assert.equal(await stdioStart.onclick(),true);
+  assert.match(opsNodes.get('#ops-stdio-review').textContent,/stdio-server.*已确认启动[\s\S]*列表刷新失败/);
+  listFails=false;const immediateStdioFetch=context.fetch;
+  stdioConfig.value=JSON.stringify({program:'/fixture/node',args:['server.js'],env:{FIXTURE_SECRET:'SECRET STDIO VALUE'}});
+  context.fetch=async url=>url==='/api/external/stdio/preview' ? new Promise(resolve=>{stdioReads++;finishStdio=resolve;}) : immediateStdioFetch(url);
+  const waitingPreview=stdioRead.onclick(), priorReadCount=stdioReads;
+  assert.ok(!stdioConfig.value.includes('SECRET STDIO VALUE'));
+  assert.equal(await stdioRead.onclick(),false);assert.equal(stdioReads,priorReadCount,'busy preview cannot create a second token with silently stripped env');
+  stdioConfig.value='NEW SECRET DRAFT';stdioConfig.oninput();finishStdio(opsResponse(launchPreview));assert.equal(await waitingPreview,false);
+  assert.equal(stdioConfig.value,'NEW SECRET DRAFT');assert.equal(stdioStart.disabled,true);assert.equal(stdioRead.disabled,false);
+  stdioConfig.value=JSON.stringify({program:'/fixture/node',args:['server.js']});
+  const timedPreview=stdioRead.onclick();[...timers.values()].at(-1)();finishStdio(opsResponse(launchPreview));assert.equal(await timedPreview,false);
+  assert.equal(stdioStart.disabled,true);
+  context.fetch=immediateStdioFetch;await stdioRead.onclick();
+  context.fetch=async url=>url==='/api/external/stdio/start' ? new Promise(resolve=>{stdioStarts++;finishStdio=resolve;}) : immediateStdioFetch(url);
+  const waitingLaunch=stdioStart.onclick(), priorLaunchCount=stdioStarts;
+  assert.equal(await stdioStart.onclick(),false);assert.equal(await stdioRead.onclick(),false);assert.equal(stdioStarts,priorLaunchCount);
+  stdioConfig.value='NEXT DRAFT';stdioConfig.oninput();const editedNotice=opsNodes.get('#ops-stdio-review').textContent;
+  finishStdio(opsResponse(stdioRecord));assert.equal(await waitingLaunch,false);
+  assert.equal(opsNodes.get('#ops-stdio-review').textContent,editedNotice,'late launch cannot overwrite the newer edit warning');
+  assert.equal(stdioRead.disabled,false);assert.equal(stdioStart.disabled,true);
+  stdioConfig.value=JSON.stringify({program:'/fixture/node',args:['server.js']});await stdioRead.onclick();
+  const timedLaunch=stdioStart.onclick();[...timers.values()].at(-1)();finishStdio(opsResponse(stdioRecord));assert.equal(await timedLaunch,false);
+  assert.match(opsNodes.get('#ops-stdio-review').textContent,/启动结果未确认/);
+  context.fetch=async()=>({ok:true,json:async()=>{throw new Error('SECRET STDIO VALUE');}});
+  assert.equal(await stdioRead.onclick(),false);assert.ok(!opsNodes.get('#ops-stdio-review').textContent.includes('SECRET STDIO VALUE'));
   console.log('workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });

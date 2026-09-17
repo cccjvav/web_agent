@@ -49,6 +49,8 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 
 第36组增加HTTP登记/移除的VM失败与互斥、externalDiscovery真实connecting移除、stdioMcp区分停止回包与最终PID退出，以及独立externalRegistrationBrowser页面回归；既有后端合同不变。
 
+第37组补stdio页面合同：workbenchRuntime先复现不完整预览/空启动响应，再覆盖草稿/绑定/过期/在途与未知消费；stdioMcp验证失败令牌不重用、原输入args/env不可改已审快照。stdioLifecycleBrowser另测真实页面合成响应，不替代既有真实进程测试。
+
 ## 按风险选择回归
 | 风险/模块 | 主要测试 | 证据类型与限制 |
 |---|---|---|
@@ -168,9 +170,9 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 165 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 177 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 277 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 288 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 9 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 15 个函数/类节点 |

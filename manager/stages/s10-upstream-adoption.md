@@ -84,8 +84,8 @@
 |---|---|---|---|
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
-| R2 / 高，穿插 | 进行中：安全正文剩余实现对照 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27/31–36组设置/模型/状态/Provider、审批、检查点及HTTP接入登记/移除首包已修；继续stdio预览/启动及其它API消费者 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
+| R2 / 下一项，高 | 进行中：安全正文剩余实现对照，先复核本机控制面/跨站拒绝链 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
+| R3 / 高，继续 | 进行中：第25/27/31–37组设置/模型/状态/Provider、审批、检查点、HTTP接入及stdio消费首包已修；其余API消费者按风险继续 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -568,6 +568,19 @@ externalPending按登记与remove:ID分别互斥，允许移除connecting接入�
 真实HTTP测试移除挂起发现、等待登记拒绝、再次remove=false，目标HTTP服务仍活着且后来显式登记可用；stdioMcp先检查移除回包，再closeAll/真实PID证明最终退出。既有后端行为正确，本批不改后端源码。VM定向通过，新增externalRegistrationBrowser拦截场景并补齐旧公网浏览器fixture合同；本地无Chromium，不宣称已执行。最终本地82测试文件通过，文档生成/构建/一致性通过（246源码/28目录/110排除），git diff --check通过；实现0b79fc41ae3465b4259a065450e445168756d1c6已推当前固定分支，[CI35282860722](https://github.com/cccjvav/web_agent/actions/runs/35282860722)九项逐项成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium）；新增externalRegistrationBrowser已实际执行通过，本地仍无Chromium，不代签用户实机。
 
 只扩大HTTP登记/移除及对应测试/页面段的局部审查；stdio预览/启动结果消费者留下一包，R2穿插。正式全仓逐句、历史Windows超时根因、真实提供商/用户实机仍未完成，探测保持暂停。
+
+
+#### 第37组：stdio预览完整性、一次启动与结果未知
+
+2026-09-18从f81613b干净工作区继续，仅非探测stdio消费链。对照stdioLaunch.preview/consume、externalClient.startStdio/establish、transport.status与页面，先红测证明：仅previewId就启用启动；启动HTTP200/null仍被onclick消费为true。不把这称为后端越权：后端已有完整配置/hash/过期/单次消费门槛，原问题是前端审阅和结果不可信。
+
+新增完整预览合同/草稿与绑定快照，程序stamp、args、cwd、envKeys及reviewFiles等字段齐全才给按钮；规范路径由后端决定，前端不独立认证哈希或环境来源。预览/启动共busy，避免连点预览在清env后又生成无env的新授权；编辑/新预览使旧回包失效，程序化改value也在启动前被拒。确认前后复查草稿/绑定/本地有效期，确认后先消费ID再POST；取消确认不消费。期限沿用预览10秒/启动40秒，不伪装取消进程。
+
+启动必须stdio/discovered、launch与预览一致、PID/ready/closed/stopped及工具审批目录合同通过；失败/非终态/矛盾/空响应只报未确认，可能已执行，不重启。确认后列表失败保留ID，新编辑后旧结果不覆盖警告。异常固定文案，不回显环境密钥；HTTP登记工具目录校验抽成validExternalTools共享，原合同保持。
+
+stdioMcp真实进程加强失败consume不可重用、原输入args/env事后修改不影响已审快照（仍验证原secret/参数），后端行为正确、源码不改。VM红转绿并补过期/绑定/草稿/忙拒绝/超时/丢结果/刷新失败；新增stdioLifecycleBrowser合成响应页面测试，main已有真实启动链保留。本地无Chromium，新增场景未宣称执行；最终本地82测试文件通过，文档生成/构建/一致性通过（246源码/28目录/110排除），git diff --check通过；精确CI待提交核验。
+
+仅扩大上述局部，未认证整个stdio长篇、依赖树或OS隔离。接下来按R2高风险穿插复核localControl/corsAllow及路由的本机控制面/跨站拒绝链，R3其它消费者继续保留；全仓逐句、旧Windows超时根因、用户实机未完成，探测专项暂停。
 
 ## 复盘
 
