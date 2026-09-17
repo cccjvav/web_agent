@@ -64,3 +64,5 @@ main创建短期限与容量实例，owner分别改变会话或凭据；wait订�
 main在临时工作区挂真实MCP与API router，rpc使用fetch编码JSON和凭据；init建立两个同名但不同ID会话。唯一受控替身是workspace_info的handler：普通调用返回结果式失败，wait调用订阅当前请求信号并通过started通知夹具已进入工具。它不模拟Windows进程，也不更改工具权限。
 
 cancel通知从另一会话返回204但不触发信号；无认证请求401；同owner重复活动ID返回协议错误。正确取消使原调用保留ID=0、isError和cancelled trace；完成后同ID可以重用。observe回调收集tool_call_end，断言后移除监听；直接REST调用要保留HTTP200和内部错误细节，但success及tool_call_end都为false。finally恢复原handler、关闭连接/服务器并删除临时工作区；测试并不开放产品本机控制面，真实回环/Origin保护另有专门测试。
+
+F27-02回归：mcpProtocol/httpSmoke断言DeepSeek/Chat Plus为unverified，三项描述字段严格null，移除固定商店ID/构建命令；保留extension-http候选的地址和规则输出，规则不授权或建连。MCP clients资源必须显示Plus/tunnel unknown而非no。原把固定商店ID当产品合同的断言已替换为未知状态与安全前置条件，不代表第三方实测。

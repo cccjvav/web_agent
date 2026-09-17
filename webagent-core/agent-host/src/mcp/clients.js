@@ -34,43 +34,40 @@ const CLIENTS = [
   },
   {
     id: 'deepseek',
-    name: 'DeepSeek 网页',
+    name: 'DeepSeek 第三方扩展（候选）',
     url: 'https://chat.deepseek.com/',
-    needsPlus: false,
-    needsTunnel: true,
-    supportsMcp: true,
+    needsPlus: null,
+    needsTunnel: null,
+    supportsMcp: null,
+    verification: 'unverified',
     connectMode: 'extension-http',
-    extensionId: 'kdmpkkahkhdmdhfkdihkopikgcocbpbf',
-    storeUrl: 'https://chromewebstore.google.com/detail/deepseek++/kdmpkkahkhdmdhfkdihkopikgcocbpbf',
-    summary: 'DeepSeek 网页自己调不了 MCP。用第三方扩展 DeepSeek++ 当手，把我们的 Streamable HTTP 填进侧边栏。无需 Plus。改磁盘走本机 agent-host，不必装扩展自带的 Shell Native Host。',
+    repoUrl: 'https://github.com/zhu1090093659/deepseek-pp',
+    summary: '第三方候选，当前安装包、站点、订阅和MCP兼容性未验证。连接方式取决于实际扩展版本，不保证填入地址即可使用。',
     steps: [
-      '用 Chrome 或 Edge 打开 Chrome 网上应用店，安装 DeepSeek++（扩展 ID kdmpkkahkhdmdhfkdihkopikgcocbpbf）。不是 DeepSeek 官方产品',
-      '启动 Bridge，等到地址变成 https://….trycloudflare.com/mcp/…',
-      '点「复制」得到这一行 MCP 地址（带密钥），不要发到公开地方',
-      '本机浏览器打开 https://chat.deepseek.com/ ，点 DeepSeek++ 侧边栏 → MCP',
-      '添加远程服务，传输选 Streamable HTTP，URL 填刚复制的地址。不要装 deepseek-pp-shell-host',
-      '点「复制规则」，贴进 DeepSeek++ 系统提示词或新对话第一句。不要贴进 MCP 地址框',
-      '新开 DeepSeek 对话下任务。右侧 BRIDGE 应出现工具调用'
+      '先核对实际扩展版本、来源、许可证及权限；参考 docs/guides/网页DeepSeek使用指南.md，不按旧商店ID盲装',
+      '区分扩展本机请求与云端请求；云端需要可达的认证地址，本机能否用回环取决于浏览器权限，不一律要求隧道',
+      '确认支持Streamable HTTP及实际认证流程后，再复制MCP地址到经过核对的连接配置，不公开密钥',
+      '复制规则只是参考，不会建立连接、自动注入工具或授予权限；401/403不能靠关闭鉴权解决',
+      '先确认认证和工具发现，再只读调用workspace_info及已知测试文件，核对真实Bridge记录；后续写入逐次授权，不额外安装Shell Native Host'
     ]
   },
   {
     id: 'chat-plus',
-    name: 'Chat Plus 扩展（多网站）',
+    name: 'Chat Plus 第三方扩展（候选）',
     url: 'https://github.com/aiguicai/Chat-Plus',
-    needsPlus: false,
-    needsTunnel: true,
-    supportsMcp: true,
+    needsPlus: null,
+    needsTunnel: null,
+    supportsMcp: null,
+    verification: 'unverified',
     connectMode: 'extension-http',
     repoUrl: 'https://github.com/aiguicai/Chat-Plus',
-    summary: '社区扩展，适配 ChatGPT / Gemini / DeepSeek / 豆包 / 通义 / Arena 等多个网页。把我们的 Streamable HTTP 填进扩展即可。无需 Plus，不必装 MCP-Gateway。GPL，不拷进本仓库。',
+    summary: '社区候选，当前构建方式、许可证、支持站点、订阅与MCP兼容性未验证。本项目不内置或自动安装该扩展。',
     steps: [
-      '用 Git 克隆 https://github.com/aiguicai/Chat-Plus ，在该目录 npm install 后 npm run build:chrome。Chrome/Edge 开发者模式加载 dist/chrome。不是各家 AI 官方产品，许可证 GPL v3',
-      '启动 Bridge，等到地址变成 https://….trycloudflare.com/mcp/…',
-      '点「复制」得到这一行 MCP 地址（带密钥），不要发到公开地方',
-      '打开 Chat Plus 侧边栏，添加 MCP 服务：传输选 Streamable HTTP，URL 填刚复制的地址。不要再装 aiguicai/MCP-Gateway',
-      '点「复制规则」，贴进 Chat Plus 编排里的系统提示词。打开「注入工具信息」。不要贴进 MCP 地址框',
-      '打开已适配的网页（ChatGPT、Gemini、DeepSeek、豆包、通义、Arena 等），给当前页启用工具',
-      '新开对话下任务。右侧 BRIDGE 应出现工具调用'
+      '先核对选定版本的来源、许可证、权限和安装说明；参考 docs/guides/网页ChatPlus使用指南.md，不保证旧构建命令仍有效',
+      '区分扩展本机请求与云端请求；是否需要隧道取决于请求发起位置及浏览器权限',
+      '确认支持Streamable HTTP与认证后，再复制MCP地址到经过核对的连接配置；不要公开密钥或关闭鉴权',
+      '复制规则不等于注入工具成功，更不是权限授权；不要为接入额外安装MCP-Gateway或Shell通道',
+      '确认认证、列工具，再只读调用workspace_info和已知文件，核对Bridge真实记录；写入与执行需另外授权'
     ]
   },
   {
@@ -101,7 +98,7 @@ const CLIENTS = [
       '不要把 trycloudflare.com/mcp/… 贴进 ChatGPT 输入框当第一句',
       '任何档位的普通聊天栏都不会因此去连本机 MCP',
       '要对接着「ChatGPT 自制 MCP 插件」：设置里新建插件，服务器 URL + OAuth',
-      '也可以装 Chat Plus 扩展当手（见docs/guides/网页ChatPlus使用指南.md），或改用本机 Chat / Arena / DeepSeek++'
+      '可评估未验收的第三方候选（见docs/guides/网页ChatPlus使用指南.md），不保证安装或兼容；也可选本机 Chat / Arena'
     ]
   },
   {

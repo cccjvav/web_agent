@@ -94,3 +94,5 @@ workbenchRuntime新增实际Bridge模块VM失败路径：HTTP200/success:false�
 R3定制设置回归：workbenchRuntime加载真实settings模块，先用400负例复现旧保存返回undefined/污染state，再覆盖HTTP/业务/坏JSON/形状/网络失败保留旧值、超时AbortSignal与finally释放、忙时拒绝第二次加载/保存、只提交partial、保存响应不覆盖其他草稿、显式加载填表。计时器为VM替身，不是实际网络超时。workbench.browser点击实际指令保存按钮、拦截400响应，断言错误可见、草稿保留、不显示成功；不据此认证用户本机或所有设置按钮。
 
 正式审查首批：workbenchRuntime执行saveModelSettings真实模块，覆盖HTTP/业务/网络失败不刷新、保存请求互斥、成功刷新一次以及保存成功但刷新失败的独立提示。没有执行真实供应商模型切换，也不认证其他/api/models调用或refreshStatus的全部HTTP语义。
+
+F27-02的workbenchRuntime负例先复现null被paintClients显示“无需Plus”，修复后执行真实Bridge模块，断言待核对/未验证徽标以及DeepSeek指引无固定商店ID。DOM/HTTP回归不是真实浏览器安装第三方扩展或兼容验收。

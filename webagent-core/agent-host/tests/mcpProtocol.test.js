@@ -52,7 +52,7 @@ async function main() {
   );
   assert.strictEqual(
     PAGE_RULES_LEAD,
-    '这些规则与 MCP initialize.instructions 相同。Chat Plus / DeepSeek++ 不会自动转给网页模型。贴进扩展的系统提示词或新对话第一句，不要贴进 MCP 地址框。'
+    '这些规则与 MCP initialize.instructions 同源。第三方扩展是否传给模型须按版本核对；如需手动传递，请使用已核对的规则入口，不要贴进 MCP 地址框。复制规则不建立连接或授予权限。'
   );
   const pageRules = getPageRulesPrompt();
   assert.ok(pageRules.startsWith(PAGE_RULES_LEAD));
@@ -208,20 +208,27 @@ async function main() {
   assert.ok(catalog.some((c) => c.id === 'chat' && c.needsPlus === false && c.needsTunnel === false));
   assert.ok(catalog.some((c) => c.id === 'arena' && c.supportsMcp && !c.needsPlus && c.rulesText === ''));
   const deepseek = catalog.find((c) => c.id === 'deepseek');
-  assert.ok(deepseek && deepseek.connectMode === 'extension-http' && deepseek.supportsMcp && !deepseek.needsPlus);
+  assert.ok(deepseek && deepseek.connectMode === 'extension-http' && deepseek.supportsMcp === null && deepseek.needsPlus === null && deepseek.needsTunnel === null && deepseek.verification === 'unverified');
   assert.strictEqual(deepseek.prompt, 'https://x.trycloudflare.com/mcp/abc');
   assert.ok(deepseek.rulesText && deepseek.rulesText.startsWith(PAGE_RULES_LEAD));
   assert.ok(deepseek.rulesText.includes('Web Agent Bridge MCP'));
-  assert.strictEqual(deepseek.extensionId, 'kdmpkkahkhdmdhfkdihkopikgcocbpbf');
-  assert.ok(deepseek.steps.some((s) => /不要装 deepseek-pp-shell-host/.test(s)));
+  assert.strictEqual(deepseek.extensionId, undefined);
+  assert.strictEqual(deepseek.storeUrl, undefined);
+  assert.ok(clientsDoc.contents[0].text.includes('Plus=unknown, tunnel=unknown'));
+  assert.ok(deepseek.steps.some((s) => /不额外安装Shell Native Host/.test(s)));
   assert.ok(deepseek.steps.some((s) => /复制规则/.test(s)));
   const chatPlus = catalog.find((c) => c.id === 'chat-plus');
-  assert.ok(chatPlus && chatPlus.connectMode === 'extension-http' && chatPlus.supportsMcp && !chatPlus.needsPlus);
+  assert.ok(chatPlus && chatPlus.connectMode === 'extension-http' && chatPlus.supportsMcp === null && chatPlus.needsPlus === null && chatPlus.needsTunnel === null && chatPlus.verification === 'unverified');
   assert.strictEqual(chatPlus.prompt, 'https://x.trycloudflare.com/mcp/abc');
   assert.ok(chatPlus.rulesText && chatPlus.rulesText.startsWith(PAGE_RULES_LEAD));
-  assert.ok(chatPlus.steps.some((s) => /注入工具信息/.test(s)));
+  assert.ok(chatPlus.steps.some((s) => /复制规则不等于注入工具成功/.test(s)));
   assert.strictEqual(chatPlus.repoUrl, 'https://github.com/aiguicai/Chat-Plus');
-  assert.ok(chatPlus.steps.some((s) => /不要再装 aiguicai\/MCP-Gateway/.test(s)));
+  assert.ok(chatPlus.steps.some((s) => /不要为接入额外安装MCP-Gateway/.test(s)));
+  for (const c of [deepseek,chatPlus]) {
+    assert.ok(!JSON.stringify(c).includes('kdmpkkahkhdmdhfkdihkopikgcocbpbf'));
+    assert.ok(!JSON.stringify(c).includes('npm run build:chrome'));
+    assert.ok(c.steps.some(step => step.includes('workspace_info')));
+  }
   const gptBar = catalog.find((c) => c.id === 'chatgpt-free');
   assert.ok(gptBar && gptBar.connectMode === 'unsupported-mcp' && gptBar.supportsMcp === false);
   assert.ok(gptBar.steps.some((s) => /贴进 ChatGPT 输入框/.test(s)));

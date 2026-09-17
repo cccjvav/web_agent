@@ -125,10 +125,11 @@ export function paintClients() {
   if (!box) return;
   const list = (state.status && state.status.clients) || [];
   box.innerHTML = list.map((c) => {
-    const plus = c.needsPlus ? '<span class="badge warn">要 Plus</span>' : '<span class="badge ok">无需 Plus</span>';
+    const plus = c.needsPlus === true ? '<span class="badge warn">要 Plus</span>' : c.needsPlus === false ? '<span class="badge ok">无需 Plus</span>' : '<span class="badge warn">订阅条件待核对</span>';
+    const verification = c.verification === 'unverified' ? '<span class="badge warn">兼容性未验证</span>' : '';
     const on = c.id === state.selectedClient ? ' on' : '';
     return `<button type="button" class="client-card${on}" data-client="${escapeHtml(c.id)}">
-      <strong>${escapeHtml(c.name)}${plus}</strong>
+      <strong>${escapeHtml(c.name)}${plus}${verification}</strong>
       <p>${escapeHtml(c.summary)}</p>
     </button>`;
   }).join('');
@@ -163,13 +164,13 @@ export function renderBrowser(tab) {
   const prompt = ui.promptText();
   if (tab.site === 'deepseek') {
     const mcp = (state.status && state.status.mcpUrl) || prompt || '';
-    const store = 'https://chromewebstore.google.com/detail/deepseek++/kdmpkkahkhdmdhfkdihkopikgcocbpbf';
     page.innerHTML = `<div class="generic-site">
-      <h2>DeepSeek 网页要用 DeepSeek++ 当手</h2>
-      <p>chat.deepseek.com 自己调不了 MCP。工作台内置浏览器也跑不了扩展。请用本机 <strong>Chrome 或 Edge</strong> 装 DeepSeek++，把下面这一行填进扩展侧边栏 MCP（传输选 Streamable HTTP）。</p>
-      <p>扩展不是 DeepSeek 官方产品。改磁盘走本机 agent-host，<strong>不要</strong>再装 <code>deepseek-pp-shell-host</code>。</p>
-      <p><a href="${escapeHtml(store)}" target="_blank" rel="noopener">Chrome 网上应用店安装 DeepSeek++</a>
-        · <a href="https://chat.deepseek.com/" target="_blank" rel="noopener">在本机浏览器打开 chat.deepseek.com</a></p>
+      <h2>DeepSeek 第三方扩展候选 · 兼容性未验证</h2>
+      <p>这里不会嵌入网站或安装扩展。先核对实际版本、来源、许可证、订阅和权限；没有经过验证的固定商店ID或安装命令。</p>
+      <p>是否需要隧道取决于扩展本机请求还是云端请求。确认支持Streamable HTTP及实际认证后，再配置地址；不要关闭鉴权或额外安装Shell Native Host。</p>
+      <p><a href="https://github.com/zhu1090093659/deepseek-pp" target="_blank" rel="noopener noreferrer">历史参考来源（非安装保证）</a>
+        · <a href="https://chat.deepseek.com/" target="_blank" rel="noopener noreferrer">在浏览器打开网站</a></p>
+      <p>先认证、列工具，再只读核对workspace_info和已知文件；复制规则不建立连接或扩大授权。详见产品docs/guides/网页DeepSeek使用指南.md。</p>
       <p class="hint">MCP 地址（带密钥，只填进扩展，不要发到公开地方）：</p>
       <div class="prompt-box">${escapeHtml(mcp)}</div>
     </div>`;

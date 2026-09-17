@@ -321,5 +321,18 @@ if (!process.argv.includes('--vm-child')) {
   state.namespace.ui.refreshStatus = async () => {throw new Error('refresh failed')};
   assert.strictEqual(await settings.namespace.saveModelSettings({multiModel:{enabled:true}}),true);
   assert.ok(notices.at(-1).includes('已保存，但状态刷新失败'));
+  const clientNodes = new Map();
+  context.document.querySelector = selector => {
+    if (!clientNodes.has(selector)) clientNodes.set(selector,{innerHTML:'',value:'',textContent:'',querySelectorAll:()=>[],classList:{toggle(){}}});
+    return clientNodes.get(selector);
+  };
+  state.namespace.state.selectedClient='deepseek';
+  state.namespace.state.status={clients:[{id:'deepseek',name:'Candidate',summary:'未验证',steps:[],needsPlus:null,verification:'unverified',connectMode:'extension-http'}],mcpUrl:'http://localhost:123/mcp/fixture'};
+  bridge.namespace.paintClients();
+  assert.ok(clientNodes.get('#client-cards').innerHTML.includes('订阅条件待核对'));
+  assert.ok(!clientNodes.get('#client-cards').innerHTML.includes('无需 Plus'));
+  bridge.namespace.renderBrowser({site:'deepseek',url:'https://chat.deepseek.com/'});
+  assert.ok(clientNodes.get('#browser-page').innerHTML.includes('兼容性未验证'));
+  assert.ok(!clientNodes.get('#browser-page').innerHTML.includes('kdmpkkahkhdmdhfkdihkopikgcocbpbf'));
   console.log('workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });

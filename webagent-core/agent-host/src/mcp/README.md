@@ -21,7 +21,7 @@ stdio/受控外部接入：[受控工具与工作流详解](../utils/受控工�
 | `errors.js` | ProtocolError/ExecutionError及对外错误对象转换 |
 | `instructions.js` | initialize说明、连接引导和给网页模型的规则文本 |
 | `resources.js` | 主机、工作区、记忆和客户端连接说明资源，不是任意磁盘读取接口 |
-| `clients.js` | 客户端连接方式、配方与文案；列出配方不表示第三方客户端当前可用性已实测 |
+| `clients.js` | 客户端候选方式与文案；第三方卡片三态能力/订阅/隧道字段，null为未知，不是免费或无需隧道的保证 |
 
 ## 建立连接
 ### 地址和凭据

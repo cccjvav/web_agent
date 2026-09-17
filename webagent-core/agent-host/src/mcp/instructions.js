@@ -5,7 +5,7 @@ const { listSkills } = require('../tools/skills');
 
 const CONNECT_LINE = '快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。';
 
-const PAGE_RULES_LEAD = '这些规则与 MCP initialize.instructions 相同。Chat Plus / DeepSeek++ 不会自动转给网页模型。贴进扩展的系统提示词或新对话第一句，不要贴进 MCP 地址框。';
+const PAGE_RULES_LEAD = '这些规则与 MCP initialize.instructions 同源。第三方扩展是否传给模型须按版本核对；如需手动传递，请使用已核对的规则入口，不要贴进 MCP 地址框。复制规则不建立连接或授予权限。';
 
 function getBootstrapPrompt(mcpUrl) {
   return `${mcpUrl || ''}\n\n${CONNECT_LINE}`;

@@ -104,9 +104,9 @@ function readResource(uri) {
       const text = [
         '# Connecting web agents',
         '',
-        'This host is not ChatGPT-only. Pasting the MCP URL into the ChatGPT chat box does not connect (any plan). ChatGPT homemade plugins / connectors can, via OAuth + canonical /mcp. Also: local Chat, Arena, DeepSeek++, Chat Plus.',
+        'This host is not ChatGPT-only. Pasting the MCP URL into the ChatGPT chat box does not connect (any plan). ChatGPT homemade plugins / connectors can, via OAuth + canonical /mcp. Also: local Chat and Arena; DeepSeek++ / Chat Plus are unverified third-party candidates.',
         '',
-        ...rows.map((c) => `- **${c.name}**: ${c.summary} (Plus=${c.needsPlus ? 'yes' : 'no'}, tunnel=${c.needsTunnel ? 'yes' : 'no'})`)
+        ...rows.map((c) => `- **${c.name}**: ${c.summary} (Plus=${c.needsPlus === true ? 'yes' : c.needsPlus === false ? 'no' : 'unknown'}, tunnel=${c.needsTunnel === true ? 'yes' : c.needsTunnel === false ? 'no' : 'unknown'})`)
       ].join('\n');
       return { uri, mimeType: 'text/markdown', text };
     }

@@ -13,14 +13,15 @@
 ## 首批证据与下一步
 
 - F27-01：逐句核对docs三级导航，实际目录为11篇用户专题与8篇开发专题；路径/归放/暂停/非全审承诺准确，链接守卫验证实际目标。
-- F27-02：已全文读取两篇第三方接入专题。正文明确“不保证安装/兼容”，但src/mcp/clients.js的DeepSeek/Chat Plus卡片仍给固定商店ID、构建命令、站点/订阅等保证；**未闭环**，下一包对照整个clients.js及消费者/测试后修，不为消除矛盾把指南改成虚假兼容承诺。未访问或执行上游代码。
+- F27-02：第28组已修跨端矛盾。DeepSeek/Chat Plus卡片改为unverified及三个null未知字段，移除未经验证的固定安装/站点/订阅保证；UI徽标、DeepSeek指引、复制提示、规则前言及MCP资源同步，VM/协议/HTTP回归通过。两篇专题逐句复核，不认证第三方兼容性；CI仍待账户级解阻。
+- F28-01：clients.js其余卡片及资源/配对提示仍含固定ChatGPT菜单、订阅与“仅某客户端需要OAuth”等描述，**未闭环**；下一包对照这些消费者及实际主机OAuth范围，不把候选示例当全部厂商当前保证。
 - F27-03：设置文档模型选择/多模型保存段与settings.js、bind.js、POST /models对照；统一成功判断、页内互斥、超时/未知效果、成功保存与刷新失败分离，VM回归；不是全部API/工作流审完。
 
 ## 逐文件状态
 
 基线为2f569c24b385ba58e0cd41229468878e2ff39a41后的本次工作区；本清单自身属于维护索引，不自我授予语义通过。新文件须登记；历史先前批次仅作证据，未自动标为本轮完成。
 
-基线条目数：198；状态：待逐句核对 133、暂停，只登记路径 15、生成定位，非语义认证 1、已逐句核对 3、已读，有待修问题 2、待边界核对 7、只读规范副本 1、待历史定位核对 33、原始证据，受限 1、局部核对 2。这是文件计数，不是语义准确率。
+基线条目数：198；状态：待逐句核对 132、暂停，只登记路径 15、生成定位，非语义认证 1、已逐句核对 5、待边界核对 7、只读规范副本 1、待历史定位核对 33、原始证据，受限 1、局部核对 3。这是文件计数，不是语义准确率。
 
 | 文件 | 状态 | SHA-256前16位 | 依据/下一动作 |
 |---|---|---|---|
@@ -71,8 +72,8 @@
 | [docs/guides/Windows新手逐步验收.md](../docs/guides/Windows新手逐步验收.md) | 待逐句核对 | 6f91ce6b2edbfa92 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs/guides/内置探索Agent使用指南.md](../docs/guides/内置探索Agent使用指南.md) | 待逐句核对 | 7d39608590b06355 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs/guides/技能使用指南.md](../docs/guides/技能使用指南.md) | 待逐句核对 | ceb23a42a9736616 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [docs/guides/网页ChatPlus使用指南.md](../docs/guides/网页ChatPlus使用指南.md) | 已读，有待修问题 | d37bf29df2f6916b | F27-02：正文保守，但clients.js界面仍给未经验证的固定步骤 |
-| [docs/guides/网页DeepSeek使用指南.md](../docs/guides/网页DeepSeek使用指南.md) | 已读，有待修问题 | 2080770efc21cb19 | F27-02：正文保守，但clients.js界面仍给未经验证的固定步骤 |
+| [docs/guides/网页ChatPlus使用指南.md](../docs/guides/网页ChatPlus使用指南.md) | 已逐句核对 | a0fbe858990f07d3 | F27-02：正文/卡片/资源/复制提示同步；第三方兼容性未验证 |
+| [docs/guides/网页DeepSeek使用指南.md](../docs/guides/网页DeepSeek使用指南.md) | 已逐句核对 | d76c9c0f93c2acac | F27-02：正文/卡片/DeepSeek指引同步；第三方兼容性未验证 |
 | [docs/guides/网页VSCode使用指南.md](../docs/guides/网页VSCode使用指南.md) | 待逐句核对 | 7fd83648d162c3e4 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs/guides/隧道使用指南.md](../docs/guides/隧道使用指南.md) | 待逐句核对 | 9e174df444c52a80 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [examples/calculator/.webagent/instructions.md](../examples/calculator/.webagent/instructions.md) | 待边界核对 | b9fee21ec621714f | 冻结原型/示例/发行副本，不冒称产品主线语义认证 |
@@ -148,7 +149,7 @@
 | [webagent-core/agent-host/src/mcp/会话与结果详解.md](../webagent-core/agent-host/src/mcp/会话与结果详解.md) | 待逐句核对 | bd09d07886a550b8 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/mcp/公网出站详解.md](../webagent-core/agent-host/src/mcp/公网出站详解.md) | 待逐句核对 | 1b892e6459f27979 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/mcp/请求分发详解.md](../webagent-core/agent-host/src/mcp/请求分发详解.md) | 待逐句核对 | ff420c9dbaf0d4d4 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [webagent-core/agent-host/src/mcp/资源与客户端详解.md](../webagent-core/agent-host/src/mcp/资源与客户端详解.md) | 待逐句核对 | 5ec8efd70983fa17 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [webagent-core/agent-host/src/mcp/资源与客户端详解.md](../webagent-core/agent-host/src/mcp/资源与客户端详解.md) | 局部核对 | 4a0fdffed080e68c | F28：第三方卡片/三态资源/规则前言；其余资源与卡片待审 |
 | [webagent-core/agent-host/src/models/README.md](../webagent-core/agent-host/src/models/README.md) | 待逐句核对 | 0fb2581c85b8d01d | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/models/画像与记忆详解.md](../webagent-core/agent-host/src/models/画像与记忆详解.md) | 待逐句核对 | dd4fad1da5e31d80 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/agent-host/src/models/配置存储详解.md](../webagent-core/agent-host/src/models/配置存储详解.md) | 待逐句核对 | fd8ac25586b827af | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |

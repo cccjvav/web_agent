@@ -201,7 +201,7 @@ export function bind() {
     await navigator.clipboard.writeText(ui.promptText());
     const c = ui.selectedClientInfo();
     ui.toast(c && c.connectMode === 'extension-http'
-      ? '已复制 MCP 地址，填进扩展侧边栏（Streamable HTTP）'
+      ? '已复制 MCP 地址；请先核对扩展版本、认证与兼容性，再填入连接配置'
       : '已复制提示词，请整段作为第一句发出');
   };
   onClick('#btn-copy-rules', async () => {
