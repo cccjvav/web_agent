@@ -101,7 +101,7 @@ const CLIENTS = [
       '不要把 trycloudflare.com/mcp/… 贴进 ChatGPT 输入框当第一句',
       '任何档位的普通聊天栏都不会因此去连本机 MCP',
       '要对接着「ChatGPT 自制 MCP 插件」：设置里新建插件，服务器 URL + OAuth',
-      '也可以装 Chat Plus 扩展当手（见网页ChatPlus使用指南.md），或改用本机 Chat / Arena / DeepSeek++'
+      '也可以装 Chat Plus 扩展当手（见docs/guides/网页ChatPlus使用指南.md），或改用本机 Chat / Arena / DeepSeek++'
     ]
   },
   {

@@ -83,13 +83,8 @@
       "group": "维护"
     },
     {
-      "id": "documentation-quality",
-      "path": "review/DOC_QUALITY_2026-09-12.md",
-      "group": "维护"
-    },
-    {
       "id": "conda-windows",
-      "path": "Conda环境说明.md",
+      "path": "docs/guides/Conda环境说明.md",
       "group": "运行与验收"
     },
     {
@@ -99,7 +94,7 @@
     },
     {
       "id": "code-learning",
-      "path": "代码复盘指南.md",
+      "path": "docs/development/代码复盘指南.md",
       "group": "源码复盘"
     },
     {
@@ -319,7 +314,7 @@
     },
     {
       "id": "learning-platform",
-      "path": "平台启动与CI详解.md",
+      "path": "docs/development/平台启动与CI详解.md",
       "group": "源码复盘"
     },
     {
@@ -404,7 +399,7 @@
     },
     {
       "id": "windows-step-by-step",
-      "path": "Windows新手逐步验收.md",
+      "path": "docs/guides/Windows新手逐步验收.md",
       "group": "使用"
     },
     {
@@ -419,17 +414,17 @@
     },
     {
       "id": "builtin-explorer-guide",
-      "path": "内置探索Agent使用指南.md",
+      "path": "docs/guides/内置探索Agent使用指南.md",
       "group": "使用"
     },
     {
       "id": "adoption-beginner-guide",
-      "path": "借鉴优化说明（新手版）.md",
+      "path": "docs/development/借鉴优化说明（新手版）.md",
       "group": "使用"
     },
     {
       "id": "bridge-refresh-guide",
-      "path": "Bridge统计与刷新排查.md",
+      "path": "docs/guides/Bridge统计与刷新排查.md",
       "group": "使用"
     },
     {
@@ -464,12 +459,12 @@
     },
     {
       "id": "bridge-task-guide",
-      "path": "Bridge任务栏说明.md",
+      "path": "docs/guides/Bridge任务栏说明.md",
       "group": "使用"
     },
     {
       "id": "bridge-owner-access",
-      "path": "Bridge权限与工作模式.md",
+      "path": "docs/guides/Bridge权限与工作模式.md",
       "group": "使用"
     },
     {
@@ -486,6 +481,21 @@
       "id": "public-https-details",
       "path": "webagent-core/agent-host/src/mcp/公网出站详解.md",
       "group": "实现"
+    },
+    {
+      "id": "documentation-center",
+      "path": "docs/README.md",
+      "group": "文档导航"
+    },
+    {
+      "id": "user-guides-index",
+      "path": "docs/guides/README.md",
+      "group": "文档导航"
+    },
+    {
+      "id": "development-guides-index",
+      "path": "docs/development/README.md",
+      "group": "文档导航"
     }
   ],
   "sourceSnapshotExclusions": [

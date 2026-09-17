@@ -9,7 +9,7 @@
 
 ## 编码规范
 - 解释对得上磁盘，不杜撰未实现的逻辑
-- 改功能同步对应夹 README；动「为什么这样装」改根 `架构导读.md`（四层）
+- 改功能同步对应夹 README；动「为什么这样装」改 `docs/development/架构导读.md`（四层）
 - 文档唯一规范：`manager/docs/documentation.md`；先审查正文，再运行 `node docs-site/check-docs.js --write` 与 `node docs-site/build.js`，禁止把结构校验等同语义认证。
 
 ## 开发流程

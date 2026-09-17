@@ -51,7 +51,7 @@ JS/CJS/MJS用Acorn提取节点；其他语言只有文件级登记。链接检�
 ## 验证
 文档门禁使用documentationPolicy的真实清单检查及负例；documentationQuality检查本次关键契约、表格/围栏及本页目录函数fixture；docsSite验证生成一致性、归属导航和快照hash；docsHttp验证畸形URL及正常请求。浏览器窄屏/键盘/视觉效果仍需实测，不以生成成功代替。
 
-规范见[文档维护规范](../manager/docs/documentation.md)，正文质量审查见[本次审查](../review/DOC_QUALITY_2026-09-12.md)。
+规范见[文档维护规范](../manager/docs/documentation.md)，正文质量审查见[现行审查](../review/SEMANTIC_REVIEW_2026-09-16.md)。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航
@@ -83,4 +83,4 @@ serve.js先检查bundled.json；存在则要求format=1/prebuilt=true/content.js
 
 新手直达：文档列表搜索「内置探索Agent使用指南」或「借鉴优化说明（新手版）」；路由分别为#/files/builtin-explorer-guide与#/files/adoption-beginner-guide。
 
-片段导航：anchors.js将常用GitHub风格标题片段映射到本站真实id；build逐根文档设置相对路径上下文，同文档#片段不解析到父目录。五份现行根导航有目标/标题负例守卫，并检查生成href与目标id对应。范围见[清单与构建详解](清单与构建详解.md)，不是全Markdown语法或全仓语义认证。
+片段导航：anchors.js将常用GitHub风格标题片段映射到本站真实id；build逐篇文档设置相对路径上下文，同文档#片段不解析到父目录。选定现行入口及docs两类专题有目标/标题负例守卫，并检查生成href与目标id对应。范围见[清单与构建详解](清单与构建详解.md)，不是全Markdown语法或全仓语义认证。

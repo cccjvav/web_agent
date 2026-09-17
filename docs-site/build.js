@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Pack root Markdown + folder READMEs into content.js for the visual docs site.
- * No npm dependencies. Re-run after changing 架构导读.md / 技术实现.md / 总览.md / folder READMEs.
+ * No npm dependencies. Re-run after changing docs/development/架构导读.md / docs/development/技术实现.md / docs/development/总览.md / folder READMEs.
  */
 'use strict';
 
@@ -78,14 +78,14 @@ function rewriteHref(href) {
   const p = rawPath || '';
   if (/^https?:\/\//i.test(p) || p.startsWith('mailto:')) return href;
   const map = {
-    './架构导读.md': '#/guide',
-    '架构导读.md': '#/guide',
-    './技术实现.md': '#/impl',
-    '技术实现.md': '#/impl',
-    './总览.md': '#/graph',
-    '总览.md': '#/graph',
-    './组件说明.md': '#/workflow',
-    '组件说明.md': '#/workflow',
+    './docs/development/架构导读.md': '#/guide',
+    'docs/development/架构导读.md': '#/guide',
+    './docs/development/技术实现.md': '#/impl',
+    'docs/development/技术实现.md': '#/impl',
+    './docs/development/总览.md': '#/graph',
+    'docs/development/总览.md': '#/graph',
+    './docs/development/组件说明.md': '#/workflow',
+    'docs/development/组件说明.md': '#/workflow',
     './DOCUMENTATION_SUMMARY.md': '#/files/summary',
     'DOCUMENTATION_SUMMARY.md': '#/files/summary'
   };
@@ -351,10 +351,10 @@ function parseTerms(md) {
   return rows;
 }
 
-const guideMd = readUtf8('架构导读.md');
-const implMd = readUtf8('技术实现.md');
-const overviewMd = readUtf8('总览.md');
-const workflowMd = readUtf8('组件说明.md');
+const guideMd = readUtf8('docs/development/架构导读.md');
+const implMd = readUtf8('docs/development/技术实现.md');
+const overviewMd = readUtf8('docs/development/总览.md');
+const workflowMd = readUtf8('docs/development/组件说明.md');
 
 const files = {};
 for (const doc of FILE_DOCS) {
@@ -386,21 +386,21 @@ function renderDocument(docPath, render) {
 }
 const payload = {
   sources,
-  guide: renderDocument('架构导读.md', () => parseGuide(guideMd)),
+  guide: renderDocument('docs/development/架构导读.md', () => parseGuide(guideMd)),
   impl: {
     title: '技术实现：执行链与边界',
     toc: tocFromMd(implMd),
-    html: renderDocument('技术实现.md', () => mdToHtml(implMd))
+    html: renderDocument('docs/development/技术实现.md', () => mdToHtml(implMd))
   },
   overview: {
     title: '总览（知识图谱）',
     toc: tocFromMd(overviewMd),
-    html: renderDocument('总览.md', () => mdToHtml(overviewMd))
+    html: renderDocument('docs/development/总览.md', () => mdToHtml(overviewMd))
   },
   workflow: {
     title: '组件说明',
     toc: tocFromMd(workflowMd),
-    html: renderDocument('组件说明.md', () => mdToHtml(workflowMd))
+    html: renderDocument('docs/development/组件说明.md', () => mdToHtml(workflowMd))
   },
   terms: parseTerms(guideMd),
   files,

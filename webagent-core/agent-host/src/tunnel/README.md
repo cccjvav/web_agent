@@ -31,7 +31,7 @@ Named Token必须传给cloudflared命令行，因此可能对有本机进程查�
 ## 验证与排查
 `tunnel`、`tunnelLifecycle`和`bridgeTunnel`测试覆盖解析、进程引用/代次、停止失败及API结果；进程事件fixture不等于Windows进程树或真实公网验收。
 
-排查顺序：二进制可用 → 提供商选项正确 → 本机MCP健康 → 客户端日志就绪 → 公网OAuth/认证MCP请求成功。详细安装方式见[隧道指南](../../../../隧道使用指南.md)。
+排查顺序：二进制可用 → 提供商选项正确 → 本机MCP健康 → 客户端日志就绪 → 公网OAuth/认证MCP请求成功。详细安装方式见[隧道指南](../../../../docs/guides/隧道使用指南.md)。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航

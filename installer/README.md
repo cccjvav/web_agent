@@ -3,7 +3,7 @@
 精细复盘：[Inno全部声明与事件](安装声明详解.md)。
 
 
-继续逐函数阅读：[launch.js 与 package.js 详解](函数详解.md)；实际运行见[Conda 环境说明](../Conda环境说明.md)。
+继续逐函数阅读：[launch.js 与 package.js 详解](函数详解.md)；实际运行见[Conda 环境说明](../docs/guides/Conda环境说明.md)。
 
 ## 职责与文件
 | 文件 | 作用 |

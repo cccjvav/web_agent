@@ -3,7 +3,7 @@
 # 阶段 2：工作台更像他们的会话壳（两条路分清）
 
 ## 需求
-`review/PROMPT_SHUNCODE.md` 第二阶段：欢迎页/设置把「本机 Chat」和「Bridge」两条路写得像 ShunCode 文档那样分清。MCP session 卡、主题、Health 已有，不重做。用户 2026-09-07 说「继续」授权开工。
+`review/archive/PROMPT_SHUNCODE.md` 第二阶段：欢迎页/设置把「本机 Chat」和「Bridge」两条路写得像 ShunCode 文档那样分清。MCP session 卡、主题、Health 已有，不重做。用户 2026-09-07 说「继续」授权开工。
 
 ## 实现（提交 9d6a2a3，30/30 绿）
 - 欢迎页右列新增「两条路」标题 + 两张 walk 卡：`#walk-local-chat`（开智能体窗口；本机 Chat 直接改工作区、vision 模型收截图、不用隧道）、`#walk-bridge`（开设置 Bridge 页；网页 AI 经 MCP、恒文本、要公网地址）
@@ -25,4 +25,4 @@
 - [x] workbench/README.md（描述 + 行号）
 - [x] docs-site/content.js（重建）
 - [x] manager/CONTEXT.md（当前状态）
-- [x] review/REPORT_SHUNCODE_S2.md（交付报告）
+- [x] review/archive/REPORT_SHUNCODE_S2.md（交付报告）

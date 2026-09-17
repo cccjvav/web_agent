@@ -28,30 +28,32 @@ run-webagent.cmd "D:\My Projects\my-app"
 | `install-vscode-extension.cmd`＋已运行的主机 | 桌面 VS Code 核心扩展 | 扩展自身不启动引擎；IDE 首个可信本地文件夹须与主机一致 |
 | `run-webagent-appwindow.cmd` | 网页 VS Code 的独立浏览器窗口 | 不是另一套 Electron IDE |
 
-code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容性需分别验证，不能用主机单测替代。完整操作见[使用指南](使用指南.md)和[网页 VS Code 指南](网页VSCode使用指南.md)。
+code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容性需分别验证，不能用主机单测替代。完整操作见[使用指南](使用指南.md)和[网页 VS Code 指南](docs/guides/网页VSCode使用指南.md)。
 
 ## 当前能力与未完成范围
 
 - 核心版本为 **0.7.2**，探针 Companion／统一浏览器 Inspector 为 **0.5.2**；以各自包清单为版本来源。
-- Bridge 统计和 Tasks 来自主机快照，刷新页面不清零。Tasks 是 Agent 显式上报的待办，不是工具日志，也不是完成质量证明。见[任务栏说明](Bridge任务栏说明.md)及[统计排查](Bridge统计与刷新排查.md)。
+- Bridge 统计和 Tasks 来自主机快照，刷新页面不清零。Tasks 是 Agent 显式上报的待办，不是工具日志，也不是完成质量证明。见[任务栏说明](docs/guides/Bridge任务栏说明.md)及[统计排查](docs/guides/Bridge统计与刷新排查.md)。
 - 文件补丁有 dryRun/hash 保护，经典工作台有草稿diff及单次保存回退，原生扩展有草稿diff/恢复；现增加任务前手动建立的跨文件内容检查点，任务后预览/确认恢复。都是有界、版本保护的文本恢复，不是全项目原子回滚或shell副作用撤销。见[使用指南](使用指南.md#跨文件内容检查点任务前备份任务后恢复)。
 - 出站外部 MCP 支持本机 HTTP、显式批准的 stdio，以及显式确认的公网 HTTPS（每次DNS/连接地址检查、拒绝跳转、工具逐次审批；真实供应商兼容性须另验）。这与公网客户端通过认证 Bridge **入站**连接本机是两回事。
 - 探测相关施工暂停，等待另一助手的外部整合项目正式交接；既有桌面探针保留，不提前宣称新工作台/code-server/VSCode整合已验收。见[暂停范围与交接门槛](manager/stages/s8-probe-integration.md)、[存量入口矩阵](探针入口与实际可用范围.md)。探针结果仍是参考，不鉴定真实后台模型。
-- 第三方 Chat Plus／DeepSeek 扩展只是候选接入，不能保证当前版本、站点、认证或订阅条件；分别见[Chat Plus](网页ChatPlus使用指南.md)、[DeepSeek](网页DeepSeek使用指南.md)。不要把聊天栏里的一条 URL 当作已经建立 MCP 连接。
+- 第三方 Chat Plus／DeepSeek 扩展只是候选接入，不能保证当前版本、站点、认证或订阅条件；分别见[Chat Plus](docs/guides/网页ChatPlus使用指南.md)、[DeepSeek](docs/guides/网页DeepSeek使用指南.md)。不要把聊天栏里的一条 URL 当作已经建立 MCP 连接。
 
 剩余施工、候选设计与人工验收分开记录在[阶段 10](manager/stages/s10-upstream-adoption.md)和[上游采用队列](review/UPSTREAM_ADOPTION_MAP_2026-09-15.md)。当前文档审查范围见[文档状态](review/SEMANTIC_REVIEW_2026-09-16.md)，不以索引生成或 CI 绿灯宣称全仓逐句审查完成。
 
 ## 文档导航
 
+专题已集中到[文档中心](docs/README.md)：[用户专题](docs/guides/README.md)、[开发与学习](docs/development/README.md)。源码教学仍在模块旁，旧报告集中归档，不再与当前待办混排。
+
 | 目的 | 唯一主入口 |
 |---|---|
 | 接手开发与后续计划 | [交接与路线图](交接与路线图.md)（源码checkout） |
-| 按动作逐步验收 | [Windows 新手逐步验收](Windows新手逐步验收.md)、[人工清单](review/CHECKLIST_WINDOWS.md) |
-| 环境安装与维护 | [Conda 环境](Conda环境说明.md)、[启动入口](启动脚本说明.md)、[安装器](installer/README.md) |
-| 公网 Bridge | [隧道配置](隧道使用指南.md)、[当前权限与工作模式](Bridge权限与工作模式.md) |
-| 本机探索、Skills | [内置探索 Agent](内置探索Agent使用指南.md)、[技能指南](技能使用指南.md) |
-| 了解模块与学习函数 | [总览](总览.md)、[组件](组件说明.md)、[架构](架构导读.md)、[技术实现](技术实现.md)、[代码复盘](代码复盘指南.md) |
-| 开发与测试 | [贡献说明](CONTRIBUTING.md)、[测试说明](测试说明.md)、[平台启动与 CI](平台启动与CI详解.md) |
+| 按动作逐步验收 | [Windows 新手逐步验收](docs/guides/Windows新手逐步验收.md)、[人工清单](review/CHECKLIST_WINDOWS.md) |
+| 环境安装与维护 | [Conda 环境](docs/guides/Conda环境说明.md)、[启动入口](启动脚本说明.md)、[安装器](installer/README.md) |
+| 公网 Bridge | [隧道配置](docs/guides/隧道使用指南.md)、[当前权限与工作模式](docs/guides/Bridge权限与工作模式.md) |
+| 本机探索、Skills | [内置探索 Agent](docs/guides/内置探索Agent使用指南.md)、[技能指南](docs/guides/技能使用指南.md) |
+| 了解模块与学习函数 | [总览](docs/development/总览.md)、[组件](docs/development/组件说明.md)、[架构](docs/development/架构导读.md)、[技术实现](docs/development/技术实现.md)、[代码复盘](docs/development/代码复盘指南.md) |
+| 开发与测试 | [贡献说明](CONTRIBUTING.md)、[测试说明](docs/development/测试说明.md)、[平台启动与 CI](docs/development/平台启动与CI详解.md) |
 | 管理与证据 | [当前上下文](manager/CONTEXT.md)、[审查目录](review/README.md) |
 
 文档站展示仓库中的同一份正文：`node docs-site/serve.js`，默认 http://127.0.0.1:4173/ ，只在本机使用；源码快照和自动符号索引不是人工语义认证。
@@ -68,4 +70,4 @@ code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容�
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
 <!-- docs-inventory:end -->
 
-主机模式与所有者权限：[Bridge权限与工作模式](Bridge权限与工作模式.md)。Chat/Bridge互斥，同类型可并行；远端Read/Edit/Execute/Capture由本机保存，Execute不是OS沙箱。
+主机模式与所有者权限：[Bridge权限与工作模式](docs/guides/Bridge权限与工作模式.md)。Chat/Bridge互斥，同类型可并行；远端Read/Edit/Execute/Capture由本机保存，Execute不是OS沙箱。

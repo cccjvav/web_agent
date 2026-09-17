@@ -100,7 +100,7 @@
 
 ## 第六组：按用户更正实施模式与权限
 
-用户授权补齐截图式权限，并明确手机Arena固定Bridge；Chat/Bridge互斥，同类型可并行。新增[操作手册](../../Bridge权限与工作模式.md)及[executionControl逐函数解释](../../webagent-core/agent-host/src/utils/执行控制详解.md)，逐句对照本批入口、权限类别、持久化、后台计数和审批流程；不是扫描工具名作完成证明。SECURITY原“没有开关”段落重写为真实依赖与当前边界，明确Execute可跨类并访问本机控制面，所以拒绝Execute开而其他类关的矛盾组合。
+用户授权补齐截图式权限，并明确手机Arena固定Bridge；Chat/Bridge互斥，同类型可并行。新增[操作手册](../../docs/guides/Bridge权限与工作模式.md)及[executionControl逐函数解释](../../webagent-core/agent-host/src/utils/执行控制详解.md)，逐句对照本批入口、权限类别、持久化、后台计数和审批流程；不是扫描工具名作完成证明。SECURITY原“没有开关”段落重写为真实依赖与当前边界，明确Execute可跨类并访问本机控制面，所以拒绝Execute开而其他类关的矛盾组合。
 
 局部修订：Chat/runChat包裹模式租约；工具入口别名后检查；MCP资源/提示词Read和回图Capture；API工作区/身份/revision；审批保存来源模式与执行时复查；executor子进程error/cancelled不代表close；PTY未确认取消不能被TTL/容量淘汰；经典/扩展草稿不被轮询覆盖。未因此给这些长篇全文重新认证。测试README旧“全部52项”与当前新增测试数不符，改为已写正文的阅读入口。
 

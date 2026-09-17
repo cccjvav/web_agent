@@ -442,7 +442,7 @@ button.send{margin-left:auto;background:#0e639c;color:#fff;border:0;width:28px;h
   <summary>内置探索 Agent 使用帮助</summary>
   <p>新手先在 Agent 菜单切 Web Agent Ask。本页使用 agent-host 当前选择的模型，默认是内置探索；切 Ask 不等于切换模型。</p>
   <p>内置模式不需要 API Key，但不是大模型。试着要求读取 README.md（文件须在当前工作区），核对工具结果；它仍会扫描/搜索，读取有上限。Code会修改文件或执行测试，不当只读模式用。</p>
-  <p>在本产品源码中按 Ctrl+P 打开「内置探索Agent使用指南.md」或「借鉴优化说明（新手版）.md」，Ctrl+Shift+V预览。若打开的是自己的项目，请到产品源码目录找。</p>
+  <p>在本产品源码中按 Ctrl+P 打开「docs/guides/内置探索Agent使用指南.md」或「docs/development/借鉴优化说明（新手版）.md」，Ctrl+Shift+V预览。若打开的是自己的项目，请到产品源码目录找。</p>
 </details>
 <div id="log">
   <div class="empty">

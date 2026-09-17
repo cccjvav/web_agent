@@ -10,7 +10,7 @@
 - 最近完整通过的实现基线55c3656d7842e5c361fefa27b376fa6db1ed8b75（第24组R1三模块修复与语义复核），[CI35245544812](https://github.com/cccjvav/web_agent/actions/runs/35245544812)九项逐项成功；本地实现回归82测试文件通过，246源码/28目录/110排除。保留36ff82f首轮CI35125290301的Windows22两项超时（8/9、整体失败）：后续证据提交未改实现而全量通过，不说明超时根因已定位或修复。
 - 持久登录仍延期；Chat API确切后端身份是用户约定的后续任务。启发式结果提供参考，不承诺绝对鉴定。
 
-- 当前续作：第25组R3定制设置加载/保存修复：失败保留state/草稿，按钮不假成功，只PUT本次字段，页面内单请求/10秒取消等待；GET坏配置500 JSON。VM/HTTP及本地82测试通过，本批483510a的CI35247957459九任务因GitHub账户付款/支出上限未启动；新增Chromium负例未执行，沙箱浏览器下载ECONNRESET。R3其余API/工作流、R2安全依赖继续，不称整条路线完成。
+- 当前续作：按用户补充要求完成第26组文档集中首包：19篇根专题→docs/guides与docs/development，17篇旧审查→review/archive；删旧PROMPT并保留完成证据，更新链接/站点/安装白名单。R3其余API/工作流、R2安全与原待办不取消；CI账户阻塞未获解除证据，旧实机/Windows失败保留。
 
 - 文档审查与施工继续：[现行范围与剩余施工](../review/SEMANTIC_REVIEW_2026-09-16.md)。早期测试数/CI仅是对应历史批次证据，不作为当前状态；当前已核验基线以上方精确提交为准。手机固定Bridge，同类型并发保留，新增控件不继承旧手机验收。
 
@@ -46,7 +46,8 @@
 - 当前索引不超过80行；历史事实移入归档，不删除失败证据。
 
 ## 用户与维护导航
-- 使用入口：[使用指南](../使用指南.md)；[Windows线性验收](../Windows新手逐步验收.md)。
+- [统一文档中心](../docs/README.md)：用户专题、开发学习、模块详解与当前/历史审查分层。
+- 使用入口：[使用指南](../使用指南.md)；[Windows线性验收](../docs/guides/Windows新手逐步验收.md)。
 - [探针完整验收](../探针完整整合实施与验收.md)、[Companion](../webagent-core/probe-extension/README.md)、[浏览器整合](../webagent-core/probe-extension/浏览器整合说明.md)。
 - [现行逐句审查](../review/SEMANTIC_REVIEW_2026-09-16.md)、[验收清单](../review/CHECKLIST_WINDOWS.md)、[借鉴映射](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md)。
 - [经验](docs/experience.md)、[旧索引归档](stages/context-history-through-0.4.md)、[双探针0.3～0.4时间线](stages/probe-dual-integration-2026-09-15.md)。

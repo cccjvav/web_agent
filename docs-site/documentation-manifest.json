@@ -682,7 +682,7 @@
     {
       "path": "docs-site/build.js",
       "doc": "docs-site/README.md",
-      "sha256": "914c5ffeb584d43dbd292e0b39235a5190e46a1e846208a4c341a414a63e22fb",
+      "sha256": "2542369d73fa33aec2ace1e29ac2843c749740cd6f9cb5c66d943a71eb1db0c6",
       "lineCount": 416,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -938,32 +938,32 @@
           ]
         },
         {
-          "id": "anonymous@389:35",
-          "name": "anonymous@389:35",
+          "id": "anonymous@389:52",
+          "name": "anonymous@389:52",
           "kind": "ArrowFunctionExpression",
           "startLine": 389,
           "endLine": 389,
           "parameters": []
         },
         {
-          "id": "anonymous@393:36",
-          "name": "anonymous@393:36",
+          "id": "anonymous@393:53",
+          "name": "anonymous@393:53",
           "kind": "ArrowFunctionExpression",
           "startLine": 393,
           "endLine": 393,
           "parameters": []
         },
         {
-          "id": "anonymous@398:34",
-          "name": "anonymous@398:34",
+          "id": "anonymous@398:51",
+          "name": "anonymous@398:51",
           "kind": "ArrowFunctionExpression",
           "startLine": 398,
           "endLine": 398,
           "parameters": []
         },
         {
-          "id": "anonymous@403:36",
-          "name": "anonymous@403:36",
+          "id": "anonymous@403:53",
+          "name": "anonymous@403:53",
           "kind": "ArrowFunctionExpression",
           "startLine": 403,
           "endLine": 403,
@@ -1172,8 +1172,8 @@
     {
       "path": "docs-site/documentation.config.json",
       "doc": "docs-site/README.md",
-      "sha256": "a69232d90e6fa3faa09948d13b8de2b44c6b5f7e5e17a5103499a0e46ab6579e",
-      "lineCount": 498,
+      "sha256": "a797ace006a39c3647a7a5413e2c93397f6a070ab21013a50b2159c4eb3ed40a",
+      "lineCount": 508,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -1497,8 +1497,8 @@
     {
       "path": "installer/package.js",
       "doc": "installer/README.md",
-      "sha256": "864230b71dfa4678b96f1f43d0ad8e5d66f40d356801c8e5e5ec58c0fb3b43cf",
-      "lineCount": 103,
+      "sha256": "60721feb3566d18a07cfda78d2b8686e8ea47d7cecd7079fba53f69e4d628c1f",
+      "lineCount": 104,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -1506,8 +1506,8 @@
           "id": "digest",
           "name": "digest",
           "kind": "FunctionDeclaration",
-          "startLine": 25,
-          "endLine": 25,
+          "startLine": 26,
+          "endLine": 26,
           "parameters": [
             "data"
           ]
@@ -1516,8 +1516,8 @@
           "id": "collect",
           "name": "collect",
           "kind": "FunctionDeclaration",
-          "startLine": 26,
-          "endLine": 45,
+          "startLine": 27,
+          "endLine": 46,
           "parameters": [
             "source = root"
           ]
@@ -1526,8 +1526,8 @@
           "id": "collect/add",
           "name": "add",
           "kind": "FunctionDeclaration",
-          "startLine": 28,
-          "endLine": 41,
+          "startLine": 29,
+          "endLine": 42,
           "parameters": [
             "rel"
           ]
@@ -1536,8 +1536,8 @@
           "id": "bundledDocs",
           "name": "bundledDocs",
           "kind": "FunctionDeclaration",
-          "startLine": 46,
-          "endLine": 51,
+          "startLine": 47,
+          "endLine": 52,
           "parameters": [
             "source"
           ]
@@ -1546,8 +1546,8 @@
           "id": "rewritePackagedMarkdown",
           "name": "rewritePackagedMarkdown",
           "kind": "FunctionDeclaration",
-          "startLine": 52,
-          "endLine": 69,
+          "startLine": 53,
+          "endLine": 70,
           "parameters": [
             "rel",
             "text",
@@ -1556,11 +1556,11 @@
           ]
         },
         {
-          "id": "rewritePackagedMarkdown/anonymous@55:54",
-          "name": "anonymous@55:54",
+          "id": "rewritePackagedMarkdown/anonymous@56:54",
+          "name": "anonymous@56:54",
           "kind": "ArrowFunctionExpression",
-          "startLine": 55,
-          "endLine": 68,
+          "startLine": 56,
+          "endLine": 69,
           "parameters": [
             "whole",
             "image",
@@ -1569,21 +1569,21 @@
           ]
         },
         {
-          "id": "rewritePackagedMarkdown/anonymous@55:54/anonymous@61:49",
-          "name": "anonymous@61:49",
+          "id": "rewritePackagedMarkdown/anonymous@56:54/anonymous@62:49",
+          "name": "anonymous@62:49",
           "kind": "ArrowFunctionExpression",
-          "startLine": 61,
-          "endLine": 61,
+          "startLine": 62,
+          "endLine": 62,
           "parameters": [
             "file"
           ]
         },
         {
-          "id": "rewritePackagedMarkdown/anonymous@55:54/anonymous@62:36",
-          "name": "anonymous@62:36",
+          "id": "rewritePackagedMarkdown/anonymous@56:54/anonymous@63:36",
+          "name": "anonymous@63:36",
           "kind": "ArrowFunctionExpression",
-          "startLine": 62,
-          "endLine": 62,
+          "startLine": 63,
+          "endLine": 63,
           "parameters": [
             "entry"
           ]
@@ -1592,8 +1592,8 @@
           "id": "stage",
           "name": "stage",
           "kind": "FunctionDeclaration",
-          "startLine": 70,
-          "endLine": 97,
+          "startLine": 71,
+          "endLine": 98,
           "parameters": [
             "source = root",
             "target = path.join(root, 'installer/output/payload')"
@@ -4081,7 +4081,7 @@
     {
       "path": "webagent-core/agent-host/src/mcp/clients.js",
       "doc": "webagent-core/agent-host/src/mcp/README.md",
-      "sha256": "f8c38d5b431ceae134226d776206b7fc3dce8135b901ddba2f127683a2b571e5",
+      "sha256": "1bed41644ae24cc6a2ba3c2fa1e296acc9827eba6f3ca47675253b357539537b",
       "lineCount": 168,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -14159,7 +14159,7 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLearning.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "5571cc783e541f4db322375931c71335032c4b2e050cd37896d7c61218be4d57",
+      "sha256": "7f552315fc140deb48b04a1035b4ac7b4b49bdb6ab2930986d887a566b78e1c8",
       "lineCount": 383,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -14240,8 +14240,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLinks.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "e2d657081e2bea28a53f8d9c2bd3832af6cf4533229e2d2730978f2d9db70fb3",
-      "lineCount": 65,
+      "sha256": "c24dc2b95e5b694d18be69844febb2e14792be699e1418363797762fa2ace651",
+      "lineCount": 74,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -14283,21 +14283,41 @@
           "parameters": []
         },
         {
-          "id": "anonymous@28:27",
-          "name": "anonymous@28:27",
+          "id": "anonymous@27:67",
+          "name": "anonymous@27:67",
           "kind": "ArrowFunctionExpression",
-          "startLine": 28,
-          "endLine": 28,
+          "startLine": 27,
+          "endLine": 27,
+          "parameters": [
+            "name"
+          ]
+        },
+        {
+          "id": "anonymous@36:27",
+          "name": "anonymous@36:27",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 36,
+          "endLine": 36,
           "parameters": [
             "item"
           ]
         },
         {
-          "id": "anonymous@29:34",
-          "name": "anonymous@29:34",
+          "id": "anonymous@37:27",
+          "name": "anonymous@37:27",
           "kind": "ArrowFunctionExpression",
-          "startLine": 29,
-          "endLine": 29,
+          "startLine": 37,
+          "endLine": 37,
+          "parameters": [
+            "item"
+          ]
+        },
+        {
+          "id": "anonymous@38:34",
+          "name": "anonymous@38:34",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 38,
+          "endLine": 38,
           "parameters": [
             "item"
           ]
@@ -14306,8 +14326,8 @@
           "id": "insertAdjacentHTML",
           "name": "insertAdjacentHTML",
           "kind": "FunctionExpression",
-          "startLine": 45,
-          "endLine": 45,
+          "startLine": 54,
+          "endLine": 54,
           "parameters": [
             "_position",
             "html"
@@ -14317,8 +14337,8 @@
           "id": "$",
           "name": "$",
           "kind": "ArrowFunctionExpression",
-          "startLine": 48,
-          "endLine": 48,
+          "startLine": 57,
+          "endLine": 57,
           "parameters": [
             "selector"
           ]
@@ -14327,16 +14347,16 @@
           "id": "$/remove",
           "name": "remove",
           "kind": "FunctionExpression",
-          "startLine": 48,
-          "endLine": 48,
+          "startLine": 57,
+          "endLine": 57,
           "parameters": []
         },
         {
           "id": "$/outerHTML",
           "name": "outerHTML",
           "kind": "FunctionExpression",
-          "startLine": 48,
-          "endLine": 48,
+          "startLine": 57,
+          "endLine": 57,
           "parameters": [
             "html"
           ]
@@ -14345,24 +14365,24 @@
           "id": "pageChrome",
           "name": "pageChrome",
           "kind": "ArrowFunctionExpression",
-          "startLine": 49,
-          "endLine": 49,
+          "startLine": 58,
+          "endLine": 58,
           "parameters": []
         },
         {
           "id": "route",
           "name": "route",
           "kind": "ArrowFunctionExpression",
-          "startLine": 49,
-          "endLine": 49,
+          "startLine": 58,
+          "endLine": 58,
           "parameters": []
         },
         {
           "id": "getElementById",
           "name": "getElementById",
           "kind": "FunctionExpression",
-          "startLine": 50,
-          "endLine": 50,
+          "startLine": 59,
+          "endLine": 59,
           "parameters": [
             "id"
           ]
@@ -14371,24 +14391,24 @@
           "id": "getElementById/scrollIntoView",
           "name": "scrollIntoView",
           "kind": "FunctionExpression",
-          "startLine": 50,
-          "endLine": 50,
+          "startLine": 59,
+          "endLine": 59,
           "parameters": []
         },
         {
-          "id": "anonymous@61:15",
-          "name": "anonymous@61:15",
+          "id": "anonymous@70:15",
+          "name": "anonymous@70:15",
           "kind": "ArrowFunctionExpression",
-          "startLine": 61,
-          "endLine": 61,
+          "startLine": 70,
+          "endLine": 70,
           "parameters": []
         },
         {
-          "id": "anonymous@63:15",
-          "name": "anonymous@63:15",
+          "id": "anonymous@72:15",
+          "name": "anonymous@72:15",
           "kind": "ArrowFunctionExpression",
-          "startLine": 63,
-          "endLine": 63,
+          "startLine": 72,
+          "endLine": 72,
           "parameters": []
         }
       ]
@@ -14513,7 +14533,7 @@
     {
       "path": "webagent-core/agent-host/tests/documentationQuality.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "b341b297402b5d2b5c9d1b113f0d1ce4f29a308b8d8ecfcdb06162a3999ac9be",
+      "sha256": "e83cd3c421b63cfee4cfbac7cf920702178df939877cb6306cd60ed3550b1f0c",
       "lineCount": 113,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -16636,7 +16656,7 @@
     {
       "path": "webagent-core/agent-host/tests/installerPackaging.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "11b349f8057b364e46b31457453bc4935dcfff735cc6eac1ba470220c430018b",
+      "sha256": "79fc40ebd9bbd7f678be86e956bcfe89e42ce3c8e02a4a0cf6e389880020536b",
       "lineCount": 108,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -16650,8 +16670,8 @@
           "parameters": []
         },
         {
-          "id": "anonymous@10:1/anonymous@28:103",
-          "name": "anonymous@28:103",
+          "id": "anonymous@10:1/anonymous@28:216",
+          "name": "anonymous@28:216",
           "kind": "ArrowFunctionExpression",
           "startLine": 28,
           "endLine": 28,
@@ -24870,7 +24890,7 @@
     {
       "path": "webagent-core/agent-host/tests/workbenchHtml.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "0501a0ade45fde152be19fa9b1d7a79ca8927ec97db7d73f0b554d0da5a709a5",
+      "sha256": "4bb018574bf8fcf52d9736c388bd5904c05c6b4ffc95e760881da090deffa375",
       "lineCount": 93,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -26768,7 +26788,7 @@
     {
       "path": "webagent-core/extension/extension.js",
       "doc": "webagent-core/extension/README.md",
-      "sha256": "fe95876d9cda15b5aee4c375f9372197f7faecdf77c19a716abedb8ca187135f",
+      "sha256": "43f45c60894a69017749bdf4b41bd9c9ea9c87893e5028905db3bdf98ffcc35c",
       "lineCount": 672,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -30826,7 +30846,7 @@
     {
       "path": "webagent-core/workbench/index.html",
       "doc": "webagent-core/workbench/README.md",
-      "sha256": "33e2babd0e378d3eab9aa1b1c267ffb0fadedef5a6d6b425388114aa75da9085",
+      "sha256": "baecef409f02d25a9a54aa0cde3ca3cd7d9dd1a5ce5dac11b46c1b84fcbe9c5c",
       "lineCount": 758,
       "structure": "file-only",
       "semanticReview": "not-certified",

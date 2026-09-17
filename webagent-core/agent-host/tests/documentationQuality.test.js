@@ -37,29 +37,29 @@ const hostPackage = JSON.parse(read('webagent-core/agent-host/package.json'));
 const projectPackage = JSON.parse(read('package.json'));
 assert.ok(projectPackage.private && projectPackage.scripts.test.includes('agent-host'));
 assert.ok(hostPackage.devDependencies.playwright && hostPackage.scripts['test:browser'].includes('workbench.browser.js'));
-for (const name of ['测试说明.md', 'Conda环境说明.md', '平台启动与CI详解.md']) {
+for (const name of ['docs/development/测试说明.md', 'docs/guides/Conda环境说明.md', 'docs/development/平台启动与CI详解.md']) {
   const prose = read(name);
   assert.ok(!/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(prose), name + ': no hidden control characters in commands');
   assert.ok(prose.includes(hostPackage.devDependencies.playwright), name + ': Playwright version matches package');
   assert.ok(prose.includes('test:browser') && prose.includes('Chromium'), name + ': separate browser runtime and test entry');
 }
-assert.ok(!read('总览.md').includes('源码根无统一npm包入口'));
-assert.ok(read('平台启动与CI详解.md').includes('三个job定义'));
+assert.ok(!read('docs/development/总览.md').includes('源码根无统一npm包入口'));
+assert.ok(read('docs/development/平台启动与CI详解.md').includes('三个job定义'));
 assert.ok(read('check-env.cmd').includes('完全退出并重开 VS Code'));
-const tunnelGuide = read('隧道使用指南.md');
+const tunnelGuide = read('docs/guides/隧道使用指南.md');
 for (const stale of ['失败时按钮仍会成功', 'C:\\Windows\\System32', '每次启动 Bridge 都变']) assert.ok(!tunnelGuide.includes(stale));
 for (const contract of ['success:false', '停止失败', 'workspace_info', '完全退出并重开 VS Code']) assert.ok(tunnelGuide.includes(contract));
 assert.ok(!read('SECURITY.md').includes('跑**非破坏性**命令'));
-assert.ok(read('Windows新手逐步验收.md').includes('本机连接未建立'));
+assert.ok(read('docs/guides/Windows新手逐步验收.md').includes('本机连接未建立'));
 assert.ok(read('review/CHECKLIST_WINDOWS.md').includes('M1'));
-const skillGuide = read('技能使用指南.md');
+const skillGuide = read('docs/guides/技能使用指南.md');
 assert.ok(!skillGuide.includes('演示工作区里现成的四篇'));
 assert.ok(!skillGuide.includes('ShunCode 官方说法'));
 for (const contract of ['createOnly', 'frontmatter.name', 'evidence-check', '状态未知']) assert.ok(skillGuide.includes(contract), "Skill guide contract: " + contract);
 
 
 
-for (const guide of ['架构导读.md', '组件说明.md', '总览.md']) {
+for (const guide of ['docs/development/架构导读.md', 'docs/development/组件说明.md', 'docs/development/总览.md']) {
   const body = read(guide);
   for (const obsolete of ['工作区是仓库里那个带测试的小计算器', '没有浏览器自动点选测试', '不是 exe 安装包', '正好 **30** 个', 'GPL v3 会传染许可证']) assert.ok(!body.includes(obsolete), guide + ': obsolete current claim');
   assert.ok(body.includes('Chat') && body.includes('Bridge') && body.includes('互斥'), guide + ': mode contract');

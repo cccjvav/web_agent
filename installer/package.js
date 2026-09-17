@@ -5,13 +5,14 @@ const path = require('path');
 const crypto = require('crypto');
 const root = path.resolve(__dirname, '..');
 const files = [
+  'docs/README.md', 'docs/guides/README.md', 'docs/development/README.md',
   'webagent-core/probe-extension/traceInput.js',
   'webagent-core/probe-extension/referenceInput.js',
-  'LICENSE', 'Bridge权限与工作模式.md', '探针入口与实际可用范围.md', 'arena-model-probe/webagent-connection.user.js', '内置探索Agent使用指南.md', '借鉴优化说明（新手版）.md', 'Bridge统计与刷新排查.md', 'SECURITY.md', 'README.md', '使用指南.md', '技术实现.md', '架构导读.md', '组件说明.md',
-  'Conda环境说明.md', '代码复盘指南.md', 'Windows新手逐步验收.md', 'review/CHECKLIST_WINDOWS.md',
+  'LICENSE', 'docs/guides/Bridge权限与工作模式.md', '探针入口与实际可用范围.md', 'arena-model-probe/webagent-connection.user.js', 'docs/guides/内置探索Agent使用指南.md', 'docs/development/借鉴优化说明（新手版）.md', 'docs/guides/Bridge统计与刷新排查.md', 'SECURITY.md', 'README.md', '使用指南.md', 'docs/development/技术实现.md', 'docs/development/架构导读.md', 'docs/development/组件说明.md',
+  'docs/guides/Conda环境说明.md', 'docs/development/代码复盘指南.md', 'docs/guides/Windows新手逐步验收.md', 'review/CHECKLIST_WINDOWS.md',
   'installer/README.md', 'installer/函数详解.md',
   'webagent-core/agent-host/scripts/README.md', 'webagent-core/agent-host/scripts/运行器详解.md',
-  '总览.md', '技能使用指南.md', '网页VSCode使用指南.md', 'check-env.cmd',
+  'docs/development/总览.md', 'docs/guides/技能使用指南.md', 'docs/guides/网页VSCode使用指南.md', 'check-env.cmd',
   'run-webagent.cmd', 'run-webagent-vscode.cmd', 'run-webagent-appwindow.cmd',
   'run-admin.cmd', 'install-vscode-extension.cmd', 'installer/launch.js',
   'webagent-core/agent-host/package.json', 'webagent-core/agent-host/package-lock.json',
@@ -60,7 +61,7 @@ function rewritePackagedMarkdown(rel, text, selected, docs) {
     catch (_) { return `${label}（仅源码仓库）`; }
     if (selected.has(dest) || [...selected].some(file => file.startsWith(dest + '/'))) return whole;
     const doc = docs.fileIndex.find(entry => entry.path === dest);
-    const special = { '架构导读.md': 'guide', '技术实现.md': 'impl', '总览.md': 'graph', '组件说明.md': 'workflow' };
+    const special = { 'docs/development/架构导读.md': 'guide', 'docs/development/技术实现.md': 'impl', 'docs/development/总览.md': 'graph', 'docs/development/组件说明.md': 'workflow' };
     const route = docs.sources[dest] ? `source/${encodeURIComponent(dest)}` : special[dest] || (doc && `files/${doc.id}`);
     if (!image && route) return `[${label}](${site}#/${route}${anchor ? '/' + anchor : ''})`;
     // Don't ship clickable links to deliberately excluded source/history/private data.

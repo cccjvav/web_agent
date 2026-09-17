@@ -1,6 +1,6 @@
 # 持续集成
 
-精细复盘：[CI逐job与嵌入PowerShell解释](../../平台启动与CI详解.md)。
+精细复盘：[CI逐job与嵌入PowerShell解释](../../docs/development/平台启动与CI详解.md)。
 
 
 ## 职责与入口

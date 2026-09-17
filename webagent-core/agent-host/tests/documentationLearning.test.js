@@ -266,7 +266,7 @@ for (const [source, guide] of pairs) {
 }
 // File-level evidence for non-JS prose: no semantic or selector completeness claim.
 const artifactPairs = [
-  ["package.json", "平台启动与CI详解.md"],
+  ["package.json", "docs/development/平台启动与CI详解.md"],
   [".webagent/skills/evidence-check/workflow.json", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
   ["webagent-core/probe-extension/package_browser.py", "webagent-core/probe-extension/实现详解.md"],
   ["webagent-core/probe-extension/sample-observation.json", "webagent-core/probe-extension/实现详解.md"],
@@ -289,21 +289,21 @@ const artifactPairs = [
   ["computer-use/win/input2.cs", "computer-use/win/鼠标键盘与剪贴板详解.md"],
   ["computer-use/win/keys.cs", "computer-use/win/鼠标键盘与剪贴板详解.md"],
 
-  [".github/workflows/test.yml", "平台启动与CI详解.md"],
-  ["check-env.cmd", "平台启动与CI详解.md"],
-  ["docs-site/serve.cmd", "平台启动与CI详解.md"],
-  ["install-vscode-extension.cmd", "平台启动与CI详解.md"],
-  ["installer/build-installer.cmd", "平台启动与CI详解.md"],
-  ["run-admin.cmd", "平台启动与CI详解.md"],
-  ["run-admin.sh", "平台启动与CI详解.md"],
-  ["run-tests.cmd", "平台启动与CI详解.md"],
-  ["run-webagent-appwindow.cmd", "平台启动与CI详解.md"],
-  ["run-webagent-vscode.cmd", "平台启动与CI详解.md"],
-  ["run-webagent-vscode.sh", "平台启动与CI详解.md"],
-  ["run-webagent.cmd", "平台启动与CI详解.md"],
-  ["run-webagent.sh", "平台启动与CI详解.md"],
-  ["webagent-core/agent-host/package.json", "平台启动与CI详解.md"],
-  ["webagent-core/start-webagent.sh", "平台启动与CI详解.md"],
+  [".github/workflows/test.yml", "docs/development/平台启动与CI详解.md"],
+  ["check-env.cmd", "docs/development/平台启动与CI详解.md"],
+  ["docs-site/serve.cmd", "docs/development/平台启动与CI详解.md"],
+  ["install-vscode-extension.cmd", "docs/development/平台启动与CI详解.md"],
+  ["installer/build-installer.cmd", "docs/development/平台启动与CI详解.md"],
+  ["run-admin.cmd", "docs/development/平台启动与CI详解.md"],
+  ["run-admin.sh", "docs/development/平台启动与CI详解.md"],
+  ["run-tests.cmd", "docs/development/平台启动与CI详解.md"],
+  ["run-webagent-appwindow.cmd", "docs/development/平台启动与CI详解.md"],
+  ["run-webagent-vscode.cmd", "docs/development/平台启动与CI详解.md"],
+  ["run-webagent-vscode.sh", "docs/development/平台启动与CI详解.md"],
+  ["run-webagent.cmd", "docs/development/平台启动与CI详解.md"],
+  ["run-webagent.sh", "docs/development/平台启动与CI详解.md"],
+  ["webagent-core/agent-host/package.json", "docs/development/平台启动与CI详解.md"],
+  ["webagent-core/start-webagent.sh", "docs/development/平台启动与CI详解.md"],
   ["installer/webagent.iss", "installer/安装声明详解.md"],
 
   [
@@ -350,7 +350,7 @@ const sourceManifest = JSON.parse(read('docs-site/documentation-manifest.json'))
 for (const file of sourceManifest.files) {
   assert.ok(explainedSources.has(file.path), file.path + ': needs a detailed implementation guide');
 }
-const docs = new Set([...artifactPairs.map(p => p[1]), ...pairs.map(p => p[1]), 'Conda环境说明.md', '代码复盘指南.md', 'Windows新手逐步验收.md', 'review/CHECKLIST_WINDOWS.md']);
+const docs = new Set([...artifactPairs.map(p => p[1]), ...pairs.map(p => p[1]), 'docs/guides/Conda环境说明.md', 'docs/development/代码复盘指南.md', 'docs/guides/Windows新手逐步验收.md', 'review/CHECKLIST_WINDOWS.md']);
 for (const doc of docs) {
   assert.ok(routes.has(doc), doc + ': has viewer route');
   let fenced = false, columns = null;
@@ -368,15 +368,15 @@ for (const doc of docs) {
   }
   assert.ok(!fenced, doc + ': balanced fences');
 }
-const conda = read('Conda环境说明.md');
+const conda = read('docs/guides/Conda环境说明.md');
 for (const contract of ['process.execPath', 'sys.executable', 'conda run', '--include=dev', '-NoProfile', '未执行', '本轮沙箱没有 Conda']) assert.ok(conda.includes(contract), contract);
-const walkthrough = read('Windows新手逐步验收.md');
+const walkthrough = read('docs/guides/Windows新手逐步验收.md');
 for (const contract of ['CMD-A', 'CMD-B', 'echo %ERRORLEVEL%', '自动测试未执行', '当前会话本身没有', 'workspace_info', '停止 Bridge']) assert.ok(walkthrough.includes(contract), contract);
 const checklist = read('review/CHECKLIST_WINDOWS.md');
 for (const section of ['E1–E6', '## F.', '## G.', '## H.', '未执行', '不自动删']) assert.ok(checklist.includes(section), section);
 assert.ok(!checklist.includes('33 test files passed'));
 assert.ok(!checklist.includes('不需要在真机做的（沙箱已覆盖）'));
 const packaged = require('../../../installer/package').collect(root);
-for (const p of ['Conda环境说明.md', '代码复盘指南.md', 'Windows新手逐步验收.md', 'review/CHECKLIST_WINDOWS.md']) assert.ok(packaged.includes(p), p + ': ships with product');
-assert.ok(read('代码复盘指南.md').includes('尚须继续补齐'));
+for (const p of ['docs/guides/Conda环境说明.md', 'docs/development/代码复盘指南.md', 'docs/guides/Windows新手逐步验收.md', 'review/CHECKLIST_WINDOWS.md']) assert.ok(packaged.includes(p), p + ': ships with product');
+assert.ok(read('docs/development/代码复盘指南.md').includes('尚须继续补齐'));
 console.log('learning documentation names, navigation, formatting and Conda/acceptance contracts passed; not semantic certification');

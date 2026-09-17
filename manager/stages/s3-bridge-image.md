@@ -3,7 +3,7 @@
 # 阶段 3：Bridge 回传图片（MCP image 内容）
 
 ## 需求
-`review/PROMPT_SHUNCODE.md` 第三阶段：MCP `content:[{type:'image'}]`，等于网页 AI 能看桌面，安全边界变化，**必须用户书面同意**。2026-09-07 用户经 ask_user 选择「书面同意，现在开工」，授权原文存档于 `review/REPORT_SHUNCODE_S3.md`。
+`review/archive/PROMPT_SHUNCODE.md` 第三阶段：MCP `content:[{type:'image'}]`，等于网页 AI 能看桌面，安全边界变化，**必须用户书面同意**。2026-09-07 用户经 ask_user 选择「书面同意，现在开工」，授权原文存档于 `review/archive/REPORT_SHUNCODE_S3.md`。
 
 ## 实现（提交 4bceede 后端 + a6a10e7 文案，30/30 绿）
 - `mcp/server.js` tools/call 成功分支：`run_command` → `collectShot`（复用 agent 层：白名单/realpath/6MB）→ content 文本部件后追加 `{type:'image', data:裸 base64, mimeType}`；认不出静默回文本
@@ -21,7 +21,7 @@
 - [x] workbench/README.md、src/mcp/README.md、src/agent/README.md、src/tools/README.md、tests/README.md、测试说明.md
 - [x] 技能使用指南.md §10、架构导读.md §12、manager/agents.md
 - [x] docs-site/content.js 重建
-- [x] manager/CONTEXT.md、review/REPORT_SHUNCODE_S3.md
+- [x] manager/CONTEXT.md、review/archive/REPORT_SHUNCODE_S3.md
 
 ## 复盘
 - 安全边界类改动流程跑通：任务书预埋「停下等签字」→ ask_user 拿授权 → 报告存档原文 → 才动共享层。此流程应成为后续同类改动模板。

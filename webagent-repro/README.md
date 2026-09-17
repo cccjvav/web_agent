@@ -1,6 +1,6 @@
 # webagent-repro（已冻结，不要运行）
 
-**与主线已分叉的旧拷贝，仅供对照；DO-NOT-EDIT**（见 [架构导读.md](../架构导读.md) 第 12 节）。不要改这里的 JS。
+**与主线已分叉的旧拷贝，仅供对照；DO-NOT-EDIT**（见 [架构导读.md](../docs/development/架构导读.md) 第 12 节）。不要改这里的 JS。
 
 这是仓库里 **第一代 Bridge 原型**：一个 Node 进程同时提供简易网页和 MCP（默认端口 **3000**，工作区是本目录 `workspace_demo/`）。
 
@@ -10,7 +10,7 @@
 |---|---|
 | Windows 改本机仓库 | 仓库根 `run-webagent.cmd`，代码在 `../webagent-core/` |
 | 网页里真 VS Code | `run-webagent-vscode.cmd` |
-| 目录对照 | [组件说明.md](../组件说明.md) 第 1.1 节 |
+| 目录对照 | [组件说明.md](../docs/development/组件说明.md) 第 1.1 节 |
 
 下面是第一阶段行级说明书（对照用）。**不**把本目录当成可启动产品，不要改这里的 JS。
 

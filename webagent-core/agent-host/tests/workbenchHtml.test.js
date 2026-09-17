@@ -39,7 +39,7 @@ assert.ok(!html.includes('永久顺'));
 assert.ok(!html.includes('D:\\skills'));
 assert.ok(!html.includes('不必拷进当前项目'));
 assert.ok(!html.includes('不必拷进工作区'));
-assert.ok(html.includes('技能使用指南.md'));
+assert.ok(html.includes('docs/guides/技能使用指南.md'));
 assert.ok(html.includes('都不会'));
 assert.ok(!html.includes('Chat 模式才能外接 MCP'));
 assert.ok(html.includes('id="sb-ws"'));
