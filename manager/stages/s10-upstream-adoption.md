@@ -223,6 +223,6 @@ Playwright并未删除：当前Node开发依赖1.63.0，浏览器任务独立安
 
 profile/API/记忆新增负例与字节保留断言；Windows外部目录用junction测试，悬空文件symlink负例仅非Windows。单Node同步调用无await穿插，但没有外部OS写进程锁/版本控制、四文件事务或断电耐久性；辅助列表不是完整schema。R1本包结束，下一包R3继续settings.js加载/保存失败呈现与旧state提交链，R2继续共享路径/安全实现，不据此关闭全部优化。探测继续暂停，实机与Windows历史超时仍待。
 
-本地82测试文件通过；本批提交后的精确CI待核对，不沿用第23组绿灯。
+第24组55c3656d7842e5c361fefa27b376fa6db1ed8b75，[CI35245544812](https://github.com/cccjvav/web_agent/actions/runs/35245544812)九项逐项成功（七组主机Node、Windows安装器、Chromium）；本地82测试文件、246源码/28目录/110排除。悬空文件链接负例只在非Windows执行，Windows目录链接用junction；不是用户实机或同用户OS进程竞态验收，不关闭历史Windows22超时根因。
 
 更新路线状态后的本地全量曾1/82失败：旧交接守卫写死“R1 / 下一项”。改为检查R0–R8/P齐全且恰有一个当前下一项，保留结束标准/历史CI/暂停/验收守卫，再重跑；没有为过时断言把实际状态倒退为待做。

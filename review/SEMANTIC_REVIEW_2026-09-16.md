@@ -109,11 +109,11 @@
 
 全文对照画像与记忆指南及profile/customizations/memory。隔离旧模块证实notes局部修改重置shell、非法instructions发布JSON后失败、超大记忆写后不可召回、悬空记忆链接在外部创建文件。修已确认问题并补回归：有限输入类型/先渲染与8MiB输出预算/真实路径、两个子对象保留字段；清单256KiB且普通文件/对象，jsconfig不猜TS、Python标记不猜pytest；记忆正文16KiB/每日256KiB、CR/LF与NUL校验、lstat拒悬空链接。新预算不会自动清理已有超大日记或重试写操作。
 
-对应README、函数/测试说明及PUT错误格式同步；profile finally恢复工作区。全量82测试通过，精确提交CI在推送后核对。R1完成的是这三个模块的整篇对照与本包修复；settings.js失败消费/旧状态提交列入R3，通用路径、安全执行链列入R2；任意扩展字段schema、四文件事务、同用户跨进程竞态不由本包保证。
+对应README、函数/测试说明及PUT错误格式同步；profile finally恢复工作区。全量82测试通过；55c3656d7842e5c361fefa27b376fa6db1ed8b75的[CI35245544812](https://github.com/cccjvav/web_agent/actions/runs/35245544812)九项逐项成功。R1完成的是这三个模块的整篇对照与本包修复；settings.js失败消费/旧状态提交列入R3，通用路径、安全执行链列入R2；任意扩展字段schema、四文件事务、同用户跨进程竞态不由本包保证。
 
 ## 验证与维护入口
 
-第23组最新核验cd2a3eaa42831526e3a6ef7a504370144e857da5，[CI35243219647](https://github.com/cccjvav/web_agent/actions/runs/35243219647)九项逐项成功。本地82测试文件、246源码/28目录/110排除。首推0fac6f0漏带自动tests/README导航，CI35243193771仅1/9成功（浏览器）、整体失败；立即补齐而未删守卫，未将首推当绿灯。本组仅交接、导航与回归约束，无产品运行逻辑变更。
+第23组历史核验cd2a3eaa42831526e3a6ef7a504370144e857da5，[CI35243219647](https://github.com/cccjvav/web_agent/actions/runs/35243219647)九项逐项成功。本地82测试文件、246源码/28目录/110排除。首推0fac6f0漏带自动tests/README导航，CI35243193771仅1/9成功（浏览器）、整体失败；立即补齐而未删守卫，未将首推当绿灯。本组仅交接、导航与回归约束，无产品运行逻辑变更。
 
 第22组核验52b2148b96bbb01431f0ead70352e7d4a90e4f64，[CI35235675274](https://github.com/cccjvav/web_agent/actions/runs/35235675274)九项逐项成功；本地82测试文件、246源码/28目录/110排除。真实Git临时仓库/自写辅助程序正反对照在主机矩阵通过；不等于用户项目的LFS配置或所有Git版本验收。
 
