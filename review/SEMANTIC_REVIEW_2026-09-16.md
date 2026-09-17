@@ -2,9 +2,9 @@
 
 ## 当前状态
 
-第31组F31-01/02：R3状态刷新与聊天/内置选择已修，本地82测试文件和文档生成/构建通过，远端待本批精确提交核验。HTTP/核心形状错误不发布；新请求序号阻止旧头/JSON覆盖，select与标签按同一确认ID，未知模型不回退。选择按钮共用模型保存guard；写后读失败/被取代不重写。局部源码/说明与VM已核对；新增真实页面fixture待CI，本沙箱Chromium下载ECONNRESET，未执行。Provider添加的探测错误/超时、全数组替换及共用写guard是下一项；R2和全仓审查未完成。
+第31组F31-01/02：R3状态刷新与聊天/内置选择已修，本地82测试文件和文档生成/构建通过，实现78ebac2daac3904cd7d1ce71ea26a3c4152878a7的[CI35269106675](https://github.com/cccjvav/web_agent/actions/runs/35269106675)九项逐项成功。HTTP/核心形状错误不发布；新请求序号阻止旧头/JSON覆盖，select与标签按同一确认ID，未知模型不回退。选择按钮共用模型保存guard；写后读失败/被取代不重写。局部源码/说明与VM已核对；新增真实页面fixture已在CI Chromium执行通过；本沙箱Chromium下载ECONNRESET，未本地执行。Provider添加的探测错误/超时、全数组替换及共用写guard是下一项；R2和全仓审查未完成。
 
-第30组彻底回归原管家结构：计划、工作包与交接纳入[现有阶段10](../manager/stages/s10-upstream-adoption.md#当前工作包与交接约束)，CONTEXT仍是唯一接手索引；不再保留根交接文件或单独路线。第29组OAuth指引/空prompt修复与验证仍看阶段历史；本次只整理管理文档，不增加语义完成数。本地82测试文件通过；7439388ed80359bdcc814a8f0cfe3fb5a8267baf的[CI35266822926](https://github.com/cccjvav/web_agent/actions/runs/35266822926)九项成功，范围见阶段30组，不代替剩余审查或实机验收。
+第30组彻底回归原管家结构：计划、工作包与交接纳入[现有阶段10](../manager/stages/s10-upstream-adoption.md#当前工作包与交接约束)，CONTEXT仍是唯一接手索引；不再保留根交接文件或单独路线。第29组OAuth指引/空prompt修复与验证仍看阶段历史；第30组当时只整理管理文档，不增加语义完成数。本地82测试文件通过；7439388ed80359bdcc814a8f0cfe3fb5a8267baf的[CI35266822926](https://github.com/cccjvav/web_agent/actions/runs/35266822926)九项成功，范围见阶段30组，不代替剩余审查或实机验收。
 
 第28组28f26e166be5294bc2963b30e195e800ef48f05d，[CI35263924819](https://github.com/cccjvav/web_agent/actions/runs/35263924819)逐项九项成功（Ubuntu18/20/22/24、Windows20/22/24、安装器、Chromium）。本地82测试文件通过，246源码/28目录/110排除。本次CI实际执行，不再把账户问题列为当前全局阻塞；不推断账单如何恢复，不删除25–27组未启动历史，也不据此关闭Windows旧超时根因或第三方实机验收。
 
