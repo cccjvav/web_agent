@@ -103,13 +103,19 @@ for (const obsolete of ['MCP 走当前页面源', 'MCP 仍走当前页面源', '
 }
 for (const contract of ['test:browser', '主人权限', '真实工具', '已跟踪', '完整重开VSCode']) assert.ok(usageGuide.includes(contract), contract);
 
-const entrypoint = read('交接与路线图.md');
-assert.ok(entrypoint.includes('manager/CONTEXT.md') && entrypoint.includes('manager/ROADMAP.md'));
-assert.ok(!/\| R[0-8] \/|最新核验|最近已核验实现/.test(entrypoint), 'root handoff does not duplicate live status');
-const handoff = read('manager/ROADMAP.md');
-for (const id of ['R0','R1','R2','R3','R4','R5','R6','R7','R8','P']) assert.ok(handoff.includes('| ' + id + ' / '), 'handoff route: ' + id);
+for (const retired of ['交接与路线图.md', 'manager/ROADMAP.md']) {
+  assert.ok(!fs.existsSync(path.join(root, retired)), 'no parallel handoff file: ' + retired);
+}
+const handoff = read('manager/stages/s10-upstream-adoption.md');
+assert.deepStrictEqual([...handoff.matchAll(/^## (.+)$/gm)].map(m => m[1]), ['目标', '需求', '设计', '实现', '复盘', '待更新文档'], 'original stage template');
+assert.ok(!handoff.includes('## 当前剩余范围（施工与候选分开）'), 'no duplicate current package table');
+const managementIndex = read('manager/CONTEXT.md');
+assert.ok(managementIndex.split('\n').length < 80, 'lightweight L1 index');
+assert.ok(managementIndex.includes('stages/s10-upstream-adoption.md#当前工作包与交接约束'));
+assert.ok(read('AGENTS.md').includes('按需读取其他文件，禁止预加载全部'));
+for (const id of ['R0','R1','R2','R3','R4','R5','R6','R7','R8','P']) assert.strictEqual(handoff.split('| ' + id + ' / ').length - 1, 1, 'one authoritative handoff route: ' + id);
 assert.strictEqual([...handoff.matchAll(/\| R[1-8] \/ 下一项/g)].length, 1, 'handoff has one current next package, not permanently R1');
 for (const contract of ['完成标准', '35125290301', '不自动', '探测', '暂停', '本机MCP', 'memoryRecall']) {
   assert.ok(handoff.includes(contract), 'handoff contract: ' + contract);
 }
-for (const entry of ['README.md', 'AGENTS.md', 'manager/CONTEXT.md']) assert.ok(read(entry).includes('交接与路线图.md'), entry + ': discoverable handoff');
+for (const entry of ['README.md', 'AGENTS.md']) assert.ok(read(entry).includes('manager/CONTEXT.md'), entry + ': original management entry');

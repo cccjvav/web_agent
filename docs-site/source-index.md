@@ -215,7 +215,7 @@
 
 ## docs-site/documentation.config.json
 
-[目录说明](README.md) · SHA-256 `da7b7a58a5476407e3e52714c14c0ec57b27fce56470999c700f98b32ef5059d`
+[目录说明](README.md) · SHA-256 `520b8fbe305cbb0da8ff0c6179dfa9e9a4e946fabe3f36fc7cc5734c5e5b5385`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -2018,7 +2018,7 @@
 
 ## webagent-core/agent-host/tests/documentationLinks.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `b754751debe70bf77bff30d0918b0998298c01a2a91d805333290a8d92f74137`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `8cec6042ef0c82868f9cc25405af8c9f8f3e0364c16edaa2fd0f7218509f1201`
 
 - `read` — ArrowFunctionExpression，[L6–L6](../webagent-core/agent-host/tests/documentationLinks.test.js#L6-L6)
 - `checkLinks` — FunctionDeclaration，[L7–L17](../webagent-core/agent-host/tests/documentationLinks.test.js#L7-L17)
@@ -2061,7 +2061,7 @@
 
 ## webagent-core/agent-host/tests/documentationQuality.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `d680b3b13391553527f13fb512bd6b3e9a3850ca465967a7652b7282759868ce`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `1e76449f0275b1cfd3d205ef1d995ab48a048e0260f901a0c5c7128c48df7155`
 
 - `anonymous@10:88` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationQuality.test.js#L10-L10)
 - `read` — ArrowFunctionExpression，[L35–L35](../webagent-core/agent-host/tests/documentationQuality.test.js#L35-L35)
@@ -2072,6 +2072,7 @@
 - `go` — ArrowFunctionExpression，[L84–L84](../webagent-core/agent-host/tests/documentationQuality.test.js#L84-L84)
 - `getElementById` — ArrowFunctionExpression，[L85–L85](../webagent-core/agent-host/tests/documentationQuality.test.js#L85-L85)
 - `getElementById/scrollIntoView` — FunctionExpression，[L85–L85](../webagent-core/agent-host/tests/documentationQuality.test.js#L85-L85)
+- `anonymous@110:64` — ArrowFunctionExpression，[L110–L110](../webagent-core/agent-host/tests/documentationQuality.test.js#L110-L110)
 
 ## webagent-core/agent-host/tests/editorReview.test.js
 

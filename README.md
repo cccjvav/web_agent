@@ -47,7 +47,7 @@ code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容�
 
 | 目的 | 唯一主入口 |
 |---|---|
-| 接手开发与后续计划 | [交接与路线图](交接与路线图.md)（源码checkout） |
+| 接手开发与后续计划 | [项目管理索引](manager/CONTEXT.md)（源码checkout） |
 | 按动作逐步验收 | [Windows 新手逐步验收](docs/guides/Windows新手逐步验收.md)、[人工清单](review/CHECKLIST_WINDOWS.md) |
 | 环境安装与维护 | [Conda 环境](docs/guides/Conda环境说明.md)、[启动入口](启动脚本说明.md)、[安装器](installer/README.md) |
 | 公网 Bridge | [隧道配置](docs/guides/隧道使用指南.md)、[当前权限与工作模式](docs/guides/Bridge权限与工作模式.md) |

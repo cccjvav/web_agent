@@ -69,7 +69,7 @@
   "extraSiteDocs": [
     {
       "id": "handoff-roadmap",
-      "path": "交接与路线图.md",
+      "path": "manager/CONTEXT.md",
       "group": "维护"
     },
     {
@@ -504,7 +504,7 @@
     },
     {
       "id": "management-roadmap",
-      "path": "manager/ROADMAP.md",
+      "path": "manager/stages/s10-upstream-adoption.md",
       "group": "维护"
     }
   ],

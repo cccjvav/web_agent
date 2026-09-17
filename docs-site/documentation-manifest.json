@@ -1172,7 +1172,7 @@
     {
       "path": "docs-site/documentation.config.json",
       "doc": "docs-site/README.md",
-      "sha256": "da7b7a58a5476407e3e52714c14c0ec57b27fce56470999c700f98b32ef5059d",
+      "sha256": "520b8fbe305cbb0da8ff0c6179dfa9e9a4e946fabe3f36fc7cc5734c5e5b5385",
       "lineCount": 518,
       "structure": "file-only",
       "semanticReview": "not-certified",
@@ -14240,7 +14240,7 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLinks.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "b754751debe70bf77bff30d0918b0998298c01a2a91d805333290a8d92f74137",
+      "sha256": "8cec6042ef0c82868f9cc25405af8c9f8f3e0364c16edaa2fd0f7218509f1201",
       "lineCount": 85,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -14563,8 +14563,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationQuality.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "d680b3b13391553527f13fb512bd6b3e9a3850ca465967a7652b7282759868ce",
-      "lineCount": 116,
+      "sha256": "1e76449f0275b1cfd3d205ef1d995ab48a048e0260f901a0c5c7128c48df7155",
+      "lineCount": 122,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -14645,6 +14645,16 @@
           "startLine": 85,
           "endLine": 85,
           "parameters": []
+        },
+        {
+          "id": "anonymous@110:64",
+          "name": "anonymous@110:64",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 110,
+          "endLine": 110,
+          "parameters": [
+            "m"
+          ]
         }
       ]
     },
