@@ -93,7 +93,9 @@
 
 ## 验证与维护入口
 
-第20组最新核验b4cd7ae4852c113e6d9cf51fdce3da6cf3ba279d，[CI35231427025](https://github.com/cccjvav/web_agent/actions/runs/35231427025)九项逐项成功（七组主机、安装器、Chromium）；本地82测试文件、246源码/28目录/110排除。仅验证本仓库变更，不认证外部探测项目，不证明此前Windows超时根因已修复。
+第21组最新核验2e1bc29c280ab08b7cebe985bb6ba602c968f483，[CI35233048258](https://github.com/cccjvav/web_agent/actions/runs/35233048258)九项逐项成功；本地82测试文件、246源码/28目录/110排除。包含真实提供商模块＋模拟进程事件的日志回归，不是实际Cloudflare/ngrok连接验收。
+
+第20组核验b4cd7ae4852c113e6d9cf51fdce3da6cf3ba279d，[CI35231427025](https://github.com/cccjvav/web_agent/actions/runs/35231427025)九项逐项成功（七组主机、安装器、Chromium）；本地82测试文件、246源码/28目录/110排除。仅验证本仓库变更，不认证外部探测项目，不证明此前Windows超时根因已修复。
 
 第19组完整核验：e470d5ff7efbdcfe3ef03d86f42519f147003a9a，[CI35125876577](https://github.com/cccjvav/web_agent/actions/runs/35125876577)九项逐项成功。该提交仅记录上一轮证据，未修改实现或放宽测试；新的完整CI通过，先前Windows22超时根因仍未证明。
 
