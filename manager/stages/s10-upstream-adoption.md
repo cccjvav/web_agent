@@ -701,7 +701,9 @@ R9首包把Actions权限收敛为`contents: read`，高危生产依赖审计改�
 
 详细文件、前置报告状态、验证和剩余Node EOL/lint/生成物/实机取舍见[第45组报告](../../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)。对话中断后分支ref曾回到初始提交而文件仍为新基线；先备份binary diff/未跟踪项，再仅`update-ref`+`read-tree`恢复固定分支到`81fb5c2`，未覆盖工作文件。本批本地最终证据：83个主测试文件通过；文档库存247/28/110与构建一致；calculator 6项、trace-inspector 77项、model-probe四阶段（69单测/15 E2E/20冒烟）通过；生产审计0漏洞、扩展镜像一致。
 
-首推`e0fdf65`的[CI35380095907](https://github.com/cccjvav/web_agent/actions/runs/35380095907)为8/9：Ubuntu/Windows主机矩阵及Windows安装器全部通过，真实Chromium在640px首次跨断点时捕获已展开侧栏遮挡Agent菜单。未改断言掩盖失败；bind现只在宽→窄跨越时关闭旧桌面侧栏并同步焦点/ARIA，避免窄屏键盘高度resize误关用户刚开的抽屉；VM加入1000→640真实闭包回归。Actions checkout/setup-node同步升v5，清理由旧Node动作运行时产生的弃用告警。该修复的精确提交CI仍需推送后核对，不继承首推8个通过项。
+首推`e0fdf65`的[CI35380095907](https://github.com/cccjvav/web_agent/actions/runs/35380095907)为8/9：Ubuntu/Windows主机矩阵及Windows安装器全部通过，真实Chromium在640px首次跨断点时捕获已展开侧栏遮挡Agent菜单。未改断言掩盖失败；bind现只在宽→窄跨越时关闭旧桌面侧栏并同步焦点/ARIA，避免窄屏键盘高度resize误关用户刚开的抽屉；VM加入1000→640真实闭包回归。Actions checkout/setup-node同步升v5，清理由旧Node动作运行时产生的弃用告警。
+
+`04c8e04`的[CI35381193695](https://github.com/cccjvav/web_agent/actions/runs/35381193695)再次8/9，Chromium已越过原遮挡点并运行到Skill创建400负例；失败是浏览器断言仍要求旧版纯服务端错误串，而bind已按本批合同显示“状态未知：原错误”。断言现同时要求可信状态语义、保留原错误且磁盘零创建，不通过删负例或放宽为任意toast掩盖。精确后续提交CI仍需推送后核对，不继承前两轮8个通过项。
 
 
 ## 复盘

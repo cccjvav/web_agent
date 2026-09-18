@@ -636,7 +636,8 @@ async function main() {
     }) : route.continue());
     await page.fill('#sk-name', 'rejected-browser-skill');
     await page.click('#btn-add-skill');
-    await page.waitForFunction(() => document.querySelector('#toast').textContent === 'fixture skill create rejected');
+    await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('fixture skill create rejected'));
+    assert.ok((await page.locator('#toast').textContent()).includes('状态未知'));
     assert.ok(!fs.existsSync(path.join(workspace,'.webagent/skills/rejected-browser-skill/SKILL.md')));
     await page.unroute('**/api/skills');
     await page.fill('#skill-search', 'browser-review');

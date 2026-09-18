@@ -74,7 +74,7 @@
 - 辅助项目：calculator 6/6；trace-inspector 77/77；model-probe构建、69项单测、15项E2E、20项启动冒烟四阶段通过。
 - 生产依赖审计：0个已知漏洞；结论只对应执行时公告与生产依赖。
 - 语法/镜像：202份库存JS、2份Python、4份Shell通过对应本地语法检查；规范扩展与安装镜像一致；`webagent-repro/`零差异。
-- 真实浏览器：本机没有Playwright Chromium，下载此前持续`ECONNRESET`。首推`e0fdf65`的[CI 35380095907](https://github.com/cccjvav/web_agent/actions/runs/35380095907)中8个非浏览器任务通过；Chromium实际发现桌面已展开侧栏在首次跨入640px时遮挡Agent菜单。后续补丁在跨入700px抽屉断点时收起旧桌面侧栏并恢复ARIA/焦点，另升级checkout/setup-node动作运行时；精确修复提交仍须以其Actions结果为准。
+- 真实浏览器：本机没有Playwright Chromium，下载此前持续`ECONNRESET`。首推`e0fdf65`的[CI 35380095907](https://github.com/cccjvav/web_agent/actions/runs/35380095907)中8个非浏览器任务通过；Chromium实际发现桌面已展开侧栏在首次跨入640px时遮挡Agent菜单。`04c8e04`在跨入700px抽屉断点时收起旧桌面侧栏并恢复ARIA/焦点、升级checkout/setup-node动作运行时；[CI 35381193695](https://github.com/cccjvav/web_agent/actions/runs/35381193695)确认该处已越过并再次8/9，但随后暴露Skill失败提示的浏览器断言仍要求旧版纯错误串。后续断言同时要求新“状态未知”语义和原服务端错误，精确修复提交仍须以其Actions结果为准。
 
 ## 6. 仍需保留的风险/决策
 
