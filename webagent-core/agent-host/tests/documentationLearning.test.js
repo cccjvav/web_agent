@@ -221,6 +221,7 @@ const pairs = [
   ["webagent-core/agent-host/src/tools/planRound.js", "webagent-core/agent-host/src/tools/Plan状态详解.md"],
   ["webagent-core/agent-host/src/tools/consensusEngine.js", "webagent-core/agent-host/src/tools/Plan状态详解.md"],
   ["webagent-core/agent-host/src/models/store.js", "webagent-core/agent-host/src/models/配置存储详解.md"],
+  ["webagent-core/agent-host/src/models/modelSettings.js", "webagent-core/agent-host/src/models/配置存储详解.md"],
   ["webagent-core/agent-host/src/models/customizations.js", "webagent-core/agent-host/src/models/画像与记忆详解.md"],
   ["webagent-core/agent-host/src/models/profile.js", "webagent-core/agent-host/src/models/画像与记忆详解.md"],
   ["webagent-core/agent-host/src/models/memory.js", "webagent-core/agent-host/src/models/画像与记忆详解.md"],

@@ -83,6 +83,7 @@ function addProvider(input) {
   // Read real stored records, never reconstruct previous keys from /status or masked /models.
   // No await between load/check/save: serialized in this host, not a cross-process lock.
   const cfg = store.load();
+  if (cfg.models.length + models.length > 100) throw providerError('模型目录最多保存100项，请先整理现有配置');
   for (const model of models) {
     if (cfg.models.some(existing => {
       if (existing.id === model.id) return true;

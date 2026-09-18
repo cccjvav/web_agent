@@ -235,6 +235,48 @@ async function main() {
     assert.strictEqual(row.pricing, '$1/M');
     assert.strictEqual(row.hasKey, true);
     assert.ok(!('apiKey' in row));
+
+    const configPath = path.join(tmp, '.webagent/config.json');
+    const redactedModels = await request(server, 'GET', '/api/models');
+    assert.strictEqual(redactedModels.json.models.find(model => model.id === 'custom-1').apiKey, '••••');
+    const redactedRoundTrip = await request(server, 'POST', '/api/models', redactedModels.json);
+    assert.strictEqual(redactedRoundTrip.status, 200, 'legacy model-table updates remain compatible');
+    assert.strictEqual(JSON.parse(fs.readFileSync(configPath, 'utf8')).models.find(model => model.id === 'custom-1').apiKey, 'sk-secret',
+      'a redacted GET response cannot overwrite the stored credential');
+    const validMultiModel = { enabled: false, mergeModel: 'builtin', thinkLevel: 'medium', mergeAllowsRead: false, maxBranches: 3 };
+    const savedMultiModel = await request(server, 'POST', '/api/models', { multiModel: validMultiModel });
+    assert.strictEqual(savedMultiModel.status, 200);
+    assert.strictEqual(savedMultiModel.json.modelCount, redactedModels.json.models.length);
+    assert.deepStrictEqual(savedMultiModel.json.multiModel, validMultiModel);
+    const beforeInvalidModelSettings = fs.readFileSync(configPath, 'utf8');
+    for (const body of [
+      {}, [], { typo: true }, { activeModelId: '' }, { activeModelId: 7 }, { activeModelId: 'missing-model' },
+      { models: [] }, { models: redactedModels.json.models, model: { id: 'mixed' } },
+      { model: 'bad' }, { model: { id: 'bad-caps', caps: 'vision' } },
+      { model: { id: 'custom-1', apiKey: 'do-not-echo', caps: 'invalid' } },
+      { model: { id: 'custom-1', baseUrl: 'https://retargeted.invalid/v1' } },
+      { model: { id: 'custom-1', apiKey: '••••', baseUrl: 'https://retargeted.invalid/v1' } },
+      { multiModel: {} }, { multiModel: { enabled: 'false' } }, { multiModel: { maxBranches: 9 } },
+      { multiModel: { thinkLevel: 'extreme' } }, { multiModel: { mergeModel: 'missing-model' } },
+      { multiModel: { typo: true } }
+    ]) {
+      const rejected = await request(server, 'POST', '/api/models', body);
+      assert.strictEqual(rejected.status, 400, `invalid model settings must be rejected: ${JSON.stringify(body)}`);
+      assert.strictEqual(rejected.json.success, false);
+      assert.strictEqual(rejected.json.code, 'E_BAD_MODEL_SETTINGS');
+      assert.ok(!JSON.stringify(rejected.json).includes('do-not-echo'), 'validation errors cannot echo request credentials');
+      assert.strictEqual(fs.readFileSync(configPath, 'utf8'), beforeInvalidModelSettings, 'invalid settings cannot rewrite configuration');
+    }
+    const retargetedModel = await request(server, 'POST', '/api/models', {
+      model: { id: 'custom-1', baseUrl: 'https://retargeted.example/v1', apiKey: 'replacement-secret' }
+    });
+    assert.strictEqual(retargetedModel.status, 200, 'an explicit replacement credential permits a connection change');
+    assert.ok(!JSON.stringify(retargetedModel.json).includes('replacement-secret'), 'model update responses cannot echo credentials');
+    assert.strictEqual(JSON.parse(fs.readFileSync(configPath, 'utf8')).models.find(model => model.id === 'custom-1').apiKey, 'replacement-secret');
+    const restoredModel = await request(server, 'POST', '/api/models', {
+      model: { id: 'custom-1', baseUrl: 'https://example.com/v1', apiKey: 'sk-secret' }
+    });
+    assert.strictEqual(restoredModel.status, 200);
     // Disconnecting the local discovery request aborts its upstream signal.
     const previousFetch=global.fetch;
     let upstreamStarted, upstreamCancelled, disconnectTimer;
@@ -271,7 +313,6 @@ async function main() {
     assert.notEqual(appended[0].id,appended[1].id,'normalization must not collapse distinct model IDs');
     assert.ok(appended.every(m=>m.apiKey==='second-fixture-key' && m.vision));
     assert.ok(!JSON.stringify(addedProvider.json).includes('fixture-key'));
-    const configPath=path.join(tmp,'.webagent/config.json');
     const providerBytes=fs.readFileSync(configPath,'utf8');
     const duplicateProvider=await request(server,'POST','/api/models',{addProvider:{...providerInput,apiKey:'replacement-key'}});
     assert.equal(duplicateProvider.status,409);
@@ -289,6 +330,12 @@ async function main() {
     }
     assert.equal((await request(server,'POST','/api/models',{addProvider:providerInput,models:[]})).status,400);
     assert.equal(fs.readFileSync(configPath,'utf8'),providerBytes);
+    const tooManyModels = await request(server, 'POST', '/api/models', { addProvider: {
+      baseUrl: 'https://capacity.test/v1', apiKey: 'capacity-key',
+      models: Array.from({ length: 100 }, (_, index) => ({ id: `capacity-${index}` }))
+    } });
+    assert.equal(tooManyModels.status, 400, 'provider append cannot grow the stored catalog beyond 100 models');
+    assert.equal(fs.readFileSync(configPath, 'utf8'), providerBytes);
     // Two overlapping HTTP requests are serialized by the synchronous local save path.
     const parallel=await Promise.all(['third','fourth'].map(name=>request(server,'POST','/api/models',{
       addProvider:{baseUrl:`https://${name}.test/v1`,apiKey:`${name}-key`,models:[{id:'shared-model'}]}

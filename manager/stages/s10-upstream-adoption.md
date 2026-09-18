@@ -85,7 +85,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 高，继续 | 进行中：第38–40组控制面、OAuth凭据/issuer、会话公开标识/主体绑定首包已核对；其余安全依赖继续，不作全链认证 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27/31–37与41–43/45组既有消费链已修；第46组修operatorQueue保留/过期、审批schema及相邻目录/命令/日志/任务状态caller隔离；下一包继续尚未核对的非探针API/workflow结果边界，不重做已修链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试；明确排除探针专项 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
+| R3 / 下一项，高 | 进行中：第25/27/31–37与41–43/45–47组既有消费链已修；第46组修审批保留/schema及caller隔离，第47组修外部ok:false覆盖、工作流部分读取继续写及模型设置掩码/连接绑定/严格事务；下一包继续尚未核对的非探针REST结果边界并与R2安全链交叉，不重做已修链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、modelSettings、operatorQueue/workflows、工具入口与相关测试；明确排除探针专项 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -721,6 +721,16 @@ approvedOperations以可控Date.now覆盖临期完成、完整结果保留、可
 本组明确排除`arena-model-probe/`、`webagent-core/probe-extension/`及探针专项文档/测试；没有读取后再自行判定“顺手修复”。探针线索只移交负责该项目的另一位助手。
 
 本组文档链首次运行到inventory时出现“missing Bridge任务栏说明.md”；核对发现并非文件/清单丢失，而是固定分支ref第三次被环境改回`1d532d0`，旧索引把现行docs/guides路径看成根路径删除/新增。按上节先备份、核对远端`27fca73`并恢复ref/index后，同一documentationLinks与docsSite通过；该次环境失败不冒充源码回归，也不靠改清单掩盖。扩展后的首轮完整套件另为82/83：唯一docsSite失败明确指出恢复记录在生成站点后又改文案产生镜像漂移；重建content.js后最终83/83，不以该可解释失败冒充产品逻辑回归。
+
+#### 第47组：非探针外部结果、部分读取与模型设置事务
+
+继续R3时先用真实回环MCP夹具复现：第三方tools/call回`ok:false`但无isError，被externalClient覆盖为ok:true并进入succeeded终态。execute现保留外部失败信号，以共享isToolFailure派生统一ok；仍标external-reported，不外推副作用证明。重复批准失败记录不再次调用。
+
+工作流另用真实临时目录证明read_files双路径一项成功、一项missing时，普通工具返回`files:[成功,error]`，旧execute只看顶层trace而继续创建后续文件。新增hasPartialReadFailure只在固定工作流把显式逐项error标failed/E_PARTIAL_READ并停止；普通工具保留有界部分读取合同，不将truncated或git不可用等已声明状态泛化为失败。
+
+模型API红测证明GET脱敏表直接POST会把磁盘fixture Key改成`••••`；旧空/拼错/错类型请求还会无操作报成功或非结构化失败，单model改baseUrl可通过浅合并沿用旧Key。新`models/modelSettings.js`从长routes分离请求级校验：非空固定字段、models/model互斥、模型数量/显示字段/caps/vision、有效active/merge引用及multiModel严格布尔/枚举/整数。掩码只在同id且protocol/baseUrl/modelId不变时恢复；省略或掩码改连接都拒绝，显式Key字段才可改变身份；addProvider现有加本批也不得超过100，不能靠多批绕开整表预算。全部输入通过后才单次store.save；失败逐字节保持配置。兼容旧整表往返，但不是跨进程CAS、模型可调用或供应商实测。
+
+approvedOperations、workflowPreconditions和apiFiles三项红转绿；相关模型存储、API、受控工作流和测试正文同步，documentationLearning新增modelSettings到唯一主说明。首轮全量为80/83：documentationQuality抓到交接表暂时没有唯一“下一项”，docsSite抓到源码改后未重建镜像，workflowPreconditions抓到状态重排误少一个optional chain；三者修正并定向通过后，最终83/83。文档库存248源码/28目录/110排除且只读updated=0，站点重建一致，生产audit为0漏洞；精确CI须按本组实现提交补记。探针目录零diff，不把完整回归中既有探针测试的通过冒充专项审查。
 
 ## 复盘
 

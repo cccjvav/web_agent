@@ -9,6 +9,7 @@
 | 文件 | 存储/输出 | 用途 |
 |---|---|---|
 | `store.js` | `.webagent/config.json` | 模型、活动模型、Bridge选项、多模型配置及持久身份 |
+| `modelSettings.js` | 严格模型设置请求→原子单文件保存结果 | 校验局部/旧整表模型API，保护脱敏Key与连接身份 |
 | `customizations.js` | `customizations.json`及三份派生Markdown | 指令、偏好、环境/栈覆盖与界面列表 |
 | `profile.js` | 返回对象或Markdown，不主动写盘 | 根据平台、项目清单和锁文件推断环境与测试命令 |
 | `memory.js` | `memory/YYYY-MM-DD.md` | 追加简短备忘和读取日期条目 |
@@ -18,6 +19,8 @@
 `load`在文件不存在时使用defaults；已有文件的JSON或部分结构校验失败则抛 `E_CONFIG_CORRUPT` 并保留原文。模型ID须非空且不重复，已校验的模型字段要满足类型约束；这不是所有嵌套字段的完整schema验证。
 
 `patch`先load，再合并顶层和特定子对象；`save`写同目录独占临时文件并rename，尝试0600权限及忽略规则保护。损坏配置应先备份再显式修复，不能期待下一次patch静默重置。权限模式在Windows不等价于完整ACL管理；gitignore也不能移除已跟踪的秘密文件。
+
+模型POST另经`modelSettings.updateModelSettings`收紧：非空包装只接受activeModelId/models/model/multiModel，models与model不能混用；模型与多模型字段有类型、总量、枚举和引用边界，addProvider追加后整表也不得超过100项。GET返回的`••••`只可为同一模型、同一protocol/baseUrl/modelId恢复磁盘旧Key；改连接身份必须显式提供Key字段，防掩码或省略字段把现存凭据转绑到另一端点。整表兼容不等于开放无校验覆盖，保存仍是单进程同步读改写，不是跨进程CAS。
 
 | 配置组 | 主要字段与语义 |
 |---|---|
@@ -52,6 +55,7 @@ memory的day必须为有效日历日期；路径和真实链接目标经过工�
 |---|---|
 | [customizations.js](customizations.js) | 7 个函数/类节点 |
 | [memory.js](memory.js) | 9 个函数/类节点 |
+| [modelSettings.js](modelSettings.js) | 15 个函数/类节点 |
 | [profile.js](profile.js) | 15 个函数/类节点 |
 | [store.js](store.js) | 29 个函数/类节点 |
 <!-- docs-inventory:end -->

@@ -20,6 +20,7 @@ const { runChat } = require('../agent/runChat');
 const planRound = require('../tools/planRound');
 const { listRemoteModels, addProvider } = require('../agent/providers');
 const store = require('../models/store');
+const { updateModelSettings } = require('../models/modelSettings');
 const { loadCustom, patchCustom } = require('../models/customizations');
 const { detectEnvironment, detectTechStack } = require('../models/profile');
 const { listSkills, discoverSkills } = require('../tools/skills');
@@ -521,23 +522,14 @@ router.get('/models', (req, res) => {
 });
 
 router.post('/models', (req, res) => {
-  const body = req.body || {};
-  if (Object.hasOwn(body, 'addProvider')) {
-    if (Object.keys(body).length !== 1) return res.status(400).json({success:false,error:'addProvider不能与整表替换或其他设置混用'});
+  const body = req.body;
+  if (body && typeof body === 'object' && !Array.isArray(body) && Object.hasOwn(body, 'addProvider')) {
+    if (Object.keys(body).length !== 1) return res.status(400).json({success:false,error:'addProvider不能与整表替换或其他设置混用',code:'E_BAD_MODEL_SETTINGS'});
     try { return res.json(addProvider(body.addProvider)); }
     catch (error) { return res.status(error.status || 500).json({success:false,error:error.message,code:error.code || 'E_INTERNAL'}); }
   }
-  const cfg = store.load();
-  if (body.activeModelId) cfg.activeModelId = body.activeModelId;
-  if (Array.isArray(body.models)) cfg.models = body.models;
-  if (body.model) {
-    const idx = cfg.models.findIndex((m) => m.id === body.model.id);
-    if (idx >= 0) cfg.models[idx] = { ...cfg.models[idx], ...body.model };
-    else cfg.models.push(body.model);
-  }
-  if (body.multiModel) cfg.multiModel = { ...cfg.multiModel, ...body.multiModel };
-  store.save(cfg);
-  res.json({ success: true, activeModelId: cfg.activeModelId });
+  try { return res.json(updateModelSettings(body)); }
+  catch (error) { return res.status(error.status || 500).json({ success: false, error: error.message, code: error.code || 'E_INTERNAL' }); }
 });
 
 router.get('/logs', (req, res) => {

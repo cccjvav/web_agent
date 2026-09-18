@@ -22,7 +22,7 @@
 | [统计与文档测试](统计与文档测试详解.md) | adminHost、docsSite、docsHttp |
 | [工作台HTML结构与测试](../../workbench/页面结构详解.md) | workbenchHtml |
 
-documentationLearning检查全部清单源文件的正文登记；对JS检查具名函数/类方法提及，对非JS检查文件名关联。总计130个JS与36个非JS对应60篇详解，只有机械遗漏/漂移检查，不认证解释准确性，也不代表Windows/Conda实测。
+documentationLearning检查全部清单源文件的正文登记；对JS检查具名函数/类方法提及，对非JS检查文件名关联。总计131个JS与36个非JS对应60篇详解，只有机械遗漏/漂移检查，不认证解释准确性，也不代表Windows/Conda实测。
 
 ## 职责与运行
 这里存放可独立运行的 `.test.js`，统一入口是上一级scripts/run-tests.js。runner检查依赖和必需测试，发现其他测试文件，以独立进程执行，超时/失败非零退出；测试失败仍汇总其余结果。
@@ -54,6 +54,8 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 第45组补齐优化报告中的结果消费者并扩大可靠性/可访问性回归：workbenchRuntime覆盖登录、清除身份、新建文件、终端、搜索、补丁后读、Bridge统计布尔结果及Chat严格流终态；apiFiles以并发HTTP证明createOnly只能一方创建；githubAuth覆盖设备流程代次与poll单飞；ptyLifecycle拒绝非2xx伪成功；workbenchHtml检查标签、ARIA、原生按钮和390px样式源码。独立workbench.browser.js增加帮助模态焦点恢复与390×844边界断言；workbenchRuntime还执行1000→640px断点跨越，防止已展开侧栏遮挡Agent菜单并核对焦点/ARIA恢复；本地没有Chromium时不得把其源码登记写成浏览器执行通过。
 
 第46组只续审非探针R3审批/工作流与相邻结果消费者：approvedOperations拒绝external_request/operation_result未知包装字段，并用可控Date.now证明临近审批期限完成后仍从finishedAt保留完整15分钟、expired可见且迟到cancel不改写为denied；workflowPreconditions拒绝definition及preview/request包装的顶层未知字段、exists:false与contains/sha256矛盾合同，以及完整输出自/前向引用和危险/空路径段；正文中间的同名文字保持字面量；executionControl证明tools/list/get_capabilities使用相同远程ACL，并证明命令显式ID、缺省最近记录、取消及get_logs执行记录均绑定远程peer；taskProgress证明get_task_status只返回本机/当前peer计划，不再向远程回传Local计划，未知peer纯读取也不占16个报告槽。没有修改或专项审查探针项目。
+
+第47组继续非探针API/workflow结果边界：approvedOperations让真实外部MCP返回ok:false但不带isError，要求终态failed且不重放；workflowPreconditions让双路径read_files一项成功、一项missing，要求E_PARTIAL_READ并阻止后续写；apiFiles经真实HTTP验证模型GET掩码整表安全往返、连接字段改写必须显式给Key、严格active/merge/multiModel/包装字段、addProvider整表100项上限与全部输入失败配置字节零变化。未调用真实第三方模型或扩大探针范围。
 
 ## 按风险选择回归
 | 风险/模块 | 主要测试 | 证据类型与限制 |
@@ -97,7 +99,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | 源码 | 定位证据 |
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
-| [apiFiles.test.js](apiFiles.test.js) | 34 个函数/类节点 |
+| [apiFiles.test.js](apiFiles.test.js) | 38 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 20 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |

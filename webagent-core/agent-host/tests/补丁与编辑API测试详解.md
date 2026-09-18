@@ -60,3 +60,5 @@ apiFiles用真实本地HTTP验证addProvider追加两模型，旧模型/真实fi
 发现路由fixture暂时替换global.fetch以捕获上游signal，实际发本机HTTP请求、等待上游开始后destroy客户端；2000ms watchdog内必须收到abort。finally清timer并恢复fetch。不是用临时API直接挂载证明完整Origin/Host认证，也不调用真实提供商。
 
 第35组apiFiles检查点创建续测：提交./checkpoint-http.txt别名，返回规范路径checkpoint-http.txt、ready与result:null，原文件字节不变；已有文件加缺失文件的创建400后，GET元数据完整等于失败前，不留半条记录。后续原有预览/严格确认/真实恢复断言保留；这证明既有后端行为，不是本批新加幂等接口。
+
+第47组模型设置API续测：先GET带`••••`的旧整表再POST，磁盘fixture Key必须仍为原值；同连接身份的旧客户端往返保持兼容。合法multiModel五字段保存后响应含实际modelCount，空/数组/未知顶层、空/未知/错类型/越界多模型、未知active/merge引用、空models、models+model混用及坏caps均400/E_BAD_MODEL_SETTINGS，逐次比较配置完整字节不变，错误正文不回显fixture Key。单model用省略Key或掩码把原id改到另一baseUrl也必须零写，防旧秘密被浅合并转绑；显式replacement Key则允许改连接并可显式改回；已有目录再通过addProvider追加100项也因整表超过100而400/零写，不能分批绕过预算。未请求真实模型端点，不认证API Key有效性或跨进程CAS。

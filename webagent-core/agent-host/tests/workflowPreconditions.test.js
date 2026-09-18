@@ -47,6 +47,16 @@ async function main() {
     assert.strictEqual(fs.readFileSync(path.join(root, 'first.txt'), 'utf8'), 'remains');
     assert.strictEqual(fs.readFileSync(path.join(root, 'target.txt'), 'utf8'), 'new');
     assert.ok(!fs.existsSync(path.join(root, 'never.txt')));
+    fs.writeFileSync(path.join(root, 'readable.txt'), 'available');
+    const partialRead = workflows.request({ definition: { steps: [
+      { id: 'read', tool: 'read_files', arguments: { paths: ['readable.txt', 'missing.txt'] } },
+      writeStep('mustStop', 'after-partial-read.txt', 'never')
+    ] }, requestKey: 'partial-read-stops' });
+    await queue.approve(partialRead.requestId, true);
+    const partialReadResult = queue.inspect(partialRead.requestId);
+    assert.strictEqual(partialReadResult.status, 'failed', 'an explicit per-file read error stops the workflow');
+    assert.strictEqual(partialReadResult.result.steps[0].errorCode, 'E_PARTIAL_READ');
+    assert.ok(!fs.existsSync(path.join(root, 'after-partial-read.txt')), 'partial read results cannot authorize later effects');
     for (const condition of [null, {}, [], { path: 'x', exists: null }, { path: 'x', sha256: null }, { path: 'x', contains: 3 }, { path: 'x', exists: false, typo: true }]) {
       for (const field of ['before', 'expect']) assert.throws(() => workflows.preview({ steps: [{ ...writeStep('x', 'x', 'x'), [field]: condition }] }));
     }

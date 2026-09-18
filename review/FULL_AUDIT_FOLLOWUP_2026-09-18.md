@@ -1,6 +1,6 @@
-<!-- 定位：第45组全仓交叉审查及第46组非探针审批/工作流/caller隔离追加报告；结论按证据范围成立，不是用户实机或形式化安全认证。 -->
+<!-- 定位：第45组全仓交叉审查及第46–47组非探针审批、API/workflow结果边界追加报告；结论按证据范围成立，不是用户实机或形式化安全认证。 -->
 
-# 全仓交叉审查与实修报告（2026-09-18）
+# 全仓交叉审查与实修报告（2026-09-18，续至09-19）
 
 - 固定分支：`arena/01a0b053-web-agent`
 - 同步目标：`arena/01a0b0da-web-agent`，基线 `81fb5c2527bffe227c6e69afedae466b25aadf82`
@@ -8,7 +8,7 @@
 
 ## 1. 结论摘要
 
-本轮先逐项交叉复核前置报告，再扩展到工作台结果合同、认证并发、文件创建、PTY、HTML/CSS/键盘交互、CI、文档库存和非探针辅助项目。前置报告的P1-A七个结果消费者与P2-D设备码竞态均确认存在并已修；P2-A生产依赖审计改为高危硬门禁。扩展审查另发现并修复Chat流缺可靠终态、`createOnly`链路非独占、补丁后读覆盖草稿、Bridge刷新真假值、模态/页签/工具卡键盘语义和窄屏侧栏。第46组续审非探针审批结果与工作流schema，修复临近审批期限完成的结果立即淘汰、expired不可观察/可被迟到取消改写，工作流/外部请求未知字段与矛盾合同、命令结果/取消/get_logs跨peer未隔离及远程get_task_status误读Local计划及get_capabilities目录ACL不一致。探针由另一位助手负责，本分支不保留探针实现改动。
+本轮先逐项交叉复核前置报告，再扩展到工作台结果合同、认证并发、文件创建、PTY、HTML/CSS/键盘交互、CI、文档库存和非探针辅助项目。前置报告的P1-A七个结果消费者与P2-D设备码竞态均确认存在并已修；P2-A生产依赖审计改为高危硬门禁。扩展审查另发现并修复Chat流缺可靠终态、`createOnly`链路非独占、补丁后读覆盖草稿、Bridge刷新真假值、模态/页签/工具卡键盘语义和窄屏侧栏。第46组续审非探针审批结果与工作流schema，修复临近审批期限完成的结果立即淘汰、expired不可观察/可被迟到取消改写，工作流/外部请求未知字段与矛盾合同、命令结果/取消/get_logs跨peer未隔离及远程get_task_status误读Local计划及get_capabilities目录ACL不一致。第47组继续结果链：外部MCP的ok:false不再被缺isError覆盖成成功，工作流多文件部分读取失败不能启动后续写入，模型设置POST不再接受空/未知/错类型请求或把脱敏旧Key转绑新端点。探针由另一位助手负责，本分支不保留探针实现改动。
 
 在当前自动化与静态证据范围内，没有遗留已知P0/P1阻塞。这个结论不等于形式化安全证明，也不覆盖真实Windows/VS Code、屏幕阅读器、手机、Cloudflare/ngrok或第三方模型服务实机。
 
@@ -62,6 +62,13 @@
 - 相邻命令消费者复核发现`executor`的最近ID与记录全局共享：另一已认证peer可按已知execId读取/取消，不传ID还会取全局最近命令。命令记录现绑定内部owner；远程使用服务端认证后的peer/兼容caller键，显式ID、缺省最近记录和取消均只在该owner名下查找，跨peer统一found:false。桌面仍共享local命名空间，事件/公开结果不暴露owner。`getLogs`也曾忽略handler上下文并汇总全局事件；远程现只得到`sessionIdFor`匹配的有界执行追踪，本机仍可查看宿主事件。`getTaskStatus`还曾忽略handler上下文并向远程返回Local计划；现把options传给`getTaskState/stateFor`，本机和各peer分别只读自身快照；未知peer读取使用未保存idle快照，不消耗16个报告槽。`getCapabilities`也改为远程复用`tools/list`的当前ACL过滤，不再向只读peer重新广告已隐藏的写/命令工具。
 - 可控`Date.now`回归覆盖临期完成后的完整结果窗口、最终淘汰、expired可见和迟到cancel；工作流负例覆盖顶层未知字段、两类矛盾条件、完整输出自/前向引用、危险/空路径段及字面量非误判；executionControl用第二peer证明无法读/停原peer命令而原所有者仍可操作。相邻长篇说明仅更新该局部，不因此整篇认证。
 
+### 3.6 第47组：外部结果、部分读取与模型设置事务
+
+- `externalClient.execute`原来无条件用`output.isError !== true`覆盖第三方结果的`ok`。真实MCP若明确返回`ok:false`但未同时设置标准isError，记录会被改成`ok:true`并由审批队列标succeeded。现先保留外部字段、覆盖宿主external-reported验证，再用共享`isToolFailure`统一派生ok；ok:false/success:false/isError/失败status/非零exitCode等均不能相互覆盖成成功。它仍是外部自报，失败不证明绝无副作用。
+- `read_files`的多路径普通调用有意返回成功项和逐项error，不整体抛错；工作流此前只看顶层/trace，因此一个路径缺失时仍会把该步当succeeded并执行后续写。新增`hasPartialReadFailure`仅在固定工作流把显式逐项error提升为failed/E_PARTIAL_READ，后续步骤不派发；普通read_files的部分结果合同不变。
+- `/models`旧普通分支会把空对象、拼错字段和非法multiModel当成功或在保存时给非结构化500；GET得到的`••••`整表回写还会把真实Key永久替换成掩码。更危险的是单model浅合并可在省略Key时改baseUrl并沿用旧秘密。新增独立`modelSettings.js`：严格非空包装、1–100模型与字段预算、active/merge引用和multiModel布尔/枚举/2–8范围；旧整表掩码只在同id、protocol/baseUrl/modelId不变时恢复，连接身份变化必须显式提供Key字段。addProvider另从“每批≤100”补为现有加本批总计≤100，不能分批绕开整表预算。全部校验后一次同步save，输入失败配置字节不变；不宣称跨进程CAS、Key有效或真实提供商兼容。
+- 三条回归均先在旧实现转红：外部ok:false得到succeeded、双路径部分读取后真实创建文件、整表回写把fixture Key落成四圆点；追加目录预算也先得到200并写入超过100项。修复后定向测试通过。首轮全量另为80/83：文档质量守卫抓到交接表暂失唯一“下一项”，站点守卫抓到源码快照未重建，工作流负例抓到状态重排误少optional chain；均修复、定向复验后最终83/83。保留这些失败，不用最终绿灯抹去红测或施工回归事实。
+
 ## 4. 前置报告交叉复核状态
 
 | 前置项 | 当前状态 |
@@ -76,9 +83,11 @@
 
 ## 5. 验证结果
 
-实现提交`a85fa5a21a7bba448665f3f6da9671aad56dab6d`的[CI35397169896](https://github.com/cccjvav/web_agent/actions/runs/35397169896)九项逐项成功；本地及边界结果如下：
+最近已核对的实现提交`a85fa5a21a7bba448665f3f6da9671aad56dab6d`之[CI35397169896](https://github.com/cccjvav/web_agent/actions/runs/35397169896)九项逐项成功；第47组当前先保留本地证据，不能继承该旧绿灯：
 
 - agent-host：第46组代码/回归加入后，83个测试文件全部通过；故意注入的`fixture stop failed`等stderr不代表套件失败。
+- 第47组：首轮80/83及原因如3.6保留，修正后的完整83/83通过；`approvedOperations`、`workflowPreconditions`、`apiFiles`与`providers`均在全量中通过，9份相关JS通过`node --check`。
+- 第47组文档/范围：库存248项源码、28目录、110排除，`check-docs`只读updated=0，站点内容与build一致；生产依赖audit为0漏洞；相对`ff948013`的两个探针目录零diff。实现提交与精确CI尚待补记，不把全量中自动经过的存量探针测试称为专项审查。
 - 第46组定向：`approvedOperations.test.js`、`workflowPreconditions.test.js`、`executionControl.test.js`、`ptyLifecycle.test.js`、`ptyJobs.test.js`和`taskProgress.test.js`通过；相关实现/测试通过`node --check`。
 - 文档：247项源码、28个目录、110项排除；清单检查、函数学习/质量守卫及文档站构建一致。扩展后首轮完整套件唯一docsSite失败是恢复段在站点生成后又改文案造成的精确镜像漂移（82/83）；重建后最终83/83。
 - 非探针辅助项目：calculator 6/6；trace-inspector 77/77。早先Probe专项结果不再作为本批交付证据。

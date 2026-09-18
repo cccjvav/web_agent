@@ -4,6 +4,7 @@
 const { randomUUID } = require('crypto');
 const { config } = require('../config');
 const { currentSignal, checkCancelled, runWithSignal } = require('../utils/requestScope');
+const { isToolFailure } = require('../utils/toolTrace');
 const approvals = require('../utils/operatorQueue');
 const stdioLaunch = require('./stdioLaunch');
 const stdioTransport = require('./stdioTransport');
@@ -184,7 +185,11 @@ async function execute(input) {
   const client = clients.get(input.serverId);
   if (!client || client.status !== 'discovered' || !client.tools.some(tool => tool.name === input.tool)) return { ok: false, error: 'Server removed or tool unavailable; not executed' };
   const output = await rpc(client, 'tools/call', { name: input.tool, arguments: input.arguments });
-  return { ...output, ok: output.isError !== true, verification: { state: 'external-reported', note: 'External tool output is not an independent verification of effects.' } };
+  const reported = { ...output, verification: { state: 'external-reported', note: 'External tool output is not an independent verification of effects.' } };
+  // Preserve every explicit failure signal. In particular, do not overwrite a
+  // non-standard but common ok:false result just because MCP isError is absent.
+  reported.ok = !isToolFailure(reported);
+  return reported;
 }
 approvals.register('external-mcp', execute);
 async function closeAll() {

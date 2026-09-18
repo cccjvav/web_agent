@@ -95,6 +95,10 @@ function request(input = {}, options = {}) {
     || Object.keys(input).some(key => !['definition', 'requestKey'].includes(key))) throw new Error('Unknown workflow request field');
   return approvals.submit('workflow', { definition: validate(input.definition) }, options, input.requestKey);
 }
+function hasPartialReadFailure(tool, output) {
+  return tool === 'read_files' && Array.isArray(output?.files)
+    && output.files.some(item => item && typeof item === 'object' && Object.hasOwn(item, 'error'));
+}
 async function execute({ definition }, options) {
   const checked = validate(definition), outputs = Object.create(null), steps = [];
   for (const step of checked.steps) {
@@ -110,13 +114,15 @@ async function execute({ definition }, options) {
       if (options.remote) require('../utils/executionControl').assertAllowed(step.tool);
       dispatched = true;
       const output = await require('./index').callTool(step.tool, args, WRITE.has(step.tool) ? 'code' : 'ask', options);
-      const trace = output?.trace;
-      const status = !trace || !['succeeded','failed','cancelled','unknown'].includes(trace.status)
-        || output.verification?.state === 'unknown' || output.status === 'unknown' || trace.status === 'unknown'
-        || ['running','waiting-approval','accepted','pending'].includes(output.status) ? 'unknown'
-        : output.status === 'cancelled' || trace.status === 'cancelled' ? 'cancelled'
-          : isToolFailure(output) ? 'failed' : 'succeeded';
-      steps.push({ id: step.id, tool: step.tool, status, execution:'dispatched', callId:trace?.callId, verification: output?.verification?.state || 'not-applicable' });
+      const trace = output?.trace, partialReadFailure = hasPartialReadFailure(step.tool, output);
+      const status = output?.status === 'cancelled' || trace?.status === 'cancelled' ? 'cancelled'
+        : partialReadFailure ? 'failed'
+          : !trace || !['succeeded','failed','unknown'].includes(trace.status)
+            || output?.verification?.state === 'unknown' || output?.status === 'unknown' || trace.status === 'unknown'
+            || ['running','waiting-approval','accepted','pending'].includes(output?.status) ? 'unknown'
+            : isToolFailure(output) ? 'failed' : 'succeeded';
+      steps.push({ id: step.id, tool: step.tool, status, execution:'dispatched', callId:trace?.callId,
+        verification: output?.verification?.state || 'not-applicable', ...(partialReadFailure ? { errorCode: 'E_PARTIAL_READ' } : {}) });
       if (status !== 'succeeded') return { ok:false, status, steps, stoppedAt:step.id, error:'Step completion was not confirmed as successful. Inspect effects; no retry or rollback performed.' };
       outputs[step.id] = output;
       try { checkExpectation(step.expect); }

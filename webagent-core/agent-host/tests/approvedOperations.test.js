@@ -11,7 +11,7 @@ const { callTool } = require('../src/tools');
 const queue = require('../src/utils/operatorQueue');
 const external = require('../src/mcp/externalClient');
 const workflows = require('../src/tools/workflows');
-let calls = 0, onHangingCall;
+let calls = 0, businessFailures = 0, onHangingCall;
 const server = http.createServer(async (req, res) => {
   let text = ''; for await (const chunk of req) text += chunk;
   const message = JSON.parse(text);
@@ -20,9 +20,16 @@ const server = http.createServer(async (req, res) => {
   let result;
   if (message.method === 'initialize') result = { protocolVersion: '2025-03-26', capabilities: {} };
   if (message.method === 'tools/list') result = { tools: [{ name: 'count', inputSchema: { type: 'object' } }] };
-  if (message.method === 'tools/call') { calls++;
-    if (message.params.arguments.hang) { res.setHeader('Content-Type', 'application/json'); res.write('{'); onHangingCall(); return; }
-    result = { content: [{ type: 'text', text: 'executed' }] }; }
+  if (message.method === 'tools/call') {
+    if (message.params.arguments.businessFailure) {
+      businessFailures++;
+      result = { ok: false, error: 'external fixture reported failure' };
+    } else {
+      calls++;
+      if (message.params.arguments.hang) { res.setHeader('Content-Type', 'application/json'); res.write('{'); onHangingCall(); return; }
+      result = { content: [{ type: 'text', text: 'executed' }] };
+    }
+  }
   res.setHeader('Content-Type', 'application/json'); res.setHeader('Mcp-Session-Id', 'fixture-session');
   res.end(JSON.stringify({ jsonrpc: '2.0', id: message.id, result }));
 });
@@ -47,6 +54,13 @@ const server = http.createServer(async (req, res) => {
     await Promise.all([queue.approve(pending.requestId, true), queue.approve(pending.requestId, true)]);
     assert.equal(calls, 1); assert.equal(queue.result(pending.requestId, options).result.verification.state, 'external-reported');
     await queue.approve(pending.requestId, true); assert.equal(calls, 1);
+    const reportedFailure = external.request({ ...args, arguments: { businessFailure: true }, requestKey: 'request-business-failure' }, options);
+    await queue.approve(reportedFailure.requestId, true);
+    const reportedFailureResult = queue.result(reportedFailure.requestId, options);
+    assert.equal(reportedFailureResult.status, 'failed', 'an external ok:false report cannot be rewritten as success');
+    assert.equal(reportedFailureResult.result.ok, false);
+    assert.equal(businessFailures, 1);
+    await queue.approve(reportedFailure.requestId, true); assert.equal(businessFailures, 1, 'reported failures are terminal and never replayed');
     const denied = external.request({ ...args, requestKey: 'request-002' }, options); queue.cancel(denied.requestId);
     await queue.approve(denied.requestId, true); assert.equal(calls, 1);
     const definition = { steps: [{ id: 'write', tool: 'write_file', arguments: { filePath: 'proof.txt', content: 'approved only' }, expect: { path: 'proof.txt', contains: 'approved only' } }] };

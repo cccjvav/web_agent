@@ -26,7 +26,7 @@
 | `/execution-control` | GET / POST | 主机工作模式/Bridge权限，模式和权限分开变更，受在途/后台屏障保护 |
 | `/operations`、`/operations/:id`、`/operations/:id/approve`、`/operations/:id/cancel` | GET / POST | 本机查看/批准/取消有界请求，批准不等于执行成功 |
 | `/external/*`、`/workflows/*` | GET / POST / DELETE（依实际路由） | 接入/发现、stdio启动审阅、工作流预览/提交；不新增远程管理权 |
-| `/models` | GET / POST | 模型配置读取/更新；新增独立addProvider仅追加、不改activeModelId、不覆盖旧Key；响应隐藏Key正文 |
+| `/models` | GET / POST | 模型配置读取/更新；addProvider独立仅追加且整表总量≤100。普通更新严格限制包装/模型/multiModel字段与引用；脱敏Key只绑定原连接身份，改端点须显式给Key；响应隐藏Key正文 |
 | `/providers/probe`、`/profile/detect` | POST / GET | 探测模型、环境与技术栈 |
 | `/customizations` | GET / PUT | 自定义配置；其持久化保证见models说明 |
 | `/skills` | GET / POST | 列出Skill或创建Skill正文 |
@@ -63,7 +63,7 @@ requestScope由 `/chat`显式创建，**不代表所有REST请求自动拥有同
 
 | 源码 | 定位证据 |
 |---|---|
-| [routes.js](routes.js) | 86 个函数/类节点 |
+| [routes.js](routes.js) | 85 个函数/类节点 |
 <!-- docs-inventory:end -->
 
 第42组经典停止调用携工作区/主机绑定；有任一字段时完整匹配才递增generation或停隧道，旧无字段请求兼容。停隧道失败和停止完成后广播失败可能都500但效果不同，不能从HTTP错误猜测回滚。
