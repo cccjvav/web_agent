@@ -697,15 +697,15 @@ bridgeLifecycleBrowser通过真实菜单→设置Bridge导航和bind按钮，拦
 
 界面审查修表单名称、伪链接/可点击容器、动态标签/树/搜索/工具卡的原生按钮语义；模态焦点进入、Tab约束、Escape恢复；编辑器及右栏页签roving tabindex与方向/Home/End键；最小字体11px、统一焦点轮廓、390px覆盖式侧栏。浏览器源码新增焦点/页签/390×844断言；本机无Chromium且既往下载`ECONNRESET`，首推真实CI执行并暴露宽→窄侧栏遮挡，处置、两次失败及最终复验证据见本组末尾，不把首轮失败冒充通过。
 
-R9首包把Actions权限收敛为`contents: read`，高危生产依赖审计改硬门禁。扩展/安装镜像及函数说明同步。按用户全仓范围运行辅助项目时，model-probe离线E2E真实复现同名未知模型因向量抖动重复`NEW_MODEL`；改模型ID精确命中优先、兼容无向量verified条目并过滤畸形导入/证据，四阶段verify转绿。外部CDP/账户/整合仍暂停，没有借此宣称阶段8恢复。
+R9首包把Actions权限收敛为`contents: read`，高危生产依赖审计改硬门禁。扩展/安装镜像及函数说明同步。这里曾把用户要求的全仓检查错误扩大为探针实现授权：对model-probe专项verify后修改README、`src/learned.js`、`tools/e2e.mjs`。用户重申该项目由另一位助手负责后，三文件恢复至同步基线`81fb5c2`；观察只作为未裁决线索移交，不计本批发现修复或验证。后续即使通用检查触发探针失败也只记录边界，不开展专项审查。
 
-详细文件、前置报告状态、验证和剩余Node EOL/lint/生成物/实机取舍见[第45组报告](../../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)。对话中断后分支ref曾回到初始提交而文件仍为新基线；先备份binary diff/未跟踪项，再仅`update-ref`+`read-tree`恢复固定分支到`81fb5c2`，未覆盖工作文件。本批本地最终证据：83个主测试文件通过；文档库存247/28/110与构建一致；calculator 6项、trace-inspector 77项、model-probe四阶段（69单测/15 E2E/20冒烟）通过；生产审计0漏洞、扩展镜像一致。
+详细文件、前置报告状态、验证和剩余Node EOL/lint/生成物/实机取舍见[第45组报告](../../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)。对话中断后分支ref两次曾回到初始提交而文件仍为新基线；两次均先备份binary diff/未跟踪项、显式核对远端，只用`update-ref`+`read-tree`恢复固定分支引用/索引，未覆盖工作文件。第二次备份位于`/home/user/r46-recovery-1789759792/`。本批非探针本地证据：83个主测试文件通过；文档库存247/28/110与构建一致；calculator 6项、trace-inspector 77项通过；生产审计0漏洞、扩展镜像一致。
 
 首推`e0fdf65`的[CI35380095907](https://github.com/cccjvav/web_agent/actions/runs/35380095907)为8/9：Ubuntu/Windows主机矩阵及Windows安装器全部通过，真实Chromium在640px首次跨断点时捕获已展开侧栏遮挡Agent菜单。未改断言掩盖失败；bind现只在宽→窄跨越时关闭旧桌面侧栏并同步焦点/ARIA，避免窄屏键盘高度resize误关用户刚开的抽屉；VM加入1000→640真实闭包回归。Actions checkout/setup-node同步升v5，清理由旧Node动作运行时产生的弃用告警。
 
 `04c8e04`的[CI35381193695](https://github.com/cccjvav/web_agent/actions/runs/35381193695)再次8/9，Chromium已越过原遮挡点并运行到Skill创建400负例；失败是浏览器断言仍要求旧版纯服务端错误串，而bind已按本批合同显示“状态未知：原错误”。断言现同时要求可信状态语义、保留原错误且磁盘零创建，不通过删负例或放宽为任意toast掩盖。
 
-修复`cc779414c61493b02248571977eea9e96893953c`的[CI35381668516](https://github.com/cccjvav/web_agent/actions/runs/35381668516)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器及真实Chromium均通过；生产高危审计门禁也在各主机任务通过。前两次8/9仍保留为发现链，不用最终绿灯抹去。GitHub仅剩ubuntu-latest将于2026-10-19迁移Ubuntu 26的计划性notice，不是本次失败或产品验证。
+修复`cc779414c61493b02248571977eea9e96893953c`的[CI35381668516](https://github.com/cccjvav/web_agent/actions/runs/35381668516)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器及真实Chromium均通过；生产高危审计门禁也在各主机任务通过。前两次8/9仍保留为发现链，不用最终绿灯抹去。该成功早于上述探针三文件恢复，边界纠正提交必须独立复验，不继承旧绿灯。GitHub仅剩ubuntu-latest将于2026-10-19迁移Ubuntu 26的计划性notice，不是本次失败或产品验证。
 
 
 ## 复盘

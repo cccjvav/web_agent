@@ -8,7 +8,7 @@
 
 ## 1. 结论摘要
 
-本轮先逐项交叉复核前置报告，再扩展到工作台结果合同、认证并发、文件创建、PTY、HTML/CSS/键盘交互、CI、文档库存和辅助项目。前置报告的P1-A七个结果消费者与P2-D设备码竞态均确认存在并已修；P2-A生产依赖审计改为高危硬门禁。扩展审查另发现并修复Chat流缺可靠终态、`createOnly`链路非独占、补丁后读覆盖草稿、Bridge刷新真假值、模态/页签/工具卡键盘语义、窄屏侧栏，以及`arena-model-probe`同名未知模型重复建档。
+本轮先逐项交叉复核前置报告，再扩展到工作台结果合同、认证并发、文件创建、PTY、HTML/CSS/键盘交互、CI、文档库存和非探针辅助项目。前置报告的P1-A七个结果消费者与P2-D设备码竞态均确认存在并已修；P2-A生产依赖审计改为高危硬门禁。扩展审查另发现并修复Chat流缺可靠终态、`createOnly`链路非独占、补丁后读覆盖草稿、Bridge刷新真假值、模态/页签/工具卡键盘语义和窄屏侧栏。探针由另一位助手负责，本分支不保留探针实现改动。
 
 在当前自动化与静态证据范围内，没有遗留已知P0/P1阻塞。这个结论不等于形式化安全证明，也不覆盖真实Windows/VS Code、屏幕阅读器、手机、Cloudflare/ngrok或第三方模型服务实机。
 
@@ -21,7 +21,7 @@
 | Python | 库存中的2份Python用`py_compile`；辅助打包器仍由主测试/Windows CI覆盖 |
 | C# / PowerShell / CMD / Shell | 4份Shell以`bash -n`检查；C#/PowerShell/CMD在本机无编译器，仅核对现有Windows CI编译/解析门禁，不冒充本地执行 |
 | 文档 | `check-docs --write`重建247源码、28目录、110排除库存；函数说明学习/质量守卫、文档站构建与镜像一致性 |
-| 辅助项目 | calculator 6项、trace-inspector 77项、model-probe四阶段离线verify；冻结`webagent-repro/`保持零差异 |
+| 非探针辅助项目 | calculator 6项、trace-inspector 77项；冻结`webagent-repro/`保持零差异。探针目录按暂停边界不审不改 |
 | 依赖与CI | 生产依赖`npm audit --omit=dev --audit-level=high`；工作流最小`contents: read`权限与高危门禁人工复核 |
 
 ## 3. 已修问题与边界
@@ -51,7 +51,7 @@
 - GitHub Actions顶层权限收敛为`contents: read`；生产依赖高/严重公告现在直接使CI失败，不再`continue-on-error`。
 - `.webagent`本地身份、用量、记忆和定制文件加入嵌套及根忽略规则，避免启动工作台后反复污染工作树或误提交本地数据。
 - 文档库存、函数说明、测试导航、API/认证/PTY/工作台页面与样式说明已同步；自动生成`documentation-manifest.json`、`source-index.md`与`content.js`。
-- `arena-model-probe`离线verify实际复现：同一已声明未知模型因时序指纹变化再次返回`NEW_MODEL`；已改为模型ID精确命中优先，兼容没有向量的已验证条目，并过滤畸形证据/导入项。没有恢复CDP、账户或外部整合施工。
+- **范围纠正：** 曾因把“全仓检查”错误理解为可修改所有辅助项目，对`arena-model-probe`运行专项verify并改动README、`src/learned.js`和`tools/e2e.mjs`。用户重申该项目由另一位助手负责后，三文件全部恢复到同步基线`81fb5c2`；观察到的同名建档现象仅作为未裁决线索移交，不在本报告认定缺陷、方案或完成状态。
 
 ## 4. 前置报告交叉复核状态
 
@@ -71,18 +71,18 @@
 
 - agent-host：83个测试文件全部通过；故意注入的`fixture stop failed`等stderr不代表套件失败。
 - 文档：247项源码、28个目录、110项排除；清单检查、函数学习/质量守卫及文档站构建一致。
-- 辅助项目：calculator 6/6；trace-inspector 77/77；model-probe构建、69项单测、15项E2E、20项启动冒烟四阶段通过。
+- 非探针辅助项目：calculator 6/6；trace-inspector 77/77。早先Probe专项结果不再作为本批交付证据。
 - 生产依赖审计：0个已知漏洞；结论只对应执行时公告与生产依赖。
 - 语法/镜像：202份库存JS、2份Python、4份Shell通过对应本地语法检查；规范扩展与安装镜像一致；`webagent-repro/`零差异。
-- 真实浏览器：本机没有Playwright Chromium，下载此前持续`ECONNRESET`。首推`e0fdf65`的[CI 35380095907](https://github.com/cccjvav/web_agent/actions/runs/35380095907)中8个非浏览器任务通过；Chromium实际发现桌面已展开侧栏在首次跨入640px时遮挡Agent菜单。`04c8e04`在跨入700px抽屉断点时收起旧桌面侧栏并恢复ARIA/焦点、升级checkout/setup-node动作运行时；[CI 35381193695](https://github.com/cccjvav/web_agent/actions/runs/35381193695)确认该处已越过并再次8/9，但随后暴露Skill失败提示的浏览器断言仍要求旧版纯错误串。后续断言同时要求新“状态未知”语义和原服务端错误；修复`cc77941`的[CI 35381668516](https://github.com/cccjvav/web_agent/actions/runs/35381668516)九项逐项成功，含真实Chromium、Ubuntu/Windows Node矩阵和Windows安装器。
+- 真实浏览器：本机没有Playwright Chromium，下载此前持续`ECONNRESET`。首推`e0fdf65`的[CI 35380095907](https://github.com/cccjvav/web_agent/actions/runs/35380095907)中8个非浏览器任务通过；Chromium实际发现桌面已展开侧栏在首次跨入640px时遮挡Agent菜单。`04c8e04`在跨入700px抽屉断点时收起旧桌面侧栏并恢复ARIA/焦点、升级checkout/setup-node动作运行时；[CI 35381193695](https://github.com/cccjvav/web_agent/actions/runs/35381193695)确认该处已越过并再次8/9，但随后暴露Skill失败提示的浏览器断言仍要求旧版纯错误串。后续断言同时要求新“状态未知”语义和原服务端错误；修复`cc77941`的[CI 35381668516](https://github.com/cccjvav/web_agent/actions/runs/35381668516)九项逐项成功。该结果早于探针边界纠正，三文件恢复后的精确提交仍须重新核对，不能继承旧绿灯。
 
 ## 6. 仍需保留的风险/决策
 
-1. `cc77941`的九项CI已覆盖Ubuntu/Windows Node矩阵、Windows C#/PowerShell/Inno和真实Chromium；这仍不代签用户桌面、手机、第三方服务或屏幕阅读器验收。
+1. `cc77941`的九项CI覆盖Ubuntu/Windows Node矩阵、Windows C#/PowerShell/Inno和真实Chromium，但早于探针三文件恢复；边界纠正提交须独立跑完九项，且任何CI仍不代签用户桌面、手机、第三方服务或屏幕阅读器验收。
 2. Node 18/20最低兼容与矩阵是否退役需产品决定，并同步`engines`和用户指南。
 3. 最小ESLint、`routes.js`拆分及`content.js`生成物策略仍是维护性候选，不是本轮功能缺陷。
 4. 真实VS Code、多窗口、屏幕阅读器、手机窄屏、隧道和第三方OAuth/模型服务仍按人工清单验收。
-5. 外部探针整合仍暂停；本轮只修离线自检实际暴露的本地建档缺陷，不宣称外部项目已交接。
+5. 探针专项整体由另一位助手负责并继续暂停；本分支已撤回误做的三文件修改，后续不运行专项审查、不实现线索、不改探针文档，等待正式交接。
 6. 全仓逐文件清单中的“待逐句”文档仍不能因本报告自动获得语义认证；本报告只对上表列明的代码链与相邻说明负责。
 
 ## 7. Git工作区恢复记录

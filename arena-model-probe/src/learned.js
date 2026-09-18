@@ -81,7 +81,6 @@ function load() {
     if (!raw) return { version: REGISTRY_VERSION, entries: [], updated: Date.now() };
     const o = JSON.parse(raw);
     if (!o || !Array.isArray(o.entries)) return { version: REGISTRY_VERSION, entries: [], updated: Date.now() };
-    o.entries = o.entries.filter(entry => entry && typeof entry === 'object' && !Array.isArray(entry)).slice(-MAX_ENTRIES);
     return o;
   } catch { return { version: REGISTRY_VERSION, entries: [], updated: Date.now() }; }
 }
@@ -110,25 +109,16 @@ export function signatureOf({ evidence = [], observation = null }) {
  * ------------------------------------------------------------------ */
 export function learnFromObservation(observation, evidenceForIt = []) {
   const db = load();
-  const sample = observation && typeof observation === 'object' ? observation : {};
-  const vec = fingerprintVector(sample);
-  const modelIds = [...new Set(evidenceForIt
-    .filter(e => e && typeof e.modelId === 'string' && e.modelId.trim())
-    .map(e => e.modelId.trim()))];
+  const vec = fingerprintVector(observation);
+  const modelIds = [...new Set(evidenceForIt.filter(e => e.modelId).map(e => e.modelId.trim()))];
   const declared = modelIds.find(m => matchKnownModels(m).length) || modelIds[0] || null;
-  const declaredKey = declared && declared.toLowerCase();
-  const exact = declaredKey && db.entries.find(en => en && (
-    (typeof en.resolved === 'string' && en.resolved.toLowerCase() === declaredKey)
-    || (Array.isArray(en.modelIds) && en.modelIds.some(id => typeof id === 'string' && id.toLowerCase() === declaredKey))
-  ));
 
-  const proto = protocolFingerprint(sample.text || '');
+  const proto = protocolFingerprint(observation.text || '');
   const protoFamily = proto.length ? proto[0].family : null;
 
   // --- 1. 先找已建档条目 ---
   let best = null, bestSim = 0;
   for (const en of db.entries) {
-    if (!en || !en.vec || typeof en.vec !== 'object') continue;
     const sim = cosineSim(vec, en.vec, FP_DIMS);
     if (sim > bestSim) { bestSim = sim; best = en; }
   }
@@ -136,20 +126,10 @@ export function learnFromObservation(observation, evidenceForIt = []) {
   const nowTs = Date.now();
   let verdict;
 
-  if (exact) {
-    const exactSim = exact.vec && typeof exact.vec === 'object' ? cosineSim(vec, exact.vec, FP_DIMS) : 0;
-    exact.count = Number.isSafeInteger(exact.count) && exact.count >= 0 ? exact.count + 1 : 1;
-    exact.lastSeen = nowTs;
-    exact.vec = exact.vec && typeof exact.vec === 'object' ? blend(exact.vec, vec, 0.25) : vec;
-    if (!Array.isArray(exact.modelIds)) exact.modelIds = [];
-    if (declared && !exact.modelIds.includes(declared)) exact.modelIds.push(declared);
-    if (declared && !exact.resolved) { exact.resolved = declared; exact.resolvedAt = nowTs; }
-    verdict = { kind: 'MATCH', entry: exact, similarity: +exactSim.toFixed(4) };
-  } else if (best && bestSim >= SIM_THRESHOLD) {
-    best.count = Number.isSafeInteger(best.count) && best.count >= 0 ? best.count + 1 : 1;
+  if (best && bestSim >= SIM_THRESHOLD) {
+    best.count++;
     best.lastSeen = nowTs;
     best.vec = blend(best.vec, vec, 0.25);
-    if (!Array.isArray(best.modelIds)) best.modelIds = [];
     if (declared && !best.modelIds.includes(declared)) best.modelIds.push(declared);
     if (declared && !best.resolved) { best.resolved = declared; best.resolvedAt = nowTs; }
     verdict = { kind: 'MATCH', entry: best, similarity: +bestSim.toFixed(4) };
@@ -177,14 +157,14 @@ export function learnFromObservation(observation, evidenceForIt = []) {
     };
   } else if (best && bestSim >= NEW_THRESHOLD) {
     // --- 3. 无模型串，但与已知簇近似 → 归簇 ---
-    best.count = Number.isSafeInteger(best.count) && best.count >= 0 ? best.count + 1 : 1;
+    best.count++;
     best.lastSeen = nowTs;
     best.vec = blend(best.vec, vec, 0.15);
     verdict = { kind: 'CLUSTER', entry: best, similarity: +bestSim.toFixed(4) };
   } else {
     // --- 4. 全新匿名簇建档（等待未来溯名） ---
     const entry = {
-      id: `c_${hash(String(sample.url || '') + nowTs)}`,
+      id: `c_${hash(observation.url + nowTs)}`,
       modelIds: [],
       resolved: null,
       family: protoFamily,
@@ -218,15 +198,12 @@ export function recordRealModel(name, meta = {}) {
   if (!name || typeof name !== 'string') return null;
   const db = load();
   const key = name.trim();
-  if (!key) return null;
-  const detail = meta && typeof meta === 'object' ? meta : {};
-  let en = db.entries.find(e => e && e.resolved === key && e.verified);
+  let en = db.entries.find(e => e.resolved === key && e.verified);
 
   if (en) {
-    en.count = Number.isSafeInteger(en.count) && en.count >= 0 ? en.count + 1 : 1;
+    en.count++;
     en.lastSeen = Date.now();
-    if (!Array.isArray(en.runIds)) en.runIds = [];
-    if (detail.runId && !en.runIds.includes(detail.runId)) en.runIds.push(detail.runId);
+    if (meta.runId && en.runIds && !en.runIds.includes(meta.runId)) en.runIds.push(meta.runId);
     save(db);
     return { kind: 'VERIFIED_MATCH', entry: en };
   }
@@ -245,7 +222,7 @@ export function recordRealModel(name, meta = {}) {
     count: 1,
     verified: true,          // 标记：来自 run trace，非推测
     status: matched.length ? 'KNOWN' : 'VERIFIED_UNLISTED',
-    runIds: detail.runId ? [detail.runId] : [],
+    runIds: meta.runId ? [meta.runId] : [],
   };
   db.entries.push(en);
   save(db);
@@ -296,11 +273,7 @@ export function importLearned(json) {
     if (!o || !Array.isArray(o.entries)) return false;
     const cur = load();
     const ids = new Set(cur.entries.map(e => e.id));
-    for (const e of o.entries) {
-      if (!e || typeof e !== 'object' || Array.isArray(e) || typeof e.id !== 'string' || !e.id || e.id.length > 128 || ids.has(e.id)) continue;
-      cur.entries.push(e);
-      ids.add(e.id);
-    }
+    for (const e of o.entries) if (!ids.has(e.id)) cur.entries.push(e);
     save(cur);
     return true;
   } catch { return false; }
