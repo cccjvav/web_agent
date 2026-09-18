@@ -464,11 +464,13 @@ router.put('/files/content', async (req, res) => {
     if (!filePath || typeof content !== 'string') {
       return res.status(400).json({ error: 'path and content required' });
     }
-    const undoSnapshot = editorUndo.capture(filePath, req.body.expectedHash, content);
+    const createOnly = req.body.createOnly === true;
+    const undoSnapshot = createOnly ? null : editorUndo.capture(filePath, req.body.expectedHash, content);
     const result = await callTool('write_file', {
       filePath,
       content,
-      confirm_overwrite: true,
+      createOnly,
+      confirm_overwrite: !createOnly,
       expectedHash: req.body.expectedHash || undefined
     }, 'code');
     if (result.success === false) return res.status(409).json({ error: result.error, code: result.code, verification: result.verification });
@@ -476,8 +478,8 @@ router.put('/files/content', async (req, res) => {
     try { if (result.verification?.state === 'verified') undo = editorUndo.remember(undoSnapshot, result.hash); } catch (_) { /* Saved file remains successful even if optional undo allocation fails. */ }
     res.json({ success: true, path: filePath, hash: result.hash, verification: result.verification, undo });
   } catch (err) {
-    const stale = err.code === 'E_STALE_FILE' || /STALE_FILE/.test(String(err.message || ''));
-    res.status(stale ? 409 : 400).json({
+    const conflict = err.code === 'E_FILE_EXISTS' || err.code === 'E_STALE_FILE' || /STALE_FILE/.test(String(err.message || ''));
+    res.status(conflict ? 409 : 400).json({
       error: err.message,
       code: err.code,
       detail: err.detail
@@ -584,16 +586,7 @@ router.post('/skills', async (req, res) => {
 });
 
 router.post('/bridge/login', (req, res) => {
-  store.patch({
-    bridge: {
-      loggedIn: true,
-      provider: 'local-demo',
-      username: 'local',
-      githubId: '',
-      license: 'local-demo',
-      deviceAuthorized: true
-    }
-  });
+  github.clearGithubKeepDemo();
   res.json({ success: true, demo: true, provider: 'local-demo', username: 'local' });
 });
 

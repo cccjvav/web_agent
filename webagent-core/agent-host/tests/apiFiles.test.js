@@ -82,6 +82,17 @@ async function main() {
     assert.ok(created.json.hash);
     assert.strictEqual(fs.readFileSync(path.join(tmp, 'notes.md'), 'utf8'), 'hello from editor');
     assert.ok(!fs.readdirSync(tmp).some((n) => n.includes('.tmp.')));
+    const duplicateCreate = await request(server, 'PUT', '/api/files/content', {
+      path: 'notes.md', content: '', createOnly: true
+    });
+    assert.strictEqual(duplicateCreate.status, 409, 'create-only editor action cannot blank an existing file');
+    assert.strictEqual(fs.readFileSync(path.join(tmp, 'notes.md'), 'utf8'), 'hello from editor');
+    const racingCreates = await Promise.all(['FIRST','SECOND'].map(content => request(server,'PUT','/api/files/content',{
+      path:'created-once.txt',content,createOnly:true
+    })));
+    assert.deepStrictEqual(racingCreates.map(result=>result.status).sort(),[200,409]);
+    const createWinner=racingCreates[0].status===200?'FIRST':'SECOND';
+    assert.strictEqual(fs.readFileSync(path.join(tmp,'created-once.txt'),'utf8'),createWinner);
 
     const preview = await request(server, 'POST', '/api/files/preview', {path:'notes.md',content:'reviewed draft',expectedHash:created.json.hash});
     assert.equal(preview.status,200); assert.ok(preview.json.diff.includes('+reviewed draft'));

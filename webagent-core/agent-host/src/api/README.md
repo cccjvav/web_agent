@@ -20,7 +20,7 @@
 | `/tool/call`、`/consensus/run`、`/tasks/reset` | POST | 直接调用工具、本机共识流程、清任务状态 |
 | `/pty/hello`、`/pty/jobs`、`/pty/jobs/:jobId` | POST / GET / POST | PTY客户端存活、取任务、报告状态 |
 | `/files/tree`、`/files/content` | GET | 文件导航与内容/hash读取 |
-| `/files/content` | PUT | 通过write_file保存，接受expectedHash；可返回经典单次保存回退句柄 |
+| `/files/content` | PUT | 通过write_file保存，接受expectedHash；createOnly严格为true时原子拒绝已有目标且不分配回退句柄，普通保存可返回经典单次回退句柄 |
 | `/files/preview`、`/files/undo/:id` | POST / GET / POST | 有界只读diff、预览与明确确认版本绑定回退 |
 | `/checkpoints`、`/checkpoints/:id/preview`、`/checkpoints/:id/restore`、`/checkpoints/:id/remove` | GET / POST | 选定文件内存检查点、预览与一次恢复；各POST绑定工作区/host，不是多文件原子事务 |
 | `/execution-control` | GET / POST | 主机工作模式/Bridge权限，模式和权限分开变更，受在途/后台屏障保护 |

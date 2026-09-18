@@ -10,6 +10,7 @@
 |---|---|---|
 | loadNodePty() | 无→模块或null | 从vscode.env.appRoot下普通/asar node_modules尝试require；失败尝试下个，不自行下载安装 |
 | stripAnsi(s) | 文本→显示文本 | 去常见CSI/OSC和回车，不是完整终端模拟器 |
+| successfulResponse(response) | requestJson结果→boolean | 只接受整数status且在200–299；JSON里自称成功不能覆盖HTTP拒绝 |
 | scrubEnv(base)，导入ptyPolicy | 环境→副本 | 去凭据命名字段，保留一般PATH/Conda变量；不加载Conda profile |
 | spawnSpec(command) | 文本→shell/args/cleanup | 非Windows选SHELL或bash -lc；Windows短ASCII单行用powershell -Command，其他用crypto随机前缀+mkdtemp私有目录，wx/0600写带UTF-8 BOM的ps1再-File；cleanup/cleanupDir给调用者，写失败删除目录并抛错 |
 | waitForShellIntegration(terminal,ms=2500) | 终端→Promise<integration或null> | 已可executeCommand直接返回；无事件API返回null；否则注册变更回调，只接该终端；finish一次性清timer/dispose订阅/resolve，超时读当前integration |
@@ -30,8 +31,8 @@ spawnSpec的临时脚本不是凭据文件，仍要注意命令正文可能敏�
 | dispose() | 无→undefined | 标disposed、清hello/poll计时器，逐session尝试kill及cleanup后clear；未逐个证明操作系统进程退出，也未await在途HTTP |
 | url(p) | API路径→字符串 | 每次读agentHostUrl依赖后拼路径 |
 | identity() | 无→clientId/workspace | 只取第一个workspaceFolder，不是多根独立会话 |
-| hello() | 无→Promise | POST hello带身份，响应pending更新hint；异常吞，允许服务尚未启动 |
-| poll() | 无→Promise | disposed/已有轮询/流新鲜时跳过；GET jobs带身份，逐个await handleIncoming，finally解除polling；网络失败下一轮再试 |
+| hello() | 无→Promise | POST hello带身份；仅HTTP 2xx且pending为非负整数才更新hint，拒绝/畸形响应保留最后可信值；异常吞，允许服务尚未启动 |
+| poll() | 无→Promise | disposed/已有轮询/流新鲜时跳过；GET jobs带身份，仅HTTP 2xx且jobs为对象数组才发布pendingHint并逐个await handleIncoming；拒绝/畸形响应保留旧队列提示，finally解除polling，网络失败下一轮再试 |
 | postJob(jobId,body) | ID/报告→requestJson Promise | body后合并本机identity，防传入body覆盖身份字段 |
 
 ## 3. 审批与目录检查
@@ -40,7 +41,7 @@ spawnSpec的临时脚本不是凭据文件，仍要注意命令正文可能敏�
 
 **cwdFor(job)**要求当前首工作区与job.workspaceRoot sameWorkspace，resolve cwd并realpath根和目标，relative不能离开根；目标不存在也抛错，不自行建cwd。
 
-**handleRun(job)**先向后端claimed，只有真正claimed才弹confirm；拒绝回done/status denied；允许后accepted，后端不接受或实例已disposed即不执行。之后cwdFor并spawn。异常尝试回done/error，回报再次失败吞掉。**审批后再向后端确认有效性**，避免90秒过期后迟到点击仍运行。
+**handleRun(job)**先向后端claimed，只有HTTP 2xx且JSON claimed严格为true才弹confirm；拒绝回done/status denied；允许后也只有HTTP 2xx且accepted严格true、实例未disposed才执行。JSON即使声称claimed/accepted，HTTP 409等拒绝仍不能授权。之后cwdFor并spawn。异常尝试回done/error，回报再次失败吞掉。**审批后再向后端确认有效性**，避免90秒过期后迟到点击仍运行。
 
 ## 4. 两种执行后端
 
@@ -64,7 +65,7 @@ reading.then标readFinished，catch记录readError并dispose，防等待exit时�
 
 ## 5. 输入、取消与去重
 
-**handleInput(job)**先accepted，再查execId活session且proc.write可用；没有则done/error。正常write(input)后done/ok true，这只是输入已提交，不代表被运行应用处理；fallback只有kill无write，所以不能伪装支持stdin。
+**handleInput(job)**先要求accepted响应同时HTTP 2xx且accepted严格true，再查execId活session且proc.write可用；没有则done/error。正常write(input)后done/ok true，这只是输入已提交，不代表被运行应用处理；fallback只有kill无write，所以不能伪装支持stdin。handleCancel与fallback执行前的check也使用相同HTTP+JSON合同，不能把拒绝状态里的真值字段当许可。
 
 **handleIncoming(job)**先校验jobId及工作区。cancelRequested先处理：kill匹配session、回cancelled，不受seen去重阻止。普通job已seen跳过，新增seen最多400（删最早）；input/cancel分别委托。run使用handleRun.catch而不await，让轮询在审批/执行期间继续收到取消。
 

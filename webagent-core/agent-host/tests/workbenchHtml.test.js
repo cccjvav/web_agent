@@ -72,6 +72,10 @@ assert.ok(html.includes('id="model-pick-btn"') && html.includes('id="model-selec
 assert.ok(html.includes('id="btn-mm-pick"') && html.includes('id="mm-merge-display"') && html.includes('id="btn-mm-active"'), 'merge-model picker row');
 const chatSrc = fs.readFileSync(path.resolve(__dirname, '../../workbench/js/chat.js'), 'utf8');
 assert.ok(chatSrc.includes('branch-pill'), 'multi-model round messages carry a branch pill');
+assert.ok(chatSrc.includes('<button type="button" class="gen-instr"') && !chatSrc.includes('<a class="gen-instr"'),
+  'chat empty-state actions remain native keyboard-operable buttons');
+assert.ok(chatSrc.includes('<button type="button" class="tool-card-toggle" aria-expanded="false"')
+  && chatSrc.includes("setAttribute('aria-expanded'"), 'tool details use a native disclosure button');
 assert.ok(/details class="block"/.test(html) && html.includes('快速打开') && html.includes('高级设置'), 'bridge page collapsible groups');
 
 console.log('workbench HTML has bind() nodes');
@@ -91,3 +95,33 @@ assert.ok(html.includes('id="walk-start"'));
 assert.ok(html.includes('id="page-help"'));
 assert.ok(bindSrc.includes("$('#menu-help').onclick = () => ui.openModal('help')"));
 assert.ok(bindSrc.includes("onClick('#walk-start', () => ui.openModal('help'))"));
+
+// Keyboard and assistive-technology semantics are part of the workbench contract.
+for (const id of ['walk-start', 'walk-basics', 'walk-local-chat', 'walk-bridge']) {
+  assert.match(html, new RegExp(`<button[^>]+id="${id}"`), `#${id} must be keyboard-operable`);
+}
+assert.ok(html.includes('id="tabs" role="tablist"'));
+assert.ok(html.includes('id="rb-chat-tab" class="on" role="tab" aria-selected="true" aria-controls="right-chat" tabindex="0"'));
+assert.ok(html.includes('id="right-chat" class="rb-body" role="tabpanel" aria-labelledby="rb-chat-tab"'));
+assert.ok(html.includes('id="modal" class="hidden" role="dialog" aria-modal="true"'));
+assert.ok(html.includes('id="toast" hidden role="status" aria-live="polite"'));
+for (const match of html.matchAll(/<button\b[^>]*>/g)) {
+  assert.ok(/\btype="button"/.test(match[0]), `${match[0].slice(0, 100)} must declare type=button`);
+}
+for (const match of html.matchAll(/<(input|textarea|select)\b[^>]*>/g)) {
+  const tag = match[0];
+  if (/\btype="hidden"|\bclass="[^"]*\bhidden\b/.test(tag)) continue;
+  const id = /\bid="([^"]+)"/.exec(tag)?.[1];
+  const insideLabel = html.lastIndexOf('<label', match.index) > html.lastIndexOf('</label>', match.index);
+  const labelled = /\baria-label(?:ledby)?="|\btitle="/.test(tag)
+    || (id && html.includes(`for="${id}"`)) || insideLabel;
+  assert.ok(labelled, `${tag.slice(0, 80)} must have an accessible label`);
+}
+const styles = fs.readFileSync(path.resolve(__dirname, '../../workbench/styles.css'), 'utf8');
+assert.match(styles, /input:focus-visible,\s*textarea:focus-visible/);
+assert.match(styles, /@media \(max-width: 700px\)[\s\S]*?#sidebar \{[\s\S]*?position: absolute/);
+const tabsSrc = fs.readFileSync(path.resolve(__dirname, '../../workbench/js/tabs.js'), 'utf8');
+assert.ok(tabsSrc.includes('class="tab-label" role="tab"'));
+assert.ok(tabsSrc.includes('aria-controls="editor-wrap" tabindex="${active ? 0 : -1}"'));
+assert.ok(tabsSrc.includes("['ArrowLeft', 'ArrowRight', 'Home', 'End']"));
+assert.ok(tabsSrc.includes('type="button" class="tree-item"'));

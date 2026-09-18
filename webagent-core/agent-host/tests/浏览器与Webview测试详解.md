@@ -105,6 +105,14 @@ R3定制设置回归：workbenchRuntime加载真实settings模块，先用400负
 
 正式审查首批：workbenchRuntime执行saveModelSettings真实模块，覆盖HTTP/业务/网络失败不刷新、保存请求互斥、成功刷新一次以及保存成功但刷新失败的独立提示。没有执行真实供应商模型切换，也不认证其他/api/models调用或refreshStatus的全部HTTP语义。
 
+### 结果消费、流终止与可信候选回归（2026-09-18）
+
+workbenchRuntime在真实bind/bridge/settings/tabs/chat模块上执行确认合同。认证按钮覆盖HTTP拒绝、业务假成功、坏JSON、令牌草稿保留、设备轮询代次/Abort及单飞；画像探测覆盖畸形候选、环境与技术栈共享请求、等待期间草稿变化；新建文件发送createOnly且失败不打开，终端/搜索拒绝失败或坏形状。Bridge清轮、health、diagnostics与Execution Control必须同时满足HTTP/业务/核心形状，写确认后的读失败与写未确认分开。
+
+Skill目录和正文先验证完整候选再发布，失败保留可信列表/正文；文件树坏候选不替换旧树；apply_patch重读只在合法hash/正文后协调，干净标签同步、脏草稿保留。局部**streamResponse(chunks,status=200)**构造NDJSON响应，body的**getReader()**逐块返回Buffer；覆盖非2xx错误正文、合法无换行尾done、坏JSON、提前断流，以及message→error→done仍不得写assistant历史。该reader是VM替身，不模拟真实背压、TCP分片时序或浏览器解码器实现。
+
+workbenchHtml另遍历非隐藏表单控件检查可访问名称，要求欢迎卡/动态源码语义及输入focus-visible、窄屏抽屉规则。真实workbench.browser检查模态打开聚焦、Escape恢复触发点和390px无水平溢出；本机缺Chromium时只由CI或有浏览器环境执行，不能把静态/VM PASS冒充这三项真实DOM布局已运行。
+
 F27-02的workbenchRuntime负例先复现null被paintClients显示“无需Plus”，修复后执行真实Bridge模块，断言待核对/未验证徽标以及DeepSeek指引无固定商店ID。DOM/HTTP回归不是真实浏览器安装第三方扩展或兼容验收。
 
 F28-01负例先复现配对码被说成仅ChatGPT需要；workbenchRuntime实际Bridge模块验证通用OAuth文案，以及unsupported卡片空prompt不泄落到全局连接文本。这里不连接真实厂商服务。

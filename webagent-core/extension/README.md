@@ -22,7 +22,7 @@
 ## 执行流程
 1. 激活时建立agent-host客户端，注册侧栏及当前VS Code版本支持的Chat能力。HTTP普通请求和NDJSON有各自的超时/取消处理。
 2. 用户消息发到 `/api/chat`；原生取消token和webview停止消息可中止请求。响应中的tool、message、error、done由各界面分别呈现。
-3. 扩展PTY以clientId和workspace标识自己。接到job先验证工作区和cwd真实路径，再claim；批准后重新向host报告accepted并确认仍可执行，不凭一个过期弹窗直接启动。
+3. 扩展PTY以clientId和workspace标识自己。队列、hello、claim、accepted与运行中check都同时要求HTTP 2xx和预期JSON形状；拒绝或畸形响应保留最近可信队列状态。接到job先验证工作区和cwd真实路径，再claim；批准后重新向host报告accepted并确认仍可执行，不凭一个过期弹窗或HTTP拒绝正文里的真值字段启动。
 4. 优先尝试node-pty。不可用时只使用能观察执行结束和读取输出的shell integration；等待后仍不可用则拒绝执行，**不通过不可观测的sendText猜测成功**。
 5. 输出分段上报，结束要结合真实退出码与完整捕获状态；未知退出码、非零退出、不完整捕获、取消或超时都不能报run成功。
 
@@ -54,7 +54,7 @@ agentHostUrl优先读取VS Code设置`webagent.agentHostUrl`，其次扩展进�
 | [extension.js](extension.js) | 53 个函数/类节点 |
 | [modeFromChatRequest.js](modeFromChatRequest.js) | 1 个函数/类节点 |
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
-| [ptyHost.js](ptyHost.js) | 57 个函数/类节点 |
+| [ptyHost.js](ptyHost.js) | 59 个函数/类节点 |
 | [ptyPolicy.js](ptyPolicy.js) | 5 个函数/类节点 |
 | [workspaceMatch.js](workspaceMatch.js) | 2 个函数/类节点 |
 <!-- docs-inventory:end -->

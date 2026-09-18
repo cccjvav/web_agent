@@ -53,11 +53,13 @@ export function refreshBridgeActivity() {
       const response = await fetch('/api/bridge/activity', { signal: controller.signal, cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       paintBridgeActivity(await response.json());
+      return true;
     } catch (_) {
       activityVersion = '';
       if ($('#bridge-task-count')) $('#bridge-task-count').textContent = '任务同步失败，当前状态未知';
       const note = $('#sess-note');
       if (note) note.textContent = '工具统计同步失败：请确认已重启更新后的本机服务，且 MCP 与工作台属于同一个主机进程/工作区。';
+      return false;
     } finally { clearTimeout(timer); activityPending = null; }
   });
   return activityPending;
@@ -96,15 +98,28 @@ export function paintStats() {
   if ($('#sess-meta')) $('#sess-meta').textContent = parts.join(' · ');
 }
 
+let resetRoundPending = false;
 export async function resetRound() {
+  if (resetRoundPending) return false;
+  resetRoundPending = true;
   try {
     const response = await fetch('/api/bridge/reset-round', { method: 'POST' });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    await ui.refreshStatus();
-    if (activityPending) await activityPending;
-    await refreshBridgeActivity();
-    ui.toast('已清除本轮 MCP 统计');
-  } catch (_) { ui.toast('清除失败，请检查本机服务；未假装清零。'); }
+    const data = await response.json();
+    if (!response.ok || !data || data.success !== true) throw new Error(data && data.error || `HTTP ${response.status}`);
+    let refreshed = true;
+    try {
+      if (await ui.refreshStatus() === false) refreshed = false;
+      if (activityPending) await activityPending;
+      if (await refreshBridgeActivity() === false) refreshed = false;
+    } catch (_) { refreshed = false; }
+    ui.toast(refreshed ? '已清除本轮 MCP 统计' : '本轮统计清除已确认，但状态刷新失败；请手动核对');
+    return true;
+  } catch (_) {
+    ui.toast('清除结果未确认，请检查本机服务；未假装清零，也未自动重试。');
+    return false;
+  } finally {
+    resetRoundPending = false;
+  }
 }
 
 export function selectedClientInfo() {
@@ -479,12 +494,13 @@ export function paintBridge() {
 
 export async function checkBridgeHealth() {
   try {
-    const h = await fetch('/health');
-    const hj = await h.json().catch(() => ({}));
-    await ui.refreshStatus();
+    const response = await fetch('/health', { cache: 'no-store' });
+    const health = await response.json().catch(() => ({}));
+    if (!response.ok || health.ok !== true) throw new Error(`健康端点未确认（HTTP ${response.status || '错误'}）`);
+    if (await ui.refreshStatus() === false) throw new Error('状态读取已被更新请求取代');
     const s = state.status || {};
     const bits = [];
-    bits.push(hj.ok ? '工作台健康' : '工作台无响应');
+    bits.push('工作台健康');
     bits.push(s.bridgeRunning ? 'Bridge 运行中' : 'Bridge 已停止');
     const tun = s.tunnel || {};
     if (tun.url) bits.push(String(tun.url).replace(/^https?:\/\//, ''));
@@ -584,12 +600,19 @@ export async function refreshDiagnostics() {
   currentDiagnostics = null;
   $('#host-comparison').textContent = '';
   try {
-    const response = await fetch('/api/diagnostics');
+    const response = await fetch('/api/diagnostics', { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    currentDiagnostics = await response.json();
-    $('#diagnostic-identity').textContent = JSON.stringify(currentDiagnostics.identity, null, 2);
-    $('#diagnostic-capabilities').innerHTML = currentDiagnostics.capabilities.map(cap =>
-      `<article class="block"><strong>${escapeHtml(cap.id)} · ${escapeHtml(cap.status)}</strong><p>${escapeHtml(cap.reason)}</p></article>`
+    const diagnostics = await response.json();
+    if (!diagnostics || typeof diagnostics !== 'object' || !diagnostics.identity ||
+        typeof diagnostics.identity.hostInstanceId !== 'string' || typeof diagnostics.identity.workspaceRoot !== 'string' ||
+        !Array.isArray(diagnostics.capabilities) || diagnostics.capabilities.some(capability => !capability ||
+          typeof capability.id !== 'string' || typeof capability.status !== 'string' || typeof capability.reason !== 'string')) {
+      throw new Error('诊断响应格式无效');
+    }
+    currentDiagnostics = diagnostics;
+    $('#diagnostic-identity').textContent = JSON.stringify(diagnostics.identity, null, 2);
+    $('#diagnostic-capabilities').innerHTML = diagnostics.capabilities.map(capability =>
+      `<article class="block"><strong>${escapeHtml(capability.id)} · ${escapeHtml(capability.status)}</strong><p>${escapeHtml(capability.reason)}</p></article>`
     ).join('');
   } catch (_) {
     $('#diagnostic-identity').textContent = '诊断读取失败；无法确认当前主机。';
@@ -606,7 +629,7 @@ export function compareHost() {
 ui.refreshDiagnostics = refreshDiagnostics;
 ui.compareHost = compareHost;
 
-let controlDirty = false, controlRevision = '';
+let controlDirty = false, controlRevision = '', controlChangePending = false;
 export function paintExecutionControl() {
   const current = state.status?.executionControl;
   if (!$('#execution-mode')) return;
@@ -618,14 +641,32 @@ export function paintExecutionControl() {
 export function initExecutionControl() {
   if (!$('#execution-save')) return;
   async function change(value) {
+    if (controlChangePending) {
+      $('#execution-result').textContent = '已有权限设置请求进行中；未重复发送。';
+      return false;
+    }
+    controlChangePending = true;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
     try {
-      const response = await fetch('/api/execution-control', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...value,workspaceRoot:state.status?.workspaceRoot,hostInstanceId:state.status?.identity?.hostInstanceId})});
+      const response = await fetch('/api/execution-control', {method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({...value,workspaceRoot:state.status?.workspaceRoot,hostInstanceId:state.status?.identity?.hostInstanceId})});
       const data = await response.json();
-      if (!response.ok || !data.success) throw Error(data.error || '设置失败');
+      if (!response.ok || !data || data.success !== true) throw Error(data && data.error || '主机未确认设置');
       controlDirty = false;
-      await ui.refreshStatus();
-      $('#execution-result').textContent = '已由主机应用；没有自动取消或重放任务';
-    } catch(error) { $('#execution-result').textContent = error.message; }
+      try {
+        if (await ui.refreshStatus() === false) throw Error('读取被更新请求取代');
+        $('#execution-result').textContent = '已由主机应用；没有自动取消或重放任务';
+      } catch (_) {
+        $('#execution-result').textContent = '主机已确认应用，但状态刷新失败；请手动核对，不要重复保存。';
+      }
+      return true;
+    } catch(error) {
+      $('#execution-result').textContent = ('设置结果未确认：' + (error.message || '请核对主机状态') + '；未自动重试。').slice(0, 220);
+      return false;
+    } finally {
+      clearTimeout(timer);
+      controlChangePending = false;
+    }
   }
   $('#execution-chat').onclick = () => change({workMode:'chat'});
   $('#execution-bridge').onclick = () => change({workMode:'bridge'});

@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   agent-host:
     strategy:
@@ -26,9 +29,8 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: Check documentation inventory
         run: node ../../docs-site/check-docs.js
-      - name: Audit production dependencies
-        continue-on-error: true
-        run: npm audit --omit=dev
+      - name: Audit high-severity production dependencies
+        run: npm audit --omit=dev --audit-level=high
       - run: npm test
       - name: Repeat Windows cancellation and stdio lifecycle
         if: runner.os == 'Windows'

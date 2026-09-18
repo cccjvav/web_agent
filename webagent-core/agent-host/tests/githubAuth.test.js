@@ -121,6 +121,69 @@ async function run() {
   assert.strictEqual(done.username, 'hubber');
   assert.strictEqual(store.load().bridge.githubId, '99');
 
+  const startAttempt = (deviceCode) => github.startDeviceLogin(async url => {
+    assert.ok(String(url).includes('/login/device/code'));
+    return jsonResp(200, {device_code:deviceCode,user_code:deviceCode.toUpperCase(),expires_in:900,interval:5});
+  });
+
+  // Clearing/replacing identity while a device poll verifies the user must make the late result inert.
+  await startAttempt('late-clear');
+  let releaseLateUser, enteredLateUser;
+  const lateUserEntered = new Promise(resolve => { enteredLateUser = resolve; });
+  const latePoll = github.pollDeviceLogin(async url => {
+    if (String(url).includes('/login/oauth/access_token')) return jsonResp(200,{access_token:'ghp_late'});
+    enteredLateUser();
+    return new Promise(resolve => { releaseLateUser = resolve; });
+  });
+  await lateUserEntered;
+  github.clearGithubKeepDemo();
+  releaseLateUser(jsonResp(200,{login:'must-not-win',id:404}));
+  const clearedLate = await latePoll;
+  assert.strictEqual(clearedLate.done,false);
+  assert.strictEqual(clearedLate.code,'E_SUPERSEDED');
+  assert.strictEqual(store.load().bridge.provider,'local-demo');
+  assert.strictEqual(store.load().bridge.username,'local');
+
+  // A newer device attempt supersedes an older in-flight token exchange.
+  await startAttempt('old-device');
+  let releaseOldToken, enteredOldToken, oldUserFetches = 0;
+  const oldTokenEntered = new Promise(resolve => { enteredOldToken = resolve; });
+  const oldPoll = github.pollDeviceLogin(async url => {
+    if (String(url).includes('/login/oauth/access_token')) {
+      enteredOldToken();
+      return new Promise(resolve => { releaseOldToken = resolve; });
+    }
+    oldUserFetches++;
+    return jsonResp(200,{login:'old-user',id:405});
+  });
+  await oldTokenEntered;
+  await startAttempt('new-device');
+  releaseOldToken(jsonResp(200,{access_token:'ghp_old'}));
+  const replaced = await oldPoll;
+  assert.strictEqual(replaced.done,false);
+  assert.strictEqual(replaced.code,'E_SUPERSEDED');
+  assert.strictEqual(oldUserFetches,0,'superseded token must not trigger a user lookup');
+  let newCode;
+  const newPending = await github.pollDeviceLogin(async (url,opts) => {
+    newCode=String(opts.body);return jsonResp(200,{error:'authorization_pending'});
+  });
+  assert.strictEqual(newPending.pending,true);
+  assert.ok(newCode.includes('device_code=new-device'));
+
+  // Duplicate browser polls for one attempt are coalesced server-side.
+  await startAttempt('overlap');
+  let releaseOverlap, enteredOverlap, overlapCalls = 0;
+  const overlapEntered = new Promise(resolve => { enteredOverlap = resolve; });
+  const firstOverlap = github.pollDeviceLogin(async () => {
+    overlapCalls++;enteredOverlap();return new Promise(resolve => { releaseOverlap = resolve; });
+  });
+  await overlapEntered;
+  const secondOverlap = await github.pollDeviceLogin(async () => { overlapCalls++;return jsonResp(200,{error:'authorization_pending'}); });
+  assert.strictEqual(secondOverlap.pending,true);
+  assert.strictEqual(overlapCalls,1);
+  releaseOverlap(jsonResp(200,{error:'authorization_pending'}));
+  assert.strictEqual((await firstOverlap).pending,true);
+
   github.resetPending();
   github.clearGithubKeepDemo();
   delete process.env.WEBAGENT_GITHUB_CLIENT_ID;

@@ -146,7 +146,7 @@ function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = fal
   const fullPath = resolveSafePath(filePath);
   if (typeof content !== 'string' || Buffer.byteLength(content, 'utf8') > MAX_TEXT_BYTES) throw new ProtocolError('E_BAD_ARGS', 'write_file content exceeds text budget');
   const exists = fs.existsSync(fullPath);
-  if (createOnly && exists) throw new ProtocolError('E_BAD_ARGS', 'File already exists; choose a new name instead of overwriting');
+  if (createOnly && exists) throw new ProtocolError('E_FILE_EXISTS', 'File already exists; choose a new name instead of overwriting');
   if (expectedHash && !exists) throw new ProtocolError('E_STALE_FILE', '文件已被删除，拒绝用旧版本重新创建');
   let overwriteOk = Boolean(confirmOverwrite || confirm_overwrite);
   let currentHash = null;
@@ -176,7 +176,14 @@ function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = fal
     }
   }
   fs.mkdirSync(path.dirname(fullPath), { recursive: true });
-  atomicWriteText(fullPath, content);
+  try {
+    atomicWriteText(fullPath, content, { exclusive: createOnly });
+  } catch (error) {
+    if (createOnly && error && error.code === 'EEXIST') {
+      throw new ProtocolError('E_FILE_EXISTS', 'File already exists; choose a new name instead of overwriting');
+    }
+    throw error;
+  }
   const hash = computeHash(content);
 
   eventBus.broadcast('file_written', { filePath, hash, size: content.length });

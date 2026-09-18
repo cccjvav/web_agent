@@ -48,7 +48,9 @@ refresh同样检查机密客户端缺认证401，再正确认证200，旧access�
 
 删除WEBAGENT_GITHUB_CLIENT_ID后deviceAvailable false，startDeviceLogin E_NO_GITHUB_APP。设测试Client ID后真；**deviceFetch**按URL分支：device/code断言表单client_id并回code/user_code/900秒/5秒；access_token断言设备grant type编码并回authorization_pending。start返回ABCD-1234，poll返回pending。
 
-**doneFetch**对token端点回假access token、/user回hubber/id99，其余URLthrow，下一poll应done/hubber并保存99。成功resetPending/clear demo/删env/reset store/rm tmp；catch exit1，无finally，原env没有恢复，依赖子进程隔离。未测真实等待间隔、GitHub限流/拒绝/过期全部分支，不声称账号已授权。
+**doneFetch**对token端点回假access token、/user回hubber/id99，其余URLthrow，下一poll应done/hubber并保存99。局部**startAttempt(deviceCode)**用不同假device_code快速创建后续并发夹具：旧poll已拿token、等待/user时执行clear，迟到用户不得覆盖local-demo；旧poll等待token时启动新设备码，旧token不得继续查用户，新poll必须携新device_code；同一attempt首个poll挂起时第二个poll直接pending，GitHub token请求计数仍为1。三组均检查E_SUPERSEDED或当前请求内容，而不是只看最终文案。
+
+成功resetPending/clear demo/删env/reset store/rm tmp；catch exit1，无finally，原env没有恢复，依赖子进程隔离。未测真实等待间隔、真实GitHub限流/拒绝/过期全部分支、跨进程共享或浏览器多窗口，不声称账号已授权。
 
 ## 验证
 

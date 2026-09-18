@@ -489,8 +489,17 @@ async function main() {
     await page.click('#menu-help'); await page.locator('#page-help').waitFor({ state: 'visible' });
     assert.ok((await page.locator('#builtin-guide').textContent()).includes('读取 `README.md`'));
     assert.ok((await page.locator('#adoption-guide').textContent()).includes('不是全部候选已完成'));
-    await page.click('#modal-close');
+    assert.strictEqual(await page.evaluate(() => document.querySelector('#modal').contains(document.activeElement)), true,
+      'opening the settings dialog moves focus inside it');
+    await page.keyboard.press('Escape');
+    assert.strictEqual(await page.evaluate(() => document.activeElement?.id), 'menu-help',
+      'closing the settings dialog restores focus to its trigger');
     await page.click('#walk-start'); await page.locator('#page-help').waitFor({ state: 'visible' }); await page.click('#modal-close');
+    await page.focus('#rb-chat-tab'); await page.keyboard.press('ArrowRight');
+    assert.strictEqual(await page.evaluate(() => document.activeElement?.id), 'rb-bridge-tab');
+    assert.strictEqual(await page.getAttribute('#rb-bridge-tab', 'aria-selected'), 'true');
+    await page.keyboard.press('Home');
+    assert.strictEqual(await page.evaluate(() => document.activeElement?.id), 'rb-chat-tab');
     await page.click('#rb-bridge-tab'); await page.click('#btn-host-diagnostics');
     await page.waitForFunction(() => document.querySelector('#diagnostic-identity').textContent.includes('hostInstanceId'));
     const ping = JSON.parse((await rpc('ping')).content[0].text);
@@ -569,13 +578,28 @@ async function main() {
     await page.waitForFunction(() => document.querySelector('#btn-send').textContent === '↑');
     for (const theme of ['dark', 'light']) {
       await page.evaluate(async value => (await import('/js/dom.js')).applyTheme(value), theme);
-      for (const viewport of [{ width: 1024, height: 600 }, { width: 640, height: 360 }]) {
+      for (const viewport of [{ width: 1024, height: 600 }, { width: 640, height: 360 }, { width: 390, height: 844 }]) {
         await page.setViewportSize(viewport); await page.click('#btn-agent-pick');
         const rect = await page.locator('#agent-pick-menu').boundingBox();
         assert.ok(rect.x >= 0 && rect.y >= 0 && rect.x + rect.width <= viewport.width && rect.y + rect.height <= viewport.height);
         await page.keyboard.press('Escape');
       }
     }
+    await page.setViewportSize({ width: 390, height: 844 });
+    if (!await page.locator('#sidebar').evaluate(el => el.classList.contains('collapsed'))) {
+      await page.click('[data-left="explorer"]');
+    }
+    await page.click('[data-left="explorer"]');
+    const narrowLayout = await page.evaluate(() => ({
+      viewport: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      sidebar: document.querySelector('#sidebar').getBoundingClientRect().toJSON(),
+      rightbar: document.querySelector('#rightbar').getBoundingClientRect().toJSON()
+    }));
+    assert.ok(narrowLayout.scrollWidth <= narrowLayout.viewport, '390px layout must not overflow horizontally');
+    assert.ok(narrowLayout.sidebar.x >= 48 && narrowLayout.sidebar.right <= 390, 'narrow sidebar is an in-viewport drawer');
+    assert.ok(narrowLayout.rightbar.right <= 390, 'right panel stays reachable on a narrow screen');
+    await page.click('[data-left="explorer"]');
     await page.setViewportSize({ width: 1280, height: 900 }); await page.click('#rb-bridge-tab');
     await page.click('#execution-bridge');
     await page.waitForFunction(()=>document.querySelector('#execution-mode').textContent.includes('主机模式：bridge'));

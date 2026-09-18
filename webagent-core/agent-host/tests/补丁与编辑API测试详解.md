@@ -45,7 +45,9 @@ apiFiles新增POST /files/preview真实HTTP夹具：成功返回diff和基线has
 
 apiFiles还验证本机保存undo句柄、预览无写入、错绑定/非布尔确认拒绝、磁盘变化拒绝覆盖、成功恢复原hash、同记录不重复回退。直接模块夹具检查64KiB/无变化/敏感路径不登记、16项容量和15分钟TTL；恢复测试文件是测试布置，不是产品自动回滚。
 
-apiFiles以真实本地HTTP测试Skill新建：规范化后重名返回400且保留原文；两个同名并发请求只有一个200、另一400，磁盘保留成功请求正文。这是主机内路径锁并发回归，不是外部OS进程隔离。
+apiFiles以真实本地HTTP测试Skill新建：规范化后重名返回400且保留原文；两个同名并发请求只有一个200、另一400，磁盘保留成功请求正文。
+
+经典PUT `/files/content`另以两个createOnly请求并发创建同一路径，断言一个200、一个409/E_FILE_EXISTS，磁盘正文只能等于赢家请求，不能被输家覆盖；这是端到端路由→write_file→exclusive发布回归。Node内路径锁会串行同进程请求，exclusive原语还防锁外目标抢占检查与发布之间的位置，但不把测试外推为跨文件事务、网络幂等或所有文件系统的实机兼容证明。
 
 apiFiles的PUT /customizations真实HTTP回归：先存shell+notes，再只改notes，shell保留；instructions对象返回400/success:false/E_BAD_ARGS，配置JSON逐字节不变。不由此认证完整浏览器设置交互或四文件事务。
 

@@ -9,12 +9,12 @@
 ## 文件分工
 - operations.js：工具接入、工作流与审批；详情/草稿共用审阅代次，审批按钮绑定已展示ID；审批/检查点列表独立校验发布，检查点恢复须核对完整差异及逐文件结果，创建检查点在途互斥并保留草稿，已确认创建与列表读取失败分开提示，HTTP接入登记与按ID移除各自互斥，独立显示确认/未知/停止未确认，stdio预览/启动另核对完整快照、有效期与进程/发现响应，在途不重发，失去确认不重放。逐函数说明见[受控工具与工作流详解](../../agent-host/src/utils/受控工具与工作流详解.md)。
 - state.js：共享状态、DOM选择器及ui函数注册表。
-- dom.js：主题、文字转义、提示和基础DOM能力。
-- bind.js：界面事件与操作函数的接线。
-- tabs.js：标签页、文件模型、dirty状态及保存/关闭交互。
-- chat.js：聊天发送、流式结果、停止请求和会话展示。
-- bridge.js：Bridge状态与连接/认证相关界面操作。
-- settings.js：模型与自定义配置界面。
+- dom.js：主题、文字转义、提示、页签ARIA及设置模态框焦点进入/恢复。
+- bind.js：界面事件与操作函数的接线；认证/画像探测/新建/终端/搜索都先验证HTTP与业务结果，设备轮询带取消和代次。
+- tabs.js：键盘可用的标签/文件树、文件模型、dirty状态及保存/关闭/补丁重读协调。
+- chat.js：严格消费HTTP/NDJSON完成合同、停止请求和会话展示；错误或断流不发布助手历史。
+- bridge.js：Bridge状态、统计、诊断、执行控制与连接/认证相关界面操作。
+- settings.js：模型、自定义配置及Skill目录/分页候选验证界面。
 - picker.js：选择器相关交互。
 - monaco.js：加载高级编辑器；失败/超时保留纯文本编辑，迟到成功先捕获缓冲区再升级。
 
@@ -22,7 +22,7 @@
 app.js初始化绑定并并行拉取状态、目录和配置。模块经ui注册表调用，HTTP使用相对地址；后端校验不能用隐藏按钮替代。文件编辑按tab保留模型，保存携带磁盘hash，冲突或失败保持编辑内容；取消请求不保证已完成的磁盘操作可回滚。
 
 ## 验证
-agent-host测试中的editorRuntime、workbenchRuntime、monacoLoading执行实际模块/函数fixture；HTML接线另有测试。真实浏览器焦点、页面卸载和无障碍仍需人工验收。
+agent-host测试中的editorRuntime、workbenchRuntime、monacoLoading执行实际模块/函数fixture；workbenchHtml守卫控件标签、语义按钮、输入焦点环和窄屏抽屉规则。独立workbench.browser在CI Chromium检查模态焦点进入/恢复、390px无水平溢出及侧栏抽屉边界。真实辅助技术、页面卸载、输入法和桌面缩放仍需人工验收。
 
 定制设置加载/保存检查HTTP、业务及快照形状；只提交本次修改，页面内单请求、10秒取消等待，失败不假成功，保存响应不覆盖未提交表单。不是跨客户端版本锁或四文件事务，详见[Bridge与设置详解](Bridge与设置详解.md)。
 
@@ -33,16 +33,16 @@ agent-host测试中的editorRuntime、workbenchRuntime、monacoLoading执行实�
 
 | 源码 | 定位证据 |
 |---|---|
-| [bind.js](bind.js) | 100 个函数/类节点 |
-| [bridge.js](bridge.js) | 58 个函数/类节点 |
-| [chat.js](chat.js) | 38 个函数/类节点 |
+| [bind.js](bind.js) | 116 个函数/类节点 |
+| [bridge.js](bridge.js) | 60 个函数/类节点 |
+| [chat.js](chat.js) | 39 个函数/类节点 |
 | [dom.js](dom.js) | 15 个函数/类节点 |
 | [monaco.js](monaco.js) | 9 个函数/类节点 |
 | [operations.js](operations.js) | 79 个函数/类节点 |
 | [picker.js](picker.js) | 16 个函数/类节点 |
-| [settings.js](settings.js) | 51 个函数/类节点 |
+| [settings.js](settings.js) | 55 个函数/类节点 |
 | [state.js](state.js) | 2 个函数/类节点 |
-| [tabs.js](tabs.js) | 46 个函数/类节点 |
+| [tabs.js](tabs.js) | 51 个函数/类节点 |
 <!-- docs-inventory:end -->
 
 模型表格、多模型保存、聊天选择与显式切回内置共用saveModelSettings：HTTP与success双检查、页内互斥、保存等待10秒；失败不假成功，保存后刷新失败单独提示且不重放。refreshStatus检查HTTP及核心快照形状，10秒读取、序号屏障阻止旧响应覆盖；隐藏select和按钮同用后台确认模型。Provider Test/Add也共用模型guard，捕获本次输入、明确手动模式、仅追加保留旧Key/选择，后端15秒/512KiB/100项和断连取消已回归；其余嵌套状态消费者及安全依赖未全审，详见Bridge与设置详解。

@@ -274,6 +274,24 @@ export async function saveCustom(partial) {
 
 let skillCatalog = [], openedSkill = null, skillRequest = 0, skillController = null;
 
+function validSkillSummary(skill) {
+  return Boolean(skill && typeof skill === 'object' && !Array.isArray(skill) &&
+    typeof skill.id === 'string' && skill.id && typeof skill.name === 'string' && skill.name &&
+    (skill.description === undefined || typeof skill.description === 'string') &&
+    (skill.preview === undefined || typeof skill.preview === 'string'));
+}
+
+function validSkillPage(page, id, resource, offset) {
+  if (!page || typeof page !== 'object' || Array.isArray(page) || page.found !== true ||
+      page.id !== id || page.resource !== resource || typeof page.content !== 'string' ||
+      !/^[a-f0-9]{64}$/.test(page.hash || '') || !Number.isInteger(page.fileBytes) || page.fileBytes < 0 ||
+      !Number.isInteger(page.offset) || page.offset !== offset || !Number.isInteger(page.totalChars) || page.totalChars < 0 ||
+      (page.nextOffset !== null && (!Number.isInteger(page.nextOffset) || page.nextOffset <= offset || page.nextOffset > page.totalChars))) return false;
+  if (page.resources !== undefined && (!Array.isArray(page.resources) || page.resources.some(item => !item ||
+      typeof item.path !== 'string' || typeof item.readable !== 'boolean'))) return false;
+  return validSkillSummary(page);
+}
+
 export function paintSkills() {
   const query = ($('#skill-search').value || '').toLowerCase();
   const rows = skillCatalog.filter(skill => `${skill.id} ${skill.description || ''}`.toLowerCase().includes(query));
@@ -295,8 +313,8 @@ export async function readSkillPage(id, resource = 'SKILL.md', offset = 0, hash 
   try {
     const response = await fetch('/api/skills/load?' + new URLSearchParams({ name: id, resource, offset: String(offset), expectedHash: hash }), { signal: controller.signal });
     const data = await response.json();
-    if (ticket !== skillRequest) return;
-    if (!response.ok || !data.found) throw new Error(data.error || data.hint || `HTTP ${response.status}`);
+    if (ticket !== skillRequest) return false;
+    if (!response.ok || !validSkillPage(data, id, resource, offset)) throw new Error(data && (data.error || data.hint) || `HTTP ${response.status}`);
     $('#skill-reader-content').textContent = offset && openedSkill?.id === id && openedSkill?.resource === resource
       ? $('#skill-reader-content').textContent + data.content : data.content;
     openedSkill = data;
@@ -307,19 +325,28 @@ export async function readSkillPage(id, resource = 'SKILL.md', offset = 0, hash 
     $('#btn-skill-workflow').disabled = data.resource !== 'workflow.json' || data.nextOffset != null || data.fileBytes > 32 * 1024;
     if (!offset) $('#skill-resources').innerHTML = `<button type="button" class="vs-btn" data-resource="SKILL.md">重新读取 SKILL.md</button>`
       + (data.resources || []).map(item => `<button type="button" class="vs-btn" data-resource="${escapeHtml(item.path)}" ${item.readable ? '' : 'disabled'}>${escapeHtml(item.path)}（只读）</button>`).join('');
+    return true;
   } catch (error) {
     if (ticket === skillRequest) { openedSkill = null; $('#skill-reader-note').textContent = `加载失败：${error.message}。重新选择目录项，从第一页读取。`; }
+    return false;
   } finally { clearTimeout(timer); if (ticket === skillRequest) skillController = null; }
 }
 
 export async function loadSkills() {
+  let loaded = false;
   try {
-    const res = await fetch('/api/skills');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json(); skillCatalog = data.skills || [];
+    const response = await fetch('/api/skills', { cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    if (!data || typeof data !== 'object' || !Array.isArray(data.skills) || !data.skills.every(validSkillSummary) ||
+        typeof data.truncated !== 'boolean' || !Array.isArray(data.warnings) || !data.warnings.every(item => typeof item === 'string')) {
+      throw new Error('Skill 目录响应格式无效');
+    }
+    skillCatalog = data.skills;
     $('#cnt-skills').textContent = skillCatalog.length ? String(skillCatalog.length) : '';
-    $('#skills-scan-note').textContent = `${skillCatalog.length} 项；来源仅表示位置，不表示授权。${data.truncated ? '扫描达到目录/数量上限，目录不完整。' : ''} ${(data.warnings || []).join(' ')}`;
+    $('#skills-scan-note').textContent = `${skillCatalog.length} 项；来源仅表示位置，不表示授权。${data.truncated ? '扫描达到目录/数量上限，目录不完整。' : ''} ${data.warnings.join(' ')}`;
     paintSkills();
+    loaded = true;
   } catch (error) { $('#skills-scan-note').textContent = `扫描失败：${error.message}`; }
   $('#skill-search').oninput = paintSkills;
   $('#btn-refresh-skills').onclick = loadSkills;
@@ -347,6 +374,7 @@ export async function loadSkills() {
     ui.setAgentMode('ask'); ui.setRight('chat'); ui.closeModal(); input.focus();
     ui.toast('已填入 Ask，尚未发送。内置探索不解释任意Skill；按技能推理需配置模型或使用外部AI。');
   };
+  return loaded;
 }
 
 ui.rowList = rowList;

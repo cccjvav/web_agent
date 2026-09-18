@@ -12,7 +12,7 @@
 - 最近完整核验基线6a1944d56d63e228bdf3b4b3a022c3efd6a84c1d（第44组全仓检查与优化报告；第43组原生扩展轮换/停止实现为db85323/CI35332743748），[CI35335420393](https://github.com/cccjvav/web_agent/actions/runs/35335420393)九项逐项成功；本地83测试文件通过，247源码/28目录/110排除。保留36ff82f首轮CI35125290301的Windows22两项超时（8/9、整体失败）：后续证据提交未改实现而全量通过，不说明超时根因已定位或修复。
 - 持久登录仍延期；Chat API确切后端身份是用户约定的后续任务。启发式结果提供参考，不承诺绝对鉴定。
 
-- 当前续作：第43组原生扩展轮换/停止已交付并九项CI通过；第44组完成全仓检查并产出[优化报告](../review/OPTIMIZATION_REPORT_2026-09-18.md)（P1剩余7处假成功消费者、CI/工程化建议、交接环境事实、交叉审查清单）。同时修正本索引与F43的过期计数：当前83测试文件、247源码、清单198项（逐句7/局部32/待逐句102）。报告与同步提交[CI35335420393](https://github.com/cccjvav/web_agent/actions/runs/35335420393)九项逐项成功。下一包按报告第5节顺序推进（P1-A并入R3、工程化立R9），R2/全仓/实机保留，探测暂停。
+- 当前续作：第45组已完成第44组报告交叉复核并落实P1-A七个结果消费者、设备码代次/单飞、`createOnly`原子创建、PTY 2xx门禁、Chat可靠终态、补丁协调、Bridge布尔合同、无障碍/390px界面及CI最小权限/高危审计门禁；离线verify另修model-probe同名重复建档。详见[第45组报告](../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)。本地83测试与辅助项目通过；真实Chromium/Windows/精确提交CI尚待本批推送后核对，不提前继承旧CI。R2、lint/EOL/生成物取舍、全仓待逐句与实机边界保留，外部探针整合仍暂停。
 
 - 文档审查与施工继续：[现行范围与剩余施工](../review/SEMANTIC_REVIEW_2026-09-16.md)。早期测试数/CI仅是对应历史批次证据，不作为当前状态；当前已核验基线以上方精确提交为准。手机固定Bridge，同类型并发保留，新增控件不继承旧手机验收。
 
@@ -51,5 +51,5 @@
 - [统一文档中心](../docs/README.md)：用户专题、开发学习、模块详解与当前/历史审查分层。
 - 使用入口：[使用指南](../使用指南.md)；[Windows线性验收](../docs/guides/Windows新手逐步验收.md)。
 - [探针完整验收](../探针完整整合实施与验收.md)、[Companion](../webagent-core/probe-extension/README.md)、[浏览器整合](../webagent-core/probe-extension/浏览器整合说明.md)。
-- [现行逐句审查](../review/SEMANTIC_REVIEW_2026-09-16.md)、[验收清单](../review/CHECKLIST_WINDOWS.md)、[借鉴映射](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md)、[全仓检查与优化报告](../review/OPTIMIZATION_REPORT_2026-09-18.md)。
+- [现行逐句审查](../review/SEMANTIC_REVIEW_2026-09-16.md)、[验收清单](../review/CHECKLIST_WINDOWS.md)、[借鉴映射](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md)、[第44组原始优化报告](../review/OPTIMIZATION_REPORT_2026-09-18.md)、[第45组交叉审查与实修](../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)。
 - [经验](docs/experience.md)、[旧索引归档](stages/context-history-through-0.4.md)、[双探针0.3～0.4时间线](stages/probe-dual-integration-2026-09-15.md)。

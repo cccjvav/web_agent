@@ -145,13 +145,13 @@ if (!process.argv.includes('--vm-child')) {
   context.fetch = async (url, options) => { assert.strictEqual(options.cache, 'no-store'); activityRequests++; return { ok: true, json: async () => activity }; };
   const firstRefresh = bridge.namespace.refreshBridgeActivity();
   assert.strictEqual(bridge.namespace.refreshBridgeActivity(), firstRefresh, 'polls/events share one in-flight request');
-  await firstRefresh;
+  assert.strictEqual(await firstRefresh, true);
   assert.strictEqual(activityRequests, 1);
   context.fetch = async () => ({ ok: false, status: 503 });
-  await bridge.namespace.refreshBridgeActivity();
+  assert.strictEqual(await bridge.namespace.refreshBridgeActivity(), false);
   assert.ok(button.textContent.includes('同步失败'));
   context.fetch = async () => ({ ok: true, json: async () => activity });
-  await bridge.namespace.refreshBridgeActivity();
+  assert.strictEqual(await bridge.namespace.refreshBridgeActivity(), true);
   assert.ok(!button.textContent.includes('同步失败'), 'same revision recovers the error message');
   context.fetch = async () => ({ ok: true, json: async () => ({}) });
   await bridge.namespace.refreshBridgeActivity();
@@ -335,6 +335,8 @@ if (!process.argv.includes('--vm-child')) {
     if (!taskNodes.has(selector)) taskNodes.set(selector,{innerHTML:'',textContent:'',classList:{remove(){},toggle(){}}});
     return taskNodes.get(selector);
   };
+  const tabs = new vm.SourceTextModule(fs.readFileSync(path.join(root,'tabs.js'),'utf8'),{context});
+  await tabs.link(specifier=>specifier==='./state.js'?state:dom);await tabs.evaluate();
   const chat = new vm.SourceTextModule(fs.readFileSync(path.join(root,'chat.js'),'utf8'),{context});
   await chat.link(specifier=>specifier==='./state.js'?state:dom);await chat.evaluate();
   chat.namespace.paintTodos([{title:'Local task',status:'pending'}]);
@@ -449,7 +451,7 @@ if (!process.argv.includes('--vm-child')) {
     if (!statusNodes.has(selector)) statusNodes.set(selector, {
       value: '', textContent: '', innerHTML: '', dataset: {}, style: {},
       classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
-      addEventListener() {}, setAttribute() {}, querySelectorAll: () => []
+      addEventListener() {}, setAttribute() {}, appendChild() {}, querySelectorAll: () => []
     });
     return statusNodes.get(selector);
   };
@@ -538,8 +540,221 @@ if (!process.argv.includes('--vm-child')) {
   binding.namespace.bind();
   state.namespace.ui.saveModelSettings = settings.namespace.saveModelSettings;
   state.namespace.ui.refreshStatus = bridge.namespace.refreshStatus;
+
+  // R3 result consumers: an HTTP response is not success until its body confirms the action.
+  const consumerNotices = [];
+  state.namespace.ui.toast = message => consumerNotices.push(message);
+  let consumerRefreshes = 0, treeLoads = 0, openedFiles = 0;
+  state.namespace.ui.refreshStatus = async () => { consumerRefreshes++; return true; };
+  state.namespace.ui.loadTree = async () => { treeLoads++; };
+  state.namespace.ui.openFile = async () => { openedFiles++; };
+  state.namespace.state.loggedIn = false;
+  context.fetch = async () => ({ok:false,status:500,json:async()=>({success:true})});
+  assert.equal(await statusNodes.get('#btn-gh-login').onclick(),false);
+  assert.equal(state.namespace.state.loggedIn,false,'failed demo login cannot publish a local success');
+  assert.equal(consumerRefreshes,0);assert.ok(!consumerNotices.at(-1).includes('已打开'));
+  context.fetch = async () => ({ok:true,status:200,json:async()=>({success:false,error:'clear rejected'})});
+  assert.equal(await statusNodes.get('#btn-gh-clear').onclick(),false);
+  assert.equal(consumerRefreshes,0);assert.ok(!consumerNotices.at(-1).includes('已清除'));
+
+  let deviceStarts=0,devicePolls=0;
+  context.fetch=async url=>{
+    if(url==='/api/bridge/device') return {ok:true,status:200,json:async()=>({success:true,userCode:'OLD-CODE',verificationUri:'https://github.com/login/device',interval:5})};
+    if(url==='/api/bridge/github/clear') return {ok:true,status:200,json:async()=>({success:true,provider:'local-demo',username:'local'})};
+    devicePolls++;return {ok:true,status:200,json:async()=>({pending:true,done:false,interval:5})};
+  };
+  const timersBeforeDevice=new Set(timers.keys());
+  assert.equal(await statusNodes.get('#btn-gh-device').onclick(),true);
+  const cancelledPoll=[...timers.keys()].find(id=>!timersBeforeDevice.has(id));
+  assert.ok(cancelledPoll);assert.equal(await statusNodes.get('#btn-gh-clear').onclick(),true);
+  assert.ok(!timers.has(cancelledPoll),'clearing identity cancels the scheduled device poll');assert.equal(devicePolls,0);
+  context.fetch=async url=>{
+    if(url==='/api/bridge/device') {
+      deviceStarts++;return {ok:true,status:200,json:async()=>({success:true,userCode:'CODE-'+deviceStarts,verificationUri:'https://github.com/login/device',interval:5})};
+    }
+    devicePolls++;return {ok:true,status:200,json:async()=>({pending:false,done:true,success:true,username:'latest-user'})};
+  };
+  const replacementTimers=new Set(timers.keys());
+  assert.equal(await statusNodes.get('#btn-gh-device').onclick(),true);
+  const oldPoll=[...timers.keys()].find(id=>!replacementTimers.has(id));
+  assert.equal(await statusNodes.get('#btn-gh-device').onclick(),true);
+  assert.ok(!timers.has(oldPoll),'a newer device attempt cancels the older generation');
+  const latestPoll=[...timers.keys()].find(id=>!replacementTimers.has(id));
+  const latestTick=timers.get(latestPoll);timers.delete(latestPoll);await latestTick();
+  assert.equal(devicePolls,1);assert.ok(consumerNotices.at(-1).includes('latest-user'));
+
+  context.prompt = () => '../blocked.txt';
+  context.fetch = async () => ({ok:true,status:200,json:async()=>({success:false,error:'create rejected'})});
+  assert.equal(await statusNodes.get('#lnk-new-file').onclick(),false);
+  assert.equal(treeLoads,0);assert.equal(openedFiles,0);
+  assert.ok(consumerNotices.at(-1).includes('未确认'));
+
+  let createBody;
+  context.prompt = () => 'fresh.txt';
+  context.fetch = async (url, options) => {
+    assert.equal(url,'/api/files/content');createBody=JSON.parse(options.body);
+    return {ok:true,status:200,json:async()=>({success:true,path:'fresh.txt',hash:'b'.repeat(64)})};
+  };
+  assert.equal(await statusNodes.get('#lnk-new-file').onclick(),true);
+  assert.deepStrictEqual(createBody,{path:'fresh.txt',content:'',createOnly:true});
+  assert.equal(treeLoads,1);assert.equal(openedFiles,1);
+
+  const terminalLines = [];
+  state.namespace.ui.termLine = (text, cls = '') => terminalLines.push({text,cls});
+  context.document.querySelector('#term-input').value='echo fixture';
+  context.fetch = async () => ({ok:true,status:200,json:async()=>({success:false,error:'command rejected'})});
+  assert.equal(await statusNodes.get('#term-form').onsubmit({preventDefault(){}}),false);
+  assert.ok(terminalLines.at(-1).text.includes('command rejected'));
+  assert.equal(terminalLines.at(-1).cls,'err');
+  context.fetch = async () => ({ok:true,status:200,json:async()=>({success:true,result:{stdout:'done\n',stderr:'',exitCode:0}})});
+  context.document.querySelector('#term-input').value='echo fixture';
+  assert.equal(await statusNodes.get('#term-form').onsubmit({preventDefault(){}}),true);
+  assert.equal(terminalLines.at(-1).text,'done\n');
+  context.fetch = async () => ({ok:false,status:503,json:async()=>({success:true,result:{matches:[]}})});
+  context.document.querySelector('#search-q').value='fixture';
+  assert.equal(await statusNodes.get('#btn-search').onclick(),false);
+  assert.ok(statusNodes.get('#search-results').textContent.includes('失败'));
+  assert.ok(!statusNodes.get('#search-results').textContent.includes('没有命中'));
+  context.fetch = async () => ({ok:true,status:200,json:async()=>({success:true,result:{matches:[{file:'a.txt',line:3,content:'fixture'}]}})});
+  assert.equal(await statusNodes.get('#btn-search').onclick(),true);
+  assert.ok(statusNodes.get('#search-results').innerHTML.includes('a.txt:3'));
+
+  let modelValue='keep me', modelUpdates=0;
+  const patchedTab = {id:'file:patched.txt',path:'patched.txt',kind:'file',content:'keep me',savedContent:'keep me',hash:'a'.repeat(64),dirty:false,
+    model:{getValue:()=>modelValue,setValue:value=>{modelValue=value;modelUpdates++;}}};
+  state.namespace.state.tabs.push(patchedTab);
+  context.fetch = async () => ({ok:false,status:500,json:async()=>({error:'read rejected'})});
+  const consumerQuery = context.document.querySelector;
+  context.document.querySelector = selector => ['#chat-stream','#agent-stream'].includes(selector) ? null : consumerQuery(selector);
+  chat.namespace.handleEvent({type:'tool',name:'apply_patch',ok:true,result:{filePath:'patched.txt'}});
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(patchedTab.content,'keep me','failed post-patch read cannot blank the editor tab');
+  assert.ok(consumerNotices.at(-1).includes('重新读取失败'));
+
+  context.fetch = async () => ({ok:true,status:200,json:async()=>({content:'from disk',hash:'c'.repeat(64)})});
+  chat.namespace.handleEvent({type:'tool',name:'apply_patch',ok:true,result:{filePath:'patched.txt'}});
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(patchedTab.content,'from disk');assert.equal(patchedTab.savedContent,'from disk');
+  assert.equal(patchedTab.hash,'c'.repeat(64));assert.equal(patchedTab.dirty,false);
+  assert.equal(modelValue,'from disk');assert.equal(modelUpdates,1,'clean post-patch reads synchronize an existing Monaco model');
+
+  patchedTab.content='newer local draft';patchedTab.savedContent='from disk';patchedTab.dirty=true;modelValue='newer local draft';
+  context.fetch = async () => ({ok:true,status:200,json:async()=>({content:'newer disk patch',hash:'d'.repeat(64)})});
+  chat.namespace.handleEvent({type:'tool',name:'apply_patch',ok:true,result:{filePath:'patched.txt'}});
+  await new Promise(resolve=>setImmediate(resolve));
+  context.document.querySelector = consumerQuery;
+  assert.equal(patchedTab.content,'newer local draft','post-patch refresh preserves a dirty draft');
+  assert.equal(modelValue,'newer local draft');assert.equal(modelUpdates,1);
+  assert.equal(patchedTab.hash,'c'.repeat(64),'dirty tab keeps its old hash so a later save is rejected as stale');
+  assert.equal(patchedTab.dirty,true);assert.ok(consumerNotices.at(-1).includes('已保留未保存草稿'));
+
+  // Read-only consumers preserve the last trusted UI on HTTP/shape failures and late drafts.
+  const environmentReply={environment:{os:'linux',shell:'bash'},techStack:{languages:'JavaScript',frameworks:'Express',packageManager:'npm',testCommand:'npm test'}};
+  const envOs=context.document.querySelector('#env-os'),envShell=context.document.querySelector('#env-shell');
+  envOs.value='draft-os';envShell.value='draft-shell';
+  context.fetch=async()=>({ok:false,status:500,json:async()=>environmentReply});
+  assert.equal(await statusNodes.get('#btn-detect-env').onclick(),false);
+  assert.equal(envOs.value,'draft-os');assert.equal(envShell.value,'draft-shell');
+  let finishDetection;
+  context.fetch=()=>new Promise(resolve=>{finishDetection=resolve;});
+  const detecting=statusNodes.get('#btn-detect-env').onclick();
+  envOs.value='newer-draft';finishDetection({ok:true,status:200,json:async()=>environmentReply});
+  assert.equal(await detecting,false);assert.equal(envOs.value,'newer-draft');
+  envOs.value='draft-os';envShell.value='draft-shell';context.fetch=async()=>({ok:true,status:200,json:async()=>environmentReply});
+  assert.equal(await statusNodes.get('#btn-detect-env').onclick(),true);
+  assert.equal(envOs.value,'linux');assert.equal(envShell.value,'bash');
+  context.document.querySelector('#st-lang').value='keep-stack';
+  context.fetch=async()=>({ok:true,status:200,json:async()=>({environment:environmentReply.environment,techStack:null})});
+  assert.equal(await statusNodes.get('#btn-detect-stack').onclick(),false);
+  assert.equal(context.document.querySelector('#st-lang').value,'keep-stack');
+
+  const treeBox=context.document.querySelector('#file-tree');treeBox.innerHTML='trusted tree';
+  context.fetch=async()=>({ok:false,status:503,json:async()=>({error:'tree unavailable'})});
+  await assert.rejects(tabs.namespace.loadTree());assert.equal(treeBox.innerHTML,'trusted tree');
+  context.fetch=async()=>({ok:true,status:200,json:async()=>({items:null})});
+  await assert.rejects(tabs.namespace.loadTree());assert.equal(treeBox.innerHTML,'trusted tree');
+  context.fetch=async()=>({ok:true,status:200,json:async()=>({items:[{name:'a.txt',path:'a.txt',type:'file'}]})});
+  assert.equal(await tabs.namespace.loadTree(),true);assert.ok(treeBox.innerHTML.includes('a.txt'));
+
+  const skill={id:'workspace:test',name:'test',description:'fixture skill'};
+  context.URLSearchParams=URLSearchParams;
+  context.fetch=async()=>({ok:true,status:200,json:async()=>({skills:[skill],truncated:false,warnings:[]})});
+  assert.equal(await settings.namespace.loadSkills(),true);
+  const trustedSkills=statusNodes.get('#skills-list').innerHTML;
+  context.fetch=async()=>({ok:true,status:200,json:async()=>({skills:[null],truncated:false,warnings:[]})});
+  assert.equal(await settings.namespace.loadSkills(),false);
+  assert.equal(statusNodes.get('#skills-list').innerHTML,trustedSkills,'malformed catalog cannot replace the last trusted list');
+  const skillPage={...skill,found:true,resource:'SKILL.md',fileBytes:4,content:'body',hash:'e'.repeat(64),offset:0,nextOffset:null,totalChars:4,resources:[]};
+  context.fetch=async()=>({ok:true,status:200,json:async()=>skillPage});
+  assert.equal(await settings.namespace.readSkillPage(skill.id),true);
+  context.fetch=async()=>({ok:true,status:200,json:async()=>({...skillPage,resources:[null]})});
+  assert.equal(await settings.namespace.readSkillPage(skill.id),false);
+  assert.equal(statusNodes.get('#btn-skill-workflow').disabled,true);
+
+  let resetRefreshes=0;
+  state.namespace.ui.refreshStatus=async()=>{resetRefreshes++;return true;};
+  context.fetch=async()=>({ok:true,status:200,json:async()=>({success:false,error:'reset rejected'})});
+  assert.equal(await bridge.namespace.resetRound(),false);assert.equal(resetRefreshes,0);
+  assert.ok(consumerNotices.at(-1).includes('未确认'));
+  state.namespace.ui.refreshStatus=async()=>{resetRefreshes++;return false;};
+  context.fetch=async url=>url==='/api/bridge/reset-round'
+    ? {ok:true,status:200,json:async()=>({success:true,mcpSession:{}})}
+    : {ok:true,status:200,json:async()=>activity};
+  assert.equal(await bridge.namespace.resetRound(),true);
+  assert.ok(consumerNotices.at(-1).includes('清除已确认'));
+
+  let healthRefreshes=0;
+  state.namespace.ui.refreshStatus=async()=>{healthRefreshes++;return true;};
+  context.fetch=async()=>({ok:false,status:500,json:async()=>({ok:true})});
+  await bridge.namespace.checkBridgeHealth();assert.equal(healthRefreshes,0);
+  assert.ok(state.namespace.state.stats.healthLine.includes('失败'));
+  context.fetch=async()=>({ok:true,status:200,json:async()=>({identity:{hostInstanceId:'bad',workspaceRoot:'/bad'},capabilities:[null]})});
+  await bridge.namespace.refreshDiagnostics();
+  context.document.querySelector('#expected-host').value='1'.repeat(36);
+  assert.doesNotThrow(()=>bridge.namespace.compareHost());
+  assert.ok(statusNodes.get('#host-comparison').textContent.includes('先成功读取'));
+
+  state.namespace.state.status={...confirmedStatus,workspaceRoot:'/fixture',identity:{hostInstanceId:'host-fixture'},executionControl:{mode:'chat',revision:'rev-1',active:{chat:0,bridge:0},permissions:{read:true,edit:true,execute:false,capture:true}}};
+  bridge.namespace.paintExecutionControl();bridge.namespace.initExecutionControl();
+  let finishControl,controlPosts=0;
+  state.namespace.ui.refreshStatus=async()=>false;
+  context.fetch=()=>{controlPosts++;return new Promise(resolve=>{finishControl=resolve;});};
+  const changingControl=statusNodes.get('#execution-save').onclick();
+  assert.equal(await statusNodes.get('#execution-bridge').onclick(),false);assert.equal(controlPosts,1);
+  finishControl({ok:true,status:200,json:async()=>({success:true})});
+  assert.equal(await changingControl,true);assert.ok(statusNodes.get('#execution-result').textContent.includes('已确认应用'));
+  context.fetch=async()=>({ok:true,status:200,json:async()=>({success:false,error:'permission rejected'})});
+  assert.equal(await statusNodes.get('#execution-save').onclick(),false);
+  assert.ok(statusNodes.get('#execution-result').textContent.includes('未确认'));
+
+  context.TextDecoder=TextDecoder;
+  const streamResponse=(chunks,status=200)=>({ok:status>=200&&status<300,status,
+    body:{getReader(){let index=0;return{async read(){return index<chunks.length?{done:false,value:Buffer.from(chunks[index++])}:{done:true};}};}},
+    async text(){return chunks.join('');}});
+  const chatQuery=context.document.querySelector;
+  context.document.querySelector=selector=>['#chat-stream','#agent-stream'].includes(selector)?null:chatQuery(selector);
+  state.namespace.ui.refreshStatus=async()=>true;state.namespace.ui.loadTree=async()=>true;
+  context.fetch=async()=>streamResponse(['{"error":"chat rejected"}'],500);
+  assert.equal(await chat.namespace.sendChat('HTTP failure'),false);
+  assert.ok(state.namespace.state.messages.at(-1).text.includes('chat rejected'));
+  context.fetch=async()=>streamResponse(['{"type":"message","text":"confirmed answer"}\n{"type":"done"}']);
+  assert.equal(await chat.namespace.sendChat('valid stream'),true);
+  assert.equal(state.namespace.state.history.at(-1).content,'confirmed answer');
+  const historyBeforeError = state.namespace.state.history.length;
+  context.fetch=async()=>streamResponse(['{"type":"message","text":"must not persist"}\n{"type":"error","message":"failed"}\n{"type":"done"}']);
+  assert.equal(await chat.namespace.sendChat('error then done'),false);
+  assert.equal(state.namespace.state.history.length,historyBeforeError+1,'only the user prompt is retained after an error event');
+  context.fetch=async()=>streamResponse(['not-json\n']);
+  assert.equal(await chat.namespace.sendChat('bad stream'),false);
+  context.fetch=async()=>streamResponse(['{"type":"status","text":"partial"}\n']);
+  assert.equal(await chat.namespace.sendChat('truncated stream'),false);
+  assert.ok(state.namespace.state.messages.at(-1).text.includes('提前结束'));
+  context.document.querySelector=chatQuery;
+  state.namespace.state.status={...confirmedStatus,activeModelId:'new'};
+
   const rotationNotices = [];
-  const rotationRefresh = state.namespace.ui.refreshStatus;
+  const rotationRefresh = bridge.namespace.refreshStatus;
+  state.namespace.ui.refreshStatus = rotationRefresh;
   const beforeRotation = state.namespace.state.status;
   const oldSecret = 'a'.repeat(24), newSecret = 'b'.repeat(24);
   const rotationSnapshot = {...beforeRotation, workspaceRoot:'/rotation',identity:{hostInstanceId:'rotation-host'},secretKey:oldSecret};

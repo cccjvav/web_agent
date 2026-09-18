@@ -9,9 +9,9 @@
 | formatClock(ms) | 时间→本地时钟文本 | 空值空字符串；内部pad(n)补两位；本地时区不是UTC |
 | logBridgeTool() | 无→Promise | 兼容事件入口，仅委托refreshBridgeActivity，不在浏览器累加，以免重复或混入本地Chat |
 | paintBridgeActivity(snapshot) | 服务端快照→undefined | 校验stats/logs，epoch:revision未变不重复绘制；覆盖state.stats、paintStats、转义后重建最近100条完成摘要；计数不等于当前仍连接 |
-| refreshBridgeActivity() | 无→Promise | 单飞GET本机/api/bridge/activity，5秒AbortController超时；成功paint，失败显示统计同步错误并允许下一次相同版本快照恢复；finally清timer与pending |
+| refreshBridgeActivity() | 无→Promise<boolean> | 单飞GET本机/api/bridge/activity，5秒AbortController超时；成功完整paint后true，HTTP/解析/快照失败显示同步错误并false，允许下一次相同版本快照恢复；finally清timer与pending |
 | paintStats() | 无→undefined | 显示调用/失败/成功率/平均秒；healthLine优先；会话数取httpSessions/alive/clients或调用记录启发式，最后工具附formatClock |
-| resetRound() | 无→Promise<void> | 检查POST reset-round的HTTP成功，刷新状态，等待已有快照再取新快照；失败提示而不假装本地清零 |
+| resetRound() | 无→Promise<boolean> | resetRoundPending拒绝页内重复；POST后要求HTTP成功、JSON对象且success严格true才确认写入，再分别刷新status和活动快照。写确认但读取失败仍返回true并提示手动核对；写未确认false且不假装本地清零、不自动重试 |
 | selectedClientInfo() | 无→客户端或null | 当前selectedClient优先，否则arena；找不到null |
 | promptText() | 无→字符串 | 客户端专用prompt优先、status.prompt其次，再拼mcpUrl+连接说明；可能含密钥，不公开粘贴 |
 | paintClients() | 无→undefined | map卡片/步骤；needsPlus严格true/false/其他分别显示要Plus/无需Plus/待核对，verification=unverified加未验证徽标；click修改selectedClient并重画；copyRules按connectMode显示；配对码只在Bridge运行且有效信息存在时展示，供兼容OAuth客户端使用，不称某厂商专属 |
@@ -49,7 +49,7 @@
 
 需要区分文案与数据：bridge-sub的“活动请求”使用state.stats.calls累计次数，不是并发数；Bridge运行不代表外部Agent已连接；隧道URL存在也不是全公网端到端健康证明。
 
-**checkBridgeHealth()**GET /health，JSON失败变空；refreshStatus，再拼工作台/Bridge/隧道摘要到healthLine；catch错误摘要；只检查本源，不从手机侧探测公网。
+**checkBridgeHealth()**以no-store GET /health，只有HTTP 2xx且health.ok严格true才继续refreshStatus；被更新读取取代也算未确认。成功再拼工作台/Bridge/隧道摘要到healthLine，失败走错误摘要，不用拒绝正文里的ok真值假报健康；只检查本源，不从手机侧探测公网。
 
 **isStatusSnapshot(value)**验证本次消费的核心形状：online、非success:false、bridgeRunning布尔、activeModelId字符串、models数组；模型项须对象、id非空且不重复，name若有须字符串、caps若有须数组。允许当前ID不在列表，此时不偷偷选第一个或builtin。它不是整个status（包括权限/任务/客户端等嵌套对象）的完整schema、主机身份认证或模型兼容性验证。
 
@@ -81,7 +81,9 @@
 
 load/save共用页面内customBusy，已有请求时明确拒绝新请求而不排队；各用10秒AbortController和finally清timer/释放busy，避免迟到加载覆盖保存结果。取消等待不证明服务器未写入；不自动重放。它不是跨标签页/跨进程CAS，两个客户端修改同一字段或整列表仍可能后写覆盖前写；明确加载会重填表单，不是草稿恢复功能。
 
-**loadSkills()**获取带来源/截断/错误提示的目录，并绑定搜索、重扫、查看、下一页、资源和填入对话按钮。**paintSkills()**按id/description过滤并转义生成卡片，显示来源和同名项。**readSkillPage(id,resource,offset,hash)**调用受保护的GET `/api/skills/load`，5秒AbortController超时；新请求取消上一个且用ticket忽略迟到响应。第一页清旧正文；后续页按同id/resource拼接，服务端校验expectedHash防混版；错误清选择并提示从头读取，不允许继续操作旧内容。正文textContent展示，不执行Markdown/脚本。只将loadSkills作为原ui启动入口，新增导出也可供测试直接调用。
+**validSkillSummary(skill)**要求目录项为对象、id/name为非空字符串，description/preview若有也须字符串。**validSkillPage(page,id,resource,offset)**在此基础上要求found严格true、请求ID/资源/offset回显一致、正文字符串、64位hash、非负字节/总字符、合法递增或null的nextOffset，resources若有须逐项path字符串/readable布尔；这是发布形状合同，不认证说明内容可信。
+
+**loadSkills()**以no-store获取目录，只有HTTP成功且skills/truncated/warnings完整形状有效才替换skillCatalog并paint；失败保留最后可信列表，只更新扫描错误说明并返回false。它同时绑定搜索、重扫、查看、下一页、资源和填入对话按钮。**paintSkills()**按id/description过滤并转义生成卡片，显示来源和同名项。**readSkillPage(id,resource,offset,hash)**调用受保护的GET `/api/skills/load`，5秒AbortController超时；新请求取消上一个且用ticket忽略迟到响应，只有validSkillPage通过才发布。第一页替换正文；后续页按同id/resource拼接，服务端校验expectedHash防混版；错误清选择并提示从头读取，不允许继续操作旧内容。正文textContent展示，不执行Markdown/脚本。
 
 “填入Ask”保留已有草稿，追加明确load_skill ID和授权限制，切Ask并聚焦，**不发送**；提示内置探索不能解释任意Skill。完整读完≤32KiB的`workflow.json`才启用转工作流按钮；只复制已读取的文本到现有operations页并触发结构/风险预览，不提交审批、不执行；现有流程仍需另外提交和本机批准。其他资源只是参考文本，不根据run.py/run.sh名字自动启动。
 
@@ -98,7 +100,7 @@ HTTP状态/并发、真实剪贴板与公网连接的界限应按上述实现理
 会话数显示sessions (≤24h)，不是当前正在执行的任务数；后端snapshot已主动清理过期会话，alive另按10秒心跳窗口判断。
 
 ## 身份与追踪界面
-paintBridgeActivity先显示snapshot.identity，存在executions时优先展示进行中/完成的工具追踪、任务/会话/callId、核验与execId，而不是只列完成摘要；状态文本均转义。**refreshDiagnostics()**先清旧身份，GET只读诊断后显示identity/capabilities，失败不能沿用旧身份做匹配。**compareHost()**校验用户填的UUID与当前主机一致性，不接收密钥；不一致要求停止修改任务并核对工作区。
+paintBridgeActivity先显示snapshot.identity，存在executions时优先展示进行中/完成的工具追踪、任务/会话/callId、核验与execId，而不是只列完成摘要；状态文本均转义。**refreshDiagnostics()**先清旧身份，以no-store GET只读诊断；只有HTTP成功、identity带字符串hostInstanceId/workspaceRoot且capabilities每项id/status/reason均为字符串才发布currentDiagnostics并渲染。失败不能沿用旧身份做匹配。**compareHost()**校验用户填的UUID与当前主机一致性，不接收密钥；不一致要求停止修改任务并核对工作区。
 
 paintBridgeActivity校验epoch/revision和非负统计，渲染完成后才提交activityVersion；失败仍可重试。同一版本避免日志重绘。activityInfo保存当前页已取得的主机身份/本轮起点；paintStats在未同步时显示—，统一更新Bridge摘要，不再把完成数叫活动请求。paintBridge不再覆盖sess-note，避免一般状态和活动快照竞态。refreshBridgeActivity使用cache:no-store，无效快照同HTTP失败一样显示错误且不清除已知计数。
 
@@ -112,6 +114,6 @@ startBridge工作区校验（0.7.1）：记录页面state.status，再fetch实�
 
 ## 所有者模式/权限控件
 
-**paintExecutionControl()**从status.executionControl画主机模式/请求数；没有新主机字段显示未知，存在未保存草稿则不覆盖勾选和revision。**initExecutionControl()**绑定两模式按钮、四项复选框、保存与重新读取。内部**change(value)** POST /api/execution-control，带当前workspaceRoot、identity.hostInstanceId，权限附草稿revision；仅成功后清dirty并刷新主机。出错显示原因，不假装切换成功。Read关会在草稿关Edit；缺Read/Edit/Capture会关Execute并提示，不自动扩大权限。保存才实际生效。refreshStatus调用paintExecutionControl，bind经ui.initExecutionControl接线。验证见executionControl.test与浏览器回归，不能视为真实Windows控件验收。
+**paintExecutionControl()**从status.executionControl画主机模式/请求数；没有新主机字段显示未知，存在未保存草稿则不覆盖勾选和revision。**initExecutionControl()**绑定两模式按钮、四项复选框、保存与重新读取。内部**change(value)**用controlChangePending单飞及10秒AbortController POST `/api/execution-control`，带当前workspaceRoot、identity.hostInstanceId，权限附草稿revision；只有HTTP成功且success严格true才清dirty并确认主机写入。后续状态刷新成功才显示已应用；写确认但刷新失败单独提示手动核对，写未确认固定提示且不自动重试。Read关会在草稿关Edit；缺Read/Edit/Capture会关Execute并提示，不自动扩大权限。保存才实际生效。refreshStatus调用paintExecutionControl，bind经ui.initExecutionControl接线。验证见executionControl.test与浏览器回归，不能视为真实Windows控件验收。
 
 promptText对已选卡片直接返回其prompt或空字符串；不支持普通粘贴/本机Chat的空prompt不能回退成全局带密钥连接提示。仅没有卡片时保留旧全局回退；复制按钮遇空文本提示无配置并退出，不假报已复制。

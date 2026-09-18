@@ -18,7 +18,7 @@ ES imports首先填ui，后执行boot。WS_BACKOFF_MIN/MAX为1/30秒，wsBackoff
 
 | 函数 | 参数/返回 | 实现与副作用 |
 |---|---|---|
-| emptyChat() | 无→静态HTML | 欢迎文字与四个设置链接，不发请求 |
+| emptyChat() | 无→静态HTML | 欢迎文字与四个原生button链接样式入口，可用键盘聚焦/触发，不发请求 |
 | paintChat() | 无→undefined | 内部paint(box)缺节点返回；空messages插empty并forEach绑定设置链接；非空清容器、forEach renderMsg，滚底；同时画两个Chat区域 |
 | summarizeTool(result) | 结果→原值或浅副本 | 只裁顶层content800/stdout1000字符；不是全JSON体积预算/脱敏器 |
 | renderMsg(m) | 消息→DOM节点 | 按user/status/tool/consensus/assistant分支，细节下述 |
@@ -28,7 +28,7 @@ ES imports首先填ui，后执行boot。WS_BACKOFF_MIN/MAX为1/30秒，wsBackoff
 | agentLabel(mode) | 模式→标签 | ask/code明确，其余按Plan显示，不是权限验证 |
 | setAgentMode(mode) | 模式→undefined | 改state.mode、两select、Agent标签再paintPlanComposer；真正工具模式锁在服务端 |
 
-**renderMsg**：user/status textContent。tool由ok/error判断类，header与JSON摘要先escape；header.onclick切pre展示。consensus参与者map标签，内部**show(i)**切按钮并用renderMd显示合并稿/分支，行动计划title escape；tabs.onclick取dataset.i；adopt.onclick切code并调用sendChat固定执行提示——这是**用户点击才发生的新任务**，不是服务器自动重放。assistant renderMd，branch存在追加模型/序号/模拟标签。
+**renderMsg**：user/status textContent。tool由ok/error判断类，原生`.tool-card-toggle`按钮与JSON摘要先escape；点击切pre展示并同步aria-expanded，键盘可直接触发。consensus参与者map标签，内部**show(i)**切按钮并用renderMd显示合并稿/分支，行动计划title escape；tabs.onclick取dataset.i；adopt.onclick切code并调用sendChat固定执行提示——这是**用户点击才发生的新任务**，不是服务器自动重放。assistant renderMd，branch存在追加模型/序号/模拟标签。
 
 ## 3. sendChat(text,opts={})
 
@@ -37,16 +37,16 @@ ES imports首先填ui，后执行boot。WS_BACKOFF_MIN/MAX为1/30秒，wsBackoff
 3. 空正文：merge可继续；Plan满足显式branch或canBranch转branch；无任务Plan提示，其余返回。分支显示占位用户消息，但不把空消息塞历史。
 4. sending=true/新AbortController，按钮切停止；stayOnBridge来自opts，不要求转Chat时保留Bridge。取旧历史尾12，本轮非空用户才push历史；merge仅status。
 5. 从选择框/status取modelId、thinkLevel，POST `/api/chat`，请求含mode/message/history/modelId/thinkLevel/planAction，不把所有UI事件都发送。
-6. reader/TextDecoder逐块按换行解析NDJSON，半行留buf，坏JSON忽略；handleEvent并累计message正文。循环done后仅把累计助手正文入history。
-7. catch显示请求失败（包括AbortError）；finally清sending/controller/恢复按钮，触发refreshStatus/loadTree，未await它们；refreshStatus的reject由独立catch消费并提示重新读取，不重放对话。loadTree仍沿用原调用。
+6. 先要求HTTP 2xx及可读body；非2xx有界读取text并优先取JSON error，不进入事件成功路径。reader/TextDecoder逐块按换行解析NDJSON，半行留buffer；内部**consumeLine(line)**要求每个非空行是带字符串type的对象，坏JSON/坏形状立即失败。buffer超过1MiB拒绝；流结束flush decoder，并消费没有换行的尾事件。
+7. 只有出现done且从未出现error才返回true，并只在该条件下把累计message正文写assistant history；error即使后面还有done也不能发布助手历史。既无done也无error的断流明确结果未确认。catch区分AbortError“已停止、可能不完整”与普通失败；finally清sending/controller/恢复按钮，并安全消费refreshStatus/loadTree的同步抛错或Promise拒绝，提示但不重放对话。
 
-**具体限制**：未检查res.ok；res.body空会进入catch；末尾buf无换行不会额外解析，decoder也无最终flush，不可声称任意NDJSON尾部都完整处理。失败前已执行的工具不会因abort自动回滚；前端没有自动选别的模型重放任务。
+**具体限制**：事件流形状检查只约束对象/type及message正文类型，不穷举未来事件的全部字段；显示过的部分工具副作用/消息不能事务回滚。失败前已执行的工具不会因abort自动回滚；前端没有自动选别的模型重放任务。
 
 ## 4. handleEvent(ev)全部分支
 
-pty_request/done直接忽略，浏览器并不是VS Code PTY宿主；status→状态消息；tool→完整展示记录，stayOnBridge时另记Bridge日志，set_todos重画，run/execute命令输出写terminal；apply_patch对已开tab发GET内容，then修改tab.content、活跃时applyEditor，并有diff则openDiff。
+pty_request/done直接忽略，浏览器并不是VS Code PTY宿主；status→状态消息；tool→完整展示记录，stayOnBridge时另记Bridge日志，set_todos重画，run/execute命令输出写terminal。只有apply_patch事件ok严格为true且带filePath才处理：有已开标签时重读同一路径，要求HTTP成功、路径若返回则一致，再交给tabs.reconcilePatchedFile；有diff仍openDiff。
 
-补丁后的刷新并非完整编辑冲突协调：未检查GET状态/hash，没有同步savedContent/hash；既有Monaco model不会因applyEditor自动setValue；也未先保护dirty正文。这里如实描述风险，不把“打开diff”当成编辑器已安全同步磁盘。
+补丁协调按候选验证后发布：干净标签同步content/savedContent/hash及Monaco/textarea；脏草稿与新磁盘正文不同则原样保留草稿和旧hash，提示后续保存会由版本检查拒绝，要求人工核对；重读失败保留可信标签并提示。它不是三方自动合并、补丁事务回滚或跨客户端编辑锁。
 
 consensus显示汇总，planRound更新state并paint，message带branch，error显示文本。没有全局事件去重；同工具可能同时从Chat和WS进入统计/终端，所以UI计数不应当作唯一准确账本。
 
@@ -58,7 +58,7 @@ npm test --prefix webagent-core/agent-host -- --filter=chat
 npm test --prefix webagent-core/agent-host -- --filter=editorRuntime
 ```
 
-测试中成功模拟事件不能替代网络断流、手机会话或模型真实响应。这里暴露的HTTP/尾行/编辑同步限制未通过文档工作悄悄改变实现。
+测试覆盖HTTP拒绝、坏JSON、无换行尾事件、提前断流、error后done不得写助手历史，以及补丁重读/草稿协调；成功模拟事件仍不能替代真实网络断流、手机会话、编辑器多窗口或模型响应。
 
 
 ## 受控执行增量

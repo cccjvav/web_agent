@@ -85,6 +85,37 @@ config.workspaceRoot = tmp;
     assert.ok(jobs.noteClient(body));
     return { status: 200, json: jobs.report(url.split('/').pop(), body, body.clientId) };
   } });
+  // Polling must not turn a rejected/malformed host response into an empty successful queue.
+  const pollReplies = [
+    { status: 200, json: { jobs: [{ jobId: 'poll-fixture' }] } },
+    { status: 409, json: { ok: false, error: 'workspace mismatch' } },
+    { status: 200, json: { jobs: null } }
+  ];
+  const pollHost = new PtyHost({ agentHostUrl: () => 'http://127.0.0.1', requestJson: async () => pollReplies.shift() });
+  const polledJobs = [];
+  pollHost.handleIncoming = async job => { polledJobs.push(job.jobId); };
+  await pollHost.poll();
+  assert.deepStrictEqual(polledJobs, ['poll-fixture']);
+  assert.strictEqual(pollHost.pendingHint, 1);
+  await pollHost.poll();
+  assert.strictEqual(pollHost.pendingHint, 1, 'HTTP rejection preserves the last confirmed pending count');
+  await pollHost.poll();
+  assert.strictEqual(pollHost.pendingHint, 1, 'malformed JSON cannot publish an empty queue');
+  pollHost.dispose();
+
+  const rejectedClaimHost = new PtyHost({agentHostUrl:()=>'',requestJson:async()=>({})});
+  let rejectedSpawns=0,rejectedConfirms=0;
+  rejectedClaimHost.confirm=async()=>{rejectedConfirms++;return true;};
+  rejectedClaimHost.spawn=async()=>{rejectedSpawns++;};
+  rejectedClaimHost.postJob=async()=>({status:409,json:{claimed:true,accepted:true}});
+  await rejectedClaimHost.handleRun({jobId:'rejected-claim',execId:'rejected-claim',command:'echo no',workspaceRoot:tmp});
+  assert.strictEqual(rejectedConfirms,0);assert.strictEqual(rejectedSpawns,0,'an HTTP rejection cannot authorize PTY work');
+  let claimStep=0;
+  rejectedClaimHost.postJob=async()=>++claimStep===1?{status:200,json:{claimed:true}}:{status:409,json:{accepted:true}};
+  await rejectedClaimHost.handleRun({jobId:'rejected-accept',execId:'rejected-accept',command:'echo no',workspaceRoot:tmp});
+  assert.strictEqual(rejectedConfirms,1);assert.strictEqual(rejectedSpawns,0,'an HTTP-rejected acceptance cannot spawn');
+  rejectedClaimHost.dispose();
+
   let approve, spawned = 0;
   host.confirm = () => new Promise(resolve => { approve = resolve; });
   host.spawn = async () => { spawned++; };

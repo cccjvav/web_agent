@@ -53,3 +53,10 @@ webagent-core/probe-extension/dist/
 # Python build/import caches (Conda or system Python)
 __pycache__/
 *.py[cod]
+
+# Web Agent — do not commit MCP secret or API keys
+.webagent/memory/
+.webagent/customizations.json
+.webagent/instructions.md
+.webagent/preference.md
+.webagent/tech-stack.md

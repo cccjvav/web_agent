@@ -327,7 +327,8 @@ const TOOLS = [
         filePath: { type: 'string' },
         content: { type: 'string' },
         expectedHash: { type: 'string', description: 'Optional sha256 of the current file when overwriting.' },
-        confirm_overwrite: { type: 'boolean', description: 'Required when the path already exists.' }
+        confirm_overwrite: { type: 'boolean', description: 'Required when the path already exists.' },
+        createOnly: { type: 'boolean', description: 'Atomically reject the write if the path already exists.' }
       },
       required: ['filePath', 'content']
     },

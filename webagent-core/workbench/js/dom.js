@@ -70,20 +70,44 @@ export function termLine(text, cls = '') {
   box.scrollTop = box.scrollHeight;
 }
 
+let modalReturnFocus = null;
+
 export function openModal(page) {
-  $('#modal').classList.remove('hidden');
+  const modal = $('#modal');
+  const active = document.activeElement;
+  modalReturnFocus = active && typeof active.focus === 'function' ? active : null;
+  modal.classList.remove('hidden');
+  modal.setAttribute?.('aria-hidden', 'false');
   showPage(page || 'overview');
+  const initial = modal.querySelector?.('#modal-close, button, a[href], summary, input, textarea, select, [tabindex]:not([tabindex="-1"])');
+  initial?.focus?.();
 }
-export function closeModal() { $('#modal').classList.add('hidden'); }
+export function closeModal() {
+  const modal = $('#modal');
+  modal.classList.add('hidden');
+  modal.setAttribute?.('aria-hidden', 'true');
+  const target = modalReturnFocus;
+  modalReturnFocus = null;
+  target?.focus?.();
+}
 
 export function showPage(id) {
-  $$('.nav-item').forEach((b) => b.classList.toggle('on', b.dataset.page === id));
+  $$('.nav-item').forEach((b) => {
+    const active = b.dataset.page === id;
+    b.classList.toggle('on', active);
+    b.setAttribute?.('aria-current', active ? 'page' : 'false');
+  });
   $$('.page').forEach((p) => p.classList.toggle('hidden', p.id !== `page-${id}`));
 }
 
 export function setRight(which) {
-  $('#rb-chat-tab').classList.toggle('on', which === 'chat');
-  $('#rb-bridge-tab').classList.toggle('on', which === 'bridge');
+  const chat = $('#rb-chat-tab'), bridge = $('#rb-bridge-tab');
+  chat.classList.toggle('on', which === 'chat');
+  bridge.classList.toggle('on', which === 'bridge');
+  chat.setAttribute?.('aria-selected', which === 'chat' ? 'true' : 'false');
+  bridge.setAttribute?.('aria-selected', which === 'bridge' ? 'true' : 'false');
+  chat.tabIndex = which === 'chat' ? 0 : -1;
+  bridge.tabIndex = which === 'bridge' ? 0 : -1;
   $('#right-chat').classList.toggle('hidden', which !== 'chat');
   $('#right-bridge').classList.toggle('hidden', which !== 'bridge');
 }

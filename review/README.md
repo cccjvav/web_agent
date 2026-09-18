@@ -9,8 +9,9 @@
 | [逐句审查台账](SEMANTIC_REVIEW_2026-09-16.md) | 已核对范围、未审范围及每批实际证据 |
 | [Windows人工清单](CHECKLIST_WINDOWS.md) | 实机结果与未执行项；不由CI代签 |
 | [上游采用映射](UPSTREAM_ADOPTION_MAP_2026-09-15.md) | 26类机会、实现/候选/延期的区别 |
-| [全仓检查与优化报告](OPTIMIZATION_REPORT_2026-09-18.md) | 基线e5c8363的检查证据、P1–P3优化建议与交叉审查清单 |
-| [管理路线与接力](../manager/stages/s10-upstream-adoption.md#当前工作包与交接约束) | R0–R8/P与实际下一项 |
+| [全仓检查与优化报告](OPTIMIZATION_REPORT_2026-09-18.md) | 基线e5c8363的原始发现与建议；第45组处置状态见报告顶部更新 |
+| [第45组交叉审查与实修](FULL_AUDIT_FOLLOWUP_2026-09-18.md) | 前置报告逐项复核、跨语言/UI/CI/辅助项目检查、修复与诚实验证边界 |
+| [管理路线与接力](../manager/stages/s10-upstream-adoption.md#当前工作包与交接约束) | R0–R9/P与实际下一项 |
 | [历史归档](archive/README.md) | 旧审查、授权、取舍、提交和CI；旧“当前”不生效 |
 | [参考截图](shuncode-ui/README.md) | 参考资料，不是本产品效果验收 |
 

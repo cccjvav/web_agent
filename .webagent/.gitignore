@@ -1,0 +1,10 @@
+# Web Agent — do not commit MCP secret or API keys
+config.json
+read-hashes.json
+usage.json
+board.json
+memory/
+customizations.json
+instructions.md
+preference.md
+tech-stack.md

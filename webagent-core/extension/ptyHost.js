@@ -32,6 +32,10 @@ function stripAnsi(s) {
     .replace(/\r/g, '');
 }
 
+function successfulResponse(response) {
+  return Boolean(response && Number.isInteger(response.status) && response.status >= 200 && response.status < 300);
+}
+
 function spawnSpec(command) {
   const win = process.platform === 'win32';
   if (!win) {
@@ -144,8 +148,9 @@ class PtyHost {
   async hello() {
     if (this.disposed) return;
     try {
-      const r = await this.requestJson('POST', this.url('/api/pty/hello'), this.identity());
-      if (r && r.json && typeof r.json.pending === 'number') this.pendingHint = r.json.pending;
+      const response = await this.requestJson('POST', this.url('/api/pty/hello'), this.identity());
+      const pending = response && response.json && response.json.pending;
+      if (successfulResponse(response) && Number.isInteger(pending) && pending >= 0) this.pendingHint = pending;
     } catch (_) { /* agent-host 可能还没起来 */ }
   }
 
@@ -154,8 +159,9 @@ class PtyHost {
     if (Date.now() < this.streamFreshUntil) return;
     this.polling = true;
     try {
-      const r = await this.requestJson('GET', this.url('/api/pty/jobs?' + new URLSearchParams(this.identity())));
-      const list = (r.json && r.json.jobs) || [];
+      const response = await this.requestJson('GET', this.url('/api/pty/jobs?' + new URLSearchParams(this.identity())));
+      const list = response && response.json && response.json.jobs;
+      if (!successfulResponse(response) || !Array.isArray(list) || list.some(job => !job || typeof job !== 'object')) return;
       this.pendingHint = list.length;
       for (const job of list) {
         await this.handleIncoming(job);
@@ -208,7 +214,7 @@ class PtyHost {
   async handleRun(job) {
     try {
       const claimed = await this.postJob(job.jobId, { state: 'claimed' });
-      if (!claimed.json || claimed.json.claimed !== true) return;
+      if (!successfulResponse(claimed) || !claimed.json || claimed.json.claimed !== true) return;
       const allow = await this.confirm(job.command);
       if (!allow) {
         await this.postJob(job.jobId, {
@@ -219,7 +225,7 @@ class PtyHost {
         return;
       }
       const accepted = await this.postJob(job.jobId, { state: 'accepted' });
-      if (!accepted.json || accepted.json.accepted !== true || this.disposed) return;
+      if (!successfulResponse(accepted) || !accepted.json || accepted.json.accepted !== true || this.disposed) return;
       const cwd = this.cwdFor(job);
       await this.spawn(job, cwd);
     } catch (err) {
@@ -354,7 +360,7 @@ class PtyHost {
       const si = await waitForShellIntegration(terminal, 2500);
       if (!si) throw new Error('无node-pty或可观测shellIntegration，未执行命令；不会用sendText后假报成功');
       const live = await this.postJob(job.jobId, { state: 'check' });
-      if (!live.json || !live.json.running || this.disposed) { terminal.dispose(); this.sessions.delete(String(job.execId)); return; }
+      if (!successfulResponse(live) || !live.json || live.json.running !== true || this.disposed) { terminal.dispose(); this.sessions.delete(String(job.execId)); return; }
       await this.runShellIntegration(si, job, terminal);
     } catch (err) {
       terminal.dispose(); this.sessions.delete(String(job.execId)); throw err;
@@ -364,7 +370,7 @@ class PtyHost {
   async handleInput(job) {
     try {
       const accepted = await this.postJob(job.jobId, { state: 'accepted' });
-      if (!accepted.json || accepted.json.accepted !== true) return;
+      if (!successfulResponse(accepted) || !accepted.json || accepted.json.accepted !== true) return;
       const session = this.sessions.get(String(job.execId));
       if (!session || !session.proc || typeof session.proc.write !== 'function') {
         await this.postJob(job.jobId, {
@@ -411,7 +417,7 @@ class PtyHost {
   async handleCancel(job) {
     try {
       const accepted = await this.postJob(job.jobId, { state: 'accepted' });
-      if (!accepted.json || accepted.json.accepted !== true) return;
+      if (!successfulResponse(accepted) || !accepted.json || accepted.json.accepted !== true) return;
       const session = this.sessions.get(String(job.execId));
       if (session && session.proc && session.proc.kill) {
         try { session.proc.kill(); } catch (_) {}

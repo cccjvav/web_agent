@@ -4,11 +4,25 @@ import { escapeHtml } from './dom.js';
 export function paintTabs() {
   const tabs = $('#tabs');
   tabs.innerHTML = '';
-  state.tabs.forEach((t) => {
+  state.tabs.forEach((t, index) => {
     const d = document.createElement('div');
-    d.className = 'tab' + (t.id === state.activeTab ? ' on' : '');
-    d.innerHTML = `<span>${escapeHtml(t.title)}${t.dirty ? ' •' : ''}</span><span class="x">✕</span>`;
-    d.querySelector('span').onclick = () => activateTab(t.id);
+    const active = t.id === state.activeTab;
+    d.className = 'tab' + (active ? ' on' : '');
+    d.setAttribute?.('role', 'presentation');
+    d.innerHTML = `<button type="button" class="tab-label" role="tab" aria-selected="${active}" aria-controls="editor-wrap" tabindex="${active ? 0 : -1}"><span>${escapeHtml(t.title)}${t.dirty ? ' •' : ''}</span></button>`
+      + `<button type="button" class="x" aria-label="关闭 ${escapeHtml(t.title)}">✕</button>`;
+    const label = d.querySelector('.tab-label');
+    label.onclick = () => activateTab(t.id);
+    label.onkeydown = (event) => {
+      const key = event.key;
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key)) return;
+      event.preventDefault();
+      const last = state.tabs.length - 1;
+      const target = key === 'Home' ? 0 : key === 'End' ? last
+        : key === 'ArrowRight' ? (index + 1) % state.tabs.length : (index + last) % state.tabs.length;
+      activateTab(state.tabs[target].id);
+      tabs.querySelectorAll('.tab-label')[target]?.focus?.();
+    };
     d.querySelector('.x').onclick = (e) => { e.stopPropagation(); closeTab(t.id); };
     tabs.appendChild(d);
   });
@@ -138,7 +152,11 @@ export async function openFile(filePath) {
       }
     }
     activateTab(tab.id);
-  } catch (err) { ui.toast('打开失败：' + err.message); }
+    return true;
+  } catch (err) {
+    ui.toast('打开失败：' + err.message);
+    return false;
+  }
 }
 
 export function langFor(p) {
@@ -167,24 +185,55 @@ export function applyEditor(tab) {
   }
 }
 
+export function reconcilePatchedFile(filePath, disk) {
+  if (!disk || typeof disk.content !== 'string' || !/^[a-f0-9]{64}$/.test(disk.hash || '')) {
+    throw new Error('文件响应缺少内容或有效版本号');
+  }
+  const tab = state.tabs.find(candidate => candidate.id === 'file:' + filePath);
+  if (!tab) return { status: 'closed' };
+  if (state.activeTab === tab.id) captureActiveFile();
+  if (tab.dirty && tab.content !== disk.content) {
+    return { status: 'dirty', path: filePath };
+  }
+  tab.content = disk.content;
+  tab.savedContent = disk.content;
+  tab.hash = disk.hash;
+  tab.dirty = false;
+  if (tab.model && tab.model.getValue() !== disk.content) tab.model.setValue(disk.content);
+  if (state.activeTab === tab.id && !tab.model) $('#editor-fallback').value = disk.content;
+  paintTabs();
+  return { status: 'updated', path: filePath };
+}
+
+function validTreeItems(items, depth = 0) {
+  if (!Array.isArray(items) || depth > 8) return false;
+  return items.every(item => {
+    if (!item || typeof item !== 'object' || typeof item.name !== 'string' || !['file', 'directory'].includes(item.type)) return false;
+    if (item.type === 'file') return typeof item.path === 'string';
+    return item.children === undefined || validTreeItems(item.children, depth + 1);
+  });
+}
+
 export function treeHtml(items, depth = 0) {
   if (!items) return '';
   return items.map((it) => {
     if (it.type === 'directory') {
       return `<div class="tree-dir">
-        <div class="tree-item dir" data-dir="1" style="padding-left:${8 + depth * 12}px"><span class="chev">▾</span>${escapeHtml(it.name)}</div>
+        <button type="button" class="tree-item dir" data-dir="1" aria-expanded="true" style="padding-left:${8 + depth * 12}px"><span class="chev">▾</span>${escapeHtml(it.name)}</button>
         <div class="tree-kids">${treeHtml(it.children || [], depth + 1)}</div>
       </div>`;
     }
-    return `<div class="tree-item" data-path="${escapeHtml(it.path)}" style="padding-left:${8 + depth * 12}px">${escapeHtml(it.name)}</div>`;
+    return `<button type="button" class="tree-item" data-path="${escapeHtml(it.path)}" style="padding-left:${8 + depth * 12}px">${escapeHtml(it.name)}</button>`;
   }).join('');
 }
 
 export async function loadTree() {
-  const res = await fetch('/api/files/tree');
-  const data = await res.json();
+  const response = await fetch('/api/files/tree');
+  const data = await response.json();
+  if (!response.ok) throw new Error(data && data.error || `文件树请求失败（HTTP ${response.status || '错误'}）`);
+  if (!data || typeof data !== 'object' || !validTreeItems(data.items)) throw new Error('文件树响应格式无效');
   const box = $('#file-tree');
-  box.innerHTML = treeHtml(data.items || []);
+  box.innerHTML = treeHtml(data.items);
   box.onclick = (e) => {
     const dir = e.target.closest('.tree-item.dir');
     if (dir) {
@@ -194,6 +243,7 @@ export async function loadTree() {
         kids.style.display = hide ? '' : 'none';
         const chev = dir.querySelector('.chev');
         if (chev) chev.textContent = hide ? '▾' : '▸';
+        dir.setAttribute('aria-expanded', hide ? 'true' : 'false');
       }
       return;
     }
@@ -214,6 +264,7 @@ export async function loadTree() {
     const b = e.target.closest('button[data-open]');
     if (b) openFile(b.dataset.open);
   };
+  return true;
 }
 export async function saveActive() {
   captureActiveFile();
@@ -262,6 +313,7 @@ ui.ensureWelcome = ensureWelcome;
 ui.openFile = openFile;
 ui.langFor = langFor;
 ui.applyEditor = applyEditor;
+ui.reconcilePatchedFile = reconcilePatchedFile;
 ui.treeHtml = treeHtml;
 ui.loadTree = loadTree;
 ui.saveActive = saveActive;

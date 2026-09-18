@@ -51,17 +51,19 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 
 第37组补stdio页面合同：workbenchRuntime先复现不完整预览/空启动响应，再覆盖草稿/绑定/过期/在途与未知消费；stdioMcp验证失败令牌不重用、原输入args/env不可改已审快照。stdioLifecycleBrowser另测真实页面合成响应，不替代既有真实进程测试。
 
+第45组补齐优化报告中的结果消费者并扩大可靠性/可访问性回归：workbenchRuntime覆盖登录、清除身份、新建文件、终端、搜索、补丁后读、Bridge统计布尔结果及Chat严格流终态；apiFiles以并发HTTP证明createOnly只能一方创建；githubAuth覆盖设备流程代次与poll单飞；ptyLifecycle拒绝非2xx伪成功；workbenchHtml检查标签、ARIA、原生按钮和390px样式源码。独立workbench.browser.js增加帮助模态焦点恢复与390×844边界断言；本地没有Chromium时不得把其源码登记写成浏览器执行通过。
+
 ## 按风险选择回归
 | 风险/模块 | 主要测试 | 证据类型与限制 |
 |---|---|---|
-| 路径、写入、hash、补丁、Skill | patchEngine、workspaceTools、sandbox、auditStorage、apiFiles | 临时文件系统与HTTP；不是OS沙箱证明 |
+| 路径、写入、hash、补丁、Skill | patchEngine、workspaceTools、sandbox、auditStorage、apiFiles | 临时文件系统与HTTP，含createOnly并发一胜一409；不是外部OS写进程隔离证明 |
 | 模型失败、工具结果、Plan | modelLifecycle、runChat、chatMode、planRound、toolLabel | 实际调度模块+模拟模型响应，不是提供商实测 |
-| MCP、OAuth、会话/board | mcpProtocol、oauth、oauthClientAuth、mcpBoard、board | 真实index验证OAuth issuer/撤销、公开peer不可冒用及跨主体会话；另测取消具体凭据隔离，非第三方实机验收 |
+| MCP、OAuth、GitHub身份、会话/board | mcpProtocol、oauth、oauthClientAuth、githubAuth、mcpBoard、board | 真实index验证OAuth issuer/撤销、公开peer不可冒用及跨主体会话；GitHub设备流以HTTP替身验证代次/单飞，非第三方实机验收 |
 | 本机控制面、WS、Origin | auditControl、localControl、corsAllow、httpSmoke | 真实入口双端口API门禁、MCP Origin/认证先于解析、预检与WS；代理/跨站浏览器须另测 |
-| PTY审批、取消、归属、捕获 | ptyLifecycle、ptyJobs、desktopExtension | 部分真实子进程+VS Code事件fixture；原生终端效果须另测 |
+| PTY审批、取消、归属、捕获 | ptyLifecycle、ptyJobs、desktopExtension | 部分真实子进程+VS Code事件fixture，含扩展对非2xx回包的拒绝；原生终端效果须另测 |
 | 隧道启停 | tunnel、bridgeTunnel、tunnelLifecycle | 解析、API及进程引用fixture；非真实公网隧道 |
 | 原生扩展命令消费 | nativeRotationCommands | 真实activate+VS Code/HTTP替身；非真实IDE或隧道进程退出证明 |
-| 文件编辑、webview、主题、Monaco | editorRuntime、webviewRuntime、workbenchRuntime、monacoLoading、workbenchHtml | 真实源码配DOM/Monaco/宿主fixture，不等同浏览器E2E |
+| 文件编辑、webview、主题、Monaco、无障碍结构 | editorRuntime、webviewRuntime、workbenchRuntime、monacoLoading、workbenchHtml | 真实源码配DOM/Monaco/宿主fixture及静态语义检查；不等同浏览器E2E、屏幕阅读器或手机实测 |
 | 配置、环境、统计、后台 | stateIntegrity、hostPersist、profile、usageTracker、adminHost | 模块与HTTP边界；不代表所有配置事务一致 |
 | 截图 | chatVision、mcpProtocol | 图片路径/大小/内容契约，不证明模型理解画面 |
 | 发行与启动 | installerPackaging、extensionCopy、codeServerAuth、codeServerNotRunnable、skipWorkbench | payload/副本/关键参数；安装、升级和UI另验收 |
@@ -93,7 +95,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | 源码 | 定位证据 |
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
-| [apiFiles.test.js](apiFiles.test.js) | 32 个函数/类节点 |
+| [apiFiles.test.js](apiFiles.test.js) | 34 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 12 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 20 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
@@ -120,7 +122,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
 | [externalDiscovery.test.js](externalDiscovery.test.js) | 13 个函数/类节点 |
 | [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
-| [githubAuth.test.js](githubAuth.test.js) | 8 个函数/类节点 |
+| [githubAuth.test.js](githubAuth.test.js) | 21 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 42 个函数/类节点 |
@@ -151,7 +153,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [profile.test.js](profile.test.js) | 8 个函数/类节点 |
 | [providers.test.js](providers.test.js) | 30 个函数/类节点 |
 | [ptyJobs.test.js](ptyJobs.test.js) | 12 个函数/类节点 |
-| [ptyLifecycle.test.js](ptyLifecycle.test.js) | 59 个函数/类节点 |
+| [ptyLifecycle.test.js](ptyLifecycle.test.js) | 68 个函数/类节点 |
 | [publicHttps.test.js](publicHttps.test.js) | 19 个函数/类节点 |
 | [requestLifecycle.test.js](requestLifecycle.test.js) | 12 个函数/类节点 |
 | [resourceBudget.test.js](resourceBudget.test.js) | 14 个函数/类节点 |
@@ -172,9 +174,9 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 203 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 209 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 337 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 440 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 9 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 15 个函数/类节点 |

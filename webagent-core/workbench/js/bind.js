@@ -2,6 +2,47 @@ import { $, $$, state, ui } from './state.js';
 import { escapeHtml, positionPopover } from './dom.js';
 import { openModelPicker, closeModelPicker } from './picker.js';
 
+async function confirmedJson(response, action) {
+  let data;
+  try {
+    data = await response.json();
+  } catch (_) {
+    throw new Error(`${action}响应不是有效 JSON`);
+  }
+  if (!response.ok) {
+    const detail = data && typeof data.error === 'string' ? data.error : `HTTP ${response.status || '错误'}`;
+    throw new Error(detail);
+  }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    throw new Error(`${action}响应格式无效`);
+  }
+  return data;
+}
+
+let profileDetection = null;
+async function detectProfile() {
+  if (profileDetection) return profileDetection;
+  profileDetection = (async () => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    try {
+      const data = await confirmedJson(await fetch('/api/profile/detect', { cache: 'no-store', signal: controller.signal }), '工作区探测');
+      const environment = data.environment, techStack = data.techStack;
+      const validStrings = (value, keys) => value && typeof value === 'object' && !Array.isArray(value)
+        && keys.every(key => typeof value[key] === 'string');
+      if (!validStrings(environment, ['os', 'shell']) ||
+          !validStrings(techStack, ['languages', 'frameworks', 'packageManager', 'testCommand'])) {
+        throw new Error('工作区探测响应格式无效');
+      }
+      return data;
+    } finally {
+      clearTimeout(timer);
+    }
+  })();
+  try { return await profileDetection; }
+  finally { profileDetection = null; }
+}
+
 function onClick(id, handler) {
   const node = $(id);
   if (!node) return;
@@ -32,12 +73,16 @@ export function bind() {
       const left = b.dataset.left;
       const side = $('#sidebar');
       const already = b.classList.contains('active') && !side.classList.contains('collapsed');
-      $$('#activitybar .ab-btn').forEach((x) => x.classList.remove('active'));
+      $$('#activitybar [data-left]').forEach((x) => {
+        x.classList.remove('active');
+        x.setAttribute?.('aria-pressed', 'false');
+      });
       if (already) {
         side.classList.add('collapsed');
         return;
       }
       b.classList.add('active');
+      b.setAttribute?.('aria-pressed', 'true');
       side.classList.remove('collapsed');
       $('#left-explorer').classList.toggle('hidden', left !== 'explorer');
       $('#left-search').classList.toggle('hidden', left !== 'search');
@@ -46,7 +91,8 @@ export function bind() {
 
   $('#btn-manage').onclick = (e) => {
     e.stopPropagation();
-    $('#manage-menu').classList.toggle('hidden');
+    const hidden = $('#manage-menu').classList.toggle('hidden');
+    $('#btn-manage').setAttribute('aria-expanded', hidden ? 'false' : 'true');
   };
   const closeAgentMenu = () => {
     $('#agent-pick-menu').classList.add('hidden');
@@ -54,6 +100,7 @@ export function bind() {
   };
   document.addEventListener('click', () => {
     $('#manage-menu').classList.add('hidden');
+    $('#btn-manage').setAttribute('aria-expanded', 'false');
     $('#file-menu').classList.add('hidden');
     closeAgentMenu();
   });
@@ -144,6 +191,15 @@ export function bind() {
 
   $('#rb-chat-tab').onclick = () => ui.setRight('chat');
   $('#rb-bridge-tab').onclick = () => ui.setRight('bridge');
+  [['#rb-chat-tab', 'chat'], ['#rb-bridge-tab', 'bridge']].forEach(([selector, side]) => {
+    $(selector).onkeydown = (event) => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const target = event.key === 'Home' ? 'chat' : event.key === 'End' ? 'bridge' : side === 'chat' ? 'bridge' : 'chat';
+      ui.setRight(target);
+      $(`#rb-${target}-tab`).focus();
+    };
+  });
   $('#btn-send').onclick = () => ui.sendChat();
   if ($('#btn-plan-merge')) {
     $('#btn-plan-merge').onclick = () => ui.sendChat('', { planAction: 'merge' });
@@ -218,65 +274,147 @@ export function bind() {
   $$('.open-site').forEach((b) => {
     b.onclick = () => ui.openSite(b.dataset.site);
   });
+  let devicePollGeneration = 0;
+  let devicePollTimer = null;
+  let devicePollController = null;
+  const cancelDevicePoll = () => {
+    devicePollGeneration++;
+    if (devicePollTimer != null) clearTimeout(devicePollTimer);
+    if (devicePollController) devicePollController.abort();
+    devicePollTimer = null;
+    devicePollController = null;
+  };
+  const refreshAfterConfirmedAuth = async () => {
+    try { return await ui.refreshStatus() !== false; }
+    catch (_) { return false; }
+  };
+
   $('#btn-gh-login').onclick = async () => {
-    await fetch('/api/bridge/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({})
-    });
-    state.loggedIn = true;
-    await ui.refreshStatus();
-    ui.toast('已打开本机演示授权（不是 GitHub）');
+    cancelDevicePoll();
+    try {
+      const response = await fetch('/api/bridge/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      const data = await confirmedJson(response, '本机演示授权');
+      if (data.success !== true || data.demo !== true || data.provider !== 'local-demo') {
+        throw new Error(data.error || '服务器未确认本机演示授权');
+      }
+      state.loggedIn = true;
+      const refreshed = await refreshAfterConfirmedAuth();
+      ui.toast(refreshed ? '已打开本机演示授权（不是 GitHub）' : '本机演示授权已确认，但状态刷新失败；请手动刷新');
+      return true;
+    } catch (error) {
+      ui.toast(('本机演示授权未确认：' + (error.message || '请核对主机状态')).slice(0, 180));
+      return false;
+    }
   };
   if ($('#btn-gh-token')) {
     $('#btn-gh-token').onclick = async () => {
-      const token = ($('#gh-token') && $('#gh-token').value) || '';
-      const res = await fetch('/api/bridge/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token })
-      });
-      const data = await res.json();
-      if ($('#gh-token')) $('#gh-token').value = '';
-      if (!data.success) { ui.toast(data.error || '验证失败'); return; }
-      await ui.refreshStatus();
-      ui.toast('已验证 GitHub @' + data.username);
+      cancelDevicePoll();
+      const input = $('#gh-token');
+      const token = (input && input.value) || '';
+      if (!token.trim()) { ui.toast('请先粘贴 GitHub 令牌'); return false; }
+      try {
+        const response = await fetch('/api/bridge/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        const data = await confirmedJson(response, 'GitHub 令牌验证');
+        if (data.success !== true || data.provider !== 'github' || typeof data.username !== 'string' || !data.username) {
+          throw new Error(data.error || '服务器未确认 GitHub 身份');
+        }
+        if (input && input.value === token) input.value = '';
+        const refreshed = await refreshAfterConfirmedAuth();
+        ui.toast(refreshed ? '已验证 GitHub @' + data.username : 'GitHub 身份已确认，但状态刷新失败；请手动刷新');
+        return true;
+      } catch (error) {
+        ui.toast(('GitHub 令牌验证未确认；已保留输入：' + (error.message || '请核对主机状态')).slice(0, 180));
+        return false;
+      }
     };
   }
   if ($('#btn-gh-device')) {
     $('#btn-gh-device').onclick = async () => {
-      const res = await fetch('/api/bridge/device', { method: 'POST' });
-      const data = await res.json();
-      if (!data.success) {
-        ui.toast(data.error || '无法开始设备码登录');
-        return;
-      }
-      if ($('#gh-device-hint')) {
-        $('#gh-device-hint').textContent = `在 ${data.verificationUri} 输入 ${data.userCode}`;
-      }
-      ui.toast('设备码 ' + data.userCode);
-      const tick = async () => {
-        const poll = await fetch('/api/bridge/device/poll', { method: 'POST' });
-        const out = await poll.json();
-        if (out.done) {
-          await ui.refreshStatus();
-          ui.toast('已验证 GitHub @' + out.username);
-          return;
+      cancelDevicePoll();
+      const generation = devicePollGeneration;
+      const controller = new AbortController();
+      devicePollController = controller;
+      const button = $('#btn-gh-device');
+      button.disabled = true;
+      try {
+        const response = await fetch('/api/bridge/device', { method: 'POST', signal: controller.signal });
+        const data = await confirmedJson(response, '设备码登录');
+        if (generation !== devicePollGeneration) return false;
+        if (data.success !== true || typeof data.userCode !== 'string' || !data.userCode ||
+            typeof data.verificationUri !== 'string' || !data.verificationUri) {
+          throw new Error(data.error || '服务器未确认设备码');
         }
-        if (out.pending) {
-          setTimeout(tick, 5000);
-          return;
+        if ($('#gh-device-hint')) {
+          $('#gh-device-hint').textContent = `在 ${data.verificationUri} 输入 ${data.userCode}`;
         }
-        ui.toast(out.error || '设备码登录结束');
-      };
-      setTimeout(tick, (Number(data.interval) || 5) * 1000);
+        ui.toast('设备码 ' + data.userCode);
+        const tick = async () => {
+          if (generation !== devicePollGeneration) return false;
+          try {
+            const poll = await fetch('/api/bridge/device/poll', { method: 'POST', signal: controller.signal });
+            const out = await confirmedJson(poll, '设备码轮询');
+            if (generation !== devicePollGeneration) return false;
+            if (out.done === true && out.success === true && typeof out.username === 'string' && out.username) {
+              devicePollTimer = null;
+              devicePollController = null;
+              const refreshed = await refreshAfterConfirmedAuth();
+              if (generation !== devicePollGeneration) return false;
+              ui.toast(refreshed ? '已验证 GitHub @' + out.username : 'GitHub 身份已确认，但状态刷新失败；请手动刷新');
+              return true;
+            }
+            if (out.pending === true && out.done === false) {
+              devicePollTimer = setTimeout(tick, Math.max(5, Number(out.interval) || 5) * 1000);
+              return true;
+            }
+            devicePollTimer = null;
+            devicePollController = null;
+            ui.toast(('设备码登录结束：' + (out.error || '服务器未确认身份')).slice(0, 180));
+            return false;
+          } catch (error) {
+            if (generation !== devicePollGeneration || error.name === 'AbortError') return false;
+            devicePollTimer = null;
+            devicePollController = null;
+            await refreshAfterConfirmedAuth();
+            ui.toast(('设备码轮询结果未确认，已停止自动轮询：' + (error.message || '请核对身份状态')).slice(0, 180));
+            return false;
+          }
+        };
+        devicePollTimer = setTimeout(tick, Math.max(5, Number(data.interval) || 5) * 1000);
+        return true;
+      } catch (error) {
+        if (generation !== devicePollGeneration || error.name === 'AbortError') return false;
+        devicePollController = null;
+        ui.toast(('无法开始设备码登录：' + (error.message || '请核对主机配置')).slice(0, 180));
+        return false;
+      } finally {
+        if (generation === devicePollGeneration) button.disabled = false;
+      }
     };
   }
   if ($('#btn-gh-clear')) {
     $('#btn-gh-clear').onclick = async () => {
-      await fetch('/api/bridge/github/clear', { method: 'POST' });
-      await ui.refreshStatus();
-      ui.toast('已清除 GitHub 身份，仍保留本机演示授权');
+      cancelDevicePoll();
+      try {
+        const response = await fetch('/api/bridge/github/clear', { method: 'POST' });
+        const data = await confirmedJson(response, '清除 GitHub 身份');
+        if (data.success !== true || data.provider !== 'local-demo' || data.username !== 'local') {
+          throw new Error(data.error || '服务器未确认清除 GitHub 身份');
+        }
+        const refreshed = await refreshAfterConfirmedAuth();
+        ui.toast(refreshed ? '已清除 GitHub 身份，仍保留本机演示授权' : 'GitHub 身份清除已确认，但状态刷新失败；请手动刷新');
+        return true;
+      } catch (error) {
+        ui.toast(('清除 GitHub 身份未确认：' + (error.message || '请核对主机状态')).slice(0, 180));
+        return false;
+      }
     };
   }
   $('#btn-refresh-auth').onclick = () => { ui.paintBridge(); ui.toast('已刷新状态'); };
@@ -358,13 +496,12 @@ export function bind() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, content })
       });
-      const data = await response.json();
-      if (!response.ok || !data.success) {
-        ui.toast(String(data.error || 'Skill 创建失败').slice(0, 180));
-        return false;
+      const data = await confirmedJson(response, 'Skill 创建');
+      if (data.success !== true || typeof data.path !== 'string' || !data.path) {
+        throw new Error(data.error || '服务器未确认 Skill 创建');
       }
-      await ui.loadSkills();
-      ui.toast('已创建 Skill 文件夹');
+      const refreshed = await ui.loadSkills();
+      ui.toast(refreshed === false ? 'Skill 创建已确认，但目录刷新失败；请手动刷新' : '已创建 Skill 文件夹');
       return true;
     } catch (error) {
       ui.toast(('Skill 创建状态未知：' + (error.message || '请核对主机与目录')).slice(0, 180));
@@ -372,12 +509,22 @@ export function bind() {
     }
   };
   onClick('#btn-detect-env', async () => {
-    const res = await fetch('/api/profile/detect');
-    const data = await res.json();
-    const env = data.environment || {};
-    if ($('#env-os')) $('#env-os').value = env.os || 'auto';
-    if ($('#env-shell')) $('#env-shell').value = env.shell || 'auto';
-    if ($('#env-status')) $('#env-status').textContent = `探测到 ${env.os} / ${env.shell}`;
+    const fields = ['#env-os', '#env-shell'];
+    const before = fields.map(selector => $(selector)?.value);
+    try {
+      const env = (await detectProfile()).environment;
+      if (fields.some((selector, index) => $(selector)?.value !== before[index])) {
+        if ($('#env-status')) $('#env-status').textContent = '探测完成，但输入已变化；已保留当前草稿，请需要时重新探测。';
+        return false;
+      }
+      if ($('#env-os')) $('#env-os').value = env.os || 'auto';
+      if ($('#env-shell')) $('#env-shell').value = env.shell || 'auto';
+      if ($('#env-status')) $('#env-status').textContent = `探测到 ${env.os} / ${env.shell}`;
+      return true;
+    } catch (error) {
+      if ($('#env-status')) $('#env-status').textContent = ('探测失败：' + (error.message || '请核对主机状态')).slice(0, 180);
+      return false;
+    }
   });
   onClick('#btn-save-env', async () => {
     if (!await ui.saveCustom({
@@ -393,15 +540,25 @@ export function bind() {
     ui.toast('已保存环境偏好');
   });
   onClick('#btn-detect-stack', async () => {
-    const res = await fetch('/api/profile/detect');
-    const data = await res.json();
-    const st = data.techStack || {};
-    if ($('#st-lang')) $('#st-lang').value = st.languages || '';
-    if ($('#st-fw')) $('#st-fw').value = st.frameworks || '';
-    if ($('#st-pm')) $('#st-pm').value = st.packageManager || '';
-    if ($('#st-test')) $('#st-test').value = st.testCommand || '';
-    if ($('#stack-status')) {
-      $('#stack-status').textContent = st.languages || st.testCommand ? '已填入探测结果，确认后保存。' : '工作区没有识别到常见清单文件。';
+    const fields = ['#st-lang', '#st-fw', '#st-pm', '#st-test'];
+    const before = fields.map(selector => $(selector)?.value);
+    try {
+      const stack = (await detectProfile()).techStack;
+      if (fields.some((selector, index) => $(selector)?.value !== before[index])) {
+        if ($('#stack-status')) $('#stack-status').textContent = '探测完成，但输入已变化；已保留当前草稿，请需要时重新探测。';
+        return false;
+      }
+      if ($('#st-lang')) $('#st-lang').value = stack.languages;
+      if ($('#st-fw')) $('#st-fw').value = stack.frameworks;
+      if ($('#st-pm')) $('#st-pm').value = stack.packageManager;
+      if ($('#st-test')) $('#st-test').value = stack.testCommand;
+      if ($('#stack-status')) {
+        $('#stack-status').textContent = stack.languages || stack.testCommand ? '已填入探测结果，确认后保存。' : '工作区没有识别到常见清单文件。';
+      }
+      return true;
+    } catch (error) {
+      if ($('#stack-status')) $('#stack-status').textContent = ('探测失败：' + (error.message || '请核对主机状态')).slice(0, 180);
+      return false;
     }
   });
   onClick('#btn-save-stack', async () => {
@@ -494,16 +651,36 @@ export function bind() {
     $('#model-status').textContent = '内置探索 Agent 选择已保存；若状态刷新失败，请核对主机，不要重复保存。';
   };
 
+  let fileCreatePending = false;
   $('#lnk-new-file').onclick = async () => {
+    if (fileCreatePending) { ui.toast('已有文件正在创建，请等待结果'); return false; }
     const name = prompt('文件名', 'untitled.js');
-    if (!name) return;
-    await fetch('/api/files/content', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ path: name, content: '' })
-    });
-    await ui.loadTree();
-    ui.openFile(name);
+    if (!name) return false;
+    const button = $('#lnk-new-file');
+    fileCreatePending = true;
+    button.disabled = true;
+    try {
+      const response = await fetch('/api/files/content', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: name, content: '', createOnly: true })
+      });
+      const data = await confirmedJson(response, '创建文件');
+      if (data.success !== true || data.path !== name || !/^[a-f0-9]{64}$/.test(data.hash || '')) {
+        throw new Error(data.error || '服务器未确认文件创建');
+      }
+      let refreshed = true;
+      try { if (await ui.loadTree() === false) refreshed = false; } catch (_) { refreshed = false; }
+      try { if (await ui.openFile(name) === false) refreshed = false; } catch (_) { refreshed = false; }
+      ui.toast(refreshed ? '已创建 ' + name : '文件创建已确认，但界面刷新失败；请手动刷新文件树');
+      return true;
+    } catch (error) {
+      ui.toast(('文件创建未确认：' + (error.message || '请核对磁盘后再操作')).slice(0, 180));
+      return false;
+    } finally {
+      fileCreatePending = false;
+      button.disabled = false;
+    }
   };
   $('#lnk-open-file').onclick = () => {
     $('#activitybar [data-left="explorer"]').click();
@@ -518,36 +695,59 @@ export function bind() {
   $('#term-form').onsubmit = async (e) => {
     e.preventDefault();
     const cmd = $('#term-input').value.trim();
-    if (!cmd) return;
+    if (!cmd) return false;
     $('#term-input').value = '';
     ui.termLine('$ ' + cmd, 'info');
-    const res = await fetch('/api/tool/call', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'run_command', mode: 'code', arguments: { command: cmd } })
-    });
-    const data = await res.json();
-    const r = data.result || {};
-    if (r.stdout) ui.termLine(r.stdout);
-    if (r.stderr) ui.termLine(r.stderr, 'err');
+    try {
+      const response = await fetch('/api/tool/call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'run_command', mode: 'code', arguments: { command: cmd } })
+      });
+      const data = await confirmedJson(response, '终端命令');
+      const result = data.result;
+      if (data.success !== true || !result || typeof result !== 'object' || Array.isArray(result)) {
+        throw new Error(data.error || (result && (result.stderr || result.message)) || '服务器未确认命令成功');
+      }
+      if (typeof result.stdout === 'string' && result.stdout) ui.termLine(result.stdout);
+      if (typeof result.stderr === 'string' && result.stderr) ui.termLine(result.stderr, 'err');
+      if (!result.stdout && !result.stderr) ui.termLine('命令已完成（无输出）', 'info');
+      return true;
+    } catch (error) {
+      ui.termLine(('命令失败或结果未确认：' + (error.message || '请核对执行状态')).slice(0, 500), 'err');
+      return false;
+    }
   };
   $('#btn-search').onclick = async () => {
     const q = $('#search-q').value.trim();
-    if (!q) return;
-    const res = await fetch('/api/tool/call', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'search_files', mode: 'ask', arguments: { query: q } })
-    });
-    const data = await res.json();
-    const hits = (data.result && data.result.matches) || [];
-    $('#search-results').innerHTML = hits.map((h) =>
-      `<div class="tree-item" data-path="${escapeHtml(h.file)}"><b>${escapeHtml(h.file)}:${h.line}</b><div class="hint">${escapeHtml(h.content)}</div></div>`
-    ).join('') || '<p class="hint">没有命中</p>';
-    $('#search-results').onclick = (e) => {
-      const item = e.target.closest('[data-path]');
-      if (item) ui.openFile(item.dataset.path);
-    };
+    if (!q) return false;
+    const box = $('#search-results');
+    try {
+      const response = await fetch('/api/tool/call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'search_files', mode: 'ask', arguments: { query: q } })
+      });
+      const data = await confirmedJson(response, '文件搜索');
+      const hits = data.result && data.result.matches;
+      if (data.success !== true || !Array.isArray(hits) || hits.some(hit => !hit || typeof hit.file !== 'string' ||
+          !Number.isInteger(hit.line) || typeof hit.content !== 'string')) {
+        throw new Error(data.error || '服务器未返回有效搜索结果');
+      }
+      box.innerHTML = hits.map((h) =>
+        `<button type="button" class="tree-item search-hit" data-path="${escapeHtml(h.file)}"><b>${escapeHtml(h.file)}:${h.line}</b><span class="hint">${escapeHtml(h.content)}</span></button>`
+      ).join('') || '<p class="hint">没有命中</p>';
+      box.onclick = (e) => {
+        const item = e.target.closest('[data-path]');
+        if (item) ui.openFile(item.dataset.path);
+      };
+      return true;
+    } catch (error) {
+      box.innerHTML = '';
+      box.textContent = ('搜索失败：' + (error.message || '请核对主机状态')).slice(0, 240);
+      box.onclick = null;
+      return false;
+    }
   };
   $('#br-go').onclick = () => {
     const url = $('#br-url').value.trim();
@@ -560,11 +760,28 @@ export function bind() {
   };
 
   window.addEventListener('keydown', (e) => {
+    const modal = $('#modal');
+    if (e.key === 'Tab' && !modal.classList.contains('hidden')) {
+      const focusable = [...modal.querySelectorAll('button:not([disabled]), a[href], summary, input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+        .filter((el) => {
+          const closedDetails = el.closest?.('details:not([open])');
+          return !el.hidden && !el.closest?.('.hidden') && (!closedDetails || el.tagName === 'SUMMARY');
+        });
+      if (focusable.length) {
+        const first = focusable[0], last = focusable[focusable.length - 1];
+        if (e.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
+          e.preventDefault(); last.focus();
+        } else if (!e.shiftKey && (document.activeElement === last || !modal.contains(document.activeElement))) {
+          e.preventDefault(); first.focus();
+        }
+      }
+    }
     if (e.key === 'Escape') {
       if (!$('#agent-pick-menu').classList.contains('hidden')) {
         closeAgentMenu(); $('#btn-agent-pick').focus(); return;
       }
-      closeModelPicker(); ui.closeModal();
+      closeModelPicker();
+      if (!modal.classList.contains('hidden')) ui.closeModal();
     }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();

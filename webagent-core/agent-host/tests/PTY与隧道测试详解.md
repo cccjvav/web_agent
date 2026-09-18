@@ -16,6 +16,8 @@
 
 AbortController取消enqueue返回cancelled；预取消runWithSignal中的write_file拒且never.txt不存在。暂换Module._load仅stub vscode，导入真实PtyHost后立即finally恢复loader。构造器的**agentHostUrl**给假地址，**requestJson**直接回接jobs.noteClient/report，没有HTTP。替换host.confirm为待决Promise，**approve**保存resolver；host.spawn只计数。服务器先timeout再批准，handleRun不能spawn；错误workspace的handleIncoming也不能启动。
 
+响应消费负例给poll依次返回合法jobs、HTTP409和jobs:null：只有首项进入handleIncoming，后两项不得把pendingHint清零。rejectedClaimHost让claim的409正文仍写claimed/accepted:true，断言不弹确认、不spawn；另一条先200 claimed、用户允许，再以409 accepted:true拒绝，断言只确认一次且仍不spawn。这里requestJson响应是内存替身，不证明真实VS Code网络栈，但精确覆盖HTTP状态不能被JSON真值绕过。
+
 再把postJob替换为reports收集器；**onDidEndTerminalShellExecution**存ended并返回**dispose()**空清理接口；execution的异步生成器**read()**先yield output，再queueMicrotask上报exit3；**executeCommand**仅返回此execution。runShellIntegration必须报告error/3。createTerminal fixture的**show/dispose**为空，**sendText**一调用即抛：spawnFallback必须“未执行命令”拒绝，不能退回不可观测执行。host.dispose结束实例。
 
 最后真executeCommand启动Node30秒有限定时器，100ms abort后cancelled/ok:false，并要求10秒内管道关闭（不能等自然退出冒充取消）；global.fetch替身只监听signal abort并reject，用30ms fetchText deadline证明请求超时传播，keep定时器维持事件循环，finally清timer/恢复fetch。外层finally reset jobs/删tmp。这里有真实子进程取消，但没有真实node-pty或Windows窗口批准测试。

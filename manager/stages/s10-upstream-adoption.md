@@ -85,13 +85,13 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 高，继续 | 进行中：第38–40组控制面、OAuth凭据/issuer、会话公开标识/主体绑定首包已核对；其余安全依赖继续，不作全链认证 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27/31–37组设置/模型/状态/Provider、审批、检查点、HTTP接入及stdio消费首包已修；第41组经典密钥轮换、第42组经典启停、第43组原生扩展轮换/停止消费已修；下一包按[优化报告P1-A](../../review/OPTIMIZATION_REPORT_2026-09-18.md)的7处界面消费者（bind.js登录/清除/新建文件/终端/搜索、chat.js补丁后读、ptyHost轮询）与Bridge Health继续 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
+| R3 / 下一项，高 | 进行中：第25/27/31–37与41–43组既有消费链已修；第45组完成[优化报告P1-A交叉复核](../../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)，七处界面/PTY消费者、Bridge Health、Chat终态、GitHub代次和原子创建已修；下一包只推进尚未核对的API/workflow结果边界，不重做本批 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
 | R7 / 结构首包已做，语义继续 | 第26组集中19篇专题、归档17篇旧审查、删除过期PROMPT；其余README/管理旧现状继续核对 | 源码清单、目录README、根维护/安装说明及阶段索引 | 活跃正文无相互矛盾的“当前”；无用旧指南退役，有效教学/历史失败保留；给出已审和未审清单而不是总称100% |
 | R8 / 分项就绪后 | 待用户实机：项目根MCP验收 | 第7节、Windows清单M/W/T/G等；用户接入后核对工具身份 | 逐项有提交、实际环境、动作、退出码/效果与脱敏证据；失败/未执行如实留存，不借CI代签 |
-| R9 / 中，候选 | 工程化与仓库维护：CI审计结果可见化、EOL Node矩阵取舍、最小lint（只报错不改风格）、生成物churn与仓库权重 | [优化报告P2/P3](../../review/OPTIMIZATION_REPORT_2026-09-18.md)；需项目主人决策的版本/依赖/发行取舍 | 每项先写范围与回滚点，不改冻结原型、不做TS重写；CI九项不因新增检查放宽 |
+| R9 / 中，部分完成 | 第45组已交付CI顶层`contents: read`与高危生产依赖硬门禁；EOL Node矩阵、最小lint（只报错不改风格）、生成物churn与仓库权重仍为候选 | [第45组报告剩余决策](../../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md#6-仍需保留的风险决策)；版本/依赖/发行取舍需项目主人决策 | 每项先写范围与回滚点，不改冻结原型、不做TS重写；CI九项不因新增检查放宽 |
 | P / 暂停 | 探测整合、迁移与专项复核 | 第8节，另一助手正式交接前不动 | 交接后先锁版本/权限/接口/数据方案并重排范围，不自行恢复施工 |
 
 ##### 4.1 当前路线的证据入口
@@ -690,6 +690,16 @@ bridgeLifecycleBrowser通过真实菜单→设置Bridge导航和bind按钮，拦
 沙箱环境事实已写入报告P3-B：`.git/shallow`存在、本地仅33个提交、fetch refspec只有main，因此`git rev-parse origin/<工作分支>`必然失败；核对远端必须用`git ls-remote`或显式fetch+`FETCH_HEAD`，恢复ref前先备份差异并证明工作树等于远端。
 
 验证：完整83测试文件、文档生成/构建/一致性、`git diff --check`通过。报告与管理同步提交6a1944d56d63e228bdf3b4b3a022c3efd6a84c1d已推当前固定分支，[CI35335420393](https://github.com/cccjvav/web_agent/actions/runs/35335420393)九项逐项成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium）；本批只改文档，未改产品源码。报告在正式清单中登记为**待逐句核对**，由接手助手按报告第6节复核后改状态——本会话不自我认证。
+
+#### 第45组：交叉审查、结果合同、无障碍与辅助项目实修
+
+2026-09-18接手后先显式fetch并快进到目标`81fb5c2`，逐项读取/复核第44组报告。确认P1-A七处和P2-D设备码竞态后，不仅改提示：所有相关消费者增加HTTP、严格布尔和响应形状门禁，区分写确认与后读失败且不自动重放；Chat要求可靠NDJSON终态，补丁后读协调脏草稿；GitHub服务端/浏览器双代次与poll单飞；新建文件端到端`createOnly`独占原子创建并以并发HTTP证明一胜一409；PTY所有确认点拒绝非2xx。Bridge统计函数返回可信布尔值，清除写确认不被后读失败改写。
+
+界面审查修表单名称、伪链接/可点击容器、动态标签/树/搜索/工具卡的原生按钮语义；模态焦点进入、Tab约束、Escape恢复；编辑器及右栏页签roving tabindex与方向/Home/End键；最小字体11px、统一焦点轮廓、390px覆盖式侧栏。浏览器源码新增焦点/页签/390×844断言，但本机无Chromium且既往下载`ECONNRESET`，只登记为待CI执行，不冒充通过。
+
+R9首包把Actions权限收敛为`contents: read`，高危生产依赖审计改硬门禁。扩展/安装镜像及函数说明同步。按用户全仓范围运行辅助项目时，model-probe离线E2E真实复现同名未知模型因向量抖动重复`NEW_MODEL`；改模型ID精确命中优先、兼容无向量verified条目并过滤畸形导入/证据，四阶段verify转绿。外部CDP/账户/整合仍暂停，没有借此宣称阶段8恢复。
+
+详细文件、前置报告状态、验证和剩余Node EOL/lint/生成物/实机取舍见[第45组报告](../../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)。对话中断后分支ref曾回到初始提交而文件仍为新基线；先备份binary diff/未跟踪项，再仅`update-ref`+`read-tree`恢复固定分支到`81fb5c2`，未覆盖工作文件。本批本地最终证据：83个主测试文件通过；文档库存247/28/110与构建一致；calculator 6项、trace-inspector 77项、model-probe四阶段（69单测/15 E2E/20冒烟）通过；生产审计0漏洞、扩展镜像一致。真实Chromium/Windows与精确提交CI仍不得预写。
 
 
 ## 复盘
