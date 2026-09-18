@@ -109,8 +109,9 @@ async function secretRotationBrowser(browser, base) {
   try {
     await page.goto(base);
     await page.waitForFunction(() => document.querySelector('#mcp-url').textContent.includes('/mcp/'));
-    await page.click('#rb-bridge-tab');
-    await page.evaluate(() => { document.querySelector('#btn-reset-secret').closest('details').open=true; });
+    await page.click('#menu-help');
+    await page.click('.modal-nav [data-page="bridge"]');
+    await page.click('#page-bridge details:has(#btn-reset-secret) > summary');
     await page.click('#btn-reset-secret');
     await page.waitForFunction(() => document.querySelector('#secret-result').textContent.includes('结果未确认'));
     assert.equal(posts,1);
