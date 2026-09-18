@@ -84,8 +84,8 @@
 |---|---|---|---|
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
-| R2 / 下一项，高 | 进行中：第38–39组控制面与OAuth凭据/issuer首包已核对；下一包MCP会话/peer与凭据绑定、任务归属/取消边界，先复现影响再决定修复 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 高，继续 | 进行中：第25/27/31–37组设置/模型/状态/Provider、审批、检查点、HTTP接入及stdio消费首包已修；其余API消费者按风险继续 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
+| R2 / 高，继续 | 进行中：第38–40组控制面、OAuth凭据/issuer、会话公开标识/主体绑定首包已核对；其余安全依赖继续，不作全链认证 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
+| R3 / 下一项，高 | 进行中：第25/27/31–37组设置/模型/状态/Provider、审批、检查点、HTTP接入及stdio消费首包已修；其余API消费者按风险继续，下一包Bridge启停/密钥轮换结果消费 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -607,6 +607,21 @@ oauthClientAuth从自行拼Express改为临时工作区/双0端口的真实index
 OAuth授权详解全段/函数逐句对照：补URL规范化及req.protocol/当前代理策略边界，明确none不是secret持有证明、撤销200不证明目标存在/已删除、长期密钥独立。MCP README修“仅机密客户端返回secret”的错误（none也返回但不校验），安全/测试对应段局部同步。正式197项：已逐句7、局部23、待逐句110，其余状态不变；完整OAuth标准、第三方兼容与多客户端隔离不随文档盖章。
 
 本地oauth筛选三文件、完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）及git diff --check通过。测试/说明提交526dfadb1065d2de5f903cd4d47dd3bccd339f38已推当前固定分支，[CI35288609389](https://github.com/cccjvav/web_agent/actions/runs/35288609389)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、既有真实Chromium。本地无Chromium，本轮无新增浏览器场景，不代签真实第三方OAuth/用户实机。下一包复核MCP session/peer、凭据与任务/取消边界；已有取消按peer+凭据键隔离，不自动等同全部会话状态隔离。先查实际影响，不把源码候选提前记成漏洞。R3其余消费者/Provider更新删除、历史Windows超时根因、用户实机保留，探测继续暂停。
+
+
+#### 第40组：公开peer与私有会话分离、认证主体绑定
+
+从b0ea801干净基线开始R2。真实index双server、同一长期密钥两个客户端：B用正常会话修改A任务被E_NOT_OWNER拒绝，但从peers_list拿A的peer标签剥前缀后当Mcp-Session-Id，磁盘任务实际从claimed变done。原回归期望claimed、实际done，证明已认证协作者可冒用owner，不是未认证接入或OS越权。仅分离公开标签后，另一OAuth client用已知私有SID ping仍200而应404，取得第二个独立红测。
+
+initialize改为独立随机公开peer，不再拼HTTP SID；合法重初始化保留key。requireAuth验证凭据后生成私有principal摘要，OAuth按kind+注册clientId、长期secret按kind+实际密钥；HTTP会话创建/读取/删除及keyForReq核对它，错误主体不续期。OAuth刷新沿用会话/owner，长期密钥轮换不继承旧session；不保存原凭据。未知/异主体普通请求404；DELETE仍统一204但不删除他人；允许创建的initialize/GET SSE可分配另一新SID，不能接管旧peer。受信内部直接函数夹具可省略principal，不是公开免认证入口。
+
+mcpBoard保留直接RPC工具回归，增加生产HTTP/磁盘负例：公开标签不能更新任务或删除会话，OAuth跨client的ping/写/GET被拒，DELETE不影响原owner、initialize返回不同新SID；刷新后旧token401、新token保持归属，再initialize/更新仍是原owner。公开ping/peers/board响应不含夹具私有SID，正确删除后404，临时密钥轮换不继承旧会话。mcpCancellation补公开peer无法取消共享密钥调用，同一OAuth client的两个有效token仍不能互相取消原调用；原具体凭据取消、取消trace、ID释放等断言保留。stateIntegrity加错误principal不续期/不删除及正确主体读取/删除，受控时钟finally恢复。
+
+本批用户续接后沙箱Git指针回到b6ab9ed，而文件保留最新状态。先停止普通提交、备份全部binary diff与逐文件hash至工作区外/home/user/r40-recovery；fetch后逐项核对远端b0ea801，恰只有本轮5个源码/测试差异。仅以update-ref/read-tree恢复固定分支指针和index，未覆盖任何工作文件，逐文件hash全部一致；没有reset --hard、clean或改分支。依赖缺失按原锁文件npm ci恢复，不作为产品失败或安全证据。
+
+说明修正覆盖私有会话/公开peer、稳定OAuth主体与具体取消凭据的区别；仅对应章节局部核对，未重审budget/errors/全部RPC长篇。正式197项：逐句7、局部28、待逐句105，其余状态不变。共享同一主体并真正知道私有SID者仍可使用，不是完整多租户隔离；重启/过期/淘汰不从磁盘任务恢复身份，刷新不自动取消旧凭据在途操作。既有任意Execute/同OS用户信任边界不变，探测专项未施工。
+
+定向mcpBoard/mcpCancellation及完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）和git diff --check通过。本批精确CI待提交后核验；本地无Chromium，不冒充新增浏览器攻击用例。下一包回R3 Bridge启停/密钥轮换结果消费，R2余项、Provider更新删除、历史Windows超时根因、全仓逐句和用户实机继续保留。
 
 ## 复盘
 

@@ -2,6 +2,8 @@
 
 ## 当前状态
 
+第40组F40：真实index复现公开peer泄露SID、另一个同密钥客户端可改owner任务（磁盘claimed→done）；另一个OAuth client可复用已知私有SID（200而非404）。独立公开peer+会话principal绑定后转绿；刷新保留归属，取消仍按原具体凭据，DELETE幂等响应不删他人。仅已认证协作者边界，非OS/完整多租户隔离。新增生产HTTP/磁盘/取消/不续期回归，本地82测试与文档检查通过，本批CI待核验；逐句7、局部28、待逐句105，共197。续接Git基线错配经备份、远端逐项对照及hash复验无损恢复，过程见阶段40组。下一包R3 Bridge启停/密钥轮换消费，余项及暂停边界保留。
+
 第39组F39：OAuth凭据/issuer/撤销与表单授权改用真实index回归，未复现认证绕过，产品源码不改。Host负例最初受fetch头改写影响，改node:http后保持原断言通过，不算产品红测。OAuth授权详解逐句核对，修none返回secret/撤销200语义及代理边界，其余安全/测试仅局部；197项中已逐句7、局部23、待逐句110。本地82测试/文档检查通过，提交526dfadb1065d2de5f903cd4d47dd3bccd339f38的[CI35288609389](https://github.com/cccjvav/web_agent/actions/runs/35288609389)九项逐项成功（含既有Chromium，无新增浏览器场景）。下一包MCP会话/peer与凭据、任务/取消边界，不把未验证候选当漏洞；探测/实机/历史超时边界保留。
 
 第38组F38：真实index中合法密钥+恶意Origin+畸形JSON先400，改为MCP端口解析前硬拒绝403，合法预检/认证/CLI兼容不变；不是已证明的工具执行越权。新增双端口API/Host/WS及socket优先级负例。控制面与Origin详解逐句核对完成，入口/安全/测试相关段局部；正式清单197项，已逐句6、局部21、待逐句113。本地82测试和文档生成/构建/一致性通过，实现ca7ab17df95adf1526c791176c0fc71cb748c8af的[CI35287587285](https://github.com/cccjvav/web_agent/actions/runs/35287587285)九项逐项成功（含既有Chromium，不是新增跨站攻击用例）。R2下一包OAuth凭据/issuer，其余R3、全仓、实机、历史Windows超时根因及探测暂停边界保留。

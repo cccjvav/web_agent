@@ -88,17 +88,19 @@ function createHttpSession(extra = {}) {
   return id;
 }
 
-function touchHttpSession(id) {
+function touchHttpSession(id, principal) {
   if (!id) return null;
   pruneHttpSessions();
   const rec = httpSessions.get(id);
-  if (!rec) return null;
+  if (!rec || (principal !== undefined && rec.principal !== principal)) return null;
   rec.lastSeen = Date.now();
   return rec;
 }
 
-function destroyHttpSession(id) {
+function destroyHttpSession(id, principal) {
   if (!id) return false;
+  const rec = httpSessions.get(id);
+  if (principal !== undefined && (!rec || rec.principal !== principal)) return false;
   return httpSessions.delete(id);
 }
 
@@ -108,11 +110,12 @@ function setHttpSessionKey(id, key) {
   return Boolean(rec);
 }
 
-// 第六阶段：tools/call 里没有 clientInfo，靠会话 id（initialize 时绑过 key）或 ip 回落认人
+// HTTP requests carry the verified principal; direct module fixtures may omit it.
+// No IP fallback here: only a live session can supply the initialized public peer.
 function keyForReq(req) {
   const id = req && (req.mcpSessionId || req.headers && req.headers['mcp-session-id']);
   if (!id) return null;
-  const rec = touchHttpSession(id);
+  const rec = touchHttpSession(id, req.mcpPrincipal);
   return rec && rec.key || null;
 }
 

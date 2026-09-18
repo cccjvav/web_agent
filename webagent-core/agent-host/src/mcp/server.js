@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const control = require('../utils/executionControl');
 const { isToolFailure } = require('../utils/toolTrace');
 const lifecycle = require('./requestLifecycle').createLifecycle();
@@ -46,7 +47,13 @@ function rejectUnauthorized(req, res) {
 }
 
 function requireAuth(req, res, next) {
-  if (!isAuthorized(req)) return rejectUnauthorized(req, res);
+  const token = extractToken(req);
+  const identity = oauth.verifyAccessToken(token);
+  if (!identity) return rejectUnauthorized(req, res);
+  // OAuth refresh retains the registered client identity. A URL-secret rotation
+  // changes identity; neither the raw credential nor this digest is a public peer key.
+  req.mcpPrincipal = crypto.createHash('sha256')
+    .update(JSON.stringify([identity.kind, identity.kind === 'oauth' ? identity.clientId : token])).digest('hex');
   next();
 }
 
@@ -76,17 +83,17 @@ function incomingSessionId(req) {
 function bindHttpSession(req, { createIfMissing = false } = {}) {
   const incoming = incomingSessionId(req);
   if (incoming) {
-    if (touchHttpSession(incoming)) {
+    if (touchHttpSession(incoming, req.mcpPrincipal)) {
       req.mcpSessionId = incoming;
       return { ok: true };
     }
     if (createIfMissing) {
-      req.mcpSessionId = createHttpSession({ replaced: incoming });
+      req.mcpSessionId = createHttpSession({ replaced: incoming, principal: req.mcpPrincipal });
       return { ok: true };
     }
     return { ok: false };
   }
-  if (createIfMissing) req.mcpSessionId = createHttpSession();
+  if (createIfMissing) req.mcpSessionId = createHttpSession({ principal: req.mcpPrincipal });
   return { ok: true };
 }
 
@@ -153,9 +160,12 @@ async function handleRpc(req) {
   switch (method) {
     case 'initialize': {
       const clientInfo = (params && params.clientInfo) || { name: 'External-Agent' };
-      const peerId = req.mcpSessionId || incomingSessionId(req) || createHttpSession();
+      const peerId = req.mcpSessionId || incomingSessionId(req) || createHttpSession({ principal: req.mcpPrincipal });
       req.mcpSessionId = peerId;
-      const sessInit = touch(req, { clientInfo, key: `peer:${peerId}` });
+      // Public peer labels must not disclose the private HTTP session capability.
+      const existing = touchHttpSession(peerId, req.mcpPrincipal);
+      const peerKey = existing && existing.key || `peer:${crypto.randomBytes(16).toString('hex')}`;
+      const sessInit = touch(req, { clientInfo, key: peerKey });
       if (req.mcpSessionId) setHttpSessionKey(req.mcpSessionId, sessInit.key);
       eventBus.broadcast('agent_connected', { clientInfo, ip: req.ip });
       return {
@@ -200,7 +210,7 @@ async function handleRpc(req) {
       if (!name) throw new ProtocolError('E_BAD_ARGS', 'tools/call requires params.name');
       eventBus.broadcast('tool_call_start', { tool: name, args: toolArgs, source: 'Bridge-Remote' });
       const started = Date.now();
-      // 第六阶段：把会话身份（clientName@ip）穿给工具层，多 Agent 任务板靠它记归属
+      // 第六阶段：把初始化后的公开peer身份穿给工具层，多 Agent 任务板靠它记归属
       const initializedKey = keyForReq(req);
       if (['board_create', 'board_claim', 'board_update', 'external_request', 'workflow_request', 'confirm_connection'].includes(resolveToolName(name)) && !initializedKey) {
         eventBus.broadcast('tool_call_end', { source: 'Bridge-Remote', tool: name, success: false, durationMs: Date.now() - started });
@@ -437,7 +447,7 @@ function handleGet(req, res) {
 
 function handleDelete(req, res) {
   const incoming = incomingSessionId(req);
-  if (incoming) destroyHttpSession(incoming);
+  if (incoming) destroyHttpSession(incoming, req.mcpPrincipal);
   return res.status(204).end();
 }
 

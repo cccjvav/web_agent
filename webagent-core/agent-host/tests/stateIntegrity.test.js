@@ -25,6 +25,21 @@ config.workspaceRoot = tmp;
     assert.strictEqual(session.snapshot().httpSessions, 0);
     assert.strictEqual(session.allSessions().length, 0);
   } finally { Date.now = clock; }
+  const owned = session.createHttpSession({ principal: 'fixture-owner' });
+  session.setHttpSessionKey(owned, 'peer:fixture-public-label');
+  const record = session.touchHttpSession(owned, 'fixture-owner');
+  const seen = record.lastSeen;
+  try {
+    Date.now = () => seen + 1000;
+    assert.strictEqual(session.touchHttpSession(owned, 'different-owner'), null);
+    assert.strictEqual(session.keyForReq({ mcpSessionId: owned, mcpPrincipal: 'different-owner' }), null);
+    assert.strictEqual(session.destroyHttpSession(owned, 'different-owner'), false);
+    assert.strictEqual(record.lastSeen, seen, 'wrong principal must not renew the session lifetime');
+    assert.strictEqual(session.keyForReq({ mcpSessionId: owned, mcpPrincipal: 'fixture-owner' }), 'peer:fixture-public-label');
+    assert.strictEqual(record.lastSeen, seen + 1000);
+    assert.strictEqual(session.destroyHttpSession(owned, 'fixture-owner'), true);
+  } finally { Date.now = clock; }
+
 
   const custom = require('../src/models/customizations');
   fs.mkdirSync(path.join(tmp, '.webagent'), { recursive: true });
@@ -101,7 +116,7 @@ config.workspaceRoot = tmp;
   assert.strictEqual(session.keyForReq(req('', {})), null);
   const denied = await handleRpc(req('tools/call', { name: 'board_create', arguments: { title: 'no session' } }));
   assert.strictEqual(denied.isError, true);
-  const ctx = { callerKey: 'peer:' + a };
+  const ctx = { callerKey: session.keyForReq(req('', {}, a)) };
   const created = await board.boardCreate({ title: 'claim required' }, ctx);
   assert.strictEqual((await board.boardUpdate({ id: created.task.id, status: 'done' }, ctx)).ok, false);
   assert.strictEqual((await board.boardClaim({ id: created.task.id, owner: 'other' }, ctx)).ok, false);
