@@ -140,3 +140,7 @@ workbenchRuntime先复现两处红测：只有previewId即启用启动，启动�
 finishStdio挂起预览/启动，证明busy拒第二次预览（不能因首个请求清env而自动发无env的新预览）和第二次启动；编辑后旧回包不覆盖新草稿/警告。env值仅发送后从草稿去除，坏JSON/网络异常用固定提示不回显fixture密钥；VM计时器分别模拟预览10秒、启动40秒后晚回，失败不复活旧授权。真实后端一次性/快照由stdioMcp测试，不把VM模拟当实际进程启动。
 
 stdioLifecycleBrowser的实际页面合同负例主说明见[主机诊断与调用追踪详解](../src/utils/主机诊断与调用追踪详解.md)，实际执行看第37组精确CI；main已有真实进程/远端调用审批仍另作证据。
+
+## 第41组：经典密钥轮换结果消费
+
+workbenchRuntime执行真实bind的reset-secret回调：HTTP500不得toast“已重置”先红测；修后确保有效页面/预读状态下实际发送过一次POST，而非因夹具缺字段提前返回假通过。rotationReply给JSON/HTTP替身，rotationResult读取独立结果区；覆盖null/缺字段/非布尔success/旧secret/错路径、取消、confirm期间绑定变化、实时旧密钥不匹配、POST在途重复onclick一写，以及10秒期限覆盖迟到JSON。finally禁按钮释放；确认POST后刷新失败仍true且保留写成功，不回显异常secret、不自动再POST；正常刷新核对新secret。这里是VM，不是浏览器或真实密钥轮换。

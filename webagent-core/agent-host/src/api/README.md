@@ -13,7 +13,7 @@
 |---|---|---|
 | `/status`、`/logs` | GET | 状态快照、日志；status包含本机连接所需信息，不应当成可公开接口 |
 | `/bridge/start`、`/bridge/stop`、`/bridge/logout` | POST | 启停隧道或注销；代次控制拒绝迟到启动 |
-| `/bridge/reset-secret`、`/bridge/reset-round` | POST | 重置连接身份，或清MCP会话/读取hash缓存（旧reset-round接口）；不是同一个操作 |
+| `/bridge/reset-secret`、`/bridge/reset-round` | POST | 重置连接身份（新UI携绑定/旧密钥比较，旧空体兼容），或清MCP会话/读取hash缓存；不是同一个操作 |
 | `/bridge/login`、`/bridge/token` | POST | 本机演示授权，或验证用户提供的GitHub身份 |
 | `/bridge/device`、`/bridge/device/poll`、`/bridge/github/clear` | POST | GitHub设备流及清理；不等同MCP OAuth配对 |
 | `/chat` | POST | 本机Chat的NDJSON事件流 |
@@ -63,5 +63,5 @@ requestScope由 `/chat`显式创建，**不代表所有REST请求自动拥有同
 
 | 源码 | 定位证据 |
 |---|---|
-| [routes.js](routes.js) | 84 个函数/类节点 |
+| [routes.js](routes.js) | 85 个函数/类节点 |
 <!-- docs-inventory:end -->

@@ -67,3 +67,9 @@ tmp假cloudflared文件，CLOUDFLARED_PATH指它；cp.spawn返回fake并记录�
 tunnel.test执行createTokenRedactor，遍历ASCII、重复前缀与中文Token的每个UTF-8字节切分位置，再逐字节喂入；完整Token遮盖，普通错配前缀仍输出。tunnelLifecycle以实际Named/ngrok启动回调及模拟ChildProcess事件交错stdout/stderr，检查分流游标、潜在秘密前缀不提前发布、正常ready、停止后旧数据拒绝、事件历史不含完整测试Token。未调用外部程序或真实账号，不代表Windows进程树/公网验收。
 
 collect(event)是tunnelLifecycle临时订阅回调，仅收集已脱敏的event.chunk供断言，finally移除监听；测试还恢复NGROK_PATH，避免污染后续环境。tunnel.test额外穷举长度0–8的二元文本、四种重叠Token，以整体split/join为对照验证逐字符输出；这是有界性质检查，不是任意输入形式化证明。
+
+## 第41组：密钥轮换的真实HTTP与持久化边界
+
+bridgeTunnel的main新增真实POST reset-secret：部分绑定/错主机/错expectedSecret均409，原key和配对码保留。暂替store.patch使保存抛错，HTTP500且内存key/OAuth配对不变，finally恢复。两个相同完整绑定和旧key并发请求恰200/409，成功回包key/path与内存/磁盘一致、旧key失效、配对撤销。
+
+再暂替eventBus.broadcast，仅secret_rotated时模拟写后失败：HTTP500但磁盘/内存已轮换；同一旧expectedSecret再发409且不二次轮换，finally恢复broadcast。验证未知响应可能已有副作用，不是回滚。最后无新字段的旧空体调用仍200并轮换，保证现有扩展协议兼容；不是原生UI成功提示的验收。原隧道函数依旧替身，不声称本测试连接了公网。

@@ -27,6 +27,16 @@
 
 **stopBridge()**等待POST和JSON，HTTP及success均成功才清healthLine、刷新并灭灯、true。失败显示error/note或默认提示、false，不因收到HTTP响应就假报停止；网络/JSON/刷新异常catch弹窗、false。丢失响应时实际进程状态未知，应核对主机，不自动重试或强杀。
 
+### 经典工作台密钥轮换（第41组）
+
+**secretRequest(path,body)**独立GET/POST帮助函数：同源、no-store、10秒AbortController覆盖取头和JSON正文，HTTP失败/空回包/明确success:false拒绝，finally清timer。异常不直接展示远端文字或密钥；abort不是撤回服务端轮换。
+
+**sameSecretBinding(snapshot,expected)**对比workspaceRoot和identity.hostInstanceId；**validRotatedSecret(data,oldSecret)**要求success严格true、新24位hex secret与旧值不同、mcpPath匹配、HTTP(S)完整URL无凭据/查询/fragment且canonical URL同源/mcp。它不认证公网可达性。
+
+**resetSecret()**使用页内secretRotating与禁按钮防并发；捕获页面工作区/主机/旧密钥，先GET当前状态验证核心形状及同绑定/同旧密钥。明确confirm告知OAuth撤销但任务/隧道不停止，确认前后复查页面；取消不POST。请求携workspaceRoot/hostInstanceId/expectedSecret，服务端单进程比较后再轮换，旧页面不应直接重发。轮换响应通过完整消费合同才确认；随后只刷新状态，不再POST。刷新失败/被取代/主机或secret不匹配保留“原主机轮换已确认、当前地址未核对”。
+
+请求发出后遇HTTP/业务/JSON/网络/超时/坏合同一律结果未确认，旧显示地址可能过期，先读状态而非再次重置；没有自动重试。发送前失败明确未发送。结果写独立secret-result（aria-live），不沿用无条件成功toast，不自动复制地址；finally释放guard。仅页内互斥，不是跨标签锁或永久幂等；服务端旧空体扩展调用仍兼容，不因此获得新绑定/CAS保证。经典UI改进不代表原生扩展命令已复核。启动/停止没有共用此锁，启动在途停止不能被密钥轮换锁挡住；启停剩余消费单独待办。
+
 **paintBridge()**把state.status映射为运行pill/toggle/MCP块/URL/底栏/installId，domain空输入才回填，radio规范named别名；paintClients。按provider/URL判断隧道类型，显示就绪文案；账目信息区GitHub实际身份、演示授权、未授权分开，deviceAvailable控制按钮；usage显示今日工具计数及是否配置上报；mcpSession.alive/latest/空决定Connected/Idle/Waiting/Stopped，最后paintStats。
 
 需要区分文案与数据：bridge-sub的“活动请求”使用state.stats.calls累计次数，不是并发数；Bridge运行不代表外部Agent已连接；隧道URL存在也不是全公网端到端健康证明。

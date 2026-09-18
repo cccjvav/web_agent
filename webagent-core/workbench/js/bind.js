@@ -214,11 +214,7 @@ export function bind() {
       ? '已复制规则，贴进 Chat Plus「编排 / 系统提示词」，不要贴进 URL 框'
       : '已复制规则，贴进扩展系统提示或对话第一句，不要贴进 URL 框');
   });
-  $('#btn-reset-secret').onclick = async () => {
-    await fetch('/api/bridge/reset-secret', { method: 'POST' });
-    await ui.refreshStatus();
-    ui.toast('Secret 已重置，旧链接立即失效');
-  };
+  $('#btn-reset-secret').onclick = ui.resetSecret;
   $$('.open-site').forEach((b) => {
     b.onclick = () => ui.openSite(b.dataset.site);
   });

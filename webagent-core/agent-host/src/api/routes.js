@@ -181,6 +181,15 @@ router.get('/status', (req, res) => {
 });
 
 router.post('/bridge/reset-secret', (req, res) => {
+  // New UI requests opt into binding/CAS; empty legacy extension calls remain compatible.
+  const body = req.body || {};
+  if (['workspaceRoot', 'hostInstanceId', 'expectedSecret'].some(key => Object.prototype.hasOwnProperty.call(body, key))) {
+    try { assertWorkspaceBinding(body, config); }
+    catch (_) { return res.status(409).json({ success: false, error: 'Rotation binding changed; read status first' }); }
+    if (typeof body.expectedSecret !== 'string' || body.expectedSecret !== config.secretKey) {
+      return res.status(409).json({ success: false, error: 'Rotation state changed; read status first' });
+    }
+  }
   generateNewSecret();
   oauth.revokeAll();
   eventBus.broadcast('secret_rotated', { rotated: true });

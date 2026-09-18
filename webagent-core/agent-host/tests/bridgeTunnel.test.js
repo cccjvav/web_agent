@@ -219,6 +219,49 @@ async function main() {
     store.patch({ bridge: { loggedIn: false, deviceAuthorized: false } });
     const denied = await request(server, 'POST', '/api/bridge/start', { tunnelProvider: 'cloudflare' });
     assert.strictEqual(denied.status, 403);
+    const oauth = require('../src/mcp/oauth');
+    const originalSecret = config.secretKey;
+    const pairing = oauth.issuePairing();
+    const boundRotation = {workspaceRoot:config.workspaceRoot,hostInstanceId:config.hostInstanceId,expectedSecret:originalSecret};
+    for (const body of [{expectedSecret:originalSecret}, {...boundRotation,hostInstanceId:'stale'}, {...boundRotation,expectedSecret:'stale'}]) {
+      const reject = await request(server,'POST','/api/bridge/reset-secret',body);
+      assert.strictEqual(reject.status,409);
+      assert.strictEqual(config.secretKey,originalSecret);
+      assert.strictEqual(oauth.snapshotPairing().code,pairing.code);
+    }
+    const oldPatch = store.patch;
+    try {
+      store.patch = () => { throw new Error('fixture persistence rejected'); };
+      const failed = await request(server,'POST','/api/bridge/reset-secret',boundRotation);
+      assert.strictEqual(failed.status,500);
+      assert.strictEqual(config.secretKey,originalSecret);
+      assert.strictEqual(oauth.snapshotPairing().code,pairing.code,'failed save must not revoke OAuth');
+    } finally { store.patch = oldPatch; }
+    const results = await Promise.all([request(server,'POST','/api/bridge/reset-secret',boundRotation),request(server,'POST','/api/bridge/reset-secret',boundRotation)]);
+    assert.deepStrictEqual(results.map(result=>result.status).sort(),[200,409]);
+    const successful = results.find(result=>result.status===200).json;
+    assert.strictEqual(successful.success,true);
+    assert.notStrictEqual(config.secretKey,originalSecret);
+    assert.strictEqual(successful.secretKey,config.secretKey);
+    assert.strictEqual(successful.mcpPath,'/mcp/'+config.secretKey);
+    assert.strictEqual(store.load().secretKey,config.secretKey);
+    assert.strictEqual(oauth.verifyAccessToken(originalSecret),null);
+    assert.strictEqual(oauth.snapshotPairing().code,null);
+    const bus = require('../src/utils/eventBus');
+    const broadcast = bus.broadcast;
+    const lostAck = {...boundRotation,expectedSecret:config.secretKey};
+    try {
+      bus.broadcast = (type, data) => { if(type === 'secret_rotated') throw new Error('fixture after-save failure'); return broadcast(type,data); };
+      assert.strictEqual((await request(server,'POST','/api/bridge/reset-secret',lostAck)).status,500);
+      assert.notStrictEqual(config.secretKey,lostAck.expectedSecret,'an HTTP failure may follow a completed rotation');
+      assert.strictEqual(store.load().secretKey,config.secretKey);
+      const afterWrite = config.secretKey;
+      assert.strictEqual((await request(server,'POST','/api/bridge/reset-secret',lostAck)).status,409);
+      assert.strictEqual(config.secretKey,afterWrite,'old compare-and-set must not rotate again after lost acknowledgement');
+    } finally { bus.broadcast = broadcast; }
+    const beforeLegacy = config.secretKey;
+    assert.strictEqual((await request(server,'POST','/api/bridge/reset-secret',{})).status,200,'legacy extension calls stay compatible');
+    assert.notStrictEqual(config.secretKey,beforeLegacy);
   } finally {
     tunnel.startQuickTunnel = origStart;
     tunnel.startNamedTunnel = origNamed;

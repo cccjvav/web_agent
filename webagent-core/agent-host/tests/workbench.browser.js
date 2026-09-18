@@ -83,6 +83,49 @@ async function probeHudBrowser(browser) {
     assert.strictEqual(result.logs, 0); assert.deepStrictEqual(errors, []);
   } finally { await fixture.close(); }
 }
+async function secretRotationBrowser(browser, base) {
+  const page = await browser.newPage();
+  let snapshot, posts = 0, release, failRead = false, entered;
+  const pendingPost = new Promise(resolve => { entered=resolve; });
+  page.on('dialog', dialog => dialog.accept());
+  await page.route('**/api/status', async route => {
+    if (failRead) return route.fulfill({status:503,json:{success:false}});
+    const response = await route.fetch(); snapshot = await response.json();
+    return route.fulfill({response,json:snapshot});
+  });
+  await page.route('**/api/bridge/reset-secret', async route => {
+    posts++;
+    if (posts === 1) return route.fulfill({status:500,json:{success:false}});
+    const body = route.request().postDataJSON();
+    assert.equal(body.expectedSecret,snapshot.secretKey);
+    assert.equal(body.hostInstanceId,snapshot.identity.hostInstanceId);
+    await new Promise(resolve => { release=resolve; entered(); });
+    failRead = true;
+    const secretKey = 'b'.repeat(24);
+    const url = new URL(snapshot.mcpUrl);
+    await route.fulfill({json:{success:true,secretKey,mcpPath:'/mcp/'+secretKey,
+      mcpUrl:url.origin+'/mcp/'+secretKey,mcpCanonicalUrl:url.origin+'/mcp'}});
+  });
+  try {
+    await page.goto(base);
+    await page.waitForFunction(() => document.querySelector('#mcp-url').textContent.includes('/mcp/'));
+    await page.click('#rb-bridge-tab');
+    await page.evaluate(() => { document.querySelector('#btn-reset-secret').closest('details').open=true; });
+    await page.click('#btn-reset-secret');
+    await page.waitForFunction(() => document.querySelector('#secret-result').textContent.includes('结果未确认'));
+    assert.equal(posts,1);
+    await page.click('#btn-reset-secret');
+    await page.waitForFunction(() => document.querySelector('#secret-result').textContent.includes('轮换已发送'));
+    assert.equal(await page.locator('#btn-reset-secret').isDisabled(),true);
+    assert.equal(await page.evaluate(() => document.querySelector('#btn-reset-secret').onclick()),false);
+    await pendingPost;
+    assert.equal(posts,2); release();
+    await page.waitForFunction(() => document.querySelector('#secret-result').textContent.includes('轮换已确认，但当前地址'));
+    assert.equal(posts,2);
+    assert.equal(await page.locator('#btn-reset-secret').isDisabled(),false);
+  } finally { if(release) release(); await page.close(); }
+}
+
 async function stdioLifecycleBrowser(browser, base) {
   const fixture=await browser.newPage({viewport:{width:1280,height:900}}), errors=[];
   fixture.on('pageerror',error=>errors.push(error.message));
@@ -378,6 +421,7 @@ async function main() {
     await checkpointCreateBrowser(browser, base, workspace);
     await externalRegistrationBrowser(browser, base);
     await stdioLifecycleBrowser(browser, base);
+    await secretRotationBrowser(browser, base);
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.route('https://cdn.jsdelivr.net/**', route => route.abort());

@@ -97,7 +97,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [auditControl.test.js](auditControl.test.js) | 20 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
 | [board.test.js](board.test.js) | 4 个函数/类节点 |
-| [bridgeTunnel.test.js](bridgeTunnel.test.js) | 20 个函数/类节点 |
+| [bridgeTunnel.test.js](bridgeTunnel.test.js) | 24 个函数/类节点 |
 | [chatMode.test.js](chatMode.test.js) | 0 个函数/类节点 |
 | [chatVision.test.js](chatVision.test.js) | 21 个函数/类节点 |
 | [codeServerAuth.test.js](codeServerAuth.test.js) | 0 个函数/类节点 |
@@ -170,9 +170,9 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 177 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 189 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 288 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 314 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 9 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 15 个函数/类节点 |
@@ -188,3 +188,5 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 requestLifecycle.test.js：按会话/凭据和带类型RPC ID隔离取消；重复与容量拒绝、超时/断连/抛错清理；共享失败判定正反例。mcpCancellation.test.js：真实Express/认证HTTP、两个同名初始化客户端、取消ID=0、未认证拒绝、ID复用与直接API结果式失败。工具使用受控可取消夹具，不冒称真实桌面进程或第三方兼容性。runChat.test.js增加无效/缺配置合并模型不产生consensus/工具调用、不改变已有分支，随后明确builtin可合并。
 
 新增[执行控制源码与测试解释](../src/utils/执行控制详解.md)对应executionControl.test.js，覆盖模式互斥与持久权限，不代表Windows/手机新控件实测。
+
+第41组：workbenchRuntime验证经典重置密钥的真实回调/未知消费；bridgeTunnel覆盖HTTP绑定/CAS、保存前/后失败与旧空体兼容；浏览器合成响应场景见主机诊断与调用追踪详解。三类证据不互相冒充。

@@ -85,7 +85,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 高，继续 | 进行中：第38–40组控制面、OAuth凭据/issuer、会话公开标识/主体绑定首包已核对；其余安全依赖继续，不作全链认证 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27/31–37组设置/模型/状态/Provider、审批、检查点、HTTP接入及stdio消费首包已修；其余API消费者按风险继续，下一包Bridge启停/密钥轮换结果消费 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
+| R3 / 下一项，高 | 进行中：第25/27/31–37组设置/模型/状态/Provider、审批、检查点、HTTP接入及stdio消费首包已修；第41组经典密钥轮换已修；下一包Bridge启停在途/结果消费，原生重置命令也待独立红测与修复 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -622,6 +622,23 @@ mcpBoard保留直接RPC工具回归，增加生产HTTP/磁盘负例：公开标�
 说明修正覆盖私有会话/公开peer、稳定OAuth主体与具体取消凭据的区别；仅对应章节局部核对，未重审budget/errors/全部RPC长篇。正式197项：逐句7、局部28、待逐句105，其余状态不变。共享同一主体并真正知道私有SID者仍可使用，不是完整多租户隔离；重启/过期/淘汰不从磁盘任务恢复身份，刷新不自动取消旧凭据在途操作。既有任意Execute/同OS用户信任边界不变，探测专项未施工。
 
 定向mcpBoard/mcpCancellation及完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）和git diff --check通过。实现bff848389183ee099d42a227aa04bc73f974f306已推当前固定分支，[CI35291325766](https://github.com/cccjvav/web_agent/actions/runs/35291325766)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、既有真实Chromium。本地无Chromium，不冒充新增浏览器攻击用例或用户实机验收。下一包回R3 Bridge启停/密钥轮换结果消费，R2余项、Provider更新删除、历史Windows超时根因、全仓逐句和用户实机继续保留。
+
+
+#### 第41组：经典工作台密钥轮换确认、旧值比较与未知结果
+
+2026-09-18按R3对照Bridge启停/轮换。续接Git再次停在b6ab9ed，先备份binary diff到/home/user/r41-recovery并fetch，工作树与远端fa963e8完全一致（git diff --quiet）；只恢复固定分支ref/index，不覆盖文件，再按锁文件恢复依赖。本轮不把历史改动当新提交，不重做第40组。
+
+真实bind回调VM红测：POST HTTP500/success:false后仍toast“Secret已重置，旧链接立即失效”。范围收窄先修经典轮换；启停已有HTTP/业务失败处理，但并发/期限/后读失败仍另包，不能用同一总锁阻塞启动中的停止。读取原生扩展发现其resetSecret也未消费requestJson状态，尚未做该命令红测/修复，旧空体兼容不等于该UI已验收。
+
+bind委托bridge.resetSecret。页内secretRotating/禁按钮，从页面捕获主机/工作区/旧secret，再GET当前状态复核；明确确认且确认后仍同绑定才POST。secretRequest独立10秒期限含JSON正文；validRotatedSecret要求严格success、新24位secret/路径及HTTP(S)URL一致。取消/发送前失败明确未发送；发出后HTTP/业务/JSON/超时/坏合同保守未知、旧地址可能过期、不自动重试。写确认后读取失败/被取代/绑定或secret不匹配保留原主机已轮换，只要求重新读取，返回写入确认而非再POST。独立aria-live结果区，不自动复制，不回显异常正文/密钥。
+
+后端新增兼容性条件合同：带workspaceRoot/hostInstanceId/expectedSecret任一字段就要求完整绑定和当前旧值一致，否则409零轮换/零OAuth撤销；比较与同步保存单进程顺序执行，两同旧值请求恰一成功。旧无字段调用保留，不声称全调用者都有绑定、跨进程锁或永久幂等。原generateNewSecret保存后发布内存与revokeAll链保留。
+
+VM红转绿并验证有效绑定下确实发了一POST，补坏形状/旧key/错路径、取消/确认时变绑、忙拒绝、正文超时、读取失败保留成功。bridgeTunnel真实HTTP验证条件拒绝、两请求200/409、磁盘/内存一致、旧key失效、旧空体仍兼容；注入保存失败时500且旧key/OAuth不变，写后广播失败时500但已轮换，旧expectedSecret再发409不二次轮换。注入错误堆栈是预期fixture，不是全量失败。
+
+secretRotationBrowser新增真实页面的合成500/扣住POST/连点一写/写成功后状态503场景，不改测试主机真实密钥；实际后端由HTTP测试另证。本地无Chromium，未声称运行新增页面。对应说明仅局部，正式197项：逐句7、局部30、待逐句103，其余不变；不扩大为整个Bridge或扩展认证。
+
+本地定向与完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）、git diff --check通过。本批精确CI待提交后核验。下一包继续Bridge启停及原生重置命令剩余消费者；R2余项、Provider更新删除、历史Windows超时根因、用户实机仍保留，探测暂停。
 
 ## 复盘
 

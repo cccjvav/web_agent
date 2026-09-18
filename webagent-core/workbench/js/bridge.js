@@ -256,6 +256,82 @@ export async function startBridge() {
   } catch (error) { window.alert(error.message || 'Bridge 启动失败，请检查主机和工作区。'); return false; }
 }
 
+let secretRotating = false;
+
+async function secretRequest(path, body) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch(path, { cache: 'no-store', signal: controller.signal,
+      ...(body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}) });
+    const data = await response.json();
+    if (controller.signal.aborted || !response.ok || !data || data.success === false) throw new Error('unconfirmed');
+    return data;
+  } finally { clearTimeout(timer); }
+}
+
+function sameSecretBinding(snapshot, expected) {
+  return snapshot?.workspaceRoot === expected.workspaceRoot
+    && snapshot?.identity?.hostInstanceId === expected.hostInstanceId;
+}
+
+function validRotatedSecret(data, oldSecret) {
+  if (data?.success !== true || typeof data.secretKey !== 'string'
+    || !/^[a-f0-9]{24}$/.test(data.secretKey) || data.secretKey === oldSecret
+    || data.mcpPath !== '/mcp/' + data.secretKey) return false;
+  try {
+    const url = new URL(data.mcpUrl);
+    return ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password && !url.search && !url.hash
+      && url.pathname === data.mcpPath && data.mcpCanonicalUrl === url.origin + '/mcp';
+  } catch (_) { return false; }
+}
+
+export async function resetSecret() {
+  if (secretRotating) return false;
+  secretRotating = true;
+  const button = $('#btn-reset-secret');
+  const result = $('#secret-result');
+  if (button) button.disabled = true;
+  const expected = { workspaceRoot: state.status?.workspaceRoot,
+    hostInstanceId: state.status?.identity?.hostInstanceId, expectedSecret: state.status?.secretKey };
+  let sent = false;
+  try {
+    if (!expected.workspaceRoot || !expected.hostInstanceId || !/^[a-f0-9]{24}$/.test(expected.expectedSecret || '')) throw new Error('binding');
+    result.textContent = '正在核对当前主机与连接密钥；尚未发送轮换。';
+    const current = await secretRequest('/api/status');
+    if (!isStatusSnapshot(current) || !sameSecretBinding(current, expected) || current.secretKey !== expected.expectedSecret
+      || !sameSecretBinding(state.status, expected) || state.status.secretKey !== expected.expectedSecret) throw new Error('binding');
+    if (!window.confirm('确认重置 MCP 地址？旧密钥及 OAuth 授权将失效，但不会停止已接受的任务或隧道。结果丢失时不要再次重置，应先读取状态。')) {
+      result.textContent = '已取消，未发送密钥轮换。'; return false;
+    }
+    if (!sameSecretBinding(state.status, expected) || state.status.secretKey !== expected.expectedSecret) throw new Error('binding');
+    sent = true;
+    result.textContent = '密钥轮换已发送，等待确认；不要重复重置。';
+    const data = await secretRequest('/api/bridge/reset-secret', expected);
+    if (!validRotatedSecret(data, expected.expectedSecret)) throw new Error('contract');
+    // A confirmed write and a subsequent failed read are different outcomes.
+    result.textContent = '原主机已确认密钥轮换；正在重新读取当前地址。';
+    try {
+      if (!sameSecretBinding(state.status, expected)) throw new Error('binding');
+      const refreshed = await ui.refreshStatus();
+      if (refreshed === false || !sameSecretBinding(state.status, expected) || state.status.secretKey !== data.secretKey) throw new Error('read');
+      result.textContent = '密钥轮换已确认，当前地址已重新读取；旧凭据不再接受新请求，已有任务未被自动停止。';
+    } catch (_) {
+      result.textContent = '原主机密钥轮换已确认，但当前地址或主机未核对；请重新读取状态，不要再次重置。';
+    }
+    return true;
+  } catch (_) {
+    result.textContent = sent
+      ? '密钥轮换结果未确认，可能已生效；旧显示地址可能过期。请重新读取状态，不要重复重置；没有自动重试。'
+      : '主机或密钥状态未确认，未发送轮换；请刷新页面并核对工作区。';
+    return false;
+  } finally {
+    secretRotating = false;
+    if (button) button.disabled = false;
+  }
+}
+ui.resetSecret = resetSecret;
+
 export async function stopBridge() {
   try {
     const response = await fetch('/api/bridge/stop', { method: 'POST' });
