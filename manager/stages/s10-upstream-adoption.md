@@ -638,7 +638,9 @@ VM红转绿并验证有效绑定下确实发了一POST，补坏形状/旧key/错
 
 secretRotationBrowser新增真实页面的合成500/扣住POST/连点一写/写成功后状态503场景，不改测试主机真实密钥；实际后端由HTTP测试另证。本地无Chromium，未声称运行新增页面。对应说明仅局部，正式197项：逐句7、局部30、待逐句103，其余不变；不扩大为整个Bridge或扩展认证。
 
-本地定向与完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）、git diff --check通过。首轮7406e1a9a9d5e57077ea6954177ec017f2a8bf94的[CI35309852333](https://github.com/cccjvav/web_agent/actions/runs/35309852333)8/9通过：新增浏览器夹具误只开右侧Bridge，实际重置按钮在设置弹窗，点击不可见超时。日志下载遇EOF，check-run annotation给出具体位置/调用日志，与HTML层级一致；已修真实帮助菜单→Bridge导航→高级summary，不用force或改产品CSS。修正e9bb63b18f38a1b415ad8f609d67e787c8f3e391的[CI35310130909](https://github.com/cccjvav/web_agent/actions/runs/35310130909)浏览器已通过，但另8项在文档库存门禁失败：生成器把tests/README的浏览器函数数189改为188，提交时漏add该文件，导致已测工作树不等于提交树。现补齐生成导航并在提交前检查无遗漏的unstaged差异，不削弱门禁；后续新SHA精确CI待核验，不重跑原提交掩盖失败。下一包继续Bridge启停及原生重置命令剩余消费者；R2余项、Provider更新删除、历史Windows超时根因、用户实机仍保留，探测暂停。
+本地定向与完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）、git diff --check通过。首轮7406e1a9a9d5e57077ea6954177ec017f2a8bf94的[CI35309852333](https://github.com/cccjvav/web_agent/actions/runs/35309852333)8/9通过：新增浏览器夹具误只开右侧Bridge，实际重置按钮在设置弹窗，点击不可见超时。日志下载遇EOF，check-run annotation给出具体位置/调用日志，与HTML层级一致；已修真实帮助菜单→Bridge导航→高级summary，不用force或改产品CSS。修正e9bb63b18f38a1b415ad8f609d67e787c8f3e391的[CI35310130909](https://github.com/cccjvav/web_agent/actions/runs/35310130909)浏览器已通过，但另8项在文档库存门禁失败：生成器把tests/README的浏览器函数数189改为188，提交时漏add该文件，导致已测工作树不等于提交树。现补齐生成导航并在提交前检查无遗漏的unstaged差异，不削弱门禁；不重跑原提交掩盖失败。
+
+补齐后的529752b8e453942d5e42c76089714185f3502a5c已推固定分支，[CI35310276345](https://github.com/cccjvav/web_agent/actions/runs/35310276345)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium。新增secretRotationBrowser在CI实际执行通过（合成响应，不是浏览器真实轮换），真实后端写入/并发/异常语义由bridgeTunnel另证。本地仍无Chromium；最终82测试文件及文档生成/构建/一致性通过，不代签用户实机。下一包继续Bridge启停及原生重置命令剩余消费者；R2余项、Provider更新删除、历史Windows超时根因、用户实机仍保留，探测暂停。
 
 ## 复盘
 
