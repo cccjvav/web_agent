@@ -730,7 +730,7 @@ approvedOperations以可控Date.now覆盖临期完成、完整结果保留、可
 
 模型API红测证明GET脱敏表直接POST会把磁盘fixture Key改成`••••`；旧空/拼错/错类型请求还会无操作报成功或非结构化失败，单model改baseUrl可通过浅合并沿用旧Key。新`models/modelSettings.js`从长routes分离请求级校验：非空固定字段、models/model互斥、模型数量/显示字段/caps/vision、有效active/merge引用及multiModel严格布尔/枚举/整数。掩码只在同id且protocol/baseUrl/modelId不变时恢复；省略或掩码改连接都拒绝，显式Key字段才可改变身份；addProvider现有加本批也不得超过100，不能靠多批绕开整表预算。全部输入通过后才单次store.save；失败逐字节保持配置。兼容旧整表往返，但不是跨进程CAS、模型可调用或供应商实测。
 
-approvedOperations、workflowPreconditions和apiFiles三项红转绿；相关模型存储、API、受控工作流和测试正文同步，documentationLearning新增modelSettings到唯一主说明。首轮全量为80/83：documentationQuality抓到交接表暂时没有唯一“下一项”，docsSite抓到源码改后未重建镜像，workflowPreconditions抓到状态重排误少一个optional chain；三者修正并定向通过后，最终83/83。文档库存248源码/28目录/110排除且只读updated=0，站点重建一致，生产audit为0漏洞；精确CI须按本组实现提交补记。探针目录零diff，不把完整回归中既有探针测试的通过冒充专项审查。
+approvedOperations、workflowPreconditions和apiFiles三项红转绿；相关模型存储、API、受控工作流和测试正文同步，documentationLearning新增modelSettings到唯一主说明。首轮全量为80/83：documentationQuality抓到交接表暂时没有唯一“下一项”，docsSite抓到源码改后未重建镜像，workflowPreconditions抓到状态重排误少一个optional chain；三者修正并定向通过后，最终83/83。文档库存248源码/28目录/110排除且只读updated=0，站点重建一致，生产audit为0漏洞；实现`874006e4b8b6d2e1e5bb126e7c2d2a66314acc78`的[CI35402127412](https://github.com/cccjvav/web_agent/actions/runs/35402127412)九项逐项成功，含Windows Node20/22/24、Ubuntu18/20/22/24、真实Chromium与Windows安装器。探针目录零diff，不把完整回归中既有探针测试的通过冒充专项审查。
 
 ## 复盘
 

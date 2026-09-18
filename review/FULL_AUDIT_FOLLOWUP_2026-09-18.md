@@ -83,11 +83,11 @@
 
 ## 5. 验证结果
 
-最近已核对的实现提交`a85fa5a21a7bba448665f3f6da9671aad56dab6d`之[CI35397169896](https://github.com/cccjvav/web_agent/actions/runs/35397169896)九项逐项成功；第47组当前先保留本地证据，不能继承该旧绿灯：
+第46组实现`a85fa5a21a7bba448665f3f6da9671aad56dab6d`之[CI35397169896](https://github.com/cccjvav/web_agent/actions/runs/35397169896)九项逐项成功；第47组没有继承该旧绿灯，其实现`874006e4b8b6d2e1e5bb126e7c2d2a66314acc78`的[CI35402127412](https://github.com/cccjvav/web_agent/actions/runs/35402127412)也已九项逐项成功：
 
 - agent-host：第46组代码/回归加入后，83个测试文件全部通过；故意注入的`fixture stop failed`等stderr不代表套件失败。
 - 第47组：首轮80/83及原因如3.6保留，修正后的完整83/83通过；`approvedOperations`、`workflowPreconditions`、`apiFiles`与`providers`均在全量中通过，9份相关JS通过`node --check`。
-- 第47组文档/范围：库存248项源码、28目录、110排除，`check-docs`只读updated=0，站点内容与build一致；生产依赖audit为0漏洞；相对`ff948013`的两个探针目录零diff。实现提交与精确CI尚待补记，不把全量中自动经过的存量探针测试称为专项审查。
+- 第47组文档/范围：库存248项源码、28目录、110排除，`check-docs`只读updated=0，站点内容与build一致；生产依赖audit为0漏洞；相对`ff948013`的两个探针目录零diff。CI覆盖Windows Node20/22/24、Ubuntu18/20/22/24、真实Chromium及Windows安装器；不把全量中自动经过的存量探针测试称为专项审查。
 - 第46组定向：`approvedOperations.test.js`、`workflowPreconditions.test.js`、`executionControl.test.js`、`ptyLifecycle.test.js`、`ptyJobs.test.js`和`taskProgress.test.js`通过；相关实现/测试通过`node --check`。
 - 文档：247项源码、28个目录、110项排除；清单检查、函数学习/质量守卫及文档站构建一致。扩展后首轮完整套件唯一docsSite失败是恢复段在站点生成后又改文案造成的精确镜像漂移（82/83）；重建后最终83/83。
 - 非探针辅助项目：calculator 6/6；trace-inspector 77/77。早先Probe专项结果不再作为本批交付证据。
