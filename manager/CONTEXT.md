@@ -9,10 +9,10 @@
 - 探测相关施工现全部暂停，等待外部助手完成整合并交接；不拉取合并、不重复开发、不提前确认新入口兼容。现有探针实现和历史证据保留。
 - **阶段8暂停／等待外部交接**：用户2026-09-17报告另一助手在[arena-ai-probe指定分支](https://github.com/phuang6666/arena-ai-probe/tree/arena/01a0ab8a-arena-ai-probe)设计整合工作台/code-server外接与VSCode配套插件；目前仅用户报告，尚未审查或验收。不撤销既有0.5.2交付，11.3仍关闭。
 - **阶段7也不是“全部优化完成”**：已确认缺陷和若干增强已落实，但26类借鉴中仍有未实现/待深入候选，详见阶段7与UPSTREAM_ADOPTION_MAP。
-- 最近完整核验基线db85323c770137f7cbe7b15d570869d13c43a004（第43组原生扩展轮换/停止结果消费），[CI35332743748](https://github.com/cccjvav/web_agent/actions/runs/35332743748)九项逐项成功；本地82测试文件通过，246源码/28目录/110排除。保留36ff82f首轮CI35125290301的Windows22两项超时（8/9、整体失败）：后续证据提交未改实现而全量通过，不说明超时根因已定位或修复。
+- 最近完整核验基线db85323c770137f7cbe7b15d570869d13c43a004（第43组原生扩展轮换/停止结果消费），[CI35332743748](https://github.com/cccjvav/web_agent/actions/runs/35332743748)九项逐项成功；本地83测试文件通过，247源码/28目录/110排除。保留36ff82f首轮CI35125290301的Windows22两项超时（8/9、整体失败）：后续证据提交未改实现而全量通过，不说明超时根因已定位或修复。
 - 持久登录仍延期；Chat API确切后端身份是用户约定的后续任务。启发式结果提供参考，不承诺绝对鉴定。
 
-- 当前续作：第43组原生扩展密钥轮换已红测后修：真实activate在VM执行，先复现HTTP500仍提示已重置；改为模态确认+workspaceRoot/hostInstanceId/expectedSecret绑定比较，严格回包合同，409拒绝与未知分开，写确认后读取失败保留确认；原生停止同样带绑定并要求running=false。本地83测试文件/文档检查与本批精确CI九项逐项成功；夹具是VS Code/HTTP替身，不代签真实IDE或隧道进程。下一包其余API消费者与Bridge Health，R2/全仓/实机保留，探测暂停。
+- 当前续作：第43组原生扩展轮换/停止已交付并九项CI通过；第44组完成全仓检查并产出[优化报告](../review/OPTIMIZATION_REPORT_2026-09-18.md)（P1剩余7处假成功消费者、CI/工程化建议、交接环境事实、交叉审查清单）。同时修正本索引与F43的过期计数：当前83测试文件、247源码、清单198项（逐句7/局部32/待逐句102）。下一包按报告第5节顺序推进，R2/全仓/实机保留，探测暂停。
 
 - 文档审查与施工继续：[现行范围与剩余施工](../review/SEMANTIC_REVIEW_2026-09-16.md)。早期测试数/CI仅是对应历史批次证据，不作为当前状态；当前已核验基线以上方精确提交为准。手机固定Bridge，同类型并发保留，新增控件不继承旧手机验收。
 
@@ -51,5 +51,5 @@
 - [统一文档中心](../docs/README.md)：用户专题、开发学习、模块详解与当前/历史审查分层。
 - 使用入口：[使用指南](../使用指南.md)；[Windows线性验收](../docs/guides/Windows新手逐步验收.md)。
 - [探针完整验收](../探针完整整合实施与验收.md)、[Companion](../webagent-core/probe-extension/README.md)、[浏览器整合](../webagent-core/probe-extension/浏览器整合说明.md)。
-- [现行逐句审查](../review/SEMANTIC_REVIEW_2026-09-16.md)、[验收清单](../review/CHECKLIST_WINDOWS.md)、[借鉴映射](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md)。
+- [现行逐句审查](../review/SEMANTIC_REVIEW_2026-09-16.md)、[验收清单](../review/CHECKLIST_WINDOWS.md)、[借鉴映射](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md)、[全仓检查与优化报告](../review/OPTIMIZATION_REPORT_2026-09-18.md)。
 - [经验](docs/experience.md)、[旧索引归档](stages/context-history-through-0.4.md)、[双探针0.3～0.4时间线](stages/probe-dual-integration-2026-09-15.md)。

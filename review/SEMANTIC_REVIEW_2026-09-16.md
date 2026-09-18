@@ -2,7 +2,10 @@
 
 ## 当前状态
 
-第43组F43：原生`webagent.resetSecret`空体POST且忽略status/json，HTTP500仍提示“已重置”，VM执行真实activate复现后修：模态确认、绑定+expectedSecret、严格回包合同、409拒绝与未知分开、写确认后读取失败保留确认；原生停止带绑定并要求running=false（测试另抓出success:"true"假成功）。本地83测试文件与文档检查通过，实现db85323c770137f7cbe7b15d570869d13c43a004的[CI35332743748](https://github.com/cccjvav/web_agent/actions/runs/35332743748)九项逐项成功；夹具是VS Code/HTTP替身，不代签真实IDE或隧道进程。仅局部，197项逐句7、局部30、待103口径不变（extension详解与命令安全测试说明因本批同步改为局部）；剩余R3消费者、R2、全仓/实机/历史超时与探测暂停保留。
+第44组F44：按用户要求做全仓检查并产出[优化报告](OPTIMIZATION_REPORT_2026-09-18.md)（基线e5c8363，83测试文件/247源码/审计0漏洞/两次九项CI）。报告用文件:行给出7处仍存在的“请求发出即当成功”消费者（bind.js登录/清除/新建文件/终端/搜索、chat.js补丁后读、ptyHost.poll），并给CI审计可见化、EOL矩阵、缺lint、生成物churn、浅克隆交接事实与逐句进度策略；明确不做项与未验证缺口。本批未改产品源码。清单增至198项（新增报告行，待逐句）。
+
+
+第43组F43：原生`webagent.resetSecret`空体POST且忽略status/json，HTTP500仍提示“已重置”，VM执行真实activate复现后修：模态确认、绑定+expectedSecret、严格回包合同、409拒绝与未知分开、写确认后读取失败保留确认；原生停止带绑定并要求running=false（测试另抓出success:"true"假成功）。本地83测试文件与文档检查通过，实现db85323c770137f7cbe7b15d570869d13c43a004的[CI35332743748](https://github.com/cccjvav/web_agent/actions/runs/35332743748)九项逐项成功；夹具是VS Code/HTTP替身，不代签真实IDE或隧道进程。仅局部；本批把extension详解与命令安全测试说明由待逐句改为局部，清单实际为197项：逐句7、局部32、待逐句101（此前文案沿用30/103已更正）；剩余R3消费者、R2、全仓/实机/历史超时与探测暂停保留。
 
 第42组F42：经典startBridge挂起时重复调用两POST，红测后改单飞；停止独立且页面代次拒旧预读/回包/旧finally覆盖。捕获绑定与草稿、完整回包/期限、写后读取失败保留确认，不自动复制或重试；stop有字段条件绑定、旧无字段兼容。VM/真实HTTP通过，隧道进程是替身；新增真实bind页面合成场景本地未执行。82本地测试/文档检查通过，实现53a0560c7b1af1fcf2936988ae9c52f4cd0ec8c7的[CI35329103242](https://github.com/cccjvav/web_agent/actions/runs/35329103242)九项逐项成功，含新增bridgeLifecycleBrowser合成响应场景；不代签真实公网/用户实机。仅局部，197项逐句7、局部30、待103不变；下一包原生重置命令，剩余R3/R2、全仓/实机/历史超时与探测暂停保留。
 
