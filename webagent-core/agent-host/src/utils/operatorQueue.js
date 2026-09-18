@@ -7,11 +7,16 @@ const MAX_RESULT = 256 * 1024, MAX_INPUT = 32 * 1024, KEEP_MS = 15 * 60 * 1000;
 function register(kind, handler) { handlers.set(kind, handler); }
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 function prune() {
+  const now = Date.now();
   for (const job of jobs.values()) {
-    if (job.status === 'waiting-approval' && Date.now() - job.createdAt > KEEP_MS) job.status = 'expired';
+    if (job.status === 'waiting-approval' && now - job.createdAt > KEEP_MS) {
+      job.status = 'expired';
+      job.finishedAt = now;
+    }
   }
   for (const [id, job] of jobs) {
-    if (!['waiting-approval', 'running'].includes(job.status) && (jobs.size > 40 || Date.now() - job.createdAt > KEEP_MS)) jobs.delete(id);
+    const retentionStart = job.finishedAt ?? job.createdAt;
+    if (!['waiting-approval', 'running'].includes(job.status) && (jobs.size > 40 || now - retentionStart > KEEP_MS)) jobs.delete(id);
   }
 }
 function owner(options) {
@@ -20,7 +25,8 @@ function owner(options) {
 }
 function publicJob(job, details = false) {
   return { requestId: job.id, kind: job.kind, status: job.status, taskId: job.taskId,
-    createdAt: job.createdAt, expiresAt: job.createdAt + KEEP_MS,
+    createdAt: job.createdAt, ...(job.startedAt != null ? { startedAt: job.startedAt } : {}), ...(job.finishedAt != null ? { finishedAt: job.finishedAt } : {}),
+    expiresAt: (job.finishedAt ?? job.startedAt ?? job.createdAt) + KEEP_MS,
     nextAction: job.status === 'waiting-approval' ? 'Stop and wait for local operator approval; query operation_result, do not resubmit.' : 'Inspect result. Retention is bounded and process-local; an unknown/expired ID is never permission to replay.',
     cancelRequested: Boolean(job.cancelRequested || job.controller?.signal.aborted),
     ...(details ? { input: clone(job.input), result: job.result == null ? null : clone(job.result) } : {}) };
@@ -52,6 +58,11 @@ function result(id, options) {
   if (!job || job.owner !== owner(options)) throw new Error('Unknown operation for this caller');
   return publicJob(job, true);
 }
+function resultRequest(input = {}, options = {}) {
+  if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(key => key !== 'requestId')
+    || typeof input.requestId !== 'string') throw new Error('Invalid operation result request');
+  return result(input.requestId, options);
+}
 function list() { prune(); return [...jobs.values()].reverse().map(job => publicJob(job)); }
 function inspect(id) { prune(); const job = jobs.get(id); if (!job) throw new Error('Unknown operation'); return publicJob(job, true); }
 async function approve(id, confirmed) {
@@ -62,7 +73,7 @@ async function approve(id, confirmed) {
   if ([...jobs.values()].filter(item => item.status === 'running').length >= 4) throw new Error('Too many running operations');
   const control = require('./executionControl');
   const releaseMode = control.enter(job.workMode);
-  job.status = 'running'; job.controller = new AbortController();
+  job.status = 'running'; job.startedAt = Date.now(); job.controller = new AbortController();
   const timer = setTimeout(() => job.controller.abort(), 60000);
   let execution, handlerDispatched = false;
   try {
@@ -89,15 +100,17 @@ async function approve(id, confirmed) {
     job.result = { ok: false, status: 'unknown', error: 'Execution interrupted, failed or exceeded a budget. Effects may already exist; inspect before submitting anything again.' };
     if (!handlerDispatched && error.code === 'E_FORBIDDEN') { job.status = 'failed'; job.result = {ok:false,status:'failed',error:error.message}; }
   } finally {
+    if (!['waiting-approval', 'running'].includes(job.status) && job.finishedAt == null) job.finishedAt = Date.now();
     try { if (execution) finishCall(execution, { ...job.result, status: job.status, requestId: job.id }); }
     finally { clearTimeout(timer); job.cancelRequested = Boolean(job.controller?.signal.aborted); job.controller = null; releaseMode(); }
   }
   return publicJob(job);
 }
 function cancel(id) {
+  prune();
   const job = jobs.get(id); if (!job) throw new Error('Unknown operation');
-  if (job.status === 'waiting-approval') job.status = 'denied';
+  if (job.status === 'waiting-approval') { job.status = 'denied'; job.finishedAt = Date.now(); }
   else if (job.status === 'running') job.controller.abort();
   return publicJob(job);
 }
-module.exports = { register, submit, result, list, inspect, approve, cancel };
+module.exports = { register, submit, result, resultRequest, list, inspect, approve, cancel };

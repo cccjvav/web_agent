@@ -40,6 +40,9 @@ async function main() {
   assert.equal((await post('/api/execution-control',{...binding,permissions:full,revision:'stale'})).status,409);
   const names = (await rpc('tools/list')).body.result.tools.map(t=>t.name);
   assert.ok(names.includes('read_files')); assert.ok(!names.includes('write_file')); assert.ok(!names.includes('run_command'));
+  const capabilities=JSON.parse((await rpc('tools/call',{name:'get_capabilities'})).body.result.content[0].text);
+  const capabilityNames=capabilities.tools.map(tool=>tool.name);
+  assert.ok(capabilityNames.includes('read_files')); assert.ok(!capabilityNames.includes('write_file')); assert.ok(!capabilityNames.includes('run_command'),'get_capabilities must match the remote ACL-filtered catalog');
   for(const name of ['write_file','move_file','execute_command','bash','external_request','probe_request']) {
     const r = await rpc('tools/call',{name,arguments:{filePath:'forbidden.txt',content:'no',command:'echo nope'},_meta:{mode:'code',permissions:full,remote:false}});
     assert.equal(r.body.result.isError,true,name); assert.match(r.body.result.content[0].text,/E_FORBIDDEN/,name);
@@ -78,6 +81,19 @@ async function main() {
   const command='"'+process.execPath+'" -e "setTimeout(()=>{},30000)"';
   const accepted=await tools.callTool('start_command',{command},'code',options);
   assert.ok(executor.activeCount()>0); assert.throws(()=>control.selectMode('chat'),/在途/);
+  const otherOptions={remote:true,callerKey:'peer:other-session'};
+  assert.equal((await tools.callTool('get_command_output',{execId:accepted.execId},'ask',otherOptions)).found,false,'another peer cannot read command output by ID');
+  assert.equal((await tools.callTool('get_command_output',{},'ask',otherOptions)).found,false,'implicit latest command is scoped per peer');
+  assert.equal((await tools.callTool('cancel_command',{execId:accepted.execId},'code',otherOptions)).found,false,'another peer cannot cancel a command');
+  const otherPing=await tools.callTool('ping',{},'ask',otherOptions);
+  const ownLogs=await tools.callTool('get_logs',{maxLines:200},'ask',options);
+  assert.ok(ownLogs.logs.length>0 && ownLogs.logs.every(event=>event.payload.sessionId===accepted.trace.sessionId),'remote logs contain only the caller trace');
+  assert.ok(!JSON.stringify(ownLogs.logs).includes(otherPing.trace.sessionId),'another peer trace is not exposed');
+  const otherLogs=await tools.callTool('get_logs',{maxLines:200},'ask',otherOptions);
+  assert.ok(otherLogs.logs.length>0 && otherLogs.logs.every(event=>event.payload.sessionId===otherPing.trace.sessionId));
+  assert.ok(!JSON.stringify(otherLogs.logs).includes(accepted.trace.sessionId));
+  assert.equal((await tools.callTool('get_command_output',{execId:accepted.execId},'ask',options)).found,true);
+  assert.ok(executor.activeCount()>0,'foreign cancellation does not stop the owner command');
   await tools.callTool('cancel_command',{execId:accepted.execId},'code',options);
   const stopDeadline=Date.now()+5000;while(executor.activeCount() && Date.now()<stopDeadline)await new Promise(r=>setTimeout(r,10));
   assert.equal(executor.activeCount(),0);

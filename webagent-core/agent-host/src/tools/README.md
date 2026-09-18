@@ -9,7 +9,7 @@
 逐函数阅读：[Plan状态详解](Plan状态详解.md)。
 
 
-有限workflows入口见[受控工具与工作流详解](../utils/受控工具与工作流详解.md)：批准后逐步复核、写入派发后异常保守unknown，停止而不重放。
+有限workflows入口见[受控工具与工作流详解](../utils/受控工具与工作流详解.md)：顶层/步骤/条件严格schema且动态值只能引用安全的前序步骤，批准后逐步复核，写入派发后异常保守unknown，停止而不重放。
 
 ## 职责与入口
 MCP、本机Chat和部分REST操作复用 `index.js` 的callTool。它做工具名称/参数归一、模式检查、远程限制和结果预算，再调用具体handler。**schema用于描述接口，不代表这里有通用JSON Schema执行器**；参数边界仍由归一逻辑和handler检查。
@@ -37,7 +37,7 @@ MCP、本机Chat和部分REST操作复用 `index.js` 的callTool。它做工具�
 ## 调用流程与模式
 callTool先检查当前请求取消，再定位工具、检查模式、归一参数，最后执行handler并clipJson。Ask/Plan不开放普通源码写入和命令运行；但todos、memory和协作board属于允许的元数据操作，所以“只读”不能解释为磁盘上一个字节都不会变化。
 
-远程MCP拒绝交互send_command_input；run/start命令还经过远程危险命令限制，并把timeoutSec夹到最多60秒。本机显式确认和远程权限不是同一个开关。完整实时工具名单以getToolList/tools/list为准，不手写容易失真的数量。
+远程MCP拒绝交互send_command_input；run/start命令还经过远程危险命令限制，并把timeoutSec夹到最多60秒。远程get_capabilities与tools/list使用同一ACL过滤，get_logs只返回当前caller的执行追踪，get_task_status只返回当前caller计划；本机入口仍可看宿主/Local状态。本机显式确认和远程权限不是同一个开关。完整实时工具名单以getToolList/tools/list为准，不手写容易失真的数量。
 
 ## 文件读取与安全边界
 路径必须通过resolveSafePath及敏感规则；绝对盘符、越界路径、真实链接目标等按实现检查。目录遍历跳过链接及隐藏项，不能据此宣称任意外部程序也被限制在工作区。
@@ -64,7 +64,7 @@ read_files返回带行号的content和hash；offset从1开始，不是字节位�
 搜索返回cursor/nextCursor、scannedFiles及跳过/截短信息。页是本次扫描的结果切片，不是持久化快照；两次调用之间文件变化时不保证稳定顺序。正则启发式检查不是时间复杂度证明，可终止worker才是额外的执行边界。
 
 ## 命令与PTY
-普通子进程最多8个同时运行，保留有界历史；stdout/stderr各保留约200Ki字符尾部，不是完整日志归档。run等待结果，start返回execId供get_command_output轮询；取消/超时/非零退出不能当done成功。取消先TERM，必要时2秒后升级KILL；实际系统进程树效果须平台验收。
+普通子进程最多8个同时运行，保留有界历史；stdout/stderr各保留约200Ki字符尾部，不是完整日志归档。run等待结果，start返回execId供get_command_output轮询；记录和缺省“最近命令”按本机local/远程peer所有者隔离，跨peer查询/取消统一found:false；取消/超时/非零退出不能当done成功。取消先TERM，必要时2秒后升级KILL；实际系统进程树效果须平台验收。
 
 扩展Chat启用PTY时，ptyJobs把任务发给匹配workspace/clientId的宿主：
 - 排队 → claim并绑定所有者 → 当次审批 → accepted再检查有效期 → running → 终态。
@@ -73,7 +73,7 @@ read_files返回带行号的content和hash；offset从1开始，不是字节位�
 - node-pty不可用时，只允许可观测shell integration；无观测能力拒绝执行。真正终端事件如何被捕获见[扩展说明](../../../extension/README.md)。
 
 ## 协作、Skill与缓存
-board从调用上下文获取当前peer，不相信参数任意指定owner；先认领再更新受保护任务状态。Plan和progress仍有共享全局状态，不是全部按客户端隔离。
+board从调用上下文获取当前peer，不相信参数任意指定owner；先认领再更新受保护任务状态。Plan轮次仍有本机共享状态；progress的本机计划与各远程peer隔离，get_task_status也只返回调用者计划，但这仍不是OS用户级多租户事务库。
 
 用户Skill限定在工作区允许路径，普通UTF8文件128KiB上限；每页最多8000 UTF16字符，用nextOffset/expectedHash续读。来源ID区分工作区根与内置产品目录，引用/脚本资源只读。Skill是说明文本，不等于后台插件执行器；详见技能与隐藏规则详解。
 
@@ -93,11 +93,11 @@ readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，
 | [commandJob.cs](commandJob.cs) | 文件级登记；未做符号完整性证明 |
 | [consensusEngine.js](consensusEngine.js) | 7 个函数/类节点 |
 | [dangerous.js](dangerous.js) | 1 个函数/类节点 |
-| [executor.js](executor.js) | 32 个函数/类节点 |
+| [executor.js](executor.js) | 35 个函数/类节点 |
 | [fileOps.js](fileOps.js) | 31 个函数/类节点 |
 | [findFiles.js](findFiles.js) | 3 个函数/类节点 |
 | [gitOps.js](gitOps.js) | 5 个函数/类节点 |
-| [index.js](index.js) | 22 个函数/类节点 |
+| [index.js](index.js) | 21 个函数/类节点 |
 | [normalize.js](normalize.js) | 4 个函数/类节点 |
 | [patchEngine.js](patchEngine.js) | 33 个函数/类节点 |
 | [planRound.js](planRound.js) | 10 个函数/类节点 |
@@ -107,9 +107,9 @@ readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，
 | [searchWorker.js](searchWorker.js) | 1 个函数/类节点 |
 | [sensitive.js](sensitive.js) | 12 个函数/类节点 |
 | [skills.js](skills.js) | 20 个函数/类节点 |
-| [workflows.js](workflows.js) | 15 个函数/类节点 |
+| [workflows.js](workflows.js) | 21 个函数/类节点 |
 | [workspaceInfo.js](workspaceInfo.js) | 3 个函数/类节点 |
 <!-- docs-inventory:end -->
 
 
-受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。默认回环HTTP(S)，另支持本机显式确认的公网HTTPS及stdio启动；工具仍逐次本机批准，不自动安装或重试。
+受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。默认回环HTTP(S)，另支持本机显式确认的公网HTTPS及stdio启动；external_request与operation_result包装字段严格白名单，工具仍逐次本机批准，不自动安装或重试。

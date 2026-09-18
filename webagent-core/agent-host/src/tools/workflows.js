@@ -15,12 +15,24 @@ function validateCondition(condition, label) {
     || typeof condition.path !== 'string' || !condition.path || condition.path.startsWith('$steps.')
     || (Object.hasOwn(condition, 'sha256') && (typeof condition.sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(condition.sha256)))
     || (Object.hasOwn(condition, 'contains') && (typeof condition.contains !== 'string' || condition.contains.length > 2000))
-    || (Object.hasOwn(condition, 'exists') && typeof condition.exists !== 'boolean')) throw new Error('Invalid explicit file ' + label);
+    || (Object.hasOwn(condition, 'exists') && typeof condition.exists !== 'boolean')
+    || (condition.exists === false && (Object.hasOwn(condition, 'contains') || Object.hasOwn(condition, 'sha256')))) throw new Error('Invalid explicit file ' + label);
+}
+function validateReferences(value, earlierIds) {
+  if (typeof value === 'string' && value.startsWith('$steps.')) {
+    const parts = value.slice(7).split('.');
+    if (!/^[a-zA-Z][a-zA-Z0-9_-]{0,39}$/.test(parts[0] || '') || !earlierIds.has(parts[0])) throw new Error('References must point to an earlier step');
+    if (parts.some(part => !part || ['__proto__', 'prototype', 'constructor'].includes(part))) throw new Error('Invalid step reference');
+    return;
+  }
+  if (Array.isArray(value)) for (const item of value) validateReferences(item, earlierIds);
+  else if (value && typeof value === 'object') for (const item of Object.values(value)) validateReferences(item, earlierIds);
 }
 function validate(definition) {
   if (!definition || typeof definition !== 'object' || Array.isArray(definition)
     || Buffer.byteLength(JSON.stringify(definition)) > 32 * 1024
     || !Array.isArray(definition.steps) || definition.steps.length < 1 || definition.steps.length > 12) throw new Error('Workflow requires 1–12 steps and at most 32 KiB');
+  if (Object.keys(definition).some(key => key !== 'steps')) throw new Error('Unknown workflow field');
   const ids = new Set();
   for (const step of definition.steps) {
     if (!step || !/^[a-zA-Z][a-zA-Z0-9_-]{0,39}$/.test(step.id || '') || ids.has(step.id)) throw new Error('Unique step IDs required');
@@ -33,11 +45,8 @@ function validate(definition) {
       const body = step.tool === 'write_file' ? step.arguments.content : step.arguments.patch;
       if (typeof body !== 'string' || body.startsWith('$steps.')) throw new Error('Write content/patch must be an explicit literal for operator review');
     }
-    // Reject forward step references before any approval or execution.
-    const encoded = JSON.stringify(step.arguments);
-    for (const match of encoded.matchAll(/\$steps\.([a-zA-Z][a-zA-Z0-9_-]*)\./g)) {
-      if (!ids.has(match[1])) throw new Error('References must point to an earlier step');
-    }
+    // Reject impossible/self/forward references before any approval or execution.
+    validateReferences(step.arguments, ids);
     if (Object.hasOwn(step, 'expect')) validateCondition(step.expect, 'postcondition');
     if (Object.hasOwn(step, 'before')) validateCondition(step.before, 'precondition');
     ids.add(step.id);
@@ -76,8 +85,15 @@ function checkExpectation(expect) {
     if (expect.sha256 != null && computeHash(content) !== expect.sha256) throw new Error('Hash postcondition failed');
   }
 }
-function request({ definition, requestKey }, options = {}) {
-  return approvals.submit('workflow', { definition: validate(definition) }, options, requestKey);
+function previewRequest(input = {}) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)
+    || Object.keys(input).some(key => key !== 'definition')) throw new Error('Unknown workflow preview field');
+  return preview(input.definition);
+}
+function request(input = {}, options = {}) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)
+    || Object.keys(input).some(key => !['definition', 'requestKey'].includes(key))) throw new Error('Unknown workflow request field');
+  return approvals.submit('workflow', { definition: validate(input.definition) }, options, input.requestKey);
 }
 async function execute({ definition }, options) {
   const checked = validate(definition), outputs = Object.create(null), steps = [];
@@ -117,4 +133,4 @@ async function execute({ definition }, options) {
   return { ok: true, status: 'succeeded', steps, note: 'Only the specified point-in-time tool/file conditions were checked; not a general goal-completion proof.' };
 }
 approvals.register('workflow', execute);
-module.exports = { validate, preview, resolveValues, checkExpectation, request };
+module.exports = { validate, preview, previewRequest, resolveValues, checkExpectation, request };

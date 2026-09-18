@@ -2,7 +2,9 @@
 
 ## 当前状态
 
-第45组F45：按用户要求接手并交叉审查第44组报告，确认并修复七处结果消费者、设备码代次/单飞、Chat可靠终态、`createOnly`独占创建、补丁后读协调、PTY 2xx门禁与Bridge布尔合同；工作台补原生控件、标签、模态焦点恢复、页签键盘语义、11px下限和390px抽屉。CI新增`contents: read`并把高危生产依赖审计改为硬门禁。完整范围、验证和未验边界见[第45组报告](FULL_AUDIT_FOLLOWUP_2026-09-18.md)。本地83测试、文档库存/构建、calculator、trace-inspector和生产审计通过；首推两轮真实Chromium先后暴露窄屏侧栏遮挡与Skill旧文案断言并保留8/9失败，修复`cc77941`的CI35381668516九项成功（含Chromium、Windows矩阵/安装器）。范围纠正：误改的3个model-probe文件已恢复到`81fb5c2`，不把另一位助手负责的探针专项计入本批审查/实现/验证；线索只移交。正式清单仍为199项：已逐句8、局部46、待逐句88、历史32、暂停15、边界7、生成1、规范1、受限1；未审正文不自动认证。
+第46组F46：仅续审非探针R3审批/工作流。operatorQueue原终态保留按createdAt，导致临近15分钟才批准的结果完成后立即淘汰；同次prune还让expired不可见，迟到cancel可改写成denied。现记录finishedAt并从终态完整保留15分钟，cancel先prune；不扩称持久exactly-once。workflow及external_request/operation_result拒绝未知包装/顶层字段，workflow另拒绝exists:false与contains/sha256矛盾合同，并于审批前拦截完整输出形式的自/前向引用和危险/空路径段。executor命令记录/最近ID现绑定local或远程peer，跨peer显式/缺省查询与取消统一found:false，get_logs只返回本caller追踪；get_task_status现按调用上下文返回Local或当前peer计划，不再向远程泄露/混入Local任务；get_capabilities与tools/list共享远程ACL过滤。approvedOperations可控时间与workflowPreconditions负例、本地83测试及文档247/28/110库存/站点一致性通过；探针专项明确排除，精确CI随本组提交。相关长篇仍只局部核对，不增加整篇通过数；命令及缓存/进度详解从待逐句转为局部后，正式清单199项现为已逐句8、局部48、待逐句86、历史32、暂停15、边界7、生成1、规范1、受限1。
+
+第45组F45：按用户要求接手并交叉审查第44组报告，确认并修复七处结果消费者、设备码代次/单飞、Chat可靠终态、`createOnly`独占创建、补丁后读协调、PTY 2xx门禁与Bridge布尔合同；工作台补原生控件、标签、模态焦点恢复、页签键盘语义、11px下限和390px抽屉。CI新增`contents: read`并把高危生产依赖审计改为硬门禁。完整范围、验证和未验边界见[第45组报告](FULL_AUDIT_FOLLOWUP_2026-09-18.md)。本地83测试、文档库存/构建、calculator、trace-inspector和生产审计通过；首推两轮真实Chromium先后暴露窄屏侧栏遮挡与Skill旧文案断言并保留8/9失败，修复`cc77941`的CI35381668516九项成功（含Chromium、Windows矩阵/安装器）。范围纠正：误改的3个model-probe文件已恢复到`81fb5c2`，不把另一位助手负责的探针专项计入本批审查/实现/验证；线索只移交，边界纠正`27fca73`的CI35386685807九项成功。正式清单当时为199项：已逐句8、局部46、待逐句88、历史32、暂停15、边界7、生成1、规范1、受限1；未审正文不自动认证。
 
 第44组F44：按用户要求做全仓检查并产出[优化报告](OPTIMIZATION_REPORT_2026-09-18.md)（基线e5c8363，83测试文件/247源码/审计0漏洞/两次九项CI）。报告用文件:行给出7处仍存在的“请求发出即当成功”消费者（bind.js登录/清除/新建文件/终端/搜索、chat.js补丁后读、ptyHost.poll），并给CI审计可见化、EOL矩阵、缺lint、生成物churn、浅克隆交接事实与逐句进度策略；明确不做项与未验证缺口。本批未改产品源码。清单增至198项（新增报告行，待逐句）。
 

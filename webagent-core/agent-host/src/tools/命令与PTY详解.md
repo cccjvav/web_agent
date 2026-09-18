@@ -8,17 +8,19 @@
 
 | 函数 | 参数/返回 | 过程/边界 |
 |---|---|---|
+| commandOwner(options={}) | 调用上下文→所有者键 | 本机缺省local；远程须有服务端认证后的callerKey（初始化peer或兼容凭据回退），否则E_SESSION_REQUIRED；键不进入公开结果 |
+| lastCommandId(owner) | 所有者键→ID/空串 | 只在最多40条commandStore中反向找该调用者最新记录，不共享全局最近命令 |
 | countRunning() | 无→数量 | 遍历commandStore中status=running；取消标终态可早于进程真正退出 |
 | pruneCommands() | 无→undefined | 记录≥40时按Map顺序删非running至<40；不主动kill、不提供无限历史 |
 | killChild(child,force=false) | 子进程→undefined | Windows同步taskkill PID树（3秒期限，失败记录退出状态/错误；WEBAGENT_DEBUG_PROCESS=1额外记录成功结果）；其他先杀进程组再回退child.kill，TERM/KILL按force。吞发送错误，不等待退出证明 |
 | workingDirFrom(cwd) | 目录→安全绝对路径 | resolveSafePath，任何异常统一改成outside workspace提示，原失败原因可能被泛化 |
 | scrubEnv(base)，导入extension/ptyPolicy | 环境对象→副本 | 删除名称匹配凭据模式的字段；不是值扫描；保留PATH/一般Conda变量，不自动conda activate |
 | publicRecord(rec,tail) | 内部记录→展示对象 | stdout/stderr取尾部，tail默认8000钳500–200Ki字符，附状态/退出码/建议等待；截断不保留完整日志 |
-| storePtyResult(result) | PTY结果→记录 | 更新lastExecId、commandStore，标execution=pty；不启动/查询系统进程 |
+| storePtyResult(result,owner) | PTY结果/所有者→记录 | 写入带内部owner的commandStore，标execution=pty；不启动/查询系统进程 |
 
-## 2. startProcess({command,cwd='.',timeoutSec=30})
+## 2. startProcess({command,cwd='.',timeoutSec=30},owner)
 
-running≥8拒绝，prune，生成execId与运行记录；验证cwd，算至少1秒timeout，广播started。Windows用powershell.exe NoProfile/NonInteractive，其他/bin/bash -c；非Windows detached便于进程组停止。env经scrub，加CI/TERM/FORCE_COLOR。
+running≥8拒绝，prune，生成execId与带内部owner的运行记录；验证cwd，算至少1秒timeout，广播started。Windows用powershell.exe NoProfile/NonInteractive，其他/bin/bash -c；非Windows detached便于进程组停止。env经scrub，加CI/TERM/FORCE_COLOR。
 
 保存child后接入当前请求signal。内部 **abort()**先标cancelled/ok=false，killChild，再2秒force回调；deadline回调设isTimeout、发送停止并2秒升级。计时器支持unref。
 
@@ -28,15 +30,15 @@ running≥8拒绝，prune，生成execId与运行记录；验证cwd，算至少1
 
 ## 3. executor的公开执行函数
 
-**executeCommand(opts)**：checkCancelled；wantsPty时prune、await enqueue(run)、storePtyResult、publicRecord；否则startProcess并返回done。普通run等待结束，PTY等待扩展报告，绝不是写终端后立即猜成功。
+**executeCommand(opts,options={})**：checkCancelled并绑定commandOwner；wantsPty时prune、await enqueue(run)、storePtyResult、publicRecord；否则把owner交给startProcess并返回done。普通run等待结束，PTY等待扩展报告，绝不是写终端后立即猜成功。
 
-**startCommand(opts)**：立即返回execId/status=running/建议等待。经典路径startProcess，done.catch补error与stderr。PTY路径检查8运行上限，先存running记录和started事件，再enqueue(run)。onChunk闭包累计/广播；then合并结果、退出码、输出与finished事件，catch将仍running标error。
+**startCommand(opts,options={})**：绑定所有者后立即返回execId/status=running/建议等待。经典路径startProcess，done.catch补error与stderr。PTY路径检查8运行上限，先存带owner的running记录和started事件，再enqueue(run)。onChunk闭包累计/广播；then合并结果、退出码、输出与finished事件，catch将仍running标error。
 
-现状：PTY then先计算尊重cancelled的ok，后面又赋result.ok，不能把它描述成所有迟到结果字段均严格不变；status保留与ok赋值是不同代码。记录在enqueue前已创建，排队失败也需查记录错误。
+PTY迟到结果不覆盖已经cancelled的status，ok也要求当前状态仍非cancelled且result.ok严格为true。记录在enqueue前已创建，排队失败也需查记录错误。
 
-**getCommandOutput({execId,commandId,tail}={})**：优先execId/commandId，缺省lastExecId；不存在返回found:false，不抛错。未指定ID可能看到其他调用最近的命令，全局不是每用户隔离。
+**getCommandOutput({execId,commandId,tail}={},options={})**：只在commandOwner名下查显式execId/commandId；缺省时用lastCommandId找该调用者最新记录。不存在或属于另一peer均返回found:false，不泄露记录是否属于他人；local桌面仍共享local命名空间。
 
-**cancelCommand({execId}={})**：无记录found:false、非running cancelled:false。PTY上下文先标cancelled、cancelExec，再await enqueue(cancel)，错误吞，必要时kill已有child；经典直接标cancelled/kill并返回。选择依赖当前PTY上下文，不只看原rec.execution，调用路径要一致。
+**cancelCommand({execId}={},options={})**：先要求记录属于commandOwner，未知/跨peer统一found:false；非running cancelled:false。PTY上下文再标cancelled、cancelExec并await enqueue(cancel)，错误吞，必要时kill已有child；经典直接标cancelled/kill并返回。选择依赖当前PTY上下文，不只看原rec.execution，调用路径要一致。
 
 **sendCommandInput({execId,input}={})**：PTY队列input；经典返回ok:false及说明，不向经典进程stdin猜写。远程调用在工具入口另拒绝。
 

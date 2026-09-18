@@ -53,6 +53,8 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 
 第45组补齐优化报告中的结果消费者并扩大可靠性/可访问性回归：workbenchRuntime覆盖登录、清除身份、新建文件、终端、搜索、补丁后读、Bridge统计布尔结果及Chat严格流终态；apiFiles以并发HTTP证明createOnly只能一方创建；githubAuth覆盖设备流程代次与poll单飞；ptyLifecycle拒绝非2xx伪成功；workbenchHtml检查标签、ARIA、原生按钮和390px样式源码。独立workbench.browser.js增加帮助模态焦点恢复与390×844边界断言；workbenchRuntime还执行1000→640px断点跨越，防止已展开侧栏遮挡Agent菜单并核对焦点/ARIA恢复；本地没有Chromium时不得把其源码登记写成浏览器执行通过。
 
+第46组只续审非探针R3审批/工作流与相邻结果消费者：approvedOperations拒绝external_request/operation_result未知包装字段，并用可控Date.now证明临近审批期限完成后仍从finishedAt保留完整15分钟、expired可见且迟到cancel不改写为denied；workflowPreconditions拒绝definition及preview/request包装的顶层未知字段、exists:false与contains/sha256矛盾合同，以及完整输出自/前向引用和危险/空路径段；正文中间的同名文字保持字面量；executionControl证明tools/list/get_capabilities使用相同远程ACL，并证明命令显式ID、缺省最近记录、取消及get_logs执行记录均绑定远程peer；taskProgress证明get_task_status只返回本机/当前peer计划，不再向远程回传Local计划，未知peer纯读取也不占16个报告槽。没有修改或专项审查探针项目。
+
 ## 按风险选择回归
 | 风险/模块 | 主要测试 | 证据类型与限制 |
 |---|---|---|
@@ -96,7 +98,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
 | [apiFiles.test.js](apiFiles.test.js) | 34 个函数/类节点 |
-| [approvedOperations.test.js](approvedOperations.test.js) | 12 个函数/类节点 |
+| [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 20 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
 | [board.test.js](board.test.js) | 4 个函数/类节点 |
@@ -118,7 +120,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [editorReview.test.js](editorReview.test.js) | 29 个函数/类节点 |
 | [editorRuntime.test.js](editorRuntime.test.js) | 37 个函数/类节点 |
 | [eventBus.test.js](eventBus.test.js) | 9 个函数/类节点 |
-| [executionControl.test.js](executionControl.test.js) | 28 个函数/类节点 |
+| [executionControl.test.js](executionControl.test.js) | 31 个函数/类节点 |
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
 | [externalDiscovery.test.js](externalDiscovery.test.js) | 13 个函数/类节点 |
 | [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
@@ -177,7 +179,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [workbench.browser.js](workbench.browser.js) | 209 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 449 个函数/类节点 |
-| [workflowPreconditions.test.js](workflowPreconditions.test.js) | 9 个函数/类节点 |
+| [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 15 个函数/类节点 |
 <!-- docs-inventory:end -->

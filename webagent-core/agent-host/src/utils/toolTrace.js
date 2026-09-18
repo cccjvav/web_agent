@@ -11,6 +11,9 @@ const records = new Map();
 const LIMIT = 200, ACTIVE_LIMIT = 64;
 
 function withTask(info, fn) { return context.run({ ...info, taskId: info.taskId || randomUUID() }, fn); }
+function sessionIdFor(options = {}) {
+  return createHash('sha256').update(config.hostInstanceId + ':' + String(options.callerKey || 'local')).digest('hex').slice(0, 16);
+}
 function taskId(value) {
   return typeof value === 'string' && (/^t[1-9][0-9]{0,8}$/.test(value) || /^[0-9a-f-]{36}$/i.test(value)) ? value : randomUUID();
 }
@@ -20,9 +23,8 @@ function beginCall(tool, options = {}) {
   }
   const inherited = context.getStore() || {};
   const source = options.remote ? 'Bridge-Remote' : inherited.source || 'Local';
-  const sessionId = createHash('sha256').update(config.hostInstanceId + ':' + String(options.callerKey || 'local')).digest('hex').slice(0, 16);
   const record = { hostInstanceId: config.hostInstanceId, callId: randomUUID(),
-    taskId: taskId(options.taskId || inherited.taskId), sessionId, source,
+    taskId: taskId(options.taskId || inherited.taskId), sessionId: sessionIdFor(options), source,
     tool: String(tool).slice(0, 120), status: 'running', startedAt: new Date().toISOString(), verification: 'not-applicable' };
   records.set(record.callId, record);
   for (const [id, old] of records) {
@@ -81,4 +83,4 @@ function verifyMutation(tool, input, result) {
       verification: { state: 'unknown', method: 'postcondition' } };
   }
 }
-module.exports = { isToolFailure, withTask, beginCall, finishCall, snapshot, clearCompleted, verifyMutation };
+module.exports = { isToolFailure, withTask, sessionIdFor, beginCall, finishCall, snapshot, clearCompleted, verifyMutation };

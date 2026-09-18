@@ -16,11 +16,12 @@ function cleanStates() {
   const cutoff = Date.now() - TTL_MS;
   for (const [id, state] of remoteStates) if (Date.parse(state.lastUpdated) <= cutoff) remoteStates.delete(id);
 }
-function stateFor(options = {}) {
+function stateFor(options = {}, create = true) {
   cleanStates();
   if (!options.remote) return currentTaskState;
   const id = createHash('sha256').update(config.hostInstanceId + ':' + String(options.callerKey || 'local')).digest('hex').slice(0, 16);
   if (!remoteStates.has(id)) {
+    if (!create) return initialState('Bridge-Remote', id);
     if (remoteStates.size >= MAX_SESSIONS) throw new Error('Too many task-reporting sessions; wait for inactive reports to expire');
     remoteStates.set(id, initialState('Bridge-Remote', id));
   }
@@ -62,7 +63,7 @@ function setTodos({ todos = [] }, options) {
   eventBus.broadcast('todos_updated', snapshot(state));
   return { success: true, totalTodos: normalized.length, todos: snapshot(state).todos };
 }
-function getTaskState() { cleanStates(); return snapshot(currentTaskState); }
+function getTaskState(options = {}) { return snapshot(stateFor(options, false)); }
 function getBridgeTaskStates() { cleanStates(); return [...remoteStates.values()].map(snapshot); }
 function resetTaskState() {
   remoteStates.clear(); currentTaskState = initialState(); currentRoot = config.workspaceRoot;

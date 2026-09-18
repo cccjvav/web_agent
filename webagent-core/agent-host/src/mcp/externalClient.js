@@ -171,7 +171,10 @@ function remove(id) {
   clients.delete(id);
   return { removed: Boolean(client), ...(client?.transport ? { stopping: true } : {}) };
 }
-function request({ serverId, tool, arguments: args = {}, requestKey }, options = {}) {
+function request(input = {}, options = {}) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)
+    || Object.keys(input).some(key => !['serverId', 'tool', 'arguments', 'requestKey'].includes(key))) throw new Error('Unknown external request field');
+  const { serverId, tool, arguments: args = {}, requestKey } = input;
   const client = clients.get(serverId);
   if (!client || client.status !== 'discovered' || !client.tools.some(item => item.name === tool)) throw new Error('Unknown external server/tool');
   if (!args || typeof args !== 'object' || Array.isArray(args)) throw new Error('arguments must be an object');

@@ -51,6 +51,17 @@ async function main() {
       for (const field of ['before', 'expect']) assert.throws(() => workflows.preview({ steps: [{ ...writeStep('x', 'x', 'x'), [field]: condition }] }));
     }
     assert.throws(() => workflows.preview({ steps: [{ ...writeStep('x', 'x', 'x'), precondition: { path: 'x', exists: false } }] }), /Unknown/);
+    assert.throws(() => workflows.preview({ steps: [writeStep('x', 'x', 'x')], label: 'not-in-schema' }), /Unknown workflow field/);
+    assert.throws(() => workflows.previewRequest({definition:{steps:[writeStep('x','x','x')]},autoApprove:true}), /Unknown workflow preview field/);
+    assert.throws(() => workflows.request({definition:{steps:[writeStep('x','x','x')]},requestKey:'strict-wrapper-001',autoApprove:true}), /Unknown workflow request field/);
+    for (const impossible of [{path:'x',exists:false,contains:''},{path:'x',exists:false,sha256:'0'.repeat(64)}]) {
+      for (const field of ['before','expect']) assert.throws(() => workflows.preview({steps:[{...writeStep('x','x','x'),[field]:impossible}]}), /Invalid explicit file/);
+    }
+    const first = {id:'first',tool:'ping',arguments:{}};
+    assert.doesNotThrow(() => workflows.preview({steps:[first,{id:'second',tool:'ping',arguments:{value:'$steps.first',literal:'text $steps.future.hash'}}]}));
+    for (const reference of ['$steps.second','$steps.first.__proto__','$steps.first..hash']) {
+      assert.throws(() => workflows.preview({steps:[first,{id:'second',tool:'ping',arguments:{value:reference}}]}), /(?:earlier step|Invalid step reference)/);
+    }
     const forbidden = workflows.request({ definition: { steps: [writeStep('x', 'x', 'x', { path: '../outside.txt', exists: false })] }, requestKey: 'guard-path-001' });
     await queue.approve(forbidden.requestId, true);
     assert.strictEqual(queue.inspect(forbidden.requestId).result.steps[0].errorCode, 'E_PRECONDITION');

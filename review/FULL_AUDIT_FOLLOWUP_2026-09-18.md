@@ -1,4 +1,4 @@
-<!-- 定位：第45组全仓交叉审查、实修与验证报告；结论按证据范围成立，不是用户实机或形式化安全认证。 -->
+<!-- 定位：第45组全仓交叉审查及第46组非探针审批/工作流/caller隔离追加报告；结论按证据范围成立，不是用户实机或形式化安全认证。 -->
 
 # 全仓交叉审查与实修报告（2026-09-18）
 
@@ -8,7 +8,7 @@
 
 ## 1. 结论摘要
 
-本轮先逐项交叉复核前置报告，再扩展到工作台结果合同、认证并发、文件创建、PTY、HTML/CSS/键盘交互、CI、文档库存和非探针辅助项目。前置报告的P1-A七个结果消费者与P2-D设备码竞态均确认存在并已修；P2-A生产依赖审计改为高危硬门禁。扩展审查另发现并修复Chat流缺可靠终态、`createOnly`链路非独占、补丁后读覆盖草稿、Bridge刷新真假值、模态/页签/工具卡键盘语义和窄屏侧栏。探针由另一位助手负责，本分支不保留探针实现改动。
+本轮先逐项交叉复核前置报告，再扩展到工作台结果合同、认证并发、文件创建、PTY、HTML/CSS/键盘交互、CI、文档库存和非探针辅助项目。前置报告的P1-A七个结果消费者与P2-D设备码竞态均确认存在并已修；P2-A生产依赖审计改为高危硬门禁。扩展审查另发现并修复Chat流缺可靠终态、`createOnly`链路非独占、补丁后读覆盖草稿、Bridge刷新真假值、模态/页签/工具卡键盘语义和窄屏侧栏。第46组续审非探针审批结果与工作流schema，修复临近审批期限完成的结果立即淘汰、expired不可观察/可被迟到取消改写，工作流/外部请求未知字段与矛盾合同、命令结果/取消/get_logs跨peer未隔离及远程get_task_status误读Local计划及get_capabilities目录ACL不一致。探针由另一位助手负责，本分支不保留探针实现改动。
 
 在当前自动化与静态证据范围内，没有遗留已知P0/P1阻塞。这个结论不等于形式化安全证明，也不覆盖真实Windows/VS Code、屏幕阅读器、手机、Cloudflare/ngrok或第三方模型服务实机。
 
@@ -53,6 +53,15 @@
 - 文档库存、函数说明、测试导航、API/认证/PTY/工作台页面与样式说明已同步；自动生成`documentation-manifest.json`、`source-index.md`与`content.js`。
 - **范围纠正：** 曾因把“全仓检查”错误理解为可修改所有辅助项目，对`arena-model-probe`运行专项verify并改动README、`src/learned.js`和`tools/e2e.mjs`。用户重申该项目由另一位助手负责后，三文件全部恢复到同步基线`81fb5c2`；观察到的同名建档现象仅作为未裁决线索移交，不在本报告认定缺陷、方案或完成状态。
 
+### 3.5 第46组：审批结果、工作流schema与caller隔离
+
+- `operatorQueue`原来按`createdAt`淘汰所有终态。若操作在15分钟待批期限末才获批，执行结果可能刚完成便在下次查询消失；waiting在同一次prune里先转expired又立即删除，迟到cancel还可把尚未触发清理的超期请求改成denied。
+- 修复后进入running和终态分别记录`startedAt`/`finishedAt`；expired、denied及执行终结均从`finishedAt`完整保留15分钟，公开`expiresAt`反映当前阶段的真实保留点，cancel先prune。队列仍是进程内、按访问清理和约40条容量，不宣称持久exactly-once。
+- `workflow`定义顶层现在仅允许`steps`，preview/request包装也拒绝未知字段，并继续维持步骤白名单；`exists:false`不能再和必须存在并读取文件的`contains`或`sha256`组合。原扫描还漏掉`$steps.id`整个输出形式及结构上危险/空路径段，可能让必然失败的自/前向引用在先前写入后才暴露；递归`validateReferences`现于审批前限制为安全的前序步骤，正文中间同名文字仍为字面量。
+- 同一审批入口的`external_request`/`operation_result`原会静默忽略autoApprove/autoRetry等未知包装字段；运行时和公开schema现分别只接受固定请求字段，未知字段不能进入审阅/查询流程，入队仍不代表批准，未知ID也不是重试许可。
+- 相邻命令消费者复核发现`executor`的最近ID与记录全局共享：另一已认证peer可按已知execId读取/取消，不传ID还会取全局最近命令。命令记录现绑定内部owner；远程使用服务端认证后的peer/兼容caller键，显式ID、缺省最近记录和取消均只在该owner名下查找，跨peer统一found:false。桌面仍共享local命名空间，事件/公开结果不暴露owner。`getLogs`也曾忽略handler上下文并汇总全局事件；远程现只得到`sessionIdFor`匹配的有界执行追踪，本机仍可查看宿主事件。`getTaskStatus`还曾忽略handler上下文并向远程返回Local计划；现把options传给`getTaskState/stateFor`，本机和各peer分别只读自身快照；未知peer读取使用未保存idle快照，不消耗16个报告槽。`getCapabilities`也改为远程复用`tools/list`的当前ACL过滤，不再向只读peer重新广告已隐藏的写/命令工具。
+- 可控`Date.now`回归覆盖临期完成后的完整结果窗口、最终淘汰、expired可见和迟到cancel；工作流负例覆盖顶层未知字段、两类矛盾条件、完整输出自/前向引用、危险/空路径段及字面量非误判；executionControl用第二peer证明无法读/停原peer命令而原所有者仍可操作。相邻长篇说明仅更新该局部，不因此整篇认证。
+
 ## 4. 前置报告交叉复核状态
 
 | 前置项 | 当前状态 |
@@ -69,22 +78,24 @@
 
 最终验证应以本报告提交后的CI为准；本地已执行结果如下：
 
-- agent-host：83个测试文件全部通过；故意注入的`fixture stop failed`等stderr不代表套件失败。
-- 文档：247项源码、28个目录、110项排除；清单检查、函数学习/质量守卫及文档站构建一致。
+- agent-host：第46组代码/回归加入后，83个测试文件全部通过；故意注入的`fixture stop failed`等stderr不代表套件失败。
+- 第46组定向：`approvedOperations.test.js`、`workflowPreconditions.test.js`、`executionControl.test.js`、`ptyLifecycle.test.js`、`ptyJobs.test.js`和`taskProgress.test.js`通过；相关实现/测试通过`node --check`。
+- 文档：247项源码、28个目录、110项排除；清单检查、函数学习/质量守卫及文档站构建一致。扩展后首轮完整套件唯一docsSite失败是恢复段在站点生成后又改文案造成的精确镜像漂移（82/83）；重建后最终83/83。
 - 非探针辅助项目：calculator 6/6；trace-inspector 77/77。早先Probe专项结果不再作为本批交付证据。
 - 生产依赖审计：0个已知漏洞；结论只对应执行时公告与生产依赖。
 - 语法/镜像：202份库存JS、2份Python、4份Shell通过对应本地语法检查；规范扩展与安装镜像一致；`webagent-repro/`零差异。
-- 真实浏览器：本机没有Playwright Chromium，下载此前持续`ECONNRESET`。首推`e0fdf65`的[CI 35380095907](https://github.com/cccjvav/web_agent/actions/runs/35380095907)中8个非浏览器任务通过；Chromium实际发现桌面已展开侧栏在首次跨入640px时遮挡Agent菜单。`04c8e04`在跨入700px抽屉断点时收起旧桌面侧栏并恢复ARIA/焦点、升级checkout/setup-node动作运行时；[CI 35381193695](https://github.com/cccjvav/web_agent/actions/runs/35381193695)确认该处已越过并再次8/9，但随后暴露Skill失败提示的浏览器断言仍要求旧版纯错误串。后续断言同时要求新“状态未知”语义和原服务端错误；修复`cc77941`的[CI 35381668516](https://github.com/cccjvav/web_agent/actions/runs/35381668516)九项逐项成功。该结果早于探针边界纠正，三文件恢复后的精确提交仍须重新核对，不能继承旧绿灯。
+- 真实浏览器：本机没有Playwright Chromium，下载此前持续`ECONNRESET`。首推`e0fdf65`的[CI 35380095907](https://github.com/cccjvav/web_agent/actions/runs/35380095907)中8个非浏览器任务通过；Chromium实际发现桌面已展开侧栏在首次跨入640px时遮挡Agent菜单。`04c8e04`在跨入700px抽屉断点时收起旧桌面侧栏并恢复ARIA/焦点、升级checkout/setup-node动作运行时；[CI 35381193695](https://github.com/cccjvav/web_agent/actions/runs/35381193695)确认该处已越过并再次8/9，但随后暴露Skill失败提示的浏览器断言仍要求旧版纯错误串。后续断言同时要求新“状态未知”语义和原服务端错误；修复`cc77941`的[CI 35381668516](https://github.com/cccjvav/web_agent/actions/runs/35381668516)九项逐项成功。该结果早于探针边界纠正；三文件恢复提交`27fca73`的[CI 35386685807](https://github.com/cccjvav/web_agent/actions/runs/35386685807)另行九项成功，未继承旧绿灯。
 
 ## 6. 仍需保留的风险/决策
 
-1. `cc77941`的九项CI覆盖Ubuntu/Windows Node矩阵、Windows C#/PowerShell/Inno和真实Chromium，但早于探针三文件恢复；边界纠正提交须独立跑完九项，且任何CI仍不代签用户桌面、手机、第三方服务或屏幕阅读器验收。
+1. 边界纠正`27fca73`的九项CI已覆盖Ubuntu/Windows Node矩阵、Windows C#/PowerShell/Inno和真实Chromium；这仍不代签用户桌面、手机、第三方服务或屏幕阅读器验收。
 2. Node 18/20最低兼容与矩阵是否退役需产品决定，并同步`engines`和用户指南。
 3. 最小ESLint、`routes.js`拆分及`content.js`生成物策略仍是维护性候选，不是本轮功能缺陷。
 4. 真实VS Code、多窗口、屏幕阅读器、手机窄屏、隧道和第三方OAuth/模型服务仍按人工清单验收。
 5. 探针专项整体由另一位助手负责并继续暂停；本分支已撤回误做的三文件修改，后续不运行专项审查、不实现线索、不改探针文档，等待正式交接。
 6. 全仓逐文件清单中的“待逐句”文档仍不能因本报告自动获得语义认证；本报告只对上表列明的代码链与相邻说明负责。
+7. 审批队列仍驻留单进程内存；重启、跨进程和容量淘汰不保证结果续查。若产品要求持久exactly-once，需另行设计存储和幂等协议，不能从本次保留窗口修复外推。
 
 ## 7. Git工作区恢复记录
 
-对话中断后，沙箱把固定分支ref恢复到初始`1d532d0`，但工作文件仍是目标分支加本轮修改。已先保存二进制diff及未跟踪文件清单，再显式fetch目标分支，确认`FETCH_HEAD=81fb5c2`，只用`update-ref`和`read-tree`恢复当前固定分支引用/索引；没有`reset --hard`、`clean`或覆盖工作文件。此记录防止后续把上游历史误算成本轮修改。
+对话中断后，沙箱曾三次把固定分支ref恢复到初始`1d532d0`，但工作文件仍保留目标分支及未提交修改。首次先保存二进制diff及未跟踪文件清单，再显式fetch目标分支，确认`FETCH_HEAD=81fb5c2`；第46组期间后两次复现时同样先做外部备份、第三次另存完整非Git/依赖工作树压缩包，并核对远端均为`27fca73`。三次都只用`update-ref`和`read-tree`恢复当前固定分支引用/索引，没有`reset --hard`、`clean`或覆盖工作文件。第三次先表现为documentationLinks把现行docs/guides文件误判为旧根路径缺项；恢复后原样通过，未为掩盖环境问题改清单。此记录防止后续把上游历史误算成本轮修改。

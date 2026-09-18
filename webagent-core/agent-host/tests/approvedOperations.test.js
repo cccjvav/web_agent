@@ -34,9 +34,11 @@ const server = http.createServer(async (req, res) => {
     assert.ok(!JSON.stringify(external.list()).includes('private-token'));
     const args = { serverId: registered.serverId, tool: 'count', arguments: {}, requestKey: 'request-001' };
     const options = { remote: true, callerKey: 'peer:test-session' };
+    assert.throws(() => external.request({...args,autoApprove:true},options),/Unknown external request field/);
     await assert.rejects(callTool('external_request', args, 'ask', options));
     await assert.rejects(callTool('external_request', args, 'code', { remote: true, callerKey: 'ip:bad' }));
     const pending = await callTool('external_request', args, 'code', options);
+    assert.throws(()=>queue.resultRequest({requestId:pending.requestId,autoRetry:true},options),/Invalid operation result request/);
     assert.equal(pending.trace.status, 'accepted'); assert.equal(pending.taskId, pending.trace.taskId); assert.equal(calls, 0);
     assert.equal((await callTool('external_request', args, 'code', options)).requestId, pending.requestId);
     assert.throws(() => queue.result(pending.requestId, { remote: true, callerKey: 'peer:other' }));
@@ -100,6 +102,30 @@ const server = http.createServer(async (req, res) => {
     const afterEffect=queue.submit('throw-after-effect',{}, {}, 'throw-after-effect');
     assert.equal((await queue.approve(afterEffect.requestId,true)).status,'unknown','permission-like error after handler dispatch does not prove no execution');
     assert.equal(fs.readFileSync(path.join(tmp,'handler-effect.txt'),'utf8'),'kept');
+    // Approval may happen near its deadline; retain the terminal result for a full window after completion.
+    const originalNow = Date.now;
+    let now = originalNow();
+    try {
+      Date.now = () => now;
+      queue.register('retention-fixture', async () => ({ok:true,status:'succeeded'}));
+      const retained = queue.submit('retention-fixture', {}, {}, 'retention-result');
+      now += 15 * 60 * 1000 - 1;
+      const completedRetention = await queue.approve(retained.requestId, true);
+      assert.equal(completedRetention.status, 'succeeded');
+      assert.equal(completedRetention.startedAt, now);
+      assert.equal(completedRetention.finishedAt, now);
+      now += 2; // Past the old createdAt-based expiry, but only 2ms after completion.
+      assert.equal(queue.inspect(retained.requestId).status, 'succeeded');
+      assert.equal(queue.inspect(retained.requestId).expiresAt, completedRetention.finishedAt + 15 * 60 * 1000);
+      now += 15 * 60 * 1000;
+      assert.throws(() => queue.inspect(retained.requestId), /Unknown operation/);
+      const expiring = queue.submit('retention-fixture', {}, {}, 'retention-expired');
+      now += 15 * 60 * 1000 + 1;
+      const expired = queue.cancel(expiring.requestId);
+      assert.equal(expired.status, 'expired', 'a late cancel observes expiry instead of rewriting it as denial');
+      assert.equal(expired.finishedAt, now);
+      assert.equal(expired.expiresAt, now + 15 * 60 * 1000);
+    } finally { Date.now = originalNow; }
     console.log('approved operations: real MCP discovery/call, gating, ownership, dedupe, workflow verification/stop and response bounds passed');
   } finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); fs.rmSync(tmp, { recursive: true, force: true }); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

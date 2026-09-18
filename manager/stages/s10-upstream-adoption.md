@@ -85,7 +85,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 高，继续 | 进行中：第38–40组控制面、OAuth凭据/issuer、会话公开标识/主体绑定首包已核对；其余安全依赖继续，不作全链认证 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27/31–37与41–43组既有消费链已修；第45组完成[优化报告P1-A交叉复核](../../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)，七处界面/PTY消费者、Bridge Health、Chat终态、GitHub代次和原子创建已修；下一包只推进尚未核对的API/workflow结果边界，不重做本批 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
+| R3 / 下一项，高 | 进行中：第25/27/31–37与41–43/45组既有消费链已修；第46组修operatorQueue保留/过期、审批schema及相邻目录/命令/日志/任务状态caller隔离；下一包继续尚未核对的非探针API/workflow结果边界，不重做已修链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试；明确排除探针专项 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -691,7 +691,7 @@ bridgeLifecycleBrowser通过真实菜单→设置Bridge导航和bind按钮，拦
 
 验证：完整83测试文件、文档生成/构建/一致性、`git diff --check`通过。报告与管理同步提交6a1944d56d63e228bdf3b4b3a022c3efd6a84c1d已推当前固定分支，[CI35335420393](https://github.com/cccjvav/web_agent/actions/runs/35335420393)九项逐项成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium）；本批只改文档，未改产品源码。报告在正式清单中登记为**待逐句核对**，由接手助手按报告第6节复核后改状态——本会话不自我认证。
 
-#### 第45组：交叉审查、结果合同、无障碍与辅助项目实修
+#### 第45组：交叉审查、结果合同、无障碍与非探针辅助项目实修
 
 2026-09-18接手后先显式fetch并快进到目标`81fb5c2`，逐项读取/复核第44组报告。确认P1-A七处和P2-D设备码竞态后，不仅改提示：所有相关消费者增加HTTP、严格布尔和响应形状门禁，区分写确认与后读失败且不自动重放；Chat要求可靠NDJSON终态，补丁后读协调脏草稿；GitHub服务端/浏览器双代次与poll单飞；新建文件端到端`createOnly`独占原子创建并以并发HTTP证明一胜一409；PTY所有确认点拒绝非2xx。Bridge统计函数返回可信布尔值，清除写确认不被后读失败改写。
 
@@ -699,14 +699,28 @@ bridgeLifecycleBrowser通过真实菜单→设置Bridge导航和bind按钮，拦
 
 R9首包把Actions权限收敛为`contents: read`，高危生产依赖审计改硬门禁。扩展/安装镜像及函数说明同步。这里曾把用户要求的全仓检查错误扩大为探针实现授权：对model-probe专项verify后修改README、`src/learned.js`、`tools/e2e.mjs`。用户重申该项目由另一位助手负责后，三文件恢复至同步基线`81fb5c2`；观察只作为未裁决线索移交，不计本批发现修复或验证。后续即使通用检查触发探针失败也只记录边界，不开展专项审查。
 
-详细文件、前置报告状态、验证和剩余Node EOL/lint/生成物/实机取舍见[第45组报告](../../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)。对话中断后分支ref两次曾回到初始提交而文件仍为新基线；两次均先备份binary diff/未跟踪项、显式核对远端，只用`update-ref`+`read-tree`恢复固定分支引用/索引，未覆盖工作文件。第二次备份位于`/home/user/r46-recovery-1789759792/`。本批非探针本地证据：83个主测试文件通过；文档库存247/28/110与构建一致；calculator 6项、trace-inspector 77项通过；生产审计0漏洞、扩展镜像一致。
+详细文件、前置报告状态、验证和剩余Node EOL/lint/生成物/实机取舍见[第45组报告](../../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)。对话中断后分支ref三次曾回到初始提交而文件仍为新基线；每次均先备份binary diff/未跟踪项（第三次另留完整非Git/依赖工作树压缩包）、显式核对远端，只用`update-ref`+`read-tree`恢复固定分支引用/索引，未覆盖工作文件。外部临时备份路径另留本会话恢复记录，不作为仓库持久入口。本批非探针本地证据：83个主测试文件通过；文档库存247/28/110与构建一致；calculator 6项、trace-inspector 77项通过；生产审计0漏洞、扩展镜像一致。
 
 首推`e0fdf65`的[CI35380095907](https://github.com/cccjvav/web_agent/actions/runs/35380095907)为8/9：Ubuntu/Windows主机矩阵及Windows安装器全部通过，真实Chromium在640px首次跨断点时捕获已展开侧栏遮挡Agent菜单。未改断言掩盖失败；bind现只在宽→窄跨越时关闭旧桌面侧栏并同步焦点/ARIA，避免窄屏键盘高度resize误关用户刚开的抽屉；VM加入1000→640真实闭包回归。Actions checkout/setup-node同步升v5，清理由旧Node动作运行时产生的弃用告警。
 
 `04c8e04`的[CI35381193695](https://github.com/cccjvav/web_agent/actions/runs/35381193695)再次8/9，Chromium已越过原遮挡点并运行到Skill创建400负例；失败是浏览器断言仍要求旧版纯服务端错误串，而bind已按本批合同显示“状态未知：原错误”。断言现同时要求可信状态语义、保留原错误且磁盘零创建，不通过删负例或放宽为任意toast掩盖。
 
-修复`cc779414c61493b02248571977eea9e96893953c`的[CI35381668516](https://github.com/cccjvav/web_agent/actions/runs/35381668516)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器及真实Chromium均通过；生产高危审计门禁也在各主机任务通过。前两次8/9仍保留为发现链，不用最终绿灯抹去。该成功早于上述探针三文件恢复，边界纠正提交必须独立复验，不继承旧绿灯。GitHub仅剩ubuntu-latest将于2026-10-19迁移Ubuntu 26的计划性notice，不是本次失败或产品验证。
+修复`cc779414c61493b02248571977eea9e96893953c`的[CI35381668516](https://github.com/cccjvav/web_agent/actions/runs/35381668516)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器及真实Chromium均通过；生产高危审计门禁也在各主机任务通过。前两次8/9仍保留为发现链，不用最终绿灯抹去。该成功早于上述探针三文件恢复；边界纠正`27fca73`的[CI35386685807](https://github.com/cccjvav/web_agent/actions/runs/35386685807)另行九项成功，未继承旧绿灯。GitHub仅剩ubuntu-latest将于2026-10-19迁移Ubuntu 26的计划性notice，不是本次失败或产品验证。
 
+
+#### 第46组：非探针审批结果、工作流schema与caller隔离
+
+按R3只续审`operatorQueue.js`、`workflows.js`及对应非探针测试/说明。发现终态淘汰仍锚定createdAt：待批接近15分钟才获批时，刚完成的结果会在下一次查询立即删除；同一prune中waiting先变expired又立刻按旧创建时间删除，因此expired实际不可观察。`cancel`不先prune还会把已经超期但未触发清理的请求改写成denied。修复后expired与denied分别记录finishedAt，终态从finishedAt完整保留15分钟，publicJob的expiresAt反映当前淘汰点；仍是进程内、按访问触发清理及约40条上限，不扩大为持久exactly-once。
+
+工作流固定schema另发现顶层未知字段会静默进入审阅快照，且`exists:false`可与必须读取文件的contains/sha256组成永远不可能成立的条件；原前向引用扫描还漏掉`$steps.id`整个输出形式及结构上危险的路径段，可能在先前写入后才失败。validate现要求definition顶层只有steps，preview/request包装也拒绝未知字段，并在审批前拒绝矛盾条件；validateReferences递归限制为安全前序步骤，正文中间同名文字不误判；步骤工具集、权限、失败unknown、不重放与时点检查边界不变。同链external_request与operation_result也不再静默忽略autoApprove/autoRetry等包装字段，分别只接受固定请求字段；仍不把入队当批准或未知ID当重试许可。
+
+相邻executionControl/结果消费者复核发现executor把lastExecId与commandStore全局共享；任一已认证peer若取得/猜中另一peer的execId可读输出或取消，不传ID还会直接拿到全局最近命令。记录现保存内部owner，commandOwner使用服务端认证后的peer/兼容caller键，lastCommandId只在该所有者的有界记录中反查；显式查询/取消也对跨peer统一found:false且不泄露记录存在。桌面调用仍共享local命名空间，事件与公开结果不暴露owner。executionControl用第二peer证明显式ID、缺省最近记录和取消均隔离，原所有者仍可查询/停止。getLogs原来也忽略options并汇总全局事件；远程现只返回sessionIdFor匹配的有界执行追踪，本机仍可查宿主事件。同一路径还发现getTaskStatus忽略handler的options，总是返回Local计划；现将上下文传入getTaskState/stateFor，taskProgress证明两个远程peer分别只读回自身计划且不含Local内容，未知peer读取返回未保存idle快照而不消耗16个报告槽。getCapabilities同样曾无视remote options，向只读peer重新广告tools/list已隐藏的写/命令工具；现复用同一allowed过滤，executionControl锁定两目录一致。
+
+approvedOperations以可控Date.now覆盖临期完成、完整结果保留、可见expired及迟到cancel；workflowPreconditions覆盖顶层未知字段、两类矛盾条件、完整输出的自/前向引用、危险/空路径段及字面量非误判。专项定向测试、executionControl/PTY/taskProgress回归、本地83测试、文档247文件/28目录/110排除项库存与站点生成一致性均通过；精确CI随本组提交核对。
+
+本组明确排除`arena-model-probe/`、`webagent-core/probe-extension/`及探针专项文档/测试；没有读取后再自行判定“顺手修复”。探针线索只移交负责该项目的另一位助手。
+
+本组文档链首次运行到inventory时出现“missing Bridge任务栏说明.md”；核对发现并非文件/清单丢失，而是固定分支ref第三次被环境改回`1d532d0`，旧索引把现行docs/guides路径看成根路径删除/新增。按上节先备份、核对远端`27fca73`并恢复ref/index后，同一documentationLinks与docsSite通过；该次环境失败不冒充源码回归，也不靠改清单掩盖。扩展后的首轮完整套件另为82/83：唯一docsSite失败明确指出恢复记录在生成站点后又改文案产生镜像漂移；重建content.js后最终83/83，不以该可解释失败冒充产品逻辑回归。
 
 ## 复盘
 

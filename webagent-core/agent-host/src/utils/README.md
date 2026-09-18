@@ -10,7 +10,7 @@
 
 逐函数新增：[主机诊断与调用追踪](主机诊断与调用追踪详解.md)。
 
-审批/工作流逐函数主说明：[受控工具与工作流详解](受控工具与工作流详解.md)。operatorQueue保留取消意图、区分调用前拒绝与已派发未知结果；不是持久任务系统。
+审批/工作流逐函数主说明：[受控工具与工作流详解](受控工具与工作流详解.md)。operatorQueue保留取消意图、区分调用前拒绝与已派发未知结果，并从finishedAt保留完整终态查询窗口；不是持久任务系统。
 
 ## 职责与文件分工
 这些模块为API、MCP和工具提供公共能力，不独立监听HTTP或运行模型。
@@ -60,10 +60,10 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 | [fileCheckpoints.js](fileCheckpoints.js) | 15 个函数/类节点 |
 | [hostDiagnostics.js](hostDiagnostics.js) | 4 个函数/类节点 |
 | [localControl.js](localControl.js) | 7 个函数/类节点 |
-| [operatorQueue.js](operatorQueue.js) | 17 个函数/类节点 |
+| [operatorQueue.js](operatorQueue.js) | 19 个函数/类节点 |
 | [probeBridge.js](probeBridge.js) | 23 个函数/类节点 |
 | [requestScope.js](requestScope.js) | 5 个函数/类节点 |
-| [toolTrace.js](toolTrace.js) | 11 个函数/类节点 |
+| [toolTrace.js](toolTrace.js) | 12 个函数/类节点 |
 | [workspaceBinding.js](workspaceBinding.js) | 2 个函数/类节点 |
 <!-- docs-inventory:end -->
 

@@ -22,7 +22,14 @@ async function main() {
   const before = progress.getBridgeTaskStates();
   assert.equal(before.length, 2); assert.equal(before[0].progress, 25);
   assert.equal(progress.getTaskState().todos[0].title, 'Local only');
-  assert.ok(!JSON.stringify(before).includes('secret-session'));
+  const remoteAStatus = await callTool('get_task_status', {}, 'ask', remote('a-secret-session'));
+  const remoteBStatus = await callTool('get_task_status', {}, 'ask', remote('b-secret-session'));
+  assert.equal(remoteAStatus.todos[0].title, 'Remote A'); assert.equal(remoteAStatus.progress, 25);
+  assert.equal(remoteBStatus.todos[0].title, 'Remote B'); assert.equal(remoteBStatus.progress, 0);
+  const emptyRemoteStatus = await callTool('get_task_status', {}, 'ask', remote('read-only-session'));
+  assert.deepStrictEqual(emptyRemoteStatus.todos,[]); assert.equal(progress.getBridgeTaskStates().length,2,'read-only status must not consume a reporting-session slot');
+  assert.ok(!JSON.stringify([before,remoteAStatus,remoteBStatus,emptyRemoteStatus]).includes('secret-session'));
+  assert.ok(!JSON.stringify(remoteAStatus).includes('Local only'),'remote status cannot read the local plan');
   const returned = progress.getBridgeTaskStates(); returned[0].todos[0].title = 'tamper';
   assert.deepStrictEqual(progress.getBridgeTaskStates(), before);
   for (const todos of [[null], [{title:'x',status:'invented'}], [{id:'dup',title:'a'},{id:'dup',title:'b'}], Array(51).fill({title:'x'}), [{title:'x'.repeat(501)}]]) {

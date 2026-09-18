@@ -9,12 +9,20 @@ const { ProtocolError } = require('../mcp/errors');
 const ptyJobs = require('./ptyJobs');
 const { currentSignal, checkCancelled } = require('../utils/requestScope');
 
-let lastExecId = '';
 const commandStore = new Map();
 const children = new Map();
 const MAX_CAPTURE = 200 * 1024;
 const MAX_RUNNING = 8;
 const MAX_COMMANDS = 40;
+
+function commandOwner(options = {}) {
+  if (options.remote && !options.callerKey) throw new ProtocolError('E_SESSION_REQUIRED', 'Remote command access requires an authenticated caller key');
+  return String(options.callerKey || 'local');
+}
+
+function lastCommandId(owner) {
+  return [...commandStore.values()].reverse().find(record => record.owner === owner)?.execId || '';
+}
 
 function countRunning() {
   let n = 0;
@@ -95,10 +103,10 @@ function publicRecord(rec, tail) {
   };
 }
 
-function storePtyResult(result) {
-  lastExecId = result.execId;
+function storePtyResult(result, owner) {
   const rec = {
     execId: result.execId,
+    owner,
     command: result.command,
     status: result.status || (result.ok === false ? 'error' : 'done'),
     stdout: result.stdout || '',
@@ -115,18 +123,18 @@ function storePtyResult(result) {
   return rec;
 }
 
-function startProcess({ command, cwd = '.', timeoutSec = 30 }) {
+function startProcess({ command, cwd = '.', timeoutSec = 30 }, owner) {
   if (countRunning() >= MAX_RUNNING) {
     throw new ProtocolError('E_BAD_ARGS', `Too many running commands (max ${MAX_RUNNING}). Cancel or wait.`);
   }
   pruneCommands();
   const execId = crypto.randomBytes(8).toString('hex');
-  lastExecId = execId;
   const workingDir = workingDirFrom(cwd);
   const timeoutMs = Math.max(1000, (timeoutSec || 30) * 1000);
   const startTime = Date.now();
   const rec = {
     execId,
+    owner,
     command,
     cwd: path.relative(config.workspaceRoot, workingDir) || '.',
     status: 'running',
@@ -232,8 +240,9 @@ ${command}`;
   return { rec, done };
 }
 
-async function executeCommand(opts) {
+async function executeCommand(opts, options = {}) {
   checkCancelled();
+  const owner = commandOwner(options);
   if (ptyJobs.wantsPty()) {
     pruneCommands();
     const result = await ptyJobs.enqueue('run', {
@@ -241,25 +250,26 @@ async function executeCommand(opts) {
       cwd: (opts && opts.cwd) || '.',
       timeoutSec: (opts && opts.timeoutSec) || 30
     });
-    const rec = storePtyResult(result);
+    const rec = storePtyResult(result, owner);
     return publicRecord(rec);
   }
-  const { done } = startProcess(opts || {});
+  const { done } = startProcess(opts || {}, owner);
   return done;
 }
 
-function startCommand(opts) {
+function startCommand(opts, options = {}) {
   checkCancelled();
+  const owner = commandOwner(options);
   if (ptyJobs.wantsPty()) {
     if (countRunning() >= MAX_RUNNING) {
       throw new ProtocolError('E_BAD_ARGS', `Too many running commands (max ${MAX_RUNNING}). Cancel or wait.`);
     }
     pruneCommands();
     const execId = crypto.randomBytes(8).toString('hex');
-    lastExecId = execId;
     const timeoutMs = Math.max(1000, ((opts && opts.timeoutSec) || 30) * 1000);
     const rec = {
       execId,
+      owner,
       command: (opts && opts.command) || '',
       cwd: (opts && opts.cwd) || '.',
       status: 'running',
@@ -315,7 +325,7 @@ function startCommand(opts) {
       hint: 'Poll get_command_output until status is done or timeout. Desktop Chat runs this in Web Agent · 1.'
     };
   }
-  const { rec, done } = startProcess(opts || {});
+  const { rec, done } = startProcess(opts || {}, owner);
   done.catch((err) => {
     if (rec.status === 'running') rec.status = 'error';
     rec.stderr = `${rec.stderr || ''}${err.message}`;
@@ -329,21 +339,23 @@ function startCommand(opts) {
   };
 }
 
-function getCommandOutput({ execId, commandId, tail } = {}) {
-  const id = String(execId || commandId || lastExecId);
+function getCommandOutput({ execId, commandId, tail } = {}, options = {}) {
+  const owner = commandOwner(options);
+  const id = String(execId || commandId || lastCommandId(owner));
   const rec = commandStore.get(id);
-  if (!rec) {
-    return { execId: id, found: false, message: 'No command with this execId yet.' };
+  if (!rec || rec.owner !== owner) {
+    return { execId: id, found: false, message: 'No command with this execId for this caller.' };
   }
   return publicRecord(rec, tail);
 }
 
-async function cancelCommand({ execId } = {}) {
+async function cancelCommand({ execId } = {}, options = {}) {
+  const owner = commandOwner(options);
   const id = String(execId || '');
   const rec = commandStore.get(id);
   const child = children.get(id);
+  if (!rec || rec.owner !== owner) return { execId: id, found: false };
   if (ptyJobs.wantsPty()) {
-    if (!rec) return { execId: id, found: false };
     if (rec.status !== 'running' && !child) {
       return { execId: rec.execId, status: rec.status, cancelled: false, message: 'Command is not running.' };
     }
@@ -356,7 +368,6 @@ async function cancelCommand({ execId } = {}) {
     if (child) killChild(child, true);
     return { execId: rec.execId, cancelled: true, status: 'cancelled', execution: 'pty' };
   }
-  if (!rec) return { execId: id, found: false };
   if (rec.status !== 'running' && !child) {
     return { execId: rec.execId, status: rec.status, cancelled: false, message: 'Command is not running.' };
   }

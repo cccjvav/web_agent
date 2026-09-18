@@ -112,7 +112,7 @@ router.post('/external/stdio/start', operationApi(req => externalClient.startStd
 router.post('/external/servers', operationApi(req => externalClient.add(req.body || {})));
 router.delete('/external/servers/:id', operationApi(req => externalClient.remove(req.params.id)));
 router.post('/external/request', operationApi(req => externalClient.request(req.body || {}, { callerKey: 'local' })));
-router.post('/workflows/preview', operationApi(req => workflows.preview(req.body?.definition)));
+router.post('/workflows/preview', operationApi(req => workflows.previewRequest(req.body || {})));
 router.post('/workflows/request', operationApi(req => workflows.request(req.body || {}, { callerKey: 'local' })));
 
 const connectionCheck = require('../utils/connectionCheck');
