@@ -183,7 +183,7 @@ export function bind() {
   };
 
   $('#btn-bridge-toggle').onclick = async () => {
-    if (state.status && state.status.bridgeRunning) await ui.stopBridge();
+    if (ui.bridgeStartPending() || state.status?.bridgeRunning) await ui.stopBridge();
     else await ui.startBridge();
   };
   $('#btn-stop-bridge-rb').onclick = ui.stopBridge;

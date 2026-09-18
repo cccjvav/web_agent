@@ -83,6 +83,62 @@ async function probeHudBrowser(browser) {
     assert.strictEqual(result.logs, 0); assert.deepStrictEqual(errors, []);
   } finally { await fixture.close(); }
 }
+async function bridgeLifecycleBrowser(browser, base) {
+  const page = await browser.newPage({viewport:{width:1280,height:900}}), errors = [];
+  let snapshot, starts = 0, stops = 0, release, entered, failRead = false;
+  const pendingStart = new Promise(resolve=>{entered=resolve;});
+  page.on('pageerror',error=>errors.push(error.message));
+  await page.route('**/api/status',async route=>{
+    if(failRead) return route.fulfill({status:503,json:{success:false}});
+    const response = await route.fetch(); snapshot = await response.json();
+    return route.fulfill({response,json:snapshot});
+  });
+  await page.route('**/api/bridge/start',async route=>{
+    starts++;
+    const body = route.request().postDataJSON();
+    assert.equal(body.hostInstanceId,snapshot.identity.hostInstanceId);
+    if(starts===1) await new Promise(resolve=>{release=resolve;entered();});
+    failRead=true;
+    const secretKey=snapshot.secretKey;
+    await route.fulfill({json:{success:true,running:true,provider:body.tunnelProvider,secretKey,
+      mcpPath:'/mcp/'+secretKey,mcpUrl:'https://fixture.test/mcp/'+secretKey,mcpCanonicalUrl:'https://fixture.test/mcp'}});
+  });
+  await page.route('**/api/bridge/stop',async route=>{
+    stops++;assert.equal(route.request().postDataJSON().hostInstanceId,snapshot.identity.hostInstanceId);
+    failRead=true;
+    await route.fulfill({json:{success:true,running:false}});
+  });
+  try {
+    await page.goto(base);
+    await page.waitForFunction(()=>document.querySelector('#mcp-url').textContent.includes('/mcp/'));
+    // Keep the real bind handler and start function; only retain its Promise for deterministic late-response assertions.
+    await page.evaluate(async()=>{
+      const {ui}=await import('/js/state.js');const start=ui.startBridge;
+      ui.startBridge=()=>{window.fixtureBridgeStart=start();return window.fixtureBridgeStart;};
+    });
+    await page.click('#menu-help');await page.click('.modal-nav [data-page="bridge"]');
+    await page.click('#btn-bridge-toggle');await pendingStart;
+    assert.equal(await page.evaluate(async()=> (await import('/js/bridge.js')).startBridge()),false);
+    assert.equal(starts,1);
+    assert.equal(await page.locator('#btn-bridge-toggle').textContent(),'停止启动');
+    assert.equal(await page.locator('#btn-bridge-toggle').isEnabled(),true);
+    await page.click('#btn-bridge-toggle');
+    await page.waitForFunction(()=>document.querySelector('#bridge-result').textContent.includes('停止已确认，但当前状态未核对'));
+    assert.equal(stops,1);
+    const stoppedText=await page.locator('#bridge-result').textContent();
+    release();assert.equal(await page.evaluate(()=>window.fixtureBridgeStart),false);
+    assert.equal(await page.locator('#bridge-result').textContent(),stoppedText,'late start cannot replace stop result');
+    assert.equal(await page.locator('#bridge-result-rb').textContent(),stoppedText);
+    failRead=false;
+    await page.click('#btn-bridge-toggle');
+    await page.waitForFunction(()=>document.querySelector('#bridge-result').textContent.includes('启动已确认，但当前状态或地址未核对'));
+    assert.equal(await page.evaluate(()=>window.fixtureBridgeStart),true);
+    assert.equal(starts,2);assert.equal(stops,1);
+    assert.equal(await page.locator('#mcp-banner').isVisible(),false);
+    assert.deepStrictEqual(errors,[]);
+  } finally {if(release) release();await page.close();}
+}
+
 async function secretRotationBrowser(browser, base) {
   const page = await browser.newPage();
   let snapshot, posts = 0, release, failRead = false, entered;
@@ -423,6 +479,7 @@ async function main() {
     await externalRegistrationBrowser(browser, base);
     await stdioLifecycleBrowser(browser, base);
     await secretRotationBrowser(browser, base);
+    await bridgeLifecycleBrowser(browser, base);
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.route('https://cdn.jsdelivr.net/**', route => route.abort());
@@ -744,12 +801,12 @@ async function main() {
     await page.route('**/api/bridge/start', route => route.fulfill({ status: 200, contentType: 'application/json',
       body: JSON.stringify({success:false,running:false,tunnelError:'fixture cloudflared unavailable'}) }));
     assert.equal(await page.evaluate(async () => (await import('/js/bridge.js')).startBridge()), false);
-    assert.equal(await page.locator('#toast').textContent(), 'fixture cloudflared unavailable');
+    assert.ok((await page.locator('#bridge-result').textContent()).includes('启动结果未确认'));
     await page.unroute('**/api/bridge/start');
     await page.route('**/api/bridge/stop', route => route.fulfill({ status: 500, contentType: 'application/json',
       body: JSON.stringify({success:false,error:'fixture stop not confirmed'}) }));
     assert.equal(await page.evaluate(async () => (await import('/js/bridge.js')).stopBridge()), false);
-    assert.equal(await page.locator('#toast').textContent(), 'fixture stop not confirmed');
+    assert.ok((await page.locator('#bridge-result').textContent()).includes('停止结果未确认'));
     await page.unroute('**/api/bridge/stop');
     assert.deepStrictEqual(errors, []);
     console.log('Browser PASS: minimal page observation + authenticated connection echo/forged session rejection/clear, help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');

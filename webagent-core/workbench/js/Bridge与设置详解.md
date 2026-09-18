@@ -23,9 +23,17 @@
 
 ## 2. bridge.js启动/停止/状态函数
 
-**startBridge()**先核对页面与实时status的workspaceRoot/hostInstanceId，再按radio构造provider和可选凭据、POST绑定字段。HTTP或业务失败按error→tunnelError→note→默认文案选择原因，409弹窗，其余toast截180字符；刷新主机状态清掉失败重启后的旧URL，不复制本机fallback URL。成功才显示banner、尝试复制MCP地址并切Bridge。网络/JSON/刷新异常在catch弹窗并false；Token只提交后端，不写localStorage。
+**bridgeStartPending()**返回本页是否有当前启动意图，供真实bind切换按钮在启动中转为停止，而不是按旧status再次启动。**paintBridgeAction()**按启动/停止ticket绘按钮；启动中停止仍可用，停止中禁两按钮，隐藏旧复制banner。**bridgeOutcome(message)**同步设置页与右栏的两个aria-live结果区，普通状态刷新不清除动作结果。
 
-**stopBridge()**等待POST和JSON，HTTP及success均成功才清healthLine、刷新并灭灯、true。失败显示error/note或默认提示、false，不因收到HTTP响应就假报停止；网络/JSON/刷新异常catch弹窗、false。丢失响应时实际进程状态未知，应核对主机，不自动重试或强杀。
+**bridgeRequest(path,body,timeoutMs=10000)**同源no-store GET/POST，AbortController覆盖响应头和JSON；解析后还核对signal.aborted，finally清timer。启动POST45秒、停止POST15秒、预读10秒；取消等待不证明后端未执行。原隧道默认25秒就绪期限和停止清理不因此改变。
+
+**startBridge()**页内单飞，不在停止在途时启动。同步捕获workspaceRoot/hostInstanceId、provider及所选domain/token，预读后复查页面绑定及实时核心状态；实时已运行则不重启，不混入await期间改过的新草稿。当前ticket才允许POST。回包必须HTTP成功、success/running严格true、provider匹配、完整密钥/路径/URL合同（复用validRotatedSecret并以空旧值只验证地址），不据此认证公网可达。
+
+确认写后读取失败、被更新读取取代、当前主机/地址/密钥/运行标记不符，保留“原主机启动已确认，当前未核对”，返回true；仅刷新确认的同目标地址才点灯并切右栏。**不再自动复制或自动显示已复制banner**，用户核对后手动复制。发送前失败明确未启动POST；发出后失败保守未确认，固定文案不回显原始错误或Token；同绑定时尝试一次只读刷新，不重复POST。停止递增代次后，旧预读不再POST、旧启动回包不覆盖结果/点灯/复制；已确认写而后读途中被停止取代仍返回写确认true，但不覆盖新结果。
+
+**stopBridge()**独立停止guard，立即取代本页启动ticket，不等待启动回包或密钥轮换锁。捕获当前绑定直接POST，不增加可能挂住停止的GET；没有绑定就不发送。HTTP成功且success严格true/running严格false才确认；后读异常/不匹配仍保留确认true，只有同绑定、bridgeRunning=false才灭灯。失败明确停止未确认，不自动重试/强杀。finally释放自己的guard，旧启动finally不能释放较新的启动ticket。
+
+停止接口收到任一绑定字段便要求完整匹配；旧无字段调用保持兼容。页面代次不是服务器永久幂等、跨页/跨进程锁，已发送但尚未被服务器受理的启动不保证被先到的停止撤回；之后其它启动也会改变状态。停止确认不自动取消已接受的工具任务，更不等于所有后代/第三方进程已退出。原生命令/其他API消费仍另审。
 
 ### 经典工作台密钥轮换（第41组）
 
@@ -35,7 +43,7 @@
 
 **resetSecret()**使用页内secretRotating与禁按钮防并发；捕获页面工作区/主机/旧密钥，先GET当前状态验证核心形状及同绑定/同旧密钥。明确confirm告知OAuth撤销但任务/隧道不停止，确认前后复查页面；取消不POST。请求携workspaceRoot/hostInstanceId/expectedSecret，服务端单进程比较后再轮换，旧页面不应直接重发。轮换响应通过完整消费合同才确认；随后只刷新状态，不再POST。刷新失败/被取代/主机或secret不匹配保留“原主机轮换已确认、当前地址未核对”。
 
-请求发出后遇HTTP/业务/JSON/网络/超时/坏合同一律结果未确认，旧显示地址可能过期，先读状态而非再次重置；没有自动重试。发送前失败明确未发送。结果写独立secret-result（aria-live），不沿用无条件成功toast，不自动复制地址；finally释放guard。仅页内互斥，不是跨标签锁或永久幂等；服务端旧空体扩展调用仍兼容，不因此获得新绑定/CAS保证。经典UI改进不代表原生扩展命令已复核。启动/停止没有共用此锁，启动在途停止不能被密钥轮换锁挡住；启停剩余消费单独待办。
+请求发出后遇HTTP/业务/JSON/网络/超时/坏合同一律结果未确认，旧显示地址可能过期，先读状态而非再次重置；没有自动重试。发送前失败明确未发送。结果写独立secret-result（aria-live），不沿用无条件成功toast，不自动复制地址；finally释放guard。仅页内互斥，不是跨标签锁或永久幂等；服务端旧空体扩展调用仍兼容，不因此获得新绑定/CAS保证。经典UI改进不代表原生扩展命令已复核。启动/停止没有共用此锁，启动在途停止不能被密钥轮换锁挡住；本批经典启停消费见上节，原生扩展仍另审。
 
 **paintBridge()**把state.status映射为运行pill/toggle/MCP块/URL/底栏/installId，domain空输入才回填，radio规范named别名；paintClients。按provider/URL判断隧道类型，显示就绪文案；账目信息区GitHub实际身份、演示授权、未授权分开，deviceAvailable控制按钮；usage显示今日工具计数及是否配置上报；mcpSession.alive/latest/空决定Connected/Idle/Waiting/Stopped，最后paintStats。
 
@@ -97,7 +105,7 @@ paintBridgeActivity校验epoch/revision和非负统计，渲染完成后才提�
 诊断页新增连接核对区。operations.initOperations内部connectionAction显示固定异常，创建按钮清空输入后上传最小JSON，checkGeneration防旧成功响应覆盖新状态；本机只显示toolRequest，不自动调用。查询丢弃旧generation，清除递增generation且不注销MCP。页面刷新丢弃当前checkId，旧记录由主机TTL清理。
 
 
-startBridge工作区校验（0.7.1）：记录页面state.status，再fetch实时status，必须与页面的workspaceRoot/identity.hostInstanceId一致才POST两个绑定字段。缺失、主机重启/更换项目、409或请求异常均弹窗并返回false；不能拿新主机状态悄悄替换旧页面目标。刷新整页核对项目后再启动。验证由workbenchRuntime与bridgeTunnel覆盖，实机另记。
+startBridge工作区校验（0.7.1）：记录页面state.status，再fetch实时status，必须与页面的workspaceRoot/identity.hostInstanceId一致才POST两个绑定字段。缺失、主机重启/更换项目、409或请求异常在独立结果区区分未发送/未确认并返回false；不能拿新主机状态悄悄替换旧页面目标。刷新整页核对项目后再启动。验证由workbenchRuntime与bridgeTunnel覆盖，实机另记。
 
 
 0.7.2 paintBridgeActivity在日志版本短路前更新远程Tasks；refreshBridgeActivity沿用3秒单飞轮询，在错误时给任务计数标“同步失败，当前状态未知”。计划独立于工具日志，不根据工具名称生成。Tasks只读Agent报告并显示会话和更新时间，重启丢失、30分钟未更新过期。

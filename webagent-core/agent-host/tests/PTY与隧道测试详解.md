@@ -73,3 +73,7 @@ collect(event)是tunnelLifecycle临时订阅回调，仅收集已脱敏的event.
 bridgeTunnel的main新增真实POST reset-secret：部分绑定/错主机/错expectedSecret均409，原key和配对码保留。暂替store.patch使保存抛错，HTTP500且内存key/OAuth配对不变，finally恢复。两个相同完整绑定和旧key并发请求恰200/409，成功回包key/path与内存/磁盘一致、旧key失效、配对撤销。
 
 再暂替eventBus.broadcast，仅secret_rotated时模拟写后失败：HTTP500但磁盘/内存已轮换；同一旧expectedSecret再发409且不二次轮换，finally恢复broadcast。验证未知响应可能已有副作用，不是回滚。最后无新字段的旧空体调用仍200并轮换，保证现有扩展协议兼容；不是原生UI成功提示的验收。原隧道函数依旧替身，不声称本测试连接了公网。
+
+## 第42组：停止绑定及在途启动
+
+bridgeTunnel通过真实HTTP检验stop部分/错主机/错目录绑定409，stopCalls、运行标记及配置不变；挂起start时错误stop不递增generation，原start仍成功。另一次挂起start被已有租约拒重复start409，但合法绑定stop不等待启动完成；放行旧start得409且运行false/URL空。stopTunnel注入抛错500仍运行，广播注入抛错500但停止已生效，finally恢复替身。旧空体stop仍兼容。这里启动/停止进程函数是替身，证明路由次序/状态/响应而非真实OS退出，真实进程旧回归仍独立保留。

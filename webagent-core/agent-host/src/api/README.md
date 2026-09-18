@@ -63,5 +63,7 @@ requestScope由 `/chat`显式创建，**不代表所有REST请求自动拥有同
 
 | 源码 | 定位证据 |
 |---|---|
-| [routes.js](routes.js) | 85 个函数/类节点 |
+| [routes.js](routes.js) | 86 个函数/类节点 |
 <!-- docs-inventory:end -->
+
+第42组经典停止调用携工作区/主机绑定；有任一字段时完整匹配才递增generation或停隧道，旧无字段请求兼容。停隧道失败和停止完成后广播失败可能都500但效果不同，不能从HTTP错误猜测回滚。

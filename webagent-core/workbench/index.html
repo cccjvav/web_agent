@@ -241,6 +241,7 @@
               <button type="button" id="btn-bridge-health" class="vs-btn sess-btn">Health</button>
               <button type="button" id="btn-reset-round" class="vs-btn sess-btn" title="清除本轮统计">Clear log</button>
             </div>
+            <p id="bridge-result-rb" class="hint" role="status" aria-live="polite"></p>
             <div class="sess-grid">
               <div><label>本轮外部工具调用</label><span id="stat-calls">—</span></div>
               <div><label>Average response</label><span id="stat-avg">—</span></div>
@@ -633,6 +634,7 @@
             </div>
             <div id="mcp-banner" class="banner hidden">临时 MCP 地址已复制。每次 Bridge 重启后，请在 ChatGPT 中替换 MCP 地址。</div>
           </div>
+          <p id="bridge-result" class="hint" role="status" aria-live="polite"></p>
           <div class="btn-wrap" id="bridge-actions">
             <button type="button" id="btn-bridge-toggle" class="vs-btn primary">启动 Bridge</button>
             <button type="button" id="btn-copy-prompt" class="vs-btn">复制提示词</button>

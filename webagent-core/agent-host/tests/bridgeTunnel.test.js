@@ -204,6 +204,53 @@ async function main() {
     assert.strictEqual(ngrokStatus.json.ngrokDomain, 'mcp.ngrok-free.app');
     assert.ok(!JSON.stringify(ngrokStatus.json).includes('ngrok_test_token_must_hide'));
 
+    // Bound stop rejects before touching generation, config, or the tunnel.
+    const stopBinding = {workspaceRoot:config.workspaceRoot,hostInstanceId:config.hostInstanceId};
+    const beforeStopCalls = stopCalls, beforeStopConfig = JSON.stringify(store.load());
+    for(const body of [{workspaceRoot:tmp},{...stopBinding,hostInstanceId:'stale'},{...stopBinding,workspaceRoot:os.tmpdir()}]) {
+      const rejectedStop = await request(server,'POST','/api/bridge/stop',body);
+      assert.equal(rejectedStop.status,409);assert.equal(rejectedStop.json.success,false);
+      assert.equal(stopCalls,beforeStopCalls);assert.equal(config.bridgeRunning,true);
+    }
+    assert.equal(JSON.stringify(store.load()),beforeStopConfig);
+    {
+      let reached, release;
+      const waiting = new Promise(resolve=>{reached=resolve;});
+      tunnel.startQuickTunnel = () => new Promise(resolve=>{release=resolve;reached();});
+      const starting = request(server,'POST','/api/bridge/start',{tunnelProvider:'cloudflare'});
+      await waiting;
+      assert.equal((await request(server,'POST','/api/bridge/stop',{...stopBinding,hostInstanceId:'stale'})).status,409);
+      config.publicTunnelUrl='https://bound.fixture.test';release({url:config.publicTunnelUrl});
+      assert.equal((await starting).json.success,true,'rejected stop must not invalidate a pending start');
+    }
+    {
+      let reached, release;
+      const waiting = new Promise(resolve=>{reached=resolve;});
+      tunnel.startQuickTunnel = () => new Promise(resolve=>{release=resolve;reached();});
+      const starting = request(server,'POST','/api/bridge/start',{tunnelProvider:'cloudflare'});
+      await waiting;
+      assert.equal((await request(server,'POST','/api/bridge/start',{tunnelProvider:'cloudflare'})).status,409,'backend already rejects duplicate active starts');
+      const stopDuringStart = await request(server,'POST','/api/bridge/stop',stopBinding);
+      assert.equal(stopDuringStart.json.success,true);assert.equal(stopDuringStart.json.running,false);
+      release({url:'https://obsolete.fixture.test'});
+      assert.equal((await starting).status,409,'bound stop supersedes an accepted pending start');
+      assert.equal(config.bridgeRunning,false);assert.equal(config.publicTunnelUrl,null);
+    }
+    const stopStub = tunnel.stopTunnel;
+    try {
+      config.bridgeRunning=true;
+      tunnel.stopTunnel = async()=>{throw new Error('fixture stop failed');};
+      assert.equal((await request(server,'POST','/api/bridge/stop',stopBinding)).status,500);
+      assert.equal(config.bridgeRunning,true,'a rejected tunnel stop does not publish stopped');
+    } finally {tunnel.stopTunnel=stopStub;}
+    const stopBus = require('../src/utils/eventBus'), originalBroadcast = stopBus.broadcast;
+    try {
+      stopBus.broadcast = (type,data)=>{if(type==='bridge_stopped') throw new Error('fixture lost stop acknowledgement');return originalBroadcast(type,data);};
+      assert.equal((await request(server,'POST','/api/bridge/stop',stopBinding)).status,500);
+      assert.equal(config.bridgeRunning,false,'HTTP failure may follow completed stop');
+    } finally {stopBus.broadcast=originalBroadcast;}
+    assert.equal((await request(server,'POST','/api/bridge/stop')).json.running,false,'legacy empty stop remains compatible');
+
     let readyStart, finishStart;
     const entered = new Promise(resolve => { readyStart = resolve; });
     tunnel.startQuickTunnel = () => new Promise(resolve => { finishStart = resolve; readyStart(); });

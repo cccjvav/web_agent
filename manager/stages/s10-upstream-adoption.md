@@ -85,7 +85,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 高，继续 | 进行中：第38–40组控制面、OAuth凭据/issuer、会话公开标识/主体绑定首包已核对；其余安全依赖继续，不作全链认证 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27/31–37组设置/模型/状态/Provider、审批、检查点、HTTP接入及stdio消费首包已修；第41组经典密钥轮换已修；下一包Bridge启停在途/结果消费，原生重置命令也待独立红测与修复 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
+| R3 / 下一项，高 | 进行中：第25/27/31–37组设置/模型/状态/Provider、审批、检查点、HTTP接入及stdio消费首包已修；第41组经典密钥轮换、第42组经典启停在途/结果消费已修；下一包原生重置命令独立红测与修复，其余消费者继续 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -641,6 +641,25 @@ secretRotationBrowser新增真实页面的合成500/扣住POST/连点一写/写�
 本地定向与完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）、git diff --check通过。首轮7406e1a9a9d5e57077ea6954177ec017f2a8bf94的[CI35309852333](https://github.com/cccjvav/web_agent/actions/runs/35309852333)8/9通过：新增浏览器夹具误只开右侧Bridge，实际重置按钮在设置弹窗，点击不可见超时。日志下载遇EOF，check-run annotation给出具体位置/调用日志，与HTML层级一致；已修真实帮助菜单→Bridge导航→高级summary，不用force或改产品CSS。修正e9bb63b18f38a1b415ad8f609d67e787c8f3e391的[CI35310130909](https://github.com/cccjvav/web_agent/actions/runs/35310130909)浏览器已通过，但另8项在文档库存门禁失败：生成器把tests/README的浏览器函数数189改为188，提交时漏add该文件，导致已测工作树不等于提交树。现补齐生成导航并在提交前检查无遗漏的unstaged差异，不削弱门禁；不重跑原提交掩盖失败。
 
 补齐后的529752b8e453942d5e42c76089714185f3502a5c已推固定分支，[CI35310276345](https://github.com/cccjvav/web_agent/actions/runs/35310276345)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium。新增secretRotationBrowser在CI实际执行通过（合成响应，不是浏览器真实轮换），真实后端写入/并发/异常语义由bridgeTunnel另证。本地仍无Chromium；最终82测试文件及文档生成/构建/一致性通过，不代签用户实机。下一包继续Bridge启停及原生重置命令剩余消费者；R2余项、Provider更新删除、历史Windows超时根因、用户实机仍保留，探测暂停。
+
+#### 第42组：经典启停去重、停止优先与写后状态分离
+
+2026-09-18继续R3。续接Git ref再次停在b6ab9ed但工作树等远端92c82a4；先保存binary diff到/home/user/r42-recovery/before.patch，fetch后git diff --quiet FETCH_HEAD确认为零，仅update-ref/read-tree恢复固定分支ref/index，不覆盖文件、不重复提交历史。npm ci按原锁文件恢复依赖。
+
+真实Bridge模块VM将首个POST挂起，再次startBridge，断言一POST而实际两POST，红测后修。范围收窄经典启停，不混入原生扩展独立命令。启动页内单飞、预读10秒，捕获同一provider/domain/token及主机/工作区快照；预读后复查绑定，实时已运行不再POST启动。启动POST45秒、停止15秒，均含JSON，超时不证明服务端未执行。
+
+停止独立guard，不等启动结束，也不借用轮换锁。bind在启动中将原按钮变为“停止启动”，右栏停止仍可用；停止期间禁重复停止及新启动。停止递增页面动作代次，尚未POST的启动取消发送、已发送启动的迟到响应不改新结果/灯，旧finally不解锁较新启动。停止请求携捕获绑定；API有任一绑定字段时完整核对，不匹配409且不改generation/配置/隧道，旧无字段调用兼容。这是新增条件合同而非已证明的认证绕过修复；原backend在途租约和启动generation机制不重做。
+
+启动回包要求HTTP成功、严格success/running/provider及完整地址；停止要求严格success:true/running:false。确认写与后续读取区分，读取reject/被取代/主机或状态不符仍保留“原主机已确认、当前未核对”，不重复POST。未发送与发出后未知分别提示，固定文本不反射Token/异常正文；启动失败可尝试一次只读刷新。设置页/右栏各独立aria-live结果，启停隐藏旧复制banner并取消启动自动复制，改为核对后手动复制；不以第三方已连接措辞代替隧道启动。
+
+VM覆盖有效合同下单写、忙拒绝、停止跨过启动、GET中停止零启动POST、迟到启动与旧finally不覆盖新意图、草稿一致、绑错/已运行/坏合同/HTTP/网络/正文超时及写后读分离。HTTP bridgeTunnel使用真实路由但替身隧道：错stop零副作用且不取代挂起start、有效stop取代已受理start、后端已有重复start409；停止前抛错500仍运行，停止后广播抛错500但已生效，旧空体仍兼容。注入错误堆栈是预期fixture，不冒充真实OS/公网退出证明。
+
+bridgeLifecycleBrowser通过真实菜单→设置Bridge导航和bind按钮，拦截启动/停止，不开公网隧道；扣首个start并验证重复调用零第二写，点同按钮停止，503后读保留停止确认，旧start放行不覆盖，再显式启动验证已启动但读取失败。保留真实函数Promise便于等待迟到完成，不靠固定sleep。普通本地全量不运行Chromium，本地无浏览器；新增场景须本批精确CI核验。
+
+对应说明只核对本批启停/结果/条件绑定段，正式197项仍逐句7、局部30、待逐句103；未把长篇文档整篇晋级。本地定向workbenchRuntime/bridgeTunnel、完整82文件及文档生成/构建/一致性（246源码/28目录/110排除）、git diff --check通过；本批精确CI待核验。
+
+页内代次不是跨标签锁/永久幂等，停止无法保证撤回已发送但尚未到达服务器的启动，之后其他客户端启动仍可改变状态；不自动取消已接受的工具任务，不承诺全部OS后代退出。下一包原生重置命令（第41组只读发现忽略status/json、尚未红测/修复）；Bridge Health/其他API消费者、Provider更新删除、R2余项、历史Windows超时根因、全仓逐句及用户实机保留，探测暂停。
+
 
 ## 复盘
 

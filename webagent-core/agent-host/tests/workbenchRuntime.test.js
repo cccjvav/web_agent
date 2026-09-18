@@ -184,52 +184,152 @@ if (!process.argv.includes('--vm-child')) {
   assert.strictEqual(sockets, 1, 'initial request failure must not prevent websocket startup');
   assert.strictEqual(activated, 1, 'initial tab must still activate');
   assert.strictEqual(warnings, 1, 'partial initialization failure must be visible');
-  // Bridge start binds the visible project, not a different host returned after restart.
-  let starts = 0, alerts = 0;
-  const boundStatus = {workspaceRoot:'/fixture/project',identity:{hostInstanceId:'current'},mcpUrl:'/mcp/fixture'};
-  context.window.alert = () => { alerts++; };
-  context.navigator = {clipboard:{writeText:async()=>{}}};
-  button.classList = {add(){},remove(){}};
-  state.namespace.ui.refreshStatus = async()=>{};
-  context.fetch = async url => url==='/api/status' ? {ok:true,json:async()=>boundStatus} : (++starts,{ok:true,status:200,json:async()=>({success:true})});
-  state.namespace.state.status = null;
-  assert.equal(await bridge.namespace.startBridge(),false);assert.equal(starts,0);
-  state.namespace.state.status = {...boundStatus,identity:{hostInstanceId:'stale'}};
-  assert.equal(await bridge.namespace.startBridge(),false);assert.equal(starts,0);
-  state.namespace.state.status = boundStatus;
-  assert.equal(await bridge.namespace.startBridge(),true);assert.equal(starts,1);
-  context.fetch = async url => url==='/api/status' ? {ok:true,json:async()=>boundStatus} : {status:409,json:async()=>({success:false,error:'stale'})};
-  assert.equal(await bridge.namespace.startBridge(),false);assert.equal(alerts,3);
-  context.fetch = async()=>{throw new Error('offline');};
-  assert.equal(await bridge.namespace.startBridge(),false);assert.equal(alerts,4);
-  const bridgeNotices = [];
-  let refreshed = 0, removed = 0, copied = 0;
-  state.namespace.ui.toast = message => bridgeNotices.push(message);
-  state.namespace.ui.refreshStatus = async () => { refreshed++; };
-  context.navigator.clipboard.writeText = async () => { copied++; };
-  button.classList.remove = () => { removed++; };
-  for (const reason of [{tunnelError:'fixture cloudflared missing'}, {note:'fixture tunnel not ready'}]) {
-    context.fetch = async url => url === '/api/status' ? {ok:true,json:async()=>boundStatus} :
-      {ok:true,status:200,json:async()=>({success:false,...reason})};
-    assert.equal(await bridge.namespace.startBridge(), false);
-    assert.ok(bridgeNotices.at(-1).startsWith('fixture '), 'show actionable server failure, not generic failure');
+  // R42: real start/stop functions; well-formed preflight and write contracts.
+  const actionNodes = new Map();
+  let starts = 0, stops = 0, copied = 0, lit = 0, removed = 0, refreshed = 0;
+  context.document.querySelector = selector => {
+    if (!actionNodes.has(selector)) actionNodes.set(selector,{value:'',textContent:'',disabled:false,
+      classList:{add(){if(selector==='#sess-dot')lit++;},remove(){if(selector==='#sess-dot')removed++;},toggle(){}}});
+    return actionNodes.get(selector);
+  };
+  context.window.alert = () => {};
+  context.navigator = {clipboard:{writeText:async()=>{copied++;}}};
+  const boundStatus = {status:'online',bridgeRunning:false,activeModelId:'builtin',models:[],
+    workspaceRoot:'/fixture/project',identity:{hostInstanceId:'current'},secretKey:'c'.repeat(24)};
+  const startAck = {success:true,running:true,provider:'cloudflare',secretKey:boundStatus.secretKey,
+    mcpPath:'/mcp/'+boundStatus.secretKey,mcpUrl:'https://fixture.test/mcp/'+boundStatus.secretKey,mcpCanonicalUrl:'https://fixture.test/mcp'};
+  const stopAck = {success:true,running:false};
+  const actionReply = (data,ok=true) => ({ok,status:ok?200:500,json:async()=>data});
+  const actionResult = () => actionNodes.get('#bridge-result').textContent;
+  state.namespace.ui.refreshStatus = async () => {refreshed++;return true;};
+  context.fetch = async url => url === '/api/status' ? actionReply(boundStatus) : (++starts,actionReply(startAck));
+  for(const snapshot of [null,{...boundStatus,identity:{hostInstanceId:'stale'}}]) {
+    state.namespace.state.status = snapshot;
+    assert.equal(await bridge.namespace.startBridge(),false);assert.equal(starts,0);
+    assert.ok(actionResult().includes('未发送启动'));
   }
-  assert.equal(refreshed, 2, 'failed restart refreshes stale public URL state');
-  assert.equal(copied, 0, 'failure must not copy a fallback URL');
-  context.fetch = async () => ({ok:false,status:500,json:async()=>({success:true,error:'fixture stop rejected'})});
-  assert.equal(await bridge.namespace.stopBridge(), false);
-  assert.equal(removed, 0, 'HTTP failure cannot extinguish the indicator as if stop succeeded');
-  assert.equal(bridgeNotices.at(-1), 'fixture stop rejected');
-  context.fetch = async () => ({ok:true,json:async()=>({success:false,error:'fixture still running'})});
-  assert.equal(await bridge.namespace.stopBridge(), false);
-  assert.equal(removed, 0);
-  context.fetch = async () => { throw new Error('fixture lost response'); };
-  assert.equal(await bridge.namespace.stopBridge(), false);
-  assert.equal(removed, 0);
-  context.fetch = async () => ({ok:true,json:async()=>({success:true})});
-  assert.equal(await bridge.namespace.stopBridge(), true);
-  assert.equal(removed, 1);
-  assert.equal(refreshed, 3);
+  state.namespace.state.status = boundStatus;
+  context.fetch = async url => url === '/api/status' ? actionReply({...boundStatus,bridgeRunning:true}) : (++starts,actionReply(startAck));
+  assert.equal(await bridge.namespace.startBridge(),false);assert.equal(starts,0,'already-running status must not replay a start');
+  let finishPreflight;
+  context.fetch = async url => url === '/api/status' ? new Promise(resolve=>{finishPreflight=resolve;}) : (++starts,actionReply(startAck));
+  const changedHostStart = bridge.namespace.startBridge();
+  state.namespace.state.status = {...boundStatus,identity:{hostInstanceId:'other'}};
+  finishPreflight(actionReply(boundStatus));
+  assert.equal(await changedHostStart,false);assert.equal(starts,0,'recheck visible binding after await');
+  state.namespace.state.status = boundStatus;
+  for(const data of [null,{}, {success:true}, {...startAck,running:false},{...startAck,success:'true'},
+    {...startAck,provider:'ngrok'},{...startAck,mcpUrl:'javascript:secret'}, {success:false,tunnelError:'TOKEN-MUST-NOT-ECHO'}]) {
+    context.fetch = async url => url === '/api/status' ? actionReply(boundStatus) : (++starts,actionReply(data));
+    assert.equal(await bridge.namespace.startBridge(),false);
+    assert.ok(actionResult().includes('未确认'));assert.ok(!actionResult().includes('TOKEN-MUST-NOT-ECHO'));
+  }
+  assert.equal(refreshed,8,'failed sent requests still try one read, never another write');
+  assert.equal(copied,0);assert.equal(lit,0);
+  context.fetch = async url => url === '/api/status' ? actionReply(boundStatus) : actionReply(startAck,false);
+  assert.equal(await bridge.namespace.startBridge(),false,'HTTP failure overrides success body');
+  context.fetch = async()=>{throw new Error('offline');};
+  assert.equal(await bridge.namespace.startBridge(),false);assert.ok(actionResult().includes('未发送启动'));
+  for(const data of [null,{}, {success:true}, {...stopAck,running:true}, {...stopAck,success:'true'}, {success:false}]) {
+    context.fetch = async () => (++stops,actionReply(data));
+    assert.equal(await bridge.namespace.stopBridge(),false);
+    assert.ok(actionResult().includes('停止结果未确认'));
+  }
+  context.fetch = async () => actionReply(stopAck,false);
+  assert.equal(await bridge.namespace.stopBridge(),false);assert.equal(removed,0);
+  context.fetch = async () => {throw new Error('TOKEN-MUST-NOT-ECHO');};
+  assert.equal(await bridge.namespace.stopBridge(),false);assert.ok(!actionResult().includes('TOKEN-MUST-NOT-ECHO'));
+  // Confirmed writes survive read rejection, supersession or a mismatching snapshot.
+  for(const read of [async()=>{throw new Error('read failed');},async()=>false,async()=>true]) {
+    state.namespace.state.status = {...boundStatus,bridgeRunning:true};
+    state.namespace.ui.refreshStatus = read;
+    context.fetch = async () => actionReply(stopAck);
+    assert.equal(await bridge.namespace.stopBridge(),true);assert.ok(actionResult().includes('停止已确认，但当前状态未核对'));
+    state.namespace.state.status = boundStatus;
+    context.fetch = async url => url === '/api/status' ? actionReply(boundStatus) : actionReply(startAck);
+    assert.equal(await bridge.namespace.startBridge(),true);assert.ok(actionResult().includes('启动已确认，但当前状态或地址未核对'));
+  }
+  state.namespace.ui.refreshStatus = async()=>{state.namespace.state.status={...boundStatus,...startAck,bridgeRunning:true};return true;};
+  assert.equal(await bridge.namespace.startBridge(),true);assert.ok(actionResult().includes('当前地址已核对'));
+  assert.equal(copied,0,'even confirmed starts leave address copying explicit');
+  // Repeated start POST is single-flight; stop is independent and supersedes late success.
+  state.namespace.state.status = boundStatus;
+  state.namespace.ui.refreshStatus = async()=>{state.namespace.state.status=boundStatus;return true;};
+  starts=0;stops=0;
+  let finishStart, finishStop;
+  context.fetch = async (url,options) => {
+    if(url === '/api/status') return actionReply(boundStatus);
+    if(url.endsWith('/start')) {starts++;return new Promise(resolve=>{finishStart=resolve;});}
+    assert.equal(JSON.parse(options.body).hostInstanceId,'current');
+    stops++;return new Promise(resolve=>{finishStop=resolve;});
+  };
+  const firstStart = bridge.namespace.startBridge();
+  assert.equal(await bridge.namespace.startBridge(),false);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(starts,1,'a pending start must not issue a second POST');
+  assert.equal(actionNodes.get('#btn-bridge-toggle').textContent,'停止启动');
+  assert.equal(actionNodes.get('#btn-stop-bridge-rb').disabled,false);
+  const independentStop = bridge.namespace.stopBridge();
+  assert.equal(await bridge.namespace.stopBridge(),false);assert.equal(stops,1);
+  assert.equal(await bridge.namespace.startBridge(),false,'no start while stop is pending');
+  finishStop(actionReply(stopAck));assert.equal(await independentStop,true);
+  const stopMessage = actionResult(), lightsBeforeLate = lit;
+  finishStart(actionReply(startAck));assert.equal(await firstStart,false);
+  assert.equal(actionResult(),stopMessage);assert.equal(lit,lightsBeforeLate);assert.equal(copied,0);
+  // A confirmed old start may still await its read while stop and a newer start run.
+  {
+    let finishRead, finishNewStart, reads=0, writes=0;
+    state.namespace.state.status=boundStatus;
+    state.namespace.ui.refreshStatus=async()=>++reads===1 ? new Promise(resolve=>{finishRead=resolve;}) : true;
+    context.fetch=async url=>url==='/api/status' ? actionReply(boundStatus) : url.endsWith('/stop') ? actionReply(stopAck) :
+      ++writes===1 ? actionReply(startAck) : new Promise(resolve=>{finishNewStart=resolve;});
+    const confirmedOld=bridge.namespace.startBridge();
+    await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(await bridge.namespace.stopBridge(),true);
+    const newerStart=bridge.namespace.startBridge();
+    await new Promise(resolve=>setImmediate(resolve));
+    const newerMessage=actionResult();finishRead(true);
+    assert.equal(await confirmedOld,true,'a confirmed old write remains confirmed, without replacing the newer UI intent');
+    assert.equal(actionResult(),newerMessage);assert.equal(bridge.namespace.bridgeStartPending(),true);
+    assert.equal(await bridge.namespace.startBridge(),false,'old finally must not release a newer start guard');
+    finishNewStart(actionReply(startAck));assert.equal(await newerStart,true);
+    state.namespace.ui.refreshStatus=async()=>true;
+  }
+  // Stop during preflight prevents the not-yet-sent start; missing bindings never stop another host.
+  starts=0;
+  context.fetch = async url => url === '/api/status' ? new Promise(resolve=>{finishPreflight=resolve;}) :
+    url.endsWith('/start') ? (++starts,actionReply(startAck)) : actionReply(stopAck);
+  const beforePost = bridge.namespace.startBridge();
+  assert.equal(await bridge.namespace.stopBridge(),true);
+  finishPreflight(actionReply(boundStatus));assert.equal(await beforePost,false);assert.equal(starts,0);
+  state.namespace.state.status = null;
+  context.fetch = async()=>{throw new Error('must not send');};
+  assert.equal(await bridge.namespace.stopBridge(),false);assert.ok(actionResult().includes('未发送停止'));
+  state.namespace.state.status = boundStatus;
+  // Capture provider/domain/token together, not a token edited while GET is in flight.
+  actionNodes.get('input[name="tunnel"]:checked').value='ngrok';
+  context.document.querySelector('#ngrok-domain').value='old.test';context.document.querySelector('#ngrok-token').value='old-token';
+  let capturedStart;
+  context.fetch = async (url,options) => url === '/api/status' ? new Promise(resolve=>{finishPreflight=resolve;}) :
+    (capturedStart=JSON.parse(options.body),actionReply({...startAck,provider:'ngrok'}));
+  const draftStart = bridge.namespace.startBridge();
+  actionNodes.get('#ngrok-token').value='new-token';actionNodes.get('#ngrok-domain').value='new.test';
+  finishPreflight(actionReply(boundStatus));assert.equal(await draftStart,true);
+  assert.equal(capturedStart.ngrokToken,'old-token');assert.equal(capturedStart.ngrokDomain,'old.test');
+  actionNodes.get('input[name="tunnel"]:checked').value='';
+  // Expired response bodies cannot be consumed as success (without wall-clock sleeps).
+  const actionTimeout = context.setTimeout, actionClear = context.clearTimeout;
+  let expireAction, finishActionBody;
+  context.setTimeout = fn=>{expireAction=fn;return 42;};context.clearTimeout=()=>{};
+  for(const action of ['startBridge','stopBridge']) {
+    state.namespace.state.status=boundStatus;
+    context.fetch = async url => url === '/api/status' ? actionReply(boundStatus) : {ok:true,json:()=>new Promise(resolve=>{finishActionBody=resolve;})};
+    const pendingAction = bridge.namespace[action]();
+    await new Promise(resolve=>setImmediate(resolve));
+    expireAction();finishActionBody(action==='startBridge'?startAck:stopAck);
+    assert.equal(await pendingAction,false);assert.ok(actionResult().includes('未确认'));
+  }
+  context.setTimeout=actionTimeout;context.clearTimeout=actionClear;
   const taskNodes = new Map();
   context.document.querySelector = selector => {
     if (!taskNodes.has(selector)) taskNodes.set(selector,{innerHTML:'',textContent:'',classList:{remove(){},toggle(){}}});

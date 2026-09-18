@@ -214,47 +214,92 @@ export async function openSite(key) {
   ui.toast(`已打开 ${site.name} 连接指引，尚未建立外部会话`);
 }
 
-export async function startBridge() {
-  try {
-  const expected = state.status;
-  const provider = ($('input[name="tunnel"]:checked') || {}).value || 'cloudflare';
-  const statusResponse = await fetch('/api/status', {cache:'no-store'});
-  const binding = await statusResponse.json();
-  if (!statusResponse.ok || !binding.workspaceRoot || !binding.identity?.hostInstanceId || expected?.workspaceRoot !== binding.workspaceRoot || expected?.identity?.hostInstanceId !== binding.identity.hostInstanceId) {
-    window.alert('工作区尚未确认或主机已变化，不能启动 Bridge。请使用项目文件夹启动主机后刷新页面并核对工作区。'); return false;
+let bridgeAction = 0, bridgeStartTicket = 0, bridgeStopTicket = 0;
+
+export function bridgeStartPending() { return Boolean(bridgeStartTicket); }
+
+function paintBridgeAction() {
+  const toggle = $('#btn-bridge-toggle'), stop = $('#btn-stop-bridge-rb');
+  if (toggle) {
+    toggle.disabled = Boolean(bridgeStopTicket);
+    toggle.textContent = bridgeStopTicket ? '正在请求停止…' : bridgeStartTicket ? '停止启动' : state.status?.bridgeRunning ? '停止 Bridge' : '启动 Bridge';
   }
-  const body = { tunnelProvider: provider, workspaceRoot:binding.workspaceRoot, hostInstanceId:binding.identity.hostInstanceId };
+  if (stop) stop.disabled = Boolean(bridgeStopTicket);
+  if (bridgeStartTicket || bridgeStopTicket) $('#mcp-banner')?.classList.add('hidden');
+}
+
+function bridgeOutcome(message) {
+  for (const id of ['#bridge-result', '#bridge-result-rb']) if ($(id)) $(id).textContent = message;
+}
+
+async function bridgeRequest(path, body, timeoutMs = 10000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(path, {cache:'no-store', signal:controller.signal,
+      ...(body ? {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)} : {})});
+    const data = await response.json();
+    if (controller.signal.aborted) throw new Error('deadline');
+    return {response, data};
+  } finally { clearTimeout(timer); }
+}
+
+export async function startBridge() {
+  if (bridgeStartTicket || bridgeStopTicket) return false;
+  const ticket = ++bridgeAction; bridgeStartTicket = ticket;
+  const expected = {workspaceRoot:state.status?.workspaceRoot, hostInstanceId:state.status?.identity?.hostInstanceId};
+  // Capture provider AND credentials before the preflight await; never mix drafts.
+  const provider = ($('input[name="tunnel"]:checked') || {}).value || 'cloudflare';
+  const body = {tunnelProvider:provider, ...expected};
   if (provider === 'cloudflare-named' || provider === 'named') {
-    body.namedDomain = ($('#named-domain') && $('#named-domain').value) || '';
-    body.namedToken = ($('#named-token') && $('#named-token').value) || '';
+    body.namedDomain = $('#named-domain')?.value || ''; body.namedToken = $('#named-token')?.value || '';
   }
   if (provider === 'ngrok') {
-    body.ngrokDomain = ($('#ngrok-domain') && $('#ngrok-domain').value) || '';
-    body.ngrokToken = ($('#ngrok-token') && $('#ngrok-token').value) || '';
+    body.ngrokDomain = $('#ngrok-domain')?.value || ''; body.ngrokToken = $('#ngrok-token')?.value || '';
   }
-  const res = await fetch('/api/bridge/start', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  const data = await res.json();
-  if (!res.ok || !data.success) {
-    const message = String(data.error || data.tunnelError || data.note || '无法启动 Bridge');
-    if (res.status === 409) window.alert(message);
-    else ui.toast(message.slice(0, 180));
-    await ui.refreshStatus();
+  let sent = false;
+  paintBridgeAction();
+  bridgeOutcome('正在核对启动目标；可点击停止启动。');
+  try {
+    if (!expected.workspaceRoot || !expected.hostInstanceId) throw new Error('binding');
+    const current = await bridgeRequest('/api/status');
+    if (ticket !== bridgeAction) return false;
+    if (!current.response.ok || !isStatusSnapshot(current.data) || current.data.bridgeRunning !== false || !sameSecretBinding(current.data, expected)
+      || !sameSecretBinding(state.status, expected)) throw new Error('binding');
+    sent = true;
+    bridgeOutcome('启动请求已发送，等待主机确认；停止仍可用。');
+    const {response, data} = await bridgeRequest('/api/bridge/start', body, 45000);
+    if (ticket !== bridgeAction) return false;
+    if (!response.ok || data?.success !== true || data.running !== true || data.provider !== provider
+      || !validRotatedSecret(data, '')) throw new Error('unconfirmed');
+    state.stats.healthLine = '';
+    bridgeOutcome('原主机已确认启动；正在核对当前状态。');
+    try {
+      if (!sameSecretBinding(state.status, expected)) throw new Error('binding');
+      const refreshed = await ui.refreshStatus();
+      if (ticket !== bridgeAction) return true;
+      if (refreshed === false || !sameSecretBinding(state.status, expected) || state.status.bridgeRunning !== true
+        || state.status.mcpUrl !== data.mcpUrl || state.status.secretKey !== data.secretKey) throw new Error('read');
+      $('#sess-dot').classList.add('on');
+      ui.setRight('bridge');
+      bridgeOutcome('启动已确认，当前地址已核对；请按需手动复制。隧道开启不代表第三方已连接。');
+    } catch (_) {
+      if (ticket === bridgeAction) bridgeOutcome('原主机启动已确认，但当前状态或地址未核对；请重新读取状态，不要再次启动。');
+    }
+    return true;
+  } catch (_) {
+    if (ticket === bridgeAction) {
+      bridgeOutcome(sent ? '启动结果未确认，可能已生效；请读取状态或显式停止。没有自动重试或复制地址。'
+        : '主机、工作区或停止状态未确认，未发送启动；请刷新并核对工作区。');
+      if (sent && sameSecretBinding(state.status, expected)) { try { await ui.refreshStatus(); } catch (_) {} }
+    }
     return false;
+  } finally {
+    if (bridgeStartTicket === ticket) bridgeStartTicket = 0;
+    paintBridgeAction();
   }
-  if (data.note) ui.toast(data.note.slice(0, 180));
-  state.stats.healthLine = '';
-  await ui.refreshStatus();
-  $('#mcp-banner').classList.remove('hidden');
-  try { await navigator.clipboard.writeText(state.status.mcpUrl); } catch (_) {}
-  ui.setRight('bridge');
-  $('#sess-dot').classList.add('on');
-  return true;
-  } catch (error) { window.alert(error.message || 'Bridge 启动失败，请检查主机和工作区。'); return false; }
 }
+ui.bridgeStartPending = bridgeStartPending;
 
 let secretRotating = false;
 
@@ -333,20 +378,39 @@ export async function resetSecret() {
 ui.resetSecret = resetSecret;
 
 export async function stopBridge() {
+  if (bridgeStopTicket) return false;
+  const ticket = ++bridgeAction; bridgeStopTicket = ticket;
+  // Supersede the local start, including a preflight which has not sent a POST.
+  // This does not recall an already transmitted request or prove process exit.
+  bridgeStartTicket = 0;
+  const expected = {workspaceRoot:state.status?.workspaceRoot, hostInstanceId:state.status?.identity?.hostInstanceId};
+  let sent = false;
+  paintBridgeAction();
+  bridgeOutcome('正在请求停止；不会自动取消已接受的工具任务。');
   try {
-    const response = await fetch('/api/bridge/stop', { method: 'POST' });
-    const data = await response.json();
-    if (!response.ok || !data.success) {
-      ui.toast(String(data.error || data.note || 'Bridge 停止失败，请核对隧道进程').slice(0, 180));
-      return false;
-    }
+    if (!expected.workspaceRoot || !expected.hostInstanceId) throw new Error('binding');
+    sent = true;
+    const {response, data} = await bridgeRequest('/api/bridge/stop', expected, 15000);
+    if (!response.ok || data?.success !== true || data.running !== false) throw new Error('unconfirmed');
     state.stats.healthLine = '';
-    await ui.refreshStatus();
-    $('#sess-dot').classList.remove('on');
+    bridgeOutcome('原主机已确认停止；正在核对当前状态。');
+    try {
+      if (!sameSecretBinding(state.status, expected)) throw new Error('binding');
+      const refreshed = await ui.refreshStatus();
+      if (refreshed === false || !sameSecretBinding(state.status, expected) || state.status.bridgeRunning !== false) throw new Error('read');
+      $('#sess-dot').classList.remove('on');
+      bridgeOutcome('停止已确认，当前状态已核对；已接受的任务未被自动取消，其他启动仍可能改变状态。');
+    } catch (_) {
+      bridgeOutcome('原主机停止已确认，但当前状态未核对；请重新读取状态，不要将此当作所有进程已退出。');
+    }
     return true;
-  } catch (error) {
-    window.alert(error.message || 'Bridge 停止状态未知，请核对主机和隧道进程');
+  } catch (_) {
+    bridgeOutcome(sent ? '停止结果未确认；请读取状态并核对隧道进程。请求失败不证明未执行，没有自动重试。'
+      : '主机或工作区未确认，未发送停止；请刷新并核对目标。');
     return false;
+  } finally {
+    bridgeStopTicket = 0;
+    paintBridgeAction();
   }
 }
 
@@ -355,7 +419,7 @@ export function paintBridge() {
   const running = !!s.bridgeRunning;
   $('#bridge-pill').textContent = running ? '运行中' : '已停止';
   $('#bridge-pill').className = 'status-pill ' + (running ? 'run' : 'stop');
-  $('#btn-bridge-toggle').textContent = running ? '停止 Bridge' : '启动 Bridge';
+  paintBridgeAction();
   $('#mcp-block').classList.toggle('hidden', !running);
   $('#mcp-url').textContent = s.mcpUrl || '—';
   $('#bridge-sub').textContent = running

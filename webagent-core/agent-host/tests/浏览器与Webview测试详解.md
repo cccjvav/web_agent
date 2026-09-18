@@ -99,7 +99,7 @@ stdio审批回归必须等待具体requestId的approve响应为succeeded，再�
 
 使用真实Chromium单独页面，通过route白名单提供实际docs-site/index.html/app.js/content.js/styles.css，其他请求中止；不连接外网服务。验证有结果→无匹配替换→清空移除，坏guide百分号不阻断全文，以及真实MCP详解含斜线标题的目标。覆写scrollIntoView仅记录被调用元素ID，不把它当滚动动画/视觉验收；pageerror收集未处理错误，finally关页面。此用例使用真实DOM/脚本，不是VM，但也不覆盖静态服务器网络/全部浏览器或所有标题语法。
 
-workbenchRuntime新增实际Bridge模块VM失败路径：HTTP200/success:false的tunnelError与note可见、失败重启刷新状态且不复制URL；停止时HTTP失败、业务失败、响应丢失都不假灭灯，成功才刷新/灭灯。它使用模拟fetch/DOM，不是公网提供商或Windows进程验收。
+workbenchRuntime实际Bridge模块VM失败路径已按第42组更新：HTTP200/success:false或HTTP失败均在独立结果区显示未确认、不回显tunnelError/note中的凭据，启动失败仍尝试一次只读刷新且不复制URL；停止时HTTP失败、业务失败、响应丢失不假灭灯，写确认和后续读取单独消费。它使用模拟fetch/DOM，不是公网提供商或Windows进程验收。
 
 R3定制设置回归：workbenchRuntime加载真实settings模块，先用400负例复现旧保存返回undefined/污染state，再覆盖HTTP/业务/坏JSON/形状/网络失败保留旧值、超时AbortSignal与finally释放、忙时拒绝第二次加载/保存、只提交partial、保存响应不覆盖其他草稿、显式加载填表。计时器为VM替身，不是实际网络超时。workbench.browser点击实际指令保存按钮、拦截400响应，断言错误可见、草稿保留、不显示成功；不据此认证用户本机或所有设置按钮。
 
@@ -144,3 +144,9 @@ stdioLifecycleBrowser的实际页面合同负例主说明见[主机诊断与调�
 ## 第41组：经典密钥轮换结果消费
 
 workbenchRuntime执行真实bind的reset-secret回调：HTTP500不得toast“已重置”先红测；修后确保有效页面/预读状态下实际发送过一次POST，而非因夹具缺字段提前返回假通过。rotationReply给JSON/HTTP替身，rotationResult读取独立结果区；覆盖null/缺字段/非布尔success/旧secret/错路径、取消、confirm期间绑定变化、实时旧密钥不匹配、POST在途重复onclick一写，以及10秒期限覆盖迟到JSON。finally禁按钮释放；确认POST后刷新失败仍true且保留写成功，不回显异常secret、不自动再POST；正常刷新核对新secret。这里是VM，不是浏览器或真实密钥轮换。
+
+## 第42组：启动去重、停止优先与迟到响应
+
+workbenchRuntime先以挂起POST复现两次startBridge发两POST（实际2、期望1）；不是只比源码。actionReply提供有效核心status与完整启停合同，actionResult读取独立结果区；修后验证缺失/改变主机及实时已运行零启动，预读期间页面变绑零POST，畸形success/running/provider/地址/HTTP错误不确认，固定提示不回显fixture Token。已确认启动/停止后读reject/false/不匹配仍true；正确读取才点灯/灭灯，启动不自动复制。
+
+start/stop各自单飞，启动中停止可达并携绑定，停止中不得再启动；旧启动迟到不能覆盖已停文案或灯。停止发生于GET等待时零启动POST。domain/token与provider同时捕获，等待期间编辑不混入旧请求。缺绑定的停止零POST；模拟计时器过期后迟到JSON不能被消费为成功。actionTimeout/actionClear恢复计时器，VM响应/灯/剪贴板均为替身，不是公网或真实桌面证据。真实bind切换按钮与浏览器执行见bridgeLifecycleBrowser，真实HTTP见bridgeTunnel。

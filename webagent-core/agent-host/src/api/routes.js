@@ -290,6 +290,11 @@ router.post('/bridge/start', async (req, res) => {
 });
 
 router.post('/bridge/stop', async (req, res) => {
+  const body = req.body || {};
+  if (['workspaceRoot', 'hostInstanceId'].some(key => Object.prototype.hasOwnProperty.call(body, key))) {
+    try { assertWorkspaceBinding(body, config); }
+    catch (_) { return res.status(409).json({success:false, error:'Stop binding changed; read status first'}); }
+  }
   bridgeGeneration++;
   await tunnel.stopTunnel();
   config.bridgeRunning = false;
