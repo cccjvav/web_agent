@@ -671,7 +671,7 @@ bridgeLifecycleBrowser通过真实菜单→设置Bridge导航和bind按钮，拦
 
 覆盖：绑定字段、模态确认与取消零POST、旧密钥形状未知/工作区不匹配零POST、十种坏回包、请求抛错、写后读成功与四种读取失败、停止六类失败与工作区不匹配零POST，并断言提示不含新旧密钥。后端绑定/CAS的真实HTTP证据仍由bridgeTunnel提供；夹具是HTTP与VS Code替身，不是真实IDE、隧道进程或Windows弹窗验收。`extensions-installed`副本已同步（extensionCopy按字节比较），`documentationLearning`新增测试文件到说明映射，并按命名函数规则改用箭头属性避免未说明的`show`/`dispose`等符号。
 
-本地定向与完整**83个测试文件**通过（新增1个），文档生成/构建/一致性与`git diff --check`通过；本批精确CI待核验。相关说明只核对本批轮换/停止段：extension详解与命令安全测试说明由待逐句改为局部，其余仍待逐句。
+本地定向与完整**83个测试文件**通过（新增1个），文档生成/构建/一致性与`git diff --check`通过。实现db85323c770137f7cbe7b15d570869d13c43a004已推当前固定分支，[CI35332743748](https://github.com/cccjvav/web_agent/actions/runs/35332743748)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium；本批未改浏览器夹具，workbench-browser仅回归既有场景。相关说明只核对本批轮换/停止段：extension详解与命令安全测试说明由待逐句改为局部，其余仍待逐句。
 
 单窗口顺序不是跨窗口锁或永久幂等；服务端仍接受旧空体调用（无绑定/CAS），不因此认为所有调用方都已绑定。下一包其余API消费者与Bridge Health；经典UI、R2余项、历史Windows超时根因、全仓逐句与用户实机保留，探测暂停。
 

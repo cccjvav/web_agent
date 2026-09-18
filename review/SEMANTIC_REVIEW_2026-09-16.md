@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-第43组F43：原生`webagent.resetSecret`空体POST且忽略status/json，HTTP500仍提示“已重置”，VM执行真实activate复现后修：模态确认、绑定+expectedSecret、严格回包合同、409拒绝与未知分开、写确认后读取失败保留确认；原生停止带绑定并要求running=false（测试另抓出success:"true"假成功）。本地83测试文件与文档检查通过，本批CI待核验。仅局部，197项逐句7、局部30、待103口径不变（extension详解与命令安全测试说明因本批同步改为局部）；剩余R3消费者、R2、全仓/实机/历史超时与探测暂停保留。
+第43组F43：原生`webagent.resetSecret`空体POST且忽略status/json，HTTP500仍提示“已重置”，VM执行真实activate复现后修：模态确认、绑定+expectedSecret、严格回包合同、409拒绝与未知分开、写确认后读取失败保留确认；原生停止带绑定并要求running=false（测试另抓出success:"true"假成功）。本地83测试文件与文档检查通过，实现db85323c770137f7cbe7b15d570869d13c43a004的[CI35332743748](https://github.com/cccjvav/web_agent/actions/runs/35332743748)九项逐项成功；夹具是VS Code/HTTP替身，不代签真实IDE或隧道进程。仅局部，197项逐句7、局部30、待103口径不变（extension详解与命令安全测试说明因本批同步改为局部）；剩余R3消费者、R2、全仓/实机/历史超时与探测暂停保留。
 
 第42组F42：经典startBridge挂起时重复调用两POST，红测后改单飞；停止独立且页面代次拒旧预读/回包/旧finally覆盖。捕获绑定与草稿、完整回包/期限、写后读取失败保留确认，不自动复制或重试；stop有字段条件绑定、旧无字段兼容。VM/真实HTTP通过，隧道进程是替身；新增真实bind页面合成场景本地未执行。82本地测试/文档检查通过，实现53a0560c7b1af1fcf2936988ae9c52f4cd0ec8c7的[CI35329103242](https://github.com/cccjvav/web_agent/actions/runs/35329103242)九项逐项成功，含新增bridgeLifecycleBrowser合成响应场景；不代签真实公网/用户实机。仅局部，197项逐句7、局部30、待103不变；下一包原生重置命令，剩余R3/R2、全仓/实机/历史超时与探测暂停保留。
 
