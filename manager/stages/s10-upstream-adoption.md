@@ -716,7 +716,7 @@ R9首包把Actions权限收敛为`contents: read`，高危生产依赖审计改�
 
 相邻executionControl/结果消费者复核发现executor把lastExecId与commandStore全局共享；任一已认证peer若取得/猜中另一peer的execId可读输出或取消，不传ID还会直接拿到全局最近命令。记录现保存内部owner，commandOwner使用服务端认证后的peer/兼容caller键，lastCommandId只在该所有者的有界记录中反查；显式查询/取消也对跨peer统一found:false且不泄露记录存在。桌面调用仍共享local命名空间，事件与公开结果不暴露owner。executionControl用第二peer证明显式ID、缺省最近记录和取消均隔离，原所有者仍可查询/停止。getLogs原来也忽略options并汇总全局事件；远程现只返回sessionIdFor匹配的有界执行追踪，本机仍可查宿主事件。同一路径还发现getTaskStatus忽略handler的options，总是返回Local计划；现将上下文传入getTaskState/stateFor，taskProgress证明两个远程peer分别只读回自身计划且不含Local内容，未知peer读取返回未保存idle快照而不消耗16个报告槽。getCapabilities同样曾无视remote options，向只读peer重新广告tools/list已隐藏的写/命令工具；现复用同一allowed过滤，executionControl锁定两目录一致。
 
-approvedOperations以可控Date.now覆盖临期完成、完整结果保留、可见expired及迟到cancel；workflowPreconditions覆盖顶层未知字段、两类矛盾条件、完整输出的自/前向引用、危险/空路径段及字面量非误判。专项定向测试、executionControl/PTY/taskProgress回归、本地83测试、文档247文件/28目录/110排除项库存与站点生成一致性均通过；精确CI随本组提交核对。
+approvedOperations以可控Date.now覆盖临期完成、完整结果保留、可见expired及迟到cancel；workflowPreconditions覆盖顶层未知字段、两类矛盾条件、完整输出的自/前向引用、危险/空路径段及字面量非误判。专项定向测试、executionControl/PTY/taskProgress回归、本地83测试、文档247文件/28目录/110排除项库存与站点生成一致性均通过。实现提交`a85fa5a21a7bba448665f3f6da9671aad56dab6d`的[CI35397169896](https://github.com/cccjvav/web_agent/actions/runs/35397169896)九项逐项成功（Ubuntu Node18/20/22/24、Windows Node20/22/24及重复取消/stdio、Windows安装器、真实Chromium）；不把矩阵内既有探针任务当本组专项审查证据。
 
 本组明确排除`arena-model-probe/`、`webagent-core/probe-extension/`及探针专项文档/测试；没有读取后再自行判定“顺手修复”。探针线索只移交负责该项目的另一位助手。
 

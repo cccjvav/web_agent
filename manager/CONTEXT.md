@@ -9,10 +9,10 @@
 - 探测相关施工现全部暂停并由另一位助手负责，等待其完成整合并正式交接；本分支不拉取合并、不运行专项审查、不修改探针代码/文档。即使通用检查发现疑似缺陷也只记录移交，不自行实现；现有探针实现和历史证据保留。
 - **阶段8暂停／等待外部交接**：用户2026-09-17报告另一助手在[arena-ai-probe指定分支](https://github.com/phuang6666/arena-ai-probe/tree/arena/01a0ab8a-arena-ai-probe)设计整合工作台/code-server外接与VSCode配套插件；目前仅用户报告，尚未审查或验收。不撤销既有0.5.2交付，11.3仍关闭。
 - **阶段7也不是“全部优化完成”**：已确认缺陷和若干增强已落实，但26类借鉴中仍有未实现/待深入候选，详见阶段7与UPSTREAM_ADOPTION_MAP。
-- 最近完整核验基线27fca732b8f0ed28ce37b09b1ab96d93e00dc25b（第45组实修及探针边界纠正），[CI35386685807](https://github.com/cccjvav/web_agent/actions/runs/35386685807)九项逐项成功；本地83测试文件通过，247源码/28目录/110排除。保留36ff82f首轮CI35125290301的Windows22两项超时（8/9、整体失败）：后续证据提交未改实现而全量通过，不说明超时根因已定位或修复。
+- 最近完整核验基线a85fa5a21a7bba448665f3f6da9671aad56dab6d（第46组非探针审批/工作流/caller隔离实修），[CI35397169896](https://github.com/cccjvav/web_agent/actions/runs/35397169896)九项逐项成功；本地83测试文件通过，247源码/28目录/110排除。保留36ff82f首轮CI35125290301的Windows22两项超时（8/9、整体失败）：后续证据提交未改实现而全量通过，不说明超时根因已定位或修复。
 - 持久登录仍延期；Chat API确切后端身份是用户约定的后续任务。启发式结果提供参考，不承诺绝对鉴定。
 
-- 当前续作：第45组已完成第44组报告交叉复核并落实P1-A七个结果消费者、设备码代次/单飞、`createOnly`原子创建、PTY 2xx门禁、Chat可靠终态、补丁协调、Bridge布尔合同、无障碍/390px界面及CI最小权限/高危审计门禁。曾误改的3个model-probe文件已恢复到同步基线，仅留未裁决线索给负责该项目的另一位助手；详见[第45组报告](../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)。非探针本地验证通过；两轮Chromium 8/9失败及后续成功证据均保留，边界纠正`27fca73`的CI35386685807九项成功。第46组已修非探针operatorQueue临期结果立即淘汰/过期被取消改写、workflow及external_request/operation_result包装、矛盾条件/动态前序引用schema，以及命令结果/取消/get_logs跨peer未隔离、远程get_task_status误读Local计划和get_capabilities绕过目录ACL过滤；本地83测试与文档生成/库存通过，精确CI待本组提交。下一项继续其余非探针API/workflow结果边界；R2、lint/EOL/生成物取舍、全仓待逐句与实机边界保留。
+- 当前续作：第45组已完成第44组报告交叉复核并落实P1-A七个结果消费者、设备码代次/单飞、`createOnly`原子创建、PTY 2xx门禁、Chat可靠终态、补丁协调、Bridge布尔合同、无障碍/390px界面及CI最小权限/高危审计门禁。曾误改的3个model-probe文件已恢复到同步基线，仅留未裁决线索给负责该项目的另一位助手；详见[第45组报告](../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)。非探针本地验证通过；两轮Chromium 8/9失败及后续成功证据均保留，边界纠正`27fca73`的CI35386685807九项成功。第46组已修非探针operatorQueue临期结果立即淘汰/过期被取消改写、workflow及external_request/operation_result包装、矛盾条件/动态前序引用schema，以及命令结果/取消/get_logs跨peer未隔离、远程get_task_status误读Local计划和get_capabilities绕过目录ACL过滤；本地83测试与文档生成/库存通过；`a85fa5a`的CI35397169896九项成功。下一项继续其余非探针API/workflow结果边界；R2、lint/EOL/生成物取舍、全仓待逐句与实机边界保留。
 
 - 文档审查与施工继续：[现行范围与剩余施工](../review/SEMANTIC_REVIEW_2026-09-16.md)。早期测试数/CI仅是对应历史批次证据，不作为当前状态；当前已核验基线以上方精确提交为准。手机固定Bridge，同类型并发保留，新增控件不继承旧手机验收。
 

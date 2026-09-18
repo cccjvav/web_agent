@@ -76,7 +76,7 @@
 
 ## 5. 验证结果
 
-最终验证应以本报告提交后的CI为准；本地已执行结果如下：
+实现提交`a85fa5a21a7bba448665f3f6da9671aad56dab6d`的[CI35397169896](https://github.com/cccjvav/web_agent/actions/runs/35397169896)九项逐项成功；本地及边界结果如下：
 
 - agent-host：第46组代码/回归加入后，83个测试文件全部通过；故意注入的`fixture stop failed`等stderr不代表套件失败。
 - 第46组定向：`approvedOperations.test.js`、`workflowPreconditions.test.js`、`executionControl.test.js`、`ptyLifecycle.test.js`、`ptyJobs.test.js`和`taskProgress.test.js`通过；相关实现/测试通过`node --check`。
@@ -88,7 +88,7 @@
 
 ## 6. 仍需保留的风险/决策
 
-1. 边界纠正`27fca73`的九项CI已覆盖Ubuntu/Windows Node矩阵、Windows C#/PowerShell/Inno和真实Chromium；这仍不代签用户桌面、手机、第三方服务或屏幕阅读器验收。
+1. 当前实现`a85fa5a`的九项CI已覆盖Ubuntu/Windows Node矩阵、Windows C#/PowerShell/Inno和真实Chromium；这仍不代签用户桌面、手机、第三方服务或屏幕阅读器验收。
 2. Node 18/20最低兼容与矩阵是否退役需产品决定，并同步`engines`和用户指南。
 3. 最小ESLint、`routes.js`拆分及`content.js`生成物策略仍是维护性候选，不是本轮功能缺陷。
 4. 真实VS Code、多窗口、屏幕阅读器、手机窄屏、隧道和第三方OAuth/模型服务仍按人工清单验收。
