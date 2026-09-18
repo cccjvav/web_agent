@@ -695,7 +695,7 @@ bridgeLifecycleBrowser通过真实菜单→设置Bridge导航和bind按钮，拦
 
 2026-09-18接手后先显式fetch并快进到目标`81fb5c2`，逐项读取/复核第44组报告。确认P1-A七处和P2-D设备码竞态后，不仅改提示：所有相关消费者增加HTTP、严格布尔和响应形状门禁，区分写确认与后读失败且不自动重放；Chat要求可靠NDJSON终态，补丁后读协调脏草稿；GitHub服务端/浏览器双代次与poll单飞；新建文件端到端`createOnly`独占原子创建并以并发HTTP证明一胜一409；PTY所有确认点拒绝非2xx。Bridge统计函数返回可信布尔值，清除写确认不被后读失败改写。
 
-界面审查修表单名称、伪链接/可点击容器、动态标签/树/搜索/工具卡的原生按钮语义；模态焦点进入、Tab约束、Escape恢复；编辑器及右栏页签roving tabindex与方向/Home/End键；最小字体11px、统一焦点轮廓、390px覆盖式侧栏。浏览器源码新增焦点/页签/390×844断言；本机无Chromium且既往下载`ECONNRESET`，首推真实CI执行并暴露宽→窄侧栏遮挡，处置和待复验记录见本组末尾，不把首轮失败冒充通过。
+界面审查修表单名称、伪链接/可点击容器、动态标签/树/搜索/工具卡的原生按钮语义；模态焦点进入、Tab约束、Escape恢复；编辑器及右栏页签roving tabindex与方向/Home/End键；最小字体11px、统一焦点轮廓、390px覆盖式侧栏。浏览器源码新增焦点/页签/390×844断言；本机无Chromium且既往下载`ECONNRESET`，首推真实CI执行并暴露宽→窄侧栏遮挡，处置、两次失败及最终复验证据见本组末尾，不把首轮失败冒充通过。
 
 R9首包把Actions权限收敛为`contents: read`，高危生产依赖审计改硬门禁。扩展/安装镜像及函数说明同步。按用户全仓范围运行辅助项目时，model-probe离线E2E真实复现同名未知模型因向量抖动重复`NEW_MODEL`；改模型ID精确命中优先、兼容无向量verified条目并过滤畸形导入/证据，四阶段verify转绿。外部CDP/账户/整合仍暂停，没有借此宣称阶段8恢复。
 
@@ -703,7 +703,9 @@ R9首包把Actions权限收敛为`contents: read`，高危生产依赖审计改�
 
 首推`e0fdf65`的[CI35380095907](https://github.com/cccjvav/web_agent/actions/runs/35380095907)为8/9：Ubuntu/Windows主机矩阵及Windows安装器全部通过，真实Chromium在640px首次跨断点时捕获已展开侧栏遮挡Agent菜单。未改断言掩盖失败；bind现只在宽→窄跨越时关闭旧桌面侧栏并同步焦点/ARIA，避免窄屏键盘高度resize误关用户刚开的抽屉；VM加入1000→640真实闭包回归。Actions checkout/setup-node同步升v5，清理由旧Node动作运行时产生的弃用告警。
 
-`04c8e04`的[CI35381193695](https://github.com/cccjvav/web_agent/actions/runs/35381193695)再次8/9，Chromium已越过原遮挡点并运行到Skill创建400负例；失败是浏览器断言仍要求旧版纯服务端错误串，而bind已按本批合同显示“状态未知：原错误”。断言现同时要求可信状态语义、保留原错误且磁盘零创建，不通过删负例或放宽为任意toast掩盖。精确后续提交CI仍需推送后核对，不继承前两轮8个通过项。
+`04c8e04`的[CI35381193695](https://github.com/cccjvav/web_agent/actions/runs/35381193695)再次8/9，Chromium已越过原遮挡点并运行到Skill创建400负例；失败是浏览器断言仍要求旧版纯服务端错误串，而bind已按本批合同显示“状态未知：原错误”。断言现同时要求可信状态语义、保留原错误且磁盘零创建，不通过删负例或放宽为任意toast掩盖。
+
+修复`cc779414c61493b02248571977eea9e96893953c`的[CI35381668516](https://github.com/cccjvav/web_agent/actions/runs/35381668516)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器及真实Chromium均通过；生产高危审计门禁也在各主机任务通过。前两次8/9仍保留为发现链，不用最终绿灯抹去。GitHub仅剩ubuntu-latest将于2026-10-19迁移Ubuntu 26的计划性notice，不是本次失败或产品验证。
 
 
 ## 复盘
