@@ -531,6 +531,20 @@ if (!process.argv.includes('--vm-child')) {
   assert.strictEqual(statusNodes.get('#think-select').value,'my-draft');
 
   // Execute the real bind callbacks and shared save helper, not copied handlers.
+  const classSet = initial => {
+    const values = new Set(initial);
+    return { add: value => values.add(value), remove: value => values.delete(value),
+      toggle(value, force) { if (force === true) values.add(value); else if (force === false) values.delete(value); else if (values.has(value)) values.delete(value); else values.add(value); },
+      contains: value => values.has(value) };
+  };
+  const sidebarNode = context.document.querySelector('#sidebar');
+  const sidebarChild = {};
+  sidebarNode.classList = classSet(['collapsed']);
+  sidebarNode.contains = node => node === sidebarChild;
+  const activityNode = { dataset: { left: 'explorer' }, classList: classSet([]),
+    setAttribute(name,value) { this[name]=value; }, focus() { focused=this; } };
+  context.document.querySelectorAll = selector => selector === '#activitybar [data-left]' ? [activityNode] : [];
+  context.window.innerWidth = 1000;
   const binding = new vm.SourceTextModule(fs.readFileSync(path.join(root,'bind.js'),'utf8'),{context});
   await binding.link(specifier => specifier==='./state.js'?state:specifier==='./picker.js'?picker:dom);
   await binding.evaluate();
@@ -540,6 +554,15 @@ if (!process.argv.includes('--vm-child')) {
   binding.namespace.bind();
   state.namespace.ui.saveModelSettings = settings.namespace.saveModelSettings;
   state.namespace.ui.refreshStatus = bridge.namespace.refreshStatus;
+
+  activityNode.onclick();
+  assert.ok(!sidebarNode.classList.contains('collapsed'));
+  context.document.activeElement = sidebarChild;
+  context.window.innerWidth = 640;
+  for (const resize of listeners.get('resize')) resize();
+  assert.ok(sidebarNode.classList.contains('collapsed'),'crossing into the drawer breakpoint closes an obstructing sidebar');
+  assert.strictEqual(activityNode['aria-pressed'],'false');
+  assert.strictEqual(focused,activityNode,'focus returns to the visible activity control when its drawer closes');
 
   // R3 result consumers: an HTTP response is not success until its body confirms the action.
   const consumerNotices = [];

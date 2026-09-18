@@ -695,11 +695,13 @@ bridgeLifecycleBrowser通过真实菜单→设置Bridge导航和bind按钮，拦
 
 2026-09-18接手后先显式fetch并快进到目标`81fb5c2`，逐项读取/复核第44组报告。确认P1-A七处和P2-D设备码竞态后，不仅改提示：所有相关消费者增加HTTP、严格布尔和响应形状门禁，区分写确认与后读失败且不自动重放；Chat要求可靠NDJSON终态，补丁后读协调脏草稿；GitHub服务端/浏览器双代次与poll单飞；新建文件端到端`createOnly`独占原子创建并以并发HTTP证明一胜一409；PTY所有确认点拒绝非2xx。Bridge统计函数返回可信布尔值，清除写确认不被后读失败改写。
 
-界面审查修表单名称、伪链接/可点击容器、动态标签/树/搜索/工具卡的原生按钮语义；模态焦点进入、Tab约束、Escape恢复；编辑器及右栏页签roving tabindex与方向/Home/End键；最小字体11px、统一焦点轮廓、390px覆盖式侧栏。浏览器源码新增焦点/页签/390×844断言，但本机无Chromium且既往下载`ECONNRESET`，只登记为待CI执行，不冒充通过。
+界面审查修表单名称、伪链接/可点击容器、动态标签/树/搜索/工具卡的原生按钮语义；模态焦点进入、Tab约束、Escape恢复；编辑器及右栏页签roving tabindex与方向/Home/End键；最小字体11px、统一焦点轮廓、390px覆盖式侧栏。浏览器源码新增焦点/页签/390×844断言；本机无Chromium且既往下载`ECONNRESET`，首推真实CI执行并暴露宽→窄侧栏遮挡，处置和待复验记录见本组末尾，不把首轮失败冒充通过。
 
 R9首包把Actions权限收敛为`contents: read`，高危生产依赖审计改硬门禁。扩展/安装镜像及函数说明同步。按用户全仓范围运行辅助项目时，model-probe离线E2E真实复现同名未知模型因向量抖动重复`NEW_MODEL`；改模型ID精确命中优先、兼容无向量verified条目并过滤畸形导入/证据，四阶段verify转绿。外部CDP/账户/整合仍暂停，没有借此宣称阶段8恢复。
 
-详细文件、前置报告状态、验证和剩余Node EOL/lint/生成物/实机取舍见[第45组报告](../../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)。对话中断后分支ref曾回到初始提交而文件仍为新基线；先备份binary diff/未跟踪项，再仅`update-ref`+`read-tree`恢复固定分支到`81fb5c2`，未覆盖工作文件。本批本地最终证据：83个主测试文件通过；文档库存247/28/110与构建一致；calculator 6项、trace-inspector 77项、model-probe四阶段（69单测/15 E2E/20冒烟）通过；生产审计0漏洞、扩展镜像一致。真实Chromium/Windows与精确提交CI仍不得预写。
+详细文件、前置报告状态、验证和剩余Node EOL/lint/生成物/实机取舍见[第45组报告](../../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)。对话中断后分支ref曾回到初始提交而文件仍为新基线；先备份binary diff/未跟踪项，再仅`update-ref`+`read-tree`恢复固定分支到`81fb5c2`，未覆盖工作文件。本批本地最终证据：83个主测试文件通过；文档库存247/28/110与构建一致；calculator 6项、trace-inspector 77项、model-probe四阶段（69单测/15 E2E/20冒烟）通过；生产审计0漏洞、扩展镜像一致。
+
+首推`e0fdf65`的[CI35380095907](https://github.com/cccjvav/web_agent/actions/runs/35380095907)为8/9：Ubuntu/Windows主机矩阵及Windows安装器全部通过，真实Chromium在640px首次跨断点时捕获已展开侧栏遮挡Agent菜单。未改断言掩盖失败；bind现只在宽→窄跨越时关闭旧桌面侧栏并同步焦点/ARIA，避免窄屏键盘高度resize误关用户刚开的抽屉；VM加入1000→640真实闭包回归。Actions checkout/setup-node同步升v5，清理由旧Node动作运行时产生的弃用告警。该修复的精确提交CI仍需推送后核对，不继承首推8个通过项。
 
 
 ## 复盘

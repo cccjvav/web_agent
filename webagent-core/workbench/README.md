@@ -46,7 +46,7 @@ Bridge显示外部客户端连接信息与工具事件；内置Arena面板仅提
 ## 验证与阅读顺序
 先看[交互模块](js/README.md)，编辑冲突看[API说明](../agent-host/src/api/README.md)，命令边界看[工具说明](../agent-host/src/tools/README.md)。
 
-editorRuntime/workbenchRuntime/monacoLoading用实际模块或函数fixture检查数据保护、结果消费、主题和加载；workbenchHtml检查表单标签、语义按钮、焦点样式和窄屏规则。独立workbench.browser在具备Chromium时检查模态焦点恢复和390px抽屉边界；真实读屏器、输入法、Windows DPI、beforeunload及更多移动端状态仍需人工验收。
+editorRuntime/workbenchRuntime/monacoLoading用实际模块或函数fixture检查数据保护、结果消费、主题和加载；workbenchRuntime另执行1000→640px跨断点侧栏收起及焦点/ARIA恢复，workbenchHtml检查表单标签、语义按钮、焦点样式和窄屏规则。独立workbench.browser在具备Chromium时检查模态焦点恢复和390px抽屉边界；真实读屏器、输入法、Windows DPI、beforeunload及更多移动端状态仍需人工验收。
 
 HTTP工具接入登记与移除有独立结果区：在途防重复，未知先查原列表；移除登记不证明HTTP服务停止，stdio的停止请求也不等于已观察到退出。逐函数与验证见[受控工具与工作流详解](../agent-host/src/utils/受控工具与工作流详解.md)，不据此认证所有接入或进程隔离。
 

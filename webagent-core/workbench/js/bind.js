@@ -68,19 +68,33 @@ export function bind() {
     if (btn) btn.setAttribute('aria-expanded', on ? 'false' : 'true');
   });
   onClick('#btn-bridge-health', () => ui.checkBridgeHealth && ui.checkBridgeHealth());
+  const closeSidebar = () => {
+    const side = $('#sidebar');
+    if (!side || side.classList.contains('collapsed')) return false;
+    const buttons = $$('#activitybar [data-left]');
+    const active = buttons.find((button) => button.classList.contains('active'));
+    const restoreFocus = typeof side.contains === 'function' && side.contains(document.activeElement);
+    side.classList.add('collapsed');
+    buttons.forEach((button) => {
+      button.classList.remove('active');
+      button.setAttribute?.('aria-pressed', 'false');
+    });
+    if (restoreFocus) active?.focus?.();
+    return true;
+  };
   $$('#activitybar [data-left]').forEach((b) => {
     b.onclick = () => {
       const left = b.dataset.left;
       const side = $('#sidebar');
       const already = b.classList.contains('active') && !side.classList.contains('collapsed');
+      if (already) {
+        closeSidebar();
+        return;
+      }
       $$('#activitybar [data-left]').forEach((x) => {
         x.classList.remove('active');
         x.setAttribute?.('aria-pressed', 'false');
       });
-      if (already) {
-        side.classList.add('collapsed');
-        return;
-      }
       b.classList.add('active');
       b.setAttribute?.('aria-pressed', 'true');
       side.classList.remove('collapsed');
@@ -104,7 +118,13 @@ export function bind() {
     $('#file-menu').classList.add('hidden');
     closeAgentMenu();
   });
-  window.addEventListener('resize', closeAgentMenu);
+  let narrowViewport = Number(window.innerWidth) > 0 && Number(window.innerWidth) <= 700;
+  window.addEventListener('resize', () => {
+    closeAgentMenu();
+    const nextNarrow = Number(window.innerWidth) > 0 && Number(window.innerWidth) <= 700;
+    if (nextNarrow && !narrowViewport) closeSidebar();
+    narrowViewport = nextNarrow;
+  });
   $('#btn-agent-pick').onclick = (e) => {
     e.stopPropagation();
     const menu = $('#agent-pick-menu');

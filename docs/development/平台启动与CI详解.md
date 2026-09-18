@@ -62,7 +62,7 @@ dependencies：express HTTP路由、cors来源控制、ws WebSocket、diff差异
 
 ### agent-host
 
-fail-fast:false让失败不取消其它矩阵。Ubuntu/Windows各Node20/22/24，include再加Ubuntu18兼容任务。default working-directory是agent-host；checkout@v4取源码，setup-node@v4选择项目Node，npm ci按锁文件安装依赖，check-docs只检查不修漂移，npm test运行测试发现/汇总。
+fail-fast:false让失败不取消其它矩阵。Ubuntu/Windows各Node20/22/24，include再加Ubuntu18兼容任务。default working-directory是agent-host；checkout@v5取源码，setup-node@v5以Node 24动作运行时选择项目Node，避免GitHub弃用旧动作运行时的告警；npm ci按锁文件安装依赖，check-docs只检查不修漂移，npm test运行测试发现/汇总。
 
 `npm audit --omit=dev --audit-level=high`现在是门禁：高/严重生产依赖公告或审计请求失败会使矩阵失败，不再用continue-on-error吞掉。它不扫描开发依赖、不分析项目源码或证明依赖来源签名，因此绿色CI仍不是“零漏洞”证书。Action自身的Node运行时弃用警告与矩阵node-version不同，不能混报。
 

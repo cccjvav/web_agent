@@ -33,7 +33,7 @@ agent-host测试中的editorRuntime、workbenchRuntime、monacoLoading执行实�
 
 | 源码 | 定位证据 |
 |---|---|
-| [bind.js](bind.js) | 116 个函数/类节点 |
+| [bind.js](bind.js) | 120 个函数/类节点 |
 | [bridge.js](bridge.js) | 60 个函数/类节点 |
 | [chat.js](chat.js) | 39 个函数/类节点 |
 | [dom.js](dom.js) | 15 个函数/类节点 |
