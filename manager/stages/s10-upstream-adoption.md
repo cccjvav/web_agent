@@ -621,7 +621,7 @@ mcpBoard保留直接RPC工具回归，增加生产HTTP/磁盘负例：公开标�
 
 说明修正覆盖私有会话/公开peer、稳定OAuth主体与具体取消凭据的区别；仅对应章节局部核对，未重审budget/errors/全部RPC长篇。正式197项：逐句7、局部28、待逐句105，其余状态不变。共享同一主体并真正知道私有SID者仍可使用，不是完整多租户隔离；重启/过期/淘汰不从磁盘任务恢复身份，刷新不自动取消旧凭据在途操作。既有任意Execute/同OS用户信任边界不变，探测专项未施工。
 
-定向mcpBoard/mcpCancellation及完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）和git diff --check通过。本批精确CI待提交后核验；本地无Chromium，不冒充新增浏览器攻击用例。下一包回R3 Bridge启停/密钥轮换结果消费，R2余项、Provider更新删除、历史Windows超时根因、全仓逐句和用户实机继续保留。
+定向mcpBoard/mcpCancellation及完整82测试文件、文档生成/构建/一致性（246源码/28目录/110排除）和git diff --check通过。实现bff848389183ee099d42a227aa04bc73f974f306已推当前固定分支，[CI35291325766](https://github.com/cccjvav/web_agent/actions/runs/35291325766)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、既有真实Chromium。本地无Chromium，不冒充新增浏览器攻击用例或用户实机验收。下一包回R3 Bridge启停/密钥轮换结果消费，R2余项、Provider更新删除、历史Windows超时根因、全仓逐句和用户实机继续保留。
 
 ## 复盘
 
