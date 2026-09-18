@@ -689,7 +689,7 @@ bridgeLifecycleBrowser通过真实菜单→设置Bridge导航和bind按钮，拦
 
 沙箱环境事实已写入报告P3-B：`.git/shallow`存在、本地仅33个提交、fetch refspec只有main，因此`git rev-parse origin/<工作分支>`必然失败；核对远端必须用`git ls-remote`或显式fetch+`FETCH_HEAD`，恢复ref前先备份差异并证明工作树等于远端。
 
-验证：完整83测试文件、文档生成/构建/一致性、`git diff --check`通过；本批精确CI待核验。报告在正式清单中登记为**待逐句核对**，由接手助手按报告第6节复核后改状态——本会话不自我认证。
+验证：完整83测试文件、文档生成/构建/一致性、`git diff --check`通过。报告与管理同步提交6a1944d56d63e228bdf3b4b3a022c3efd6a84c1d已推当前固定分支，[CI35335420393](https://github.com/cccjvav/web_agent/actions/runs/35335420393)九项逐项成功（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium）；本批只改文档，未改产品源码。报告在正式清单中登记为**待逐句核对**，由接手助手按报告第6节复核后改状态——本会话不自我认证。
 
 
 ## 复盘
