@@ -64,7 +64,7 @@ function workspacePaths() {
   if (!paths.length) throw new Error('未打开工作区，已阻止启动 Bridge/任务。请先通过 文件 → 打开文件夹 选择项目根目录。');
   return paths;
 }
-async function workspaceBinding() {
+async function workspaceSnapshot() {
   const before = workspacePaths();
   const response = await requestJson('GET', `${agentHostUrl()}/api/status`);
   const status = response.json;
@@ -72,7 +72,67 @@ async function workspaceBinding() {
   const after = workspacePaths();
   const matches = folder => sameWorkspace(folder, status.workspaceRoot);
   if (!matches(before[0]) || !matches(after[0])) throw new Error(`工作区与主机不一致，已阻止操作。主机工作区：${status.workspaceRoot}。请将该文件夹作为首工作区（建议单独打开），或为目标项目重新启动主机。`);
-  return {workspaceRoot:status.workspaceRoot, hostInstanceId:status.identity.hostInstanceId};
+  return { status, binding: { workspaceRoot: status.workspaceRoot, hostInstanceId: status.identity.hostInstanceId } };
+}
+async function workspaceBinding() { return (await workspaceSnapshot()).binding; }
+
+const SECRET_PATTERN = /^[a-f0-9]{24}$/;
+
+// A resolved request is not a rotated credential: require the host's own new-key contract.
+function validRotationResult(result, oldSecret) {
+  const data = result?.json;
+  if (result?.status !== 200 || data?.success !== true || typeof data.secretKey !== 'string'
+    || !SECRET_PATTERN.test(data.secretKey) || data.secretKey === oldSecret
+    || data.mcpPath !== '/mcp/' + data.secretKey) return false;
+  try {
+    const url = new URL(data.mcpUrl);
+    return ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password && !url.search && !url.hash
+      && url.pathname === data.mcpPath && data.mcpCanonicalUrl === url.origin + '/mcp';
+  } catch { return false; }
+}
+
+// Rotation invalidates credentials and OAuth, so it is confirmed, bound, and never replayed blindly.
+async function resetSecretCommand({ refresh } = {}) {
+  let sent = false;
+  try {
+    const { status, binding } = await workspaceSnapshot();
+    const oldSecret = status.secretKey;
+    if (!SECRET_PATTERN.test(oldSecret || '')) throw new Error('当前密钥状态未知，请先刷新状态，再决定是否重置。');
+    const choice = await vscode.window.showWarningMessage(
+      '确认重置 MCP 地址？旧密钥与 OAuth 授权立即失效，已接受的任务不会自动停止。结果丢失时不要重复重置，先读取状态。',
+      { modal: true }, '重置');
+    if (choice !== '重置') { vscode.window.showInformationMessage('已取消，未发送密钥轮换。'); return false; }
+    sent = true;
+    let result;
+    try {
+      result = await requestJson('POST', `${agentHostUrl()}/api/bridge/reset-secret`, { ...binding, expectedSecret: oldSecret });
+    } catch {
+      throw new Error('密钥轮换结果未确认，可能已生效；请刷新状态，不要重复重置。');
+    }
+    // The host rejects binding/CAS mismatches before writing; anything else stays unknown.
+    if (result.status === 409) throw new Error('轮换被主机拒绝：绑定或密钥已变化，未轮换；请刷新状态后重试。');
+    if (!validRotationResult(result, oldSecret)) throw new Error('密钥轮换结果未确认，可能已生效；请刷新状态，不要重复重置。');
+    // A confirmed write and a later failed read are different outcomes; never auto-retry.
+    let verified = false;
+    try {
+      const after = await workspaceSnapshot();
+      verified = after.status.secretKey === result.json.secretKey
+        && after.binding.workspaceRoot === binding.workspaceRoot
+        && after.binding.hostInstanceId === binding.hostInstanceId;
+    } catch { verified = false; }
+    if (refresh) { try { await refresh(); } catch { /* status view stays stale, rotation is already confirmed */ } }
+    if (verified) {
+      vscode.window.showInformationMessage('Web Agent: MCP 地址已重置并核对，旧链接立即失效；请手动复制新地址。');
+    } else {
+      vscode.window.showWarningMessage('Web Agent: 原主机已确认轮换，但当前地址未核对；请刷新状态，不要重复重置。');
+    }
+    return true;
+  } catch (e) {
+    const message = sent ? e.message : `未发送密钥轮换：${e.message}`;
+    if (sent) vscode.window.showWarningMessage(message, { modal: true });
+    else vscode.window.showErrorMessage(message);
+    return false;
+  }
 }
 
 function postNdjson(url, body, onEvent, signal) {
@@ -269,15 +329,7 @@ function activate(context) {
         vscode.commands.executeCommand('workbench.view.extension.webagent-sidebar');
       }
     }),
-    vscode.commands.registerCommand('webagent.resetSecret', async () => {
-      try {
-        await requestJson('POST', `${agentHostUrl()}/api/bridge/reset-secret`, {});
-        vscode.window.showInformationMessage('Web Agent: MCP Secret 已重置，旧链接立即失效。');
-        bridge.refresh();
-      } catch (e) {
-        vscode.window.showErrorMessage(`重置失败: ${e.message}`);
-      }
-    })
+    vscode.commands.registerCommand('webagent.resetSecret', () => resetSecretCommand({ refresh: () => bridge.refresh() }))
   );
 }
 
@@ -372,7 +424,17 @@ class BridgeView {
           return this.refresh();
         }
         if (msg.type === 'stop') {
-          await requestJson('POST', `${agentHostUrl()}/api/bridge/stop`, {});
+          const binding = await workspaceBinding();
+          let result;
+          try {
+            result = await requestJson('POST', `${agentHostUrl()}/api/bridge/stop`, binding);
+          } catch {
+            throw new Error('停止结果未确认；请刷新状态并核对隧道进程。请求失败不证明未执行，没有自动重试。');
+          }
+          if (result.status === 409) throw new Error('停止被主机拒绝：绑定已变化，未停止；请刷新状态后重试。');
+          if (result.status >= 400 || result.json?.success !== true || result.json.running !== false) {
+            throw new Error('停止结果未确认；请刷新状态并核对隧道进程。');
+          }
           return this.refresh();
         }
         if (msg.type === 'copy') {

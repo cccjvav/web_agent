@@ -25,7 +25,24 @@
 
 **refreshBar()**每5秒GET status，明确检查status≥400/无JSON；有工作区差异显示warning，正常显示Bridge状态，catch离线。context.dispose清interval；已有请求不会因clearInterval自动取消。
 
-三个registerCommand箭头：openBridge打开侧栏；openAgentChat尝试原生Chat预填@webagent，失败回侧栏；resetSecret POST后通知并刷新Bridge，catch错误。这里resetSecret未检查HTTP状态，requestJson resolved不保证API业务成功，不能把通知文字当后端证据。statusBar自身也加入subscriptions管理。
+三个registerCommand：openBridge打开侧栏；openAgentChat尝试原生Chat预填@webagent，失败回侧栏；resetSecret委托**resetSecretCommand({refresh:()=>bridge.refresh()})**，把确认/绑定/回包消费集中在一个可测函数里，不再用内联箭头吞掉HTTP状态。statusBar自身也加入subscriptions管理。
+
+### 原生密钥轮换与停止（第43组）
+
+**workspaceSnapshot()**是workspaceBinding的实体：取before文件夹→GET status→校验HTTP/工作区/主机→取after并sameWorkspace，返回`{status,binding}`；**workspaceBinding()**只返回binding，避免把secretKey随控制/启动请求外发。
+
+**validRotationResult(result,oldSecret)**要求HTTP200、`success`严格true、新24位hex密钥且不同于旧值、`mcpPath`等于`/mcp/<新key>`、`mcpUrl`是无凭据/查询/fragment的http(s) URL且路径与canonical origin一致；否则不确认。它不验证公网可达性。
+
+**resetSecretCommand({refresh})**流程：读快照并检查旧密钥形状→`showWarningMessage(...,{modal:true},'重置')`确认（取消则通知“已取消，未发送”并false）→POST携workspaceRoot/hostInstanceId/expectedSecret→消费结果：
+
+- 请求本身抛错（超时/断连）：结果未确认，可能已生效，不重试。
+- HTTP409：主机在写入前拒绝（绑定或旧密钥已变化），报“未轮换”。
+- 其他非200、空/坏JSON、success非严格true、密钥未变或地址合同不符：结果未确认。
+- 合同成立：写已确认，再读一次快照核对新密钥与同一主机/工作区；核对成功才提示“已重置并核对”，否则明确“原主机已确认轮换，但当前地址未核对”。两种情况都调用refresh刷新侧栏，返回true。
+
+失败提示按sent区分：未发送用`未发送密钥轮换：<原因>`，已发送保留未确认/被拒绝原文。所有提示不含密钥正文。命令级只有页内一次调用顺序，没有跨窗口锁或永久幂等；服务端仍接受旧空体调用（无绑定/CAS），本命令自身不再发空体。
+
+停止分支同样消费结果：先workspaceBinding（不匹配即不发送，避免停到别的主机），POST携绑定字段；请求抛错、非200、`success`非严格true或`running`不为false都报“停止结果未确认”，HTTP409报“未停止”，只有确认才refresh。这里同样不自动重试、不宣称隧道进程已退出。
 
 导出的**deactivate匿名箭头**为空，释放依赖VS Code context.subscriptions（含PTY dispose），不是显式关闭agent-host或Bridge进程。
 
@@ -40,7 +57,7 @@
 
 ## 4. BridgeView全部方法与回调
 
-**resolveWebviewView(webviewView)**设_view/options/html，消息验证后switch式if处理：refresh调用refresh；start POST cloudflare；stop POST停止；copy写系统剪贴板并通知；reset委托命令。start/stop响应未统一校验状态，再刷新状态才见实际结果；catch显示错误。初始化立即refresh。
+**resolveWebviewView(webviewView)**设_view/options/html，消息验证后switch式if处理：refresh调用refresh；start POST cloudflare并校验HTTP与success；stop先取绑定再POST，严格校验success/running，失败弹未确认而非静默刷新；copy写系统剪贴板并通知；reset委托命令。catch统一modal显示错误。初始化立即refresh。
 
 **refresh()**没有_view即返回；GET status后post状态JSON，网络失败回带error的状态。和状态栏不同，该方法未检查HTTP错误码，所以不要仅凭界面无exception认定成功。
 
@@ -89,9 +106,9 @@ chatHtml在日志区外增加原生details使用帮助，首屏可见且不随�
 
 ## 10. 工作区绑定与启动拒绝（0.7.1）
 
-**workspacePaths()**先检查workspace.isTrusted；要求首文件夹为file URI并有fsPath，空窗口/虚拟目录直接抛中文提醒。返回本地文件夹路径。**workspaceBinding()**先取before，再请求实时/api/status，核对HTTP、workspaceRoot及identity.hostInstanceId，之后再取after；内部**matches**按sameWorkspace比较首文件夹。前后任一不匹配则拒绝。首根规则与revealWorkspaceFile和PTY identity一致；多根项目建议将目标单独打开，不支持运行中自动改绑主机。
+**workspaceSnapshot()**（见第2节）返回status与binding；**workspaceBinding()**是它的薄封装。**workspacePaths()**先检查workspace.isTrusted；要求首文件夹为file URI并有fsPath，空窗口/虚拟目录直接抛中文提醒。返回本地文件夹路径。**workspaceBinding()**先取before，再请求实时/api/status，核对HTTP、workspaceRoot及identity.hostInstanceId，之后再取after；内部**matches**按sameWorkspace比较首文件夹。前后任一不匹配则拒绝。首根规则与revealWorkspaceFile和PTY identity一致；多根项目建议将目标单独打开，不支持运行中自动改绑主机。
 
-BridgeView启动、原生Chat handler及ChatView send都先await workspaceBinding，然后把两个绑定字段随POST送往主机；失败showErrorMessage以modal=true弹窗，Bridge还校验HTTP及success。Chat校验后才登记历史，取消后不发送；postNdjson遇HTTP错误明确reject，不能把409正文吞成完成。refreshBar对空/不信任/首根不匹配给出警告，工作区变更会刷新，轮询仍保留。
+BridgeView启动/停止、原生Chat handler及ChatView send都先await workspaceBinding，然后把两个绑定字段随POST送往主机；失败showErrorMessage以modal=true弹窗，Bridge启动校验HTTP及success，停止另要求running为false。原生轮换改用workspaceSnapshot以取得旧密钥做比较。Chat校验后才登记历史，取消后不发送；postNdjson遇HTTP错误明确reject，不能把409正文吞成完成。refreshBar对空/不信任/首根不匹配给出警告，工作区变更会刷新，轮询仍保留。
 
 验证：workspaceEntry的真实扩展VM处理器覆盖空窗口无请求、首根不匹配不启动、不信任和查询期间关闭文件夹；bridgeTunnel真实HTTP覆盖缺失/过期绑定409且不改变隧道/授权。VM不等于真实桌面VSCode弹窗验收。服务器收到的字段是客户端声明，不是后台读取IDE的证明，也不是认证或OS隔离。
 

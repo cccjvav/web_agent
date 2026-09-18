@@ -85,7 +85,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 高，继续 | 进行中：第38–40组控制面、OAuth凭据/issuer、会话公开标识/主体绑定首包已核对；其余安全依赖继续，不作全链认证 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27/31–37组设置/模型/状态/Provider、审批、检查点、HTTP接入及stdio消费首包已修；第41组经典密钥轮换、第42组经典启停在途/结果消费已修；下一包原生重置命令独立红测与修复，其余消费者继续 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
+| R3 / 下一项，高 | 进行中：第25/27/31–37组设置/模型/状态/Provider、审批、检查点、HTTP接入及stdio消费首包已修；第41组经典密钥轮换、第42组经典启停、第43组原生扩展轮换/停止消费已修；下一包其余API消费者与Bridge Health，其他调用方继续 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、operatorQueue/workflows、工具入口与相关测试 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -659,6 +659,21 @@ bridgeLifecycleBrowser通过真实菜单→设置Bridge导航和bind按钮，拦
 对应说明只核对本批启停/结果/条件绑定段，正式197项仍逐句7、局部30、待逐句103；未把长篇文档整篇晋级。本地定向workbenchRuntime/bridgeTunnel、完整82文件及文档生成/构建/一致性（246源码/28目录/110排除）、git diff --check通过。实现53a0560c7b1af1fcf2936988ae9c52f4cd0ec8c7已推当前固定分支，[CI35329103242](https://github.com/cccjvav/web_agent/actions/runs/35329103242)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium；新增bridgeLifecycleBrowser在CI实际执行通过，合成回包不等于真实公网隧道启停，本地仍无Chromium，不代签用户实机。
 
 页内代次不是跨标签锁/永久幂等，停止无法保证撤回已发送但尚未到达服务器的启动，之后其他客户端启动仍可改变状态；不自动取消已接受的工具任务，不承诺全部OS后代退出。下一包原生重置命令（第41组只读发现忽略status/json、尚未红测/修复）；Bridge Health/其他API消费者、Provider更新删除、R2余项、历史Windows超时根因、全仓逐句及用户实机保留，探测暂停。
+
+
+#### 第43组：原生扩展轮换/停止结果消费
+
+2026-09-18继续R3。原生`webagent.resetSecret`此前POST空体`{}`并且不看`requestJson`的status/json，任何HTTP结果都弹“MCP Secret 已重置”。新增`nativeRotationCommands.test.js`在VM中跑真实`activate()`，只替换vscode与HTTP传输：先复现HTTP500仍提示已重置（断言0条、实际1条），再修实现。
+
+`workspaceSnapshot()`承担原`workspaceBinding()`的校验并返回`{status,binding}`；`workspaceBinding()`改为薄封装，避免把secretKey随控制/启动请求外发。`validRotationResult(result,oldSecret)`要求HTTP200、`success`严格true、新24位hex且不同于旧值、`mcpPath`与密钥一致、`mcpUrl`为无凭据/查询/fragment的http(s)且canonical同源。`resetSecretCommand({refresh})`先读快照校验旧密钥形状，模态确认后才POST，携带workspaceRoot/hostInstanceId/expectedSecret；请求抛错与其它坏回包报“结果未确认”，HTTP409报“未轮换”（主机在写入前拒绝），合同成立才认为写已确认，再读一次核对新密钥与同一主机/工作区：核对成功提示“已重置并核对”，否则明确“已确认轮换，但当前地址未核对”。两者都刷新侧栏并返回true；提示按是否已发送区分“未发送密钥轮换”，且不回显密钥。命令注册改为委托该函数，便于执行真实代码路径。
+
+原生停止同样先取绑定再POST，要求`success===true && running===false`；请求抛错、非200、`success`非严格true或running不为false都报“停止结果未确认”，409报“未停止”，只有确认才refresh。测试还抓到实现里`success:'true'`被当成功的真实漏洞，已收紧为严格布尔。
+
+覆盖：绑定字段、模态确认与取消零POST、旧密钥形状未知/工作区不匹配零POST、十种坏回包、请求抛错、写后读成功与四种读取失败、停止六类失败与工作区不匹配零POST，并断言提示不含新旧密钥。后端绑定/CAS的真实HTTP证据仍由bridgeTunnel提供；夹具是HTTP与VS Code替身，不是真实IDE、隧道进程或Windows弹窗验收。`extensions-installed`副本已同步（extensionCopy按字节比较），`documentationLearning`新增测试文件到说明映射，并按命名函数规则改用箭头属性避免未说明的`show`/`dispose`等符号。
+
+本地定向与完整**83个测试文件**通过（新增1个），文档生成/构建/一致性与`git diff --check`通过；本批精确CI待核验。相关说明只核对本批轮换/停止段：extension详解与命令安全测试说明由待逐句改为局部，其余仍待逐句。
+
+单窗口顺序不是跨窗口锁或永久幂等；服务端仍接受旧空体调用（无绑定/CAS），不因此认为所有调用方都已绑定。下一包其余API消费者与Bridge Health；经典UI、R2余项、历史Windows超时根因、全仓逐句与用户实机保留，探测暂停。
 
 
 ## 复盘

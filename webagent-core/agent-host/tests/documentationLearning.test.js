@@ -26,6 +26,7 @@ const pairs = [
   ["webagent-core/agent-host/tests/oauthRateLimit.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
   ["webagent-core/agent-host/src/utils/workspaceBinding.js", "webagent-core/agent-host/src/utils/函数详解.md"],
   ["webagent-core/agent-host/tests/workspaceEntry.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
+  ["webagent-core/agent-host/tests/nativeRotationCommands.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
   ["webagent-core/agent-host/tests/probeQuestionGuard.test.js", "webagent-core/probe-extension/实现详解.md"],
   ["webagent-core/agent-host/tests/probeCaptureLifecycle.test.js", "webagent-core/probe-extension/实现详解.md"],
   ["webagent-core/agent-host/tests/probePairLifecycle.test.js", "webagent-core/probe-extension/实现详解.md"],
