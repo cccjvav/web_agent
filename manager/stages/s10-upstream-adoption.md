@@ -656,7 +656,7 @@ VM覆盖有效合同下单写、忙拒绝、停止跨过启动、GET中停止零
 
 bridgeLifecycleBrowser通过真实菜单→设置Bridge导航和bind按钮，拦截启动/停止，不开公网隧道；扣首个start并验证重复调用零第二写，点同按钮停止，503后读保留停止确认，旧start放行不覆盖，再显式启动验证已启动但读取失败。保留真实函数Promise便于等待迟到完成，不靠固定sleep。普通本地全量不运行Chromium，本地无浏览器；新增场景须本批精确CI核验。
 
-对应说明只核对本批启停/结果/条件绑定段，正式197项仍逐句7、局部30、待逐句103；未把长篇文档整篇晋级。本地定向workbenchRuntime/bridgeTunnel、完整82文件及文档生成/构建/一致性（246源码/28目录/110排除）、git diff --check通过；本批精确CI待核验。
+对应说明只核对本批启停/结果/条件绑定段，正式197项仍逐句7、局部30、待逐句103；未把长篇文档整篇晋级。本地定向workbenchRuntime/bridgeTunnel、完整82文件及文档生成/构建/一致性（246源码/28目录/110排除）、git diff --check通过。实现53a0560c7b1af1fcf2936988ae9c52f4cd0ec8c7已推当前固定分支，[CI35329103242](https://github.com/cccjvav/web_agent/actions/runs/35329103242)九项逐项成功：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium；新增bridgeLifecycleBrowser在CI实际执行通过，合成回包不等于真实公网隧道启停，本地仍无Chromium，不代签用户实机。
 
 页内代次不是跨标签锁/永久幂等，停止无法保证撤回已发送但尚未到达服务器的启动，之后其他客户端启动仍可改变状态；不自动取消已接受的工具任务，不承诺全部OS后代退出。下一包原生重置命令（第41组只读发现忽略status/json、尚未红测/修复）；Bridge Health/其他API消费者、Provider更新删除、R2余项、历史Windows超时根因、全仓逐句及用户实机保留，探测暂停。
 
