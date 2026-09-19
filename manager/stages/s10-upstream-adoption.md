@@ -740,7 +740,7 @@ Skill创建路由原来只await `write_file`，不消费正常返回的业务对
 
 审批队列虽宣称约40条容量，旧`prune`在`jobs.size>40`时会不顾15分钟窗口提前删终态，令完整结果与requestKey墓碑在压力下消失。现设40条硬上限：先允许同owner/key/摘要命中原记录；未过完整窗口的任何终态都不为新请求让位，新key明确拒绝，超过窗口才惰性清理并恢复容量。该取舍优先查询/窗口内去重而非无限可用性，仍不是重启或多进程后的持久exactly-once。新增`operatorQueueCapacity.test.js`以固定时钟填满并批准40条，锁定首条可查、旧key不重执行、第41条拒绝及窗口后恢复。
 
-定向`modelLifecycle`、`apiFiles`、`operatorQueueCapacity`及相邻`approvedOperations`、`workflowPreconditions`、`runChat`均通过，相关JS通过`node --check`。首轮完整套件为83/84：唯一失败是新测试已进生成库存但尚未加入documentationLearning的主指南映射；补登记且在详解写明`main`后，文档五项守卫与最终84/84通过。文档库存249源码/28目录/110排除且只读updated=0，站点重建一致；生产audit 0漏洞、`git diff --check`通过、两个探针目录零diff。本段只记录本地候选，提交SHA与CI须在推送后补证，不能继承第47组绿灯。
+定向`modelLifecycle`、`apiFiles`、`operatorQueueCapacity`及相邻`approvedOperations`、`workflowPreconditions`、`runChat`均通过，相关JS通过`node --check`。首轮完整套件为83/84：唯一失败是新测试已进生成库存但尚未加入documentationLearning的主指南映射；补登记且在详解写明`main`后，文档五项守卫与最终84/84通过。文档库存249源码/28目录/110排除且只读updated=0，站点重建一致；生产audit 0漏洞、`git diff --check`通过、两个探针目录零diff。实现提交`f89767fdbbc3db1787bf48bb10a32895b1dca647`的[CI35408375271](https://github.com/cccjvav/web_agent/actions/runs/35408375271)九项逐项成功，覆盖Windows Node20/22/24及重复取消/stdio、Ubuntu18/20/22/24、真实Chromium和Windows安装器；不把自动经过的存量探针测试称为专项审查。
 
 本组启动时固定分支ref第四次回到`1d532d0`，而远端已前移到`90c0a9b`。先在`/home/user/r48-recovery-1789775918/`保存binary diff、目标文件和排除Git/依赖的全工作树压缩包，再只读fetch确认`90c0a9b`以`ff948013`为祖先并含第47组两提交；随后仅用`update-ref`与`read-tree`恢复引用/索引。远端独有文件从索引恢复，八个重叠正文以`ff948013`为共同基线三方合并并人工解决两处同段冲突；未使用`reset --hard`、`clean`或整树覆盖，目标改动由外部备份逐项保全。
 

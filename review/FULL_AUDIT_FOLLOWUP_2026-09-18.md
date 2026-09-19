@@ -74,7 +74,7 @@
 - `runOpenAI`与`runChat.timedTool`原来只把`ok:false`或`success:false`当作返回式失败。`operation_result`正常返回的公开记录以顶层`status:'failed'`表达终态，因此被发成`ok:true`工具事件；OpenAI路径还会继续走命令截图等成功专属逻辑。两处现统一复用`toolTrace.isToolFailure`，覆盖失败/取消/unknown状态、trace、超时、非零退出及unknown核验。返回式失败保留完整有界result、发`ok:false`和归一错误；OpenAI仍把原JSON作为tool消息给下一轮模型，真正抛错才使用`ERROR:`合同，失败命令不采集截图。模型夹具登记并真实批准一个进程内failed operation，断言下一轮收到原error且UI事件不假绿。
 - `/skills`旧路由只等待`write_file` Promise，不检查返回对象。若实际写入后read-back发生变化，中央工具会正常return `success:false`/`E_VERIFY_UNKNOWN`，路由却仍答200创建成功。现成功要求`success===true`且`verification.state==='verified'`；返回式失败或unknown答409并保留code/verification，要求先核对目标而非自动重试，抛出的重名/输入异常仍为400。真实HTTP夹具用一次性`file_written`监听在写入和核验之间删除目标，确认最终不报成功；这不是外部OS竞争穷举或副作用回滚。
 - `operatorQueue.prune`虽从finishedAt保留结果，却在`jobs.size>40`时提前删任何终态；持续新请求会在15分钟内丢掉结果查询与requestKey去重墓碑。现40条成为硬上限：prune只删完整窗口外终态；submit先查同owner/key/摘要，原请求在满容量仍可命中，新的不同请求明确拒绝。`operatorQueueCapacity`固定时钟顺序批准40条，锁定首条结果、重复key零重执行、第41条拒绝及窗口后恢复。该策略以可查询和窗口内幂等证据优先，代价是满容量期间拒绝新工作；仍不提供重启/多进程持久exactly-once。
-- Agent、API、队列和测试说明同步；另纠正Chat调度说明中“空工作区初始化npm test”的过时描述，实际代码早已初始化空命令。首轮完整套件为83/84，唯一失败是生成库存已发现新测试、documentationLearning映射尚未登记；补入唯一主指南并写明`main`后，五项文档守卫及最终84/84通过。文档249/28/110、生产audit 0漏洞、探针目录零diff。本地结果不继承第47组CI，提交和远端矩阵须另行核对。
+- Agent、API、队列和测试说明同步；另纠正Chat调度说明中“空工作区初始化npm test”的过时描述，实际代码早已初始化空命令。首轮完整套件为83/84，唯一失败是生成库存已发现新测试、documentationLearning映射尚未登记；补入唯一主指南并写明`main`后，五项文档守卫及最终84/84通过。文档249/28/110、生产audit 0漏洞、探针目录零diff。实现`f89767fdbbc3db1787bf48bb10a32895b1dca647`的CI35408375271九项成功，没有继承第47组绿灯。
 
 ## 4. 前置报告交叉复核状态
 
@@ -90,10 +90,10 @@
 
 ## 5. 验证结果
 
-第46组实现`a85fa5a21a7bba448665f3f6da9671aad56dab6d`之[CI35397169896](https://github.com/cccjvav/web_agent/actions/runs/35397169896)九项逐项成功；第47组没有继承该旧绿灯，其实现`874006e4b8b6d2e1e5bb126e7c2d2a66314acc78`的[CI35402127412](https://github.com/cccjvav/web_agent/actions/runs/35402127412)也已九项逐项成功。第48组当前只有本地候选证据，提交与CI待推送后补充：
+第46组实现`a85fa5a21a7bba448665f3f6da9671aad56dab6d`之[CI35397169896](https://github.com/cccjvav/web_agent/actions/runs/35397169896)九项逐项成功；第47组没有继承该旧绿灯，其实现`874006e4b8b6d2e1e5bb126e7c2d2a66314acc78`的[CI35402127412](https://github.com/cccjvav/web_agent/actions/runs/35402127412)也已九项逐项成功；第48组实现`f89767fdbbc3db1787bf48bb10a32895b1dca647`的[CI35408375271](https://github.com/cccjvav/web_agent/actions/runs/35408375271)再次九项逐项成功：
 
 - 第48组：定向`modelLifecycle`、`apiFiles`、`operatorQueueCapacity`、`approvedOperations`、`workflowPreconditions`、`runChat`通过；7份改动源码/测试JS通过`node --check`。首轮83/84及登记原因如3.7保留，补齐后完整84/84通过；故意注入的`fixture stop failed`等stderr不代表套件失败。
-- 第48组文档/范围：库存249项源码、28目录、110排除，`check-docs`只读updated=0；documentationLearning/Quality/Policy/Links/docsSite五项通过且站点与build一致；生产audit 0漏洞、两个探针目录零diff、`git diff --check`通过。真实Chromium和Windows矩阵仍待新CI，不继承旧结果。
+- 第48组文档/范围：库存249项源码、28目录、110排除，`check-docs`只读updated=0；documentationLearning/Quality/Policy/Links/docsSite五项通过且站点与build一致；生产audit 0漏洞、两个探针目录零diff、`git diff --check`通过。CI实际覆盖Windows Node20/22/24及重复取消/stdio、Ubuntu18/20/22/24、真实Chromium和Windows安装器；不把自动执行的存量探针测试称为专项审查。
 - agent-host：第46组代码/回归加入后，83个测试文件全部通过；故意注入的`fixture stop failed`等stderr不代表套件失败。
 - 第47组：首轮80/83及原因如3.6保留，修正后的完整83/83通过；`approvedOperations`、`workflowPreconditions`、`apiFiles`与`providers`均在全量中通过，9份相关JS通过`node --check`。
 - 第47组文档/范围：库存248项源码、28目录、110排除，`check-docs`只读updated=0，站点内容与build一致；生产依赖audit为0漏洞；相对`ff948013`的两个探针目录零diff。CI覆盖Windows Node20/22/24、Ubuntu18/20/22/24、真实Chromium及Windows安装器；不把全量中自动经过的存量探针测试称为专项审查。
@@ -106,7 +106,7 @@
 
 ## 6. 仍需保留的风险/决策
 
-1. 最近已绑定远端矩阵的实现`874006e`覆盖Ubuntu/Windows Node矩阵、Windows C#/PowerShell/Inno和真实Chromium；第48组当前仍只具本地证据，须新CI。即使通过也不代签用户桌面、手机、第三方服务或屏幕阅读器验收。
+1. 当前实现`f89767f`的九项CI覆盖Ubuntu/Windows Node矩阵、Windows C#/PowerShell/Inno和真实Chromium；这仍不代签用户桌面、手机、第三方服务或屏幕阅读器验收。
 2. Node 18/20最低兼容与矩阵是否退役需产品决定，并同步`engines`和用户指南。
 3. 最小ESLint、`routes.js`拆分及`content.js`生成物策略仍是维护性候选，不是本轮功能缺陷。
 4. 真实VS Code、多窗口、屏幕阅读器、手机窄屏、隧道和第三方OAuth/模型服务仍按人工清单验收。
