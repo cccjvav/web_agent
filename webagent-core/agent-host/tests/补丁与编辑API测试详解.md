@@ -62,3 +62,5 @@ apiFiles用真实本地HTTP验证addProvider追加两模型，旧模型/真实fi
 第35组apiFiles检查点创建续测：提交./checkpoint-http.txt别名，返回规范路径checkpoint-http.txt、ready与result:null，原文件字节不变；已有文件加缺失文件的创建400后，GET元数据完整等于失败前，不留半条记录。后续原有预览/严格确认/真实恢复断言保留；这证明既有后端行为，不是本批新加幂等接口。
 
 第47组模型设置API续测：先GET带`••••`的旧整表再POST，磁盘fixture Key必须仍为原值；同连接身份的旧客户端往返保持兼容。合法multiModel五字段保存后响应含实际modelCount，空/数组/未知顶层、空/未知/错类型/越界多模型、未知active/merge引用、空models、models+model混用及坏caps均400/E_BAD_MODEL_SETTINGS，逐次比较配置完整字节不变，错误正文不回显fixture Key。单model用省略Key或掩码把原id改到另一baseUrl也必须零写，防旧秘密被浅合并转绑；显式replacement Key则允许改连接并可显式改回；已有目录再通过addProvider追加100项也因整表超过100而400/零写，不能分批绕过预算。未请求真实模型端点，不认证API Key有效性或跨进程CAS。
+
+第49组模型/Provider固定schema续测：先直接在fixture旧模型写入`authorization`、`internalToken`及嵌套`metadata`，并给caps/mergeModel等已知槽位写错类型嵌套秘密、给multiModel写未知凭据字段；GET `/models`与`/status`均不得发布注入秘密，models只返回固定且类型有效的模型/多模型字段、Key仍脱敏；把该公开快照合法往返后，磁盘Key保持且历史未知字段被清除。POST单条模型带未知字段400/E_BAD_MODEL_SETTINGS且磁盘逐字节不变。`/providers/probe`带未知包装字段时用fetch计数器证明在触网前400/E_BAD_PROVIDER；addProvider包装或目录项带未知字段同样400/E_BAD_PROVIDER、零写，所有错误正文均不含fixture Key。该测试证明的是本机路由的投影/校验顺序，不检查真实远端响应、浏览器网络面板或恶意进程直接改配置。

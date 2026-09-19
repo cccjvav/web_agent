@@ -53,10 +53,11 @@ function providerKey(value) {
 
 function providerCatalog(list) {
   if (!Array.isArray(list) || !list.length || list.length > 100) throw providerError('模型列表须包含1–100项；可明确填写手动模型ID后添加');
-  const ids = new Set();
+  const ids = new Set(), allowed = new Set(['id', 'name', 'contextSize', 'caps', 'pricing']);
   return list.map(model => {
-    if (!model || typeof model !== 'object' || Array.isArray(model)
-      || typeof model.id !== 'string' || !model.id.trim() || model.id.length > 256
+    if (!model || typeof model !== 'object' || Array.isArray(model)) throw providerError('模型目录项必须为对象');
+    if (Object.keys(model).some(key => !allowed.has(key))) throw providerError('未知模型目录字段');
+    if (typeof model.id !== 'string' || !model.id.trim() || model.id.length > 256
       || /[\x00-\x1f\x7f]/.test(model.id) || ids.has(model.id.trim())) throw providerError('模型ID缺失、重复或格式无效');
     const id = model.id.trim(); ids.add(id);
     for (const [key, limit] of [['name',256],['contextSize',64],['pricing',256]]) {
@@ -70,6 +71,7 @@ function providerCatalog(list) {
 
 function addProvider(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw providerError('addProvider必须为对象');
+  if (Object.keys(input).some(key => !['baseUrl', 'apiKey', 'vision', 'models'].includes(key))) throw providerError('未知addProvider字段');
   const baseUrl = providerEndpoint(input.baseUrl), apiKey = providerKey(input.apiKey);
   if (input.vision != null && typeof input.vision !== 'boolean') throw providerError('vision必须为布尔值');
   const catalog = providerCatalog(input.models);

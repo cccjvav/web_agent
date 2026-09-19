@@ -59,6 +59,8 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 
 第48组继续非探针R3结果边界：modelLifecycle令真实operation_result以正常return给出failed，要求OpenAI工具事件不再假绿且下一轮仍收到原终态详情；apiFiles在Skill磁盘写入与read-back间制造确定性变化，要求路由拒绝把unknown核验包装成创建成功；operatorQueueCapacity填满40条终态，证明未过15分钟的结果/稳定key不提前淘汰，新key拒绝而非牺牲去重，窗口届满后再恢复容量。均为Node/HTTP或模拟模型证据，不代签真实提供商、外部OS竞争或主机重启。
 
+第49组继续非探针R3/R2输入与公开投影边界：apiFiles先把带`authorization`等未知属性及已知槽位错类型嵌套秘密的历史模型/multiModel配置注入磁盘，要求models/status只给各自固定且类型有效的schema、模型Key脱敏；再验证普通模型、Provider探测包装、addProvider包装及目录项的未知字段均受控400，探测负例不触网、保存负例配置字节不变且响应不回显Key。providers/modelLifecycle回归守住目录解析、调用及失败语义。该证据只覆盖本机HTTP/模拟fetch与文件字节，不证明外部Provider善意、跨进程写入或探针项目。
+
 ## 按风险选择回归
 | 风险/模块 | 主要测试 | 证据类型与限制 |
 |---|---|---|
@@ -101,7 +103,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | 源码 | 定位证据 |
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
-| [apiFiles.test.js](apiFiles.test.js) | 39 个函数/类节点 |
+| [apiFiles.test.js](apiFiles.test.js) | 46 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 20 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |

@@ -85,7 +85,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 高，继续 | 进行中：第38–40组控制面、OAuth凭据/issuer、会话公开标识/主体绑定首包已核对；其余安全依赖继续，不作全链认证 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27/31–37与41–43/45–48组既有消费链已修；第46组修审批保留/schema及caller隔离，第47组修外部结果/部分读取与模型设置事务，第48组修模型工具返回式失败、Skill写后核验及审批历史硬容量；下一包继续尚未核对的非探针REST结果边界并与R2安全链交叉，不重做已修链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、modelSettings、operatorQueue/workflows、工具入口与相关测试；明确排除探针专项 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
+| R3 / 下一项，高 | 进行中：第25/27/31–37与41–43/45–49组既有消费链已修；第46组修审批保留/schema及caller隔离，第47组修外部结果/部分读取与模型设置事务，第48组修模型工具返回式失败、Skill写后核验及审批历史硬容量，第49组修模型/Provider未知输入与历史配置公开投影；下一包继续尚未核对的非探针REST结果边界并与R2安全链交叉，不重做已修链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、modelSettings、operatorQueue/workflows、工具入口与相关测试；明确排除探针专项 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -743,6 +743,14 @@ Skill创建路由原来只await `write_file`，不消费正常返回的业务对
 定向`modelLifecycle`、`apiFiles`、`operatorQueueCapacity`及相邻`approvedOperations`、`workflowPreconditions`、`runChat`均通过，相关JS通过`node --check`。首轮完整套件为83/84：唯一失败是新测试已进生成库存但尚未加入documentationLearning的主指南映射；补登记且在详解写明`main`后，文档五项守卫与最终84/84通过。文档库存249源码/28目录/110排除且只读updated=0，站点重建一致；生产audit 0漏洞、`git diff --check`通过、两个探针目录零diff。实现提交`f89767fdbbc3db1787bf48bb10a32895b1dca647`的[CI35408375271](https://github.com/cccjvav/web_agent/actions/runs/35408375271)九项逐项成功，覆盖Windows Node20/22/24及重复取消/stdio、Ubuntu18/20/22/24、真实Chromium和Windows安装器；不把自动经过的存量探针测试称为专项审查。
 
 本组启动时固定分支ref第四次回到`1d532d0`，而远端已前移到`90c0a9b`。先在`/home/user/r48-recovery-1789775918/`保存binary diff、目标文件和排除Git/依赖的全工作树压缩包，再只读fetch确认`90c0a9b`以`ff948013`为祖先并含第47组两提交；随后仅用`update-ref`与`read-tree`恢复引用/索引。远端独有文件从索引恢复，八个重叠正文以`ff948013`为共同基线三方合并并人工解决两处同段冲突；未使用`reset --hard`、`clean`或整树覆盖，目标改动由外部备份逐项保全。
+
+#### 第49组：模型与Provider固定schema、历史配置公开投影
+
+继续R3并交叉R2时，先在真实HTTP夹具把`authorization`等未声明秘密写入旧模型记录；旧GET `/models`会随整条对象浅拷贝发布，新增投影断言在`apiFiles.test.js`明确红测。沿同一路径复核又发现models/status原样返回multiModel，且已知caps/mergeModel槽位若被旧配置写成对象也可携嵌套值。现由modelSettings集中维护固定模型字段与五个multiModel字段：公开响应只复制类型/预算有效值并脱敏Key，status复用同一投影；合法公开快照往返保留真实Key，同时从新事务清除历史未知属性。它不是配置文件加密、同用户进程隔离或跨进程CAS。
+
+普通模型POST现在拒绝记录级未知字段，`caps`与旧兼容`capabilities`共享数组预算；单模型更新先投影旧记录，避免浅合并继续传播历史属性。Provider发现包装必须恰为baseUrl/apiKey，未知字段在创建上游请求前400/E_BAD_PROVIDER；addProvider只接受baseUrl/apiKey/vision/models，每条目录项只接受id/name/contextSize/caps/pricing。错误文案不拼接Key；输入失败不触网或不改配置，既有15秒/512KiB/100项、拒跳转、连接身份绑定和整表上限保持。
+
+`apiFiles`覆盖模型/multiModel未知及错类型历史值不经models/status发布、公开快照往返清洗、普通模型未知字段、探测未知包装零fetch、addProvider包装/目录未知字段零写和错误正文不含Key；`providers`与`modelLifecycle`守住发现、调用和失败语义。定向回归与完整84项均通过，文档249/28/110只读零漂移，生产audit 0漏洞、`git diff --check`及两个探针目录零diff；实现提交与精确CI待本批推送后补证，不能继承第48组绿灯。两个探针目录仍明确排除，自动主套件经过其存量测试不算专项审查。
 
 ## 复盘
 

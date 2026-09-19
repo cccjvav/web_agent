@@ -20,7 +20,7 @@ const { runChat } = require('../agent/runChat');
 const planRound = require('../tools/planRound');
 const { listRemoteModels, addProvider } = require('../agent/providers');
 const store = require('../models/store');
-const { updateModelSettings } = require('../models/modelSettings');
+const { publicModel, publicMultiModel, updateModelSettings } = require('../models/modelSettings');
 const { loadCustom, patchCustom } = require('../models/customizations');
 const { detectEnvironment, detectTechStack } = require('../models/profile');
 const { listSkills, discoverSkills } = require('../tools/skills');
@@ -149,21 +149,24 @@ router.get('/status', (req, res) => {
     ...mcpInfo(req),
     // Workbench paintProviderTable reads GET /api/status.models (not /api/models).
     // Keep display fields; never send apiKey (hasKey only).
-    models: cfg.models.map((m) => ({
-      id: m.id,
-      name: m.name,
-      protocol: m.protocol,
-      modelId: m.modelId,
-      baseUrl: m.baseUrl,
-      hasKey: Boolean(m.apiKey),
-      group: m.group || '',
-      contextSize: m.contextSize || '',
-      caps: Array.isArray(m.caps) ? m.caps : [],
-      vision: Boolean(m.vision),
-      pricing: m.pricing || ''
-    })),
+    models: cfg.models.map((storedModel) => {
+      const m = publicModel(storedModel);
+      return {
+        id: m.id,
+        name: m.name,
+        protocol: m.protocol,
+        modelId: m.modelId,
+        baseUrl: m.baseUrl,
+        hasKey: m.apiKey === '••••',
+        group: m.group || '',
+        contextSize: m.contextSize || '',
+        caps: Array.isArray(m.caps) ? m.caps : [],
+        vision: m.vision === true,
+        pricing: m.pricing || ''
+      };
+    }),
     activeModelId: cfg.activeModelId,
-    multiModel: cfg.multiModel,
+    multiModel: publicMultiModel(cfg.multiModel),
     planRound: planRound.snapshot(),
     bridgeAccount: {
       loggedIn: cfg.bridge.loggedIn,
@@ -500,7 +503,13 @@ router.get('/skills/load', async (req, res) => {
 });
 
 router.post('/providers/probe', async (req, res) => {
-  const body = req.body || {}, controller = new AbortController();
+  const body = req.body;
+  if (!body || typeof body !== 'object' || Array.isArray(body)
+    || Object.keys(body).some(key => !['baseUrl', 'apiKey'].includes(key))
+    || !Object.hasOwn(body, 'baseUrl') || !Object.hasOwn(body, 'apiKey')) {
+    return res.status(400).json({ success: false, error: '模型发现只接受baseUrl与apiKey', code: 'E_BAD_PROVIDER' });
+  }
+  const controller = new AbortController();
   const abort = () => controller.abort();
   const disconnected = () => { if (!res.writableEnded) abort(); };
   req.on('aborted', abort); res.on('close', disconnected);
@@ -508,7 +517,9 @@ router.post('/providers/probe', async (req, res) => {
     const models = await runWithSignal(controller.signal, () => listRemoteModels(body.baseUrl, body.apiKey));
     if (!res.destroyed) res.json({ success: true, models });
   } catch (err) {
-    if (!res.destroyed) res.status(400).json({ success: false, error: err.code === 'E_BAD_PROVIDER' ? err.message : '模型发现失败或超时，请核对Endpoint与凭据' });
+    if (!res.destroyed) res.status(400).json({ success: false,
+      error: err.code === 'E_BAD_PROVIDER' ? err.message : '模型发现失败或超时，请核对Endpoint与凭据',
+      code: err.code === 'E_BAD_PROVIDER' ? err.code : 'E_PROVIDER_PROBE' });
   } finally { req.removeListener('aborted', abort); res.removeListener('close', disconnected); }
 });
 
@@ -516,8 +527,8 @@ router.get('/models', (req, res) => {
   const cfg = store.load();
   res.json({
     activeModelId: cfg.activeModelId,
-    models: cfg.models.map((m) => ({ ...m, apiKey: m.apiKey ? '••••' : '' })),
-    multiModel: cfg.multiModel
+    models: cfg.models.map(publicModel),
+    multiModel: publicMultiModel(cfg.multiModel)
   });
 });
 

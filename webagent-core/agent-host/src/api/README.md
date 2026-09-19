@@ -11,7 +11,7 @@
 
 | 路径 | 方法 | 用途及关键结果 |
 |---|---|---|
-| `/status`、`/logs` | GET | 状态快照、日志；status包含本机连接所需信息，不应当成可公开接口 |
+| `/status`、`/logs` | GET | 状态快照、日志；status的模型及多模型设置使用固定公开投影，但仍包含本机连接所需信息，不应当成可公开接口 |
 | `/bridge/start`、`/bridge/stop`、`/bridge/logout` | POST | 启停隧道或注销；代次控制拒绝迟到启动 |
 | `/bridge/reset-secret`、`/bridge/reset-round` | POST | 重置连接身份（新UI携绑定/旧密钥比较，旧空体兼容），或清MCP会话/读取hash缓存；不是同一个操作 |
 | `/bridge/login`、`/bridge/token` | POST | 本机演示授权，或验证用户提供的GitHub身份 |
@@ -26,8 +26,8 @@
 | `/execution-control` | GET / POST | 主机工作模式/Bridge权限，模式和权限分开变更，受在途/后台屏障保护 |
 | `/operations`、`/operations/:id`、`/operations/:id/approve`、`/operations/:id/cancel` | GET / POST | 本机查看/批准/取消有界请求，批准不等于执行成功 |
 | `/external/*`、`/workflows/*` | GET / POST / DELETE（依实际路由） | 接入/发现、stdio启动审阅、工作流预览/提交；不新增远程管理权 |
-| `/models` | GET / POST | 模型配置读取/更新；addProvider独立仅追加且整表总量≤100。普通更新严格限制包装/模型/multiModel字段与引用；脱敏Key只绑定原连接身份，改端点须显式给Key；响应隐藏Key正文 |
-| `/providers/probe`、`/profile/detect` | POST / GET | 探测模型、环境与技术栈 |
+| `/models` | GET / POST | 模型配置读取/更新；addProvider独立仅追加且整表总量≤100。普通更新严格限制包装/模型/multiModel字段与引用，单条模型拒绝未知字段；GET只投影固定且类型有效的模型与五个多模型字段，脱敏Key只绑定原连接身份，改端点须显式给Key，历史未知属性不会进入响应 |
+| `/providers/probe`、`/profile/detect` | POST / GET | Provider探测包装只接受baseUrl/apiKey且在触网前校验；探测模型、环境与技术栈 |
 | `/customizations` | GET / PUT | 自定义配置；其持久化保证见models说明 |
 | `/skills` | GET / POST | 列出Skill或以createOnly创建正文；成功还要求写后核验为verified，返回式未知结果不包装成创建成功 |
 

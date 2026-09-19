@@ -251,10 +251,44 @@ async function main() {
     const configPath = path.join(tmp, '.webagent/config.json');
     const redactedModels = await request(server, 'GET', '/api/models');
     assert.strictEqual(redactedModels.json.models.find(model => model.id === 'custom-1').apiKey, '••••');
+    {
+      const modelStore = require('../src/models/store');
+      const legacyConfig = modelStore.load();
+      const legacyModel = legacyConfig.models.find(model => model.id === 'custom-1');
+      legacyModel.authorization = 'legacy-secret-must-not-leak';
+      legacyModel.internalToken = 'legacy-token-must-not-leak';
+      legacyModel.metadata = { password: 'nested-secret-must-not-leak' };
+      legacyModel.caps = ['vision', { authorization: 'typed-model-secret-must-not-leak' }];
+      legacyConfig.multiModel.authorization = 'multi-secret-must-not-leak';
+      legacyConfig.multiModel.mergeModel = { authorization: 'typed-multi-secret-must-not-leak' };
+      modelStore.save(legacyConfig);
+      const projectedModels = await request(server, 'GET', '/api/models');
+      const projectedStatus = await request(server, 'GET', '/api/status');
+      assert.strictEqual(projectedModels.status, 200);
+      assert.strictEqual(projectedStatus.status, 200);
+      const projectedModel = projectedModels.json.models.find(model => model.id === 'custom-1');
+      assert.deepStrictEqual(Object.keys(projectedModel).sort(),
+        Object.keys(redactedModels.json.models.find(model => model.id === 'custom-1')).filter(key => key !== 'caps').sort(),
+        'the public model response only projects documented, well-typed fields from legacy configuration');
+      assert.deepStrictEqual(Object.keys(projectedModels.json.multiModel).sort(),
+        Object.keys(redactedModels.json.multiModel).filter(key => key !== 'mergeModel').sort(),
+        'the public multi-model response only projects documented, well-typed fields from legacy configuration');
+      assert.deepStrictEqual(projectedStatus.json.models.find(model => model.id === 'custom-1').caps, []);
+      for (const secret of ['legacy-secret-must-not-leak', 'legacy-token-must-not-leak',
+        'nested-secret-must-not-leak', 'multi-secret-must-not-leak',
+        'typed-model-secret-must-not-leak', 'typed-multi-secret-must-not-leak']) {
+        assert.ok(!JSON.stringify(projectedModels.json).includes(secret));
+        assert.ok(!JSON.stringify(projectedStatus.json).includes(secret));
+      }
+    }
     const redactedRoundTrip = await request(server, 'POST', '/api/models', redactedModels.json);
     assert.strictEqual(redactedRoundTrip.status, 200, 'legacy model-table updates remain compatible');
-    assert.strictEqual(JSON.parse(fs.readFileSync(configPath, 'utf8')).models.find(model => model.id === 'custom-1').apiKey, 'sk-secret',
+    const roundTripConfig = fs.readFileSync(configPath, 'utf8');
+    assert.strictEqual(JSON.parse(roundTripConfig).models.find(model => model.id === 'custom-1').apiKey, 'sk-secret',
       'a redacted GET response cannot overwrite the stored credential');
+    for (const secret of ['legacy-secret-must-not-leak', 'legacy-token-must-not-leak',
+      'nested-secret-must-not-leak', 'multi-secret-must-not-leak',
+      'typed-model-secret-must-not-leak', 'typed-multi-secret-must-not-leak']) assert.ok(!roundTripConfig.includes(secret));
     const validMultiModel = { enabled: false, mergeModel: 'builtin', thinkLevel: 'medium', mergeAllowsRead: false, maxBranches: 3 };
     const savedMultiModel = await request(server, 'POST', '/api/models', { multiModel: validMultiModel });
     assert.strictEqual(savedMultiModel.status, 200);
@@ -266,6 +300,7 @@ async function main() {
       { models: [] }, { models: redactedModels.json.models, model: { id: 'mixed' } },
       { model: 'bad' }, { model: { id: 'bad-caps', caps: 'vision' } },
       { model: { id: 'custom-1', apiKey: 'do-not-echo', caps: 'invalid' } },
+      { model: { id: 'custom-1', undocumentedSecret: 'do-not-echo' } },
       { model: { id: 'custom-1', baseUrl: 'https://retargeted.invalid/v1' } },
       { model: { id: 'custom-1', apiKey: '••••', baseUrl: 'https://retargeted.invalid/v1' } },
       { multiModel: {} }, { multiModel: { enabled: 'false' } }, { multiModel: { maxBranches: 9 } },
@@ -289,6 +324,20 @@ async function main() {
       model: { id: 'custom-1', baseUrl: 'https://example.com/v1', apiKey: 'sk-secret' }
     });
     assert.strictEqual(restoredModel.status, 200);
+    // Unknown provider-probe wrapper fields fail before credentials can reach an endpoint.
+    const strictProbeFetch = global.fetch;
+    let rejectedProbeCalls = 0;
+    global.fetch = async () => { rejectedProbeCalls++; throw new Error('unknown wrapper reached fetch'); };
+    try {
+      const rejectedProbe = await request(server, 'POST', '/api/providers/probe', {
+        baseUrl: 'https://strict-probe.test/v1', apiKey: 'strict-probe-key', autoSave: true
+      });
+      assert.strictEqual(rejectedProbe.status, 400);
+      assert.strictEqual(rejectedProbe.json.code, 'E_BAD_PROVIDER');
+      assert.strictEqual(rejectedProbeCalls, 0);
+      assert.ok(!JSON.stringify(rejectedProbe.json).includes('strict-probe-key'));
+    } finally { global.fetch = strictProbeFetch; }
+
     // Disconnecting the local discovery request aborts its upstream signal.
     const previousFetch=global.fetch;
     let upstreamStarted, upstreamCancelled, disconnectTimer;
@@ -335,9 +384,12 @@ async function main() {
       {...providerInput,models:Array.from({length:101},(_,i)=>({id:String(i)}))},
       {...providerInput,apiKey:'••••'}, {...providerInput,baseUrl:'https://user:password@example.test/v1'},
       {...providerInput,baseUrl:'https://example.test/v1?api_key=secret'},
-      {...providerInput,models:[{id:'x',caps:{}}]}]) {
+      {...providerInput,models:[{id:'x',caps:{}}]},
+      {baseUrl:'https://unknown-wrapper.test/v1',apiKey:'wrapper-secret',models:[{id:'x'}],autoActivate:true},
+      {baseUrl:'https://unknown-catalog.test/v1',apiKey:'catalog-secret',models:[{id:'x',authorization:'hidden'}]}]) {
       const bad=await request(server,'POST','/api/models',{addProvider:input});
       assert.equal(bad.status,400);
+      if (input && typeof input.apiKey === 'string') assert.ok(!JSON.stringify(bad.json).includes(input.apiKey));
       assert.equal(fs.readFileSync(configPath,'utf8'),providerBytes);
     }
     assert.equal((await request(server,'POST','/api/models',{addProvider:providerInput,models:[]})).status,400);
