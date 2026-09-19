@@ -51,9 +51,57 @@ async function main() {
   });
 
   try {
+    const invalidToolTarget = 'invalid-tool-wrapper.txt';
+    const invalidToolWrapper = await request(server, 'POST', '/api/tool/call', {
+      name: 'write_file', mode: 'code',
+      arguments: { filePath: invalidToolTarget, content: 'MUST NOT WRITE' },
+      unexpected: 'field'
+    });
+    assert.equal(invalidToolWrapper.status, 400, 'unknown tool wrapper fields must fail before dispatch');
+    assert.equal(invalidToolWrapper.json.code, 'E_BAD_API_REQUEST');
+    assert.ok(!fs.existsSync(path.join(tmp, invalidToolTarget)));
+    assert.equal((await request(server, 'POST', '/api/tool/call', { name: 'ping', arguments: 'not-an-object' })).status, 400);
+    const invalidChatWrapper = await request(server, 'POST', '/api/chat', { mode: 'ask', message: 'do not run', unexpected: true });
+    assert.equal(invalidChatWrapper.status, 400, 'unknown Chat wrapper fields must fail before task/model work');
+    assert.equal(invalidChatWrapper.json.code, 'E_BAD_API_REQUEST');
+    const invalidChatHistory = await request(server, 'POST', '/api/chat', {
+      mode: 'ask', message: 'do not run', history: [{ role: 'system', content: 'untrusted role' }]
+    });
+    assert.equal(invalidChatHistory.status, 400, 'Chat history only accepts fixed user/assistant records');
+    assert.equal((await request(server, 'POST', '/api/consensus/run', { taskDescription: 'do not run', unexpected: true })).status, 400);
+    assert.equal((await request(server, 'POST', '/api/tasks/reset', { unexpected: true })).status, 400);
+
+    const executionControl = require('../src/utils/executionControl');
+    const modeBeforeInvalidWrapper = executionControl.snapshot().mode;
+    const invalidControlWrapper = await request(server, 'POST', '/api/execution-control', {
+      workspaceRoot: tmp, hostInstanceId: config.hostInstanceId, workMode: 'chat', unexpected: true
+    });
+    assert.equal(invalidControlWrapper.status, 400);
+    assert.equal(executionControl.snapshot().mode, modeBeforeInvalidWrapper, 'unknown control wrapper cannot change host mode');
+
+    const queue = require('../src/utils/operatorQueue');
+    let wrapperOperationRuns = 0;
+    queue.register('api-wrapper-fixture', async () => { wrapperOperationRuns++; return { ok: true }; });
+    const wrapperOperation = queue.submit('api-wrapper-fixture', {}, {}, 'api-wrapper-request');
+    const invalidApprovalWrapper = await request(server, 'POST', `/api/operations/${wrapperOperation.requestId}/approve`, { confirm: true, unexpected: true });
+    assert.equal(invalidApprovalWrapper.status, 400);
+    assert.equal(wrapperOperationRuns, 0);
+    assert.equal(queue.inspect(wrapperOperation.requestId).status, 'waiting-approval');
+    assert.equal((await request(server, 'POST', `/api/operations/${wrapperOperation.requestId}/approve`, { confirm: true })).status, 200);
+    assert.equal(wrapperOperationRuns, 1);
+    const cancelledOperation = queue.submit('api-wrapper-fixture', { n: 2 }, {}, 'api-wrapper-cancel');
+    assert.equal((await request(server, 'POST', `/api/operations/${cancelledOperation.requestId}/cancel`, { unexpected: true })).status, 400);
+    assert.equal(queue.inspect(cancelledOperation.requestId).status, 'waiting-approval');
+    assert.equal((await request(server, 'POST', `/api/operations/${cancelledOperation.requestId}/cancel`, {})).status, 200);
+
     fs.writeFileSync(path.join(tmp, 'checkpoint-http.txt'), 'HTTP original');
     const checkpointBinding = { workspaceRoot: tmp, hostInstanceId: config.hostInstanceId };
     assert.equal((await request(server, 'POST', '/api/checkpoints', { paths: ['checkpoint-http.txt'], confirmed: true })).status, 400);
+    const unknownCheckpointCreate = await request(server, 'POST', '/api/checkpoints', {
+      ...checkpointBinding, paths: ['checkpoint-http.txt'], confirmed: true, unexpected: true
+    });
+    assert.equal(unknownCheckpointCreate.status, 400);
+    assert.deepEqual((await request(server, 'GET', '/api/checkpoints')).json, [], 'unknown checkpoint wrapper cannot allocate a record');
     const checkpointCreated = await request(server, 'POST', '/api/checkpoints', { ...checkpointBinding, paths: ['./checkpoint-http.txt'], confirmed: true });
     assert.equal(checkpointCreated.status, 200);
     assert.deepEqual(checkpointCreated.json.paths,['checkpoint-http.txt'],'creation reports canonical paths, not necessarily the submitted spelling');
@@ -66,22 +114,46 @@ async function main() {
     fs.writeFileSync(path.join(tmp, 'checkpoint-http.txt'), 'HTTP modified');
     const checkpointPreview = await request(server, 'POST', '/api/checkpoints/' + checkpointId + '/preview', checkpointBinding);
     assert.equal(checkpointPreview.status, 200);
+    const unknownCheckpointRestore = await request(server, 'POST', '/api/checkpoints/' + checkpointId + '/restore', {
+      ...checkpointBinding, previewId: checkpointPreview.json.previewId, confirmed: true, unexpected: true
+    });
+    assert.equal(unknownCheckpointRestore.status, 400);
+    assert.equal(fs.readFileSync(path.join(tmp, 'checkpoint-http.txt'), 'utf8'), 'HTTP modified', 'bad restore wrapper cannot consume or write');
     assert.equal((await request(server, 'POST', '/api/checkpoints/' + checkpointId + '/restore', { ...checkpointBinding, previewId: checkpointPreview.json.previewId, confirmed: 'true' })).status, 400);
     const checkpointRestored = await request(server, 'POST', '/api/checkpoints/' + checkpointId + '/restore', { ...checkpointBinding, previewId: checkpointPreview.json.previewId, confirmed: true });
     assert.equal(checkpointRestored.json.result.status, 'succeeded');
     assert.equal(fs.readFileSync(path.join(tmp, 'checkpoint-http.txt'), 'utf8'), 'HTTP original');
     assert.equal((await request(server, 'GET', '/api/checkpoints')).json.find(item => item.id === checkpointId).state, 'consumed');
+    assert.equal((await request(server, 'POST', '/api/checkpoints/' + checkpointId + '/remove', { ...checkpointBinding, unexpected: true })).status, 400);
+    assert.ok((await request(server, 'GET', '/api/checkpoints')).json.some(item => item.id === checkpointId));
     assert.equal((await request(server, 'POST', '/api/checkpoints/' + checkpointId + '/remove', checkpointBinding)).status, 200);
 
     const created = await request(server, 'PUT', '/api/files/content', {
       path: 'notes.md',
-      content: 'hello from editor'
+      content: 'hello from editor',
+      createOnly: true
     });
     assert.strictEqual(created.status, 200);
     assert.strictEqual(created.json.success, true);
     assert.ok(created.json.hash);
     assert.strictEqual(fs.readFileSync(path.join(tmp, 'notes.md'), 'utf8'), 'hello from editor');
     assert.ok(!fs.readdirSync(tmp).some((n) => n.includes('.tmp.')));
+    const ambiguousCreate = await request(server, 'PUT', '/api/files/content', {
+      path: 'ambiguous-create.txt', content: 'MUST DECLARE CREATE MODE'
+    });
+    assert.equal(ambiguousCreate.status, 400, 'a write must be exclusive-create or carry an expected hash');
+    assert.ok(!fs.existsSync(path.join(tmp, 'ambiguous-create.txt')));
+    const invalidCreateOnly = await request(server, 'PUT', '/api/files/content', {
+      path: 'notes.md', content: 'MUST NOT OVERWRITE', createOnly: 'true'
+    });
+    assert.equal(invalidCreateOnly.status, 400, 'wrongly typed createOnly cannot fall through to overwrite mode');
+    assert.equal(invalidCreateOnly.json.code, 'E_BAD_API_REQUEST');
+    assert.strictEqual(fs.readFileSync(path.join(tmp, 'notes.md'), 'utf8'), 'hello from editor');
+    const unknownFileWrapper = await request(server, 'PUT', '/api/files/content', {
+      path: 'unknown-wrapper.txt', content: 'MUST NOT WRITE', unexpected: true
+    });
+    assert.equal(unknownFileWrapper.status, 400);
+    assert.ok(!fs.existsSync(path.join(tmp, 'unknown-wrapper.txt')));
     const duplicateCreate = await request(server, 'PUT', '/api/files/content', {
       path: 'notes.md', content: '', createOnly: true
     });
@@ -98,6 +170,9 @@ async function main() {
     assert.equal(preview.status,200); assert.ok(preview.json.diff.includes('+reviewed draft'));
     assert.equal(preview.json.expectedHash,created.json.hash);
     assert.equal(fs.readFileSync(path.join(tmp,'notes.md'),'utf8'),'hello from editor','preview never writes');
+    const unknownPreview = await request(server,'POST','/api/files/preview',{path:'notes.md',content:'x',expectedHash:created.json.hash,unexpected:true});
+    assert.equal(unknownPreview.status,400);
+    assert.equal(unknownPreview.json.code,'E_BAD_API_REQUEST');
     assert.equal((await request(server,'POST','/api/files/preview',{path:'notes.md',content:'x'})).status,400);
     assert.equal((await request(server,'POST','/api/files/preview',{path:'notes.md',content:'x',expectedHash:'0'.repeat(64)})).status,409);
     assert.equal((await request(server,'POST','/api/files/preview',{path:'../escape',content:'x',expectedHash:created.json.hash})).status,400);
@@ -118,7 +193,10 @@ async function main() {
     assert.equal(fs.readFileSync(path.join(tmp,'notes.md'),'utf8'),'undo target');
     const restoreInput={confirmed:true,expectedHash:undoSaved.json.hash,workspaceRoot:tmp,hostInstanceId:config.hostInstanceId};
     assert.equal((await request(server,'POST','/api/files/undo/'+undoId,{...restoreInput,hostInstanceId:'wrong'})).status,409);
-    assert.equal((await request(server,'POST','/api/files/undo/'+undoId,{...restoreInput,confirmed:'true'})).status,409);
+    const wrongUndoType = await request(server,'POST','/api/files/undo/'+undoId,{...restoreInput,confirmed:'true'});
+    assert.equal(wrongUndoType.status,400); assert.equal(wrongUndoType.json.code,'E_BAD_API_REQUEST');
+    const unknownUndoWrapper = await request(server,'POST','/api/files/undo/'+undoId,{...restoreInput,unexpected:true});
+    assert.equal(unknownUndoWrapper.status,400); assert.equal(fs.readFileSync(path.join(tmp,'notes.md'),'utf8'),'undo target');
     fs.writeFileSync(path.join(tmp,'notes.md'),'external edit');
     assert.equal((await request(server,'POST','/api/files/undo/'+undoId,restoreInput)).status,409);
     assert.equal(fs.readFileSync(path.join(tmp,'notes.md'),'utf8'),'external edit');
@@ -142,7 +220,8 @@ async function main() {
 
     const blocked = await request(server, 'PUT', '/api/files/content', {
       path: '.env',
-      content: 'SECRET=1'
+      content: 'SECRET=1',
+      createOnly: true
     });
     assert.ok(blocked.status >= 400);
     assert.ok(/ACCESS_DENIED|outside workspace|sensitive/i.test(String(blocked.json && blocked.json.error)));
@@ -150,7 +229,8 @@ async function main() {
 
     const escaped = await request(server, 'PUT', '/api/files/content', {
       path: '../outside.txt',
-      content: 'nope'
+      content: 'nope',
+      createOnly: true
     });
     assert.ok(escaped.status >= 400);
     assert.ok(/outside workspace/i.test(String(escaped.json && escaped.json.error)));
@@ -158,7 +238,7 @@ async function main() {
     const stale = await request(server, 'PUT', '/api/files/content', {
       path: 'notes.md',
       content: 'newer',
-      expectedHash: 'deadbeef'
+      expectedHash: 'd'.repeat(64)
     });
     assert.strictEqual(stale.status, 409);
     assert.match(stale.json.detail.retryHint, /Stop this write/);
@@ -184,6 +264,13 @@ async function main() {
     assert.strictEqual(badCustom.json.code,'E_BAD_ARGS');
     assert.ok(fs.readFileSync(path.join(tmp,'.webagent/customizations.json')).equals(beforeCustom));
 
+    const unknownSkill = await request(server, 'POST', '/api/skills', {
+      name: 'unknown-wrapper-skill', content: 'MUST NOT WRITE', unexpected: true
+    });
+    assert.strictEqual(unknownSkill.status, 400);
+    assert.ok(!fs.existsSync(path.join(tmp, '.webagent/skills/unknown-wrapper-skill/SKILL.md')));
+    assert.strictEqual((await request(server, 'GET', '/api/skills?unexpected=true')).status, 400);
+    assert.strictEqual((await request(server, 'GET', '/api/skills/load?cursor=0&unexpected=true')).status, 400);
     const skill = await request(server, 'POST', '/api/skills', {
       name: 'demo-skill',
       content: '# Skill: demo\n'
@@ -219,6 +306,9 @@ async function main() {
 
     const opened = await request(server, 'GET', '/api/files/content?path=notes.md');
     assert.strictEqual(opened.status, 200);
+    const unknownReadQuery = await request(server, 'GET', '/api/files/content?path=notes.md&unexpected=true');
+    assert.strictEqual(unknownReadQuery.status, 400);
+    assert.strictEqual(unknownReadQuery.json.code, 'E_BAD_API_REQUEST');
     assert.strictEqual(opened.json.content, 'hello from editor');
     assert.ok(opened.json.hash);
 

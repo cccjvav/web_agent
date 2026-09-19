@@ -9,6 +9,8 @@ const { collectShot } = require('./computerUse');
 const { fetchText, checkCancelled } = require('../utils/requestScope');
 const { isToolFailure } = require('../utils/toolTrace');
 
+const MODEL_RESPONSE_MAX_BYTES = 1024 * 1024;
+
 // 模型会不会看图：显式 vision 标记（设置页 Add API 勾选）或 caps 里带 vision。
 // 探测不到的纯文本 Endpoint 一律按「不会看图」处理——宁可诚实拒绝，不假装 OCR。
 function modelSeesImages(model) {
@@ -114,10 +116,12 @@ async function runOpenAI({
         Authorization: `Bearer ${model.apiKey}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ ...bodyBase, messages })
-    });
+      body: JSON.stringify({ ...bodyBase, messages }),
+      redirect: 'error'
+    }, 120000, { maxBytes: MODEL_RESPONSE_MAX_BYTES });
     if (!resp.ok) {
-      throw new Error(`HTTP ${resp.status}: ${raw.slice(0, 240)}`);
+      const status = Number.isInteger(resp.status) ? ` ${resp.status}` : '';
+      throw new Error(`模型 HTTP${status} 请求失败`);
     }
     let data;
     try {
@@ -212,4 +216,4 @@ async function runOpenAI({
   return { text };
 }
 
-module.exports = { runOpenAI, systemPrompt, temperatureFor, modelSeesImages };
+module.exports = { MODEL_RESPONSE_MAX_BYTES, runOpenAI, systemPrompt, temperatureFor, modelSeesImages };

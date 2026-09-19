@@ -6,7 +6,7 @@ const path = require('path');
 const { config } = require('../src/config');
 const store = require('../src/models/store');
 const { runChat, planRound } = require('../src/agent/runChat');
-const { runOpenAI } = require('../src/agent/openai');
+const { MODEL_RESPONSE_MAX_BYTES, runOpenAI } = require('../src/agent/openai');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-model-life-'));
 const priorWorkspace = config.workspaceRoot, priorFetch = global.fetch;
 config.workspaceRoot = tmp;
@@ -16,6 +16,7 @@ const reply = message => ({ ok: true, text: async () => JSON.stringify({ choices
   store.save({ ...store.defaults(), activeModelId: 'test', models: [model] });
   let defaultTools;
   global.fetch = async (_, options) => {
+    assert.strictEqual(options.redirect, 'error', 'model requests must never follow redirects');
     defaultTools = JSON.parse(options.body).tools;
     return reply({ role: 'assistant', content: 'default mode checked' });
   };
@@ -23,6 +24,24 @@ const reply = message => ({ ok: true, text: async () => JSON.stringify({ choices
   assert.ok(defaultTools.some(t => t.function.name === 'read_files'));
   assert.ok(!defaultTools.some(t => t.function.name === 'write_file'));
   assert.strictEqual((await runChat({ mode: 'invalid', message: 'list' }, () => {})).ok, false);
+
+  const reflectedProviderBody = 'REMOTE_SECRET_SHOULD_NOT_BE_REFLECTED';
+  global.fetch = async () => new Response(reflectedProviderBody, { status: 401 });
+  await assert.rejects(
+    runOpenAI({ mode: 'ask', message: 'error body', history: [], model }),
+    error => {
+      assert.match(error.message, /HTTP 401/);
+      assert.ok(!error.message.includes(reflectedProviderBody), 'provider response bodies are not trusted error text');
+      return true;
+    }
+  );
+  assert.strictEqual(MODEL_RESPONSE_MAX_BYTES, 1024 * 1024);
+  global.fetch = async () => new Response('x'.repeat(MODEL_RESPONSE_MAX_BYTES + 1), { status: 200 });
+  await assert.rejects(
+    runOpenAI({ mode: 'ask', message: 'oversized response', history: [], model }),
+    error => error && error.code === 'E_RESPONSE_TOO_LARGE'
+  );
+
   const events = [];
   global.fetch = async () => { throw new Error('fixture model unavailable'); };
   await runChat({ mode: 'code', message: '创建 note.txt\n```text\nhello\n```' }, (type, data) => events.push({ type, ...data }));

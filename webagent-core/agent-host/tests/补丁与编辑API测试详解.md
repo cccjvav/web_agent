@@ -26,9 +26,9 @@ computeHash导入但本文件没有直接调用，版本来自readFile；样例�
 
 [源码](apiFiles.test.js)的**request(server,method,urlPath,body)**真实本机HTTP，按JSON字节设长度，data累计、end解析（坏JSON为null）、error reject。异步**main**搭Express JSON/API路由，随机端口，workspace指tmp。
 
-1. PUT notes.md：200/success/hash，磁盘正文准确且无.tmp.残留。
-2. PUT .env：≥400且敏感/ACCESS_DENIED等错误，文件不存在；PUT ../outside.txt：≥400/outside。
-3. PUT已有notes携deadbeef：409/STALE_FILE，原正文保持，防UI冲突静默覆盖。
+1. PUT notes.md携`createOnly:true`：200/success/hash，磁盘正文准确且无.tmp.残留；省略createOnly且无expectedHash的含糊新建400且零文件。
+2. PUT .env与../outside.txt也显式走createOnly，仍分别因敏感路径/越界≥400且不创建，证明包装门禁没有代替路径安全。
+3. PUT已有notes携错误但格式有效的64位hash：409/STALE_FILE，原正文保持，防UI冲突静默覆盖。
 4. POST skills demo-skill：200且真实SKILL.md存在；GET列表有demo、相对skillFile与绝对skillFileAbs。
 5. GET notes：原文和hash返回，供下一次编辑版本控制。
 6. POST model完整元数据和假apiKey，GET status：模型存在，group/contextSize/caps/pricing保留，hasKey真但无apiKey字段。测试仅保存/脱敏，不访问模型baseUrl。
@@ -64,3 +64,7 @@ apiFiles用真实本地HTTP验证addProvider追加两模型，旧模型/真实fi
 第47组模型设置API续测：先GET带`••••`的旧整表再POST，磁盘fixture Key必须仍为原值；同连接身份的旧客户端往返保持兼容。合法multiModel五字段保存后响应含实际modelCount，空/数组/未知顶层、空/未知/错类型/越界多模型、未知active/merge引用、空models、models+model混用及坏caps均400/E_BAD_MODEL_SETTINGS，逐次比较配置完整字节不变，错误正文不回显fixture Key。单model用省略Key或掩码把原id改到另一baseUrl也必须零写，防旧秘密被浅合并转绑；显式replacement Key则允许改连接并可显式改回；已有目录再通过addProvider追加100项也因整表超过100而400/零写，不能分批绕过预算。未请求真实模型端点，不认证API Key有效性或跨进程CAS。
 
 第49组模型/Provider固定schema续测：先直接在fixture旧模型写入`authorization`、`internalToken`及嵌套`metadata`，并给caps/mergeModel等已知槽位写错类型嵌套秘密、给multiModel写未知凭据字段；GET `/models`与`/status`均不得发布注入秘密，models只返回固定且类型有效的模型/多模型字段、Key仍脱敏；把该公开快照合法往返后，磁盘Key保持且历史未知字段被清除。POST单条模型带未知字段400/E_BAD_MODEL_SETTINGS且磁盘逐字节不变。`/providers/probe`带未知包装字段时用fetch计数器证明在触网前400/E_BAD_PROVIDER；addProvider包装或目录项带未知字段同样400/E_BAD_PROVIDER、零写，所有错误正文均不含fixture Key。该测试证明的是本机路由的投影/校验顺序，不检查真实远端响应、浏览器网络面板或恶意进程直接改配置。
+
+第51组严格本机包装续测在任何文件夹具写入前先发`/tool/call`未知顶层字段，要求400/E_BAD_API_REQUEST且目标文件不存在；同样拒绝Chat、consensus与tasks/reset未知包装及工具arguments字符串、Chat system历史。execution-control的合法切换字段夹未知键不得改变mode；构造真实待批operation后，未知approve不得运行handler，未知cancel不得改waiting状态，随后合法操作各只生效一次。检查点未知创建不得分配记录，未知restore不得改磁盘/消费previewId，未知remove不得删记录；随后合法一次恢复/移除仍成功。Skill未知POST不得创建目录，目录和load未知query均400。
+
+普通文件链覆盖`createOnly:'true'`不得覆盖现有notes、未知PUT不得创建、无createOnly且无hash的含糊写拒绝、preview未知字段拒绝、GET content未知query拒绝。回退记录上用完整合法确认再加unknown字段，要求400且磁盘仍是undo target，之后记录仍可经历漂移拒绝和一次成功恢复，证明错误包装未消费授权。合法httpSmoke、并发createOnly和旧hash流程继续通过；这是本机临时HTTP/内存/磁盘证据，不是跨进程或浏览器攻击验收。

@@ -63,6 +63,8 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 
 第50组继续非探针REST/审批结果边界并交叉R2：bridgeTunnel先证实Bridge start、stop、轮换、清轮及身份端点会静默接受未知包装，且历史对象型授权/展示字段可被truthy消费或经status发布；修后固定提供商专属schema、请求及当前provider保存凭据的字符串预算、空体兼容和公开投影，所有负例在存储/停启/触网前失败且不回显标记。approvedOperations让真实外部MCP只以`verification.state=unknown`报告不确定效果，要求宿主在覆盖验证说明前判定、队列终态unknown且重复批准零重放。测试仍使用本机HTTP和外部MCP fixture，不连接真实隧道/GitHub，也不修改或认证探针项目。
 
+第51组继续非探针本机文件/工具/Chat包装及模型HTTP响应边界：apiFiles以真实HTTP证明tool/chat/consensus/tasks、执行控制、审批/取消、文件读写/预览/回退、检查点及Skill包装的未知字段在调度、改模式、执行/撤销、扫描、写盘、重置、分配或消费记录前400；`createOnly:'true'`不能退入覆盖，文件新建须显式独占，普通保存须64位expectedHash，错误请求保持磁盘与内存记录不变。modelLifecycle用模拟fetch锁定模型POST拒跳转、401远端正文不反射及1MiB+1响应在JSON解析前以E_RESPONSE_TOO_LARGE失败。httpSmoke等原合法调用仍作兼容回归；这些fixture不连接真实Provider、不测代理内存峰值，也不扩大暂停的探针专项。
+
 ## 按风险选择回归
 | 风险/模块 | 主要测试 | 证据类型与限制 |
 |---|---|---|
@@ -105,7 +107,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | 源码 | 定位证据 |
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
-| [apiFiles.test.js](apiFiles.test.js) | 46 个函数/类节点 |
+| [apiFiles.test.js](apiFiles.test.js) | 48 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 20 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
@@ -142,7 +144,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 14 个函数/类节点 |
 | [mcpProtocol.test.js](mcpProtocol.test.js) | 33 个函数/类节点 |
 | [memoryRecall.test.js](memoryRecall.test.js) | 8 个函数/类节点 |
-| [modelLifecycle.test.js](modelLifecycle.test.js) | 26 个函数/类节点 |
+| [modelLifecycle.test.js](modelLifecycle.test.js) | 30 个函数/类节点 |
 | [monacoLoading.test.js](monacoLoading.test.js) | 12 个函数/类节点 |
 | [nativeRotationCommands.test.js](nativeRotationCommands.test.js) | 54 个函数/类节点 |
 | [oauth.test.js](oauth.test.js) | 15 个函数/类节点 |

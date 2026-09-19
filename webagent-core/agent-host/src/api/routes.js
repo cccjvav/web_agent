@@ -138,6 +138,80 @@ function validateBridgeStart(body, cfg) {
   }
   return provider;
 }
+
+const CHAT_FIELDS = ['mode', 'message', 'history', 'modelId', 'thinkLevel', 'planAction', 'client', 'workspaceRoot', 'hostInstanceId'];
+function rejectApiRequest(res) {
+  return res.status(400).json({ success: false, error: 'API请求字段或类型无效', code: 'E_BAD_API_REQUEST' });
+}
+function isRequestRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+function fixedRequestRecord(value, res, allowed) {
+  const record = value === undefined ? {} : value;
+  if (!isRequestRecord(record) || Object.keys(record).some(key => !allowed.includes(key))) {
+    rejectApiRequest(res);
+    return null;
+  }
+  return record;
+}
+function apiRequestBody(req, res, allowed) {
+  return fixedRequestRecord(req.body, res, allowed);
+}
+function apiRequestQuery(req, res, allowed) {
+  return fixedRequestRecord(req.query, res, allowed);
+}
+function apiString(value, maxBytes, { nonEmpty = false, singleLine = false } = {}) {
+  return typeof value === 'string'
+    && Buffer.byteLength(value, 'utf8') <= maxBytes
+    && (!nonEmpty || value.length > 0)
+    && (!singleLine || !/[\r\n\0]/.test(value));
+}
+function apiHash(value) {
+  return typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+}
+function validChatHistory(history) {
+  if (history === undefined) return true;
+  if (!Array.isArray(history) || history.length > 12) return false;
+  let bytes = 0;
+  for (const item of history) {
+    if (!isRequestRecord(item)
+      || Object.keys(item).some(key => key !== 'role' && key !== 'content')
+      || !['user', 'assistant'].includes(item.role)
+      || !apiString(item.content, 256 * 1024)) return false;
+    bytes += Buffer.byteLength(item.content, 'utf8');
+    if (bytes > 1024 * 1024) return false;
+  }
+  return true;
+}
+function validChatRequest(body) {
+  const mode = Object.hasOwn(body, 'mode') ? body.mode : 'ask';
+  if (!['ask', 'plan', 'code'].includes(mode)
+    || (Object.hasOwn(body, 'message') && (!apiString(body.message, 1024 * 1024) || body.message.includes('\0')))
+    || !validChatHistory(body.history)
+    || (Object.hasOwn(body, 'modelId') && !apiString(body.modelId, 256, { nonEmpty: true, singleLine: true }))
+    || (Object.hasOwn(body, 'thinkLevel') && !['low', 'medium', 'high'].includes(body.thinkLevel))
+    || (Object.hasOwn(body, 'planAction') && !['start', 'branch', 'merge', 'reset'].includes(body.planAction))) return false;
+  const action = body.planAction;
+  if (action && mode !== 'plan') return false;
+  if ((mode === 'ask' || mode === 'code' || (mode === 'plan' && (!action || action === 'start')))
+    && (!apiString(body.message, 1024 * 1024, { nonEmpty: true }) || !body.message.trim())) return false;
+  const extension = body.client === 'vscode-extension';
+  if (Object.hasOwn(body, 'client') && !extension) return false;
+  const hasBinding = Object.hasOwn(body, 'workspaceRoot') || Object.hasOwn(body, 'hostInstanceId');
+  if (extension) {
+    if ((Object.hasOwn(body, 'workspaceRoot') && !apiString(body.workspaceRoot, 4096, { nonEmpty: true, singleLine: true }))
+      || (Object.hasOwn(body, 'hostInstanceId') && !apiString(body.hostInstanceId, 256, { nonEmpty: true, singleLine: true }))) return false;
+  } else if (hasBinding) return false;
+  return true;
+}
+function validFileWriteRequest(body) {
+  if (!apiString(body.path, 4096, { nonEmpty: true, singleLine: true })
+    || !apiString(body.content, MAX_TEXT_BYTES)
+    || (Object.hasOwn(body, 'createOnly') && typeof body.createOnly !== 'boolean')
+    || (Object.hasOwn(body, 'expectedHash') && !apiHash(body.expectedHash))) return false;
+  if (body.createOnly === true) return !Object.hasOwn(body, 'expectedHash');
+  return apiHash(body.expectedHash);
+}
 function publicText(value, maxLength) {
   return typeof value === 'string' ? value.slice(0, maxLength) : '';
 }
@@ -156,12 +230,17 @@ function publicBridge(bridge = {}) {
     }
   };
 }
-router.get('/execution-control', (req, res) => res.json(control.snapshot()));
+router.get('/execution-control', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
+  res.json(control.snapshot());
+});
 router.post('/execution-control', (req, res) => {
+  const body = apiRequestBody(req, res, ['workspaceRoot', 'hostInstanceId', 'permissions', 'workMode', 'revision']);
+  if (!body) return;
   try {
-    assertWorkspaceBinding(req.body, config);
-    if (req.body.permissions !== undefined && req.body.workMode !== undefined) throw Error('模式与权限请分开修改');
-    const result = req.body.workMode !== undefined ? control.selectMode(req.body.workMode) : control.updatePermissions(req.body.permissions, req.body.revision);
+    assertWorkspaceBinding(body, config);
+    if (body.permissions !== undefined && body.workMode !== undefined) throw Error('模式与权限请分开修改');
+    const result = body.workMode !== undefined ? control.selectMode(body.workMode) : control.updatePermissions(body.permissions, body.revision);
     eventBus.broadcast('execution_control_changed', result);
     res.json({success:true, ...result});
   } catch(error) { res.status(error.status || 409).json({success:false,error:error.message,code:error.code}); }
@@ -171,15 +250,55 @@ router.get('/probe/links', operationApi(() => probeBridge.list()));
 router.get('/probe/links/:id/reports/:tabId', operationApi(req => probeBridge.report(req.params.id, req.params.tabId)));
 router.delete('/probe/links/:id', operationApi(req => { probeBridge.drop(req.params.id); return {ok: true}; }));
 router.post('/probe/actions', operationApi(req => probeBridge.request(req.body)));
-router.get('/checkpoints', operationApi(() => fileCheckpoints.list()));
-router.post('/checkpoints', operationApi(req => fileCheckpoints.create(req.body || {})));
-router.post('/checkpoints/:id/preview', operationApi(req => fileCheckpoints.preview(req.params.id, req.body || {})));
-router.post('/checkpoints/:id/restore', operationApi(req => fileCheckpoints.restore(req.params.id, req.body || {})));
-router.post('/checkpoints/:id/remove', operationApi(req => fileCheckpoints.remove(req.params.id, req.body || {})));
-router.get('/operations', operationApi(() => ({ requests: operatorQueue.list(), servers: externalClient.list(true) })));
-router.get('/operations/:id', operationApi(req => operatorQueue.inspect(req.params.id)));
-router.post('/operations/:id/approve', operationApi(req => operatorQueue.approve(req.params.id, req.body?.confirm === true)));
-router.post('/operations/:id/cancel', operationApi(req => operatorQueue.cancel(req.params.id)));
+router.get('/checkpoints', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
+  try { res.json(fileCheckpoints.list()); }
+  catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+});
+router.post('/checkpoints', (req, res) => {
+  const body = apiRequestBody(req, res, ['paths', 'confirmed', 'workspaceRoot', 'hostInstanceId']);
+  if (!body) return;
+  try { res.json(fileCheckpoints.create(body)); }
+  catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+});
+router.post('/checkpoints/:id/preview', (req, res) => {
+  const body = apiRequestBody(req, res, ['workspaceRoot', 'hostInstanceId']);
+  if (!body) return;
+  try { res.json(fileCheckpoints.preview(req.params.id, body)); }
+  catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+});
+router.post('/checkpoints/:id/restore', async (req, res) => {
+  const body = apiRequestBody(req, res, ['workspaceRoot', 'hostInstanceId', 'previewId', 'confirmed']);
+  if (!body) return;
+  try { res.json(await fileCheckpoints.restore(req.params.id, body)); }
+  catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+});
+router.post('/checkpoints/:id/remove', (req, res) => {
+  const body = apiRequestBody(req, res, ['workspaceRoot', 'hostInstanceId']);
+  if (!body) return;
+  try { res.json(fileCheckpoints.remove(req.params.id, body)); }
+  catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+});
+router.get('/operations', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
+  res.json({ requests: operatorQueue.list(), servers: externalClient.list(true) });
+});
+router.get('/operations/:id', async (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
+  try { res.json(await operatorQueue.inspect(req.params.id)); }
+  catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+});
+router.post('/operations/:id/approve', async (req, res) => {
+  const body = apiRequestBody(req, res, ['confirm']);
+  if (!body) return;
+  try { res.json(await operatorQueue.approve(req.params.id, body.confirm)); }
+  catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+});
+router.post('/operations/:id/cancel', async (req, res) => {
+  if (!apiRequestBody(req, res, [])) return;
+  try { res.json(await operatorQueue.cancel(req.params.id)); }
+  catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+});
 router.post('/external/stdio/preview', operationApi(req => externalClient.previewStdio(req.body || {})));
 router.post('/external/stdio/start', operationApi(req => externalClient.startStdio(req.body || {})));
 router.post('/external/servers', operationApi(req => externalClient.add(req.body || {})));
@@ -392,9 +511,11 @@ router.post('/bridge/reset-round', (req, res) => {
 });
 
 router.post('/consensus/run', async (req, res) => {
-  const { taskDescription } = req.body || {};
+  const body = apiRequestBody(req, res, ['taskDescription']);
+  if (!body) return;
+  if (!apiString(body.taskDescription, 1024 * 1024, { nonEmpty: true }) || !body.taskDescription.trim()) return rejectApiRequest(res);
   try {
-    const result = await control.run('chat', () => runMultiModelConsensus({ taskDescription }));
+    const result = await control.run('chat', () => runMultiModelConsensus({ taskDescription: body.taskDescription }));
     res.json({ success: true, result });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -402,7 +523,15 @@ router.post('/consensus/run', async (req, res) => {
 });
 
 router.post('/tool/call', async (req, res) => {
-  const { name, arguments: toolArgs, mode = 'code' } = req.body || {};
+  const body = apiRequestBody(req, res, ['name', 'arguments', 'mode']);
+  if (!body) return;
+  if (!apiString(body.name, 128, { nonEmpty: true, singleLine: true })
+    || !/^[a-z][a-z0-9_]*$/.test(body.name)
+    || (Object.hasOwn(body, 'arguments') && !isRequestRecord(body.arguments))
+    || (Object.hasOwn(body, 'mode') && !['ask', 'plan', 'code'].includes(body.mode))) return rejectApiRequest(res);
+  const name = body.name;
+  const toolArgs = Object.hasOwn(body, 'arguments') ? body.arguments : {};
+  const mode = body.mode || 'code';
   try {
     eventBus.broadcast('tool_call_start', { tool: name, args: toolArgs, source: `Chat-${mode}` });
     const result = await control.run('chat', () => callTool(name, toolArgs, mode));
@@ -416,8 +545,11 @@ router.post('/tool/call', async (req, res) => {
 });
 
 router.post('/chat', async (req, res) => {
-  if(req.body?.client==='vscode-extension'){
-    try { assertWorkspaceBinding(req.body, config); }
+  const body = apiRequestBody(req, res, CHAT_FIELDS);
+  if (!body) return;
+  if (!validChatRequest(body)) return rejectApiRequest(res);
+  if (body.client === 'vscode-extension') {
+    try { assertWorkspaceBinding(body, config); }
     catch(error){ return res.status(409).json({success:false,error:error.message}); }
   }
   const controller = new AbortController();
@@ -435,17 +567,17 @@ router.post('/chat', async (req, res) => {
     if (!res.destroyed && !res.writableEnded) res.write(`${JSON.stringify({ type, ...data })}\n`);
   };
 
-  const client = String((req.body && req.body.client) || '');
+  const client = body.client || '';
   const pty = client === 'vscode-extension';
   try {
     await runWithSignal(controller.signal, () => ptyJobs.runWithPty({ pty, remote: false, emit }, async () => {
       await runChat({
-        mode: req.body && req.body.mode,
-        message: req.body && req.body.message,
-        history: (req.body && req.body.history) || [],
-        modelId: req.body && req.body.modelId,
-        thinkLevel: req.body && req.body.thinkLevel,
-        planAction: req.body && req.body.planAction,
+        mode: body.mode,
+        message: body.message,
+        history: body.history || [],
+        modelId: body.modelId,
+        thinkLevel: body.thinkLevel,
+        planAction: body.planAction,
         emit
       });
     }));
@@ -477,10 +609,12 @@ router.post('/pty/jobs/:jobId', (req, res) => {
 });
 
 router.post('/tasks/reset', (req, res) => {
+  if (!apiRequestBody(req, res, [])) return;
   res.json({ success: true, taskState: resetTaskState() });
 });
 
 router.get('/files/tree', async (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
   try {
     const tree = await callTool('list_directory', { dirPath: '.', recursive: true, maxDepth: 5 }, 'ask');
     res.json(tree);
@@ -490,8 +624,11 @@ router.get('/files/tree', async (req, res) => {
 });
 
 router.get('/files/content', (req, res) => {
+  const query = apiRequestQuery(req, res, ['path']);
+  if (!query) return;
+  if (!apiString(query.path, 4096, { nonEmpty: true, singleLine: true })) return rejectApiRequest(res);
   try {
-    const filePath = String(req.query.path || '');
+    const filePath = query.path;
     const full = resolveSafePath(filePath);
     if (!fs.existsSync(full) || fs.statSync(full).isDirectory()) {
       return res.status(404).json({ error: 'not found' });
@@ -512,9 +649,12 @@ router.get('/files/content', (req, res) => {
 
 // Existing-file editor previews are read-only and bounded; saving rechecks the same hash.
 router.post('/files/preview', (req, res) => {
+  const body = apiRequestBody(req, res, ['path', 'content', 'expectedHash']);
+  if (!body) return;
+  const { path: filePath, content, expectedHash } = body;
+  if (!apiString(filePath, 4096, { nonEmpty: true, singleLine: true })
+    || !apiString(content, MAX_TEXT_BYTES) || !apiHash(expectedHash)) return rejectApiRequest(res);
   try {
-    const { path: filePath, content, expectedHash } = req.body || {};
-    if (typeof filePath !== 'string' || !filePath || typeof content !== 'string' || typeof expectedHash !== 'string' || !/^[a-f0-9]{64}$/.test(expectedHash || '')) return res.status(400).json({ error: 'path, content and expectedHash required' });
     if (Buffer.byteLength(content) > 65536 || content.split('\n').length > 2000) return res.status(413).json({ error: '预览限每份文本64KiB/2000行，请缩小修改或使用桌面编辑器' });
     const full = resolveSafePath(filePath);
     if (!fs.existsSync(full)) return res.status(409).json({ error: '文件已删除，不能预览旧版本', code: 'E_STALE_FILE' });
@@ -529,31 +669,37 @@ router.post('/files/preview', (req, res) => {
 });
 
 router.get('/files/undo/:id', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
   try { res.json(editorUndo.preview(req.params.id)); }
   catch(error) { res.status(409).json({error:error.message}); }
 });
 router.post('/files/undo/:id', async (req, res) => {
+  const body = apiRequestBody(req, res, ['confirmed', 'expectedHash', 'workspaceRoot', 'hostInstanceId']);
+  if (!body) return;
+  if (body.confirmed !== true || !apiHash(body.expectedHash)
+    || !apiString(body.workspaceRoot, 4096, { nonEmpty: true, singleLine: true })
+    || !apiString(body.hostInstanceId, 256, { nonEmpty: true, singleLine: true })) return rejectApiRequest(res);
   try {
-    assertWorkspaceBinding(req.body, config);
-    res.json(await editorUndo.restore(req.params.id, req.body));
+    assertWorkspaceBinding(body, config);
+    res.json(await editorUndo.restore(req.params.id, body));
   } catch(error) { res.status(409).json({error:error.message}); }
 });
 
 router.put('/files/content', async (req, res) => {
+  const body = apiRequestBody(req, res, ['path', 'content', 'expectedHash', 'createOnly']);
+  if (!body) return;
+  if (!validFileWriteRequest(body)) return rejectApiRequest(res);
   try {
-    const filePath = req.body && req.body.path;
-    const content = req.body && req.body.content;
-    if (!filePath || typeof content !== 'string') {
-      return res.status(400).json({ error: 'path and content required' });
-    }
-    const createOnly = req.body.createOnly === true;
-    const undoSnapshot = createOnly ? null : editorUndo.capture(filePath, req.body.expectedHash, content);
+    const filePath = body.path;
+    const content = body.content;
+    const createOnly = body.createOnly === true;
+    const undoSnapshot = createOnly ? null : editorUndo.capture(filePath, body.expectedHash, content);
     const result = await callTool('write_file', {
       filePath,
       content,
       createOnly,
       confirm_overwrite: !createOnly,
-      expectedHash: req.body.expectedHash || undefined
+      expectedHash: body.expectedHash
     }, 'code');
     if (result.success === false) return res.status(409).json({ error: result.error, code: result.code, verification: result.verification });
     let undo = null;
@@ -569,12 +715,21 @@ router.put('/files/content', async (req, res) => {
   }
 });
 
-router.get('/skills', (req, res) => res.json(discoverSkills()));
+router.get('/skills', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
+  res.json(discoverSkills());
+});
 
 router.get('/skills/load', async (req, res) => {
+  const query = apiRequestQuery(req, res, ['name', 'resource', 'expectedHash', 'offset', 'limit', 'cursor', 'pageSize']);
+  if (!query) return;
+  if ((Object.hasOwn(query, 'name') && !apiString(query.name, 256, { nonEmpty: true, singleLine: true }))
+    || (Object.hasOwn(query, 'resource') && !apiString(query.resource, 2048, { nonEmpty: true, singleLine: true }))
+    || (Object.hasOwn(query, 'expectedHash') && !apiHash(query.expectedHash))
+    || ['offset', 'limit', 'cursor', 'pageSize'].some(key => Object.hasOwn(query, key) && (typeof query[key] !== 'string' || !/^\d{1,10}$/.test(query[key])))) return rejectApiRequest(res);
   try {
-    const args = { name: req.query.name, resource: req.query.resource || 'SKILL.md', expectedHash: req.query.expectedHash };
-    for (const key of ['offset', 'limit', 'cursor', 'pageSize']) if (req.query[key] != null) args[key] = Number(req.query[key]);
+    const args = { name: query.name, resource: query.resource || 'SKILL.md', expectedHash: query.expectedHash };
+    for (const key of ['offset', 'limit', 'cursor', 'pageSize']) if (query[key] != null) args[key] = Number(query[key]);
     const result = await callTool('load_skill', args, 'ask');
     res.status(result.found === false ? 404 : 200).json(result);
   } catch (error) { res.status(error.code === 'E_STALE_FILE' ? 409 : 400).json({ error: error.message, code: error.code }); }
@@ -650,13 +805,17 @@ router.put('/customizations', (req, res) => {
 });
 
 router.post('/skills', async (req, res) => {
-  const name = String((req.body && req.body.name) || '')
+  const body = apiRequestBody(req, res, ['name', 'content']);
+  if (!body) return;
+  if (!apiString(body.name, 256, { nonEmpty: true, singleLine: true })
+    || (Object.hasOwn(body, 'content') && !apiString(body.content, MAX_TEXT_BYTES))) return rejectApiRequest(res);
+  const name = body.name
     .trim()
     .replace(/[^\w\-]+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 40);
   if (!name) return res.status(400).json({ error: 'name required' });
-  const content = String((req.body && req.body.content) || `# Skill: ${name}\n\n把路径告诉模型就会用。\n`);
+  const content = body.content || `# Skill: ${name}\n\n把路径告诉模型就会用。\n`;
   const filePath = `.webagent/skills/${name}/SKILL.md`;
   try {
     const result = await callTool('write_file', { filePath, content, createOnly: true }, 'code');

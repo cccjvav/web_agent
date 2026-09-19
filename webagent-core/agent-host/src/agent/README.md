@@ -27,7 +27,7 @@
 
 工具按模式筛选；执行仍经过 `tools.callTool` 的模式与命令检查。返回式失败同样使用共享 `isToolFailure` 标成失败事件，但把有界原结果作为 tool 消息交给下一轮模型，不伪造异常或丢掉 `operation_result` 的终态详情；失败命令不进入截图成功分支。参数解析和抛出的工具异常也会反馈给模型，不代表每次工具失败都立即终止整个循环。**模型服务调用失败停止**与**工具失败作为结果反馈**是两种不同情形。
 
-结果经软预算处理后序列化，保持完整JSON。普通模型请求及响应body受120秒deadline约束，并服从当前Chat取消信号；外层HTTP Chat还有5分钟总截止时间。
+结果经软预算处理后序列化，保持完整JSON。普通模型POST显式`redirect:'error'`，响应body在解析前以原始字节逐块限制为1MiB；超限为`E_RESPONSE_TOO_LARGE`并尝试取消reader。成功与非2xx正文都受同一预算，Provider错误正文不拼入向UI传播的异常。请求及body另受120秒deadline并服从当前Chat取消信号；外层HTTP Chat还有5分钟总截止时间。这些限制不验证Provider善意，也不是整个进程的内存上限。
 
 ### Plan 分支与总结
 - `start` 创建全局当前轮次，`branch` 追加分支，`reset` 清空；关闭多模型时使用single草案，不是“只有一支就自动总结”。

@@ -85,7 +85,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 高，继续 | 进行中：第38–40组控制面、OAuth凭据/issuer、会话公开标识/主体绑定首包已核对；其余安全依赖继续，不作全链认证 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27/31–37与41–43/45–50组既有消费链已修；第46组修审批保留/schema及caller隔离，第47组修外部结果/部分读取与模型设置事务，第48组修模型工具返回式失败、Skill写后核验及审批历史硬容量，第49组修模型/Provider未知输入与历史配置公开投影，第50组修Bridge严格请求/公开投影与外部unknown终态；下一包继续尚未核对的本机文件/工具/Chat REST包装及模型HTTP响应预算并与R2交叉，不重做已修链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes/apiFiles、模型HTTP入口、工具入口与相关测试；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
+| R3 / 下一项，高 | 进行中：第25/27/31–37与41–43/45–50组既有消费链已修；第51组修本机文件/检查点/Skill/工具/Chat/共识/任务/执行控制/审批包装及模型响应预算、跳转与错误正文反射。下一包继续未覆盖的PTY、connection-check、external删除等本机管理包装与模型请求/响应形状，不重做已修链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes及剩余真实HTTP测试、PTY/connection-check/external入口；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -219,7 +219,7 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 暂停/延期：探测待交接；其它边界是否改变。
 ```
 
-下一位助手可以直接按R3尚未核对的本机文件/工具/Chat REST包装与模型HTTP响应预算并交叉R2继续，不重做已核对的operatorQueue/workflows、模型/Provider或Bridge边界，也无需用户重新复述此前授权和约束；如发现与实际代码不符，以核验结果修订交接，而不是照抄本页当绝对真相。
+下一位助手可以直接按R3继续尚未固定的PTY、connection-check、external删除等本机管理包装及模型请求/响应形状并交叉R2，不重做第51组已核对的文件/检查点/Skill/工具/Chat/共识/任务/执行控制/审批包装、模型1MiB响应边界，也无需用户重新复述此前授权和约束；如发现与实际代码不符，以核验结果修订交接，而不是照抄本页当绝对真相。
 
 ### 实施批次与证据
 
@@ -761,6 +761,16 @@ Skill创建路由原来只await `write_file`，不消费正常返回的业务对
 Bridge status现只投影固定公开字段，字符串须类型有效且有界，running/authorized等仅严格布尔；历史授权槽位也只有布尔`true`能启动。测试以真实HTTP覆盖未知字段、错类型、预算、跨provider凭据、历史嵌套值、truthy授权及认证/配置/停启/网络计数零副作用；正常启停、故障后的已知结果与旧空体兼容保持。
 
 真实外部MCP夹具另复现原始`verification.state:'unknown'`会被宿主覆盖的external-reported说明改成verified，再被队列记作succeeded。externalClient现先对原始不可信结果执行共享失败/unknown判定，再合并宿主verification投影；终态保留unknown、`ok:false`且同requestKey重复批准不重放，仍不把外部自报当独立副作用证明。首轮完整套件83/84的唯一失败是改源码后尚未重建`docs-site/content.js`，重建后完整84/84。随后复核补上当前provider历史保存凭据不得绕过预算；再一轮83/84唯一由documentationLearning指出新增具名helper漏登记详解，补齐函数表并重建后最终完整84/84。两个失败均为施工中的生成/说明漂移，未删守卫或改运行断言。文档库存249源码/28目录/110排除，相关API/MCP/工具/测试正文维持局部，正式清单计数不变；生产audit 0漏洞、正式哈希183项匹配、`git diff --check`与探针两目录零diff，自动完整套件经过存量探针测试不算专项审查。实现`11c168915a1f0bace11128b77a022cf403f74c9d`的[CI35437963655](https://github.com/cccjvav/web_agent/actions/runs/35437963655)九项逐项成功，覆盖Ubuntu Node18/20/22/24、Windows Node20/22/24及重复取消/stdio、Windows安装器和真实Chromium。
+
+#### 第51组：本机固定包装与模型HTTP响应边界
+
+继续非探针R3并交叉R2时，先以真实HTTP红测证明`/tool/call`带未知顶层字段仍返回200并实际写文件；静态链同时确认`createOnly:'true'`会退入普通覆盖分支。模型fixture要求`redirect:'error'`时，旧runChat把断言转成失败，随后因defaultTools未赋值退出1，证明请求选项没有拒跳转；另有非2xx正文前240字符直接进入异常及成功/错误body均无字节预算。
+
+本批引入只用于已接入端点的固定body/query包装和`E_BAD_API_REQUEST`，在副作用前拒绝未知字段、数组/非对象及路由级错类型。Chat只接受固定字段/枚举、最多12条user/assistant历史和消息字节预算；tool/consensus/tasks、execution-control及operations approve/cancel在广播、租约、模式改变、执行/取消或重置前拒绝坏包装。文件新建必须`createOnly:true`且不得混hash，普通保存必须64位expectedHash，字符串true不能变覆盖；content/tree/preview/undo、检查点和Skill目录/load/create也固定query/body，错误包装不读取、分配/消费记录或写盘。底层路径、hash、权限与一次消费检查保持，不把包装校验当全router schema。
+
+`requestScope.fetchText`现优先以WHATWG reader或Node异步流逐块累计原始字节，默认8MiB；标准流越界尝试取消并抛`E_RESPONSE_TOO_LARGE`，text-only旧fetch/测试替身只能事后核对。模型POST显式收紧到1MiB并设`redirect:'error'`，非2xx只传播固定状态错误，不再拼接远端正文。120秒deadline、父取消和Chat五分钟总限保持；预算不是进程总内存或Provider可信证明。
+
+`apiFiles`新增真实HTTP零副作用回归，覆盖控制模式、审批handler、检查点ticket、回退记录及Skill文件；`modelLifecycle`覆盖跳转选项、401标记不反射和1MiB+1正文在JSON解析前失败。定向apiFiles/modelLifecycle/httpSmoke/executionControl/approvedOperations/fileCheckpoints/skillsLifecycle及相邻回归已通过。首轮完整套件80/84，四项仅为本批尚未同步说明/站点时的documentationPolicy、documentationLearning、docsSite、docsHttp，未删除守卫；同步后最终完整84/84。文档库存249源码/28目录/110排除且只读检查零漂移，生产audit 0漏洞、正式哈希183项匹配、`git diff --check`与探针两目录零diff；自动全量经过存量探针测试不算专项审查。精确提交与CI待本批闭环，探针目录及专项实现继续排除。
 
 ## 复盘
 

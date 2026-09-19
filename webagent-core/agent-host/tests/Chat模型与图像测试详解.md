@@ -19,9 +19,11 @@ filter/map/find/some都是从事件数组找上述证据，不代表全部事件
 
 ## modelLifecycle.test.js
 
-[源码](modelLifecycle.test.js)保留workspace/fetch，临时store保存外部模型。**reply(message)**返回带异步text()的兼容响应，不联网。
+[源码](modelLifecycle.test.js)保留workspace/fetch，临时store保存外部模型。**reply(message)**返回带异步text()的兼容响应，不联网。首个缺mode调用核对默认只读工具，同时直接断言模型fetch的`redirect==='error'`，防以后无意恢复默认跟随。
 
-第一fetch直接抛不可用；runChat Code面对创建文件请求必须有“已停止”错误、没有tool且文件不存在，防模型失败自动builtin重放。第二fetch：首轮返回9个list_directory工具调用（Array.from生成独立id），次轮解析请求messages筛tool，必须有9个响应，第9个ok=false；最终runOpenAI答done，证明超额度也补齐协议结果，而非丢失tool_call_id。
+随后用标准WHATWG Response造401正文`REMOTE_SECRET_SHOULD_NOT_BE_REFLECTED`：异常必须保留HTTP 401但不得含该标记；再造1MiB+1字节200正文，必须以`E_RESPONSE_TOO_LARGE`失败而不是读完后落到JSON语法错。这证明模拟fetch下的错误反射与模型响应预算合同，不是实际供应商、代理或网络内存剖析。
+
+下一fetch直接抛不可用；runChat Code面对创建文件请求必须有“已停止”错误、没有tool且文件不存在，防模型失败自动builtin重放。工具额度组首轮返回9个list_directory调用（Array.from生成独立id），次轮解析请求messages筛tool，必须有9个响应，第9个ok=false；最终runOpenAI答done，证明超额度也补齐协议结果，而非丢失tool_call_id。
 
 返回式失败组登记并批准一个真实进程内operation，handler正常return但状态为failed；模拟模型调用operation_result，下一轮必须收到含failed及原error的完整有界结果，工具事件必须ok=false且保留result。它专门防止只检查ok/success字段而把终态失败画成绿色；不把夹具审批当真实外部副作用。
 
