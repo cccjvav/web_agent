@@ -760,7 +760,7 @@ Skill创建路由原来只await `write_file`，不消费正常返回的业务对
 
 Bridge status现只投影固定公开字段，字符串须类型有效且有界，running/authorized等仅严格布尔；历史授权槽位也只有布尔`true`能启动。测试以真实HTTP覆盖未知字段、错类型、预算、跨provider凭据、历史嵌套值、truthy授权及认证/配置/停启/网络计数零副作用；正常启停、故障后的已知结果与旧空体兼容保持。
 
-真实外部MCP夹具另复现原始`verification.state:'unknown'`会被宿主覆盖的external-reported说明改成verified，再被队列记作succeeded。externalClient现先对原始不可信结果执行共享失败/unknown判定，再合并宿主verification投影；终态保留unknown、`ok:false`且同requestKey重复批准不重放，仍不把外部自报当独立副作用证明。首轮完整套件83/84的唯一失败是改源码后尚未重建`docs-site/content.js`，重建后完整84/84。随后复核补上当前provider历史保存凭据不得绕过预算；再一轮83/84唯一由documentationLearning指出新增具名helper漏登记详解，补齐函数表并重建后最终完整84/84。两个失败均为施工中的生成/说明漂移，未删守卫或改运行断言。文档库存249源码/28目录/110排除，相关API/MCP/工具/测试正文维持局部，正式清单计数不变；生产audit 0漏洞、正式哈希183项匹配、`git diff --check`与探针两目录零diff，自动完整套件经过存量探针测试不算专项审查。实现提交及CI证据待本批提交后回填。
+真实外部MCP夹具另复现原始`verification.state:'unknown'`会被宿主覆盖的external-reported说明改成verified，再被队列记作succeeded。externalClient现先对原始不可信结果执行共享失败/unknown判定，再合并宿主verification投影；终态保留unknown、`ok:false`且同requestKey重复批准不重放，仍不把外部自报当独立副作用证明。首轮完整套件83/84的唯一失败是改源码后尚未重建`docs-site/content.js`，重建后完整84/84。随后复核补上当前provider历史保存凭据不得绕过预算；再一轮83/84唯一由documentationLearning指出新增具名helper漏登记详解，补齐函数表并重建后最终完整84/84。两个失败均为施工中的生成/说明漂移，未删守卫或改运行断言。文档库存249源码/28目录/110排除，相关API/MCP/工具/测试正文维持局部，正式清单计数不变；生产audit 0漏洞、正式哈希183项匹配、`git diff --check`与探针两目录零diff，自动完整套件经过存量探针测试不算专项审查。实现`11c168915a1f0bace11128b77a022cf403f74c9d`的[CI35437963655](https://github.com/cccjvav/web_agent/actions/runs/35437963655)九项逐项成功，覆盖Ubuntu Node18/20/22/24、Windows Node20/22/24及重复取消/stdio、Windows安装器和真实Chromium。
 
 ## 复盘
 

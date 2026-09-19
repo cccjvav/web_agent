@@ -50,11 +50,11 @@
 - F47：继续非探针结果链，三条旧实现均由真实行为红测复现：外部MCP ok:false无isError被覆盖成成功；read_files多路径部分error仍启动后续写；模型GET掩码整表回写破坏Key且单model可省略Key转绑端点。现统一外部失败判定、工作流E_PARTIAL_READ停止，并由独立modelSettings实施严格包装/字段/引用与凭据连接绑定，addProvider总目录同限100，输入失败配置零改写。定向测试转绿；首轮全量80/83暴露并修正文档标记/站点镜像/optional-chain施工回归，最终83/83，248/28/110库存零漂移、生产audit 0漏洞；实现874006e的CI35402127412九项成功。模型README、配置详解与模型调用详解由待逐句转局部，其他相邻长篇维持局部；探针暂停边界不变。
 - F48：继续非探针结果链：runOpenAI/timedTool统一共享失败判定，正常return的operation_result failed终态不再画成成功，仍向模型保留原结果且失败命令不进截图分支；Skill创建只在write_file success严格true且read-back verified时确认，unknown答409；operatorQueue不再为容量提前删除15分钟内终态/requestKey墓碑，40条满时旧key仍命中而新key拒绝。真实队列/HTTP/模拟模型回归与相邻测试通过；首轮83/84仅暴露新测试未登记主说明，修后84/84，249/28/110库存零漂移、audit 0漏洞、探针零diff；实现f89767f的CI35408375271九项成功。Chat调度、agent README、Chat测试详解由待逐句转局部，其他受影响长篇维持局部；探针暂停边界不变。
 - F49：继续非探针模型/Provider输入与公开投影：真实HTTP红测证明旧模型未知字段会由GET原样发布，扩展复核还覆盖multiModel与已知槽位错类型嵌套值。现models/status只投影固定且类型有效的模型/多模型字段并脱敏Key，合法往返清除历史属性且保留真实Key；模型记录、Provider探测包装、addProvider包装及目录项均拒绝未知字段，探测负例不触网、保存负例零写且错误不回显Key。定向及完整84项、249/28/110文档零漂移、生产audit 0漏洞与探针零diff已通过，实现124b205的CI35428457492九项成功；受影响长篇维持局部，计数不变，探针暂停边界不变。
-- F50：继续非探针Bridge/外部MCP结果边界：真实HTTP红测证明Bridge生命周期和身份包装会静默接受未知/错类型/跨provider/超预算输入后产生配置、停启或触网副作用，历史嵌套值还会由status发布且truthy授权对象可通过门禁；真实外部MCP另证明unknown核验会被宿主投影覆盖成成功。现Bridge固定请求schema、provider专属字段及请求/生效保存值字节预算与零副作用400，status只投影有界类型有效字段并严格识别布尔授权；externalClient先判原始结果，保留unknown、ok:false及不可重放。两轮83/84分别只暴露站点镜像未重建和新增具名helper漏登记详解，补齐后最终84/84，249/28/110文档零漂移、audit 0漏洞、正式哈希183项匹配、探针零diff；受影响长篇维持局部，计数不变，探针暂停边界不变。实现提交及CI待本批回填。
+- F50：继续非探针Bridge/外部MCP结果边界：真实HTTP红测证明Bridge生命周期和身份包装会静默接受未知/错类型/跨provider/超预算输入后产生配置、停启或触网副作用，历史嵌套值还会由status发布且truthy授权对象可通过门禁；真实外部MCP另证明unknown核验会被宿主投影覆盖成成功。现Bridge固定请求schema、provider专属字段及请求/生效保存值字节预算与零副作用400，status只投影有界类型有效字段并严格识别布尔授权；externalClient先判原始结果，保留unknown、ok:false及不可重放。两轮83/84分别只暴露站点镜像未重建和新增具名helper漏登记详解，补齐后最终84/84，249/28/110文档零漂移、audit 0漏洞、正式哈希183项匹配、探针零diff；受影响长篇维持局部，计数不变，探针暂停边界不变。实现11c1689的CI35437963655九项成功，覆盖Windows/Ubuntu矩阵、重复取消/stdio、真实Chromium与安装器。
 
 ## 逐文件状态
 
-当前第50组本地实现已完成且待提交/CI；最近远端完整基线仍为第49组`124b2051563b2dc6a5b44dafb68d2dd3574b3323`、CI35428457492九项成功。本清单自身属于维护索引，不自我授予语义通过。新文件须登记；历史先前批次仅作证据，未自动标为本轮完成。
+当前第50组实现基线为`11c168915a1f0bace11128b77a022cf403f74c9d`，CI35437963655九项成功；本清单自身属于维护索引，不自我授予语义通过。新文件须登记；历史先前批次仅作证据，未自动标为本轮完成。
 
 <!-- review-status-counts:start -->
 现存条目数：199（合并退役2项，不计通过）；状态：待逐句核对 80、暂停，只登记路径 15、生成定位，非语义认证 1、已逐句核对 8、待边界核对 7、只读规范副本 1、待历史定位核对 32、原始证据，受限 1、局部核对 54。这是文件计数，不是语义准确率。
@@ -118,7 +118,7 @@
 | [installer/README.md](../installer/README.md) | 待逐句核对 | f2edbd500219def5 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/函数详解.md](../installer/函数详解.md) | 待逐句核对 | e56bd9d538e2a089 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/安装声明详解.md](../installer/安装声明详解.md) | 待逐句核对 | 5c8566d2ce5b1bc8 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | 06f7d7cd6bd2159f | F50同步Bridge/外部unknown范围、本地验证、待回填证据与下一项；F49精确基线及其它阶段/用户实机事实不重签 |
+| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | 19470a4b3c874320 | F50同步Bridge/外部unknown范围、本地验证、待回填证据与下一项；F49精确基线及其它阶段/用户实机事实不重签 |
 | [manager/SKILL.md](../manager/SKILL.md) | 只读规范副本 | 5c8c93d50e52332b | 只核对引用与适用范围，不修改技能副本 |
 | [manager/agents.md](../manager/agents.md) | 待逐句核对 | 4466f9c59524232f | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [manager/docs/documentation.md](../manager/docs/documentation.md) | 待逐句核对 | dff435c047431d16 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
@@ -128,7 +128,7 @@
 | [manager/stages/documentation-2026-09-12.md](../manager/stages/documentation-2026-09-12.md) | 待历史定位核对 | c23c09e4b3615d99 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/probe-dual-integration-2026-09-15.md](../manager/stages/probe-dual-integration-2026-09-15.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
 | [manager/stages/s1-handoff.md](../manager/stages/s1-handoff.md) | 待历史定位核对 | cfc0e427dc08e55c | 核对归档/引用/证据，不将旧结论改成现状 |
-| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | e7341d3d7b51716d | F50更新R3/R2交叉状态并登记Bridge严格包装/投影、外部unknown、验证与下一包；整篇历史批次不重新认证 |
+| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | 4ed86d751f756463 | F50更新R3/R2交叉状态并登记Bridge严格包装/投影、外部unknown、验证与下一包；整篇历史批次不重新认证 |
 | [manager/stages/s2-shell.md](../manager/stages/s2-shell.md) | 待历史定位核对 | 5ac447fe582ce09e | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s3-bridge-image.md](../manager/stages/s3-bridge-image.md) | 待历史定位核对 | fbe64b3265d3cf1a | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s4-terminal.md](../manager/stages/s4-terminal.md) | 待历史定位核对 | 1cf1fcca01c51478 | 核对归档/引用/证据，不将旧结论改成现状 |
@@ -143,7 +143,7 @@
 | [review/OPTIMIZATION_REPORT_2026-09-18.md](../review/OPTIMIZATION_REPORT_2026-09-18.md) | 已逐句核对 | 29391f9e3e15ea70 | F45逐项交叉复核；P1-A/P2-D/P2-A已处置，原始发现保留，剩余取舍见顶部链接 |
 | [review/FULL_AUDIT_FOLLOWUP_2026-09-18.md](../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md) | 待逐句核对 | 8a0799b45e63fcdb | F45–48交叉审查/实修与验证报告；本页不自我授予整篇语义认证，结论按列明证据边界复核 |
 | [review/README.md](../review/README.md) | 局部核对 | efeb6aa96aed3a71 | F45新增交叉审查入口并区分原始报告/现行处置；其它历史入口范围保留 |
-| [review/SEMANTIC_REVIEW_2026-09-16.md](../review/SEMANTIC_REVIEW_2026-09-16.md) | 待逐句核对 | 77248b6d9da90b5c | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [review/SEMANTIC_REVIEW_2026-09-16.md](../review/SEMANTIC_REVIEW_2026-09-16.md) | 待逐句核对 | 3c22377dfadca940 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [review/UPSTREAM_ADOPTION_MAP_2026-09-15.md](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md) | 待逐句核对 | e454a1ff6891f7bc | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [review/archive/01a08d85-web-agent-audit.md](../review/archive/01a08d85-web-agent-audit.md) | 待历史定位核对 | 95fc2e2b61e4c58c | 核对归档/引用/证据，不将旧结论改成现状 |
 | [review/archive/ARENA_PROBE_INTEGRATION_2026-09-15.md](../review/archive/ARENA_PROBE_INTEGRATION_2026-09-15.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
