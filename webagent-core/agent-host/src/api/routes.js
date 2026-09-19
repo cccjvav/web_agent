@@ -570,7 +570,12 @@ router.post('/skills', async (req, res) => {
   const content = String((req.body && req.body.content) || `# Skill: ${name}\n\n把路径告诉模型就会用。\n`);
   const filePath = `.webagent/skills/${name}/SKILL.md`;
   try {
-    await callTool('write_file', { filePath, content, createOnly: true }, 'code');
+    const result = await callTool('write_file', { filePath, content, createOnly: true }, 'code');
+    if (result?.success !== true || result.verification?.state !== 'verified') {
+      return res.status(409).json({ success: false,
+        error: result?.error || 'Skill write completion could not be verified; inspect the target before retrying',
+        code: result?.code || 'E_VERIFY_UNKNOWN', verification: result?.verification || { state: 'unknown' } });
+    }
     res.json({ success: true, path: `.webagent/skills/${name}` });
   } catch (err) {
     res.status(400).json({ error: err.message });

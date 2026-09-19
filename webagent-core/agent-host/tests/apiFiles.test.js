@@ -198,6 +198,18 @@ async function main() {
     assert.deepStrictEqual(racingSkills.map(result => result.status).sort(), [200,400]);
     const winner = racingSkills[0].status === 200 ? 'FIRST' : 'SECOND';
     assert.strictEqual(fs.readFileSync(path.join(tmp,'.webagent/skills/concurrent-skill/SKILL.md'),'utf8'), winner);
+    // A write can return normally yet fail read-back verification. The route must not turn
+    // that result object into a confirmed Skill creation.
+    const uncertainSkillPath = '.webagent/skills/verification-race/SKILL.md';
+    require('../src/utils/eventBus').once('file_written', event => {
+      if (event.filePath === uncertainSkillPath) fs.rmSync(path.join(tmp, uncertainSkillPath), { force: true });
+    });
+    const uncertainSkill = await request(server, 'POST', '/api/skills', {name:'verification-race',content:'NOT VERIFIED'});
+    assert.strictEqual(uncertainSkill.status, 409);
+    assert.strictEqual(uncertainSkill.json.success, false);
+    assert.strictEqual(uncertainSkill.json.code, 'E_VERIFY_UNKNOWN');
+    assert.strictEqual(uncertainSkill.json.verification.state, 'unknown');
+    assert.ok(!fs.existsSync(path.join(tmp, uncertainSkillPath)));
     const listed = await request(server, 'GET', '/api/skills');
     assert.strictEqual(listed.status, 200);
     const demoSkill = (listed.json.skills || []).find((s) => s.name === 'demo-skill');

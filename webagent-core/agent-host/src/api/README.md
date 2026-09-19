@@ -29,7 +29,7 @@
 | `/models` | GET / POST | 模型配置读取/更新；addProvider独立仅追加且整表总量≤100。普通更新严格限制包装/模型/multiModel字段与引用；脱敏Key只绑定原连接身份，改端点须显式给Key；响应隐藏Key正文 |
 | `/providers/probe`、`/profile/detect` | POST / GET | 探测模型、环境与技术栈 |
 | `/customizations` | GET / PUT | 自定义配置；其持久化保证见models说明 |
-| `/skills` | GET / POST | 列出Skill或创建Skill正文 |
+| `/skills` | GET / POST | 列出Skill或以createOnly创建正文；成功还要求写后核验为verified，返回式未知结果不包装成创建成功 |
 
 ## 执行流程与成功语义
 ### Bridge

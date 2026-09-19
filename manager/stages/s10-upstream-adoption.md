@@ -85,7 +85,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 高，继续 | 进行中：第38–40组控制面、OAuth凭据/issuer、会话公开标识/主体绑定首包已核对；其余安全依赖继续，不作全链认证 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27/31–37与41–43/45–47组既有消费链已修；第46组修审批保留/schema及caller隔离，第47组修外部ok:false覆盖、工作流部分读取继续写及模型设置掩码/连接绑定/严格事务；下一包继续尚未核对的非探针REST结果边界并与R2安全链交叉，不重做已修链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、modelSettings、operatorQueue/workflows、工具入口与相关测试；明确排除探针专项 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
+| R3 / 下一项，高 | 进行中：第25/27/31–37与41–43/45–48组既有消费链已修；第46组修审批保留/schema及caller隔离，第47组修外部结果/部分读取与模型设置事务，第48组修模型工具返回式失败、Skill写后核验及审批历史硬容量；下一包继续尚未核对的非探针REST结果边界并与R2安全链交叉，不重做已修链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、modelSettings、operatorQueue/workflows、工具入口与相关测试；明确排除探针专项 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -219,7 +219,7 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 暂停/延期：探测待交接；其它边界是否改变。
 ```
 
-下一位助手可以直接按R3的operatorQueue/workflows与其余API结果消费、R2继续，无需用户重新复述此前授权和约束；如发现与实际代码不符，以核验结果修订交接，而不是照抄本页当绝对真相。
+下一位助手可以直接按R3其余非探针API结果消费与R2继续，不重做已核对的operatorQueue/workflows边界，也无需用户重新复述此前授权和约束；如发现与实际代码不符，以核验结果修订交接，而不是照抄本页当绝对真相。
 
 ### 实施批次与证据
 
@@ -731,6 +731,18 @@ approvedOperations以可控Date.now覆盖临期完成、完整结果保留、可
 模型API红测证明GET脱敏表直接POST会把磁盘fixture Key改成`••••`；旧空/拼错/错类型请求还会无操作报成功或非结构化失败，单model改baseUrl可通过浅合并沿用旧Key。新`models/modelSettings.js`从长routes分离请求级校验：非空固定字段、models/model互斥、模型数量/显示字段/caps/vision、有效active/merge引用及multiModel严格布尔/枚举/整数。掩码只在同id且protocol/baseUrl/modelId不变时恢复；省略或掩码改连接都拒绝，显式Key字段才可改变身份；addProvider现有加本批也不得超过100，不能靠多批绕开整表预算。全部输入通过后才单次store.save；失败逐字节保持配置。兼容旧整表往返，但不是跨进程CAS、模型可调用或供应商实测。
 
 approvedOperations、workflowPreconditions和apiFiles三项红转绿；相关模型存储、API、受控工作流和测试正文同步，documentationLearning新增modelSettings到唯一主说明。首轮全量为80/83：documentationQuality抓到交接表暂时没有唯一“下一项”，docsSite抓到源码改后未重建镜像，workflowPreconditions抓到状态重排误少一个optional chain；三者修正并定向通过后，最终83/83。文档库存248源码/28目录/110排除且只读updated=0，站点重建一致，生产audit为0漏洞；实现`874006e4b8b6d2e1e5bb126e7c2d2a66314acc78`的[CI35402127412](https://github.com/cccjvav/web_agent/actions/runs/35402127412)九项逐项成功，含Windows Node20/22/24、Ubuntu18/20/22/24、真实Chromium与Windows安装器。探针目录零diff，不把完整回归中既有探针测试的通过冒充专项审查。
+
+#### 第48组：返回式失败、Skill核验与审批历史容量
+
+继续R3时，`runOpenAI`和内置探索的`timedTool`仍只识别`ok:false`/`success:false`。`operation_result`会正常return一个只以顶层`status:'failed'`表达的终态，因此界面事件被标`ok:true`；OpenAI下一轮虽能看到JSON，但成功颜色和截图等成功专属消费者已走错分支。两处现统一调用共享`isToolFailure`，返回式失败事件保留原result与归一错误并标`ok:false`；OpenAI仍把有界原结果交给模型继续判断，而不是改成无上下文异常，失败命令不再进入截图成功分支。真正抛错仍走原异常合同。对应说明另纠正`runChat`早已将空工作区`testCmd`初始化为空的事实，不再误写成会凭空报告`npm test`。
+
+Skill创建路由原来只await `write_file`，不消费正常返回的业务对象；若文件在中央read-back前变化，工具会return `success:false`与`verification.state:'unknown'`，路由却仍答创建成功。现仅在`success===true`且核验严格为`verified`时确认；返回式失败/unknown答409并保留code/verification，提示先检查目标而非自动重试，抛出的重名/参数错误仍维持400。apiFiles用一次性`file_written`监听在真实写入与read-back之间删除目标，确定性证明路由不会再把未知效果包装成成功；它不是外部OS竞争穷举。
+
+审批队列虽宣称约40条容量，旧`prune`在`jobs.size>40`时会不顾15分钟窗口提前删终态，令完整结果与requestKey墓碑在压力下消失。现设40条硬上限：先允许同owner/key/摘要命中原记录；未过完整窗口的任何终态都不为新请求让位，新key明确拒绝，超过窗口才惰性清理并恢复容量。该取舍优先查询/窗口内去重而非无限可用性，仍不是重启或多进程后的持久exactly-once。新增`operatorQueueCapacity.test.js`以固定时钟填满并批准40条，锁定首条可查、旧key不重执行、第41条拒绝及窗口后恢复。
+
+定向`modelLifecycle`、`apiFiles`、`operatorQueueCapacity`及相邻`approvedOperations`、`workflowPreconditions`、`runChat`均通过，相关JS通过`node --check`。首轮完整套件为83/84：唯一失败是新测试已进生成库存但尚未加入documentationLearning的主指南映射；补登记且在详解写明`main`后，文档五项守卫与最终84/84通过。文档库存249源码/28目录/110排除且只读updated=0，站点重建一致；生产audit 0漏洞、`git diff --check`通过、两个探针目录零diff。本段只记录本地候选，提交SHA与CI须在推送后补证，不能继承第47组绿灯。
+
+本组启动时固定分支ref第四次回到`1d532d0`，而远端已前移到`90c0a9b`。先在`/home/user/r48-recovery-1789775918/`保存binary diff、目标文件和排除Git/依赖的全工作树压缩包，再只读fetch确认`90c0a9b`以`ff948013`为祖先并含第47组两提交；随后仅用`update-ref`与`read-tree`恢复引用/索引。远端独有文件从索引恢复，八个重叠正文以`ff948013`为共同基线三方合并并人工解决两处同段冲突；未使用`reset --hard`、`clean`或整树覆盖，目标改动由外部备份逐项保全。
 
 ## 复盘
 

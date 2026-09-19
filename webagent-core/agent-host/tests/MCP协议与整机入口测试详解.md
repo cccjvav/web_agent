@@ -57,6 +57,10 @@ httpSmoke在真实认证MCP ping完成后GET活动快照，确认calls非零、�
 
 截图回传的echo夹具断言仍要求isError=false；shotDetail只在失败时提供该合成调用首个text结果最多1600字符，并替换URL和长十六进制ID，避免只看到true!==false无法定位。不增加超时、不自动重跑命令、不放宽结果断言。
 
+## operatorQueueCapacity.test.js：审批历史容量与窗口内去重
+
+[源码](operatorQueueCapacity.test.js)的`main`替换Date.now为固定时钟，登记无副作用的capacity-fixture并顺序提交/批准40个不同requestKey。填满后第一条终态仍必须可读取原值，同owner重用第一条key必须返回同requestId且执行计数不增加；第41个新key必须明确因历史容量拒绝，不能通过提前删第一条伪装可用。时钟前进15分钟加1毫秒后，惰性清理允许新请求并只新增一次执行。finally恢复Date.now；每个测试文件独立进程使内部Map不会继承其它夹具。它证明单进程完整窗口/40条上限，不是重启后持久exactly-once或多进程共享去重。
+
 ## requestLifecycle.test.js：生命周期单元回归
 main创建短期限与容量实例，owner分别改变会话或凭据；wait订阅currentSignal的abort，避免用sleep猜测是否取消。ID=0与字符串0不得混同，重复ID拒绝，错误owner取消无影响。正确取消后await完成并复用ID，确认没有取消墓碑；EventEmitter模拟close，断连和异常后监听数归零。两个在途占满后第三个拒绝，取消释放再继续。10ms期限配1s引用watchdog防止unref导致测试提前退出，checkCancelled必须抛E_CANCELLED。最后分别枚举失败/unknown与已受理/available:false正反例；catch仅设置进程失败码。
 

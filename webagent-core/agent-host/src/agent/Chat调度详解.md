@@ -24,9 +24,9 @@ Plan 直接委托 runPlanRound。普通模式 pickModel；选中非 builtin 但�
 
 ### timedTool(emit, mode, name, args)
 
-记录时间 → await callTool → 若业务对象显式 ok/success 为 false，则抛入同一 catch。成功 emit tool（原始 result、参数、耗时、短标签），返回 `{ok:true,result,durationMs}`；失败 emit 带 error 的 tool，返回 `{ok:false,error,durationMs}` 而非继续抛错。
+记录时间 → await callTool → 由共享 `isToolFailure` 统一判断返回对象。除了显式ok/success=false，还覆盖isError/isTimeout、非零exitCode、失败/取消/unknown状态或trace，以及unknown核验。返回式失败 emit `ok:false` 并保留原始result和归一错误，返回 `{ok:false,result,error,durationMs}`；确认成功才emit `ok:true`并返回成功对象。抛出的异常仍由catch转换为不带result的失败。
 
-因此上层要检查 ok。emit 本身不是隔离的消息队列：成功 emit 抛错也会落进 catch，失败 emit 再抛仍可使函数拒绝。工具取消到达这里也可能被包装为失败结果，不等于整个探索流程自动终止。
+因此上层要检查 ok，不能把Promise正常返回当成功；只用status表达的失败也不能画成绿色。emit 本身不是隔离的消息队列：emit 抛错会落进catch，失败emit再抛仍可使函数拒绝。工具取消到达这里也可能被包装为失败结果，不等于整个探索流程自动终止。
 
 ## 2. 内置探索的全部辅助函数
 
@@ -51,7 +51,7 @@ Plan 直接委托 runPlanRound。普通模式 pickModel；选中非 builtin 但�
 4. 固定 README/语言清单候选先 pickExisting，再补文件树中的项；读取最多6文件、每文件 limit120。跳过错误项，去行号；遇到多个 README 后者覆盖前者，只有 package.json 放入 facts.pkg。
 5. detectTestCommand 非空才覆盖 facts.testCmd，然后返回。
 
-**初始化 testCmd 就是 `npm test`**，所以总结里出现“探测到 npm test”不一定真的探测到了。该函数也不是全仓分析：有深度、结果数、文件数和读行数限制。多数工具失败只得到错误事件，探索仍继续；直接 fs/画像异常可能使函数拒绝。
+`testCmd`初始化为空；只有画像明确声明测试命令，或检测到tests目录并按包管理器形成有限猜测时才填写。因此空工作区不会再凭空声称`npm test`。该函数仍不是全仓分析：有深度、结果数、文件数和读行数限制。多数工具失败只得到错误事件，探索仍继续；直接fs/画像异常可能使函数拒绝。
 
 ### summarizeAsk(message, facts)
 

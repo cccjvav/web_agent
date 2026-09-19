@@ -40,6 +40,38 @@ const reply = message => ({ ok: true, text: async () => JSON.stringify({ choices
     return reply({ role: 'assistant', content: 'done' });
   };
   assert.strictEqual((await runOpenAI({ mode: 'ask', message: 'list', history: [], model })).text, 'done');
+
+  // Result-style failures must stay visible to the model and UI as failures, even when the
+  // tool returned normally instead of throwing (for example operation_result).
+  const queue = require('../src/utils/operatorQueue');
+  queue.register('model-outcome-fixture', async () => ({ status: 'failed', error: 'fixture terminal failure' }));
+  const failedOperation = queue.submit('model-outcome-fixture', {}, {}, 'model-outcome-failed');
+  await queue.approve(failedOperation.requestId, true);
+  const failureEvents = [];
+  let failureRequests = 0;
+  global.fetch = async (_, options) => {
+    failureRequests++;
+    if (failureRequests === 1) {
+      return reply({ role: 'assistant', content: null, tool_calls: [{
+        id: 'failed-result-call', type: 'function',
+        function: { name: 'operation_result', arguments: JSON.stringify({ requestId: failedOperation.requestId }) }
+      }] });
+    }
+    const messages = JSON.parse(options.body).messages;
+    const reported = messages.find(message => message.role === 'tool' && message.tool_call_id === 'failed-result-call');
+    assert.ok(reported, 'the model receives the returned terminal record instead of a fabricated success');
+    const outcome = JSON.parse(reported.content);
+    assert.strictEqual(outcome.status, 'failed');
+    assert.strictEqual(outcome.result.error, 'fixture terminal failure');
+    return reply({ role: 'assistant', content: 'failure observed' });
+  };
+  assert.strictEqual((await runOpenAI({ mode: 'ask', message: 'inspect', history: [], model,
+    emit: (type, data) => failureEvents.push({ type, ...data }) })).text, 'failure observed');
+  const failedEvent = failureEvents.find(event => event.type === 'tool' && event.name === 'operation_result');
+  assert.ok(failedEvent);
+  assert.strictEqual(failedEvent.ok, false, 'returned failed/unknown/cancelled states must not paint as successful tools');
+  assert.strictEqual(failedEvent.result.status, 'failed');
+
   let finish;
   global.fetch = () => new Promise(resolve => { finish = resolve; });
   const oldTask = runChat({ mode: 'plan', message: 'first plan' }, () => {});

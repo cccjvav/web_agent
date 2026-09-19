@@ -18,11 +18,11 @@
 | [本机边界与跨站测试详解](本机边界与跨站测试详解.md) | auditControl、localControl、corsAllow |
 | [OAuth与GitHub测试详解](OAuth与GitHub测试详解.md) | oauth、oauthClientAuth、githubAuth |
 | [补丁与编辑API测试详解](补丁与编辑API测试详解.md) | patchEngine、apiFiles |
-| [MCP协议与整机入口测试详解](MCP协议与整机入口测试详解.md) | mcpProtocol、httpSmoke、skipWorkbench |
+| [MCP协议与整机入口测试详解](MCP协议与整机入口测试详解.md) | mcpProtocol、httpSmoke、skipWorkbench、operatorQueueCapacity |
 | [统计与文档测试](统计与文档测试详解.md) | adminHost、docsSite、docsHttp |
 | [工作台HTML结构与测试](../../workbench/页面结构详解.md) | workbenchHtml |
 
-documentationLearning检查全部清单源文件的正文登记；对JS检查具名函数/类方法提及，对非JS检查文件名关联。总计131个JS与36个非JS对应60篇详解，只有机械遗漏/漂移检查，不认证解释准确性，也不代表Windows/Conda实测。
+documentationLearning检查全部清单源文件的正文登记；对JS检查具名函数/类方法提及，对非JS检查文件名关联。总计132个JS与36个非JS对应60篇详解，只有机械遗漏/漂移检查，不认证解释准确性，也不代表Windows/Conda实测。
 
 ## 职责与运行
 这里存放可独立运行的 `.test.js`，统一入口是上一级scripts/run-tests.js。runner检查依赖和必需测试，发现其他测试文件，以独立进程执行，超时/失败非零退出；测试失败仍汇总其余结果。
@@ -57,11 +57,13 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 
 第47组继续非探针API/workflow结果边界：approvedOperations让真实外部MCP返回ok:false但不带isError，要求终态failed且不重放；workflowPreconditions让双路径read_files一项成功、一项missing，要求E_PARTIAL_READ并阻止后续写；apiFiles经真实HTTP验证模型GET掩码整表安全往返、连接字段改写必须显式给Key、严格active/merge/multiModel/包装字段、addProvider整表100项上限与全部输入失败配置字节零变化。未调用真实第三方模型或扩大探针范围。
 
+第48组继续非探针R3结果边界：modelLifecycle令真实operation_result以正常return给出failed，要求OpenAI工具事件不再假绿且下一轮仍收到原终态详情；apiFiles在Skill磁盘写入与read-back间制造确定性变化，要求路由拒绝把unknown核验包装成创建成功；operatorQueueCapacity填满40条终态，证明未过15分钟的结果/稳定key不提前淘汰，新key拒绝而非牺牲去重，窗口届满后再恢复容量。均为Node/HTTP或模拟模型证据，不代签真实提供商、外部OS竞争或主机重启。
+
 ## 按风险选择回归
 | 风险/模块 | 主要测试 | 证据类型与限制 |
 |---|---|---|
 | 路径、写入、hash、补丁、Skill | patchEngine、workspaceTools、sandbox、auditStorage、apiFiles | 临时文件系统与HTTP，含createOnly并发一胜一409；不是外部OS写进程隔离证明 |
-| 模型失败、工具结果、Plan | modelLifecycle、runChat、chatMode、planRound、toolLabel | 实际调度模块+模拟模型响应，不是提供商实测 |
+| 模型失败、工具结果、Plan | modelLifecycle、runChat、chatMode、planRound、toolLabel | 实际调度模块+模拟模型响应，含返回式终态失败；不是提供商实测 |
 | MCP、OAuth、GitHub身份、会话/board | mcpProtocol、oauth、oauthClientAuth、githubAuth、mcpBoard、board | 真实index验证OAuth issuer/撤销、公开peer不可冒用及跨主体会话；GitHub设备流以HTTP替身验证代次/单飞，非第三方实机验收 |
 | 本机控制面、WS、Origin | auditControl、localControl、corsAllow、httpSmoke | 真实入口双端口API门禁、MCP Origin/认证先于解析、预检与WS；代理/跨站浏览器须另测 |
 | PTY审批、取消、归属、捕获 | ptyLifecycle、ptyJobs、desktopExtension | 部分真实子进程+VS Code事件fixture，含扩展对非2xx回包的拒绝；原生终端效果须另测 |
@@ -99,7 +101,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | 源码 | 定位证据 |
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
-| [apiFiles.test.js](apiFiles.test.js) | 38 个函数/类节点 |
+| [apiFiles.test.js](apiFiles.test.js) | 39 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 20 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
@@ -136,12 +138,13 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 14 个函数/类节点 |
 | [mcpProtocol.test.js](mcpProtocol.test.js) | 33 个函数/类节点 |
 | [memoryRecall.test.js](memoryRecall.test.js) | 8 个函数/类节点 |
-| [modelLifecycle.test.js](modelLifecycle.test.js) | 21 个函数/类节点 |
+| [modelLifecycle.test.js](modelLifecycle.test.js) | 26 个函数/类节点 |
 | [monacoLoading.test.js](monacoLoading.test.js) | 12 个函数/类节点 |
 | [nativeRotationCommands.test.js](nativeRotationCommands.test.js) | 54 个函数/类节点 |
 | [oauth.test.js](oauth.test.js) | 15 个函数/类节点 |
 | [oauthClientAuth.test.js](oauthClientAuth.test.js) | 29 个函数/类节点 |
 | [oauthRateLimit.test.js](oauthRateLimit.test.js) | 15 个函数/类节点 |
+| [operatorQueueCapacity.test.js](operatorQueueCapacity.test.js) | 5 个函数/类节点 |
 | [patchEngine.test.js](patchEngine.test.js) | 7 个函数/类节点 |
 | [planRound.test.js](planRound.test.js) | 6 个函数/类节点 |
 | [probeAnalysis.test.js](probeAnalysis.test.js) | 6 个函数/类节点 |

@@ -7,6 +7,7 @@ const { listSkills } = require('../tools/skills');
 const { toolLabel } = require('./toolLabel');
 const { collectShot } = require('./computerUse');
 const { fetchText, checkCancelled } = require('../utils/requestScope');
+const { isToolFailure } = require('../utils/toolTrace');
 
 // 模型会不会看图：显式 vision 标记（设置页 Add API 勾选）或 caps 里带 vision。
 // 探测不到的纯文本 Endpoint 一律按「不会看图」处理——宁可诚实拒绝，不假装 OCR。
@@ -147,14 +148,19 @@ async function runOpenAI({
         const t0 = Date.now();
         try {
           const result = await callTool(name, args, mode);
-          if (result && (result.ok === false || result.success === false)) throw new Error(result.error || result.message || '工具执行失败');
+          const failed = isToolFailure(result);
           const durationMs = Date.now() - t0;
-          send('tool', { name, args, result, ok: true, durationMs, label: toolLabel(name, result, true) });
+          send('tool', { name, args, result,
+            ...(failed ? { error: result?.error || result?.message || result?.result?.error || '工具执行失败' } : {}),
+            ok: !failed, durationMs, label: toolLabel(name, result, !failed) });
           messages.push({
             role: 'tool',
             tool_call_id: tc.id,
             content: JSON.stringify(clipJson(result, 12000))
           });
+          // A returned failure is still evidence for the next model turn. Preserve the full
+          // bounded result, but do not run success-only consumers such as screenshot capture.
+          if (failed) continue;
           // 本机 Chat 的「眼睛」：run_command 产生截图（如 computer-use snap.ps1 -Out …）时，
           // 下一轮把 PNG 作为 image_url 部分发给模型。文本通道会被 12000 字截断，不能当眼睛。
           // MCP/Bridge 不走这里：mcp/server.js 复用 collectShot，以 MCP image 内容回图。

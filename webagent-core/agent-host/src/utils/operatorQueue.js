@@ -3,7 +3,7 @@ const { randomUUID, createHash } = require('crypto');
 const { runWithSignal, checkCancelled } = require('./requestScope');
 const { withTask, beginCall, finishCall, isToolFailure } = require('./toolTrace');
 const handlers = new Map(), jobs = new Map();
-const MAX_RESULT = 256 * 1024, MAX_INPUT = 32 * 1024, KEEP_MS = 15 * 60 * 1000;
+const MAX_RESULT = 256 * 1024, MAX_INPUT = 32 * 1024, KEEP_MS = 15 * 60 * 1000, MAX_JOBS = 40;
 function register(kind, handler) { handlers.set(kind, handler); }
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 function prune() {
@@ -16,7 +16,9 @@ function prune() {
   }
   for (const [id, job] of jobs) {
     const retentionStart = job.finishedAt ?? job.createdAt;
-    if (!['waiting-approval', 'running'].includes(job.status) && (jobs.size > 40 || now - retentionStart > KEEP_MS)) jobs.delete(id);
+    // Never trade away a still-queryable result or request-key tombstone for availability.
+    // New submissions fail closed at MAX_JOBS until an entire retention window has elapsed.
+    if (!['waiting-approval', 'running'].includes(job.status) && now - retentionStart > KEEP_MS) jobs.delete(id);
   }
 }
 function owner(options) {
@@ -47,6 +49,7 @@ function submit(kind, input, options, requestKey) {
     return publicJob(job);
   }
   if ([...jobs.values()].filter(job => ['waiting-approval', 'running'].includes(job.status)).length >= 20) throw new Error('Too many outstanding approvals');
+  if (jobs.size >= MAX_JOBS) throw new Error('Approval history capacity is full; wait for retained results to expire instead of resubmitting');
   const job = { id: randomUUID(), kind, workMode, owner: caller, options: { remote: Boolean(options.remote), callerKey: caller },
     taskId: options.taskId || randomUUID(), input: JSON.parse(encoded), digest, requestKey,
     status: 'waiting-approval', createdAt: Date.now(), result: null };

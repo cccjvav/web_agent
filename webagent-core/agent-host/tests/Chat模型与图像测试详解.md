@@ -23,6 +23,8 @@ filter/map/find/some都是从事件数组找上述证据，不代表全部事件
 
 第一fetch直接抛不可用；runChat Code面对创建文件请求必须有“已停止”错误、没有tool且文件不存在，防模型失败自动builtin重放。第二fetch：首轮返回9个list_directory工具调用（Array.from生成独立id），次轮解析请求messages筛tool，必须有9个响应，第9个ok=false；最终runOpenAI答done，证明超额度也补齐协议结果，而非丢失tool_call_id。
 
+返回式失败组登记并批准一个真实进程内operation，handler正常return但状态为failed；模拟模型调用operation_result，下一轮必须收到含failed及原error的完整有界结果，工具事件必须ok=false且保留result。它专门防止只检查ok/success字段而把终态失败画成绿色；不把夹具审批当真实外部副作用。
+
 后两组用Promise保存**finish**延迟响应：旧Plan开始后新start替换回合，旧回答不得插新回合；新回合两支启动merge后再加第三支，迟到merge不得标已合并。finally恢复workspace/fetch、reset回合、rm临时目录；catch exitCode1。不是实时服务端网络race测试，而是可控延迟的确定性状态竞争fixture。
 
 ## chatVision.test.js

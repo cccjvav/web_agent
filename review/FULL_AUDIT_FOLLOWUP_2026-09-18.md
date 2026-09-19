@@ -1,4 +1,4 @@
-<!-- 定位：第45组全仓交叉审查及第46–47组非探针审批、API/workflow结果边界追加报告；结论按证据范围成立，不是用户实机或形式化安全认证。 -->
+<!-- 定位：第45组全仓交叉审查及第46–48组非探针审批、API/workflow结果边界追加报告；结论按证据范围成立，不是用户实机或形式化安全认证。 -->
 
 # 全仓交叉审查与实修报告（2026-09-18，续至09-19）
 
@@ -8,7 +8,7 @@
 
 ## 1. 结论摘要
 
-本轮先逐项交叉复核前置报告，再扩展到工作台结果合同、认证并发、文件创建、PTY、HTML/CSS/键盘交互、CI、文档库存和非探针辅助项目。前置报告的P1-A七个结果消费者与P2-D设备码竞态均确认存在并已修；P2-A生产依赖审计改为高危硬门禁。扩展审查另发现并修复Chat流缺可靠终态、`createOnly`链路非独占、补丁后读覆盖草稿、Bridge刷新真假值、模态/页签/工具卡键盘语义和窄屏侧栏。第46组续审非探针审批结果与工作流schema，修复临近审批期限完成的结果立即淘汰、expired不可观察/可被迟到取消改写，工作流/外部请求未知字段与矛盾合同、命令结果/取消/get_logs跨peer未隔离及远程get_task_status误读Local计划及get_capabilities目录ACL不一致。第47组继续结果链：外部MCP的ok:false不再被缺isError覆盖成成功，工作流多文件部分读取失败不能启动后续写入，模型设置POST不再接受空/未知/错类型请求或把脱敏旧Key转绑新端点。探针由另一位助手负责，本分支不保留探针实现改动。
+本轮先逐项交叉复核前置报告，再扩展到工作台结果合同、认证并发、文件创建、PTY、HTML/CSS/键盘交互、CI、文档库存和非探针辅助项目。前置报告的P1-A七个结果消费者与P2-D设备码竞态均确认存在并已修；P2-A生产依赖审计改为高危硬门禁。扩展审查另发现并修复Chat流缺可靠终态、`createOnly`链路非独占、补丁后读覆盖草稿、Bridge刷新真假值、模态/页签/工具卡键盘语义和窄屏侧栏。第46组续审非探针审批结果与工作流schema，修复临近审批期限完成的结果立即淘汰、expired不可观察/可被迟到取消改写，工作流/外部请求未知字段与矛盾合同、命令结果/取消/get_logs跨peer未隔离及远程get_task_status误读Local计划及get_capabilities目录ACL不一致。第47组继续结果链：外部MCP的ok:false不再被缺isError覆盖成成功，工作流多文件部分读取失败不能启动后续写入，模型设置POST不再接受空/未知/错类型请求或把脱敏旧Key转绑新端点。第48组再收紧模型工具返回式失败、Skill写后unknown核验与审批历史容量：终态失败不画绿或进入截图分支，创建只在verified时确认，完整15分钟结果/requestKey墓碑不再为新请求提前让位。探针由另一位助手负责，本分支不保留探针实现改动。
 
 在当前自动化与静态证据范围内，没有遗留已知P0/P1阻塞。这个结论不等于形式化安全证明，也不覆盖真实Windows/VS Code、屏幕阅读器、手机、Cloudflare/ngrok或第三方模型服务实机。
 
@@ -16,11 +16,11 @@
 
 | 范围 | 实际检查 |
 |---|---|
-| JavaScript / Node | 对247项源码库存中的202份JS做`node --check`；阅读网络结果消费者、认证、文件、PTY、补丁、状态发布与UI动态DOM；完整83文件主测试 |
+| JavaScript / Node | 当前库存249项源码、其中204份JS；本批改动JS集中做`node --check`，并阅读网络结果消费者、认证、文件、PTY、补丁、状态发布与UI动态DOM；完整84文件主测试 |
 | HTML / CSS / 浏览器代码 | 重复ID、控件名称/标签、原生按钮、ARIA、焦点、键盘页签、11px下限、390px布局静态与VM回归；真实Chromium断言已写入但本机浏览器缺失 |
 | Python | 库存中的2份Python用`py_compile`；辅助打包器仍由主测试/Windows CI覆盖 |
 | C# / PowerShell / CMD / Shell | 4份Shell以`bash -n`检查；C#/PowerShell/CMD在本机无编译器，仅核对现有Windows CI编译/解析门禁，不冒充本地执行 |
-| 文档 | `check-docs --write`重建247源码、28目录、110排除库存；函数说明学习/质量守卫、文档站构建与镜像一致性 |
+| 文档 | `check-docs --write`重建当前249源码、28目录、110排除库存；函数说明学习/质量/政策/链接守卫、文档站构建与镜像一致性 |
 | 非探针辅助项目 | calculator 6项、trace-inspector 77项；冻结`webagent-repro/`保持零差异。探针目录按暂停边界不审不改 |
 | 依赖与CI | 生产依赖`npm audit --omit=dev --audit-level=high`；工作流最小`contents: read`权限与高危门禁人工复核 |
 
@@ -69,6 +69,13 @@
 - `/models`旧普通分支会把空对象、拼错字段和非法multiModel当成功或在保存时给非结构化500；GET得到的`••••`整表回写还会把真实Key永久替换成掩码。更危险的是单model浅合并可在省略Key时改baseUrl并沿用旧秘密。新增独立`modelSettings.js`：严格非空包装、1–100模型与字段预算、active/merge引用和multiModel布尔/枚举/2–8范围；旧整表掩码只在同id、protocol/baseUrl/modelId不变时恢复，连接身份变化必须显式提供Key字段。addProvider另从“每批≤100”补为现有加本批总计≤100，不能分批绕开整表预算。全部校验后一次同步save，输入失败配置字节不变；不宣称跨进程CAS、Key有效或真实提供商兼容。
 - 三条回归均先在旧实现转红：外部ok:false得到succeeded、双路径部分读取后真实创建文件、整表回写把fixture Key落成四圆点；追加目录预算也先得到200并写入超过100项。修复后定向测试通过。首轮全量另为80/83：文档质量守卫抓到交接表暂失唯一“下一项”，站点守卫抓到源码快照未重建，工作流负例抓到状态重排误少optional chain；均修复、定向复验后最终83/83。保留这些失败，不用最终绿灯抹去红测或施工回归事实。
 
+### 3.7 第48组：模型工具结果、Skill写后确认与队列容量
+
+- `runOpenAI`与`runChat.timedTool`原来只把`ok:false`或`success:false`当作返回式失败。`operation_result`正常返回的公开记录以顶层`status:'failed'`表达终态，因此被发成`ok:true`工具事件；OpenAI路径还会继续走命令截图等成功专属逻辑。两处现统一复用`toolTrace.isToolFailure`，覆盖失败/取消/unknown状态、trace、超时、非零退出及unknown核验。返回式失败保留完整有界result、发`ok:false`和归一错误；OpenAI仍把原JSON作为tool消息给下一轮模型，真正抛错才使用`ERROR:`合同，失败命令不采集截图。模型夹具登记并真实批准一个进程内failed operation，断言下一轮收到原error且UI事件不假绿。
+- `/skills`旧路由只等待`write_file` Promise，不检查返回对象。若实际写入后read-back发生变化，中央工具会正常return `success:false`/`E_VERIFY_UNKNOWN`，路由却仍答200创建成功。现成功要求`success===true`且`verification.state==='verified'`；返回式失败或unknown答409并保留code/verification，要求先核对目标而非自动重试，抛出的重名/输入异常仍为400。真实HTTP夹具用一次性`file_written`监听在写入和核验之间删除目标，确认最终不报成功；这不是外部OS竞争穷举或副作用回滚。
+- `operatorQueue.prune`虽从finishedAt保留结果，却在`jobs.size>40`时提前删任何终态；持续新请求会在15分钟内丢掉结果查询与requestKey去重墓碑。现40条成为硬上限：prune只删完整窗口外终态；submit先查同owner/key/摘要，原请求在满容量仍可命中，新的不同请求明确拒绝。`operatorQueueCapacity`固定时钟顺序批准40条，锁定首条结果、重复key零重执行、第41条拒绝及窗口后恢复。该策略以可查询和窗口内幂等证据优先，代价是满容量期间拒绝新工作；仍不提供重启/多进程持久exactly-once。
+- Agent、API、队列和测试说明同步；另纠正Chat调度说明中“空工作区初始化npm test”的过时描述，实际代码早已初始化空命令。首轮完整套件为83/84，唯一失败是生成库存已发现新测试、documentationLearning映射尚未登记；补入唯一主指南并写明`main`后，五项文档守卫及最终84/84通过。文档249/28/110、生产audit 0漏洞、探针目录零diff。本地结果不继承第47组CI，提交和远端矩阵须另行核对。
+
 ## 4. 前置报告交叉复核状态
 
 | 前置项 | 当前状态 |
@@ -83,8 +90,10 @@
 
 ## 5. 验证结果
 
-第46组实现`a85fa5a21a7bba448665f3f6da9671aad56dab6d`之[CI35397169896](https://github.com/cccjvav/web_agent/actions/runs/35397169896)九项逐项成功；第47组没有继承该旧绿灯，其实现`874006e4b8b6d2e1e5bb126e7c2d2a66314acc78`的[CI35402127412](https://github.com/cccjvav/web_agent/actions/runs/35402127412)也已九项逐项成功：
+第46组实现`a85fa5a21a7bba448665f3f6da9671aad56dab6d`之[CI35397169896](https://github.com/cccjvav/web_agent/actions/runs/35397169896)九项逐项成功；第47组没有继承该旧绿灯，其实现`874006e4b8b6d2e1e5bb126e7c2d2a66314acc78`的[CI35402127412](https://github.com/cccjvav/web_agent/actions/runs/35402127412)也已九项逐项成功。第48组当前只有本地候选证据，提交与CI待推送后补充：
 
+- 第48组：定向`modelLifecycle`、`apiFiles`、`operatorQueueCapacity`、`approvedOperations`、`workflowPreconditions`、`runChat`通过；7份改动源码/测试JS通过`node --check`。首轮83/84及登记原因如3.7保留，补齐后完整84/84通过；故意注入的`fixture stop failed`等stderr不代表套件失败。
+- 第48组文档/范围：库存249项源码、28目录、110排除，`check-docs`只读updated=0；documentationLearning/Quality/Policy/Links/docsSite五项通过且站点与build一致；生产audit 0漏洞、两个探针目录零diff、`git diff --check`通过。真实Chromium和Windows矩阵仍待新CI，不继承旧结果。
 - agent-host：第46组代码/回归加入后，83个测试文件全部通过；故意注入的`fixture stop failed`等stderr不代表套件失败。
 - 第47组：首轮80/83及原因如3.6保留，修正后的完整83/83通过；`approvedOperations`、`workflowPreconditions`、`apiFiles`与`providers`均在全量中通过，9份相关JS通过`node --check`。
 - 第47组文档/范围：库存248项源码、28目录、110排除，`check-docs`只读updated=0，站点内容与build一致；生产依赖audit为0漏洞；相对`ff948013`的两个探针目录零diff。CI覆盖Windows Node20/22/24、Ubuntu18/20/22/24、真实Chromium及Windows安装器；不把全量中自动经过的存量探针测试称为专项审查。
@@ -97,14 +106,16 @@
 
 ## 6. 仍需保留的风险/决策
 
-1. 当前实现`a85fa5a`的九项CI已覆盖Ubuntu/Windows Node矩阵、Windows C#/PowerShell/Inno和真实Chromium；这仍不代签用户桌面、手机、第三方服务或屏幕阅读器验收。
+1. 最近已绑定远端矩阵的实现`874006e`覆盖Ubuntu/Windows Node矩阵、Windows C#/PowerShell/Inno和真实Chromium；第48组当前仍只具本地证据，须新CI。即使通过也不代签用户桌面、手机、第三方服务或屏幕阅读器验收。
 2. Node 18/20最低兼容与矩阵是否退役需产品决定，并同步`engines`和用户指南。
 3. 最小ESLint、`routes.js`拆分及`content.js`生成物策略仍是维护性候选，不是本轮功能缺陷。
 4. 真实VS Code、多窗口、屏幕阅读器、手机窄屏、隧道和第三方OAuth/模型服务仍按人工清单验收。
 5. 探针专项整体由另一位助手负责并继续暂停；本分支已撤回误做的三文件修改，后续不运行专项审查、不实现线索、不改探针文档，等待正式交接。
 6. 全仓逐文件清单中的“待逐句”文档仍不能因本报告自动获得语义认证；本报告只对上表列明的代码链与相邻说明负责。
-7. 审批队列仍驻留单进程内存；重启、跨进程和容量淘汰不保证结果续查。若产品要求持久exactly-once，需另行设计存储和幂等协议，不能从本次保留窗口修复外推。
+7. 审批队列仍驻留单进程内存；40条未过保留窗口时会拒绝新请求，窗口届满、重启和跨进程均不保证结果续查。若产品要求持久exactly-once或更高吞吐，需另行设计存储、背压和幂等协议，不能从本次硬容量/保留窗口外推。
 
 ## 7. Git工作区恢复记录
 
-对话中断后，沙箱曾三次把固定分支ref恢复到初始`1d532d0`，但工作文件仍保留目标分支及未提交修改。首次先保存二进制diff及未跟踪文件清单，再显式fetch目标分支，确认`FETCH_HEAD=81fb5c2`；第46组期间后两次复现时同样先做外部备份、第三次另存完整非Git/依赖工作树压缩包，并核对远端均为`27fca73`。三次都只用`update-ref`和`read-tree`恢复当前固定分支引用/索引，没有`reset --hard`、`clean`或覆盖工作文件。第三次先表现为documentationLinks把现行docs/guides文件误判为旧根路径缺项；恢复后原样通过，未为掩盖环境问题改清单。此记录防止后续把上游历史误算成本轮修改。
+对话中断后，沙箱曾四次把固定分支ref恢复到初始`1d532d0`，但工作文件仍保留目标分支及未提交修改。首次先保存二进制diff及未跟踪文件清单，再显式fetch目标分支，确认`FETCH_HEAD=81fb5c2`；第46组期间后两次复现时同样先做外部备份、第三次另存完整非Git/依赖工作树压缩包，并核对远端均为`27fca73`。前三次都只用`update-ref`和`read-tree`恢复当前固定分支引用/索引，没有`reset --hard`、`clean`或覆盖工作文件。第三次先表现为documentationLinks把现行docs/guides文件误判为旧根路径缺项；恢复后原样通过，未为掩盖环境问题改清单。
+
+第48组开始时第四次复现，本地HEAD为`1d532d0`，远端却已从先前核对的`ff948013`前移到`90c0a9b`。任何恢复前先建立`/home/user/r48-recovery-1789775918/`：含binary diff、17个目标文件、状态/校验和及排除`.git`/依赖的全工作树压缩包。只读fetch证明`ff948013`是`90c0a9b`祖先，新增两提交正是第47组实现/证据；随后仅恢复ref/index，远端独有文件从索引取回，八个重叠文本以`ff948013`为共同基线三方合并并人工合并两个同段冲突。目标改动逐项对照备份后通过专项/全量测试。此记录防止后续把上游历史误算成本轮修改，也不能把异常ref当成普通Git状态直接硬重置。

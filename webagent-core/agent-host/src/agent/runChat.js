@@ -1,5 +1,5 @@
 const path = require('path');
-const { withTask } = require('../utils/toolTrace');
+const { withTask, isToolFailure } = require('../utils/toolTrace');
 const { resolveSafePath } = require('../tools/patchEngine');
 const { config } = require('../config');
 const { callTool } = require('../tools');
@@ -23,19 +23,21 @@ async function timedTool(emit, mode, name, args) {
   const t0 = Date.now();
   try {
     const result = await callTool(name, args, mode);
-    if (result && (result.ok === false || result.success === false)) throw new Error(result.error || result.message || '工具执行失败');
+    const failed = isToolFailure(result);
     const durationMs = Date.now() - t0;
+    const error = failed ? result?.error || result?.message || result?.result?.error || '工具执行失败' : undefined;
     if (emit) {
       emit('tool', {
         name,
         args,
         result,
-        ok: true,
+        ...(failed ? { error } : {}),
+        ok: !failed,
         durationMs,
-        label: toolLabel(name, result, true)
+        label: toolLabel(name, result, !failed)
       });
     }
-    return { ok: true, result, durationMs };
+    return failed ? { ok: false, result, error, durationMs } : { ok: true, result, durationMs };
   } catch (err) {
     const durationMs = Date.now() - t0;
     if (emit) {
