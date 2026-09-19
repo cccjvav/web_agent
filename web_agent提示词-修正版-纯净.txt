@@ -1,0 +1,55 @@
+我提供一份从我旧项目 ShunCode 0.7.4 恢复出来的 **MCP Bridge 源码包**
+(`shuncode-bridge-source.zip`)。**我不是要你整体替换我们现有的实现**——
+我已经看过我们的 `agent-host/src/mcp/`,它能跑,而且和审批/审计体系耦合。
+
+我想请你**按模块评估是否值得挑选性借鉴**。
+
+### 已核实的对照事实
+
+我们的扩展走**稳定 Chat API**(`vscode.chat.createChatParticipant`,无
+`enabledApiProposals`),ShunCode 走的是 **7 个 proposed API** + 分叉宿主。
+**我们的路线是对的**——能上 Marketplace,普通用户装得上。这点不需要改。
+
+我们的 MCP 是**手写**的(无 `@modelcontextprotocol` 依赖),ShunCode 用**官方 SDK 2.0.0**,
+协议版本 `2025-11-25`。
+
+逐个 grep 确认,ShunCode 有而我们**没有**的:
+
+| 能力 | 我们 | ShunCode 模块 |
+| --- | --- | --- |
+| 自适应并发 | 无 | `adaptive-concurrency.js` |
+| 信号量限流 | 无 | `concurrency.js` |
+| 事件缓冲/断线重放 | 无 | `bridge-event-store.js` |
+| 会话驱逐 | 仅 24h TTL 一刀切 | `bridge-session-registry.js`(空闲+容量驱逐,活跃永不驱逐) |
+| JSON-RPC id 占用登记 | 无 | `jsonrpc-request-id-registry.js` |
+
+### 请你回答
+
+1. **会话驱逐**:我们 `agent-host/src/mcp/session.js` 现在是
+   `SESSION_TTL_MS = 24h` + `pruneSessions()` 一刀切。ShunCode 区分活跃/空闲,
+   **有请求在飞或有流开着的会话永不驱逐**。我们的长任务场景会不会因为 TTL 被切?
+   值得换吗?
+
+2. **自适应并发**:`adaptive-concurrency.js` 按延迟/失败/排队自动调整
+   (出问题减半、恢复每次 +1,窗口满才决策)。我们现在有没有等价机制?
+   在我们的负载下有意义吗?
+
+3. **哪些不该动**:我认为文件工具那套(`file-tool-registry.js`、`apply-patch.js`)
+   **不该直接替换**,因为我们已有 dryRun/hash 保护和跨文件检查点,且与审批流程耦合。
+   请确认或反驳。
+
+4. **已知缺陷**:包里 README 第五节列了 5 个实测发现的问题,其中
+   `bridge-http-router.js` 有**真实缺陷**——`if (!sessionId)` 排除得了 `undefined`
+   但排除不了 `string[]`(HTTP 允许同名头重复),客户端发两个 `Mcp-Session-Id`
+   就会把数组传进只接受 `string` 的处理器。
+   **请检查我们的 `server.js` 有没有同类问题。**
+
+5. **如果都不值得用,请直接说。** 这是我自己的旧代码,但那不是采用它的理由。
+
+### 边界
+
+- 授权/支付代码**未包含**,也不要为此设计
+- 类型声明是**手写重建的,不是原件**:17 个模块的类型名是恢复过程中起的,
+  只有形状有依据。以 `bridge-core/*.js` 的实际行为为准
+- 这些代码**从未在我们环境里运行过**,恢复项目只做到类型检查层面
+- 包里没有 `package.json`,不能直接 `npm install`
