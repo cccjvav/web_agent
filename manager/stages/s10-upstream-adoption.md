@@ -750,7 +750,9 @@ Skill创建路由原来只await `write_file`，不消费正常返回的业务对
 
 普通模型POST现在拒绝记录级未知字段，`caps`与旧兼容`capabilities`共享数组预算；单模型更新先投影旧记录，避免浅合并继续传播历史属性。Provider发现包装必须恰为baseUrl/apiKey，未知字段在创建上游请求前400/E_BAD_PROVIDER；addProvider只接受baseUrl/apiKey/vision/models，每条目录项只接受id/name/contextSize/caps/pricing。错误文案不拼接Key；输入失败不触网或不改配置，既有15秒/512KiB/100项、拒跳转、连接身份绑定和整表上限保持。
 
-`apiFiles`覆盖模型/multiModel未知及错类型历史值不经models/status发布、公开快照往返清洗、普通模型未知字段、探测未知包装零fetch、addProvider包装/目录未知字段零写和错误正文不含Key；`providers`与`modelLifecycle`守住发现、调用和失败语义。定向回归与完整84项均通过，文档249/28/110只读零漂移，生产audit 0漏洞、`git diff --check`及两个探针目录零diff；实现`124b2051563b2dc6a5b44dafb68d2dd3574b3323`的[CI35428457492](https://github.com/cccjvav/web_agent/actions/runs/35428457492)九项逐项成功，覆盖Ubuntu Node18/20/22/24、Windows Node20/22/24及重复取消/stdio、Windows安装器和真实Chromium。两个探针目录仍明确排除，自动主套件经过其存量测试不算专项审查。
+`apiFiles`覆盖模型/multiModel未知及错类型历史值不经models/status发布、公开快照往返清洗、普通模型未知字段、探测未知包装零fetch、addProvider包装/目录未知字段零写和错误正文不含Key；`providers`与`modelLifecycle`守住发现、调用和失败语义。定向回归与完整84项均通过，文档249/28/110只读零漂移，生产audit 0漏洞、`git diff --check`及两个探针目录零diff；实现`124b2051563b2dc6a5b44dafb68d2dd3574b3323`的[CI35428457492](https://github.com/cccjvav/web_agent/actions/runs/35428457492)九项逐项成功，覆盖Ubuntu Node18/20/22/24、Windows Node20/22/24及重复取消/stdio、Windows安装器和真实Chromium；证据提交`6be27cd`的[CI35428680374](https://github.com/cccjvav/web_agent/actions/runs/35428680374)也九项成功。两个探针目录仍明确排除，自动主套件经过其存量测试不算专项审查。
+
+用户再次确认交接状态时，沙箱本地ref第五次从`6be27cd`回到`1d532d0`，工作文件仍为远端新树且依赖目录消失。先把binary diff、未跟踪项和四份权威交接正文保存到`/home/user/r49-recovery-1789811559/`；显式fetch并验证初始提交为远端`6be27cd`祖先，再用独立临时index证明工作树与远端树diff为0、无额外未跟踪项。最后只用`update-ref`与`read-tree`恢复固定分支ref/index，并按锁文件`npm ci`恢复75个包；未使用reset --hard、clean、checkout覆盖或整树替换。
 
 ## 复盘
 
