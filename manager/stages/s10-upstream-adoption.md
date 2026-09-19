@@ -770,7 +770,7 @@ Bridge status现只投影固定公开字段，字符串须类型有效且有界�
 
 `requestScope.fetchText`现优先以WHATWG reader或Node异步流逐块累计原始字节，默认8MiB；标准流越界尝试取消并抛`E_RESPONSE_TOO_LARGE`，text-only旧fetch/测试替身只能事后核对。模型POST显式收紧到1MiB并设`redirect:'error'`，非2xx只传播固定状态错误，不再拼接远端正文。120秒deadline、父取消和Chat五分钟总限保持；预算不是进程总内存或Provider可信证明。
 
-`apiFiles`新增真实HTTP零副作用回归，覆盖控制模式、审批handler、检查点ticket、回退记录及Skill文件；`modelLifecycle`覆盖跳转选项、401标记不反射和1MiB+1正文在JSON解析前失败。定向apiFiles/modelLifecycle/httpSmoke/executionControl/approvedOperations/fileCheckpoints/skillsLifecycle及相邻回归已通过。首轮完整套件80/84，四项仅为本批尚未同步说明/站点时的documentationPolicy、documentationLearning、docsSite、docsHttp，未删除守卫；同步后最终完整84/84。文档库存249源码/28目录/110排除且只读检查零漂移，生产audit 0漏洞、正式哈希183项匹配、`git diff --check`与探针两目录零diff；自动全量经过存量探针测试不算专项审查。精确提交与CI待本批闭环，探针目录及专项实现继续排除。
+`apiFiles`新增真实HTTP零副作用回归，覆盖控制模式、审批handler、检查点ticket、回退记录及Skill文件；`modelLifecycle`覆盖跳转选项、401标记不反射和1MiB+1正文在JSON解析前失败。定向apiFiles/modelLifecycle/httpSmoke/executionControl/approvedOperations/fileCheckpoints/skillsLifecycle及相邻回归已通过。首轮完整套件80/84，四项仅为本批尚未同步说明/站点时的documentationPolicy、documentationLearning、docsSite、docsHttp，未删除守卫；同步后最终完整84/84。文档库存249源码/28目录/110排除且只读检查零漂移，生产audit 0漏洞、正式哈希183项匹配、`git diff --check`与探针两目录零diff；自动全量经过存量探针测试不算专项审查。首推`c1ea0f8c019c4829be2fd6acb2692cc219b652b8`的[CI35445326912](https://github.com/cccjvav/web_agent/actions/runs/35445326912)为8/9：七个Node矩阵和Windows安装器通过，真实Chromium在Skill正文首页等待SHA256超时；原因是前端把尚不存在的expectedHash作为空字符串发送，被本批严格可选hash合同拒绝。`a4157822238f6669cce6cbc994ee86989afc40ec`改为首页省略该字段、续页仍携可信hash并增加VM回归，[CI35448256206](https://github.com/cccjvav/web_agent/actions/runs/35448256206)九项逐项成功，覆盖Ubuntu Node18/20/22/24、Windows Node20/22/24及重复取消/stdio、Windows安装器和真实Chromium。探针目录及专项实现继续排除。
 
 ## 复盘
 
