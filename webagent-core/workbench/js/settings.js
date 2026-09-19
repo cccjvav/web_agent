@@ -311,7 +311,9 @@ export async function readSkillPage(id, resource = 'SKILL.md', offset = 0, hash 
   $('#btn-skill-more').disabled = true; $('#btn-skill-use').disabled = true; $('#btn-skill-workflow').disabled = true;
   $('#skill-reader-note').textContent = '正在只读加载…';
   try {
-    const response = await fetch('/api/skills/load?' + new URLSearchParams({ name: id, resource, offset: String(offset), expectedHash: hash }), { signal: controller.signal });
+    const query = new URLSearchParams({ name: id, resource, offset: String(offset) });
+    if (hash) query.set('expectedHash', hash);
+    const response = await fetch('/api/skills/load?' + query, { signal: controller.signal });
     const data = await response.json();
     if (ticket !== skillRequest) return false;
     if (!response.ok || !validSkillPage(data, id, resource, offset)) throw new Error(data && (data.error || data.hint) || `HTTP ${response.status}`);

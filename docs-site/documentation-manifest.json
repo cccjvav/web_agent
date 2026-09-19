@@ -28633,7 +28633,7 @@
     {
       "path": "webagent-core/agent-host/tests/workbenchRuntime.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "1f1e6778c78825f7c9c88dd9eaf5d50adf9db8a322e708e588c6fe66017993f7",
+      "sha256": "62c0db54ffb08d09bf3a353ff4a9c6883a0ed531e080a029f630e0d1aa438dfa",
       "lineCount": 1376,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -31105,15 +31105,17 @@
           "parameters": []
         },
         {
-          "id": "anonymous@13:1/anonymous@711:16",
-          "name": "anonymous@711:16",
+          "id": "anonymous@13:1/anonymous@711:39",
+          "name": "anonymous@711:39",
           "kind": "ArrowFunctionExpression",
           "startLine": 711,
           "endLine": 711,
-          "parameters": []
+          "parameters": [
+            "url"
+          ]
         },
         {
-          "id": "anonymous@13:1/anonymous@711:16/json",
+          "id": "anonymous@13:1/anonymous@711:39/json",
           "name": "json",
           "kind": "ArrowFunctionExpression",
           "startLine": 711,
@@ -40813,8 +40815,8 @@
     {
       "path": "webagent-core/workbench/js/settings.js",
       "doc": "webagent-core/workbench/js/README.md",
-      "sha256": "a7786d6d9977111f1e0360292d1a099c046660bab3cebb2252ab1d29f86fa788",
-      "lineCount": 388,
+      "sha256": "f96dcc56f40b4bd41260691e32e7566ffb35b182e8c6d67f411c98294c36b5a7",
+      "lineCount": 390,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -41259,7 +41261,7 @@
           "name": "readSkillPage",
           "kind": "FunctionDeclaration",
           "startLine": 304,
-          "endLine": 333,
+          "endLine": 335,
           "parameters": [
             "id",
             "resource = 'SKILL.md'",
@@ -41276,11 +41278,11 @@
           "parameters": []
         },
         {
-          "id": "readSkillPage/anonymous@327:35",
-          "name": "anonymous@327:35",
+          "id": "readSkillPage/anonymous@329:35",
+          "name": "anonymous@329:35",
           "kind": "ArrowFunctionExpression",
-          "startLine": 327,
-          "endLine": 327,
+          "startLine": 329,
+          "endLine": 329,
           "parameters": [
             "item"
           ]
@@ -41289,62 +41291,62 @@
           "id": "loadSkills",
           "name": "loadSkills",
           "kind": "FunctionDeclaration",
-          "startLine": 335,
-          "endLine": 378,
+          "startLine": 337,
+          "endLine": 380,
           "parameters": []
         },
         {
-          "id": "loadSkills/anonymous@342:101",
-          "name": "anonymous@342:101",
+          "id": "loadSkills/anonymous@344:101",
+          "name": "anonymous@344:101",
           "kind": "ArrowFunctionExpression",
-          "startLine": 342,
-          "endLine": 342,
+          "startLine": 344,
+          "endLine": 344,
           "parameters": [
             "item"
           ]
         },
         {
-          "id": "loadSkills/anonymous@353:30",
-          "name": "anonymous@353:30",
+          "id": "loadSkills/anonymous@355:30",
+          "name": "anonymous@355:30",
           "kind": "ArrowFunctionExpression",
-          "startLine": 353,
-          "endLine": 356,
+          "startLine": 355,
+          "endLine": 358,
           "parameters": [
             "event"
           ]
         },
         {
-          "id": "loadSkills/anonymous@357:33",
-          "name": "anonymous@357:33",
+          "id": "loadSkills/anonymous@359:33",
+          "name": "anonymous@359:33",
           "kind": "ArrowFunctionExpression",
-          "startLine": 357,
-          "endLine": 359,
+          "startLine": 359,
+          "endLine": 361,
           "parameters": []
         },
         {
-          "id": "loadSkills/anonymous@360:34",
-          "name": "anonymous@360:34",
+          "id": "loadSkills/anonymous@362:34",
+          "name": "anonymous@362:34",
           "kind": "ArrowFunctionExpression",
-          "startLine": 360,
-          "endLine": 363,
+          "startLine": 362,
+          "endLine": 365,
           "parameters": [
             "event"
           ]
         },
         {
-          "id": "loadSkills/anonymous@364:37",
-          "name": "anonymous@364:37",
+          "id": "loadSkills/anonymous@366:37",
+          "name": "anonymous@366:37",
           "kind": "ArrowFunctionExpression",
-          "startLine": 364,
-          "endLine": 369,
+          "startLine": 366,
+          "endLine": 371,
           "parameters": []
         },
         {
-          "id": "loadSkills/anonymous@370:32",
-          "name": "anonymous@370:32",
+          "id": "loadSkills/anonymous@372:32",
+          "name": "anonymous@372:32",
           "kind": "ArrowFunctionExpression",
-          "startLine": 370,
-          "endLine": 376,
+          "startLine": 372,
+          "endLine": 378,
           "parameters": []
         }
       ]

@@ -107,7 +107,7 @@ R3定制设置回归：workbenchRuntime加载真实settings模块，先用400负
 
 ### 结果消费、流终止与可信候选回归（2026-09-18）
 
-workbenchRuntime在真实bind/bridge/settings/tabs/chat模块上执行确认合同。认证按钮覆盖HTTP拒绝、业务假成功、坏JSON、令牌草稿保留、设备轮询代次/Abort及单飞；画像探测覆盖畸形候选、环境与技术栈共享请求、等待期间草稿变化；新建文件发送createOnly且失败不打开，终端/搜索拒绝失败或坏形状。Bridge清轮、health、diagnostics与Execution Control必须同时满足HTTP/业务/核心形状，写确认后的读失败与写未确认分开。
+workbenchRuntime在真实bind/bridge/settings/tabs/chat模块上执行确认合同。认证按钮覆盖HTTP拒绝、业务假成功、坏JSON、令牌草稿保留、设备轮询代次/Abort及单飞；画像探测覆盖畸形候选、环境与技术栈共享请求、等待期间草稿变化；新建文件发送createOnly且失败不打开，终端/搜索拒绝失败或坏形状。Skill第一页读取断言不发送空的可选expectedHash，续页仍由可信hash绑定。Bridge清轮、health、diagnostics与Execution Control必须同时满足HTTP/业务/核心形状，写确认后的读失败与写未确认分开。
 
 Skill目录和正文先验证完整候选再发布，失败保留可信列表/正文；真实浏览器对创建400同时要求保留服务端错误、明确“状态未知”且磁盘零创建，不再把旧版纯错误串当唯一文案。文件树坏候选不替换旧树；apply_patch重读只在合法hash/正文后协调，干净标签同步、脏草稿保留。局部**streamResponse(chunks,status=200)**构造NDJSON响应，body的**getReader()**逐块返回Buffer；覆盖非2xx错误正文、合法无换行尾done、坏JSON、提前断流，以及message→error→done仍不得写assistant历史。该reader是VM替身，不模拟真实背压、TCP分片时序或浏览器解码器实现。
 

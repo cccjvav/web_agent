@@ -708,8 +708,8 @@ if (!process.argv.includes('--vm-child')) {
   assert.equal(await settings.namespace.loadSkills(),false);
   assert.equal(statusNodes.get('#skills-list').innerHTML,trustedSkills,'malformed catalog cannot replace the last trusted list');
   const skillPage={...skill,found:true,resource:'SKILL.md',fileBytes:4,content:'body',hash:'e'.repeat(64),offset:0,nextOffset:null,totalChars:4,resources:[]};
-  context.fetch=async()=>({ok:true,status:200,json:async()=>skillPage});
-  assert.equal(await settings.namespace.readSkillPage(skill.id),true);
+  let initialSkillUrl='';context.fetch=async url=>{initialSkillUrl=String(url);return {ok:true,status:200,json:async()=>skillPage};};
+  assert.equal(await settings.namespace.readSkillPage(skill.id),true);assert.equal(new URL(initialSkillUrl,'http://fixture.invalid').searchParams.has('expectedHash'),false,'the first page omits an empty optional hash');
   context.fetch=async()=>({ok:true,status:200,json:async()=>({...skillPage,resources:[null]})});
   assert.equal(await settings.namespace.readSkillPage(skill.id),false);
   assert.equal(statusNodes.get('#btn-skill-workflow').disabled,true);

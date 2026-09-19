@@ -83,7 +83,7 @@ load/save共用页面内customBusy，已有请求时明确拒绝新请求而不�
 
 **validSkillSummary(skill)**要求目录项为对象、id/name为非空字符串，description/preview若有也须字符串。**validSkillPage(page,id,resource,offset)**在此基础上要求found严格true、请求ID/资源/offset回显一致、正文字符串、64位hash、非负字节/总字符、合法递增或null的nextOffset，resources若有须逐项path字符串/readable布尔；这是发布形状合同，不认证说明内容可信。
 
-**loadSkills()**以no-store获取目录，只有HTTP成功且skills/truncated/warnings完整形状有效才替换skillCatalog并paint；失败保留最后可信列表，只更新扫描错误说明并返回false。它同时绑定搜索、重扫、查看、下一页、资源和填入对话按钮。**paintSkills()**按id/description过滤并转义生成卡片，显示来源和同名项。**readSkillPage(id,resource,offset,hash)**调用受保护的GET `/api/skills/load`，5秒AbortController超时；新请求取消上一个且用ticket忽略迟到响应，只有validSkillPage通过才发布。第一页替换正文；后续页按同id/resource拼接，服务端校验expectedHash防混版；错误清选择并提示从头读取，不允许继续操作旧内容。正文textContent展示，不执行Markdown/脚本。
+**loadSkills()**以no-store获取目录，只有HTTP成功且skills/truncated/warnings完整形状有效才替换skillCatalog并paint；失败保留最后可信列表，只更新扫描错误说明并返回false。它同时绑定搜索、重扫、查看、下一页、资源和填入对话按钮。**paintSkills()**按id/description过滤并转义生成卡片，显示来源和同名项。**readSkillPage(id,resource,offset,hash)**调用受保护的GET `/api/skills/load`，5秒AbortController超时；新请求取消上一个且用ticket忽略迟到响应，只有validSkillPage通过才发布。第一页省略尚不存在的expectedHash并替换正文；后续页才携可信页hash，按同id/resource拼接且由服务端校验expectedHash防混版；错误清选择并提示从头读取，不允许继续操作旧内容。正文textContent展示，不执行Markdown/脚本。
 
 “填入Ask”保留已有草稿，追加明确load_skill ID和授权限制，切Ask并聚焦，**不发送**；提示内置探索不能解释任意Skill。完整读完≤32KiB的`workflow.json`才启用转工作流按钮；只复制已读取的文本到现有operations页并触发结构/风险预览，不提交审批、不执行；现有流程仍需另外提交和本机批准。其他资源只是参考文本，不根据run.py/run.sh名字自动启动。
 
