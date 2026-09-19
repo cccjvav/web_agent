@@ -51,6 +51,128 @@ async function main() {
   });
 
   try {
+    const ptyJobs = require('../src/tools/ptyJobs');
+    ptyJobs.resetForTests();
+    const ptyIdentity = { clientId: 'api-pty-client', workspace: tmp };
+    const invalidPtyHello = await request(server, 'POST', '/api/pty/hello', { ...ptyIdentity, unexpected: true });
+    assert.equal(invalidPtyHello.status, 400, 'unknown PTY hello fields must not register a client');
+    assert.equal(invalidPtyHello.json.code, 'E_BAD_API_REQUEST');
+    assert.equal(ptyJobs.hasClient(), false);
+    const invalidPtyPoll = await request(server, 'GET', `/api/pty/jobs?${new URLSearchParams({ ...ptyIdentity, unexpected: 'true' })}`);
+    assert.equal(invalidPtyPoll.status, 400, 'unknown PTY poll fields must not refresh client liveness');
+    assert.equal(ptyJobs.hasClient(), false);
+    assert.equal((await request(server, 'POST', '/api/pty/hello', ptyIdentity)).status, 200);
+    const pendingPty = ptyJobs.enqueue('run', { command: 'printf fixture', cwd: '.', timeoutSec: 5 });
+    const pendingPtyJob = ptyJobs.listPending(ptyIdentity.clientId)[0];
+    const invalidPtyReport = await request(server, 'POST', `/api/pty/jobs/${pendingPtyJob.jobId}`, {
+      ...ptyIdentity, state: 'claimed', unexpected: true
+    });
+    assert.equal(invalidPtyReport.status, 400, 'unknown PTY report fields must not claim a job');
+    assert.equal(ptyJobs.listPending(ptyIdentity.clientId)[0].state, 'queued');
+    assert.equal((await request(server, 'POST', `/api/pty/jobs/${pendingPtyJob.jobId}`, { ...ptyIdentity, state: 'claimed' })).status, 200);
+    assert.equal((await request(server, 'POST', `/api/pty/jobs/${pendingPtyJob.jobId}`, { ...ptyIdentity, state: 'accepted' })).status, 200);
+    const contradictoryPtyReport = await request(server, 'POST', `/api/pty/jobs/${pendingPtyJob.jobId}`, {
+      ...ptyIdentity, state: 'cancelled', status: 'done', ok: true, exitCode: 0
+    });
+    assert.equal(contradictoryPtyReport.status, 400, 'a terminal PTY state cannot be relabelled as success');
+    assert.equal(ptyJobs.listPending(ptyIdentity.clientId)[0].state, 'running');
+    assert.equal((await request(server, 'POST', `/api/pty/jobs/${pendingPtyJob.jobId}`, {
+      ...ptyIdentity, state: 'progress', stdout: 'fixture'
+    })).status, 200);
+    assert.equal((await request(server, 'POST', `/api/pty/jobs/${pendingPtyJob.jobId}`, {
+      ...ptyIdentity, state: 'done', status: 'done', ok: true, exitCode: 0, stdout: 'fixture complete', outputCaptured: true
+    })).status, 200);
+    const completedPty = await pendingPty;
+    assert.equal(completedPty.ok, true);
+    assert.equal(completedPty.stdout, 'fixture complete');
+    ptyJobs.resetForTests();
+
+    const connectionCheck = require('../src/utils/connectionCheck');
+    const connectionInput = {
+      schema: 'webagent-browser-observation/v1', origin: 'https://arena.ai',
+      observedAt: new Date().toISOString(), pageKind: 'agent', pageDigest: 'a'.repeat(64)
+    };
+    connectionCheck.clear();
+    const originalConnectionCreate = connectionCheck.create;
+    let connectionCreates = 0;
+    connectionCheck.create = input => { connectionCreates++; return originalConnectionCreate(input); };
+    try {
+      const invalidConnectionCreate = await request(server, 'POST', '/api/connection-checks', {
+        ...connectionInput, unexpected: true
+      });
+      assert.equal(invalidConnectionCreate.status, 400, 'unknown connection-check fields must fail before record allocation');
+      assert.equal(connectionCreates, 0);
+    } finally {
+      connectionCheck.create = originalConnectionCreate;
+    }
+    const connectionRecord = connectionCheck.create(connectionInput);
+    const invalidConnectionInspect = await request(server, 'GET', `/api/connection-checks/${connectionRecord.checkId}?unexpected=true`);
+    assert.equal(invalidConnectionInspect.status, 400, 'unknown connection-check query fields must fail before inspection');
+    assert.equal(connectionCheck.inspect(connectionRecord.checkId).status, 'waiting');
+    const invalidConnectionClear = await request(server, 'DELETE', '/api/connection-checks', { unexpected: true });
+    assert.equal(invalidConnectionClear.status, 400, 'unknown clear wrappers must not erase connection checks');
+    assert.equal(connectionCheck.inspect(connectionRecord.checkId).status, 'waiting');
+    assert.equal((await request(server, 'DELETE', '/api/connection-checks', {})).status, 200);
+    assert.throws(() => connectionCheck.inspect(connectionRecord.checkId));
+
+    const externalClient = require('../src/mcp/externalClient');
+    const originalExternalAdd = externalClient.add;
+    const originalExternalPreview = externalClient.previewStdio;
+    const originalExternalStart = externalClient.startStdio;
+    const originalExternalRemove = externalClient.remove;
+    let externalAdds = 0, externalPreviews = 0, externalStarts = 0, externalRemovals = 0;
+    externalClient.add = async () => { externalAdds++; return { serverId: 'fixture-http', status: 'discovered', tools: [] }; };
+    externalClient.previewStdio = () => { externalPreviews++; return { previewId: '11111111-1111-4111-8111-111111111111' }; };
+    externalClient.startStdio = async () => { externalStarts++; return { serverId: 'fixture-stdio', status: 'discovered', tools: [] }; };
+    externalClient.remove = () => { externalRemovals++; return { removed: true }; };
+    try {
+      const invalidStdioPreview = await request(server, 'POST', '/api/external/stdio/preview', {
+        program: '/fixture', unexpected: true
+      });
+      assert.equal(invalidStdioPreview.status, 400, 'unknown stdio preview fields must fail before preview allocation');
+      assert.equal(externalPreviews, 0);
+      const invalidExternalAdd = await request(server, 'POST', '/api/external/servers', {
+        name: 'fixture', url: 'http://127.0.0.1:9/mcp', token: '', publicHttps: false, unexpected: true
+      });
+      assert.equal(invalidExternalAdd.status, 400, 'unknown external registration fields must fail before network setup');
+      assert.equal(externalAdds, 0);
+      const unconfirmedPublicAdd = await request(server, 'POST', '/api/external/servers', {
+        name: 'fixture', url: 'https://mcp.example.test/mcp', publicHttps: true, confirmedPublic: false,
+        workspaceRoot: tmp, hostInstanceId: config.hostInstanceId
+      });
+      assert.equal(unconfirmedPublicAdd.status, 400, 'public HTTPS requires strict confirmation before registration');
+      assert.equal(externalAdds, 0);
+      const partialBindingAdd = await request(server, 'POST', '/api/external/servers', {
+        name: 'fixture', url: 'http://127.0.0.1:9/mcp', publicHttps: false, workspaceRoot: tmp
+      });
+      assert.equal(partialBindingAdd.status, 400, 'optional registration bindings must be complete');
+      assert.equal(externalAdds, 0);
+      assert.equal((await request(server, 'POST', '/api/external/servers', {
+        name: 'fixture', url: 'http://127.0.0.1:9/mcp', token: '', publicHttps: false, confirmedPublic: false,
+        workspaceRoot: tmp, hostInstanceId: config.hostInstanceId
+      })).status, 200);
+      assert.equal(externalAdds, 1);
+      const previewId = '11111111-1111-4111-8111-111111111111';
+      const invalidStdioStart = await request(server, 'POST', '/api/external/stdio/start', {
+        previewId, confirmed: true, unexpected: true
+      });
+      assert.equal(invalidStdioStart.status, 400, 'unknown stdio start fields must fail before process launch');
+      assert.equal(externalStarts, 0);
+      assert.equal((await request(server, 'POST', '/api/external/stdio/start', { previewId, confirmed: true })).status, 200);
+      assert.equal(externalStarts, 1);
+      const externalId = '22222222-2222-4222-8222-222222222222';
+      const invalidExternalRemove = await request(server, 'DELETE', `/api/external/servers/${externalId}?unexpected=true`, {});
+      assert.equal(invalidExternalRemove.status, 400, 'unknown external delete wrappers must not remove a server');
+      assert.equal(externalRemovals, 0);
+      assert.equal((await request(server, 'DELETE', `/api/external/servers/${externalId}`, {})).status, 200);
+      assert.equal(externalRemovals, 1);
+    } finally {
+      externalClient.add = originalExternalAdd;
+      externalClient.previewStdio = originalExternalPreview;
+      externalClient.startStdio = originalExternalStart;
+      externalClient.remove = originalExternalRemove;
+    }
+
     const invalidToolTarget = 'invalid-tool-wrapper.txt';
     const invalidToolWrapper = await request(server, 'POST', '/api/tool/call', {
       name: 'write_file', mode: 'code',
@@ -498,6 +620,8 @@ async function main() {
     afterProvider=store.load();assert.equal(afterProvider.models.length,previous.models.length+4);
     assert.equal(afterProvider.models.find(m=>m.id==='custom-1').apiKey,'sk-secret');
   } finally {
+    require('../src/tools/ptyJobs').resetForTests();
+    require('../src/utils/connectionCheck').clear();
     await new Promise((r) => server.close(r));
     fs.rmSync(tmp, { recursive: true, force: true });
   }

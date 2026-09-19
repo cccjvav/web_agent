@@ -65,6 +65,8 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 
 第51组继续非探针本机文件/工具/Chat包装及模型HTTP响应边界：apiFiles以真实HTTP证明tool/chat/consensus/tasks、执行控制、审批/取消、文件读写/预览/回退、检查点及Skill包装的未知字段在调度、改模式、执行/撤销、扫描、写盘、重置、分配或消费记录前400；`createOnly:'true'`不能退入覆盖，文件新建须显式独占，普通保存须64位expectedHash，错误请求保持磁盘与内存记录不变。modelLifecycle用模拟fetch锁定模型POST拒跳转、401远端正文不反射及1MiB+1响应在JSON解析前以E_RESPONSE_TOO_LARGE失败。httpSmoke等原合法调用仍作兼容回归；这些fixture不连接真实Provider、不测代理内存峰值，也不扩大暂停的探针专项。
 
+第52组续审非探针PTY、connection-check、external本机管理包装及模型协议形状：apiFiles经真实HTTP让未知hello/jobs/report、核对创建/读取/清空、HTTP登记、stdio预览/启动及删除包装在登记客户端、推进任务、分配/清空挑战、触网/保存、分配预览、启动/停止前400，同时跑完整合法PTY状态链。modelLifecycle证明完整序列化模型POST超过12MiB时fetch计数为零；畸形/非对象arguments、64项以上tool_calls及禁用/未声明工具在工具前失败；合法Provider assistant只以固定role/content/tool_calls/function投影回送下一轮。httpSmoke把缺PTY身份明确为400/E_BAD_API_REQUEST并保留错workspace 409。均为本机/模拟Provider证据，不证明真实扩展、第三方进程或模型服务善意；Probe目录仍排除。
+
 ## 按风险选择回归
 | 风险/模块 | 主要测试 | 证据类型与限制 |
 |---|---|---|
@@ -107,7 +109,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | 源码 | 定位证据 |
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
-| [apiFiles.test.js](apiFiles.test.js) | 48 个函数/类节点 |
+| [apiFiles.test.js](apiFiles.test.js) | 54 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 20 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
@@ -144,7 +146,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 14 个函数/类节点 |
 | [mcpProtocol.test.js](mcpProtocol.test.js) | 33 个函数/类节点 |
 | [memoryRecall.test.js](memoryRecall.test.js) | 8 个函数/类节点 |
-| [modelLifecycle.test.js](modelLifecycle.test.js) | 30 个函数/类节点 |
+| [modelLifecycle.test.js](modelLifecycle.test.js) | 53 个函数/类节点 |
 | [monacoLoading.test.js](monacoLoading.test.js) | 12 个函数/类节点 |
 | [nativeRotationCommands.test.js](nativeRotationCommands.test.js) | 54 个函数/类节点 |
 | [oauth.test.js](oauth.test.js) | 15 个函数/类节点 |

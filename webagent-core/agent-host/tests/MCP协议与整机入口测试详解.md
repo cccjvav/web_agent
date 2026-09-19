@@ -34,7 +34,7 @@
 3. 错secret和无Bearer canonical /mcp initialize 401；正确secret initialize有instructions，tools/list30项、discovery有授权端点，ping工具成功。
 4. status recentLogs存在ping，每个payload键只能tool/success/durationMs；get_logs不含args/chunk/patch；usage.json落盘有调用数。空bridge token400，reset-round后session客户端0但累计usage不能减少。
 5. 模拟Cloudflare headers访问status/chat/pty/tool均404且status不泄secret，公网Host也404；同样headers带secret访问MCP initialize仍200。恶意Origin管理API404、本机Origin200；工作台端口的恶意reset-round也404。
-6. PTY hello缺identity或错workspace409；正确clientId/workspace200，带同identity查询jobs数组。没有执行PTY任务。
+6. PTY hello缺identity为400/E_BAD_API_REQUEST且错workspace仍409；正确clientId/workspace200，带同identity查询jobs数组。没有执行PTY任务；完整状态链及未知包装零副作用另见apiFiles。
 7. OPTIONS恶意Origin没有allow-origin，DeepSeek/扩展Origin回精确allow-origin；恶意Origin MCP执行请求403无命令回显，受信Origin ping正常。MCP端口根页不能含工作台picker，防管理UI暴露。
 8. 工作台/api/chat Ask以真实builtin处理临时空工作区，按NDJSON逐行JSON.parse、非法行null并filter掉，要求list_directory tool/message/done。局部**ndjson(raw)**抽出同一解析逻辑供Plan：起始一branch无consensus，追加第二branch可merge但仍无consensus，显式merge才有simulated:true且agreementRate null。不是实际多模型共识。
 

@@ -317,7 +317,8 @@ async function main() {
     assert.ok(localOriginApi.json.secretKey);
 
     const missingIdentity = await request('POST', `http://127.0.0.1:${mcpPort}/api/pty/hello`, {});
-    assert.strictEqual(missingIdentity.status, 409);
+    assert.strictEqual(missingIdentity.status, 400);
+    assert.strictEqual(missingIdentity.json.code, 'E_BAD_API_REQUEST');
     const identity = { clientId: 'smoke-client', workspace: tmp };
     const wrongWorkspace = await request('POST', `http://127.0.0.1:${mcpPort}/api/pty/hello`, { ...identity, workspace: path.dirname(tmp) });
     assert.strictEqual(wrongWorkspace.status, 409);

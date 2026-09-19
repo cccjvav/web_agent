@@ -212,6 +212,53 @@ function validFileWriteRequest(body) {
   if (body.createOnly === true) return !Object.hasOwn(body, 'expectedHash');
   return apiHash(body.expectedHash);
 }
+const PTY_IDENTITY_FIELDS = ['clientId', 'workspace'];
+const PTY_REPORT_FIELDS = [...PTY_IDENTITY_FIELDS, 'state', 'status', 'message', 'stdout', 'stderr', 'ok', 'exitCode', 'outputCaptured'];
+const PTY_TERMINAL_STATES = new Set(['done', 'denied', 'error', 'timeout', 'cancelled']);
+function validPtyIdentity(body) {
+  return apiString(body.clientId, 80, { nonEmpty: true, singleLine: true })
+    && /^[a-zA-Z0-9_-]{8,80}$/.test(body.clientId)
+    && apiString(body.workspace, 4096, { nonEmpty: true, singleLine: true });
+}
+function validPtyReport(body) {
+  if (!validPtyIdentity(body) || !apiString(body.state, 16, { nonEmpty: true, singleLine: true })) return false;
+  const base = new Set([...PTY_IDENTITY_FIELDS, 'state']);
+  let allowed = base;
+  if (body.state === 'progress') allowed = new Set([...base, 'stdout', 'stderr']);
+  else if (PTY_TERMINAL_STATES.has(body.state)) {
+    allowed = new Set([...base, 'status', 'message', 'stdout', 'stderr', 'ok', 'exitCode', 'outputCaptured']);
+  } else if (!['check', 'claimed', 'accepted'].includes(body.state)) return false;
+  if (Object.keys(body).some(key => !allowed.has(key))) return false;
+  if (body.state === 'progress') {
+    if (!Object.hasOwn(body, 'stdout') && !Object.hasOwn(body, 'stderr')) return false;
+  }
+  if ((Object.hasOwn(body, 'stdout') && !apiString(body.stdout, 1024 * 1024))
+    || (Object.hasOwn(body, 'stderr') && !apiString(body.stderr, 1024 * 1024))
+    || (Object.hasOwn(body, 'message') && !apiString(body.message, 64 * 1024))
+    || (Object.hasOwn(body, 'status') && !PTY_TERMINAL_STATES.has(body.status))
+    || (Object.hasOwn(body, 'ok') && typeof body.ok !== 'boolean')
+    || (Object.hasOwn(body, 'exitCode') && !Number.isSafeInteger(body.exitCode))
+    || (Object.hasOwn(body, 'outputCaptured') && typeof body.outputCaptured !== 'boolean')) return false;
+  const effectiveStatus = body.status || body.state;
+  if (PTY_TERMINAL_STATES.has(body.state)
+    && ((body.state !== 'done' && Object.hasOwn(body, 'status') && body.status !== body.state)
+      || (effectiveStatus !== 'done' && body.ok === true))) return false;
+  return true;
+}
+function validExternalRegistration(body) {
+  const hasWorkspace = Object.hasOwn(body, 'workspaceRoot');
+  const hasHost = Object.hasOwn(body, 'hostInstanceId');
+  if (!apiString(body.url, 2048, { nonEmpty: true, singleLine: true })
+    || (Object.hasOwn(body, 'name') && !apiString(body.name, 120, { singleLine: true }))
+    || (Object.hasOwn(body, 'token') && (!apiString(body.token, 4096) || /[\r\n\0]/.test(body.token)))
+    || (Object.hasOwn(body, 'publicHttps') && typeof body.publicHttps !== 'boolean')
+    || (Object.hasOwn(body, 'confirmedPublic') && typeof body.confirmedPublic !== 'boolean')
+    || (hasWorkspace && !apiString(body.workspaceRoot, 4096, { nonEmpty: true, singleLine: true }))
+    || (hasHost && !apiString(body.hostInstanceId, 256, { nonEmpty: true, singleLine: true }))
+    || hasWorkspace !== hasHost) return false;
+  if (body.publicHttps === true) return body.confirmedPublic === true && hasWorkspace;
+  return body.confirmedPublic !== true;
+}
 function publicText(value, maxLength) {
   return typeof value === 'string' ? value.slice(0, maxLength) : '';
 }
@@ -299,18 +346,59 @@ router.post('/operations/:id/cancel', async (req, res) => {
   try { res.json(await operatorQueue.cancel(req.params.id)); }
   catch (error) { res.status(400).json({ ok: false, error: error.message }); }
 });
-router.post('/external/stdio/preview', operationApi(req => externalClient.previewStdio(req.body || {})));
-router.post('/external/stdio/start', operationApi(req => externalClient.startStdio(req.body || {})));
-router.post('/external/servers', operationApi(req => externalClient.add(req.body || {})));
-router.delete('/external/servers/:id', operationApi(req => externalClient.remove(req.params.id)));
+router.post('/external/stdio/preview', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
+  const body = apiRequestBody(req, res, ['name', 'program', 'args', 'cwd', 'env', 'reviewFiles']);
+  if (!body) return;
+  try { res.json(externalClient.previewStdio(body)); }
+  catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+});
+router.post('/external/stdio/start', async (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
+  const body = apiRequestBody(req, res, ['previewId', 'confirmed']);
+  if (!body) return;
+  if (!apiString(body.previewId, 36, { nonEmpty: true, singleLine: true })
+    || !/^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(body.previewId)
+    || body.confirmed !== true) return rejectApiRequest(res);
+  try { res.json(await externalClient.startStdio(body)); }
+  catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+});
+router.post('/external/servers', async (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
+  const body = apiRequestBody(req, res, ['name', 'url', 'token', 'publicHttps', 'confirmedPublic', 'workspaceRoot', 'hostInstanceId']);
+  if (!body) return;
+  if (!validExternalRegistration(body)) return rejectApiRequest(res);
+  try { res.json(await externalClient.add(body)); }
+  catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+});
+router.delete('/external/servers/:id', (req, res) => {
+  if (!apiRequestQuery(req, res, []) || !apiRequestBody(req, res, [])) return;
+  if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(req.params.id)) return rejectApiRequest(res);
+  try { res.json(externalClient.remove(req.params.id)); }
+  catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+});
 router.post('/external/request', operationApi(req => externalClient.request(req.body || {}, { callerKey: 'local' })));
 router.post('/workflows/preview', operationApi(req => workflows.previewRequest(req.body || {})));
 router.post('/workflows/request', operationApi(req => workflows.request(req.body || {}, { callerKey: 'local' })));
 
 const connectionCheck = require('../utils/connectionCheck');
-router.post('/connection-checks', operationApi(req => connectionCheck.create(req.body)));
-router.get('/connection-checks/:id', operationApi(req => connectionCheck.inspect(req.params.id)));
-router.delete('/connection-checks', operationApi(() => connectionCheck.clear()));
+router.post('/connection-checks', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
+  const body = apiRequestBody(req, res, ['schema', 'origin', 'observedAt', 'pageKind', 'pageDigest']);
+  if (!body) return;
+  try { res.json(connectionCheck.create(body)); }
+  catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+});
+router.get('/connection-checks/:id', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
+  if (!/^[a-f0-9]{32}$/.test(req.params.id)) return rejectApiRequest(res);
+  try { res.json(connectionCheck.inspect(req.params.id)); }
+  catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+});
+router.delete('/connection-checks', (req, res) => {
+  if (!apiRequestQuery(req, res, []) || !apiRequestBody(req, res, [])) return;
+  res.json(connectionCheck.clear());
+});
 
 router.get('/diagnostics', (req, res) => res.json(diagnostics()));
 
@@ -592,18 +680,33 @@ router.post('/chat', async (req, res) => {
 });
 
 router.post('/pty/hello', (req, res) => {
-  if (!ptyJobs.noteClient(req.body)) return res.status(409).json({ ok: false, error: 'workspace/client mismatch' });
+  if (!apiRequestQuery(req, res, [])) return;
+  const body = apiRequestBody(req, res, PTY_IDENTITY_FIELDS);
+  if (!body) return;
+  if (!validPtyIdentity(body)) return rejectApiRequest(res);
+  if (!ptyJobs.noteClient(body)) return res.status(409).json({ ok: false, error: 'workspace/client mismatch' });
   res.json({ ok: true, ...ptyJobs.snapshot() });
 });
 
 router.get('/pty/jobs', (req, res) => {
-  if (!ptyJobs.noteClient(req.query)) return res.status(409).json({ ok: false, error: 'workspace/client mismatch' });
-  res.json({ jobs: ptyJobs.listPending(req.query.clientId), ...ptyJobs.snapshot() });
+  const query = apiRequestQuery(req, res, PTY_IDENTITY_FIELDS);
+  if (!query) return;
+  if (!validPtyIdentity(query)) return rejectApiRequest(res);
+  if (!ptyJobs.noteClient(query)) return res.status(409).json({ ok: false, error: 'workspace/client mismatch' });
+  res.json({ jobs: ptyJobs.listPending(query.clientId), ...ptyJobs.snapshot() });
 });
 
 router.post('/pty/jobs/:jobId', (req, res) => {
-  if (!ptyJobs.noteClient(req.body)) return res.status(409).json({ ok: false, error: 'workspace/client mismatch' });
-  const out = ptyJobs.report(req.params.jobId, req.body || {}, req.body.clientId);
+  if (!apiRequestQuery(req, res, [])) return;
+  const body = apiRequestBody(req, res, PTY_REPORT_FIELDS);
+  if (!body) return;
+  if (!/^[a-f0-9]{16}$/.test(req.params.jobId) || !validPtyReport(body)) return rejectApiRequest(res);
+  if (!ptyJobs.noteClient({ clientId: body.clientId, workspace: body.workspace })) {
+    return res.status(409).json({ ok: false, error: 'workspace/client mismatch' });
+  }
+  const report = {};
+  for (const key of PTY_REPORT_FIELDS) if (!PTY_IDENTITY_FIELDS.includes(key) && Object.hasOwn(body, key)) report[key] = body[key];
+  const out = ptyJobs.report(req.params.jobId, report, body.clientId);
   if (!out) return res.status(404).json({ ok: false, error: 'unknown job' });
   res.json({ ok: true, ...out });
 });

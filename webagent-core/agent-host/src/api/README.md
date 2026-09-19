@@ -18,14 +18,15 @@
 | `/bridge/device`、`/bridge/device/poll`、`/bridge/github/clear` | POST | GitHub设备流及清理；无参操作只接受空体，不等同MCP OAuth配对 |
 | `/chat` | POST | 本机Chat的NDJSON事件流；只接受固定顶层字段、枚举及有界user/assistant历史，错误包装在发流式响应头/模型或工具副作用前400 |
 | `/tool/call`、`/consensus/run`、`/tasks/reset` | POST | 固定包装下直接调用工具、本机共识流程或清任务状态；未知字段不调度/不重置，统一`E_BAD_API_REQUEST` |
-| `/pty/hello`、`/pty/jobs`、`/pty/jobs/:jobId` | POST / GET / POST | PTY客户端存活、取任务、报告状态；本批固定包装不外推到这些独立协议端点 |
+| `/pty/hello`、`/pty/jobs`、`/pty/jobs/:jobId` | POST / GET / POST | PTY客户端存活、取任务、报告状态；固定身份/query/body及逐状态字段/type/预算，错误包装不刷新存活或认领/推进/结束任务 |
 | `/files/tree`、`/files/content` | GET | 文件导航与内容/hash读取；tree只收空query，content只收有界path，未知query不读取 |
 | `/files/content` | PUT | 固定path/content/expectedHash/createOnly包装；新建必须`createOnly:true`，普通保存必须带64位expectedHash，错类型不会落入覆盖分支 |
 | `/files/preview`、`/files/undo/:id` | POST / GET / POST | 有界只读diff、预览与明确确认版本绑定回退；包装/绑定字段固定，未知字段不写盘/不消费回退记录 |
 | `/checkpoints`、`/checkpoints/:id/preview`、`/checkpoints/:id/restore`、`/checkpoints/:id/remove` | GET / POST | 固定包装下创建内存检查点、预览与一次恢复；未知字段不分配/写入/消费记录，各POST仍绑定工作区/host，不是多文件原子事务 |
 | `/execution-control` | GET / POST | 固定query/body包装下读取或修改主机工作模式/Bridge权限；未知字段不改模式/策略，合法变更仍受绑定和在途/后台屏障保护 |
 | `/operations`、`/operations/:id`、`/operations/:id/approve`、`/operations/:id/cancel` | GET / POST | 本机查看/批准/取消有界请求；approve只收confirm、cancel只收空体，未知包装不执行或取消，批准不等于执行成功 |
-| `/external/*`、`/workflows/*` | GET / POST / DELETE（依实际路由） | 接入/发现、stdio启动审阅、工作流预览/提交；不新增远程管理权 |
+| `/external/*`、`/workflows/*` | GET / POST / DELETE（依实际路由） | external HTTP登记/删除及stdio预览/启动使用固定包装、严格确认/UUID/绑定；未知字段不触网、不保存、不启动/停止进程；工作流仍按其独立严格合同，不新增远程管理权 |
+| `/connection-checks`、`/connection-checks/:id` | POST / GET / DELETE | 创建/检查/清空本机连接核对；body/query/32位十六进制ID固定，未知包装不分配或清除挑战记录，实际确认仍只能经认证MCP工具 |
 | `/models` | GET / POST | 模型配置读取/更新；addProvider独立仅追加且整表总量≤100。普通更新严格限制包装/模型/multiModel字段与引用，单条模型拒绝未知字段；GET只投影固定且类型有效的模型与五个多模型字段，脱敏Key只绑定原连接身份，改端点须显式给Key，历史未知属性不会进入响应 |
 | `/providers/probe`、`/profile/detect` | POST / GET | Provider探测包装只接受baseUrl/apiKey且在触网前校验；探测模型、环境与技术栈 |
 | `/customizations` | GET / PUT | 自定义配置；其持久化保证见models说明 |
@@ -51,10 +52,10 @@ stop/logout等待停止Promise，失败不能当成功；stop只兼容完全空�
 GET tree拒绝任意query；GET content只接受单个有界path，再经安全路径和有界读取返回content/hash。PUT只接受path/content/expectedHash/createOnly：独占新建必须显式`createOnly:true`且不能混带expectedHash；其余保存必须携当前64位小写hash，不能省略版本后盲目覆盖。createOnly字符串等错类型和未知字段在capture/callTool前400/E_BAD_API_REQUEST。合法旧hash冲突映射为409，其他保存异常为400。preview与undo也先固定包装，undo只有严格confirmed true、hash和完整绑定才可能消费记录。浏览器应保留未保存缓冲区，再读取新磁盘状态，而不是无条件强制覆盖。
 
 ### PTY身份
-hello、取任务和报告都要提供clientId与匹配的workspace；不匹配409。job报告还由PTY模块核对所有权和状态，终态不能通过迟到accepted复活。这里只负责协议接线，真正终端运行在扩展端。
+hello、取任务和报告都只接受clientId/workspace身份字段：clientId须为8–80位ASCII字母/数字/下划线/连字符，workspace为非空单行且不超过4096字节；POST还要求空query。未知/缺失/错类型固定400/E_BAD_API_REQUEST，发生在noteClient前，因此不会刷新客户端存活。结构合法但workspace不匹配409。jobId严格为16位小写十六进制；报告顶层只接受身份及state/status/message/stdout/stderr/ok/exitCode/outputCaptured，并按check/claimed/accepted/progress/终态限制字段。progress必须显式给stdout或stderr且每项≤1MiB；终态状态为done/denied/error/timeout/cancelled，可带有界结果，非done状态不能通过矛盾status/ok重标成功。结构通过后才登记身份，路由只把投影后的报告交PTY模块；模块继续核对所有权和状态，终态不能通过迟到accepted复活。真正终端运行在扩展端。
 
 ## 边界与验证
-requestScope由 `/chat`显式创建，**不代表所有REST请求自动拥有同样的断连取消机制**。本批`apiRequestBody/apiRequestQuery`只接到上述文件/工具/Chat/共识/任务端点，不是router全局JSON Schema验证器，也不替代工具内部参数schema、路径检查或工作区绑定。配置写入的保护程度以各models实现为准。
+requestScope由 `/chat`显式创建，**不代表所有REST请求自动拥有同样的断连取消机制**。`apiRequestBody/apiRequestQuery`已接到上表所述文件/工具/Chat/共识/任务、PTY、external管理及connection-check等端点，但仍不是router全局JSON Schema验证器，也不替代各服务内部参数schema、路径检查、工作区绑定或取消语义。配置写入的保护程度以各models实现为准。
 
 `httpSmoke`、`apiFiles`、`bridgeTunnel`、`auditControl`、`ptyLifecycle`覆盖实际HTTP和模块边界；不是手机OAuth、真实终端或浏览器全部操作的验收。
 
@@ -65,7 +66,7 @@ requestScope由 `/chat`显式创建，**不代表所有REST请求自动拥有同
 
 | 源码 | 定位证据 |
 |---|---|
-| [routes.js](routes.js) | 108 个函数/类节点 |
+| [routes.js](routes.js) | 112 个函数/类节点 |
 <!-- docs-inventory:end -->
 
 第42组经典停止调用携工作区/主机绑定；有任一字段时完整匹配才递增generation或停隧道，只有完全空体的旧请求兼容，未知字段400且零停启。停隧道失败和停止完成后广播失败可能都500但效果不同，不能从HTTP错误猜测回滚。

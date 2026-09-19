@@ -85,7 +85,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 高，继续 | 进行中：第38–40组控制面、OAuth凭据/issuer、会话公开标识/主体绑定首包已核对；其余安全依赖继续，不作全链认证 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27/31–37与41–43/45–50组既有消费链已修；第51组修本机文件/检查点/Skill/工具/Chat/共识/任务/执行控制/审批包装及模型响应预算、跳转与错误正文反射。下一包继续未覆盖的PTY、connection-check、external删除等本机管理包装与模型请求/响应形状，不重做已修链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes及剩余真实HTTP测试、PTY/connection-check/external入口；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
+| R3 / 下一项，高 | 进行中：第25/27/31–37与41–43/45–50组既有消费链已修；第51组修文件/工具/Chat等包装与模型HTTP边界，第52组修PTY、connection-check、external登记/stdio/删除包装及模型12MiB请求、assistant/tool-call严格形状、已声明工具白名单与投影。下一包继续剩余非探针query包装、只读状态/诊断投影及external/workflow路由接线，不重做已修链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes及剩余真实HTTP测试、status/diagnostics/external/workflow入口；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -219,7 +219,7 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 暂停/延期：探测待交接；其它边界是否改变。
 ```
 
-下一位助手可以直接按R3继续尚未固定的PTY、connection-check、external删除等本机管理包装及模型请求/响应形状并交叉R2，不重做第51组已核对的文件/检查点/Skill/工具/Chat/共识/任务/执行控制/审批包装、模型1MiB响应边界，也无需用户重新复述此前授权和约束；如发现与实际代码不符，以核验结果修订交接，而不是照抄本页当绝对真相。
+下一位助手可以直接按R3继续尚未固定的非探针query包装、只读状态/诊断投影及external/workflow路由接线并交叉R2，不重做第51组文件/工具/Chat等包装和模型1MiB响应边界，也不重做第52组PTY、connection-check、external管理包装与模型请求/响应形状；无需用户重新复述此前授权和约束。如发现与实际代码不符，以核验结果修订交接，而不是照抄本页当绝对真相。
 
 ### 实施批次与证据
 
@@ -771,6 +771,14 @@ Bridge status现只投影固定公开字段，字符串须类型有效且有界�
 `requestScope.fetchText`现优先以WHATWG reader或Node异步流逐块累计原始字节，默认8MiB；标准流越界尝试取消并抛`E_RESPONSE_TOO_LARGE`，text-only旧fetch/测试替身只能事后核对。模型POST显式收紧到1MiB并设`redirect:'error'`，非2xx只传播固定状态错误，不再拼接远端正文。120秒deadline、父取消和Chat五分钟总限保持；预算不是进程总内存或Provider可信证明。
 
 `apiFiles`新增真实HTTP零副作用回归，覆盖控制模式、审批handler、检查点ticket、回退记录及Skill文件；`modelLifecycle`覆盖跳转选项、401标记不反射和1MiB+1正文在JSON解析前失败。定向apiFiles/modelLifecycle/httpSmoke/executionControl/approvedOperations/fileCheckpoints/skillsLifecycle及相邻回归已通过。首轮完整套件80/84，四项仅为本批尚未同步说明/站点时的documentationPolicy、documentationLearning、docsSite、docsHttp，未删除守卫；同步后最终完整84/84。文档库存249源码/28目录/110排除且只读检查零漂移，生产audit 0漏洞、正式哈希183项匹配、`git diff --check`与探针两目录零diff；自动全量经过存量探针测试不算专项审查。首推`c1ea0f8c019c4829be2fd6acb2692cc219b652b8`的[CI35445326912](https://github.com/cccjvav/web_agent/actions/runs/35445326912)为8/9：七个Node矩阵和Windows安装器通过，真实Chromium在Skill正文首页等待SHA256超时；原因是前端把尚不存在的expectedHash作为空字符串发送，被本批严格可选hash合同拒绝。`a4157822238f6669cce6cbc994ee86989afc40ec`改为首页省略该字段、续页仍携可信hash并增加VM回归，[CI35448256206](https://github.com/cccjvav/web_agent/actions/runs/35448256206)九项逐项成功，覆盖Ubuntu Node18/20/22/24、Windows Node20/22/24及重复取消/stdio、Windows安装器和真实Chromium。探针目录及专项实现继续排除。
+
+#### 第52组：PTY/external管理包装与模型协议形状
+
+继续非探针R3并交叉R2时，先写真实HTTP/模拟Provider红测：旧`/pty/hello`会静默接受未知字段、返回200并登记客户端；模型模块尚无出站请求字节预算。随后把同类核对扩到PTY poll/report、connection-check创建/检查/清空、external HTTP登记、stdio预览/启动及删除包装。所有相关POST/GET/DELETE现先固定body/query/ID字段；错误包装在刷新客户端、认领/推进/结束任务、分配/清空连接挑战、调用external登记/预览/启动/删除服务前固定400。PTY另按check/claimed/accepted/progress/五终态限制可带字段和预算，拒绝把cancelled等非done状态用矛盾status/ok重标成功；公网external登记要求严格确认及成对完整绑定。服务层原有工作区、所有权、一次消费、端点安全与进程语义保持。
+
+`runOpenAI`现在在每轮fetch前序列化完整请求并限制12MiB，超限抛`E_MODEL_REQUEST_TOO_LARGE`；Provider assistant响应不再原样回送，只投影role/content/tool_calls及固定function字段。content须字符串/null，单轮最多64项tool call，ID唯一且有界，function名字固定形状，arguments须≤256KiB并解析为非数组对象；调用名还须属于本轮实际发送的工具声明，使allowTools=false成为执行断路器且隐藏工具不能被Provider点名。整份响应先验证后才执行任何工具；通过后仍只执行前8项，其余已验证ID获得限额反馈。畸形arguments不再静默退化为`{}`。
+
+`apiFiles`锁定未知包装零服务调用、PTY矛盾终态零推进及合法状态链；`modelLifecycle`锁定请求超限零fetch、坏content/arguments、65项整体拒绝及Provider未知字段不回送。定向与相邻PTY/connection/external/model回归通过。首轮完整套件83/84，唯一`docsSite`失败明确为源码/正文更新后尚未重建`content.js`；生成库存与站点镜像刷新后最终84/84。文档库存249源码/28目录/110排除且只读零漂移，生产audit 0漏洞、正式哈希183项匹配、`git diff --check`及两个探针目录零diff；完整套件自动经过存量探针测试不算专项审查，探针文件未修改。精确提交与CI证据在推送后回填；下一包继续剩余非探针query包装、只读状态/诊断投影及external/workflow路由接线。
 
 ## 复盘
 

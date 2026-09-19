@@ -6,7 +6,7 @@ const path = require('path');
 const { config } = require('../src/config');
 const store = require('../src/models/store');
 const { runChat, planRound } = require('../src/agent/runChat');
-const { MODEL_RESPONSE_MAX_BYTES, runOpenAI } = require('../src/agent/openai');
+const { MODEL_REQUEST_MAX_BYTES, MODEL_RESPONSE_MAX_BYTES, MODEL_TOOL_CALL_MAX, runOpenAI } = require('../src/agent/openai');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-model-life-'));
 const priorWorkspace = config.workspaceRoot, priorFetch = global.fetch;
 config.workspaceRoot = tmp;
@@ -41,6 +41,112 @@ const reply = message => ({ ok: true, text: async () => JSON.stringify({ choices
     runOpenAI({ mode: 'ask', message: 'oversized response', history: [], model }),
     error => error && error.code === 'E_RESPONSE_TOO_LARGE'
   );
+  assert.strictEqual(MODEL_REQUEST_MAX_BYTES, 12 * 1024 * 1024);
+  let oversizedRequestCalls = 0;
+  global.fetch = async () => { oversizedRequestCalls++; return reply({ role: 'assistant', content: 'must not send' }); };
+  await assert.rejects(
+    runOpenAI({ mode: 'ask', message: 'oversized request', history: [], model, extraSystem: 'x'.repeat(MODEL_REQUEST_MAX_BYTES) }),
+    error => error && error.code === 'E_MODEL_REQUEST_TOO_LARGE'
+  );
+  assert.strictEqual(oversizedRequestCalls, 0, 'oversized model requests fail before credentials or content reach fetch');
+
+  const malformedToolEvents = [];
+  let malformedToolRequests = 0;
+  global.fetch = async () => {
+    malformedToolRequests++;
+    return reply({ role: 'assistant', content: null, tool_calls: [{
+      id: 'malformed-tool-call', type: 'function',
+      function: { name: 'list_directory', arguments: '{' }
+    }] });
+  };
+  await assert.rejects(
+    runOpenAI({ mode: 'ask', message: 'malformed tool arguments', history: [], model,
+      emit: (type, data) => malformedToolEvents.push({ type, ...data }) }),
+    /工具调用参数不是对象JSON/
+  );
+  assert.strictEqual(malformedToolRequests, 1);
+  assert.ok(!malformedToolEvents.some(event => event.type === 'tool'), 'malformed tool arguments cannot execute with fabricated empty args');
+  const nonObjectToolEvents = [];
+  global.fetch = async () => reply({ role: 'assistant', content: null, tool_calls: [{
+    id: 'array-tool-call', type: 'function',
+    function: { name: 'list_directory', arguments: '[]' }
+  }] });
+  await assert.rejects(
+    runOpenAI({ mode: 'ask', message: 'non-object tool arguments', history: [], model,
+      emit: (type, data) => nonObjectToolEvents.push({ type, ...data }) }),
+    /工具调用参数不是对象JSON/
+  );
+  assert.ok(!nonObjectToolEvents.some(event => event.type === 'tool'));
+
+  const disabledToolEvents = [];
+  global.fetch = async () => reply({ role: 'assistant', content: null, tool_calls: [{
+    id: 'disabled-tool-call', type: 'function',
+    function: { name: 'list_directory', arguments: '{}' }
+  }] });
+  await assert.rejects(
+    runOpenAI({ mode: 'plan', message: 'tools are disabled', history: [], model, allowTools: false,
+      emit: (type, data) => disabledToolEvents.push({ type, ...data }) }),
+    /未声明或已禁用的工具/
+  );
+  assert.ok(!disabledToolEvents.some(event => event.type === 'tool'), 'allowTools=false must be an execution circuit breaker');
+
+  const unadvertisedToolEvents = [];
+  global.fetch = async () => reply({ role: 'assistant', content: null, tool_calls: [{
+    id: 'hidden-tool-call', type: 'function',
+    function: { name: 'send_command_input', arguments: '{"execId":"0123456789abcdef","input":"fixture"}' }
+  }] });
+  await assert.rejects(
+    runOpenAI({ mode: 'code', message: 'unadvertised tool', history: [], model,
+      emit: (type, data) => unadvertisedToolEvents.push({ type, ...data }) }),
+    /未声明或已禁用的工具/
+  );
+  assert.ok(!unadvertisedToolEvents.some(event => event.type === 'tool'), 'hidden tools cannot be invoked by a provider');
+
+  global.fetch = async () => reply({ role: 'assistant', content: { text: 'not a Chat Completions string' } });
+  await assert.rejects(
+    runOpenAI({ mode: 'ask', message: 'bad assistant content', history: [], model }),
+    /模型 message\.content 类型无效/
+  );
+
+  assert.strictEqual(MODEL_TOOL_CALL_MAX, 64);
+  let excessiveToolRequests = 0;
+  const excessiveToolEvents = [];
+  global.fetch = async () => {
+    excessiveToolRequests++;
+    return reply({ role: 'assistant', content: null, tool_calls: Array.from({ length: MODEL_TOOL_CALL_MAX + 1 }, (_, index) => ({
+      id: `excess-${index}`, type: 'function', function: { name: 'list_directory', arguments: '{}' }
+    })) });
+  };
+  await assert.rejects(
+    runOpenAI({ mode: 'ask', message: 'too many tools', history: [], model,
+      emit: (type, data) => excessiveToolEvents.push({ type, ...data }) }),
+    /模型工具调用超过64项上限/
+  );
+  assert.strictEqual(excessiveToolRequests, 1);
+  assert.ok(!excessiveToolEvents.some(event => event.type === 'tool'));
+
+  let projectionRequests = 0;
+  const projectionToolEvents = [];
+  global.fetch = async (_, options) => {
+    projectionRequests++;
+    if (projectionRequests === 1) return reply({
+      role: 'assistant', content: null, providerSecret: 'MUST_NOT_ECHO',
+      tool_calls: [{
+        id: 'projection-call', type: 'function', providerExtension: 'MUST_NOT_ECHO',
+        function: { name: 'list_directory', arguments: '{"dirPath":"."}', providerExtension: 'MUST_NOT_ECHO' }
+      }]
+    });
+    const messages = JSON.parse(options.body).messages;
+    const assistant = messages.find(message => message.role === 'assistant');
+    assert.deepStrictEqual(Object.keys(assistant).sort(), ['content', 'role', 'tool_calls']);
+    assert.deepStrictEqual(Object.keys(assistant.tool_calls[0]).sort(), ['function', 'id', 'type']);
+    assert.deepStrictEqual(Object.keys(assistant.tool_calls[0].function).sort(), ['arguments', 'name']);
+    assert.ok(!JSON.stringify(messages).includes('MUST_NOT_ECHO'));
+    return reply({ role: 'assistant', content: 'projected' });
+  };
+  assert.strictEqual((await runOpenAI({ mode: 'ask', message: 'project response', history: [], model,
+    emit: (type, data) => projectionToolEvents.push({ type, ...data }) })).text, 'projected');
+  assert.strictEqual(projectionToolEvents.filter(event => event.type === 'tool').length, 1);
 
   const events = [];
   global.fetch = async () => { throw new Error('fixture model unavailable'); };

@@ -9,7 +9,69 @@ const { collectShot } = require('./computerUse');
 const { fetchText, checkCancelled } = require('../utils/requestScope');
 const { isToolFailure } = require('../utils/toolTrace');
 
+const MODEL_REQUEST_MAX_BYTES = 12 * 1024 * 1024;
 const MODEL_RESPONSE_MAX_BYTES = 1024 * 1024;
+const MODEL_TOOL_CALL_MAX = 64;
+const MODEL_TOOL_EXECUTION_MAX = 8;
+const MODEL_TOOL_ARGUMENT_MAX_BYTES = 256 * 1024;
+
+function isResponseRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function encodeModelRequest(body) {
+  const encoded = JSON.stringify(body);
+  if (Buffer.byteLength(encoded, 'utf8') > MODEL_REQUEST_MAX_BYTES) {
+    const error = new Error(`模型请求超过 ${MODEL_REQUEST_MAX_BYTES} 字节上限`);
+    error.code = 'E_MODEL_REQUEST_TOO_LARGE';
+    error.maxBytes = MODEL_REQUEST_MAX_BYTES;
+    throw error;
+  }
+  return encoded;
+}
+
+function normalizeAssistantMessage(data) {
+  if (!isResponseRecord(data) || !Array.isArray(data.choices) || !isResponseRecord(data.choices[0])
+    || !isResponseRecord(data.choices[0].message)) throw new Error('模型没有 message');
+  const source = data.choices[0].message;
+  if (source.role !== undefined && source.role !== 'assistant') throw new Error('模型 message.role 类型无效');
+  if (source.content !== undefined && source.content !== null && typeof source.content !== 'string') {
+    throw new Error('模型 message.content 类型无效');
+  }
+  const rawCalls = source.tool_calls == null ? [] : source.tool_calls;
+  if (!Array.isArray(rawCalls)) throw new Error('模型 tool_calls 类型无效');
+  if (rawCalls.length > MODEL_TOOL_CALL_MAX) throw new Error(`模型工具调用超过${MODEL_TOOL_CALL_MAX}项上限`);
+  const ids = new Set();
+  const calls = rawCalls.map(call => {
+    if (!isResponseRecord(call) || typeof call.id !== 'string' || !call.id
+      || Buffer.byteLength(call.id, 'utf8') > 256 || /[\r\n\0]/.test(call.id)
+      || ids.has(call.id) || (call.type !== undefined && call.type !== 'function')
+      || !isResponseRecord(call.function)
+      || typeof call.function.name !== 'string' || !/^[a-zA-Z][a-zA-Z0-9_.-]{0,119}$/.test(call.function.name)
+      || typeof call.function.arguments !== 'string'
+      || Buffer.byteLength(call.function.arguments, 'utf8') > MODEL_TOOL_ARGUMENT_MAX_BYTES) {
+      throw new Error('模型工具调用形状无效');
+    }
+    let args;
+    try { args = JSON.parse(call.function.arguments); }
+    catch (_) { throw new Error('模型工具调用参数不是对象JSON'); }
+    if (!isResponseRecord(args)) throw new Error('模型工具调用参数不是对象JSON');
+    ids.add(call.id);
+    return { id: call.id, name: call.function.name, arguments: call.function.arguments, args };
+  });
+  return {
+    message: {
+      role: 'assistant',
+      content: source.content == null ? null : source.content,
+      ...(calls.length ? { tool_calls: calls.map(call => ({
+        id: call.id,
+        type: 'function',
+        function: { name: call.name, arguments: call.arguments }
+      })) } : {})
+    },
+    calls
+  };
+}
 
 // 模型会不会看图：显式 vision 标记（设置页 Add API 勾选）或 caps 里带 vision。
 // 探测不到的纯文本 Endpoint 一律按「不会看图」处理——宁可诚实拒绝，不假装 OCR。
@@ -74,8 +136,11 @@ async function runOpenAI({
   extraSystem
 } = {}) {
   const send = typeof emit === 'function' ? emit : () => {};
+  if (!model || typeof model !== 'object' || Array.isArray(model)) throw new Error('模型配置无效');
   const base = String(model.baseUrl || '').replace(/\/$/, '');
   if (!base) throw new Error('baseUrl 为空');
+  if (message !== undefined && message !== null && typeof message !== 'string') throw new Error('模型消息必须是字符串');
+  if (extraSystem !== undefined && extraSystem !== null && typeof extraSystem !== 'string') throw new Error('模型系统提示必须是字符串');
   const tools = allowTools
     ? getToolList(mode).map((t) => ({
       type: 'function',
@@ -86,12 +151,14 @@ async function runOpenAI({
       }
     }))
     : undefined;
+  const advertisedToolNames = new Set((tools || []).map(tool => tool.function.name));
 
   const sys = [systemPrompt(mode), extraSystem].filter(Boolean).join('\n\n');
   const messages = [
     { role: 'system', content: sys },
     ...history
-      .filter((h) => h && h.content && (h.role === 'user' || h.role === 'assistant'))
+      .filter((h) => isResponseRecord(h) && typeof h.content === 'string' && h.content
+        && (h.role === 'user' || h.role === 'assistant'))
       .slice(-12)
       .map((h) => ({ role: h.role, content: h.content })),
     { role: 'user', content: message || '' }
@@ -110,13 +177,14 @@ async function runOpenAI({
   for (let step = 0; step < 10; step++) {
     send('status', { text: step === 0 ? `请求 ${model.modelId || 'model'}…` : '模型继续调用工具…' });
     checkCancelled();
+    const requestBody = encodeModelRequest({ ...bodyBase, messages });
     const { response: resp, text: raw } = await fetchText(`${base}/chat/completions`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${model.apiKey}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ ...bodyBase, messages }),
+      body: requestBody,
       redirect: 'error'
     }, 120000, { maxBytes: MODEL_RESPONSE_MAX_BYTES });
     if (!resp.ok) {
@@ -129,25 +197,21 @@ async function runOpenAI({
     } catch {
       throw new Error('模型返回不是 JSON');
     }
-    const msg = data.choices && data.choices[0] && data.choices[0].message;
-    if (!msg) throw new Error('模型没有 message');
+    const normalized = normalizeAssistantMessage(data);
+    if (normalized.calls.some(call => !advertisedToolNames.has(call.name))) {
+      throw new Error('模型调用了未声明或已禁用的工具');
+    }
+    const msg = normalized.message;
     messages.push(msg);
 
-    if (msg.tool_calls && msg.tool_calls.length) {
-      if (!Array.isArray(msg.tool_calls) || msg.tool_calls.some(tc => !tc || typeof tc.id !== 'string')
-        || new Set(msg.tool_calls.map(tc => tc.id)).size !== msg.tool_calls.length) throw new Error('模型工具调用缺少唯一id');
-      for (const [index, tc] of msg.tool_calls.entries()) {
-        if (index >= 8) {
+    if (normalized.calls.length) {
+      for (const [index, tc] of normalized.calls.entries()) {
+        if (index >= MODEL_TOOL_EXECUTION_MAX) {
           messages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify({ ok: false, error: '本轮工具执行上限为8，请在后续轮次重新请求' }) });
           continue;
         }
-        const name = tc.function && tc.function.name;
-        let args = {};
-        try {
-          args = JSON.parse((tc.function && tc.function.arguments) || '{}');
-        } catch {
-          args = {};
-        }
+        const name = tc.name;
+        const args = tc.args;
         send('status', { text: `调用 ${name}…` });
         const t0 = Date.now();
         try {
@@ -216,4 +280,12 @@ async function runOpenAI({
   return { text };
 }
 
-module.exports = { MODEL_RESPONSE_MAX_BYTES, runOpenAI, systemPrompt, temperatureFor, modelSeesImages };
+module.exports = {
+  MODEL_REQUEST_MAX_BYTES,
+  MODEL_RESPONSE_MAX_BYTES,
+  MODEL_TOOL_CALL_MAX,
+  runOpenAI,
+  systemPrompt,
+  temperatureFor,
+  modelSeesImages
+};
