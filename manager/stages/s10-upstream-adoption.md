@@ -788,7 +788,7 @@ external/request、workflows/preview与workflows/request不再由宽泛operation
 
 同链复核customizations发现历史未知顶层、environment和列表项属性会由GET原样发布，PUT也会保存未知字段，空patch还会重写四文件。现完整固定defaults顶层、两个字符串对象、六类≤100项列表、voice/dictation/codex的字段/type/字节预算；写请求严格拒绝空/未知/错类型，历史读取只丢未知属性但已知槽位损坏仍E_CUSTOM_CORRUPT，合法局部更新保持environment/techStack/codex子字段。四文件顺序发布仍非事务，同用户直接改盘不在此隔离。
 
-`apiFiles`用服务调用/fetch/磁盘/会话计数锁定上述零副作用与固定投影；profile、stateIntegrity、httpSmoke、workflowPreconditions、externalDiscovery、MCP/board等相邻回归通过。首轮完整套件80/84，四项仅为新增函数说明、库存与站点镜像尚未同步，所有80项产品/业务测试通过；未删守卫。同步正文、库存与站点后最终84/84，文档249源码/28目录/110排除且只读updated=0，生产audit 0漏洞、正式哈希183项、`git diff --check`与两个探针目录零diff。精确实现提交与CI在推送后回填；完整套件自动经过存量探针测试不算专项审查。
+`apiFiles`用服务调用/fetch/磁盘/会话计数锁定上述零副作用与固定投影；profile、stateIntegrity、httpSmoke、workflowPreconditions、externalDiscovery、MCP/board等相邻回归通过。首轮完整套件80/84，四项仅为新增函数说明、库存与站点镜像尚未同步，所有80项产品/业务测试通过；未删守卫。同步正文、库存与站点后最终84/84，文档249源码/28目录/110排除且只读updated=0，生产audit 0漏洞、正式哈希183项、`git diff --check`与两个探针目录零diff。实现提交`397476c7bc29d256781c759f3386beac91d9c147`的[CI35459273776](https://github.com/cccjvav/web_agent/actions/runs/35459273776)九项逐项成功，覆盖Ubuntu Node18/20/22/24、Windows Node20/22/24及重复取消/stdio、Windows安装器和真实Chromium；完整套件经过存量探针测试不算专项审查。
 
 ## 复盘
 
