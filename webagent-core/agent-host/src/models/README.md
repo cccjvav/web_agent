@@ -32,9 +32,9 @@
 GitHub身份验证后保存身份字段，不保存该流程的PAT。模型API Key和隧道Token则可能存在config.json中；不能笼统说“没有凭据落盘”。
 
 ### 自定义配置：保证不同
-`loadCustom`通过有界读取合并默认environment/techStack；仅ENOENT回默认，坏JSON/受校验字段形状错误/其他读取或路径错误抛E_CUSTOM_CORRUPT并保留原文件。saveCustom先校验输入并读取旧配置，拒绝覆盖损坏配置；所有目标走真实路径检查，提前渲染并逐输出检查8MiB预算，再通过独占临时文件和rename顺序写JSON及三份Markdown；不是四文件事务。
+`loadCustom`通过有界读取把历史文件投影为defaults声明的固定顶层：environment/techStack/codex按已知字段补默认，六类列表最多100项且各自只保留固定字符串字段；未知顶层、嵌套或列表项属性不经GET发布，已知槽位错类型仍抛E_CUSTOM_CORRUPT并保留原文件。仅ENOENT回默认。saveCustom先严格校验输入并读取旧配置，拒绝未知/错类型输入或覆盖损坏配置；所有目标走真实路径检查，提前渲染并逐输出检查8MiB预算，再通过独占临时文件和rename顺序写JSON及三份Markdown；不是四文件事务。
 
-单文件替换保护不表示四份文件同时成功。后续派生文件失败时，前面的JSON可能已经改变；需要核查部分更新，不自动重试整个修改。patch会按字段保留environment/techStack中未提交的旧值；其他对象/数组整体替换，不是任意层递归深合并，具体行为见逐函数说明。
+单文件替换保护不表示四份文件同时成功。后续派生文件失败时，前面的JSON可能已经改变；需要核查部分更新，不自动重试整个修改。patch拒绝空请求，按字段保留environment/techStack/codex中未提交的旧值；列表整体替换，不是任意层递归深合并。登记项内容并不因通过形状校验就变可信命令、URL或已实现功能，具体行为见逐函数说明。
 
 ### 环境与记忆
 profile先探测平台、package/lock/项目清单，再用用户非auto的值覆盖；推断出的测试命令不证明依赖已安装或命令能成功。hooks、外部MCP配置等列表的存在不代表运行时执行器已经实现。
@@ -42,7 +42,7 @@ profile先探测平台、package/lock/项目清单，再用用户非auto的值�
 memory的day必须为有效日历日期；路径和真实链接目标经过工作区检查。remember写入正文最多16KiB、含追加内容的每日文件最多256KiB，超限保留原文并拒绝而不轮转；recall只读、不为了查询创建目录；读取有条目数及文本预算。Ask/Plan允许写这类协作元数据，不等于允许任意修改源码。
 
 ## 验证与关联
-`stateIntegrity`覆盖store损坏保留/校验，`hostPersist`覆盖身份持久化，`profile`覆盖画像，`auditStorage`覆盖记忆日期与路径。它们不证明customizations拥有相同的事务保证。
+`stateIntegrity`覆盖store/customizations损坏保留与发布失败，`hostPersist`覆盖身份持久化，`profile`覆盖画像和局部保存，`apiFiles`以真实HTTP覆盖customizations固定schema/历史未知值投影，`auditStorage`覆盖记忆日期与路径。它们不证明customizations拥有四文件事务、跨进程CAS或登记内容可信。
 
 配置进入Chat系统提示的链路见[Agent说明](../agent/README.md)；接口及失败映射见[API说明](../api/README.md)。
 
@@ -53,7 +53,7 @@ memory的day必须为有效日历日期；路径和真实链接目标经过工�
 
 | 源码 | 定位证据 |
 |---|---|
-| [customizations.js](customizations.js) | 7 个函数/类节点 |
+| [customizations.js](customizations.js) | 17 个函数/类节点 |
 | [memory.js](memory.js) | 9 个函数/类节点 |
 | [modelSettings.js](modelSettings.js) | 21 个函数/类节点 |
 | [profile.js](profile.js) | 15 个函数/类节点 |

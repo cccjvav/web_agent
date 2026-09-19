@@ -52,32 +52,94 @@ function defaults() {
   };
 }
 
-function validateCustom(value) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new ProtocolError('E_BAD_ARGS', 'customizations must be an object');
-  const base = defaults();
-  for (const key of ['preference', 'instructions']) {
-    if (value[key] !== undefined && typeof value[key] !== 'string') throw new ProtocolError('E_BAD_ARGS', key + ' must be text');
+const MAX_LIST_ITEMS = 100;
+const LIST_FIELDS = {
+  agents: { id: 256, name: 1024, role: 64 * 1024 },
+  prompts: { id: 256, name: 1024, content: MAX_TEXT_BYTES },
+  hooks: { event: 256, command: 64 * 1024 },
+  mcpServers: { name: 1024, url: 4096 },
+  plugins: { name: 1024 },
+  quickLinks: { name: 1024, url: 4096 }
+};
+
+function invalidCustom(message) {
+  throw new ProtocolError('E_BAD_ARGS', message);
+}
+
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function text(value, field, maxBytes = MAX_TEXT_BYTES) {
+  if (typeof value !== 'string' || Buffer.byteLength(value, 'utf8') > maxBytes || value.includes('\0')) {
+    invalidCustom(field + ' must be bounded text');
   }
-  for (const key of ['environment', 'techStack']) {
-    if (value[key] === undefined) continue;
-    const record = value[key];
-    if (!record || typeof record !== 'object' || Array.isArray(record)) throw new ProtocolError('E_BAD_ARGS', key + ' must be an object');
-    for (const field of Object.keys(base[key])) {
-      if (record[field] !== undefined && typeof record[field] !== 'string') throw new ProtocolError('E_BAD_ARGS', key + '.' + field + ' must be text');
+  return value;
+}
+
+function fixedStringRecord(value, fields, label, strict) {
+  if (!isRecord(value)) invalidCustom(label + ' must be an object');
+  if (strict && Object.keys(value).some(key => !Object.hasOwn(fields, key))) invalidCustom('unknown ' + label + ' field');
+  const out = {};
+  for (const [field, limit] of Object.entries(fields)) {
+    if (Object.hasOwn(value, field)) out[field] = text(value[field], `${label}.${field}`, limit);
+  }
+  return out;
+}
+
+function fixedList(value, label, strict) {
+  if (!Array.isArray(value) || value.length > MAX_LIST_ITEMS) invalidCustom(label + ' must be a bounded list');
+  const fields = LIST_FIELDS[label];
+  return value.map((item) => {
+    if (label === 'plugins' && typeof item === 'string') return text(item, 'plugins[]', fields.name);
+    return fixedStringRecord(item, fields, `${label}[]`, strict);
+  });
+}
+
+function normalizeCustom(value, { strict = true } = {}) {
+  if (!isRecord(value)) invalidCustom('customizations must be an object');
+  const base = defaults();
+  const allowed = new Set(Object.keys(base));
+  if (strict && Object.keys(value).some(key => !allowed.has(key))) invalidCustom('unknown customization field');
+  const out = {};
+  for (const field of ['preference', 'instructions']) {
+    if (Object.hasOwn(value, field)) out[field] = text(value[field], field);
+  }
+  for (const field of ['environment', 'techStack']) {
+    if (Object.hasOwn(value, field)) {
+      const limits = Object.fromEntries(Object.keys(base[field]).map(key => [key, 64 * 1024]));
+      out[field] = fixedStringRecord(value[field], limits, field, strict);
     }
   }
+  for (const field of Object.keys(LIST_FIELDS)) {
+    if (Object.hasOwn(value, field)) out[field] = fixedList(value[field], field, strict);
+  }
+  for (const field of ['voice', 'dictation']) {
+    if (Object.hasOwn(value, field)) out[field] = text(value[field], field, 1024);
+  }
+  if (Object.hasOwn(value, 'codex')) {
+    if (!isRecord(value.codex)) invalidCustom('codex must be an object');
+    if (strict && Object.keys(value.codex).some(key => !['loggedIn', 'account'].includes(key))) invalidCustom('unknown codex field');
+    out.codex = {};
+    if (Object.hasOwn(value.codex, 'loggedIn')) {
+      if (typeof value.codex.loggedIn !== 'boolean') invalidCustom('codex.loggedIn must be boolean');
+      out.codex.loggedIn = value.codex.loggedIn;
+    }
+    if (Object.hasOwn(value.codex, 'account')) out.codex.account = text(value.codex.account, 'codex.account', 1024);
+  }
+  return out;
 }
 
 function loadCustom() {
   try {
-    const raw = JSON.parse(readBoundedText(file()));
-    validateCustom(raw);
+    const raw = normalizeCustom(JSON.parse(readBoundedText(file())), { strict: false });
     const base = defaults();
     return {
       ...base,
       ...raw,
       environment: { ...base.environment, ...(raw.environment || {}) },
-      techStack: { ...base.techStack, ...(raw.techStack || {}) }
+      techStack: { ...base.techStack, ...(raw.techStack || {}) },
+      codex: { ...base.codex, ...(raw.codex || {}) }
     };
   } catch (err) {
     if (err.code === 'ENOENT') return defaults();
@@ -98,12 +160,13 @@ function writeCustomFile(target, text) {
 }
 
 function saveCustom(next = {}) {
-  validateCustom(next);
+  const normalized = normalizeCustom(next);
   loadCustom(); // Fail closed on unreadable existing state, even for direct saves.
 
-  const merged = { ...defaults(), ...next };
-  if (next && next.environment) merged.environment = { ...defaults().environment, ...next.environment };
-  if (next && next.techStack) merged.techStack = { ...defaults().techStack, ...next.techStack };
+  const merged = { ...defaults(), ...normalized };
+  if (normalized.environment) merged.environment = { ...defaults().environment, ...normalized.environment };
+  if (normalized.techStack) merged.techStack = { ...defaults().techStack, ...normalized.techStack };
+  if (normalized.codex) merged.codex = { ...defaults().codex, ...normalized.codex };
   const outputs = [
     [file(), JSON.stringify(merged, null, 2)],
     [resolveSafePath('.webagent/instructions.md'), merged.instructions || ''],
@@ -119,11 +182,13 @@ function saveCustom(next = {}) {
 }
 
 function patchCustom(partial) {
-  validateCustom(partial);
+  const normalized = normalizeCustom(partial);
+  if (!Object.keys(normalized).length) invalidCustom('customization patch must not be empty');
   const current = loadCustom();
-  return saveCustom({ ...current, ...partial,
-    environment: { ...current.environment, ...partial.environment },
-    techStack: { ...current.techStack, ...partial.techStack }
+  return saveCustom({ ...current, ...normalized,
+    environment: { ...current.environment, ...normalized.environment },
+    techStack: { ...current.techStack, ...normalized.techStack },
+    codex: { ...current.codex, ...normalized.codex }
   });
 }
 

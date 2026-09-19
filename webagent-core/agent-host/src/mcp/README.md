@@ -32,7 +32,7 @@ stdio/受控外部接入：[受控工具与工作流详解](../utils/受控工�
 ### initialize与会话
 initialize协商支持的协议版本，返回能力、服务器信息和instructions，并建立Mcp-Session-Id。当前声明支持2024-11-05、2025-03-26、2025-06-18；客户端应保存服务器选择的版本和会话ID。
 
-HTTP会话使用私有随机ID，初始化peer另取独立随机公开标签，公开peers/任务归属不能还原会话头。会话绑定OAuth注册client或当前长期secret的主体摘要；同client刷新沿用，跨client不可复用/删除，不以IP/显示名称判身份。无会话仍可走部分兼容调用，但修改board必须先初始化；未知已提供的session通常404，重新initialize可建立新会话。会话和授权凭据不是同一个对象，不能把显示名称当认证用户；同主体持有真正会话ID仍可使用它，需保密，非完整多租户隔离。
+HTTP会话使用私有随机ID，初始化peer另取独立随机公开标签，公开peers/任务归属不能还原会话头。会话绑定OAuth注册client或当前长期secret的主体摘要；同client刷新沿用，跨client不可复用/删除，不以IP/显示名称判身份。initialize提交的clientInfo在统计入库时只保留有界name/title/version，未知extra不保留；status/snapshot再按固定key/时间/计数/busy/clientInfo深投影，不能把远端任意对象展开进本机状态响应。无会话仍可走部分兼容调用，但修改board必须先初始化；未知已提供的session通常404，重新initialize可建立新会话。会话和授权凭据不是同一个对象，不能把显示名称当认证用户；同主体持有真正会话ID仍可使用它，需保密，非完整多租户隔离。
 
 HTTP会话有24小时TTL及200上限。进程重启会丢失内存会话；客户端需要重新初始化，而不是持续重发失效ID。
 
@@ -69,7 +69,7 @@ POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连
 因此不是所有响应都严格小于16k，也不是所有类型都带同样的截短标志。大文件、搜索和命令捕获的硬上限在各工具实现；需要更小返回应缩小查询范围或limit。
 
 ## 验证与排查
-`mcpProtocol`覆盖RPC、通知/batch和附图，`oauth`与`oauthClientAuth`覆盖PKCE/刷新/客户端认证，后者直接加载真实index验证issuer/挑战、表单授权及撤销后MCP拒绝，`mcpBoard`以真实index验证公开peer不可冒充、跨主体会话限制及OAuth刷新保留任务归属，`resourceBudget`覆盖schema与游标。测试不等同手机Arena、所有代理或第三方连接器的端到端验收。
+`mcpProtocol`覆盖RPC、通知/batch和附图，`oauth`与`oauthClientAuth`覆盖PKCE/刷新/客户端认证，后者直接加载真实index验证issuer/挑战、表单授权及撤销后MCP拒绝，`mcpBoard`以真实index验证公开peer不可冒充、跨主体会话限制及OAuth刷新保留任务归属，`apiFiles`把未知session extra/clientInfo嵌套送入真实status HTTP并核对固定投影，`resourceBudget`覆盖schema与游标。测试不等同手机Arena、所有代理或第三方连接器的端到端验收。
 
 排查顺序：本机健康 → 公网路由 → 认证 → initialize/session → tools/list → 只读工具 → 经明确授权的写入。精确工具模式和文件边界见[工具说明](../tools/README.md)。
 
@@ -90,7 +90,7 @@ POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连
 | [requestLifecycle.js](requestLifecycle.js) | 7 个函数/类节点 |
 | [resources.js](resources.js) | 5 个函数/类节点 |
 | [server.js](server.js) | 34 个函数/类节点 |
-| [session.js](session.js) | 14 个函数/类节点 |
+| [session.js](session.js) | 17 个函数/类节点 |
 | [stdioBridge.cs](stdioBridge.cs) | 文件级登记；未做符号完整性证明 |
 | [stdioBridge.ps1](stdioBridge.ps1) | 文件级登记；未做符号完整性证明 |
 | [stdioLaunch.js](stdioLaunch.js) | 11 个函数/类节点 |

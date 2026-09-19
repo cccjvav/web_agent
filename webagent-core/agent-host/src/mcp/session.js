@@ -19,16 +19,19 @@ function pruneSessions() {
 
 function touch(req, extra = {}) {
   pruneSessions();
-  const key = extra.key || sessionKey(req);
+  const requestedKey = extra.key || sessionKey(req);
+  const key = publicText(requestedKey, 512) || 'mcp@local';
   const prev = sessions.get(key) || {
     key,
     connectedAt: new Date().toISOString(),
     calls: 0,
-    fail: 0
+    fail: 0,
+    clientInfo: {}
   };
   const next = {
-    ...prev,
-    ...extra,
+    key,
+    connectedAt: prev.connectedAt,
+    clientInfo: Object.hasOwn(extra, 'clientInfo') ? publicClientInfo(extra.clientInfo) : publicClientInfo(prev.clientInfo),
     lastSeen: new Date().toISOString(),
     calls: prev.calls + (extra.incCall ? 1 : 0),
     fail: prev.fail + (extra.incFail ? 1 : 0),
@@ -39,18 +42,46 @@ function touch(req, extra = {}) {
   return next;
 }
 
+function publicText(value, maxLength) {
+  return typeof value === 'string' && value.length <= maxLength && !/[\x00-\x1f\x7f]/.test(value) ? value : '';
+}
+
+function publicClientInfo(value) {
+  const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  const clientInfo = {};
+  for (const [key, limit] of [['name', 256], ['title', 256], ['version', 128]]) {
+    const text = publicText(source[key], limit);
+    if (text) clientInfo[key] = text;
+  }
+  return clientInfo;
+}
+
+function publicSession(record) {
+  const source = record && typeof record === 'object' ? record : {};
+  return {
+    key: publicText(source.key, 512),
+    connectedAt: publicText(source.connectedAt, 64),
+    lastSeen: publicText(source.lastSeen, 64),
+    calls: Number.isSafeInteger(source.calls) && source.calls >= 0 ? source.calls : 0,
+    fail: Number.isSafeInteger(source.fail) && source.fail >= 0 ? source.fail : 0,
+    busy: source.busy === true,
+    clientInfo: publicClientInfo(source.clientInfo)
+  };
+}
+
 function snapshot() {
   pruneSessions();
   pruneHttpSessions();
-  const list = [...sessions.values()].sort((a, b) => String(b.lastSeen).localeCompare(String(a.lastSeen)));
-  const latest = list[0] || null;
-  const ageMs = latest ? Date.now() - Date.parse(latest.lastSeen) : null;
+  const records = [...sessions.values()].sort((a, b) => String(b.lastSeen).localeCompare(String(a.lastSeen)));
+  const latestRecord = records[0] || null;
+  const ageMs = latestRecord ? Date.now() - Date.parse(latestRecord.lastSeen) : null;
+  const list = records.map(publicSession);
   return {
     clients: list.length,
     staleAfterMs: 10000,
-    alive: Boolean(latest && ageMs != null && ageMs < 10000),
+    alive: Boolean(latestRecord && ageMs != null && ageMs < 10000),
     ageMs,
-    latest,
+    latest: list[0] ? { ...list[0], clientInfo: { ...list[0].clientInfo } } : null,
     sessions: list.slice(0, 8),
     httpSessions: httpSessions.size
   };
@@ -59,7 +90,9 @@ function snapshot() {
 // 第六阶段审计 F6：snapshot() 的 sessions 截断到 8 供界面用；板工具要全量在场者
 function allSessions() {
   pruneSessions();
-  return [...sessions.values()].sort((a, b) => String(b.lastSeen).localeCompare(String(a.lastSeen)));
+  return [...sessions.values()]
+    .sort((a, b) => String(b.lastSeen).localeCompare(String(a.lastSeen)))
+    .map(publicSession);
 }
 
 function pruneHttpSessions() {

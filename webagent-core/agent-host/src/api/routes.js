@@ -91,8 +91,10 @@ function rejectBridgeRequest(res) {
   return res.status(400).json({ success: false, error: 'Bridge请求字段或长度无效', code: 'E_BAD_BRIDGE_REQUEST' });
 }
 function bridgeRequestBody(req, res, allowed) {
+  const query = req.query === undefined ? {} : req.query;
   const body = req.body === undefined ? {} : req.body;
-  if (!body || typeof body !== 'object' || Array.isArray(body)
+  if (!query || typeof query !== 'object' || Array.isArray(query) || Object.keys(query).length
+    || !body || typeof body !== 'object' || Array.isArray(body)
     || Object.keys(body).some(key => !allowed.includes(key))) {
     rejectBridgeRequest(res);
     return null;
@@ -155,6 +157,7 @@ function fixedRequestRecord(value, res, allowed) {
   return record;
 }
 function apiRequestBody(req, res, allowed) {
+  if (!fixedRequestRecord(req.query, res, [])) return null;
   return fixedRequestRecord(req.body, res, allowed);
 }
 function apiRequestQuery(req, res, allowed) {
@@ -377,9 +380,24 @@ router.delete('/external/servers/:id', (req, res) => {
   try { res.json(externalClient.remove(req.params.id)); }
   catch (error) { res.status(400).json({ ok: false, error: error.message }); }
 });
-router.post('/external/request', operationApi(req => externalClient.request(req.body || {}, { callerKey: 'local' })));
-router.post('/workflows/preview', operationApi(req => workflows.previewRequest(req.body || {})));
-router.post('/workflows/request', operationApi(req => workflows.request(req.body || {}, { callerKey: 'local' })));
+router.post('/external/request', async (req, res) => {
+  const body = apiRequestBody(req, res, ['serverId', 'tool', 'arguments', 'requestKey']);
+  if (!body) return;
+  try { res.json(await externalClient.request(body, { callerKey: 'local' })); }
+  catch (error) { res.status(error.status || 400).json({ ok: false, error: error.message, code: error.code || 'E_BAD_ARGS' }); }
+});
+router.post('/workflows/preview', async (req, res) => {
+  const body = apiRequestBody(req, res, ['definition']);
+  if (!body) return;
+  try { res.json(await workflows.previewRequest(body)); }
+  catch (error) { res.status(error.status || 400).json({ ok: false, error: error.message, code: error.code || 'E_BAD_ARGS' }); }
+});
+router.post('/workflows/request', async (req, res) => {
+  const body = apiRequestBody(req, res, ['definition', 'requestKey']);
+  if (!body) return;
+  try { res.json(await workflows.request(body, { callerKey: 'local' })); }
+  catch (error) { res.status(error.status || 400).json({ ok: false, error: error.message, code: error.code || 'E_BAD_ARGS' }); }
+});
 
 const connectionCheck = require('../utils/connectionCheck');
 router.post('/connection-checks', (req, res) => {
@@ -400,11 +418,18 @@ router.delete('/connection-checks', (req, res) => {
   res.json(connectionCheck.clear());
 });
 
-router.get('/diagnostics', (req, res) => res.json(diagnostics()));
+router.get('/diagnostics', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
+  res.json(diagnostics());
+});
 
-router.get('/bridge/activity', (req, res) => res.json(eventBus.getBridgeActivity()));
+router.get('/bridge/activity', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
+  res.json(eventBus.getBridgeActivity());
+});
 
 router.get('/status', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
   const cfg = store.load();
   const bridge = publicBridge(cfg.bridge);
   res.json({
@@ -839,6 +864,7 @@ router.get('/skills/load', async (req, res) => {
 });
 
 router.post('/providers/probe', async (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
   const body = req.body;
   if (!body || typeof body !== 'object' || Array.isArray(body)
     || Object.keys(body).some(key => !['baseUrl', 'apiKey'].includes(key))
@@ -860,6 +886,7 @@ router.post('/providers/probe', async (req, res) => {
 });
 
 router.get('/models', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
   const cfg = store.load();
   res.json({
     activeModelId: cfg.activeModelId,
@@ -869,6 +896,7 @@ router.get('/models', (req, res) => {
 });
 
 router.post('/models', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
   const body = req.body;
   if (body && typeof body === 'object' && !Array.isArray(body) && Object.hasOwn(body, 'addProvider')) {
     if (Object.keys(body).length !== 1) return res.status(400).json({success:false,error:'addProvider不能与整表替换或其他设置混用',code:'E_BAD_MODEL_SETTINGS'});
@@ -880,10 +908,12 @@ router.post('/models', (req, res) => {
 });
 
 router.get('/logs', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
   res.json({ logs: eventBus.getRecentLogs(80) });
 });
 
 router.get('/profile/detect', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
   res.json({
     environment: detectEnvironment(),
     techStack: detectTechStack(),
@@ -892,13 +922,15 @@ router.get('/profile/detect', (req, res) => {
 });
 
 router.get('/customizations', (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
   res.setHeader('Cache-Control', 'no-store');
   try { res.json(loadCustom()); }
   catch (error) { res.status(500).json({ success: false, error: error.message, code: error.code || 'E_INTERNAL' }); }
 });
 
 router.put('/customizations', (req, res) => {
-  const body = req.body || {};
+  if (!apiRequestQuery(req, res, [])) return;
+  const body = req.body === undefined ? {} : req.body;
   try {
     const next = patchCustom(body);
     res.json({ success: true, customizations: next });

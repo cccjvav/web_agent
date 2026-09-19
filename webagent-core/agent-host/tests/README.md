@@ -67,6 +67,8 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 
 第52组续审非探针PTY、connection-check、external本机管理包装及模型协议形状：apiFiles经真实HTTP让未知hello/jobs/report、核对创建/读取/清空、HTTP登记、stdio预览/启动及删除包装在登记客户端、推进任务、分配/清空挑战、触网/保存、分配预览、启动/停止前400，同时跑完整合法PTY状态链。modelLifecycle证明完整序列化模型POST超过12MiB时fetch计数为零；畸形/非对象arguments、64项以上tool_calls及禁用/未声明工具在工具前失败；合法Provider assistant只以固定role/content/tool_calls/function投影回送下一轮。httpSmoke把缺PTY身份明确为400/E_BAD_API_REQUEST并保留错workspace 409。均为本机/模拟Provider证据，不证明真实扩展、第三方进程或模型服务善意；Probe目录仍排除。
 
+第53组续审非探针query、公开投影及external/workflow路由：apiFiles逐个向diagnostics/activity/status/models/logs/profile/customizations及Bridge/tool写入口加入未知query，锁定读取/重置/调度前400；用替换服务计数证明external/request与workflow预览/提交的未知query/body不会查询或分配审批，合法包装各调用一次。它还把未知session extra/clientInfo和历史customizations三层未知秘密注入内存/磁盘，要求内部会话、status与customizations GET只给固定字段，空/数组/未知定制写入逐字节零改动。相邻profile/stateIntegrity/httpSmoke/workflow/external/MCP/board测试守住合法行为；仍是本机HTTP/模块fixture，不证明远端服务、登记内容或四文件事务。
+
 ## 按风险选择回归
 | 风险/模块 | 主要测试 | 证据类型与限制 |
 |---|---|---|
@@ -109,7 +111,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | 源码 | 定位证据 |
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
-| [apiFiles.test.js](apiFiles.test.js) | 54 个函数/类节点 |
+| [apiFiles.test.js](apiFiles.test.js) | 59 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 20 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |

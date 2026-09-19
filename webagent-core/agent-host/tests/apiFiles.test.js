@@ -51,6 +51,27 @@ async function main() {
   });
 
   try {
+    for (const readPath of ['/diagnostics', '/bridge/activity', '/status', '/models', '/logs', '/profile/detect', '/customizations']) {
+      const rejected = await request(server, 'GET', `/api${readPath}?unexpected=true`);
+      assert.equal(rejected.status, 400, `${readPath} must reject unknown query fields before read-side discovery`);
+      assert.equal(rejected.json.code, 'E_BAD_API_REQUEST');
+    }
+    const diagnosticsSnapshot = await request(server, 'GET', '/api/diagnostics');
+    assert.equal(diagnosticsSnapshot.status, 200);
+    assert.deepEqual(Object.keys(diagnosticsSnapshot.json).sort(), ['capabilities', 'identity', 'probe']);
+    assert.deepEqual(Object.keys(diagnosticsSnapshot.json.identity).sort(),
+      ['hostInstanceId', 'mcpPort', 'startedAt', 'version', 'workbenchPort', 'workspaceRoot']);
+    assert.ok(diagnosticsSnapshot.json.capabilities.every(capability =>
+      Object.keys(capability).sort().join(',') === 'id,reason,status'));
+
+    const bridgeBeforeRejectedReset = require('../src/utils/eventBus').getBridgeActivity();
+    const rejectedBridgeReset = await request(server, 'POST', '/api/bridge/reset-round?unexpected=true', {});
+    assert.equal(rejectedBridgeReset.status, 400);
+    assert.equal(rejectedBridgeReset.json.code, 'E_BAD_BRIDGE_REQUEST');
+    const bridgeAfterRejectedReset = require('../src/utils/eventBus').getBridgeActivity();
+    assert.equal(bridgeAfterRejectedReset.resetAt, bridgeBeforeRejectedReset.resetAt,
+      'unknown Bridge query fields must fail before resetting session state');
+
     const ptyJobs = require('../src/tools/ptyJobs');
     ptyJobs.resetForTests();
     const ptyIdentity = { clientId: 'api-pty-client', workspace: tmp };
@@ -120,11 +141,19 @@ async function main() {
     const originalExternalPreview = externalClient.previewStdio;
     const originalExternalStart = externalClient.startStdio;
     const originalExternalRemove = externalClient.remove;
-    let externalAdds = 0, externalPreviews = 0, externalStarts = 0, externalRemovals = 0;
+    const originalExternalRequest = externalClient.request;
+    const workflowService = require('../src/tools/workflows');
+    const originalWorkflowPreview = workflowService.previewRequest;
+    const originalWorkflowRequest = workflowService.request;
+    let externalAdds = 0, externalPreviews = 0, externalStarts = 0, externalRemovals = 0, externalRequests = 0;
+    let workflowPreviews = 0, workflowRequests = 0;
     externalClient.add = async () => { externalAdds++; return { serverId: 'fixture-http', status: 'discovered', tools: [] }; };
     externalClient.previewStdio = () => { externalPreviews++; return { previewId: '11111111-1111-4111-8111-111111111111' }; };
     externalClient.startStdio = async () => { externalStarts++; return { serverId: 'fixture-stdio', status: 'discovered', tools: [] }; };
     externalClient.remove = () => { externalRemovals++; return { removed: true }; };
+    externalClient.request = () => { externalRequests++; return { requestId: 'fixture-external-request', status: 'waiting-approval' }; };
+    workflowService.previewRequest = () => { workflowPreviews++; return { valid: true, steps: [] }; };
+    workflowService.request = () => { workflowRequests++; return { requestId: 'fixture-workflow-request', status: 'waiting-approval' }; };
     try {
       const invalidStdioPreview = await request(server, 'POST', '/api/external/stdio/preview', {
         program: '/fixture', unexpected: true
@@ -166,14 +195,62 @@ async function main() {
       assert.equal(externalRemovals, 0);
       assert.equal((await request(server, 'DELETE', `/api/external/servers/${externalId}`, {})).status, 200);
       assert.equal(externalRemovals, 1);
+
+      const externalCall = { serverId: externalId, tool: 'fixture', arguments: {}, requestKey: 'external-route-001' };
+      for (const [urlPath, body] of [
+        ['/api/external/request?unexpected=true', externalCall],
+        ['/api/external/request', { ...externalCall, unexpected: true }]
+      ]) {
+        const rejected = await request(server, 'POST', urlPath, body);
+        assert.equal(rejected.status, 400, 'external request wrappers must fail before approval allocation');
+        assert.equal(rejected.json.code, 'E_BAD_API_REQUEST');
+      }
+      assert.equal(externalRequests, 0);
+      assert.equal((await request(server, 'POST', '/api/external/request', externalCall)).status, 200);
+      assert.equal(externalRequests, 1);
+
+      const workflowDefinition = { steps: [{ id: 'inspect', tool: 'ping', arguments: {} }] };
+      for (const [urlPath, body] of [
+        ['/api/workflows/preview?unexpected=true', { definition: workflowDefinition }],
+        ['/api/workflows/preview', { definition: workflowDefinition, unexpected: true }]
+      ]) {
+        const rejected = await request(server, 'POST', urlPath, body);
+        assert.equal(rejected.status, 400, 'workflow preview wrappers must fail before validation work');
+        assert.equal(rejected.json.code, 'E_BAD_API_REQUEST');
+      }
+      assert.equal(workflowPreviews, 0);
+      assert.equal((await request(server, 'POST', '/api/workflows/preview', { definition: workflowDefinition })).status, 200);
+      assert.equal(workflowPreviews, 1);
+      const workflowCall = { definition: workflowDefinition, requestKey: 'workflow-route-001' };
+      for (const [urlPath, body] of [
+        ['/api/workflows/request?unexpected=true', workflowCall],
+        ['/api/workflows/request', { ...workflowCall, unexpected: true }]
+      ]) {
+        const rejected = await request(server, 'POST', urlPath, body);
+        assert.equal(rejected.status, 400, 'workflow request wrappers must fail before approval allocation');
+        assert.equal(rejected.json.code, 'E_BAD_API_REQUEST');
+      }
+      assert.equal(workflowRequests, 0);
+      assert.equal((await request(server, 'POST', '/api/workflows/request', workflowCall)).status, 200);
+      assert.equal(workflowRequests, 1);
     } finally {
       externalClient.add = originalExternalAdd;
       externalClient.previewStdio = originalExternalPreview;
       externalClient.startStdio = originalExternalStart;
       externalClient.remove = originalExternalRemove;
+      externalClient.request = originalExternalRequest;
+      workflowService.previewRequest = originalWorkflowPreview;
+      workflowService.request = originalWorkflowRequest;
     }
 
     const invalidToolTarget = 'invalid-tool-wrapper.txt';
+    const invalidToolQuery = await request(server, 'POST', '/api/tool/call?unexpected=true', {
+      name: 'write_file', mode: 'code',
+      arguments: { filePath: invalidToolTarget, content: 'MUST NOT WRITE' }
+    });
+    assert.equal(invalidToolQuery.status, 400, 'unknown query fields must fail before body-routed tool dispatch');
+    assert.equal(invalidToolQuery.json.code, 'E_BAD_API_REQUEST');
+    assert.ok(!fs.existsSync(path.join(tmp, invalidToolTarget)));
     const invalidToolWrapper = await request(server, 'POST', '/api/tool/call', {
       name: 'write_file', mode: 'code',
       arguments: { filePath: invalidToolTarget, content: 'MUST NOT WRITE' },
@@ -373,6 +450,10 @@ async function main() {
     const customPatched = await request(server,'PUT','/api/customizations',{environment:{notes:'second'}});
     assert.strictEqual(customPatched.json.customizations.environment.shell,'powershell');
     const beforeCustom = fs.readFileSync(path.join(tmp,'.webagent/customizations.json'));
+    const rejectedCustomQuery = await request(server, 'PUT', '/api/customizations?unexpected=true', { preference: 'MUST NOT SAVE' });
+    assert.equal(rejectedCustomQuery.status, 400);
+    assert.equal(rejectedCustomQuery.json.code, 'E_BAD_API_REQUEST');
+    assert.ok(fs.readFileSync(path.join(tmp, '.webagent/customizations.json')).equals(beforeCustom));
     fs.writeFileSync(path.join(tmp,'.webagent/customizations.json'),'{broken');
     const badLoad = await request(server,'GET','/api/customizations');
     assert.strictEqual(badLoad.status,500);
@@ -385,6 +466,41 @@ async function main() {
     assert.strictEqual(badCustom.json.success,false);
     assert.strictEqual(badCustom.json.code,'E_BAD_ARGS');
     assert.ok(fs.readFileSync(path.join(tmp,'.webagent/customizations.json')).equals(beforeCustom));
+    for (const body of [{}, []]) {
+      const rejected = await request(server, 'PUT', '/api/customizations', body);
+      assert.equal(rejected.status, 400, 'empty or non-record customization patches must not rewrite state');
+      assert.equal(rejected.json.code, 'E_BAD_ARGS');
+      assert.ok(fs.readFileSync(path.join(tmp, '.webagent/customizations.json')).equals(beforeCustom));
+    }
+    for (const body of [
+      { undocumentedSecret: 'request-secret-must-not-persist' },
+      { environment: { shell: 'bash', authorization: 'nested-request-secret' } },
+      { agents: [{ id: 'fixture', name: 'Fixture', role: 'review', token: 'item-request-secret' }] }
+    ]) {
+      const rejected = await request(server, 'PUT', '/api/customizations', body);
+      assert.equal(rejected.status, 400, 'customization writes only accept the documented fixed schema');
+      assert.equal(rejected.json.code, 'E_BAD_ARGS');
+      assert.ok(!JSON.stringify(rejected.json).includes('request-secret'));
+      assert.ok(fs.readFileSync(path.join(tmp, '.webagent/customizations.json')).equals(beforeCustom));
+    }
+    {
+      const legacyCustom = JSON.parse(beforeCustom.toString('utf8'));
+      legacyCustom.internalToken = 'legacy-custom-top-secret';
+      legacyCustom.environment.authorization = 'legacy-custom-nested-secret';
+      legacyCustom.agents[0].password = 'legacy-custom-item-secret';
+      fs.writeFileSync(path.join(tmp, '.webagent/customizations.json'), JSON.stringify(legacyCustom));
+      const projectedCustom = await request(server, 'GET', '/api/customizations');
+      assert.equal(projectedCustom.status, 200);
+      assert.deepEqual(Object.keys(projectedCustom.json).sort(),
+        Object.keys(require('../src/models/customizations').defaults()).sort());
+      assert.deepEqual(Object.keys(projectedCustom.json.environment).sort(),
+        Object.keys(require('../src/models/customizations').defaults().environment).sort());
+      assert.deepEqual(Object.keys(projectedCustom.json.agents[0]).sort(), ['id', 'name', 'role']);
+      for (const secret of ['legacy-custom-top-secret', 'legacy-custom-nested-secret', 'legacy-custom-item-secret']) {
+        assert.ok(!JSON.stringify(projectedCustom.json).includes(secret));
+      }
+      fs.writeFileSync(path.join(tmp, '.webagent/customizations.json'), beforeCustom);
+    }
 
     const unknownSkill = await request(server, 'POST', '/api/skills', {
       name: 'unknown-wrapper-skill', content: 'MUST NOT WRITE', unexpected: true
@@ -433,6 +549,45 @@ async function main() {
     assert.strictEqual(unknownReadQuery.json.code, 'E_BAD_API_REQUEST');
     assert.strictEqual(opened.json.content, 'hello from editor');
     assert.ok(opened.json.hash);
+
+    const mcpSession = require('../src/mcp/session');
+    mcpSession.touch({ ip: '127.0.0.1' }, {
+      key: 'peer:status-projection-fixture', incCall: true, injected: 'session-record-secret',
+      clientInfo: {
+        name: 'fixture-client', title: 'Fixture Client', version: '1.2.3',
+        authorization: 'client-info-secret', nested: { password: 'nested-client-info-secret' }
+      }
+    });
+    const retainedSession = mcpSession.allSessions()[0];
+    assert.deepEqual(Object.keys(retainedSession).sort(),
+      ['busy', 'calls', 'clientInfo', 'connectedAt', 'fail', 'key', 'lastSeen']);
+    assert.deepEqual(Object.keys(retainedSession.clientInfo).sort(), ['name', 'title', 'version']);
+    retainedSession.clientInfo.name = 'consumer-mutation-must-not-stick';
+    retainedSession.injected = 'consumer-mutation-secret';
+    const retainedAgain = mcpSession.allSessions()[0];
+    assert.equal(retainedAgain.clientInfo.name, 'fixture-client');
+    assert.ok(!Object.hasOwn(retainedAgain, 'injected'));
+    const projectedSessionStatus = await request(server, 'GET', '/api/status');
+    assert.equal(projectedSessionStatus.status, 200);
+    const projectedSession = projectedSessionStatus.json.mcpSession.latest;
+    assert.deepEqual(Object.keys(projectedSession).sort(),
+      ['busy', 'calls', 'clientInfo', 'connectedAt', 'fail', 'key', 'lastSeen']);
+    assert.deepEqual(Object.keys(projectedSession.clientInfo).sort(), ['name', 'title', 'version']);
+    assert.deepEqual(projectedSessionStatus.json.mcpSession.sessions[0], projectedSession);
+    for (const secret of [
+      'session-record-secret', 'client-info-secret', 'nested-client-info-secret',
+      'consumer-mutation-must-not-stick', 'consumer-mutation-secret'
+    ]) {
+      assert.ok(!JSON.stringify(projectedSessionStatus.json).includes(secret));
+    }
+    mcpSession.reset();
+
+    const rejectedModelQuery = await request(server, 'POST', '/api/models?unexpected=true', {
+      model: { id: 'query-must-not-save', name: 'MUST NOT SAVE' }
+    });
+    assert.equal(rejectedModelQuery.status, 400);
+    assert.equal(rejectedModelQuery.json.code, 'E_BAD_API_REQUEST');
+    assert.ok(!(await request(server, 'GET', '/api/models')).json.models.some(model => model.id === 'query-must-not-save'));
 
     const saved = await request(server, 'POST', '/api/models', {
       model: {
@@ -541,6 +696,12 @@ async function main() {
     let rejectedProbeCalls = 0;
     global.fetch = async () => { rejectedProbeCalls++; throw new Error('unknown wrapper reached fetch'); };
     try {
+      const rejectedProbeQuery = await request(server, 'POST', '/api/providers/probe?unexpected=true', {
+        baseUrl: 'https://strict-probe.test/v1', apiKey: 'strict-probe-key'
+      });
+      assert.strictEqual(rejectedProbeQuery.status, 400);
+      assert.strictEqual(rejectedProbeQuery.json.code, 'E_BAD_API_REQUEST');
+      assert.strictEqual(rejectedProbeCalls, 0);
       const rejectedProbe = await request(server, 'POST', '/api/providers/probe', {
         baseUrl: 'https://strict-probe.test/v1', apiKey: 'strict-probe-key', autoSave: true
       });
