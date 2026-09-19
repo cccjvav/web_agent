@@ -778,7 +778,7 @@ Bridge status现只投影固定公开字段，字符串须类型有效且有界�
 
 `runOpenAI`现在在每轮fetch前序列化完整请求并限制12MiB，超限抛`E_MODEL_REQUEST_TOO_LARGE`；Provider assistant响应不再原样回送，只投影role/content/tool_calls及固定function字段。content须字符串/null，单轮最多64项tool call，ID唯一且有界，function名字固定形状，arguments须≤256KiB并解析为非数组对象；调用名还须属于本轮实际发送的工具声明，使allowTools=false成为执行断路器且隐藏工具不能被Provider点名。整份响应先验证后才执行任何工具；通过后仍只执行前8项，其余已验证ID获得限额反馈。畸形arguments不再静默退化为`{}`。
 
-`apiFiles`锁定未知包装零服务调用、PTY矛盾终态零推进及合法状态链；`modelLifecycle`锁定请求超限零fetch、坏content/arguments、65项整体拒绝及Provider未知字段不回送。定向与相邻PTY/connection/external/model回归通过。首轮完整套件83/84，唯一`docsSite`失败明确为源码/正文更新后尚未重建`content.js`；生成库存与站点镜像刷新后最终84/84。文档库存249源码/28目录/110排除且只读零漂移，生产audit 0漏洞、正式哈希183项匹配、`git diff --check`及两个探针目录零diff；完整套件自动经过存量探针测试不算专项审查，探针文件未修改。精确提交与CI证据在推送后回填；下一包继续剩余非探针query包装、只读状态/诊断投影及external/workflow路由接线。
+`apiFiles`锁定未知包装零服务调用、PTY矛盾终态零推进及合法状态链；`modelLifecycle`锁定请求超限零fetch、坏content/arguments、65项整体拒绝及Provider未知字段不回送。定向与相邻PTY/connection/external/model回归通过。首轮完整套件83/84，唯一`docsSite`失败明确为源码/正文更新后尚未重建`content.js`；生成库存与站点镜像刷新后最终84/84。文档库存249源码/28目录/110排除且只读零漂移，生产audit 0漏洞、正式哈希183项匹配、`git diff --check`及两个探针目录零diff；完整套件自动经过存量探针测试不算专项审查，探针文件未修改。实现提交`94841c38410591e062867cbe8da92dd9ae2aacdc`的[CI35450192029](https://github.com/cccjvav/web_agent/actions/runs/35450192029)九项逐项成功，覆盖Ubuntu Node18/20/22/24、Windows Node20/22/24及重复取消/stdio、Windows安装器和真实Chromium。下一包继续剩余非探针query包装、只读状态/诊断投影及external/workflow路由接线。
 
 ## 复盘
 
