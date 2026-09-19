@@ -84,7 +84,7 @@
 |---|---|---|---|
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
-| R2 / 下一项，高 | 进行中：第38–40组控制面、OAuth凭据/issuer、会话公开标识/主体绑定首包已核对；第53组又固定MCP clientInfo入库/公开投影。下一包沿已认证MCP initialize→会话→取消/结果所有权→公开资源链继续，不作全链认证 | [SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth、执行控制与错误输出；已有控制面、模型、Bridge及探针专项不重做 | 按入口→认证→身份绑定→权限→执行→取消→输出查调用链；先做真实负例再最小修复，保留unknown/不重放，不以读完整安全说明代替实现审计 |
+| R2 / 下一项，高 | 第54组进行中：先同步新增任务证据，再沿已认证MCP initialize→会话→取消/结果所有权→公开资源链完整复审；同时只读对照用户提供的ShunCode Bridge源码包，判断会话驱逐、自适应并发、请求ID登记与重复会话头，绝不整体替换 | [SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth、执行控制与错误输出；`shuncode-bridge-source.zip`仅在仓库外安全解包作不可信参考；已有模型/文件/审批与探针专项不重做 | 按入口→认证→身份绑定→权限→执行→取消→输出查调用链；先做真实负例再最小修复，保留unknown/不重放；逐项说明采用/拒绝及负载依据，不因旧项目来源或类型声明授信 |
 | R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；后续只随具体复现继续，不重做已修链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
@@ -788,7 +788,15 @@ external/request、workflows/preview与workflows/request不再由宽泛operation
 
 同链复核customizations发现历史未知顶层、environment和列表项属性会由GET原样发布，PUT也会保存未知字段，空patch还会重写四文件。现完整固定defaults顶层、两个字符串对象、六类≤100项列表、voice/dictation/codex的字段/type/字节预算；写请求严格拒绝空/未知/错类型，历史读取只丢未知属性但已知槽位损坏仍E_CUSTOM_CORRUPT，合法局部更新保持environment/techStack/codex子字段。四文件顺序发布仍非事务，同用户直接改盘不在此隔离。
 
-`apiFiles`用服务调用/fetch/磁盘/会话计数锁定上述零副作用与固定投影；profile、stateIntegrity、httpSmoke、workflowPreconditions、externalDiscovery、MCP/board等相邻回归通过。首轮完整套件80/84，四项仅为新增函数说明、库存与站点镜像尚未同步，所有80项产品/业务测试通过；未删守卫。同步正文、库存与站点后最终84/84，文档249源码/28目录/110排除且只读updated=0，生产audit 0漏洞、正式哈希183项、`git diff --check`与两个探针目录零diff。实现提交`397476c7bc29d256781c759f3386beac91d9c147`的[CI35459273776](https://github.com/cccjvav/web_agent/actions/runs/35459273776)九项逐项成功，覆盖Ubuntu Node18/20/22/24、Windows Node20/22/24及重复取消/stdio、Windows安装器和真实Chromium；完整套件经过存量探针测试不算专项审查。
+`apiFiles`用服务调用/fetch/磁盘/会话计数锁定上述零副作用与固定投影；profile、stateIntegrity、httpSmoke、workflowPreconditions、externalDiscovery、MCP/board等相邻回归通过。首轮完整套件80/84，四项仅为新增函数说明、库存与站点镜像尚未同步，所有80项产品/业务测试通过；未删守卫。同步正文、库存与站点后最终84/84，文档249源码/28目录/110排除且只读updated=0，生产audit 0漏洞、正式哈希183项、`git diff --check`与两个探针目录零diff。实现提交`397476c7bc29d256781c759f3386beac91d9c147`的[CI35459273776](https://github.com/cccjvav/web_agent/actions/runs/35459273776)九项逐项成功，覆盖Ubuntu Node18/20/22/24、Windows Node20/22/24及重复取消/stdio、Windows安装器和真实Chromium；证据提交`0b8b9a4e642d2a813be1e2413056b01c64f96890`的[CI35459466444](https://github.com/cccjvav/web_agent/actions/runs/35459466444)也九项成功。完整套件经过存量探针测试不算专项审查。
+
+#### 第54组：交接同步、ShunCode只读对照与完整非Probe复审（进行中）
+
+用户上传提交`3fbe8723de4c9fdd9e115f377aff06d16b449a64`新增`shuncode-bridge-source.zip`及`web_agent提示词-修正版-纯净.txt`。任务要求不是替换现有实现，而是逐模块评估会话驱逐、自适应并发、信号量/事件缓冲、JSON-RPC ID登记和重复`Mcp-Session-Id`头，并确认文件工具/审批耦合不应直接替换；授权/支付不在包内，手写类型只作线索，代码从未在本环境运行。zip SHA-256为`4114d6e8d583cea5193b48d53e8137921803a681006914a943abf804aa847188`，已做绝对路径、`..`、symlink、单项/总字节检查后仅解到仓库外`/home/user/r54-shuncode-reference/`，不安装、不执行、不把类型声明当行为。
+
+该上传提交的[CI35466582618](https://github.com/cccjvav/web_agent/actions/runs/35466582618)中真实Chromium和Windows安装器通过，七个主机任务的`npm test`均由同一文档守卫失败：正式清单遗漏新增TXT；不是已证明的产品运行回归，也不能冒称全绿。进入本组时ref/index第八次回到初始提交而工作文件保留；外部备份`/home/user/r54-recovery-1789853320/`含binary diff和排除Git/依赖的整树包，显式fetch后以临时索引证明现有文件与远端除两份未落盘上传文件外一致且无额外untracked，只恢复ref/index并从远端blob补这两份文件，未使用hard reset、clean、checkout覆盖或整树替换。
+
+本组先把任务TXT登记为只读原始证据并同步CONTEXT、路线、语义台账；随后按用户要求审查全部当前可负责的非Probe源码、配置、UI、文档与工程门禁。Probe及外部trace项目继续只登记路径、不读实现、不改文件；完整套件经过其存量测试也不算专项审查。最终发现、取舍、回归、精确提交和CI待审查完成后回填。
 
 ## 复盘
 
