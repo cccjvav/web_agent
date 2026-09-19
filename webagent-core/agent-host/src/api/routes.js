@@ -84,6 +84,78 @@ function operationApi(handler) {
     catch (error) { res.status(400).json({ ok: false, error: error.message }); }
   };
 }
+
+const BRIDGE_START_FIELDS = ['workspaceRoot', 'hostInstanceId', 'tunnelProvider', 'namedDomain', 'namedToken', 'ngrokDomain', 'ngrokToken'];
+const BRIDGE_PROVIDERS = new Set(['cloudflare', 'cloudflare-named', 'named', 'ngrok', 'local']);
+function rejectBridgeRequest(res) {
+  return res.status(400).json({ success: false, error: 'Bridge请求字段或长度无效', code: 'E_BAD_BRIDGE_REQUEST' });
+}
+function bridgeRequestBody(req, res, allowed) {
+  const body = req.body === undefined ? {} : req.body;
+  if (!body || typeof body !== 'object' || Array.isArray(body)
+    || Object.keys(body).some(key => !allowed.includes(key))) {
+    rejectBridgeRequest(res);
+    return null;
+  }
+  return body;
+}
+function validBridgeString(value, maxBytes) {
+  return typeof value === 'string' && Buffer.byteLength(value, 'utf8') <= maxBytes && !/[\r\n\0]/.test(value);
+}
+function validOptionalString(body, key, maxBytes) {
+  return !Object.hasOwn(body, key) || validBridgeString(body[key], maxBytes);
+}
+function validBridgeBindingFields(body, withSecret = false) {
+  return validOptionalString(body, 'workspaceRoot', 4096)
+    && validOptionalString(body, 'hostInstanceId', 256)
+    && (!withSecret || validOptionalString(body, 'expectedSecret', 256));
+}
+function validateBridgeStart(body, cfg) {
+  if (!validBridgeBindingFields(body)
+    || !validOptionalString(body, 'namedDomain', 512)
+    || !validOptionalString(body, 'ngrokDomain', 512)
+    || !validOptionalString(body, 'namedToken', 4096)
+    || !validOptionalString(body, 'ngrokToken', 4096)) return null;
+  const bridge = cfg?.bridge && typeof cfg.bridge === 'object' && !Array.isArray(cfg.bridge) ? cfg.bridge : {};
+  const stored = BRIDGE_PROVIDERS.has(bridge.tunnelProvider) ? bridge.tunnelProvider : 'cloudflare';
+  const provider = Object.hasOwn(body, 'tunnelProvider') ? body.tunnelProvider : stored;
+  if (typeof provider !== 'string' || !BRIDGE_PROVIDERS.has(provider)) return null;
+  const providerFields = isNamedTunnelProvider(provider) ? new Set(['namedDomain', 'namedToken'])
+    : isNgrokProvider(provider) ? new Set(['ngrokDomain', 'ngrokToken']) : new Set();
+  if (['namedDomain', 'namedToken', 'ngrokDomain', 'ngrokToken']
+    .some(key => Object.hasOwn(body, key) && !providerFields.has(key))) return null;
+  if (isNamedTunnelProvider(provider)) {
+    const domain = Object.hasOwn(body, 'namedDomain') ? body.namedDomain : (typeof bridge.namedDomain === 'string' ? bridge.namedDomain : '');
+    const requestedToken = Object.hasOwn(body, 'namedToken') ? body.namedToken : '';
+    const token = requestedToken.trim() ? requestedToken : (typeof bridge.namedToken === 'string' ? bridge.namedToken : '');
+    if (!validBridgeString(domain, 512) || !validBridgeString(token, 4096)) return null;
+  }
+  if (isNgrokProvider(provider)) {
+    const domain = Object.hasOwn(body, 'ngrokDomain') ? body.ngrokDomain : (typeof bridge.ngrokDomain === 'string' ? bridge.ngrokDomain : '');
+    const requestedToken = Object.hasOwn(body, 'ngrokToken') ? body.ngrokToken : '';
+    const token = requestedToken.trim() ? requestedToken : (typeof bridge.ngrokToken === 'string' ? bridge.ngrokToken : '');
+    if (!validBridgeString(domain, 512) || !validBridgeString(token, 4096)) return null;
+  }
+  return provider;
+}
+function publicText(value, maxLength) {
+  return typeof value === 'string' ? value.slice(0, maxLength) : '';
+}
+function publicBridge(bridge = {}) {
+  return {
+    tunnelProvider: BRIDGE_PROVIDERS.has(bridge.tunnelProvider) ? bridge.tunnelProvider : 'cloudflare',
+    namedDomain: publicText(bridge.namedDomain, 512),
+    ngrokDomain: publicText(bridge.ngrokDomain, 512),
+    account: {
+      loggedIn: bridge.loggedIn === true,
+      provider: publicText(bridge.provider, 64),
+      username: publicText(bridge.username, 256),
+      githubId: publicText(bridge.githubId, 256),
+      license: publicText(bridge.license, 64),
+      deviceAuthorized: bridge.deviceAuthorized === true
+    }
+  };
+}
 router.get('/execution-control', (req, res) => res.json(control.snapshot()));
 router.post('/execution-control', (req, res) => {
   try {
@@ -127,6 +199,7 @@ router.get('/bridge/activity', (req, res) => res.json(eventBus.getBridgeActivity
 
 router.get('/status', (req, res) => {
   const cfg = store.load();
+  const bridge = publicBridge(cfg.bridge);
   res.json({
     status: 'online',
     executionControl: control.snapshot(),
@@ -143,9 +216,9 @@ router.get('/status', (req, res) => {
     bridgeTaskStates: getBridgeTaskStates(),
     recentLogs: recentToolLogs(12),
     bridgeRunning: config.bridgeRunning,
-    tunnelProvider: cfg.bridge.tunnelProvider,
-    namedDomain: cfg.bridge.namedDomain || '',
-    ngrokDomain: cfg.bridge.ngrokDomain || '',
+    tunnelProvider: bridge.tunnelProvider,
+    namedDomain: bridge.namedDomain,
+    ngrokDomain: bridge.ngrokDomain,
     ...mcpInfo(req),
     // Workbench paintProviderTable reads GET /api/status.models (not /api/models).
     // Keep display fields; never send apiKey (hasKey only).
@@ -168,14 +241,7 @@ router.get('/status', (req, res) => {
     activeModelId: cfg.activeModelId,
     multiModel: publicMultiModel(cfg.multiModel),
     planRound: planRound.snapshot(),
-    bridgeAccount: {
-      loggedIn: cfg.bridge.loggedIn,
-      provider: cfg.bridge.provider,
-      username: cfg.bridge.username,
-      githubId: cfg.bridge.githubId || '',
-      license: cfg.bridge.license,
-      deviceAuthorized: cfg.bridge.deviceAuthorized
-    },
+    bridgeAccount: bridge.account,
     githubAuth: {
       deviceAvailable: github.deviceAvailable()
     },
@@ -185,9 +251,11 @@ router.get('/status', (req, res) => {
 });
 
 router.post('/bridge/reset-secret', (req, res) => {
-  // New UI requests opt into binding/CAS; empty legacy extension calls remain compatible.
-  const body = req.body || {};
-  if (['workspaceRoot', 'hostInstanceId', 'expectedSecret'].some(key => Object.prototype.hasOwnProperty.call(body, key))) {
+  // New UI requests opt into binding/CAS; an exactly empty legacy call remains compatible.
+  const body = bridgeRequestBody(req, res, ['workspaceRoot', 'hostInstanceId', 'expectedSecret']);
+  if (!body) return;
+  if (!validBridgeBindingFields(body, true)) return rejectBridgeRequest(res);
+  if (['workspaceRoot', 'hostInstanceId', 'expectedSecret'].some(key => Object.hasOwn(body, key))) {
     try { assertWorkspaceBinding(body, config); }
     catch (_) { return res.status(409).json({ success: false, error: 'Rotation binding changed; read status first' }); }
     if (typeof body.expectedSecret !== 'string' || body.expectedSecret !== config.secretKey) {
@@ -201,10 +269,15 @@ router.post('/bridge/reset-secret', (req, res) => {
 });
 
 router.post('/bridge/start', async (req, res) => {
-  try { assertWorkspaceBinding(req.body, config); }
+  const body = bridgeRequestBody(req, res, BRIDGE_START_FIELDS);
+  if (!body) return;
+  if (!validBridgeBindingFields(body)) return rejectBridgeRequest(res);
+  try { assertWorkspaceBinding(body, config); }
   catch(error) { return res.status(409).json({success:false,error:error.message}); }
   const cfg = store.load();
-  if (!cfg.bridge.loggedIn || !cfg.bridge.deviceAuthorized) {
+  const provider = validateBridgeStart(body, cfg);
+  if (!provider) return rejectBridgeRequest(res);
+  if (cfg.bridge.loggedIn !== true || cfg.bridge.deviceAuthorized !== true) {
     return res.status(403).json({ success: false, error: '需要先点本机演示授权或完成 GitHub 验证。Chat 不受影响。' });
   }
   try { control.assertIdle(); control.selectMode('bridge'); }
@@ -212,16 +285,18 @@ router.post('/bridge/start', async (req, res) => {
   const releaseMode = control.enter('bridge');
   try {
     const bridgeTicket = ++bridgeGeneration;
-    const body = req.body || {};
-    const provider = body.tunnelProvider || cfg.bridge.tunnelProvider || 'cloudflare';
     const named = isNamedTunnelProvider(provider);
     const ngrokProv = isNgrokProvider(provider);
-    const namedDomain = String(body.namedDomain != null ? body.namedDomain : (cfg.bridge.namedDomain || '')).trim();
-    const bodyToken = String(body.namedToken || '').trim();
-    const namedToken = bodyToken || String(cfg.bridge.namedToken || '').trim();
-    const ngrokDomain = String(body.ngrokDomain != null ? body.ngrokDomain : (cfg.bridge.ngrokDomain || '')).trim();
-    const bodyNgrokTok = String(body.ngrokToken || '').trim();
-    const ngrokToken = bodyNgrokTok || String(cfg.bridge.ngrokToken || '').trim();
+    const storedNamedDomain = typeof cfg.bridge.namedDomain === 'string' ? cfg.bridge.namedDomain : '';
+    const storedNamedToken = typeof cfg.bridge.namedToken === 'string' ? cfg.bridge.namedToken : '';
+    const storedNgrokDomain = typeof cfg.bridge.ngrokDomain === 'string' ? cfg.bridge.ngrokDomain : '';
+    const storedNgrokToken = typeof cfg.bridge.ngrokToken === 'string' ? cfg.bridge.ngrokToken : '';
+    const namedDomain = (Object.hasOwn(body, 'namedDomain') ? body.namedDomain : storedNamedDomain).trim();
+    const bodyToken = (Object.hasOwn(body, 'namedToken') ? body.namedToken : '').trim();
+    const namedToken = bodyToken || storedNamedToken.trim();
+    const ngrokDomain = (Object.hasOwn(body, 'ngrokDomain') ? body.ngrokDomain : storedNgrokDomain).trim();
+    const bodyNgrokTok = (Object.hasOwn(body, 'ngrokToken') ? body.ngrokToken : '').trim();
+    const ngrokToken = bodyNgrokTok || storedNgrokToken.trim();
     const bridgePatch = { tunnelProvider: provider, namedDomain, ngrokDomain };
     if (bodyToken) bridgePatch.namedToken = bodyToken;
     if (bodyNgrokTok) bridgePatch.ngrokToken = bodyNgrokTok;
@@ -294,8 +369,10 @@ router.post('/bridge/start', async (req, res) => {
 });
 
 router.post('/bridge/stop', async (req, res) => {
-  const body = req.body || {};
-  if (['workspaceRoot', 'hostInstanceId'].some(key => Object.prototype.hasOwnProperty.call(body, key))) {
+  const body = bridgeRequestBody(req, res, ['workspaceRoot', 'hostInstanceId']);
+  if (!body) return;
+  if (!validBridgeBindingFields(body)) return rejectBridgeRequest(res);
+  if (['workspaceRoot', 'hostInstanceId'].some(key => Object.hasOwn(body, key))) {
     try { assertWorkspaceBinding(body, config); }
     catch (_) { return res.status(409).json({success:false, error:'Stop binding changed; read status first'}); }
   }
@@ -307,6 +384,7 @@ router.post('/bridge/stop', async (req, res) => {
 });
 
 router.post('/bridge/reset-round', (req, res) => {
+  if (!bridgeRequestBody(req, res, [])) return;
   const mcpSession = mcpReset();
   resetHashes();
   eventBus.broadcast('bridge_round_reset', {});
@@ -594,13 +672,17 @@ router.post('/skills', async (req, res) => {
 });
 
 router.post('/bridge/login', (req, res) => {
+  if (!bridgeRequestBody(req, res, [])) return;
   github.clearGithubKeepDemo();
   res.json({ success: true, demo: true, provider: 'local-demo', username: 'local' });
 });
 
 router.post('/bridge/token', async (req, res) => {
+  const body = bridgeRequestBody(req, res, ['token']);
+  if (!body) return;
+  if (!validOptionalString(body, 'token', 4096)) return rejectBridgeRequest(res);
   try {
-    const out = await github.loginWithToken((req.body && req.body.token) || '');
+    const out = await github.loginWithToken(body.token || '');
     res.json(out);
   } catch (err) {
     res.status(err.status || 400).json({ success: false, error: err.message });
@@ -608,6 +690,7 @@ router.post('/bridge/token', async (req, res) => {
 });
 
 router.post('/bridge/device', async (req, res) => {
+  if (!bridgeRequestBody(req, res, [])) return;
   try {
     const out = await github.startDeviceLogin();
     res.json({ success: true, ...out });
@@ -617,6 +700,7 @@ router.post('/bridge/device', async (req, res) => {
 });
 
 router.post('/bridge/device/poll', async (req, res) => {
+  if (!bridgeRequestBody(req, res, [])) return;
   try {
     const out = await github.pollDeviceLogin();
     res.json(out);
@@ -626,11 +710,13 @@ router.post('/bridge/device/poll', async (req, res) => {
 });
 
 router.post('/bridge/github/clear', (req, res) => {
+  if (!bridgeRequestBody(req, res, [])) return;
   github.clearGithubKeepDemo();
   res.json({ success: true, provider: 'local-demo', username: 'local' });
 });
 
 router.post('/bridge/logout', async (req, res) => {
+  if (!bridgeRequestBody(req, res, [])) return;
   bridgeGeneration++;
   github.resetPending();
   store.patch({

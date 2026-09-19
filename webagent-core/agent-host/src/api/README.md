@@ -11,11 +11,11 @@
 
 | 路径 | 方法 | 用途及关键结果 |
 |---|---|---|
-| `/status`、`/logs` | GET | 状态快照、日志；status的模型及多模型设置使用固定公开投影，但仍包含本机连接所需信息，不应当成可公开接口 |
-| `/bridge/start`、`/bridge/stop`、`/bridge/logout` | POST | 启停隧道或注销；代次控制拒绝迟到启动 |
-| `/bridge/reset-secret`、`/bridge/reset-round` | POST | 重置连接身份（新UI携绑定/旧密钥比较，旧空体兼容），或清MCP会话/读取hash缓存；不是同一个操作 |
-| `/bridge/login`、`/bridge/token` | POST | 本机演示授权，或验证用户提供的GitHub身份 |
-| `/bridge/device`、`/bridge/device/poll`、`/bridge/github/clear` | POST | GitHub设备流及清理；不等同MCP OAuth配对 |
+| `/status`、`/logs` | GET | 状态快照、日志；status的模型/多模型及Bridge展示字段使用固定类型投影，历史嵌套值不原样发布，但仍包含本机连接所需信息，不应当成可公开接口 |
+| `/bridge/start`、`/bridge/stop`、`/bridge/logout` | POST | 启停隧道或注销；启动只接受固定提供商及其专属域名/凭据字段和预算，未知包装在写配置/停启进程前拒绝；代次控制拒绝迟到启动 |
+| `/bridge/reset-secret`、`/bridge/reset-round` | POST | 重置连接身份（新UI携绑定/旧密钥比较，只有完全空的旧请求兼容），或清MCP会话/读取hash缓存；未知字段不触发副作用，不是同一个操作 |
+| `/bridge/login`、`/bridge/token` | POST | 本机演示授权，或验证用户提供的GitHub身份；空体/令牌包装严格，令牌在触网前限长且拒绝换行 |
+| `/bridge/device`、`/bridge/device/poll`、`/bridge/github/clear` | POST | GitHub设备流及清理；无参操作只接受空体，不等同MCP OAuth配对 |
 | `/chat` | POST | 本机Chat的NDJSON事件流 |
 | `/tool/call`、`/consensus/run`、`/tasks/reset` | POST | 直接调用工具、本机共识流程、清任务状态 |
 | `/pty/hello`、`/pty/jobs`、`/pty/jobs/:jobId` | POST / GET / POST | PTY客户端存活、取任务、报告状态 |
@@ -33,9 +33,9 @@
 
 ## 执行流程与成功语义
 ### Bridge
-start先验证授权，保存选项，再等待旧隧道停止并启动所选提供商。只有取得公网URL后才将running设为true。为兼容UI，部分启动失败仍返回HTTP 200，但 `success:false`、`running:false` 和 `tunnelError` 表明业务失败。新start/stop/logout使旧start的最终响应变为409。
+start先校验固定包装、字段类型/长度、提供商与专属凭据组合及工作区绑定；未知字段、错类型、跨提供商Token在保存配置、停止旧隧道或触网前以固定`E_BAD_BRIDGE_REQUEST`拒绝，错误正文不回显输入。历史授权槽位只有严格布尔true才可启动；随后才保存选项，等待旧隧道停止并启动所选提供商。只有取得公网URL后才将running设为true。为兼容UI，部分启动失败仍返回HTTP 200，但 `success:false`、`running:false` 和 `tunnelError` 表明业务失败。新start/stop/logout使旧start的最终响应变为409。
 
-stop/logout等待停止Promise，失败不能当成功。没有公网隧道时连接信息指向本机MCP端口，而非浏览器页面Host；这不意味着手机仍能连接本机地址。
+stop/logout等待停止Promise，失败不能当成功；stop只兼容完全空的旧请求或固定绑定字段，logout等无参身份操作只接受空体。没有公网隧道时连接信息指向本机MCP端口，而非浏览器页面Host；这不意味着手机仍能连接本机地址。
 
 ### Chat流
 请求创建AbortController，5分钟到期、请求中止或响应断开触发abort。外层用requestScope传播信号，扩展客户端另启用PTY上下文。`emit`只向仍打开的响应写入一行JSON，最后清理监听器和计时器。
@@ -63,7 +63,7 @@ requestScope由 `/chat`显式创建，**不代表所有REST请求自动拥有同
 
 | 源码 | 定位证据 |
 |---|---|
-| [routes.js](routes.js) | 85 个函数/类节点 |
+| [routes.js](routes.js) | 95 个函数/类节点 |
 <!-- docs-inventory:end -->
 
-第42组经典停止调用携工作区/主机绑定；有任一字段时完整匹配才递增generation或停隧道，旧无字段请求兼容。停隧道失败和停止完成后广播失败可能都500但效果不同，不能从HTTP错误猜测回滚。
+第42组经典停止调用携工作区/主机绑定；有任一字段时完整匹配才递增generation或停隧道，只有完全空体的旧请求兼容，未知字段400且零停启。停隧道失败和停止完成后广播失败可能都500但效果不同，不能从HTTP错误猜测回滚。

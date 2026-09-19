@@ -61,6 +61,8 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 
 第49组继续非探针R3/R2输入与公开投影边界：apiFiles先把带`authorization`等未知属性及已知槽位错类型嵌套秘密的历史模型/multiModel配置注入磁盘，要求models/status只给各自固定且类型有效的schema、模型Key脱敏；再验证普通模型、Provider探测包装、addProvider包装及目录项的未知字段均受控400，探测负例不触网、保存负例配置字节不变且响应不回显Key。providers/modelLifecycle回归守住目录解析、调用及失败语义。该证据只覆盖本机HTTP/模拟fetch与文件字节，不证明外部Provider善意、跨进程写入或探针项目。
 
+第50组继续非探针REST/审批结果边界并交叉R2：bridgeTunnel先证实Bridge start、stop、轮换、清轮及身份端点会静默接受未知包装，且历史对象型授权/展示字段可被truthy消费或经status发布；修后固定提供商专属schema、请求及当前provider保存凭据的字符串预算、空体兼容和公开投影，所有负例在存储/停启/触网前失败且不回显标记。approvedOperations让真实外部MCP只以`verification.state=unknown`报告不确定效果，要求宿主在覆盖验证说明前判定、队列终态unknown且重复批准零重放。测试仍使用本机HTTP和外部MCP fixture，不连接真实隧道/GitHub，也不修改或认证探针项目。
+
 ## 按风险选择回归
 | 风险/模块 | 主要测试 | 证据类型与限制 |
 |---|---|---|
@@ -108,7 +110,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [auditControl.test.js](auditControl.test.js) | 20 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
 | [board.test.js](board.test.js) | 4 个函数/类节点 |
-| [bridgeTunnel.test.js](bridgeTunnel.test.js) | 32 个函数/类节点 |
+| [bridgeTunnel.test.js](bridgeTunnel.test.js) | 34 个函数/类节点 |
 | [chatMode.test.js](chatMode.test.js) | 0 个函数/类节点 |
 | [chatVision.test.js](chatVision.test.js) | 21 个函数/类节点 |
 | [codeServerAuth.test.js](codeServerAuth.test.js) | 0 个函数/类节点 |

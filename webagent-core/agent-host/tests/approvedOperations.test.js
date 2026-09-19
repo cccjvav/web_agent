@@ -11,7 +11,7 @@ const { callTool } = require('../src/tools');
 const queue = require('../src/utils/operatorQueue');
 const external = require('../src/mcp/externalClient');
 const workflows = require('../src/tools/workflows');
-let calls = 0, businessFailures = 0, onHangingCall;
+let calls = 0, businessFailures = 0, uncertainReports = 0, onHangingCall;
 const server = http.createServer(async (req, res) => {
   let text = ''; for await (const chunk of req) text += chunk;
   const message = JSON.parse(text);
@@ -24,6 +24,9 @@ const server = http.createServer(async (req, res) => {
     if (message.params.arguments.businessFailure) {
       businessFailures++;
       result = { ok: false, error: 'external fixture reported failure' };
+    } else if (message.params.arguments.uncertainReport) {
+      uncertainReports++;
+      result = { content: [{ type: 'text', text: 'effect may have happened' }], verification: { state: 'unknown' } };
     } else {
       calls++;
       if (message.params.arguments.hang) { res.setHeader('Content-Type', 'application/json'); res.write('{'); onHangingCall(); return; }
@@ -61,6 +64,14 @@ const server = http.createServer(async (req, res) => {
     assert.equal(reportedFailureResult.result.ok, false);
     assert.equal(businessFailures, 1);
     await queue.approve(reportedFailure.requestId, true); assert.equal(businessFailures, 1, 'reported failures are terminal and never replayed');
+    const reportedUnknown = external.request({ ...args, arguments: { uncertainReport: true }, requestKey: 'request-uncertain-report' }, options);
+    await queue.approve(reportedUnknown.requestId, true);
+    const reportedUnknownResult = queue.result(reportedUnknown.requestId, options);
+    assert.equal(reportedUnknownResult.status, 'unknown', 'external unknown verification cannot be overwritten as a confirmed result');
+    assert.equal(reportedUnknownResult.result.ok, false);
+    assert.equal(reportedUnknownResult.result.verification.state, 'unknown');
+    assert.equal(uncertainReports, 1);
+    await queue.approve(reportedUnknown.requestId, true); assert.equal(uncertainReports, 1, 'uncertain external effects are never replayed');
     const denied = external.request({ ...args, requestKey: 'request-002' }, options); queue.cancel(denied.requestId);
     await queue.approve(denied.requestId, true); assert.equal(calls, 1);
     const definition = { steps: [{ id: 'write', tool: 'write_file', arguments: { filePath: 'proof.txt', content: 'approved only' }, expect: { path: 'proof.txt', contains: 'approved only' } }] };

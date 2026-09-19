@@ -185,10 +185,14 @@ async function execute(input) {
   const client = clients.get(input.serverId);
   if (!client || client.status !== 'discovered' || !client.tools.some(tool => tool.name === input.tool)) return { ok: false, error: 'Server removed or tool unavailable; not executed' };
   const output = await rpc(client, 'tools/call', { name: input.tool, arguments: input.arguments });
-  const reported = { ...output, verification: { state: 'external-reported', note: 'External tool output is not an independent verification of effects.' } };
-  // Preserve every explicit failure signal. In particular, do not overwrite a
-  // non-standard but common ok:false result just because MCP isError is absent.
-  reported.ok = !isToolFailure(reported);
+  const reportedUnknown = output.verification?.state === 'unknown';
+  const failed = isToolFailure(output);
+  const reported = { ...output, verification: reportedUnknown
+    ? { state: 'unknown', note: 'External tool reported unknown completion; effects may exist and were not independently verified.' }
+    : { state: 'external-reported', note: 'External tool output is not an independent verification of effects.' } };
+  // Evaluate the original response before replacing its untrusted verification
+  // metadata. Otherwise an explicit unknown signal can be erased into success.
+  reported.ok = !failed;
   return reported;
 }
 approvals.register('external-mcp', execute);

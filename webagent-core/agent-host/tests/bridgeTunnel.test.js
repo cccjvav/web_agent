@@ -98,6 +98,90 @@ async function main() {
     assert.equal(startCalls+namedCalls+ngrokCalls+stopCalls,0,'binding rejection must not start or stop tunnels');
     assert.equal(JSON.stringify(store.load()),beforeBinding,'binding rejection must not mutate authorization/config');
 
+    const beforeInvalidStart = JSON.stringify(store.load());
+    const privateMarker = 'private-bridge-input-must-not-leak';
+    for (const body of [
+      {tunnelProvider:'cloudflare',unexpected:privateMarker},
+      {tunnelProvider:{provider:'cloudflare'}},
+      {tunnelProvider:'unsupported-provider'},
+      {tunnelProvider:'cloudflare',namedToken:privateMarker},
+      {tunnelProvider:'named',namedToken:'x'.repeat(4097)}
+    ]) {
+      const rejected = await request(server,'POST','/api/bridge/start',body);
+      assert.equal(rejected.status,400,'invalid Bridge start wrapper must fail before persistence or tunnel I/O');
+      assert.equal(rejected.json.success,false);
+      assert.equal(rejected.json.code,'E_BAD_BRIDGE_REQUEST');
+      assert.ok(!JSON.stringify(rejected.json).includes(privateMarker));
+    }
+    assert.equal(startCalls+namedCalls+ngrokCalls+stopCalls,0,'invalid Bridge input must not start or stop tunnels');
+    assert.equal(JSON.stringify(store.load()),beforeInvalidStart,'invalid Bridge input must not mutate config');
+    const beforeInvalidLifecycle = JSON.stringify(store.load()), beforeInvalidLifecycleStops = stopCalls;
+    for (const route of ['/api/bridge/reset-round','/api/bridge/login','/api/bridge/device/poll','/api/bridge/github/clear','/api/bridge/logout']) {
+      const rejected = await request(server,'POST',route,{unexpected:privateMarker});
+      assert.equal(rejected.status,400,route + ' must reject unknown wrapper fields');
+      assert.equal(rejected.json.success,false);
+      assert.equal(rejected.json.code,'E_BAD_BRIDGE_REQUEST');
+      assert.ok(!JSON.stringify(rejected.json).includes(privateMarker));
+    }
+    assert.equal(stopCalls,beforeInvalidLifecycleStops,'invalid lifecycle wrappers must not stop tunnels');
+    assert.equal(JSON.stringify(store.load()),beforeInvalidLifecycle,'invalid lifecycle wrappers must not mutate identity/config');
+    const github = require('../src/auth/github');
+    const originalDeviceLogin = github.startDeviceLogin, originalTokenLogin = github.loginWithToken;
+    let deviceStarts = 0, tokenLogins = 0;
+    try {
+      github.startDeviceLogin = async () => { deviceStarts++; return {userCode:'FIXTURE',verificationUri:'https://github.com/login/device'}; };
+      github.loginWithToken = async () => { tokenLogins++; return {success:true,provider:'github',username:'fixture'}; };
+      for (const [route, body] of [
+        ['/api/bridge/device',{unexpected:privateMarker}],
+        ['/api/bridge/token',{token:privateMarker,unexpected:'field'}],
+        ['/api/bridge/token',{token:'x'.repeat(4097)}],
+        ['/api/bridge/token',{token:privateMarker + '\n'}]
+      ]) {
+        const rejected = await request(server,'POST',route,body);
+        assert.equal(rejected.status,400,route + ' must reject unknown fields before outbound authentication');
+        assert.equal(rejected.json.success,false);
+        assert.equal(rejected.json.code,'E_BAD_BRIDGE_REQUEST');
+        assert.ok(!JSON.stringify(rejected.json).includes(privateMarker));
+      }
+    } finally {
+      github.startDeviceLogin = originalDeviceLogin;
+      github.loginWithToken = originalTokenLogin;
+    }
+    assert.equal(deviceStarts,0); assert.equal(tokenLogins,0);
+
+    const historicalBridge = store.load().bridge;
+    store.patch({bridge:{
+      tunnelProvider:{authorization:privateMarker}, namedDomain:{authorization:privateMarker}, ngrokDomain:[privateMarker],
+      loggedIn:{authorization:privateMarker}, provider:{authorization:privateMarker}, username:{authorization:privateMarker},
+      githubId:{authorization:privateMarker}, license:{authorization:privateMarker}, deviceAuthorized:{authorization:privateMarker}
+    }});
+    const projectedStatus = await request(server,'GET','/api/status');
+    assert.equal(projectedStatus.status,200);
+    assert.ok(!JSON.stringify(projectedStatus.json).includes(privateMarker),'historical nested Bridge values must not cross the public status projection');
+    assert.equal(typeof projectedStatus.json.tunnelProvider,'string');
+    assert.equal(typeof projectedStatus.json.namedDomain,'string');
+    assert.equal(typeof projectedStatus.json.ngrokDomain,'string');
+    assert.equal(typeof projectedStatus.json.bridgeAccount.loggedIn,'boolean');
+    assert.equal(typeof projectedStatus.json.bridgeAccount.deviceAuthorized,'boolean');
+    for (const key of ['provider','username','githubId','license']) assert.equal(typeof projectedStatus.json.bridgeAccount[key],'string');
+    const beforeMalformedAuthCalls = startCalls + namedCalls + ngrokCalls + stopCalls;
+    const deniedMalformedAuth = await request(server,'POST','/api/bridge/start',{tunnelProvider:'cloudflare'});
+    assert.equal(deniedMalformedAuth.status,403,'truthy legacy objects must not satisfy Bridge authorization booleans');
+    assert.ok(!JSON.stringify(deniedMalformedAuth.json).includes(privateMarker));
+    assert.equal(startCalls + namedCalls + ngrokCalls + stopCalls,beforeMalformedAuthCalls);
+    store.patch({bridge:historicalBridge});
+
+    const beforeInvalidStoredBridge = store.load().bridge;
+    store.patch({bridge:{tunnelProvider:'named',namedToken:'x'.repeat(4097)}});
+    const invalidStoredSnapshot = JSON.stringify(store.load());
+    const beforeInvalidStoredCalls = startCalls + namedCalls + ngrokCalls + stopCalls;
+    const rejectedStoredCredential = await request(server,'POST','/api/bridge/start',{});
+    assert.equal(rejectedStoredCredential.status,400,'historical stored credentials must not bypass the active provider budget');
+    assert.equal(rejectedStoredCredential.json.code,'E_BAD_BRIDGE_REQUEST');
+    assert.equal(startCalls + namedCalls + ngrokCalls + stopCalls,beforeInvalidStoredCalls);
+    assert.equal(JSON.stringify(store.load()),invalidStoredSnapshot,'invalid stored credentials must fail without rewriting configuration');
+    store.patch({bridge:beforeInvalidStoredBridge});
+
     const started = await request(server, 'POST', '/api/bridge/start', { tunnelProvider: 'cloudflare' });
     assert.strictEqual(started.status, 200);
     assert.strictEqual(started.json.success, true);
@@ -207,6 +291,14 @@ async function main() {
     // Bound stop rejects before touching generation, config, or the tunnel.
     const stopBinding = {workspaceRoot:config.workspaceRoot,hostInstanceId:config.hostInstanceId};
     const beforeStopCalls = stopCalls, beforeStopConfig = JSON.stringify(store.load());
+    const invalidStop = await request(server,'POST','/api/bridge/stop',{unexpected:privateMarker});
+    assert.equal(invalidStop.status,400);
+    assert.equal(invalidStop.json.success,false);
+    assert.equal(invalidStop.json.code,'E_BAD_BRIDGE_REQUEST');
+    assert.ok(!JSON.stringify(invalidStop.json).includes(privateMarker));
+    assert.equal(stopCalls,beforeStopCalls,'invalid stop wrapper must not stop a tunnel');
+    assert.equal(config.bridgeRunning,true);
+    assert.equal(JSON.stringify(store.load()),beforeStopConfig);
     for(const body of [{workspaceRoot:tmp},{...stopBinding,hostInstanceId:'stale'},{...stopBinding,workspaceRoot:os.tmpdir()}]) {
       const rejectedStop = await request(server,'POST','/api/bridge/stop',body);
       assert.equal(rejectedStop.status,409);assert.equal(rejectedStop.json.success,false);
@@ -270,6 +362,13 @@ async function main() {
     const originalSecret = config.secretKey;
     const pairing = oauth.issuePairing();
     const boundRotation = {workspaceRoot:config.workspaceRoot,hostInstanceId:config.hostInstanceId,expectedSecret:originalSecret};
+    const invalidRotation = await request(server,'POST','/api/bridge/reset-secret',{unexpected:privateMarker});
+    assert.equal(invalidRotation.status,400);
+    assert.equal(invalidRotation.json.success,false);
+    assert.equal(invalidRotation.json.code,'E_BAD_BRIDGE_REQUEST');
+    assert.ok(!JSON.stringify(invalidRotation.json).includes(privateMarker));
+    assert.equal(config.secretKey,originalSecret,'invalid rotation wrapper must not rotate the secret');
+    assert.equal(oauth.snapshotPairing().code,pairing.code,'invalid rotation wrapper must not revoke pairing');
     for (const body of [{expectedSecret:originalSecret}, {...boundRotation,hostInstanceId:'stale'}, {...boundRotation,expectedSecret:'stale'}]) {
       const reject = await request(server,'POST','/api/bridge/reset-secret',body);
       assert.strictEqual(reject.status,409);

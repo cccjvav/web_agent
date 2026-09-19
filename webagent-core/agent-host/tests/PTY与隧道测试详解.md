@@ -41,6 +41,9 @@ tmp假cloudflared文件，CLOUDFLARED_PATH指它；cp.spawn返回fake并记录�
 | HTTP序列 | 断言 |
 |---|---|
 | store直接patch已登录已授权；Quick start/status/stop | success、URL、note、无error、running；stop被调用且URL空 |
+| start未知/错类型/未知provider/跨provider Token/4097字节Token | 统一400/E_BAD_BRIDGE_REQUEST，响应不含私密标记，配置字节和全部停启计数不变 |
+| reset-round/login/device/poll/clear/logout未知包装及Token未知/超长/换行 | 触网、身份写入、停止前400；GitHub函数替身计数保持0，finally恢复 |
+| 历史Bridge展示/授权槽位注入对象/数组秘密，当前provider保存Token超预算 | status固定为字符串/布尔且不含标记；truthy对象及非法保存凭据不能通过start，停启计数不变 |
 | Quick抛E_NO_CLOUDFLARED | HTTP200但success/running false，显示本机MCP与错误，不挂旧公网址 |
 | Named缺参 | 不调用Quick、有Named参数错误、不回Quick地址 |
 | stub Named成功并传假domain/token | opts准确、返回域名与ready；start/status JSON均不泄token |
@@ -79,3 +82,9 @@ bridgeTunnel的main新增真实POST reset-secret：部分绑定/错主机/错exp
 ## 第42组：停止绑定及在途启动
 
 bridgeTunnel通过真实HTTP检验stop部分/错主机/错目录绑定409，stopCalls、运行标记及配置不变；挂起start时错误stop不递增generation，原start仍成功。另一次挂起start被已有租约拒重复start409，但合法绑定stop不等待启动完成；放行旧start得409且运行false/URL空。stopTunnel注入抛错500仍运行，广播注入抛错500但停止已生效，finally恢复替身。旧空体stop仍兼容。这里启动/停止进程函数是替身，证明路由次序/状态/响应而非真实OS退出，真实进程旧回归仍独立保留。
+
+## 第50组：Bridge严格包装与历史投影
+
+bridgeTunnel先以真实HTTP重现start接受未知字段、对象provider、跨提供商Token和超预算Token后仍写配置/停启；另重现stop、reset-secret及无参身份路由把未知包装当合法操作。修后这些请求统一在副作用前400/E_BAD_BRIDGE_REQUEST，固定错误不含fixture私密标记；配置JSON、停启计数及GitHub触网替身计数保持不变。Named/ngrok只接受各自domain/Token，Token与绑定字段有字节预算，完全空体的旧stop/reset-secret仍单独保留兼容。
+
+同一夹具向历史Bridge已知槽位注入带authorization标记的对象/数组：GET status只能返回固定字符串/布尔投影且不含标记，loggedIn/deviceAuthorized的truthy对象也不能取得start授权；再把当前Named provider保存Token置为超预算字符串，要求空start在配置改写或停启前400，证明旧配置不能绕过生效字段预算。随后恢复原Bridge快照再跑全部既有Quick/Named/ngrok、代次、CAS与写前/后失败断言，避免负例污染成功链。这里证明路由次序、响应投影和零调用替身，不证明真实GitHub、隧道厂商或磁盘被同进程外篡改时的完整恢复。

@@ -112,4 +112,4 @@ readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，
 <!-- docs-inventory:end -->
 
 
-受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。默认回环HTTP(S)，另支持本机显式确认的公网HTTPS及stdio启动；external_request与operation_result包装字段严格白名单，外部ok:false等明确失败不被缺失isError改写为成功。工作流把read_files逐项error提升为步骤失败并停止后续效果；工具仍逐次本机批准，不自动安装或重试。
+受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。默认回环HTTP(S)，另支持本机显式确认的公网HTTPS及stdio启动；external_request与operation_result包装字段严格白名单，外部ok:false等明确失败以及verification unknown在覆盖宿主验证说明前判定，不被缺失isError或投影顺序改写为成功。工作流把read_files逐项error提升为步骤失败并停止后续效果；工具仍逐次本机批准，不自动安装或重试。

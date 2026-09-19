@@ -11,7 +11,7 @@ stdio/受控外部接入：[受控工具与工作流详解](../utils/受控工�
 | 文件 | 主要职责 |
 |---|---|
 | `requestLifecycle.js` | 有界在途请求、按peer和凭据绑定的取消、断连/期限与清理 |
-| `externalClient.js` | 登记第三方回环HTTP(S)/公网HTTPS/stdio服务、发现目录、经审批调用；不把入站授权透传给第三方 |
+| `externalClient.js` | 登记第三方回环HTTP(S)/公网HTTPS/stdio服务、发现目录、经审批调用；先判原始结果再覆盖宿主验证说明，外部unknown/失败不被改写成功；不把入站授权透传给第三方 |
 | `publicHttps.js` | 仅负责公网出站HTTPS：DNS全答案过滤、固定连接地址、正常TLS及有界消费所用流适配 |
 | `stdioLaunch.js` / `stdioTransport.js` | 本机程序启动审阅与受监督JSON行传输，不是OS沙箱 |
 | `server.js` | HTTP/JSON-RPC分发、认证入口、会话、tools/resources/prompts及SSE |

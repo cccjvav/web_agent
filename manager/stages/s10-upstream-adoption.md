@@ -85,7 +85,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 高，继续 | 进行中：第38–40组控制面、OAuth凭据/issuer、会话公开标识/主体绑定首包已核对；其余安全依赖继续，不作全链认证 | [SECURITY](../../SECURITY.md)，localControl、corsAllow、OAuth、externalClient、执行控制、事件和存储模块；已有Git/隧道修复不重做 | 按入口→认证→权限→执行→取消→输出查调用链；对发现风险做真实负例，修错误正文，不以读完整安全说明代替实现审计 |
-| R3 / 下一项，高 | 进行中：第25/27/31–37与41–43/45–49组既有消费链已修；第46组修审批保留/schema及caller隔离，第47组修外部结果/部分读取与模型设置事务，第48组修模型工具返回式失败、Skill写后核验及审批历史硬容量，第49组修模型/Provider未知输入与历史配置公开投影；下一包继续尚未核对的非探针REST结果边界并与R2安全链交叉，不重做已修链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、modelSettings、operatorQueue/workflows、工具入口与相关测试；明确排除探针专项 | 每路由核对HTTP与业务结果、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
+| R3 / 下一项，高 | 进行中：第25/27/31–37与41–43/45–50组既有消费链已修；第46组修审批保留/schema及caller隔离，第47组修外部结果/部分读取与模型设置事务，第48组修模型工具返回式失败、Skill写后核验及审批历史硬容量，第49组修模型/Provider未知输入与历史配置公开投影，第50组修Bridge严格请求/公开投影与外部unknown终态；下一包继续尚未核对的本机文件/工具/Chat REST包装及模型HTTP响应预算并与R2交叉，不重做已修链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes/apiFiles、模型HTTP入口、工具入口与相关测试；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -219,7 +219,7 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 暂停/延期：探测待交接；其它边界是否改变。
 ```
 
-下一位助手可以直接按R3其余非探针API结果消费与R2继续，不重做已核对的operatorQueue/workflows边界，也无需用户重新复述此前授权和约束；如发现与实际代码不符，以核验结果修订交接，而不是照抄本页当绝对真相。
+下一位助手可以直接按R3尚未核对的本机文件/工具/Chat REST包装与模型HTTP响应预算并交叉R2继续，不重做已核对的operatorQueue/workflows、模型/Provider或Bridge边界，也无需用户重新复述此前授权和约束；如发现与实际代码不符，以核验结果修订交接，而不是照抄本页当绝对真相。
 
 ### 实施批次与证据
 
@@ -753,6 +753,14 @@ Skill创建路由原来只await `write_file`，不消费正常返回的业务对
 `apiFiles`覆盖模型/multiModel未知及错类型历史值不经models/status发布、公开快照往返清洗、普通模型未知字段、探测未知包装零fetch、addProvider包装/目录未知字段零写和错误正文不含Key；`providers`与`modelLifecycle`守住发现、调用和失败语义。定向回归与完整84项均通过，文档249/28/110只读零漂移，生产audit 0漏洞、`git diff --check`及两个探针目录零diff；实现`124b2051563b2dc6a5b44dafb68d2dd3574b3323`的[CI35428457492](https://github.com/cccjvav/web_agent/actions/runs/35428457492)九项逐项成功，覆盖Ubuntu Node18/20/22/24、Windows Node20/22/24及重复取消/stdio、Windows安装器和真实Chromium；证据提交`6be27cd`的[CI35428680374](https://github.com/cccjvav/web_agent/actions/runs/35428680374)也九项成功。两个探针目录仍明确排除，自动主套件经过其存量测试不算专项审查。
 
 用户再次确认交接状态时，沙箱本地ref第五次从`6be27cd`回到`1d532d0`，工作文件仍为远端新树且依赖目录消失。先把binary diff、未跟踪项和四份权威交接正文保存到`/home/user/r49-recovery-1789811559/`；显式fetch并验证初始提交为远端`6be27cd`祖先，再用独立临时index证明工作树与远端树diff为0、无额外未跟踪项。最后只用`update-ref`与`read-tree`恢复固定分支ref/index，并按锁文件`npm ci`恢复75个包；未使用reset --hard、clean、checkout覆盖或整树替换。
+
+#### 第50组：Bridge严格请求/公开投影与外部unknown终态
+
+继续非探针REST/审批结果边界并交叉R2时，真实HTTP先证明Bridge start会静默接受未知字段、对象provider、跨提供商Token与超预算Token，随后写配置或进入停启；stop/reset-secret和清轮/身份端点也会把未知包装当合法请求。另把对象/数组植入历史Bridge已知槽位，旧status会原样发布，truthy对象还可通过启动授权。修复后provider仅为`cloudflare|cloudflare-named|named|ngrok|local`，domain最多512字节、Token和workspaceRoot最多4096字节、hostInstanceId/expectedSecret最多256字节，均拒CR/LF/NUL；当前provider实际复用的历史保存domain/Token也不能绕过同一预算，提供商专属字段不能跨用。只有真正空体保留旧stop/reset-secret兼容，其余无参端点只接受空体，所有包装失败固定400/`E_BAD_BRIDGE_REQUEST`且在认证存储、配置、控制租约、停启或GitHub触网前返回，不回显私密输入。
+
+Bridge status现只投影固定公开字段，字符串须类型有效且有界，running/authorized等仅严格布尔；历史授权槽位也只有布尔`true`能启动。测试以真实HTTP覆盖未知字段、错类型、预算、跨provider凭据、历史嵌套值、truthy授权及认证/配置/停启/网络计数零副作用；正常启停、故障后的已知结果与旧空体兼容保持。
+
+真实外部MCP夹具另复现原始`verification.state:'unknown'`会被宿主覆盖的external-reported说明改成verified，再被队列记作succeeded。externalClient现先对原始不可信结果执行共享失败/unknown判定，再合并宿主verification投影；终态保留unknown、`ok:false`且同requestKey重复批准不重放，仍不把外部自报当独立副作用证明。首轮完整套件83/84的唯一失败是改源码后尚未重建`docs-site/content.js`，重建后完整84/84。随后复核补上当前provider历史保存凭据不得绕过预算；再一轮83/84唯一由documentationLearning指出新增具名helper漏登记详解，补齐函数表并重建后最终完整84/84。两个失败均为施工中的生成/说明漂移，未删守卫或改运行断言。文档库存249源码/28目录/110排除，相关API/MCP/工具/测试正文维持局部，正式清单计数不变；生产audit 0漏洞、正式哈希183项匹配、`git diff --check`与探针两目录零diff，自动完整套件经过存量探针测试不算专项审查。实现提交及CI证据待本批提交后回填。
 
 ## 复盘
 
