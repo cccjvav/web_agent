@@ -98,27 +98,51 @@ function allSessions() {
 function pruneHttpSessions() {
   const now = Date.now();
   for (const [id, rec] of httpSessions) {
+    if ((rec.active || 0) > 0) continue;
     if (now - rec.lastSeen > SESSION_TTL_MS) httpSessions.delete(id);
   }
 }
 
+// 借鉴ShunCode会话驱逐语义（2026-09-20，F54）：有在途HTTP请求或SSE流的会话
+// 不因TTL/容量被驱逐，否则长工具调用期间的取消与后续调用会失去身份绑定。
+// 全部在途时拒绝分配，不依赖调用方并发上限来保证这个不变量。
 function createHttpSession(extra = {}) {
   pruneHttpSessions();
   while (httpSessions.size >= MAX_HTTP_SESSIONS) {
     let oldestId = null;
     let oldestSeen = Infinity;
     for (const [id, rec] of httpSessions) {
+      if ((rec.active || 0) > 0) continue;
       if (rec.lastSeen < oldestSeen) {
         oldestSeen = rec.lastSeen;
         oldestId = id;
       }
     }
-    if (!oldestId) break;
+    if (!oldestId) return null;
     httpSessions.delete(oldestId);
   }
   const id = crypto.randomBytes(16).toString('hex');
-  httpSessions.set(id, { id, createdAt: Date.now(), lastSeen: Date.now(), ...extra });
+  httpSessions.set(id, { id, createdAt: Date.now(), lastSeen: Date.now(), active: 0, ...extra });
   return id;
+}
+
+// 标记一次在途工作（HTTP请求处理或SSE流打开）。返回一次性release；
+// 未知ID返回no-op false。最后一个工作完成后重新开始空闲TTL；不延长授权、不代替认证。
+function beginHttpSessionWork(id) {
+  const rec = id ? httpSessions.get(id) : null;
+  if (!rec) return () => false;
+  rec.active = (rec.active || 0) + 1;
+  let released = false;
+  return () => {
+    if (released) return false;
+    released = true;
+    const current = httpSessions.get(id);
+    if (current === rec) {
+      current.active = Math.max(0, (current.active || 0) - 1);
+      if (current.active === 0) current.lastSeen = Date.now();
+    }
+    return true;
+  };
 }
 
 function touchHttpSession(id, principal) {
@@ -168,5 +192,6 @@ module.exports = {
   reset,
   createHttpSession,
   touchHttpSession,
-  destroyHttpSession
+  destroyHttpSession,
+  beginHttpSessionWork
 };

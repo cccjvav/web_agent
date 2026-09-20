@@ -103,6 +103,8 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 ## 新增测试规则
 改功能时优先增加能使旧实现失败的行为断言，明确fixture与真实进程部分；清理临时目录/服务器，避免遗留计时器。不要为绿灯删除必要断言或修改冻结原型。测试使用非真实凭据，不把用户秘密写入fixture或日志。
 
+F54会话修复：stateIntegrity锁定空闲TTL/全忙拒绝；mcpProtocol与mcpCancellation覆盖头校验及真实HTTP/SSE pin；externalDiscovery用真实回环服务器验证重复/空白/显式空响应SID拒绝和合法单值回传。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -145,8 +147,8 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [installerPackaging.test.js](installerPackaging.test.js) | 23 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 19 个函数/类节点 |
-| [mcpCancellation.test.js](mcpCancellation.test.js) | 14 个函数/类节点 |
-| [mcpProtocol.test.js](mcpProtocol.test.js) | 33 个函数/类节点 |
+| [mcpCancellation.test.js](mcpCancellation.test.js) | 24 个函数/类节点 |
+| [mcpProtocol.test.js](mcpProtocol.test.js) | 34 个函数/类节点 |
 | [memoryRecall.test.js](memoryRecall.test.js) | 8 个函数/类节点 |
 | [modelLifecycle.test.js](modelLifecycle.test.js) | 53 个函数/类节点 |
 | [monacoLoading.test.js](monacoLoading.test.js) | 12 个函数/类节点 |
@@ -179,7 +181,7 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 | [searchWorkerLifecycle.test.js](searchWorkerLifecycle.test.js) | 14 个函数/类节点 |
 | [skillsLifecycle.test.js](skillsLifecycle.test.js) | 19 个函数/类节点 |
 | [skipWorkbench.test.js](skipWorkbench.test.js) | 16 个函数/类节点 |
-| [stateIntegrity.test.js](stateIntegrity.test.js) | 25 个函数/类节点 |
+| [stateIntegrity.test.js](stateIntegrity.test.js) | 31 个函数/类节点 |
 | [stdioMcp.test.js](stdioMcp.test.js) | 24 个函数/类节点 |
 | [stdioOwnerFixture.js](stdioOwnerFixture.js) | 2 个函数/类节点 |
 | [stdioServerFixture.js](stdioServerFixture.js) | 3 个函数/类节点 |

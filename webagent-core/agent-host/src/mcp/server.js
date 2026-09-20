@@ -13,7 +13,7 @@ const { listResources, readResource } = require('./resources');
 const { clipJson, clipText } = require('./budget');
 const { resolveToolName } = require('../tools/normalize');
 const { ProtocolError, publicError } = require('./errors');
-const { touch, snapshot, createHttpSession, touchHttpSession, destroyHttpSession, keyForReq, setHttpSessionKey } = require('./session');
+const { touch, snapshot, createHttpSession, touchHttpSession, destroyHttpSession, keyForReq, setHttpSessionKey, beginHttpSessionWork } = require('./session');
 const oauth = require('./oauth');
 const tracker = require('../usage/tracker');
 // 第三阶段（用户 2026-09-07 书面同意）：run_command 截图以 MCP image 内容回给网页 Agent。
@@ -80,6 +80,28 @@ function incomingSessionId(req) {
   return String((req.headers && req.headers['mcp-session-id']) || '').trim() || null;
 }
 
+// HTTP允许同名头重复；Node把非set-cookie重复头合并成"a, b"字符串。
+// 旧实现查找合并串会404，initialize还可能另建会话。现在在绑定/分配前拒绝。
+// 1–512可见ASCII且禁逗号是本项目较窄策略；不把它冒称为MCP全部合法字符集合。
+function hasMalformedSessionHeader(req) {
+  const raw = req.headers && req.headers['mcp-session-id'];
+  if (raw === undefined) return false;
+  const rawHeaders = req.rawHeaders || [];
+  let count = 0;
+  for (let i = 0; i < rawHeaders.length; i += 2) {
+    if (String(rawHeaders[i]).toLowerCase() === 'mcp-session-id') count++;
+  }
+  return count > 1 || typeof raw !== 'string' || !/^[\x21-\x7E]{1,512}$/.test(raw) || raw.includes(',');
+}
+
+function rejectMalformedSessionHeader(req, res) {
+  return res.status(400).json({
+    jsonrpc: '2.0',
+    error: { code: -32600, message: 'Invalid Request: send exactly one Mcp-Session-Id header with a single token.' },
+    id: req.body && !Array.isArray(req.body) && req.body.id != null ? req.body.id : null
+  });
+}
+
 function bindHttpSession(req, { createIfMissing = false } = {}) {
   const incoming = incomingSessionId(req);
   if (incoming) {
@@ -89,17 +111,24 @@ function bindHttpSession(req, { createIfMissing = false } = {}) {
     }
     if (createIfMissing) {
       req.mcpSessionId = createHttpSession({ replaced: incoming, principal: req.mcpPrincipal });
-      return { ok: true };
+      return req.mcpSessionId ? { ok: true } : { ok: false, full: true };
     }
     return { ok: false };
   }
-  if (createIfMissing) req.mcpSessionId = createHttpSession({ principal: req.mcpPrincipal });
+  if (createIfMissing) {
+    req.mcpSessionId = createHttpSession({ principal: req.mcpPrincipal });
+    if (!req.mcpSessionId) return { ok: false, full: true };
+  }
   return { ok: true };
 }
 
 function mcpEndpointPath(req) {
   if (req.params && req.params.secret) return `/mcp/${req.params.secret}`;
   return '/mcp';
+}
+
+function rejectSessionCapacity(req, res) {
+  return res.status(503).json({ jsonrpc: '2.0', error: { code: -32000, message: 'Session capacity exhausted. Retry when active work completes.' }, id: null });
 }
 
 function rejectUnknownSession(req, res) {
@@ -377,6 +406,7 @@ async function dispatchOne(req, body, res) {
 }
 
 async function handlePost(req, res) {
+  if (hasMalformedSessionHeader(req)) return rejectMalformedSessionHeader(req, res);
   const incoming = req.body;
   if (Array.isArray(incoming) && incoming.length === 0) {
     return sendJsonRpc(req, res, invalidRpc(null, 'Invalid Request: empty batch'), 400);
@@ -386,11 +416,12 @@ async function handlePost(req, res) {
   const items = batch ? incoming : [incoming];
   const hasInit = items.some((b) => b && typeof b === 'object' && b.method === 'initialize');
   const bound = bindHttpSession(req, { createIfMissing: hasInit });
-  if (!bound.ok) return rejectUnknownSession(req, res);
+  if (!bound.ok) return bound.full ? rejectSessionCapacity(req, res) : rejectUnknownSession(req, res);
 
   const saved = req.body;
   const responses = [];
   let lastHttp = 200;
+  const releaseWork = beginHttpSessionWork(req.mcpSessionId);
   try {
     for (const item of items) {
       const out = await dispatchOne(req, item, res);
@@ -401,6 +432,7 @@ async function handlePost(req, res) {
     }
   } finally {
     req.body = saved;
+    releaseWork();
   }
 
   if (batch) {
@@ -412,16 +444,18 @@ async function handlePost(req, res) {
 }
 
 function handleGet(req, res) {
+  if (hasMalformedSessionHeader(req)) return rejectMalformedSessionHeader(req, res);
   try { const release = control.enter('bridge'); release(); }
   catch(error) { return res.status(409).json({error:error.message}); }
   const bound = bindHttpSession(req, { createIfMissing: wantsSse(req) });
-  if (!bound.ok) return rejectUnknownSession(req, res);
+  if (!bound.ok) return bound.full ? rejectSessionCapacity(req, res) : rejectUnknownSession(req, res);
 
   if (wantsSse(req)) {
     if (sseOpen >= MAX_SSE) {
       return res.status(503).json({ error: 'too many SSE connections' });
     }
     sseOpen += 1;
+    const releaseWork = beginHttpSessionWork(req.mcpSessionId);
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     if (req.mcpSessionId) res.setHeader('Mcp-Session-Id', req.mcpSessionId);
@@ -434,10 +468,11 @@ function handleGet(req, res) {
       try { res.end(); } catch (_) {}
     }, SSE_IDLE_MS);
     if (idle.unref) idle.unref();
-    req.on('close', () => {
+    res.once('close', () => {
       sseOpen = Math.max(0, sseOpen - 1);
       clearInterval(timer);
       clearTimeout(idle);
+      releaseWork();
     });
     return;
   }
@@ -446,6 +481,7 @@ function handleGet(req, res) {
 }
 
 function handleDelete(req, res) {
+  if (hasMalformedSessionHeader(req)) return rejectMalformedSessionHeader(req, res);
   const incoming = incomingSessionId(req);
   if (incoming) destroyHttpSession(incoming, req.mcpPrincipal);
   return res.status(204).end();

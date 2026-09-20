@@ -808,6 +808,16 @@ ShunCode在仓库外`/home/user/audit-2026-09-20/shuncode/`重新安全解包87�
 
 本轮只落报告/截图证据，直接修分发详解的旧权限/截图/租约说明、patch新建风险和工作台窄屏验证描述，更新manager/review与文档导航/生成物；没有主机/扩展/工作台执行源码或测试/依赖变更；docs-site/content.js由生成器重建。正式清单新增报告待逐句项，总数201，已逐句仍8，局部56、待79，其余不变。说明/报告改动后已重跑本地84/84、完整既有Chromium套件、249/28/110只读文档检查updated=0与git diff --check；没有新增正式产品回归。审查落档提交`a490ca02f84fe5d9086e2d7629c0e1bfa2258206`已推到本会话固定`arena/01a0bfa9-web-agent`，远端SHA一致；[CI35525528734](https://github.com/cccjvav/web_agent/actions/runs/35525528734)已按该SHA核验completed/success且九个job逐项success（Ubuntu Node18/20/22/24、Windows Node20/22/24、Chromium和Windows安装器）。不是借50c03be绿灯代签，也不把这些绿灯当新增负例已修。附属复现脚本、原始JSON/日志与CI摘要在仓库外`/home/user/audit-2026-09-20/F54-audit-evidence.zip`，不进入产品依赖或暂停专项。R2/R3、R4历史Windows超时、R5–R9及探针暂停边界不关闭。
 
+### F54修复第一批：会话pin与双向头校验（2026-09-20）
+
+用户确认按分支对比计划施工，并确认此前本助手未修业务代码。来源01a0bf59精确2e865bd的会话/头实现和三份测试增量选择性吸收，不合其管理叙述或生成物；未触碰暂停探针。当前ref/index回到50c03be而文件保留：先用仓库外临时索引证明整树与已发布36895f6 tree完全一致、备份diff，再仅恢复本会话ref/index，无工作文件覆盖或切分支。
+
+合同：POST/SSE active pin阻止TTL/容量淘汰；全部200忙时分配null，HTTP initialize/GET SSE固定503。release单次，最后一个工作完成更新lastSeen，从完成开始24h空闲TTL，不续凭据，不复活显式删除。入站查rawHeaders重复及单值1–512可见ASCII/无逗号，畸形400在分配前；出站区分缺省与空值，畸形不保存回传。禁逗号和512是本项目更窄兼容策略，不能当MCP通用限制。
+
+三份新增回归在未修源码下先失败（缺beginHttpSessionWork、404而非400、未拒绝出站重复头），日志在仓库外/home/user/f54-fix-evidence；四份定向修后通过。额外真实认证HTTP回归覆盖忙会话取消送达、重复原始头POST/GET/DELETE、SSE pin及response close释放、全忙503；容量及25h由内部API/注入时钟构造，不声称200HTTP并发可达或长时实跑。本地完整84/84、真实Chromium套件、生产audit 0漏洞均通过；文档249/28/110已重建并零漂移，git diff --check通过。当前实现提交的CI须在推送后按精确SHA核对，不由历史绿灯代签。
+
+不采纳“顺序批内重复ID无需预检”结论。RPC版本/ID/批次准入、补丁不存在目标保护、资源投影、原生终态与UI仍待后续批次；F54报告保留原始基线观察，不能用本批关闭所有发现。
+
 ## 复盘
 
 - 上一轮只改文件所在目录，没有消除额外管理层次；应先核对已有规则，而不是先引入新文件类型。

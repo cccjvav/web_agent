@@ -6,10 +6,10 @@
 
 ## 当前状态
 - **阶段10进行中，核心0.7.2，不是只剩人工验收。** 已交付Chat/Bridge互斥、所有者权限、Tasks隔离/刷新恢复、经典受保护回退、原生草稿diff/恢复、跨文件内容检查点和显式公网HTTPS出站；R2/R3与其它待办仍在[唯一工作包表](stages/s10-upstream-adoption.md#当前工作包与交接约束)。
-- **2026-09-20独立复审已归档，产品修复尚未开始。** [F54报告](../review/INDEPENDENT_AUDIT_2026-09-20.md)列出真实文件/HTTP/完整主机/原生函数/浏览器证据、ShunCode取舍及未执行项。本轮只改报告、管理和已对照的相邻说明/生成物，不把发现写成修复。
+- **2026-09-20独立复审已归档，现开始第一批产品修复。** [F54报告](../review/INDEPENDENT_AUDIT_2026-09-20.md)列出真实文件/HTTP/完整主机/原生函数/浏览器证据、ShunCode取舍及未执行项。前轮只有审查/说明；用户同意计划后，本批选择性采用01a0bf59的会话pin/头校验，并补全忙503、完成后空闲TTL和畸形SID边界。门禁与未完成项见阶段54组续记。
 - 本会话固定`arena/01a0bfa9-web-agent`。已fetch指定来源`arena/01a0b053-web-agent`，同步时均为`50c03bedc97f9eaaf1c875f4767c6e9bb5278d56`，ahead/behind=0/0；没有切分支、reset或恢复ref/index。
 - 精确实现基线[CI35470787917](https://github.com/cccjvav/web_agent/actions/runs/35470787917)已逐job核实九项success。本地84/84、真实Chromium既有套件、文档249源码/28目录/110排除且updated=0、生产audit 0漏洞；语法201 JS/MJS+14 JSON+4 Shell、calculator6/6。基线成功不覆盖新增负例。审查落档`a490ca02f84fe5d9086e2d7629c0e1bfa2258206`已推本会话分支，[CI35525528734](https://github.com/cccjvav/web_agent/actions/runs/35525528734)亦逐job核实9/9成功；门禁与边界见阶段54组。
-- **下一闭环仍为R2，并与R3交叉**：新文件patch的hash/块处理；RPC准入/批内ID与busy会话驱逐；资源caller/目录ACL；原生聊天可靠终态；窄屏/ARIA。全部未修。正式回归须先锁正确合同再最小修复，不用整体替换掩盖问题。
+- **下一闭环仍为R2，并与R3交叉**：新文件patch的hash/块处理；RPC准入/批内ID与busy会话驱逐；资源caller/目录ACL；原生聊天可靠终态；窄屏/ARIA。busy会话与会话头本批有实现/定向回归，其余未修。正式回归须先锁正确合同再最小修复，不用整体替换掩盖问题。
 - 参考ShunCode zip只在仓库外安全解包/read-only阅读，未安装或执行。优先借鉴busy/stream pin与整批ID预检查；自适应并发/重放暂缓，信号量缩容有静态缺陷；不换现有文件/审批栈、不做支付授权、不授信手写类型。
 - **探针原分工继续暂停，用户本轮再次确认。** 不接手arena-model-probe、arena-trace-inspector、probe-extension及其专项源码/文档；通用套件经过旧用例不是专项审查。阶段8等另一助手正式交接；用户2026-09-17报告的[外部整合分支](https://github.com/phuang6666/arena-ai-probe/tree/arena/01a0ab8a-arena-ai-probe)仍未由本助手验收，不撤销0.5.2交付，11.3仍已关闭。
 - 正式清单201项：已逐句8、局部56、待逐句79、历史32、暂停15、边界7、生成1、规范1、受限2。新增报告不自授通过；库存、静态扫描、深入阅读、运行验证与实机验收分开。

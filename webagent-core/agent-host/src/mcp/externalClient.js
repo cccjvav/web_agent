@@ -82,8 +82,10 @@ async function rpc(client, method, params, notification = false) {
       : await fetch(client.url, {method:'POST',redirect:'error',signal:controller.signal,headers,body});
     if (!response.ok) { await response.body?.cancel(); throw new Error(`External MCP HTTP ${response.status}`); }
     const session = response.headers.get('mcp-session-id');
-    if (session) {
-      if (session.length > 512) throw new Error('Invalid session header');
+    if (session !== null) {
+      // fetch合并重复响应头为"a, b"；本项目采用1–512可见ASCII且无逗号的会话策略（比协议更窄）。
+      // 合并串/含空白或控制字符的值拒绝保存，也不回放给对端（F54续批，与入站400合同对称）。
+      if (!/^[\x21-\x7E]{1,512}$/.test(session) || session.includes(',')) throw new Error('Invalid session header');
       client.session = session;
     }
     if (notification) { await response.body?.cancel(); return {}; }

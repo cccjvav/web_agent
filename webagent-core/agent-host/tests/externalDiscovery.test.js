@@ -11,11 +11,12 @@ function fragmentedResponse(text) {
   } }), { headers: { 'content-type': 'Text/Event-Stream; charset=utf-8' } });
 }
 async function main() {
-  let mode = 'paged', lists = 0, calls = 0, waiting;
+  let mode = 'paged', lists = 0, calls = 0, waiting, lastSessionSeen;
   const server = http.createServer(async (req, res) => {
     let body = ''; for await (const chunk of req) body += chunk;
     const message = JSON.parse(body);
     assert.strictEqual(req.headers.authorization, 'Bearer fixture-private');
+    lastSessionSeen = req.headers['mcp-session-id'];
     if (message.method === 'notifications/initialized') { res.writeHead(202); res.end(); return; }
     let result = { protocolVersion: '2025-03-26', capabilities: {} };
     if (message.method === 'tools/call') calls++;
@@ -36,6 +37,12 @@ async function main() {
       if (mode === 'hang') { res.writeHead(200, { 'Content-Type': 'application/json' }); res.write('{'); waiting(); return; }
     }
     res.setHeader('Content-Type', 'application/json');
+    // F54续批：外部服务器回重复会话头（fetch合并成"a, b"）或含空白/控制字符的
+    // 会话头，客户端必须拒绝保存，不得在后续请求回放合并串。
+    if (mode === 'session-merged') res.setHeader('Mcp-Session-Id', ['evil-a', 'evil-b']);
+    if (mode === 'session-space') res.setHeader('Mcp-Session-Id', 'bad session token');
+    if (mode === 'session-empty') res.setHeader('Mcp-Session-Id', '');
+    if (mode === 'session-valid') res.setHeader('Mcp-Session-Id', 'valid-session-token');
     res.end(JSON.stringify({ jsonrpc: '2.0', id: message.id, result }));
   });
   try {
@@ -49,7 +56,7 @@ async function main() {
     assert.strictEqual(external.list()[0].tools[0].inputSchema.properties.x.type, 'string');
     assert.ok(!JSON.stringify(external.list()).includes('fixture-private'));
     external.remove(added.serverId);
-    for (const scenario of ['repeat', 'duplicate', 'pages', 'bytes', 'result-array', 'schema', 'null-schema', 'cursor', 'count']) {
+    for (const scenario of ['repeat', 'duplicate', 'pages', 'bytes', 'result-array', 'schema', 'null-schema', 'cursor', 'count', 'session-merged', 'session-space', 'session-empty']) {
       mode = scenario; lists = 0;
       await assert.rejects(external.add(options));
       assert.deepStrictEqual(external.list(), []); assert.ok(lists <= 10); assert.strictEqual(calls, 0);
@@ -68,6 +75,10 @@ async function main() {
     assert.strictEqual(calls,0);assert.strictEqual(server.listening,true,'removing the host connection does not stop the external HTTP server');
     mode='paged';const explicitlyReadded=await external.add(options);
     assert.strictEqual(explicitlyReadded.status,'discovered');external.remove(explicitlyReadded.serverId);
+    mode = 'session-valid'; lastSessionSeen = undefined;
+    const sessionful = await external.add(options);
+    assert.strictEqual(lastSessionSeen, 'valid-session-token', 'a single valid session token is retained and replayed');
+    external.remove(sessionful.serverId);
     for (const ending of ['\r', '\r\n', '\n']) {
       const message = JSON.stringify({ jsonrpc: '2.0', id: 'wanted', result: { content: '中文🙂' } });
       const response = fragmentedResponse(`: heartbeat${ending}${ending}data: {"method":"notification"}${ending}${ending}data: ${message}${ending}${ending}`);

@@ -25,6 +25,67 @@ config.workspaceRoot = tmp;
     assert.strictEqual(session.snapshot().httpSessions, 0);
     assert.strictEqual(session.allSessions().length, 0);
   } finally { Date.now = clock; }
+  // F54借鉴ShunCode会话驱逐：有在途工作的会话不因容量/TTL被驱逐；release后恢复可驱逐。
+  {
+    session.reset();
+    const busy = session.createHttpSession({ principal: 'busy-owner' });
+    const releaseBusy = session.beginHttpSessionWork(busy);
+    session.touchHttpSession(busy, 'busy-owner').lastSeen = Date.now() - 1000000;
+    for (let i = 0; i < 205; i++) session.createHttpSession({ principal: 'filler' });
+    assert.ok(session.touchHttpSession(busy, 'busy-owner'), 'active session must survive capacity eviction');
+    const busyClock = Date.now;
+    try {
+      Date.now = () => busyClock() + 25 * 60 * 60 * 1000;
+      session.createHttpSession();
+      assert.ok(session.touchHttpSession(busy, 'busy-owner'), 'active session must survive TTL prune');
+    } finally { Date.now = busyClock; }
+    assert.strictEqual(releaseBusy(), true);
+    assert.strictEqual(releaseBusy(), false, 'release is single-use');
+    session.touchHttpSession(busy, 'busy-owner').lastSeen = Date.now() - 1000000;
+    for (let i = 0; i < 205; i++) session.createHttpSession({ principal: 'filler2' });
+    assert.strictEqual(session.touchHttpSession(busy, 'busy-owner'), null, 'released session is evictable again');
+    assert.strictEqual(session.beginHttpSessionWork('missing-id')(), false, 'unknown id yields no-op release');
+    session.reset();
+  }
+
+  // All-busy is refusal, never a license to destroy another owner's active session.
+  {
+    session.reset();
+    const ids = [], releases = [];
+    for (let i = 0; i < 200; i++) {
+      const id = session.createHttpSession(); ids.push(id);
+      releases.push(session.beginHttpSessionWork(id));
+    }
+    assert.strictEqual(session.createHttpSession(), null);
+    assert.ok(ids.every(id => session.touchHttpSession(id)));
+    releases.forEach(release => release());
+    session.reset();
+    const id = session.createHttpSession(), release = session.beginHttpSessionWork(id);
+    const realClock = Date.now;
+    try {
+      const finish = realClock() + 25 * 60 * 60 * 1000;
+      Date.now = () => finish;
+      assert.strictEqual(session.snapshot().httpSessions, 1);
+      assert.strictEqual(release(), true);
+      assert.strictEqual(session.snapshot().httpSessions, 1, 'completion starts idle TTL');
+      Date.now = () => finish + 23 * 60 * 60 * 1000;
+      assert.strictEqual(release(), false, 'duplicate release must not refresh idle TTL');
+      Date.now = () => finish + 25 * 60 * 60 * 1000;
+      assert.strictEqual(session.snapshot().httpSessions, 0);
+    } finally { Date.now = realClock; session.reset(); }
+    const shared = session.createHttpSession(), first = session.beginHttpSessionWork(shared), second = session.beginHttpSessionWork(shared);
+    const record = session.touchHttpSession(shared);
+    assert.strictEqual(record.active, 2);
+    first(); first();
+    assert.strictEqual(record.active, 1, 'one completion cannot release another request');
+    second();
+    assert.strictEqual(record.active, 0);
+    session.reset();
+    const gone = session.createHttpSession(), done = session.beginHttpSessionWork(gone);
+    session.destroyHttpSession(gone); done();
+    assert.strictEqual(session.snapshot().httpSessions, 0, 'release never resurrects deleted sessions');
+  }
+
   const owned = session.createHttpSession({ principal: 'fixture-owner' });
   session.setHttpSessionKey(owned, 'peer:fixture-public-label');
   const record = session.touchHttpSession(owned, 'fixture-owner');

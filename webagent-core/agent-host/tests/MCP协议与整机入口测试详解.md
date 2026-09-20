@@ -72,3 +72,7 @@ main在临时工作区挂真实MCP与API router，rpc使用fetch编码JSON和凭
 F27-02回归：mcpProtocol/httpSmoke断言DeepSeek/Chat Plus为unverified，三项描述字段严格null，移除固定商店ID/构建命令；保留extension-http候选的地址和规则输出，规则不授权或建连。MCP clients资源必须显示Plus/tunnel unknown而非no。原把固定商店ID当产品合同的断言已替换为未知状态与安全前置条件，不代表第三方实测。
 
 F28-01协议/HTTP断言通用和OAuth连接器候选的未知状态、规范/mcp地址、S256 PKCE前置、无固定/plugins地址，替换旧开发者菜单断言；普通粘贴卡prompt为空。后端OAuth既有公有/秘密客户端回归继续保留，未放宽认证。
+
+### F54修复第一批新增回归
+
+`mcpProtocol.main`中的`postWithSession(sessionHeader)`用fakeRes验证合并串/数组/空/非ASCII/超长值400及单未知ID404。`mcpCancellation.main`中的`rawSession(method,value)`用真实HTTP发送重复原始头，验证POST/GET/DELETE拒绝且会话数不变；真实挂起工具handler加内部容量注入验证取消送达、POST释放；真实SSE打开/关闭验证pin释放。全200 busy由内部API构造，initialize/GET SSE通过真实HTTP验证503；不是200并发HTTP可达或24小时压测证明。

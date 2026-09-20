@@ -91,6 +91,60 @@ async function main() {
   require('../src/utils/executionControl').selectMode('bridge');
   const done = await (await rpc({jsonrpc:'2.0',id:0,method:'tools/call',params:{name:'workspace_info'}},a)).json();
   assert.strictEqual(done.result.isError,true); // ID released, no duplicate error
+  // Real authenticated HTTP: busy ownership survives deterministic capacity churn.
+  const sessions = require('../src/mcp/session');
+  const busyInit = await init(), busySid = busyInit.headers.get('mcp-session-id'); await busyInit.json();
+  const busyReady = new Promise(resolve => { started = resolve; });
+  const busyCall = rpc({jsonrpc:'2.0',id:77,method:'tools/call',params:{name:'workspace_info',arguments:{wait:true}}},busySid);
+  await busyReady;
+  const clock = Date.now;
+  try {
+    let tick = 1; Date.now = () => clock() + tick++;
+    for (let i = 0; i < 205; i++) sessions.createHttpSession();
+  } finally { Date.now = clock; }
+  const busyCancel = await rpc({jsonrpc:'2.0',method:'notifications/cancelled',params:{requestId:77}},busySid);
+  assert.strictEqual(busyCancel.status,204);
+  assert.strictEqual((await (await busyCall).json()).result._meta.trace.status,'cancelled');
+  assert.strictEqual(sessions.touchHttpSession(busySid).active,0);
+  // Response headers contain duplicate raw fields, not just a mocked merged string.
+  async function rawSession(method, value) {
+    return new Promise((resolve,reject) => {
+      const body = JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize'});
+      const req = require('http').request(base+'/mcp',{method,headers:{authorization:'Bearer '+config.secretKey,
+        'content-type':'application/json','mcp-session-id':value}},res => {
+        res.resume();res.on('end',()=>resolve(res.statusCode));
+      });
+      req.on('error',reject);req.end(method==='POST'?body:undefined);
+    });
+  }
+  for (const method of ['POST','GET','DELETE']) {
+    const before = sessions.snapshot().httpSessions;
+    assert.strictEqual(await rawSession(method,[busySid,busySid]),400);
+    assert.strictEqual(await rawSession(method,''),400);
+    assert.strictEqual(sessions.snapshot().httpSessions,before);
+  }
+  // SSE retains its pin until response close, then releases exactly once.
+  const streamInit = await init(), streamSid = streamInit.headers.get('mcp-session-id'); await streamInit.json();
+  const controller = new AbortController();
+  const stream = await fetch(base+'/mcp',{signal:controller.signal,headers:{authorization:'Bearer '+config.secretKey,
+    'mcp-session-id':streamSid,accept:'text/event-stream'}});
+  assert.strictEqual(stream.status,200);
+  const reader = stream.body.getReader();await reader.read();
+  const record = sessions.touchHttpSession(streamSid);
+  assert.strictEqual(record.active,1);
+  for (let i=0;i<205;i++) sessions.createHttpSession();
+  assert.strictEqual(sessions.touchHttpSession(streamSid),record);
+  controller.abort(); await reader.cancel().catch(()=>{});
+  for (let i=0;record.active && i<100;i++) await new Promise(resolve=>setTimeout(resolve,10));
+  assert.strictEqual(record.active,0);
+  // Registry-only pin setup; HTTP admission must reject without evicting busy work.
+  sessions.reset();const ids=[],releases=[];
+  for(let i=0;i<200;i++){const id=sessions.createHttpSession();ids.push(id);releases.push(sessions.beginHttpSessionWork(id));}
+  const full = await init();assert.strictEqual(full.status,503);await full.json();
+  const fullStream = await fetch(base+'/mcp',{headers:{authorization:'Bearer '+config.secretKey,accept:'text/event-stream'}});
+  assert.strictEqual(fullStream.status,503);await fullStream.json();
+  assert.ok(ids.every(id=>sessions.touchHttpSession(id)));
+  releases.forEach(release=>release());sessions.reset();
   console.log('authenticated HTTP cancellation and direct API failure tests passed');
 }
 main().catch(err => {console.error(err); process.exitCode=1;}).finally(async () => {
