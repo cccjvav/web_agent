@@ -506,6 +506,11 @@
       "id": "management-roadmap",
       "path": "manager/stages/s10-upstream-adoption.md",
       "group": "维护"
+    },
+    {
+      "id": "independent-audit-2026-09-20",
+      "path": "review/INDEPENDENT_AUDIT_2026-09-20.md",
+      "group": "维护"
     }
   ],
   "sourceSnapshotExclusions": [

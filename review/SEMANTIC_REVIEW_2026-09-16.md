@@ -2,7 +2,9 @@
 
 ## 当前状态
 
-第54组F54进行中：用户上传`shuncode-bridge-source.zip`及任务TXT，要求在确认交接文档及时完整后，对当前可负责的全部非Probe项目做完整复审，并只读评估旧ShunCode Bridge的会话驱逐、自适应并发、事件缓冲、JSON-RPC ID登记及重复会话头。上传提交`3fbe872`的CI35466582618中Chromium/安装器通过，七个主机任务仅因新增TXT未进正式清单而同点失败；现先登记原始任务证据、同步CONTEXT/阶段/清单，再从MCP入口→认证→会话→取消/结果所有权→公开资源链起做真实负例和最小修复。参考zip经路径/symlink/字节预算检查后仅在仓库外解包，不安装、不执行、不授信手写类型；Probe与外部trace项目仍暂停且不读取实现。最终发现、完整本地门禁、精确提交和CI待本组完成后回填。
+第54组F54独立复审证据已落档，产品修复尚未开始：[报告](INDEPENDENT_AUDIT_2026-09-20.md)。2026-09-20从指定01a0b053来源fetch，固定会话分支与来源均为`50c03bedc97f9eaaf1c875f4767c6e9bb5278d56`；[CI35470787917](https://github.com/cccjvav/web_agent/actions/runs/35470787917)九job逐项success，已取代3fbe872新TXT漏登记的失败基线，历史失败不删。本轮重读manager/review但不沿用旧结论：真实文件/HTTP/完整主机/原生函数/浏览器另复现patch创建保护、RPC准入/批内ID、busy会话丢失取消、资源归属/目录ACL、原生坏流假完成与窄屏/ARIA缺陷；没有证明未认证写入，禁止Edit的实际写调用仍被拒绝。所有新增缺陷未修，观察夹具不是正式回归。
+
+本轮基线本地84/84、既有Chromium套件通过，文档249/28/110且updated=0、生产audit 0漏洞、非暂停219项语法/JSON/Shell和calculator6/6；追加9种UI状态、独立静态/链接扫描与受控负例，边界见报告。只修改报告、管理、对应旧说明/生成物，正式清单201项：已逐句8、局部56、待79，其余不变；新增报告不自授通过。本轮修改后的门禁/推送以阶段54组续记为准。ShunCode仅仓库外安全解包/阅读，未安装/执行，不授信手写类型；优先借鉴busy pin/整批ID预检，暂不采用自适应并发/重放，保留文件/审批栈。探针原分工经用户再次确认保持暂停；R2/R3与全仓未审、Windows/真实IDE验收及旧超时仍未闭环。
 
 第53组F53：继续非探针query/只读投影/external-workflow接线并交叉R2。真实HTTP红测证明diagnostics、activity、status、models、logs、profile与customizations忽略未知query，Bridge reset-round和tool/call仍会产生状态/调度副作用；现apiRequestBody及bridgeRequestBody统一先拒绝query，原始body路由显式门禁，逐路由静态核对确认除明确暂停的`/probe/*`外全部当前REST入口均固定query。external/request与两个workflow入口改为固定body的显式异步路由，错误包装在服务查询/预览/审批分配前400。MCP peer记录入库及status快照只保留固定七字段，clientInfo只留有界name/title/version；diagnostics固定三层公开形状。customizations完整固定defaults顶层、嵌套及六类≤100项列表，空/未知/错类型写入零改动，历史未知属性不经GET发布，已知损坏仍保留原文报错；四文件仍非事务。apiFiles及相邻定向回归通过；首轮完整80/84仅为函数说明/库存/站点尚未同步，80项业务测试全绿；同步后最终84/84、文档249/28/110且updated=0、生产audit 0漏洞、正式哈希183项、git diff与探针目录零diff。实现`397476c7bc29d256781c759f3386beac91d9c147`的[CI35459273776](https://github.com/cccjvav/web_agent/actions/runs/35459273776)九项成功；探针专项保持暂停。
 

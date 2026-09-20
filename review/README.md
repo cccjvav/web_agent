@@ -6,6 +6,7 @@
 
 | 入口 | 作用 |
 |---|---|
+| [F54独立复审](INDEPENDENT_AUDIT_2026-09-20.md) | 基线50c03be；新增真实负例、UI截图、ShunCode逐项取舍；产品代码未修，范围/验证/未执行分开 |
 | [逐句审查台账](SEMANTIC_REVIEW_2026-09-16.md) | 已核对范围、未审范围及每批实际证据 |
 | [Windows人工清单](CHECKLIST_WINDOWS.md) | 实机结果与未执行项；不由CI代签 |
 | [上游采用映射](UPSTREAM_ADOPTION_MAP_2026-09-15.md) | 26类机会、实现/候选/延期的区别 |

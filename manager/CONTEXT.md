@@ -1,55 +1,55 @@
-<!-- 定位：项目管理L1索引，记录当前状态、摘要与按需导航；详细计划和交接位于现有阶段。 -->
+<!-- 定位：项目管理L1索引；只记当前摘要，计划/交接和逐批历史由既有阶段承载。 -->
 
 # Web Agent · 项目管理索引
 
-接手只需本索引和[项目约定](agents.md)，再按导航读取[当前阶段的计划与交接约束](stages/s10-upstream-adoption.md#当前工作包与交接约束)。不另设路线图或根交接文件。
+接手先读本索引和[项目约定](agents.md)，再按需读[阶段10的工作包与交接](stages/s10-upstream-adoption.md#当前工作包与交接约束)。不另建路线图或根交接文件。
 
 ## 当前状态
-- **阶段10：继续上游借鉴与文档整顿**。Tasks隔离/刷新恢复与初步编辑预览（核心0.7.2）已交付；所有者权限与Chat/Bridge互斥已交付，经典单文件受保护回退已交付，显式公网HTTPS出站已交付，原生草稿diff/恢复已交付，跨文件内容检查点已交付，继续非探测文档逐句审查与旧指南退役、过期内容清理与实际缺口复核；见[阶段10](stages/s10-upstream-adoption.md)。阶段9工作区调整已交付。
-- 探测相关施工现全部暂停并由另一位助手负责，等待其完成整合并正式交接；本分支不拉取合并、不运行专项审查、不修改探针代码/文档。即使通用检查发现疑似缺陷也只记录移交，不自行实现；现有探针实现和历史证据保留。
-- **阶段8暂停／等待外部交接**：用户2026-09-17报告另一助手在[arena-ai-probe指定分支](https://github.com/phuang6666/arena-ai-probe/tree/arena/01a0ab8a-arena-ai-probe)设计整合工作台/code-server外接与VSCode配套插件；目前仅用户报告，尚未审查或验收。不撤销既有0.5.2交付，11.3仍关闭。
-- **阶段7也不是“全部优化完成”**：已确认缺陷和若干增强已落实，但26类借鉴中仍有未实现/待深入候选，详见阶段7与UPSTREAM_ADOPTION_MAP。
-- 最近完整核验基线为第53组实现`397476c7bc29d256781c759f3386beac91d9c147`及证据`0b8b9a4e642d2a813be1e2413056b01c64f96890`；[CI35459273776](https://github.com/cccjvav/web_agent/actions/runs/35459273776)与[CI35459466444](https://github.com/cccjvav/web_agent/actions/runs/35459466444)均九项逐项成功，本地84/84、文档249源码/28目录/110排除零漂移、生产依赖audit 0漏洞、正式哈希183项匹配、探针目录零diff。随后用户上传提交`3fbe872`仅加入ShunCode参考zip与任务TXT；[CI35466582618](https://github.com/cccjvav/web_agent/actions/runs/35466582618)的浏览器/安装器通过、七个主机任务仅因新TXT未登记正式清单而失败，产品测试未显示独立回归。进入第54组时本地ref/index第八次回到`1d532d0`而工作文件保留；已备份至`/home/user/r54-recovery-1789853320/`，临时索引证明工作树与远端`3fbe872`除两份尚未落盘的上传文件外逐字节一致且无额外untracked，再只用update-ref/read-tree并从对应blob补回这两份文件，未覆盖已有工作文件。保留36ff82f首轮CI35125290301的Windows22两项超时（8/9、整体失败）：后续绿灯不说明根因已定位或修复。
-- 持久登录仍延期；Chat API确切后端身份是用户约定的后续任务。启发式结果提供参考，不承诺绝对鉴定。
+- **阶段10进行中，核心0.7.2，不是只剩人工验收。** 已交付Chat/Bridge互斥、所有者权限、Tasks隔离/刷新恢复、经典受保护回退、原生草稿diff/恢复、跨文件内容检查点和显式公网HTTPS出站；R2/R3与其它待办仍在[唯一工作包表](stages/s10-upstream-adoption.md#当前工作包与交接约束)。
+- **2026-09-20独立复审已归档，产品修复尚未开始。** [F54报告](../review/INDEPENDENT_AUDIT_2026-09-20.md)列出真实文件/HTTP/完整主机/原生函数/浏览器证据、ShunCode取舍及未执行项。本轮只改报告、管理和已对照的相邻说明/生成物，不把发现写成修复。
+- 本会话固定`arena/01a0bfa9-web-agent`。已fetch指定来源`arena/01a0b053-web-agent`，同步时均为`50c03bedc97f9eaaf1c875f4767c6e9bb5278d56`，ahead/behind=0/0；没有切分支、reset或恢复ref/index。
+- 精确实现基线[CI35470787917](https://github.com/cccjvav/web_agent/actions/runs/35470787917)已逐job核实九项success。本地84/84、真实Chromium既有套件、文档249源码/28目录/110排除且updated=0、生产audit 0漏洞；语法201 JS/MJS+14 JSON+4 Shell、calculator6/6。基线成功不覆盖新增负例，本轮文档落盘后的门禁/推送证据看阶段54组。
+- **下一闭环仍为R2，并与R3交叉**：新文件patch的hash/块处理；RPC准入/批内ID与busy会话驱逐；资源caller/目录ACL；原生聊天可靠终态；窄屏/ARIA。全部未修。正式回归须先锁正确合同再最小修复，不用整体替换掩盖问题。
+- 参考ShunCode zip只在仓库外安全解包/read-only阅读，未安装或执行。优先借鉴busy/stream pin与整批ID预检查；自适应并发/重放暂缓，信号量缩容有静态缺陷；不换现有文件/审批栈、不做支付授权、不授信手写类型。
+- **探针原分工继续暂停，用户本轮再次确认。** 不接手arena-model-probe、arena-trace-inspector、probe-extension及其专项源码/文档；通用套件经过旧用例不是专项审查。阶段8等另一助手正式交接；用户2026-09-17报告的[外部整合分支](https://github.com/phuang6666/arena-ai-probe/tree/arena/01a0ab8a-arena-ai-probe)仍未由本助手验收，不撤销0.5.2交付，11.3仍已关闭。
+- 正式清单201项：已逐句8、局部56、待逐句79、历史32、暂停15、边界7、生成1、规范1、受限2。新增报告不自授通过；库存、静态扫描、深入阅读、运行验证与实机验收分开。
+- 阶段7的26类借鉴仍有候选/未深入项；持久登录、确切后端身份的用户约定后续任务仍延期，不承诺启发式绝对鉴定。
 
-- 当前续作：第45组已完成第44组报告交叉复核并落实P1-A七个结果消费者、设备码代次/单飞、`createOnly`原子创建、PTY 2xx门禁、Chat可靠终态、补丁协调、Bridge布尔合同、无障碍/390px界面及CI最小权限/高危审计门禁。曾误改的3个model-probe文件已恢复到同步基线，仅留未裁决线索给负责该项目的另一位助手；详见[第45组报告](../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)。非探针本地验证通过；两轮Chromium 8/9失败及后续成功证据均保留，边界纠正`27fca73`的CI35386685807九项成功。第46组已修非探针operatorQueue临期结果立即淘汰/过期被取消改写、workflow及external_request/operation_result包装、矛盾条件/动态前序引用schema，以及命令结果/取消/get_logs跨peer未隔离、远程get_task_status误读Local计划和get_capabilities绕过目录ACL过滤；本地83测试与文档生成/库存通过；`a85fa5a`的CI35397169896九项成功。第47组已修外部ok:false被改成功、工作流部分读取后继续写、模型掩码Key破坏/跨端点复用、严格字段/引用及addProvider整表预算；首轮80/83暴露并修三项施工漂移，最终83/83，文档248/28/110零漂移、生产audit 0漏洞、探针目录零diff；实现`874006e`的CI35402127412九项成功。第48组再修Chat/OpenAI把只以终态表达的返回式失败画成成功、Skill忽略写后unknown核验，以及审批队列在容量压力下提前删除15分钟内结果/requestKey墓碑；新增真实队列/HTTP/模拟模型回归，首轮83/84仅暴露新增测试未登记主说明，补齐后84/84，文档249/28/110零漂移、audit 0漏洞、探针目录零diff；实现`f89767f`的CI35408375271九项成功。第49组再修models/status把历史模型或multiModel未知属性、错类型嵌套值原样发布，普通模型/addProvider/Provider目录或探测包装静默忽略未知字段；固定公开投影与触网/写入前严格schema现有真实HTTP负例，配置失败零写且错误不回显Key；最终本地84/84、文档249/28/110零漂移、audit 0漏洞、探针目录零diff；实现`124b205`的CI35428457492九项成功。第50组再以真实HTTP/外部MCP修Bridge全生命周期严格请求schema、provider专属字段及请求/生效保存值字节预算、历史状态公开投影与严格布尔授权，并保留外部verification unknown终态、ok:false和不可重放；两轮83/84分别只暴露站点镜像未重建和新增具名helper漏登记详解，均补齐后最终84/84，文档249/28/110零漂移、audit 0漏洞、正式哈希183项匹配、探针目录零diff；实现`11c168915a1f0bace11128b77a022cf403f74c9d`的[CI35437963655](https://github.com/cccjvav/web_agent/actions/runs/35437963655)九项逐项成功，覆盖Ubuntu Node18/20/22/24、Windows Node20/22/24及重复取消/stdio、Windows安装器和真实Chromium。第51组已修文件/检查点/Skill/工具/Chat/共识/任务/执行控制/审批固定包装及模型1MiB响应、拒跳转与错误正文不反射；真实HTTP/模拟fetch定向回归通过，首轮全量80/84仅为说明/站点尚未同步，补齐后最终84/84、文档249/28/110零漂移、audit 0漏洞、正式哈希183项匹配且探针目录零diff。首推`c1ea0f8`的CI35445326912为8/9，真实Chromium发现Skill首页仍发送空expectedHash而被新合同拒绝；`a415782`省略空可选字段并加VM回归，[CI35448256206](https://github.com/cccjvav/web_agent/actions/runs/35448256206)九项成功。第52组再修PTY身份/报告、connection-check及external登记/stdio/删除的固定包装和矛盾终态，并为模型完整POST加入12MiB触网前预算、严格assistant/content/tool-call形状、64项/256KiB参数上限、已声明工具白名单及固定响应投影；真实HTTP/模拟Provider红转绿，首轮完整83/84仅站点镜像待重建，刷新后最终84/84、文档249/28/110零漂移、audit 0漏洞且探针目录零diff；实现`94841c3`的[CI35450192029](https://github.com/cccjvav/web_agent/actions/runs/35450192029)九项成功。第53组已补齐所有当前非Probe路由query门禁、external/workflow固定显式接线、MCP peer固定入库/status深投影及customizations完整schema/历史投影；真实HTTP红转绿，首轮完整80/84仅说明/库存/站点未同步，产品测试80项全绿，同步后最终84/84、文档249/28/110且updated=0、audit 0漏洞、正式哈希183项、git diff/探针零diff；实现`397476c7bc29d256781c759f3386beac91d9c147`的[CI35459273776](https://github.com/cccjvav/web_agent/actions/runs/35459273776)九项成功。第54组先登记用户新增的ShunCode Bridge只读参考包/任务证据并修复其引入的清单门禁，再对全部本助手可负责的非Probe项目做完整复审；重点沿R2的MCP initialize→会话→取消/结果所有权→公开资源链回答会话驱逐、并发、JSON-RPC ID与重复会话头问题，不整体替换现有文件/审批体系、不运行参考包。正式清单增为200项：逐句8、局部56、待78、历史32、暂停15、边界7、生成1、规范1、受限2；lint/EOL/生成物取舍与实机边界保留。
-
-- 文档审查与施工继续：[现行范围与剩余施工](../review/SEMANTIC_REVIEW_2026-09-16.md)。早期测试数/CI仅是对应历史批次证据，不作为当前状态；当前已核验基线以上方精确提交为准。手机固定Bridge，同类型并发保留，新增控件不继承旧手机验收。
-
-- 文档清理政策：过时使用指南删除或归档，不靠末尾追加新状态留在现行入口。已删除旧双向连接指南，当前有效步骤并入使用指南；早期探针接入报告移入review/archive，仅保留历史证据。清理提交72ad02f79b42c48fae191ba7d7f49a09cd4e8870已推送，CI35099997405九项成功，本地78测试文件通过。
+## 必须保留的失败与边界
+- 上传`3fbe872`曾因新增任务TXT未登记而七项主机CI失败、另两项通过；现已由`50c03be`九项绿灯取代为当前基线。前任ref恢复及各批施工漂移仍在阶段历史，不写成今天又发生，也不据此自动重置checkout。
+- `36ff82f`首轮CI35125290301的Windows Node22两项超时仍未定位（R4）。后续绿灯不能证明根因已修；不得删断言、加时限或反复重跑美化结果。
+- 本轮完整主机确认资源会混入Local任务、目录权限投影不一致；实际Edit禁用仍拒绝写入。异常RPC写入使用有效临时凭据，不是未认证越权结论。
+- 390/320px中心区宽度为0并溢入聊天，axe命中tablist子角色；已有浏览器回归仍绿。字体优化是建议，Linux审查字体回退不是用户Windows效果认证。
+- 文档逐句、R5 PTY/平台、R6候选、R7文档、R8实机、R9工程化均继续；历史实现/CI详见[阶段10](stages/s10-upstream-adoption.md)，不在轻量索引复制整段F45–53日志。
 
 ## 阶段导航
 | 阶段 | 状态与范围 | 记录 |
 |---|---|---|
 | 1 项目交接 | 历史阶段 | [交接](stages/s1-handoff.md) |
 | 2 会话壳 | 历史阶段 | [会话壳](stages/s2-shell.md) |
-| 3 Bridge回图 | 已实现；实机验收范围看清单 | [Bridge回图](stages/s3-bridge-image.md) |
+| 3 Bridge回图 | 已实现；实机范围看清单 | [Bridge回图](stages/s3-bridge-image.md) |
 | 4 终端 | 已实现并持续修正 | [终端](stages/s4-terminal.md) |
-| 5 体验对齐 | 原阶段记录；后续修复见阶段7 | [体验](stages/s5-experience-parity.md) |
-| 6 多Agent任务板 | 已实现；没有宣称通用多Agent协作完成 | [任务板](stages/s6-multi-agent-board.md) |
-| 7 平台审计与可靠性 | 缺陷修复有证据；借鉴候选未全部落地 | [平台可靠性](stages/s7-platform-reliability.md) |
-| 8 双探针完整整合 | 暂停，待外部整合项目正式交接；存量实现保留 | [当前能力与验收](stages/s8-probe-integration.md) |
-| 9 工作区入口治理 | 核心0.7.1已交付；新增人工项单列 | [工作区与防错绑](stages/s9-workspace-entry.md) |
-| 10 上游借鉴与文档整顿 | 进行中；不虚报整个队列完成 | [具体落地与剩余](stages/s10-upstream-adoption.md) |
+| 5 体验对齐 | 历史记录，后续修复见阶段7 | [体验](stages/s5-experience-parity.md) |
+| 6 多Agent任务板 | 已实现，非通用多Agent协作完成 | [任务板](stages/s6-multi-agent-board.md) |
+| 7 平台审计与可靠性 | 有修复证据，候选未全部落地 | [平台可靠性](stages/s7-platform-reliability.md) |
+| 8 双探针完整整合 | 暂停，等外部正式交接 | [能力与验收](stages/s8-probe-integration.md) |
+| 9 工作区入口治理 | 核心0.7.1已交付，人工项单列 | [工作区与防错绑](stages/s9-workspace-entry.md) |
+| 10 上游借鉴与文档整顿 | 进行中，不虚报全队列完成 | [落地与剩余](stages/s10-upstream-adoption.md) |
 
-## 用户环境与验收
-- 用户指定最终验收：剩余施工完成后，通过Arena实际接入本机WebAgent MCP，选择本项目根目录。先核对工具可用、ping/workspace_info身份与root、Git提交/现有改动，再受控测试；未接入前不可用沙箱冒充。本机新清单M1–M5尚未执行，停止后的进程结果须本机确认。
-- Windows桌面VSCode集成CMD，已有Conda环境，系统Node；不是默认Anaconda Prompt，不用venv。
-- 用户已报告步骤7～10及11.1/11.2完成；11.3已由用户2026-09-16确认完成/关闭（协作说明，非独立验收）。不推断网络/手机条件。
-- 用户已确认刷新后Bridge计数及调用记录保留；不扩大为其他功能验收。
-- 手机Arena连接已通过（用户2026-09-16实机报告）：手机浏览器登录后使用WebAgent MCP链接成功连接，用法与电脑浏览器相同；未推断OS/浏览器/蜂窝或全部工具结果，详见清单F2。
-- 模型失败显式停止；不自动切换模型或重放修改；浏览器写操作必须有明确授权。
-- 当前会话没有用户本机MCP或桌面访问权限，不编造实机日志。
+## 用户环境与最终验收
+- 用户指定：剩余施工完成后，从Arena实际连接本机WebAgent MCP，选择本项目根；先核对工具/ping/workspace_info的身份/root、Git提交与现有改动，再受控测试。本机M1–M5未执行，停止后的进程结果仍须本机确认；沙箱不能代签。
+- Windows桌面VSCode集成CMD、已有Conda环境、系统Node；不是默认Anaconda Prompt，不新建venv。当前会话没有用户本机MCP/桌面权限，不编造日志。
+- 用户已报告7～10与11.1/11.2完成；11.3于2026-09-16报告完成/关闭，仍属协作说明而非本助手独立验收。
+- 用户已确认刷新后Bridge计数/记录保留；手机Arena浏览器通过MCP链接连接成功（2026-09-16）。不扩大为全部工具、OS/蜂窝或经典手机工作台UI验收，详见人工清单F2。
+- 模型失败显式停止，不自动换模型/重放修改；浏览器写操作须明确授权。手机固定Bridge，同类型并发保留，新控件不继承旧手机验收。
 
 ## 开发与文档规则
-- 当前会话只使用Arena指定分支；及时提交/推送并核对精确SHA的CI。
-- [项目约定](agents.md)、[唯一文档规范](docs/documentation.md)。逐函数解释基于真实源码。
-- 阶段更新必须改本索引和对应阶段表，不能只向旧CONTEXT末尾追加“最新”。
-- 当前索引不超过80行；历史事实移入归档，不删除失败证据。
+- 只在当前Arena绑定分支施工/提交/推送，核对精确SHA的CI；不机械复制历史分支名。
+- 遵循[项目约定](agents.md)与[唯一文档规范](docs/documentation.md)，按真实源码解释；原地修错误正文后重建文档，不手改生成区或只追加“最新说明”。
+- 每批同时改本索引与阶段工作包；CONTEXT≤80行，历史证据保留在阶段/归档。旧使用指南应退役，不删除未解决失败，也不重写暂停资料。
 
-## 导航规则
-- [统一文档中心](../docs/README.md)：用户专题、开发学习、模块详解与当前/历史审查分层。
-- 使用入口：[使用指南](../使用指南.md)；[Windows线性验收](../docs/guides/Windows新手逐步验收.md)。
-- [探针完整验收](../探针完整整合实施与验收.md)、[Companion](../webagent-core/probe-extension/README.md)、[浏览器整合](../webagent-core/probe-extension/浏览器整合说明.md)。
-- [现行逐句审查](../review/SEMANTIC_REVIEW_2026-09-16.md)、[验收清单](../review/CHECKLIST_WINDOWS.md)、[借鉴映射](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md)、[第44组原始优化报告](../review/OPTIMIZATION_REPORT_2026-09-18.md)、[第45组交叉审查与实修](../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)。
-- [经验](docs/experience.md)、[旧索引归档](stages/context-history-through-0.4.md)、[双探针0.3～0.4时间线](stages/probe-dual-integration-2026-09-15.md)。
+## 按需导航
+- [文档中心](../docs/README.md)、[使用指南](../使用指南.md)、[Windows线性验收](../docs/guides/Windows新手逐步验收.md)。
+- [本轮独立报告](../review/INDEPENDENT_AUDIT_2026-09-20.md)、[正式逐文件清单](../review/FULL_REVIEW_INDEX.md)、[语义台账](../review/SEMANTIC_REVIEW_2026-09-16.md)、[人工清单](../review/CHECKLIST_WINDOWS.md)、[借鉴映射](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md)。
+- [F44原报告](../review/OPTIMIZATION_REPORT_2026-09-18.md)、[F45交叉审查/实修](../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)、[经验](docs/experience.md)、[旧索引归档](stages/context-history-through-0.4.md)。
+- 暂停导航仅供定位：[探针验收](../探针完整整合实施与验收.md)、[Companion](../webagent-core/probe-extension/README.md)、[浏览器整合](../webagent-core/probe-extension/浏览器整合说明.md)、[历史时间线](stages/probe-dual-integration-2026-09-15.md)。

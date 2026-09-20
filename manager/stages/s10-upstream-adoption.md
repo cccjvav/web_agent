@@ -24,7 +24,7 @@
 
 两项当前任务：继续全部剩余待办，同时按[正式全仓逐句审查清单](../../review/FULL_REVIEW_INDEX.md)逐文件开展正式审查；整理和测试不代替逐句核对。
 
-> 更新：2026-09-17。面向接力助手与项目主人，不替代产品《使用指南》。本交接以Git checkout为准，安装包不保证包含开发测试/管理资料。这是经管理索引按需进入的现行施工计划与交接约束，不是“全部完成”报告。每次完成一项，应更新对应路线状态和证据，而不是只在末尾追加新结论。
+> 更新：2026-09-20。面向接力助手与项目主人，不替代产品《使用指南》。本交接以Git checkout为准，安装包不保证包含开发测试/管理资料。这是经管理索引按需进入的现行施工计划与交接约束，不是“全部完成”报告。每次完成一项，应更新对应路线状态和证据，而不是只在末尾追加新结论。
 
 #### 1. 接手边界
 
@@ -84,12 +84,12 @@
 |---|---|---|---|
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
-| R2 / 下一项，高 | 第54组进行中：先同步新增任务证据，再沿已认证MCP initialize→会话→取消/结果所有权→公开资源链完整复审；同时只读对照用户提供的ShunCode Bridge源码包，判断会话驱逐、自适应并发、请求ID登记与重复会话头，绝不整体替换 | [SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth、执行控制与错误输出；`shuncode-bridge-source.zip`仅在仓库外安全解包作不可信参考；已有模型/文件/审批与探针专项不重做 | 按入口→认证→身份绑定→权限→执行→取消→输出查调用链；先做真实负例再最小修复，保留unknown/不重放；逐项说明采用/拒绝及负载依据，不因旧项目来源或类型声明授信 |
-| R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；后续只随具体复现继续，不重做已修链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
+| R2 / 下一项，高 | F54独立复审已落档，产品代码未修：RPC准入/版本/整批ID、忙会话驱逐导致取消失联、资源caller与目录ACL均有新证据；接着写正确合同回归并最小修复。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
+| R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54另复现新文件patch丢块/绕过显式hash与原生postNdjson坏流假完成，均未修；按新证据续修，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
-| R7 / 结构首包已做，语义继续 | 第26组集中19篇专题、归档17篇旧审查、删除过期PROMPT；其余README/管理旧现状继续核对 | 源码清单、目录README、根维护/安装说明及阶段索引 | 活跃正文无相互矛盾的“当前”；无用旧指南退役，有效教学/历史失败保留；给出已审和未审清单而不是总称100% |
+| R7 / 结构首包已做，语义继续 | 第26组集中19篇专题、归档17篇旧审查、删除过期PROMPT；F54改相邻错误说明、归档独立报告与同步当前基线，未增加逐句完成项；其余README/管理旧现状继续核对 | 源码清单、目录README、根维护/安装说明及阶段索引 | 活跃正文无相互矛盾的“当前”；无用旧指南退役，有效教学/历史失败保留；给出已审和未审清单而不是总称100% |
 | R8 / 分项就绪后 | 待用户实机：项目根MCP验收 | 第7节、Windows清单M/W/T/G等；用户接入后核对工具身份 | 逐项有提交、实际环境、动作、退出码/效果与脱敏证据；失败/未执行如实留存，不借CI代签 |
 | R9 / 中，部分完成 | 第45组已交付CI顶层`contents: read`与高危生产依赖硬门禁；EOL Node矩阵、最小lint（只报错不改风格）、生成物churn与仓库权重仍为候选 | [第45组报告剩余决策](../../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md#6-仍需保留的风险决策)；版本/依赖/发行取舍需项目主人决策 | 每项先写范围与回滚点，不改冻结原型、不做TS重写；CI九项不因新增检查放宽 |
 | P / 暂停 | 探测整合、迁移与专项复核 | 第8节，另一助手正式交接前不动 | 交接后先锁版本/权限/接口/数据方案并重排范围，不自行恢复施工 |
@@ -178,8 +178,8 @@ cd ..\..
 本会话的推送与核验例子：
 
 ```sh
-git push origin arena/01a0b0da-web-agent
-gh run list --branch arena/01a0b0da-web-agent --limit 5 --json databaseId,headSha,status,conclusion
+git push origin arena/01a0bfa9-web-agent
+gh run list --branch arena/01a0bfa9-web-agent --limit 5 --json databaseId,headSha,status,conclusion
 gh run view RUN_ID --json headSha,conclusion,jobs
 ```
 
@@ -790,13 +790,23 @@ external/request、workflows/preview与workflows/request不再由宽泛operation
 
 `apiFiles`用服务调用/fetch/磁盘/会话计数锁定上述零副作用与固定投影；profile、stateIntegrity、httpSmoke、workflowPreconditions、externalDiscovery、MCP/board等相邻回归通过。首轮完整套件80/84，四项仅为新增函数说明、库存与站点镜像尚未同步，所有80项产品/业务测试通过；未删守卫。同步正文、库存与站点后最终84/84，文档249源码/28目录/110排除且只读updated=0，生产audit 0漏洞、正式哈希183项、`git diff --check`与两个探针目录零diff。实现提交`397476c7bc29d256781c759f3386beac91d9c147`的[CI35459273776](https://github.com/cccjvav/web_agent/actions/runs/35459273776)九项逐项成功，覆盖Ubuntu Node18/20/22/24、Windows Node20/22/24及重复取消/stdio、Windows安装器和真实Chromium；证据提交`0b8b9a4e642d2a813be1e2413056b01c64f96890`的[CI35459466444](https://github.com/cccjvav/web_agent/actions/runs/35459466444)也九项成功。完整套件经过存量探针测试不算专项审查。
 
-#### 第54组：交接同步、ShunCode只读对照与完整非Probe复审（进行中）
+#### 第54组：交接同步与独立非Probe复审（证据已落档，产品修复未开始）
 
 用户上传提交`3fbe8723de4c9fdd9e115f377aff06d16b449a64`新增`shuncode-bridge-source.zip`及`web_agent提示词-修正版-纯净.txt`。任务要求不是替换现有实现，而是逐模块评估会话驱逐、自适应并发、信号量/事件缓冲、JSON-RPC ID登记和重复`Mcp-Session-Id`头，并确认文件工具/审批耦合不应直接替换；授权/支付不在包内，手写类型只作线索，代码从未在本环境运行。zip SHA-256为`4114d6e8d583cea5193b48d53e8137921803a681006914a943abf804aa847188`，已做绝对路径、`..`、symlink、单项/总字节检查后仅解到仓库外`/home/user/r54-shuncode-reference/`，不安装、不执行、不把类型声明当行为。
 
-该上传提交的[CI35466582618](https://github.com/cccjvav/web_agent/actions/runs/35466582618)中真实Chromium和Windows安装器通过，七个主机任务的`npm test`均由同一文档守卫失败：正式清单遗漏新增TXT；不是已证明的产品运行回归，也不能冒称全绿。进入本组时ref/index第八次回到初始提交而工作文件保留；外部备份`/home/user/r54-recovery-1789853320/`含binary diff和排除Git/依赖的整树包，显式fetch后以临时索引证明现有文件与远端除两份未落盘上传文件外一致且无额外untracked，只恢复ref/index并从远端blob补这两份文件，未使用hard reset、clean、checkout覆盖或整树替换。
+该上传提交的[CI35466582618](https://github.com/cccjvav/web_agent/actions/runs/35466582618)中真实Chromium和Windows安装器通过，七个主机任务的`npm test`均由同一文档守卫失败：正式清单遗漏新增TXT；不是已证明的产品运行回归，也不能冒称全绿。本组较早的接手记录：ref/index第八次回到初始提交而工作文件保留；外部备份`/home/user/r54-recovery-1789853320/`含binary diff和排除Git/依赖的整树包，显式fetch后以临时索引证明现有文件与远端除两份未落盘上传文件外一致且无额外untracked，只恢复ref/index并从远端blob补这两份文件，未使用hard reset、clean、checkout覆盖或整树替换。
 
-本组先把任务TXT登记为只读原始证据并同步CONTEXT、路线、语义台账；随后按用户要求审查全部当前可负责的非Probe源码、配置、UI、文档与工程门禁。Probe及外部trace项目继续只登记路径、不读实现、不改文件；完整套件经过其存量测试也不算专项审查。最终发现、取舍、回归、精确提交和CI待审查完成后回填。
+本组先把任务TXT登记为只读原始证据并同步CONTEXT、路线、语义台账；准备提交`50c03bedc97f9eaaf1c875f4767c6e9bb5278d56`的[CI35470787917](https://github.com/cccjvav/web_agent/actions/runs/35470787917)已在2026-09-20按SHA与九个job逐项核验success，旧上传失败不再作为最新基线。
+
+2026-09-20独立接手在固定`arena/01a0bfa9-web-agent`fetch用户指定的`arena/01a0b053-web-agent`，双方均为上述SHA、ahead/behind=0/0，工作树干净；没有本轮ref恢复/强制覆盖。先读manager与review，再独立阅读/实验。用户再次确认探针原分工保持暂停；完整套件经过存量用例不是专项接手。报告：[F54独立复审](../../review/INDEPENDENT_AUDIT_2026-09-20.md)。
+
+证据新增：真实文件工具复现缺失目标忽略expectedHash、原始SEARCH落盘和多块丢后块；认证MCP及完整index主机复现异常/无ID写入、重复batch ID双写、2025-06-18仍接受batch/不支持版本头；内部容量填充配真实在途HTTP证明忙SID被驱逐后取消404且signal未abort。tools已隔离但workspace资源混入Local步骤、capabilities未过滤ACL；实际禁止Edit仍拒绝写入，不是认证/写权限绕过。原生真实postNdjson+VM依赖替身/回环HTTP在302、坏帧和无终态EOF时resolve；不是实际VSCode验收。另做9浏览器状态，390/320px中心宽度0并欢迎内容叠入Chat，axe命中tablist子角色。各项均未修，不把观察脚本退出0算产品正确。
+
+ShunCode在仓库外`/home/user/audit-2026-09-20/shuncode/`重新安全解包87文件，仅阅读而未运行/安装；上传原文/zip保持不改。采用结论：优先局部借鉴busy/stream计数与整批ID预检；自适应并发/重放暂缓，参考信号量下调limit后release仍无条件补队的缩容缺陷仅静态推演；保留现有文件hash/dryRun/检查点/审批/所有权，不整体换SDK或文件工具，不做授权/支付。
+
+基线本地84/84、文档249源码/28目录/110排除且updated=0、生产audit 0漏洞、calculator6/6；非暂停201 JS/MJS+14 JSON+4 Shell语法/格式检查通过。额外静态扫描200 JS、181 MD、5865本地链接；73个Promise执行器返回值风格提示不是73个功能bug，两个发行副本链接失效单列。当前仓库18 Python全部暂停，无主线TS/TSX/MTS。仓库外Chromium153.0.8010.0已跑完整既有浏览器套件且通过，未关闭web security/TLS；本轮CJK审查字体回退、Monaco CDN拦截与平台未验边界见报告。
+
+本轮只落报告/截图证据，直接修分发详解的旧权限/截图/租约说明、patch新建风险和工作台窄屏验证描述，更新manager/review与文档导航/生成物；没有主机/扩展/工作台执行源码或测试/依赖变更；docs-site/content.js由生成器重建。正式清单新增报告待逐句项，总数201，已逐句仍8，局部56、待79，其余不变。说明/报告改动后已重跑本地84/84、完整既有Chromium套件、249/28/110只读文档检查updated=0与git diff --check；没有新增正式产品回归。提交前最新远端证据仍为上述50c03be，审查稿提交/推送后须核对它自己的CI，不能借基线代签。R2/R3、R4历史Windows超时、R5–R9及探针暂停边界不关闭。
 
 ## 复盘
 
