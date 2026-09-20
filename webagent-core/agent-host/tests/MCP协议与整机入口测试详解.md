@@ -21,7 +21,7 @@
 
 客户端字段只是仓库目录契约，不是对外部产品当前权限的在线认证。数组some/map/find与匿名filter回调在这些组中分别选择目标记录、投影name/URI、统计匹配数，不触发远程操作。
 
-局部**fakeRes()**提供headers/statusCode/body；**setHeader(k,v)**小写记键，**status/json**记录并链式返回，**end()**仅返回this，**write()**空（本组不验证SSE字节）。**post(body)**用无header/params的请求直接handlePost：空batch→400/-32600；ping+tools/list batch保两id与对应result；notification+ping只回ping；纯notification→204；id0必须返回0而非误作通知。成功rm tmp，catch exit1；没有finally，session状态由单文件进程结束隔离。
+局部**fakeRes()**提供headers/statusCode/body；**setHeader(k,v)**小写记键，**status/json**记录并链式返回，**end()**仅返回this，**write()**空（本组不验证SSE字节）。**post(body)**用无header/params的请求直接handlePost：空batch→400/-32600；ping+tools/list batch保两id与对应result；notification+ping只回ping；纯notification→204；id0必须返回0而非误作通知。**postWithSession(sessionHeader)**以固定ping请求携带指定mcp-session-id头进handlePost：合并串`aaaa, bbbb`与数组形态都必须在会话查找前400/-32600并回显原id（F54重复会话头合同）；单个未知ID仍走404/-32001，证明畸形头拒绝没有吞掉原有未知会话合同。成功rm tmp，catch exit1；没有finally，session状态由单文件进程结束隔离。
 
 ## httpSmoke.test.js
 

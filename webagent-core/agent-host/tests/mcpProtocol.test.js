@@ -292,6 +292,30 @@ async function main() {
   assert.strictEqual(zero.body.id, 0);
   assert.strictEqual(zero.body.result.ok, true);
 
+  // 重复 Mcp-Session-Id 头被 Node 合并成 "a, b"，或以数组出现；两种形态都必须
+  // 在会话查找前给 400 说明，而不是误导性的 404 会话不存在（F54，对照ShunCode缺陷5）。
+  async function postWithSession(sessionHeader) {
+    const res = fakeRes();
+    await handlePost({
+      ip: '127.0.0.1',
+      body: { jsonrpc: '2.0', id: 9, method: 'ping', params: {} },
+      headers: { 'mcp-session-id': sessionHeader },
+      params: {}
+    }, res);
+    return res;
+  }
+  const merged = await postWithSession('aaaa, bbbb');
+  assert.strictEqual(merged.statusCode, 400);
+  assert.strictEqual(merged.body.error.code, -32600);
+  assert.ok(merged.body.error.message.includes('exactly one Mcp-Session-Id'));
+  assert.strictEqual(merged.body.id, 9);
+  const arrayHeader = await postWithSession(['aaaa', 'bbbb']);
+  assert.strictEqual(arrayHeader.statusCode, 400);
+  assert.strictEqual(arrayHeader.body.error.code, -32600);
+  const unknownSingle = await postWithSession('deadbeef');
+  assert.strictEqual(unknownSingle.statusCode, 404, 'single unknown session id keeps the -32001 contract');
+  assert.strictEqual(unknownSingle.body.error.code, -32001);
+
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('mcp protocol tests passed');
 }

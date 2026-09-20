@@ -2,7 +2,18 @@
 
 ## 当前状态
 
-第54组F54进行中：用户上传`shuncode-bridge-source.zip`及任务TXT，要求在确认交接文档及时完整后，对当前可负责的全部非Probe项目做完整复审，并只读评估旧ShunCode Bridge的会话驱逐、自适应并发、事件缓冲、JSON-RPC ID登记及重复会话头。上传提交`3fbe872`的CI35466582618中Chromium/安装器通过，七个主机任务仅因新增TXT未进正式清单而同点失败；现先登记原始任务证据、同步CONTEXT/阶段/清单，再从MCP入口→认证→会话→取消/结果所有权→公开资源链起做真实负例和最小修复。参考zip经路径/symlink/字节预算检查后仅在仓库外解包，不安装、不执行、不授信手写类型；Probe与外部trace项目仍暂停且不读取实现。最终发现、完整本地门禁、精确提交和CI待本组完成后回填。
+第54组F54进行中：用户上传`shuncode-bridge-source.zip`及任务TXT，要求在确认交接文档及时完整后，对当前可负责的全部非Probe项目做完整复审，并只读评估旧ShunCode Bridge的会话驱逐、自适应并发、事件缓冲、JSON-RPC ID登记及重复会话头。上传提交`3fbe872`的CI35466582618中Chromium/安装器通过，七个主机任务仅因新增TXT未进正式清单而同点失败；现先登记原始任务证据、同步CONTEXT/阶段/清单，再从MCP入口→认证→会话→取消/结果所有权→公开资源链起做真实负例和最小修复。参考zip经路径/symlink/字节预算检查后仅在仓库外解包，不安装、不执行、不授信手写类型；Probe与外部trace项目仍暂停且不读取实现。
+
+第54组续批（2026-09-20，接力助手）已完成ShunCode五问的实证裁决并落实两处最小修复，全部先做真实负例再改实现：
+
+1. **重复`Mcp-Session-Id`头（采用检查，自研修复）**：真实HTTP raw socket负例证明Node把重复头合并成`"sid, sid"`，旧`server.js`用合并串查会话必失配，误导性回答404“会话不存在”（不是ShunCode那种把数组传进string处理器的类型混淆，但同根源同用户危害）。现`hasMalformedSessionHeader`在会话查找前识别数组形态或含逗号/空白的会话头，POST/GET/DELETE统一400/-32600并回显原id；单个未知ID保持404/-32001原合同。真实HTTP复测：dup→400、single→200、delete-dup→400。
+2. **会话驱逐（采用语义，不搬代码）**：红测证明容量压力下有在途请求的最旧会话会被`createHttpSession`驱逐，长工具调用中会话丢失后取消与后续调用失去身份绑定；TTL prune同理。现`beginHttpSessionWork`在POST处理期与SSE流打开期登记在途计数，prune/容量驱逐跳过active>0会话，全在途才退回全局最旧兜底（lifecycle上限64+SSE上限32<200容量，正常达不到）；release一次性。未搬ShunCode的`BridgeSessionRegistry`类，因其`destroy`回调/`destroyAfter`与我们的principal绑定模型不兼容。
+3. **JSON-RPC ID占用登记（不采用）**：`requestLifecycle`现有`JSON.stringify([owner,id])`键已按会话+凭据隔离并区分string/number类型，重复在飞ID拒绝有真实HTTP回归（mcpCancellation）；ShunCode的registry是全局命名空间、跨会话共享冲突面，比现状更弱。批内重复ID因顺序执行天然不并发，无需预占。
+4. **自适应并发（不采用，记候选）**：单机个人场景无实测排队/延迟瓶颈证据；现有lifecycle 64在飞上限、SSE 32、operatorQueue容量已defensive。按窗口自动调限会引入新的可观察态且无收益证明，违反“先负载依据再施工”。若未来multi-agent板出现真实排队数据再评估。
+5. **事件缓冲/断线重放（不采用）**：我们GET SSE是固定10分钟寿命的endpoint通告流、POST SSE单发即关，均无“流中结果”需要重放；Tasks恢复已由0.7.2主机快照轮询交付。ShunCode实现自身还有全局有界挤占别流历史的缺陷（其README第五节自认）。引入按流重放属新架构承诺，不在本批最小修复边界。
+6. **文件工具（确认用户判断：不替换）**：`file-tool-registry.js`/`apply-patch.js`无我们的dryRun哈希预览、STALE_FILE拒绝、跨文件检查点与审批耦合；其`tool-input-validation.js`静默放过`$ref/oneOf/pattern`等，弱于我们的固定schema门禁。仅对照，不搬。
+
+回归：`stateIntegrity`新增在途会话容量/TTL存活、release单次性、未知ID no-op；`mcpProtocol`新增合并串/数组头400与未知单ID仍404。定向及完整84/84通过，文档249/28/110零漂移（新增具名`postWithSession`已登记主指南，首次全量因漏登记暴露后补齐），`会话与结果详解`/`请求分发详解`/`MCP协议与整机入口测试详解`同步更新。精确提交与CI见管理索引；这不是对参考包其余37个模块的逐句审查，也不改变Probe暂停边界。
 
 第53组F53：继续非探针query/只读投影/external-workflow接线并交叉R2。真实HTTP红测证明diagnostics、activity、status、models、logs、profile与customizations忽略未知query，Bridge reset-round和tool/call仍会产生状态/调度副作用；现apiRequestBody及bridgeRequestBody统一先拒绝query，原始body路由显式门禁，逐路由静态核对确认除明确暂停的`/probe/*`外全部当前REST入口均固定query。external/request与两个workflow入口改为固定body的显式异步路由，错误包装在服务查询/预览/审批分配前400。MCP peer记录入库及status快照只保留固定七字段，clientInfo只留有界name/title/version；diagnostics固定三层公开形状。customizations完整固定defaults顶层、嵌套及六类≤100项列表，空/未知/错类型写入零改动，历史未知属性不经GET发布，已知损坏仍保留原文报错；四文件仍非事务。apiFiles及相邻定向回归通过；首轮完整80/84仅为函数说明/库存/站点尚未同步，80项业务测试全绿；同步后最终84/84、文档249/28/110且updated=0、生产audit 0漏洞、正式哈希183项、git diff与探针目录零diff。实现`397476c7bc29d256781c759f3386beac91d9c147`的[CI35459273776](https://github.com/cccjvav/web_agent/actions/runs/35459273776)九项成功；探针专项保持暂停。
 
