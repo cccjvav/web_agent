@@ -814,7 +814,7 @@ ShunCode在仓库外`/home/user/audit-2026-09-20/shuncode/`重新安全解包87�
 
 合同：POST/SSE active pin阻止TTL/容量淘汰；全部200忙时分配null，HTTP initialize/GET SSE固定503。release单次，最后一个工作完成更新lastSeen，从完成开始24h空闲TTL，不续凭据，不复活显式删除。入站查rawHeaders重复及单值1–512可见ASCII/无逗号，畸形400在分配前；出站区分缺省与空值，畸形不保存回传。禁逗号和512是本项目更窄兼容策略，不能当MCP通用限制。
 
-三份新增回归在未修源码下先失败（缺beginHttpSessionWork、404而非400、未拒绝出站重复头），日志在仓库外/home/user/f54-fix-evidence；四份定向修后通过。额外真实认证HTTP回归覆盖忙会话取消送达、重复原始头POST/GET/DELETE、SSE pin及response close释放、全忙503；容量及25h由内部API/注入时钟构造，不声称200HTTP并发可达或长时实跑。本地完整84/84、真实Chromium套件、生产audit 0漏洞均通过；文档249/28/110已重建并零漂移，git diff --check通过。当前实现提交的CI须在推送后按精确SHA核对，不由历史绿灯代签。
+三份新增回归在未修源码下先失败（缺beginHttpSessionWork、404而非400、未拒绝出站重复头），日志在仓库外/home/user/f54-fix-evidence；四份定向修后通过。额外真实认证HTTP回归覆盖忙会话取消送达、重复原始头POST/GET/DELETE、SSE pin及response close释放、全忙503；容量及25h由内部API/注入时钟构造，不声称200HTTP并发可达或长时实跑。本地完整84/84、真实Chromium套件、生产audit 0漏洞均通过；文档249/28/110已重建并零漂移，git diff --check通过。实现`d7b521ba724ec86d36ee4ed88946c1946b79407c`已推本会话固定分支；[CI35531273186](https://github.com/cccjvav/web_agent/actions/runs/35531273186)按该SHA核验九job逐项success，含Ubuntu/Windows矩阵、Chromium和安装器。不是历史绿灯代签，不关闭尚未修复的RPC/补丁/UI等缺陷。
 
 不采纳“顺序批内重复ID无需预检”结论。RPC版本/ID/批次准入、补丁不存在目标保护、资源投影、原生终态与UI仍待后续批次；F54报告保留原始基线观察，不能用本批关闭所有发现。
 
