@@ -6,7 +6,7 @@
 
 ## 当前状态
 - **阶段10进行中，核心0.7.2，不是只剩人工验收。** 已交付Chat/Bridge互斥、所有者权限、Tasks隔离/刷新恢复、经典受保护回退、原生草稿diff/恢复、跨文件内容检查点和显式公网HTTPS出站；R2/R3与其它待办仍在[唯一工作包表](stages/s10-upstream-adoption.md#当前工作包与交接约束)。
-- **2026-09-20独立复审已归档，已完成第一批，现修第二批RPC准入。** [F54报告](../review/INDEPENDENT_AUDIT_2026-09-20.md)列出真实文件/HTTP/完整主机/原生函数/浏览器证据、ShunCode取舍及未执行项。审查之后第一批选择性采用01a0bf59的会话pin/头校验，补全忙503与空闲TTL；第二批现补RPC ID/整份批次/版本绑定与通知202，本地84/84和真实Chromium通过。实现`d7b521b`及[CI35531273186](https://github.com/cccjvav/web_agent/actions/runs/35531273186)九项成功，门禁与未完成项见阶段54组续记。
+- **2026-09-20独立复审已归档，已完成第一批，第二批RPC准入亦已交付。** [F54报告](../review/INDEPENDENT_AUDIT_2026-09-20.md)列出真实文件/HTTP/完整主机/原生函数/浏览器证据、ShunCode取舍及未执行项。审查之后第一批选择性采用01a0bf59的会话pin/头校验，补全忙503与空闲TTL；第二批`f40b917`补RPC ID/整份批次/版本绑定与通知202，本地84/84和真实Chromium通过，[CI35533579984](https://github.com/cccjvav/web_agent/actions/runs/35533579984)九项成功。实现`d7b521b`及[CI35531273186](https://github.com/cccjvav/web_agent/actions/runs/35531273186)九项成功，门禁与未完成项见阶段54组续记。
 - 本会话固定`arena/01a0bfa9-web-agent`。已fetch指定来源`arena/01a0b053-web-agent`，同步时均为`50c03bedc97f9eaaf1c875f4767c6e9bb5278d56`，当时ahead/behind=0/0；本批接续时先证明整树等于已发布3412ef2，再仅恢复本会话ref/index，不覆盖工作文件、不切分支。
 - 精确实现基线[CI35470787917](https://github.com/cccjvav/web_agent/actions/runs/35470787917)已逐job核实九项success。本地84/84、真实Chromium既有套件、文档249源码/28目录/110排除且updated=0、生产audit 0漏洞；语法201 JS/MJS+14 JSON+4 Shell、calculator6/6。基线成功不覆盖新增负例。审查落档`a490ca02f84fe5d9086e2d7629c0e1bfa2258206`已推本会话分支，[CI35525528734](https://github.com/cccjvav/web_agent/actions/runs/35525528734)亦逐job核实9/9成功；门禁与边界见阶段54组。
 - **下一闭环仍为R2，并与R3交叉**：新文件patch的hash/块处理；RPC准入/批内ID与busy会话驱逐；资源caller/目录ACL；原生聊天可靠终态；窄屏/ARIA。busy会话/会话头已交付；第二批补RPC envelope/协商版本/批内ID与预算预检，其他缺陷未修。正式回归须先锁正确合同再最小修复，不用整体替换掩盖问题。

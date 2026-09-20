@@ -826,7 +826,7 @@ RPC envelope只允许jsonrpc/id/method/params，具名params对象；请求ID≤
 
 私有HTTP会话保存协商protocolVersion；只读getHttpSession做准入查找，不续期。重复/不支持/与已知版本冲突的版本头在POST/GET/DELETE先400；缺省头沿用已知版本，全部未知才2025-03-26；已知会话不允许重新initialize降级。未知initialize提案仍按旧协商fallback，不等于接受不支持的HTTP版本头。2025-06-18拒绝所有batch，旧版1–64项受限兼容；接受的通知统一202空体（2025-03-26同样要求202），DELETE保持204。GET非SSE状态、断连取消、无SID兼容调用、未知SID重建等既有边界不在本批冒称符合全部协议。
 
-两份红测已转绿，mcpCancellation/mcpBoard/httpSmoke/stateIntegrity/externalDiscovery定向通过。原取消精确凭据/owner和异常释放断言未删除；通知状态只纠正204→202。首次新HTTP夹具尝试解析Express对primitive的400 HTML失败，已按Content-Type保留原状态修正夹具，并非改变产品拒绝行为。本地完整84/84与真实Chromium套件已通过，生产audit为0漏洞；另在httpSmoke真实src/index.js入口验证异常ID/旧版重复ID/现代batch/坏版本零写，并以同路径合法写入为正对照。文档249/28/110重建零漂移；提交前刷新正式指纹且不提升语义认证状态，git diff --check通过。精确实现CI待推送后核对，不由前批绿灯代签。后续优先补丁不存在目标hash/多块，再资源投影、原生终态、UI；Windows实机/旧超时和全仓逐句仍未闭环。
+两份红测已转绿，mcpCancellation/mcpBoard/httpSmoke/stateIntegrity/externalDiscovery定向通过。原取消精确凭据/owner和异常释放断言未删除；通知状态只纠正204→202。首次新HTTP夹具尝试解析Express对primitive的400 HTML失败，已按Content-Type保留原状态修正夹具，并非改变产品拒绝行为。本地完整84/84与真实Chromium套件已通过，生产audit为0漏洞；另在httpSmoke真实src/index.js入口验证异常ID/旧版重复ID/现代batch/坏版本零写，并以同路径合法写入为正对照。文档249/28/110重建零漂移；提交前刷新正式指纹且不提升语义认证状态，git diff --check通过。实现`f40b91780b9f6e0abac41839f502fb0b2dfd0c1f`已推固定会话分支；[CI35533579984](https://github.com/cccjvav/web_agent/actions/runs/35533579984)按该SHA核验九job逐项success（Ubuntu/Windows Node矩阵、Chromium、Windows安装器），不是前批绿灯代签。后续优先补丁不存在目标hash/多块，再资源投影、原生终态、UI；Windows实机/旧超时和全仓逐句仍未闭环。
 
 ## 复盘
 
