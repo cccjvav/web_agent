@@ -145,11 +145,19 @@ function beginHttpSessionWork(id) {
   };
 }
 
+// Read-only admission lookup: rejected requests must not renew idle TTL.
+function getHttpSession(id, principal) {
+  const rec = id ? httpSessions.get(id) : null;
+  if (!rec || (principal !== undefined && rec.principal !== principal)) return null;
+  if (!(rec.active > 0) && Date.now() - rec.lastSeen > SESSION_TTL_MS) return null;
+  return rec;
+}
+
 function touchHttpSession(id, principal) {
   if (!id) return null;
   pruneHttpSessions();
-  const rec = httpSessions.get(id);
-  if (!rec || (principal !== undefined && rec.principal !== principal)) return null;
+  const rec = getHttpSession(id, principal);
+  if (!rec) return null;
   rec.lastSeen = Date.now();
   return rec;
 }
@@ -192,6 +200,7 @@ module.exports = {
   reset,
   createHttpSession,
   touchHttpSession,
+  getHttpSession,
   destroyHttpSession,
   beginHttpSessionWork
 };

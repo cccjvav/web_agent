@@ -84,7 +84,7 @@
 |---|---|---|---|
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
-| R2 / 下一项，高 | F54独立复审已落档，产品代码未修：RPC准入/版本/整批ID、忙会话驱逐导致取消失联、资源caller与目录ACL均有新证据；接着写正确合同回归并最小修复。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
+| R2 / 下一项，高 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，资源caller与目录ACL仍未修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
 | R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54另复现新文件patch丢块/绕过显式hash与原生postNdjson坏流假完成，均未修；按新证据续修，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
@@ -817,6 +817,16 @@ ShunCode在仓库外`/home/user/audit-2026-09-20/shuncode/`重新安全解包87�
 三份新增回归在未修源码下先失败（缺beginHttpSessionWork、404而非400、未拒绝出站重复头），日志在仓库外/home/user/f54-fix-evidence；四份定向修后通过。额外真实认证HTTP回归覆盖忙会话取消送达、重复原始头POST/GET/DELETE、SSE pin及response close释放、全忙503；容量及25h由内部API/注入时钟构造，不声称200HTTP并发可达或长时实跑。本地完整84/84、真实Chromium套件、生产audit 0漏洞均通过；文档249/28/110已重建并零漂移，git diff --check通过。实现`d7b521ba724ec86d36ee4ed88946c1946b79407c`已推本会话固定分支；[CI35531273186](https://github.com/cccjvav/web_agent/actions/runs/35531273186)按该SHA核验九job逐项success，含Ubuntu/Windows矩阵、Chromium和安装器。不是历史绿灯代签，不关闭尚未修复的RPC/补丁/UI等缺陷。
 
 不采纳“顺序批内重复ID无需预检”结论。RPC版本/ID/批次准入、补丁不存在目标保护、资源投影、原生终态与UI仍待后续批次；F54报告保留原始基线观察，不能用本批关闭所有发现。
+
+### F54修复第二批：RPC整份准入与协议版本（2026-09-20）
+
+从已发布3412ef2接续；本地ref/index再次处于50c03be、文件保留，仓库外临时索引证明完整tree等于3412ef2并备份diff后只恢复本会话ref/index，不覆盖文件。先加真实认证HTTP零写回归与lifecycle直接调用回归：旧版null ID真实写盘返回200、lifecycle无效ID执行fn，红测记录在/home/user/f54-rpc-evidence。正式回归没有运行参考包或接手暂停探针。
+
+RPC envelope只允许jsonrpc/id/method/params，具名params对象；请求ID≤256字符单元或安全整数（本地预算），通知不得有ID，非notifications/方法不得缺ID。整份预检所有成员、批内typed ID唯一和64项上限，initialize必须单独发送；任何准入错误在会话分配/续期、模式租约、工具事件、文件写入前400。合法旧版batch仍顺序执行；预检不是工具参数预执行、事务回滚或持久exactly-once。未知客户端响应未被本服务请求，仍400拒绝。
+
+私有HTTP会话保存协商protocolVersion；只读getHttpSession做准入查找，不续期。重复/不支持/与已知版本冲突的版本头在POST/GET/DELETE先400；缺省头沿用已知版本，全部未知才2025-03-26；已知会话不允许重新initialize降级。未知initialize提案仍按旧协商fallback，不等于接受不支持的HTTP版本头。2025-06-18拒绝所有batch，旧版1–64项受限兼容；接受的通知统一202空体（2025-03-26同样要求202），DELETE保持204。GET非SSE状态、断连取消、无SID兼容调用、未知SID重建等既有边界不在本批冒称符合全部协议。
+
+两份红测已转绿，mcpCancellation/mcpBoard/httpSmoke/stateIntegrity/externalDiscovery定向通过。原取消精确凭据/owner和异常释放断言未删除；通知状态只纠正204→202。首次新HTTP夹具尝试解析Express对primitive的400 HTML失败，已按Content-Type保留原状态修正夹具，并非改变产品拒绝行为。本地完整84/84与真实Chromium套件已通过，生产audit为0漏洞；另在httpSmoke真实src/index.js入口验证异常ID/旧版重复ID/现代batch/坏版本零写，并以同路径合法写入为正对照。文档249/28/110重建零漂移；提交前刷新正式指纹且不提升语义认证状态，git diff --check通过。精确实现CI待推送后核对，不由前批绿灯代签。后续优先补丁不存在目标hash/多块，再资源投影、原生终态、UI；Windows实机/旧超时和全仓逐句仍未闭环。
 
 ## 复盘
 

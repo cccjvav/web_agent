@@ -92,6 +92,13 @@ config.workspaceRoot = tmp;
   const seen = record.lastSeen;
   try {
     Date.now = () => seen + 1000;
+    assert.strictEqual(session.getHttpSession(owned, 'different-owner'), null);
+    assert.strictEqual(session.getHttpSession(owned, 'fixture-owner'), record);
+    assert.strictEqual(record.lastSeen, seen, 'admission lookup must not renew even the correct owner');
+    Date.now = () => seen + 25 * 60 * 60 * 1000;
+    assert.strictEqual(session.getHttpSession(owned, 'fixture-owner'), null);
+    assert.strictEqual(record.lastSeen, seen);
+    Date.now = () => seen + 1000;
     assert.strictEqual(session.touchHttpSession(owned, 'different-owner'), null);
     assert.strictEqual(session.keyForReq({ mcpSessionId: owned, mcpPrincipal: 'different-owner' }), null);
     assert.strictEqual(session.destroyHttpSession(owned, 'different-owner'), false);

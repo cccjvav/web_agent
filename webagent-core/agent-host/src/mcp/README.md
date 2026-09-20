@@ -30,14 +30,14 @@ stdio/受控外部接入：[受控工具与工作流详解](../utils/受控工�
 未认证返回401并给WWW-Authenticate发现提示。允许浏览器Origin只是CORS层条件，不代替凭据认证。OAuth发现/注册/授权/token端点挂在MCP端口，由上层index挂载。
 
 ### initialize与会话
-initialize协商支持的协议版本，返回能力、服务器信息和instructions，并建立Mcp-Session-Id。当前声明支持2024-11-05、2025-03-26、2025-06-18；客户端应保存服务器选择的版本和会话ID。
+initialize协商支持的协议版本，返回能力、服务器信息和instructions，并建立Mcp-Session-Id。当前声明支持2024-11-05、2025-03-26、2025-06-18；客户端应保存服务器选择的版本和会话ID。版本保存在私有会话；缺省版本头沿用已知协商值，无已知信息才按2025-03-26兼容。重复/不支持/冲突版本头在POST/GET/DELETE副作用前400，活会话不允许重新initialize降级。
 
 HTTP会话使用私有随机ID，初始化peer另取独立随机公开标签，公开peers/任务归属不能还原会话头。会话绑定OAuth注册client或当前长期secret的主体摘要；同client刷新沿用，跨client不可复用/删除，不以IP/显示名称判身份。initialize提交的clientInfo在统计入库时只保留有界name/title/version，未知extra不保留；status/snapshot再按固定key/时间/计数/busy/clientInfo深投影，不能把远端任意对象展开进本机状态响应。无会话仍可走部分兼容调用，但修改board必须先初始化；未知已提供的session通常404，重新initialize可建立新会话。会话和授权凭据不是同一个对象，不能把显示名称当认证用户；同主体持有真正会话ID仍可使用它，需保密，非完整多租户隔离。
 
 HTTP会话有24小时TTL及200上限。进程重启会丢失内存会话；客户端需要重新初始化，而不是持续重发失效ID。
 
 ## 请求、通知与结果
-- POST支持单个JSON-RPC请求或batch。batch逐项执行；仅通知无返回结果时为204；空batch拒绝。HTTP200不意味着其中每个RPC/工具成功。
+- POST先完整校验RPC envelope/ID/params与协议版本。2025-06-18拒绝batch；旧版本允许1–64项batch，先检查全体形状和类型区分的批内重复ID，通过后才顺序执行；initialize必须单独请求。合法通知（单个/旧版批次）202空体，DELETE仍204。ID预算为≤256字符串或安全整数；不接受无ID工具调用。上述上限是本地策略，不是通用协议限制。HTTP200不意味着其中每个RPC/工具成功，预检不是跨工具事务或持久去重。
 - `tools/list`返回可见工具schema；`tools/call`最终经过共享callTool，远程命令权限与本机审批不同。
 - 工具结果经共享isToolFailure检查，显式失败、非零退出、超时、取消或unknown时，MCP结果带 `isError:true`；抛出的异常也变成失败内容。客户端应检查isError及错误对象，而非只看HTTP状态。
 - 公共工具错误含layer、code、msg、detail；未分类错误可能归为E_INTERNAL。错误分类器的字符串匹配不是完整异常类型系统。
@@ -89,10 +89,10 @@ F54第一批：POST/SSE会话使用active pin防止忙时TTL/容量淘汰；全�
 | [instructions.js](instructions.js) | 3 个函数/类节点 |
 | [oauth.js](oauth.js) | 47 个函数/类节点 |
 | [publicHttps.js](publicHttps.js) | 17 个函数/类节点 |
-| [requestLifecycle.js](requestLifecycle.js) | 7 个函数/类节点 |
+| [requestLifecycle.js](requestLifecycle.js) | 8 个函数/类节点 |
 | [resources.js](resources.js) | 5 个函数/类节点 |
-| [server.js](server.js) | 37 个函数/类节点 |
-| [session.js](session.js) | 20 个函数/类节点 |
+| [server.js](server.js) | 41 个函数/类节点 |
+| [session.js](session.js) | 21 个函数/类节点 |
 | [stdioBridge.cs](stdioBridge.cs) | 文件级登记；未做符号完整性证明 |
 | [stdioBridge.ps1](stdioBridge.ps1) | 文件级登记；未做符号完整性证明 |
 | [stdioLaunch.js](stdioLaunch.js) | 11 个函数/类节点 |

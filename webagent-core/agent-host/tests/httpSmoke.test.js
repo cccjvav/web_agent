@@ -210,6 +210,30 @@ async function main() {
     assert.ok(init.json.result.instructions.includes('Web Agent Bridge MCP'));
     assert.ok(init.json.result.instructions.includes('webagent://instructions'));
 
+    // Full src/index.js path must enforce the same admission before real file writes.
+    const admissionWrite = id => ({jsonrpc:'2.0',id,method:'tools/call',params:{name:'write_file',arguments:{filePath:'rpc-admission-denied.txt',content:'must not write'}}});
+    const modernInit = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/${secret}`, {
+      jsonrpc:'2.0',id:'modern-init',method:'initialize',params:{protocolVersion:'2025-06-18',clientInfo:{name:'admission-full-host'},capabilities:{}}
+    });
+    assert.strictEqual(modernInit.status,200);
+    assert.strictEqual(modernInit.json.result.protocolVersion,'2025-06-18');
+    const modernHeaders = {'Mcp-Session-Id':modernInit.headers['mcp-session-id'],'MCP-Protocol-Version':'2025-06-18'};
+    const noId = admissionWrite(1);delete noId.id;
+    for (const body of [admissionWrite(null),admissionWrite({invalid:true}),noId,[admissionWrite(1),admissionWrite(1)]]) {
+      const refused = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/${secret}`,body,modernHeaders);
+      assert.strictEqual(refused.status,400);
+      assert.strictEqual(fs.existsSync(path.join(tmp,'rpc-admission-denied.txt')),false);
+    }
+    const oldHeaders = {'Mcp-Session-Id':init.headers['mcp-session-id']};
+    const duplicateOld = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/${secret}`,[admissionWrite(1),admissionWrite(1)],oldHeaders);
+    assert.strictEqual(duplicateOld.status,400);assert.strictEqual(fs.existsSync(path.join(tmp,'rpc-admission-denied.txt')),false);
+    const badVersion = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/${secret}`,admissionWrite(1),{...modernHeaders,'MCP-Protocol-Version':'1900-01-01'});
+    assert.strictEqual(badVersion.status,400);assert.strictEqual(fs.existsSync(path.join(tmp,'rpc-admission-denied.txt')),false);
+    const goodWrite = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/${secret}`,admissionWrite('valid'),modernHeaders);
+    assert.strictEqual(goodWrite.status,200);assert.strictEqual(goodWrite.json.result.isError,false);
+    assert.strictEqual(fs.readFileSync(path.join(tmp,'rpc-admission-denied.txt'),'utf8'),'must not write');
+    fs.unlinkSync(path.join(tmp,'rpc-admission-denied.txt'));
+
     const listed = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/${secret}`, {
       jsonrpc: '2.0',
       id: 2,

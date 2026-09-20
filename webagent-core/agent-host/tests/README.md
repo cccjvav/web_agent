@@ -105,6 +105,8 @@ Windows CI还会编译输入辅助C#、解析PS并编译Inno安装器。这是�
 
 F54会话修复：stateIntegrity锁定空闲TTL/全忙拒绝；mcpProtocol与mcpCancellation覆盖头校验及真实HTTP/SSE pin；externalDiscovery用真实回环服务器验证重复/空白/显式空响应SID拒绝和合法单值回传。
 
+F54第二批：mcpProtocol新增真实HTTP整份准入/版本协商/旧版批预算与零写回归；requestLifecycle锁共享ID预算，mcpCancellation通知按202接受且不弱化归属断言。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -143,12 +145,12 @@ F54会话修复：stateIntegrity锁定空闲TTL/全忙拒绝；mcpProtocol与mcp
 | [githubAuth.test.js](githubAuth.test.js) | 21 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
-| [httpSmoke.test.js](httpSmoke.test.js) | 42 个函数/类节点 |
+| [httpSmoke.test.js](httpSmoke.test.js) | 43 个函数/类节点 |
 | [installerPackaging.test.js](installerPackaging.test.js) | 23 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 19 个函数/类节点 |
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 24 个函数/类节点 |
-| [mcpProtocol.test.js](mcpProtocol.test.js) | 34 个函数/类节点 |
+| [mcpProtocol.test.js](mcpProtocol.test.js) | 52 个函数/类节点 |
 | [memoryRecall.test.js](memoryRecall.test.js) | 8 个函数/类节点 |
 | [modelLifecycle.test.js](modelLifecycle.test.js) | 53 个函数/类节点 |
 | [monacoLoading.test.js](monacoLoading.test.js) | 12 个函数/类节点 |
@@ -174,14 +176,14 @@ F54会话修复：stateIntegrity锁定空闲TTL/全忙拒绝；mcpProtocol与mcp
 | [ptyJobs.test.js](ptyJobs.test.js) | 12 个函数/类节点 |
 | [ptyLifecycle.test.js](ptyLifecycle.test.js) | 68 个函数/类节点 |
 | [publicHttps.test.js](publicHttps.test.js) | 19 个函数/类节点 |
-| [requestLifecycle.test.js](requestLifecycle.test.js) | 12 个函数/类节点 |
+| [requestLifecycle.test.js](requestLifecycle.test.js) | 13 个函数/类节点 |
 | [resourceBudget.test.js](resourceBudget.test.js) | 14 个函数/类节点 |
 | [runChat.test.js](runChat.test.js) | 29 个函数/类节点 |
 | [sandbox.test.js](sandbox.test.js) | 3 个函数/类节点 |
 | [searchWorkerLifecycle.test.js](searchWorkerLifecycle.test.js) | 14 个函数/类节点 |
 | [skillsLifecycle.test.js](skillsLifecycle.test.js) | 19 个函数/类节点 |
 | [skipWorkbench.test.js](skipWorkbench.test.js) | 16 个函数/类节点 |
-| [stateIntegrity.test.js](stateIntegrity.test.js) | 31 个函数/类节点 |
+| [stateIntegrity.test.js](stateIntegrity.test.js) | 33 个函数/类节点 |
 | [stdioMcp.test.js](stdioMcp.test.js) | 24 个函数/类节点 |
 | [stdioOwnerFixture.js](stdioOwnerFixture.js) | 2 个函数/类节点 |
 | [stdioServerFixture.js](stdioServerFixture.js) | 3 个函数/类节点 |

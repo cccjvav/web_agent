@@ -1,7 +1,8 @@
 const crypto = require('crypto');
 const control = require('../utils/executionControl');
 const { isToolFailure } = require('../utils/toolTrace');
-const lifecycle = require('./requestLifecycle').createLifecycle();
+const { createLifecycle, validRequestId } = require('./requestLifecycle');
+const lifecycle = createLifecycle();
 const express = require('express');
 const { getToolList, callTool } = require('../tools');
 const { hostIdentity } = require('../utils/hostDiagnostics');
@@ -13,7 +14,7 @@ const { listResources, readResource } = require('./resources');
 const { clipJson, clipText } = require('./budget');
 const { resolveToolName } = require('../tools/normalize');
 const { ProtocolError, publicError } = require('./errors');
-const { touch, snapshot, createHttpSession, touchHttpSession, destroyHttpSession, keyForReq, setHttpSessionKey, beginHttpSessionWork } = require('./session');
+const { touch, snapshot, createHttpSession, touchHttpSession, getHttpSession, destroyHttpSession, keyForReq, setHttpSessionKey, beginHttpSessionWork } = require('./session');
 const oauth = require('./oauth');
 const tracker = require('../usage/tracker');
 // 第三阶段（用户 2026-09-07 书面同意）：run_command 截图以 MCP image 内容回给网页 Agent。
@@ -22,6 +23,7 @@ const { collectShot } = require('../agent/computerUse');
 
 const router = express.Router();
 const SUPPORTED_PROTOCOL = ['2024-11-05', '2025-03-26', '2025-06-18'];
+const MAX_BATCH_ITEMS = 64;
 
 function extractToken(req) {
   const auth = req.headers.authorization || '';
@@ -42,7 +44,7 @@ function rejectUnauthorized(req, res) {
   return res.status(401).json({
     jsonrpc: '2.0',
     error: { code: -32000, message: 'Unauthorized: provide Bearer token, /mcp/<secret>, or complete OAuth pairing.' },
-    id: req.body ? req.body.id : null
+    id: rpcId(req.body?.id)
   });
 }
 
@@ -98,7 +100,7 @@ function rejectMalformedSessionHeader(req, res) {
   return res.status(400).json({
     jsonrpc: '2.0',
     error: { code: -32600, message: 'Invalid Request: send exactly one Mcp-Session-Id header with a single token.' },
-    id: req.body && !Array.isArray(req.body) && req.body.id != null ? req.body.id : null
+    id: rpcId(req.body?.id)
   });
 }
 
@@ -135,7 +137,7 @@ function rejectUnknownSession(req, res) {
   return res.status(404).json({
     jsonrpc: '2.0',
     error: { code: -32001, message: 'Session not found. Call initialize again, or omit Mcp-Session-Id.' },
-    id: req.body && req.body.id != null ? req.body.id : null
+    id: rpcId(req.body?.id)
   });
 }
 
@@ -193,12 +195,14 @@ async function handleRpc(req) {
       req.mcpSessionId = peerId;
       // Public peer labels must not disclose the private HTTP session capability.
       const existing = touchHttpSession(peerId, req.mcpPrincipal);
+      const protocolVersion = req.mcpProtocol || existing?.protocolVersion || pickProtocol(params);
+      if (existing) existing.protocolVersion = protocolVersion;
       const peerKey = existing && existing.key || `peer:${crypto.randomBytes(16).toString('hex')}`;
       const sessInit = touch(req, { clientInfo, key: peerKey });
       if (req.mcpSessionId) setHttpSessionKey(req.mcpSessionId, sessInit.key);
       eventBus.broadcast('agent_connected', { clientInfo, ip: req.ip });
       return {
-        protocolVersion: pickProtocol(params),
+        protocolVersion,
         capabilities: {
           tools: { listChanged: true },
           resources: { listChanged: true },
@@ -357,7 +361,7 @@ function hostStatus() {
 }
 
 function rpcId(id) {
-  return id === undefined ? null : id;
+  return validRequestId(id) ? id : null;
 }
 
 function invalidRpc(id, message) {
@@ -368,19 +372,65 @@ function invalidRpc(id, message) {
   };
 }
 
+// Validate the complete envelope before binding/renewing a session or executing any item.
+function rpcEnvelopeError(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body) || body.jsonrpc !== '2.0') return 'Invalid JSON-RPC envelope';
+  if (Object.keys(body).some(key => !['jsonrpc', 'id', 'method', 'params'].includes(key))) return 'Unexpected JSON-RPC envelope field';
+  if (typeof body.method !== 'string' || !body.method.length || body.method.length > 256) return 'Invalid method';
+  if (Object.hasOwn(body, 'params') && (!body.params || typeof body.params !== 'object' || Array.isArray(body.params))) return 'Named params must be an object';
+  const hasId = Object.hasOwn(body, 'id');
+  const notification = body.method.startsWith('notifications/');
+  if (notification ? hasId : !hasId || !validRequestId(body.id)) return 'Invalid request/notification id';
+  if (body.method === 'notifications/cancelled' && !validRequestId(body.params?.requestId)) return 'Invalid cancellation requestId';
+  if (body.method === 'initialize' && body.params) {
+    const params = body.params;
+    if (Object.hasOwn(params, 'protocolVersion') && (typeof params.protocolVersion !== 'string' || !params.protocolVersion.length || params.protocolVersion.length > 64)) return 'Invalid initialization protocolVersion';
+    for (const name of ['clientInfo', 'capabilities']) {
+      if (Object.hasOwn(params, name) && (!params[name] || typeof params[name] !== 'object' || Array.isArray(params[name]))) return 'Invalid initialization metadata';
+    }
+  }
+  return null;
+}
+
+function protocolForRequest(req, initialization) {
+  const header = req.headers?.['mcp-protocol-version'];
+  const raw = req.rawHeaders || [];
+  let count = 0;
+  for (let i = 0; i < raw.length; i += 2) if (String(raw[i]).toLowerCase() === 'mcp-protocol-version') count++;
+  if (count > 1 || header !== undefined && (typeof header !== 'string' || !SUPPORTED_PROTOCOL.includes(header))) return null;
+  const known = getHttpSession(incomingSessionId(req), req.mcpPrincipal)?.protocolVersion;
+  const proposed = initialization && Object.hasOwn(initialization.params || {}, 'protocolVersion') ? pickProtocol(initialization.params) : null;
+  if (known && proposed && known !== proposed) return null; // Reinitialize cannot downgrade a live session.
+  const version = known || proposed || header || '2025-03-26';
+  if (header !== undefined && header !== version) return null;
+  return version;
+}
+
+function postAdmission(req) {
+  const batch = Array.isArray(req.body);
+  const items = batch ? req.body : [req.body];
+  if (!items.length || items.length > MAX_BATCH_ITEMS) return 'Batch must contain 1–64 items';
+  const ids = new Set();
+  for (const item of items) {
+    const error = rpcEnvelopeError(item);
+    if (error) return error;
+    if (batch && item.method === 'initialize') return 'Initialize must be a standalone request';
+    if (Object.hasOwn(item, 'id')) {
+      const key = JSON.stringify(item.id); // Distinguishes 0 and "0"; invalid numeric IDs already rejected.
+      if (ids.has(key)) return 'Duplicate request id within batch';
+      ids.add(key);
+    }
+  }
+  const initialization = !batch && req.body.method === 'initialize' ? req.body : null;
+  const version = protocolForRequest(req, initialization);
+  if (!version) return 'Invalid, unsupported or inconsistent MCP-Protocol-Version';
+  if (batch && version === '2025-06-18') return 'Batch is not supported by protocol 2025-06-18';
+  req.mcpProtocol = version;
+  return null;
+}
+
 async function dispatchOne(req, body, res) {
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return { kind: 'response', payload: invalidRpc(null, 'Invalid Request'), httpStatus: 400 };
-  }
-  if (body.jsonrpc !== '2.0') {
-    return {
-      kind: 'response',
-      payload: invalidRpc(body.id, 'Invalid Request: jsonrpc must be "2.0"'),
-      httpStatus: 400
-    };
-  }
-  const method = body.method;
-  const notify = body.id === undefined || (method && String(method).startsWith('notifications/'));
+  const notify = !Object.hasOwn(body, 'id');
   req.body = body;
   try {
     const result = await control.run('bridge', async () => body.method === 'tools/call'
@@ -407,10 +457,9 @@ async function dispatchOne(req, body, res) {
 
 async function handlePost(req, res) {
   if (hasMalformedSessionHeader(req)) return rejectMalformedSessionHeader(req, res);
+  const admissionError = postAdmission(req);
+  if (admissionError) return res.status(400).json(invalidRpc(req.body?.id, admissionError));
   const incoming = req.body;
-  if (Array.isArray(incoming) && incoming.length === 0) {
-    return sendJsonRpc(req, res, invalidRpc(null, 'Invalid Request: empty batch'), 400);
-  }
 
   const batch = Array.isArray(incoming);
   const items = batch ? incoming : [incoming];
@@ -436,15 +485,16 @@ async function handlePost(req, res) {
   }
 
   if (batch) {
-    if (!responses.length) return res.status(204).end();
+    if (!responses.length) return res.status(202).end();
     return sendJsonRpc(req, res, responses, 200);
   }
-  if (!responses.length) return res.status(204).end();
+  if (!responses.length) return res.status(202).end();
   return sendJsonRpc(req, res, responses[0], lastHttp);
 }
 
 function handleGet(req, res) {
   if (hasMalformedSessionHeader(req)) return rejectMalformedSessionHeader(req, res);
+  if (!protocolForRequest(req)) return res.status(400).json(invalidRpc(null, 'Invalid, unsupported or inconsistent MCP-Protocol-Version'));
   try { const release = control.enter('bridge'); release(); }
   catch(error) { return res.status(409).json({error:error.message}); }
   const bound = bindHttpSession(req, { createIfMissing: wantsSse(req) });
@@ -482,6 +532,7 @@ function handleGet(req, res) {
 
 function handleDelete(req, res) {
   if (hasMalformedSessionHeader(req)) return rejectMalformedSessionHeader(req, res);
+  if (!protocolForRequest(req)) return res.status(400).json(invalidRpc(null, 'Invalid, unsupported or inconsistent MCP-Protocol-Version'));
   const incoming = incomingSessionId(req);
   if (incoming) destroyHttpSession(incoming, req.mcpPrincipal);
   return res.status(204).end();

@@ -3,12 +3,18 @@ const { createHash } = require('crypto');
 const { runWithSignal } = require('../utils/requestScope');
 const { ProtocolError } = require('./errors');
 
+// Local cancellation/addressability budget, shared with HTTP admission.
+// Safe integers avoid two wire IDs collapsing onto the same JS number.
+function validRequestId(id) {
+  return typeof id === 'string' && id.length <= 256 || typeof id === 'number' && Number.isSafeInteger(id);
+}
+
 // Only live calls are retained. The same session with a different credential
 // cannot cancel a call, even if it learns that call's JSON-RPC id.
 function createLifecycle({ timeoutMs = 300000, limit = 64 } = {}) {
   const active = new Map();
   function key(owner, id) {
-    if (!owner || !(typeof id === 'string' && id.length <= 256 || typeof id === 'number' && Number.isFinite(id))) return null;
+    if (!owner || !validRequestId(id)) return null;
     return JSON.stringify([owner, id]);
   }
   function owner(session, credential) {
@@ -20,6 +26,7 @@ function createLifecycle({ timeoutMs = 300000, limit = 64 } = {}) {
     // Unknown/finished/wrong-owner IDs have no observable lookup result.
   }
   async function run(identity, id, response, fn) {
+    if (!validRequestId(id)) throw new ProtocolError('E_BAD_ARGS', 'Invalid MCP request id');
     const requestKey = key(identity, id);
     if (active.size >= limit) throw new ProtocolError('E_BUSY', 'Too many active MCP calls');
     if (requestKey && active.has(requestKey)) throw new ProtocolError('E_BAD_ARGS', 'Duplicate active MCP request id');
@@ -40,4 +47,4 @@ function createLifecycle({ timeoutMs = 300000, limit = 64 } = {}) {
   }
   return { owner, cancel, run };
 }
-module.exports = { createLifecycle };
+module.exports = { createLifecycle, validRequestId };

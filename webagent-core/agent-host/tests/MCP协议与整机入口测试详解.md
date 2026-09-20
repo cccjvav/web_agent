@@ -4,7 +4,7 @@
 
 ## mcpProtocol.test.js
 
-[源码](mcpProtocol.test.js)临时workspace，**req(method,params,extra={})**构造ip、JSON-RPC id1/body，再展开extra覆盖字段。异步**main**直接handleRpc，不先经过HTTP认证中间件。
+[源码](mcpProtocol.test.js)临时workspace，**req(method,params,extra={})**构造ip、JSON-RPC id1/body，再展开extra覆盖字段。异步**main**先运行httpAdmission真实认证HTTP回归，再保留直接handleRpc的工具/展示合同测试；后者本身不经过认证中间件。
 
 | 断言组 | fixture、实际调用及结果 |
 |---|---|
@@ -21,7 +21,7 @@
 
 客户端字段只是仓库目录契约，不是对外部产品当前权限的在线认证。数组some/map/find与匿名filter回调在这些组中分别选择目标记录、投影name/URI、统计匹配数，不触发远程操作。
 
-局部**fakeRes()**提供headers/statusCode/body；**setHeader(k,v)**小写记键，**status/json**记录并链式返回，**end()**仅返回this，**write()**空（本组不验证SSE字节）。**post(body)**用无header/params的请求直接handlePost：空batch→400/-32600；ping+tools/list batch保两id与对应result；notification+ping只回ping；纯notification→204；id0必须返回0而非误作通知。成功rm tmp，catch exit1；没有finally，session状态由单文件进程结束隔离。
+局部**fakeRes()**提供headers/statusCode/body；**setHeader(k,v)**小写记键，**status/json**记录并链式返回，**end()**仅返回this，**write()**空（本组不验证SSE字节）。**post(body)**用无header/params的请求直接handlePost：空batch→400/-32600；ping+tools/list batch保两id与对应result；notification+ping只回ping；纯notification→202；id0必须返回0而非误作通知。成功与catch均rm tmp，catch exit1；session状态由单文件进程结束隔离。
 
 ## httpSmoke.test.js
 
@@ -67,7 +67,7 @@ main创建短期限与容量实例，owner分别改变会话或凭据；wait订�
 ## mcpCancellation.test.js：真实HTTP边界
 main在临时工作区挂真实MCP与API router，rpc使用fetch编码JSON和凭据；init建立两个同名但不同ID会话。唯一受控替身是workspace_info的handler：普通调用返回结果式失败，wait调用订阅当前请求信号并通过started通知夹具已进入工具。它不模拟Windows进程，也不更改工具权限。
 
-新增先从真实peers_list枚举公开key并当作会话头发送取消，全部404且原信号不触发；公开标签不再充当私有会话。cancel通知从另一会话返回204但不触发信号；无认证请求401；同owner重复活动ID返回协议错误。正确取消使原调用保留ID=0、isError和cancelled trace；完成后同ID可以重用。 局部**mint()**为同一个已注册OAuth client分别配对换取两个同时有效access；rpc的auth参数兼容布尔值与显式token。用第一token初始化并开始等待，第二token使用同SID发送取消仍204但不取消，第一token才可取消。验证session按client稳定绑定不削弱原调用按具体凭据隔离；不是令牌刷新后自动停止的保证。observe回调收集tool_call_end，断言后移除监听；直接REST调用要保留HTTP200和内部错误细节，但success及tool_call_end都为false。finally恢复原handler、关闭连接/服务器并删除临时工作区；测试并不开放产品本机控制面，真实回环/Origin保护另有专门测试。
+新增先从真实peers_list枚举公开key并当作会话头发送取消，全部404且原信号不触发；公开标签不再充当私有会话。cancel通知从另一会话返回202但不触发信号；无认证请求401；同owner重复活动ID返回协议错误。正确取消使原调用保留ID=0、isError和cancelled trace；完成后同ID可以重用。 局部**mint()**为同一个已注册OAuth client分别配对换取两个同时有效access；rpc的auth参数兼容布尔值与显式token。用第一token初始化并开始等待，第二token使用同SID发送取消仍202但不取消，第一token才可取消。验证session按client稳定绑定不削弱原调用按具体凭据隔离；不是令牌刷新后自动停止的保证。observe回调收集tool_call_end，断言后移除监听；直接REST调用要保留HTTP200和内部错误细节，但success及tool_call_end都为false。finally恢复原handler、关闭连接/服务器并删除临时工作区；测试并不开放产品本机控制面，真实回环/Origin保护另有专门测试。
 
 F27-02回归：mcpProtocol/httpSmoke断言DeepSeek/Chat Plus为unverified，三项描述字段严格null，移除固定商店ID/构建命令；保留extension-http候选的地址和规则输出，规则不授权或建连。MCP clients资源必须显示Plus/tunnel unknown而非no。原把固定商店ID当产品合同的断言已替换为未知状态与安全前置条件，不代表第三方实测。
 
@@ -76,3 +76,11 @@ F28-01协议/HTTP断言通用和OAuth连接器候选的未知状态、规范/mcp
 ### F54修复第一批新增回归
 
 `mcpProtocol.main`中的`postWithSession(sessionHeader)`用fakeRes验证合并串/数组/空/非ASCII/超长值400及单未知ID404。`mcpCancellation.main`中的`rawSession(method,value)`用真实HTTP发送重复原始头，验证POST/GET/DELETE拒绝且会话数不变；真实挂起工具handler加内部容量注入验证取消送达、POST释放；真实SSE打开/关闭验证pin释放。全200 busy由内部API构造，initialize/GET SSE通过真实HTTP验证503；不是200并发HTTP可达或24小时压测证明。
+
+### F54第二批RPC准入回归
+
+`httpAdmission()`启动真实Express/MCP router与临时工作区，真实文件工具、不替换handler。内部`request(body,options)`使用node:http发送可重复原始版本头、可选SID/JSON或SSE Accept，收HTTP/raw/JSON；Express严格JSON解析可能在路由前对primitive返回400 HTML，夹具保留状态而不强制解析为JSON。`write(id)`/`ping(id)`构造消息；`rejectBeforeEffects`要求400、会话/peer快照不变（去掉纯时间派生ageMs/alive）、没有tool_call_start、目标文件不存在且不返回新SID。`initialize(version)`断言实际握手及返回版本。
+
+覆盖非法ID/params/顶层字段/初始化元数据、无ID工具调用、有ID通知、非法取消目标；先写后坏成员/重复ID的整份批次必须零写。版本空值/重复/不支持在POST/GET/DELETE拒绝；协商2025-06-18后省略头仍拒绝batch，不能降级重握手，错误DELETE不删会话。旧版合法1–64项、0与字符串0、通知202、合法单写、单SSE响应、未知提案fallback与正常DELETE204/后续404有正例。requestLifecycle另锁直接run的非法ID不执行fn；mcpCancellation只将通知接受状态从204纠正202，原同owner/精确凭据/跨会话和取消信号断言均保留。不是全部客户端互操作认证，不测试持久exactly-once或跨文件批事务。
+
+httpSmoke第二批还通过真实src/index.js验证零写与正例：`admissionWrite(id)`构造临时write_file请求，协商现代会话后拒绝null/对象/无ID、现代batch、旧版重复ID及坏版本；合法ID必须真的写成同一文件，随后fixture删除。避免仅由权限关闭导致“零写”假阳性。

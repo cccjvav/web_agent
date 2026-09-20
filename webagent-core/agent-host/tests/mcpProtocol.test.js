@@ -21,7 +21,127 @@ function req(method, params, extra = {}) {
   };
 }
 
+// Real authenticated HTTP, real temporary file tools; no handler mocking.
+async function httpAdmission() {
+  const http = require('http'), express = require('express');
+  const sessions = require('../src/mcp/session'), bus = require('../src/utils/eventBus');
+  const app = express(); app.use(express.json()); app.use('/mcp', require('../src/mcp/server'));
+  const server = http.createServer(app);
+  const events = []; const observe = event => events.push(event);
+  bus.on('tool_call_start', observe);
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  async function request(body, { sid, version, method = 'POST', accept = 'application/json' } = {}) {
+    return new Promise((resolve, reject) => {
+      const payload = method === 'POST' ? JSON.stringify(body) : '';
+      const headers = { authorization: 'Bearer ' + config.secretKey, 'content-type': 'application/json', accept,
+        'content-length': Buffer.byteLength(payload), ...(sid ? {'mcp-session-id':sid} : {}),
+        ...(version !== undefined ? {'MCP-Protocol-Version':version} : {}) };
+      const req = http.request({host:'127.0.0.1',port:server.address().port,path:'/mcp',method,headers,agent:false},res => {
+        let text = ''; res.setEncoding('utf8'); res.on('data', data => text += data);res.on('error', reject);
+        res.on('end', () => {
+          try {
+            const json = text.startsWith('event:') ? text.split('\n').find(line=>line.startsWith('data:')).slice(5).trim() : text;
+            resolve({ status:res.statusCode, body:json && /json|event-stream/.test(res.headers['content-type'] || '') ? JSON.parse(json) : null, text, sid:res.headers['mcp-session-id'] });
+          } catch (error) { reject(error); }
+        });
+      });
+      req.setTimeout(5000,()=>req.destroy(new Error('admission fixture HTTP timeout')));
+      req.on('error',reject);req.end(payload);
+    });
+  }
+  const target = path.join(tmp,'rpc-must-not-write.txt');
+  const write = id => ({jsonrpc:'2.0',id,method:'tools/call',params:{name:'write_file',arguments:{filePath:'rpc-must-not-write.txt',content:'must not execute'}}});
+  const ping = id => ({jsonrpc:'2.0',id,method:'ping'});
+  async function rejectBeforeEffects(body, options = {}) {
+    const before = sessions.snapshot(); delete before.ageMs; delete before.alive;
+    const calls = events.length;
+    const result = await request(body, options);
+    assert.strictEqual(result.status,400,JSON.stringify({body,options,result}));
+    const after = sessions.snapshot(); delete after.ageMs; delete after.alive;
+    assert.deepStrictEqual(after,before,'invalid envelope cannot allocate/touch peers or sessions');
+    assert.strictEqual(events.length,calls,'invalid envelope must never dispatch a tool');
+    assert.strictEqual(fs.existsSync(target),false,'invalid envelope must have zero file writes');
+    assert.strictEqual(result.sid,undefined,'invalid envelope must not advertise a new session');
+    return result;
+  }
+  async function initialize(version) {
+    const result = await request({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:version,clientInfo:{name:'admission-fixture',version:'1'},capabilities:{}}});
+    assert.strictEqual(result.status,200);assert.ok(result.sid);
+    assert.strictEqual(result.body.result.protocolVersion,version);
+    return result.sid;
+  }
+  try {
+    for (const id of [null,{},[],true,1.5,Number.MAX_SAFE_INTEGER+1,'x'.repeat(257)]) {
+      const result = await rejectBeforeEffects(write(id));
+      assert.strictEqual(result.body.id,null,'invalid id is not echoed');
+    }
+    const noId = write(1);delete noId.id;await rejectBeforeEffects(noId);
+    for (const body of [null,[],[null],42,'request',{jsonrpc:'1.0',id:1,method:'initialize'},
+      {jsonrpc:'2.0',id:1,method:7},{jsonrpc:'2.0',id:1,method:''},
+      {jsonrpc:'2.0',id:1,method:'ping',params:[]},{jsonrpc:'2.0',id:1,method:'initialize',params:null},
+      {jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:7}},
+      {jsonrpc:'2.0',id:1,method:'initialize',params:{clientInfo:[]}},
+      {jsonrpc:'2.0',id:1,method:'initialize',params:{capabilities:[]}},
+      {...write(1),result:{}},{...write(1),extra:true},
+      {jsonrpc:'2.0',id:1,method:'notifications/initialized'},
+      {jsonrpc:'2.0',method:'notifications/cancelled',params:{requestId:null}},
+      {jsonrpc:'2.0',method:'notifications/cancelled'},
+      [write(1),{...ping(2),params:null}],[write(1),write(1)],
+      [{jsonrpc:'2.0',id:3,method:'initialize'},write(4)]]) await rejectBeforeEffects(body);
+    for (const version of ['1900-01-01','', ['2025-03-26','2025-03-26']]) {
+      await rejectBeforeEffects({jsonrpc:'2.0',id:1,method:'initialize'}, {version});
+      for (const method of ['GET','DELETE']) await rejectBeforeEffects(null,{version,method});
+    }
+    const modern = await initialize('2025-06-18');
+    assert.strictEqual(sessions.touchHttpSession(modern).protocolVersion,'2025-06-18');
+    // Invalid requests must not refresh the idle TTL of an otherwise valid session.
+    const rec = sessions.touchHttpSession(modern);rec.lastSeen = Date.now()-1000;
+    const previous = rec.lastSeen;
+    await rejectBeforeEffects(write(8),{sid:modern,version:'2025-03-26'});
+    assert.strictEqual(rec.lastSeen,previous);
+    await rejectBeforeEffects([write(8),write(9)],{sid:modern});
+    await rejectBeforeEffects([write(8)],{sid:modern,version:'2025-06-18'});
+    await rejectBeforeEffects([write(8)],{version:'2025-06-18'});
+    await rejectBeforeEffects({jsonrpc:'2.0',id:2,method:'initialize',params:{protocolVersion:'2025-03-26'}},{sid:modern});
+    assert.strictEqual(rec.protocolVersion,'2025-06-18','reinitialize cannot downgrade the session to enable batching');
+    for (const method of ['GET','DELETE']) {
+      await rejectBeforeEffects(null,{method,sid:modern,version:'2025-03-26'});
+      assert.ok(sessions.touchHttpSession(modern),'invalid DELETE must not delete');
+    }
+    for (const id of [0,'0','',Number.MAX_SAFE_INTEGER]) {
+      const response = await request(ping(id),{sid:modern});
+      assert.strictEqual(response.status,200);assert.strictEqual(response.body.id,id);
+    }
+    const notice = await request({jsonrpc:'2.0',method:'notifications/initialized'},{sid:modern});
+    assert.strictEqual(notice.status,202);assert.strictEqual(notice.text,'');
+    const sse = await request(ping(5),{sid:modern,version:'2025-06-18',accept:'application/json, text/event-stream'});
+    assert.strictEqual(sse.status,200);assert.strictEqual(sse.body.id,5);
+    for (const version of ['2024-11-05','2025-03-26']) {
+      const sid = await initialize(version);
+      await rejectBeforeEffects([write(1),write(1)],{sid,version});
+      await rejectBeforeEffects([write(1),...Array.from({length:64},(_,i)=>ping(i+2))],{sid});
+      const good = await request([ping(0),{jsonrpc:'2.0',method:'notifications/initialized'},ping('0')],{sid});
+      assert.strictEqual(good.status,200);assert.deepStrictEqual(good.body.map(x=>x.id),[0,'0']);
+      const max = await request(Array.from({length:64},(_,i)=>ping(i)),{sid});
+      assert.strictEqual(max.status,200);assert.strictEqual(max.body.length,64);
+      const notes = await request([{jsonrpc:'2.0',method:'notifications/initialized'}],{sid});
+      assert.strictEqual(notes.status,202);assert.strictEqual(notes.text,'');
+    }
+    const fallback = await request({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'future-unrecognized'}});
+    assert.strictEqual(fallback.body.result.protocolVersion,'2025-03-26','preserve negotiation fallback, not an unknown HTTP version header');
+    const goodWrite = await request({...write('valid-write'),params:{name:'write_file',arguments:{filePath:'rpc-valid-write.txt',content:'ok'}}},{sid:modern});
+    assert.strictEqual(goodWrite.status,200);assert.strictEqual(goodWrite.body.result.isError,false);
+    assert.strictEqual(fs.readFileSync(path.join(tmp,'rpc-valid-write.txt'),'utf8'),'ok');
+    assert.strictEqual((await request(null,{method:'DELETE',sid:modern,version:'2025-06-18'})).status,204);
+    assert.strictEqual((await request(ping(10),{sid:modern})).status,404);
+  } finally {
+    bus.removeListener('tool_call_start',observe);server.closeAllConnections?.();
+    await new Promise(resolve=>server.close(resolve));sessions.reset();
+  }
+}
+
 async function main() {
+  await httpAdmission();
   const init = await handleRpc(req('initialize', { clientInfo: { name: 'test-client' } }));
   assert.ok(init.instructions && init.instructions.includes('Web Agent Bridge MCP'));
   assert.ok(init.instructions.includes('webagent://instructions'));
@@ -286,7 +406,7 @@ async function main() {
   const notes = await post([
     { jsonrpc: '2.0', method: 'notifications/initialized' }
   ]);
-  assert.strictEqual(notes.statusCode, 204);
+  assert.strictEqual(notes.statusCode, 202);
 
   const zero = await post({ jsonrpc: '2.0', id: 0, method: 'ping', params: {} });
   assert.strictEqual(zero.body.id, 0);
@@ -325,5 +445,6 @@ async function main() {
 
 main().catch((err) => {
   console.error(err);
+  fs.rmSync(tmp, { recursive: true, force: true });
   process.exit(1);
 });

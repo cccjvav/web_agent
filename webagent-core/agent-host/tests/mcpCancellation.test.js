@@ -45,12 +45,12 @@ async function main() {
   assert.strictEqual(signal.aborted,false);
 
   const cancel = {jsonrpc:'2.0',method:'notifications/cancelled',params:{requestId:0}};
-  assert.strictEqual((await rpc(cancel,b)).status,204);
+  assert.strictEqual((await rpc(cancel,b)).status,202);
   assert.strictEqual((await rpc(cancel,a,false)).status,401);
   assert.strictEqual(signal.aborted,false);
   const duplicate = await (await rpc({jsonrpc:'2.0',id:0,method:'tools/call',params:{name:'workspace_info'}},a)).json();
   assert.ok(duplicate.error.message.includes('Duplicate'));
-  assert.strictEqual((await rpc(cancel,a)).status,204);
+  assert.strictEqual((await rpc(cancel,a)).status,202);
   const result = await (await pending).json();
   assert.strictEqual(result.id,0);
   assert.strictEqual(result.result.isError,true);
@@ -72,9 +72,9 @@ async function main() {
   const readyOAuth = new Promise(resolve => { started = resolve; });
   const waitingOAuth = rpc({jsonrpc:'2.0',id:0,method:'tools/call',params:{name:'workspace_info',arguments:{wait:true}}},oauthSid,first);
   await readyOAuth;
-  assert.strictEqual((await rpc(cancel,oauthSid,second)).status,204);
+  assert.strictEqual((await rpc(cancel,oauthSid,second)).status,202);
   assert.strictEqual(signal.aborted,false,'same OAuth client with another valid token must not cancel the original credential call');
-  assert.strictEqual((await rpc(cancel,oauthSid,first)).status,204);
+  assert.strictEqual((await rpc(cancel,oauthSid,first)).status,202);
   assert.strictEqual((await (await waitingOAuth).json()).result._meta.trace.status,'cancelled');
   const events = [];
   const bus = require('../src/utils/eventBus');
@@ -103,7 +103,7 @@ async function main() {
     for (let i = 0; i < 205; i++) sessions.createHttpSession();
   } finally { Date.now = clock; }
   const busyCancel = await rpc({jsonrpc:'2.0',method:'notifications/cancelled',params:{requestId:77}},busySid);
-  assert.strictEqual(busyCancel.status,204);
+  assert.strictEqual(busyCancel.status,202);
   assert.strictEqual((await (await busyCall).json()).result._meta.trace.status,'cancelled');
   assert.strictEqual(sessions.touchHttpSession(busySid).active,0);
   // Response headers contain duplicate raw fields, not just a mocked merged string.

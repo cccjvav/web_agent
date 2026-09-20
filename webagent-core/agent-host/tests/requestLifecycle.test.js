@@ -7,6 +7,11 @@ const { isToolFailure } = require('../src/utils/toolTrace');
 
 async function main() {
   const life = createLifecycle({ timeoutMs: 1000, limit: 2 });
+  for (const id of [null, undefined, {}, [], true, NaN, Infinity, -Infinity, 1.5, Number.MAX_SAFE_INTEGER + 1, 'x'.repeat(257)]) {
+    let executed = false;
+    await assert.rejects(life.run('owner', id, null, async () => { executed = true; }), /request id/i);
+    assert.strictEqual(executed,false,'lifecycle must fail closed even when called without HTTP validation');
+  }
   const a = life.owner('session-a', 'credential-a');
   const b = life.owner('session-b', 'credential-a');
   const c = life.owner('session-a', 'credential-b');
