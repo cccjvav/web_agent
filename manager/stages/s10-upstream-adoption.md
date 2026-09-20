@@ -844,7 +844,7 @@ server不从params复制上下文，固定remote:true并从keyForReq取可信pee
 
 capabilities按当前remote ACL调用getToolList，与tools/list一致；恢复权限立即反映，实际派发权限仍复查。protocol资源删去Retry using detail.currentHash，明确hash仅诊断、停下重读协调、冲突询问操作者，不得去掉hash自动重建或盲目重放。
 
-executionControl同IP同凭据双SID/Local任务、伪造上下文、空闲/删除/缺省SID、Read禁止和Edit实际拒绝定向通过；httpSmoke真实src/index.js通过本机Chat工具种Local，再切Bridge验证双peer，绑定+revision策略修改必须成功，目录名逐项等于tools/list且实际禁写无文件，再恢复策略。profile/mcpProtocol/taskProgress相邻回归通过。完整84/84、真实Chromium既有套件通过，生产依赖audit 0漏洞，docs249源码/28目录/110排除；实现`f318e6050d4276b24e9d3dbba4d622e236bedb92`的[CI35536769099](https://github.com/cccjvav/web_agent/actions/runs/35536769099)首轮8/9成功：Windows Node20在生产依赖审计步骤失败，该job测试未运行，其余八项成功。gh两条日志下载路径均EOF，未确认根因；failed-only重跑被GitHub拒绝（workflow file may be broken），不把失败归为已证明的网络波动。没有修改工作流/依赖/门禁。最终文档提交另行核验全量CI；正式清单201项含16暂停项，更新的是185个非暂停指纹，不读暂停正文、不提升逐句认证状态。下一项原生NDJSON可靠终态，之后窄屏/ARIA；其余R4–R9与逐句/实机验收继续，未把目录修复夸成原先存在Edit越权。
+executionControl同IP同凭据双SID/Local任务、伪造上下文、空闲/删除/缺省SID、Read禁止和Edit实际拒绝定向通过；httpSmoke真实src/index.js通过本机Chat工具种Local，再切Bridge验证双peer，绑定+revision策略修改必须成功，目录名逐项等于tools/list且实际禁写无文件，再恢复策略。profile/mcpProtocol/taskProgress相邻回归通过。完整84/84、真实Chromium既有套件通过，生产依赖audit 0漏洞，docs249源码/28目录/110排除；实现`f318e6050d4276b24e9d3dbba4d622e236bedb92`的[CI35536769099](https://github.com/cccjvav/web_agent/actions/runs/35536769099)首轮8/9成功：Windows Node20在生产依赖审计步骤失败，该job测试未运行，其余八项成功。gh两条日志下载路径均EOF，未确认根因；failed-only重跑被GitHub拒绝（workflow file may be broken），不把失败归为已证明的网络波动。没有修改工作流/依赖/门禁。文档提交`1b9eb049527f473e38d2580f960ab7199b89ae07`的[CI35536951646](https://github.com/cccjvav/web_agent/actions/runs/35536951646)已逐job核实九项success（包括此前失败的Windows20审计及测试），不倒推首轮失败根因；正式清单201项，暂停15项，更新的是185个已登记指纹，不读暂停正文、不提升逐句认证状态。下一项原生NDJSON可靠终态，之后窄屏/ARIA；其余R4–R9与逐句/实机验收继续，未把目录修复夸成原先存在Edit越权。
 
 ## 复盘
 
