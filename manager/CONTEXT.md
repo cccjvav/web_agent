@@ -6,10 +6,10 @@
 
 ## 当前状态
 - **阶段10进行中，核心0.7.2，不是只剩人工验收。** 已交付Chat/Bridge互斥、所有者权限、Tasks隔离/刷新恢复、经典受保护回退、原生草稿diff/恢复、跨文件内容检查点和显式公网HTTPS出站；R2/R3与其它待办仍在[唯一工作包表](stages/s10-upstream-adoption.md#当前工作包与交接约束)。
-- **2026-09-20独立复审已归档，已完成第一批，第二批RPC准入亦已交付，第三批补丁创建保护已交付。** [F54报告](../review/INDEPENDENT_AUDIT_2026-09-20.md)列出真实文件/HTTP/完整主机/原生函数/浏览器证据、ShunCode取舍及未执行项。审查之后第一批选择性采用01a0bf59的会话pin/头校验，补全忙503与空闲TTL；第二批`f40b917`补RPC ID/整份批次/版本绑定与通知202，本地84/84和真实Chromium通过，[CI35533579984](https://github.com/cccjvav/web_agent/actions/runs/35533579984)九项成功。实现`d7b521b`及[CI35531273186](https://github.com/cccjvav/web_agent/actions/runs/35531273186)九项成功，门禁与未完成项见阶段54组续记。
-- 本会话固定`arena/01a0bfa9-web-agent`。已fetch指定来源`arena/01a0b053-web-agent`，同步时均为`50c03bedc97f9eaaf1c875f4767c6e9bb5278d56`，当时ahead/behind=0/0；前批曾核对整树后仅恢复ref/index；第三批从干净7423c88接续，没有恢复ref/index或覆盖工作文件。
+- **2026-09-20独立复审已归档，已完成第一批，第二批RPC准入亦已交付，第三批补丁创建保护已交付，第四批资源隔离/ACL与机器指引已实施。** [F54报告](../review/INDEPENDENT_AUDIT_2026-09-20.md)列出真实文件/HTTP/完整主机/原生函数/浏览器证据、ShunCode取舍及未执行项。审查之后第一批选择性采用01a0bf59的会话pin/头校验，补全忙503与空闲TTL；第二批`f40b917`补RPC ID/整份批次/版本绑定与通知202，本地84/84和真实Chromium通过，[CI35533579984](https://github.com/cccjvav/web_agent/actions/runs/35533579984)九项成功。实现`d7b521b`及[CI35531273186](https://github.com/cccjvav/web_agent/actions/runs/35531273186)九项成功，门禁与未完成项见阶段54组续记。
+- 本会话固定`arena/01a0bfa9-web-agent`。已fetch指定来源`arena/01a0b053-web-agent`，同步时均为`50c03bedc97f9eaaf1c875f4767c6e9bb5278d56`，当时ahead/behind=0/0；前批曾核对整树后仅恢复ref/index；第四批从干净35968a2接续，没有恢复ref/index或覆盖工作文件。
 - 精确实现基线[CI35470787917](https://github.com/cccjvav/web_agent/actions/runs/35470787917)已逐job核实九项success。本地84/84、真实Chromium既有套件、文档249源码/28目录/110排除且updated=0、生产audit 0漏洞；语法201 JS/MJS+14 JSON+4 Shell、calculator6/6。基线成功不覆盖新增负例。审查落档`a490ca02f84fe5d9086e2d7629c0e1bfa2258206`已推本会话分支，[CI35525528734](https://github.com/cccjvav/web_agent/actions/runs/35525528734)亦逐job核实9/9成功；门禁与边界见阶段54组。
-- **下一闭环仍为R2，并与R3交叉**：新文件patch的hash/块处理；RPC准入/批内ID与busy会话驱逐；资源caller/目录ACL；原生聊天可靠终态；窄屏/ARIA。busy会话/会话头已交付；第二批补RPC envelope/协商版本/批内ID与预算预检，第三批`95c3330`新增缺失目标hash/新建块校验，[CI35534909704](https://github.com/cccjvav/web_agent/actions/runs/35534909704)九项成功；资源投影、原生终态、UI仍未修。正式回归须先锁正确合同再最小修复，不用整体替换掩盖问题。
+- **下一闭环仍为R2，并与R3交叉**：新文件patch的hash/块处理；RPC准入/批内ID与busy会话驱逐；资源caller/目录ACL；原生聊天可靠终态；窄屏/ARIA。busy会话/会话头已交付；第二批补RPC envelope/协商版本/批内ID与预算预检，第三批`95c3330`新增缺失目标hash/新建块校验，[CI35534909704](https://github.com/cccjvav/web_agent/actions/runs/35534909704)九项成功；第四批补可信资源caller/目录ACL与错误hash指引；原生终态和UI仍未修。正式回归须先锁正确合同再最小修复，不用整体替换掩盖问题。
 - 参考ShunCode zip只在仓库外安全解包/read-only阅读，未安装或执行。优先借鉴busy/stream pin与整批ID预检查；自适应并发/重放暂缓，信号量缩容有静态缺陷；不换现有文件/审批栈、不做支付授权、不授信手写类型。
 - **探针原分工继续暂停，用户本轮再次确认。** 不接手arena-model-probe、arena-trace-inspector、probe-extension及其专项源码/文档；通用套件经过旧用例不是专项审查。阶段8等另一助手正式交接；用户2026-09-17报告的[外部整合分支](https://github.com/phuang6666/arena-ai-probe/tree/arena/01a0ab8a-arena-ai-probe)仍未由本助手验收，不撤销0.5.2交付，11.3仍已关闭。
 - 正式清单201项：已逐句8、局部56、待逐句79、历史32、暂停15、边界7、生成1、规范1、受限2。新增报告不自授通过；库存、静态扫描、深入阅读、运行验证与实机验收分开。
@@ -18,7 +18,7 @@
 ## 必须保留的失败与边界
 - 上传`3fbe872`曾因新增任务TXT未登记而七项主机CI失败、另两项通过；现已由`50c03be`九项绿灯取代为当前基线。前任ref恢复及各批施工漂移仍在阶段历史，不写成今天又发生，也不据此自动重置checkout。
 - `36ff82f`首轮CI35125290301的Windows Node22两项超时仍未定位（R4）。后续绿灯不能证明根因已修；不得删断言、加时限或反复重跑美化结果。
-- 本轮完整主机确认资源会混入Local任务、目录权限投影不一致；实际Edit禁用仍拒绝写入。异常RPC写入使用有效临时凭据，不是未认证越权结论。
+- 首轮完整主机确认资源混入Local任务/目录权限投影不一致；第四批已补资源归属/ACL回归，实际Edit禁用仍拒绝写入。异常RPC写入使用有效临时凭据，不是未认证越权结论。
 - 390/320px中心区宽度为0并溢入聊天，axe命中tablist子角色；已有浏览器回归仍绿。字体优化是建议，Linux审查字体回退不是用户Windows效果认证。
 - 文档逐句、R5 PTY/平台、R6候选、R7文档、R8实机、R9工程化均继续；历史实现/CI详见[阶段10](stages/s10-upstream-adoption.md)，不在轻量索引复制整段F45–53日志。
 

@@ -75,6 +75,8 @@ POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连
 
 F54第一批：POST/SSE会话使用active pin防止忙时TTL/容量淘汰；全忙拒绝新分配（503），最后release启动空闲TTL。入站原始重复/畸形SID拒绝400；出站畸形响应SID不保存/回传。采用1–512可见ASCII、禁逗号的较窄SID策略，不是完整协议符合性承诺。
 
+F54第四批：resources/read固定使用已认证peer上下文，workspace远端读取须保留初始化SID；只返回本peer任务并省略全局事件类型，Local内部默认不变。capabilities资源复用tools/list的当前ACL；Read仍是资源正文门槛。协议资源明确错误hash仅诊断、停下重读协调，不得去hash重放。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 

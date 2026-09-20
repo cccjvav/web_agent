@@ -303,7 +303,7 @@ async function handleRpc(req) {
     case 'resources/read': {
       control.assertAllowed('read_files');
       const uri = params && params.uri;
-      const doc = readResource(uri);
+      const doc = readResource(uri, { remote: true, callerKey: keyForReq(req) });
       if (!doc) throw new ProtocolError('E_NOT_FOUND', `Unknown resource ${uri}`);
       return { contents: [doc] };
     }

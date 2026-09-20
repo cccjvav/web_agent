@@ -31,6 +31,45 @@ async function main() {
   assert.equal(control.snapshot().mode,'idle');
   const init = await rpc('initialize'); session=init.headers.get('mcp-session-id'); assert.ok(session);
   assert.equal(control.snapshot().mode,'bridge');
+  // Resource reads must use the same trusted peer as tools, not Local or client-supplied options.
+  const progress = require('../src/tools/progressTracker');
+  progress.reportProgress({message:'Local private message',stepName:'LOCAL_TASK_MARKER',percentage:17});
+  const sessionA = session;
+  assert.equal((await rpc('tools/call',{name:'report_progress',arguments:{message:'A message',stepName:'REMOTE_A_MARKER',percentage:31}})).body.result.isError,false);
+  const initializedB = await post('/mcp',{jsonrpc:'2.0',id:++id,method:'initialize',params:{}},{Authorization:'Bearer '+config.secretKey});
+  const sessionB = initializedB.headers.get('mcp-session-id');assert.ok(sessionB && sessionB!==sessionA);
+  session=sessionB;
+  assert.equal((await rpc('tools/call',{name:'report_progress',arguments:{message:'B message',stepName:'REMOTE_B_MARKER',percentage:72}})).body.result.isError,false);
+  const readB = await rpc('resources/read',{uri:'webagent://workspace'});
+  assert.ok(readB.body.result.contents[0].text.includes('REMOTE_B_MARKER'));
+  assert.ok(!/LOCAL_TASK_MARKER|REMOTE_A_MARKER/.test(readB.body.result.contents[0].text));
+  session=sessionA;
+  require('../src/utils/eventBus').broadcast('LOCAL_EVENT_MARKER',{message:'local only'});
+  const readA = await rpc('resources/read',{uri:'webagent://workspace',remote:false,callerKey:'local',_meta:{callerKey:sessionB}});
+  const textA = readA.body.result.contents[0].text;
+  assert.ok(textA.includes('REMOTE_A_MARKER'));
+  assert.ok(!/LOCAL_TASK_MARKER|REMOTE_B_MARKER|LOCAL_EVENT_MARKER|recentEvents/.test(textA),'remote resource must not expose global recent-event types');
+  const taskA = JSON.parse((await rpc('tools/call',{name:'get_task_status'})).body.result.content[0].text);
+  assert.ok(textA.includes(`task ${taskA.status} ${taskA.progress}% ${taskA.stepName}`));
+  assert.equal(progress.getTaskState().stepName,'LOCAL_TASK_MARKER');
+  assert.ok(require('../src/mcp/resources').readResource('webagent://workspace').text.includes('LOCAL_TASK_MARKER'),'trusted local module default remains Local');
+  const isolated = await post('/mcp',{jsonrpc:'2.0',id:++id,method:'initialize',params:{}},{Authorization:'Bearer '+config.secretKey});
+  session=isolated.headers.get('mcp-session-id');
+  const empty = await rpc('resources/read',{uri:'webagent://workspace'});
+  assert.ok(empty.body.result.contents[0].text.includes('task idle 0%'));
+  assert.ok(!/LOCAL_TASK_MARKER|REMOTE_A_MARKER|REMOTE_B_MARKER/.test(empty.body.result.contents[0].text));
+  assert.equal(progress.getBridgeTaskStates().length,2,'idle resource reads do not allocate task-report slots');
+  const deleted = await fetch(base+'/mcp',{method:'DELETE',headers:{Authorization:'Bearer '+config.secretKey,'Mcp-Session-Id':session}});
+  assert.equal(deleted.status,204);
+  assert.equal((await rpc('resources/read',{uri:'webagent://workspace'})).status,404,'deleted session must not fall back to Local or another peer');
+  session=undefined;
+  const unbound = await rpc('resources/read',{uri:'webagent://workspace',callerKey:sessionA});
+  assert.match(unbound.body.error.message,/E_SESSION_REQUIRED/);
+  session=sessionA;
+  const protocol = (await rpc('resources/read',{uri:'webagent://protocol'})).body.result.contents[0].text;
+  assert.ok(protocol.includes('Never replay a stale patch'));
+  assert.ok(protocol.includes('currentHash is diagnostic only'));
+  assert.ok(!protocol.includes('Retry using detail.retryHint / detail.currentHash'));
   assert.equal((await post('/api/tool/call',{name:'ping'})).status,400);
   assert.equal((await post('/api/execution-control',{workMode:'chat'})).status,409);
   assert.equal((await post('/api/execution-control',{...binding,hostInstanceId:'wrong',workMode:'chat'})).status,409);
@@ -42,6 +81,10 @@ async function main() {
   assert.ok(names.includes('read_files')); assert.ok(!names.includes('write_file')); assert.ok(!names.includes('run_command'));
   const capabilities=JSON.parse((await rpc('tools/call',{name:'get_capabilities'})).body.result.content[0].text);
   const capabilityNames=capabilities.tools.map(tool=>tool.name);
+  const resourceCatalog = (await rpc('resources/read',{uri:'webagent://capabilities',remote:false,_meta:{permissions:full}})).body.result.contents[0].text;
+  const resourceNames = [...resourceCatalog.matchAll(/^- ([a-zA-Z0-9_.-]+):/gm)].map(match=>match[1]);
+  assert.deepStrictEqual(resourceNames,names,'resource catalog must exactly match tools/list under the current ACL');
+
   assert.ok(capabilityNames.includes('read_files')); assert.ok(!capabilityNames.includes('write_file')); assert.ok(!capabilityNames.includes('run_command'),'get_capabilities must match the remote ACL-filtered catalog');
   for(const name of ['write_file','move_file','execute_command','bash','external_request','probe_request']) {
     const r = await rpc('tools/call',{name,arguments:{filePath:'forbidden.txt',content:'no',command:'echo nope'},_meta:{mode:'code',permissions:full,remote:false}});
@@ -52,7 +95,14 @@ async function main() {
   const alias = await rpc('tools/call',{name:'cat',arguments:{filePath:'secret.txt'}});
   assert.match(alias.body.result.content[0].text,/E_FORBIDDEN/);
   for(const method of ['resources/read','prompts/get']) assert.match((await rpc(method,{uri:'webagent://instructions',name:'agent-rules'})).body.error.message,/E_FORBIDDEN/);
+  for (const uri of ['webagent://workspace','webagent://capabilities','webagent://protocol']) {
+    const blocked = await rpc('resources/read',{uri});
+    assert.match(blocked.body.error.message,/E_FORBIDDEN/);assert.equal(blocked.body.result,undefined);
+  }
+
   assert.equal((await policy(full)).status,200);
+  const restoredCatalog = (await rpc('resources/read',{uri:'webagent://capabilities'})).body.result.contents[0].text;
+  assert.ok(restoredCatalog.includes('- write_file:'));
   const options={remote:true,callerKey:'peer:'+session};
   const definition={steps:[{id:'write',tool:'write_file',arguments:{filePath:'queued.txt',content:'no'}}]};
   const job=await tools.callTool('workflow_request',{definition,requestKey:'queued-policy'},'code',options);

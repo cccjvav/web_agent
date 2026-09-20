@@ -109,6 +109,8 @@ F54第二批：mcpProtocol新增真实HTTP整份准入/版本协商/旧版批预
 
 F54第三批：patchEngine的missingTargetSafety锁新建hash/块校验、无mkdir/事件/缓存副作用和正例预览；httpSmoke经真实主机入口交叉验证。
 
+F54第四批：executionControl/httpSmoke以真实HTTP验证Local/远端A/B资源归属、客户端上下文伪装无效、能力目录与ACL一致及实际写入仍受禁止；覆盖Read撤销/权限恢复和错误hash指引。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -140,14 +142,14 @@ F54第三批：patchEngine的missingTargetSafety锁新建hash/块校验、无mkd
 | [editorReview.test.js](editorReview.test.js) | 29 个函数/类节点 |
 | [editorRuntime.test.js](editorRuntime.test.js) | 37 个函数/类节点 |
 | [eventBus.test.js](eventBus.test.js) | 9 个函数/类节点 |
-| [executionControl.test.js](executionControl.test.js) | 31 个函数/类节点 |
+| [executionControl.test.js](executionControl.test.js) | 32 个函数/类节点 |
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
 | [externalDiscovery.test.js](externalDiscovery.test.js) | 13 个函数/类节点 |
 | [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
 | [githubAuth.test.js](githubAuth.test.js) | 21 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
-| [httpSmoke.test.js](httpSmoke.test.js) | 43 个函数/类节点 |
+| [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
 | [installerPackaging.test.js](installerPackaging.test.js) | 23 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 19 个函数/类节点 |

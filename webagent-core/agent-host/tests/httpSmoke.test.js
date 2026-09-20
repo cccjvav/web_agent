@@ -261,6 +261,34 @@ async function main() {
     }
     assert.strictEqual(fs.readFileSync(path.join(tmp,'valid-patch-dir/new.txt'),'utf8'),'created');
 
+    // Complete host: local task and two authenticated peers cannot cross resource projections.
+    const resourceBinding = {workspaceRoot:status.json.workspaceRoot,hostInstanceId:status.json.identity.hostInstanceId};
+    assert.strictEqual((await request('POST', `http://127.0.0.1:${workbenchPort}/api/execution-control`,{...resourceBinding,workMode:'chat'})).status,200);
+    const localProgress = await request('POST', `http://127.0.0.1:${workbenchPort}/api/tool/call`,{name:'report_progress',arguments:{message:'local fixture',stepName:'LOCAL_RESOURCE_ONLY',percentage:19}});
+    assert.strictEqual(localProgress.json.success,true);
+    assert.strictEqual((await request('POST', `http://127.0.0.1:${workbenchPort}/api/execution-control`,{...resourceBinding,workMode:'bridge'})).status,200);
+    const resourceRpc = (method,params,headers=modernHeaders) => request('POST', `http://127.0.0.1:${mcpPort}/mcp/${secret}`,{jsonrpc:'2.0',id:patchId++,method,params},headers);
+    for (const [headers,stepName] of [[modernHeaders,'REMOTE_RESOURCE_A'],[oldHeaders,'REMOTE_RESOURCE_B']]) {
+      const reported = await resourceRpc('tools/call',{name:'report_progress',arguments:{message:'remote fixture',stepName,percentage:41}},headers);
+      assert.strictEqual(reported.json.result.isError,false);
+    }
+    for (const [headers,own,other] of [[modernHeaders,'REMOTE_RESOURCE_A','REMOTE_RESOURCE_B'],[oldHeaders,'REMOTE_RESOURCE_B','REMOTE_RESOURCE_A']]) {
+      const resource = await resourceRpc('resources/read',{uri:'webagent://workspace',remote:false,callerKey:'local'},headers);
+      const text = resource.json.result.contents[0].text;
+      assert.ok(text.includes(own));assert.ok(!text.includes(other));assert.ok(!text.includes('LOCAL_RESOURCE_ONLY'));assert.ok(!text.includes('recentEvents'));
+    }
+    const savedPolicy = await request('GET', `http://127.0.0.1:${workbenchPort}/api/execution-control`);
+    const revoked = await request('POST', `http://127.0.0.1:${workbenchPort}/api/execution-control`,{...resourceBinding,revision:savedPolicy.json.revision,permissions:{read:true,edit:false,execute:false,capture:false}});
+    assert.strictEqual(revoked.status,200);assert.strictEqual(revoked.json.success,true);
+    const resourceCatalog = (await resourceRpc('resources/read',{uri:'webagent://capabilities'})).json.result.contents[0].text;
+    const allowedNames = (await resourceRpc('tools/list',{})).json.result.tools.map(tool=>tool.name);
+    assert.deepStrictEqual([...resourceCatalog.matchAll(/^- ([a-zA-Z0-9_.-]+):/gm)].map(match=>match[1]),allowedNames);
+    assert.ok(!resourceCatalog.includes('- write_file:'));
+    const forbiddenWrite = await resourceRpc('tools/call',{name:'write_file',arguments:{filePath:'resource-acl-denied.txt',content:'no'}});
+    assert.strictEqual(forbiddenWrite.json.result.isError,true);assert.ok(!fs.existsSync(path.join(tmp,'resource-acl-denied.txt')));
+    const restoredPolicy = await request('POST', `http://127.0.0.1:${workbenchPort}/api/execution-control`,{...resourceBinding,revision:revoked.json.revision,permissions:savedPolicy.json.permissions});
+    assert.strictEqual(restoredPolicy.status,200);assert.strictEqual(restoredPolicy.json.success,true);
+
     const listed = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/${secret}`, {
       jsonrpc: '2.0',
       id: 2,

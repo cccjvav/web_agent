@@ -9,6 +9,8 @@ const { snapshot } = require('./session');
 const eventBus = require('../utils/eventBus');
 const { getInstructions } = require('./instructions');
 const { listClients } = require('./clients');
+const { ProtocolError } = require('./errors');
+const control = require('../utils/executionControl');
 
 const RESOURCE_DEFS = [
   { uri: 'webagent://instructions', name: 'Instructions', mimeType: 'text/markdown', description: 'Full server + workspace instructions (same payload as initialize.instructions).' },
@@ -25,7 +27,8 @@ function listResources() {
   return RESOURCE_DEFS;
 }
 
-function readResource(uri) {
+function readResource(uri, options = {}) {
+  if (options.remote) control.assertAllowed('read_files');
   switch (uri) {
     case 'webagent://instructions':
       return { uri, mimeType: 'text/markdown', text: getInstructions() };
@@ -43,22 +46,23 @@ function readResource(uri) {
           '# Web Agent MCP',
           '',
           '- Transport: Streamable HTTP JSON-RPC 2.0. Paste-URL clients use `/mcp/<secret>`; OAuth clients use `/mcp` + Bearer.',
-          '- initialize → workspace_info → tools/list → tools/call',
+          '- initialize → notifications/initialized → workspace_info → tools/list → tools/call; retain Mcp-Session-Id and the negotiated MCP-Protocol-Version.',
+          '- workspace resource task state requires an initialized session and reflects only that peer; use get_logs for caller-scoped execution logs.',
           '- resources: webagent://protocol|capabilities|config|workspace|memory|profile|clients',
           '- prompts: workspace customizations',
           '- Tool results are clipped (~4k tokens). Use offset/limit/cursor.',
-          '- tools/call failures (wrong args, HASH_REQUIRED, confirm, missing files) are MCP `isError: true` with `{layer,code,msg,detail}`. Retry using detail.retryHint / detail.currentHash.',
+          '- tools/call failures (wrong args, HASH_REQUIRED, confirm, missing files) are MCP `isError: true` with `{layer,code,msg,detail}`. Stop on HASH_REQUIRED / STALE_FILE and inspect the current file before planning a new edit; detail.currentHash is diagnostic only, never authorization to replay a write.',
           '- JSON-RPC `error` is for bad jsonrpc / unknown method / missing tools/call name, not for a failed tool.',
           '- Heartbeat: call ping; host treats 10s silence as a stale client.',
           '- Long commands: start_command → poll get_command_output(execId) using suggestedWaitMs.',
           '- git_status / git_diff are read-only. Plain folders return available:false instead of throwing.',
-          '- apply_patch reuses the last read_files sha256 for that path (persisted under .webagent/read-hashes.json); otherwise pass expectedHash. HASH_REQUIRED includes currentHash.',
+          '- apply_patch may reuse the last read_files sha256 for an existing path (persisted under .webagent/read-hashes.json). Never replay a stale patch: re-read and reconcile the current content, and ask the operator if intent conflicts. For a missing target with expectedHash, do not drop the hash and recreate automatically.',
           '- Remote tools/call defaults to Code mode. Pass params._meta.mode=ask|plan|code to switch. Local Chat sends the UI mode on /api/chat.',
           '- Argument aliases: path/file_path → filePath; cmd → command; bash/cat/grep/ls map to run_command/read_files/search_files/list_directory.'
         ].join('\n')
       };
     case 'webagent://capabilities': {
-      const tools = getToolList();
+      const tools = getToolList(null, options.remote ? { remote: true } : {});
       return {
         uri,
         mimeType: 'text/plain',
@@ -82,8 +86,9 @@ function readResource(uri) {
       };
     }
     case 'webagent://workspace': {
+      if (options.remote && !options.callerKey) throw new ProtocolError('E_SESSION_REQUIRED', 'Initialize and retain Mcp-Session-Id before reading the workspace task resource.');
       const custom = loadCustom();
-      const task = getTaskState();
+      const task = getTaskState(options);
       return {
         uri,
         mimeType: 'text/plain',
@@ -91,7 +96,7 @@ function readResource(uri) {
           `root ${config.workspaceRoot}`,
           `instructions ${custom.instructions || '(none)'}`,
           `task ${task.status} ${task.progress}% ${task.stepName || ''}`.trim(),
-          `recentEvents ${eventBus.getRecentLogs(5).map((e) => e.type).join(', ') || 'none'}`
+          ...(options.remote ? [] : [`recentEvents ${eventBus.getRecentLogs(5).map((e) => e.type).join(', ') || 'none'}`])
         ].join('\n')
       };
     }

@@ -84,7 +84,7 @@
 |---|---|---|---|
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
-| R2 / 下一项，高 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，资源caller与目录ACL仍未修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
+| R2 / 下一项，高 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，第四批现补资源caller与目录ACL及错误hash指引，原生终态/UI仍待续修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
 | R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54第三批已补新文件patch显式hash与块校验，原生postNdjson坏流假完成仍未修；按新证据续修，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
@@ -835,6 +835,16 @@ RPC envelope只允许jsonrpc/id/method/params，具名params对象；请求ID≤
 合同：显式expectedHash表示已有文件的内容前提，缺失目标在dryRun/提交均E_STALE_FILE且currentHash=null，空文件hash也不代表不存在。新建允许完整正文或恰好一个空SEARCH块；单非空SEARCH E_CONFLICT，多块E_BAD_ARGS整体拒绝，而不是猜测拼接或丢掉尾块。已有文件多块顺序应用、CRLF、写锁、exclusive原子创建、检查点/审批耦合保持；新建未传hash仍按原合同不自动使用历史readCache，不承诺外部编辑器事务或持久exactly-once。
 
 正式回归锁拒绝前无父目录/文件、无file_patched和新hash缓存；先read再外部删除仍拒绝旧hash。合法正文/单空块dryRun零写，提交内容/hash与预览一致；已有文件双块完整应用。httpSmoke用真实src/index.js和有效凭据验证同类工具错误（HTTP200但isError=true）及成功新建正例。patchEngine/httpSmoke/taskProgress/fileCheckpoints/workflowPreconditions/apiFiles/stateIntegrity定向通过；本地完整84/84、真实Chromium套件与生产audit 0漏洞通过；文档249/28/110重建零漂移，git diff --check通过。实现`95c3330ecb5a2b8d7402cfc98da0c0b46bc39670`已推本会话分支；[CI35534909704](https://github.com/cccjvav/web_agent/actions/runs/35534909704)按该SHA逐job核验九项success，含Windows Node24重复取消/stdio；未重跑美化结果，不证明历史Windows超时根因已修。未扩大为Windows真实编辑器验收。下一项资源caller/目录ACL与机器重试指引，然后原生终态、UI；历史Windows超时及全仓逐句继续保留。
+
+### F54修复第四批：资源上下文/目录ACL与安全重试指引（2026-09-20）
+
+从干净35968a2接续，没有恢复ref/index、切分支或合并别处生成物。先给executionControl加真实HTTP负例：不同远端SID读workspace应匹配自身step，旧实现读到Local，红测在/home/user/f54-resource-evidence/red.log。仅修改resources/server两处运行时文件，不涉及暂停探针/参考包。
+
+server不从params复制上下文，固定remote:true并从keyForReq取可信peer；readResource(uri,options={})保留Local内部缺省，远端再次检查Read。workspace远端须初始化SID，无可信peer报E_SESSION_REQUIRED，不用IP/显示名称/自报callerKey猜归属；已删除SID维持404。getTaskState(options)复用原工具隔离，空闲peer不新建任务槽位；远端移除全局recentEvents，需日志走既有get_logs。根、自定义instructions、memory等仍是Read授权的共享工作区信息，不宣称全面多租户隔离。
+
+capabilities按当前remote ACL调用getToolList，与tools/list一致；恢复权限立即反映，实际派发权限仍复查。protocol资源删去Retry using detail.currentHash，明确hash仅诊断、停下重读协调、冲突询问操作者，不得去掉hash自动重建或盲目重放。
+
+executionControl同IP同凭据双SID/Local任务、伪造上下文、空闲/删除/缺省SID、Read禁止和Edit实际拒绝定向通过；httpSmoke真实src/index.js通过本机Chat工具种Local，再切Bridge验证双peer，绑定+revision策略修改必须成功，目录名逐项等于tools/list且实际禁写无文件，再恢复策略。profile/mcpProtocol/taskProgress相邻回归通过。完整84/84、真实Chromium既有套件通过，生产依赖audit 0漏洞，docs249源码/28目录/110排除；精确CI待提交后核验。下一项原生NDJSON可靠终态，之后窄屏/ARIA；其余R4–R9与逐句/实机验收继续，未把目录修复夸成原先存在Edit越权。
 
 ## 复盘
 

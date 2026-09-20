@@ -86,3 +86,5 @@ F28-01协议/HTTP断言通用和OAuth连接器候选的未知状态、规范/mcp
 httpSmoke第二批还通过真实src/index.js验证零写与正例：`admissionWrite(id)`构造临时write_file请求，协商现代会话后拒绝null/对象/无ID、现代batch、旧版重复ID及坏版本；合法ID必须真的写成同一文件，随后fixture删除。避免仅由权限关闭导致“零写”假阳性。
 
 F54第三批：httpSmoke继续通过真实src/index.js、合法现代会话调用apply_patch：显式hash但不存在、非空SEARCH和多块新建，在dryRun与正式执行均HTTP200/result.isError且错误码正确、父目录不创建；单空块新建预览零写、提交内容精确为created。区分HTTP成功与工具失败，不改审批或权限。
+
+F54第四批：httpSmoke的`resourceRpc(method,params,headers)`复用真实src/index.js会话发资源/工具请求。先经带workspaceRoot/hostInstanceId的本机执行控制切Chat，用本机tool/call上报Local标记，再切回Bridge；两个远端SID分别上报并读取自己资源，不得串Local或另一peer。带绑定与revision的Read-only策略更新必须status200/success=true，capabilities资源工具名逐项等于tools/list且无write_file；实际write_file仍isError且无文件。最后按新revision恢复原权限并核对成功，避免策略修改失败或未恢复造成假阳性。
