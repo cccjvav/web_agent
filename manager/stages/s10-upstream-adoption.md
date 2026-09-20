@@ -834,7 +834,7 @@ RPC envelope只允许jsonrpc/id/method/params，具名params对象；请求ID≤
 
 合同：显式expectedHash表示已有文件的内容前提，缺失目标在dryRun/提交均E_STALE_FILE且currentHash=null，空文件hash也不代表不存在。新建允许完整正文或恰好一个空SEARCH块；单非空SEARCH E_CONFLICT，多块E_BAD_ARGS整体拒绝，而不是猜测拼接或丢掉尾块。已有文件多块顺序应用、CRLF、写锁、exclusive原子创建、检查点/审批耦合保持；新建未传hash仍按原合同不自动使用历史readCache，不承诺外部编辑器事务或持久exactly-once。
 
-正式回归锁拒绝前无父目录/文件、无file_patched和新hash缓存；先read再外部删除仍拒绝旧hash。合法正文/单空块dryRun零写，提交内容/hash与预览一致；已有文件双块完整应用。httpSmoke用真实src/index.js和有效凭据验证同类工具错误（HTTP200但isError=true）及成功新建正例。patchEngine/httpSmoke/taskProgress/fileCheckpoints/workflowPreconditions/apiFiles/stateIntegrity定向通过；本地完整84/84、真实Chromium套件与生产audit 0漏洞通过；文档249/28/110重建零漂移，git diff --check通过。精确实现CI待推送后核对，不借前批绿灯代签。未扩大为Windows真实编辑器验收。下一项资源caller/目录ACL与机器重试指引，然后原生终态、UI；历史Windows超时及全仓逐句继续保留。
+正式回归锁拒绝前无父目录/文件、无file_patched和新hash缓存；先read再外部删除仍拒绝旧hash。合法正文/单空块dryRun零写，提交内容/hash与预览一致；已有文件双块完整应用。httpSmoke用真实src/index.js和有效凭据验证同类工具错误（HTTP200但isError=true）及成功新建正例。patchEngine/httpSmoke/taskProgress/fileCheckpoints/workflowPreconditions/apiFiles/stateIntegrity定向通过；本地完整84/84、真实Chromium套件与生产audit 0漏洞通过；文档249/28/110重建零漂移，git diff --check通过。实现`95c3330ecb5a2b8d7402cfc98da0c0b46bc39670`已推本会话分支；[CI35534909704](https://github.com/cccjvav/web_agent/actions/runs/35534909704)按该SHA逐job核验九项success，含Windows Node24重复取消/stdio；未重跑美化结果，不证明历史Windows超时根因已修。未扩大为Windows真实编辑器验收。下一项资源caller/目录ACL与机器重试指引，然后原生终态、UI；历史Windows超时及全仓逐句继续保留。
 
 ## 复盘
 
