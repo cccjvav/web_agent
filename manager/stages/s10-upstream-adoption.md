@@ -84,8 +84,8 @@
 |---|---|---|---|
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
-| R2 / 下一项，高 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，第四批现补资源caller与目录ACL及错误hash指引，原生终态/UI仍待续修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
-| R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54第三批已补新文件patch显式hash与块校验，原生postNdjson坏流假完成仍未修；按新证据续修，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
+| R2 / 下一项，高 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，第四批现补资源caller与目录ACL及错误hash指引，第五批已补原生流确认，UI仍待续修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
+| R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54第三批已补新文件patch显式hash与块校验，第五批补原生postNdjson坏流/终态及失败历史；按新证据续修，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -863,6 +863,14 @@ executionControl同IP同凭据双SID/Local任务、伪造上下文、空闲/删�
 stateIntegrity/mcpProtocol/mcpCancellation/requestLifecycle/externalDiscovery/patchEngine/executionControl/taskProgress/fileCheckpoints/workflowPreconditions/operatorQueueCapacity/nativeRotationCommands/extensionCopy共13项定向通过；84/84和真实Chromium既有套件通过。最初定向命令误写不存在的operatorQueue.test.js，属于执行脚本路径错误，停止后核对真实operatorQueueCapacity入口再运行；原错误日志保留，不把它报为产品回归或已执行测试。修改说明后再次完整84/84通过；docs249/28/110，精确提交CI在提交后核验。证据目录/home/user/f54-cross-review-evidence。
 
 总体方向仍是既有安全文件工具、审批/恢复、Chat/Bridge和可靠结果链的选择性修复；没有引入替代MCP栈、模型自动切换/重放、扩大OS权限或解除探针暂停。本次未发现新的已复现运行时回归，不等于证明全部兼容性；保留历史Windows超时/首轮审计失败根因、R4–R9及实际Windows/第三方客户端验收。原生可靠终态仍是下一施工项，本轮自审不将其标成完成。
+
+### F54第五批：原生聊天可靠终态（2026-09-21）
+
+本轮先核对Git：本地ref/index回到50c03be而文件保留上轮成果；fetch固定分支2d4ac31，核对发布树后仅mixed恢复ref/index，不覆盖工作文件，恢复后status干净。未编辑暂停探针。
+
+nativeChatStream先以真实HTTP证明旧postNdjson对302正常resolve（/home/user/f54-native-evidence/red.log），再最小修原生链：仅2xx NDJSON，1MiB单行/16MiB总响应、5分钟总deadline和空闲timeout；坏帧/回调错误/断流/error/取消全部拒绝并清理，只在唯一done后正常EOF确认。done之后非空事件同样拒绝。ChatView原有“await成功才存助手历史”现在获得可靠合同；原生participant返回完成metadata，失败assistant历史不再回送，未标记旧历史保持兼容。取消不弹错误模态、不声称主机一定未执行，不自动重放。未修改审批/文件/PTY权限、共享MCP及经典UI。
+
+测试覆盖传输与两个真实消费者（VS Code及binding替身），正例跨UTF8字节/无尾换行，负例302/错误MIME/坏帧/无终态/重复或done后数据/error/断流/取消/预算/控制时钟deadline。发行副本按既有syncExtension生成，不手改单独副本或放宽一致性断言。首轮84/85仅新增测试的详解登记遗漏，补登记及夹具函数说明后完整85/85、真实Chromium通过，docs250/28/110；Playwright下载TLS失败，改用仓库外Chromium包及所需库运行，不降低TLS或浏览器安全策略。精确CI待提交后核验；实际Windows VS Code窗口不代签。requestJson响应预算等相邻静态缺口仍待，窄屏/ARIA继续下一项，不把本次局部修复外推全原生链审完。
 
 ## 复盘
 

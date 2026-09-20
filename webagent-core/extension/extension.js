@@ -140,45 +140,77 @@ function postNdjson(url, body, onEvent, signal) {
     const u = new URL(url);
     const lib = u.protocol === 'https:' ? https : http;
     const payload = JSON.stringify(body);
-    const req = lib.request(
-      {
-        hostname: u.hostname,
-        port: u.port,
-        path: u.pathname + u.search,
-        method: 'POST',
-        signal,
-        timeout: 300000,
-        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
-      },
-      (res) => {
-        if (res.statusCode >= 400) { res.resume(); reject(new Error('主机拒绝任务，请刷新并重新核对工作区、主机状态及授权。')); return; }
-        let buf = '';
-        res.setEncoding('utf8');
-        res.on('data', (chunk) => {
-          buf += chunk;
-          const lines = buf.split('\n');
-          buf = lines.pop();
-          for (const line of lines) {
-            if (!line.trim()) continue;
-            try {
-              onEvent(JSON.parse(line));
-            } catch (_) {}
-          }
-        });
-        res.on('end', () => {
-          if (buf.trim()) {
-            try {
-              onEvent(JSON.parse(buf));
-            } catch (_) {}
-          }
-          resolve();
-        });
+    let settled = false, response, deadline;
+    const finish = (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(deadline);
+      if (error) {
+        reject(error);
+        response?.destroy();
+        req.destroy();
+      } else resolve();
+    };
+    const req = lib.request({
+      hostname: u.hostname, port: u.port, path: u.pathname + u.search,
+      method: 'POST', signal, timeout: 300000,
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
+    }, (res) => {
+      response = res;
+      res.on('error', finish);
+      res.on('aborted', () => finish(new Error('对话连接中断，结果未确认；未自动重试')));
+      res.on('close', () => { if (!settled) finish(new Error('对话连接关闭，结果未确认；未自动重试')); });
+      if (settled) { res.destroy(); return; }
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        finish(new Error('主机拒绝任务或返回重定向，请核对状态；未自动重试')); return;
       }
-    );
-    req.on('timeout', () => req.destroy(new Error('Chat请求超时')));
-    req.on('error', reject);
-    req.write(payload);
-    req.end();
+      if (!/^application\/x-ndjson(?:\s*;|$)/i.test(res.headers['content-type'] || '')) {
+        finish(new Error('对话响应不是NDJSON事件流')); return;
+      }
+      let buf = '', bytes = 0, done = false;
+      const consume = (line) => {
+        if (!line.trim()) return;
+        if (signal?.aborted) throw new Error('请求已停止，结果未确认；未自动重试');
+        if (done) throw new Error('完成事件之后仍有数据，结果未确认');
+        let event;
+        try { event = JSON.parse(line); } catch { throw new Error('对话事件流包含无效JSON'); }
+        if (!event || typeof event !== 'object' || Array.isArray(event) || typeof event.type !== 'string' || !event.type
+          || event.type === 'message' && typeof event.text !== 'string') throw new Error('对话事件格式无效');
+        onEvent(event); // Consumer failure must propagate, not become a successful response.
+        if (signal?.aborted) throw new Error('请求已停止，结果未确认；未自动重试');
+        if (event.type === 'error') throw new Error('主机报告任务失败，结果未确认；未自动重试');
+        if (event.type === 'done') done = true;
+      };
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => {
+        if (settled) return;
+        try {
+          bytes += Buffer.byteLength(chunk);
+          if (bytes > 16 * 1024 * 1024) throw new Error('对话响应超过16MiB处理上限');
+          buf += chunk;
+          let index;
+          while ((index = buf.indexOf('\n')) !== -1) {
+            const line = buf.slice(0, index); buf = buf.slice(index + 1);
+            if (Buffer.byteLength(line) > 1024 * 1024) throw new Error('对话事件超过1MiB处理上限');
+            consume(line);
+          }
+          if (Buffer.byteLength(buf) > 1024 * 1024) throw new Error('对话事件超过1MiB处理上限');
+        } catch (error) { finish(error); }
+      });
+      res.on('end', () => {
+        if (settled) return;
+        try {
+          consume(buf);
+          if (signal?.aborted) throw new Error('请求已停止，结果未确认；未自动重试');
+          if (!done) throw new Error('对话连接提前结束，结果未确认；未自动重试');
+          finish();
+        } catch (error) { finish(error); }
+      });
+    });
+    deadline = setTimeout(() => finish(new Error('Chat请求超时，结果未确认；未自动重试')), 300000);
+    req.on('timeout', () => finish(new Error('Chat请求超时，结果未确认；未自动重试')));
+    req.on('error', finish);
+    req.end(payload);
   });
 }
 
@@ -186,6 +218,7 @@ function historyFromChatContext(context) {
   const out = [];
   for (const turn of (context && context.history) || []) {
     if (turn.prompt) out.push({ role: 'user', content: String(turn.prompt) });
+    if (turn.result?.metadata?.webagentCompleted === false) continue;
     const parts = turn.response || [];
     const text = parts
       .map((p) => {
@@ -230,7 +263,7 @@ function registerChatParticipant(context) {
     stream.progress(mode === 'code' ? 'Agent 正在搜-读-补丁-再测…' : `Web Agent ${mode}…`);
     try {
       const binding = await workspaceBinding();
-      if (token.isCancellationRequested) return;
+      if (token.isCancellationRequested) return { metadata: { webagentCompleted: false } };
       await postNdjson(
         `${agentHostUrl()}/api/chat`,
         { mode, message, history: historyFromChatContext(chatContext), client: 'vscode-extension', ...binding },
@@ -256,9 +289,11 @@ function registerChatParticipant(context) {
           }
         }, controller.signal
       );
+      return { metadata: { webagentCompleted: true } };
     } catch (err) {
-      vscode.window.showErrorMessage(err.message, {modal:true});
-      stream.markdown(`任务未完成：${err.message}\n\n确认 run-webagent.cmd 或 run-webagent-vscode.cmd 已启动 agent-host（:48271）。`);
+      if (!controller.signal.aborted) vscode.window.showErrorMessage(err.message, {modal:true});
+      stream.markdown(`任务未完成：${err.message}\n\n请核对主机状态及已发生的操作；未自动重试。`);
+      return { metadata: { webagentCompleted: false } };
     } finally { subscription.dispose(); }
   };
   const participant = vscode.chat.createChatParticipant('webagent.agent', handler);
@@ -387,10 +422,10 @@ class ChatView {
         );
         if (assistantText) this.history.push({ role: 'assistant', content: assistantText });
       } catch (err) {
-        vscode.window.showErrorMessage(err.message, {modal:true});
+        if (!this.controller.signal.aborted) vscode.window.showErrorMessage(err.message, {modal:true});
         this._view.webview.postMessage({
           type: 'event',
-          ev: { type: 'error', message: err.message + '（确认 run-webagent.cmd 或 run-webagent-vscode.cmd 已启动 agent-host :48271）' }
+          ev: { type: 'error', message: err.message + '（请核对主机状态及已发生的操作；未自动重试）' }
         });
       } finally {
         this.controller = null;

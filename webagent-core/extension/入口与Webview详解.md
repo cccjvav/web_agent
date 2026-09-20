@@ -11,15 +11,15 @@
 | dispatchPty(ev) | 事件→undefined | 只转发pty_request给全局ptyHost，noteStream再handleIncoming；未await返回Promise，不统一接收其异步拒绝 |
 | agentHostUrl() | 无→URL文本 | VS Code设置优先，然后环境变量，再48271；去尾部一个斜杠。manifest设置带默认值，所以通常设置读取本身已有默认 |
 | requestJson(method,url,body) | HTTP参数→Promise<{status,json,raw}> | 根据http/https选库，JSON正文带长度；data积累Buffer，end尝试JSON，坏JSON保留raw/json null。15秒timeout destroy，error reject；HTTP4xx/5xx本身不reject，没有通用响应大小上限 |
-| postNdjson(url,body,onEvent,signal) | Chat请求→Promise<void> | POST JSON+AbortSignal、5分钟timeout；UTF8 data缓冲按换行解析，保留半行；end解析最后半行再resolve；每行parse和onEvent同一try，回调异常也吞；未先验证HTTP状态/Content-Type |
-| historyFromChatContext(context) | VS Code历史→role/content数组 | 每turn.prompt变user，response.map识别value或value.value后join变assistant；最后12消息，不是12轮；不传引用/工具结构 |
+| postNdjson(url,body,onEvent,signal) | Chat请求→Promise<void> | POST JSON+AbortSignal；仅2xx且application/x-ndjson；5分钟空闲timeout及总deadline。UTF8解码保留跨chunk字符与半行，单行1MiB/总响应16MiB上限；consume验证对象/type及message.text，回调异常向上传播。仅一个done且随后正常end才resolve；error、done后数据、坏帧、aborted/error/提前close均finish拒绝并销毁请求/响应，单次结算清deadline；不跟随重定向或重试 |
+| historyFromChatContext(context) | VS Code历史→role/content数组 | 每turn.prompt变user；本扩展result.metadata.webagentCompleted=false的失败turn不回送assistant，未标记的旧历史保持兼容；response.map识别value或value.value后join变assistant；最后12消息，不是12轮；不传引用/工具结构 |
 | revealWorkspaceFile(rel) | 相对路径→undefined | 首工作区joinPath，openTextDocument.then成功show预览/保留焦点，打开失败吞；此函数本身不是写入沙箱检查 |
 | registerChatParticipant(context) | 上下文→undefined | API存在才尝试创建webagent.agent，设SVG icon，加入订阅；不支持/注册异常不阻止Webview |
 | activate(context) | VS Code上下文→undefined | PTY→ChatView/BridgeView provider→原生Chat→状态栏→命令订阅；不是启动agent-host服务器 |
 | validWebviewMessage(msg,surface) | 不可信消息→boolean | 拒绝空/数组/非字符串type；chat只openNative/cancel/合法模式send且正文非空≤128000；bridge只合法copy或refresh/start/stop/reset。没有通配API代理 |
 | chatHtml()/bridgeHtml() | 无→完整HTML字符串 | 各生成随机nonce，默认资源禁用，script仅nonce，允许内联style，禁止base/form；事件内容不作HTML注入 |
 
-**registerChatParticipant的handler(request,chatContext,stream,token)**：AbortController关联取消订阅并处理预取消；modeFromChatRequest取模式，去首个slash命令。空正文输出帮助、dispose返回；非空progress→postNdjson。事件回调先忽略已取消，再PTY分派；status为进度，tool显示结果/补丁打开与reference，message Markdown，error错误，consensus区分模拟汇总。catch统一提示连不上（因此取消/其他网络错误文案未细分），finally dispose取消订阅。
+**registerChatParticipant的handler(request,chatContext,stream,token)**：AbortController关联取消订阅并处理预取消；modeFromChatRequest取模式，去首个slash命令。空正文输出帮助、dispose返回；非空progress→postNdjson。事件回调先忽略已取消，再PTY分派；status为进度，tool显示结果/补丁打开与reference，message Markdown，error错误，consensus区分模拟汇总。正常完成返回metadata.webagentCompleted=true，失败/预取消返回false；catch提示结果未完成、核对已发生操作、不自动重试，主动取消不弹错误模态框；finally dispose取消订阅。
 
 ## 2. activate内部回调
 
@@ -52,7 +52,7 @@
 
 1. validWebviewMessage门禁；openNative分派命令；cancel abort当前controller。
 2. send只允许没有controller时开始（单视图串行），建立AbortController，回user消息，取历史末12然后把本轮用户加入本地history。
-3. postNdjson事件回调转发PTY和webview event，message累积assistantText，apply_patch结果揭示文件。成功流结束才将助手文本存历史；失败的用户条目仍保留。
+3. postNdjson事件回调转发PTY和webview event，message累积assistantText，apply_patch结果揭示文件。postNdjson确认done+正常end后才将助手文本存历史；失败的用户条目仍保留。
 4. catch回error，finally controller=null并发finished，使按钮复原。history内存数组没有总长度裁剪，只是每次发送取尾部；重载扩展不持久化聊天。
 
 ## 4. BridgeView全部方法与回调
@@ -147,3 +147,5 @@ BridgeView的control消息只接受chat/bridge，或含64字符revision与四个
 **main()**使用真实临时磁盘与注入的VS Code API替身；**run(restore)**调用实际注册命令。断言只读左右快照、取消零编辑、自动保存拒绝、确认期间草稿/磁盘/信任变化拒绝、明确确认后仅一次editor.edit、undoStopBefore/After与无直接磁盘写入；严格编码、BOM/NUL、大小和非file失败。替身中的executeCommand、edit/replace和showWarningMessage只记录/触发状态变化，不能证明真实VS Code diff/撤销栈可视交互通过。真实桌面/code-server五步验收仍待，不把VM测试当作实机结果。
 
 夹具细节：onConfirm在模态确认返回前注入草稿/磁盘/信任变化；getText/positionAt返回模拟文档文本和位置；Range的constructor保存起止位置。parse/toString只包装虚拟URI，getWorkspaceFolder/getConfiguration/get提供临时工作区和自动保存值；registerTextDocumentContentProvider保存provider，registerCommand保存真实回调。showErrorMessage收集错误，showInformationMessage不触发真实UI；dispose清理由测试finally统一执行。替身不负责模拟操作系统并发或完整编辑器行为。
+
+F54原生流回归：nativeChatStream用真实回环HTTP与VM中的真实postNdjson/ChatView/注册handler，替换VS Code及workspaceBinding；覆盖302/格式/坏帧/提前结束/断流/取消（含done回调时取消）、回调异常、单行/总预算、控制时钟的deadline、跨UTF8字节/无尾换行正例，以及失败不进助手历史。不是实际VS Code窗口验收；requestJson的响应预算等相邻审查项仍未在此修复。

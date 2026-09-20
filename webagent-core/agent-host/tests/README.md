@@ -160,6 +160,7 @@ F54交叉复审：mcpProtocol对初始化指引与apply_patch工具目录增加h
 | [memoryRecall.test.js](memoryRecall.test.js) | 8 个函数/类节点 |
 | [modelLifecycle.test.js](modelLifecycle.test.js) | 53 个函数/类节点 |
 | [monacoLoading.test.js](monacoLoading.test.js) | 12 个函数/类节点 |
+| [nativeChatStream.test.js](nativeChatStream.test.js) | 27 个函数/类节点 |
 | [nativeRotationCommands.test.js](nativeRotationCommands.test.js) | 54 个函数/类节点 |
 | [oauth.test.js](oauth.test.js) | 15 个函数/类节点 |
 | [oauthClientAuth.test.js](oauthClientAuth.test.js) | 29 个函数/类节点 |
@@ -225,3 +226,5 @@ requestLifecycle.test.js：按会话/凭据和带类型RPC ID隔离取消；重�
 第42组：经典Bridge页内启停独立互斥/代次/写后读失败由VM验证；真实bind浏览器合成响应另证；bridgeTunnel以HTTP验证停止绑定、启动在途可停止及错误的前后副作用。不是公网/用户进程退出验收。
 
 第43组补原生命令消费：nativeRotationCommands先复现HTTP500仍提示“已重置”，再覆盖绑定/CAS、确认、坏合同、409拒绝、写后读分离与停止严格判定；后端绑定合同仍由bridgeTunnel证明。
+
+nativeChatStream.test.js：真实回环HTTP与VM原生扩展，验证NDJSON失败/终态/预算/取消和两个消费者的历史；入口及helper main详见工作区与命令安全测试详解。
