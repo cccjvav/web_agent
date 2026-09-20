@@ -144,6 +144,11 @@ async function main() {
   await httpAdmission();
   const init = await handleRpc(req('initialize', { clientInfo: { name: 'test-client' } }));
   assert.ok(init.instructions && init.instructions.includes('Web Agent Bridge MCP'));
+  assert.ok(init.instructions.includes('For an existing file only'), 'initialization must scope automatic hash reuse to existing files');
+  assert.ok(init.instructions.includes('retain its expectedHash'), 'deletion must not turn an existing-file edit into automatic creation');
+  const patchDescription = getToolList().find(tool => tool.name === 'apply_patch').description;
+  assert.ok(patchDescription.includes('For an existing file only'));
+  assert.ok(patchDescription.includes('Without expectedHash, a missing target follows the creation contract'));
   assert.ok(init.instructions.includes('webagent://instructions'));
   assert.ok(init.capabilities.resources);
   assert.ok(init.capabilities.prompts);

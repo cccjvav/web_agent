@@ -88,3 +88,5 @@ httpSmoke第二批还通过真实src/index.js验证零写与正例：`admissionW
 F54第三批：httpSmoke继续通过真实src/index.js、合法现代会话调用apply_patch：显式hash但不存在、非空SEARCH和多块新建，在dryRun与正式执行均HTTP200/result.isError且错误码正确、父目录不创建；单空块新建预览零写、提交内容精确为created。区分HTTP成功与工具失败，不改审批或权限。
 
 F54第四批：httpSmoke的`resourceRpc(method,params,headers)`复用真实src/index.js会话发资源/工具请求。先经带workspaceRoot/hostInstanceId的本机执行控制切Chat，用本机tool/call上报Local标记，再切回Bridge；两个远端SID分别上报并读取自己资源，不得串Local或另一peer。带绑定与revision的Read-only策略更新必须status200/success=true，capabilities资源工具名逐项等于tools/list且无write_file；实际write_file仍isError且无文件。最后按新revision恢复原权限并核对成功，避免策略修改失败或未恢复造成假阳性。
+
+F54交叉复审：main检查initialize.instructions与getToolList的apply_patch描述明确existing file only，并提示保留expectedHash/未给hash的缺失目标走创建合同。旧文案先红测，修复仅收窄机器说明，不将字符串断言当作跨进程删除保护；实际缺失目标行为仍由patchEngine/httpSmoke回归证明。

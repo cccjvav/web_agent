@@ -761,7 +761,7 @@
 
 ## webagent-core/agent-host/src/mcp/instructions.js
 
-[目录说明](../webagent-core/agent-host/src/mcp/README.md) · SHA-256 `8b3e4b3e060a28e5350d1c8060e372563f54fd768e1632788519ebd371a58bc9`
+[目录说明](../webagent-core/agent-host/src/mcp/README.md) · SHA-256 `2f16413074d691630ccea56b33f63d7003d7adde3e25b1b852c1b30247a77d4c`
 
 - `getBootstrapPrompt` — FunctionDeclaration，[L10–L12](../webagent-core/agent-host/src/mcp/instructions.js#L10-L12)
 - `getPageRulesPrompt` — FunctionDeclaration，[L14–L16](../webagent-core/agent-host/src/mcp/instructions.js#L14-L16)
@@ -1268,7 +1268,7 @@
 
 ## webagent-core/agent-host/src/tools/index.js
 
-[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `6fbb4ce17950a0f5def3ac7164e5994f5af2089c972ace315fe23933aeb1da16`
+[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `f51a263b208d785033b217c49edfe1a50954a1a04cedacec91238889e7206e47`
 
 - `tool` — FunctionDeclaration，[L26–L28](../webagent-core/agent-host/src/tools/index.js#L26-L28)
 - `pingHost` — FunctionDeclaration，[L30–L32](../webagent-core/agent-host/src/tools/index.js#L30-L32)
@@ -2635,7 +2635,7 @@
 
 ## webagent-core/agent-host/tests/mcpProtocol.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `69a7980fd196e6d97162d73776a85749f05c2874238b909df5ada72e1b5fb090`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `55055c3a3c7c3acdc9717d70846bbd0d7c2d89b8d1bcbc5fdf3d88a5c6b8e83e`
 
 - `req` — FunctionDeclaration，[L16–L22](../webagent-core/agent-host/tests/mcpProtocol.test.js#L16-L22)
 - `httpAdmission` — FunctionDeclaration，[L25–L141](../webagent-core/agent-host/tests/mcpProtocol.test.js#L25-L141)
@@ -2656,39 +2656,40 @@
 - `httpAdmission/anonymous@124:79` — ArrowFunctionExpression，[L124–L124](../webagent-core/agent-host/tests/mcpProtocol.test.js#L124-L124)
 - `httpAdmission/anonymous@125:55` — ArrowFunctionExpression，[L125–L125](../webagent-core/agent-host/tests/mcpProtocol.test.js#L125-L125)
 - `httpAdmission/anonymous@139:22` — ArrowFunctionExpression，[L139–L139](../webagent-core/agent-host/tests/mcpProtocol.test.js#L139-L139)
-- `main` — FunctionDeclaration，[L143–L444](../webagent-core/agent-host/tests/mcpProtocol.test.js#L143-L444)
-- `main/anonymous@156:36` — ArrowFunctionExpression，[L156–L156](../webagent-core/agent-host/tests/mcpProtocol.test.js#L156-L156)
-- `main/anonymous@181:34` — ArrowFunctionExpression，[L181–L181](../webagent-core/agent-host/tests/mcpProtocol.test.js#L181-L181)
-- `main/anonymous@191:60` — ArrowFunctionExpression，[L191–L191](../webagent-core/agent-host/tests/mcpProtocol.test.js#L191-L191)
-- `main/anonymous@282:40` — ArrowFunctionExpression，[L282–L282](../webagent-core/agent-host/tests/mcpProtocol.test.js#L282-L282)
-- `main/anonymous@290:33` — ArrowFunctionExpression，[L290–L290](../webagent-core/agent-host/tests/mcpProtocol.test.js#L290-L290)
-- `main/anonymous@303:31` — ArrowFunctionExpression，[L303–L303](../webagent-core/agent-host/tests/mcpProtocol.test.js#L303-L303)
-- `main/anonymous@316:52` — ArrowFunctionExpression，[L316–L316](../webagent-core/agent-host/tests/mcpProtocol.test.js#L316-L316)
-- `main/anonymous@319:36` — ArrowFunctionExpression，[L319–L319](../webagent-core/agent-host/tests/mcpProtocol.test.js#L319-L319)
-- `main/anonymous@328:25` — ArrowFunctionExpression，[L328–L328](../webagent-core/agent-host/tests/mcpProtocol.test.js#L328-L328)
-- `main/anonymous@329:25` — ArrowFunctionExpression，[L329–L329](../webagent-core/agent-host/tests/mcpProtocol.test.js#L329-L329)
-- `main/anonymous@330:32` — ArrowFunctionExpression，[L330–L330](../webagent-core/agent-host/tests/mcpProtocol.test.js#L330-L330)
-- `main/anonymous@338:32` — ArrowFunctionExpression，[L338–L338](../webagent-core/agent-host/tests/mcpProtocol.test.js#L338-L338)
-- `main/anonymous@339:32` — ArrowFunctionExpression，[L339–L339](../webagent-core/agent-host/tests/mcpProtocol.test.js#L339-L339)
-- `main/anonymous@340:32` — ArrowFunctionExpression，[L340–L340](../webagent-core/agent-host/tests/mcpProtocol.test.js#L340-L340)
+- `main` — FunctionDeclaration，[L143–L449](../webagent-core/agent-host/tests/mcpProtocol.test.js#L143-L449)
+- `main/anonymous@149:46` — ArrowFunctionExpression，[L149–L149](../webagent-core/agent-host/tests/mcpProtocol.test.js#L149-L149)
+- `main/anonymous@161:36` — ArrowFunctionExpression，[L161–L161](../webagent-core/agent-host/tests/mcpProtocol.test.js#L161-L161)
+- `main/anonymous@186:34` — ArrowFunctionExpression，[L186–L186](../webagent-core/agent-host/tests/mcpProtocol.test.js#L186-L186)
+- `main/anonymous@196:60` — ArrowFunctionExpression，[L196–L196](../webagent-core/agent-host/tests/mcpProtocol.test.js#L196-L196)
+- `main/anonymous@287:40` — ArrowFunctionExpression，[L287–L287](../webagent-core/agent-host/tests/mcpProtocol.test.js#L287-L287)
+- `main/anonymous@295:33` — ArrowFunctionExpression，[L295–L295](../webagent-core/agent-host/tests/mcpProtocol.test.js#L295-L295)
+- `main/anonymous@308:31` — ArrowFunctionExpression，[L308–L308](../webagent-core/agent-host/tests/mcpProtocol.test.js#L308-L308)
+- `main/anonymous@321:52` — ArrowFunctionExpression，[L321–L321](../webagent-core/agent-host/tests/mcpProtocol.test.js#L321-L321)
+- `main/anonymous@324:36` — ArrowFunctionExpression，[L324–L324](../webagent-core/agent-host/tests/mcpProtocol.test.js#L324-L324)
+- `main/anonymous@333:25` — ArrowFunctionExpression，[L333–L333](../webagent-core/agent-host/tests/mcpProtocol.test.js#L333-L333)
+- `main/anonymous@334:25` — ArrowFunctionExpression，[L334–L334](../webagent-core/agent-host/tests/mcpProtocol.test.js#L334-L334)
+- `main/anonymous@335:32` — ArrowFunctionExpression，[L335–L335](../webagent-core/agent-host/tests/mcpProtocol.test.js#L335-L335)
+- `main/anonymous@343:32` — ArrowFunctionExpression，[L343–L343](../webagent-core/agent-host/tests/mcpProtocol.test.js#L343-L343)
 - `main/anonymous@344:32` — ArrowFunctionExpression，[L344–L344](../webagent-core/agent-host/tests/mcpProtocol.test.js#L344-L344)
-- `main/anonymous@346:32` — ArrowFunctionExpression，[L346–L346](../webagent-core/agent-host/tests/mcpProtocol.test.js#L346-L346)
-- `main/anonymous@350:27` — ArrowFunctionExpression，[L350–L350](../webagent-core/agent-host/tests/mcpProtocol.test.js#L350-L350)
-- `main/anonymous@352:30` — ArrowFunctionExpression，[L352–L352](../webagent-core/agent-host/tests/mcpProtocol.test.js#L352-L352)
-- `main/anonymous@354:30` — ArrowFunctionExpression，[L354–L354](../webagent-core/agent-host/tests/mcpProtocol.test.js#L354-L354)
-- `main/anonymous@355:33` — ArrowFunctionExpression，[L355–L355](../webagent-core/agent-host/tests/mcpProtocol.test.js#L355-L355)
-- `main/anonymous@358:33` — ArrowFunctionExpression，[L358–L358](../webagent-core/agent-host/tests/mcpProtocol.test.js#L358-L358)
-- `main/anonymous@360:34` — ArrowFunctionExpression，[L360–L360](../webagent-core/agent-host/tests/mcpProtocol.test.js#L360-L360)
-- `main/anonymous@361:33` — ArrowFunctionExpression，[L361–L361](../webagent-core/agent-host/tests/mcpProtocol.test.js#L361-L361)
-- `main/fakeRes` — FunctionDeclaration，[L364–L375](../webagent-core/agent-host/tests/mcpProtocol.test.js#L364-L375)
-- `main/fakeRes/setHeader` — FunctionExpression，[L369–L369](../webagent-core/agent-host/tests/mcpProtocol.test.js#L369-L369)
-- `main/fakeRes/status` — FunctionExpression，[L370–L370](../webagent-core/agent-host/tests/mcpProtocol.test.js#L370-L370)
-- `main/fakeRes/json` — FunctionExpression，[L371–L371](../webagent-core/agent-host/tests/mcpProtocol.test.js#L371-L371)
-- `main/fakeRes/end` — FunctionExpression，[L372–L372](../webagent-core/agent-host/tests/mcpProtocol.test.js#L372-L372)
-- `main/fakeRes/write` — FunctionExpression，[L373–L373](../webagent-core/agent-host/tests/mcpProtocol.test.js#L373-L373)
-- `main/post` — FunctionDeclaration，[L377–L381](../webagent-core/agent-host/tests/mcpProtocol.test.js#L377-L381)
-- `main/postWithSession` — FunctionDeclaration，[L417–L426](../webagent-core/agent-host/tests/mcpProtocol.test.js#L417-L426)
-- `anonymous@446:13` — ArrowFunctionExpression，[L446–L450](../webagent-core/agent-host/tests/mcpProtocol.test.js#L446-L450)
+- `main/anonymous@345:32` — ArrowFunctionExpression，[L345–L345](../webagent-core/agent-host/tests/mcpProtocol.test.js#L345-L345)
+- `main/anonymous@349:32` — ArrowFunctionExpression，[L349–L349](../webagent-core/agent-host/tests/mcpProtocol.test.js#L349-L349)
+- `main/anonymous@351:32` — ArrowFunctionExpression，[L351–L351](../webagent-core/agent-host/tests/mcpProtocol.test.js#L351-L351)
+- `main/anonymous@355:27` — ArrowFunctionExpression，[L355–L355](../webagent-core/agent-host/tests/mcpProtocol.test.js#L355-L355)
+- `main/anonymous@357:30` — ArrowFunctionExpression，[L357–L357](../webagent-core/agent-host/tests/mcpProtocol.test.js#L357-L357)
+- `main/anonymous@359:30` — ArrowFunctionExpression，[L359–L359](../webagent-core/agent-host/tests/mcpProtocol.test.js#L359-L359)
+- `main/anonymous@360:33` — ArrowFunctionExpression，[L360–L360](../webagent-core/agent-host/tests/mcpProtocol.test.js#L360-L360)
+- `main/anonymous@363:33` — ArrowFunctionExpression，[L363–L363](../webagent-core/agent-host/tests/mcpProtocol.test.js#L363-L363)
+- `main/anonymous@365:34` — ArrowFunctionExpression，[L365–L365](../webagent-core/agent-host/tests/mcpProtocol.test.js#L365-L365)
+- `main/anonymous@366:33` — ArrowFunctionExpression，[L366–L366](../webagent-core/agent-host/tests/mcpProtocol.test.js#L366-L366)
+- `main/fakeRes` — FunctionDeclaration，[L369–L380](../webagent-core/agent-host/tests/mcpProtocol.test.js#L369-L380)
+- `main/fakeRes/setHeader` — FunctionExpression，[L374–L374](../webagent-core/agent-host/tests/mcpProtocol.test.js#L374-L374)
+- `main/fakeRes/status` — FunctionExpression，[L375–L375](../webagent-core/agent-host/tests/mcpProtocol.test.js#L375-L375)
+- `main/fakeRes/json` — FunctionExpression，[L376–L376](../webagent-core/agent-host/tests/mcpProtocol.test.js#L376-L376)
+- `main/fakeRes/end` — FunctionExpression，[L377–L377](../webagent-core/agent-host/tests/mcpProtocol.test.js#L377-L377)
+- `main/fakeRes/write` — FunctionExpression，[L378–L378](../webagent-core/agent-host/tests/mcpProtocol.test.js#L378-L378)
+- `main/post` — FunctionDeclaration，[L382–L386](../webagent-core/agent-host/tests/mcpProtocol.test.js#L382-L386)
+- `main/postWithSession` — FunctionDeclaration，[L422–L431](../webagent-core/agent-host/tests/mcpProtocol.test.js#L422-L431)
+- `anonymous@451:13` — ArrowFunctionExpression，[L451–L455](../webagent-core/agent-host/tests/mcpProtocol.test.js#L451-L455)
 
 ## webagent-core/agent-host/tests/memoryRecall.test.js
 

@@ -111,6 +111,8 @@ F54第三批：patchEngine的missingTargetSafety锁新建hash/块校验、无mkd
 
 F54第四批：executionControl/httpSmoke以真实HTTP验证Local/远端A/B资源归属、客户端上下文伪装无效、能力目录与ACL一致及实际写入仍受禁止；覆盖Read撤销/权限恢复和错误hash指引。
 
+F54交叉复审：mcpProtocol对初始化指引与apply_patch工具目录增加hash复用范围断言，防止再次把现存文件的缓存保护泛化到缺失目标。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -154,7 +156,7 @@ F54第四批：executionControl/httpSmoke以真实HTTP验证Local/远端A/B资�
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 19 个函数/类节点 |
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 24 个函数/类节点 |
-| [mcpProtocol.test.js](mcpProtocol.test.js) | 52 个函数/类节点 |
+| [mcpProtocol.test.js](mcpProtocol.test.js) | 53 个函数/类节点 |
 | [memoryRecall.test.js](memoryRecall.test.js) | 8 个函数/类节点 |
 | [modelLifecycle.test.js](modelLifecycle.test.js) | 53 个函数/类节点 |
 | [monacoLoading.test.js](monacoLoading.test.js) | 12 个函数/类节点 |

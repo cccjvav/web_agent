@@ -5,6 +5,7 @@
 接手先读本索引和[项目约定](agents.md)，再按需读[阶段10的工作包与交接](stages/s10-upstream-adoption.md#当前工作包与交接约束)。不另建路线图或根交接文件。
 
 ## 当前状态
+- **用户重申自我复审与目标防偏移，本轮先完成前四批交叉复核。** 基线20ad7b2；核对七处累计运行时代码及会话/取消、文件/检查点、资源/权限的相邻合同。发现并收窄工具目录和初始化指引中自动hash复用的过宽承诺，红转绿；不改变文件新建行为。13项定向、84/84及真实Chromium通过；范围/兼容边界见阶段10续记。原生终态尚未修，不用本次审查冒充已完成。
 - **阶段10进行中，核心0.7.2，不是只剩人工验收。** 已交付Chat/Bridge互斥、所有者权限、Tasks隔离/刷新恢复、经典受保护回退、原生草稿diff/恢复、跨文件内容检查点和显式公网HTTPS出站；R2/R3与其它待办仍在[唯一工作包表](stages/s10-upstream-adoption.md#当前工作包与交接约束)。
 - **2026-09-20独立复审已归档，已完成第一批，第二批RPC准入亦已交付，第三批补丁创建保护已交付，第四批资源隔离/ACL与机器指引已交付（f318e60）；本地84/84和真实Chromium通过，首轮CI8/9，Windows20依赖审计失败原因未明，文档提交1b9eb04的[CI35536951646](https://github.com/cccjvav/web_agent/actions/runs/35536951646)已逐job核实9/9成功；不据此解释首轮审计失败根因。** [F54报告](../review/INDEPENDENT_AUDIT_2026-09-20.md)列出真实文件/HTTP/完整主机/原生函数/浏览器证据、ShunCode取舍及未执行项。审查之后第一批选择性采用01a0bf59的会话pin/头校验，补全忙503与空闲TTL；第二批`f40b917`补RPC ID/整份批次/版本绑定与通知202，本地84/84和真实Chromium通过，[CI35533579984](https://github.com/cccjvav/web_agent/actions/runs/35533579984)九项成功。实现`d7b521b`及[CI35531273186](https://github.com/cccjvav/web_agent/actions/runs/35531273186)九项成功，门禁与未完成项见阶段54组续记。
 - 本会话固定`arena/01a0bfa9-web-agent`。已fetch指定来源`arena/01a0b053-web-agent`，同步时均为`50c03bedc97f9eaaf1c875f4767c6e9bb5278d56`，当时ahead/behind=0/0；前批曾核对整树后仅恢复ref/index；第四批从干净35968a2接续，没有恢复ref/index或覆盖工作文件。

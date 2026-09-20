@@ -846,6 +846,24 @@ capabilities按当前remote ACL调用getToolList，与tools/list一致；恢复�
 
 executionControl同IP同凭据双SID/Local任务、伪造上下文、空闲/删除/缺省SID、Read禁止和Edit实际拒绝定向通过；httpSmoke真实src/index.js通过本机Chat工具种Local，再切Bridge验证双peer，绑定+revision策略修改必须成功，目录名逐项等于tools/list且实际禁写无文件，再恢复策略。profile/mcpProtocol/taskProgress相邻回归通过。完整84/84、真实Chromium既有套件通过，生产依赖audit 0漏洞，docs249源码/28目录/110排除；实现`f318e6050d4276b24e9d3dbba4d622e236bedb92`的[CI35536769099](https://github.com/cccjvav/web_agent/actions/runs/35536769099)首轮8/9成功：Windows Node20在生产依赖审计步骤失败，该job测试未运行，其余八项成功。gh两条日志下载路径均EOF，未确认根因；failed-only重跑被GitHub拒绝（workflow file may be broken），不把失败归为已证明的网络波动。没有修改工作流/依赖/门禁。文档提交`1b9eb049527f473e38d2580f960ab7199b89ae07`的[CI35536951646](https://github.com/cccjvav/web_agent/actions/runs/35536951646)已逐job核实九项success（包括此前失败的Windows20审计及测试），不倒推首轮失败根因；正式清单201项，暂停15项，更新的是185个已登记指纹，不读暂停正文、不提升逐句认证状态。下一项原生NDJSON可靠终态，之后窄屏/ARIA；其余R4–R9与逐句/实机验收继续，未把目录修复夸成原先存在Edit越权。
 
+### F54交叉复审：审查自己的累计修改与项目目标（2026-09-20）
+
+用户明确要求继续时审查此前工作，避免旧功能回归与整体目标偏移。本轮先暂停增加原生功能，以20ad7b2为复核基线，对照a490ca0之后前四批累计改动，不把上一批CI成功当作审查结论。运行时代码范围为session/server/requestLifecycle/externalClient/resources、tools/index工具描述和patchEngine；沿调用链核对progressTracker、执行控制/文件恢复及原生消费者。不是全部源码或全仓逐句审完，也不是外部独立审计。
+
+| 复核链 | 保留合同及审查结论 | 兼容变化/不能外推的边界 |
+|---|---|---|
+| 会话pin→HTTP请求/SSE→释放→取消 | 活跃会话不参与TTL/容量驱逐；release单次；认证主体绑定不替代精确凭据取消归属；出站无效SID拒绝后finally仍abort/清理，未发现遗漏这条清理路径 | 全忙503是有意背压；DELETE不是回滚；断开后的协作取消不是协议完全合规或持久exactly-once |
+| RPC准入→版本→批次→工具派发 | 整份envelope/ID/预算预检先于执行，保留合法旧版批次、现代单请求、同类型并发与授权复查 | 256字符ID、64项批次是本地约束；2025-06-18拒批次是有意变化；不承诺整个批次语义事务或完成ID终身去重 |
+| patch→hash→dryRun/写入→检查点 | 显式hash要求目标仍存在；新建只接受正文/单空SEARCH，已有文件多块/行尾/写锁保持；审批/恢复栈未被替换 | 多块新建拒绝是有意纠正丢块；未传hash的新建不自动使用旧readCache作为删除前提；不是跨进程事务 |
+| resources→可信caller→任务/目录→ACL | HTTP固定上下文，Local内部缺省保持；同peer任务复用既有tracker；Read门槛和实际工具权限没有放宽 | workspace资源缺SID拒绝是有意兼容变化；根/指令/记忆仍按Read共享，不宣称全面租户隔离；真实第三方客户端未验 |
+| 前端/原生→Chat路由→结果历史 | 浏览器既有回归覆盖审批/文件/恢复/stdio；对照真实/api/chat的done或error及两种原生消费者 | 原生postNdjson仍吞坏帧、允许302/无终态resolve，不能用经典页面成功代签；下一包必须同时测试传输函数、ChatView历史和chat participant消费 |
+
+**本轮确实发现并修正自己的说明遗漏**：tools/index的apply_patch目录描述和initialize.instructions仍不加条件地说读过路径会自动复用hash，而patchEngine仅在“目标存在”分支查recalledHash。第四批protocol资源已限定existing，两处仍未对齐。本轮先在mcpProtocol给初始化指引/工具目录加断言，旧文案失败（guidance-red.log），再限定existing file only、优先显式expectedHash、先前读过的目标消失须保留hash并停止协调；说明缺hash的缺失目标走创建合同。只改机器说明，不悄悄改变文件创建合同，也不声称新增了删除检测保护。
+
+stateIntegrity/mcpProtocol/mcpCancellation/requestLifecycle/externalDiscovery/patchEngine/executionControl/taskProgress/fileCheckpoints/workflowPreconditions/operatorQueueCapacity/nativeRotationCommands/extensionCopy共13项定向通过；84/84和真实Chromium既有套件通过。最初定向命令误写不存在的operatorQueue.test.js，属于执行脚本路径错误，停止后核对真实operatorQueueCapacity入口再运行；原错误日志保留，不把它报为产品回归或已执行测试。修改说明后再次完整84/84通过；docs249/28/110，精确提交CI在提交后核验。证据目录/home/user/f54-cross-review-evidence。
+
+总体方向仍是既有安全文件工具、审批/恢复、Chat/Bridge和可靠结果链的选择性修复；没有引入替代MCP栈、模型自动切换/重放、扩大OS权限或解除探针暂停。本次未发现新的已复现运行时回归，不等于证明全部兼容性；保留历史Windows超时/首轮审计失败根因、R4–R9及实际Windows/第三方客户端验收。原生可靠终态仍是下一施工项，本轮自审不将其标成完成。
+
 ## 复盘
 
 - 上一轮只改文件所在目录，没有消除额外管理层次；应先核对已有规则，而不是先引入新文件类型。

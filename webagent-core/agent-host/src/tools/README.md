@@ -84,6 +84,8 @@ readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，
 
 F54第三批：apply_patch新建分支在预览/提交前校验显式hash及块结构；缺失目标携hash拒绝，新建只接受正文或单空SEARCH块，多块整体拒绝，已有文件多块支持保留。
 
+F54交叉复审：apply_patch工具目录明确现存文件才可自动复用读取hash；缺失目标未带expectedHash按既有创建合同，不承诺自动删除检测。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 

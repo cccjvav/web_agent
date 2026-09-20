@@ -77,6 +77,8 @@ F54第一批：POST/SSE会话使用active pin防止忙时TTL/容量淘汰；全�
 
 F54第四批：resources/read固定使用已认证peer上下文，workspace远端读取须保留初始化SID；只返回本peer任务并省略全局事件类型，Local内部默认不变。capabilities资源复用tools/list的当前ACL；Read仍是资源正文门槛。协议资源明确错误hash仅诊断、停下重读协调，不得去hash重放。
 
+F54交叉复审：initialize.instructions限定自动hash复用仅适用于现存文件；先前读取的目标消失须保留expectedHash并协调，缺hash的新建不获得隐式删除保护。与protocol资源和工具目录对齐，不改变patch实现。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
