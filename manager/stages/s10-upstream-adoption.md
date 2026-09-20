@@ -239,6 +239,8 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 
 未定位间歇：本批沙箱（Ubuntu，Node22）两次观察到完整套件报`1/84 test files failed`，但摘要未打印FAIL文件名，立即复跑及随后连续三轮均84/84；失败文件身份未捕获，不能归因也不改时限/断言。与R4的Windows22超时同策略：保留观察，后续复现时先抓完整日志定位。
 
+CI证据：第一批实现`48b08ab`的[CI35520116029](https://github.com/cccjvav/web_agent/actions/runs/35520116029)九项成功。第二批首推`1f791f2`的[CI35521665785](https://github.com/cccjvav/web_agent/actions/runs/35521665785)七个主机任务同点失败——最后一次编辑本页后只跑了check-docs未重跑build.js，content.js站点镜像漂移，与历史0fac6f0教训同类；补交`4f522f1`仅重建content.js，[CI35521837716](https://github.com/cccjvav/web_agent/actions/runs/35521837716)九项成功。失败保留，不借绿灯覆盖。
+
 #### 已交付：限流与生成测试批次
 
 - 11限流：OAuth JSON/HTML 429都返回Retry-After；超额请求不增加计数/延长窗口；1000-key容量有恢复提示且旧key剩余额度不被挤掉；来源不直接回退不可信转发头。原固定窗口本来不会被连续拒绝无限延长，此处不虚报修复了不存在的问题。
