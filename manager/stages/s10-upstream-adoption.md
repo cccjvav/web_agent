@@ -880,7 +880,7 @@ nativeChatStream先以真实HTTP证明旧postNdjson对302正常resolve（/home/u
 
 真实浏览器覆盖320/390/640有效宽度、输入命中/草稿、长文件名关闭、键盘、取消dirty关闭/确认关闭及焦点；768/1024/1440桌面双栏。仓库外axe经AXE_PATH验证两条required-children/parent规则，无仓库依赖变化；CI始终有结构和交互断言，不把可选axe当唯一门禁或完整WCAG认证。旧真实保存/回退/审批/stdio浏览器场景继续。
 
-首轮全量80/85：四项文档/生成物未同步，editorRuntime的简化DOM缺querySelectorAll使新展示函数报错；给fixture补真实DOM查询入口，未删旧dirty/hash/恢复断言。实际页面和该fixture随后均通过；第二轮84/85为新helper漏登记到原主详解（辅助详解已写），补主入口说明后85/85、真实Chromium及两条axe规则通过，docs250/28/110。自审补了程序切Chat/Bridge时隐藏面内焦点恢复到活动tab，避免只处理鼠标点击；截图中的中文缺字是沙箱字体环境限制，不据此认证Windows字体。精确CI待提交后核验。继续保留Windows桌面/读屏器/DPI验收、原生requestJson预算及R4–R9，不将局部UI修复扩大为项目全完成。
+首轮全量80/85：四项文档/生成物未同步，editorRuntime的简化DOM缺querySelectorAll使新展示函数报错；给fixture补真实DOM查询入口，未删旧dirty/hash/恢复断言。实际页面和该fixture随后均通过；第二轮84/85为新helper漏登记到原主详解（辅助详解已写），补主入口说明后85/85、真实Chromium及两条axe规则通过，docs250/28/110。自审补了程序切Chat/Bridge时隐藏面内焦点恢复到活动tab，避免只处理鼠标点击；截图中的中文缺字是沙箱字体环境限制，不据此认证Windows字体。实现`e32974a242cee3015fb22a7e5a1d2759ddcac545`的[CI35545037493](https://github.com/cccjvav/web_agent/actions/runs/35545037493)已逐job核实9/9成功。继续保留Windows桌面/读屏器/DPI验收、原生requestJson预算及R4–R9，不将局部UI修复扩大为项目全完成。
 
 ## 复盘
 
