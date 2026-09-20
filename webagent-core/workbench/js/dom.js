@@ -100,7 +100,21 @@ export function showPage(id) {
   $$('.page').forEach((p) => p.classList.toggle('hidden', p.id !== `page-${id}`));
 }
 
+export function setWorkspaceView(which) {
+  if (!['editor', 'chat', 'bridge'].includes(which)) return;
+  const hiddenPane = $(which === 'editor' ? '#rightbar' : '#center');
+  const restoreFocus = hiddenPane?.contains?.(document.activeElement);
+  const workbench = $('#workbench');
+  if (workbench?.dataset) workbench.dataset.workspaceActive = which;
+  $$('[data-workspace-view]').forEach(button => button.setAttribute?.('aria-pressed', String(button.dataset.workspaceView === which)));
+  if (Number(window.innerWidth) <= 700) {
+    if (restoreFocus) $(`[data-workspace-view="${which}"]`)?.focus?.();
+  }
+}
+
 export function setRight(which) {
+  const restoreFocus = $(which === 'chat' ? '#right-bridge' : '#right-chat')?.contains?.(document.activeElement);
+  setWorkspaceView(which);
   const chat = $('#rb-chat-tab'), bridge = $('#rb-bridge-tab');
   chat.classList.toggle('on', which === 'chat');
   bridge.classList.toggle('on', which === 'bridge');
@@ -110,6 +124,7 @@ export function setRight(which) {
   bridge.tabIndex = which === 'bridge' ? 0 : -1;
   $('#right-chat').classList.toggle('hidden', which !== 'chat');
   $('#right-bridge').classList.toggle('hidden', which !== 'bridge');
+  if (restoreFocus) (which === 'chat' ? chat : bridge).focus?.();
 }
 
 ui.applyTheme = applyTheme;
@@ -122,3 +137,5 @@ ui.openModal = openModal;
 ui.closeModal = closeModal;
 ui.showPage = showPage;
 ui.setRight = setRight;
+
+ui.setWorkspaceView = setWorkspaceView;

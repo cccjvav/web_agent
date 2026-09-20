@@ -158,3 +158,7 @@ workbenchRuntime执行真实bind的reset-secret回调：HTTP500不得toast“已
 workbenchRuntime先以挂起POST复现两次startBridge发两POST（实际2、期望1）；不是只比源码。actionReply提供有效核心status与完整启停合同，actionResult读取独立结果区；修后验证缺失/改变主机及实时已运行零启动，预读期间页面变绑零POST，畸形success/running/provider/地址/HTTP错误不确认，固定提示不回显fixture Token。已确认启动/停止后读reject/false/不匹配仍true；正确读取才点灯/灭灯，启动不自动复制。
 
 start/stop各自单飞，启动中停止可达并携绑定，停止中不得再启动；旧启动迟到不能覆盖已停文案或灯。停止发生于GET等待时零启动POST。domain/token与provider同时捕获，等待期间编辑不混入旧请求。缺绑定的停止零POST；模拟计时器过期后迟到JSON不能被消费为成功。actionTimeout/actionClear恢复计时器，VM响应/灯/剪贴板均为替身，不是公网或真实桌面证据。真实bind切换按钮与浏览器执行见bridgeLifecycleBrowser，真实HTTP见bridgeTunnel。
+
+### narrowWorkspaceBrowser(browser,base)
+
+新开真实主机页面、仅阻断Monaco CDN而使用fallback，不发模型或写盘请求。320/390/640（含640×360）逐editor/chat/bridge断言可用宽度至少viewport−49，另一工作面不可见；聊天草稿往返保留、elementFromPoint确认输入框未被欢迎页遮挡。注入页面内存文件tab检查超长名称仍可关闭、Home/End焦点、dirty确认取消保留/确认关闭与焦点恢复、Delete关闭；这部分不是磁盘保存测试，旧main的真实保存/回退/审批链继续执行。768/1024/1440双栏保留，宽→窄跟随正在输入的工作面。AXE_PATH可指定仓库外axe脚本，逐窄屏工作面执行两条父子角色规则；不传也强制tablist无普通button子节点。UI_EVIDENCE_DIR可保存每个窄屏工作面的截图。finally关页、收集pageerror；不代表真实Windows/DPI/读屏器验收。editorRuntime夹具新增querySelectorAll返回空导航集合，使实际dom.setWorkspaceView可运行；原dirty/hash/保存/恢复断言未删。

@@ -113,6 +113,8 @@ F54第四批：executionControl/httpSmoke以真实HTTP验证Local/远端A/B资�
 
 F54交叉复审：mcpProtocol对初始化指引与apply_patch工具目录增加hash复用范围断言，防止再次把现存文件的缓存保护泛化到缺失目标。
 
+F54第六批：workbench.browser的narrowWorkspaceBrowser验证320/390/640工作面、输入命中/草稿、有效ARIA子角色、长名称/dirty关闭/焦点及768/1024/1440桌面保留；AXE_PATH可附加两条真实axe角色规则。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -142,7 +144,7 @@ F54交叉复审：mcpProtocol对初始化指引与apply_patch工具目录增加h
 | [documentationPolicy.test.js](documentationPolicy.test.js) | 12 个函数/类节点 |
 | [documentationQuality.test.js](documentationQuality.test.js) | 10 个函数/类节点 |
 | [editorReview.test.js](editorReview.test.js) | 29 个函数/类节点 |
-| [editorRuntime.test.js](editorRuntime.test.js) | 37 个函数/类节点 |
+| [editorRuntime.test.js](editorRuntime.test.js) | 38 个函数/类节点 |
 | [eventBus.test.js](eventBus.test.js) | 9 个函数/类节点 |
 | [executionControl.test.js](executionControl.test.js) | 32 个函数/类节点 |
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
@@ -202,7 +204,7 @@ F54交叉复审：mcpProtocol对初始化指引与apply_patch工具目录增加h
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 209 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 225 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 449 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |

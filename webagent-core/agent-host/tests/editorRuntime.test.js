@@ -22,7 +22,7 @@ if (!process.argv.includes('--vm-child')) {
   const handlers = {}, messages = [], calls = [], responses = [];
   let confirm = false;
   const context = vm.createContext({
-    document: { querySelector: get, createElement: element },
+    document: { querySelector: get, querySelectorAll: () => [], createElement: element },
     window: { addEventListener: (event, fn) => { handlers[event] = fn; }, confirm: () => confirm },
     fetch: async (url, options) => {
       calls.push({ url, body: options && JSON.parse(options.body) });

@@ -572,3 +572,24 @@ button.walk-card { width: 100%; text-align: left; color: var(--text); font: inhe
 #right-bridge { overflow-y: auto; }
 #right-bridge > * { flex-shrink: 0; }
 #right-bridge .bridge-log { min-height: 100px; }
+
+/* One visible workspace on small screens; hidden panes retain drafts and models. */
+#workspace-switcher { display: none; }
+#editor-heading { display: flex; flex: 0 0 35px; min-width: 0; }
+#editor-heading #tabs { flex: 1; min-width: 0; }
+#btn-close-tab { flex: 0 0 36px; border: 1px solid var(--border); background: var(--bg0); }
+#btn-close-tab:disabled { opacity: .45; cursor: default; }
+.tab { flex-shrink: 0; }
+@media (max-width: 700px) {
+  #workspace-switcher { display: flex; height: 36px; background: var(--bg0); }
+  #workspace-switcher button { flex: 1; min-width: 0; border: 1px solid var(--border); background: var(--bg0); }
+  #workspace-switcher button[aria-pressed="true"] { background: var(--bg3); border-bottom: 2px solid var(--focus); }
+  #workbench { height: calc(100% - var(--title) - var(--status) - 36px); }
+  #workbench #center, #workbench #rightbar { flex: 1; min-width: 0; width: auto; }
+  #workbench[data-workspace-active="editor"] #rightbar { display: none; }
+  #workbench:not([data-workspace-active="editor"]) #center { display: none; }
+  #welcome { padding: 20px 16px; }
+  #welcome h1 { font-size: 30px; }
+  .welcome-grid { min-width: 0; gap: 20px; }
+  .welcome-grid > * { min-width: 0; overflow-wrap: anywhere; }
+}

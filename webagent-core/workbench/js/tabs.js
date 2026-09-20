@@ -9,12 +9,15 @@ export function paintTabs() {
     const active = t.id === state.activeTab;
     d.className = 'tab' + (active ? ' on' : '');
     d.setAttribute?.('role', 'presentation');
-    d.innerHTML = `<button type="button" class="tab-label" role="tab" aria-selected="${active}" aria-controls="editor-wrap" tabindex="${active ? 0 : -1}"><span>${escapeHtml(t.title)}${t.dirty ? ' •' : ''}</span></button>`
-      + `<button type="button" class="x" aria-label="关闭 ${escapeHtml(t.title)}">✕</button>`;
+    d.innerHTML = `<button type="button" id="editor-tab-${index}" class="tab-label" role="tab" aria-selected="${active}" aria-controls="editor-wrap" tabindex="${active ? 0 : -1}"><span>${escapeHtml(t.title)}${t.dirty ? ' •' : ''}</span></button>`;
     const label = d.querySelector('.tab-label');
-    label.onclick = () => activateTab(t.id);
+    label.onclick = () => {
+      activateTab(t.id);
+      tabs.querySelector('[aria-selected="true"]')?.focus?.();
+    };
     label.onkeydown = (event) => {
       const key = event.key;
+      if (key === 'Delete') { event.preventDefault(); closeTab(t.id); return; }
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key)) return;
       event.preventDefault();
       const last = state.tabs.length - 1;
@@ -23,10 +26,19 @@ export function paintTabs() {
       activateTab(state.tabs[target].id);
       tabs.querySelectorAll('.tab-label')[target]?.focus?.();
     };
-    d.querySelector('.x').onclick = (e) => { e.stopPropagation(); closeTab(t.id); };
     tabs.appendChild(d);
   });
   const cur = state.tabs.find((t) => t.id === state.activeTab);
+  if (cur) {
+    $('#editor-wrap').setAttribute?.('role', 'tabpanel');
+    $('#editor-wrap').setAttribute?.('aria-labelledby', `editor-tab-${state.tabs.indexOf(cur)}`);
+  }
+  const close = $('#btn-close-tab');
+  if (close) {
+    close.disabled = state.tabs.length <= 1;
+    close.setAttribute?.('aria-label', `关闭 ${cur?.title || '当前编辑器'}`);
+    close.onclick = () => closeTab(state.activeTab);
+  }
   $('#window-title').textContent = cur ? cur.title : '欢迎';
   $('#sb-file').textContent = cur ? cur.title : '欢迎';
   document.title = `${cur ? cur.title : '欢迎'} — Web Agent`;
@@ -56,6 +68,8 @@ export function initEditorSafety() {
 }
 
 export function activateTab(id) {
+  if (Number(window.innerWidth) <= 700) ui.closeSidebar?.();
+  ui.setWorkspaceView?.('editor');
   captureActiveFile();
   state.activeTab = id;
   const t = state.tabs.find((x) => x.id === id);
@@ -87,6 +101,7 @@ export function closeTab(id) {
   state.tabs = state.tabs.filter((t) => t.id !== id);
   if (state.activeTab == null) activateTab(state.tabs[state.tabs.length - 1].id);
   else paintTabs();
+  $('#tabs').querySelector?.('[aria-selected="true"]')?.focus?.();
 }
 
 export function openAgentWindow() {

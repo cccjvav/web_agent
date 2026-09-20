@@ -50,6 +50,8 @@ editorRuntime/workbenchRuntime/monacoLoading用实际模块或函数fixture检�
 
 HTTP工具接入登记与移除有独立结果区：在途防重复，未知先查原列表；移除登记不证明HTTP服务停止，stdio的停止请求也不等于已观察到退出。逐函数与验证见[受控工具与工作流详解](../agent-host/src/utils/受控工具与工作流详解.md)，不据此认证所有接入或进程隔离。
 
+F54第六批：窄屏显式切换编辑器/Chat/Bridge展示面（不是切主机执行模式），桌面双栏保留；tablist外关闭当前页及Delete关闭保留脏文件确认与焦点。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 

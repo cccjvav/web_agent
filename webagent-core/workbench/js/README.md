@@ -26,6 +26,8 @@ agent-host测试中的editorRuntime、workbenchRuntime、monacoLoading执行实�
 
 定制设置加载/保存检查HTTP、业务及快照形状；只提交本次修改，页面内单请求、10秒取消等待，失败不假成功，保存响应不覆盖未提交表单。不是跨客户端版本锁或四文件事务，详见[Bridge与设置详解](Bridge与设置详解.md)。
 
+F54第六批：dom.setWorkspaceView与bind/tabs联动窄屏展示和抽屉；工作面切换保留草稿，tablist内仅tab按钮，关闭当前页动作在外。真实浏览器验证几何/命中/键盘，不仅测根溢出。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -33,10 +35,10 @@ agent-host测试中的editorRuntime、workbenchRuntime、monacoLoading执行实�
 
 | 源码 | 定位证据 |
 |---|---|
-| [bind.js](bind.js) | 120 个函数/类节点 |
+| [bind.js](bind.js) | 123 个函数/类节点 |
 | [bridge.js](bridge.js) | 60 个函数/类节点 |
 | [chat.js](chat.js) | 39 个函数/类节点 |
-| [dom.js](dom.js) | 15 个函数/类节点 |
+| [dom.js](dom.js) | 17 个函数/类节点 |
 | [monaco.js](monaco.js) | 9 个函数/类节点 |
 | [operations.js](operations.js) | 79 个函数/类节点 |
 | [picker.js](picker.js) | 16 个函数/类节点 |

@@ -51,6 +51,13 @@ function onClick(id, handler) {
 
 export function bind() {
   ui.initOperations();
+  $$('[data-workspace-view]').forEach(button => {
+    button.onclick = () => {
+      closeSidebar();
+      if (button.dataset.workspaceView === 'editor') ui.setWorkspaceView('editor');
+      else ui.setRight(button.dataset.workspaceView);
+    };
+  });
   if (ui.initExecutionControl) ui.initExecutionControl();
   onClick('#btn-host-diagnostics', () => { ui.openModal('diagnostics'); ui.refreshDiagnostics(); });
   onClick('#btn-refresh-diagnostics', () => ui.refreshDiagnostics());
@@ -82,6 +89,12 @@ export function bind() {
     if (restoreFocus) active?.focus?.();
     return true;
   };
+  ui.closeSidebar = closeSidebar;
+  document.addEventListener('focusin', event => {
+    if (Number(window.innerWidth) <= 700) return;
+    if (event.target?.closest?.('#center')) ui.setWorkspaceView('editor');
+    else if (event.target?.closest?.('#rightbar')) ui.setWorkspaceView($('#rb-bridge-tab').classList.contains('on') ? 'bridge' : 'chat');
+  });
   $$('#activitybar [data-left]').forEach((b) => {
     b.onclick = () => {
       const left = b.dataset.left;

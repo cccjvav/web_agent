@@ -7,6 +7,89 @@ const path = require('path');
 const net = require('net');
 const { spawn } = require('child_process');
 const { chromium } = require('playwright');
+async function narrowWorkspaceBrowser(browser, base) {
+  const page = await browser.newPage(), errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.route('https://cdn.jsdelivr.net/**', route => route.abort());
+  try {
+    await page.goto(base);
+    await page.waitForFunction(() => document.querySelector('#tabs .tab-label'));
+    if (process.env.AXE_PATH) await page.addScriptTag({path:process.env.AXE_PATH});
+    for (const width of [390, 320, 640]) {
+      await page.setViewportSize({width, height:width === 640 ? 360 : 640});
+      await page.evaluate(async () => (await import('/js/tabs.js')).activateTab('welcome'));
+      const center = await page.locator('#center').boundingBox();
+      assert.ok(center && center.width >= width - 49, 'narrow editor must have a usable full workspace, not zero width');
+      for (const view of ['chat','bridge','editor']) {
+        await page.click(`[data-workspace-view="${view}"]`);
+        const selector = view === 'editor' ? '#center' : '#rightbar';
+        const rect = await page.locator(selector).boundingBox();
+        assert.ok(rect && rect.width >= width - 49 && rect.x + rect.width <= width + 1);
+        assert.equal(await page.locator(view === 'editor' ? '#rightbar' : '#center').isVisible(), false);
+        if (process.env.UI_EVIDENCE_DIR) {
+          fs.mkdirSync(process.env.UI_EVIDENCE_DIR, {recursive:true});
+          await page.screenshot({path:path.join(process.env.UI_EVIDENCE_DIR, `${width}-${view}.png`)});
+        }
+        if (process.env.AXE_PATH) {
+          const violations = await page.evaluate(async () => (await window.axe.run(document, {runOnly:{type:'rule',values:['aria-required-children','aria-required-parent']}})).violations);
+          assert.deepStrictEqual(violations, [], 'tab ownership rules must pass in every narrow workspace');
+        }
+      }
+      await page.click('[data-workspace-view="chat"]');
+      await page.locator('#chat-input').fill('draft retained across workspace switches');
+      await page.click('[data-workspace-view="editor"]');
+      await page.click('[data-workspace-view="chat"]');
+      assert.equal(await page.locator('#chat-input').inputValue(), 'draft retained across workspace switches');
+      const hit = await page.locator('#chat-input').evaluate(el => {
+        const r = el.getBoundingClientRect(); return el.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));
+      });
+      assert.ok(hit, 'composer must not be covered by the welcome pane');
+    }
+    await page.evaluate(async () => {
+      const {state} = await import('/js/state.js');
+      state.tabs.push({id:'layout-fixture',title:'very-long-file-name-'.repeat(16),kind:'file',content:'draft',savedContent:'draft',hash:'a'.repeat(64)});
+      (await import('/js/tabs.js')).activateTab('layout-fixture');
+    });
+    assert.equal(await page.locator('#tabs button:not([role="tab"])').count(), 0, 'tablist cannot own close buttons');
+    await page.locator('#tabs [aria-selected="true"]').focus();
+    await page.keyboard.press('Home');
+    assert.equal(await page.locator('#tabs [aria-selected="true"]').innerText(), '欢迎');
+    await page.keyboard.press('End');
+    const closeHit = await page.locator('#btn-close-tab').evaluate(el => {const r=el.getBoundingClientRect();return el === document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);});
+    assert.ok(closeHit, 'long filenames cannot push the close action offscreen');
+    await page.locator('#editor-fallback').fill('dirty draft');
+    page.once('dialog', dialog => dialog.dismiss());
+    await page.click('#btn-close-tab');
+    assert.equal(await page.locator('#editor-fallback').inputValue(), 'dirty draft', 'cancel close retains draft');
+    page.once('dialog', dialog => dialog.accept());
+    await page.click('#btn-close-tab');
+    assert.equal(await page.locator('#tabs [role="tab"]').count(), 1);
+    assert.equal(await page.locator('#tabs [aria-selected="true"]').evaluate(el => el === document.activeElement), true);
+    for (const width of [768,1024,1440]) {
+      await page.setViewportSize({width,height:900});
+      assert.ok((await page.locator('#center').boundingBox()).width > 250);
+      assert.equal(await page.locator('#rightbar').isVisible(), true);
+    }
+    await page.locator('#chat-input').focus();
+    await page.setViewportSize({width:320,height:640});
+    assert.equal(await page.locator('#chat-input').isVisible(), true, 'resize follows the focused desktop workspace');
+    await page.evaluate(async () => (await import('/js/dom.js')).setRight('bridge'));
+    assert.equal(await page.locator('#rb-bridge-tab').evaluate(el => el === document.activeElement), true, 'programmatic panel changes must not strand focus in hidden Chat');
+    await page.locator('[data-workspace-view="editor"]').focus();
+    await page.keyboard.press('Enter');
+    assert.equal(await page.locator('#center').isVisible(), true);
+    await page.evaluate(async () => {
+      const {state} = await import('/js/state.js');
+      state.tabs.push({id:'delete-fixture',title:'keyboard close',kind:'welcome'});
+      (await import('/js/tabs.js')).activateTab('delete-fixture');
+    });
+    await page.locator('#tabs [aria-selected="true"]').focus();
+    await page.keyboard.press('Delete');
+    assert.equal(await page.locator('#tabs [role="tab"]').count(), 1);
+    assert.equal(await page.locator('#tabs [aria-selected="true"]').evaluate(el => el === document.activeElement), true);
+    assert.deepStrictEqual(errors, []);
+  } finally { await page.close(); }
+}
 async function freePort() {
   const server = net.createServer();
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
@@ -470,6 +553,7 @@ async function main() {
     };
     await rpc('ping'); // History exists before the page opens.
     browser = await chromium.launch({ headless: true, ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
+    await narrowWorkspaceBrowser(browser, base);
     await probeHudBrowser(browser);
     await docsViewerBrowser(browser);
     await modelStateBrowser(browser, base);
@@ -579,7 +663,9 @@ async function main() {
     for (const theme of ['dark', 'light']) {
       await page.evaluate(async value => (await import('/js/dom.js')).applyTheme(value), theme);
       for (const viewport of [{ width: 1024, height: 600 }, { width: 640, height: 360 }, { width: 390, height: 844 }]) {
-        await page.setViewportSize(viewport); await page.click('#btn-agent-pick');
+        await page.setViewportSize(viewport);
+        if (viewport.width <= 700) await page.click('[data-workspace-view="chat"]');
+        await page.click('#btn-agent-pick');
         const rect = await page.locator('#agent-pick-menu').boundingBox();
         assert.ok(rect.x >= 0 && rect.y >= 0 && rect.x + rect.width <= viewport.width && rect.y + rect.height <= viewport.height);
         await page.keyboard.press('Escape');
