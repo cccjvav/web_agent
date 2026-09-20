@@ -806,7 +806,7 @@ ShunCode在仓库外`/home/user/audit-2026-09-20/shuncode/`重新安全解包87�
 
 基线本地84/84、文档249源码/28目录/110排除且updated=0、生产audit 0漏洞、calculator6/6；非暂停201 JS/MJS+14 JSON+4 Shell语法/格式检查通过。额外静态扫描200 JS、181 MD、5865本地链接；73个Promise执行器返回值风格提示不是73个功能bug，两个发行副本链接失效单列。当前仓库18 Python全部暂停，无主线TS/TSX/MTS。仓库外Chromium153.0.8010.0已跑完整既有浏览器套件且通过，未关闭web security/TLS；本轮CJK审查字体回退、Monaco CDN拦截与平台未验边界见报告。
 
-本轮只落报告/截图证据，直接修分发详解的旧权限/截图/租约说明、patch新建风险和工作台窄屏验证描述，更新manager/review与文档导航/生成物；没有主机/扩展/工作台执行源码或测试/依赖变更；docs-site/content.js由生成器重建。正式清单新增报告待逐句项，总数201，已逐句仍8，局部56、待79，其余不变。说明/报告改动后已重跑本地84/84、完整既有Chromium套件、249/28/110只读文档检查updated=0与git diff --check；没有新增正式产品回归。提交前最新远端证据仍为上述50c03be，审查稿提交/推送后须核对它自己的CI，不能借基线代签。R2/R3、R4历史Windows超时、R5–R9及探针暂停边界不关闭。
+本轮只落报告/截图证据，直接修分发详解的旧权限/截图/租约说明、patch新建风险和工作台窄屏验证描述，更新manager/review与文档导航/生成物；没有主机/扩展/工作台执行源码或测试/依赖变更；docs-site/content.js由生成器重建。正式清单新增报告待逐句项，总数201，已逐句仍8，局部56、待79，其余不变。说明/报告改动后已重跑本地84/84、完整既有Chromium套件、249/28/110只读文档检查updated=0与git diff --check；没有新增正式产品回归。审查落档提交`a490ca02f84fe5d9086e2d7629c0e1bfa2258206`已推到本会话固定`arena/01a0bfa9-web-agent`，远端SHA一致；[CI35525528734](https://github.com/cccjvav/web_agent/actions/runs/35525528734)已按该SHA核验completed/success且九个job逐项success（Ubuntu Node18/20/22/24、Windows Node20/22/24、Chromium和Windows安装器）。不是借50c03be绿灯代签，也不把这些绿灯当新增负例已修。附属复现脚本、原始JSON/日志与CI摘要在仓库外`/home/user/audit-2026-09-20/F54-audit-evidence.zip`，不进入产品依赖或暂停专项。R2/R3、R4历史Windows超时、R5–R9及探针暂停边界不关闭。
 
 ## 复盘
 
