@@ -870,7 +870,7 @@ stateIntegrity/mcpProtocol/mcpCancellation/requestLifecycle/externalDiscovery/pa
 
 nativeChatStream先以真实HTTP证明旧postNdjson对302正常resolve（/home/user/f54-native-evidence/red.log），再最小修原生链：仅2xx NDJSON，1MiB单行/16MiB总响应、5分钟总deadline和空闲timeout；坏帧/回调错误/断流/error/取消全部拒绝并清理，只在唯一done后正常EOF确认。done之后非空事件同样拒绝。ChatView原有“await成功才存助手历史”现在获得可靠合同；原生participant返回完成metadata，失败assistant历史不再回送，未标记旧历史保持兼容。取消不弹错误模态、不声称主机一定未执行，不自动重放。未修改审批/文件/PTY权限、共享MCP及经典UI。
 
-测试覆盖传输与两个真实消费者（VS Code及binding替身），正例跨UTF8字节/无尾换行，负例302/错误MIME/坏帧/无终态/重复或done后数据/error/断流/取消/预算/控制时钟deadline。发行副本按既有syncExtension生成，不手改单独副本或放宽一致性断言。首轮84/85仅新增测试的详解登记遗漏，补登记及夹具函数说明后完整85/85、真实Chromium通过，docs250/28/110；Playwright下载TLS失败，改用仓库外Chromium包及所需库运行，不降低TLS或浏览器安全策略。精确CI待提交后核验；实际Windows VS Code窗口不代签。requestJson响应预算等相邻静态缺口仍待，窄屏/ARIA继续下一项，不把本次局部修复外推全原生链审完。
+测试覆盖传输与两个真实消费者（VS Code及binding替身），正例跨UTF8字节/无尾换行，负例302/错误MIME/坏帧/无终态/重复或done后数据/error/断流/取消/预算/控制时钟deadline。发行副本按既有syncExtension生成，不手改单独副本或放宽一致性断言。首轮84/85仅新增测试的详解登记遗漏，补登记及夹具函数说明后完整85/85、真实Chromium通过，docs250/28/110；Playwright下载TLS失败，改用仓库外Chromium包及所需库运行，不降低TLS或浏览器安全策略。实现`931d4e965981cb1d5479b4aafeb2073149a0331e`的[CI35542931972](https://github.com/cccjvav/web_agent/actions/runs/35542931972)已逐job核验九项success；实际Windows VS Code窗口不代签。requestJson响应预算等相邻静态缺口仍待，窄屏/ARIA继续下一项，不把本次局部修复外推全原生链审完。
 
 ## 复盘
 

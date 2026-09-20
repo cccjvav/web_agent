@@ -91,7 +91,7 @@
 | [computer-use/win/截图标记与OCR详解.md](../computer-use/win/截图标记与OCR详解.md) | 待逐句核对 | 1deb2309a14f2568 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [computer-use/win/鼠标键盘与剪贴板详解.md](../computer-use/win/鼠标键盘与剪贴板详解.md) | 待逐句核对 | 2f5dba67bb07f984 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs-site/README.md](../docs-site/README.md) | 待逐句核对 | 72c6c3ae4ad1d781 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [docs-site/source-index.md](../docs-site/source-index.md) | 生成定位，非语义认证 | 03589fe743a3f8ae | 检查生成一致性，逐函数含义另查主说明 |
+| [docs-site/source-index.md](../docs-site/source-index.md) | 生成定位，非语义认证 | bdd339872e71e18e | 检查生成一致性，逐函数含义另查主说明 |
 | [docs-site/样式规则详解.md](../docs-site/样式规则详解.md) | 待逐句核对 | 294d6015d16c6b6e | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs-site/浏览与服务详解.md](../docs-site/浏览与服务详解.md) | 待逐句核对 | 2e72d034f06c6f91 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs-site/清单与构建详解.md](../docs-site/清单与构建详解.md) | 待逐句核对 | 63b60e93bb1c59ca | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
@@ -122,7 +122,7 @@
 | [installer/README.md](../installer/README.md) | 待逐句核对 | f2edbd500219def5 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/函数详解.md](../installer/函数详解.md) | 待逐句核对 | e56bd9d538e2a089 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/安装声明详解.md](../installer/安装声明详解.md) | 待逐句核对 | 5c8566d2ce5b1bc8 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | 11f96b205e667a2a | F54压缩为轻量当前索引，记录来源同步/50c03be精确CI与未修新证据；历史保留阶段，不自授整篇通过 |
+| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | 01af460a7ec14acf | F54压缩为轻量当前索引，记录来源同步/50c03be精确CI与未修新证据；历史保留阶段，不自授整篇通过 |
 | [manager/SKILL.md](../manager/SKILL.md) | 只读规范副本 | 5c8c93d50e52332b | 只核对引用与适用范围，不修改技能副本 |
 | [manager/agents.md](../manager/agents.md) | 待逐句核对 | 6dff82f43223763a | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [manager/docs/documentation.md](../manager/docs/documentation.md) | 待逐句核对 | dff435c047431d16 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
@@ -132,7 +132,7 @@
 | [manager/stages/documentation-2026-09-12.md](../manager/stages/documentation-2026-09-12.md) | 待历史定位核对 | c23c09e4b3615d99 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/probe-dual-integration-2026-09-15.md](../manager/stages/probe-dual-integration-2026-09-15.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
 | [manager/stages/s1-handoff.md](../manager/stages/s1-handoff.md) | 待历史定位核对 | cfc0e427dc08e55c | 核对归档/引用/证据，不将旧结论改成现状 |
-| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | 10e23bb358952670 | F54更新R2/R3与实际审查/未修边界、基线和ShunCode取舍；保留历史失败，其余阶段不重签 |
+| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | 2514357d1980c1c5 | F54更新R2/R3与实际审查/未修边界、基线和ShunCode取舍；保留历史失败，其余阶段不重签 |
 | [manager/stages/s2-shell.md](../manager/stages/s2-shell.md) | 待历史定位核对 | 5ac447fe582ce09e | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s3-bridge-image.md](../manager/stages/s3-bridge-image.md) | 待历史定位核对 | fbe64b3265d3cf1a | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s4-terminal.md](../manager/stages/s4-terminal.md) | 待历史定位核对 | 1cf1fcca01c51478 | 核对归档/引用/证据，不将旧结论改成现状 |
