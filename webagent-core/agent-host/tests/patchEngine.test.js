@@ -10,7 +10,70 @@ const { findFiles } = require('../src/tools/findFiles');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-patch-'));
 config.workspaceRoot = tmp;
 
+async function missingTargetSafety() {
+  const bus = require('../src/utils/eventBus');
+  const { recalledHash } = require('../src/tools/readCache');
+  const events = []; const observe = event => events.push(event);
+  bus.on('file_patched', observe);
+  const empty = '<<<<<<< SEARCH\n=======\nfirst\n>>>>>>> REPLACE';
+  const change = '<<<<<<< SEARCH\nfirst\n=======\nsecond\n>>>>>>> REPLACE';
+  const cases = [
+    { patch: 'raw new body', expectedHash: computeHash('old'), code: 'E_STALE_FILE' },
+    { patch: empty, expectedHash: computeHash(''), code: 'E_STALE_FILE' },
+    { patch: change, code: 'E_CONFLICT' },
+    { patch: empty + '\n' + change, code: 'E_BAD_ARGS' },
+    { patch: empty + '\n' + empty, code: 'E_BAD_ARGS' }
+  ];
+  try {
+    for (let i = 0; i < cases.length; i++) {
+      for (const dryRun of [true, false]) {
+        const filePath = `missing-case-${i}-${dryRun}/file.txt`;
+        const { code, ...input } = cases[i];
+        const count = events.length;
+        await assert.rejects(applyPatch({ filePath, ...input, dryRun }), error => {
+          assert.strictEqual(error.code, code);
+          if (code === 'E_STALE_FILE') assert.strictEqual(error.detail.currentHash, null);
+          return true;
+        });
+        assert.strictEqual(fs.existsSync(path.join(tmp, filePath.split('/')[0])), false, 'rejection must not even create a parent directory');
+        assert.strictEqual(recalledHash(filePath), null);
+        assert.strictEqual(events.length, count, 'rejected patch cannot broadcast success');
+      }
+    }
+    // The supplied read precondition survives external deletion, including dryRun.
+    fs.writeFileSync(path.join(tmp, 'deleted-after-read.txt'), 'old');
+    const old = readFile({ filePath: 'deleted-after-read.txt' });
+    fs.unlinkSync(path.join(tmp, 'deleted-after-read.txt'));
+    for (const dryRun of [true, false]) {
+      await assert.rejects(applyPatch({ filePath: 'deleted-after-read.txt', patch: empty, expectedHash: old.hash, dryRun }), error => error.code === 'E_STALE_FILE');
+      assert.strictEqual(fs.existsSync(path.join(tmp, 'deleted-after-read.txt')), false);
+      assert.strictEqual(recalledHash('deleted-after-read.txt'), old.hash, 'failure must not publish a new hash');
+    }
+    for (const [index, patch, content] of [[0,'raw body\r\n','raw body\r\n'],[1,empty,'first']]) {
+      const filePath = `valid-new-${index}/file.txt`, count = events.length;
+      const preview = await applyPatch({ filePath, patch, dryRun: true });
+      assert.strictEqual(preview.baseHash, null);
+      assert.strictEqual(preview.proposedHash, computeHash(content));
+      assert.strictEqual(fs.existsSync(path.join(tmp, `valid-new-${index}`)), false);
+      assert.strictEqual(recalledHash(filePath), null);
+      assert.strictEqual(events.length, count);
+      const written = await applyPatch({ filePath, patch });
+      assert.strictEqual(written.newHash, preview.proposedHash);
+      assert.strictEqual(fs.readFileSync(path.join(tmp, filePath), 'utf8'), content);
+      assert.strictEqual(events.length, count + 1);
+      assert.strictEqual(recalledHash(filePath), written.newHash);
+    }
+    // Existing-file multi-block editing remains supported; only ambiguous creation is refused.
+    fs.writeFileSync(path.join(tmp, 'existing-multi.txt'), 'first');
+    const second = '<<<<<<< SEARCH\nsecond\n=======\nthird\n>>>>>>> REPLACE';
+    const result = await applyPatch({ filePath: 'existing-multi.txt', patch: change + '\n' + second, expectedHash: computeHash('first') });
+    assert.strictEqual(result.newHash, computeHash('third'));
+    assert.strictEqual(fs.readFileSync(path.join(tmp, 'existing-multi.txt'), 'utf8'), 'third');
+  } finally { bus.removeListener('file_patched', observe); }
+}
+
 async function main() {
+  await missingTargetSafety();
   const safeBody = 'keep this line\nold\n';
   fs.writeFileSync(path.join(tmp, 'truncated.txt'), safeBody);
   const complete = '<<<<<<< SEARCH\nold\n=======\nnew\n>>>>>>> REPLACE';
@@ -257,5 +320,6 @@ x = 2;
 
 main().catch((err) => {
   console.error(err);
+  fs.rmSync(tmp, { recursive: true, force: true });
   process.exit(1);
 });

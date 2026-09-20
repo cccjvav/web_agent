@@ -305,7 +305,7 @@ const TOOLS = [
   tool({
     name: 'apply_patch',
     aliases: [],
-    description: 'Atomic SEARCH/REPLACE patch. Prefer expectedHash from the last read_files. If you just read the same path, the host reuses that sha256. HASH_REQUIRED means stop and read the file; do not blindly reuse an error hash or replay a modification. New files / dryRun may omit the hash. STALE_FILE means re-read. SEARCH must match once unless occurrence is set (1-based). Keeps the file CRLF/LF. Code mode only.',
+    description: 'Atomic SEARCH/REPLACE patch. Prefer expectedHash from the last read_files. If you just read the same path, the host reuses that sha256. HASH_REQUIRED means stop and read the file; do not blindly reuse an error hash or replay a modification. New files / dryRun may omit the hash, but a supplied hash requires the target to still exist. Creation accepts a full body or exactly one empty SEARCH block; multiple blocks or nonempty SEARCH require an existing file. STALE_FILE means stop and reconcile, never drop the hash to recreate automatically. SEARCH must match once unless occurrence is set (1-based). Keeps the file CRLF/LF. Code mode only.',
     mode: ['code'],
     inputSchema: {
       type: 'object',

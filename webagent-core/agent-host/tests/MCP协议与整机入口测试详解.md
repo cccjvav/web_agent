@@ -84,3 +84,5 @@ F28-01协议/HTTP断言通用和OAuth连接器候选的未知状态、规范/mcp
 覆盖非法ID/params/顶层字段/初始化元数据、无ID工具调用、有ID通知、非法取消目标；先写后坏成员/重复ID的整份批次必须零写。版本空值/重复/不支持在POST/GET/DELETE拒绝；协商2025-06-18后省略头仍拒绝batch，不能降级重握手，错误DELETE不删会话。旧版合法1–64项、0与字符串0、通知202、合法单写、单SSE响应、未知提案fallback与正常DELETE204/后续404有正例。requestLifecycle另锁直接run的非法ID不执行fn；mcpCancellation只将通知接受状态从204纠正202，原同owner/精确凭据/跨会话和取消信号断言均保留。不是全部客户端互操作认证，不测试持久exactly-once或跨文件批事务。
 
 httpSmoke第二批还通过真实src/index.js验证零写与正例：`admissionWrite(id)`构造临时write_file请求，协商现代会话后拒绝null/对象/无ID、现代batch、旧版重复ID及坏版本；合法ID必须真的写成同一文件，随后fixture删除。避免仅由权限关闭导致“零写”假阳性。
+
+F54第三批：httpSmoke继续通过真实src/index.js、合法现代会话调用apply_patch：显式hash但不存在、非空SEARCH和多块新建，在dryRun与正式执行均HTTP200/result.isError且错误码正确、父目录不创建；单空块新建预览零写、提交内容精确为created。区分HTTP成功与工具失败，不改审批或权限。

@@ -283,20 +283,30 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
   rejectUnsupportedPatchFormat(filePath, patch, blocksEarly);
 
   if (!fs.existsSync(fullPath)) {
-    const blocks = blocksEarly;
-    const emptySearchNew = blocks.length > 0 && String(blocks[0].search).trim() === '';
-    if (looksLikeUnifiedDiff(patch) && !emptySearchNew) {
-      throw new ProtocolError(
-        'E_BAD_ARGS',
-        `New file ${filePath}: this looks like a unified diff. Use SEARCH/REPLACE with an empty SEARCH, or pass the file body — do not paste a unified diff as the new file.`,
-        {
-          filePath,
-          retryHint: 'Retry apply_patch with <<<<<<< SEARCH\\n=======\\n<body>\\n>>>>>>> REPLACE, or write_file with the file body.'
-        }
-      );
+    // A hash is a precondition on an existing file, never permission to recreate it.
+    // The empty-file hash is still a hash of an existing file, not an absence token.
+    if (expectedHash !== null) {
+      throw new ExecutionError('E_STALE_FILE', `STALE_FILE: ${filePath} no longer exists. Stop and reconcile before creating a new file.`, {
+        filePath, expectedHash, currentHash: null,
+        retryHint: 'Stop this patch; inspect the missing file and coordinate whether recreation is intended. Do not remove expectedHash and replay automatically.'
+      });
     }
-    let newContent = patch;
-    if (emptySearchNew) newContent = blocks[0].replace;
+    if (blocksEarly.length > 1) {
+      throw new ProtocolError('E_BAD_ARGS', 'New files require exactly one empty SEARCH block or a complete file body; multiple blocks are not supported for creation.', {
+        filePath, retryHint: 'Review and supply the complete intended new file in one empty SEARCH block, or use write_file. No block was applied.'
+      });
+    }
+    if (blocksEarly.length === 1 && blocksEarly[0].search.trim() !== '') {
+      throw new ExecutionError('E_CONFLICT', `Patch conflict: ${filePath} does not exist, so a nonempty SEARCH cannot match.`, {
+        filePath, retryHint: 'Stop and inspect the missing target; do not reinterpret an existing-file patch as a new file body.'
+      });
+    }
+    if (!blocksEarly.length && looksLikeUnifiedDiff(patch)) {
+      throw new ProtocolError('E_BAD_ARGS', `New file ${filePath}: use one empty SEARCH block or the complete file body, not a unified diff.`, {
+        filePath, retryHint: 'Review the intended new file and use one empty SEARCH block or write_file.'
+      });
+    }
+    const newContent = blocksEarly.length ? blocksEarly[0].replace : patch;
 
     if (dryRun) {
       const preview = createUnifiedDiff(filePath, '', newContent);

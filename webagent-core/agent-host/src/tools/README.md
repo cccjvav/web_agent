@@ -82,6 +82,8 @@ readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，
 ## 验证与定位
 `patchEngine`、`workspaceTools`、`auditStorage`、`resourceBudget`覆盖文件与预算；`ptyLifecycle`覆盖审批、所属客户端及捕获；`mcpBoard`/`board`覆盖协作；`modelLifecycle`/`planRound`覆盖轮次。缺省的模块/进程fixture不能代替VS Code和Windows交互验收。
 
+F54第三批：apply_patch新建分支在预览/提交前校验显式hash及块结构；缺失目标携hash拒绝，新建只接受正文或单空SEARCH块，多块整体拒绝，已有文件多块支持保留。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 

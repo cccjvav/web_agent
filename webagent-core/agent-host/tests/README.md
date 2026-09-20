@@ -107,6 +107,8 @@ F54会话修复：stateIntegrity锁定空闲TTL/全忙拒绝；mcpProtocol与mcp
 
 F54第二批：mcpProtocol新增真实HTTP整份准入/版本协商/旧版批预算与零写回归；requestLifecycle锁共享ID预算，mcpCancellation通知按202接受且不弱化归属断言。
 
+F54第三批：patchEngine的missingTargetSafety锁新建hash/块校验、无mkdir/事件/缓存副作用和正例预览；httpSmoke经真实主机入口交叉验证。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -159,7 +161,7 @@ F54第二批：mcpProtocol新增真实HTTP整份准入/版本协商/旧版批预
 | [oauthClientAuth.test.js](oauthClientAuth.test.js) | 29 个函数/类节点 |
 | [oauthRateLimit.test.js](oauthRateLimit.test.js) | 15 个函数/类节点 |
 | [operatorQueueCapacity.test.js](operatorQueueCapacity.test.js) | 5 个函数/类节点 |
-| [patchEngine.test.js](patchEngine.test.js) | 7 个函数/类节点 |
+| [patchEngine.test.js](patchEngine.test.js) | 11 个函数/类节点 |
 | [planRound.test.js](planRound.test.js) | 6 个函数/类节点 |
 | [probeAnalysis.test.js](probeAnalysis.test.js) | 6 个函数/类节点 |
 | [probeBridge.test.js](probeBridge.test.js) | 11 个函数/类节点 |

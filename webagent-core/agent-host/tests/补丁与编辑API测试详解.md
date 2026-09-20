@@ -4,7 +4,7 @@
 
 ## patchEngine.test.js
 
-[源码](patchEngine.test.js)异步**main**按链构造fixture，无额外测试框架；每个try/catch仅把期望错误转布尔，紧接assert，防没有抛错也被当成功。
+[源码](patchEngine.test.js)异步**main**先运行missingTargetSafety，再按链构造fixture，无额外测试框架；每个try/catch仅把期望错误转布尔，紧接assert，防没有抛错也被当成功。
 
 | 链与输入 | 调用/结果/不变量 |
 |---|---|
@@ -20,7 +20,9 @@
 | race.js同hash两Promise并发补丁 | allSettled筛选恰一success、一STALE_FILE，结果只能2或3，不能混合 |
 | V4A *** Begin Patch | looksLikeV4A识别；已有文件E_BAD_ARGS/V4A且retryHint提SEARCH，原文保持；新文件也拒且不存在 |
 
-computeHash导入但本文件没有直接调用，版本来自readFile；样例正文里的add不是测试辅助函数，也未执行该JS计算结果。成功rm tmp，main.catch打印exit1，无finally；并发只测一个Node进程内锁，不能外推跨进程协同或断电一致性。
+computeHash用于构造明确版本前提及预览/落盘hash对照，readFile提供真实读取版本；样例正文里的add不是测试辅助函数，也未执行该JS计算结果。成功和main.catch均清理tmp；并发只测一个Node进程内锁，不能外推跨进程协同或断电一致性。
+
+**missingTargetSafety()**用真实临时磁盘、file_patched的observe监听和readCache做第三批回归：不存在目标+显式旧hash（包括空文件hash）在dryRun/正式执行均E_STALE_FILE；非空SEARCH E_CONFLICT，新建多块E_BAD_ARGS。所有拒绝不能创建父目录、发布成功事件或新hash。读取后外部unlink仍拒绝旧hash且保持缓存旧值。合法正文/单空块预览不创建目录/更新缓存，写入hash与预览一致、只发一次成功事件；已有文件的两个串联块必须完整应用。finally移除事件监听。
 
 ## apiFiles.test.js
 

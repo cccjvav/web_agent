@@ -234,6 +234,33 @@ async function main() {
     assert.strictEqual(fs.readFileSync(path.join(tmp,'rpc-admission-denied.txt'),'utf8'),'must not write');
     fs.unlinkSync(path.join(tmp,'rpc-admission-denied.txt'));
 
+    const createPatch = '<<<<<<< SEARCH\n=======\ncreated\n>>>>>>> REPLACE';
+    const editPatch = '<<<<<<< SEARCH\ncreated\n=======\nchanged\n>>>>>>> REPLACE';
+    const patchCases = [
+      { patch:createPatch, expectedHash:'a'.repeat(64), code:'E_STALE_FILE' },
+      { patch:editPatch, code:'E_CONFLICT' },
+      { patch:createPatch+'\n'+editPatch, code:'E_BAD_ARGS' }
+    ];
+    let patchId = 100;
+    for (const input of patchCases) for (const dryRun of [true,false]) {
+      const {code,...args} = input;
+      const result = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/${secret}`, {
+        jsonrpc:'2.0',id:patchId++,method:'tools/call',params:{name:'apply_patch',arguments:{filePath:'missing-patch-dir/new.txt',...args,dryRun}}
+      },modernHeaders);
+      assert.strictEqual(result.status,200);
+      assert.strictEqual(result.json.result.isError,true);
+      assert.strictEqual(JSON.parse(result.json.result.content[0].text).code,code);
+      assert.strictEqual(fs.existsSync(path.join(tmp,'missing-patch-dir')),false);
+    }
+    for (const dryRun of [true,false]) {
+      const result = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/${secret}`, {
+        jsonrpc:'2.0',id:patchId++,method:'tools/call',params:{name:'apply_patch',arguments:{filePath:'valid-patch-dir/new.txt',patch:createPatch,dryRun}}
+      },modernHeaders);
+      assert.strictEqual(result.json.result.isError,false);
+      assert.strictEqual(fs.existsSync(path.join(tmp,'valid-patch-dir/new.txt')),!dryRun);
+    }
+    assert.strictEqual(fs.readFileSync(path.join(tmp,'valid-patch-dir/new.txt'),'utf8'),'created');
+
     const listed = await request('POST', `http://127.0.0.1:${mcpPort}/mcp/${secret}`, {
       jsonrpc: '2.0',
       id: 2,
