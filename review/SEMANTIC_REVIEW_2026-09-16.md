@@ -15,6 +15,14 @@
 
 回归：`stateIntegrity`新增在途会话容量/TTL存活、release单次性、未知ID no-op；`mcpProtocol`新增合并串/数组头400与未知单ID仍404。定向及完整84/84通过，文档249/28/110零漂移（新增具名`postWithSession`已登记主指南，首次全量因漏登记暴露后补齐），`会话与结果详解`/`请求分发详解`/`MCP协议与整机入口测试详解`同步更新。精确提交与CI见管理索引；这不是对参考包其余37个模块的逐句审查，也不改变Probe暂停边界。
 
+第54组第二批（同日续作）：出站方向对称缺陷与参考包剩余模块速审。
+
+- **externalClient出站会话头（新发现，已修）**：真实HTTP红测证明外部MCP服务器发重复`Mcp-Session-Id`响应头时，fetch按规范合并成`"evil-a, evil-b"`，旧`rpc()`只查长度≤512便保存合并串，并在notifications/initialized及后续每个请求里**原样回放**给对端。现要求1–512个可见ASCII且不含逗号/空白的单token，否则抛`Invalid session header`使登记/调用失败；合法单token保存与回放有正例回归。externalDiscovery新增session-merged/session-space负例与session-valid正例，红转绿。
+- 参考包剩余模块速审（对照非逐句）：`bridge-http-router`的按流字节预算——我们已有express.json分层限制（OAuth 64kb/常规20mb/probe 300kb），不采用；`bridge-activity-tracker`/`bridge-usage-counter`——我们的tracker/eventBus已覆盖等价统计且经固定投影发布，不采用；`managed-command-*`（取消限流/保留TTL/风险分级）——我们的operatorQueue+dangerous.js+审批流覆盖同一面，其按owner取消限流依赖可信owner身份，与我们的凭据模型不合，不采用；`workspace-paths`的realpath净化——patchEngine/文件工具已有工作区绑定与symlink处理回归，不采用；`custom-tool-*`沙箱/迁移——对应我们Skill体系，其manifest目录包含检查与我们`skills.js`现有路径校验等价，不采用。类型声明按包内声明为手写重建，未当权威。
+- extractToken的query.secret入口已在请求分发详解登记为已知边界（URL secret本身即凭据形态），不新增修复；SECURITY对凭据入日志的提示保留。
+
+本批定向与完整84/84、249/28/110零漂移。至此ShunCode参考包的模块级评估完成：采用2项语义（入站会话驱逐保护、出入站双向会话头校验），其余明确拒绝并各有依据；未运行参考包任何代码。
+
 第53组F53：继续非探针query/只读投影/external-workflow接线并交叉R2。真实HTTP红测证明diagnostics、activity、status、models、logs、profile与customizations忽略未知query，Bridge reset-round和tool/call仍会产生状态/调度副作用；现apiRequestBody及bridgeRequestBody统一先拒绝query，原始body路由显式门禁，逐路由静态核对确认除明确暂停的`/probe/*`外全部当前REST入口均固定query。external/request与两个workflow入口改为固定body的显式异步路由，错误包装在服务查询/预览/审批分配前400。MCP peer记录入库及status快照只保留固定七字段，clientInfo只留有界name/title/version；diagnostics固定三层公开形状。customizations完整固定defaults顶层、嵌套及六类≤100项列表，空/未知/错类型写入零改动，历史未知属性不经GET发布，已知损坏仍保留原文报错；四文件仍非事务。apiFiles及相邻定向回归通过；首轮完整80/84仅为函数说明/库存/站点尚未同步，80项业务测试全绿；同步后最终84/84、文档249/28/110且updated=0、生产audit 0漏洞、正式哈希183项、git diff与探针目录零diff。实现`397476c7bc29d256781c759f3386beac91d9c147`的[CI35459273776](https://github.com/cccjvav/web_agent/actions/runs/35459273776)九项成功；探针专项保持暂停。
 
 第52组F52：继续非探针PTY、connection-check、external本机管理包装及模型协议形状并交叉R2。真实HTTP红测先证明PTY hello未知字段会200并登记客户端；模型fixture证明没有显式出站字节预算。现PTY hello/poll/report固定body/query/ID和逐状态字段/type/预算，错误包装与矛盾终态在刷新客户端或推进任务前400；connection-check创建/检查/清空及external HTTP登记、stdio预览/启动、删除也在分配记录、触网/保存、启动/停止前固定包装，公网登记严格确认并要求成对完整绑定。模型每轮完整JSON在fetch前限12MiB，assistant只投影固定role/content/tool_calls/function字段；content严格，tool call最多64项、唯一有界ID，arguments须≤256KiB对象JSON且名字必须在本轮声明集合内；禁用/隐藏工具同样在整份验证后、执行前拒绝，随后才可能执行前8项。apiFiles/modelLifecycle及相邻定向回归通过；首轮完整83/84唯一为尚未重建站点镜像，刷新后最终84/84、249/28/110文档零漂移、生产audit 0漏洞、正式哈希183项匹配、探针目录零diff。受影响API/Agent/三篇测试正文维持局部，正式清单199项计数不变；实现`94841c38410591e062867cbe8da92dd9ae2aacdc`的[CI35450192029](https://github.com/cccjvav/web_agent/actions/runs/35450192029)九项逐项成功，探针专项保持暂停。

@@ -235,6 +235,10 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 
 回归：stateIntegrity在途存活/释放/兜底、mcpProtocol畸形头三形态；本地定向与完整84/84，249/28/110零漂移（首轮全量暴露`postWithSession`未登记主指南，补齐后通过，失败保留）。说明同步：请求分发详解、会话与结果详解、MCP协议与整机入口测试详解。提交与CI见CONTEXT当前状态。
 
+第二批（同日）：出站对称缺陷。真实HTTP红测证明externalClient会把外部服务器重复响应头合并成的`"a, b"`会话串保存并向对端回放；现仅接受1–512可见ASCII、不含逗号/空白的单token，externalDiscovery补session-merged/session-space负例与session-valid正例。参考包剩余模块（router预算/activity-tracker/managed-command系列/workspace-paths/custom-tool系列）逐类对照后均不采用，依据记语义台账F54第二批；模块级评估至此完成。本地84/84、249/28/110零漂移。
+
+未定位间歇：本批沙箱（Ubuntu，Node22）两次观察到完整套件报`1/84 test files failed`，但摘要未打印FAIL文件名，立即复跑及随后连续三轮均84/84；失败文件身份未捕获，不能归因也不改时限/断言。与R4的Windows22超时同策略：保留观察，后续复现时先抓完整日志定位。
+
 #### 已交付：限流与生成测试批次
 
 - 11限流：OAuth JSON/HTML 429都返回Retry-After；超额请求不增加计数/延长窗口；1000-key容量有恢复提示且旧key剩余额度不被挤掉；来源不直接回退不可信转发头。原固定窗口本来不会被连续拒绝无限延长，此处不虚报修复了不存在的问题。
