@@ -42,6 +42,8 @@ classic启动自绘工作台；vscode启动code-server编排；app后台启动�
 
 installerPackaging验证白名单、私密fixture不入包、runtime路径和重要声明；Windows CI编译输入C#、解析PS并编译安装器。普通用户安装/升级迁移/卸载、PATH和浏览器窗口的实际效果仍需Windows实机验收。
 
+R5首包发行：只读tunnel-residue.js加入明确文件白名单，src/tunnel身份与记录模块随原源码树打包；用户home记录不属于产品载荷，未加入清理执行器。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 

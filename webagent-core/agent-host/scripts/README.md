@@ -13,6 +13,8 @@ run-tests.js是npm test的统一入口，不是产品服务启动器。
 
 R4：逐文件context/result固定元数据与有界失败annotation帮助区分测试进程未退出和内部产品超时；不增加超时或重跑，不自动修复业务。
 
+R5增加`tunnel-residue.js`零参数只读本地检测，JSON明确不支持清理；详见运行器详解独立章节。不会停止当前Bridge或按名称杀进程。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -21,4 +23,5 @@ R4：逐文件context/result固定元数据与有界失败annotation帮助区分
 | 源码 | 定位证据 |
 |---|---|
 | [run-tests.js](run-tests.js) | 5 个函数/类节点 |
+| [tunnel-residue.js](tunnel-residue.js) | 2 个函数/类节点 |
 <!-- docs-inventory:end -->

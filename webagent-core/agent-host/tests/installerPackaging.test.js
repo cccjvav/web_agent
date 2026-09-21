@@ -17,6 +17,7 @@ try {
   }
   const forbidden = ['webagent-core/admin-host/data/admin-token.txt', 'webagent-core/agent-host/node_modules/private.json',
     'arena-model-probe/recon/raw.json', 'arena-model-probe/src/main.js', 'arena-model-probe/arena_probe.py',
+    'webagent-core/agent-host/src/.webagent/tunnel-processes-v1/receipt.json',
     'workspace/.webagent/config.json', 'webagent-repro/server.js', '.config/code-server/config.yaml', 'manager/privacy.md'];
   for (const rel of forbidden) {
     const dest = path.join(source, rel); fs.mkdirSync(path.dirname(dest), { recursive: true });
@@ -31,6 +32,7 @@ try {
   assert.ok(manifest.files.some(f => f.path === 'installer/launch.js'));
   assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/src/utils/fileCheckpoints.js'));
   for (const file of ['stdioBridge.cs', 'stdioBridge.ps1', 'stdioSupervisor.js', 'stdioTransport.js', 'stdioLaunch.js', 'publicHttps.js']) assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/src/mcp/' + file));
+  for (const file of ['scripts/tunnel-residue.js', 'src/tunnel/tunnelRegistry.js', 'src/tunnel/processIdentity.js']) assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/' + file));
   assert.ok(manifest.files.some(f => f.path === 'computer-use/win/input.cs'));
   for (const f of manifest.files) assert.ok(!fs.readFileSync(path.join(output, f.path), 'utf8').includes('PRIVATE_FIXTURE_DO_NOT_PACKAGE'));
   assert.ok(!manifest.files.some(f => f.path.startsWith('webagent-repro/')));

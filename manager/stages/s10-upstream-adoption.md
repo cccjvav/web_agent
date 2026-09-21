@@ -87,7 +87,7 @@
 | R2 / 下一项，高 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，第四批现补资源caller与目录ACL及错误hash指引，第五批已补原生流确认，第六批补窄屏/页签ARIA，其余UI/实机项待续修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
 | R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54第三批已补新文件patch显式hash与块校验，第五批补原生postNdjson坏流/终态及失败历史；按新证据续修，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 根因未定位；已复取历史annotations并补阶段诊断首包，等待可解释复现 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
-| R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
+| R5 / 用户优先 | 已授权安全隧道残留回收；首包归属记录/只读检测，回收执行及PTY/Windows互操作仍待 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
 | R7 / 结构首包已做，语义继续 | 第26组集中19篇专题、归档17篇旧审查、删除过期PROMPT；F54改相邻错误说明、归档独立报告与同步当前基线，未增加逐句完成项；其余README/管理旧现状继续核对 | 源码清单、目录README、根维护/安装说明及阶段索引 | 活跃正文无相互矛盾的“当前”；无用旧指南退役，有效教学/历史失败保留；给出已审和未审清单而不是总称100% |
 | R8 / 分项就绪后 | 待用户实机：项目根MCP验收 | 第7节、Windows清单M/W/T/G等；用户接入后核对工具身份 | 逐项有提交、实际环境、动作、退出码/效果与脱敏证据；失败/未执行如实留存，不借CI代签 |
@@ -923,6 +923,18 @@ externalDiscovery覆盖真实HTTP JSON和SSE，stdioMcp及既有fixture覆盖真
 最小修复仅改变externalClient.rpc：会话头仍先校验为1–512可见ASCII且不含逗号的候选值；匹配响应经过JSON-RPC/对象result/无error检查后才保存。通知仍沿用现有2xx与取消响应体后返回的规则，只在成功路径保存候选SID。不引入会话重试/重建、并发轮换策略或新的通知状态限制；合法RPC result中的业务isError/unknown仍由execute及审批队列处理，不能把RPC接受等同业务成功。
 
 externalDiscovery真实JSON/SSE覆盖HTTP500、error并存、ID/版本不符、数组结果、坏JSON和超过256KiB：已执行夹具计数的调用保持unknown，重复批准不重放；后续另行批准的请求必须仍带原SID并完成。有效结果的新SID、202通知SID兼容同时验证；旧分页/取消/目录/敏感字段/stdio合同不变。定向externalDiscovery/publicHttps/executionControl已通过；Linux Node22全套87/87通过、文档清单252/28/110和185登记指纹已同步；实现19eaa164d9799c757405bcf193fc5bb69bc9362e的CI35587380854精确SHA九项全通过（含Windows20/22/24、浏览器与安装构建）。不是实际公网/IDE/Windows桌面验收，R4根因等其他未完成项及探针暂停不变。
+
+### R5安全残留回收：归属与只读检测首包（2026-09-21）
+
+用户要求异常退出留下的隧道能一键回收，且不影响正在运行的Bridge和其他程序，已同意分阶段安全计划。从干净2807f88接续。本包先做记录/检测，不把清理候选直接变成kill，也不调用会关闭当前Bridge的stopTunnel。
+
+三个provider spawn后各接一次observeTunnel；只持久化provider/实例UUID和宿主/目标PID+启动身份+exe，不传argv/Token，home私有目录共享同用户各项目。Linux读/proc，Windows固定系统PowerShell只查指定PID，8秒/128KiB、最多两个在途查询；其他平台unknown。记录/权限/路径/包装器不满足时固定警告，不阻止正常Bridge；正常退出移除本次记录，异常退出后留线索。32项/12KiB有限扫描，坏文件/链接/超额/不可读保守报告；缺目录不创建。磁盘收据不是认证/清理授权，Windows ACL与同UID篡改不作保证。
+
+本地零参数CLI `node webagent-core/agent-host/scripts/tunnel-residue.js`输出active-current/active-other/orphan-candidate/identity-changed/exited/unknown，明确registered-launches-only、cleanupAvailable=false、canCleanup=false；禁止路径/PID/--cleanup参数。没有API/UI清理入口，无网络暴露面，无实际终止操作。旧版无记录不扫描认领，结果不代表全系统无残留，不能把元数据判断当原子句柄身份验证。
+
+回归含分类负例、权限/未知、PID复用、坏记录/边界/链接/迟到exit/隐私/扫描合并；真实Node夹具宿主被SIGKILL后目标仍存活并被标记候选，检测既不杀它也不影响另一个活进程；目标由私有stop文件自行退出、失败60秒兜底。provider接线spy保留原隧道生命周期断言。Linux定向及完整88/88通过；文档257/28/110、185登记指纹同步。首轮全套发现命名辅助说明遗漏，补readStat/unknown/live；次轮因说明误写测试秘密哨兵原文触发发行防泄漏守卫，改为描述性文字，原断言未弱化，失败日志保留。发行白名单补只读CLI，安装回归核对模块/脚本并排除归属文件。Windows精确CI待核验，不声称真实隧道桌面验收。
+
+后续必须有：稳定进程句柄/可信归属、清理前重检活实例与目标身份、独立有界预览及本机绑定确认、防重复执行与逐项观察退出、只清确认项。禁止按名称/端口全杀、仅凭旧PID、篡改记录或候选状态结束程序；无法确认就跳过。R4历史超时根因及其余工作包/暂停探针不因本包改变。
 
 ## 复盘
 

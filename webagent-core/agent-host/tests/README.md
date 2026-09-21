@@ -123,6 +123,8 @@ R2/R3：externalDiscovery和stdioMcp补真实JSON/SSE/stdio矛盾响应、登记
 
 R2/R3续修：externalDiscovery用真实JSON/SSE验证拒绝响应不提交候选SID，后续单独批准调用沿用旧会话；unknown不重放及有效结果/通知SID正例同时保留。
 
+R5：tunnelRegistry/tunnelOwnerFixture验证只读归属分类、坏记录/边界、真实宿主强杀后的孤儿检测及其他活进程不受影响；tunnelLifecycle检查三个provider接线。只是检测首包，无清理按钮，详见tunnel/停止进程详解。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -162,7 +164,7 @@ R2/R3续修：externalDiscovery用真实JSON/SSE验证拒绝响应不提交候�
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
-| [installerPackaging.test.js](installerPackaging.test.js) | 23 个函数/类节点 |
+| [installerPackaging.test.js](installerPackaging.test.js) | 24 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 19 个函数/类节点 |
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 24 个函数/类节点 |
@@ -211,7 +213,9 @@ R2/R3续修：externalDiscovery用真实JSON/SSE验证拒绝响应不提交候�
 | [toolLabel.test.js](toolLabel.test.js) | 0 个函数/类节点 |
 | [traceIntegration.test.js](traceIntegration.test.js) | 4 个函数/类节点 |
 | [tunnel.test.js](tunnel.test.js) | 14 个函数/类节点 |
-| [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 14 个函数/类节点 |
+| [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 17 个函数/类节点 |
+| [tunnelOwnerFixture.js](tunnelOwnerFixture.js) | 4 个函数/类节点 |
+| [tunnelRegistry.test.js](tunnelRegistry.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
 | [workbench.browser.js](workbench.browser.js) | 225 个函数/类节点 |

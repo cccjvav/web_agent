@@ -5,6 +5,7 @@ const path = require('path');
 const { config } = require('../config');
 const eventBus = require('../utils/eventBus');
 const { stopProcess } = require('./stopProcess');
+const { observeTunnel } = require('./tunnelRegistry');
 
 const URL_RE = /https:\/\/[a-z0-9-]+\.trycloudflare\.com/i;
 
@@ -141,6 +142,7 @@ async function startNamedTunnel({ hostname, token, port = config.port, timeoutMs
       shell: needShell
     });
     child = proc;
+    observeTunnel(proc, 'cloudflare-named', bin);
     const redactLogs = new Map([proc.stdout, proc.stderr].map(stream => [stream, createTokenRedactor(tok)]));
     let buf = '';
     let settled = false;
@@ -218,6 +220,7 @@ async function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) 
       shell: needShell
     });
     child = proc;
+    observeTunnel(proc, 'cloudflare', bin);
     let buf = '';
     let settled = false;
 

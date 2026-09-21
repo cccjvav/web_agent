@@ -7,6 +7,9 @@ const path = require('path');
 const cp = require('child_process');
 const { stopProcess } = require('../src/tunnel/stopProcess');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-tunnel-life-'));
+const receipts = require('../src/tunnel/tunnelRegistry');
+const oldObserve = receipts.observeTunnel, observed = [];
+receipts.observeTunnel = (proc, provider, bin) => observed.push({ proc, provider, bin });
 const oldSpawn = cp.spawn, oldFind = cp.spawnSync, oldPath = process.env.CLOUDFLARED_PATH, oldNgrokPath = process.env.NGROK_PATH;
 function fake() {
   const proc = new EventEmitter(); proc.stdout = new EventEmitter(); proc.stderr = new EventEmitter();
@@ -54,6 +57,8 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
   const collect = event => logs.push(event.chunk);
   bus.on('tunnel_log', collect);
   try {
+    assert.equal(observed[0].provider, 'cloudflare');
+    assert.strictEqual(observed[0].proc, spawned[0]);
     process.env.NGROK_PATH = bin;
     const ngrok = require('../src/tunnel/ngrok');
     for (const provider of ['named', 'ngrok']) {
@@ -83,8 +88,12 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
       assert.ok(!JSON.stringify(bus.getRecentLogs(500)).includes(token), 'stored event history is also redacted');
     }
   } finally { bus.removeListener('tunnel_log', collect); }
+  assert(observed.some(item => item.provider === 'cloudflare-named'));
+  assert(observed.some(item => item.provider === 'ngrok'));
+  assert.equal(observed.length, spawned.length, 'exactly one receipt observation per provider spawn');
   console.log('tunnel process reference/generation/start-stop regressions passed');
 })().catch(err => { console.error(err); process.exitCode = 1; }).finally(() => {
+  receipts.observeTunnel = oldObserve;
   cp.spawn = oldSpawn; cp.spawnSync = oldFind;
   if (oldPath === undefined) delete process.env.CLOUDFLARED_PATH; else process.env.CLOUDFLARED_PATH = oldPath;
   if (oldNgrokPath === undefined) delete process.env.NGROK_PATH; else process.env.NGROK_PATH = oldNgrokPath;

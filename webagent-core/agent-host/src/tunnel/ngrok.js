@@ -4,6 +4,7 @@ const path = require('path');
 const { config } = require('../config');
 const eventBus = require('../utils/eventBus');
 const { stopProcess } = require('./stopProcess');
+const { observeTunnel } = require('./tunnelRegistry');
 const { canonicalNamedUrl, createTokenRedactor } = require('./cloudflared');
 
 const NGROK_URL_RE = /https:\/\/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+/i;
@@ -115,6 +116,7 @@ async function startNgrokTunnel({ hostname, token, port = config.port, timeoutMs
       env: { ...process.env, NGROK_AUTHTOKEN: tok }
     });
     child = proc;
+    observeTunnel(proc, 'ngrok', bin);
     const redactLogs = new Map([proc.stdout, proc.stderr].map(stream => [stream, createTokenRedactor(tok)]));
     let buf = '';
     let settled = false;

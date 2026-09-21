@@ -33,6 +33,10 @@ Named Token必须传给cloudflared命令行，因此可能对有本机进程查�
 
 排查顺序：二进制可用 → 提供商选项正确 → 本机MCP健康 → 客户端日志就绪 → 公网OAuth/认证MCP请求成功。详细安装方式见[隧道指南](../../../../docs/guides/隧道使用指南.md)。
 
+## 残留检测首包（R5）
+
+新启动的quick/named/ngrok增加私有归属记录，只读检测入口见`scripts/tunnel-residue.js`。记录在当前OS用户home的`.webagent/tunnel-processes-v1`，不含Token/argv；模块解释与边界见[只读归属](停止进程详解.md)。目前没有一键回收，检测不改变Bridge、URL或任何目标进程；旧版无记录、包装脚本、查询失败等明确不能确认。Windows/Linux有身份查询，其他平台保守unknown。不要把磁盘记录或疑似残留状态当成终止授权。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -42,5 +46,7 @@ Named Token必须传给cloudflared命令行，因此可能对有本机进程查�
 |---|---|
 | [cloudflared.js](cloudflared.js) | 44 个函数/类节点 |
 | [ngrok.js](ngrok.js) | 25 个函数/类节点 |
+| [processIdentity.js](processIdentity.js) | 14 个函数/类节点 |
 | [stopProcess.js](stopProcess.js) | 8 个函数/类节点 |
+| [tunnelRegistry.js](tunnelRegistry.js) | 21 个函数/类节点 |
 <!-- docs-inventory:end -->
