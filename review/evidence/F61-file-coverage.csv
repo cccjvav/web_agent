@@ -1,0 +1,874 @@
+baseline,path,category,bytes,mechanical_check,manual_review,evidence_or_boundary
+63cbbdc7eba23a3bab715810e57294f74a390ee5,.config/code-server/README.md,documentation,2042,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,.config/code-server/config.yaml,restricted-config,104,not-run,restricted,content not read or republished
+63cbbdc7eba23a3bab715810e57294f74a390ee5,.gitattributes,source-config,102,not-run,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,.github/workflows/README.md,documentation,2164,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,.github/workflows/test.yml,source-config,4594,text/risk sweep only; no dedicated parser,partial,CI scope/dependency platform gates
+63cbbdc7eba23a3bab715810e57294f74a390ee5,.gitignore,source-config,1322,not-run,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,.webagent/.gitignore,source-config,176,not-run,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,.webagent/skills/commit-now/SKILL.md,documentation,2015,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,.webagent/skills/docs-sync/SKILL.md,documentation,1396,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,.webagent/skills/evidence-check/README.md,documentation,894,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,.webagent/skills/evidence-check/SKILL.md,documentation,1441,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,.webagent/skills/evidence-check/references/checklist.md,documentation,540,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,.webagent/skills/evidence-check/workflow.json,source-config,145,JSON parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,.webagent/skills/fix-tests/SKILL.md,documentation,968,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,.webagent/skills/review/SKILL.md,documentation,1018,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,AGENTS.md,documentation,1858,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,CONTRIBUTING.md,documentation,2254,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,LICENSE,documentation,753,not-run,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,README.md,documentation,8122,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,SECURITY.md,documentation,21877,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/README-PYTHON.md,paused,7694,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/README.md,paused,12535,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/TRANSPORT_REVIEW.md,paused,9079,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/active_probe.py,paused,11038,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/agent_model_id.py,paused,12080,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/arena_probe.py,paused,36779,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/extract_catalog.py,paused,5924,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/extract_model_labels.py,paused,6295,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/extract_model_map2.py,paused,6912,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/final_e2e.py,paused,13004,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/final_report.py,paused,12086,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/full_capture2.py,paused,8657,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/get_token.py,paused,5166,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/new_tab.py,paused,1029,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/package.json,paused,469,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/src/classify.js,paused,15592,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/src/idmap.js,paused,6319,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/src/interceptor.js,paused,23323,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/src/learned.js,paused,11609,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/src/lifecycle.js,paused,1578,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/src/main.js,paused,14109,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/src/probe.js,paused,8021,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/src/registry.js,paused,28273,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/src/runmodel.js,paused,9496,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/src/ui.js,paused,11495,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/sync_catalog.py,paused,4363,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/tools/boot-smoke.mjs,paused,10394,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/tools/build.mjs,paused,8195,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/tools/cdp-inspect.mjs,paused,8473,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/tools/cdp.mjs,paused,2133,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/tools/e2e.mjs,paused,16027,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/tools/recon.mjs,paused,3104,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/tools/selftest.mjs,paused,35335,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/tools/tabs.mjs,paused,547,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/tools/verify-auth.mjs,paused,2779,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/tools/verify.mjs,paused,1067,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/tools/wait-ready.mjs,paused,2117,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/trigger_full.py,paused,7707,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/verify_idmap.py,paused,9620,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/verify_realname.py,paused,8518,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/wait_login.py,paused,3573,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-model-probe/webagent-connection.user.js,paused,2242,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/README.md,paused,17109,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/background.js,paused,20987,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/conversation-rename.js,paused,11283,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/core.js,paused,3870,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/evidence.js,paused,2137,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/history.js,paused,4141,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/hud-layout.js,paused,1516,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/hud-preferences.js,paused,771,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/hud.js,paused,19926,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/manifest.json,paused,685,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/package.json,paused,83,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/panel.js,paused,16005,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/popup.css,paused,3787,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/popup.html,paused,1859,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/popup.js,paused,7731,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/restore.js,paused,2437,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/tests/auto-rename.test.mjs,paused,3143,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/tests/background.test.mjs,paused,8750,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/tests/conversation-archive.test.mjs,paused,3591,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/tests/conversation-rename.test.mjs,paused,1013,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/tests/core.test.mjs,paused,3295,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/tests/evidence.test.mjs,paused,4678,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/tests/history.test.mjs,paused,4116,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/tests/hud-dom-fixture.mjs,paused,2992,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/tests/hud-layout.test.mjs,paused,2592,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/tests/hud-recovery.test.mjs,paused,3611,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/tests/popup-layout.test.mjs,paused,1024,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/tests/restore.test.mjs,paused,9231,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/tests/trace-reader.test.mjs,paused,873,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/tests/usage.test.mjs,paused,2913,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/trace-reader.js,paused,992,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/usage.js,paused,5103,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/view-model.js,paused,4640,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,arena-trace-inspector/安装教程.md,paused,8702,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,bin/README.md,documentation,2171,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,bin/code-server-runtime/package.json,source-config,261,JSON parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,check-env.cmd,source-config,902,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/SKILL.md,documentation,8625,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after1.jpg,binary-asset,31056,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after10.jpg,binary-asset,28844,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after11.jpg,binary-asset,28426,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after12.jpg,binary-asset,27852,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after13.jpg,binary-asset,27925,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after14.jpg,binary-asset,27365,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after15.jpg,binary-asset,28373,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after16.jpg,binary-asset,28038,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after17.jpg,binary-asset,28146,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after18.jpg,binary-asset,27616,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after19.jpg,binary-asset,27665,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after2.jpg,binary-asset,31636,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after20.jpg,binary-asset,27554,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after21.jpg,binary-asset,27717,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after22.jpg,binary-asset,26865,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after23.jpg,binary-asset,27261,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after24.jpg,binary-asset,27453,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after25.jpg,binary-asset,28020,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after26.jpg,binary-asset,28018,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after27.jpg,binary-asset,28017,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after28.jpg,binary-asset,28470,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after3.jpg,binary-asset,30866,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after4.jpg,binary-asset,30737,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after5.jpg,binary-asset,30286,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after6.jpg,binary-asset,30333,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after7.jpg,binary-asset,30122,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after8.jpg,binary-asset,30049,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after9.jpg,binary-asset,29400,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_bells.jpg,binary-asset,27551,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_bells2.jpg,binary-asset,31617,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_bells3.jpg,binary-asset,31430,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_brush.jpg,binary-asset,32125,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_brushclear.jpg,binary-asset,27867,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_buckets.jpg,binary-asset,32711,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_cabbage.jpg,binary-asset,31918,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_cabbage2.jpg,binary-asset,32411,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_cabclear.jpg,binary-asset,30263,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_cabfinish.jpg,binary-asset,29720,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_cabnow.jpg,binary-asset,30875,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_carrots.jpg,binary-asset,27143,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_clear_two.jpg,binary-asset,31490,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_clear_yarn_tray.jpg,binary-asset,29966,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_cleartray.jpg,binary-asset,32440,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_glove.jpg,binary-asset,32826,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_glove3.jpg,binary-asset,28248,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_gloves.jpg,binary-asset,28244,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_gloves2.jpg,binary-asset,31690,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_grass3.jpg,binary-asset,29652,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_grass_clear.jpg,binary-asset,30250,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_grass_reveal.jpg,binary-asset,30917,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_log.jpg,binary-asset,31688,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_logs_cur.jpg,binary-asset,31495,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_purple2.jpg,binary-asset,30566,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_purple_clear.jpg,binary-asset,32401,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_retry_purple.jpg,binary-asset,30563,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_s1.jpg,binary-asset,33320,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_s2.jpg,binary-asset,32951,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_stumps.jpg,binary-asset,28015,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_yarn.jpg,binary-asset,33122,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_yarn2.jpg,binary-asset,32214,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_yarn3.jpg,binary-asset,31311,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_yarn_clear.jpg,binary-asset,31557,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_yarn_free.jpg,binary-asset,30464,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_yarn_one.jpg,binary-asset,32497,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/after_yarn_pair2.jpg,binary-asset,32377,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/bell3_precise.jpg,binary-asset,28250,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/bell3_precise_mark.png,binary-asset,316065,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/bell_retry_mark.png,binary-asset,330763,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/bells_mark.png,binary-asset,292035,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/bells_plan.jpg,binary-asset,34589,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/bells_plan.png,binary-asset,387533,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/brush_plan.jpg,binary-asset,34912,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/brush_plan.png,binary-asset,382932,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/brushclear_mark.png,binary-asset,304499,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/buckets.jpg,binary-asset,35468,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/buckets.png,binary-asset,391533,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cab_finish.jpg,binary-asset,32490,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cab_finish.png,binary-asset,351007,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cab_now.jpg,binary-asset,32997,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cab_now.png,binary-asset,356074,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cabbage2.jpg,binary-asset,34810,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cabbage2.png,binary-asset,382342,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cabclear.jpg,binary-asset,33088,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cabclear.png,binary-asset,362520,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/carrots_mark.png,binary-asset,302080,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/clear_tray.jpg,binary-asset,34979,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/clear_tray.png,binary-asset,386255,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/clear_yarn_tray_mark.png,binary-asset,364834,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cleartray2.jpg,binary-asset,34955,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cleartray2.png,binary-asset,387921,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont1.jpg,binary-asset,29654,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont10.jpg,binary-asset,28201,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont10_mark.png,binary-asset,311528,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont11.jpg,binary-asset,28204,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont11_mark.png,binary-asset,318426,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont12.jpg,binary-asset,28373,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont12_mark.png,binary-asset,317019,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont13.jpg,binary-asset,28375,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont13_mark.png,binary-asset,321052,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont14.jpg,binary-asset,28810,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont14_mark.png,binary-asset,320354,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont15.jpg,binary-asset,28879,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont15_mark.png,binary-asset,326132,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont1_mark.png,binary-asset,344908,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont2.jpg,binary-asset,30562,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont2_mark.png,binary-asset,341281,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont3.jpg,binary-asset,29735,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont3_mark.png,binary-asset,358353,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont4.jpg,binary-asset,29739,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont4_mark.png,binary-asset,343447,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont5.jpg,binary-asset,29735,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont5_mark.png,binary-asset,341843,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont6.jpg,binary-asset,28763,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont6_mark.png,binary-asset,338318,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont7.jpg,binary-asset,29821,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont7_mark.png,binary-asset,319639,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont8.jpg,binary-asset,29330,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont8_mark.png,binary-asset,340803,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont9.jpg,binary-asset,27954,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/cont9_mark.png,binary-asset,336160,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/fireclear.jpg,binary-asset,28811,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/fireclear_mark.png,binary-asset,328761,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/g1.jpg,binary-asset,35631,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/g1.png,binary-asset,390814,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/glove1.jpg,binary-asset,35709,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/glove1.png,binary-asset,390890,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/glove3_mark.png,binary-asset,317267,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/glove_exposed.jpg,binary-asset,28251,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/glove_exposed_mark.png,binary-asset,316222,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/glove_low.jpg,binary-asset,28244,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/glove_low_mark.png,binary-asset,316381,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/gloves2.jpg,binary-asset,34103,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/gloves2.png,binary-asset,372515,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/gloves_mark.png,binary-asset,300162,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/grass3.png,binary-asset,349974,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/grass_clear.jpg,binary-asset,32200,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/grass_clear.png,binary-asset,347947,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/grass_reveal_mark.png,binary-asset,362014,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/high.jpg,binary-asset,73885,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/live.jpg,binary-asset,43340,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/live_chunk.jpg,binary-asset,33303,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/live_marked.jpg,binary-asset,36348,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/live_marked.png,binary-asset,397342,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/live_small.jpg,binary-asset,24615,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/log_plan.jpg,binary-asset,34728,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/log_plan.png,binary-asset,380055,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/logs_cur.jpg,binary-asset,34309,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/logs_cur.png,binary-asset,373196,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark10.jpg,binary-asset,31798,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark10.png,binary-asset,330372,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark11.jpg,binary-asset,31262,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark11.png,binary-asset,324478,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark12.jpg,binary-asset,30706,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark12.png,binary-asset,311314,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark13.jpg,binary-asset,30104,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark13.png,binary-asset,301287,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark14.jpg,binary-asset,30235,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark14.png,binary-asset,299760,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark15.jpg,binary-asset,29667,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark15.png,binary-asset,290503,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark16.jpg,binary-asset,30445,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark16.png,binary-asset,307838,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark17.jpg,binary-asset,30454,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark17.png,binary-asset,300992,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark18.jpg,binary-asset,30176,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark18.png,binary-asset,305027,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark19.png,binary-asset,301504,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark2.jpg,binary-asset,33616,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark2.png,binary-asset,364645,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark20.jpg,binary-asset,29837,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark20.png,binary-asset,296834,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark21.png,binary-asset,301864,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark22.jpg,binary-asset,31052,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark22.png,binary-asset,293258,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark23.jpg,binary-asset,28968,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark23.png,binary-asset,289451,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark24.jpg,binary-asset,29583,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark24.png,binary-asset,290962,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark25.jpg,binary-asset,29748,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark25.png,binary-asset,294357,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark26.jpg,binary-asset,30001,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark26.png,binary-asset,305616,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark3.jpg,binary-asset,33755,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark3.png,binary-asset,376136,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark4.jpg,binary-asset,33374,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark4.png,binary-asset,362657,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark5.jpg,binary-asset,33216,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark5.png,binary-asset,357254,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark6.jpg,binary-asset,32708,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark6.png,binary-asset,351050,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark7.jpg,binary-asset,32665,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark7.png,binary-asset,348176,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark8.jpg,binary-asset,32553,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark8.png,binary-asset,344693,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark9.jpg,binary-asset,32389,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark9.png,binary-asset,335881,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/mark_yarn_one.png,binary-asset,389641,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/new0.jpg,binary-asset,33387,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/next_yarn.jpg,binary-asset,35403,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/next_yarn.png,binary-asset,399933,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/now.jpg,binary-asset,28808,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/plan1.jpg,binary-asset,34902,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/plan1.png,binary-asset,382743,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/plan_cabbage.jpg,binary-asset,34181,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/plan_cabbage.png,binary-asset,372591,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/pots_now.jpg,binary-asset,33140,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/pots_now.png,binary-asset,358582,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/purple_clear2.jpg,binary-asset,32647,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/purple_clear2.png,binary-asset,355572,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/q50.jpg,binary-asset,38524,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/retry_purple.png,binary-asset,370674,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/s1.jpg,binary-asset,36185,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/s1.png,binary-asset,396090,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/s2.jpg,binary-asset,35975,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/s2.png,binary-asset,395348,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/s2b.jpg,binary-asset,35975,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/s2b.png,binary-asset,395348,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/soda0.jpg,binary-asset,707,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/soda1.jpg,binary-asset,36717,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/soda_foreclick.jpg,binary-asset,37722,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/soda_play.jpg,binary-asset,37781,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/soda_play2.jpg,binary-asset,37994,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/soda_search.jpg,binary-asset,40125,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/stump2.jpg,binary-asset,33970,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/stump2.png,binary-asset,367893,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/stumps_mark.png,binary-asset,308335,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/t1.png,binary-asset,18727,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/t2.png,binary-asset,18785,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/t3.png,binary-asset,21951,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/t4.png,binary-asset,22015,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/t5-marked.png,binary-asset,25523,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/t5.png,binary-asset,23667,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/t6.png,binary-asset,24753,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/test_glove.jpg,binary-asset,28246,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/yarn2.jpg,binary-asset,34322,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/yarn2.png,binary-asset,375824,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/yarn3.jpg,binary-asset,33634,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/yarn3.png,binary-asset,373991,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/yarn_clear.jpg,binary-asset,34070,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/yarn_clear.png,binary-asset,377132,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/yarn_pair2.jpg,binary-asset,34301,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/yarn_pair2.png,binary-asset,376369,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/yarnclear.jpg,binary-asset,28017,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/shots/yarnclear_mark.png,binary-asset,323104,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/win/README.md,documentation,2549,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/win/act-bg.ps1,source-config,862,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/win/act.ps1,source-config,992,text/risk sweep only; no dedicated parser,partial,window disambiguation
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/win/capture.cs,source-config,2460,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/win/info.ps1,source-config,1199,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/win/input.cs,source-config,1664,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/win/input2.cs,source-config,2515,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/win/keys.cs,source-config,3968,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/win/mark.cs,source-config,3630,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/win/mark.ps1,source-config,1212,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/win/ocr.ps1,source-config,2055,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/win/snap.ps1,source-config,1622,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/win/type.ps1,source-config,3174,text/risk sweep only; no dedicated parser,partial,clipboard/submit versus accepted
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/win/截图标记与OCR详解.md,documentation,6947,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,computer-use/win/鼠标键盘与剪贴板详解.md,documentation,7216,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/README.md,documentation,6927,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/anchors.js,source-config,1325,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/app.js,source-config,18967,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/build.js,source-config,14872,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/check-docs.js,source-config,9279,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/content.js,generated-copy,4325114,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/documentation-manifest.json,generated-copy,1374498,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/documentation.config.json,source-config,15184,JSON parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/index.html,source-config,621,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/serve.cmd,source-config,191,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/serve.js,source-config,2419,JS AST parsed,partial,source serving boundary
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/source-index.md,generated-copy,728374,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/styles.css,source-config,10753,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/样式规则详解.md,documentation,5531,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/浏览与服务详解.md,documentation,8773,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs-site/清单与构建详解.md,documentation,11711,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/README.md,documentation,2445,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/development/README.md,documentation,649,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/development/代码复盘指南.md,documentation,24039,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/development/借鉴优化说明（新手版）.md,documentation,6630,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/development/平台启动与CI详解.md,documentation,11565,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/development/总览.md,documentation,12769,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/development/技术实现.md,documentation,12676,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/development/架构导读.md,documentation,16259,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/development/测试说明.md,documentation,7297,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/development/组件说明.md,documentation,13272,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/guides/Bridge任务栏说明.md,documentation,3299,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/guides/Bridge权限与工作模式.md,documentation,6078,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/guides/Bridge统计与刷新排查.md,documentation,4903,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/guides/Conda环境说明.md,documentation,19784,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/guides/README.md,documentation,936,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/guides/Windows新手逐步验收.md,documentation,36429,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/guides/内置探索Agent使用指南.md,documentation,6299,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/guides/技能使用指南.md,documentation,15929,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/guides/网页ChatPlus使用指南.md,documentation,2305,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/guides/网页DeepSeek使用指南.md,documentation,1701,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/guides/网页VSCode使用指南.md,documentation,10078,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,docs/guides/隧道使用指南.md,documentation,10981,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,examples/calculator/.webagent/customizations.json,source-config,683,JSON parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,examples/calculator/.webagent/instructions.md,documentation,116,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,examples/calculator/README.md,documentation,5217,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,examples/calculator/package.json,source-config,218,JSON parsed,partial,example test entry
+63cbbdc7eba23a3bab715810e57294f74a390ee5,examples/calculator/src/calculator.js,source-config,451,JS AST parsed,partial,optional example behavior
+63cbbdc7eba23a3bab715810e57294f74a390ee5,examples/calculator/tests/calculator.test.js,source-config,1372,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,install-vscode-extension.cmd,source-config,367,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,installer/README.md,documentation,6108,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,installer/appWindow.js,source-config,14703,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,installer/build-installer.cmd,source-config,802,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,installer/launch.js,source-config,7007,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,installer/package.js,source-config,6751,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,installer/preparation.js,source-config,2679,JS AST parsed,partial,F60 prior-delivery review
+63cbbdc7eba23a3bab715810e57294f74a390ee5,installer/tunnel-recovery.ps1,source-config,2252,text/risk sweep only; no dedicated parser,partial,local TTY/retained mutex
+63cbbdc7eba23a3bab715810e57294f74a390ee5,installer/webagent.iss,source-config,9329,text/risk sweep only; no dedicated parser,partial,install/tasks/whitelist entry; partial
+63cbbdc7eba23a3bab715810e57294f74a390ee5,installer/函数详解.md,documentation,25104,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,installer/安装声明详解.md,documentation,5887,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/CONTEXT.md,documentation,8405,local Markdown link scan (not semantics),partial,current plan/boundaries
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/SKILL.md,documentation,24159,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/agents.md,documentation,3355,local Markdown link scan (not semantics),partial,per-round review and pause scope
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/docs/documentation.md,documentation,7385,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/docs/experience.md,documentation,12560,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/stages/audit-2026-09-11.md,documentation,2175,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/stages/context-history-through-0.4.md,documentation,11230,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/stages/documentation-2026-09-12.md,documentation,11116,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/stages/probe-dual-integration-2026-09-15.md,paused,2424,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/stages/s1-handoff.md,documentation,1784,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/stages/s10-upstream-adoption.md,documentation,210987,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/stages/s2-shell.md,documentation,2092,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/stages/s3-bridge-image.md,documentation,2340,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/stages/s4-terminal.md,documentation,8263,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/stages/s5-experience-parity.md,documentation,2242,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/stages/s6-multi-agent-board.md,documentation,3989,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/stages/s7-platform-reliability.md,documentation,1970,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/stages/s8-probe-integration.md,paused,7566,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,manager/stages/s9-workspace-entry.md,documentation,2160,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,multi-agent-board/SKILL.md,documentation,2684,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,package.json,source-config,440,JSON parsed,partial,root entry scripts
+63cbbdc7eba23a3bab715810e57294f74a390ee5,project-manager/SKILL.md,documentation,24159,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/CHECKLIST_WINDOWS.md,documentation,22540,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/FULL_AUDIT_FOLLOWUP_2026-09-18.md,documentation,21816,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/FULL_REVIEW_INDEX.md,documentation,60601,local Markdown link scan (not semantics),partial,D1 coverage count/current pointer
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/INDEPENDENT_AUDIT_2026-09-20.md,documentation,60242,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/OPTIMIZATION_REPORT_2026-09-18.md,documentation,16395,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/README.md,documentation,3525,local Markdown link scan (not semantics),partial,D1
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/SEMANTIC_REVIEW_2026-09-16.md,documentation,62982,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/UPSTREAM_ADOPTION_MAP_2026-09-15.md,documentation,25901,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/01a08d85-web-agent-audit.md,archive-reference,11084,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/ARENA_PROBE_INTEGRATION_2026-09-15.md,archive-reference,8706,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/AUDIT_2026-09-13.md,archive-reference,35408,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/AUDIT_CROSSCHECK_2026-09-11.md,archive-reference,31418,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/AUDIT_ROUND3_2026-09-13.md,archive-reference,73665,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/CURRENT_AUDIT_2026-09-15.md,archive-reference,28877,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/DOC_QUALITY_2026-09-12.md,archive-reference,5891,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/PROMPT_SHUNCODE.md,archive-reference,9361,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/README.md,archive-reference,3436,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/REFERENCE_ARENA_AGENT_2026-09-15.md,archive-reference,21103,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/REPORT.md,archive-reference,7621,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/REPORT_FULLAUDIT_2026-09-08.md,archive-reference,4747,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/REPORT_SHUNCODE_S1.md,archive-reference,9245,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/REPORT_SHUNCODE_S2.md,archive-reference,2767,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/REPORT_SHUNCODE_S3.md,archive-reference,4391,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/REPORT_SHUNCODE_S4.md,archive-reference,5858,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/REPORT_v2.md,archive-reference,6112,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/REPORT_v3.md,archive-reference,6800,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/REPORT_v4.md,archive-reference,6450,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/REPORT_v5.md,archive-reference,4953,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/REPORT_v6.md,archive-reference,11534,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/SEMANTIC_BATCHES_01_15_2026-09-16.md,archive-reference,25901,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/shuncode-bridge-source.zip,archive-reference,201993,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/archive/web_agent提示词-修正版-纯净.txt,archive-reference,2870,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/evidence/F54-settings-390.png,binary-asset,79688,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/evidence/F54-workbench-1440.png,binary-asset,108420,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/evidence/F54-workbench-390.png,binary-asset,55169,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/evidence/F55-docs-desktop.png,binary-asset,207197,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/evidence/F55-docs-mobile.png,binary-asset,68987,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/evidence/F55-workbench-chat-mobile.png,binary-asset,34390,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/evidence/R4-handoff-ci-2026-09-21.json,source-config,7429,JSON parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/01-welcome-dark.jpg,binary-asset,270604,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/02-settings-overview-dark.jpg,binary-asset,390562,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/03-bridge-stopped-dark.jpg,binary-asset,400937,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/04-bridge-running-dark.jpg,binary-asset,448527,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/05-bridge-waiting-arena-tab.jpg,binary-asset,442651,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/06-bridge-sidebar-mcp-session.jpg,binary-asset,401597,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/07-api-provider-dark.jpg,binary-asset,480533,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/08-dual-browser-agent-menu.jpg,binary-asset,561997,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/09-multimodel-light.jpg,binary-asset,564537,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/10-multimodel-light-zoom.jpg,binary-asset,499683,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/11-merge-model-picker.jpg,binary-asset,709738,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/12-shuncode-model-search.jpg,binary-asset,520556,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/13-shuncode-switch-thinking.jpg,binary-asset,862528,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/14-branch-badge-4of4.jpg,binary-asset,501110,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/15-merge-summarize-button.jpg,binary-asset,512887,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/16-mcp-session-light.png,binary-asset,19056,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/17-multimodel-settings-dark.jpg,binary-asset,525685,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/18-failed-toolcards-red.jpg,binary-asset,584717,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/19-install-exe-versions.jpg,binary-asset,599761,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/20-install-license.jpg,binary-asset,667778,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/21-install-destdir.jpg,binary-asset,544735,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/22-install-startmenu.jpg,binary-asset,525595,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/23-install-additional-tasks.jpg,binary-asset,566788,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/24-install-ready.jpg,binary-asset,582395,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/25-install-finished-launch.jpg,binary-asset,467232,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/shuncode-ui/README.md,documentation,5562,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,review/step5-tests.txt,restricted-evidence,9604,not-run,restricted,content not read or republished
+63cbbdc7eba23a3bab715810e57294f74a390ee5,run-admin.cmd,source-config,363,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,run-admin.sh,source-config,306,bash syntax OK,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,run-tests.cmd,source-config,1264,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,run-webagent-appwindow.cmd,source-config,361,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,run-webagent-vscode.cmd,source-config,364,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,run-webagent-vscode.sh,source-config,879,bash syntax OK,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,run-webagent.cmd,source-config,365,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,run-webagent.sh,source-config,1239,bash syntax OK,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/README.md,documentation,1926,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/admin-host/README.md,documentation,2662,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/admin-host/app.js,source-config,10178,JS AST parsed,partial,F61-04
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/admin-host/index.js,source-config,868,JS AST parsed,partial,admin entry contract
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/admin-host/统计服务详解.md,documentation,6173,local Markdown link scan (not semantics),partial,existing honest corrupt-store limits
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/README.md,documentation,2617,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/package-lock.json,dependency-lock,34694,JSON parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/package.json,source-config,553,JSON parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/scripts/README.md,documentation,1630,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/scripts/run-tests.js,source-config,6754,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/scripts/tunnel-cleanup.js,source-config,2238,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/scripts/tunnel-residue.js,source-config,522,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/scripts/运行器详解.md,documentation,9268,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/README.md,documentation,3778,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/agent/Chat调度详解.md,documentation,12291,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/agent/README.md,documentation,6584,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/agent/computerUse.js,source-config,4431,JS AST parsed,partial,R2/D2
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/agent/openai.js,source-config,12914,JS AST parsed,partial,request/response tool validation; partial
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/agent/providers.js,source-config,7830,JS AST parsed,partial,stream budget; partial
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/agent/runChat.js,source-config,21024,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/agent/toolLabel.js,source-config,1519,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/agent/模型调用详解.md,documentation,14527,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/api/README.md,documentation,10899,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/api/routes.js,source-config,48656,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/api/路由逐项详解.md,documentation,30695,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/auth/GitHub身份详解.md,documentation,5142,local Markdown link scan (not semantics),partial,existing honest network limits
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/auth/README.md,documentation,2081,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/auth/github.js,source-config,6849,JS AST parsed,partial,F61-03
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/config.js,source-config,1762,JS AST parsed,partial,isolated workspace/identity initialization
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/extensionVersion.js,source-config,321,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/index.js,source-config,6497,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/OAuth授权详解.md,documentation,14870,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/README.md,documentation,11685,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/budget.js,source-config,2478,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/clients.js,source-config,7297,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/errors.js,source-config,2053,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/externalClient.js,source-config,12899,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/instructions.js,source-config,7719,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/oauth.js,source-config,20071,JS AST parsed,partial,origin/pairing; partial
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/publicHttps.js,source-config,3948,JS AST parsed,partial,DNS pin/response bridge
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/requestLifecycle.js,source-config,2233,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/resources.js,source-config,7040,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/server.js,source-config,23316,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/session.js,source-config,6792,JS AST parsed,partial,active pin; partial
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/stdioBridge.cs,source-config,3390,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/stdioBridge.ps1,source-config,1136,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/stdioLaunch.js,source-config,6673,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/stdioSupervisor.js,source-config,916,JS AST parsed,partial,owned POSIX group boundary
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/stdioTransport.js,source-config,8216,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/会话与结果详解.md,documentation,9786,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/公网出站详解.md,documentation,6616,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/请求分发详解.md,documentation,19566,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/mcp/资源与客户端详解.md,documentation,7772,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/models/README.md,documentation,6022,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/models/customizations.js,source-config,7296,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/models/memory.js,source-config,5406,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/models/modelSettings.js,source-config,8724,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/models/profile.js,source-config,7175,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/models/store.js,source-config,8981,JS AST parsed,partial,storage contrast; partial
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/models/画像与记忆详解.md,documentation,14186,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/models/配置存储详解.md,documentation,10764,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/Plan状态详解.md,documentation,5118,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/README.md,documentation,11132,local Markdown link scan (not semantics),partial,sensitive policy overbreadth
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/board.js,source-config,8351,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/commandJob.cs,source-config,2834,text/risk sweep only; no dedicated parser,partial,job object ownership
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/consensusEngine.js,source-config,3628,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/dangerous.js,source-config,1215,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/executor.js,source-config,15349,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/fileOps.js,source-config,16443,JS AST parsed,partial,F61-02
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/findFiles.js,source-config,2082,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/gitOps.js,source-config,4848,JS AST parsed,partial,F61-01
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/index.js,source-config,26682,JS AST parsed,partial,non-probe dispatch path only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/normalize.js,source-config,5048,JS AST parsed,partial,confirmation false-positive rejected
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/patchEngine.js,source-config,16351,JS AST parsed,partial,F61-02/F61-05
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/planRound.js,source-config,3600,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/progressTracker.js,source-config,4078,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/ptyJobs.js,source-config,7745,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/readCache.js,source-config,2129,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/searchWorker.js,source-config,637,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/sensitive.js,source-config,3138,JS AST parsed,partial,F61-01 sensitivity policy
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/skills.js,source-config,12194,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/workflows.js,source-config,10498,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/workspaceInfo.js,source-config,1820,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/任务板与工作区详解.md,documentation,6462,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/命令与PTY详解.md,documentation,12833,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/工具入口与命令策略详解.md,documentation,11798,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/技能与隐藏规则详解.md,documentation,7743,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/文件与搜索详解.md,documentation,9182,local Markdown link scan (not semantics),partial,text/hash contract
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/缓存与进度详解.md,documentation,5690,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tools/补丁与路径详解.md,documentation,8700,local Markdown link scan (not semantics),partial,preview/write order
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tunnel/README.md,documentation,6342,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tunnel/cloudflared.js,source-config,11534,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tunnel/helperDiagnostics.js,source-config,2395,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tunnel/ngrok.js,source-config,7396,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tunnel/processIdentity.js,source-config,4835,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tunnel/receiptProtection.js,source-config,3134,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tunnel/receiptProtection.ps1,source-config,1974,text/risk sweep only; no dedicated parser,partial,DPAPI/internal helper boundary
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tunnel/stopProcess.js,source-config,1338,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tunnel/tunnelCleanup.cs,source-config,6005,text/risk sweep only; no dedicated parser,partial,held handle/live-owner veto
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tunnel/tunnelCleanup.js,source-config,7040,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tunnel/tunnelCleanup.ps1,source-config,4028,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tunnel/tunnelRegistry.js,source-config,9704,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tunnel/停止进程详解.md,documentation,26070,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/tunnel/隧道生命周期详解.md,documentation,8583,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/usage/README.md,documentation,1871,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/usage/tracker.js,source-config,4245,JS AST parsed,partial,R1
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/usage/用量上报详解.md,documentation,4414,local Markdown link scan (not semantics),partial,existing honest telemetry limits
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/README.md,documentation,6050,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/boundedFile.js,source-config,928,JS AST parsed,partial,F61-02
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/connectionCheck.js,source-config,3915,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/corsAllow.js,source-config,3517,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/diff.js,source-config,623,JS AST parsed,partial,F61-05
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/editorUndo.js,source-config,3488,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/eventBus.js,source-config,5250,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/executionControl.js,source-config,4770,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/fileCheckpoints.js,source-config,7913,JS AST parsed,partial,budget/hash/unknown; partial
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/hostDiagnostics.js,source-config,3600,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/localControl.js,source-config,2277,JS AST parsed,partial,local/Host gates
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/operatorQueue.js,source-config,7970,JS AST parsed,partial,single execution/unknown; partial
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/probeBridge.js,paused,8501,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/requestScope.js,source-config,4108,JS AST parsed,partial,F61-03 adjacency
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/toolTrace.js,source-config,5447,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/workspaceBinding.js,source-config,1007,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/主机诊断与调用追踪详解.md,documentation,17893,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/事件总线详解.md,documentation,5691,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/函数详解.md,documentation,8104,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/受控工具与工作流详解.md,documentation,50992,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/差异展示详解.md,documentation,1553,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/执行控制详解.md,documentation,7555,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/控制面与Origin详解.md,documentation,6522,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/utils/编辑回退详解.md,documentation,11359,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/入口详解.md,documentation,6804,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/src/运行配置详解.md,documentation,4036,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/Chat模型与图像测试详解.md,documentation,6541,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md,documentation,15142,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/OAuth与GitHub测试详解.md,documentation,8849,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/PTY与隧道测试详解.md,documentation,12433,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/README.md,documentation,29553,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/adminHost.test.js,source-config,4690,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/apiFiles.test.js,source-config,53388,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/appWindowLifecycle.test.js,source-config,19863,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/approvedOperations.test.js,source-config,11752,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/auditControl.test.js,source-config,7164,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/auditStorage.test.js,source-config,7416,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/board.test.js,source-config,3752,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/bridgeTunnel.test.js,source-config,23618,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/chatMode.test.js,source-config,554,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/chatVision.test.js,source-config,10246,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/codeServerAuth.test.js,source-config,1532,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/codeServerLifecycle.test.js,source-config,24783,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/codeServerNotRunnable.test.js,source-config,4186,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/connectionCheck.test.js,source-config,4151,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/corsAllow.test.js,source-config,7885,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/dangerousCommands.test.js,source-config,5259,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/desktopExtension.test.js,source-config,3553,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/docsHttp.test.js,source-config,2367,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/docsSite.test.js,source-config,3964,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/documentationLearning.test.js,source-config,36483,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/documentationLinks.test.js,source-config,8716,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/documentationPolicy.test.js,source-config,3356,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/documentationQuality.test.js,source-config,9208,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/editorReview.test.js,source-config,3839,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/editorRuntime.test.js,source-config,9326,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/eventBus.test.js,source-config,5381,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/executionControl.test.js,source-config,15560,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/extensionCopy.test.js,source-config,2119,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/externalDiscovery.test.js,source-config,11103,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/fileCheckpoints.test.js,source-config,7569,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/fixtures/README.md,documentation,405,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/fixtures/public-mcp-test-cert.pem,source-config,1172,fixture-key-metadata-only,not-line-by-line-reviewed,test fixture filenames only; key bytes not read
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/fixtures/public-mcp-test-key.pem,source-config,1704,fixture-key-metadata-only,not-line-by-line-reviewed,test fixture filenames only; key bytes not read
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/githubAuth.test.js,source-config,7287,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/hostDiagnostics.test.js,source-config,3206,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/hostPersist.test.js,source-config,6013,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/httpSmoke.test.js,source-config,28876,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/installerPackaging.test.js,source-config,8530,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/installerPreparation.test.js,source-config,11938,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/localControl.test.js,source-config,2807,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/mcpBoard.test.js,source-config,9803,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/mcpCancellation.test.js,source-config,9414,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/mcpProtocol.test.js,source-config,24496,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/memoryRecall.test.js,source-config,4974,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/modelLifecycle.test.js,source-config,11954,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/monacoLoading.test.js,source-config,1790,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/nativeChatStream.test.js,source-config,5324,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/nativeRequestJson.test.js,source-config,7454,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/nativeRotationCommands.test.js,source-config,10641,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/oauth.test.js,source-config,10510,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/oauthClientAuth.test.js,source-config,18126,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/oauthRateLimit.test.js,source-config,3781,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/operatorQueueCapacity.test.js,source-config,1842,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/patchEngine.test.js,source-config,13966,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/planRound.test.js,source-config,2188,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/probeAnalysis.test.js,paused,3660,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/probeBridge.test.js,paused,3369,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/probeCaptureLifecycle.test.js,paused,6943,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/probeCompanion.test.js,paused,9813,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/probeHistory.test.js,paused,1897,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/probeIntegration.test.js,paused,7937,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/probeLegacyImport.test.js,paused,2381,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/probePairLifecycle.test.js,paused,2301,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/probeQuestionGuard.test.js,paused,2413,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/probeTransport.test.js,paused,11073,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/processDiagnostics.test.js,source-config,6445,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/profile.test.js,source-config,6008,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/providers.test.js,source-config,4450,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/ptyJobs.test.js,source-config,5187,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/ptyLifecycle.test.js,source-config,14579,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/publicHttps.test.js,source-config,7308,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/requestLifecycle.test.js,source-config,3119,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/resourceBudget.test.js,source-config,3265,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/runChat.test.js,source-config,7395,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/sandbox.test.js,source-config,3082,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/searchWorkerLifecycle.test.js,source-config,2869,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/skillsLifecycle.test.js,source-config,6195,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/skipWorkbench.test.js,source-config,2466,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/stateIntegrity.test.js,source-config,11712,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/stdioMcp.test.js,source-config,11669,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/stdioOwnerFixture.js,source-config,432,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/stdioServerFixture.js,source-config,3083,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/taskProgress.test.js,source-config,6065,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/testRunner.test.js,source-config,6819,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/toolLabel.test.js,source-config,954,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/traceIntegration.test.js,source-config,3102,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/tunnel.test.js,source-config,5001,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/tunnelCleanup.test.js,source-config,5876,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/tunnelCleanupAcl.test.js,source-config,1792,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/tunnelCleanupAclFixture.cs,source-config,9338,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/tunnelCleanupAclFixture.ps1,source-config,594,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/tunnelCleanupWindows.test.js,source-config,8596,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/tunnelHelperDiagnostics.test.js,source-config,5581,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/tunnelLifecycle.test.js,source-config,5947,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/tunnelOwnerFixture.js,source-config,1084,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/tunnelReceiptProtection.test.js,source-config,7060,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/tunnelRecoveryLauncher.test.js,source-config,5847,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/tunnelRegistry.test.js,source-config,10522,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/usageTracker.test.js,source-config,2131,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/webviewRuntime.test.js,source-config,7527,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/workbench.browser.js,source-config,83054,JS AST parsed,partial,test entry; run blocked by browser install
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/workbenchHtml.test.js,source-config,7077,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/workbenchRuntime.test.js,source-config,103012,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/workflowPreconditions.test.js,source-config,10060,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/workspaceEntry.test.js,source-config,4533,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/workspaceTools.test.js,source-config,15596,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/任务板与事件流测试详解.md,documentation,5705,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/存储完整性与预算测试详解.md,documentation,9039,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/安装与运行器测试详解.md,documentation,13273,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/工作区与命令安全测试详解.md,documentation,10786,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/文档守卫测试详解.md,documentation,7903,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/本机边界与跨站测试详解.md,documentation,4480,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/模式画像与Plan测试详解.md,documentation,4747,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/浏览器与Webview测试详解.md,documentation,28114,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/统计与文档测试详解.md,documentation,6120,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/agent-host/tests/补丁与编辑API测试详解.md,documentation,12897,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extension/PTY扩展详解.md,documentation,11082,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extension/README.md,documentation,5612,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extension/dangerousPolicy.js,source-config,5337,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extension/editorReview.js,source-config,4801,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extension/extension.js,source-config,42677,JS AST parsed,partial,native request/rotation binding; partial
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extension/modeFromChatRequest.js,source-config,454,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extension/package.json,source-config,2563,JSON parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extension/ptyHost.js,source-config,16926,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extension/ptyPolicy.js,source-config,2132,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extension/resources/README.md,documentation,604,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extension/resources/icon.svg,source-config,285,XML parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extension/workspaceMatch.js,source-config,587,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extension/入口与Webview详解.md,documentation,21922,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extensions-installed/README.md,generated-copy,2928,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extensions-installed/webagent.webagent-core-0.7.2/PTY扩展详解.md,generated-copy,11082,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extensions-installed/webagent.webagent-core-0.7.2/dangerousPolicy.js,generated-copy,5337,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extensions-installed/webagent.webagent-core-0.7.2/editorReview.js,generated-copy,4801,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extensions-installed/webagent.webagent-core-0.7.2/extension.js,generated-copy,42677,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extensions-installed/webagent.webagent-core-0.7.2/modeFromChatRequest.js,generated-copy,454,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extensions-installed/webagent.webagent-core-0.7.2/package.json,generated-copy,2563,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extensions-installed/webagent.webagent-core-0.7.2/ptyHost.js,generated-copy,16926,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extensions-installed/webagent.webagent-core-0.7.2/ptyPolicy.js,generated-copy,2132,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extensions-installed/webagent.webagent-core-0.7.2/resources/README.md,generated-copy,604,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extensions-installed/webagent.webagent-core-0.7.2/resources/icon.svg,generated-copy,285,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extensions-installed/webagent.webagent-core-0.7.2/workspaceMatch.js,generated-copy,587,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/extensions-installed/webagent.webagent-core-0.7.2/入口与Webview详解.md,generated-copy,21922,not-run,not-line-by-line-reviewed,metadata/provenance only; generated docs separately checked by existing suite
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/LICENSE,paused,753,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/README.md,paused,12099,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/analysis.js,paused,7212,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/analysisWorker.mjs,paused,6273,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/browserActions.js,paused,4293,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/browserBridge.mjs,paused,4660,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/browserIntegration.mjs,paused,6359,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/browserPopup.mjs,paused,3596,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/browserReference.mjs,paused,4545,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/catalog.mjs,paused,2027,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/client.js,paused,2829,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/extension.js,paused,15181,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/genericCapture.mjs,paused,7713,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/history.js,paused,5814,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/historyClustering.js,paused,3845,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/historyTransfer.js,paused,3185,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/liveClient.js,paused,1722,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/liveCommands.js,paused,7834,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/package.json,paused,3743,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/package_browser.py,paused,11818,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/package_vsix.py,paused,8558,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/referenceInput.js,paused,2093,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/sample-observation.json,paused,268,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/traceInput.js,paused,3296,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/实现详解.md,paused,34115,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/probe-extension/浏览器整合说明.md,paused,3782,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/scripts/README.md,documentation,3806,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/scripts/codeServerAuth.js,source-config,1251,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/scripts/ensure-code-server.js,source-config,4551,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/scripts/install-desktop-extension.js,source-config,3396,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/scripts/run-code-oss.js,source-config,11163,JS AST parsed,partial,F61-06; F60 adjacency
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/scripts/编辑器编排详解.md,documentation,12425,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/start-webagent.sh,source-config,94,bash syntax OK,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/README.md,documentation,8261,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/app.js,source-config,3388,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/favicon.svg,source-config,294,XML parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/index.html,source-config,59146,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/js/Bridge与设置详解.md,documentation,21633,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/js/README.md,documentation,5381,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/js/bind.js,source-config,35873,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/js/bridge.js,source-config,35949,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/js/chat.js,source-config,18291,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/js/dom.js,source-config,5435,JS AST parsed,partial,HTML escaping/focus; partial
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/js/monaco.js,source-config,1565,JS AST parsed,partial,CDN/fallback dependency
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/js/operations.js,source-config,33166,JS AST parsed,partial,generation/unknown handling; partial
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/js/picker.js,source-config,3649,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/js/settings.js,source-config,20905,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/js/state.js,source-config,1196,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/js/tabs.js,source-config,17987,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/js/交互绑定详解.md,documentation,14703,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/js/启动与Chat详解.md,documentation,9297,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/js/状态与编辑器详解.md,documentation,13240,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/styles.css,source-config,33723,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/样式规则详解.md,documentation,11835,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-core/workbench/页面结构详解.md,documentation,13910,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/README.md,frozen-reference,20482,local Markdown link scan (not semantics),partial,frozen/non-current boundary
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/package-lock.json,frozen-reference,32831,JSON parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/package.json,frozen-reference,460,JSON parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/public/app.js,frozen-reference,19837,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/public/index.html,frozen-reference,10599,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/public/styles.css,frozen-reference,11024,text/risk sweep only; no dedicated parser,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/src/api/routes.js,frozen-reference,4128,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/src/config.js,frozen-reference,940,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/src/index.js,frozen-reference,2085,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/src/mcp/auth.js,frozen-reference,850,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/src/mcp/server.js,frozen-reference,5180,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/src/mcp/tools/executor.js,frozen-reference,2679,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/src/mcp/tools/fileOps.js,frozen-reference,5227,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/src/mcp/tools/index.js,frozen-reference,6707,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/src/mcp/tools/patchEngine.js,frozen-reference,5313,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/src/mcp/tools/progressTracker.js,frozen-reference,1767,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/src/tunnel/tunnelManager.js,frozen-reference,3049,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/src/utils/diff.js,frozen-reference,679,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/src/utils/eventBus.js,frozen-reference,1000,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/tests/patchEngine.test.js,frozen-reference,2278,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/workspace_demo/package.json,frozen-reference,273,JSON parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/workspace_demo/src/calculator.js,frozen-reference,447,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,webagent-repro/workspace_demo/tests/calculator.test.js,frozen-reference,1263,JS AST parsed,not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,使用指南.md,documentation,53900,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,启动脚本说明.md,documentation,7227,local Markdown link scan (not semantics),not-line-by-line-reviewed,
+63cbbdc7eba23a3bab715810e57294f74a390ee5,探针入口与实际可用范围.md,paused,3273,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,探针完整整合实施与验收.md,paused,5795,not-run,paused,user reconfirmed full pause; metadata only
+63cbbdc7eba23a3bab715810e57294f74a390ee5,探针能力对照与迁移边界.md,paused,5030,not-run,paused,user reconfirmed full pause; metadata only
