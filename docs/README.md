@@ -9,14 +9,14 @@
 | 安装、环境、Bridge、Skills、界面与逐步验收 | [用户专题](guides/README.md) |
 | 架构、模块协作、测试与逐函数学习 | [开发与学习](development/README.md) |
 | 查某个函数或源码模块 | [源码总览](development/总览.md) → 源码旁README/详解；[生成索引](../docs-site/source-index.md)仅供定位 |
-| 接手与继续全部待办 | [管理路线R0–R8/P](../manager/stages/s10-upstream-adoption.md#当前工作包与交接约束)、[管理索引](../manager/CONTEXT.md) |
+| 接手与继续全部待办 | [管理路线R0–R9/P](../manager/stages/s10-upstream-adoption.md#当前工作包与交接约束)、[管理索引](../manager/CONTEXT.md) |
 | 现行审查和人工验收 | [审查入口](../review/README.md) |
 | 查旧报告、授权和失败证据 | [历史归档](../review/archive/README.md)，不是当前施工指令 |
 | 文档维护规则 | [唯一规范](../manager/docs/documentation.md) |
 
 ## 归放规则
 
-根目录保留产品入口、仓库约定/安全、启动脚本同级说明；交接通过manager/CONTEXT进入现有阶段计划；探测相关三篇仍留原位，等待外部正式交接，不借整理恢复专项施工。源码旁的逐函数教学不搬离模块，避免复制成两套正文；docs只集中跨模块专题并链接过去。docs-site是生成查看站点，不是手写文档的存放位置。
+根目录保留产品入口、仓库约定/安全、启动脚本同级说明；上传参考包/原始任务证据归[历史参考资料](../review/archive/README.md#上传参考原件只存档不运行)，不改写原件；交接通过manager/CONTEXT进入现有阶段计划；探测相关三篇仍留原位，等待外部正式交接，不借整理恢复专项施工。源码旁的逐函数教学不搬离模块，避免复制成两套正文；docs只集中跨模块专题并链接过去。docs-site是生成查看站点，不是手写文档的存放位置。
 
 2026-09-17整理了19篇根专题和17篇旧审查记录。迁移不等于这些正文已重新逐句认证；实际审查范围见现行台账。没有证据价值的过期施工提示词直接删除；授权、Windows失败与用户原始日志不删。此前未完成的代码优化、安全/工作流审查、Windows超时追查、真实项目根MCP验收均继续，探测暂停保持。
 

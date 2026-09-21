@@ -78,7 +78,7 @@
 | [AGENTS.md](../AGENTS.md) | 待逐句核对 | 436905c57093ee1a | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | 待逐句核对 | 1a54f3466ead86dd | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [LICENSE](../LICENSE) | 待逐句核对 | 5aff5a5a5928fe3e | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [README.md](../README.md) | 待逐句核对 | 2de158b2b9b26713 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [README.md](../README.md) | 待逐句核对 | f7eab85c873c5e56 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [SECURITY.md](../SECURITY.md) | 局部核对 | 1c51ff086a0fa70e | F43仅原生轮换确认/绑定/CAS与停止绑定边界；前批局部保留 |
 | [arena-model-probe/README-PYTHON.md](../arena-model-probe/README-PYTHON.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
 | [arena-model-probe/README.md](../arena-model-probe/README.md) | 暂停，只登记路径 | 不读取正文 | P：由另一位助手负责；正式交接前不审实现、能力或文档 |
@@ -95,7 +95,7 @@
 | [docs-site/样式规则详解.md](../docs-site/样式规则详解.md) | 待逐句核对 | 294d6015d16c6b6e | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs-site/浏览与服务详解.md](../docs-site/浏览与服务详解.md) | 待逐句核对 | 2e72d034f06c6f91 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs-site/清单与构建详解.md](../docs-site/清单与构建详解.md) | 待逐句核对 | 63b60e93bb1c59ca | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [docs/README.md](../docs/README.md) | 已逐句核对 | c89e415eff942b9b | F27-01：目录/归放规则/边界与实际路径一致 |
+| [docs/README.md](../docs/README.md) | 已逐句核对 | 530ad09b73303ff0 | F27-01：目录/归放规则/边界与实际路径一致 |
 | [docs/development/README.md](../docs/development/README.md) | 已逐句核对 | e6e3efaad5c31918 | F27-01：目录/归放规则/边界与实际路径一致 |
 | [docs/development/代码复盘指南.md](../docs/development/代码复盘指南.md) | 待逐句核对 | 616d7a10f8e77b1a | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [docs/development/借鉴优化说明（新手版）.md](../docs/development/借鉴优化说明（新手版）.md) | 待逐句核对 | 9ebe206b9422dcac | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
@@ -122,9 +122,9 @@
 | [installer/README.md](../installer/README.md) | 待逐句核对 | 8f0ec73d491f9613 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/函数详解.md](../installer/函数详解.md) | 待逐句核对 | b427dfe583316dc3 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/安装声明详解.md](../installer/安装声明详解.md) | 待逐句核对 | 5c8566d2ce5b1bc8 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | 9dbdfb0d939ec261 | F54压缩为轻量当前索引，记录来源同步/50c03be精确CI与未修新证据；历史保留阶段，不自授整篇通过 |
+| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | b523b59a90690e0e | F54压缩为轻量当前索引，记录来源同步/50c03be精确CI与未修新证据；历史保留阶段，不自授整篇通过 |
 | [manager/SKILL.md](../manager/SKILL.md) | 只读规范副本 | 5c8c93d50e52332b | 只核对引用与适用范围，不修改技能副本 |
-| [manager/agents.md](../manager/agents.md) | 待逐句核对 | 639c9509a4881869 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [manager/agents.md](../manager/agents.md) | 待逐句核对 | 3aa68cb51ce7e928 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [manager/docs/documentation.md](../manager/docs/documentation.md) | 待逐句核对 | dff435c047431d16 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [manager/docs/experience.md](../manager/docs/experience.md) | 待逐句核对 | a6d9e3bf5dfeda87 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [manager/stages/audit-2026-09-11.md](../manager/stages/audit-2026-09-11.md) | 待历史定位核对 | d6064bf51020b073 | 核对归档/引用/证据，不将旧结论改成现状 |
@@ -132,7 +132,7 @@
 | [manager/stages/documentation-2026-09-12.md](../manager/stages/documentation-2026-09-12.md) | 待历史定位核对 | c23c09e4b3615d99 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/probe-dual-integration-2026-09-15.md](../manager/stages/probe-dual-integration-2026-09-15.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
 | [manager/stages/s1-handoff.md](../manager/stages/s1-handoff.md) | 待历史定位核对 | cfc0e427dc08e55c | 核对归档/引用/证据，不将旧结论改成现状 |
-| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | d57caff80be1a594 | F54更新R2/R3与实际审查/未修边界、基线和ShunCode取舍；保留历史失败，其余阶段不重签 |
+| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | 5b9776603ec46a3c | F54更新R2/R3与实际审查/未修边界、基线和ShunCode取舍；保留历史失败，其余阶段不重签 |
 | [manager/stages/s2-shell.md](../manager/stages/s2-shell.md) | 待历史定位核对 | 5ac447fe582ce09e | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s3-bridge-image.md](../manager/stages/s3-bridge-image.md) | 待历史定位核对 | fbe64b3265d3cf1a | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s4-terminal.md](../manager/stages/s4-terminal.md) | 待历史定位核对 | 1cf1fcca01c51478 | 核对归档/引用/证据，不将旧结论改成现状 |
@@ -148,7 +148,7 @@
 | [review/OPTIMIZATION_REPORT_2026-09-18.md](../review/OPTIMIZATION_REPORT_2026-09-18.md) | 已逐句核对 | 29391f9e3e15ea70 | F45逐项交叉复核；P1-A/P2-D/P2-A已处置，原始发现保留，剩余取舍见顶部链接 |
 | [review/FULL_AUDIT_FOLLOWUP_2026-09-18.md](../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md) | 待逐句核对 | 8a0799b45e63fcdb | F45–48交叉审查/实修与验证报告；本页不自我授予整篇语义认证，结论按列明证据边界复核 |
 | [review/README.md](../review/README.md) | 局部核对 | 25fa18c6475e3734 | F54加入独立报告并明确未修/未验；历史入口不扩大认证 |
-| [review/SEMANTIC_REVIEW_2026-09-16.md](../review/SEMANTIC_REVIEW_2026-09-16.md) | 待逐句核对 | a845f997dcc3e569 | F54只更新当前状态/新证据和精确基线，历史长台账仍逐段待核，不自授整篇通过 |
+| [review/SEMANTIC_REVIEW_2026-09-16.md](../review/SEMANTIC_REVIEW_2026-09-16.md) | 待逐句核对 | 4d2033f63bab2c14 | F54只更新当前状态/新证据和精确基线，历史长台账仍逐段待核，不自授整篇通过 |
 | [review/UPSTREAM_ADOPTION_MAP_2026-09-15.md](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md) | 待逐句核对 | e454a1ff6891f7bc | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [review/archive/01a08d85-web-agent-audit.md](../review/archive/01a08d85-web-agent-audit.md) | 待历史定位核对 | 95fc2e2b61e4c58c | 核对归档/引用/证据，不将旧结论改成现状 |
 | [review/archive/ARENA_PROBE_INTEGRATION_2026-09-15.md](../review/archive/ARENA_PROBE_INTEGRATION_2026-09-15.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
@@ -158,7 +158,7 @@
 | [review/archive/CURRENT_AUDIT_2026-09-15.md](../review/archive/CURRENT_AUDIT_2026-09-15.md) | 待历史定位核对 | 45a0b7f2e7884abd | 核对归档/引用/证据，不将旧结论改成现状 |
 | [review/archive/DOC_QUALITY_2026-09-12.md](../review/archive/DOC_QUALITY_2026-09-12.md) | 待历史定位核对 | 4fcacd89f0eb08d7 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [review/archive/PROMPT_SHUNCODE.md](../review/archive/PROMPT_SHUNCODE.md) | 待历史定位核对 | a087a76a82ea9f39 | 核对归档/引用/证据，不将旧结论改成现状 |
-| [review/archive/README.md](../review/archive/README.md) | 待历史定位核对 | 7fc8be61d8d1f983 | 核对归档/引用/证据，不将旧结论改成现状 |
+| [review/archive/README.md](../review/archive/README.md) | 待历史定位核对 | a472ebd84af66cf0 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [review/archive/REFERENCE_ARENA_AGENT_2026-09-15.md](../review/archive/REFERENCE_ARENA_AGENT_2026-09-15.md) | 待历史定位核对 | 440ba3bac277e9e4 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [review/archive/REPORT.md](../review/archive/REPORT.md) | 待历史定位核对 | 36f2670d09fa4624 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [review/archive/REPORT_FULLAUDIT_2026-09-08.md](../review/archive/REPORT_FULLAUDIT_2026-09-08.md) | 待历史定位核对 | f5bf537a7bdddb99 | 核对归档/引用/证据，不将旧结论改成现状 |
@@ -174,7 +174,7 @@
 | [review/archive/SEMANTIC_BATCHES_01_15_2026-09-16.md](../review/archive/SEMANTIC_BATCHES_01_15_2026-09-16.md) | 待历史定位核对 | ef0de062d90e338f | 核对归档/引用/证据，不将旧结论改成现状 |
 | [review/shuncode-ui/README.md](../review/shuncode-ui/README.md) | 待逐句核对 | d0fe77f07fab6f11 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | `review/step5-tests.txt` | 原始证据，受限 | 不读取正文 | 不读取/改写个人路径和原始失败，核查归属与保留 |
-| [web_agent提示词-修正版-纯净.txt](../web_agent提示词-修正版-纯净.txt) | 原始证据，受限 | 799bc9a80abb23a5 | F54逐句读取为用户任务/边界证据，不改写，不把其中对照断言直接当审查结论 |
+| [review/archive/web_agent提示词-修正版-纯净.txt](archive/web_agent提示词-修正版-纯净.txt) | 原始证据，受限 | 799bc9a80abb23a5 | F54逐句读取为用户任务/边界证据，不改写，不把其中对照断言直接当审查结论 |
 | [webagent-core/README.md](../webagent-core/README.md) | 待逐句核对 | ecfd98d990a19163 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/admin-host/README.md](../webagent-core/admin-host/README.md) | 待逐句核对 | debfb2fbc9ef4eea | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [webagent-core/admin-host/统计服务详解.md](../webagent-core/admin-host/统计服务详解.md) | 待逐句核对 | 211b9659f879e40b | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |

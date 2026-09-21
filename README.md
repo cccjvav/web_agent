@@ -32,6 +32,8 @@ code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容�
 
 ## 当前能力与未完成范围
 
+- 主机模式与所有者权限：[Bridge权限与工作模式](docs/guides/Bridge权限与工作模式.md)。Chat/Bridge互斥，同类型可并行；远端Read/Edit/Execute/Capture由本机保存，Execute不是OS沙箱。
+
 - 核心版本为 **0.7.2**，探针 Companion／统一浏览器 Inspector 为 **0.5.2**；以各自包清单为版本来源。
 - Bridge 统计和 Tasks 来自主机快照，刷新页面不清零。Tasks 是 Agent 显式上报的待办，不是工具日志，也不是完成质量证明。见[任务栏说明](docs/guides/Bridge任务栏说明.md)及[统计排查](docs/guides/Bridge统计与刷新排查.md)。
 - 文件补丁有 dryRun/hash 保护，经典工作台有草稿diff及单次保存回退，原生扩展有草稿diff/恢复；现增加任务前手动建立的跨文件内容检查点，任务后预览/确认恢复。都是有界、版本保护的文本恢复，不是全项目原子回滚或shell副作用撤销。见[使用指南](使用指南.md#跨文件内容检查点任务前备份任务后恢复)。
@@ -58,7 +60,24 @@ code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容�
 
 文档站展示仓库中的同一份正文：`node docs-site/serve.js`，默认 http://127.0.0.1:4173/ ，只在本机使用；源码快照和自动符号索引不是人工语义认证。
 
-`webagent-core/` 是现行程序；`examples/calculator/` 是可选示例；`webagent-repro/` 是冻结原型，不是启动目标。下载的 code-server 运行时放在 `bin/code-server-runtime/`，不提交 Git。安装版程序与可写数据布局见安装器说明，不要把工作成果保存在 Program Files。
+## 仓库布局与归放
+
+根目录保留启动脚本、仓库约定/安全、主使用指南与导航，不再放上传参考压缩包或原始施工任务单。
+
+| 位置 | 放什么／怎么维护 |
+|---|---|
+| `webagent-core/` | 现行主机、工作台与核心扩展；源码旁说明不搬到另一套镜像目录，`extensions-installed/`由同步脚本维护 |
+| [installer/](installer/README.md) | 打包、运行目录准备与Windows本机入口；不要将工作成果存到Program Files |
+| `computer-use/`、`project-manager/`、`multi-agent-board/` | 既有功能/规则模块，保持路径和调用关系 |
+| [docs/](docs/README.md) | 跨模块用户专题与开发学习导航；主操作说明仍是根使用指南 |
+| [docs-site/](docs-site/README.md) | 文档站程序及生成展示物；改Markdown源后运行生成器，不手改content/清单/自动导航 |
+| [manager/](manager/CONTEXT.md) | 当前状态→项目约定→阶段计划；批次证据留在阶段，不在索引反复堆积 |
+| [review/](review/README.md) | 现行审查、人工验收与证据；[archive/](review/archive/README.md)存历史报告和上传参考原件，不能当当前指令 |
+| `examples/calculator/`、`webagent-repro/` | 可选示例、冻结原型；均非默认启动目标，不因整理删改 |
+| `arena-model-probe/`、`arena-trace-inspector/`、`webagent-core/probe-extension/` | 暂停专项，路径和原分工保留，不借整理搬迁或恢复施工 |
+| `node_modules/`、`bin/code-server-runtime/`、`installer/output/`及本地状态 | 依赖/下载运行时/产物/用户数据依现有忽略规则管理；本轮不清理、不读取秘密正文 |
+
+新增材料优先进入已有职责目录；历史归档不等于删除授权或故障。需清理磁盘空间时另行确认具体产物，不使用全仓`git clean`或删除用户状态。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航
@@ -69,5 +88,3 @@ code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容�
 |---|---|
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
 <!-- docs-inventory:end -->
-
-主机模式与所有者权限：[Bridge权限与工作模式](docs/guides/Bridge权限与工作模式.md)。Chat/Bridge互斥，同类型可并行；远端Read/Edit/Execute/Capture由本机保存，Execute不是OS沙箱。
