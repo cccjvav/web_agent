@@ -24,17 +24,56 @@ public static class TunnelAclFixture
     [DllImport("advapi32.dll", SetLastError=true)]
     private static extern bool AdjustTokenPrivileges(SafeFileHandle token, bool disableAll, IntPtr state, uint size, IntPtr previous, IntPtr returned);
 
-    private static void DisableFixturePrivileges()
+    [DllImport("advapi32.dll", SetLastError=true)]
+    private static extern bool DuplicateTokenEx(SafeFileHandle token, uint access, IntPtr attributes, int level, int type, out SafeFileHandle copy);
+    [DllImport("advapi32.dll", SetLastError=true)]
+    private static extern bool SetThreadToken(IntPtr thread, SafeFileHandle token);
+    [DllImport("advapi32.dll", SetLastError=true)]
+    private static extern bool RevertToSelf();
+    [DllImport("advapi32.dll", SetLastError=true)]
+    private static extern bool GetTokenInformation(SafeFileHandle token, int kind, byte[] data, uint size, out uint needed);
+
+    private static byte[] ReadPrivileges(SafeFileHandle token)
     {
-        // Full-framework Process inspection / elevated CI may enable SeDebugPrivilege.
-        // Reduce only this disposable host's token, after gathering identity/restore handles.
-        SafeFileHandle token;
-        if (!OpenProcessToken(new IntPtr(-1), 0x20, out token)) throw new Win32Exception();
-        using (token) {
-            if (!AdjustTokenPrivileges(token, true, IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero)) throw new Win32Exception();
-        }
-        Console.WriteLine("fixture-privileges-disabled");
+        uint size;
+        GetTokenInformation(token, 3, null, 0, out size); // TokenPrivileges
+        Require(size > 0 && size <= 65536, "Token privilege size unavailable");
+        byte[] data = new byte[size];
+        if (!GetTokenInformation(token, 3, data, size, out size)) throw new Win32Exception();
+        return data;
     }
+    private sealed class ReducedToken : IDisposable
+    {
+        private SafeFileHandle primary, copy;
+        private byte[] before;
+        private bool attached;
+        public ReducedToken()
+        {
+            try {
+                // Query/duplicate only: NEVER adjust a primary token that might be shared.
+                if (!OpenProcessToken(new IntPtr(-1), 0x0A, out primary)) throw new Win32Exception();
+                before = ReadPrivileges(primary);
+                if (!DuplicateTokenEx(primary, 0x2C, IntPtr.Zero, 2, 2, out copy)) throw new Win32Exception();
+                if (!AdjustTokenPrivileges(copy, true, IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero)) throw new Win32Exception();
+                if (!SetThreadToken(IntPtr.Zero, copy)) throw new Win32Exception();
+                attached = true;
+            } catch { Dispose(); throw; }
+        }
+        public void Dispose()
+        {
+            try {
+                if (attached) { if (!RevertToSelf()) throw new Win32Exception(); attached = false; }
+                if (before != null) {
+                    Require(Convert.ToBase64String(before) == Convert.ToBase64String(ReadPrivileges(primary)), "Primary token privileges changed");
+                    Console.WriteLine("fixture-primary-token-unchanged");
+                }
+            } finally {
+                if (copy != null) copy.Dispose();
+                if (primary != null) primary.Dispose();
+            }
+        }
+    }
+    private static ReducedToken DisableFixturePrivileges() { return new ReducedToken(); }
     private static void Require(bool condition, string message) { if (!condition) throw new Exception(message); }
     private static byte[] Save(SafeProcessHandle h)
     {
@@ -65,6 +104,7 @@ public static class TunnelAclFixture
         using (var targetHandle = new SafeProcessHandle(child.Handle, false))
         using (var ownerHandle = OpenProcess(0x00060000, false, owner.Id)) {
             byte[] targetAcl = null, ownerAcl = null;
+            ReducedToken reduced = null;
             try {
             Require(!targetHandle.IsInvalid && !ownerHandle.IsInvalid, "Test restore handles unavailable");
             targetAcl = Save(targetHandle); ownerAcl = Save(ownerHandle);
@@ -74,7 +114,8 @@ public static class TunnelAclFixture
             string targetExe = child.MainModule.FileName;
             string ownerStart = owner.StartTime.ToUniversalTime().Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture);
             string ownerExe = owner.MainModule.FileName;
-                DisableFixturePrivileges();
+                reduced = DisableFixturePrivileges();
+                Console.WriteLine("fixture-privileges-disabled");
                 Set(targetHandle, deniedAcl);
                 Denied(child.Id, 0x00101401, "target");
                 using (var lease = new WebAgentTunnelLease(child.Id, targetStart, targetExe, owner.Id, ownerStart, ownerExe, "cloudflare", owner.Id)) {
@@ -105,9 +146,11 @@ public static class TunnelAclFixture
                 finally {
                     try { if (targetAcl != null) Set(targetHandle, targetAcl); }
                     finally {
-                        if (WaitForSingleObject(targetHandle, 0) == 258) Require(TerminateProcess(targetHandle, 0), "Owned fixture termination failed");
-                        Require(WaitForSingleObject(targetHandle, 5000) == 0, "Owned fixture exit unconfirmed");
-                        Console.WriteLine("fixture-target-exited");
+                        try {
+                            if (WaitForSingleObject(targetHandle, 0) == 258) Require(TerminateProcess(targetHandle, 0), "Owned fixture termination failed");
+                            Require(WaitForSingleObject(targetHandle, 5000) == 0, "Owned fixture exit unconfirmed");
+                            Console.WriteLine("fixture-target-exited");
+                        } finally { if (reduced != null) reduced.Dispose(); }
                     }
                 }
             }

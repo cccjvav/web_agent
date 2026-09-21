@@ -18,6 +18,7 @@ function main() {
   assert.ifError(result.error);
   assert.equal(result.status, 0, 'Actual Windows DACL fixture failed:\n' + result.stderr + '\n' + result.stdout);
   assert.match(result.stdout, /fixture-privileges-disabled/);
+  assert.match(result.stdout, /fixture-primary-token-unchanged/);
   assert.match(result.stdout, /TARGET_DENIED=5 OWNER_DENIED=5 inaccessible owner-unknown active-owner single-use passed/);
   assert.match(result.stdout, /fixture-target-exited/);
   console.log('Actual Windows DACL denial: target inaccessible, live owner unknown, no termination, restored live-owner protection and stable-handle fixture teardown passed');
