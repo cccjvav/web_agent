@@ -35,5 +35,9 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
     result = { content: [{ type: 'text', text: JSON.stringify({ echo: message.params.arguments.text, unicode: '中文🙂', args: process.argv.slice(3),
       hostProfile: Boolean(process.env.USERPROFILE || process.env.APPDATA || process.env.LOCALAPPDATA || process.env.PSModulePath), hostSecret: Boolean(process.env.WEBAGENT_STDIO_TEST_SECRET || process.env.GH_TOKEN || process.env.NODE_OPTIONS), explicitKey: Boolean(process.env.FIXTURE_TOKEN), launchSpec: Boolean(process.env.WEBAGENT_STDIO_LAUNCH) }) }] };
   }
-  send({ jsonrpc: '2.0', id: message.id, result });
+  const envelope = { jsonrpc: '2.0', id: message.id, result };
+  const errors = { 'error-null': null, 'error-false': false, 'error-zero': 0 };
+  if (Object.hasOwn(errors, mode)) envelope.error = errors[mode];
+  if (message.method === 'tools/call' && Object.hasOwn(message.params.arguments, 'errorMember')) envelope.error = message.params.arguments.errorMember;
+  send(envelope);
 });

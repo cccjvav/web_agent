@@ -69,7 +69,7 @@ function open(launch, onStopped = () => {}) {
     }
     const entry = pending.get(message.id);
     if (!entry) return;
-    if (message.error || !message.result || typeof message.result !== 'object' || Array.isArray(message.result)) entry.reject(new Error('Stdio MCP protocol error'));
+    if (Object.hasOwn(message, 'error') || !message.result || typeof message.result !== 'object' || Array.isArray(message.result)) entry.reject(new Error('Stdio MCP protocol error'));
     else entry.resolve(message.result);
   }
   child.stdout.on('data', chunk => {

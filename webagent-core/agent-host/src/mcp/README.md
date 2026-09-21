@@ -79,6 +79,8 @@ F54第四批：resources/read固定使用已认证peer上下文，workspace远�
 
 F54交叉复审：initialize.instructions限定自动hash复用仅适用于现存文件；先前读取的目标消失须保留expectedHash并协调，缺hash的新建不获得隐式删除保护。与protocol资源和工具目录对齐，不改变patch实现。
 
+R2/R3响应互斥：externalClient.rpc与stdioTransport.frame按error字段存在性拒绝错误响应，不能让result+error:null/false/0变成功；保持审批unknown与不重放。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 

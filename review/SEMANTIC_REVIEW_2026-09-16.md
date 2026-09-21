@@ -230,3 +230,6 @@
 ### R4诊断首包（2026-09-21）
 
 复取36ff82f的Windows22失败annotations：echo30519ms无输出、search worker startup10秒。完整日志仍不可下载；历史根因不结案。本包仅默认关闭的进程/worker固定元数据、Windows CI启用和runner上下文/失败元数据；不改超时/容量/保护或重试，诊断夹具不冒充原故障复现。范围与证据见阶段10R4节，正式逐句认证数不变。
+
+### R2/R3外部响应互斥（2026-09-21）
+HTTP/stdio对message.error作真假判断会将result+error:null/false/0视作成功，真实登记红测已确认。两处改存在性判断；真实JSON/SSE/stdio覆盖登记失败清理与已批准调用unknown且不重放。只核对此链，正式整篇认证计数不变，范围/门禁见阶段10。

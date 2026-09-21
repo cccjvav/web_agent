@@ -119,6 +119,8 @@ nativeRequestJson.test.js：真实HTTP+VM原生函数验证响应预算/总时�
 
 R4：processDiagnostics在可控worker时钟及真实子进程上检查阶段元数据、默认关闭/敏感标记不泄漏/诊断输出失败隔离；testRunner补真实隔离失败/超时元数据。详见存储完整性与预算、安装与运行器测试详解。
 
+R2/R3：externalDiscovery和stdioMcp补真实JSON/SSE/stdio矛盾响应、登记清理与已批准调用unknown/不重放，详见受控工具与工作流详解。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -199,7 +201,7 @@ R4：processDiagnostics在可控worker时钟及真实子进程上检查阶段元
 | [skillsLifecycle.test.js](skillsLifecycle.test.js) | 19 个函数/类节点 |
 | [skipWorkbench.test.js](skipWorkbench.test.js) | 16 个函数/类节点 |
 | [stateIntegrity.test.js](stateIntegrity.test.js) | 33 个函数/类节点 |
-| [stdioMcp.test.js](stdioMcp.test.js) | 24 个函数/类节点 |
+| [stdioMcp.test.js](stdioMcp.test.js) | 25 个函数/类节点 |
 | [stdioOwnerFixture.js](stdioOwnerFixture.js) | 2 个函数/类节点 |
 | [stdioServerFixture.js](stdioServerFixture.js) | 3 个函数/类节点 |
 | [taskProgress.test.js](taskProgress.test.js) | 9 个函数/类节点 |

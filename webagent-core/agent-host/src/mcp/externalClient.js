@@ -90,7 +90,7 @@ async function rpc(client, method, params, notification = false) {
     }
     if (notification) { await response.body?.cancel(); return {}; }
     const message = await responseMessage(response, id);
-    if (message.jsonrpc !== '2.0' || message.error || !message.result || typeof message.result !== 'object' || Array.isArray(message.result)) throw new Error('External MCP protocol error');
+    if (message.jsonrpc !== '2.0' || Object.hasOwn(message, 'error') || !message.result || typeof message.result !== 'object' || Array.isArray(message.result)) throw new Error('External MCP protocol error');
     return message.result;
   } finally {
     controller.abort();

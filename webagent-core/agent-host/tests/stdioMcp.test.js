@@ -78,16 +78,32 @@ async function main() {
     assert.deepStrictEqual(output.args, special); assert.strictEqual(output.hostSecret, false); assert.strictEqual(output.hostProfile, false); assert.strictEqual(output.launchSpec, false); assert.strictEqual(output.explicitKey, true);
     await queue.approve(waiting.requestId, true);
     assert.strictEqual(fs.readFileSync(path.join(root, 'stdio-calls.txt'), 'utf8'), 'call\n');
+    stage = 'malformed call outcome';
+    for (const [index, errorMember] of [null, false, 0].entries()) {
+      const malformed = external.request({ ...input, arguments: { errorMember }, requestKey: 'stdio-envelope-' + index }, { callerKey: 'local' });
+      await queue.approve(malformed.requestId, true);
+      assert.strictEqual(queue.inspect(malformed.requestId).status, 'unknown');
+      assert.strictEqual(fs.readFileSync(path.join(root, 'stdio-calls.txt'), 'utf8'), 'call\n'.repeat(index + 2));
+      await queue.approve(malformed.requestId, true);
+      assert.strictEqual(fs.readFileSync(path.join(root, 'stdio-calls.txt'), 'utf8'), 'call\n'.repeat(index + 2), 'malformed reply must not replay');
+    }
     stage = 'cancel call';
     const hanging = external.request({ ...input, arguments: { hang: true }, requestKey: 'stdio-hang-001' }, { callerKey: 'local' });
     const execution = queue.approve(hanging.requestId, true);
-    await until(() => fs.readFileSync(path.join(root, 'stdio-calls.txt'), 'utf8') === 'call\ncall\n');
+    await until(() => fs.readFileSync(path.join(root, 'stdio-calls.txt'), 'utf8') === 'call\n'.repeat(5));
     queue.cancel(hanging.requestId); await execution;
     assert.strictEqual(queue.inspect(hanging.requestId).status, 'unknown');
     stage = 'cancel cleanup';
     assert.deepStrictEqual(external.remove(registered.serverId),{removed:true,stopping:true},'remove acknowledges a stop request, not observed exit');
     await external.closeAll();
     assert.ok(!alive(JSON.parse(fs.readFileSync(path.join(root, 'stdio-started.json'))).pid));
+    stage = 'response envelope';
+    for (const mode of ['error-null', 'error-false', 'error-zero']) {
+      const launch = prepared(mode);
+      await assert.rejects(external.startStdio({ previewId: launch.previewId, confirmed: true }), /Stdio MCP protocol error/);
+      assert.deepStrictEqual(external.list(), []);
+      await until(() => !alive(JSON.parse(fs.readFileSync(path.join(root, 'stdio-started.json'))).pid));
+    }
     stage = 'budgets';
     for (const mode of ['bad-json', 'large-line', 'stderr', 'frames', 'total', 'exit']) {
       stage = mode;

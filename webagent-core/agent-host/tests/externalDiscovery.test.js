@@ -2,6 +2,7 @@
 const assert = require('assert');
 const http = require('http');
 const external = require('../src/mcp/externalClient');
+const queue = require('../src/utils/operatorQueue');
 const { runWithSignal } = require('../src/utils/requestScope');
 function fragmentedResponse(text) {
   const bytes = new TextEncoder().encode(text); let offset = 0;
@@ -43,7 +44,12 @@ async function main() {
     if (mode === 'session-space') res.setHeader('Mcp-Session-Id', 'bad session token');
     if (mode === 'session-empty') res.setHeader('Mcp-Session-Id', '');
     if (mode === 'session-valid') res.setHeader('Mcp-Session-Id', 'valid-session-token');
-    res.end(JSON.stringify({ jsonrpc: '2.0', id: message.id, result }));
+    const envelope = { jsonrpc: '2.0', id: message.id, result };
+    const errors = { 'error-null': null, 'error-false': false, 'error-zero': 0 };
+    const errorMode = mode.replace(/^sse-/, '');
+    if (Object.hasOwn(errors, errorMode)) envelope.error = errors[errorMode];
+    if (mode.startsWith('sse-')) { res.setHeader('Content-Type', 'text/event-stream'); res.end('data: ' + JSON.stringify(envelope) + '\n\n'); }
+    else res.end(JSON.stringify(envelope));
   });
   try {
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -56,11 +62,23 @@ async function main() {
     assert.strictEqual(external.list()[0].tools[0].inputSchema.properties.x.type, 'string');
     assert.ok(!JSON.stringify(external.list()).includes('fixture-private'));
     external.remove(added.serverId);
-    for (const scenario of ['repeat', 'duplicate', 'pages', 'bytes', 'result-array', 'schema', 'null-schema', 'cursor', 'count', 'session-merged', 'session-space', 'session-empty']) {
+    for (const scenario of ['error-null', 'error-false', 'error-zero', 'sse-error-null', 'sse-error-false', 'sse-error-zero', 'repeat', 'duplicate', 'pages', 'bytes', 'result-array', 'schema', 'null-schema', 'cursor', 'count', 'session-merged', 'session-space', 'session-empty']) {
       mode = scenario; lists = 0;
       await assert.rejects(external.add(options));
       assert.deepStrictEqual(external.list(), []); assert.ok(lists <= 10); assert.strictEqual(calls, 0);
     }
+    // A malformed reply after an approved call is unknown, not success or safe to retry.
+    mode = 'paged'; const callable = await external.add(options);
+    for (const scenario of ['error-null', 'error-false', 'error-zero', 'sse-error-null', 'sse-error-false', 'sse-error-zero']) {
+      mode = scenario; const before = calls;
+      const pending = external.request({ serverId: callable.serverId, tool: 'first', arguments: {}, requestKey: 'envelope-' + scenario }, { callerKey: 'local' });
+      await queue.approve(pending.requestId, true);
+      assert.strictEqual(queue.inspect(pending.requestId).status, 'unknown');
+      assert.strictEqual(calls, before + 1);
+      await queue.approve(pending.requestId, true);
+      assert.strictEqual(calls, before + 1, 'unknown response must not replay the remote call');
+    }
+    external.remove(callable.serverId); calls = 0;
     mode = 'hang'; const controller = new AbortController();
     const started = new Promise(resolve => { waiting = resolve; });
     const registering = runWithSignal(controller.signal, () => external.add(options));
