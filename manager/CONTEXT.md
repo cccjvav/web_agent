@@ -5,9 +5,9 @@
 接手先读本索引和[项目约定](agents.md)，再按需读[阶段10的工作包与交接](stages/s10-upstream-adoption.md#当前工作包与交接约束)。不另建路线图或根交接文件。
 
 ## 当前状态
-- **本轮已接手独立审查与局部实修（F55）。** 先读manager/review并从用户更正的01a0bfa9来源快进同步；已修浏览器MCP响应头、经典Chat可靠终态/预算/清理、文档与日志键盘/窄屏可读性。不是全仓审完，证据与下一项在阶段10第55组。
+- **本轮续作启动可靠性（F56）。** 真实HTTP/Node红测后修可选code-server编排的健康总期限/取消、配置与启动失败收尾、同伴退出和直接子进程观察；本地95/95、扩充Chromium、audit 0。不是全部进程树或全仓审完，精确提交/CI与下一项在阶段10第56组。
 - **接手基线：** `67f4f966720c2d6f657f53e3dc3b02cbf3860b98`，[CI35624122815](https://github.com/cccjvav/web_agent/actions/runs/35624122815)九项已逐job核实，本地94/94。F55新修改的验证与精确提交CI见阶段10，不借此基线绿灯代签。
-- **F55代码已交付：** `33fc9ed8670ff51e94939549e05961ad65919e09`，[CI35632024550](https://github.com/cccjvav/web_agent/actions/runs/35632024550)九job逐项success；本地94/94、扩充Chromium与audit 0，文档零漂移。后续证据文档提交的验证另核对，不代表全仓或用户桌面完成。
+- **F55交付基线已补核实：** 用户重连后，证据提交`036d65b735805f13381f3ab1b0a5408d999c872d`的[CI35632714383](https://github.com/cccjvav/web_agent/actions/runs/35632714383)九job逐项success；源码33fc9ed及其CI也已通过。不能借此代签F56或用户桌面。
 - **接手顺序：** 本页→[项目约定](agents.md)→[即时接手检查](stages/s10-upstream-adoption.md#即时接手检查2026-09-21)。先核对分支/HEAD/未提交文件与在跑任务；外部沙箱ZIP不保证可移交，[仓库内CI摘要](../review/evidence/R4-handoff-ci-2026-09-21.json)明确哪些事实可得、哪些原日志不可得。
 - **当前会话固定分支** `arena/01a0c4b1-web-agent`，已从更正来源`arena/01a0bfa9-web-agent`快进到67f4f96再施工，没有切分支/reset。此前01a0b053同步及ref恢复属于历史；不据旧记录覆盖工作文件。
 - **阶段10进行中，核心0.7.2，不是只剩实机。** R2/R3其余消费链/权限合同、R7逐句文档、R8本机验收仍开放；R6/R9候选按收益和授权取舍。全部优先级和完成条件只维护在[工作包表](stages/s10-upstream-adoption.md#当前工作包与交接约束)。持久登录/确切后端身份任务仍延期。
@@ -15,7 +15,7 @@
 - **R5到本机系统快捷入口，整体未完成。** 已有只读归属、Windows DPAPI记录、稳定句柄终端回收、真实ACL负例和开始菜单入口，仍需预览后RECYCLE。普通只读报告不授予清理权；面板按钮、桌面TTY/重复点击/关窗/真实隧道、跨用户及实际PID复用仍待。
 - **探针原分工继续暂停。** 不接手arena-model-probe、arena-trace-inspector、probe-extension及其专项源码/文档；通用CI经过旧用例不是专项审查。阶段8等正式交接，不撤销0.5.2交付或用户已关闭的11.3。
 - **ShunCode仅参考。** 上传原件现在[历史参考资料](../review/archive/README.md#上传参考原件只存档不运行)，字节未改；此前只在仓库外安全解包阅读，未安装/执行。不整体替换MCP/文件审批栈，不设计包中缺失的支付授权，不授信手写类型；自适应并发/重放候选仍暂缓。
-- **审查不自认证：** 正式清单201项（已逐句8、局部62、待逐句73、历史32、暂停15、边界7、生成1、规范1、受限2）。F55仅将受影响说明转局部，不增加整篇通过数；整理/生成/测试也不能代签。逐批实现、红测、提交和CI都保留在阶段10与review，索引不再重复贴长时间线。
+- **审查不自认证：** 正式清单201项（已逐句8、局部69、待逐句66、历史32、暂停15、边界7、生成1、规范1、受限2）。F55/F56仅将受影响说明转局部，不增加整篇通过数；整理/生成/测试也不能代签。逐批实现、红测、提交和CI都保留在阶段10与review，索引不再重复贴长时间线。
 
 ## 必须保留的失败与边界
 - **Windows命令/worker根因开放：** 36ff82f / CI35125290301的Windows22 echo及worker超时；a22428a / CI35614219553的Windows20 echo约30秒无输出。相似症状不证明同根因，后续成功不注销失败。
@@ -51,6 +51,6 @@
 
 ## 按需导航
 - [文档中心](../docs/README.md)、[使用指南](../使用指南.md)、[Windows线性验收](../docs/guides/Windows新手逐步验收.md)。
-- [独立报告及F55补记](../review/INDEPENDENT_AUDIT_2026-09-20.md)、[正式逐文件清单](../review/FULL_REVIEW_INDEX.md)、[语义台账](../review/SEMANTIC_REVIEW_2026-09-16.md)、[人工清单](../review/CHECKLIST_WINDOWS.md)、[借鉴映射](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md)。
+- [独立报告与接手续作](../review/INDEPENDENT_AUDIT_2026-09-20.md)、[正式逐文件清单](../review/FULL_REVIEW_INDEX.md)、[语义台账](../review/SEMANTIC_REVIEW_2026-09-16.md)、[人工清单](../review/CHECKLIST_WINDOWS.md)、[借鉴映射](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md)。
 - [F44原报告](../review/OPTIMIZATION_REPORT_2026-09-18.md)、[F45交叉审查/实修](../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md)、[经验](docs/experience.md)、[旧索引归档](stages/context-history-through-0.4.md)。
 - 暂停导航仅供定位：[探针验收](../探针完整整合实施与验收.md)、[Companion](../webagent-core/probe-extension/README.md)、[浏览器整合](../webagent-core/probe-extension/浏览器整合说明.md)、[历史时间线](stages/probe-dual-integration-2026-09-15.md)。

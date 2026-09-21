@@ -156,6 +156,7 @@ const pairs = [
   ["webagent-core/agent-host/tests/extensionCopy.test.js", "webagent-core/agent-host/tests/安装与运行器测试详解.md"],
   ["webagent-core/agent-host/tests/desktopExtension.test.js", "webagent-core/agent-host/tests/安装与运行器测试详解.md"],
   ["webagent-core/agent-host/tests/codeServerNotRunnable.test.js", "webagent-core/agent-host/tests/安装与运行器测试详解.md"],
+  ["webagent-core/agent-host/tests/codeServerLifecycle.test.js", "webagent-core/agent-host/tests/安装与运行器测试详解.md"],
   ["webagent-core/agent-host/tests/installerPackaging.test.js", "webagent-core/agent-host/tests/安装与运行器测试详解.md"],
 
   ["webagent-core/agent-host/tests/chatMode.test.js", "webagent-core/agent-host/tests/模式画像与Plan测试详解.md"],
