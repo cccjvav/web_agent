@@ -4,6 +4,39 @@ const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+// Preserve small, typed lifecycle metadata even when raw head/tail excerpts miss the middle.
+// This is a diagnostic hint, not authenticated evidence or an automatic retry decision.
+function lifecycleSummary(stderr) {
+  const rows = [];
+  const events = new Set(['created', 'spawn', 'exit', 'close', 'error', 'cancel', 'timeout', 'stdout-first', 'stderr-first',
+    'online', 'ready', 'scan-start', 'result', 'failed', 'termination-error', 'released', 'callback', 'invalid-json', 'invalid-shape', 'decoded']);
+  const errorCodes = new Set(['ENOENT', 'EACCES', 'EPERM', 'ETIMEDOUT', 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER', 'other']);
+  const pattern = /(?:^|\n)(process lifecycle |tunnel helper )([^\r\n]{1,4096})\r?(?=\n|$)/g;
+  const text = typeof stderr === 'string' ? stderr.slice(0, 16 * 1024 * 1024) : '';
+  for (const match of text.matchAll(pattern)) {
+    try {
+      const input = JSON.parse(match[2]);
+      if (!input || typeof input !== 'object' || Array.isArray(input) || !events.has(input.event)) continue;
+      const helper = match[1] === 'tunnel helper ';
+      if (helper ? !['protect', 'unprotect', 'inspect'].includes(input.operation) : !['command', 'search'].includes(input.kind)) continue;
+      const row = { kind: helper ? 'tunnel' : input.kind, event: input.event };
+      if (helper) row.operation = input.operation;
+      for (const key of ['id', 'pid', 'childPid', 'threadId', 'elapsedMs', 'stdoutBytes', 'stderrBytes', 'activeSearches', 'exitCode', 'count', 'rejected']) {
+        const value = input[key];
+        if (Number.isSafeInteger(value) && (value >= 0 || key === 'exitCode' || key === 'threadId')) row[key] = value;
+      }
+      for (const key of ['spawned', 'exited', 'online', 'ready', 'killed', 'helperStarted', 'helperReady', 'helperCompleted']) {
+        if (typeof input[key] === 'boolean') row[key] = input[key];
+      }
+      if (helper && errorCodes.has(input.errorCode)) row.errorCode = input.errorCode;
+      if (helper && ['SIGTERM', 'SIGKILL'].includes(input.signal)) row.signal = input.signal;
+      rows.push(row);
+      while (rows.length > 6 || JSON.stringify(rows).length > 1800) rows.shift();
+    } catch (_) { /* Malformed/oversized/untrusted log lines cannot break the runner. */ }
+  }
+  return rows;
+}
+
 const root = path.resolve(__dirname, '..');
 const testsDir = path.join(root, 'tests');
 
@@ -102,7 +135,8 @@ for (const f of files) {
   if (!ok) {
     failed += 1;
     if (process.env.GITHUB_ACTIONS === 'true') {
-      const detail = [JSON.stringify(diagnostic), r.error?.message || '', String(r.stderr || '').slice(0, 1600), String(r.stderr || '').slice(-1000), String(r.stdout || '').slice(-1000)].join('\n').slice(0, 4500).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+      const stages = lifecycleSummary(r.stderr);
+      const detail = [JSON.stringify(diagnostic), stages.length ? '[lifecycle-summary] ' + JSON.stringify(stages) : '', r.error?.message || '', String(r.stderr || '').slice(0, 1600), String(r.stderr || '').slice(-1000), String(r.stdout || '').slice(-1000)].join('\n').slice(0, 4500).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
       console.log(`::error title=${f}::${detail}`);
     }
   }

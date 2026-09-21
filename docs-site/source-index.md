@@ -215,7 +215,7 @@
 
 ## docs-site/documentation.config.json
 
-[目录说明](README.md) · SHA-256 `fbd4b65ef8f09d190352266fff4fa507b53109facd44dd2cec3c43682ca813a3`
+[目录说明](README.md) · SHA-256 `b8714bf1d1ca22e24d45485b38e0f790d8ae6ccfc90d6917e974d62069d6e6dd`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -413,13 +413,14 @@
 
 ## webagent-core/agent-host/scripts/run-tests.js
 
-[目录说明](../webagent-core/agent-host/scripts/README.md) · SHA-256 `00c4d635c662e0a028234271cf31e5d1833a4ec62c0d38fbf6b493b4e12286cd`
+[目录说明](../webagent-core/agent-host/scripts/README.md) · SHA-256 `f95e90484dd3772845fdaaac88fbad1337ee65bc325a187b5754a29726162483`
 
-- `anonymous@10:56` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/scripts/run-tests.js#L10-L10)
-- `anonymous@52:46` — ArrowFunctionExpression，[L52–L52](../webagent-core/agent-host/scripts/run-tests.js#L52-L52)
-- `anonymous@53:27` — ArrowFunctionExpression，[L53–L53](../webagent-core/agent-host/scripts/run-tests.js#L53-L53)
-- `anonymous@54:33` — ArrowFunctionExpression，[L54–L54](../webagent-core/agent-host/scripts/run-tests.js#L54-L54)
-- `anonymous@67:46` — ArrowFunctionExpression，[L67–L67](../webagent-core/agent-host/scripts/run-tests.js#L67-L67)
+- `lifecycleSummary` — FunctionDeclaration，[L9–L38](../webagent-core/agent-host/scripts/run-tests.js#L9-L38)
+- `anonymous@43:56` — ArrowFunctionExpression，[L43–L43](../webagent-core/agent-host/scripts/run-tests.js#L43-L43)
+- `anonymous@85:46` — ArrowFunctionExpression，[L85–L85](../webagent-core/agent-host/scripts/run-tests.js#L85-L85)
+- `anonymous@86:27` — ArrowFunctionExpression，[L86–L86](../webagent-core/agent-host/scripts/run-tests.js#L86-L86)
+- `anonymous@87:33` — ArrowFunctionExpression，[L87–L87](../webagent-core/agent-host/scripts/run-tests.js#L87-L87)
+- `anonymous@100:46` — ArrowFunctionExpression，[L100–L100](../webagent-core/agent-host/scripts/run-tests.js#L100-L100)
 
 ## webagent-core/agent-host/scripts/tunnel-cleanup.js
 
@@ -3907,13 +3908,20 @@
 
 ## webagent-core/agent-host/tests/testRunner.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `0d9098b343e2b1e73309047ca883985659d21247584ba08dabcf670b0eaca3e0`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `0f4565ab47429834a93a9f8be6b5e8a27962a987bac94bcfa0782e332c992a29`
 
 - `run` — FunctionDeclaration，[L7–L11](../webagent-core/agent-host/tests/testRunner.test.js#L7-L11)
 - `anonymous@16:53` — ArrowFunctionExpression，[L16–L16](../webagent-core/agent-host/tests/testRunner.test.js#L16-L16)
 - `anonymous@17:52` — ArrowFunctionExpression，[L17–L17](../webagent-core/agent-host/tests/testRunner.test.js#L17-L17)
 - `anonymous@47:68` — ArrowFunctionExpression，[L47–L47](../webagent-core/agent-host/tests/testRunner.test.js#L47-L47)
 - `anonymous@52:61` — ArrowFunctionExpression，[L52–L52](../webagent-core/agent-host/tests/testRunner.test.js#L52-L52)
+- `anonymous@72:52` — ArrowFunctionExpression，[L72–L72](../webagent-core/agent-host/tests/testRunner.test.js#L72-L72)
+- `anonymous@76:47` — ArrowFunctionExpression，[L76–L76](../webagent-core/agent-host/tests/testRunner.test.js#L76-L76)
+- `anonymous@79:22` — ArrowFunctionExpression，[L79–L79](../webagent-core/agent-host/tests/testRunner.test.js#L79-L79)
+- `anonymous@80:22` — ArrowFunctionExpression，[L80–L80](../webagent-core/agent-host/tests/testRunner.test.js#L80-L80)
+- `anonymous@81:22` — ArrowFunctionExpression，[L81–L81](../webagent-core/agent-host/tests/testRunner.test.js#L81-L81)
+- `anonymous@82:62` — ArrowFunctionExpression，[L82–L82](../webagent-core/agent-host/tests/testRunner.test.js#L82-L82)
+- `anonymous@83:23` — ArrowFunctionExpression，[L83–L83](../webagent-core/agent-host/tests/testRunner.test.js#L83-L83)
 
 ## webagent-core/agent-host/tests/toolLabel.test.js
 

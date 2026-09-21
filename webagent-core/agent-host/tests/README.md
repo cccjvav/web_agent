@@ -215,7 +215,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [stdioOwnerFixture.js](stdioOwnerFixture.js) | 2 个函数/类节点 |
 | [stdioServerFixture.js](stdioServerFixture.js) | 3 个函数/类节点 |
 | [taskProgress.test.js](taskProgress.test.js) | 9 个函数/类节点 |
-| [testRunner.test.js](testRunner.test.js) | 5 个函数/类节点 |
+| [testRunner.test.js](testRunner.test.js) | 12 个函数/类节点 |
 | [toolLabel.test.js](toolLabel.test.js) | 0 个函数/类节点 |
 | [traceIntegration.test.js](traceIntegration.test.js) | 4 个函数/类节点 |
 | [tunnel.test.js](tunnel.test.js) | 14 个函数/类节点 |

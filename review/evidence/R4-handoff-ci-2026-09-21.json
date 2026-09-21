@@ -1,0 +1,131 @@
+{
+  "purpose": "Portable, redacted CI handoff facts; not raw logs or semantic certification",
+  "observedOn": "2026-09-21",
+  "runs": [
+    {
+      "headSha": "dcc321b02e51ad169a23c2a3efa0f6089a50ba39",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/cccjvav/web_agent/actions/runs/35614829672",
+      "jobs": [
+        {
+          "name": "workbench-browser",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614829672/job/106382735873"
+        },
+        {
+          "name": "agent-host (ubuntu-latest, 22)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614829672/job/106382736171"
+        },
+        {
+          "name": "agent-host (ubuntu-latest, 20)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614829672/job/106382736283"
+        },
+        {
+          "name": "agent-host (windows-latest, 20)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614829672/job/106382736383"
+        },
+        {
+          "name": "windows-installer",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614829672/job/106382736388"
+        },
+        {
+          "name": "agent-host (ubuntu-latest, 18)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614829672/job/106382736520"
+        },
+        {
+          "name": "agent-host (windows-latest, 22)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614829672/job/106382736526"
+        },
+        {
+          "name": "agent-host (windows-latest, 24)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614829672/job/106382736546"
+        },
+        {
+          "name": "agent-host (ubuntu-latest, 24)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614829672/job/106382736591"
+        }
+      ]
+    },
+    {
+      "headSha": "a22428a17a930a880c86ec8f61330ef932f36efd",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/cccjvav/web_agent/actions/runs/35614219553",
+      "jobs": [
+        {
+          "name": "workbench-browser",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614219553/job/106380685575"
+        },
+        {
+          "name": "agent-host (windows-latest, 22)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614219553/job/106380685958"
+        },
+        {
+          "name": "windows-installer",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614219553/job/106380686119"
+        },
+        {
+          "name": "agent-host (windows-latest, 24)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614219553/job/106380686134"
+        },
+        {
+          "name": "agent-host (ubuntu-latest, 18)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614219553/job/106380686163"
+        },
+        {
+          "name": "agent-host (ubuntu-latest, 22)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614219553/job/106380686164"
+        },
+        {
+          "name": "agent-host (ubuntu-latest, 20)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614219553/job/106380686220"
+        },
+        {
+          "name": "agent-host (ubuntu-latest, 24)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614219553/job/106380686256"
+        },
+        {
+          "name": "agent-host (windows-latest, 20)",
+          "conclusion": "failure",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35614219553/job/106380686315"
+        }
+      ]
+    }
+  ],
+  "failure": {
+    "file": "mcpProtocol.test.js",
+    "platform": "win32",
+    "node": "v20.20.2",
+    "testElapsedMs": 30431,
+    "fixture": "test-owned screenshot echo",
+    "commandElapsedMs": 30073,
+    "status": "timeout",
+    "stdoutBytes": 0,
+    "stderrBytes": 0,
+    "rootCause": "unknown",
+    "lifecycleMiddle": "not retained by old head/tail annotation"
+  },
+  "availability": {
+    "runAndJobStatus": "retrieved via gh in this turn",
+    "failureFacts": "rechecked from GitHub Checks annotations in this turn",
+    "completeFailedJobLog": "previous TLS EOF; unavailable, not reconstructed",
+    "earlierSandboxZipFiles": "not present in this workspace; do not treat absolute /home/user paths as portable evidence"
+  }
+}

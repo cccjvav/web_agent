@@ -1172,8 +1172,8 @@
     {
       "path": "docs-site/documentation.config.json",
       "doc": "docs-site/README.md",
-      "sha256": "fbd4b65ef8f09d190352266fff4fa507b53109facd44dd2cec3c43682ca813a3",
-      "lineCount": 523,
+      "sha256": "b8714bf1d1ca22e24d45485b38e0f790d8ae6ccfc90d6917e974d62069d6e6dd",
+      "lineCount": 527,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -2041,57 +2041,67 @@
     {
       "path": "webagent-core/agent-host/scripts/run-tests.js",
       "doc": "webagent-core/agent-host/scripts/README.md",
-      "sha256": "00c4d635c662e0a028234271cf31e5d1833a4ec62c0d38fbf6b493b4e12286cd",
-      "lineCount": 122,
+      "sha256": "f95e90484dd3772845fdaaac88fbad1337ee65bc325a187b5754a29726162483",
+      "lineCount": 156,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
         {
-          "id": "anonymous@10:56",
-          "name": "anonymous@10:56",
+          "id": "lifecycleSummary",
+          "name": "lifecycleSummary",
+          "kind": "FunctionDeclaration",
+          "startLine": 9,
+          "endLine": 38,
+          "parameters": [
+            "stderr"
+          ]
+        },
+        {
+          "id": "anonymous@43:56",
+          "name": "anonymous@43:56",
           "kind": "ArrowFunctionExpression",
-          "startLine": 10,
-          "endLine": 10,
+          "startLine": 43,
+          "endLine": 43,
           "parameters": [
             "name"
           ]
         },
         {
-          "id": "anonymous@52:46",
-          "name": "anonymous@52:46",
+          "id": "anonymous@85:46",
+          "name": "anonymous@85:46",
           "kind": "ArrowFunctionExpression",
-          "startLine": 52,
-          "endLine": 52,
+          "startLine": 85,
+          "endLine": 85,
           "parameters": [
             "f"
           ]
         },
         {
-          "id": "anonymous@53:27",
-          "name": "anonymous@53:27",
+          "id": "anonymous@86:27",
+          "name": "anonymous@86:27",
           "kind": "ArrowFunctionExpression",
-          "startLine": 53,
-          "endLine": 53,
+          "startLine": 86,
+          "endLine": 86,
           "parameters": [
             "f"
           ]
         },
         {
-          "id": "anonymous@54:33",
-          "name": "anonymous@54:33",
+          "id": "anonymous@87:33",
+          "name": "anonymous@87:33",
           "kind": "ArrowFunctionExpression",
-          "startLine": 54,
-          "endLine": 54,
+          "startLine": 87,
+          "endLine": 87,
           "parameters": [
             "f"
           ]
         },
         {
-          "id": "anonymous@67:46",
-          "name": "anonymous@67:46",
+          "id": "anonymous@100:46",
+          "name": "anonymous@100:46",
           "kind": "ArrowFunctionExpression",
-          "startLine": 67,
-          "endLine": 67,
+          "startLine": 100,
+          "endLine": 100,
           "parameters": [
             "f"
           ]
@@ -29257,8 +29267,8 @@
     {
       "path": "webagent-core/agent-host/tests/testRunner.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "0d9098b343e2b1e73309047ca883985659d21247584ba08dabcf670b0eaca3e0",
-      "lineCount": 58,
+      "sha256": "0f4565ab47429834a93a9f8be6b5e8a27962a987bac94bcfa0782e332c992a29",
+      "lineCount": 86,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -29311,6 +29321,76 @@
           "endLine": 52,
           "parameters": [
             "line"
+          ]
+        },
+        {
+          "id": "anonymous@72:52",
+          "name": "anonymous@72:52",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 72,
+          "endLine": 72,
+          "parameters": [
+            "line"
+          ]
+        },
+        {
+          "id": "anonymous@76:47",
+          "name": "anonymous@76:47",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 76,
+          "endLine": 76,
+          "parameters": [
+            "line"
+          ]
+        },
+        {
+          "id": "anonymous@79:22",
+          "name": "anonymous@79:22",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 79,
+          "endLine": 79,
+          "parameters": [
+            "row"
+          ]
+        },
+        {
+          "id": "anonymous@80:22",
+          "name": "anonymous@80:22",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 80,
+          "endLine": 80,
+          "parameters": [
+            "row"
+          ]
+        },
+        {
+          "id": "anonymous@81:22",
+          "name": "anonymous@81:22",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 81,
+          "endLine": 81,
+          "parameters": [
+            "row"
+          ]
+        },
+        {
+          "id": "anonymous@82:62",
+          "name": "anonymous@82:62",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 82,
+          "endLine": 82,
+          "parameters": [
+            "row"
+          ]
+        },
+        {
+          "id": "anonymous@83:23",
+          "name": "anonymous@83:23",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 83,
+          "endLine": 83,
+          "parameters": [
+            "row"
           ]
         }
       ]
@@ -46888,6 +46968,10 @@
     {
       "path": "examples/calculator/tests/calculator.test.js",
       "reason": "可选计算器示例（非默认工作区）；不计产品代码覆盖"
+    },
+    {
+      "path": "review/evidence/R4-handoff-ci-2026-09-21.json",
+      "reason": "脱敏GitHub CI取证数据快照，非运行时代码；字段/可得性边界见review/README.md及阶段10，不作为函数覆盖分母"
     },
     {
       "path": "webagent-core/agent-host/package-lock.json",

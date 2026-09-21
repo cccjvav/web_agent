@@ -62,6 +62,10 @@
     {
       "prefix": "arena-trace-inspector/",
       "reason": "新上传浏览器原型，原测试独立运行；本轮改动与整合接缝见probe-extension实现详解，不计为已完成全量逐函数审查"
+    },
+    {
+      "path": "review/evidence/R4-handoff-ci-2026-09-21.json",
+      "reason": "脱敏GitHub CI取证数据快照，非运行时代码；字段/可得性边界见review/README.md及阶段10，不作为函数覆盖分母"
     }
   ],
   "rootScriptDoc": "启动脚本说明.md",

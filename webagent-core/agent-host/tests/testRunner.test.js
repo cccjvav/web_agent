@@ -54,4 +54,32 @@ try {
     if(name.includes('Timeout')) assert.equal(metadata.errorCode,'ETIMEDOUT');else assert.equal(metadata.status,7);
     assert.ok(result.stdout.includes('::error title='+name+'::'));
   }
+  // Stage metadata in the middle must survive the old head/tail-only annotation window.
+  const secret = 'DO_NOT_COPY_COMMAND_PATH_TOKEN';
+  const stages = [];
+  for (let i = 0; i < 12; i++) stages.push('process lifecycle ' + JSON.stringify({kind:'command',event:'spawn',childPid:101,elapsedMs:i,command:secret}));
+  stages.push('process lifecycle ' + JSON.stringify({kind:'command',event:'timeout',childPid:101,elapsedMs:30073,spawned:true,exited:false,stdoutBytes:0,stderrBytes:0,command:secret,env:{token:secret}}));
+  stages.push('tunnel helper ' + JSON.stringify({operation:'protect',id:7,event:'callback',elapsedMs:8001,helperStarted:true,helperReady:false,helperCompleted:false,errorCode:secret,stderr:secret}));
+  stages.push('process lifecycle ' + JSON.stringify({kind:'search',event:'timeout',threadId:8,elapsedMs:10001,online:true,ready:false,activeSearches:1}));
+  stages.push('process lifecycle {malformed');
+  stages.push('process lifecycle ' + JSON.stringify({kind:'command',event:secret,elapsedMs:1}));
+  stages.push('process lifecycle ' + JSON.stringify({kind:'command',event:'exit',elapsedMs:secret,exitCode:secret,exited:secret}));
+  stages.push('process lifecycle ' + JSON.stringify({kind:'command',event:'error',command:'x'.repeat(5000)}));
+  const body = 'header\n'.repeat(400) + stages.join('\n') + '\n' + 'footer\n'.repeat(400);
+  fs.writeFileSync(path.join(fixture,'tests/fixtureStages.test.js'), 'process.stderr.write(' + JSON.stringify(body) + ');process.exitCode=7;');
+  const staged = spawnSync(process.execPath,['scripts/run-tests.js','--filter=fixtureStages.test'],{cwd:fixture,env:{...process.env,GITHUB_ACTIONS:'true'},encoding:'utf8',timeout:15000});
+  assert.equal(staged.status,1);
+  const annotation = staged.stdout.split('\n').find(line=>line.startsWith('::error title=fixtureStages.test.js::'));
+  assert(annotation);
+  assert(annotation.includes('[lifecycle-summary]'), 'middle lifecycle diagnostics must survive head/tail truncation');
+  const decoded = annotation.replace(/%0A/g,'\n').replace(/%0D/g,'\r').replace(/%25/g,'%');
+  const summaryLine = decoded.split('\n').find(line=>line.startsWith('[lifecycle-summary] '));
+  const summary = JSON.parse(summaryLine.slice('[lifecycle-summary] '.length));
+  assert(summary.length <= 6 && summaryLine.length <= 1820);
+  assert(summary.some(row=>row.event==='timeout'&&row.elapsedMs===30073&&row.stdoutBytes===0&&row.exited===false));
+  assert(summary.some(row=>row.kind==='tunnel'&&row.operation==='protect'&&row.helperStarted===true&&row.helperReady===false));
+  assert(summary.some(row=>row.kind==='search'&&row.ready===false&&row.online===true));
+  assert(!summaryLine.includes(secret)); assert(!summary.some(row=>'command' in row));
+  assert(!summary.some(row=>'env' in row || 'stderr' in row));
+  assert(decoded.slice(decoded.indexOf('::')+2).length < 4700);
 } finally { fs.rmSync(fixture, { recursive: true, force: true }); }

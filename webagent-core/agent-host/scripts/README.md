@@ -24,7 +24,7 @@ R5新增独立`tunnel-cleanup.js`：仅Windows本机交互终端零参数，预�
 
 | 源码 | 定位证据 |
 |---|---|
-| [run-tests.js](run-tests.js) | 5 个函数/类节点 |
+| [run-tests.js](run-tests.js) | 6 个函数/类节点 |
 | [tunnel-cleanup.js](tunnel-cleanup.js) | 8 个函数/类节点 |
 | [tunnel-residue.js](tunnel-residue.js) | 2 个函数/类节点 |
 <!-- docs-inventory:end -->
