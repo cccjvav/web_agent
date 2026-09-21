@@ -912,7 +912,7 @@ runner新增文件/Node/平台/架构/原预算及单调耗时/status/signal/err
 
 发现externalClient.rpc和stdioTransport.frame用message.error真假值判断成功，result与error:null/false/0同时存在会误接受。真实HTTP与stdio登记负例均先失败（Missing expected rejection），证据在/home/user/r2-response-evidence；不是假设性风险。本包运行时仅两处改为Object.hasOwn(message,'error')，保留已有版本/id/对象结果、预算、权限、审批与取消路径；不整体替换MCP、不放宽协议、不自动重试。非规范服务器以error:null搭配成功result的行为不再兼容。
 
-externalDiscovery覆盖真实HTTP JSON和SSE，stdioMcp及既有fixture覆盖真实监督进程：矛盾响应登记失败后目录清空、stdio进程退出；已批准调用先产生夹具计数，收到矛盾回复必须unknown，重复批准不增加调用。正常结果、通知、分页、owner death/取消/预算旧断言保留。只解决该互斥缺陷，不宣称全RPC或所有第三方互通已认证；Linux Node22全套87/87通过，源码文档252/28/110、185登记指纹同步；精确CI待核验。
+externalDiscovery覆盖真实HTTP JSON和SSE，stdioMcp及既有fixture覆盖真实监督进程：矛盾响应登记失败后目录清空、stdio进程退出；已批准调用先产生夹具计数，收到矛盾回复必须unknown，重复批准不增加调用。正常结果、通知、分页、owner death/取消/预算旧断言保留。只解决该互斥缺陷，不宣称全RPC或所有第三方互通已认证；Linux Node22全套87/87通过，源码文档252/28/110、185登记指纹同步；实现d520ae71c541a2d3f1712c46d7c282145db4c161的CI35586118614精确SHA九项通过（含Windows20/22/24、浏览器、安装构建）。
 
 剩余工作仍包括R2/R3其他消费链、R4历史超时根因、R5 PTY/Windows合同、R7文档逐句、R8本机MCP/桌面。R6优化候选与R9版本/lint/生成物取舍按收益与授权决策，不视作全部必做；P原分工暂停不变。
 
