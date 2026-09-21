@@ -5,7 +5,7 @@
 接手先读本索引和[项目约定](agents.md)，再按需读[阶段10的工作包与交接](stages/s10-upstream-adoption.md#当前工作包与交接约束)。不另建路线图或根交接文件。
 
 ## 当前状态
-- **本轮App窗口启动已交付（F57）。** 拆分appWindow.js并修复就绪误判、错工作区复用、浏览器失败及后台清理未确认；本地96/96、Chromium与audit 0。源码`4cf4d6f81bfd9e0f85af690aa84d0ba0fdb48910` / [CI35647781757](https://github.com/cccjvav/web_agent/actions/runs/35647781757)九job已核实；不是全部进程树或全仓审完，后续记录提交及下一项在阶段10第57组。
+- **本轮续作准备阶段超时（F58）。** 为同步npm/下载阶段补有界期限与取消，本地97/97、Chromium与audit 0；不是全仓审完，精确提交/CI与下一项在阶段10第58组。
 - **接手基线：** `67f4f966720c2d6f657f53e3dc3b02cbf3860b98`，[CI35624122815](https://github.com/cccjvav/web_agent/actions/runs/35624122815)九项已逐job核实，本地94/94。F55新修改的验证与精确提交CI见阶段10，不借此基线绿灯代签。
 - **F55/F56交付基线已补核实：** 用户重连后，证据提交`036d65b735805f13381f3ab1b0a5408d999c872d`的[CI35632714383](https://github.com/cccjvav/web_agent/actions/runs/35632714383)九job及源码`a68a77e6fa82e509b3dc8a09ac27c38a402eadfb`的[CI35641420076](https://github.com/cccjvav/web_agent/actions/runs/35641420076)九job、证据`464925030b85c0725a7c98851b8ca4be1ae4fabf`的[CI35642269647](https://github.com/cccjvav/web_agent/actions/runs/35642269647)九job均逐项success；不能借此代签F57或用户桌面。
 - **接手顺序：** 本页→[项目约定](agents.md)→[即时接手检查](stages/s10-upstream-adoption.md#即时接手检查2026-09-21)。先核对分支/HEAD/未提交文件与在跑任务；外部沙箱ZIP不保证可移交，[仓库内CI摘要](../review/evidence/R4-handoff-ci-2026-09-21.json)明确哪些事实可得、哪些原日志不可得。

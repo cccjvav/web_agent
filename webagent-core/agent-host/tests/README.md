@@ -173,6 +173,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
 | [installerPackaging.test.js](installerPackaging.test.js) | 26 个函数/类节点 |
+| [installerPreparation.test.js](installerPreparation.test.js) | 34 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 19 个函数/类节点 |
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 24 个函数/类节点 |

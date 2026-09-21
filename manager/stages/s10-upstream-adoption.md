@@ -30,7 +30,7 @@
 
 这份交接随施工维护，用户可随时要求切换助手，不要求对方读取全部聊天。**“可交接”不是全项目完成，也不是所有外部证据仍可下载。**
 
-1. **定位与保护工作区**：先查git status --short、git log -1、git branch --show-current。当前会话绑定arena/01a0c4b1-web-agent；已从用户更正的arena/01a0bfa9-web-agent快进接手67f4f966720c2d6f657f53e3dc3b02cbf3860b98，[CI35624122815](https://github.com/cccjvav/web_agent/actions/runs/35624122815)九项与本地94/94为进入基线。F55证据提交036d65b / CI35632714383、F56源码a68a77e / CI35641420076及证据4649250 / CI35642269647均已逐job核实九项；F57新修改看第57组，不覆盖新增改动或机械切换历史分支。
+1. **定位与保护工作区**：先查git status --short、git log -1、git branch --show-current。当前会话绑定arena/01a0c4b1-web-agent；已从用户更正的arena/01a0bfa9-web-agent快进接手67f4f966720c2d6f657f53e3dc3b02cbf3860b98，[CI35624122815](https://github.com/cccjvav/web_agent/actions/runs/35624122815)九项与本地94/94为进入基线。F55证据提交036d65b / CI35632714383、F56源码a68a77e / CI35641420076及证据4649250 / CI35642269647、F57源码4cf4d6f / CI35647781757及证据ee393c2 / CI35648274576均已逐job核实九项；F58新修改看第58组，不覆盖新增改动或机械切换历史分支。
 2. **防恢复误判**：前序会话环境曾出现HEAD/索引回到50c03be而工作文件保留最新交付；已fetch当前绑定远端、逐blob核对后只mixed恢复dcc321b指针/索引，不写工作树。若再出现，不可盲目reset --hard/clean或把整树当新修改提交；先核对远端SHA、文件差异及用户改动，不确定就停下确认。暂停探针的哈希比对不是专项审查，不能覆盖其文件。
 3. **验证不能借用**：用gh run list按当前绑定分支列出headSha/status/conclusion/url，选择与git rev-parse HEAD一致的run，再gh run view核对全部jobs。不要用旧绿灯代签新HEAD，也不要仅看run总标题。安装/Node/测试入口见下；变更尚在施工或CI未结束就标明未完成。
 4. **证据可得性**：[仓库内CI摘要](../../review/evidence/R4-handoff-ci-2026-09-21.json)是本轮重新取得的脱敏API事实。此前沙箱外ZIP本轮未见，绝对路径不等于可移交附件；完整失败日志此前TLS EOF，不能补造。原run/job/Checks能取就复取，不能取就保留“不可得”；不上传用户密钥/环境/命令正文来补证据。
@@ -99,11 +99,11 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 下一项，高 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，第四批现补资源caller与目录ACL及错误hash指引，第五批已补原生流确认，第六批补窄屏/页签ARIA，F55又补浏览器会话/挑战响应头可读性，其余UI/实机项待续修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
-| R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54第三批已补新文件patch显式hash与块校验，第五批补原生postNdjson坏流/终态及失败历史；F55补经典流严格完成/预算/取消清理；F56补可选编辑器编排健康期限与直接子进程收尾，按新证据续修，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
+| R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54第三批已补新文件patch显式hash与块校验，第五批补原生postNdjson坏流/终态及失败历史；F55补经典流严格完成/预算/取消清理；F56补可选编辑器编排健康期限与直接子进程收尾；F57补App窗口身份绑定与浏览器失败；F58补同步准备阶段超时/取消，按新证据续修，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 根因未定位；已复取历史annotations并补阶段诊断首包，等待可解释复现 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 用户优先 | 已授权安全隧道残留回收；已交付只读检测、Windows保护记录/稳定句柄终端回收及负例/诊断；本机开始菜单入口已接入，面板/桌面与PTY互操作仍待 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
-| R7 / 结构首包已做，语义继续 | 第26组集中19篇专题、归档17篇旧审查、删除过期PROMPT；F54改相邻错误说明、归档独立报告与同步当前基线，F55修文档站实际跳转/窄屏导航/代码/对比度，F56同步启动/运行器说明并纠正旧mkdir/固定副本版本表述，均未增加整篇逐句完成项；其余README/管理旧现状继续核对 | 源码清单、目录README、根维护/安装说明及阶段索引 | 活跃正文无相互矛盾的“当前”；无用旧指南退役，有效教学/历史失败保留；给出已审和未审清单而不是总称100% |
+| R7 / 结构首包已做，语义继续 | 第26组集中19篇专题、归档17篇旧审查、删除过期PROMPT；F54改相邻错误说明、归档独立报告与同步当前基线，F55修文档站跳转/窄屏导航/代码/对比度，F56同步启动/运行器说明并纠正旧mkdir/副本版本，F57拆分appWindow并加身份/浏览器回归，F58补准备阶段超时/取消及对应测试说明，均未增加整篇逐句完成项；其余README/管理旧现状继续核对 | 源码清单、目录README、根维护/安装说明及阶段索引 | 活跃正文无相互矛盾的“当前”；无用旧指南退役，有效教学/历史失败保留；给出已审和未审清单而不是总称100% |
 | R8 / 分项就绪后 | 待用户实机：项目根MCP验收 | 第7节、Windows清单M/W/T/G等；用户接入后核对工具身份 | 逐项有提交、实际环境、动作、退出码/效果与脱敏证据；失败/未执行如实留存，不借CI代签 |
 | R9 / 中，部分完成 | 第45组已交付CI顶层`contents: read`与高危生产依赖硬门禁；F55新增默认axe开发门禁；EOL Node矩阵、最小lint（只报错不改风格）、生成物churn与仓库权重仍为候选 | [第45组报告剩余决策](../../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md#6-仍需保留的风险决策)；版本/依赖/发行取舍需项目主人决策 | 每项先写范围与回滚点，不改冻结原型、不做TS重写；CI九项不因新增检查放宽 |
 | P / 暂停 | 探测整合、迁移与专项复核 | 第8节，另一助手正式交接前不动 | 交接后先锁版本/权限/接口/数据方案并重排范围，不自行恢复施工 |
@@ -233,7 +233,7 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 暂停/延期：探测待交接；其它边界是否改变。
 ```
 
-下一位助手先看本节即时接手检查和最新批次。非Probe query、只读投影及external/workflow接线已在第53组交付，不再当尚未施工；F54/F55已修的会话/原生与经典流/响应头也不重做。继续按R2/R3的新负例推进（当前待验证线索为外层appWindow的实例/工作区确认与后台失败归属、同步依赖准备期限），交叉R4与R7；无需用户重新复述此前授权和约束。如发现与实际代码不符，以核验结果修订交接，而不是照抄本页当绝对真相。
+下一位助手先看本节即时接手检查和最新批次。非Probe query、只读投影及external/workflow接线已在第53组交付，不再当尚未施工；F54/F55/F56/F57已修的会话/原生/经典流/响应头/启动确认/直接子进程也不重做。继续按R2/R3的新负例推进（当前待验证线索为同步依赖准备期限/取消及外层再确认），交叉R4与R7；无需用户重新复述此前授权和约束。如发现与实际代码不符，以核验结果修订交接，而不是照抄本页当绝对真相。
 
 ### 实施批次与证据
 
@@ -1048,6 +1048,16 @@ stopChild区分killed与已退出；保留对象仅清本轮直接子进程，9�
 - run-code-oss受控：WEBAGENT_APP_BOOTSTRAP=1且存在IPC才允许受控分支，否则抛错；收到webagent-app-stop即停止，release需已prepared且未取消；spawn后发prepared，失败/断开通知外层；清理复用F56直接子进程观察，不认证全部后代。
 
 新增appWindowLifecycle.test.js的28个命名场景：真实回环HTTP/Node与受控时钟/进程，覆盖无关服务、错工作区、浏览器失败、复用pin、实例变化、版本/端口/路径/形状/部分缺失、非法端口/URL零网络、runner spawn错误/同步抛错/非法prepared/无prepared/浏览器失败/release回调挂起/ack缺失、冷启动等prepared后pin、停止取消、早期退出快速失败、清理未确认有界、真实HTTP大正文/坏UTF-8/形状/重定向及body stall/取消释放socket、真实Node IPC准备/释放；未执行真实code-server/窗口、跨用户/PID复用或桌面点击验收。本地96/96、Chromium与audit 0均以独立进程退出0确认；文档276/28/111且updated=0，185指纹已同步。代码`4cf4d6f81bfd9e0f85af690aa84d0ba0fdb48910`已推当前固定分支，[CI35647781757](https://github.com/cccjvav/web_agent/actions/runs/35647781757)按精确SHA核实9个job completed/success：Ubuntu Node18/20/22/24、Windows Node20/22/24（含重复取消/stdio）、Windows安装器与真实Chromium。提交前再次确认96/96、Chromium与audit 0、文档零漂移及185指纹；精选195份JS lint仅原有4处清理finally提示。UI、核心权限/工具、原生扩展、暂停探针和冻结原型运行源码零diff；不是全仓审完，不关闭R4/R5/R7/R8。后续证据文档提交仍须核对其自身HEAD。
+
+### 第58组：同步准备阶段的超时与取消（2026-09-21）
+
+沿第57组待验证线索，同步npm与code-server下载阶段尚无期限/取消。真实VM红测先证明ensureDependencies与ensure在超时/取消时无界或错误信息不明确；测试自行收尾，不安装真实依赖或下载运行时。
+
+- installer/launch.js：ensureDependencies(root,{timeoutMs=120000,signal})检查signal、期限有效性，存在express即零spawn，否则spawnSync带timeout，ETIMEDOUT转超时错误，abort转ABORT_ERR；无效期限零工作。导出该函数供测试，不改变prepareRuntime/resolveWorkspace等路径逻辑。
+- webagent-core/scripts/ensure-code-server.js：runNpm(args,cwd,{timeoutMs=180000,signal})同样检查signal/期限，spawnSync带timeout，ETIMEDOUT转超时；ensure({signal})与ensureVscodeDeps({signal})检查signal，分别120秒/180秒超时，失败不吞；abortedError()/checkSignal(signal)固定ABORT_ERR。
+- webagent-core/scripts/run-code-oss.js：main在ensure前checkRunning，ensure({signal:controller.signal})传入总控制器；同步准备阶段的超时/取消与后续health/子进程清理统一由同一AbortController协调；ensure抛错落到stop(1,error)并进入finally的stopChild观察，不遗留已创建进程。
+
+新增installerPreparation.test.js的7个场景：已有安装零spawn、npm ci超时有界、abort零工作、非法期限零工作、code-server下载超时、abort零下载、runNpm同步抛错不吞；未执行真实npm或下载。本地97/97、Chromium与audit 0均以独立进程退出0确认；文档277/28/111且updated=0，185指纹已同步。提交/精确CI待记录。UI、核心权限/工具、原生扩展、暂停探针和冻结原型运行源码零diff；不是全仓审完，不关闭R4/R5/R7/R8。
 
 ## 复盘
 

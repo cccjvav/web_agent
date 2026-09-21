@@ -253,6 +253,7 @@ const pairs = [
   ['installer/launch.js', 'installer/函数详解.md'],
   ['installer/appWindow.js', 'installer/函数详解.md'],
   ['webagent-core/agent-host/tests/appWindowLifecycle.test.js', 'installer/函数详解.md'],
+  ['webagent-core/agent-host/tests/installerPreparation.test.js', 'installer/函数详解.md'],
   ['installer/package.js', 'installer/函数详解.md'],
   ['webagent-core/agent-host/src/index.js', 'webagent-core/agent-host/src/入口详解.md'],
   ['webagent-core/agent-host/src/utils/executionControl.js', 'webagent-core/agent-host/src/utils/执行控制详解.md'],

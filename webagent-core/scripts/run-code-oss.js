@@ -157,7 +157,9 @@ async function main() {
   if (appControlled) { process.on('message', onAppMessage); process.once('disconnect', onAppDisconnect); }
   try {
     if (process.env.WEBAGENT_APP_BOOTSTRAP === '1' && !appControlled) throw new Error('App启动需要私有IPC通道');
-    const entry = ensure();
+    checkRunning();
+    const entry = ensure({ signal: controller.signal });
+    checkRunning();
     const extDir = path.join(repoRoot, 'webagent-core/extensions-installed');
     syncExtension();
 

@@ -56,12 +56,18 @@ function resolveWorkspace(value, cwd, fallback) {
   if (!fs.statSync(workspace).isDirectory()) throw new Error('工作区不是目录');
   return workspace; // Do not strip a Windows drive root's trailing separator.
 }
-function ensureDependencies(root) {
+function abortedLaunch() { return Object.assign(new Error('启动准备已停止'), { code: 'ABORT_ERR' }); }
+function checkLaunchSignal(signal) { if (signal?.aborted) throw abortedLaunch(); }
+function ensureDependencies(root, { timeoutMs = 120000, signal } = {}) {
+  checkLaunchSignal(signal);
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) throw new Error('npm准备期限无效');
   const cwd = path.join(root, 'webagent-core/agent-host');
   if (fs.existsSync(path.join(cwd, 'node_modules/express'))) return;
   const r = spawnSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['ci', '--omit=dev', '--no-audit', '--no-fund'], {
-    cwd, stdio: 'inherit', shell: process.platform === 'win32'
+    cwd, stdio: 'inherit', shell: process.platform === 'win32', timeout: timeoutMs
   });
+  if (r.error && r.error.code === 'ETIMEDOUT') throw Object.assign(new Error(`npm ci 超时 ${timeoutMs}ms in ${cwd}`), { code: 'ETIMEDOUT' });
+  checkLaunchSignal(signal);
   if (r.error || r.status !== 0) throw new Error('npm ci失败，请检查Node/npm与网络');
 }
 // Lazy, side-effect-free helper: non-app modes and recovery do not probe/start an editor.
@@ -104,4 +110,4 @@ async function main() {
   child.on('exit', (code, signal) => { process.exitCode = code == null ? 1 : code; });
 }
 if (require.main === module) main().catch(err => { console.error(err.message); process.exitCode = 1; });
-module.exports = { userHome, safeRelative, prepareRuntime, resolveWorkspace, appOrigin, ready, launchRecovery };
+module.exports = { userHome, safeRelative, prepareRuntime, resolveWorkspace, ensureDependencies, appOrigin, ready, launchRecovery };

@@ -369,3 +369,25 @@ axe-core4.13.0在这9个状态均报告同一项`aria-required-children`：`#tab
 ### 继续开放
 
 同步ensure/runNpm准备阶段的期限/取消及installer外层对实例/工作区的再确认是下一组待验证线索，而非本批已复现结论；R4历史Windows超时/辅助原因、R5真正进程树/桌面/跨用户、R7全仓逐句、R8用户本机MCP与IDE仍开放，探针专项继续原分工暂停；计划仍只维护在阶段10。
+
+## 10. F58 同步准备阶段：超时与取消（2026-09-21）
+
+沿第57组待验证线索，同步npm与code-server下载阶段尚无期限/取消。真实VM红测先证明ensureDependencies与ensure在超时/取消时无界或错误信息不明确；测试自行收尾，不安装真实依赖或下载运行时。
+
+| 合同 | 修前行为 | 修后 |
+|---|---|---|
+| 外层npm ci期限 | spawnSync无timeout，可能无限挂起 | ensureDependencies带120秒timeout，ETIMEDOUT转超时错误，非法期限零工作 |
+| 外层取消 | 无signal检查，仍执行npm | abort时抛ABORT_ERR，零spawn |
+| 内层code-server下载期限 | runNpm无timeout，ensure无signal | runNpm带180秒/120秒超时，ensure与ensureVscodeDeps检查signal，超时/取消有界 |
+| 内层取消 | 同步阶段不可取消 | signal已abort时抛ABORT_ERR，零下载 |
+| 同步抛错吞掉 | 可能被外层误判为成功 | 同步抛错直接传播，不吞 |
+
+新增installerPreparation.test.js 7个场景，均先红后绿：已有安装零spawn、npm ci超时有界、abort零工作、非法期限零工作、code-server下载超时、abort零下载、runNpm同步抛错不吞；未执行真实npm或下载。本地97/97、Chromium与audit 0均以独立进程退出0确认；文档277/28/111且updated=0，185指纹已同步。提交/精确CI待记录。UI、核心权限/工具、原生扩展、暂停探针和冻结原型运行源码零diff；不是全仓审完，不关闭R4/R5/R7/R8。
+
+测试实现：fixtureLaunch用fakeFs的existsSync控制express存在，require('fs')返回替身，spawnSync记录timeout/error；fixtureEnsure用fakeFs控制entry/marker，spawnSync记录timeout/同步抛错；bounded为看门狗，test收集失败。未安装真实依赖。
+
+本批精确提交与CI见阶段10第58组，不使用F57绿色代签。原始本地日志在仓库外，跨沙箱不保证可得；可携带证据为正式断言、本文范围与对应提交CI。
+
+### 继续开放
+
+installer外层对实例/工作区的再确认及更细的资源/权限边界是下一组待验证线索，而非本批已复现结论；R4历史Windows超时/辅助原因、R5真正进程树/桌面/跨用户、R7全仓逐句、R8用户本机MCP与IDE仍开放，探针专项继续原分工暂停；计划仍只维护在阶段10。

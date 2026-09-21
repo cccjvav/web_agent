@@ -1806,8 +1806,8 @@
     {
       "path": "installer/launch.js",
       "doc": "installer/README.md",
-      "sha256": "96f7c3295fe2195da16663240bc7ad0fb6132d22e91fae21061ae5d6d5f35e2a",
-      "lineCount": 108,
+      "sha256": "079cb4bc8d1369d8c087dd1a7880ecd99f0e3aefd5198e53fb79b0dd8df1308f",
+      "lineCount": 114,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -1875,21 +1875,40 @@
           ]
         },
         {
+          "id": "abortedLaunch",
+          "name": "abortedLaunch",
+          "kind": "FunctionDeclaration",
+          "startLine": 59,
+          "endLine": 59,
+          "parameters": []
+        },
+        {
+          "id": "checkLaunchSignal",
+          "name": "checkLaunchSignal",
+          "kind": "FunctionDeclaration",
+          "startLine": 60,
+          "endLine": 60,
+          "parameters": [
+            "signal"
+          ]
+        },
+        {
           "id": "ensureDependencies",
           "name": "ensureDependencies",
           "kind": "FunctionDeclaration",
-          "startLine": 59,
-          "endLine": 66,
+          "startLine": 61,
+          "endLine": 72,
           "parameters": [
-            "root"
+            "root",
+            "{ timeoutMs = 120000, signal } = {}"
           ]
         },
         {
           "id": "appOrigin",
           "name": "appOrigin",
           "kind": "FunctionDeclaration",
-          "startLine": 68,
-          "endLine": 68,
+          "startLine": 74,
+          "endLine": 74,
           "parameters": [
             "env = process.env"
           ]
@@ -1898,8 +1917,8 @@
           "id": "ready",
           "name": "ready",
           "kind": "FunctionDeclaration",
-          "startLine": 69,
-          "endLine": 69,
+          "startLine": 75,
+          "endLine": 75,
           "parameters": [
             "origin = appOrigin()",
             "options"
@@ -1909,8 +1928,8 @@
           "id": "appWindow",
           "name": "appWindow",
           "kind": "FunctionDeclaration",
-          "startLine": 70,
-          "endLine": 70,
+          "startLine": 76,
+          "endLine": 76,
           "parameters": [
             "root",
             "workspace",
@@ -1922,24 +1941,24 @@
           "id": "launchRecovery",
           "name": "launchRecovery",
           "kind": "FunctionDeclaration",
-          "startLine": 71,
-          "endLine": 83,
+          "startLine": 77,
+          "endLine": 89,
           "parameters": []
         },
         {
-          "id": "launchRecovery/anonymous@81:20",
-          "name": "anonymous@81:20",
+          "id": "launchRecovery/anonymous@87:20",
+          "name": "anonymous@87:20",
           "kind": "ArrowFunctionExpression",
-          "startLine": 81,
-          "endLine": 81,
+          "startLine": 87,
+          "endLine": 87,
           "parameters": []
         },
         {
-          "id": "launchRecovery/anonymous@82:19",
-          "name": "anonymous@82:19",
+          "id": "launchRecovery/anonymous@88:19",
+          "name": "anonymous@88:19",
           "kind": "ArrowFunctionExpression",
-          "startLine": 82,
-          "endLine": 82,
+          "startLine": 88,
+          "endLine": 88,
           "parameters": [
             "code"
           ]
@@ -1948,37 +1967,37 @@
           "id": "main",
           "name": "main",
           "kind": "FunctionDeclaration",
-          "startLine": 84,
-          "endLine": 105,
+          "startLine": 90,
+          "endLine": 111,
           "parameters": []
         },
         {
-          "id": "main/anonymous@103:20",
-          "name": "anonymous@103:20",
+          "id": "main/anonymous@109:20",
+          "name": "anonymous@109:20",
           "kind": "ArrowFunctionExpression",
-          "startLine": 103,
-          "endLine": 103,
+          "startLine": 109,
+          "endLine": 109,
           "parameters": [
             "err"
           ]
         },
         {
-          "id": "main/anonymous@104:19",
-          "name": "anonymous@104:19",
+          "id": "main/anonymous@110:19",
+          "name": "anonymous@110:19",
           "kind": "ArrowFunctionExpression",
-          "startLine": 104,
-          "endLine": 104,
+          "startLine": 110,
+          "endLine": 110,
           "parameters": [
             "code",
             "signal"
           ]
         },
         {
-          "id": "anonymous@106:42",
-          "name": "anonymous@106:42",
+          "id": "anonymous@112:42",
+          "name": "anonymous@112:42",
           "kind": "ArrowFunctionExpression",
-          "startLine": 106,
-          "endLine": 106,
+          "startLine": 112,
+          "endLine": 112,
           "parameters": [
             "err"
           ]
@@ -19260,8 +19279,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLearning.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "dab7459cd2cad5efc7f8ad6705ce2d84f3c25a91e164f0be3bd764497521450e",
-      "lineCount": 413,
+      "sha256": "966a35674f4069329e15e285d094b81ce7e9b3ee6d7e1ab21210aabbae7ff864",
+      "lineCount": 414,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -19289,49 +19308,49 @@
           "id": "namedFunctions",
           "name": "namedFunctions",
           "kind": "FunctionDeclaration",
-          "startLine": 264,
-          "endLine": 279,
+          "startLine": 265,
+          "endLine": 280,
           "parameters": [
             "node",
             "result = new Set()"
           ]
         },
         {
-          "id": "namedFunctions/anonymous@275:44",
-          "name": "anonymous@275:44",
+          "id": "namedFunctions/anonymous@276:44",
+          "name": "anonymous@276:44",
           "kind": "ArrowFunctionExpression",
-          "startLine": 275,
-          "endLine": 275,
+          "startLine": 276,
+          "endLine": 276,
           "parameters": [
             "child"
           ]
         },
         {
-          "id": "anonymous@378:66",
-          "name": "anonymous@378:66",
+          "id": "anonymous@379:66",
+          "name": "anonymous@379:66",
           "kind": "ArrowFunctionExpression",
-          "startLine": 378,
-          "endLine": 378,
+          "startLine": 379,
+          "endLine": 379,
           "parameters": [
             "pair"
           ]
         },
         {
-          "id": "anonymous@383:43",
-          "name": "anonymous@383:43",
+          "id": "anonymous@384:43",
+          "name": "anonymous@384:43",
           "kind": "ArrowFunctionExpression",
-          "startLine": 383,
-          "endLine": 383,
+          "startLine": 384,
+          "endLine": 384,
           "parameters": [
             "p"
           ]
         },
         {
-          "id": "anonymous@383:68",
-          "name": "anonymous@383:68",
+          "id": "anonymous@384:68",
+          "name": "anonymous@384:68",
           "kind": "ArrowFunctionExpression",
-          "startLine": 383,
-          "endLine": 383,
+          "startLine": 384,
+          "endLine": 384,
           "parameters": [
             "p"
           ]
@@ -22326,6 +22345,319 @@
           "endLine": 111,
           "parameters": [
             "err"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "webagent-core/agent-host/tests/installerPreparation.test.js",
+      "doc": "webagent-core/agent-host/tests/README.md",
+      "sha256": "a60e49e2190be76ec3fa41a5a2c287a8dd9a2c694cd53cde9aa4e8d81de7b7c2",
+      "lineCount": 131,
+      "structure": "javascript-ast",
+      "semanticReview": "not-certified",
+      "symbols": [
+        {
+          "id": "bounded",
+          "name": "bounded",
+          "kind": "FunctionDeclaration",
+          "startLine": 12,
+          "endLine": 16,
+          "parameters": [
+            "promise",
+            "ms = 1500"
+          ]
+        },
+        {
+          "id": "bounded/anonymous@14:28",
+          "name": "anonymous@14:28",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 14,
+          "endLine": 14,
+          "parameters": [
+            "_",
+            "reject"
+          ]
+        },
+        {
+          "id": "bounded/anonymous@14:28/anonymous@14:64",
+          "name": "anonymous@14:64",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 14,
+          "endLine": 14,
+          "parameters": []
+        },
+        {
+          "id": "bounded/anonymous@15:48",
+          "name": "anonymous@15:48",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 15,
+          "endLine": 15,
+          "parameters": []
+        },
+        {
+          "id": "fixtureLaunch",
+          "name": "fixtureLaunch",
+          "kind": "FunctionDeclaration",
+          "startLine": 17,
+          "endLine": 47,
+          "parameters": [
+            "{ exists = false, spawnError, spawnTimeout } = {}"
+          ]
+        },
+        {
+          "id": "fixtureLaunch/existsSync",
+          "name": "existsSync",
+          "kind": "FunctionExpression",
+          "startLine": 23,
+          "endLine": 23,
+          "parameters": [
+            "p"
+          ]
+        },
+        {
+          "id": "fixtureLaunch/require",
+          "name": "require",
+          "kind": "FunctionExpression",
+          "startLine": 28,
+          "endLine": 41,
+          "parameters": [
+            "name"
+          ]
+        },
+        {
+          "id": "fixtureLaunch/require/spawnSync",
+          "name": "spawnSync",
+          "kind": "FunctionExpression",
+          "startLine": 31,
+          "endLine": 36,
+          "parameters": [
+            "cmd",
+            "args",
+            "opts"
+          ]
+        },
+        {
+          "id": "fixtureLaunch/require/spawn",
+          "name": "spawn",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 37,
+          "endLine": 37,
+          "parameters": []
+        },
+        {
+          "id": "fixtureLaunch/require/appOrigin",
+          "name": "appOrigin",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 39,
+          "endLine": 39,
+          "parameters": []
+        },
+        {
+          "id": "fixtureLaunch/require/ready",
+          "name": "ready",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 39,
+          "endLine": 39,
+          "parameters": []
+        },
+        {
+          "id": "fixtureLaunch/require/appWindow",
+          "name": "appWindow",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 39,
+          "endLine": 39,
+          "parameters": []
+        },
+        {
+          "id": "fixtureLaunch/close",
+          "name": "close",
+          "kind": "FunctionExpression",
+          "startLine": 46,
+          "endLine": 46,
+          "parameters": []
+        },
+        {
+          "id": "fixtureEnsure",
+          "name": "fixtureEnsure",
+          "kind": "FunctionDeclaration",
+          "startLine": 48,
+          "endLine": 76,
+          "parameters": [
+            "{ timeout = false, throwSync = false } = {}"
+          ]
+        },
+        {
+          "id": "fixtureEnsure/existsSync",
+          "name": "existsSync",
+          "kind": "FunctionExpression",
+          "startLine": 53,
+          "endLine": 53,
+          "parameters": [
+            "p"
+          ]
+        },
+        {
+          "id": "fixtureEnsure/require",
+          "name": "require",
+          "kind": "FunctionExpression",
+          "startLine": 62,
+          "endLine": 73,
+          "parameters": [
+            "name"
+          ]
+        },
+        {
+          "id": "fixtureEnsure/require/spawnSync",
+          "name": "spawnSync",
+          "kind": "FunctionExpression",
+          "startLine": 65,
+          "endLine": 70,
+          "parameters": [
+            "cmd",
+            "args",
+            "opts"
+          ]
+        },
+        {
+          "id": "fixtureEnsure/close",
+          "name": "close",
+          "kind": "FunctionExpression",
+          "startLine": 75,
+          "endLine": 75,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@78:1",
+          "name": "anonymous@78:1",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 78,
+          "endLine": 130,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@78:1/test",
+          "name": "test",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 80,
+          "endLine": 83,
+          "parameters": [
+            "name",
+            "fn"
+          ]
+        },
+        {
+          "id": "anonymous@78:1/anonymous@84:66",
+          "name": "anonymous@84:66",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 84,
+          "endLine": 88,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@78:1/anonymous@89:67",
+          "name": "anonymous@89:67",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 89,
+          "endLine": 95,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@78:1/anonymous@89:67/anonymous@92:20",
+          "name": "anonymous@92:20",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 92,
+          "endLine": 92,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@78:1/anonymous@96:59",
+          "name": "anonymous@96:59",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 96,
+          "endLine": 103,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@78:1/anonymous@96:59/anonymous@100:20",
+          "name": "anonymous@100:20",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 100,
+          "endLine": 100,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@78:1/anonymous@104:64",
+          "name": "anonymous@104:64",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 104,
+          "endLine": 110,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@78:1/anonymous@104:64/anonymous@107:62",
+          "name": "anonymous@107:62",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 107,
+          "endLine": 107,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@78:1/anonymous@111:54",
+          "name": "anonymous@111:54",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 111,
+          "endLine": 115,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@78:1/anonymous@111:54/anonymous@113:24",
+          "name": "anonymous@113:24",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 113,
+          "endLine": 113,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@78:1/anonymous@116:59",
+          "name": "anonymous@116:59",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 116,
+          "endLine": 123,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@78:1/anonymous@116:59/anonymous@120:20",
+          "name": "anonymous@120:20",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 120,
+          "endLine": 120,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@78:1/anonymous@124:70",
+          "name": "anonymous@124:70",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 124,
+          "endLine": 128,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@78:1/anonymous@124:70/anonymous@126:24",
+          "name": "anonymous@126:24",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 126,
+          "endLine": 126,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@130:11",
+          "name": "anonymous@130:11",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 130,
+          "endLine": 130,
+          "parameters": [
+            "e"
           ]
         }
       ]
@@ -44435,8 +44767,8 @@
     {
       "path": "webagent-core/scripts/ensure-code-server.js",
       "doc": "webagent-core/scripts/README.md",
-      "sha256": "547528bf3888368e15b130c9448f5af1daa6a9d19fde19b919b414d0b80e0c38",
-      "lineCount": 125,
+      "sha256": "128ed57919857f7b38b339488667750b9ed559b2918b8f0101bcc2c551266d14",
+      "lineCount": 140,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -44449,30 +44781,49 @@
           "parameters": []
         },
         {
+          "id": "abortedError",
+          "name": "abortedError",
+          "kind": "FunctionDeclaration",
+          "startLine": 13,
+          "endLine": 13,
+          "parameters": []
+        },
+        {
+          "id": "checkSignal",
+          "name": "checkSignal",
+          "kind": "FunctionDeclaration",
+          "startLine": 14,
+          "endLine": 14,
+          "parameters": [
+            "signal"
+          ]
+        },
+        {
           "id": "runNpm",
           "name": "runNpm",
           "kind": "FunctionDeclaration",
-          "startLine": 13,
-          "endLine": 24,
+          "startLine": 15,
+          "endLine": 34,
           "parameters": [
             "args",
-            "cwd"
+            "cwd",
+            "{ timeoutMs = 180000, signal } = {}"
           ]
         },
         {
           "id": "findEntry",
           "name": "findEntry",
           "kind": "FunctionDeclaration",
-          "startLine": 26,
-          "endLine": 33,
+          "startLine": 36,
+          "endLine": 43,
           "parameters": []
         },
         {
-          "id": "findEntry/anonymous@32:25",
-          "name": "anonymous@32:25",
+          "id": "findEntry/anonymous@42:25",
+          "name": "anonymous@42:25",
           "kind": "ArrowFunctionExpression",
-          "startLine": 32,
-          "endLine": 32,
+          "startLine": 42,
+          "endLine": 42,
           "parameters": [
             "p"
           ]
@@ -44481,8 +44832,8 @@
           "id": "vscodeDirFromEntry",
           "name": "vscodeDirFromEntry",
           "kind": "FunctionDeclaration",
-          "startLine": 35,
-          "endLine": 37,
+          "startLine": 45,
+          "endLine": 47,
           "parameters": [
             "entry"
           ]
@@ -44491,34 +44842,37 @@
           "id": "ensureVscodeDeps",
           "name": "ensureVscodeDeps",
           "kind": "FunctionDeclaration",
-          "startLine": 39,
-          "endLine": 48,
+          "startLine": 49,
+          "endLine": 59,
           "parameters": [
-            "entry"
+            "entry",
+            "{ signal } = {}"
           ]
         },
         {
           "id": "ensure",
           "name": "ensure",
           "kind": "FunctionDeclaration",
-          "startLine": 50,
-          "endLine": 81,
-          "parameters": []
+          "startLine": 61,
+          "endLine": 96,
+          "parameters": [
+            "{ signal } = {}"
+          ]
         },
         {
           "id": "extensionVersion",
           "name": "extensionVersion",
           "kind": "FunctionDeclaration",
-          "startLine": 83,
-          "endLine": 85,
+          "startLine": 98,
+          "endLine": 100,
           "parameters": []
         },
         {
           "id": "syncExtension",
           "name": "syncExtension",
           "kind": "FunctionDeclaration",
-          "startLine": 87,
-          "endLine": 111,
+          "startLine": 102,
+          "endLine": 126,
           "parameters": [
             "extRoot = path.join(repoRoot, 'webagent-core/extensions-installed')"
           ]
@@ -44607,8 +44961,8 @@
     {
       "path": "webagent-core/scripts/run-code-oss.js",
       "doc": "webagent-core/scripts/README.md",
-      "sha256": "c2801329f4855b3e5c3db14eddb91681da51e359104f2d6d69e648351fbe3ff5",
-      "lineCount": 262,
+      "sha256": "fb9db7b12cffb2bca8f5790ad5302aaf4129c6cec2e56eaa0b5795e93f6d4b5a",
+      "lineCount": 264,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -44802,7 +45156,7 @@
           "name": "main",
           "kind": "FunctionDeclaration",
           "startLine": 107,
-          "endLine": 256,
+          "endLine": 258,
           "parameters": []
         },
         {
@@ -44925,39 +45279,39 @@
           "parameters": []
         },
         {
-          "id": "main/anonymous@231:50",
-          "name": "anonymous@231:50",
+          "id": "main/anonymous@233:50",
+          "name": "anonymous@233:50",
           "kind": "ArrowFunctionExpression",
-          "startLine": 231,
-          "endLine": 236,
+          "startLine": 233,
+          "endLine": 238,
           "parameters": []
         },
         {
-          "id": "main/anonymous@241:52",
-          "name": "anonymous@241:52",
+          "id": "main/anonymous@243:52",
+          "name": "anonymous@243:52",
           "kind": "ArrowFunctionExpression",
-          "startLine": 241,
-          "endLine": 241,
+          "startLine": 243,
+          "endLine": 243,
           "parameters": [
             "child"
           ]
         },
         {
-          "id": "anonymous@258:12",
-          "name": "anonymous@258:12",
+          "id": "anonymous@260:12",
+          "name": "anonymous@260:12",
           "kind": "ArrowFunctionExpression",
-          "startLine": 258,
-          "endLine": 258,
+          "startLine": 260,
+          "endLine": 260,
           "parameters": [
             "code"
           ]
         },
         {
-          "id": "anonymous@258:56",
-          "name": "anonymous@258:56",
+          "id": "anonymous@260:56",
+          "name": "anonymous@260:56",
           "kind": "ArrowFunctionExpression",
-          "startLine": 258,
-          "endLine": 261,
+          "startLine": 260,
+          "endLine": 263,
           "parameters": [
             "error"
           ]
