@@ -882,6 +882,18 @@ nativeChatStream先以真实HTTP证明旧postNdjson对302正常resolve（/home/u
 
 首轮全量80/85：四项文档/生成物未同步，editorRuntime的简化DOM缺querySelectorAll使新展示函数报错；给fixture补真实DOM查询入口，未删旧dirty/hash/恢复断言。实际页面和该fixture随后均通过；第二轮84/85为新helper漏登记到原主详解（辅助详解已写），补主入口说明后85/85、真实Chromium及两条axe规则通过，docs250/28/110。自审补了程序切Chat/Bridge时隐藏面内焦点恢复到活动tab，避免只处理鼠标点击；截图中的中文缺字是沙箱字体环境限制，不据此认证Windows字体。实现`e32974a242cee3015fb22a7e5a1d2759ddcac545`的[CI35545037493](https://github.com/cccjvav/web_agent/actions/runs/35545037493)已逐job核实9/9成功。继续保留Windows桌面/读屏器/DPI验收、原生requestJson预算及R4–R9，不将局部UI修复扩大为项目全完成。
 
+### F54第七批：原生JSON响应预算与断流（2026-09-21）
+
+接续已发布2bcb7d3。本地ref/index再落回50c03be而文件保留成果；fetch固定分支，以临时index/read-tree对照发布树，git diff零差异后仅mixed恢复ref/index，未覆盖文件，status干净。不沿用聊天记忆盲重置工作树，不碰暂停探针。
+
+先核对requestJson全部调用者：工作区绑定/状态、轮换、控制/启动/停止、PTY hello/poll及claimed/accepted。原实现无通用响应预算，res仅data/end，无error/aborted处理；15秒仅空闲timeout，滴流可延长。nativeRequestJson真实HTTP首红测证明>8MiB响应照收（/home/user/f54-json-evidence/red.log）。
+
+最小修改只在规范extension.js的requestJson：最多8MiB实际Buffer字节，声明超限可提前拒绝但不能代替实际累计；15秒总deadline加原socket空闲timeout。finish单次结算、清chunks/timer，响应error/aborted/提前close/不完整end失败销毁两端。3xx不跟随且拒绝，防假success正文被旧调用方误接收。完整有界4xx/5xx仍返回status/json/raw，有界坏JSON和空正文保留json=null，调用者仍负业务成功判定；不借修传输改变409或PTY授权合同，不把请求失败说成主机未执行，不自动重放。
+
+新增测试使用真实回环HTTP、实际workspaceMatch/轮换/BridgeView消费者，只替换VS Code和缩短夹具deadline。覆盖实际/声明超限、临界8MiB、跨UTF8字节、截断、滴流、无头、302、409/500/空200/204/坏JSON；所有服务端response关闭、timer清除。轮换/停止未知结果各只POST一次、不刷新报成功；有界409拒绝仍正确。没有真的轮换密钥/停止隧道；不是Windows桌面或长期RSS/并发压测。
+
+自审核对第五批NDJSON与第六批布局未被修改，复用旧轮换/PTY/副本回归；发行副本由syncExtension生成。七项定向、完整86/86、真实Chromium（含上一批窄屏/两条axe规则）通过，docs251/28/110。自审增加多字节超限与HEAD零正文兼容：HEAD的Content-Length代表资源长度，不冒充待接收正文；未改变总deadline。精确CI待提交后核验。R4历史超时及CI审计失败未明根因、R5/PTY平台与R7/R8等继续，不据此认证全部原生代码或全仓逐句完成。
+
 ## 复盘
 
 - 上一轮只改文件所在目录，没有消除额外管理层次；应先核对已有规则，而不是先引入新文件类型。

@@ -9,6 +9,7 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/tests/nativeRequestJson.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
   ["webagent-core/agent-host/tests/nativeChatStream.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
   ['docs-site/anchors.js', 'docs-site/清单与构建详解.md'],
   ['webagent-core/agent-host/tests/documentationLinks.test.js', 'docs-site/清单与构建详解.md'],

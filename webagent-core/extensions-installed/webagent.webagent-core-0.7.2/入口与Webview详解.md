@@ -10,7 +10,7 @@
 |---|---|---|
 | dispatchPty(ev) | 事件→undefined | 只转发pty_request给全局ptyHost，noteStream再handleIncoming；未await返回Promise，不统一接收其异步拒绝 |
 | agentHostUrl() | 无→URL文本 | VS Code设置优先，然后环境变量，再48271；去尾部一个斜杠。manifest设置带默认值，所以通常设置读取本身已有默认 |
-| requestJson(method,url,body) | HTTP参数→Promise<{status,json,raw}> | 根据http/https选库，JSON正文带长度；data积累Buffer，end尝试JSON，坏JSON保留raw/json null。15秒timeout destroy，error reject；HTTP4xx/5xx本身不reject，没有通用响应大小上限 |
+| requestJson(method,url,body) | HTTP参数→Promise<{status,json,raw}> | 根据http/https选库，JSON正文带长度；响应最多8MiB，Content-Length声明超限提前拒绝（HEAD仅描述资源长度，不按正文拒绝），实际Buffer字节累计仍独立检查（含chunked）。15秒空闲timeout加总deadline；响应error/aborted/提前close/不完整end拒绝。finish单次结算、清deadline及chunks，失败销毁请求/响应；3xx拒绝且不跟随/重试。完整且有界响应保留{status,json,raw}，坏JSON/空正文仍json=null，4xx/5xx仍由调用方判断业务结果；响应上限不代表进程RSS上限 |
 | postNdjson(url,body,onEvent,signal) | Chat请求→Promise<void> | POST JSON+AbortSignal；仅2xx且application/x-ndjson；5分钟空闲timeout及总deadline。UTF8解码保留跨chunk字符与半行，单行1MiB/总响应16MiB上限；consume验证对象/type及message.text，回调异常向上传播。仅一个done且随后正常end才resolve；error、done后数据、坏帧、aborted/error/提前close均finish拒绝并销毁请求/响应，单次结算清deadline；不跟随重定向或重试 |
 | historyFromChatContext(context) | VS Code历史→role/content数组 | 每turn.prompt变user；本扩展result.metadata.webagentCompleted=false的失败turn不回送assistant，未标记的旧历史保持兼容；response.map识别value或value.value后join变assistant；最后12消息，不是12轮；不传引用/工具结构 |
 | revealWorkspaceFile(rel) | 相对路径→undefined | 首工作区joinPath，openTextDocument.then成功show预览/保留焦点，打开失败吞；此函数本身不是写入沙箱检查 |
@@ -148,4 +148,6 @@ BridgeView的control消息只接受chat/bridge，或含64字符revision与四个
 
 夹具细节：onConfirm在模态确认返回前注入草稿/磁盘/信任变化；getText/positionAt返回模拟文档文本和位置；Range的constructor保存起止位置。parse/toString只包装虚拟URI，getWorkspaceFolder/getConfiguration/get提供临时工作区和自动保存值；registerTextDocumentContentProvider保存provider，registerCommand保存真实回调。showErrorMessage收集错误，showInformationMessage不触发真实UI；dispose清理由测试finally统一执行。替身不负责模拟操作系统并发或完整编辑器行为。
 
-F54原生流回归：nativeChatStream用真实回环HTTP与VM中的真实postNdjson/ChatView/注册handler，替换VS Code及workspaceBinding；覆盖302/格式/坏帧/提前结束/断流/取消（含done回调时取消）、回调异常、单行/总预算、控制时钟的deadline、跨UTF8字节/无尾换行正例，以及失败不进助手历史。不是实际VS Code窗口验收；requestJson的响应预算等相邻审查项仍未在此修复。
+F54原生流回归：nativeChatStream用真实回环HTTP与VM中的真实postNdjson/ChatView/注册handler，替换VS Code及workspaceBinding；覆盖302/格式/坏帧/提前结束/断流/取消（含done回调时取消）、回调异常、单行/总预算、控制时钟的deadline、跨UTF8字节/无尾换行正例，以及失败不进助手历史。不是实际VS Code窗口验收；该第五批当时未修requestJson；第七批现补其响应预算/总时限/断流清理及重定向拒绝，实际IDE验收仍单列。
+
+F54第七批：requestJson失败不表示变更未发生。resetSecretCommand与Bridge停止消费方继续显示未确认、不自动重放；有界完整409仍进入既有“主机拒绝”分支。PTY的hello/poll及claimed/accepted仍由successfulResponse和各自JSON字段复查，本次不改变终端执行授权。请求正文预算、跨请求并发总量与真实Windows窗口/网络环境不由本次响应字节上限认证。

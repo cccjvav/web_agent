@@ -42,6 +42,8 @@ agentHostUrl优先读取VS Code设置`webagent.agentHostUrl`，其次扩展进�
 ## 验证
 `extensionCopy`验证规范源码与副本，`webviewRuntime`运行实际模板/消息fixture，`desktopExtension`、`ptyLifecycle`覆盖接口与任务边界。尚不能据此声称真实VS Code多窗口、shell integration、Windows审批和取消全部验收。
 
+F54第七批：requestJson最多接收8MiB响应，15秒总deadline与空闲timeout；重定向/超限/断流明确失败且清理，不自动重试。完整4xx/5xx及有界坏JSON仍交由既有消费者判断，不混同HTTP完成与业务成功。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -51,7 +53,7 @@ agentHostUrl优先读取VS Code设置`webagent.agentHostUrl`，其次扩展进�
 |---|---|
 | [dangerousPolicy.js](dangerousPolicy.js) | 31 个函数/类节点 |
 | [editorReview.js](editorReview.js) | 10 个函数/类节点 |
-| [extension.js](extension.js) | 58 个函数/类节点 |
+| [extension.js](extension.js) | 64 个函数/类节点 |
 | [modeFromChatRequest.js](modeFromChatRequest.js) | 1 个函数/类节点 |
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
 | [ptyHost.js](ptyHost.js) | 59 个函数/类节点 |

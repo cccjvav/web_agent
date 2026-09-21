@@ -25,34 +25,58 @@ function requestJson(method, url, body) {
     const u = new URL(url);
     const lib = u.protocol === 'https:' ? https : http;
     const payload = body === undefined ? null : JSON.stringify(body);
-    const req = lib.request(
-      {
-        hostname: u.hostname,
-        port: u.port,
-        path: u.pathname + u.search,
-        method,
-        timeout: 15000,
-        headers: payload
-          ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
-          : {}
-      },
-      (res) => {
-        const chunks = [];
-        res.on('data', (c) => chunks.push(c));
-        res.on('end', () => {
-          const raw = Buffer.concat(chunks).toString('utf8');
-          try {
-            resolve({ status: res.statusCode, json: raw ? JSON.parse(raw) : null, raw });
-          } catch {
-            resolve({ status: res.statusCode, json: null, raw });
-          }
-        });
+    const limit = 8 * 1024 * 1024;
+    let settled = false, response, deadline, bytes = 0;
+    const chunks = [];
+    const finish = (error, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(deadline);
+      chunks.length = 0;
+      if (error) {
+        reject(error);
+        response?.destroy();
+        req.destroy();
+      } else resolve(value);
+    };
+    const req = lib.request({
+      hostname: u.hostname, port: u.port, path: u.pathname + u.search,
+      method, timeout: 15000,
+      headers: payload ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) } : {}
+    }, (res) => {
+      response = res;
+      res.on('error', error => finish(error));
+      res.on('aborted', () => finish(new Error('本机API响应中断，结果未确认；没有自动重试')));
+      res.on('close', () => { if (!settled) finish(new Error('本机API响应提前关闭，结果未确认；没有自动重试')); });
+      if (settled) { res.destroy(); return; }
+      if (res.statusCode >= 300 && res.statusCode < 400) {
+        finish(new Error('本机API返回重定向，结果未确认；没有自动跳转或重试')); return;
       }
-    );
-    req.on('timeout', () => req.destroy(new Error('本机API请求超时')));
-    req.on('error', reject);
-    if (payload) req.write(payload);
-    req.end();
+      if (String(method).toUpperCase() !== 'HEAD' && Number(res.headers['content-length']) > limit) {
+        finish(new Error('本机API响应超过8MiB上限，结果未确认；没有自动重试')); return;
+      }
+      res.on('data', chunk => {
+        if (settled) return;
+        bytes += chunk.length;
+        if (bytes > limit) {
+          finish(new Error('本机API响应超过8MiB上限，结果未确认；没有自动重试')); return;
+        }
+        chunks.push(chunk);
+      });
+      res.on('end', () => {
+        if (settled) return;
+        if (!res.complete) { finish(new Error('本机API响应不完整，结果未确认；没有自动重试')); return; }
+        const raw = Buffer.concat(chunks, bytes).toString('utf8');
+        let json = null;
+        try { json = raw ? JSON.parse(raw) : null; } catch { /* Keep bounded raw for existing callers. */ }
+        // HTTP/JSON business success remains the caller's responsibility, including 409.
+        finish(null, { status: res.statusCode, json, raw });
+      });
+    });
+    deadline = setTimeout(() => finish(new Error('本机API请求超过15秒，结果未确认；没有自动重试')), 15000);
+    req.on('timeout', () => finish(new Error('本机API请求超时，结果未确认；没有自动重试')));
+    req.on('error', error => finish(error));
+    req.end(payload);
   });
 }
 

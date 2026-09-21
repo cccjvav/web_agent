@@ -115,6 +115,8 @@ F54交叉复审：mcpProtocol对初始化指引与apply_patch工具目录增加h
 
 F54第六批：workbench.browser的narrowWorkspaceBrowser验证320/390/640工作面、输入命中/草稿、有效ARIA子角色、长名称/dirty关闭/焦点及768/1024/1440桌面保留；AXE_PATH可附加两条真实axe角色规则。
 
+nativeRequestJson.test.js：真实HTTP+VM原生函数验证响应预算/总时限/清理，密钥轮换与停止结果未知时不重放；正例/409/500/有界坏JSON合同保持。详见工作区与命令安全测试详解。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -163,6 +165,7 @@ F54第六批：workbench.browser的narrowWorkspaceBrowser验证320/390/640工作
 | [modelLifecycle.test.js](modelLifecycle.test.js) | 53 个函数/类节点 |
 | [monacoLoading.test.js](monacoLoading.test.js) | 12 个函数/类节点 |
 | [nativeChatStream.test.js](nativeChatStream.test.js) | 27 个函数/类节点 |
+| [nativeRequestJson.test.js](nativeRequestJson.test.js) | 28 个函数/类节点 |
 | [nativeRotationCommands.test.js](nativeRotationCommands.test.js) | 54 个函数/类节点 |
 | [oauth.test.js](oauth.test.js) | 15 个函数/类节点 |
 | [oauthClientAuth.test.js](oauthClientAuth.test.js) | 29 个函数/类节点 |
