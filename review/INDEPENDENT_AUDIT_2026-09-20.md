@@ -331,3 +331,41 @@ axe-core4.13.0在这9个状态均报告同一项`aria-required-children`：`#tab
 ### 继续开放
 
 健康200本身尚不认证具体实例/工作区；外层installer的ready/appWindow后台归属与失败收尾、同步ensure/runNpm准备阶段的期限/取消是下一组待验证线索，而非本批已复现结论。R4历史Windows超时/辅助原因、R5真正进程树/桌面/跨用户、R7全仓逐句、R8用户本机MCP与IDE仍开放，探针专项继续原分工暂停；计划仍只维护在阶段10。
+
+## 9. F57 App窗口启动的身份绑定与浏览器失败路径（2026-09-21）
+
+沿第56组待验证线索，外层installer/launch的ready与appWindow三项正式负例先红：无关HTML 200被当ready、已有主机属于另一工作区仍开窗口、浏览器spawn失败报成功。真实HTTP与受控VM红测后拆分实现为installer/appWindow.js，代理保留在launch.js，不自动下载/运行code-server。
+
+### 已修复发现
+
+| 编号 | 原始行为与证据 | 最小修复及边界 |
+|---|---|---|
+| F57-01 / P1 | ready只看200，不区分无关HTML服务 | probeJson要求application/json、固定路径、64KiB/UTF-8 fatal、拒重定向；validHealth校验alive/expired及lastHeartbeat；无关服务视为occupied/false |
+| F57-02 / P1 | 已有服务属于另一工作区仍打开浏览器 | inspectPair并发校验editor与host，host需hostIdentity校验UUID/version/mcpPort/workspaceRoot/startedAt；复用前再pin确认实例未变；不匹配拒绝且不终止另一服务 |
+| F57-03 / P1 | 浏览器spawn失败报成功 | openBrowser监听spawn/error/abort，单次结算并unref；失败抛错不重放；shell:false、detached、stdio ignore |
+
+三项均先红后绿，真实回环HTTP服务验证body stall与取消释放socket。测试新增waitClosed轮询socket close，避免setImmediate假通过；凭据从不发到探测端点。
+
+### 外层App启动的额外加固
+
+- appWindow拆出独立模块，launch.js仅代理appOrigin/ready/appWindow，保持无依赖、只读产品。
+- 120秒总期限独立timer与信号监听，支持SIGINT/SIGTERM取消；预先取消零网络。
+- 冷启动：home递归、startup.log 0600追加、spawn run-code-oss workspace带WEBAGENT_APP_BOOTSTRAP=1与ipc，detached；supervise监听error/exit/disconnect及严格prepared/release消息；循环等prepared后inspect；再pin确认；URL显式folder参数；release需先请求再确认ack，移交后disconnect/unref。
+- run-code-oss受控分支：需私有IPC才允许WEBAGENT_APP_BOOTSTRAP=1，否则抛错；收到stop即停止，release需已prepared；spawn后发prepared；清理复用F56直接子进程观察，不按名称/端口/PID补杀，不保证全部后代退出。
+- 浏览器打开不证明工作流通过，关窗口不代表后台退出；未确认清理非零且明确提示。
+
+### 本地验证与复审
+
+新增appWindowLifecycle.test.js 28个命名场景，覆盖无关服务、错工作区、浏览器失败、复用pin、实例变化、版本/端口/路径/形状/部分缺失、非法端口/URL零网络、runner spawn错误/同步抛错/非法prepared/无prepared/浏览器失败/release回调挂起/ack缺失、冷启动等prepared后pin、停止取消、早期退出快速失败、清理未确认有界、真实HTTP大正文/坏UTF-8/形状/重定向及body stall/取消释放socket、真实Node IPC准备/释放；未执行真实code-server/窗口、跨用户/PID复用或桌面点击验收。
+
+- 完整主机套件 **96/96**；Chromium（含F55跨源/坏流与16+12布局/axe）通过；生产audit **0漏洞**，均独立进程退出0。
+- 文档 **276源码/28目录/111排除、updated=0**；新增测试已登记主解释，185指纹同步。
+- 精选195份JS lint仍仅原有4处cleanup finally提示，无新增所选规则报警。
+- 自审核对启动链：外层代理、内层探测/身份、IPC、清理及浏览器参数；未改核心权限/文件工具/主机API、经典UI、原生扩展、冻结原型或暂停探针运行源码。
+- 对应说明原地替换旧ready/appWindow描述，并补appWindowLifecycle测试说明；只有9份受影响说明转局部，正式201项仍只有8份已逐句，不自授整篇或全仓通过。
+
+本批精确提交与CI见阶段10第57组，不使用F56绿色代签。原始本地日志在仓库外，跨沙箱不保证可得；可携带证据为正式断言、本文范围与对应提交CI。
+
+### 继续开放
+
+同步ensure/runNpm准备阶段的期限/取消及installer外层对实例/工作区的再确认是下一组待验证线索，而非本批已复现结论；R4历史Windows超时/辅助原因、R5真正进程树/桌面/跨用户、R7全仓逐句、R8用户本机MCP与IDE仍开放，探针专项继续原分工暂停；计划仍只维护在阶段10。

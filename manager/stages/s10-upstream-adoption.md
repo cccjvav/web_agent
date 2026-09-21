@@ -30,11 +30,11 @@
 
 这份交接随施工维护，用户可随时要求切换助手，不要求对方读取全部聊天。**“可交接”不是全项目完成，也不是所有外部证据仍可下载。**
 
-1. **定位与保护工作区**：先查git status --short、git log -1、git branch --show-current。当前会话绑定arena/01a0c4b1-web-agent；已从用户更正的arena/01a0bfa9-web-agent快进接手67f4f966720c2d6f657f53e3dc3b02cbf3860b98，[CI35624122815](https://github.com/cccjvav/web_agent/actions/runs/35624122815)九项与本地94/94为进入基线。F55证据提交036d65b / CI35632714383已在用户重连后补核实九项；F56新修改看第56组，不覆盖新增改动或机械切换历史分支。
+1. **定位与保护工作区**：先查git status --short、git log -1、git branch --show-current。当前会话绑定arena/01a0c4b1-web-agent；已从用户更正的arena/01a0bfa9-web-agent快进接手67f4f966720c2d6f657f53e3dc3b02cbf3860b98，[CI35624122815](https://github.com/cccjvav/web_agent/actions/runs/35624122815)九项与本地94/94为进入基线。F55证据提交036d65b / CI35632714383、F56源码a68a77e / CI35641420076及证据4649250 / CI35642269647均已逐job核实九项；F57新修改看第57组，不覆盖新增改动或机械切换历史分支。
 2. **防恢复误判**：前序会话环境曾出现HEAD/索引回到50c03be而工作文件保留最新交付；已fetch当前绑定远端、逐blob核对后只mixed恢复dcc321b指针/索引，不写工作树。若再出现，不可盲目reset --hard/clean或把整树当新修改提交；先核对远端SHA、文件差异及用户改动，不确定就停下确认。暂停探针的哈希比对不是专项审查，不能覆盖其文件。
 3. **验证不能借用**：用gh run list按当前绑定分支列出headSha/status/conclusion/url，选择与git rev-parse HEAD一致的run，再gh run view核对全部jobs。不要用旧绿灯代签新HEAD，也不要仅看run总标题。安装/Node/测试入口见下；变更尚在施工或CI未结束就标明未完成。
 4. **证据可得性**：[仓库内CI摘要](../../review/evidence/R4-handoff-ci-2026-09-21.json)是本轮重新取得的脱敏API事实。此前沙箱外ZIP本轮未见，绝对路径不等于可移交附件；完整失败日志此前TLS EOF，不能补造。原run/job/Checks能取就复取，不能取就保留“不可得”；不上传用户密钥/环境/命令正文来补证据。
-5. **当前施工与下一步**：F56已用正式红测修run-code-oss静默HTTP无总期限、预先取消无效、认证配置失败遗留已创建进程；现统一单次停止、有界观察本轮直接子进程，停止后不启动迟到editor。先核对第56组的本地/精确CI证据。继续R2/R3的下一线索为installer/launch的ready/appWindow对具体实例/工作区的确认及后台启动失败归属，和同步ensure/runNpm准备阶段的期限/取消；这些仍是待验证线索，200/healthz不能代签身份，不据此重写权限/恢复架构。R4历史Windows原因仍开放，不加期限/删断言/重跑追绿；R5真实后代/窗口、R7逐句和R8用户验收继续。
+5. **当前施工与下一步**：F57已拆分appWindow.js并修复就绪把无关200当成功、错工作区仍开窗口、浏览器失败报成功及后台清理未确认；新增28+28个分层场景，本地96/96、Chromium与audit 0均退出0。先核对第57组的本地/精确CI证据。继续R2/R3的下一线索为同步ensure/runNpm准备阶段的期限/取消及installer外层对实例/工作区的再确认；200/healthz不能代签身份，不据此重写权限/恢复架构。R4历史Windows原因仍开放，不加期限/删断言/重跑追绿；R5真实后代/窗口、R7逐句和R8用户验收继续。
 6. **已交付与仍待**：R5已到保护收据+稳定句柄交互回收+ACL负例+诊断+Windows开始菜单入口；面板内按钮、桌面TTY/重复点击/关窗/真实隧道、跨用户与实际PID复用未验。R4历史Windows22、befee7d辅助失败及a22428a Windows20 echo超时根因都开放，不因后来绿灯注销。R6/R9仍含取舍，R7文档、R8用户本机MCP/桌面未完成。
 7. **授权不变**：三个探针原分工暂停，不能因通用CI报Probe失败自行接手；ShunCode只参考不执行/不整体替换MCP；保留文件hash/检查点/审批、未知不重放、活宿主保护，不以同用户DPAPI当应用签名。用户Windows桌面VSCode集成CMD、已有Conda/系统Node，不新建环境；本会话没有用户本机MCP权限。
 
@@ -1037,6 +1037,17 @@ stopChild区分killed与已退出；保留对象仅清本轮直接子进程，9�
 新增codeServerLifecycle的28个命名场景，组合真实HTTP/Node和可控时钟/进程：开放503/200响应处置、请求失败重试、迟到回包、取消/期限、初始化参数兼容、agent/editor各退出码、mkdir/spawn失败、安装器成功/失败/取消、重复停止、killed但尚未退出、unknown有界与无关同名进程存活；CLI尾表达式退出码另测。主说明逐函数更新，并原地纠正测试说明“经典Shell默认mkdir”“固定0.7.0副本/全部只读”等过期表述，未改复制/安装架构。
 
 本地首轮完整95/95、既有扩充Chromium（含F55跨源/坏流与16+12布局/axe状态）、生产audit 0漏洞均以独立进程退出0确认；文档274文件/28目录/111排除且updated=0，精选195份JS lint仅原四个清理finally提示，无新增所选规则报警。提交前再次确认95/95、Chromium/audit退出0、文档零漂移及185指纹。代码`a68a77e6fa82e509b3dc8a09ac27c38a402eadfb`已推当前固定分支，[CI35641420076](https://github.com/cccjvav/web_agent/actions/runs/35641420076)按该SHA逐一核实9个job completed/success：Ubuntu Node18/20/22/24、Windows Node20/22/24（含原重复取消/stdio）、Windows安装器与真实Chromium。查询曾因401中断，用户再次重连后已补核实；这是查询连接问题，不是CI测试失败。后续证据文档提交仍须核对其自身HEAD，不借源码绿色代签。UI、核心权限/工具、原生扩展、暂停探针和冻结原型运行源码零diff；不是全仓审完，不关闭R4历史原因、R5实机后代/窗口、R7逐句或R8用户MCP。
+
+### 第57组：App窗口启动的身份绑定与浏览器失败路径（2026-09-21）
+
+沿第56组待验证线索，外层installer/launch的ready与appWindow三项先红：无关HTML返回200被当ready、已有主机属于另一工作区仍开窗口、浏览器spawn失败报成功。真实HTTP与受控VM红测后拆分实现为installer/appWindow.js，代理保留在launch.js，不自动下载/运行code-server。
+
+- ready/probeJson：固定只允许http://127.0.0.1的/healthz与/api/diagnostics，拒绝用户名/查询/hash/非loopback；状态分ok/occupied/absent/unknown；限制64KiB、UTF-8 fatal、JSON；任何阶段可abort/timeout并销毁req/res释放socket，不跟随重定向，不发凭据；非200/坏类型/超预算/坏JSON均视为occupied，不是实例认证。
+- 复用分支：现有服务需同时editor alive且host的hostInstanceId/version/mcpPort/workspaceRoot匹配；错版本/端口/实例/时间/路径/形状/部分缺失均拒绝且不启动/终止另一工作区服务；非法/相同端口与非固定探测URL零网络。
+- 冷启动：home/workspace已由外层解析，额外校验版本语义与端口不等；home递归创建、startup.log以0600追加打开，spawn run-code-oss workspace，env加WEBAGENT_APP_BOOTSTRAP=1，stdio含ipc，detached；supervise监听error/exit/disconnect及严格prepared/release消息；循环等prepared后inspectPair，再pin确认identity未变；URL显式folder参数，openBrowser用Edge/Chrome或rundll32，detached、shell:false，失败不重放；release需先请求再确认ack，移交后disconnect/unref；停止/失败统一stopOwned，仅处理保留对象，9秒TERM后必要时KILL再观察，最多12秒，未确认非零且明确提示，不按名称/端口/PID补杀。
+- run-code-oss受控：WEBAGENT_APP_BOOTSTRAP=1且存在IPC才允许受控分支，否则抛错；收到webagent-app-stop即停止，release需已prepared且未取消；spawn后发prepared，失败/断开通知外层；清理复用F56直接子进程观察，不认证全部后代。
+
+新增appWindowLifecycle.test.js的28个命名场景：真实回环HTTP/Node与受控时钟/进程，覆盖无关服务、错工作区、浏览器失败、复用pin、实例变化、版本/端口/路径/形状/部分缺失、非法端口/URL零网络、runner spawn错误/同步抛错/非法prepared/无prepared/浏览器失败/release回调挂起/ack缺失、冷启动等prepared后pin、停止取消、早期退出快速失败、清理未确认有界、真实HTTP大正文/坏UTF-8/形状/重定向及body stall/取消释放socket、真实Node IPC准备/释放；未执行真实code-server/窗口、跨用户/PID复用或桌面点击验收。本地96/96、Chromium与audit 0均以独立进程退出0确认；文档276/28/111且updated=0，185指纹已同步。提交/精确CI待记录。UI、核心权限/工具、原生扩展、暂停探针和冻结原型运行源码零diff；不是全仓审完，不关闭R4/R5/R7/R8。
 
 ## 复盘
 

@@ -30,6 +30,7 @@ try {
   assert.ok(!manifest.files.some(f => f.path === '双向连接核对使用指南.md' || f.path.startsWith('review/archive/')));
   assert.deepStrictEqual(manifest.files.filter(f => f.path.startsWith('arena-model-probe/')).map(f => f.path), ['arena-model-probe/webagent-connection.user.js']);
   assert.ok(manifest.files.some(f => f.path === 'installer/launch.js'));
+  assert.ok(manifest.files.some(f => f.path === 'installer/appWindow.js')), 'app bootstrap helper ships with the launcher';
   assert.ok(manifest.files.some(f => f.path === 'installer/tunnel-recovery.ps1'));
   assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/src/utils/fileCheckpoints.js'));
   for (const file of ['stdioBridge.cs', 'stdioBridge.ps1', 'stdioSupervisor.js', 'stdioTransport.js', 'stdioLaunch.js', 'publicHttps.js']) assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/src/mcp/' + file));
@@ -92,7 +93,7 @@ try {
   for (const port of ['0', '65536', '-1', '3000/path', 'abc']) assert.throws(() => appOrigin({ CODE_SERVER_PORT: port }), /CODE_SERVER_PORT/);
   let status = 200;
   const server = require('http').createServer((req, res) => {
-    assert.strictEqual(req.url, '/healthz'); res.writeHead(status).end('ok');
+    assert.strictEqual(req.url, '/healthz'); res.writeHead(status, { 'Content-Type': 'application/json' }).end(JSON.stringify({status:'expired',lastHeartbeat:0}));
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   try {

@@ -5,9 +5,9 @@
 接手先读本索引和[项目约定](agents.md)，再按需读[阶段10的工作包与交接](stages/s10-upstream-adoption.md#当前工作包与交接约束)。不另建路线图或根交接文件。
 
 ## 当前状态
-- **本轮续作启动可靠性（F56）。** 真实HTTP/Node红测后修可选code-server编排的健康总期限/取消、配置与启动失败收尾、同伴退出和直接子进程观察；本地95/95、扩充Chromium、audit 0。源码`a68a77e6fa82e509b3dc8a09ac27c38a402eadfb` / [CI35641420076](https://github.com/cccjvav/web_agent/actions/runs/35641420076)九job已核实通过；不是全部进程树或全仓审完，后续记录提交及下一项在阶段10第56组。
+- **本轮续作App窗口启动可靠性（F57）。** 拆分外层启动器为appWindow.js并修复就绪误判、错工作区复用、浏览器失败及后台清理未确认；本地96/96、Chromium通过、audit 0。不是全部进程树或全仓审完，精确提交/CI与下一项在阶段10第57组。
 - **接手基线：** `67f4f966720c2d6f657f53e3dc3b02cbf3860b98`，[CI35624122815](https://github.com/cccjvav/web_agent/actions/runs/35624122815)九项已逐job核实，本地94/94。F55新修改的验证与精确提交CI见阶段10，不借此基线绿灯代签。
-- **F55交付基线已补核实：** 用户重连后，证据提交`036d65b735805f13381f3ab1b0a5408d999c872d`的[CI35632714383](https://github.com/cccjvav/web_agent/actions/runs/35632714383)九job逐项success；源码33fc9ed及其CI也已通过。不能借此代签F56或用户桌面。
+- **F55/F56交付基线已补核实：** 用户重连后，证据提交`036d65b735805f13381f3ab1b0a5408d999c872d`的[CI35632714383](https://github.com/cccjvav/web_agent/actions/runs/35632714383)九job及源码`a68a77e6fa82e509b3dc8a09ac27c38a402eadfb`的[CI35641420076](https://github.com/cccjvav/web_agent/actions/runs/35641420076)九job、证据`464925030b85c0725a7c98851b8ca4be1ae4fabf`的[CI35642269647](https://github.com/cccjvav/web_agent/actions/runs/35642269647)九job均逐项success；不能借此代签F57或用户桌面。
 - **接手顺序：** 本页→[项目约定](agents.md)→[即时接手检查](stages/s10-upstream-adoption.md#即时接手检查2026-09-21)。先核对分支/HEAD/未提交文件与在跑任务；外部沙箱ZIP不保证可移交，[仓库内CI摘要](../review/evidence/R4-handoff-ci-2026-09-21.json)明确哪些事实可得、哪些原日志不可得。
 - **当前会话固定分支** `arena/01a0c4b1-web-agent`，已从更正来源`arena/01a0bfa9-web-agent`快进到67f4f96再施工，没有切分支/reset。此前01a0b053同步及ref恢复属于历史；不据旧记录覆盖工作文件。
 - **阶段10进行中，核心0.7.2，不是只剩实机。** R2/R3其余消费链/权限合同、R7逐句文档、R8本机验收仍开放；R6/R9候选按收益和授权取舍。全部优先级和完成条件只维护在[工作包表](stages/s10-upstream-adoption.md#当前工作包与交接约束)。持久登录/确切后端身份任务仍延期。

@@ -43,5 +43,5 @@ codeServerAuth、codeServerNotRunnable、skipWorkbench、desktopExtension、exte
 | [codeServerAuth.js](codeServerAuth.js) | 2 个函数/类节点 |
 | [ensure-code-server.js](ensure-code-server.js) | 9 个函数/类节点 |
 | [install-desktop-extension.js](install-desktop-extension.js) | 7 个函数/类节点 |
-| [run-code-oss.js](run-code-oss.js) | 32 个函数/类节点 |
+| [run-code-oss.js](run-code-oss.js) | 37 个函数/类节点 |
 <!-- docs-inventory:end -->

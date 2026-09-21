@@ -250,6 +250,67 @@
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
+## installer/appWindow.js
+
+[目录说明](../installer/README.md) · SHA-256 `76a36fedd29c1e75d95b8e11ae5e5e7f41d3454ee6ca6aa268b1ca9c7ac5cc90`
+
+- `portValue` — FunctionDeclaration，[L14–L18](../installer/appWindow.js#L14-L18)
+- `appOrigin` — FunctionDeclaration，[L19–L21](../installer/appWindow.js#L19-L21)
+- `aborted` — FunctionDeclaration，[L22–L22](../installer/appWindow.js#L22-L22)
+- `checkSignal` — FunctionDeclaration，[L23–L23](../installer/appWindow.js#L23-L23)
+- `probeJson` — FunctionDeclaration，[L25–L74](../installer/appWindow.js#L25-L74)
+- `probeJson/anonymous@33:21` — ArrowFunctionExpression，[L33–L73](../installer/appWindow.js#L33-L73)
+- `probeJson/anonymous@33:21/finish` — ArrowFunctionExpression，[L37–L42](../installer/appWindow.js#L37-L42)
+- `probeJson/anonymous@33:21/onAbort` — ArrowFunctionExpression，[L43–L43](../installer/appWindow.js#L43-L43)
+- `probeJson/anonymous@33:21/anonymous@44:29` — ArrowFunctionExpression，[L44–L44](../installer/appWindow.js#L44-L44)
+- `probeJson/anonymous@33:21/anonymous@48:88` — ArrowFunctionExpression，[L48–L70](../installer/appWindow.js#L48-L70)
+- `probeJson/anonymous@33:21/anonymous@48:88/anonymous@50:24` — ArrowFunctionExpression，[L50–L50](../installer/appWindow.js#L50-L50)
+- `probeJson/anonymous@33:21/anonymous@48:88/anonymous@55:26` — ArrowFunctionExpression，[L55–L55](../installer/appWindow.js#L55-L55)
+- `probeJson/anonymous@33:21/anonymous@48:88/anonymous@56:23` — ArrowFunctionExpression，[L56–L61](../installer/appWindow.js#L56-L61)
+- `probeJson/anonymous@33:21/anonymous@48:88/anonymous@62:22` — ArrowFunctionExpression，[L62–L69](../installer/appWindow.js#L62-L69)
+- `probeJson/anonymous@33:21/anonymous@71:22` — ArrowFunctionExpression，[L71–L71](../installer/appWindow.js#L71-L71)
+- `validHealth` — FunctionDeclaration，[L75–L79](../installer/appWindow.js#L75-L79)
+- `ready` — FunctionDeclaration，[L80–L83](../installer/appWindow.js#L80-L83)
+- `normalizedWorkspace` — FunctionDeclaration，[L84–L89](../installer/appWindow.js#L84-L89)
+- `hostIdentity` — FunctionDeclaration，[L90–L100](../installer/appWindow.js#L90-L100)
+- `inspectPair` — FunctionDeclaration，[L101–L111](../installer/appWindow.js#L101-L111)
+- `delay` — FunctionDeclaration，[L112–L121](../installer/appWindow.js#L112-L121)
+- `delay/anonymous@114:21` — ArrowFunctionExpression，[L114–L120](../installer/appWindow.js#L114-L120)
+- `delay/anonymous@114:21/finish` — ArrowFunctionExpression，[L115–L115](../installer/appWindow.js#L115-L115)
+- `delay/anonymous@114:21/onAbort` — ArrowFunctionExpression，[L116–L116](../installer/appWindow.js#L116-L116)
+- `delay/anonymous@114:21/anonymous@117:29` — ArrowFunctionExpression，[L117–L117](../installer/appWindow.js#L117-L117)
+- `isAppControl` — FunctionDeclaration，[L122–L125](../installer/appWindow.js#L122-L125)
+- `supervise` — FunctionDeclaration，[L126–L142](../installer/appWindow.js#L126-L142)
+- `supervise/fail` — ArrowFunctionExpression，[L128–L128](../installer/appWindow.js#L128-L128)
+- `supervise/anonymous@129:20` — ArrowFunctionExpression，[L129–L129](../installer/appWindow.js#L129-L129)
+- `supervise/anonymous@130:21` — ArrowFunctionExpression，[L130–L130](../installer/appWindow.js#L130-L130)
+- `supervise/anonymous@131:25` — ArrowFunctionExpression，[L131–L131](../installer/appWindow.js#L131-L131)
+- `supervise/anonymous@132:22` — ArrowFunctionExpression，[L132–L140](../installer/appWindow.js#L132-L140)
+- `sendControl` — FunctionDeclaration，[L143–L159](../installer/appWindow.js#L143-L159)
+- `sendControl/anonymous@146:21` — ArrowFunctionExpression，[L146–L158](../installer/appWindow.js#L146-L158)
+- `sendControl/anonymous@146:21/finish` — ArrowFunctionExpression，[L148–L152](../installer/appWindow.js#L148-L152)
+- `sendControl/anonymous@146:21/onAbort` — ArrowFunctionExpression，[L153–L153](../installer/appWindow.js#L153-L153)
+- `sendControl/anonymous@146:21/anonymous@156:37` — ArrowFunctionExpression，[L156–L156](../installer/appWindow.js#L156-L156)
+- `stopOwned` — FunctionDeclaration，[L160–L179](../installer/appWindow.js#L160-L179)
+- `stopOwned/detach` — ArrowFunctionExpression，[L163–L166](../installer/appWindow.js#L163-L166)
+- `stopOwned/anonymous@169:37` — ArrowFunctionExpression，[L169–L176](../installer/appWindow.js#L169-L176)
+- `stopOwned/anonymous@169:37/finish` — ArrowFunctionExpression，[L170–L170](../installer/appWindow.js#L170-L170)
+- `stopOwned/anonymous@169:37/onExit` — ArrowFunctionExpression，[L171–L171](../installer/appWindow.js#L171-L171)
+- `stopOwned/anonymous@169:37/anonymous@172:29` — ArrowFunctionExpression，[L172–L172](../installer/appWindow.js#L172-L172)
+- `stopOwned/anonymous@169:37/anonymous@174:52` — ArrowFunctionExpression，[L174–L174](../installer/appWindow.js#L174-L174)
+- `openBrowser` — FunctionDeclaration，[L180–L206](../installer/appWindow.js#L180-L206)
+- `openBrowser/anonymous@188:34` — ArrowFunctionExpression，[L188–L188](../installer/appWindow.js#L188-L188)
+- `openBrowser/anonymous@189:21` — ArrowFunctionExpression，[L189–L205](../installer/appWindow.js#L189-L205)
+- `openBrowser/anonymous@189:21/onAbort` — ArrowFunctionExpression，[L191–L191](../installer/appWindow.js#L191-L191)
+- `openBrowser/anonymous@189:21/finish` — ArrowFunctionExpression，[L192–L196](../installer/appWindow.js#L192-L196)
+- `openBrowser/anonymous@189:21/anonymous@200:26` — ArrowFunctionExpression，[L200–L200](../installer/appWindow.js#L200-L200)
+- `openBrowser/anonymous@189:21/anonymous@201:24` — ArrowFunctionExpression，[L201–L201](../installer/appWindow.js#L201-L201)
+- `appWindow` — FunctionDeclaration，[L207–L267](../installer/appWindow.js#L207-L267)
+- `appWindow/anonymous@215:27` — ArrowFunctionExpression，[L215–L215](../installer/appWindow.js#L215-L215)
+- `appWindow/onSignal` — ArrowFunctionExpression，[L216–L216](../installer/appWindow.js#L216-L216)
+- `appWindow/check` — ArrowFunctionExpression，[L217–L217](../installer/appWindow.js#L217-L217)
+- `appWindow/budget` — ArrowFunctionExpression，[L218–L218](../installer/appWindow.js#L218-L218)
+
 ## installer/build-installer.cmd
 
 [目录说明](../installer/README.md) · SHA-256 `d27c72b0afd296f6f6b4a055038787d12bfd7108d03f166d7fe267320931470e`
@@ -258,37 +319,29 @@
 
 ## installer/launch.js
 
-[目录说明](../installer/README.md) · SHA-256 `0732ed6b7139ba9d05e93967511e73b2179b6ba69eb4ac38649ae80cbe1403ab`
+[目录说明](../installer/README.md) · SHA-256 `96f7c3295fe2195da16663240bc7ad0fb6132d22e91fae21061ae5d6d5f35e2a`
 
-- `hash` — ArrowFunctionExpression，[L10–L10](../installer/launch.js#L10-L10)
-- `userHome` — FunctionDeclaration，[L11–L13](../installer/launch.js#L11-L13)
-- `safeRelative` — FunctionDeclaration，[L14–L18](../installer/launch.js#L14-L18)
-- `safeRelative/anonymous@16:57` — ArrowFunctionExpression，[L16–L16](../installer/launch.js#L16-L16)
-- `prepareRuntime` — FunctionDeclaration，[L19–L48](../installer/launch.js#L19-L48)
-- `resolveWorkspace` — FunctionDeclaration，[L49–L59](../installer/launch.js#L49-L59)
-- `ensureDependencies` — FunctionDeclaration，[L60–L67](../installer/launch.js#L60-L67)
-- `appOrigin` — FunctionDeclaration，[L68–L72](../installer/launch.js#L68-L72)
-- `ready` — FunctionDeclaration，[L73–L80](../installer/launch.js#L73-L80)
-- `ready/anonymous@74:21` — ArrowFunctionExpression，[L74–L79](../installer/launch.js#L74-L79)
-- `ready/anonymous@74:21/anonymous@75:65` — ArrowFunctionExpression，[L75–L77](../installer/launch.js#L75-L77)
-- `ready/anonymous@74:21/anonymous@78:22` — ArrowFunctionExpression，[L78–L78](../installer/launch.js#L78-L78)
-- `ready/anonymous@74:21/anonymous@78:60` — ArrowFunctionExpression，[L78–L78](../installer/launch.js#L78-L78)
-- `appWindow` — FunctionDeclaration，[L81–L107](../installer/launch.js#L81-L107)
-- `appWindow/anonymous@89:24` — ArrowFunctionExpression，[L89–L89](../installer/launch.js#L89-L89)
-- `appWindow/anonymous@94:24` — ArrowFunctionExpression，[L94–L94](../installer/launch.js#L94-L94)
-- `appWindow/anonymous@103:34` — ArrowFunctionExpression，[L103–L103](../installer/launch.js#L103-L103)
-- `appWindow/anonymous@106:20` — ArrowFunctionExpression，[L106–L106](../installer/launch.js#L106-L106)
-- `launchRecovery` — FunctionDeclaration，[L108–L120](../installer/launch.js#L108-L120)
-- `launchRecovery/anonymous@118:20` — ArrowFunctionExpression，[L118–L118](../installer/launch.js#L118-L118)
-- `launchRecovery/anonymous@119:19` — ArrowFunctionExpression，[L119–L119](../installer/launch.js#L119-L119)
-- `main` — FunctionDeclaration，[L121–L142](../installer/launch.js#L121-L142)
-- `main/anonymous@140:20` — ArrowFunctionExpression，[L140–L140](../installer/launch.js#L140-L140)
-- `main/anonymous@141:19` — ArrowFunctionExpression，[L141–L141](../installer/launch.js#L141-L141)
-- `anonymous@143:42` — ArrowFunctionExpression，[L143–L143](../installer/launch.js#L143-L143)
+- `hash` — ArrowFunctionExpression，[L9–L9](../installer/launch.js#L9-L9)
+- `userHome` — FunctionDeclaration，[L10–L12](../installer/launch.js#L10-L12)
+- `safeRelative` — FunctionDeclaration，[L13–L17](../installer/launch.js#L13-L17)
+- `safeRelative/anonymous@15:57` — ArrowFunctionExpression，[L15–L15](../installer/launch.js#L15-L15)
+- `prepareRuntime` — FunctionDeclaration，[L18–L47](../installer/launch.js#L18-L47)
+- `resolveWorkspace` — FunctionDeclaration，[L48–L58](../installer/launch.js#L48-L58)
+- `ensureDependencies` — FunctionDeclaration，[L59–L66](../installer/launch.js#L59-L66)
+- `appOrigin` — FunctionDeclaration，[L68–L68](../installer/launch.js#L68-L68)
+- `ready` — FunctionDeclaration，[L69–L69](../installer/launch.js#L69-L69)
+- `appWindow` — FunctionDeclaration，[L70–L70](../installer/launch.js#L70-L70)
+- `launchRecovery` — FunctionDeclaration，[L71–L83](../installer/launch.js#L71-L83)
+- `launchRecovery/anonymous@81:20` — ArrowFunctionExpression，[L81–L81](../installer/launch.js#L81-L81)
+- `launchRecovery/anonymous@82:19` — ArrowFunctionExpression，[L82–L82](../installer/launch.js#L82-L82)
+- `main` — FunctionDeclaration，[L84–L105](../installer/launch.js#L84-L105)
+- `main/anonymous@103:20` — ArrowFunctionExpression，[L103–L103](../installer/launch.js#L103-L103)
+- `main/anonymous@104:19` — ArrowFunctionExpression，[L104–L104](../installer/launch.js#L104-L104)
+- `anonymous@106:42` — ArrowFunctionExpression，[L106–L106](../installer/launch.js#L106-L106)
 
 ## installer/package.js
 
-[目录说明](../installer/README.md) · SHA-256 `68487290c4d0458acc4fca00db056e0dba2dd72cec134d0af3d2df28795a0d44`
+[目录说明](../installer/README.md) · SHA-256 `fdd1bfd5e920e1c0d3ded5c7a5f9cbdcee29300fb687d703f8dd33bc075b29bd`
 
 - `digest` — FunctionDeclaration，[L27–L27](../installer/package.js#L27-L27)
 - `collect` — FunctionDeclaration，[L28–L47](../installer/package.js#L28-L47)
@@ -2093,6 +2146,90 @@
 - `main/anonymous@786:22` — ArrowFunctionExpression，[L786–L786](../webagent-core/agent-host/tests/apiFiles.test.js#L786-L786)
 - `anonymous@792:13` — ArrowFunctionExpression，[L792–L795](../webagent-core/agent-host/tests/apiFiles.test.js#L792-L795)
 
+## webagent-core/agent-host/tests/appWindowLifecycle.test.js
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `2e2fc5b4388e0943f36d7601085b12453ffeff6ff0deb4bd3548f18c7ffa0e0c`
+
+- `bounded` — FunctionDeclaration，[L20–L24](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L20-L24)
+- `bounded/anonymous@22:28` — ArrowFunctionExpression，[L22–L22](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L22-L22)
+- `bounded/anonymous@22:28/anonymous@22:64` — ArrowFunctionExpression，[L22–L22](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L22-L22)
+- `bounded/anonymous@23:48` — ArrowFunctionExpression，[L23–L23](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L23-L23)
+- `fakeClock` — FunctionDeclaration，[L26–L42](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L26-L42)
+- `fakeClock/now` — FunctionExpression，[L29–L29](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L29-L29)
+- `fakeClock/setTimeout` — FunctionExpression，[L30–L30](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L30-L30)
+- `fakeClock/clearTimeout` — FunctionExpression，[L31–L31](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L31-L31)
+- `fakeClock/advance` — FunctionExpression，[L32–L40](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L32-L40)
+- `fakeClock/advance/anonymous@35:40` — ArrowFunctionExpression，[L35–L35](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L35-L35)
+- `fakeClock/advance/anonymous@35:70` — ArrowFunctionExpression，[L35–L35](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L35-L35)
+- `fakeClock/elapse` — FunctionExpression，[L40–L40](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L40-L40)
+- `nextTurn` — ArrowFunctionExpression，[L43–L43](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L43-L43)
+- `nextTurn/anonymous@43:35` — ArrowFunctionExpression，[L43–L43](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L43-L43)
+- `drive` — FunctionDeclaration，[L44–L51](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L44-L51)
+- `drive/anonymous@46:15` — ArrowFunctionExpression，[L46–L46](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L46-L46)
+- `drive/anonymous@46:62` — ArrowFunctionExpression，[L46–L46](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L46-L46)
+- `harness` — FunctionDeclaration，[L53–L133](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L53-L133)
+- `harness/get` — FunctionExpression，[L60–L82](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L60-L82)
+- `harness/get/anonymous@63:18` — ArrowFunctionExpression，[L63–L63](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L63-L63)
+- `harness/get/anonymous@64:18` — ArrowFunctionExpression，[L64–L64](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L64-L64)
+- `harness/get/anonymous@65:17` — ArrowFunctionExpression，[L65–L65](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L65-L65)
+- `harness/get/anonymous@77:19` — ArrowFunctionExpression，[L77–L80](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L77-L80)
+- `harness/spawn` — FunctionExpression，[L83–L119](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L83-L119)
+- `harness/spawn/anonymous@87:26` — ArrowFunctionExpression，[L87–L87](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L87-L87)
+- `harness/spawn/anonymous@93:18` — ArrowFunctionExpression，[L93–L93](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L93-L93)
+- `harness/spawn/anonymous@94:17` — ArrowFunctionExpression，[L94–L94](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L94-L94)
+- `harness/spawn/anonymous@95:23` — ArrowFunctionExpression，[L95–L95](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L95-L95)
+- `harness/spawn/anonymous@96:17` — ArrowFunctionExpression，[L96–L105](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L96-L105)
+- `harness/spawn/anonymous@96:17/anonymous@98:21` — ArrowFunctionExpression，[L98–L104](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L98-L104)
+- `harness/spawn/anonymous@107:19` — ArrowFunctionExpression，[L107–L117](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L107-L117)
+- `harness/error` — ArrowFunctionExpression，[L121–L121](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L121-L121)
+- `harness/require` — FunctionExpression，[L122–L127](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L122-L127)
+- `harness/require/now` — ArrowFunctionExpression，[L125–L125](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L125-L125)
+- `harness/close` — FunctionExpression，[L131–L131](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L131-L131)
+- `anonymous@135:1` — ArrowFunctionExpression，[L135–L328](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L135-L328)
+- `anonymous@135:1/test` — ArrowFunctionExpression，[L137–L140](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L137-L140)
+- `anonymous@135:1/anonymous@141:85` — ArrowFunctionExpression，[L141–L147](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L141-L147)
+- `anonymous@135:1/anonymous@141:85/anonymous@142:37` — ArrowFunctionExpression，[L142–L142](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L142-L142)
+- `anonymous@135:1/anonymous@141:85/anonymous@143:22` — ArrowFunctionExpression，[L143–L143](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L143-L143)
+- `anonymous@135:1/anonymous@141:85/anonymous@146:62` — ArrowFunctionExpression，[L146–L146](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L146-L146)
+- `anonymous@135:1/anonymous@148:84` — ArrowFunctionExpression，[L148–L154](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L148-L154)
+- `anonymous@135:1/anonymous@155:86` — ArrowFunctionExpression，[L155–L161](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L155-L161)
+- `anonymous@135:1/anonymous@162:85` — ArrowFunctionExpression，[L162–L174](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L162-L174)
+- `anonymous@135:1/anonymous@162:85/anonymous@170:37` — ArrowFunctionExpression，[L170–L170](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L170-L170)
+- `anonymous@135:1/anonymous@175:77` — ArrowFunctionExpression，[L175–L179](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L175-L179)
+- `anonymous@135:1/badIdentity` — ArrowFunctionExpression，[L181–L181](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L181-L181)
+- `anonymous@135:1/badIdentity@182:37` — ArrowFunctionExpression，[L182–L182](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L182-L182)
+- `anonymous@135:1/badIdentity@183:39` — ArrowFunctionExpression，[L183–L183](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L183-L183)
+- `anonymous@135:1/badIdentity@184:40` — ArrowFunctionExpression，[L184–L184](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L184-L184)
+- `anonymous@135:1/badIdentity@185:34` — ArrowFunctionExpression，[L185–L185](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L185-L185)
+- `anonymous@135:1/anonymous@189:83` — ArrowFunctionExpression，[L189–L193](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L189-L193)
+- `anonymous@135:1/anonymous@195:82` — ArrowFunctionExpression，[L195–L206](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L195-L206)
+- `anonymous@135:1/anonymous@195:82/anonymous@202:22` — ArrowFunctionExpression，[L202–L202](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L202-L202)
+- `anonymous@135:1/anonymous@216:93` — ArrowFunctionExpression，[L216–L226](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L216-L226)
+- `anonymous@135:1/anonymous@216:93/anonymous@220:33` — ArrowFunctionExpression，[L220–L220](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L220-L220)
+- `anonymous@135:1/anonymous@216:93/anonymous@220:85` — ArrowFunctionExpression，[L220–L220](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L220-L220)
+- `anonymous@135:1/anonymous@216:93/anonymous@221:36` — ArrowFunctionExpression，[L221–L221](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L221-L221)
+- `anonymous@135:1/anonymous@216:93/anonymous@222:56` — ArrowFunctionExpression，[L222–L222](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L222-L222)
+- `anonymous@135:1/anonymous@228:111` — ArrowFunctionExpression，[L228–L240](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L228-L240)
+- `anonymous@135:1/anonymous@228:111/anonymous@235:54` — ArrowFunctionExpression，[L235–L235](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L235-L235)
+- `anonymous@135:1/anonymous@241:104` — ArrowFunctionExpression，[L241–L251](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L241-L251)
+- `anonymous@135:1/anonymous@241:104/anonymous@248:80` — ArrowFunctionExpression，[L248–L248](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L248-L248)
+- `anonymous@135:1/anonymous@252:87` — ArrowFunctionExpression，[L252–L260](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L252-L260)
+- `anonymous@135:1/anonymous@261:120` — ArrowFunctionExpression，[L261–L269](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L261-L269)
+- `anonymous@135:1/anonymous@270:122` — ArrowFunctionExpression，[L270–L288](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L270-L288)
+- `anonymous@135:1/anonymous@270:122/anonymous@272:35` — ArrowFunctionExpression，[L272–L280](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L272-L280)
+- `anonymous@135:1/anonymous@270:122/anonymous@281:22` — ArrowFunctionExpression，[L281–L281](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L281-L281)
+- `anonymous@135:1/anonymous@270:122/anonymous@287:62` — ArrowFunctionExpression，[L287–L287](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L287-L287)
+- `anonymous@135:1/anonymous@289:87` — ArrowFunctionExpression，[L289–L312](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L289-L312)
+- `anonymous@135:1/anonymous@289:87/anonymous@291:35` — ArrowFunctionExpression，[L291–L294](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L291-L294)
+- `anonymous@135:1/anonymous@289:87/anonymous@291:35/anonymous@292:30` — ArrowFunctionExpression，[L292–L292](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L292-L292)
+- `anonymous@135:1/anonymous@289:87/anonymous@295:22` — ArrowFunctionExpression，[L295–L295](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L295-L295)
+- `anonymous@135:1/anonymous@289:87/waitClosed` — ArrowFunctionExpression，[L297–L304](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L297-L304)
+- `anonymous@135:1/anonymous@289:87/waitClosed/anonymous@301:26` — ArrowFunctionExpression，[L301–L301](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L301-L301)
+- `anonymous@135:1/anonymous@289:87/anonymous@311:62` — ArrowFunctionExpression，[L311–L311](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L311-L311)
+- `anonymous@135:1/anonymous@313:102` — ArrowFunctionExpression，[L313–L326](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L313-L326)
+- `anonymous@135:1/anonymous@313:102/anonymous@323:87` — ArrowFunctionExpression，[L323–L323](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L323-L323)
+- `anonymous@328:11` — ArrowFunctionExpression，[L328–L328](../webagent-core/agent-host/tests/appWindowLifecycle.test.js#L328-L328)
+
 ## webagent-core/agent-host/tests/approvedOperations.test.js
 
 [目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `4c4a453e94141c4f05bf9ae9f8bb4f7788ecd6b45676df8d4ee2cf134e78a651`
@@ -2459,15 +2596,15 @@
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `27e3c31066172f386e8c4e80dbde2085a1a775406ef348a5d597d0399e452836`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `dab7459cd2cad5efc7f8ad6705ce2d84f3c25a91e164f0be3bd764497521450e`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)
-- `namedFunctions` — FunctionDeclaration，[L262–L277](../webagent-core/agent-host/tests/documentationLearning.test.js#L262-L277)
-- `namedFunctions/anonymous@273:44` — ArrowFunctionExpression，[L273–L273](../webagent-core/agent-host/tests/documentationLearning.test.js#L273-L273)
-- `anonymous@376:66` — ArrowFunctionExpression，[L376–L376](../webagent-core/agent-host/tests/documentationLearning.test.js#L376-L376)
-- `anonymous@381:43` — ArrowFunctionExpression，[L381–L381](../webagent-core/agent-host/tests/documentationLearning.test.js#L381-L381)
-- `anonymous@381:68` — ArrowFunctionExpression，[L381–L381](../webagent-core/agent-host/tests/documentationLearning.test.js#L381-L381)
+- `namedFunctions` — FunctionDeclaration，[L264–L279](../webagent-core/agent-host/tests/documentationLearning.test.js#L264-L279)
+- `namedFunctions/anonymous@275:44` — ArrowFunctionExpression，[L275–L275](../webagent-core/agent-host/tests/documentationLearning.test.js#L275-L275)
+- `anonymous@378:66` — ArrowFunctionExpression，[L378–L378](../webagent-core/agent-host/tests/documentationLearning.test.js#L378-L378)
+- `anonymous@383:43` — ArrowFunctionExpression，[L383–L383](../webagent-core/agent-host/tests/documentationLearning.test.js#L383-L383)
+- `anonymous@383:68` — ArrowFunctionExpression，[L383–L383](../webagent-core/agent-host/tests/documentationLearning.test.js#L383-L383)
 
 ## webagent-core/agent-host/tests/documentationLinks.test.js
 
@@ -2818,9 +2955,9 @@
 
 ## webagent-core/agent-host/tests/installerPackaging.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `6a1a8026ca86f2c11a6dcc4ad979345f9078b9b97bc6eaaf33b0e393b406e7c5`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `761cbf12c9f62ae77a0b07f2fcd2e251732cac475c422d798be3b65e2f253dbf`
 
-- `anonymous@10:1` — ArrowFunctionExpression，[L10–L110](../webagent-core/agent-host/tests/installerPackaging.test.js#L10-L110)
+- `anonymous@10:1` — ArrowFunctionExpression，[L10–L111](../webagent-core/agent-host/tests/installerPackaging.test.js#L10-L111)
 - `anonymous@10:1/anonymous@29:216` — ArrowFunctionExpression，[L29–L29](../webagent-core/agent-host/tests/installerPackaging.test.js#L29-L29)
 - `anonymous@10:1/anonymous@30:33` — ArrowFunctionExpression，[L30–L30](../webagent-core/agent-host/tests/installerPackaging.test.js#L30-L30)
 - `anonymous@10:1/anonymous@31:47` — ArrowFunctionExpression，[L31–L31](../webagent-core/agent-host/tests/installerPackaging.test.js#L31-L31)
@@ -2828,23 +2965,24 @@
 - `anonymous@10:1/anonymous@32:32` — ArrowFunctionExpression，[L32–L32](../webagent-core/agent-host/tests/installerPackaging.test.js#L32-L32)
 - `anonymous@10:1/anonymous@33:32` — ArrowFunctionExpression，[L33–L33](../webagent-core/agent-host/tests/installerPackaging.test.js#L33-L33)
 - `anonymous@10:1/anonymous@34:32` — ArrowFunctionExpression，[L34–L34](../webagent-core/agent-host/tests/installerPackaging.test.js#L34-L34)
-- `anonymous@10:1/anonymous@35:169` — ArrowFunctionExpression，[L35–L35](../webagent-core/agent-host/tests/installerPackaging.test.js#L35-L35)
-- `anonymous@10:1/anonymous@36:376` — ArrowFunctionExpression，[L36–L36](../webagent-core/agent-host/tests/installerPackaging.test.js#L36-L36)
-- `anonymous@10:1/anonymous@37:32` — ArrowFunctionExpression，[L37–L37](../webagent-core/agent-host/tests/installerPackaging.test.js#L37-L37)
-- `anonymous@10:1/anonymous@39:33` — ArrowFunctionExpression，[L39–L39](../webagent-core/agent-host/tests/installerPackaging.test.js#L39-L39)
-- `anonymous@10:1/anonymous@40:16` — ArrowFunctionExpression，[L40–L40](../webagent-core/agent-host/tests/installerPackaging.test.js#L40-L40)
-- `anonymous@10:1/anonymous@45:18` — ArrowFunctionExpression，[L45–L45](../webagent-core/agent-host/tests/installerPackaging.test.js#L45-L45)
-- `anonymous@10:1/anonymous@50:44` — ArrowFunctionExpression，[L50–L50](../webagent-core/agent-host/tests/installerPackaging.test.js#L50-L50)
-- `anonymous@10:1/anonymous@70:16` — ArrowFunctionExpression，[L70–L70](../webagent-core/agent-host/tests/installerPackaging.test.js#L70-L70)
-- `anonymous@10:1/anonymous@71:72` — ArrowFunctionExpression，[L71–L71](../webagent-core/agent-host/tests/installerPackaging.test.js#L71-L71)
-- `anonymous@10:1/anonymous@72:16` — ArrowFunctionExpression，[L72–L72](../webagent-core/agent-host/tests/installerPackaging.test.js#L72-L72)
+- `anonymous@10:1/anonymous@35:32` — ArrowFunctionExpression，[L35–L35](../webagent-core/agent-host/tests/installerPackaging.test.js#L35-L35)
+- `anonymous@10:1/anonymous@36:169` — ArrowFunctionExpression，[L36–L36](../webagent-core/agent-host/tests/installerPackaging.test.js#L36-L36)
+- `anonymous@10:1/anonymous@37:376` — ArrowFunctionExpression，[L37–L37](../webagent-core/agent-host/tests/installerPackaging.test.js#L37-L37)
+- `anonymous@10:1/anonymous@38:32` — ArrowFunctionExpression，[L38–L38](../webagent-core/agent-host/tests/installerPackaging.test.js#L38-L38)
+- `anonymous@10:1/anonymous@40:33` — ArrowFunctionExpression，[L40–L40](../webagent-core/agent-host/tests/installerPackaging.test.js#L40-L40)
+- `anonymous@10:1/anonymous@41:16` — ArrowFunctionExpression，[L41–L41](../webagent-core/agent-host/tests/installerPackaging.test.js#L41-L41)
+- `anonymous@10:1/anonymous@46:18` — ArrowFunctionExpression，[L46–L46](../webagent-core/agent-host/tests/installerPackaging.test.js#L46-L46)
+- `anonymous@10:1/anonymous@51:44` — ArrowFunctionExpression，[L51–L51](../webagent-core/agent-host/tests/installerPackaging.test.js#L51-L51)
+- `anonymous@10:1/anonymous@71:16` — ArrowFunctionExpression，[L71–L71](../webagent-core/agent-host/tests/installerPackaging.test.js#L71-L71)
+- `anonymous@10:1/anonymous@72:72` — ArrowFunctionExpression，[L72–L72](../webagent-core/agent-host/tests/installerPackaging.test.js#L72-L72)
 - `anonymous@10:1/anonymous@73:16` — ArrowFunctionExpression，[L73–L73](../webagent-core/agent-host/tests/installerPackaging.test.js#L73-L73)
-- `anonymous@10:1/anonymous@78:16` — ArrowFunctionExpression，[L78–L78](../webagent-core/agent-host/tests/installerPackaging.test.js#L78-L78)
-- `anonymous@10:1/anonymous@92:77` — ArrowFunctionExpression，[L92–L92](../webagent-core/agent-host/tests/installerPackaging.test.js#L92-L92)
-- `anonymous@10:1/anonymous@94:46` — ArrowFunctionExpression，[L94–L96](../webagent-core/agent-host/tests/installerPackaging.test.js#L94-L96)
-- `anonymous@10:1/anonymous@97:20` — ArrowFunctionExpression，[L97–L97](../webagent-core/agent-host/tests/installerPackaging.test.js#L97-L97)
-- `anonymous@10:1/anonymous@103:32` — ArrowFunctionExpression，[L103–L103](../webagent-core/agent-host/tests/installerPackaging.test.js#L103-L103)
-- `anonymous@110:11` — ArrowFunctionExpression，[L110–L110](../webagent-core/agent-host/tests/installerPackaging.test.js#L110-L110)
+- `anonymous@10:1/anonymous@74:16` — ArrowFunctionExpression，[L74–L74](../webagent-core/agent-host/tests/installerPackaging.test.js#L74-L74)
+- `anonymous@10:1/anonymous@79:16` — ArrowFunctionExpression，[L79–L79](../webagent-core/agent-host/tests/installerPackaging.test.js#L79-L79)
+- `anonymous@10:1/anonymous@93:77` — ArrowFunctionExpression，[L93–L93](../webagent-core/agent-host/tests/installerPackaging.test.js#L93-L93)
+- `anonymous@10:1/anonymous@95:46` — ArrowFunctionExpression，[L95–L97](../webagent-core/agent-host/tests/installerPackaging.test.js#L95-L97)
+- `anonymous@10:1/anonymous@98:20` — ArrowFunctionExpression，[L98–L98](../webagent-core/agent-host/tests/installerPackaging.test.js#L98-L98)
+- `anonymous@10:1/anonymous@104:32` — ArrowFunctionExpression，[L104–L104](../webagent-core/agent-host/tests/installerPackaging.test.js#L104-L104)
+- `anonymous@111:11` — ArrowFunctionExpression，[L111–L111](../webagent-core/agent-host/tests/installerPackaging.test.js#L111-L111)
 
 ## webagent-core/agent-host/tests/localControl.test.js
 
@@ -5684,7 +5822,7 @@
 
 ## webagent-core/scripts/run-code-oss.js
 
-[目录说明](../webagent-core/scripts/README.md) · SHA-256 `0b0e5d7a167768b790f8e1c073266f4897129db89c5df16d241ac4000f0bd94c`
+[目录说明](../webagent-core/scripts/README.md) · SHA-256 `c2801329f4855b3e5c3db14eddb91681da51e359104f2d6d69e648351fbe3ff5`
 
 - `waitHealth` — FunctionDeclaration，[L20–L67](../webagent-core/scripts/run-code-oss.js#L20-L67)
 - `waitHealth/anonymous@22:21` — ArrowFunctionExpression，[L22–L66](../webagent-core/scripts/run-code-oss.js#L22-L66)
@@ -5706,7 +5844,7 @@
 - `stopChild/anonymous@84:21/send` — ArrowFunctionExpression，[L96–L99](../webagent-core/scripts/run-code-oss.js#L96-L99)
 - `stopChild/anonymous@84:21/anonymous@101:34` — ArrowFunctionExpression，[L101–L101](../webagent-core/scripts/run-code-oss.js#L101-L101)
 - `stopChild/anonymous@84:21/anonymous@102:32` — ArrowFunctionExpression，[L102–L102](../webagent-core/scripts/run-code-oss.js#L102-L102)
-- `main` — FunctionDeclaration，[L107–L229](../webagent-core/scripts/run-code-oss.js#L107-L229)
+- `main` — FunctionDeclaration，[L107–L256](../webagent-core/scripts/run-code-oss.js#L107-L256)
 - `main/anonymous@114:30` — ArrowFunctionExpression，[L114–L114](../webagent-core/scripts/run-code-oss.js#L114-L114)
 - `main/stop` — ArrowFunctionExpression，[L115–L119](../webagent-core/scripts/run-code-oss.js#L115-L119)
 - `main/onSignal` — ArrowFunctionExpression，[L120–L120](../webagent-core/scripts/run-code-oss.js#L120-L120)
@@ -5715,9 +5853,14 @@
 - `main/launch/anonymous@128:33` — ArrowFunctionExpression，[L128–L138](../webagent-core/scripts/run-code-oss.js#L128-L138)
 - `main/launch/anonymous@128:33/anonymous@129:24` — ArrowFunctionExpression，[L129–L132](../webagent-core/scripts/run-code-oss.js#L129-L132)
 - `main/launch/anonymous@128:33/anonymous@133:25` — ArrowFunctionExpression，[L133–L137](../webagent-core/scripts/run-code-oss.js#L133-L137)
-- `main/anonymous@218:52` — ArrowFunctionExpression，[L218–L218](../webagent-core/scripts/run-code-oss.js#L218-L218)
-- `anonymous@231:12` — ArrowFunctionExpression，[L231–L231](../webagent-core/scripts/run-code-oss.js#L231-L231)
-- `anonymous@231:56` — ArrowFunctionExpression，[L231–L234](../webagent-core/scripts/run-code-oss.js#L231-L234)
+- `main/sendApp` — ArrowFunctionExpression，[L143–L146](../webagent-core/scripts/run-code-oss.js#L143-L146)
+- `main/sendApp/anonymous@144:32` — ArrowFunctionExpression，[L144–L144](../webagent-core/scripts/run-code-oss.js#L144-L144)
+- `main/onAppMessage` — ArrowFunctionExpression，[L147–L154](../webagent-core/scripts/run-code-oss.js#L147-L154)
+- `main/onAppDisconnect` — ArrowFunctionExpression，[L155–L155](../webagent-core/scripts/run-code-oss.js#L155-L155)
+- `main/anonymous@231:50` — ArrowFunctionExpression，[L231–L236](../webagent-core/scripts/run-code-oss.js#L231-L236)
+- `main/anonymous@241:52` — ArrowFunctionExpression，[L241–L241](../webagent-core/scripts/run-code-oss.js#L241-L241)
+- `anonymous@258:12` — ArrowFunctionExpression，[L258–L258](../webagent-core/scripts/run-code-oss.js#L258-L258)
+- `anonymous@258:56` — ArrowFunctionExpression，[L258–L261](../webagent-core/scripts/run-code-oss.js#L258-L261)
 
 ## webagent-core/start-webagent.sh
 

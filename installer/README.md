@@ -63,8 +63,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File installer\tunnel-recovery.ps
 
 | 源码 | 定位证据 |
 |---|---|
+| [appWindow.js](appWindow.js) | 56 个函数/类节点 |
 | [build-installer.cmd](build-installer.cmd) | 文件级登记；未做符号完整性证明 |
-| [launch.js](launch.js) | 25 个函数/类节点 |
+| [launch.js](launch.js) | 17 个函数/类节点 |
 | [package.js](package.js) | 9 个函数/类节点 |
 | [tunnel-recovery.ps1](tunnel-recovery.ps1) | 文件级登记；未做符号完整性证明 |
 | [webagent.iss](webagent.iss) | 文件级登记；未做符号完整性证明 |

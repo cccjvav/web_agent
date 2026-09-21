@@ -4,7 +4,6 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
-const http = require('http');
 const { spawn, spawnSync } = require('child_process');
 const sourceRoot = path.resolve(__dirname, '..');
 const hash = data => crypto.createHash('sha256').update(data).digest('hex');
@@ -65,46 +64,10 @@ function ensureDependencies(root) {
   });
   if (r.error || r.status !== 0) throw new Error('npm ci失败，请检查Node/npm与网络');
 }
-function appOrigin(env = process.env) {
-  const port = String(env.CODE_SERVER_PORT || '3000');
-  if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) throw new Error('CODE_SERVER_PORT必须是1–65535的端口');
-  return `http://127.0.0.1:${Number(port)}`;
-}
-function ready(origin = appOrigin()) {
-  return new Promise(resolve => {
-    const req = http.get(`${origin}/healthz`, { timeout: 1500 }, res => {
-      res.resume(); resolve(res.statusCode === 200);
-    });
-    req.on('timeout', () => req.destroy()); req.on('error', () => resolve(false));
-  });
-}
-async function appWindow(root, workspace, env, home) {
-  const origin = appOrigin(env);
-  if (!await ready(origin)) {
-    fs.mkdirSync(home, { recursive: true });
-    const fd = fs.openSync(path.join(home, 'startup.log'), 'a');
-    try {
-      const child = spawn(process.execPath, [path.join(root, 'webagent-core/scripts/run-code-oss.js'), workspace],
-        { env, cwd: root, detached: true, windowsHide: true, stdio: ['ignore', fd, fd] });
-      child.on('error', err => console.error(err.message)); child.unref();
-    } finally { fs.closeSync(fd); }
-    const deadline = Date.now() + 120000;
-    while (!await ready(origin)) {
-      if (Date.now() >= deadline) throw new Error('VS Code未在120秒内就绪；后台启动日志：' + path.join(home, 'startup.log'));
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-  }
-  const candidates = [
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Microsoft/Edge/Application/msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Microsoft/Edge/Application/msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Google/Chrome/Application/chrome.exe'),
-    path.join(process.env.LOCALAPPDATA || '', 'Google/Chrome/Application/chrome.exe')
-  ];
-  const browser = candidates.find(p => path.isAbsolute(p) && fs.existsSync(p));
-  const child = browser ? spawn(browser, [`--app=${origin}`], { detached: true, stdio: 'ignore' })
-    : spawn('rundll32.exe', ['url.dll,FileProtocolHandler', origin], { detached: true, stdio: 'ignore' });
-  child.on('error', err => console.error('浏览器启动失败：' + err.message)); child.unref();
-}
+// Lazy, side-effect-free helper: non-app modes and recovery do not probe/start an editor.
+function appOrigin(env = process.env) { return require('./appWindow').appOrigin(env); }
+function ready(origin = appOrigin(), options) { return require('./appWindow').ready(origin, options); }
+function appWindow(root, workspace, env, home) { return require('./appWindow').appWindow(root, workspace, env, home); }
 function launchRecovery() {
   // No workspace resolution, dependency install, server startup or supplied target/confirmation.
   if (process.platform !== 'win32' || !process.stdin.isTTY || !process.stdout.isTTY || process.argv.length !== 3) {

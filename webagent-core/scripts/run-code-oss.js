@@ -138,8 +138,25 @@ async function main() {
     });
     return { child, finished };
   };
+  const appControlled = process.env.WEBAGENT_APP_BOOTSTRAP === '1' && typeof process.send === 'function';
+  let appReleased = false, appPrepared = false;
+  const sendApp = message => {
+    try { process.send(message, error => { if (error && !appReleased) stop(1, new Error('App启动通道发送失败')); }); }
+    catch (_) { if (!appReleased) stop(1, new Error('App启动通道已关闭')); }
+  };
+  const onAppMessage = message => {
+    if (!appControlled || !require('../../installer/appWindow').isAppControl(message)) return;
+    if (message.type === 'webagent-app-stop') stop(0);
+    else if (appPrepared && !controller.signal.aborted) {
+      appReleased = true;
+      sendApp({ type: 'webagent-app-released' });
+    }
+  };
+  const onAppDisconnect = () => { if (!appReleased) stop(0); };
   process.on('SIGINT', onSignal); process.on('SIGTERM', onSignal);
+  if (appControlled) { process.on('message', onAppMessage); process.once('disconnect', onAppDisconnect); }
   try {
+    if (process.env.WEBAGENT_APP_BOOTSTRAP === '1' && !appControlled) throw new Error('App启动需要私有IPC通道');
     const entry = ensure();
     const extDir = path.join(repoRoot, 'webagent-core/extensions-installed');
     syncExtension();
@@ -210,7 +227,13 @@ async function main() {
     console.log('===========================================================');
 
     const csEnv = auth.mode === 'password' ? { PASSWORD: auth.password } : {};
-    launch(process.execPath, csArgs, { cwd: path.dirname(entry), env: csEnv }, 'editor');
+    const editor = launch(process.execPath, csArgs, { cwd: path.dirname(entry), env: csEnv }, 'editor');
+    if (appControlled) editor.child.once('spawn', () => {
+      if (!controller.signal.aborted) {
+        appPrepared = true;
+        sendApp({ type: 'webagent-app-prepared', workspaceRoot: workspace, codePort, mcpPort });
+      }
+    });
     await stopped;
   } catch (error) { stop(1, error); }
   finally {
@@ -223,6 +246,10 @@ async function main() {
       exitCode = exitCode || 1;
     }
     process.removeListener('SIGINT', onSignal); process.removeListener('SIGTERM', onSignal);
+    if (appControlled) {
+      process.removeListener('message', onAppMessage); process.removeListener('disconnect', onAppDisconnect);
+      if (process.connected) { try { process.disconnect(); } catch (_) {} }
+    }
   }
   if (failure) console.error(failure.message || failure);
   return exitCode === null ? 1 : exitCode;
