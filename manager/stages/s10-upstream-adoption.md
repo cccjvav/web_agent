@@ -922,7 +922,7 @@ externalDiscovery覆盖真实HTTP JSON和SSE，stdioMcp及既有fixture覆盖真
 
 最小修复仅改变externalClient.rpc：会话头仍先校验为1–512可见ASCII且不含逗号的候选值；匹配响应经过JSON-RPC/对象result/无error检查后才保存。通知仍沿用现有2xx与取消响应体后返回的规则，只在成功路径保存候选SID。不引入会话重试/重建、并发轮换策略或新的通知状态限制；合法RPC result中的业务isError/unknown仍由execute及审批队列处理，不能把RPC接受等同业务成功。
 
-externalDiscovery真实JSON/SSE覆盖HTTP500、error并存、ID/版本不符、数组结果、坏JSON和超过256KiB：已执行夹具计数的调用保持unknown，重复批准不重放；后续另行批准的请求必须仍带原SID并完成。有效结果的新SID、202通知SID兼容同时验证；旧分页/取消/目录/敏感字段/stdio合同不变。定向externalDiscovery/publicHttps/executionControl已通过；Linux Node22全套87/87通过、文档清单252/28/110和185登记指纹已同步；精确CI待核验。不是实际公网/IDE/Windows桌面验收，R4根因等其他未完成项及探针暂停不变。
+externalDiscovery真实JSON/SSE覆盖HTTP500、error并存、ID/版本不符、数组结果、坏JSON和超过256KiB：已执行夹具计数的调用保持unknown，重复批准不重放；后续另行批准的请求必须仍带原SID并完成。有效结果的新SID、202通知SID兼容同时验证；旧分页/取消/目录/敏感字段/stdio合同不变。定向externalDiscovery/publicHttps/executionControl已通过；Linux Node22全套87/87通过、文档清单252/28/110和185登记指纹已同步；实现19eaa164d9799c757405bcf193fc5bb69bc9362e的CI35587380854精确SHA九项全通过（含Windows20/22/24、浏览器与安装构建）。不是实际公网/IDE/Windows桌面验收，R4根因等其他未完成项及探针暂停不变。
 
 ## 复盘
 
