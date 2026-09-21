@@ -15,7 +15,7 @@ try {
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.copyFileSync(path.join(root, rel), dest);
   }
-  const forbidden = ['webagent-core/admin-host/data/admin-token.txt', 'webagent-core/agent-host/node_modules/private.json',
+  const forbidden = ['webagent-core/agent-host/tests/tunnelCleanupAclFixture.cs', 'webagent-core/agent-host/tests/tunnelCleanupAclFixture.ps1', 'webagent-core/agent-host/tests/tunnelCleanupAcl.test.js', 'webagent-core/admin-host/data/admin-token.txt', 'webagent-core/agent-host/node_modules/private.json',
     'arena-model-probe/recon/raw.json', 'arena-model-probe/src/main.js', 'arena-model-probe/arena_probe.py',
     'webagent-core/agent-host/src/.webagent/tunnel-processes-v1/receipt.json',
     'workspace/.webagent/config.json', 'webagent-repro/server.js', '.config/code-server/config.yaml', 'manager/privacy.md'];

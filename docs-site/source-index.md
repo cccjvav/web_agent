@@ -2337,15 +2337,15 @@
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `751f412446c1419546a96475ff1f26b86a776fd09cc007a9243f061cd56a562b`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `f9d1d68268dd288fe13ae4f0788c942c657f79b86e59bbcd3463409a731a6a18`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)
-- `namedFunctions` — FunctionDeclaration，[L257–L272](../webagent-core/agent-host/tests/documentationLearning.test.js#L257-L272)
-- `namedFunctions/anonymous@268:44` — ArrowFunctionExpression，[L268–L268](../webagent-core/agent-host/tests/documentationLearning.test.js#L268-L268)
-- `anonymous@368:66` — ArrowFunctionExpression，[L368–L368](../webagent-core/agent-host/tests/documentationLearning.test.js#L368-L368)
-- `anonymous@373:43` — ArrowFunctionExpression，[L373–L373](../webagent-core/agent-host/tests/documentationLearning.test.js#L373-L373)
-- `anonymous@373:68` — ArrowFunctionExpression，[L373–L373](../webagent-core/agent-host/tests/documentationLearning.test.js#L373-L373)
+- `namedFunctions` — FunctionDeclaration，[L258–L273](../webagent-core/agent-host/tests/documentationLearning.test.js#L258-L273)
+- `namedFunctions/anonymous@269:44` — ArrowFunctionExpression，[L269–L269](../webagent-core/agent-host/tests/documentationLearning.test.js#L269-L269)
+- `anonymous@371:66` — ArrowFunctionExpression，[L371–L371](../webagent-core/agent-host/tests/documentationLearning.test.js#L371-L371)
+- `anonymous@376:43` — ArrowFunctionExpression，[L376–L376](../webagent-core/agent-host/tests/documentationLearning.test.js#L376-L376)
+- `anonymous@376:68` — ArrowFunctionExpression，[L376–L376](../webagent-core/agent-host/tests/documentationLearning.test.js#L376-L376)
 
 ## webagent-core/agent-host/tests/documentationLinks.test.js
 
@@ -2692,7 +2692,7 @@
 
 ## webagent-core/agent-host/tests/installerPackaging.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `e621561aaa2af59d046e59e793afc67572bd8a5faf129b52f52869e6bf1c5f7f`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `7b807e35580e3d26d2e41ebfe47447a22c123da5a67d2a031eb4fc1648ed7e51`
 
 - `anonymous@10:1` — ArrowFunctionExpression，[L10–L109](../webagent-core/agent-host/tests/installerPackaging.test.js#L10-L109)
 - `anonymous@10:1/anonymous@29:216` — ArrowFunctionExpression，[L29–L29](../webagent-core/agent-host/tests/installerPackaging.test.js#L29-L29)
@@ -3960,6 +3960,24 @@
 - `main/anonymous@84:45` — ArrowFunctionExpression，[L84–L84](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L84-L84)
 - `main/launch@88:69` — ArrowFunctionExpression，[L88–L88](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L88-L88)
 - `anonymous@93:13` — ArrowFunctionExpression，[L93–L93](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L93-L93)
+
+## webagent-core/agent-host/tests/tunnelCleanupAcl.test.js
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `cdae8482bba5712859f50c661c847455ae7192d44007d92ede7d32f750b856d2`
+
+- `main` — FunctionDeclaration，[L7–L23](../webagent-core/agent-host/tests/tunnelCleanupAcl.test.js#L7-L23)
+
+## webagent-core/agent-host/tests/tunnelCleanupAclFixture.cs
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `d3de5f37fb630f0426cd729a94e8559a8c6259d4a58748696e50ba3f47d87ed9`
+
+- 文件级登记；没有可报告的JS函数/类节点。
+
+## webagent-core/agent-host/tests/tunnelCleanupAclFixture.ps1
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `8240c21c8ca12baf53f3cfb9302dc3707ceb1ee9220b3b35201ce3a798b1d910`
+
+- 文件级登记；没有可报告的JS函数/类节点。
 
 ## webagent-core/agent-host/tests/tunnelCleanupWindows.test.js
 

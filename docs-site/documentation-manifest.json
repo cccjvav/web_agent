@@ -17013,8 +17013,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLearning.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "751f412446c1419546a96475ff1f26b86a776fd09cc007a9243f061cd56a562b",
-      "lineCount": 403,
+      "sha256": "f9d1d68268dd288fe13ae4f0788c942c657f79b86e59bbcd3463409a731a6a18",
+      "lineCount": 406,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -17042,49 +17042,49 @@
           "id": "namedFunctions",
           "name": "namedFunctions",
           "kind": "FunctionDeclaration",
-          "startLine": 257,
-          "endLine": 272,
+          "startLine": 258,
+          "endLine": 273,
           "parameters": [
             "node",
             "result = new Set()"
           ]
         },
         {
-          "id": "namedFunctions/anonymous@268:44",
-          "name": "anonymous@268:44",
+          "id": "namedFunctions/anonymous@269:44",
+          "name": "anonymous@269:44",
           "kind": "ArrowFunctionExpression",
-          "startLine": 268,
-          "endLine": 268,
+          "startLine": 269,
+          "endLine": 269,
           "parameters": [
             "child"
           ]
         },
         {
-          "id": "anonymous@368:66",
-          "name": "anonymous@368:66",
+          "id": "anonymous@371:66",
+          "name": "anonymous@371:66",
           "kind": "ArrowFunctionExpression",
-          "startLine": 368,
-          "endLine": 368,
+          "startLine": 371,
+          "endLine": 371,
           "parameters": [
             "pair"
           ]
         },
         {
-          "id": "anonymous@373:43",
-          "name": "anonymous@373:43",
+          "id": "anonymous@376:43",
+          "name": "anonymous@376:43",
           "kind": "ArrowFunctionExpression",
-          "startLine": 373,
-          "endLine": 373,
+          "startLine": 376,
+          "endLine": 376,
           "parameters": [
             "p"
           ]
         },
         {
-          "id": "anonymous@373:68",
-          "name": "anonymous@373:68",
+          "id": "anonymous@376:68",
+          "name": "anonymous@376:68",
           "kind": "ArrowFunctionExpression",
-          "startLine": 373,
-          "endLine": 373,
+          "startLine": 376,
+          "endLine": 376,
           "parameters": [
             "p"
           ]
@@ -19795,7 +19795,7 @@
     {
       "path": "webagent-core/agent-host/tests/installerPackaging.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "e621561aaa2af59d046e59e793afc67572bd8a5faf129b52f52869e6bf1c5f7f",
+      "sha256": "7b807e35580e3d26d2e41ebfe47447a22c123da5a67d2a031eb4fc1648ed7e51",
       "lineCount": 110,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -29641,6 +29641,42 @@
           ]
         }
       ]
+    },
+    {
+      "path": "webagent-core/agent-host/tests/tunnelCleanupAcl.test.js",
+      "doc": "webagent-core/agent-host/tests/README.md",
+      "sha256": "cdae8482bba5712859f50c661c847455ae7192d44007d92ede7d32f750b856d2",
+      "lineCount": 25,
+      "structure": "javascript-ast",
+      "semanticReview": "not-certified",
+      "symbols": [
+        {
+          "id": "main",
+          "name": "main",
+          "kind": "FunctionDeclaration",
+          "startLine": 7,
+          "endLine": 23,
+          "parameters": []
+        }
+      ]
+    },
+    {
+      "path": "webagent-core/agent-host/tests/tunnelCleanupAclFixture.cs",
+      "doc": "webagent-core/agent-host/tests/README.md",
+      "sha256": "d3de5f37fb630f0426cd729a94e8559a8c6259d4a58748696e50ba3f47d87ed9",
+      "lineCount": 100,
+      "structure": "file-only",
+      "semanticReview": "not-certified",
+      "symbols": []
+    },
+    {
+      "path": "webagent-core/agent-host/tests/tunnelCleanupAclFixture.ps1",
+      "doc": "webagent-core/agent-host/tests/README.md",
+      "sha256": "8240c21c8ca12baf53f3cfb9302dc3707ceb1ee9220b3b35201ce3a798b1d910",
+      "lineCount": 14,
+      "structure": "file-only",
+      "semanticReview": "not-certified",
+      "symbols": []
     },
     {
       "path": "webagent-core/agent-host/tests/tunnelCleanupWindows.test.js",

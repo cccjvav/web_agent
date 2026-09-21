@@ -129,6 +129,8 @@ R5第二包：tunnelReceiptProtection覆盖可信标签与旧明文隔离、密�
 
 R5第三包：tunnelCleanup为协议/过期/确认/未知的模拟测试，tunnelCleanupWindows仅Windows执行实际句柄、归属保护和确认终止，非Windows明确未执行。原检测/保护/生命周期回归保留。
 
+R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；Linux明确不执行原生测试。夹具不入安装包，实际状态见阶段10。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -218,6 +220,9 @@ R5第三包：tunnelCleanup为协议/过期/确认/未知的模拟测试，tunne
 | [traceIntegration.test.js](traceIntegration.test.js) | 4 个函数/类节点 |
 | [tunnel.test.js](tunnel.test.js) | 14 个函数/类节点 |
 | [tunnelCleanup.test.js](tunnelCleanup.test.js) | 30 个函数/类节点 |
+| [tunnelCleanupAcl.test.js](tunnelCleanupAcl.test.js) | 1 个函数/类节点 |
+| [tunnelCleanupAclFixture.cs](tunnelCleanupAclFixture.cs) | 文件级登记；未做符号完整性证明 |
+| [tunnelCleanupAclFixture.ps1](tunnelCleanupAclFixture.ps1) | 文件级登记；未做符号完整性证明 |
 | [tunnelCleanupWindows.test.js](tunnelCleanupWindows.test.js) | 17 个函数/类节点 |
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 17 个函数/类节点 |
 | [tunnelOwnerFixture.js](tunnelOwnerFixture.js) | 4 个函数/类节点 |
