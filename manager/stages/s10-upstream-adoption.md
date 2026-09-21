@@ -87,7 +87,7 @@
 | R2 / 下一项，高 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，第四批现补资源caller与目录ACL及错误hash指引，第五批已补原生流确认，第六批补窄屏/页签ARIA，其余UI/实机项待续修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
 | R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54第三批已补新文件patch显式hash与块校验，第五批补原生postNdjson坏流/终态及失败历史；按新证据续修，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 根因未定位；已复取历史annotations并补阶段诊断首包，等待可解释复现 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
-| R5 / 用户优先 | 已授权安全隧道残留回收；已交付只读检测、Windows保护记录/稳定句柄终端回收及负例/诊断；本机开始菜单入口施工，面板/桌面与PTY互操作仍待 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
+| R5 / 用户优先 | 已授权安全隧道残留回收；已交付只读检测、Windows保护记录/稳定句柄终端回收及负例/诊断；本机开始菜单入口已接入，面板/桌面与PTY互操作仍待 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
 | R7 / 结构首包已做，语义继续 | 第26组集中19篇专题、归档17篇旧审查、删除过期PROMPT；F54改相邻错误说明、归档独立报告与同步当前基线，未增加逐句完成项；其余README/管理旧现状继续核对 | 源码清单、目录README、根维护/安装说明及阶段索引 | 活跃正文无相互矛盾的“当前”；无用旧指南退役，有效教学/历史失败保留；给出已审和未审清单而不是总称100% |
 | R8 / 分项就绪后 | 待用户实机：项目根MCP验收 | 第7节、Windows清单M/W/T/G等；用户接入后核对工具身份 | 逐项有提交、实际环境、动作、退出码/效果与脱敏证据；失败/未执行如实留存，不借CI代签 |
@@ -980,7 +980,7 @@ C#从预览至执行持有同一SafeProcessHandle，确认后重查身份/活宿
 
 Inno入口用系统PowerShell -NoProfile执行固定installer/tunnel-recovery.ps1，不提权、不安装后自运行。PS零参数/输入输出非重定向门禁、当前用户SID的Local会话Mutex非阻塞排除重复点击，锁持有至结果窗口按键关闭；abandoned仅允许重新预览、不重放。PATH仅解析Node应用，用分离参数启动固定launch.js recovery。launchRecovery再次检查win32/双TTY/零参数，再准备runtime；不解析/创建工作区、npm安装或启动Bridge。当前Node+单独脚本参数shell=false/继承stdio执行原CLI，不自动传RECYCLE、不改60秒/稳定句柄/unknown合同。有效用户PATH/runtime不防同用户恶意代码，Mutex不是跨会话安全隔离。
 
-新增VM回归验证真实启动分支的门禁先于runtime、路径字面量、只启动固定CLI、退出码/错误无重试，Windows原生测试仅解析PS和管道拒绝；打包断言包含新PS/快捷入口且不安装后自动执行。用户桌面实际点击、互斥/TTY、Ctrl+C/关窗、真实隧道仍未验；不能将静态/CI算作GUI验收或R5整体关闭。精确验证待核验。
+新增VM回归验证真实启动分支的门禁先于runtime、路径字面量、只启动固定CLI、退出码/错误无重试，Windows原生测试仅解析PS和管道拒绝；打包断言包含新PS/快捷入口且不安装后自动执行。用户桌面实际点击、互斥/TTY、Ctrl+C/关窗、真实隧道仍未验；不能将静态/CI算作GUI验收或R5整体关闭。本地94/94；清单273/28/110。实现a22428a17a930a880c86ec8f61330ef932f36efd / CI35614219553八项成功，Windows20主机job失败：mcpProtocol截图回传的测试专用echo在30073ms超时，无stdout/stderr；测试文件耗时30431ms。Windows22/24主机、浏览器、Windows安装器与新入口PS/管道拒绝通过；不把新入口成功写成整体九项通过。已保存Checks annotations，完整日志TLS EOF无法读取；摘要未包含中段生命周期日志。与R4旧症状相似但不能确认同根因，不延长预算/删断言/重跑。用户桌面交互仍未验。
 
 ## 复盘
 
