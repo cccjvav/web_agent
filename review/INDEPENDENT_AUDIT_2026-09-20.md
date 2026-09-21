@@ -349,7 +349,7 @@ axe-core4.13.0在这9个状态均报告同一项`aria-required-children`：`#tab
 ### 外层App启动的额外加固
 
 - appWindow拆出独立模块，launch.js仅代理appOrigin/ready/appWindow，保持无依赖、只读产品。
-- 120秒总期限独立timer与信号监听，支持SIGINT/SIGTERM取消；预先取消零网络。
+- appWindow函数内120秒确认期限及独立timer/信号监听，支持此异步阶段SIGINT/SIGTERM取消；不包含launch此前的复制/同步依赖准备。probeJson支持预先取消零网络。
 - 冷启动：home递归、startup.log 0600追加、spawn run-code-oss workspace带WEBAGENT_APP_BOOTSTRAP=1与ipc，detached；supervise监听error/exit/disconnect及严格prepared/release消息；循环等prepared后inspect；再pin确认；URL显式folder参数；release需先请求再确认ack，移交后disconnect/unref。
 - run-code-oss受控分支：需私有IPC才允许WEBAGENT_APP_BOOTSTRAP=1，否则抛错；收到stop即停止，release需已prepared；spawn后发prepared；清理复用F56直接子进程观察，不按名称/端口/PID补杀，不保证全部后代退出。
 - 浏览器打开不证明工作流通过，关窗口不代表后台退出；未确认清理非零且明确提示。
@@ -372,22 +372,94 @@ axe-core4.13.0在这9个状态均报告同一项`aria-required-children`：`#tab
 
 ## 10. F58 同步准备阶段：超时与取消（2026-09-21）
 
-沿第57组待验证线索，同步npm与code-server下载阶段尚无期限/取消。真实VM红测先证明ensureDependencies与ensure在超时/取消时无界或错误信息不明确；测试自行收尾，不安装真实依赖或下载运行时。
+沿第57组待验证线索，同步npm与code-server下载阶段尚无期限/取消。原轮VM替身测试检查timeout参数、模拟错误和预先abort；没有证明真实耗时或运行中取消。F59复审确认仍有这两项缺口；未安装真实依赖或下载运行时。
 
 | 合同 | 修前行为 | 修后 |
 |---|---|---|
 | 外层npm ci期限 | spawnSync无timeout，可能无限挂起 | ensureDependencies带120秒timeout，ETIMEDOUT转超时错误，非法期限零工作 |
-| 外层取消 | 无signal检查，仍执行npm | abort时抛ABORT_ERR，零spawn |
-| 内层code-server下载期限 | runNpm无timeout，ensure无signal | runNpm带180秒/120秒超时，ensure与ensureVscodeDeps检查signal，超时/取消有界 |
+| 外层预取消 | 无signal检查 | 显式传入且调用前已abort时零spawn；main未接入signal，运行中不可及时取消 |
+| 内层code-server下载期限 | runNpm无timeout，ensure无signal | runNpm传180秒/120秒timeout，前后检查signal；阻塞时不能处理新取消，TERM被忽略时不保证按时返回 |
 | 内层取消 | 同步阶段不可取消 | signal已abort时抛ABORT_ERR，零下载 |
-| 同步抛错吞掉 | 可能被外层误判为成功 | 同步抛错直接传播，不吞 |
+| 同步抛错传播 | 原实现已传播spawnSync抛错和r.error | 新测试锁定原有行为，不是本批新修复 |
 
-新增installerPreparation.test.js 7个场景，均先红后绿：已有安装零spawn、npm ci超时有界、abort零工作、非法期限零工作、code-server下载超时、abort零下载、runNpm同步抛错不吞；未执行真实npm或下载。本地97/97、Chromium与audit 0均以独立进程退出0确认；文档277/28/111且updated=0，185指纹已同步。代码`6daf576040bc92a36b8f89d582f30dffb8decd54` / [CI35651156739](https://github.com/cccjvav/web_agent/actions/runs/35651156739)已按精确SHA核实9项completed/success（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium）。UI、核心权限/工具、原生扩展、暂停探针和冻结原型运行源码零diff；不是全仓审完，不关闭R4/R5/R7/R8。
+新增installerPreparation.test.js 7个场景：已有安装零spawn、模拟npm ci超时/参数、预先abort零工作、非法期限零工作、模拟下载超时、预先abort零下载、同步抛错传播；不能把所有场景或导出缺失造成的失败统称新行为先红后绿；未执行真实npm或下载。本地97/97、Chromium与audit 0均以独立进程退出0确认；文档277/28/111且updated=0，185指纹已同步。代码`6daf576040bc92a36b8f89d582f30dffb8decd54` / [CI35651156739](https://github.com/cccjvav/web_agent/actions/runs/35651156739)已按精确SHA核实9项completed/success（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium）。UI、核心权限/工具、原生扩展、暂停探针和冻结原型运行源码零diff；不是全仓审完，不关闭R4/R5/R7/R8。
 
-测试实现：fixtureLaunch用fakeFs的existsSync控制express存在，require('fs')返回替身，spawnSync记录timeout/error；fixtureEnsure用fakeFs控制entry/marker，spawnSync记录timeout/同步抛错；bounded为看门狗，test收集失败。未安装真实依赖。
+测试实现：fixtureLaunch用fakeFs的existsSync控制express存在，require('fs')返回替身，spawnSync记录timeout/error；fixtureEnsure用fakeFs控制entry/marker，spawnSync记录timeout/同步抛错；bounded仅声明未使用，不能用它证明同步调用有界；test收集失败。未安装真实依赖。
 
 本批精确提交与CI见阶段10第58组，不使用F57绿色代签。原始本地日志在仓库外，跨沙箱不保证可得；可携带证据为正式断言、本文范围与对应提交CI。
 
 ### 继续开放
 
 installer外层对实例/工作区的再确认及更细的资源/权限边界是下一组待验证线索，而非本批已复现结论；R4历史Windows超时/辅助原因、R5真正进程树/桌面/跨用户、R7全仓逐句、R8用户本机MCP与IDE仍开放，探针专项继续原分工暂停；计划仍只维护在阶段10。
+
+## 11. F59 来源同步、上一轮复审与F58证据纠偏（2026-09-21）
+
+### 确切范围与交付复审
+
+当前绑定分支`arena/01a0bfa9-web-agent`，来源`arena/01a0c4b1-web-agent`的冻结审查点为`bbe79854a8b56d0fd096235275db419c3a0db415`。merge-base为上轮整理提交`67f4f966720c2d6f657f53e3dc3b02cbf3860b98`，无分叉、无冲突，已快进整合9个提交；没有切换/推送来源分支。用户重点范围是`a68a77e6fa82e509b3dc8a09ac27c38a402eadfb..bbe7985`的6个提交（不含a68a77e本身）。Git能确认提交集合，不能反推每次push包含几个提交或历史force-push事件。
+
+上轮自己的整理复审：67f4f96只改目录/说明，原ZIP/TXT仍为201993/2870字节、SHA-256仍是归档README所载4114d6e…/799bc9a8…；无运行源码/依赖变更。归档链接和生成校验通过，没有因缩短交接而删除R4/R5未决边界。恢复环境最初HEAD/index回到50c03be；逐文件与交付67f4f96核对后仅mixed reset修复ref/index，不覆盖工作文件。两份暂停文件的Git过滤后hash与旧blob不同，进一步原始字节比对相等（换行规范化）；没有暂停源码改动。
+
+| 后续提交 | 内容与本次核查 | 精确SHA对应CI |
+|---|---|---|
+| 464925030b85c0725a7c98851b8ca4be1ae4fabf | F56交接证据；连同边界a68a77e的health/stopChild/main相邻合同复核 | [35642269647](https://github.com/cccjvav/web_agent/actions/runs/35642269647)，9/9 |
+| 4cf4d6f81bfd9e0f85af690aa84d0ba0fdb48910 | F57模块拆分、身份/探测/IPC/浏览器错误；核对launch、run-code-oss、hostDiagnostics、打包入口与测试 | [35647781757](https://github.com/cccjvav/web_agent/actions/runs/35647781757)，9/9 |
+| ee393c2a7bebe46be561dcaf637e8236a2c5124e | F57证据交接，不是又一次运行时修复 | [35648274576](https://github.com/cccjvav/web_agent/actions/runs/35648274576)，9/9 |
+| 6daf576040bc92a36b8f89d582f30dffb8decd54 | F58三个运行文件及7例测试；确认参数/预取消有效，但下述两项合同未完成 | [35651156739](https://github.com/cccjvav/web_agent/actions/runs/35651156739)，9/9 |
+| ffb75898d085015ab246fa6092b4562341b5e57f | 仅改三份交接正文，未重建content.js | [35651611509](https://github.com/cccjvav/web_agent/actions/runs/35651611509)，**2/9成功、7失败** |
+| bbe79854a8b56d0fd096235275db419c3a0db415 | 仅重建content.js；本轮只读docsSite测试再次通过 | [35651963406](https://github.com/cccjvav/web_agent/actions/runs/35651963406)，9/9 |
+
+以上由本次gh查询headSha及逐job状态确认。ffb7589七个主机任务（Ubuntu18/20/22/24、Windows20/22/24）的Checks annotations均含`docsSite.test.js`断言`docs-site/content.js drift at 1506975`；浏览器和安装器成功。失败完整日志下载EOF，未获得完整原日志；不据此排除未显示的其他问题。最小生成物diff加bbe7985本地重建一致，支持本项漂移已修，不支持取消/硬时限已经修复。来源F55（33fc9ed/036d65b）不在重点区间，但随快进继承：仅局部读审chat事件流预算/终态、CORS expose headers、站点导航变更和锁文件差异，没有声称本轮重新验完整浏览器/可访问性。
+
+### 已确认但运行时尚未修复
+
+| 编号 | 证据与影响 | 当前状态 |
+|---|---|---|
+| F59-01 / P1：同步准备不能及时处理运行中取消 | runNpm/ensureDependencies只在spawnSync前后读取signal，事件循环阻塞时SIGINT/SIGTERM/IPC/定时取消无法执行；主编排的stop/finally不能即时进入。外层main甚至未传signal给ensureDependencies。现有预先abort测试不能证明冷启动中停止有效 | 纠正F58完成表述；异步准备与归属清理的实现/正式红绿回归待下一小包 |
+| F59-02 / P1：timeout不是硬返回上限 | 默认SIGTERM被忽略时spawnSync仍等子进程退出。真实Node替身设置150ms timeout，527ms才抛ETIMEDOUT；并非150ms完成。不保证npm实际一定忽略信号，也不把Linux夹具结论当Windows实机证据 | 保留现有120/180秒配置，不靠加时/树杀/重试规避；真实期限/退出观察回归待修 |
+| F59-03 / P2：测试与文档证据夸大 | 7例用替身返回ETIMEDOUT或预先abort；bounded声明未用，Promise看门狗本来也不能打断同步阻塞。“同步抛错不吞”在原版已存在，并非本批修复 | 已原地改正函数详解/报告/交接；保留旧测试，不删断言，不把现有97/97称为缺陷已修 |
+
+F57静态/定向验证未发现需要本轮撤销的变更：固定只读路径、64KiB/UTF-8/状态、host实例与workspace pin、先prepared再探测、release ack、未知清理不冒成功仍成立。但主机元数据不认证恶意同用户进程；浏览器spawn不证明窗口出现，关闭窗口不等于后台停止；外层120秒从appWindow入口算起，不含复制与ensureDependencies，清理另有12秒观察预算。真实code-server首次安装/桌面双击、信号与IPC竞态、Windows后代清理仍未验，不以VM的28例覆盖替代。
+
+### 可携带复现（仅Linux Node替身，不运行npm/参考包）
+
+在仓库根把以下内容保存到仓库外`.cjs`并运行；只加载ensure模块函数，替换命令选择层，底层仍用真实spawnSync启动当前Node。两个子进程分别自行在250/500ms结束，无用户进程清理、下载或依赖安装。第一项证实定时取消不能在同步阻塞中被执行；第二项只在支持忽略SIGTERM的平台使用。
+
+```js
+const fs = require('fs'), vm = require('vm'), path = require('path');
+const { spawnSync } = require('child_process');
+const { performance } = require('perf_hooks');
+const file = path.resolve('webagent-core/scripts/ensure-code-server.js');
+function load(childCode) {
+  const module = { exports: {} };
+  vm.runInNewContext(fs.readFileSync(file, 'utf8'), {
+    module, __dirname: path.dirname(file), process, console,
+    require(name) { return name === 'child_process' ? {
+      spawnSync(_cmd, _args, options) {
+        return spawnSync(process.execPath, ['-e', childCode], options);
+      }
+    } : require(name); }
+  });
+  return module.exports;
+}
+(async () => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10);
+  const start = performance.now();
+  load('setTimeout(() => {}, 250)').runNpm(['fixture'], process.cwd(), { timeoutMs: 1000, signal: controller.signal });
+  const cancellation = { elapsedMs: Math.round(performance.now()-start), returnedSuccess: true, abortedAtReturn: controller.signal.aborted };
+  await new Promise(resolve => setTimeout(resolve, 20));
+  cancellation.abortedAfterYield = controller.signal.aborted; clearTimeout(timer);
+  const t = performance.now(); let code;
+  try { load("process.on('SIGTERM', () => {}); setTimeout(() => {}, 500)").runNpm(['fixture'], process.cwd(), { timeoutMs: 150 }); }
+  catch (e) { code = e.code; }
+  console.log(JSON.stringify({ node: process.version, platform: process.platform, cancellation,
+    timeout: { configuredMs:150, elapsedMs:Math.round(performance.now()-t), errorCode:code } }, null, 2));
+})();
+```
+
+本轮Linux Node v22.22.3实测：`cancellation={elapsedMs:281,returnedSuccess:true,abortedAtReturn:false,abortedAfterYield:true}`；`timeout={configuredMs:150,elapsedMs:527,errorCode:"ETIMEDOUT"}`。这是缺陷复现，不是已修复回归；不要把外部复现脚本路径当可移交证据，以上代码和结果才是仓库内记录。
+
+来源原树本地完整**97/97**、installerPreparation及appWindowLifecycle定向通过、文档277/28/111 updated=0；完整套件与真实反例可以同时成立。本轮没有重跑Chromium或重新做生产依赖审计，没有Windows桌面权限。实际发行入口只读核对，未安装/启动code-server。R4历史原因、R5实机回收/跨用户/PID复用、R7未审正文、R8用户MCP及暂停探针继续开放。本轮只修证据与工作流约定，运行时行为保持来源版本；下一轮先复核此交付，再补真实在途取消/忽略TERM红测与小范围修复。
+
+F59证据/正文最终修订后，本地完整套件再次**97/97**、文档277/28/111 updated=0、git diff --check通过；这不是F59-01/02运行时修复证明。

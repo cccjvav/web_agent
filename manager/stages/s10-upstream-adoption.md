@@ -1051,13 +1051,13 @@ stopChild区分killed与已退出；保留对象仅清本轮直接子进程，9�
 
 ### 第58组：同步准备阶段的超时与取消（2026-09-21）
 
-沿第57组待验证线索，同步npm与code-server下载阶段尚无期限/取消。真实VM红测先证明ensureDependencies与ensure在超时/取消时无界或错误信息不明确；测试自行收尾，不安装真实依赖或下载运行时。
+沿第57组待验证线索，同步npm与code-server下载阶段尚无期限/取消。原轮VM替身检查timeout参数/错误和预先abort，未证明真实耗时或运行中取消；F59已复现缺口，见后段。未安装真实依赖或下载运行时。
 
 - installer/launch.js：ensureDependencies(root,{timeoutMs=120000,signal})检查signal、期限有效性，存在express即零spawn，否则spawnSync带timeout，ETIMEDOUT转超时错误，abort转ABORT_ERR；无效期限零工作。导出该函数供测试，不改变prepareRuntime/resolveWorkspace等路径逻辑。
 - webagent-core/scripts/ensure-code-server.js：runNpm(args,cwd,{timeoutMs=180000,signal})同样检查signal/期限，spawnSync带timeout，ETIMEDOUT转超时；ensure({signal})与ensureVscodeDeps({signal})检查signal，分别120秒/180秒超时，失败不吞；abortedError()/checkSignal(signal)固定ABORT_ERR。
-- webagent-core/scripts/run-code-oss.js：main在ensure前checkRunning，ensure({signal:controller.signal})传入总控制器；同步准备阶段的超时/取消与后续health/子进程清理统一由同一AbortController协调；ensure抛错落到stop(1,error)并进入finally的stopChild观察，不遗留已创建进程。
+- webagent-core/scripts/run-code-oss.js：main在ensure前checkRunning，ensure({signal:controller.signal})传入总控制器；signal传入不等于同步期间能处理新的SIGINT/SIGTERM/IPC取消。ensure抛错落到stop(1,error)，finally仅观察children已登记对象；ensure内部spawnSync不在该列表，不能承诺无遗留。
 
-新增installerPreparation.test.js的7个场景：已有安装零spawn、npm ci超时有界、abort零工作、非法期限零工作、code-server下载超时、abort零下载、runNpm同步抛错不吞；未执行真实npm或下载。本地97/97、Chromium与audit 0均以独立进程退出0确认；文档277/28/111且updated=0，185指纹已同步。代码`6daf576040bc92a36b8f89d582f30dffb8decd54`已推当前固定分支，[CI35651156739](https://github.com/cccjvav/web_agent/actions/runs/35651156739)按精确SHA核实9个job completed/success：Ubuntu Node18/20/22/24、Windows Node20/22/24（含重复取消/stdio）、Windows安装器与真实Chromium。提交前再次确认97/97、Chromium与audit 0、文档零漂移及185指纹；精选195份JS lint仅原有4处清理finally提示。UI、核心权限/工具、原生扩展、暂停探针和冻结原型运行源码零diff；不是全仓审完，不关闭R4/R5/R7/R8。后续证据文档提交仍须核对其自身HEAD。
+新增installerPreparation.test.js的7个场景：已有安装零spawn、模拟npm ci超时/参数、预先abort零工作、非法期限零工作、模拟下载超时、预先abort零下载、同步抛错传播（原有行为）；未执行真实npm或下载。本地97/97、Chromium与audit 0均以独立进程退出0确认；文档277/28/111且updated=0，185指纹已同步。代码`6daf576040bc92a36b8f89d582f30dffb8decd54`已推当前固定分支，[CI35651156739](https://github.com/cccjvav/web_agent/actions/runs/35651156739)按精确SHA核实9个job completed/success：Ubuntu Node18/20/22/24、Windows Node20/22/24（含重复取消/stdio）、Windows安装器与真实Chromium。提交前再次确认97/97、Chromium与audit 0、文档零漂移及185指纹；精选195份JS lint仅原有4处清理finally提示。UI、核心权限/工具、原生扩展、暂停探针和冻结原型运行源码零diff；不是全仓审完，不关闭R4/R5/R7/R8。后续证据文档提交仍须核对其自身HEAD。
 
 ## 复盘
 
@@ -1070,3 +1070,17 @@ stopChild区分killed与已退出；保留对象仅清本轮直接子进程，9�
 - [x] AGENTS、CONTEXT、agents、文档中心和现行审查入口：统一指向原管理索引和本阶段。
 - [x] 旧路线/交接引用、站点入口及文档守卫：改为现有文件，保留全部工作包检查。
 - [ ] 全仓逐句审查与剩余模块说明：按上面的工作包和正式清单持续推进，不能由本次结构合并勾选完成。
+
+### 第59组：同步01a0c4b1并复审a68a77e之后的提交（2026-09-21）
+
+用户要求先同步来源并审查后续推送，之后每一轮都先复审上一轮和相邻合同。该规则已写入agents；不因对另一助手能力的评价预判代码好坏，也不凭CI绿灯授信。
+
+- 先复审自身67f4f96整理：原件字节/hash、说明导航、R4/R5未决边界保留，未动运行时。环境HEAD/index旧指针经逐文件核对后mixed reset恢复，不覆盖工作文件；Git换行过滤差异进一步以原始字节排除。来源merge-base正是67f4f96，当前绑定arena/01a0bfa9-web-agent快进9个提交到bbe79854a8b56d0fd096235275db419c3a0db415；暂停/冻结源码无来源diff，不切换或推送来源分支。
+- 重点范围a68a77e6fa82e509b3dc8a09ac27c38a402eadfb..bbe7985共6个提交，含2个运行时提交与4个证据/生成提交；逐项范围、精确SHA/CI、复现代码与结果在独立报告第11节。a68本身与F55仅作为相邻依赖局部核对，非本轮全仓认证。
+- 来源ffb7589/CI35651611509实际2/9，七个主机任务均有content.js漂移annotation；完整日志下载EOF，不能冒称全部原日志可得。bbe7985只重建生成物，CI35651963406精确SHA九job成功，本地docsSite匹配；不把这次修复外推为取消合同完成。
+- 已确认F59-01/02：spawnSync阻塞新取消处理；timeout默认TERM不保证按时返回。Linux真实Node替身150ms期限527ms返回，另一个250ms子进程结束前10ms定时取消未执行。F58七例仅参数/模拟错误/预取消；同步抛错传播本来就存在，bounded未使用。原地纠正文档/当前状态，运行时尚未修复，不删原测试、不加产品期限、不重跑追绿。
+- 来源本地全量97/97、两项定向通过，文档277/28/111 updated=0。没有重跑Chromium/audit或真正code-server/Windows窗口；旧CI均独立记录其原SHA，不代签本轮或实机。用户工作区、秘密与参考包未执行。
+
+**下一轮优先顺序（纳入现有工作包，不新建路线）：** 先复审本组同步/证据/生成物，然后用真实子进程补在途取消与忽略TERM的负例；小包改异步准备/受控直接子进程归属及期限观察，覆盖SIGINT/SIGTERM与App IPC、取消后不得进入下一阶段、不可确认退出必须报告。不能新增名称/端口/PID树杀或声称所有后代已退出；保留120/180秒准备配置及既有health/App预算，不靠延时兜绿。根因修复和验证完成前F58只算部分完成；随后再继续R2–R9/逐句审查。探针原分工暂停、R4历史故障与R5实机边界不解除。
+
+本轮最终正文/生成物修订后再次全量97/97，清单277/28/111 updated=0、diff --check通过；只有文档/管理和生成站点变化，无运行时/依赖/测试断言改动。精确交付CI须按本轮提交另验，不借来源绿灯代签。

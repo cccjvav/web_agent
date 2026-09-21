@@ -33,7 +33,7 @@
 显式相对工作区相对于调用者cwd解析；传文件取父目录；不存在的显式路径拒绝，缺省路径可创建；Windows盘符根分隔符不随意裁掉。被编辑工作区自身的.webagent配置与用户runtime不是同一层数据。
 
 ## 模式、升级与卸载
-recovery是独立Windows本机交互回收入口，不解析工作区/装依赖/启动服务，详见下节；classic启动自绘工作台；vscode启动code-server编排；app后台启动并等待healthz（当前探测3000端口，最多120秒）后打开窗口；admin启动独立后台；extension侧载桌面扩展。
+recovery是独立Windows本机交互回收入口，不解析工作区/装依赖/启动服务，详见下节；classic启动自绘工作台；vscode启动code-server编排；app在前置复制/依赖准备之后进入独立120秒启动确认，检查配置端口的healthz及主机身份/工作区，再尝试打开窗口；该120秒不覆盖前置同步准备，准备阶段取消/硬时限缺口见函数详解；admin启动独立后台；extension侧载桌面扩展。
 
 升级保留用户数据与旧runtime，不自动迁移旧安装目录中的workspace。升级前备份并显式选择用户可写工作区。卸载不删除LocalAppData/WebAgent；彻底清理要先备份，不触碰其他用户目录。PATH按分号条目规范比较，不按子串删除同前缀目录。
 

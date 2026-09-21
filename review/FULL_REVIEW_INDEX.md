@@ -2,6 +2,8 @@
 
 用户2026-09-17明确两项并行任务：继续剩余待办；正式全仓逐句审查。这里记录逐文件覆盖，不是另一份产品指南，也不替代[项目管理索引](../manager/CONTEXT.md)或[发现与证据台账](SEMANTIC_REVIEW_2026-09-16.md)。
 
+本轮F59：同步与六提交复审范围、真实准备阶段缺陷及未修边界见独立报告第11节；只纠正受影响段落并刷新其指纹，不增加整篇通过或变更状态计数。
+
 ## 审查标准
 
 1. 每个段落、表格行、步骤、示例和能力承诺逐句核对：入口/默认值、调用链、磁盘和网络副作用、权限、失败/取消/并发、平台与实际证据。
@@ -124,20 +126,20 @@
 | [docs/guides/隧道使用指南.md](../docs/guides/隧道使用指南.md) | 待逐句核对 | 9e174df444c52a80 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [examples/calculator/.webagent/instructions.md](../examples/calculator/.webagent/instructions.md) | 待边界核对 | b9fee21ec621714f | 冻结原型/示例/发行副本，不冒称产品主线语义认证 |
 | [examples/calculator/README.md](../examples/calculator/README.md) | 待边界核对 | b81ce0560907d6d3 | 冻结原型/示例/发行副本，不冒称产品主线语义认证 |
-| [installer/README.md](../installer/README.md) | 待逐句核对 | 34a51218f89194d2 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [installer/README.md](../installer/README.md) | 待逐句核对 | b52ef6aa9ed35e45 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/函数详解.md](../installer/函数详解.md) | 待逐句核对 | 53c1c2c601df774f | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/安装声明详解.md](../installer/安装声明详解.md) | 待逐句核对 | 5c8566d2ce5b1bc8 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | 4ae4c33811e06598 | F54压缩为轻量当前索引，记录来源同步/50c03be精确CI与未修新证据；历史保留阶段，不自授整篇通过 |
+| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | 5d9115ee650aab28 | F54压缩为轻量当前索引，记录来源同步/50c03be精确CI与未修新证据；历史保留阶段，不自授整篇通过 |
 | [manager/SKILL.md](../manager/SKILL.md) | 只读规范副本 | 5c8c93d50e52332b | 只核对引用与适用范围，不修改技能副本 |
-| [manager/agents.md](../manager/agents.md) | 待逐句核对 | 3aa68cb51ce7e928 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [manager/agents.md](../manager/agents.md) | 待逐句核对 | 1b5dd1c1ffe8e830 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [manager/docs/documentation.md](../manager/docs/documentation.md) | 待逐句核对 | dff435c047431d16 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [manager/docs/experience.md](../manager/docs/experience.md) | 局部核对 | 106e46ee6636971f | F56新增总期限/单次停止/直接子进程与进程树区别的经验局部核对；历史条目未全部重签 |
+| [manager/docs/experience.md](../manager/docs/experience.md) | 局部核对 | cb84fd478a408409 | F56新增总期限/单次停止/直接子进程与进程树区别的经验局部核对；历史条目未全部重签 |
 | [manager/stages/audit-2026-09-11.md](../manager/stages/audit-2026-09-11.md) | 待历史定位核对 | d6064bf51020b073 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/context-history-through-0.4.md](../manager/stages/context-history-through-0.4.md) | 待历史定位核对 | a4ccaf24eb17241b | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/documentation-2026-09-12.md](../manager/stages/documentation-2026-09-12.md) | 待历史定位核对 | c23c09e4b3615d99 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/probe-dual-integration-2026-09-15.md](../manager/stages/probe-dual-integration-2026-09-15.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
 | [manager/stages/s1-handoff.md](../manager/stages/s1-handoff.md) | 待历史定位核对 | cfc0e427dc08e55c | 核对归档/引用/证据，不将旧结论改成现状 |
-| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | c25f3639d85c6c46 | F54更新R2/R3与实际审查/未修边界、基线和ShunCode取舍；保留历史失败，其余阶段不重签 |
+| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | d4f19d55edc7b85e | F54更新R2/R3与实际审查/未修边界、基线和ShunCode取舍；保留历史失败，其余阶段不重签 |
 | [manager/stages/s2-shell.md](../manager/stages/s2-shell.md) | 待历史定位核对 | 5ac447fe582ce09e | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s3-bridge-image.md](../manager/stages/s3-bridge-image.md) | 待历史定位核对 | fbe64b3265d3cf1a | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s4-terminal.md](../manager/stages/s4-terminal.md) | 待历史定位核对 | 1cf1fcca01c51478 | 核对归档/引用/证据，不将旧结论改成现状 |
@@ -149,11 +151,11 @@
 | [multi-agent-board/SKILL.md](../multi-agent-board/SKILL.md) | 待逐句核对 | 29b4015a8d562bfb | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [project-manager/SKILL.md](../project-manager/SKILL.md) | 待逐句核对 | 5c8c93d50e52332b | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [review/CHECKLIST_WINDOWS.md](../review/CHECKLIST_WINDOWS.md) | 待逐句核对 | 6cbc79b4c85111ed | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [review/INDEPENDENT_AUDIT_2026-09-20.md](../review/INDEPENDENT_AUDIT_2026-09-20.md) | 局部核对 | 00d5bced798fa1ee | F55新增接手/红绿修复/截图及未验边界局部核对；F54原始证据保留，不自授整篇通过 |
+| [review/INDEPENDENT_AUDIT_2026-09-20.md](../review/INDEPENDENT_AUDIT_2026-09-20.md) | 局部核对 | 86ff868b434bc6dc | F55新增接手/红绿修复/截图及未验边界局部核对；F54原始证据保留，不自授整篇通过 |
 | [review/OPTIMIZATION_REPORT_2026-09-18.md](../review/OPTIMIZATION_REPORT_2026-09-18.md) | 已逐句核对 | 29391f9e3e15ea70 | F45逐项交叉复核；P1-A/P2-D/P2-A已处置，原始发现保留，剩余取舍见顶部链接 |
 | [review/FULL_AUDIT_FOLLOWUP_2026-09-18.md](../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md) | 待逐句核对 | 8a0799b45e63fcdb | F45–48交叉审查/实修与验证报告；本页不自我授予整篇语义认证，结论按列明证据边界复核 |
 | [review/README.md](../review/README.md) | 局部核对 | 7740b504d5287eab | F54加入独立报告并明确未修/未验；历史入口不扩大认证 |
-| [review/SEMANTIC_REVIEW_2026-09-16.md](../review/SEMANTIC_REVIEW_2026-09-16.md) | 待逐句核对 | 4b306410f84cae08 | F54只更新当前状态/新证据和精确基线，历史长台账仍逐段待核，不自授整篇通过 |
+| [review/SEMANTIC_REVIEW_2026-09-16.md](../review/SEMANTIC_REVIEW_2026-09-16.md) | 待逐句核对 | 602496a2543826d9 | F54只更新当前状态/新证据和精确基线，历史长台账仍逐段待核，不自授整篇通过 |
 | [review/UPSTREAM_ADOPTION_MAP_2026-09-15.md](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md) | 待逐句核对 | e454a1ff6891f7bc | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [review/archive/01a08d85-web-agent-audit.md](../review/archive/01a08d85-web-agent-audit.md) | 待历史定位核对 | 95fc2e2b61e4c58c | 核对归档/引用/证据，不将旧结论改成现状 |
 | [review/archive/ARENA_PROBE_INTEGRATION_2026-09-15.md](../review/archive/ARENA_PROBE_INTEGRATION_2026-09-15.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
