@@ -916,6 +916,14 @@ externalDiscovery覆盖真实HTTP JSON和SSE，stdioMcp及既有fixture覆盖真
 
 剩余工作仍包括R2/R3其他消费链、R4历史超时根因、R5 PTY/Windows合同、R7文档逐句、R8本机MCP/桌面。R6优化候选与R9版本/lint/生成物取舍按收益与授权决策，不视作全部必做；P原分工暂停不变。
 
+### R2/R3会话提交时序（2026-09-21）
+
+从干净da1e841继续，复审上一批两处error存在性修复的相邻合同：externalClient.rpc在读取/校验响应体之前已写client.session，即使上一批正确拒绝矛盾响应，下一次已批准请求仍会带上失败回复的SID。真实HTTP红测观察到candidate-session-token而不是原valid-session-token，证据位于/home/user/r2-session-evidence。不是认证越权结论，而是拒绝响应残留状态的明确缺陷。
+
+最小修复仅改变externalClient.rpc：会话头仍先校验为1–512可见ASCII且不含逗号的候选值；匹配响应经过JSON-RPC/对象result/无error检查后才保存。通知仍沿用现有2xx与取消响应体后返回的规则，只在成功路径保存候选SID。不引入会话重试/重建、并发轮换策略或新的通知状态限制；合法RPC result中的业务isError/unknown仍由execute及审批队列处理，不能把RPC接受等同业务成功。
+
+externalDiscovery真实JSON/SSE覆盖HTTP500、error并存、ID/版本不符、数组结果、坏JSON和超过256KiB：已执行夹具计数的调用保持unknown，重复批准不重放；后续另行批准的请求必须仍带原SID并完成。有效结果的新SID、202通知SID兼容同时验证；旧分页/取消/目录/敏感字段/stdio合同不变。定向externalDiscovery/publicHttps/executionControl已通过；Linux Node22全套87/87通过、文档清单252/28/110和185登记指纹已同步；精确CI待核验。不是实际公网/IDE/Windows桌面验收，R4根因等其他未完成项及探针暂停不变。
+
 ## 复盘
 
 - 上一轮只改文件所在目录，没有消除额外管理层次；应先核对已有规则，而不是先引入新文件类型。

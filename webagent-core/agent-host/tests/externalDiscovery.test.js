@@ -18,9 +18,12 @@ async function main() {
     const message = JSON.parse(body);
     assert.strictEqual(req.headers.authorization, 'Bearer fixture-private');
     lastSessionSeen = req.headers['mcp-session-id'];
-    if (message.method === 'notifications/initialized') { res.writeHead(202); res.end(); return; }
+    if (message.method === 'notifications/initialized') {
+      if (mode === 'notification-session') res.setHeader('Mcp-Session-Id', 'notification-session-token');
+      res.writeHead(202); res.end(); return;
+    }
     let result = { protocolVersion: '2025-03-26', capabilities: {} };
-    if (message.method === 'tools/call') calls++;
+    if (message.method === 'tools/call') { calls++; result = { content: [] }; }
     if (message.method === 'tools/list') {
       lists++;
       const second = message.params.cursor != null;
@@ -48,6 +51,20 @@ async function main() {
     const errors = { 'error-null': null, 'error-false': false, 'error-zero': 0 };
     const errorMode = mode.replace(/^sse-/, '');
     if (Object.hasOwn(errors, errorMode)) envelope.error = errors[errorMode];
+    // Valid header, rejected RPC: the candidate SID must never become durable state.
+    if (errorMode.startsWith('sid-')) {
+      res.setHeader('Mcp-Session-Id', 'candidate-session-token');
+      if (errorMode === 'sid-status') res.statusCode = 500;
+      if (errorMode === 'sid-error') envelope.error = null;
+      if (errorMode === 'sid-id') envelope.id = 'unmatched';
+      if (errorMode === 'sid-version') envelope.jsonrpc = '1.0';
+      if (errorMode === 'sid-array') envelope.result = [];
+      if (errorMode === 'sid-budget') envelope.result = { text: 'x'.repeat(256 * 1024 + 1) };
+      if (errorMode === 'sid-json') {
+        if (mode.startsWith('sse-')) res.setHeader('Content-Type', 'text/event-stream');
+        res.end(mode.startsWith('sse-') ? 'data: {\n\n' : '{'); return;
+      }
+    }
     if (mode.startsWith('sse-')) { res.setHeader('Content-Type', 'text/event-stream'); res.end('data: ' + JSON.stringify(envelope) + '\n\n'); }
     else res.end(JSON.stringify(envelope));
   });
@@ -96,7 +113,37 @@ async function main() {
     mode = 'session-valid'; lastSessionSeen = undefined;
     const sessionful = await external.add(options);
     assert.strictEqual(lastSessionSeen, 'valid-session-token', 'a single valid session token is retained and replayed');
+    for (const prefix of ['', 'sse-']) {
+      for (const failure of ['status', 'error', 'id', 'version', 'array', 'json', 'budget']) {
+        mode = prefix + 'sid-' + failure; const before = calls;
+        const rejectedCall = external.request({ serverId: sessionful.serverId, tool: 'first', arguments: {}, requestKey: 'session-reject-' + mode }, { callerKey: 'local' });
+        await queue.approve(rejectedCall.requestId, true);
+        assert.strictEqual(queue.inspect(rejectedCall.requestId).status, 'unknown');
+        assert.strictEqual(calls, before + 1);
+        await queue.approve(rejectedCall.requestId, true);
+        assert.strictEqual(calls, before + 1, 'rejected response is not permission to replay');
+        const failedMode = mode; mode = 'paged';
+        const fresh = external.request({ serverId: sessionful.serverId, tool: 'first', arguments: {}, requestKey: 'session-fresh-' + failedMode }, { callerKey: 'local' });
+        await queue.approve(fresh.requestId, true);
+        assert.strictEqual(lastSessionSeen, 'valid-session-token', failedMode + ': rejected response cannot replace the retained SID');
+        assert.strictEqual(queue.inspect(fresh.requestId).status, 'succeeded');
+        assert.strictEqual(calls, before + 2, 'the next call requires a separate explicit approval');
+      }
+    }
+    // Preserve the existing behavior for an accepted result carrying a new valid SID.
+    mode = 'sid-accepted';
+    const accepted = external.request({ serverId: sessionful.serverId, tool: 'first', arguments: {}, requestKey: 'session-accepted' }, { callerKey: 'local' });
+    await queue.approve(accepted.requestId, true);
+    assert.strictEqual(queue.inspect(accepted.requestId).status, 'succeeded');
+    mode = 'paged';
+    const afterAccepted = external.request({ serverId: sessionful.serverId, tool: 'first', arguments: {}, requestKey: 'session-after-accepted' }, { callerKey: 'local' });
+    await queue.approve(afterAccepted.requestId, true);
+    assert.strictEqual(lastSessionSeen, 'candidate-session-token');
     external.remove(sessionful.serverId);
+    mode = 'notification-session';
+    const notified = await external.add(options);
+    assert.strictEqual(lastSessionSeen, 'notification-session-token', 'accepted notifications retain their existing SID behavior');
+    external.remove(notified.serverId);
     for (const ending of ['\r', '\r\n', '\n']) {
       const message = JSON.stringify({ jsonrpc: '2.0', id: 'wanted', result: { content: '中文🙂' } });
       const response = fragmentedResponse(`: heartbeat${ending}${ending}data: {"method":"notification"}${ending}${ending}data: ${message}${ending}${ending}`);

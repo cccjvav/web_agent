@@ -86,11 +86,17 @@ async function rpc(client, method, params, notification = false) {
       // fetch合并重复响应头为"a, b"；本项目采用1–512可见ASCII且无逗号的会话策略（比协议更窄）。
       // 合并串/含空白或控制字符的值拒绝保存，也不回放给对端（F54续批，与入站400合同对称）。
       if (!/^[\x21-\x7E]{1,512}$/.test(session) || session.includes(',')) throw new Error('Invalid session header');
-      client.session = session;
     }
-    if (notification) { await response.body?.cancel(); return {}; }
+    if (notification) {
+      await response.body?.cancel();
+      if (session !== null) client.session = session;
+      return {};
+    }
     const message = await responseMessage(response, id);
     if (message.jsonrpc !== '2.0' || Object.hasOwn(message, 'error') || !message.result || typeof message.result !== 'object' || Array.isArray(message.result)) throw new Error('External MCP protocol error');
+    // Commit the candidate header only after this RPC response has been accepted.
+    // A rejected response must not silently retarget the next approved call's session.
+    if (session !== null) client.session = session;
     return message.result;
   } finally {
     controller.abort();

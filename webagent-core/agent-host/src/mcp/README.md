@@ -81,6 +81,8 @@ F54交叉复审：initialize.instructions限定自动hash复用仅适用于现�
 
 R2/R3响应互斥：externalClient.rpc与stdioTransport.frame按error字段存在性拒绝错误响应，不能让result+error:null/false/0变成功；保持审批unknown与不重放。
 
+R2/R3会话提交时序：HTTP/SSE响应SID先校验但不立即保存，RPC响应接受后才提交，拒绝回复不得改变下一次批准调用的会话；合法结果/通知现有SID兼容不变。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 

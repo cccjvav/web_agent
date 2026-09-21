@@ -121,6 +121,8 @@ R4：processDiagnostics在可控worker时钟及真实子进程上检查阶段元
 
 R2/R3：externalDiscovery和stdioMcp补真实JSON/SSE/stdio矛盾响应、登记清理与已批准调用unknown/不重放，详见受控工具与工作流详解。
 
+R2/R3续修：externalDiscovery用真实JSON/SSE验证拒绝响应不提交候选SID，后续单独批准调用沿用旧会话；unknown不重放及有效结果/通知SID正例同时保留。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
