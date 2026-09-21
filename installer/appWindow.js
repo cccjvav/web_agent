@@ -273,12 +273,18 @@ async function appWindow(root, workspace, env, home) {
     const target = new URL(expected.origin); target.searchParams.set('folder', workspace);
     await openBrowser(target.toString(), env, controller.signal); check();
     let afterOpen;
-    try { afterOpen = await inspectPair(expected, controller.signal, budget()); }
-    catch (error) {
-      if (controller.signal.aborted) throw error;
-      throw new Error('主机实例在打开窗口后变化；窗口可能已打开，未移交后台，请重新核对');
+    for (;;) {
+      try { afterOpen = await inspectPair(expected, controller.signal, budget()); }
+      catch (error) {
+        if (controller.signal.aborted) throw error;
+        throw new Error('主机实例在打开窗口后变化；窗口可能已打开，未移交后台，请重新核对');
+      }
+      check();
+      if (afterOpen && afterOpen.state === 'ready') break;
+      // A slow or refused probe is not an identity change. Retry inside the same deadline
+      // instead of stopping a window that may already be open.
+      await delay(Math.min(500, Math.max(1, expires - performance.now())), controller.signal);
     }
-    check();
     if (!afterOpen || afterOpen.state !== 'ready' || JSON.stringify(afterOpen.identity) !== JSON.stringify(confirmed.identity)) {
       throw new Error('主机实例在打开窗口后变化；窗口可能已打开，未移交后台，请重新核对');
     }

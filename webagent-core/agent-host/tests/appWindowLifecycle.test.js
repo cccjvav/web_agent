@@ -54,7 +54,7 @@ function harness(options = {}) {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-app-window-'));
   const workspace = path.join(home, 'project #一 & two'); fs.mkdirSync(workspace);
   const calls = [], requests = [], logs = [], proc = new EventEmitter();
-  let available = !options.cold, diagnostics = 0;
+  let available = !options.cold, diagnostics = 0, postOpenHostRefusals = 0;
   Object.assign(proc, { env: {}, platform: process.platform, execPath: process.execPath });
   const env = { CODE_SERVER_PORT: '51212', AGENT_HOST_PORT: '51211', CODE_SERVER_PASSWORD: 'fixture-key-not-for-probes' };
   const transport = { get(url, ...args) {
@@ -76,6 +76,11 @@ function harness(options = {}) {
     }
     if (options.badHealth && !body.identity) Object.assign(body, options.badHealth);
     queueMicrotask(() => {
+      if (options.stallHostAfterOpen && options.browserOpened && String(url).endsWith('/api/diagnostics') && postOpenHostRefusals < options.stallHostAfterOpen) {
+        postOpenHostRefusals++;
+        req.emit('error', Object.assign(new Error('fixture refused'), {code:'ECONNREFUSED'}));
+        return;
+      }
       if (!available || options.missingHost && body.identity || options.missingEditor && !body.identity) { req.emit('error', Object.assign(new Error('fixture refused'), {code:'ECONNREFUSED'})); return; }
       callback(res); if (!res.destroyed) { res.emit('data', Buffer.from(JSON.stringify(body))); res.emit('end'); }
     });
@@ -108,7 +113,7 @@ function harness(options = {}) {
         if (message.type === 'webagent-app-release' && !options.noReleaseAck) child.emit('message', {type:'webagent-app-released'});
       });
     };
-    if (!runner && options.changedAfterOpen) options.browserOpened = true;
+    if (!runner && (options.changedAfterOpen || options.stallHostAfterOpen)) options.browserOpened = true;
     calls.push({ command, args, opts, child, runner });
     queueMicrotask(() => {
       if (runner && options.runnerFailure || !runner && options.browserFailure) {
@@ -292,6 +297,26 @@ function harness(options = {}) {
     try {
       await assert.rejects(bounded(h.api.appWindow(root,h.workspace,h.env,h.home)),/可能已打开/);
       assert.equal(h.calls.length,1); assert.equal(h.calls[0].runner,false);
+    } finally { h.close(); }
+  });
+  await test('a transient post-open host refusal is retried and still released', async () => {
+    const clock=fakeClock(), h=harness({clock,cold:true,stallHostAfterOpen:1});
+    try {
+      await drive(h.api.appWindow(root,h.workspace,h.env,h.home),clock);
+      const owned=h.calls.find(call=>call.runner).child;
+      assert.deepStrictEqual(owned.messages.map(message=>message.type),['webagent-app-release']);
+      assert.deepStrictEqual(owned.kills,[]);
+      assert.equal(owned.connected,false);
+      assert.ok(h.calls.some(call=>!call.runner), 'the browser open is kept');
+    } finally { h.close(); }
+  });
+  await test('a cold-start host change after open stops only the owned supervisor', async () => {
+    const clock=fakeClock(), h=harness({clock,cold:true,changedAfterOpen:true});
+    try {
+      await assert.rejects(drive(h.api.appWindow(root,h.workspace,h.env,h.home),clock),/可能已打开/);
+      const owned=h.calls.find(call=>call.runner).child;
+      assert.ok(owned.messages.some(message=>message.type==='webagent-app-stop'));
+      assert.ok(!owned.messages.some(message=>message.type==='webagent-app-release'));
     } finally { h.close(); }
   });
   await test('prepared workspace comparison accepts a normalized trailing separator', async () => {

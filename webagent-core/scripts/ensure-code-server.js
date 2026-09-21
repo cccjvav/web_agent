@@ -18,21 +18,31 @@ function runNpm(args, cwd, { timeoutMs = 180000, signal } = {}) {
   const command = npmCmd();
   return new Promise((resolve, reject) => {
     let child, settled = false, timedOut = false, stopped = false, timer, forceTimer, giveUp;
+    const releaseLive = () => {
+      if (child && typeof child.unref === 'function' && child.exitCode == null && child.signalCode == null) {
+        try { child.unref(); } catch (_) { /* unref is not an exit proof */ }
+      }
+    };
     const finish = error => {
       if (settled) return;
       settled = true;
       clearTimeout(timer); clearTimeout(forceTimer); clearTimeout(giveUp);
       signal?.removeEventListener('abort', onAbort);
+      if (error) releaseLive();
       if (error) reject(error); else resolve();
     };
     const send = sig => {
       if (!child || child.exitCode != null || child.signalCode != null) return;
       try { child.kill(sig); } catch (_) { /* The give-up deadline still rejects. */ }
     };
+    const armEscalation = errorFactory => {
+      clearTimeout(timer); clearTimeout(forceTimer); clearTimeout(giveUp);
+      forceTimer = setTimeout(() => send('SIGKILL'), 1000);
+      giveUp = setTimeout(() => finish(errorFactory()), 2000);
+    };
     const onAbort = () => {
       stopped = true; send('SIGTERM');
-      forceTimer = setTimeout(() => send('SIGKILL'), 1000);
-      giveUp = setTimeout(() => finish(signal?.reason && signal.reason.name !== 'AbortError' ? signal.reason : abortedError()), 2000);
+      armEscalation(() => signal?.reason && signal.reason.name !== 'AbortError' ? signal.reason : abortedError());
     };
     try {
       child = spawn(command, args, {
@@ -46,9 +56,9 @@ function runNpm(args, cwd, { timeoutMs = 180000, signal } = {}) {
       return;
     }
     timer = setTimeout(() => {
+      if (stopped || settled) return;
       timedOut = true; send('SIGTERM');
-      forceTimer = setTimeout(() => send('SIGKILL'), 1000);
-      giveUp = setTimeout(() => finish(Object.assign(new Error(`npm ${args.join(' ')} 超时 ${timeoutMs}ms in ${cwd}`), { code: 'ETIMEDOUT' })), 2000);
+      armEscalation(() => Object.assign(new Error(`npm ${args.join(' ')} 超时 ${timeoutMs}ms in ${cwd}`), { code: 'ETIMEDOUT' }));
     }, timeoutMs);
     child.on('error', error => { if (!settled && child.pid == null) finish(error); });
     child.once('exit', code => {

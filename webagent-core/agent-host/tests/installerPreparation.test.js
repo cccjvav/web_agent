@@ -38,8 +38,9 @@ function fakeClock() {
 }
 function hangingChild() {
   const child = new EventEmitter();
-  Object.assign(child, { pid: 4242, exitCode: null, signalCode: null, kills: [] });
+  Object.assign(child, { pid: 4242, exitCode: null, signalCode: null, kills: [], unrefs: 0 });
   child.kill = signal => { child.kills.push(signal); return true; };
+  child.unref = () => { child.unrefs++; };
   return child;
 }
 const nextTurn = () => new Promise(resolve => setImmediate(resolve));
@@ -157,6 +158,7 @@ function fixtureEnsure({ hang = false, throwSync = false, clock } = {}) {
       assert.deepStrictEqual(h.calls[0].child.kills, ['SIGTERM', 'SIGKILL']);
       clock.advance(1000);
       await assert.rejects(pending, /超时/);
+      assert.equal(h.calls[0].child.unrefs, 1, 'give-up must not pin the launcher');
       assert.equal(clock.timers.size, 0);
       assert.ok(!JSON.stringify(h.calls).includes('taskkill'));
     } finally { await h.close(); }
@@ -180,7 +182,25 @@ function fixtureEnsure({ hang = false, throwSync = false, clock } = {}) {
       assert.deepStrictEqual(h.calls[0].child.kills, ['SIGTERM']);
       clock.advance(2000);
       await assert.rejects(pending, /停止/);
+      assert.equal(h.calls[0].child.unrefs, 1);
       assert.equal(clock.timers.size, 0);
+    } finally { await h.close(); }
+  });
+  await test('ensureDependencies abort during timeout drops the previous escalation timers', async () => {
+    const clock = fakeClock(), h = fixtureLaunch({ exists: false, hang: true, clock });
+    try {
+      const controller = new AbortController();
+      const pending = h.api.ensureDependencies(h.tmp, { signal: controller.signal, timeoutMs: 1000 });
+      await nextTurn();
+      clock.advance(1000);
+      assert.deepStrictEqual(h.calls[0].child.kills, ['SIGTERM']);
+      controller.abort();
+      const child = h.calls[0].child;
+      child.exitCode = 0; child.emit('exit', 0, null);
+      await assert.rejects(pending, /停止/);
+      clock.advance(5000);
+      assert.equal(clock.timers.size, 0);
+      assert.deepStrictEqual(child.kills, ['SIGTERM', 'SIGTERM'], 'a cleared escalation timer must not signal again');
     } finally { await h.close(); }
   });
   await test('ensureDependencies live abort is observed on the retained handle', async () => {
@@ -221,6 +241,7 @@ function fixtureEnsure({ hang = false, throwSync = false, clock } = {}) {
       assert.deepStrictEqual(h.calls[0].child.kills, ['SIGTERM']);
       clock.advance(2000);
       await assert.rejects(pending, /超时/);
+      assert.equal(h.calls[0].child.unrefs, 1);
       assert.equal(clock.timers.size, 0);
     } finally { h.close(); }
   });
@@ -243,6 +264,25 @@ function fixtureEnsure({ hang = false, throwSync = false, clock } = {}) {
       assert.deepStrictEqual(h.calls[0].child.kills, ['SIGTERM']);
       clock.advance(2000);
       await assert.rejects(pending, /停止/);
+      assert.equal(h.calls[0].child.unrefs, 1);
+      assert.equal(clock.timers.size, 0);
+    } finally { h.close(); }
+  });
+  await test('code-server ensure abort during timeout drops the previous escalation timers', async () => {
+    const clock = fakeClock(), h = fixtureEnsure({ hang: true, clock });
+    try {
+      const controller = new AbortController();
+      const pending = h.api.runNpm(['install', 'code-server@4.135.0'], h.tmp, { signal: controller.signal, timeoutMs: 1000 });
+      await nextTurn();
+      clock.advance(1000);
+      assert.deepStrictEqual(h.calls[0].child.kills, ['SIGTERM']);
+      controller.abort();
+      const child = h.calls[0].child;
+      child.exitCode = 0; child.emit('exit', 0, null);
+      await assert.rejects(pending, /停止/);
+      clock.advance(5000);
+      assert.equal(clock.timers.size, 0);
+      assert.deepStrictEqual(child.kills, ['SIGTERM', 'SIGTERM']);
     } finally { h.close(); }
   });
   await test('code-server runNpm synchronous throw is not swallowed', async () => {
