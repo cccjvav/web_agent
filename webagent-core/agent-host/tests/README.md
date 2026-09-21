@@ -224,6 +224,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [tunnelCleanupAclFixture.cs](tunnelCleanupAclFixture.cs) | 文件级登记；未做符号完整性证明 |
 | [tunnelCleanupAclFixture.ps1](tunnelCleanupAclFixture.ps1) | 文件级登记；未做符号完整性证明 |
 | [tunnelCleanupWindows.test.js](tunnelCleanupWindows.test.js) | 17 个函数/类节点 |
+| [tunnelHelperDiagnostics.test.js](tunnelHelperDiagnostics.test.js) | 20 个函数/类节点 |
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 17 个函数/类节点 |
 | [tunnelOwnerFixture.js](tunnelOwnerFixture.js) | 4 个函数/类节点 |
 | [tunnelReceiptProtection.test.js](tunnelReceiptProtection.test.js) | 17 个函数/类节点 |
