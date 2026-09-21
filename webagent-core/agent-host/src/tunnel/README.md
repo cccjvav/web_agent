@@ -35,9 +35,15 @@ Named Token必须传给cloudflared命令行，因此可能对有本机进程查�
 
 ## 残留检测首包（R5）
 
-新启动的quick/named/ngrok增加私有归属记录，只读检测入口见`scripts/tunnel-residue.js`。记录在当前OS用户home的`.webagent/tunnel-processes-v1`，不含Token/argv；模块解释与边界见[只读归属](停止进程详解.md)。目前没有一键回收，检测不改变Bridge、URL或任何目标进程；旧版无记录、包装脚本、查询失败等明确不能确认。Windows/Linux有身份查询，其他平台保守unknown。不要把磁盘记录或疑似残留状态当成终止授权。
+新启动的quick/named/ngrok增加私有归属记录，只读检测入口见`scripts/tunnel-residue.js`。记录在当前OS用户home的`.webagent/tunnel-processes-v1`，不含Token/argv；模块解释与边界见[只读归属](停止进程详解.md)。只读检测本身不改变Bridge、URL或任何目标进程；另有下述Windows本机确认回收入口，尚无图形按钮；旧版无记录、包装脚本、查询失败等明确不能确认。Windows/Linux有身份查询，其他平台保守unknown。不要把磁盘记录或疑似残留状态当成终止授权。
 
-R5记录完整性续包：Windows新收据使用CurrentUser DPAPI，封装失败不落回明文；v1仍只读且unverified，v2验证后报告os-user-protected。此标签不是WebAgent来源证明或终止授权，清理仍禁用。
+R5记录完整性续包：Windows新收据使用CurrentUser DPAPI，封装失败不落回明文；v1仍只读且unverified，v2验证后报告os-user-protected。此标签不是WebAgent来源证明或终止授权，检测报告的清理标志仍禁用；实际终止必须走独立本机确认和原生句柄复核。
+
+## Windows本机确认回收
+
+零参数交互终端运行`scripts/tunnel-cleanup.js`。仅接受DPAPI验证且有界完整扫描中的记录；同一原生句柄核对目标创建时间/映像路径/原始父PID，任何仍存活的宿主都阻止清理。仅cloudflared.exe/ngrok.exe直接子隧道根进程，包装器/重命名程序/旧明文/无记录项跳过；不调用stopTunnel、不按进程名/端口枚举或taskkill进程树。
+
+预览60秒有效，本机输入RECYCLE才会重读记录指纹并在持有的目标句柄上再次核对、终止和观察退出。权限/身份不确定即跳过，结果未知不自动重放。DPAPI不隔离同用户恶意代码/管理员，TTY也不是防自动化的人类身份认证；无HTTP/MCP清理接口、不提权。图形按钮、非Windows回收及真实隧道桌面验收仍待。完整合同见[句柄回收](停止进程详解.md)。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航
@@ -52,5 +58,8 @@ R5记录完整性续包：Windows新收据使用CurrentUser DPAPI，封装失败
 | [receiptProtection.js](receiptProtection.js) | 13 个函数/类节点 |
 | [receiptProtection.ps1](receiptProtection.ps1) | 文件级登记；未做符号完整性证明 |
 | [stopProcess.js](stopProcess.js) | 8 个函数/类节点 |
-| [tunnelRegistry.js](tunnelRegistry.js) | 23 个函数/类节点 |
+| [tunnelCleanup.cs](tunnelCleanup.cs) | 文件级登记；未做符号完整性证明 |
+| [tunnelCleanup.js](tunnelCleanup.js) | 28 个函数/类节点 |
+| [tunnelCleanup.ps1](tunnelCleanup.ps1) | 文件级登记；未做符号完整性证明 |
+| [tunnelRegistry.js](tunnelRegistry.js) | 27 个函数/类节点 |
 <!-- docs-inventory:end -->

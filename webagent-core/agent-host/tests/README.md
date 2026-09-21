@@ -127,6 +127,8 @@ R5：tunnelRegistry/tunnelOwnerFixture验证只读归属分类、坏记录/边�
 
 R5第二包：tunnelReceiptProtection覆盖可信标签与旧明文隔离、密文/文件名篡改、封装失败不降级、迟到退出；Windows运行真实CurrentUser DPAPI辅助，Linux不代签Windows。无终止操作。
 
+R5第三包：tunnelCleanup为协议/过期/确认/未知的模拟测试，tunnelCleanupWindows仅Windows执行实际句柄、归属保护和确认终止，非Windows明确未执行。原检测/保护/生命周期回归保留。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -215,6 +217,8 @@ R5第二包：tunnelReceiptProtection覆盖可信标签与旧明文隔离、密�
 | [toolLabel.test.js](toolLabel.test.js) | 0 个函数/类节点 |
 | [traceIntegration.test.js](traceIntegration.test.js) | 4 个函数/类节点 |
 | [tunnel.test.js](tunnel.test.js) | 14 个函数/类节点 |
+| [tunnelCleanup.test.js](tunnelCleanup.test.js) | 25 个函数/类节点 |
+| [tunnelCleanupWindows.test.js](tunnelCleanupWindows.test.js) | 12 个函数/类节点 |
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 17 个函数/类节点 |
 | [tunnelOwnerFixture.js](tunnelOwnerFixture.js) | 4 个函数/类节点 |
 | [tunnelReceiptProtection.test.js](tunnelReceiptProtection.test.js) | 17 个函数/类节点 |

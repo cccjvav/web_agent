@@ -45,7 +45,7 @@ function createRegistry({ baseDirectory = os.homedir(), inspect = inspectProcess
     const records = [], sealed = [], protectedIds = new Set(); let invalid = 0, complete = true;
     let root;
     try { root = await directory(); }
-    catch (error) { if (error.code === 'ENOENT') return { records, invalid, complete, protectedIds }; throw error; }
+    catch (error) { if (error.code === 'ENOENT') return { records, invalid, complete, protectedIds, sealed }; throw error; }
     const entries = await fsp.opendir(root);
     let count = 0;
     for await (const entry of entries) {
@@ -82,7 +82,16 @@ function createRegistry({ baseDirectory = os.homedir(), inspect = inspectProcess
         records.push(record); protectedIds.add(record.id);
       }
     }
-    return { records, invalid, complete, protectedIds };
+    return { records, invalid, complete, protectedIds, sealed };
+  }
+  async function cleanupSource() {
+    // Internal local-CLI input, not an API response. Never promote legacy plaintext.
+    const source = await readRecords();
+    if (!source.complete) throw Error('Incomplete tunnel registry; cleanup unavailable');
+    const entries = source.sealed.filter(item => source.protectedIds.has(item.id))
+      .map(item => ({ id: item.id, envelope: item.envelope })).sort((a, b) => a.id.localeCompare(b.id));
+    return { entries, skipped: source.invalid + source.records.length - entries.length,
+      fingerprint: crypto.createHash('sha256').update(JSON.stringify(entries)).digest('hex') };
   }
   async function hasCapacity(root) {
     let count = 0;
@@ -139,7 +148,7 @@ function createRegistry({ baseDirectory = os.homedir(), inspect = inspectProcess
       } catch (_) { return { status: 'unavailable' }; }
     })();
   }
-  return { observe, snapshot };
+  return { observe, snapshot, cleanupSource };
 }
 const registry = createRegistry();
 function observeTunnel(proc, provider, executable) {
@@ -148,4 +157,4 @@ function observeTunnel(proc, provider, executable) {
     if (!['recorded', 'exited'].includes(result.status)) console.warn('Tunnel ownership record unavailable; residual detection may be incomplete.');
   }).catch(() => {});
 }
-module.exports = { createRegistry, classify, validRecord, observeTunnel, snapshot: registry.snapshot };
+module.exports = { createRegistry, classify, validRecord, observeTunnel, snapshot: registry.snapshot, cleanupSource: registry.cleanupSource };

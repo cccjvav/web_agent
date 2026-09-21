@@ -11,7 +11,7 @@ const files = [
   'LICENSE', 'docs/guides/Bridge权限与工作模式.md', '探针入口与实际可用范围.md', 'arena-model-probe/webagent-connection.user.js', 'docs/guides/内置探索Agent使用指南.md', 'docs/development/借鉴优化说明（新手版）.md', 'docs/guides/Bridge统计与刷新排查.md', 'SECURITY.md', 'README.md', '使用指南.md', 'docs/development/技术实现.md', 'docs/development/架构导读.md', 'docs/development/组件说明.md',
   'docs/guides/Conda环境说明.md', 'docs/development/代码复盘指南.md', 'docs/guides/Windows新手逐步验收.md', 'review/CHECKLIST_WINDOWS.md',
   'installer/README.md', 'installer/函数详解.md',
-  'webagent-core/agent-host/scripts/tunnel-residue.js',
+  'webagent-core/agent-host/scripts/tunnel-residue.js', 'webagent-core/agent-host/scripts/tunnel-cleanup.js',
   'webagent-core/agent-host/scripts/README.md', 'webagent-core/agent-host/scripts/运行器详解.md',
   'docs/development/总览.md', 'docs/guides/技能使用指南.md', 'docs/guides/网页VSCode使用指南.md', 'check-env.cmd',
   'run-webagent.cmd', 'run-webagent-vscode.cmd', 'run-webagent-appwindow.cmd',

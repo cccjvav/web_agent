@@ -15,6 +15,8 @@ R4：逐文件context/result固定元数据与有界失败annotation帮助区分
 
 R5增加`tunnel-residue.js`零参数只读本地检测，JSON明确不支持清理；详见运行器详解独立章节。不会停止当前Bridge或按名称杀进程。
 
+R5新增独立`tunnel-cleanup.js`：仅Windows本机交互终端零参数，预览后RECYCLE确认；只读tunnel-residue.js不变。无图形/HTTP/MCP清理入口，未知不重放。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -23,5 +25,6 @@ R5增加`tunnel-residue.js`零参数只读本地检测，JSON明确不支持清�
 | 源码 | 定位证据 |
 |---|---|
 | [run-tests.js](run-tests.js) | 5 个函数/类节点 |
+| [tunnel-cleanup.js](tunnel-cleanup.js) | 8 个函数/类节点 |
 | [tunnel-residue.js](tunnel-residue.js) | 2 个函数/类节点 |
 <!-- docs-inventory:end -->

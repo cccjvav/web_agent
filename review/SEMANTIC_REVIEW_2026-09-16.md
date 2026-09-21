@@ -242,3 +242,6 @@ HTTP/stdio对message.error作真假判断会将result+error:null/false/0视作�
 
 ### R5 Windows收据完整性（2026-09-21）
 新收据CurrentUser DPAPI、旧v1不授信、失败不降级与文件名ID绑定；保护标签不是应用来源证明或终止授权。可控边界测试与Windows真实API验证分别登记，稳定句柄/清理入口仍待。详见阶段10，整篇认证计数不变。
+
+### R5 Windows句柄回收（2026-09-21）
+本机TTY预览/确认，保护记录加父PID/创建/映像核对、活宿主排除，同一目标句柄执行/观察退出；旧v1/未知项不行动，unknown不重放。DPAPI/TTY不隔离同用户恶意代码，无图形/API入口；平台证据见阶段10，整篇认证计数不变。
