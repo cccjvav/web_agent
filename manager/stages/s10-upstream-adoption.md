@@ -241,6 +241,10 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 
 CI证据：第一批实现`48b08ab`的[CI35520116029](https://github.com/cccjvav/web_agent/actions/runs/35520116029)九项成功。第二批首推`1f791f2`的[CI35521665785](https://github.com/cccjvav/web_agent/actions/runs/35521665785)七个主机任务同点失败——最后一次编辑本页后只跑了check-docs未重跑build.js，content.js站点镜像漂移，与历史0fac6f0教训同类；补交`4f522f1`仅重建content.js，[CI35521837716](https://github.com/cccjvav/web_agent/actions/runs/35521837716)九项成功。失败保留，不借绿灯覆盖。
 
+#### 第55组：平行分支01a0bfa9对照审查（2026-09-21）
+
+用户指令审查另一助手在`arena/01a0bfa9-web-agent`分支的工作（共同基点50c03be，41提交/112文件，与本分支F54两批相互独立演化）。方法与证据：独立worktree实测其HEAD e805bef完整93/93、docs 271/28/110零漂移、探针目录零diff，CI 35612499554九项成功；对本分支HEAD红测复现其patchEngine缺失目标三例缺陷（旧expectedHash静默重建、非空SEARCH原文整段写成新文件、多块创建静默丢弃后续块）——确认为本分支现存数据丢失级缺口；对其HEAD以raw socket运行时抽查重复会话头400、非ASCII头400、批量65项400、纯通知202、容量满initialize 503，全部与其声明一致。其MCP会话修复与本分支F54语义同向但为功能超集（active计数覆盖SSE、503背压、MCP-Protocol-Version锁定、批内信封准入）。其Windows隧道清理子系统（tunnelCleanup.cs持句柄校验创建时间/镜像路径/双向PPID后在同一句柄上terminate）细读裁决为PID复用安全、宁漏杀不误杀，但只能实机验收，其台账亦如实登记未验。其历史CI四次失败逐一核对为文档导航漏生成、Windows22夹具unknown（登记未定根因）与暂停Probe打包失败（未越界处理），无掩盖失败或代签行为。完整发现、可疑项裁决与收敛建议见[平行分支审查报告](../../review/BRANCH_COMPARISON_01a0bfa9_2026-09-21.md)；本组只登记审查结论，合并/收敛未获授权不执行。本地完整84/84（documentationLinks首轮红：新报告未登记正式清单，登记后绿）、249/28/110零漂移。
+
 #### 已交付：限流与生成测试批次
 
 - 11限流：OAuth JSON/HTML 429都返回Retry-After；超额请求不增加计数/延长窗口；1000-key容量有恢复提示且旧key剩余额度不被挤掉；来源不直接回退不可信转发头。原固定窗口本来不会被连续拒绝无限延长，此处不虚报修复了不存在的问题。
