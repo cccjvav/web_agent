@@ -37,6 +37,8 @@ Named Token必须传给cloudflared命令行，因此可能对有本机进程查�
 
 新启动的quick/named/ngrok增加私有归属记录，只读检测入口见`scripts/tunnel-residue.js`。记录在当前OS用户home的`.webagent/tunnel-processes-v1`，不含Token/argv；模块解释与边界见[只读归属](停止进程详解.md)。目前没有一键回收，检测不改变Bridge、URL或任何目标进程；旧版无记录、包装脚本、查询失败等明确不能确认。Windows/Linux有身份查询，其他平台保守unknown。不要把磁盘记录或疑似残留状态当成终止授权。
 
+R5记录完整性续包：Windows新收据使用CurrentUser DPAPI，封装失败不落回明文；v1仍只读且unverified，v2验证后报告os-user-protected。此标签不是WebAgent来源证明或终止授权，清理仍禁用。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -47,6 +49,8 @@ Named Token必须传给cloudflared命令行，因此可能对有本机进程查�
 | [cloudflared.js](cloudflared.js) | 44 个函数/类节点 |
 | [ngrok.js](ngrok.js) | 25 个函数/类节点 |
 | [processIdentity.js](processIdentity.js) | 14 个函数/类节点 |
+| [receiptProtection.js](receiptProtection.js) | 13 个函数/类节点 |
+| [receiptProtection.ps1](receiptProtection.ps1) | 文件级登记；未做符号完整性证明 |
 | [stopProcess.js](stopProcess.js) | 8 个函数/类节点 |
-| [tunnelRegistry.js](tunnelRegistry.js) | 21 个函数/类节点 |
+| [tunnelRegistry.js](tunnelRegistry.js) | 23 个函数/类节点 |
 <!-- docs-inventory:end -->

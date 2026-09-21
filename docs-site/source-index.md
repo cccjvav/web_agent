@@ -1606,6 +1606,30 @@
 - `inspectProcesses/anonymous@39:21/anonymous@41:154` — ArrowFunctionExpression，[L41–L54](../webagent-core/agent-host/src/tunnel/processIdentity.js#L41-L54)
 - `inspectProcesses/anonymous@55:13` — ArrowFunctionExpression，[L55–L55](../webagent-core/agent-host/src/tunnel/processIdentity.js#L55-L55)
 
+## webagent-core/agent-host/src/tunnel/receiptProtection.js
+
+[目录说明](../webagent-core/agent-host/src/tunnel/README.md) · SHA-256 `7154c0fc7efcb75f756f3a272e7c1e1dc7ba3ee8622632c0b107ac2e47baa549`
+
+- `unavailable` — FunctionDeclaration，[L7–L7](../webagent-core/agent-host/src/tunnel/receiptProtection.js#L7-L7)
+- `validPayload` — FunctionDeclaration，[L8–L8](../webagent-core/agent-host/src/tunnel/receiptProtection.js#L8-L8)
+- `run` — FunctionDeclaration，[L9–L34](../webagent-core/agent-host/src/tunnel/receiptProtection.js#L9-L34)
+- `run/anonymous@11:18` — ArrowFunctionExpression，[L11–L11](../webagent-core/agent-host/src/tunnel/receiptProtection.js#L11-L11)
+- `run/anonymous@18:29` — ArrowFunctionExpression，[L18–L32](../webagent-core/agent-host/src/tunnel/receiptProtection.js#L18-L32)
+- `run/anonymous@18:29/anonymous@20:87` — ArrowFunctionExpression，[L20–L28](../webagent-core/agent-host/src/tunnel/receiptProtection.js#L20-L28)
+- `run/anonymous@18:29/anonymous@20:87/anonymous@24:82` — ArrowFunctionExpression，[L24–L25](../webagent-core/agent-host/src/tunnel/receiptProtection.js#L24-L25)
+- `run/anonymous@18:29/anonymous@30:30` — ArrowFunctionExpression，[L30–L30](../webagent-core/agent-host/src/tunnel/receiptProtection.js#L30-L30)
+- `protect` — FunctionDeclaration，[L35–L39](../webagent-core/agent-host/src/tunnel/receiptProtection.js#L35-L39)
+- `unprotect` — FunctionDeclaration，[L40–L44](../webagent-core/agent-host/src/tunnel/receiptProtection.js#L40-L44)
+- `unprotect/anonymous@41:39` — ArrowFunctionExpression，[L41–L41](../webagent-core/agent-host/src/tunnel/receiptProtection.js#L41-L41)
+- `unprotect/anonymous@42:52` — ArrowFunctionExpression，[L42–L42](../webagent-core/agent-host/src/tunnel/receiptProtection.js#L42-L42)
+- `unprotect/anonymous@43:18` — ArrowFunctionExpression，[L43–L43](../webagent-core/agent-host/src/tunnel/receiptProtection.js#L43-L43)
+
+## webagent-core/agent-host/src/tunnel/receiptProtection.ps1
+
+[目录说明](../webagent-core/agent-host/src/tunnel/README.md) · SHA-256 `b6fe9fc07b2d05557e513f527201bcbc226413f9ec46e9334f0f684cbf621a26`
+
+- 文件级登记；没有可报告的JS函数/类节点。
+
 ## webagent-core/agent-host/src/tunnel/stopProcess.js
 
 [目录说明](../webagent-core/agent-host/src/tunnel/README.md) · SHA-256 `99fe9acefb6eba46c3a0e84eac1d738669d683f73b47f6a191bf35f140da2c6b`
@@ -1621,29 +1645,31 @@
 
 ## webagent-core/agent-host/src/tunnel/tunnelRegistry.js
 
-[目录说明](../webagent-core/agent-host/src/tunnel/README.md) · SHA-256 `2ec3480af3c0fe47a0e5882d8b01d366f807ce914aa96f01171420837293630e`
+[目录说明](../webagent-core/agent-host/src/tunnel/README.md) · SHA-256 `cf51ed588d294a16187bf8c5d8c2e09396e037fd4d7d6d8db35edf65aa18c6b4`
 
-- `validIdentity` — FunctionDeclaration，[L13–L16](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L13-L16)
-- `validRecord` — FunctionDeclaration，[L17–L21](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L17-L21)
-- `classify` — FunctionDeclaration，[L22–L30](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L22-L30)
-- `createRegistry` — FunctionDeclaration，[L31–L120](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L31-L120)
-- `createRegistry/directory` — FunctionDeclaration，[L33–L42](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L33-L42)
-- `createRegistry/directory/anonymous@37:66` — ArrowFunctionExpression，[L37–L37](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L37-L37)
-- `createRegistry/readRecords` — FunctionDeclaration，[L43–L71](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L43-L71)
-- `createRegistry/readRecords/anonymous@68:55` — ArrowFunctionExpression，[L68–L68](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L68-L68)
-- `createRegistry/scan` — FunctionDeclaration，[L72–L83](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L72-L83)
-- `createRegistry/scan/anonymous@75:47` — ArrowFunctionExpression，[L75–L75](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L75-L75)
-- `createRegistry/scan/anonymous@78:29` — ArrowFunctionExpression，[L78–L79](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L78-L79)
-- `createRegistry/snapshot` — FunctionDeclaration，[L84–L88](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L84-L88)
-- `createRegistry/snapshot/anonymous@86:51` — ArrowFunctionExpression，[L86–L86](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L86-L86)
-- `createRegistry/observe` — FunctionDeclaration，[L89–L118](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L89-L118)
-- `createRegistry/observe/clear` — ArrowFunctionExpression，[L92–L95](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L92-L95)
-- `createRegistry/observe/clear/anonymous@94:51` — ArrowFunctionExpression，[L94–L94](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L94-L94)
-- `createRegistry/observe/anonymous@97:12` — ArrowFunctionExpression，[L97–L117](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L97-L117)
-- `createRegistry/observe/anonymous@97:12/anonymous@114:57` — ArrowFunctionExpression，[L114–L114](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L114-L114)
-- `observeTunnel` — FunctionDeclaration，[L122–L127](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L122-L127)
-- `observeTunnel/anonymous@124:52` — ArrowFunctionExpression，[L124–L126](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L124-L126)
-- `observeTunnel/anonymous@126:11` — ArrowFunctionExpression，[L126–L126](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L126-L126)
+- `validIdentity` — FunctionDeclaration，[L14–L17](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L14-L17)
+- `validRecord` — FunctionDeclaration，[L18–L22](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L18-L22)
+- `classify` — FunctionDeclaration，[L23–L31](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L23-L31)
+- `createRegistry` — FunctionDeclaration，[L32–L143](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L32-L143)
+- `createRegistry/directory` — FunctionDeclaration，[L34–L43](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L34-L43)
+- `createRegistry/directory/anonymous@38:66` — ArrowFunctionExpression，[L38–L38](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L38-L38)
+- `createRegistry/readRecords` — FunctionDeclaration，[L44–L86](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L44-L86)
+- `createRegistry/readRecords/anonymous@74:55` — ArrowFunctionExpression，[L74–L74](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L74-L74)
+- `createRegistry/readRecords/anonymous@77:60` — ArrowFunctionExpression，[L77–L77](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L77-L77)
+- `createRegistry/hasCapacity` — FunctionDeclaration，[L87–L91](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L87-L91)
+- `createRegistry/scan` — FunctionDeclaration，[L92–L103](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L92-L103)
+- `createRegistry/scan/anonymous@95:47` — ArrowFunctionExpression，[L95–L95](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L95-L95)
+- `createRegistry/scan/anonymous@98:29` — ArrowFunctionExpression，[L98–L99](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L98-L99)
+- `createRegistry/snapshot` — FunctionDeclaration，[L104–L108](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L104-L108)
+- `createRegistry/snapshot/anonymous@106:51` — ArrowFunctionExpression，[L106–L106](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L106-L106)
+- `createRegistry/observe` — FunctionDeclaration，[L109–L141](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L109-L141)
+- `createRegistry/observe/clear` — ArrowFunctionExpression，[L112–L115](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L112-L115)
+- `createRegistry/observe/clear/anonymous@114:51` — ArrowFunctionExpression，[L114–L114](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L114-L114)
+- `createRegistry/observe/anonymous@117:12` — ArrowFunctionExpression，[L117–L140](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L117-L140)
+- `createRegistry/observe/anonymous@117:12/anonymous@137:57` — ArrowFunctionExpression，[L137–L137](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L137-L137)
+- `observeTunnel` — FunctionDeclaration，[L145–L150](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L145-L150)
+- `observeTunnel/anonymous@147:52` — ArrowFunctionExpression，[L147–L149](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L147-L149)
+- `observeTunnel/anonymous@149:11` — ArrowFunctionExpression，[L149–L149](../webagent-core/agent-host/src/tunnel/tunnelRegistry.js#L149-L149)
 
 ## webagent-core/agent-host/src/usage/tracker.js
 
@@ -2249,15 +2275,15 @@
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `3f10eb05187295dfd8948d496e0fc09e4e05e2b77daae96aec26493584552349`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `cc8fbeb9e34ac7a1cc97c925acdebab8c13d2e4b25884ab4f6833f370bca91ba`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)
-- `namedFunctions` — FunctionDeclaration，[L251–L266](../webagent-core/agent-host/tests/documentationLearning.test.js#L251-L266)
-- `namedFunctions/anonymous@262:44` — ArrowFunctionExpression，[L262–L262](../webagent-core/agent-host/tests/documentationLearning.test.js#L262-L262)
-- `anonymous@359:66` — ArrowFunctionExpression，[L359–L359](../webagent-core/agent-host/tests/documentationLearning.test.js#L359-L359)
-- `anonymous@364:43` — ArrowFunctionExpression，[L364–L364](../webagent-core/agent-host/tests/documentationLearning.test.js#L364-L364)
-- `anonymous@364:68` — ArrowFunctionExpression，[L364–L364](../webagent-core/agent-host/tests/documentationLearning.test.js#L364-L364)
+- `namedFunctions` — FunctionDeclaration，[L253–L268](../webagent-core/agent-host/tests/documentationLearning.test.js#L253-L268)
+- `namedFunctions/anonymous@264:44` — ArrowFunctionExpression，[L264–L264](../webagent-core/agent-host/tests/documentationLearning.test.js#L264-L264)
+- `anonymous@362:66` — ArrowFunctionExpression，[L362–L362](../webagent-core/agent-host/tests/documentationLearning.test.js#L362-L362)
+- `anonymous@367:43` — ArrowFunctionExpression，[L367–L367](../webagent-core/agent-host/tests/documentationLearning.test.js#L367-L367)
+- `anonymous@367:68` — ArrowFunctionExpression，[L367–L367](../webagent-core/agent-host/tests/documentationLearning.test.js#L367-L367)
 
 ## webagent-core/agent-host/tests/documentationLinks.test.js
 
@@ -2604,7 +2630,7 @@
 
 ## webagent-core/agent-host/tests/installerPackaging.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `bd2563b8af292d28efdaabe45cc3431150b04f46f625adf39522bd2ef3d11d6c`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `72261fe001731e7b1886ba5e07fd3e4ec2e13e71cf3a3402118a482e9b8bceb9`
 
 - `anonymous@10:1` — ArrowFunctionExpression，[L10–L109](../webagent-core/agent-host/tests/installerPackaging.test.js#L10-L109)
 - `anonymous@10:1/anonymous@29:216` — ArrowFunctionExpression，[L29–L29](../webagent-core/agent-host/tests/installerPackaging.test.js#L29-L29)
@@ -2614,7 +2640,7 @@
 - `anonymous@10:1/anonymous@32:32` — ArrowFunctionExpression，[L32–L32](../webagent-core/agent-host/tests/installerPackaging.test.js#L32-L32)
 - `anonymous@10:1/anonymous@33:32` — ArrowFunctionExpression，[L33–L33](../webagent-core/agent-host/tests/installerPackaging.test.js#L33-L33)
 - `anonymous@10:1/anonymous@34:169` — ArrowFunctionExpression，[L34–L34](../webagent-core/agent-host/tests/installerPackaging.test.js#L34-L34)
-- `anonymous@10:1/anonymous@35:147` — ArrowFunctionExpression，[L35–L35](../webagent-core/agent-host/tests/installerPackaging.test.js#L35-L35)
+- `anonymous@10:1/anonymous@35:218` — ArrowFunctionExpression，[L35–L35](../webagent-core/agent-host/tests/installerPackaging.test.js#L35-L35)
 - `anonymous@10:1/anonymous@36:32` — ArrowFunctionExpression，[L36–L36](../webagent-core/agent-host/tests/installerPackaging.test.js#L36-L36)
 - `anonymous@10:1/anonymous@38:33` — ArrowFunctionExpression，[L38–L38](../webagent-core/agent-host/tests/installerPackaging.test.js#L38-L38)
 - `anonymous@10:1/anonymous@39:16` — ArrowFunctionExpression，[L39–L39](../webagent-core/agent-host/tests/installerPackaging.test.js#L39-L39)
@@ -3869,24 +3895,46 @@
 - `anonymous@14:92` — ArrowFunctionExpression，[L14–L16](../webagent-core/agent-host/tests/tunnelOwnerFixture.js#L14-L16)
 - `anonymous@16:9` — ArrowFunctionExpression，[L16–L16](../webagent-core/agent-host/tests/tunnelOwnerFixture.js#L16-L16)
 
+## webagent-core/agent-host/tests/tunnelReceiptProtection.test.js
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `2869df631573c06875c75d98a2f001cd21e89b12177857de0f84f8002a1665e2`
+
+- `main` — FunctionDeclaration，[L11–L97](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L11-L97)
+- `main/live` — ArrowFunctionExpression，[L16–L16](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L16-L16)
+- `main/inspect` — ArrowFunctionExpression，[L17–L17](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L17-L17)
+- `main/protect` — FunctionExpression，[L21–L25](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L21-L25)
+- `main/unprotect` — FunctionExpression，[L26–L26](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L26-L26)
+- `main/unprotect/anonymous@26:54` — ArrowFunctionExpression，[L26–L26](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L26-L26)
+- `main/inspect@32:15` — ArrowFunctionExpression，[L32–L32](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L32-L32)
+- `main/anonymous@52:36` — ArrowFunctionExpression，[L52–L52](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L52-L52)
+- `main/unprotect@59:111` — ArrowFunctionExpression，[L59–L59](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L59-L59)
+- `main/inspect@66:87` — ArrowFunctionExpression，[L66–L66](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L66-L66)
+- `main/protect@67:44` — ArrowFunctionExpression，[L67–L67](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L67-L67)
+- `main/inspect@72:83` — ArrowFunctionExpression，[L72–L72](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L72-L72)
+- `main/protect@73:44` — ArrowFunctionExpression，[L73–L73](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L73-L73)
+- `main/protect/anonymous@73:66` — ArrowFunctionExpression，[L73–L73](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L73-L73)
+- `main/protect/anonymous@73:66/anonymous@73:88` — ArrowFunctionExpression，[L73–L73](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L73-L73)
+- `main/anonymous@77:108` — ArrowFunctionExpression，[L77–L77](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L77-L77)
+- `anonymous@98:13` — ArrowFunctionExpression，[L98–L98](../webagent-core/agent-host/tests/tunnelReceiptProtection.test.js#L98-L98)
+
 ## webagent-core/agent-host/tests/tunnelRegistry.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `7ab5eee2af2f009be6a85bf3487a48eadb006a723a9e0b56461776a3f9496eec`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `0fad9bb17f31476b577123e0a7bfeb4ac86d26cb5fb6ea3c9ea34a98a099d296`
 
-- `main` — FunctionDeclaration，[L12–L148](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L12-L148)
+- `main` — FunctionDeclaration，[L12–L149](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L12-L149)
 - `main/live` — ArrowFunctionExpression，[L18–L18](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L18-L18)
 - `main/inspect` — ArrowFunctionExpression，[L39–L41](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L39-L41)
-- `main/inspect@57:90` — ArrowFunctionExpression，[L57–L57](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L57-L57)
-- `main/anonymous@76:44` — ArrowFunctionExpression，[L76–L76](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L76-L76)
-- `main/inspect@79:70` — ArrowFunctionExpression，[L79–L79](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L79-L79)
-- `main/inspect@91:83` — ArrowFunctionExpression，[L91–L91](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L91-L91)
-- `main/inspect/anonymous@91:101` — ArrowFunctionExpression，[L91–L91](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L91-L91)
-- `main/anonymous@117:40` — ArrowFunctionExpression，[L117–L117](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L117-L117)
-- `main/anonymous@118:20` — ArrowFunctionExpression，[L118–L118](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L118-L118)
-- `main/anonymous@118:20/anonymous@118:59` — ArrowFunctionExpression，[L118–L118](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L118-L118)
-- `main/anonymous@119:17` — ArrowFunctionExpression，[L119–L119](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L119-L119)
-- `main/anonymous@133:26` — ArrowFunctionExpression，[L133–L133](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L133-L133)
-- `anonymous@149:13` — ArrowFunctionExpression，[L149–L149](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L149-L149)
+- `main/inspect@58:90` — ArrowFunctionExpression，[L58–L58](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L58-L58)
+- `main/anonymous@77:44` — ArrowFunctionExpression，[L77–L77](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L77-L77)
+- `main/inspect@80:70` — ArrowFunctionExpression，[L80–L80](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L80-L80)
+- `main/inspect@92:83` — ArrowFunctionExpression，[L92–L92](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L92-L92)
+- `main/inspect/anonymous@92:101` — ArrowFunctionExpression，[L92–L92](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L92-L92)
+- `main/anonymous@118:40` — ArrowFunctionExpression，[L118–L118](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L118-L118)
+- `main/anonymous@119:20` — ArrowFunctionExpression，[L119–L119](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L119-L119)
+- `main/anonymous@119:20/anonymous@119:59` — ArrowFunctionExpression，[L119–L119](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L119-L119)
+- `main/anonymous@120:17` — ArrowFunctionExpression，[L120–L120](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L120-L120)
+- `main/anonymous@134:26` — ArrowFunctionExpression，[L134–L134](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L134-L134)
+- `anonymous@150:13` — ArrowFunctionExpression，[L150–L150](../webagent-core/agent-host/tests/tunnelRegistry.test.js#L150-L150)
 
 ## webagent-core/agent-host/tests/usageTracker.test.js
 

@@ -125,6 +125,8 @@ R2/R3续修：externalDiscovery用真实JSON/SSE验证拒绝响应不提交候�
 
 R5：tunnelRegistry/tunnelOwnerFixture验证只读归属分类、坏记录/边界、真实宿主强杀后的孤儿检测及其他活进程不受影响；tunnelLifecycle检查三个provider接线。只是检测首包，无清理按钮，详见tunnel/停止进程详解。
 
+R5第二包：tunnelReceiptProtection覆盖可信标签与旧明文隔离、密文/文件名篡改、封装失败不降级、迟到退出；Windows运行真实CurrentUser DPAPI辅助，Linux不代签Windows。无终止操作。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -215,6 +217,7 @@ R5：tunnelRegistry/tunnelOwnerFixture验证只读归属分类、坏记录/边�
 | [tunnel.test.js](tunnel.test.js) | 14 个函数/类节点 |
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 17 个函数/类节点 |
 | [tunnelOwnerFixture.js](tunnelOwnerFixture.js) | 4 个函数/类节点 |
+| [tunnelReceiptProtection.test.js](tunnelReceiptProtection.test.js) | 17 个函数/类节点 |
 | [tunnelRegistry.test.js](tunnelRegistry.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |

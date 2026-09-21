@@ -6,6 +6,7 @@ const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
 const { config } = require('../config');
+const receiptProtection = require('./receiptProtection');
 const { validPid, sameIdentity, inspectProcesses } = require('./processIdentity');
 const MAX_RECORDS = 32;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -28,7 +29,7 @@ function classify(record, processes, instanceId) {
   if (owner?.status !== 'alive' || !sameIdentity(record.owner, owner.identity)) return 'unknown';
   return record.instanceId === instanceId ? 'active-current' : 'active-other';
 }
-function createRegistry({ baseDirectory = os.homedir(), inspect = inspectProcesses, instanceId = config.hostInstanceId, ownerPid = process.pid } = {}) {
+function createRegistry({ baseDirectory = os.homedir(), inspect = inspectProcesses, instanceId = config.hostInstanceId, ownerPid = process.pid, protection = receiptProtection } = {}) {
   let pendingScan = null;
   async function directory(create = false) {
     let current = await fsp.realpath(baseDirectory);
@@ -41,10 +42,10 @@ function createRegistry({ baseDirectory = os.homedir(), inspect = inspectProcess
     return current;
   }
   async function readRecords() {
-    const records = []; let invalid = 0, complete = true;
+    const records = [], sealed = [], protectedIds = new Set(); let invalid = 0, complete = true;
     let root;
     try { root = await directory(); }
-    catch (error) { if (error.code === 'ENOENT') return { records, invalid, complete }; throw error; }
+    catch (error) { if (error.code === 'ENOENT') return { records, invalid, complete, protectedIds }; throw error; }
     const entries = await fsp.opendir(root);
     let count = 0;
     for await (const entry of entries) {
@@ -62,21 +63,40 @@ function createRegistry({ baseDirectory = os.homedir(), inspect = inspectProcess
         const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0);
         if (bytesRead > 12 * 1024) throw Error('Oversized registry record');
         const record = JSON.parse(buffer.subarray(0, bytesRead).toString('utf8'));
-        if (!validRecord(record, id)) throw Error('Invalid registry record');
-        records.push(record);
+        if (record?.version === 2) {
+          if (Object.keys(record).length !== 3 || record.protection !== 'windows-dpapi-user' || !receiptProtection.validPayload(record.payload)) throw Error('Invalid sealed record');
+          sealed.push({ id, envelope: record });
+        } else {
+          if (!validRecord(record, id)) throw Error('Invalid registry record');
+          records.push(record); // Legacy plaintext never acquires a protection label.
+        }
       } catch (_) { invalid++; }
       finally { if (handle) await handle.close().catch(() => {}); }
     }
-    return { records, invalid, complete };
+    if (sealed.length) {
+      const decoded = await protection.unprotect(sealed.map(item => item.envelope));
+      if (!Array.isArray(decoded) || decoded.length !== sealed.length) throw Error('Protection unavailable');
+      for (let i = 0; i < sealed.length; i++) {
+        const record = decoded[i];
+        if (!validRecord(record, sealed[i].id)) { invalid++; continue; }
+        records.push(record); protectedIds.add(record.id);
+      }
+    }
+    return { records, invalid, complete, protectedIds };
+  }
+  async function hasCapacity(root) {
+    let count = 0;
+    for await (const entry of await fsp.opendir(root)) { if (++count >= MAX_RECORDS) return false; }
+    return true;
   }
   async function scan() {
     try {
-      const { records, invalid, complete } = await readRecords();
+      const { records, invalid, complete, protectedIds } = await readRecords();
       const pids = [...new Set(records.flatMap(record => [record.owner.pid, record.target.pid]))];
       const processes = await inspect(pids);
       return { readOnly: true, cleanupAvailable: false, coverage: 'registered-launches-only', complete, invalidRecords: invalid,
         records: records.map(record => ({ id: record.id, provider: record.provider, pid: record.target.pid, ownerPid: record.owner.pid,
-          status: classify(record, processes, instanceId), canCleanup: false })) };
+          status: classify(record, processes, instanceId), integrity: protectedIds.has(record.id) ? 'os-user-protected' : 'unverified', canCleanup: false })) };
     } catch (_) {
       return { readOnly: true, cleanupAvailable: false, coverage: 'registered-launches-only', complete: false, error: 'registry-unavailable', records: [] };
     }
@@ -104,13 +124,16 @@ function createRegistry({ baseDirectory = os.homedir(), inspect = inspectProcess
         const normalized = process.platform === 'win32' ? expected.toLowerCase() : expected;
         if (normalized !== target.identity.executable) return { status: 'identity-mismatch' };
         const root = await directory(true);
-        const inventory = await readRecords();
-        if (!inventory.complete || inventory.records.length + inventory.invalid >= MAX_RECORDS) return { status: 'capacity' };
+        if (!await hasCapacity(root)) return { status: 'capacity' };
         const id = crypto.randomUUID();
         const record = { version: 1, id, platform: process.platform, provider, instanceId, owner: owner.identity, target: target.identity };
         if (!validRecord(record, id) || exited) return { status: 'unavailable' };
+        // Windows sealing failure must not silently downgrade to a plaintext receipt.
+        const persisted = protection.supported ? await protection.protect(record) : record;
+        const encoded = JSON.stringify(persisted);
+        if (Buffer.byteLength(encoded) > 12 * 1024 || exited) return { status: 'unavailable' };
         recordFile = path.join(root, id + '.json');
-        await fsp.writeFile(recordFile, JSON.stringify(record), { flag: 'wx', mode: 0o600 });
+        await fsp.writeFile(recordFile, encoded, { flag: 'wx', mode: 0o600 });
         if (exited) { await fsp.unlink(recordFile).catch(() => {}); return { status: 'exited' }; }
         return { status: 'recorded' };
       } catch (_) { return { status: 'unavailable' }; }

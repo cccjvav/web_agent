@@ -9,6 +9,8 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/src/tunnel/receiptProtection.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
+  ["webagent-core/agent-host/tests/tunnelReceiptProtection.test.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
   ["webagent-core/agent-host/src/tunnel/processIdentity.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
   ["webagent-core/agent-host/src/tunnel/tunnelRegistry.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
   ["webagent-core/agent-host/tests/tunnelRegistry.test.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
@@ -277,6 +279,7 @@ for (const [source, guide] of pairs) {
 }
 // File-level evidence for non-JS prose: no semantic or selector completeness claim.
 const artifactPairs = [
+  ["webagent-core/agent-host/src/tunnel/receiptProtection.ps1", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
   ["package.json", "docs/development/平台启动与CI详解.md"],
   [".webagent/skills/evidence-check/workflow.json", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
   ["webagent-core/probe-extension/package_browser.py", "webagent-core/probe-extension/实现详解.md"],

@@ -49,7 +49,8 @@ async function main() {
     assert.equal((await registry.observe(proc, 'cloudflare', process.execPath)).status, 'recorded');
     const root = path.join(tmp, '.webagent', 'tunnel-processes-v1');
     const filename = fs.readdirSync(root)[0];
-    const receipt = JSON.parse(fs.readFileSync(path.join(root, filename)));
+    const persisted = JSON.parse(fs.readFileSync(path.join(root, filename)));
+    const receipt = persisted.version === 2 ? (await require('../src/tunnel/receiptProtection').unprotect([persisted]))[0] : persisted;
     assert(!JSON.stringify(receipt).includes('must-not-save-token'));
     assert.deepEqual(Object.keys(receipt).sort(), ['id', 'instanceId', 'owner', 'platform', 'provider', 'target', 'version']);
     assert.equal((await registry.snapshot()).records[0].status, 'active-current');
