@@ -32,6 +32,8 @@ jobs:
       - name: Audit high-severity production dependencies
         run: npm audit --omit=dev --audit-level=high
       - run: npm test
+        env:
+          WEBAGENT_DEBUG_PROCESS: ${{ runner.os == 'Windows' && '1' || '0' }}
       - name: Repeat Windows cancellation and stdio lifecycle
         if: runner.os == 'Windows'
         shell: pwsh

@@ -86,6 +86,8 @@ F54第三批：apply_patch新建分支在预览/提交前校验显式hash及块�
 
 F54交叉复审：apply_patch工具目录明确现存文件才可自动复用读取hash；缺失目标未带expectedHash按既有创建合同，不承诺自动删除检测。
 
+R4：executor/fileOps复用WEBAGENT_DEBUG_PROCESS=1输出有界生命周期元数据（不含命令/搜索/输出正文），默认关闭；超时/取消/容量/结果合同不变，历史Windows根因未关闭。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -97,8 +99,8 @@ F54交叉复审：apply_patch工具目录明确现存文件才可自动复用读
 | [commandJob.cs](commandJob.cs) | 文件级登记；未做符号完整性证明 |
 | [consensusEngine.js](consensusEngine.js) | 7 个函数/类节点 |
 | [dangerous.js](dangerous.js) | 1 个函数/类节点 |
-| [executor.js](executor.js) | 35 个函数/类节点 |
-| [fileOps.js](fileOps.js) | 31 个函数/类节点 |
+| [executor.js](executor.js) | 36 个函数/类节点 |
+| [fileOps.js](fileOps.js) | 33 个函数/类节点 |
 | [findFiles.js](findFiles.js) | 3 个函数/类节点 |
 | [gitOps.js](gitOps.js) | 5 个函数/类节点 |
 | [index.js](index.js) | 21 个函数/类节点 |

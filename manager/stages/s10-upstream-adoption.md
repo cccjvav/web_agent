@@ -86,7 +86,7 @@
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 下一项，高 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，第四批现补资源caller与目录ACL及错误hash指引，第五批已补原生流确认，第六批补窄屏/页签ARIA，其余UI/实机项待续修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
 | R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54第三批已补新文件patch显式hash与块校验，第五批补原生postNdjson坏流/终态及失败历史；按新证据续修，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
-| R4 / 高，独立追查 | 未定位：Windows22历史两项超时 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
+| R4 / 高，独立追查 | 根因未定位；已复取历史annotations并补阶段诊断首包，等待可解释复现 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 中 | 待做：PTY/Windows互操作与剩余目录说明 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
 | R7 / 结构首包已做，语义继续 | 第26组集中19篇专题、归档17篇旧审查、删除过期PROMPT；F54改相邻错误说明、归档独立报告与同步当前基线，未增加逐句完成项；其余README/管理旧现状继续核对 | 源码清单、目录README、根维护/安装说明及阶段索引 | 活跃正文无相互矛盾的“当前”；无用旧指南退役，有效教学/历史失败保留；给出已审和未审清单而不是总称100% |
@@ -893,6 +893,18 @@ nativeChatStream先以真实HTTP证明旧postNdjson对302正常resolve（/home/u
 新增测试使用真实回环HTTP、实际workspaceMatch/轮换/BridgeView消费者，只替换VS Code和缩短夹具deadline。覆盖实际/声明超限、临界8MiB、跨UTF8字节、截断、滴流、无头、302、409/500/空200/204/坏JSON；所有服务端response关闭、timer清除。轮换/停止未知结果各只POST一次、不刷新报成功；有界409拒绝仍正确。没有真的轮换密钥/停止隧道；不是Windows桌面或长期RSS/并发压测。
 
 自审核对第五批NDJSON与第六批布局未被修改，复用旧轮换/PTY/副本回归；发行副本由syncExtension生成。七项定向、完整86/86、真实Chromium（含上一批窄屏/两条axe规则）通过，docs251/28/110。自审增加多字节超限与HEAD零正文兼容：HEAD的Content-Length代表资源长度，不冒充待接收正文；未改变总deadline。实现`c37ef280ec408d22d86c1967098bdd3138df3496`的[CI35559183087](https://github.com/cccjvav/web_agent/actions/runs/35559183087)已逐job核实9/9成功。R4历史超时及CI审计失败未明根因、R5/PTY平台与R7/R8等继续，不据此认证全部原生代码或全仓逐句完成。
+
+### R4诊断首包：历史Windows22超时，不宣称根因已修（2026-09-21）
+
+从干净213241c接续，不切分支。重新用GitHub API核对35125290301/36ff82f、Windows22 job104892732306及check-run annotations：mcpProtocol截图echo的status=timeout、durationMs=30519、exitCode=1、stdout/stderr为空；patchEngine的grepSearch为E_TIMEOUT/detail.phase=startup。该job失败，其余八项成功。完整日志下载仍EOF，没有重跑历史任务。原annotations及JSON保存/home/user/r4-evidence；下载错误中的临时签名链接归档前脱敏。
+
+fetch历史SHA只用于对照，不切换工作分支。历史到213241c的searchWorker.js/commandJob.cs无差异，grepSearch启动/扫描逻辑也未变化；fileOps其他写入分支及executor所有者隔离有后续差异。现有证据不能区分运行器负载、PowerShell启动/Add-Type/Attach或管道时序，更不能把退出码1直接解释为原始命令失败（可能发生于超时终止后）。
+
+新增processDiagnostics先红测缺少online/ready诊断，随后仅补观测：WEBAGENT_DEBUG_PROCESS=1下executor记录created/spawn/首输出/取消/超时/error/exit/close，搜索记录线程online、模块ready、scan-start及失败/清理。固定数值/布尔/枚举schema，不记录命令、cwd、查询、输出正文、凭据；新trace写日志失败不改变执行。默认关闭，工具结果/事件合同不变。Windows主npm test步骤开启；不改30秒命令、10秒启动/2秒扫描、容量/内存、Job Object、终止或重试策略。
+
+runner新增文件/Node/平台/架构/原预算及单调耗时/status/signal/errorCode/捕获字节数，失败annotation带有界元数据，默认120秒/退出码不变。既有日志可能含测试正文，本包不声称全日志脱敏。
+
+可控Worker和时钟验证startup/scan/cancel/重复ready/迟到消息/单次释放，真实命令验证echo/超时/默认关闭/不吞工具输出；诊断sink抛错不破坏真实正常命令或可控worker结束。testRunner临时目录fixture验证exit7及1秒故意超时均失败且有元数据，未改真实套件时限。mcpProtocol/patchEngine开启诊断定向通过，是Linux当前实现证据，不是历史Windows复现或根因结案；首次全套发现旧searchWorkerLifecycle VM缺process环境（新增诊断读取process），补真实process/console后原断言全保留；随后一次全套因尚未重建源码清单触发文档漂移守卫，均保留失败日志。重建后Linux Node22、debug=1全套87/87通过，文档252/28/110及185登记hash已刷新；精确CI待核验。
 
 ## 复盘
 

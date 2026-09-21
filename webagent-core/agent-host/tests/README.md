@@ -117,6 +117,8 @@ F54第六批：workbench.browser的narrowWorkspaceBrowser验证320/390/640工作
 
 nativeRequestJson.test.js：真实HTTP+VM原生函数验证响应预算/总时限/清理，密钥轮换与停止结果未知时不重放；正例/409/500/有界坏JSON合同保持。详见工作区与命令安全测试详解。
 
+R4：processDiagnostics在可控worker时钟及真实子进程上检查阶段元数据、默认关闭/敏感标记不泄漏/诊断输出失败隔离；testRunner补真实隔离失败/超时元数据。详见存储完整性与预算、安装与运行器测试详解。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -183,6 +185,7 @@ nativeRequestJson.test.js：真实HTTP+VM原生函数验证响应预算/总时�
 | [probePairLifecycle.test.js](probePairLifecycle.test.js) | 15 个函数/类节点 |
 | [probeQuestionGuard.test.js](probeQuestionGuard.test.js) | 31 个函数/类节点 |
 | [probeTransport.test.js](probeTransport.test.js) | 59 个函数/类节点 |
+| [processDiagnostics.test.js](processDiagnostics.test.js) | 35 个函数/类节点 |
 | [profile.test.js](profile.test.js) | 8 个函数/类节点 |
 | [providers.test.js](providers.test.js) | 30 个函数/类节点 |
 | [ptyJobs.test.js](ptyJobs.test.js) | 12 个函数/类节点 |
@@ -200,7 +203,7 @@ nativeRequestJson.test.js：真实HTTP+VM原生函数验证响应预算/总时�
 | [stdioOwnerFixture.js](stdioOwnerFixture.js) | 2 个函数/类节点 |
 | [stdioServerFixture.js](stdioServerFixture.js) | 3 个函数/类节点 |
 | [taskProgress.test.js](taskProgress.test.js) | 9 个函数/类节点 |
-| [testRunner.test.js](testRunner.test.js) | 1 个函数/类节点 |
+| [testRunner.test.js](testRunner.test.js) | 5 个函数/类节点 |
 | [toolLabel.test.js](toolLabel.test.js) | 0 个函数/类节点 |
 | [traceIntegration.test.js](traceIntegration.test.js) | 4 个函数/类节点 |
 | [tunnel.test.js](tunnel.test.js) | 14 个函数/类节点 |

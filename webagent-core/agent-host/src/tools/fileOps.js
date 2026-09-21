@@ -367,25 +367,41 @@ function grepSearch(args = {}) {
   if (activeSearches >= 4) return Promise.reject(new ProtocolError('E_BUSY', 'Search workers busy; retry later'));
   activeSearches++;
   return new Promise((resolve, reject) => {
+    const debug = process.env.WEBAGENT_DEBUG_PROCESS === '1';
+    const traceStart = debug ? process.hrtime.bigint() : 0n;
     let worker;
     try { worker = new Worker(path.join(__dirname, 'searchWorker.js'), { workerData: { workspaceRoot: config.workspaceRoot, args }, resourceLimits: { maxOldGenerationSizeMb: 64 } }); }
     catch (err) { activeSearches--; reject(err); return; }
     let done = false, started = false, startupTimer = null, scanTimer = null;
+    const threadId = worker.threadId;
+    let online = false;
+    const trace = (event, code = null) => {
+      if (!debug) return;
+      try {
+        console.error('process lifecycle', JSON.stringify({kind:'search',event,pid:process.pid,threadId,
+          elapsedMs:Number((process.hrtime.bigint()-traceStart)/1000000n),online,ready:started,activeSearches,
+          exitCode:Number.isInteger(code) ? code : null}));
+      } catch (_) { /* Diagnostics must not change worker lifetime or admission. */ }
+    };
+    trace('created');
+    if (debug) worker.once('online', () => { online = true; trace('online'); });
     const signal = currentSignal();
     const finish = (err, value) => {
       if (done) return; done = true; clearTimeout(startupTimer); clearTimeout(scanTimer);
       if (signal) signal.removeEventListener('abort', abort);
-      worker.terminate().catch(() => {}).finally(() => { activeSearches--; });
+      trace(err ? 'failed' : 'result');
+      worker.terminate().catch(() => { trace('termination-error'); }).finally(() => { activeSearches--; trace('released'); });
       if (err) reject(err); else resolve(value);
     };
-    const abort = () => finish(new ProtocolError('E_CANCELLED', 'Search cancelled'));
-    startupTimer = setTimeout(() => finish(new ProtocolError('E_TIMEOUT', 'Search worker startup exceeded 10 second deadline', { phase: 'startup' })), 10000);
+    const abort = () => { trace('cancel'); finish(new ProtocolError('E_CANCELLED', 'Search cancelled')); };
+    startupTimer = setTimeout(() => { trace('timeout'); finish(new ProtocolError('E_TIMEOUT', 'Search worker startup exceeded 10 second deadline', { phase: 'startup' })); }, 10000);
     if (signal) signal.addEventListener('abort', abort, { once: true });
     worker.on('message', msg => {
       if (done) return;
       if (msg && msg.ready === true && !started) {
-        started = true; clearTimeout(startupTimer);
-        scanTimer = setTimeout(() => finish(new ProtocolError('E_TIMEOUT', 'Search scanning exceeded 2 second deadline; narrow the path/pattern', { phase: 'scan' })), 2000);
+        started = true; clearTimeout(startupTimer); trace('ready');
+        scanTimer = setTimeout(() => { trace('timeout'); finish(new ProtocolError('E_TIMEOUT', 'Search scanning exceeded 2 second deadline; narrow the path/pattern', { phase: 'scan' })); }, 2000);
+        trace('scan-start');
         worker.postMessage({ type: 'start' });
         return;
       }
@@ -393,8 +409,8 @@ function grepSearch(args = {}) {
       if (!started || !msg || (!Object.hasOwn(msg, 'result') && !msg.error)) return finish(new Error('Invalid search worker response'));
       finish(msg.error ? new ProtocolError(msg.error.code || 'E_BAD_ARGS', msg.error.message) : null, msg.result);
     });
-    worker.once('error', err => finish(err));
-    worker.once('exit', code => { if (!done) finish(new Error('Search worker exited without result: ' + code)); });
+    worker.once('error', err => { trace('error'); finish(err); });
+    worker.once('exit', code => { trace('exit', code); if (!done) finish(new Error('Search worker exited without result: ' + code)); });
   });
 }
 

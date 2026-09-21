@@ -79,6 +79,9 @@ let failed = 0;
 const results = [];
 for (const f of files) {
   console.log(`\n—— ${f} ——`);
+  const context = {file:f,node:process.version,platform:process.platform,arch:process.arch,timeoutMs:timeout};
+  console.log('[test-context] ' + JSON.stringify(context));
+  const started = process.hrtime.bigint();
   const r = spawnSync(process.execPath, [path.join(testsDir, f)], {
     cwd: root,
     stdio: process.env.GITHUB_ACTIONS === 'true' ? 'pipe' : 'inherit',
@@ -86,6 +89,11 @@ for (const f of files) {
     maxBuffer: 16 * 1024 * 1024,
     timeout
   });
+  const diagnostic = { ...context, elapsedMs:Number((process.hrtime.bigint()-started)/1000000n),
+    status:r.status,signal:r.signal || null,errorCode:r.error?.code || null,
+    stdoutBytes:typeof r.stdout === 'string' ? Buffer.byteLength(r.stdout) : null,
+    stderrBytes:typeof r.stderr === 'string' ? Buffer.byteLength(r.stderr) : null };
+  console.log('[test-result] ' + JSON.stringify(diagnostic));
   if (r.stdout) process.stdout.write(r.stdout);
   if (r.stderr) process.stderr.write(r.stderr);
   if (r.error) console.error(`${f}: ${r.error.message}`);
@@ -94,7 +102,7 @@ for (const f of files) {
   if (!ok) {
     failed += 1;
     if (process.env.GITHUB_ACTIONS === 'true') {
-      const detail = [r.error?.message || '', String(r.stderr || '').slice(0, 1600), String(r.stderr || '').slice(-1000), String(r.stdout || '').slice(-1000)].join('\n').replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+      const detail = [JSON.stringify(diagnostic), r.error?.message || '', String(r.stderr || '').slice(0, 1600), String(r.stderr || '').slice(-1000), String(r.stdout || '').slice(-1000)].join('\n').slice(0, 4500).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
       console.log(`::error title=${f}::${detail}`);
     }
   }

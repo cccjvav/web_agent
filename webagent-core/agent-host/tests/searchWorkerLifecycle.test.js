@@ -14,7 +14,7 @@ function harness() {
     postMessage(message) { this.sent.push(message.type); }
     terminate() { this.terminated++; return Promise.resolve(0); }
   }
-  const scope = { module: { exports: {} }, __dirname: path.dirname(file),
+  const scope = { module: { exports: {} }, __dirname: path.dirname(file), process, console,
     require(name) { return name === 'worker_threads' ? { Worker: FakeWorker } : fromFile(name); },
     setTimeout(fn, ms) { timers.set(++id, { fn, ms }); return id; }, clearTimeout(timer) { timers.delete(timer); }
   };

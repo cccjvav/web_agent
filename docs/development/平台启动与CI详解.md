@@ -103,3 +103,5 @@ Linux可执行`bash -n run-webagent.sh run-webagent-vscode.sh run-admin.sh webag
 ## 根package.json开发入口
 
 name为webagent-project，version与核心入口本次0.7.2对应，private=true防误发布，description说明源码入口。scripts.start调用installer/launch.js classic；start:vscode选择vscode模式；test委托agent-host完整测试；test:example仅跑examples/calculator；docs:check检查文档清单，不自动重写。没有新增依赖；首次测试仍先npm ci --prefix webagent-core/agent-host。验证workspaceEntry执行真实launch.main但替换进程启动，另用Node子进程检查配置默认根；不冒充Windows GUI启动验收。
+
+R4诊断：test.yml仅在agent-host的npm test步骤按runner.os给WEBAGENT_DEBUG_PROCESS=Windows时1、其他0；打开命令/搜索阶段元数据。运行器也报告文件/Node/平台/预算及退出元数据。矩阵、动作版本、权限、审计、原timeout及Windows既有重复取消/stdio步骤未变；后续通过不是历史Windows22超时根因修复证明。

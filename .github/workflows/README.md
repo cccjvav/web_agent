@@ -12,6 +12,8 @@
 ## 验证
 推送/PR触发GitHub Actions。工作流修改应检查三个job定义（矩阵展开九个任务）和退出码，保留失败日志；禁止仅修改断言来掩盖失败。
 
+R4：仅Windows矩阵的主npm test步骤开启WEBAGENT_DEBUG_PROCESS=1，保留原九任务、安装/审计/默认120秒测试与产品30秒命令/10秒worker启动/2秒扫描门禁。不是重跑到绿；日志新增固定阶段元数据用于后续失败定位。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 

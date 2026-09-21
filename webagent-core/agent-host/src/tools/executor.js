@@ -162,6 +162,8 @@ ${command}`;
   const args = win
     ? ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', guardedCommand]
     : ['-c', command];
+  const debug = process.env.WEBAGENT_DEBUG_PROCESS === '1';
+  const traceStart = debug ? process.hrtime.bigint() : 0n;
   const child = spawn(shell, args, {
     cwd: workingDir,
     windowsHide: true,
@@ -169,13 +171,24 @@ ${command}`;
     env: { ...scrubEnv(process.env), CI: 'true', TERM: 'xterm-256color', FORCE_COLOR: '1' }
   });
   children.set(String(execId), child);
-  if (process.env.WEBAGENT_DEBUG_PROCESS === '1') {
-    child.on('exit', (code, signal) => console.error('command process exit', JSON.stringify({ pid: child.pid, code, signal, elapsedMs: Date.now() - startTime })));
-    child.on('close', () => console.error('command pipes closed', JSON.stringify({ pid: child.pid, elapsedMs: Date.now() - startTime })));
+  let spawned = false, exited = false, stdoutBytes = 0, stderrBytes = 0;
+  const trace = (event, code = null) => {
+    if (!debug) return;
+    try {
+      console.error('process lifecycle', JSON.stringify({kind:'command',event,pid:process.pid,childPid:child.pid || null,
+        elapsedMs:Number((process.hrtime.bigint()-traceStart)/1000000n),spawned,exited,stdoutBytes,stderrBytes,
+        exitCode:Number.isInteger(code) ? code : null}));
+    } catch (_) { /* Diagnostics must not change command execution or cleanup. */ }
+  };
+  trace('created');
+  if (debug) {
+    child.once('spawn', () => { spawned = true; trace('spawn'); });
+    child.once('exit', code => { exited = true; trace('exit', code); });
   }
   const requestSignal = currentSignal();
   const abort = () => {
     if (rec.status !== 'running') return;
+    trace('cancel');
     rec.status = 'cancelled'; rec.ok = false;
     killChild(child);
     const force = setTimeout(() => { if (children.has(String(execId))) killChild(child, true); }, 2000);
@@ -187,6 +200,7 @@ ${command}`;
   }
 
   const timer = setTimeout(() => {
+    trace('timeout');
     rec.isTimeout = true;
     killChild(child);
     const killer = setTimeout(() => {
@@ -202,11 +216,18 @@ ${command}`;
     eventBus.broadcast('command_output', { execId, stream: field, chunk });
   };
 
-  child.stdout.on('data', (data) => append('stdout', data.toString()));
-  child.stderr.on('data', (data) => append('stderr', data.toString()));
+  child.stdout.on('data', (data) => {
+    if (debug) { const first = stdoutBytes === 0; stdoutBytes += data.length; if (first) trace('stdout-first'); }
+    append('stdout', data.toString());
+  });
+  child.stderr.on('data', (data) => {
+    if (debug) { const first = stderrBytes === 0; stderrBytes += data.length; if (first) trace('stderr-first'); }
+    append('stderr', data.toString());
+  });
 
   const done = new Promise((resolve, reject) => {
     child.on('error', (err) => {
+      trace('error');
       if (requestSignal) requestSignal.removeEventListener('abort', abort);
       clearTimeout(timer);
       if (!child.pid || child.exitCode !== null || child.signalCode !== null) children.delete(String(execId));
@@ -217,6 +238,7 @@ ${command}`;
       reject(new Error(`Failed to start command: ${err.message}`));
     });
     child.on('close', (code, signal) => {
+      trace('close', code);
       if (requestSignal) requestSignal.removeEventListener('abort', abort);
       clearTimeout(timer);
       children.delete(String(execId));

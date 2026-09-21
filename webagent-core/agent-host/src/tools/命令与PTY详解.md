@@ -90,7 +90,7 @@ npm test --prefix webagent-core/agent-host -- --filter=workspaceTools
 
 取消时立即设rec.ok=false；PTY迟到成功只合并结果数据，不得覆盖cancelled/ok:false。经典命令和扩展共用ptyPolicy.scrubEnv，剔除token/access key/storage key等凭据名称，保留PATH/Conda；不是值扫描或OS沙箱。
 
-WEBAGENT_DEBUG_PROCESS=1仅用于进程排错，输出子进程exit与close分别发生的时间，帮助区分根进程退出与继承管道关闭；不是关闭管道来绕过退出验收。
+R4诊断：WEBAGENT_DEBUG_PROCESS=1仅用于排错。startProcess的trace(event,code)按固定schema输出process lifecycle JSON：kind/事件、父/子PID、单调elapsedMs、spawned/exited、stdout/stderr字节数和整数退出码；记录created/spawn/首次输出/取消/超时/error/exit/close，不记录命令、cwd或输出正文。首输出各只记一次，不随输出流逐块刷屏。trace自身失败被捕获，不改变执行/清理。默认关闭，不进入工具公开结果或业务事件；既有taskkill诊断仍独立。不能据spawn事件推断PowerShell Add-Type/Attach已经完成，也不是关闭管道绕过退出验收。
 
 ## Windows进程树保障：commandJob.cs
 

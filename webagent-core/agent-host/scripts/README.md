@@ -11,6 +11,8 @@ run-tests.js是npm test的统一入口，不是产品服务启动器。
 ## 验证与边界
 从agent-host执行npm test；testRunner.test.js覆盖筛选、非法参数和失败边界。测试文件通过数量不等于测试覆盖率，也不代表真实Windows/浏览器验收。
 
+R4：逐文件context/result固定元数据与有界失败annotation帮助区分测试进程未退出和内部产品超时；不增加超时或重跑，不自动修复业务。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
