@@ -382,7 +382,7 @@ axe-core4.13.0在这9个状态均报告同一项`aria-required-children`：`#tab
 | 内层取消 | 同步阶段不可取消 | signal已abort时抛ABORT_ERR，零下载 |
 | 同步抛错吞掉 | 可能被外层误判为成功 | 同步抛错直接传播，不吞 |
 
-新增installerPreparation.test.js 7个场景，均先红后绿：已有安装零spawn、npm ci超时有界、abort零工作、非法期限零工作、code-server下载超时、abort零下载、runNpm同步抛错不吞；未执行真实npm或下载。本地97/97、Chromium与audit 0均以独立进程退出0确认；文档277/28/111且updated=0，185指纹已同步。提交/精确CI待记录。UI、核心权限/工具、原生扩展、暂停探针和冻结原型运行源码零diff；不是全仓审完，不关闭R4/R5/R7/R8。
+新增installerPreparation.test.js 7个场景，均先红后绿：已有安装零spawn、npm ci超时有界、abort零工作、非法期限零工作、code-server下载超时、abort零下载、runNpm同步抛错不吞；未执行真实npm或下载。本地97/97、Chromium与audit 0均以独立进程退出0确认；文档277/28/111且updated=0，185指纹已同步。代码`6daf576040bc92a36b8f89d582f30dffb8decd54` / [CI35651156739](https://github.com/cccjvav/web_agent/actions/runs/35651156739)已按精确SHA核实9项completed/success（Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、真实Chromium）。UI、核心权限/工具、原生扩展、暂停探针和冻结原型运行源码零diff；不是全仓审完，不关闭R4/R5/R7/R8。
 
 测试实现：fixtureLaunch用fakeFs的existsSync控制express存在，require('fs')返回替身，spawnSync记录timeout/error；fixtureEnsure用fakeFs控制entry/marker，spawnSync记录timeout/同步抛错；bounded为看门狗，test收集失败。未安装真实依赖。
 

@@ -30,11 +30,11 @@
 
 这份交接随施工维护，用户可随时要求切换助手，不要求对方读取全部聊天。**“可交接”不是全项目完成，也不是所有外部证据仍可下载。**
 
-1. **定位与保护工作区**：先查git status --short、git log -1、git branch --show-current。当前会话绑定arena/01a0c4b1-web-agent；已从用户更正的arena/01a0bfa9-web-agent快进接手67f4f966720c2d6f657f53e3dc3b02cbf3860b98，[CI35624122815](https://github.com/cccjvav/web_agent/actions/runs/35624122815)九项与本地94/94为进入基线。F55证据提交036d65b / CI35632714383、F56源码a68a77e / CI35641420076及证据4649250 / CI35642269647、F57源码4cf4d6f / CI35647781757及证据ee393c2 / CI35648274576均已逐job核实九项；F58新修改看第58组，不覆盖新增改动或机械切换历史分支。
+1. **定位与保护工作区**：先查git status --short、git log -1、git branch --show-current。当前会话绑定arena/01a0c4b1-web-agent；已从用户更正的arena/01a0bfa9-web-agent快进接手67f4f966720c2d6f657f53e3dc3b02cbf3860b98，[CI35624122815](https://github.com/cccjvav/web_agent/actions/runs/35624122815)九项与本地94/94为进入基线。F55证据提交036d65b / CI35632714383、F56源码a68a77e / CI35641420076及证据4649250 / CI35642269647、F57源码4cf4d6f / CI35647781757及证据ee393c2 / CI35648274576、F58源码6daf576 / CI35651156739均已逐job核实九项；不覆盖新增改动或机械切换历史分支。
 2. **防恢复误判**：前序会话环境曾出现HEAD/索引回到50c03be而工作文件保留最新交付；已fetch当前绑定远端、逐blob核对后只mixed恢复dcc321b指针/索引，不写工作树。若再出现，不可盲目reset --hard/clean或把整树当新修改提交；先核对远端SHA、文件差异及用户改动，不确定就停下确认。暂停探针的哈希比对不是专项审查，不能覆盖其文件。
 3. **验证不能借用**：用gh run list按当前绑定分支列出headSha/status/conclusion/url，选择与git rev-parse HEAD一致的run，再gh run view核对全部jobs。不要用旧绿灯代签新HEAD，也不要仅看run总标题。安装/Node/测试入口见下；变更尚在施工或CI未结束就标明未完成。
 4. **证据可得性**：[仓库内CI摘要](../../review/evidence/R4-handoff-ci-2026-09-21.json)是本轮重新取得的脱敏API事实。此前沙箱外ZIP本轮未见，绝对路径不等于可移交附件；完整失败日志此前TLS EOF，不能补造。原run/job/Checks能取就复取，不能取就保留“不可得”；不上传用户密钥/环境/命令正文来补证据。
-5. **当前施工与下一步**：F57已拆分appWindow.js并修复就绪误判、错工作区复用、浏览器失败及后台清理未确认；新增28+28个分层场景，本地96/96、Chromium与audit 0均退出0，代码`4cf4d6f81bfd9e0f85af690aa84d0ba0fdb48910` / [CI35647781757](https://github.com/cccjvav/web_agent/actions/runs/35647781757)九job已核实。继续R2/R3的下一线索为同步ensure/runNpm准备阶段的期限/取消及外层再确认；200/healthz不能代签身份，不据此重写权限/恢复架构。R4历史原因仍开放，不加期限/删断言/重跑追绿；R5真实后代/窗口、R7逐句和R8用户验收继续。
+5. **当前施工与下一步**：F58已补同步准备阶段超时/取消，本地97/97、Chromium与audit 0均退出0，代码`6daf576040bc92a36b8f89d582f30dffb8decd54` / [CI35651156739](https://github.com/cccjvav/web_agent/actions/runs/35651156739)九job已核实。继续R2/R3的下一线索为installer外层对实例/工作区的再确认及更细资源/权限边界；200/healthz不能代签身份，不据此重写权限/恢复架构。R4历史原因仍开放，不加期限/删断言/重跑追绿；R5真实后代/窗口、R7逐句和R8用户验收继续。
 6. **已交付与仍待**：R5已到保护收据+稳定句柄交互回收+ACL负例+诊断+Windows开始菜单入口；面板内按钮、桌面TTY/重复点击/关窗/真实隧道、跨用户与实际PID复用未验。R4历史Windows22、befee7d辅助失败及a22428a Windows20 echo超时根因都开放，不因后来绿灯注销。R6/R9仍含取舍，R7文档、R8用户本机MCP/桌面未完成。
 7. **授权不变**：三个探针原分工暂停，不能因通用CI报Probe失败自行接手；ShunCode只参考不执行/不整体替换MCP；保留文件hash/检查点/审批、未知不重放、活宿主保护，不以同用户DPAPI当应用签名。用户Windows桌面VSCode集成CMD、已有Conda/系统Node，不新建环境；本会话没有用户本机MCP权限。
 
@@ -1057,7 +1057,7 @@ stopChild区分killed与已退出；保留对象仅清本轮直接子进程，9�
 - webagent-core/scripts/ensure-code-server.js：runNpm(args,cwd,{timeoutMs=180000,signal})同样检查signal/期限，spawnSync带timeout，ETIMEDOUT转超时；ensure({signal})与ensureVscodeDeps({signal})检查signal，分别120秒/180秒超时，失败不吞；abortedError()/checkSignal(signal)固定ABORT_ERR。
 - webagent-core/scripts/run-code-oss.js：main在ensure前checkRunning，ensure({signal:controller.signal})传入总控制器；同步准备阶段的超时/取消与后续health/子进程清理统一由同一AbortController协调；ensure抛错落到stop(1,error)并进入finally的stopChild观察，不遗留已创建进程。
 
-新增installerPreparation.test.js的7个场景：已有安装零spawn、npm ci超时有界、abort零工作、非法期限零工作、code-server下载超时、abort零下载、runNpm同步抛错不吞；未执行真实npm或下载。本地97/97、Chromium与audit 0均以独立进程退出0确认；文档277/28/111且updated=0，185指纹已同步。提交/精确CI待记录。UI、核心权限/工具、原生扩展、暂停探针和冻结原型运行源码零diff；不是全仓审完，不关闭R4/R5/R7/R8。
+新增installerPreparation.test.js的7个场景：已有安装零spawn、npm ci超时有界、abort零工作、非法期限零工作、code-server下载超时、abort零下载、runNpm同步抛错不吞；未执行真实npm或下载。本地97/97、Chromium与audit 0均以独立进程退出0确认；文档277/28/111且updated=0，185指纹已同步。代码`6daf576040bc92a36b8f89d582f30dffb8decd54`已推当前固定分支，[CI35651156739](https://github.com/cccjvav/web_agent/actions/runs/35651156739)按精确SHA核实9个job completed/success：Ubuntu Node18/20/22/24、Windows Node20/22/24（含重复取消/stdio）、Windows安装器与真实Chromium。提交前再次确认97/97、Chromium与audit 0、文档零漂移及185指纹；精选195份JS lint仅原有4处清理finally提示。UI、核心权限/工具、原生扩展、暂停探针和冻结原型运行源码零diff；不是全仓审完，不关闭R4/R5/R7/R8。后续证据文档提交仍须核对其自身HEAD。
 
 ## 复盘
 

@@ -5,9 +5,9 @@
 接手先读本索引和[项目约定](agents.md)，再按需读[阶段10的工作包与交接](stages/s10-upstream-adoption.md#当前工作包与交接约束)。不另建路线图或根交接文件。
 
 ## 当前状态
-- **本轮续作准备阶段超时（F58）。** 为同步npm/下载阶段补有界期限与取消，本地97/97、Chromium与audit 0；不是全仓审完，精确提交/CI与下一项在阶段10第58组。
+- **本轮已完成F58准备阶段超时。** 同步npm/下载补120/180秒超时与取消，本地97/97、Chromium与audit 0，代码`6daf576040bc92a36b8f89d582f30dffb8decd54` / [CI35651156739](https://github.com/cccjvav/web_agent/actions/runs/35651156739)九job已核实；下一项见阶段10第58组后段，不是全仓审完。
 - **接手基线：** `67f4f966720c2d6f657f53e3dc3b02cbf3860b98`，[CI35624122815](https://github.com/cccjvav/web_agent/actions/runs/35624122815)九项已逐job核实，本地94/94。F55新修改的验证与精确提交CI见阶段10，不借此基线绿灯代签。
-- **F55/F56交付基线已补核实：** 用户重连后，证据提交`036d65b735805f13381f3ab1b0a5408d999c872d`的[CI35632714383](https://github.com/cccjvav/web_agent/actions/runs/35632714383)九job及源码`a68a77e6fa82e509b3dc8a09ac27c38a402eadfb`的[CI35641420076](https://github.com/cccjvav/web_agent/actions/runs/35641420076)九job、证据`464925030b85c0725a7c98851b8ca4be1ae4fabf`的[CI35642269647](https://github.com/cccjvav/web_agent/actions/runs/35642269647)九job均逐项success；不能借此代签F57或用户桌面。
+- **F55-F58交付已核实：** 证据036d65b / CI35632714383、源码a68a77e / CI35641420076、证据4649250 / CI35642269647、源码4cf4d6f / CI35647781757、证据ee393c2 / CI35648274576、源码6daf576 / CI35651156739均九项success；不能代签用户桌面或R4-R8。
 - **接手顺序：** 本页→[项目约定](agents.md)→[即时接手检查](stages/s10-upstream-adoption.md#即时接手检查2026-09-21)。先核对分支/HEAD/未提交文件与在跑任务；外部沙箱ZIP不保证可移交，[仓库内CI摘要](../review/evidence/R4-handoff-ci-2026-09-21.json)明确哪些事实可得、哪些原日志不可得。
 - **当前会话固定分支** `arena/01a0c4b1-web-agent`，已从更正来源`arena/01a0bfa9-web-agent`快进到67f4f96再施工，没有切分支/reset。此前01a0b053同步及ref恢复属于历史；不据旧记录覆盖工作文件。
 - **阶段10进行中，核心0.7.2，不是只剩实机。** R2/R3其余消费链/权限合同、R7逐句文档、R8本机验收仍开放；R6/R9候选按收益和授权取舍。全部优先级和完成条件只维护在[工作包表](stages/s10-upstream-adoption.md#当前工作包与交接约束)。持久登录/确切后端身份任务仍延期。
