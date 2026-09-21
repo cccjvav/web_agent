@@ -8,7 +8,7 @@ const path = require('path');
 const { createController } = require('../src/tunnel/tunnelCleanup');
 const id = randomUUID(), nonce = randomUUID();
 const source = { entries: [{ id, envelope: { version: 2, protection: 'windows-dpapi-user', payload: 'AAAA' } }], fingerprint: 'a'.repeat(64), skipped: 0 };
-function helper({ resultStatus = 'terminated', earlyClose = false, extraResult = false } = {}) {
+function helper({ resultStatus = 'terminated', earlyClose = false, extraResult = false, previewStatus = 'candidate' } = {}) {
   const proc = new EventEmitter(); proc.stdout = new PassThrough(); proc.stderr = new PassThrough();
   proc.actions = 0; proc.kills = 0; let buffered = '', messages = 0;
   const frame = (type, status) => JSON.stringify({ type, nonce, records: [{ id, provider: 'cloudflare', pid: 123, status }] }) + '\n';
@@ -17,7 +17,7 @@ function helper({ resultStatus = 'terminated', earlyClose = false, extraResult =
     let end;
     while ((end = buffered.indexOf('\n')) >= 0) {
       const input = JSON.parse(buffered.slice(0, end)); buffered = buffered.slice(end + 1); messages++;
-      if (messages === 1) setImmediate(() => { if (earlyClose) proc.emit('close', 1); else proc.stdout.write(frame('preview', 'candidate')); });
+      if (messages === 1) setImmediate(() => { if (earlyClose) proc.emit('close', 1); else proc.stdout.write(frame('preview', previewStatus)); });
       else {
         assert.equal(input.action, 'confirm'); assert.equal(input.nonce, nonce); proc.actions++;
         setImmediate(() => {
@@ -59,6 +59,21 @@ async function main() {
   await bad.closed; assert.equal(proc.actions, 1);
   proc = helper({ earlyClose: true });
   await assert.rejects(createController({ platform: 'win32', launch: () => proc }).prepare(registry), error => error.code === 'E_CLEANUP_NOT_STARTED');
+
+  for (const status of ['inaccessible', 'owner-unknown', 'active-owner']) {
+    proc = helper({ previewStatus: status, resultStatus: status });
+    const skip = await createController({ platform: 'win32', launch: () => proc }).prepare(registry);
+    assert.equal((await skip.confirm())[0].status, status);
+    await skip.closed;
+  }
+  const forbiddenLaunch = () => { throw Error('invalid source must not launch helper'); };
+  for (const entries of [[], Array.from({ length: 33 }, () => source.entries[0]), [source.entries[0], source.entries[0]]]) {
+    await assert.rejects(createController({ platform: 'win32', launch: forbiddenLaunch }).prepare({ cleanupSource: async () => ({ ...source, entries }) }));
+  }
+  proc = helper();
+  const overflow = await createController({ platform: 'win32', launch: () => proc }).prepare(registry);
+  proc.stderr.write(Buffer.alloc(65537)); await overflow.closed;
+  await assert.rejects(overflow.confirm()); assert.equal(proc.actions, 0);
 
   const originalSet = global.setTimeout, originalClear = global.clearTimeout, timers = new Map();
   try {

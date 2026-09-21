@@ -3928,7 +3928,7 @@
 
 ## webagent-core/agent-host/tests/tunnelCleanup.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `1f6da2a8d772a4c3b99a171414d974dcfa1d23ae694fa1adeefcd96080ef3de0`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `a1694071f930a310808be49ea0b712596f60ee961cf38d201884c87828e0ead4`
 
 - `helper` — FunctionDeclaration，[L11–L34](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L11-L34)
 - `helper/frame` — ArrowFunctionExpression，[L14–L14](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L14-L14)
@@ -3937,7 +3937,7 @@
 - `helper/write/anonymous@23:21` — ArrowFunctionExpression，[L23–L27](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L23-L27)
 - `helper/anonymous@32:14` — ArrowFunctionExpression，[L32–L32](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L32-L32)
 - `helper/anonymous@32:14/anonymous@32:49` — ArrowFunctionExpression，[L32–L32](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L32-L32)
-- `main` — FunctionDeclaration，[L35–L77](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L35-L77)
+- `main` — FunctionDeclaration，[L35–L92](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L35-L92)
 - `main/cleanupSource` — ArrowFunctionExpression，[L36–L36](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L36-L36)
 - `main/launch` — ArrowFunctionExpression，[L38–L38](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L38-L38)
 - `main/anonymous@41:16` — ArrowFunctionExpression，[L41–L41](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L41-L41)
@@ -3949,29 +3949,39 @@
 - `main/anonymous@58:38` — ArrowFunctionExpression，[L58–L58](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L58-L58)
 - `main/launch@61:69` — ArrowFunctionExpression，[L61–L61](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L61-L61)
 - `main/anonymous@61:102` — ArrowFunctionExpression，[L61–L61](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L61-L61)
-- `main/anonymous@65:24` — ArrowFunctionExpression，[L65–L65](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L65-L65)
-- `main/anonymous@66:26` — ArrowFunctionExpression，[L66–L66](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L66-L66)
-- `main/launch@68:72` — ArrowFunctionExpression，[L68–L68](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L68-L68)
-- `main/anonymous@69:45` — ArrowFunctionExpression，[L69–L69](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L69-L69)
-- `main/launch@73:69` — ArrowFunctionExpression，[L73–L73](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L73-L73)
-- `anonymous@78:13` — ArrowFunctionExpression，[L78–L78](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L78-L78)
+- `main/launch@65:69` — ArrowFunctionExpression，[L65–L65](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L65-L65)
+- `main/forbiddenLaunch` — ArrowFunctionExpression，[L69–L69](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L69-L69)
+- `main/anonymous@70:56` — ArrowFunctionExpression，[L70–L70](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L70-L70)
+- `main/cleanupSource@71:115` — ArrowFunctionExpression，[L71–L71](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L71-L71)
+- `main/launch@74:71` — ArrowFunctionExpression，[L74–L74](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L74-L74)
+- `main/anonymous@80:24` — ArrowFunctionExpression，[L80–L80](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L80-L80)
+- `main/anonymous@81:26` — ArrowFunctionExpression，[L81–L81](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L81-L81)
+- `main/launch@83:72` — ArrowFunctionExpression，[L83–L83](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L83-L83)
+- `main/anonymous@84:45` — ArrowFunctionExpression，[L84–L84](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L84-L84)
+- `main/launch@88:69` — ArrowFunctionExpression，[L88–L88](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L88-L88)
+- `anonymous@93:13` — ArrowFunctionExpression，[L93–L93](../webagent-core/agent-host/tests/tunnelCleanup.test.js#L93-L93)
 
 ## webagent-core/agent-host/tests/tunnelCleanupWindows.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `2b2614d01dca1b84bc8cffdf6fa2cf6e0a820604e096d1140943e7a3ffefbaa9`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `ed854df5a65f89b85454ac9060065cafc96ad8769d99fa52010bd7e4ea07cd72`
 
-- `main` — FunctionDeclaration，[L12–L92](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L12-L92)
-- `main/startOwner` — FunctionDeclaration，[L18–L32](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L18-L32)
-- `main/startOwner/anonymous@23:87` — ArrowFunctionExpression，[L23–L23](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L23-L23)
-- `main/startOwner/anonymous@24:18` — ArrowFunctionExpression，[L24–L24](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L24-L24)
-- `main/startOwner/anonymous@24:18/anonymous@24:56` — ArrowFunctionExpression，[L24–L24](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L24-L24)
-- `main/startOwner/anonymous@24:126` — ArrowFunctionExpression，[L24–L24](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L24-L24)
-- `main/stopped` — FunctionDeclaration，[L33–L39](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L33-L39)
-- `main/stopped/anonymous@37:24` — ArrowFunctionExpression，[L37–L37](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L37-L37)
-- `main/checkSkipped` — FunctionDeclaration，[L40–L48](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L40-L48)
-- `main/anonymous@64:42` — ArrowFunctionExpression，[L64–L64](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L64-L64)
-- `main/anonymous@87:50` — ArrowFunctionExpression，[L87–L87](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L87-L87)
-- `anonymous@93:13` — ArrowFunctionExpression，[L93–L93](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L93-L93)
+- `main` — FunctionDeclaration，[L12–L123](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L12-L123)
+- `main/startOwner` — FunctionDeclaration，[L19–L33](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L19-L33)
+- `main/startOwner/anonymous@24:87` — ArrowFunctionExpression，[L24–L24](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L24-L24)
+- `main/startOwner/anonymous@25:18` — ArrowFunctionExpression，[L25–L25](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L25-L25)
+- `main/startOwner/anonymous@25:18/anonymous@25:56` — ArrowFunctionExpression，[L25–L25](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L25-L25)
+- `main/startOwner/anonymous@25:126` — ArrowFunctionExpression，[L25–L25](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L25-L25)
+- `main/stopped` — FunctionDeclaration，[L34–L40](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L34-L40)
+- `main/stopped/anonymous@38:24` — ArrowFunctionExpression，[L38–L38](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L38-L38)
+- `main/checkSkipped` — FunctionDeclaration，[L41–L49](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L41-L49)
+- `main/anonymous@74:32` — ArrowFunctionExpression，[L74–L74](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L74-L74)
+- `main/anonymous@75:32` — ArrowFunctionExpression，[L75–L82](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L75-L82)
+- `main/anonymous@75:32/anonymous@76:34` — ArrowFunctionExpression，[L76–L79](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L76-L79)
+- `main/anonymous@75:32/anonymous@81:21` — ArrowFunctionExpression，[L81–L81](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L81-L81)
+- `main/anonymous@83:32` — ArrowFunctionExpression，[L83–L83](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L83-L83)
+- `main/anonymous@94:42` — ArrowFunctionExpression，[L94–L94](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L94-L94)
+- `main/anonymous@118:50` — ArrowFunctionExpression，[L118–L118](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L118-L118)
+- `anonymous@124:13` — ArrowFunctionExpression，[L124–L124](../webagent-core/agent-host/tests/tunnelCleanupWindows.test.js#L124-L124)
 
 ## webagent-core/agent-host/tests/tunnelLifecycle.test.js
 

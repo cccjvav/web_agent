@@ -217,8 +217,8 @@ R5第三包：tunnelCleanup为协议/过期/确认/未知的模拟测试，tunne
 | [toolLabel.test.js](toolLabel.test.js) | 0 个函数/类节点 |
 | [traceIntegration.test.js](traceIntegration.test.js) | 4 个函数/类节点 |
 | [tunnel.test.js](tunnel.test.js) | 14 个函数/类节点 |
-| [tunnelCleanup.test.js](tunnelCleanup.test.js) | 25 个函数/类节点 |
-| [tunnelCleanupWindows.test.js](tunnelCleanupWindows.test.js) | 12 个函数/类节点 |
+| [tunnelCleanup.test.js](tunnelCleanup.test.js) | 30 个函数/类节点 |
+| [tunnelCleanupWindows.test.js](tunnelCleanupWindows.test.js) | 17 个函数/类节点 |
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 17 个函数/类节点 |
 | [tunnelOwnerFixture.js](tunnelOwnerFixture.js) | 4 个函数/类节点 |
 | [tunnelReceiptProtection.test.js](tunnelReceiptProtection.test.js) | 17 个函数/类节点 |
