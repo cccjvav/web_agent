@@ -158,7 +158,7 @@ async function main() {
   try {
     if (process.env.WEBAGENT_APP_BOOTSTRAP === '1' && !appControlled) throw new Error('App启动需要私有IPC通道');
     checkRunning();
-    const entry = ensure({ signal: controller.signal });
+    const entry = await ensure({ signal: controller.signal });
     checkRunning();
     const extDir = path.join(repoRoot, 'webagent-core/extensions-installed');
     syncExtension();
@@ -237,7 +237,10 @@ async function main() {
       }
     });
     await stopped;
-  } catch (error) { stop(1, error); }
+  } catch (error) {
+    stop(1, error);
+    if (error.cleanupUnconfirmed) { exitCode = 1; failure = error; }
+  }
   finally {
     controller.abort();
     const observed = await Promise.all(children.map(child => stopChild(child)));

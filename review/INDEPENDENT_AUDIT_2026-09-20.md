@@ -413,6 +413,8 @@ installer外层对实例/工作区的再确认及更细的资源/权限边界是
 
 ### 已确认但运行时尚未修复
 
+以下为80de651交付时的历史状态；后续F60对命令准备链的修复见第12节，历史复现保留。
+
 | 编号 | 证据与影响 | 当前状态 |
 |---|---|---|
 | F59-01 / P1：同步准备不能及时处理运行中取消 | runNpm/ensureDependencies只在spawnSync前后读取signal，事件循环阻塞时SIGINT/SIGTERM/IPC/定时取消无法执行；主编排的stop/finally不能即时进入。外层main甚至未传signal给ensureDependencies。现有预先abort测试不能证明冷启动中停止有效 | 纠正F58完成表述；异步准备与归属清理的实现/正式红绿回归待下一小包 |
@@ -463,3 +465,13 @@ function load(childCode) {
 来源原树本地完整**97/97**、installerPreparation及appWindowLifecycle定向通过、文档277/28/111 updated=0；完整套件与真实反例可以同时成立。本轮没有重跑Chromium或重新做生产依赖审计，没有Windows桌面权限。实际发行入口只读核对，未安装/启动code-server。R4历史原因、R5实机回收/跨用户/PID复用、R7未审正文、R8用户MCP及暂停探针继续开放。本轮只修证据与工作流约定，运行时行为保持来源版本；下一轮先复核此交付，再补真实在途取消/忽略TERM红测与小范围修复。
 
 F59证据/正文最终修订后，本地完整套件再次**97/97**、文档277/28/111 updated=0、git diff --check通过；这不是F59-01/02运行时修复证明。
+
+## 12. F60 准备阶段异步控制（2026-09-22）
+
+复核80de651及相邻启动/IPC/打包后，F59-01/02在其同步实现上仍成立。原版真实Node在途取消回归报`Missing expected rejection`（不是缺模块/依赖造成的假红）。本组将ensureDependencies/runNpm/ensure/ensureVscodeDeps改Promise，所有实际调用方await；新增preparation内部原语，工作期限维持120/180秒，期限或取消时只对所持直接子进程SIGKILL，并单独至多1秒观察退出。单调截止防迟到exit0；未知退出拒绝并报告/unref，不按PID/树补杀，不宣称npm后代或用户窗口已停止。
+
+外层main只在依赖准备期间接SIGINT/SIGTERM，异常后不进入模式；内层沿用主控制器，四种事件（信号、私有IPC stop/disconnect）可中断准备，未知退出覆盖正常停止码为非零。真实回归含Node在途取消、Linux握手确认忽略TERM后强制退出、Windows直接子进程期限，以及失败/迟到/注册竞态/未知等替身场景；旧场景仅按Promise生命周期调整等待，不降低原工作预算。旧F59代码块仅描述80de651的同步接口，不应直接用于本组Promise版。
+
+首轮完整96/97的唯一失败是文档具名函数登记；已以真实EventEmitter替代空方法夹具并登记新helper，不弱化守卫。尚未用真实npm安装或启动code-server；强制中断可能留下部分node_modules，没有事务回滚。同步复制/扩展同步及整个启动流程没有总硬实时保证；原后端依赖缺失fallback的异步npm install仍缺独立deadline，明确列为下一小包，而非本批已修。F59的两个缺陷仅对本组修改的准备命令链修复，不关闭全仓/实机或R4/R5历史项。
+
+F60修订后本地完整97/97、文档278/28/111 updated=0、diff --check通过。精确SHA的CI须另查；本地测试不代签Windows桌面或实际npm后代。

@@ -149,7 +149,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [chatMode.test.js](chatMode.test.js) | 0 个函数/类节点 |
 | [chatVision.test.js](chatVision.test.js) | 21 个函数/类节点 |
 | [codeServerAuth.test.js](codeServerAuth.test.js) | 0 个函数/类节点 |
-| [codeServerLifecycle.test.js](codeServerLifecycle.test.js) | 95 个函数/类节点 |
+| [codeServerLifecycle.test.js](codeServerLifecycle.test.js) | 105 个函数/类节点 |
 | [codeServerNotRunnable.test.js](codeServerNotRunnable.test.js) | 0 个函数/类节点 |
 | [connectionCheck.test.js](connectionCheck.test.js) | 18 个函数/类节点 |
 | [corsAllow.test.js](corsAllow.test.js) | 20 个函数/类节点 |
@@ -173,7 +173,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
 | [installerPackaging.test.js](installerPackaging.test.js) | 26 个函数/类节点 |
-| [installerPreparation.test.js](installerPreparation.test.js) | 34 个函数/类节点 |
+| [installerPreparation.test.js](installerPreparation.test.js) | 61 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 19 个函数/类节点 |
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 24 个函数/类节点 |

@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
-const { spawn, spawnSync } = require('child_process');
+const { spawn } = require('child_process');
 const sourceRoot = path.resolve(__dirname, '..');
 const hash = data => crypto.createHash('sha256').update(data).digest('hex');
 function userHome(env = process.env) {
@@ -58,17 +58,15 @@ function resolveWorkspace(value, cwd, fallback) {
 }
 function abortedLaunch() { return Object.assign(new Error('启动准备已停止'), { code: 'ABORT_ERR' }); }
 function checkLaunchSignal(signal) { if (signal?.aborted) throw abortedLaunch(); }
-function ensureDependencies(root, { timeoutMs = 120000, signal } = {}) {
+async function ensureDependencies(root, { timeoutMs = 120000, signal } = {}) {
   checkLaunchSignal(signal);
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) throw new Error('npm准备期限无效');
   const cwd = path.join(root, 'webagent-core/agent-host');
   if (fs.existsSync(path.join(cwd, 'node_modules/express'))) return;
-  const r = spawnSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['ci', '--omit=dev', '--no-audit', '--no-fund'], {
-    cwd, stdio: 'inherit', shell: process.platform === 'win32', timeout: timeoutMs
+  await require('./preparation').runPreparation(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['ci', '--omit=dev', '--no-audit', '--no-fund'], {
+    cwd, shell: process.platform === 'win32', timeoutMs, signal
   });
-  if (r.error && r.error.code === 'ETIMEDOUT') throw Object.assign(new Error(`npm ci 超时 ${timeoutMs}ms in ${cwd}`), { code: 'ETIMEDOUT' });
   checkLaunchSignal(signal);
-  if (r.error || r.status !== 0) throw new Error('npm ci失败，请检查Node/npm与网络');
 }
 // Lazy, side-effect-free helper: non-app modes and recovery do not probe/start an editor.
 function appOrigin(env = process.env) { return require('./appWindow').appOrigin(env); }
@@ -102,7 +100,17 @@ async function main() {
     env.WEBAGENT_USER_DATA_DIR = path.join(home, 'code-server');
     env.WEBAGENT_ADMIN_DATA = path.join(home, 'admin');
   }
-  if (mode !== 'extension') ensureDependencies(runtime.root);
+  if (mode !== 'extension') {
+    const controller = new AbortController();
+    const onSignal = () => controller.abort();
+    process.on('SIGINT', onSignal); process.on('SIGTERM', onSignal);
+    try {
+      await ensureDependencies(runtime.root, { signal: controller.signal });
+      checkLaunchSignal(controller.signal);
+    } finally {
+      process.removeListener('SIGINT', onSignal); process.removeListener('SIGTERM', onSignal);
+    }
+  }
   if (mode === 'app') return appWindow(runtime.root, workspace, env, home);
   const child = spawn(process.execPath, [path.join(runtime.root, entries[mode]), ...(mode === 'vscode' ? [workspace] : [])],
     { cwd: runtime.root, env, stdio: 'inherit' });

@@ -13,7 +13,7 @@ async function main(){
   const source=fs.readFileSync(path.join(root,'installer/launch.js'),'utf8');
   for(const mode of ['classic','vscode','admin','extension']){
     let spawned;
-    const sandbox={module:{exports:{}},__dirname:path.join(root,'installer'),console,process:{argv:['node','launch',mode],env:{},platform:process.platform,execPath:process.execPath,cwd:()=>tmp},require:name=>name==='child_process'?{spawn:(command,args,options)=>{spawned={command,args,options};return new EventEmitter();},spawnSync:()=>({status:0})}:require(name)};
+    const sandbox={module:{exports:{}},__dirname:path.join(root,'installer'),console,AbortController,process:Object.assign(new EventEmitter(),{argv:['node','launch',mode],env:{},platform:process.platform,execPath:process.execPath,cwd:()=>tmp}),require:name=>name==='child_process'?{spawn:(command,args,options)=>{spawned={command,args,options};return new EventEmitter();},spawnSync:()=>({status:0})}:require(name)};
     vm.runInNewContext(source+'\nmodule.exports.main=main;',sandbox);await sandbox.module.exports.main();
     assert.equal(spawned.options.env.WORKSPACE_ROOT,root,mode+' default root must not depend on caller cwd');
   }

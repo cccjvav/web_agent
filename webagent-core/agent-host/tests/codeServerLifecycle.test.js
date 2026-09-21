@@ -79,7 +79,7 @@ function harness(options = {}) {
       children.push(child); return child;
     } },
     ...(options.clock ? { perf_hooks: { performance: { now: () => options.clock.now } } } : {}),
-    './ensure-code-server': { repoRoot: root, ensure() { return path.join(root, 'entry.js'); }, syncExtension() {} },
+    './ensure-code-server': { repoRoot: root, ensure(options_) { return options.ensure ? options.ensure(options_) : path.join(root, 'entry.js'); }, syncExtension() {} },
     './codeServerAuth': { trustedOrigins: originalRequire('./codeServerAuth').trustedOrigins,
       resolveAuth() { if (options.authError) throw options.authError; return { mode: 'password', password: 'fixture-only', passwordFile: null }; }
     }
@@ -270,7 +270,7 @@ async function serverFixture(handler) {
     const clock = fakeClock(), transport = healthyHttp({ automatic: false });
     const h = harness({ clock, http: transport });
     try {
-      const running = h.api.main(); assert.equal(h.children.length, 1);
+      const running = h.api.main(); await nextTurn(); assert.equal(h.children.length, 1);
       assert.ok([...clock.timers.values()].some(t => t.delay === 15000), 'preserve the production 15s health budget');
       h.proc.emit('SIGTERM');
       transport.requests[0].callback(transport.requests[0].response);
@@ -282,7 +282,7 @@ async function serverFixture(handler) {
     const clock = fakeClock(), transport = healthyHttp({ automatic: false });
     const h = harness({ clock, http: transport });
     try {
-      const running = h.api.main(); clock.advance(15000);
+      const running = h.api.main(); await nextTurn(); clock.advance(15000);
       assert.equal(await bounded(running), 1); assert.equal(h.children.length, 1);
       assert.deepStrictEqual(h.children[0].signals, ['SIGTERM']); assert.equal(clock.timers.size, 0);
       assert.ok(h.logs.some(line => line.includes('时限')));
@@ -291,7 +291,7 @@ async function serverFixture(handler) {
   await test('an agent exit before readiness cancels the probe, even for exit zero', async () => {
     const transport = healthyHttp({ automatic: false }), h = harness({ http: transport });
     try {
-      const running = h.api.main(); h.children[0].end(0);
+      const running = h.api.main(); await nextTurn(); h.children[0].end(0);
       assert.equal(await bounded(running), 1); assert.equal(h.children.length, 1);
       assert.deepStrictEqual(h.children[0].signals, [], 'never kill an exited child/PID');
       transport.requests[0].callback(transport.requests[0].response);
@@ -334,7 +334,7 @@ async function serverFixture(handler) {
     await test(`dependency installer ${outcome} is owned without late continuation`, async () => {
       const h = harness({ install: true, platform: 'win32' });
       try {
-        const running = h.api.main(); assert.equal(h.calls[0].command, 'npm.cmd'); assert.equal(h.calls[0].opts.shell, true);
+        const running = h.api.main(); await nextTurn(); assert.equal(h.calls[0].command, 'npm.cmd'); assert.equal(h.calls[0].opts.shell, true);
         assert.equal(h.children.length, 1);
         if (outcome === 'cancel') h.proc.emit('SIGINT'); else h.children[0].end(outcome === 'success' ? 0 : 5);
         await nextTurn();
@@ -383,6 +383,32 @@ async function serverFixture(handler) {
       assert.ok(child.exitCode !== null || child.signalCode !== null);
       if (process.platform !== 'win32') assert.equal(child.signalCode, 'SIGKILL', 'uncooperative fixture required force after grace');
       assert.equal(unrelated.exitCode, null); assert.equal(unrelated.signalCode, null);
+    } finally { await h.close(); }
+  });
+  for (const event of ['SIGINT', 'SIGTERM', 'message', 'disconnect']) {
+    await test('preparation stop via ' + event + ' never starts agent/editor', async () => {
+      let seenSignal;
+      const h = harness({ env: { WEBAGENT_APP_BOOTSTRAP: '1' }, ensure({ signal }) {
+        seenSignal = signal;
+        return new Promise((resolve, reject) => signal.addEventListener('abort', () => reject(Object.assign(new Error('stopped'), { code: 'ABORT_ERR' })), { once: true }));
+      } });
+      h.proc.send = (_message, callback) => callback?.();
+      try {
+        const running = h.api.main(); assert.ok(seenSignal); assert.equal(h.calls.length, 0);
+        h.proc.emit(event, { type: 'webagent-app-stop' });
+        assert.equal(await bounded(running), 0); assert.ok(seenSignal.aborted); assert.equal(h.calls.length, 0);
+        assert.equal(h.proc.listenerCount('SIGINT'), 0); assert.equal(h.proc.listenerCount('message'), 0);
+      } finally { await h.close(); }
+    });
+  }
+  await test('unconfirmed preparation cleanup overrides a normal stop result', async () => {
+    const h = harness({ ensure({ signal }) {
+      return new Promise((resolve, reject) => signal.addEventListener('abort', () => reject(Object.assign(new Error('unconfirmed preparation'), { cleanupUnconfirmed: true })), { once: true }));
+    } });
+    try {
+      const running = h.api.main(); h.proc.emit('SIGTERM');
+      assert.equal(await bounded(running), 1); assert.equal(h.calls.length, 0);
+      assert.ok(h.logs.some(line => line.includes('unconfirmed preparation')));
     } finally { await h.close(); }
   });
   await test('CLI forwards the settled exit code and reports unexpected rejection', async () => {

@@ -11,6 +11,7 @@
 | `package.js` | 从显式白名单构建output/payload与installation.json SHA-256清单 |
 | `webagent.iss` | Inno Setup安装定义、入口/PATH及安装前检查 |
 | `build-installer.cmd` | 先stage，再调用Inno Setup 6编译 |
+| `preparation.js` | 异步npm准备期限/取消与所持直接子进程退出观察 |
 | `launch.js` | 无依赖Node启动器，准备用户runtime、解析工作区并启动所选模式 |
 
 ## 执行流程
@@ -33,7 +34,7 @@
 显式相对工作区相对于调用者cwd解析；传文件取父目录；不存在的显式路径拒绝，缺省路径可创建；Windows盘符根分隔符不随意裁掉。被编辑工作区自身的.webagent配置与用户runtime不是同一层数据。
 
 ## 模式、升级与卸载
-recovery是独立Windows本机交互回收入口，不解析工作区/装依赖/启动服务，详见下节；classic启动自绘工作台；vscode启动code-server编排；app在前置复制/依赖准备之后进入独立120秒启动确认，检查配置端口的healthz及主机身份/工作区，再尝试打开窗口；该120秒不覆盖前置同步准备，准备阶段取消/硬时限缺口见函数详解；admin启动独立后台；extension侧载桌面扩展。
+recovery是独立Windows本机交互回收入口，不解析工作区/装依赖/启动服务，详见下节；classic启动自绘工作台；vscode启动code-server编排；app在前置复制/依赖准备之后进入独立120秒启动确认，检查配置端口的healthz及主机身份/工作区，再尝试打开窗口；该120秒不覆盖前置同步准备，异步npm准备的取消/期限与直接子进程边界见函数详解；admin启动独立后台；extension侧载桌面扩展。
 
 升级保留用户数据与旧runtime，不自动迁移旧安装目录中的workspace。升级前备份并显式选择用户可写工作区。卸载不删除LocalAppData/WebAgent；彻底清理要先备份，不触碰其他用户目录。PATH按分号条目规范比较，不按子串删除同前缀目录。
 
@@ -65,8 +66,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File installer\tunnel-recovery.ps
 |---|---|
 | [appWindow.js](appWindow.js) | 56 个函数/类节点 |
 | [build-installer.cmd](build-installer.cmd) | 文件级登记；未做符号完整性证明 |
-| [launch.js](launch.js) | 19 个函数/类节点 |
+| [launch.js](launch.js) | 20 个函数/类节点 |
 | [package.js](package.js) | 9 个函数/类节点 |
+| [preparation.js](preparation.js) | 10 个函数/类节点 |
 | [tunnel-recovery.ps1](tunnel-recovery.ps1) | 文件级登记；未做符号完整性证明 |
 | [webagent.iss](webagent.iss) | 文件级登记；未做符号完整性证明 |
 <!-- docs-inventory:end -->

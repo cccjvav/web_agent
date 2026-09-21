@@ -1084,3 +1084,19 @@ stopChild区分killed与已退出；保留对象仅清本轮直接子进程，9�
 **下一轮优先顺序（纳入现有工作包，不新建路线）：** 先复审本组同步/证据/生成物，然后用真实子进程补在途取消与忽略TERM的负例；小包改异步准备/受控直接子进程归属及期限观察，覆盖SIGINT/SIGTERM与App IPC、取消后不得进入下一阶段、不可确认退出必须报告。不能新增名称/端口/PID树杀或声称所有后代已退出；保留120/180秒准备配置及既有health/App预算，不靠延时兜绿。根因修复和验证完成前F58只算部分完成；随后再继续R2–R9/逐句审查。探针原分工暂停、R4历史故障与R5实机边界不解除。
 
 本轮最终正文/生成物修订后再次全量97/97，清单277/28/111 updated=0、diff --check通过；只有文档/管理和生成站点变化，无运行时/依赖/测试断言改动。精确交付CI须按本轮提交另验，不借来源绿灯代签。
+
+### 第60组：准备命令异步取消与直接子进程期限（2026-09-22）
+
+先复审上轮80de651（CI35660960673九项通过）：只有证据/管理/生成物变更，F59的同步阻塞与默认TERM非硬返回结论仍成立；确认工作树干净、绑定分支正确，复核ensure/launch/run-code-oss及App IPC/打包调用链。上轮不能直接迁移的复现是同步API专用，保留原版本上下文，不把现在改Promise后旧脚本返回方式当有效新证据。
+
+先在原installerPreparation补真实Node替身：定时取消应拒绝ABORT_ERR，原版Missing expected rejection，完整失败见本轮记录摘要；不运行真实npm或code-server。本组新增installer/preparation.js，用异步spawn持有本次ChildProcess，预取消/非法期限零启动、在途取消/原120或180秒deadline停止；performance截止拒绝迟到exit0，停止仅发SIGKILL到所持直接子进程，额外至多1秒观察，不延长准备工作预算。exit才证明直接子进程退出；未知设置cleanupUnconfirmed/unref/明确提示，不补杀PID/名称/端口/树、不重放，也不保证shell/npm后代退出。
+
+ensure/runNpm/ensureVscodeDeps改Promise，CLI与run-code-oss await并在跨阶段检查取消；外层ensureDependencies同样await，main仅在依赖准备期间注册SIGINT/SIGTERM。内层既有停止控制器现在能在准备期间处理信号及私有IPC stop/disconnect；cleanupUnconfirmed必须覆盖正常停止码为1并保留错误日志。syncExtension/prepareRuntime等同步磁盘步骤、已写入的部分依赖不回滚，不声明整个安装流程可抢占或有总期限。原后端依赖缺失fallback异步npm install仍未加独立deadline，是明确相邻剩余项，不将本组包装成所有启动合同已完成。
+
+回归保留原参数/预取消/非法期限/抛错/安装跳过语义，适配Promise；真实Node验证在途取消零下一阶段，Linux文件握手证明实际忽略TERM，再由期限强制终止并观察exit，Windows仍跑实际期限/退出但不冒称能忽略TERM。替身覆盖未知退出/迟到error/重复取消/注册竞争/单调截止及同步和异步spawn失败；外层两种信号零模式启动，内层四种停止途径零agent/editor、未知非零。原生命周期用例的同步准备断言改为等待一个事件循环轮次，不删15秒/退出/无关进程断言。打包显式白名单及对应断言加入helper，文档主解释登记。
+
+首轮全量96/97，仅documentationLearning因workspaceEntry新增fixture方法未解释失败；改用真实EventEmitter（而非空on/removeListener替身），同时补新helper主解释映射，未放宽守卫。未改暂停探针/冻结运行源码/核心权限或MCP。实际npm安装、Windows桌面/进程后代、R4历史根因、R5/R7/R8边界保持未验。
+
+**下一轮先复审本组：** 核查精确提交CI、Promise调用方、正常/异常/取消与未知结算，尤其Windows shell后代与部分安装边界；然后再处理旧后端依赖fallback的独立期限，不把更多范围混入本轮。不改用户授权的清理边界，不延长预算或重跑追绿。
+
+修订后本地完整97/97，文档278源码/28目录/111排除且updated=0、diff --check通过。新增运行helper的发行断言与逐函数归属已验证；精确提交CI收尾另查，不使用80de651绿灯代签。

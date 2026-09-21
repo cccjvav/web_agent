@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { spawnSync } = require('child_process');
+const { runPreparation } = require('../../installer/preparation');
 
 const VERSION = '4.135.0';
 const repoRoot = path.resolve(__dirname, '../..');
@@ -12,25 +12,14 @@ function npmCmd() {
 
 function abortedError() { return Object.assign(new Error('code-server准备已停止'), { code: 'ABORT_ERR' }); }
 function checkSignal(signal) { if (signal?.aborted) throw abortedError(); }
-function runNpm(args, cwd, { timeoutMs = 180000, signal } = {}) {
+async function runNpm(args, cwd, { timeoutMs = 180000, signal } = {}) {
   checkSignal(signal);
-  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) throw new Error('npm准备期限无效');
-  const r = spawnSync(npmCmd(), args, {
-    cwd,
-    stdio: 'inherit',
-    windowsHide: true,
-    timeout: timeoutMs,
+  await runPreparation(npmCmd(), args, {
+    cwd, windowsHide: true, timeoutMs, signal,
     env: { ...process.env, FORCE_NODE_VERSION: String(process.versions.node.split('.')[0]) },
     shell: process.platform === 'win32'
   });
-  if (r.error && r.error.code === 'ETIMEDOUT') {
-    throw Object.assign(new Error(`npm ${args.join(' ')} 超时 ${timeoutMs}ms in ${cwd}`), { code: 'ETIMEDOUT' });
-  }
   checkSignal(signal);
-  if (r.error) throw r.error;
-  if (r.status !== 0) {
-    throw new Error(`npm ${args.join(' ')} failed in ${cwd} (exit ${r.status})`);
-  }
 }
 
 function findEntry() {
@@ -46,7 +35,7 @@ function vscodeDirFromEntry(entry) {
   return path.join(path.dirname(entry), '../../lib/vscode');
 }
 
-function ensureVscodeDeps(entry, { signal } = {}) {
+async function ensureVscodeDeps(entry, { signal } = {}) {
   checkSignal(signal);
   const vscodeDir = vscodeDirFromEntry(entry);
   const marker = path.join(vscodeDir, 'node_modules/@microsoft/1ds-core-js');
@@ -55,10 +44,10 @@ function ensureVscodeDeps(entry, { signal } = {}) {
     throw new Error(`code-server 包不完整，找不到 ${vscodeDir}`);
   }
   console.log('Installing code-server VS Code dependencies (first run, ~1–2 min)…');
-  runNpm(['install', '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund'], vscodeDir, { timeoutMs: 120000, signal });
+  await runNpm(['install', '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund'], vscodeDir, { timeoutMs: 120000, signal });
 }
 
-function ensure({ signal } = {}) {
+async function ensure({ signal } = {}) {
   checkSignal(signal);
   fs.mkdirSync(runtimeRoot, { recursive: true });
   checkSignal(signal);
@@ -80,7 +69,7 @@ function ensure({ signal } = {}) {
       );
     }
     console.log(`Downloading code-server@${VERSION} from npm (first run, ~50 MB)…`);
-    runNpm(
+    await runNpm(
       ['install', `code-server@${VERSION}`, '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund'],
       runtimeRoot,
       { timeoutMs: 180000, signal }
@@ -91,7 +80,8 @@ function ensure({ signal } = {}) {
   if (!entry) {
     throw new Error('code-server 安装后仍找不到 out/node/entry.js');
   }
-  ensureVscodeDeps(entry, { signal });
+  await ensureVscodeDeps(entry, { signal });
+  checkSignal(signal);
   return entry;
 }
 
@@ -126,14 +116,18 @@ function syncExtension(extRoot = path.join(repoRoot, 'webagent-core/extensions-i
 }
 
 if (require.main === module) {
-  try {
-    const entry = ensure();
+  const controller = new AbortController();
+  const onSignal = () => controller.abort();
+  process.on('SIGINT', onSignal); process.on('SIGTERM', onSignal);
+  ensure({ signal: controller.signal }).then(entry => {
+    checkSignal(controller.signal);
     syncExtension();
     console.log('code-server entry:', entry);
-  } catch (err) {
-    console.error(err.message || err);
-    process.exit(1);
-  }
+  }).catch(err => {
+    console.error(err.message || err); process.exitCode = 1;
+  }).finally(() => {
+    process.removeListener('SIGINT', onSignal); process.removeListener('SIGTERM', onSignal);
+  });
 }
 
 module.exports = { ensure, syncExtension, findEntry, runNpm, VERSION, runtimeRoot, repoRoot };
