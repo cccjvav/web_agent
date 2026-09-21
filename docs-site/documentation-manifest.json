@@ -28954,43 +28954,43 @@
     {
       "path": "webagent-core/agent-host/tests/tunnelOwnerFixture.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "774fb37ce63728581edc0eec9f1107c39d9aabebce44b67a7d1000e2592a8619",
-      "lineCount": 15,
+      "sha256": "4b75ccd786d4186ab85a70ec6f2f2bc384acbcc783a9523a0445c9679e23cd0a",
+      "lineCount": 17,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
         {
-          "id": "anonymous@10:22",
-          "name": "anonymous@10:22",
-          "kind": "ArrowFunctionExpression",
-          "startLine": 10,
-          "endLine": 10,
-          "parameters": []
-        },
-        {
-          "id": "anonymous@11:11",
-          "name": "anonymous@11:11",
-          "kind": "ArrowFunctionExpression",
-          "startLine": 11,
-          "endLine": 11,
-          "parameters": []
-        },
-        {
-          "id": "anonymous@12:92",
-          "name": "anonymous@12:92",
+          "id": "anonymous@12:22",
+          "name": "anonymous@12:22",
           "kind": "ArrowFunctionExpression",
           "startLine": 12,
-          "endLine": 14,
+          "endLine": 12,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@13:11",
+          "name": "anonymous@13:11",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 13,
+          "endLine": 13,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@14:92",
+          "name": "anonymous@14:92",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 14,
+          "endLine": 16,
           "parameters": [
             "result"
           ]
         },
         {
-          "id": "anonymous@14:9",
-          "name": "anonymous@14:9",
+          "id": "anonymous@16:9",
+          "name": "anonymous@16:9",
           "kind": "ArrowFunctionExpression",
-          "startLine": 14,
-          "endLine": 14,
+          "startLine": 16,
+          "endLine": 16,
           "parameters": []
         }
       ]

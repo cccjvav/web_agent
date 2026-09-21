@@ -3862,12 +3862,12 @@
 
 ## webagent-core/agent-host/tests/tunnelOwnerFixture.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `774fb37ce63728581edc0eec9f1107c39d9aabebce44b67a7d1000e2592a8619`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `4b75ccd786d4186ab85a70ec6f2f2bc384acbcc783a9523a0445c9679e23cd0a`
 
-- `anonymous@10:22` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/tunnelOwnerFixture.js#L10-L10)
-- `anonymous@11:11` — ArrowFunctionExpression，[L11–L11](../webagent-core/agent-host/tests/tunnelOwnerFixture.js#L11-L11)
-- `anonymous@12:92` — ArrowFunctionExpression，[L12–L14](../webagent-core/agent-host/tests/tunnelOwnerFixture.js#L12-L14)
-- `anonymous@14:9` — ArrowFunctionExpression，[L14–L14](../webagent-core/agent-host/tests/tunnelOwnerFixture.js#L14-L14)
+- `anonymous@12:22` — ArrowFunctionExpression，[L12–L12](../webagent-core/agent-host/tests/tunnelOwnerFixture.js#L12-L12)
+- `anonymous@13:11` — ArrowFunctionExpression，[L13–L13](../webagent-core/agent-host/tests/tunnelOwnerFixture.js#L13-L13)
+- `anonymous@14:92` — ArrowFunctionExpression，[L14–L16](../webagent-core/agent-host/tests/tunnelOwnerFixture.js#L14-L16)
+- `anonymous@16:9` — ArrowFunctionExpression，[L16–L16](../webagent-core/agent-host/tests/tunnelOwnerFixture.js#L16-L16)
 
 ## webagent-core/agent-host/tests/tunnelRegistry.test.js
 

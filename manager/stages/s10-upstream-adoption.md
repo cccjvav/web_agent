@@ -932,7 +932,7 @@ externalDiscovery真实JSON/SSE覆盖HTTP500、error并存、ID/版本不符、�
 
 本地零参数CLI `node webagent-core/agent-host/scripts/tunnel-residue.js`输出active-current/active-other/orphan-candidate/identity-changed/exited/unknown，明确registered-launches-only、cleanupAvailable=false、canCleanup=false；禁止路径/PID/--cleanup参数。没有API/UI清理入口，无网络暴露面，无实际终止操作。旧版无记录不扫描认领，结果不代表全系统无残留，不能把元数据判断当原子句柄身份验证。
 
-回归含分类负例、权限/未知、PID复用、坏记录/边界/链接/迟到exit/隐私/扫描合并；真实Node夹具宿主被SIGKILL后目标仍存活并被标记候选，检测既不杀它也不影响另一个活进程；目标由私有stop文件自行退出、失败60秒兜底。provider接线spy保留原隧道生命周期断言。Linux定向及完整88/88通过；文档257/28/110、185登记指纹同步。首轮全套发现命名辅助说明遗漏，补readStat/unknown/live；次轮因说明误写测试秘密哨兵原文触发发行防泄漏守卫，改为描述性文字，原断言未弱化，失败日志保留。发行白名单补只读CLI，安装回归核对模块/脚本并排除归属文件。Windows精确CI待核验，不声称真实隧道桌面验收。
+回归含分类负例、权限/未知、PID复用、坏记录/边界/链接/迟到exit/隐私/扫描合并；真实Node夹具宿主被SIGKILL后目标仍存活并被标记候选，检测既不杀它也不影响另一个活进程；目标由私有stop文件自行退出、失败60秒兜底。provider接线spy保留原隧道生命周期断言。Linux定向及完整88/88通过；文档257/28/110、185登记指纹同步。首轮全套发现命名辅助说明遗漏，补readStat/unknown/live；次轮因说明误写测试秘密哨兵原文触发发行防泄漏守卫，改为描述性文字，原断言未弱化，失败日志保留。发行白名单补只读CLI，安装回归核对模块/脚本并排除归属文件。首轮实现d5cbb79的CI35589693930为6/9：三个Windows任务均在新夹具处报告exited而非orphan-candidate（约2秒，并非超时）；annotations已存档。只将测试owner的子进程显式detached以构造实际存活孤儿，产品spawn不变，保留原断言而不允许exited冒充孤儿。修订后Windows精确CI待核验，不声称真实隧道桌面验收。
 
 后续必须有：稳定进程句柄/可信归属、清理前重检活实例与目标身份、独立有界预览及本机绑定确认、防重复执行与逐项观察退出、只清确认项。禁止按名称/端口全杀、仅凭旧PID、篡改记录或候选状态结束程序；无法确认就跳过。R4历史超时根因及其余工作包/暂停探针不因本包改变。
 
