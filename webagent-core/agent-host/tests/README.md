@@ -140,7 +140,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
 | [apiFiles.test.js](apiFiles.test.js) | 59 个函数/类节点 |
-| [appWindowLifecycle.test.js](appWindowLifecycle.test.js) | 79 个函数/类节点 |
+| [appWindowLifecycle.test.js](appWindowLifecycle.test.js) | 89 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 20 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
@@ -173,7 +173,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
 | [installerPackaging.test.js](installerPackaging.test.js) | 26 个函数/类节点 |
-| [installerPreparation.test.js](installerPreparation.test.js) | 34 个函数/类节点 |
+| [installerPreparation.test.js](installerPreparation.test.js) | 49 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 19 个函数/类节点 |
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 24 个函数/类节点 |
@@ -239,7 +239,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 458 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
-| [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
+| [workspaceEntry.test.js](workspaceEntry.test.js) | 21 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 15 个函数/类节点 |
 <!-- docs-inventory:end -->
 

@@ -158,7 +158,7 @@ async function main() {
   try {
     if (process.env.WEBAGENT_APP_BOOTSTRAP === '1' && !appControlled) throw new Error('App启动需要私有IPC通道');
     checkRunning();
-    const entry = ensure({ signal: controller.signal });
+    const entry = await ensure({ signal: controller.signal });
     checkRunning();
     const extDir = path.join(repoRoot, 'webagent-core/extensions-installed');
     syncExtension();
@@ -181,6 +181,7 @@ async function main() {
       env: {
         WORKSPACE_ROOT: workspace,
         AGENT_HOST_PORT: String(mcpPort),
+        WORKBENCH_PORT: String(codePort),
         WEBAGENT_SKIP_WORKBENCH: '1'
       }
     }, 'agent');

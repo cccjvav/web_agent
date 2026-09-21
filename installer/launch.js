@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
-const { spawn, spawnSync } = require('child_process');
+const { spawn } = require('child_process');
 const sourceRoot = path.resolve(__dirname, '..');
 const hash = data => crypto.createHash('sha256').update(data).digest('hex');
 function userHome(env = process.env) {
@@ -62,13 +62,49 @@ function ensureDependencies(root, { timeoutMs = 120000, signal } = {}) {
   checkLaunchSignal(signal);
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) throw new Error('npm准备期限无效');
   const cwd = path.join(root, 'webagent-core/agent-host');
-  if (fs.existsSync(path.join(cwd, 'node_modules/express'))) return;
-  const r = spawnSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['ci', '--omit=dev', '--no-audit', '--no-fund'], {
-    cwd, stdio: 'inherit', shell: process.platform === 'win32', timeout: timeoutMs
+  if (fs.existsSync(path.join(cwd, 'node_modules/express'))) return Promise.resolve();
+  const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+  // Retain this child so cancel/timeout can signal it. A partial node_modules is left for the next run;
+  // Windows shell:true may also leave a grandchild this handle does not own. Never taskkill by name/port.
+  return new Promise((resolve, reject) => {
+    let child, settled = false, timedOut = false, stopped = false, timer, forceTimer, giveUp;
+    const finish = error => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer); clearTimeout(forceTimer); clearTimeout(giveUp);
+      signal?.removeEventListener('abort', onAbort);
+      if (error) reject(error); else resolve();
+    };
+    const send = sig => {
+      if (!child || child.exitCode != null || child.signalCode != null) return;
+      try { child.kill(sig); } catch (_) { /* The give-up deadline still rejects. */ }
+    };
+    const onAbort = () => {
+      stopped = true; send('SIGTERM');
+      forceTimer = setTimeout(() => send('SIGKILL'), 1000);
+      giveUp = setTimeout(() => finish(signal?.reason && signal.reason.name !== 'AbortError' ? signal.reason : abortedLaunch()), 2000);
+    };
+    try {
+      child = spawn(npm, ['ci', '--omit=dev', '--no-audit', '--no-fund'], {
+        cwd, stdio: 'inherit', windowsHide: true, shell: process.platform === 'win32', env: process.env
+      });
+    } catch (error) { finish(error); return; }
+    if (!child || typeof child.on !== 'function') { finish(new Error('npm ci失败，请检查Node/npm与网络')); return; }
+    timer = setTimeout(() => {
+      timedOut = true; send('SIGTERM');
+      forceTimer = setTimeout(() => send('SIGKILL'), 1000);
+      giveUp = setTimeout(() => finish(Object.assign(new Error(`npm ci 超时 ${timeoutMs}ms in ${cwd}`), { code: 'ETIMEDOUT' })), 2000);
+    }, timeoutMs);
+    child.on('error', error => { if (!settled && child.pid == null) finish(error); });
+    child.once('exit', code => {
+      if (stopped || signal?.aborted) return finish(signal?.reason && signal.reason.name !== 'AbortError' ? signal.reason : abortedLaunch());
+      if (timedOut) return finish(Object.assign(new Error(`npm ci 超时 ${timeoutMs}ms in ${cwd}`), { code: 'ETIMEDOUT' }));
+      if (code !== 0) return finish(new Error('npm ci失败，请检查Node/npm与网络'));
+      finish();
+    });
+    signal?.addEventListener('abort', onAbort, { once: true });
+    if (signal?.aborted) onAbort();
   });
-  if (r.error && r.error.code === 'ETIMEDOUT') throw Object.assign(new Error(`npm ci 超时 ${timeoutMs}ms in ${cwd}`), { code: 'ETIMEDOUT' });
-  checkLaunchSignal(signal);
-  if (r.error || r.status !== 0) throw new Error('npm ci失败，请检查Node/npm与网络');
 }
 // Lazy, side-effect-free helper: non-app modes and recovery do not probe/start an editor.
 function appOrigin(env = process.env) { return require('./appWindow').appOrigin(env); }
@@ -102,7 +138,17 @@ async function main() {
     env.WEBAGENT_USER_DATA_DIR = path.join(home, 'code-server');
     env.WEBAGENT_ADMIN_DATA = path.join(home, 'admin');
   }
-  if (mode !== 'extension') ensureDependencies(runtime.root);
+  if (mode !== 'extension') {
+    const prep = new AbortController();
+    const onSignal = () => prep.abort();
+    process.on('SIGINT', onSignal);
+    process.on('SIGTERM', onSignal);
+    try { await ensureDependencies(runtime.root, { signal: prep.signal }); }
+    finally {
+      process.removeListener('SIGINT', onSignal);
+      process.removeListener('SIGTERM', onSignal);
+    }
+  }
   if (mode === 'app') return appWindow(runtime.root, workspace, env, home);
   const child = spawn(process.execPath, [path.join(runtime.root, entries[mode]), ...(mode === 'vscode' ? [workspace] : [])],
     { cwd: runtime.root, env, stdio: 'inherit' });

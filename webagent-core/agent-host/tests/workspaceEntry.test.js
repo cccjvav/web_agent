@@ -13,7 +13,13 @@ async function main(){
   const source=fs.readFileSync(path.join(root,'installer/launch.js'),'utf8');
   for(const mode of ['classic','vscode','admin','extension']){
     let spawned;
-    const sandbox={module:{exports:{}},__dirname:path.join(root,'installer'),console,process:{argv:['node','launch',mode],env:{},platform:process.platform,execPath:process.execPath,cwd:()=>tmp},require:name=>name==='child_process'?{spawn:(command,args,options)=>{spawned={command,args,options};return new EventEmitter();},spawnSync:()=>({status:0})}:require(name)};
+    const proc=new EventEmitter();
+    Object.assign(proc,{argv:['node','launch',mode],env:{},platform:process.platform,execPath:process.execPath,cwd:()=>tmp});
+    const sandbox={module:{exports:{}},__dirname:path.join(root,'installer'),console,AbortController,process:proc,require:name=>name==='child_process'?{spawn:(command,args,options)=>{
+      const child=new EventEmitter(); child.exitCode=null; child.signalCode=null; child.kill=()=>true;
+      if (String(command).includes('npm')) { queueMicrotask(()=>{ child.exitCode=0; child.emit('exit',0,null); }); return child; }
+      spawned={command,args,options}; return child;
+    }}:require(name)};
     vm.runInNewContext(source+'\nmodule.exports.main=main;',sandbox);await sandbox.module.exports.main();
     assert.equal(spawned.options.env.WORKSPACE_ROOT,root,mode+' default root must not depend on caller cwd');
   }

@@ -92,11 +92,15 @@ function hostIdentity(value, expected) {
   if (!identity || typeof identity !== 'object' || Array.isArray(identity)
     || typeof identity.hostInstanceId !== 'string' || !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(identity.hostInstanceId)
     || identity.version !== expected.version || identity.mcpPort !== expected.mcpPort
+    || !Number.isSafeInteger(identity.workbenchPort) || identity.workbenchPort < 1 || identity.workbenchPort > 65535
+    || identity.workbenchPort !== expected.codePort
     || typeof identity.startedAt !== 'string' || identity.startedAt.length > 64 || !Number.isFinite(Date.parse(identity.startedAt))
     || normalizedWorkspace(identity.workspaceRoot) !== normalizedWorkspace(expected.workspace)) {
     throw new Error('主机身份或工作区不匹配；未打开窗口，未停止已有服务');
   }
-  return { hostInstanceId: identity.hostInstanceId, startedAt: identity.startedAt, version: identity.version };
+  return { hostInstanceId: identity.hostInstanceId, startedAt: identity.startedAt, version: identity.version,
+    mcpPort: identity.mcpPort, workbenchPort: identity.workbenchPort,
+    workspaceRoot: normalizedWorkspace(identity.workspaceRoot) };
 }
 async function inspectPair(expected, signal, timeoutMs) {
   const [editor, host] = await Promise.all([
@@ -132,7 +136,8 @@ function supervise(child, expected, controller) {
   child.on('message', message => {
     if (state.transferred || state.stopping) return;
     if (message?.type === 'webagent-app-prepared' && Object.keys(message).length === 4
-      && message.workspaceRoot === expected.workspace && message.codePort === expected.codePort && message.mcpPort === expected.mcpPort) {
+      && normalizedWorkspace(message.workspaceRoot) === normalizedWorkspace(expected.workspace)
+      && message.codePort === expected.codePort && message.mcpPort === expected.mcpPort) {
       state.prepared = true;
     } else if (message?.type === 'webagent-app-released' && Object.keys(message).length === 1 && state.prepared && state.releaseRequested) {
       state.released = true;
@@ -164,21 +169,41 @@ async function stopOwned(state) {
     if (child.connected) { try { child.disconnect(); } catch (_) {} }
     child.unref();
   };
-  if (!child.pid) { detach(); return true; }
-  if (child.exitCode !== null || child.signalCode !== null) { detach(); return child.exitCode === 0; }
+  const exited = () => child.exitCode !== null || child.signalCode !== null;
+  // An observed exit is confirmation even when the code is non-zero. No process means nothing to signal.
+  if (!child.pid || exited()) { detach(); return true; }
   const observed = await new Promise(resolve => {
-    const finish = value => { clearTimeout(timer); child.removeListener('exit', onExit); resolve(value); };
-    const onExit = () => finish(child.exitCode === 0);
-    const timer = setTimeout(() => finish(false), 12000); // F56 direct-child cleanup can take up to 10s.
+    let settled = false;
+    const finish = value => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(termTimer); clearTimeout(killTimer); clearTimeout(deadline);
+      child.removeListener('exit', onExit);
+      resolve(value);
+    };
+    const onExit = () => finish(true);
+    const send = signal => {
+      if (settled || exited()) return;
+      try { child.kill(signal); } catch (_) { /* Still wait for exit or the deadline. */ }
+    };
     child.once('exit', onExit);
     try { child.send({ type: 'webagent-app-stop' }, error => { if (error && child.connected) child.disconnect(); }); }
     catch (_) { if (child.connected) { try { child.disconnect(); } catch (_) {} } }
+    // Give a responsive supervisor the inner 9s+1s cleanup. A blocked loop ignores IPC and SIGTERM;
+    // SIGKILL is only on this retained handle, never taskkill or a name/port/stale PID.
+    const termTimer = setTimeout(() => send('SIGTERM'), 10000);
+    const killTimer = setTimeout(() => send('SIGKILL'), 11000);
+    const deadline = setTimeout(() => finish(false), 12000);
   });
   detach();
   return observed;
 }
 function openBrowser(url, env, signal) {
   checkSignal(signal);
+  const target = new URL(url);
+  if (target.protocol !== 'http:' || target.hostname !== '127.0.0.1' || target.username || target.password || target.hash) {
+    throw new Error('浏览器地址必须是本机编辑器入口');
+  }
   const candidates = [
     path.join(env['ProgramFiles(x86)'] || '', 'Microsoft/Edge/Application/msedge.exe'),
     path.join(env.ProgramFiles || '', 'Microsoft/Edge/Application/msedge.exe'),
@@ -247,6 +272,16 @@ async function appWindow(root, workspace, env, home) {
     }
     const target = new URL(expected.origin); target.searchParams.set('folder', workspace);
     await openBrowser(target.toString(), env, controller.signal); check();
+    let afterOpen;
+    try { afterOpen = await inspectPair(expected, controller.signal, budget()); }
+    catch (error) {
+      if (controller.signal.aborted) throw error;
+      throw new Error('主机实例在打开窗口后变化；窗口可能已打开，未移交后台，请重新核对');
+    }
+    check();
+    if (!afterOpen || afterOpen.state !== 'ready' || JSON.stringify(afterOpen.identity) !== JSON.stringify(confirmed.identity)) {
+      throw new Error('主机实例在打开窗口后变化；窗口可能已打开，未移交后台，请重新核对');
+    }
     if (owned) {
       await sendControl(owned, 'webagent-app-release', controller.signal); check();
       while (!owned.released) { await delay(Math.min(50, Math.max(1, expires - performance.now())), controller.signal); check(); }

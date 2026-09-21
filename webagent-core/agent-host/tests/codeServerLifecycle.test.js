@@ -79,7 +79,7 @@ function harness(options = {}) {
       children.push(child); return child;
     } },
     ...(options.clock ? { perf_hooks: { performance: { now: () => options.clock.now } } } : {}),
-    './ensure-code-server': { repoRoot: root, ensure() { return path.join(root, 'entry.js'); }, syncExtension() {} },
+    './ensure-code-server': { repoRoot: root, ensure() { return Promise.resolve(path.join(root, 'entry.js')); }, syncExtension() {} },
     './codeServerAuth': { trustedOrigins: originalRequire('./codeServerAuth').trustedOrigins,
       resolveAuth() { if (options.authError) throw options.authError; return { mode: 'password', password: 'fixture-only', passwordFile: null }; }
     }
@@ -251,9 +251,11 @@ async function serverFixture(handler) {
       const running = h.api.main().then(code => { settled = true; return code; });
       await nextTurn(); assert.equal(h.children.length, 2); assert.equal(settled, false);
       const [host, editor] = h.calls;
+      assert.equal(editor.args[0], path.join(h.root, 'entry.js'), 'await the prepared entry instead of spawning a Promise');
       assert.deepStrictEqual([...host.args], ['src/index.js']);
       assert.equal(host.opts.env.WORKSPACE_ROOT, h.root); assert.equal(host.opts.env.WEBAGENT_SKIP_WORKBENCH, '1');
-      assert.equal(host.opts.env.AGENT_HOST_PORT, '51321'); assert.equal(editor.opts.env.PASSWORD, 'fixture-only');
+      assert.equal(host.opts.env.AGENT_HOST_PORT, '51321'); assert.equal(host.opts.env.WORKBENCH_PORT, '51322');
+      assert.equal(editor.opts.env.PASSWORD, 'fixture-only');
       assert.equal(editor.args[editor.args.indexOf('--auth') + 1], 'password');
       assert.equal(editor.args[editor.args.indexOf('--trusted-origins') + 1], 'http://127.0.0.1:51322,http://localhost:51322');
       assert.equal(editor.args[editor.args.indexOf('--bind-addr') + 1], '127.0.0.1:51322');
@@ -270,7 +272,7 @@ async function serverFixture(handler) {
     const clock = fakeClock(), transport = healthyHttp({ automatic: false });
     const h = harness({ clock, http: transport });
     try {
-      const running = h.api.main(); assert.equal(h.children.length, 1);
+      const running = h.api.main(); await nextTurn(); assert.equal(h.children.length, 1);
       assert.ok([...clock.timers.values()].some(t => t.delay === 15000), 'preserve the production 15s health budget');
       h.proc.emit('SIGTERM');
       transport.requests[0].callback(transport.requests[0].response);
@@ -282,7 +284,7 @@ async function serverFixture(handler) {
     const clock = fakeClock(), transport = healthyHttp({ automatic: false });
     const h = harness({ clock, http: transport });
     try {
-      const running = h.api.main(); clock.advance(15000);
+      const running = h.api.main(); await nextTurn(); clock.advance(15000);
       assert.equal(await bounded(running), 1); assert.equal(h.children.length, 1);
       assert.deepStrictEqual(h.children[0].signals, ['SIGTERM']); assert.equal(clock.timers.size, 0);
       assert.ok(h.logs.some(line => line.includes('时限')));
@@ -291,7 +293,7 @@ async function serverFixture(handler) {
   await test('an agent exit before readiness cancels the probe, even for exit zero', async () => {
     const transport = healthyHttp({ automatic: false }), h = harness({ http: transport });
     try {
-      const running = h.api.main(); h.children[0].end(0);
+      const running = h.api.main(); await nextTurn(); h.children[0].end(0);
       assert.equal(await bounded(running), 1); assert.equal(h.children.length, 1);
       assert.deepStrictEqual(h.children[0].signals, [], 'never kill an exited child/PID');
       transport.requests[0].callback(transport.requests[0].response);
@@ -334,7 +336,7 @@ async function serverFixture(handler) {
     await test(`dependency installer ${outcome} is owned without late continuation`, async () => {
       const h = harness({ install: true, platform: 'win32' });
       try {
-        const running = h.api.main(); assert.equal(h.calls[0].command, 'npm.cmd'); assert.equal(h.calls[0].opts.shell, true);
+        const running = h.api.main(); await nextTurn(); assert.equal(h.calls[0].command, 'npm.cmd'); assert.equal(h.calls[0].opts.shell, true);
         assert.equal(h.children.length, 1);
         if (outcome === 'cancel') h.proc.emit('SIGINT'); else h.children[0].end(outcome === 'success' ? 0 : 5);
         await nextTurn();

@@ -71,7 +71,7 @@ Webview通过acquireVsCodeApi取得postMessage；mode初始code，sending=false�
 - go.onclick：sending时仅发cancel，否则trim输入，清输入，切停止图标，post send。q.onkeydown Enter且无Shift阻止默认并click；open-native.onclick只发openNative。
 - window message回调校验对象；finished恢复按钮，user用add，event按status/tool/message/error/consensus渲染；tool失败色并从set_todos结果paintTasks。未知事件忽略，不直接执行来自服务端的脚本。
 
-HTML log/flex滚动区域、任务栏、模式菜单、输入框与发送按钮由id绑定；CSS控制深色布局/状态，不承载授权规则。maxLength是交互限制，宿主validWebviewMessage才是额外输入边界。
+HTML log/flex滚动区域、任务栏、模式菜单、输入框与发送按钮由id绑定；CSS控制深色布局/状态，不承载授权规则。正文用13px并优先`--vscode-font-family`；辅助字至少12px。空状态和菜单提示用`--vscode-descriptionForeground`，回退色是`#c8c8c8`，不再用`#6e6e6e`。这只提高可读性，不声称完整WCAG或浅色主题已验收。maxLength是交互限制，宿主validWebviewMessage才是额外输入边界。
 
 ## 6. bridgeHtml内嵌脚本
 

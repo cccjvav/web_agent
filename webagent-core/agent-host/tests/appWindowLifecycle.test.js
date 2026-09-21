@@ -66,11 +66,12 @@ function harness(options = {}) {
     res.statusCode = 200; res.headers = { 'content-type': 'application/json' };
     const body = String(url).endsWith('/healthz') ? { status: 'alive', lastHeartbeat: 1 } : {
       identity: { hostInstanceId: hostId, workspaceRoot: options.wrongWorkspace ? home : workspace, mcpPort: 51211,
-        workbenchPort: 3000, version, startedAt: '2026-09-21T00:00:00.000Z' }, capabilities: []
+        workbenchPort: 51212, version, startedAt: '2026-09-21T00:00:00.000Z' }, capabilities: []
     };
     if (body.identity) {
       diagnostics++;
       if (options.changedInstance && diagnostics > 1) body.identity.hostInstanceId = '87654321-1234-4123-8123-123456789abc';
+      if (options.changedAfterOpen && options.browserOpened) body.identity.hostInstanceId = '87654321-1234-4123-8123-123456789abc';
       if (options.badIdentity) options.badIdentity(body.identity);
     }
     if (options.badHealth && !body.identity) Object.assign(body, options.badHealth);
@@ -91,7 +92,11 @@ function harness(options = {}) {
     const child = new EventEmitter();
     Object.assign(child, { pid: 10000 + calls.length, exitCode: null, signalCode: null, connected: true, messages: [], kills: [], unrefs: 0 });
     child.unref = () => { child.unrefs++; };
-    child.kill = signal => { child.kills.push(signal); child.signalCode = signal; child.emit('exit', null, signal); return true; };
+    child.kill = signal => {
+      child.kills.push(signal);
+      if (options.ignoreKill) return true;
+      child.signalCode = signal; child.emit('exit', null, signal); return true;
+    };
     child.disconnect = () => { child.connected = false; child.emit('disconnect'); };
     child.send = (message, callback) => {
       child.messages.push(message);
@@ -103,6 +108,7 @@ function harness(options = {}) {
         if (message.type === 'webagent-app-release' && !options.noReleaseAck) child.emit('message', {type:'webagent-app-released'});
       });
     };
+    if (!runner && options.changedAfterOpen) options.browserOpened = true;
     calls.push({ command, args, opts, child, runner });
     queueMicrotask(() => {
       if (runner && options.runnerFailure || !runner && options.browserFailure) {
@@ -111,7 +117,7 @@ function harness(options = {}) {
         child.emit('spawn');
         if (runner && !options.noPrepared) {
           available = true;
-          child.emit('message', options.badPrepared || {type:'webagent-app-prepared',workspaceRoot:workspace,codePort:51212,mcpPort:51211});
+          child.emit('message', options.badPrepared || {type:'webagent-app-prepared',workspaceRoot:options.trailingPrepared ? workspace + path.sep : workspace,codePort:51212,mcpPort:51211});
         }
       }
     });
@@ -167,7 +173,7 @@ function harness(options = {}) {
       const url = new URL(h.calls[0].args.at(-1));
       assert.equal(url.origin, 'http://127.0.0.1:51212'); assert.equal(url.searchParams.get('folder'), h.workspace);
       assert.equal(url.hash, ''); assert.equal(h.calls[0].opts.shell, false);
-      assert.equal(h.requests.filter(r => r.url.endsWith('/api/diagnostics')).length, 2);
+      assert.equal(h.requests.filter(r => r.url.endsWith('/api/diagnostics')).length, 3);
       assert.ok(!JSON.stringify(h.requests).includes(h.env.CODE_SERVER_PASSWORD), 'never send credentials to a readiness endpoint');
       assert.equal(h.proc.listenerCount('SIGINT'), 0); assert.equal(h.proc.listenerCount('SIGTERM'), 0);
     } finally { h.close(); }
@@ -180,6 +186,7 @@ function harness(options = {}) {
   for (const [name, options] of [
     ['wrong version', {badIdentity: id => { id.version = '0.0.0'; }}],
     ['wrong MCP port', {badIdentity: id => { id.mcpPort = 1234; }}],
+    ['wrong editor port', {badIdentity: id => { id.workbenchPort = 3000; }}],
     ['invalid instance', {badIdentity: id => { id.hostInstanceId = {}; }}],
     ['invalid startedAt', {badIdentity: id => { id.startedAt = 'not-a-date'; }}],
     ['remote path', {badIdentity: id => { id.workspaceRoot = '\\untrusted.invalid\share'; }}],
@@ -254,17 +261,45 @@ function harness(options = {}) {
     try {
       const pending=h.api.appWindow(root,h.workspace,h.env,h.home); await nextTurn();
       const child=h.calls[0].child; child.exitCode=1; child.emit('exit',1,null);
-      await assert.rejects(drive(pending,clock),/后台.*退出/); assert.ok(clock.now<120000);
+      const error = await drive(pending,clock).then(() => null, failure => failure);
+      assert.match(error.message,/后台.*退出/); assert.doesNotMatch(error.message,/清理结果未确认/);
+      assert.ok(clock.now<120000);
       assert.equal(h.calls.length,1); assert.deepStrictEqual(child.kills,[]); assert.equal(clock.timers.size,0);
     } finally { h.close(); }
   });
-  await test('missing cleanup confirmation is bounded and reported, never replaced by force-killing a supervisor tree', async () => {
-    const clock=fakeClock(),h=harness({clock,cold:true,noPrepared:true,hangStop:true});
+  await test('a blocked supervisor is signaled on the retained handle and stays unconfirmed if it never exits', async () => {
+    const clock=fakeClock(),h=harness({clock,cold:true,noPrepared:true,hangStop:true,ignoreKill:true});
     try {
       const pending=h.api.appWindow(root,h.workspace,h.env,h.home); await nextTurn(); h.proc.emit('SIGTERM');
       await assert.rejects(drive(pending,clock),/清理结果未确认/);
-      const child=h.calls[0].child; assert.equal(child.exitCode,null); assert.deepStrictEqual(child.kills,[]);
+      const child=h.calls[0].child; assert.equal(child.exitCode,null);
+      assert.deepStrictEqual(child.kills,['SIGTERM','SIGKILL']);
       assert.equal(child.unrefs,1); assert.equal(child.connected,false); assert.equal(clock.timers.size,0);
+      assert.ok(!JSON.stringify(h.calls).includes('taskkill'));
+    } finally { h.close(); }
+  });
+  await test('an observed non-zero supervisor exit is confirmed', async () => {
+    const clock=fakeClock(),h=harness({clock,cold:true,noPrepared:true,stopExit:1});
+    try {
+      const pending=h.api.appWindow(root,h.workspace,h.env,h.home); await nextTurn(); h.proc.emit('SIGTERM');
+      const error=await drive(pending,clock).then(()=>null,failure=>failure);
+      assert.match(error.message,/停止/); assert.doesNotMatch(error.message,/清理结果未确认/);
+      assert.deepStrictEqual(h.calls[0].child.kills,[]);
+    } finally { h.close(); }
+  });
+  await test('a host change after the browser opens is not released as a clean handoff', async () => {
+    const h=harness({changedAfterOpen:true});
+    try {
+      await assert.rejects(bounded(h.api.appWindow(root,h.workspace,h.env,h.home)),/可能已打开/);
+      assert.equal(h.calls.length,1); assert.equal(h.calls[0].runner,false);
+    } finally { h.close(); }
+  });
+  await test('prepared workspace comparison accepts a normalized trailing separator', async () => {
+    const clock=fakeClock(),h=harness({clock,cold:true,trailingPrepared:true});
+    try {
+      await drive(h.api.appWindow(root,h.workspace,h.env,h.home),clock);
+      assert.equal(h.calls.filter(call=>call.runner).length,1);
+      assert.deepStrictEqual(h.calls[0].child.messages.map(message=>message.type),['webagent-app-release']);
     } finally { h.close(); }
   });
   await test('real HTTP probes bound body/UTF-8/status, refuse redirects and accept the pinned code-server health shape', async () => {

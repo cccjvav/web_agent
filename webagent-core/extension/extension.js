@@ -533,30 +533,30 @@ function chatHtml() {
 <html><head><meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none';">
 <style>
-body{margin:0;font:12px/1.45 system-ui;background:#1e1e1e;color:#ccc;height:100vh;display:flex;flex-direction:column}
+body{margin:0;font:13px/1.5 var(--vscode-font-family,system-ui);background:var(--vscode-editor-background,#1e1e1e);color:var(--vscode-foreground,#cccccc);height:100vh;display:flex;flex-direction:column}
 #log{flex:1;overflow:auto;padding:12px}
-.empty{text-align:center;padding:36px 16px 8px;color:#bbb}
-.empty h3{margin:0 0 8px;font-size:14px;color:#ddd}
-.empty p{margin:0;color:#6e6e6e;font-size:12px;line-height:1.5}
+.empty{text-align:center;padding:36px 16px 8px;color:var(--vscode-foreground,#cccccc)}
+.empty h3{margin:0 0 8px;font-size:14px;color:var(--vscode-foreground,#dddddd)}
+.empty p{margin:0;color:var(--vscode-descriptionForeground,#c8c8c8);font-size:13px;line-height:1.5}
 .empty a{color:#3794ff;cursor:pointer}
 .msg{margin:0 0 8px;padding:8px 10px;border-radius:8px;white-space:pre-wrap}
 .user{background:#2a2a2a;margin-left:8%}
 .bot{background:#222;border:1px solid #333}
-.tool{font-family:ui-monospace,monospace;font-size:11px;color:#9cdcfe;border:1px solid #333;padding:6px 8px;border-radius:6px;margin:0 0 8px;display:flex;justify-content:space-between}
+.tool{font-family:var(--vscode-editor-font-family,ui-monospace,monospace);font-size:12px;color:#9cdcfe;border:1px solid #333;padding:6px 8px;border-radius:6px;margin:0 0 8px;display:flex;justify-content:space-between}
 .tool.fail{color:#f14c4c;border-color:#5a2d2d}
 #tasks{display:none;border-top:1px solid #333;padding:8px 10px;background:#1a1a1a}
-#tasks h4{margin:0 0 6px;font-size:11px;letter-spacing:.06em;color:#bbb;display:flex;justify-content:space-between}
+#tasks h4{margin:0 0 6px;font-size:12px;letter-spacing:.06em;color:var(--vscode-descriptionForeground,#bbbbbb);display:flex;justify-content:space-between}
 #task-list{margin:0;padding:0;list-style:none}
 .foot{padding:8px;background:#181818;border-top:1px solid #2b2b2b}
 .composer{border:1px solid #3c3c3c;border-radius:8px;padding:8px;background:#1f1f1f}
 textarea{width:100%;background:transparent;border:0;color:#fff;padding:4px 0;outline:none;resize:none;min-height:40px;font:13px/1.4 system-ui}
 .row{display:flex;gap:6px;align-items:center;margin-top:6px;position:relative}
-.agent-btn{background:#2d2d2d;border:1px solid #3c3c3c;color:#ddd;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer}
+.agent-btn{background:#2d2d2d;border:1px solid #3c3c3c;color:#ddd;border-radius:4px;padding:3px 8px;font-size:12px;cursor:pointer}
 .menu{display:none;position:absolute;bottom:32px;left:28px;background:#252526;border:1px solid #333;border-radius:6px;min-width:200px;z-index:5;padding:4px}
 .menu.on{display:block}
 .menu button{display:block;width:100%;text-align:left;background:none;border:0;color:#ccc;padding:7px 10px;font-size:12px;border-radius:4px;cursor:pointer}
 .menu button:hover,.menu button.on{background:#04395e;color:#fff}
-.menu .hint{padding:4px 10px;font-size:10px;color:#6e6e6e}
+.menu .hint{padding:4px 10px;font-size:12px;color:var(--vscode-descriptionForeground,#c8c8c8)}
 button.send{margin-left:auto;background:#0e639c;color:#fff;border:0;width:28px;height:28px;border-radius:6px;cursor:pointer}
 </style></head><body>
 <details style="padding:8px 12px;max-height:40vh;overflow:auto;color:#ddd;border-bottom:1px solid #555">
@@ -662,15 +662,15 @@ function bridgeHtml() {
 <html><head><meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none';">
 <style>
-body{margin:0;padding:12px;font:12px/1.4 system-ui;background:var(--vscode-sideBar-background,#1e1e1e);color:var(--vscode-foreground,#ccc)}
+body{margin:0;padding:12px;font:13px/1.5 var(--vscode-font-family,system-ui);background:var(--vscode-sideBar-background,#1e1e1e);color:var(--vscode-foreground,#ccc)}
 .pill{display:inline-block;padding:3px 10px;border-radius:12px;margin-bottom:10px;border:1px solid #4fc1ff;color:#4fc1ff}
 .card{background:var(--vscode-editor-background,#252526);border:1px solid var(--vscode-panel-border,#555);border-radius:8px;padding:10px;margin-bottom:10px}
 .url{word-break:break-all;font-family:ui-monospace,monospace;color:#9cdcfe;background:#111;padding:8px;border-radius:4px}
 button{background:#0e639c;color:#fff;border:0;padding:7px 10px;border-radius:4px;cursor:pointer;margin:4px 4px 0 0}
 .hint{color:var(--vscode-descriptionForeground,#b0b0b0)}
-.tool{font-family:ui-monospace,monospace;font-size:11px;color:#9cdcfe;border:1px solid #333;padding:6px 8px;border-radius:6px;margin:0 0 6px;display:flex;justify-content:space-between}
+.tool{font-family:var(--vscode-editor-font-family,ui-monospace,monospace);font-size:12px;color:#9cdcfe;border:1px solid #333;padding:6px 8px;border-radius:6px;margin:0 0 6px;display:flex;justify-content:space-between}
 #tasks{max-height:35vh;overflow:auto;overflow-wrap:anywhere}
-#tasks h4{margin:0 0 6px;font-size:11px;display:flex;justify-content:space-between}
+#tasks h4{margin:0 0 6px;font-size:12px;display:flex;justify-content:space-between}
 #task-list{margin:0;padding:0;list-style:none}
 </style></head><body>
 <div class="pill" id="pill">检查中…</div>
