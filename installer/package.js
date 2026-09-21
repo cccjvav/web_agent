@@ -15,7 +15,7 @@ const files = [
   'webagent-core/agent-host/scripts/README.md', 'webagent-core/agent-host/scripts/运行器详解.md',
   'docs/development/总览.md', 'docs/guides/技能使用指南.md', 'docs/guides/网页VSCode使用指南.md', 'check-env.cmd',
   'run-webagent.cmd', 'run-webagent-vscode.cmd', 'run-webagent-appwindow.cmd',
-  'run-admin.cmd', 'install-vscode-extension.cmd', 'installer/launch.js',
+  'run-admin.cmd', 'install-vscode-extension.cmd', 'installer/launch.js', 'installer/tunnel-recovery.ps1',
   'webagent-core/agent-host/package.json', 'webagent-core/agent-host/package-lock.json',
   'webagent-core/admin-host/index.js', 'webagent-core/admin-host/app.js',
   'docs-site/index.html', 'docs-site/app.js', 'docs-site/styles.css', 'docs-site/content.js', 'docs-site/serve.js', 'docs-site/README.md'

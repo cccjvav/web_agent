@@ -35,7 +35,7 @@ Named Token必须传给cloudflared命令行，因此可能对有本机进程查�
 
 ## 残留检测首包（R5）
 
-新启动的quick/named/ngrok增加私有归属记录，只读检测入口见`scripts/tunnel-residue.js`。记录在当前OS用户home的`.webagent/tunnel-processes-v1`，不含Token/argv；模块解释与边界见[只读归属](停止进程详解.md)。只读检测本身不改变Bridge、URL或任何目标进程；另有下述Windows本机确认回收入口，尚无图形按钮；旧版无记录、包装脚本、查询失败等明确不能确认。Windows/Linux有身份查询，其他平台保守unknown。不要把磁盘记录或疑似残留状态当成终止授权。
+新启动的quick/named/ngrok增加私有归属记录，只读检测入口见`scripts/tunnel-residue.js`。记录在当前OS用户home的`.webagent/tunnel-processes-v1`，不含Token/argv；模块解释与边界见[只读归属](停止进程详解.md)。只读检测本身不改变Bridge、URL或任何目标进程；另有下述Windows本机确认回收入口，已有开始菜单本机快捷入口，尚无面板按钮；旧版无记录、包装脚本、查询失败等明确不能确认。Windows/Linux有身份查询，其他平台保守unknown。不要把磁盘记录或疑似残留状态当成终止授权。
 
 R5记录完整性续包：Windows新收据使用CurrentUser DPAPI，封装失败不落回明文；v1仍只读且unverified，v2验证后报告os-user-protected。此标签不是WebAgent来源证明或终止授权，检测报告的清理标志仍禁用；实际终止必须走独立本机确认和原生句柄复核。
 
@@ -46,6 +46,8 @@ R5记录完整性续包：Windows新收据使用CurrentUser DPAPI，封装失败
 预览60秒有效，本机输入RECYCLE才会重读记录指纹并在持有的目标句柄上再次核对、终止和观察退出。权限/身份不确定即跳过，结果未知不自动重放。DPAPI不隔离同用户恶意代码/管理员，TTY也不是防自动化的人类身份认证；无HTTP/MCP清理接口、不提权。图形按钮、非Windows回收及真实隧道桌面验收仍待。完整合同见[句柄回收](停止进程详解.md)。
 
 R5第五包：helperDiagnostics在既有WEBAGENT_DEBUG_PROCESS=1下记录有界脱敏辅助阶段，不记录收据/参数/路径/输出正文，默认关闭；不改8秒期限或unknown保护，历史Windows22根因仍待。
+
+R5第六包：Windows安装器增加本机“隧道残留回收（需确认）”开始菜单入口，独立控制台复用本节CLI；不启动Bridge、不经网页/MCP、仍需RECYCLE，面板按钮及用户桌面点击待验，详见[安装入口](../../../../installer/README.md)。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航

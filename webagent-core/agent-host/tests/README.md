@@ -170,7 +170,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
-| [installerPackaging.test.js](installerPackaging.test.js) | 24 个函数/类节点 |
+| [installerPackaging.test.js](installerPackaging.test.js) | 25 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 19 个函数/类节点 |
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 24 个函数/类节点 |
@@ -228,6 +228,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 17 个函数/类节点 |
 | [tunnelOwnerFixture.js](tunnelOwnerFixture.js) | 4 个函数/类节点 |
 | [tunnelReceiptProtection.test.js](tunnelReceiptProtection.test.js) | 17 个函数/类节点 |
+| [tunnelRecoveryLauncher.test.js](tunnelRecoveryLauncher.test.js) | 11 个函数/类节点 |
 | [tunnelRegistry.test.js](tunnelRegistry.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |

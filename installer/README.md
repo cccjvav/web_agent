@@ -33,7 +33,7 @@
 显式相对工作区相对于调用者cwd解析；传文件取父目录；不存在的显式路径拒绝，缺省路径可创建；Windows盘符根分隔符不随意裁掉。被编辑工作区自身的.webagent配置与用户runtime不是同一层数据。
 
 ## 模式、升级与卸载
-classic启动自绘工作台；vscode启动code-server编排；app后台启动并等待healthz（当前探测3000端口，最多120秒）后打开窗口；admin启动独立后台；extension侧载桌面扩展。
+recovery是独立Windows本机交互回收入口，不解析工作区/装依赖/启动服务，详见下节；classic启动自绘工作台；vscode启动code-server编排；app后台启动并等待healthz（当前探测3000端口，最多120秒）后打开窗口；admin启动独立后台；extension侧载桌面扩展。
 
 升级保留用户数据与旧runtime，不自动迁移旧安装目录中的workspace。升级前备份并显式选择用户可写工作区。卸载不删除LocalAppData/WebAgent；彻底清理要先备份，不触碰其他用户目录。PATH按分号条目规范比较，不按子串删除同前缀目录。
 
@@ -44,6 +44,18 @@ installerPackaging验证白名单、私密fixture不入包、runtime路径和重
 
 R5首包发行：只读tunnel-residue.js加入明确文件白名单，src/tunnel身份与记录模块随原源码树打包；用户home记录不属于产品载荷，未加入清理执行器。
 
+## 本机回收快捷入口
+
+安装后开始菜单 → Web Agent → **隧道残留回收（需确认）**。独立控制台显示有限预览，输入RECYCLE才回收通过验证的登记隧道根进程；任何活宿主/未知项不终止。重复点击同会话入口不启动第二次回收，结果窗口关闭前保持锁。不提权、不启动Bridge、不调用stopTunnel，无HTTP/MCP入口。确认后未知结果不要重放。用户桌面实际点击仍待验，面板按钮尚未提供。
+
+源码在本机交互CMD、仓库根运行：
+
+```bat
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\tunnel-recovery.ps1
+```
+
+不传工作区/PID/路径/--yes，不管道输入确认；缺Node先检查系统PATH，脚本不下载安装依赖。此开关仅本次进程运行固定脚本，不改系统执行策略。安全边界与退出语义见[启动详解](函数详解.md)。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -52,8 +64,9 @@ R5首包发行：只读tunnel-residue.js加入明确文件白名单，src/tunnel
 | 源码 | 定位证据 |
 |---|---|
 | [build-installer.cmd](build-installer.cmd) | 文件级登记；未做符号完整性证明 |
-| [launch.js](launch.js) | 22 个函数/类节点 |
+| [launch.js](launch.js) | 25 个函数/类节点 |
 | [package.js](package.js) | 9 个函数/类节点 |
+| [tunnel-recovery.ps1](tunnel-recovery.ps1) | 文件级登记；未做符号完整性证明 |
 | [webagent.iss](webagent.iss) | 文件级登记；未做符号完整性证明 |
 <!-- docs-inventory:end -->
 

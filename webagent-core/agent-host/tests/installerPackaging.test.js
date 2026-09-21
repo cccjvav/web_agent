@@ -30,6 +30,7 @@ try {
   assert.ok(!manifest.files.some(f => f.path === '双向连接核对使用指南.md' || f.path.startsWith('review/archive/')));
   assert.deepStrictEqual(manifest.files.filter(f => f.path.startsWith('arena-model-probe/')).map(f => f.path), ['arena-model-probe/webagent-connection.user.js']);
   assert.ok(manifest.files.some(f => f.path === 'installer/launch.js'));
+  assert.ok(manifest.files.some(f => f.path === 'installer/tunnel-recovery.ps1'));
   assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/src/utils/fileCheckpoints.js'));
   for (const file of ['stdioBridge.cs', 'stdioBridge.ps1', 'stdioSupervisor.js', 'stdioTransport.js', 'stdioLaunch.js', 'publicHttps.js']) assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/src/mcp/' + file));
   for (const file of ['src/tunnel/helperDiagnostics.js', 'scripts/tunnel-cleanup.js', 'src/tunnel/tunnelCleanup.js', 'src/tunnel/tunnelCleanup.ps1', 'src/tunnel/tunnelCleanup.cs', 'scripts/tunnel-residue.js', 'src/tunnel/tunnelRegistry.js', 'src/tunnel/processIdentity.js', 'src/tunnel/receiptProtection.js', 'src/tunnel/receiptProtection.ps1']) assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/' + file));

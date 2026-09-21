@@ -105,8 +105,22 @@ async function appWindow(root, workspace, env, home) {
     : spawn('rundll32.exe', ['url.dll,FileProtocolHandler', origin], { detached: true, stdio: 'ignore' });
   child.on('error', err => console.error('浏览器启动失败：' + err.message)); child.unref();
 }
+function launchRecovery() {
+  // No workspace resolution, dependency install, server startup or supplied target/confirmation.
+  if (process.platform !== 'win32' || !process.stdin.isTTY || !process.stdout.isTTY || process.argv.length !== 3) {
+    process.exitCode = 2;
+    console.error('Tunnel recovery requires a local Windows console and no arguments.');
+    return;
+  }
+  const runtime = prepareRuntime();
+  const child = spawn(process.execPath, [path.join(runtime.root, 'webagent-core/agent-host/scripts/tunnel-cleanup.js')],
+    { cwd: runtime.root, stdio: 'inherit', shell: false });
+  child.on('error', () => { console.error('Recovery process unavailable; no automatic retry.'); process.exitCode = 1; });
+  child.on('exit', code => { process.exitCode = Number.isInteger(code) ? code : 1; });
+}
 async function main() {
   const mode = process.argv[2];
+  if (mode === 'recovery') return launchRecovery();
   const entries = { classic: 'webagent-core/agent-host/src/index.js', vscode: 'webagent-core/scripts/run-code-oss.js',
     admin: 'webagent-core/admin-host/index.js', extension: 'webagent-core/scripts/install-desktop-extension.js' };
   if (!entries[mode] && mode !== 'app') throw new Error('Unknown launch mode');
@@ -127,4 +141,4 @@ async function main() {
   child.on('exit', (code, signal) => { process.exitCode = code == null ? 1 : code; });
 }
 if (require.main === module) main().catch(err => { console.error(err.message); process.exitCode = 1; });
-module.exports = { userHome, safeRelative, prepareRuntime, resolveWorkspace, appOrigin, ready };
+module.exports = { userHome, safeRelative, prepareRuntime, resolveWorkspace, appOrigin, ready, launchRecovery };

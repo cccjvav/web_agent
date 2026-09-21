@@ -55,6 +55,7 @@ Name: "{autodesktop}\Web Agent (VS Code 壳)"; Filename: "{app}\run-webagent-vsc
 Name: "{autodesktop}\Web Agent (app 窗口)"; Filename: "{app}\run-webagent-appwindow.cmd"; WorkingDir: "{app}"; Tasks: appwindow
 Name: "{group}\Web Agent (VS Code 壳)"; Filename: "{app}\run-webagent-vscode.cmd"; WorkingDir: "{app}"
 Name: "{group}\经典工作台（备用）"; Filename: "{app}\run-webagent.cmd"; WorkingDir: "{app}"
+Name: "{group}\隧道残留回收（需确认）"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\installer\tunnel-recovery.ps1"""; WorkingDir: "{app}"
 Name: "{group}\环境自检 check-env"; Filename: "{app}\check-env.cmd"; WorkingDir: "{app}"
 Name: "{group}\卸载 Web Agent"; Filename: "{uninstallexe}"
 
