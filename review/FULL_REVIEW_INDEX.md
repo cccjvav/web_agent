@@ -122,9 +122,9 @@
 | [installer/README.md](../installer/README.md) | 待逐句核对 | f2edbd500219def5 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/函数详解.md](../installer/函数详解.md) | 待逐句核对 | e56bd9d538e2a089 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/安装声明详解.md](../installer/安装声明详解.md) | 待逐句核对 | 5c8566d2ce5b1bc8 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | c0df1ed50379c761 | F54压缩为轻量当前索引，记录来源同步/50c03be精确CI与未修新证据；历史保留阶段，不自授整篇通过 |
+| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | 6c01cd725389bfc4 | F54压缩为轻量当前索引，记录来源同步/50c03be精确CI与未修新证据；历史保留阶段，不自授整篇通过 |
 | [manager/SKILL.md](../manager/SKILL.md) | 只读规范副本 | 5c8c93d50e52332b | 只核对引用与适用范围，不修改技能副本 |
-| [manager/agents.md](../manager/agents.md) | 待逐句核对 | 5210523b2d467d03 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
+| [manager/agents.md](../manager/agents.md) | 待逐句核对 | 9bda245c22374f7f | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [manager/docs/documentation.md](../manager/docs/documentation.md) | 待逐句核对 | dff435c047431d16 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [manager/docs/experience.md](../manager/docs/experience.md) | 待逐句核对 | a6d9e3bf5dfeda87 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [manager/stages/audit-2026-09-11.md](../manager/stages/audit-2026-09-11.md) | 待历史定位核对 | d6064bf51020b073 | 核对归档/引用/证据，不将旧结论改成现状 |
@@ -132,7 +132,7 @@
 | [manager/stages/documentation-2026-09-12.md](../manager/stages/documentation-2026-09-12.md) | 待历史定位核对 | c23c09e4b3615d99 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/probe-dual-integration-2026-09-15.md](../manager/stages/probe-dual-integration-2026-09-15.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
 | [manager/stages/s1-handoff.md](../manager/stages/s1-handoff.md) | 待历史定位核对 | cfc0e427dc08e55c | 核对归档/引用/证据，不将旧结论改成现状 |
-| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | 40768335f666eddd | F54更新R2/R3与实际审查/未修边界、基线和ShunCode取舍；保留历史失败，其余阶段不重签 |
+| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | 36331e18fa1ea31d | F54更新R2/R3与实际审查/未修边界、基线和ShunCode取舍；保留历史失败，其余阶段不重签 |
 | [manager/stages/s2-shell.md](../manager/stages/s2-shell.md) | 待历史定位核对 | 5ac447fe582ce09e | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s3-bridge-image.md](../manager/stages/s3-bridge-image.md) | 待历史定位核对 | fbe64b3265d3cf1a | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s4-terminal.md](../manager/stages/s4-terminal.md) | 待历史定位核对 | 1cf1fcca01c51478 | 核对归档/引用/证据，不将旧结论改成现状 |

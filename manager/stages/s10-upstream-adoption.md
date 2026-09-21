@@ -904,7 +904,7 @@ fetch历史SHA只用于对照，不切换工作分支。历史到213241c的searc
 
 runner新增文件/Node/平台/架构/原预算及单调耗时/status/signal/errorCode/捕获字节数，失败annotation带有界元数据，默认120秒/退出码不变。既有日志可能含测试正文，本包不声称全日志脱敏。
 
-可控Worker和时钟验证startup/scan/cancel/重复ready/迟到消息/单次释放，真实命令验证echo/超时/默认关闭/不吞工具输出；诊断sink抛错不破坏真实正常命令或可控worker结束。testRunner临时目录fixture验证exit7及1秒故意超时均失败且有元数据，未改真实套件时限。mcpProtocol/patchEngine开启诊断定向通过，是Linux当前实现证据，不是历史Windows复现或根因结案；首次全套发现旧searchWorkerLifecycle VM缺process环境（新增诊断读取process），补真实process/console后原断言全保留；随后一次全套因尚未重建源码清单触发文档漂移守卫，均保留失败日志。重建后Linux Node22、debug=1全套87/87通过，文档252/28/110及185登记hash已刷新；精确CI待核验。
+可控Worker和时钟验证startup/scan/cancel/重复ready/迟到消息/单次释放，真实命令验证echo/超时/默认关闭/不吞工具输出；诊断sink抛错不破坏真实正常命令或可控worker结束。testRunner临时目录fixture验证exit7及1秒故意超时均失败且有元数据，未改真实套件时限。mcpProtocol/patchEngine开启诊断定向通过，是Linux当前实现证据，不是历史Windows复现或根因结案；首次全套发现旧searchWorkerLifecycle VM缺process环境（新增诊断读取process），补真实process/console后原断言全保留；随后一次全套因尚未重建源码清单触发文档漂移守卫，均保留失败日志。重建后Linux Node22、debug=1全套87/87通过，文档252/28/110及185登记hash已刷新；实现144833af902732062773f9749264ae94cd4d7e26的CI35560613257精确SHA九项全成功（含Windows20/22/24、浏览器和安装构建）。另跑debug=0全套87/87通过。仍未复现历史故障，不以当前绿色将R4结案。
 
 ## 复盘
 
