@@ -109,7 +109,7 @@ R3定制设置回归：workbenchRuntime加载真实settings模块，先用400负
 
 workbenchRuntime在真实bind/bridge/settings/tabs/chat模块上执行确认合同。认证按钮覆盖HTTP拒绝、业务假成功、坏JSON、令牌草稿保留、设备轮询代次/Abort及单飞；画像探测覆盖畸形候选、环境与技术栈共享请求、等待期间草稿变化；新建文件发送createOnly且失败不打开，终端/搜索拒绝失败或坏形状。Skill第一页读取断言不发送空的可选expectedHash，续页仍由可信hash绑定。Bridge清轮、health、diagnostics与Execution Control必须同时满足HTTP/业务/核心形状，写确认后的读失败与写未确认分开。
 
-Skill目录和正文先验证完整候选再发布，失败保留可信列表/正文；真实浏览器对创建400同时要求保留服务端错误、明确“状态未知”且磁盘零创建，不再把旧版纯错误串当唯一文案。文件树坏候选不替换旧树；apply_patch重读只在合法hash/正文后协调，干净标签同步、脏草稿保留。局部**streamResponse(chunks,status=200)**构造NDJSON响应，body的**getReader()**逐块返回Buffer；覆盖非2xx错误正文、合法无换行尾done、坏JSON、提前断流，以及message→error→done仍不得写assistant历史。该reader是VM替身，不模拟真实背压、TCP分片时序或浏览器解码器实现。
+Skill目录和正文先验证完整候选再发布，失败保留可信列表/正文；真实浏览器对创建400同时要求保留服务端错误、明确“状态未知”且磁盘零创建，不再把旧版纯错误串当唯一文案。文件树坏候选不替换旧树；apply_patch重读只在合法hash/正文后协调，干净标签同步、脏草稿保留。局部**streamResponse(chunks,status=200,type)**构造含Content-Type的NDJSON响应，body的**getReader()**逐块返回Buffer，并记录read/cancel/releaseLock。除旧HTTP/尾事件/坏JSON/断流/error→done用例，还覆盖done后数据/重复done、对象message、媒体类型与坏UTF-8、单行1MiB/总16MiB/错误正文64KiB、多字节分片/合并短行、停止后缓冲done及模拟5分钟deadline；失败必须abort、cancel、释放锁且不提交助手历史。这是VM替身，不模拟真实TCP背压；真实浏览器流另由classicChatStreamBrowser执行。
 
 workbenchHtml另遍历非隐藏表单控件检查可访问名称，要求欢迎卡/动态源码语义及输入focus-visible、窄屏抽屉规则。workbenchRuntime局部**classSet(initial)**用Set实现add/remove/toggle/contains的最小classList替身，不做CSS布局；再执行宽度从1000跨到640的真实绑定闭包，要求自动收起遮挡抽屉、aria-pressed归false且隐藏焦点恢复到活动按钮。真实workbench.browser检查模态打开聚焦、Escape恢复触发点和390px无水平溢出；本机缺Chromium时只由CI或有浏览器环境执行，不能把静态/VM PASS冒充这三项真实DOM布局已运行。
 
@@ -161,4 +161,4 @@ start/stop各自单飞，启动中停止可达并携绑定，停止中不得再�
 
 ### narrowWorkspaceBrowser(browser,base)
 
-新开真实主机页面、仅阻断Monaco CDN而使用fallback，不发模型或写盘请求。320/390/640（含640×360）逐editor/chat/bridge断言可用宽度至少viewport−49，另一工作面不可见；聊天草稿往返保留、elementFromPoint确认输入框未被欢迎页遮挡。注入页面内存文件tab检查超长名称仍可关闭、Home/End焦点、dirty确认取消保留/确认关闭与焦点恢复、Delete关闭；这部分不是磁盘保存测试，旧main的真实保存/回退/审批链继续执行。768/1024/1440双栏保留，宽→窄跟随正在输入的工作面。AXE_PATH可指定仓库外axe脚本，逐窄屏工作面执行两条父子角色规则；不传也强制tablist无普通button子节点。UI_EVIDENCE_DIR可保存每个窄屏工作面的截图。finally关页、收集pageerror；不代表真实Windows/DPI/读屏器验收。editorRuntime夹具新增querySelectorAll返回空导航集合，使实际dom.setWorkspaceView可运行；原dirty/hash/保存/恢复断言未删。
+新开真实主机页面、仅阻断Monaco CDN而使用fallback，不发模型或写盘请求。320/390/640（含640×360）逐editor/chat/bridge断言可用宽度至少viewport−49，另一工作面不可见；聊天草稿往返保留、elementFromPoint确认输入框未被欢迎页遮挡。注入页面内存文件tab检查超长名称仍可关闭、Home/End焦点、dirty确认取消保留/确认关闭与焦点恢复、Delete关闭；这部分不是磁盘保存测试，旧main的真实保存/回退/审批链继续执行。768/1024/1440双栏保留，宽→窄跟随正在输入的工作面。默认加载开发依赖axe-core，AXE_PATH仅作为显式脚本覆盖，不再是跳过axe的开关。逐窄屏工作面执行两条父子角色规则，另对深浅主题×1440/768/390/320×欢迎页/API设置16个状态执行WCAG2/2.1 A/AA标签规则及页面溢出检查；插入仅页面内的长日志，必须能聚焦并用方向键实际滚动。UI_EVIDENCE_DIR可保存窄屏工作面与文档站截图。finally关页、收集pageerror；不代表真实Windows/DPI/读屏器验收。editorRuntime夹具新增querySelectorAll返回空导航集合，使实际dom.setWorkspaceView可运行；原dirty/hash/保存/恢复断言未删。

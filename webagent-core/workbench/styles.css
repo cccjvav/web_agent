@@ -501,7 +501,7 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb { background: #cbbba8; }
 :root { --input-bg: #313131; --code-text: #e1a17f; --danger: #ff9090; color-scheme: dark; }
 html[data-theme="light"] { --input-bg: #fff; --code-text: #80421b; --green: #22683f; --warn: #805313; --danger: #a12222; color-scheme: light; }
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible,
-summary:focus-visible, select:focus-visible {
+summary:focus-visible, select:focus-visible, [tabindex]:focus-visible {
   outline: 2px solid var(--link); outline-offset: 2px;
 }
 input::placeholder, textarea::placeholder { color: var(--mute); opacity: 1; }

@@ -125,3 +125,8 @@ assert.ok(tabsSrc.includes('class="tab-label" role="tab"'));
 assert.ok(tabsSrc.includes('aria-controls="editor-wrap" tabindex="${active ? 0 : -1}"'));
 assert.ok(tabsSrc.includes("['ArrowLeft', 'ArrowRight', 'Home', 'End']"));
 assert.ok(tabsSrc.includes('type="button" class="tree-item"'));
+
+for (const id of ['chat-stream','agent-stream','bridge-log']) {
+  const tag = html.match(new RegExp('<div[^>]*id="'+id+'"[^>]*>'))?.[0] || '';
+  assert.ok(tag.includes('tabindex="0"') && tag.includes('aria-label="'), id+' must remain keyboard-readable when its content scrolls');
+}

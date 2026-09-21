@@ -38,7 +38,8 @@ node docs-site/serve.js
 - 架构导读：发生了什么、为什么这样拆。
 - 技术实现：跨模块执行链和关键边界，不再逐函数复制所有README。
 - 文件夹说明书：模块职责、分工、错误路径、验证与本页目录。
-- 维护规范/源码索引：规则和自动定位；源码快照按行高亮，使用textContent而非执行源码HTML。
+- 维护规范/源码索引：规则和自动定位；源码快照按行高亮，使用textContent而非执行源码HTML，长行在可聚焦的代码容器横滚。
+- 全景三图层卡可用Tab/Enter跳到实际导读章节并移动焦点；窄屏导航自动换行，搜索/链接不被长正文压成隐藏裁切区。
 - 总览和组件说明负责导航；summary旧页面ID现在指向人工文档审查台账，不再展示过时覆盖率统计。
 
 实际收录由build的兼容列表、清单归属和extraSiteDocs共同决定。**启动脚本说明已经收录**；不能继续写成站外文档。使用指南、各第三方客户端教程等未全部内嵌，以根Markdown为准。
@@ -49,7 +50,7 @@ node docs-site/serve.js
 JS/CJS/MJS用Acorn提取节点；其他语言只有文件级登记。链接检查范围是受检文档的内联本地文件目标，不证明全部标题锚点、外部URL可用或正文准确。排版和语义必须另外审查。
 
 ## 验证
-文档门禁使用documentationPolicy的真实清单检查及负例；documentationQuality检查本次关键契约、表格/围栏及本页目录函数fixture；docsSite验证生成一致性、归属导航和快照hash；docsHttp验证畸形URL及正常请求。浏览器窄屏/键盘/视觉效果仍需实测，不以生成成功代替。
+文档门禁使用documentationPolicy的真实清单检查及负例；documentationQuality检查本次关键契约、表格/围栏及本页目录函数fixture；docsSite验证生成一致性、归属导航和快照hash；docsHttp验证畸形URL及正常请求。独立test:browser默认用开发依赖axe-core，在真实Chromium验证12个选定宽度/文档页状态、三卡键盘跳转及源码滚动；其余文档页、缩放/读屏器/真实桌面仍需实测，不以生成成功代替。
 
 规范见[文档维护规范](../manager/docs/documentation.md)，正文质量审查见[现行审查](../review/SEMANTIC_REVIEW_2026-09-16.md)。
 
@@ -61,7 +62,7 @@ JS/CJS/MJS用Acorn提取节点；其他语言只有文件级登记。链接检�
 | 源码 | 定位证据 |
 |---|---|
 | [anchors.js](anchors.js) | 4 个函数/类节点 |
-| [app.js](app.js) | 50 个函数/类节点 |
+| [app.js](app.js) | 49 个函数/类节点 |
 | [build.js](build.js) | 30 个函数/类节点 |
 | [check-docs.js](check-docs.js) | 17 个函数/类节点 |
 | [documentation.config.json](documentation.config.json) | 文件级登记；未做符号完整性证明 |

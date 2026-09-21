@@ -12,7 +12,7 @@
 - dom.js：主题、文字转义、提示、页签ARIA及设置模态框焦点进入/恢复。
 - bind.js：界面事件与操作函数的接线；认证/画像探测/新建/终端/搜索都先验证HTTP与业务结果，设备轮询带取消和代次。
 - tabs.js：键盘可用的标签/文件树、文件模型、dirty状态及保存/关闭/补丁重读协调。
-- chat.js：严格消费HTTP/NDJSON完成合同、停止请求和会话展示；错误或断流不发布助手历史。
+- chat.js：严格消费HTTP/NDJSON/UTF-8、唯一done后EOF完成合同；逐行/总量/错误正文预算和5分钟期限，失败取消reader/请求并释放锁，错误/断流/完成后数据不发布助手历史。
 - bridge.js：Bridge状态、统计、诊断、执行控制与连接/认证相关界面操作。
 - settings.js：模型、自定义配置及Skill目录/分页候选验证界面。
 - picker.js：选择器相关交互。
@@ -22,7 +22,7 @@
 app.js初始化绑定并并行拉取状态、目录和配置。模块经ui注册表调用，HTTP使用相对地址；后端校验不能用隐藏按钮替代。文件编辑按tab保留模型，保存携带磁盘hash，冲突或失败保持编辑内容；取消请求不保证已完成的磁盘操作可回滚。
 
 ## 验证
-agent-host测试中的editorRuntime、workbenchRuntime、monacoLoading执行实际模块/函数fixture；workbenchHtml守卫控件标签、语义按钮、输入焦点环和窄屏抽屉规则。独立workbench.browser在CI Chromium检查模态焦点进入/恢复、390px无水平溢出及侧栏抽屉边界。真实辅助技术、页面卸载、输入法和桌面缩放仍需人工验收。
+agent-host测试中的editorRuntime、workbenchRuntime、monacoLoading执行实际模块/函数fixture；workbenchHtml守卫控件标签、语义按钮、输入焦点环和窄屏抽屉规则。独立workbench.browser检查模态焦点/抽屉、320–1440px工作面、深浅主题欢迎页/API设置的16个选定状态及键盘日志滚动；axe-core作为开发依赖执行选定WCAG2/2.1 A/AA规则，不是全屏幕/全WCAG认证。真实辅助技术、页面卸载、输入法和桌面缩放仍需人工验收。
 
 定制设置加载/保存检查HTTP、业务及快照形状；只提交本次修改，页面内单请求、10秒取消等待，失败不假成功，保存响应不覆盖未提交表单。不是跨客户端版本锁或四文件事务，详见[Bridge与设置详解](Bridge与设置详解.md)。
 
@@ -37,7 +37,7 @@ F54第六批：dom.setWorkspaceView与bind/tabs联动窄屏展示和抽屉；工
 |---|---|
 | [bind.js](bind.js) | 123 个函数/类节点 |
 | [bridge.js](bridge.js) | 60 个函数/类节点 |
-| [chat.js](chat.js) | 39 个函数/类节点 |
+| [chat.js](chat.js) | 42 个函数/类节点 |
 | [dom.js](dom.js) | 17 个函数/类节点 |
 | [monaco.js](monaco.js) | 9 个函数/类节点 |
 | [operations.js](operations.js) | 79 个函数/类节点 |

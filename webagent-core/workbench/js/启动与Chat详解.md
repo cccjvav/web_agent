@@ -36,9 +36,9 @@ ES imports首先填ui，后执行boot。WS_BACKOFF_MIN/MAX为1/30秒，wsBackoff
 2. 正文优先显式text，否则右Chat或Agent输入；未显式text才清两个输入。读取当前活跃Agent面板模式或主select。
 3. 空正文：merge可继续；Plan满足显式branch或canBranch转branch；无任务Plan提示，其余返回。分支显示占位用户消息，但不把空消息塞历史。
 4. sending=true/新AbortController，按钮切停止；stayOnBridge来自opts，不要求转Chat时保留Bridge。取旧历史尾12，本轮非空用户才push历史；merge仅status。
-5. 从选择框/status取modelId、thinkLevel，POST `/api/chat`，请求含mode/message/history/modelId/thinkLevel/planAction，不把所有UI事件都发送。
-6. 先要求HTTP 2xx及可读body；非2xx有界读取text并优先取JSON error，不进入事件成功路径。reader/TextDecoder逐块按换行解析NDJSON，半行留buffer；内部**consumeLine(line)**要求每个非空行是带字符串type的对象，坏JSON/坏形状立即失败。buffer超过1MiB拒绝；流结束flush decoder，并消费没有换行的尾事件。
-7. 只有出现done且从未出现error才返回true，并只在该条件下把累计message正文写assistant history；error即使后面还有done也不能发布助手历史。既无done也无error的断流明确结果未确认。catch区分AbortError“已停止、可能不完整”与普通失败；finally清sending/controller/恢复按钮，并安全消费refreshStatus/loadTree的同步抛错或Promise拒绝，提示但不重放对话。
+5. 从选择框/status取modelId、thinkLevel，POST `/api/chat`，请求含mode/message/history/modelId/thinkLevel/planAction，不把所有UI事件都发送。捕获本轮controller，拒绝重定向；5分钟总deadline中断请求。内部**checkStopped()**在headers/read完成及事件消费前后检查本轮signal，不让已停止请求因缓冲中仍有done而假成功。
+6. 要求HTTP 2xx、可读body及`application/x-ndjson`媒体类型；非2xx逐块限制64KiB错误正文，再优先取JSON error并限制展示长度，不调用无界text。成功流按原始UTF-8字节限制单行1MiB、总量16MiB；同一网络块包含多条短行仍允许。TextDecoder用fatal模式，允许合法Unicode跨块，不将坏UTF-8静默替换。内部**consumeLine(line)**要求非空行是带非空字符串type的对象，message.text必须是字符串；坏JSON/形状立即失败。结束flush并消费无换行尾事件。
+7. 必须出现唯一done并到达正常EOF，且无error、无done后的非空事件、未取消，才返回true并写助手历史。空白尾行可忽略；error即使后面还有done也不能发布助手历史。断流明确结果未确认；catch区分5分钟超时、用户停止和普通失败。finally清deadline，未确认则abort并尝试reader.cancel，取消Promise即使不结束也不阻塞收尾；释放reader锁、清sending/controller/恢复按钮。refreshStatus/loadTree的同步抛错或Promise拒绝单独提示，不重放对话。
 
 **具体限制**：事件流形状检查只约束对象/type及message正文类型，不穷举未来事件的全部字段；显示过的部分工具副作用/消息不能事务回滚。失败前已执行的工具不会因abort自动回滚；前端没有自动选别的模型重放任务。
 
@@ -58,7 +58,7 @@ npm test --prefix webagent-core/agent-host -- --filter=chat
 npm test --prefix webagent-core/agent-host -- --filter=editorRuntime
 ```
 
-测试覆盖HTTP拒绝、坏JSON、无换行尾事件、提前断流、error后done不得写助手历史，以及补丁重读/草稿协调；成功模拟事件仍不能替代真实网络断流、手机会话、编辑器多窗口或模型响应。
+测试覆盖HTTP拒绝、坏JSON/UTF-8/媒体类型、对象message正文、done后同块或后续块数据、重复done、字节预算、多字节跨块、合并短行、无换行尾事件、取消及模拟deadline；失败必须abort/cancel/release且不写助手历史。真实Chromium另用Response/ReadableStream验证坏流和永不settle的cancel仍能收尾；它不是服务端真实任务继续运行或被停止的证明。补丁重读/草稿协调回归保留；手机会话、编辑器多窗口与真实模型响应仍需另验。
 
 
 ## 受控执行增量

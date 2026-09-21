@@ -149,7 +149,7 @@ function request(server, method, urlPath, body, headers) {
           const raw = Buffer.concat(chunks).toString('utf8');
           let parsed = null;
           try { parsed = raw ? JSON.parse(raw) : null; } catch { parsed = null; }
-          resolve({ status: res.statusCode, json: parsed, raw });
+          resolve({ status: res.statusCode, headers: res.headers, json: parsed, raw });
         });
       }
     );
@@ -185,6 +185,25 @@ function request(server, method, urlPath, body, headers) {
     }, { Origin: 'https://evil.com' });
     assert.strictEqual(evil.status, 403);
     assert.ok(!/EVIL_EXEC/.test(evil.raw || ''));
+
+    // CORS acceptance is not enough: browser fetch must be allowed to read the
+    // private session header and the OAuth challenge on its own authenticated response.
+    const initialized = await request(server, 'POST', `/mcp/${secret}`, {
+      jsonrpc: '2.0', id: 10, method: 'initialize',
+      params: { protocolVersion: '2025-06-18', clientInfo: { name: 'cors-fixture' } }
+    }, { Origin: 'https://arena.ai' });
+    assert.strictEqual(initialized.status, 200);
+    assert.match(initialized.headers['mcp-session-id'], /^[a-f0-9]{32}$/);
+    assert.strictEqual(initialized.headers['access-control-allow-origin'], 'https://arena.ai');
+    const exposed = String(initialized.headers['access-control-expose-headers'] || '').toLowerCase().split(/,\s*/).sort();
+    assert.deepStrictEqual(exposed, ['mcp-session-id', 'www-authenticate'], 'only the protocol response headers are browser-readable');
+    const challenge = await request(server, 'POST', '/mcp/invalid', {
+      jsonrpc: '2.0', id: 11, method: 'ping'
+    }, { Origin: 'https://arena.ai' });
+    assert.strictEqual(challenge.status, 401);
+    assert.match(challenge.headers['www-authenticate'], /resource_metadata=/);
+    assert.ok(challenge.headers['access-control-expose-headers'].toLowerCase().includes('www-authenticate'));
+    assert.strictEqual(evil.headers['access-control-allow-origin'], undefined, 'do not widen the allowed origins');
 
     const noOrigin = await request(server, 'POST', `/mcp/${secret}`, {
       jsonrpc: '2.0',

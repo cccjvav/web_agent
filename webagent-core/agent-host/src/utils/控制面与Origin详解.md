@@ -46,7 +46,7 @@ EXTENSION_PROTOCOLS列chrome/moz/safari扩展协议，PAGE_ORIGINS列当前维�
 
 **rejectCrossSiteApi(req,res,next)**：Origin有值时只按API来源检查，拒绝404；无Origin才读Referer，非空且非本机拒绝，否则next。不能独立部署它替代本机控制面，非浏览器无头请求本来允许继续。
 
-**mcpCors()**：返回cors包中间件，内部origin(origin,cb)回调以 `cb(null,isAllowedMcpOrigin(origin))`决定CORS头。**仅不发CORS允许头不等于业务没有执行**，所以还有下一层硬拒绝。
+**mcpCors()**：返回cors包中间件，内部origin(origin,cb)回调以 `cb(null,isAllowedMcpOrigin(origin))`决定CORS头。仅显式暴露响应头`Mcp-Session-Id`和`WWW-Authenticate`，让已允许的浏览器来源能够读取会话ID及401认证挑战；没有暴露全部响应头、开放任意Origin或免除token验证。**仅不发CORS允许头不等于业务没有执行**，所以还有下一层硬拒绝。
 
 **rejectDisallowedMcpOrigin(req,res,next)**：无Origin或允许来源next，其他403 JSON。MCP端口的`applyCommon`在`/mcp`前缀先挂它，早于CORS、认证及JSON/表单解析；路由前也保留它。不允许的Origin即使携带有效凭据和畸形JSON也先403，而非解析器400；没有Origin或来源允许不代表免认证。它不验证Bearer，也不要求CLI伪造浏览器头。
 
@@ -60,4 +60,4 @@ npm test --prefix webagent-core/agent-host -- --filter=corsAllow
 npm test --prefix webagent-core/agent-host -- --filter=auditControl
 ```
 
-localControl覆盖回环、严格Host、远程socket优先于伪造ip/转发头及缺失地址；corsAllow验证额外MCP来源不放开API。auditControl直接加载真实入口，在两端口验证恶意Host/隧道头/外站Origin与Referer的404早于正文解析，验证WS握手拒绝、MCP恶意来源403早于解析、允许预检204、缺密钥401及合法初始化。它们不是浏览器攻击复现；没有证明工具执行越权、全面代理识别或网络层抗DoS，真实代理配置仍需按部署路径验收。练习：逐层解释为什么手机可经认证MCP读测试文件，却不能因此访问本机/api；以及为什么不把WEBAGENT_CORS_ORIGINS设为任意站点来解决所有连接问题。
+localControl覆盖回环、严格Host、远程socket优先于伪造ip/转发头及缺失地址；corsAllow验证额外MCP来源不放开API。auditControl直接加载真实入口，在两端口验证恶意Host/隧道头/外站Origin与Referer的404早于正文解析，验证WS握手拒绝、MCP恶意来源403早于解析、允许预检204、缺密钥401及合法初始化。这些HTTP/WS用例不是浏览器攻击复现；独立`mcpCorsBrowser`还在真实Chromium跨端口读取会话头、续用会话列工具及读取401挑战。没有证明工具执行越权、全面代理识别或网络层抗DoS，真实代理配置仍需按部署路径验收。练习：逐层解释为什么手机可经认证MCP读测试文件，却不能因此访问本机/api；以及为什么不把WEBAGENT_CORS_ORIGINS设为任意站点来解决所有连接问题。

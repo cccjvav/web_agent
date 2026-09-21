@@ -34,7 +34,7 @@ openFile取content和完整hash，为每个tab保留content、savedContent和dir
 Monaco加载逻辑在 `js/monaco.js`，不是app.js里的旧函数。状态栏显示加载中、纯文本降级或就绪。网络/AMD/初始化失败或7秒等待到期仍可使用纯文本；迟到成功先捕获当前缓冲区再升级。7秒不是固定加载耗时。
 
 ### Chat与Bridge
-Chat发送期间按钮变为停止，用AbortController取消请求；前端要求HTTP成功、合法NDJSON及明确done且无error才确认成功并写助手历史，断流/坏JSON/error后done都不假成功。done不证明此前每个工具业务目标已完成。文件保存与Chat停止是独立操作，停止聊天不丢弃编辑器缓冲区。
+Chat发送期间按钮变为停止，用本轮AbortController取消请求；前端拒重定向，要求HTTP成功、NDJSON媒体类型、合法UTF-8/消息正文、唯一done后正常EOF且无error才写助手历史。单行1MiB、总量16MiB、错误正文64KiB及5分钟deadline；断流、done后数据、坏JSON/error后done都不假成功，失败取消reader并释放锁。done不证明此前每个工具业务目标已完成。文件保存与Chat停止是独立操作，停止聊天不丢弃编辑器缓冲区。
 
 Bridge显示外部客户端连接信息与工具事件；内置Arena面板仅提供配置指引，不在本页伪造MCP握手、不自动把任务转成本机Code执行。手机Arena能否连接依赖真正公网隧道及MCP认证，不由“打开网站”按钮证明。
 
@@ -46,7 +46,7 @@ Bridge显示外部客户端连接信息与工具事件；内置Arena面板仅提
 ## 验证与阅读顺序
 先看[交互模块](js/README.md)，编辑冲突看[API说明](../agent-host/src/api/README.md)，命令边界看[工具说明](../agent-host/src/tools/README.md)。
 
-editorRuntime/workbenchRuntime/monacoLoading用实际模块或函数fixture检查数据保护、结果消费、主题和加载；workbenchRuntime另执行1000→640px跨断点侧栏收起及焦点/ARIA恢复，workbenchHtml检查表单标签、语义按钮、焦点样式和窄屏规则。独立workbench.browser在具备Chromium时检查模态焦点恢复和390px抽屉边界；真实读屏器、输入法、Windows DPI、beforeunload及更多移动端状态仍需人工验收。
+editorRuntime/workbenchRuntime/monacoLoading用实际模块或函数fixture检查数据保护、结果消费、主题和加载；workbenchRuntime另执行1000→640px跨断点侧栏收起及焦点/ARIA恢复，workbenchHtml检查表单标签、语义按钮、焦点样式和窄屏规则。独立workbench.browser在具备Chromium时检查模态焦点、320–1440px工作面、深浅主题16个欢迎/API设置状态的选定axe规则，另验证Bridge长日志方向键滚动和经典Chat坏流清理；真实读屏器、输入法、Windows DPI、beforeunload及更多移动端状态仍需人工验收。
 
 HTTP工具接入登记与移除有独立结果区：在途防重复，未知先查原列表；移除登记不证明HTTP服务停止，stdio的停止请求也不等于已观察到退出。逐函数与验证见[受控工具与工作流详解](../agent-host/src/utils/受控工具与工作流详解.md)，不据此认证所有接入或进程隔离。
 

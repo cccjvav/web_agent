@@ -98,7 +98,11 @@ function mcpCors() {
   return cors({
     origin(origin, cb) {
       cb(null, isAllowedMcpOrigin(origin));
-    }
+    },
+    // These are not CORS-safelisted response headers. Without explicit exposure,
+    // an allowed browser client cannot retain its session or read the OAuth challenge.
+    // Keep this list narrow; it does not bypass the Origin gate or authentication.
+    exposedHeaders: ['Mcp-Session-Id', 'WWW-Authenticate']
   });
 }
 

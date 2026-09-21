@@ -156,7 +156,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [docsHttp.test.js](docsHttp.test.js) | 14 个函数/类节点 |
 | [docsSite.test.js](docsSite.test.js) | 7 个函数/类节点 |
 | [documentationLearning.test.js](documentationLearning.test.js) | 7 个函数/类节点 |
-| [documentationLinks.test.js](documentationLinks.test.js) | 21 个函数/类节点 |
+| [documentationLinks.test.js](documentationLinks.test.js) | 25 个函数/类节点 |
 | [documentationPolicy.test.js](documentationPolicy.test.js) | 12 个函数/类节点 |
 | [documentationQuality.test.js](documentationQuality.test.js) | 10 个函数/类节点 |
 | [editorReview.test.js](editorReview.test.js) | 29 个函数/类节点 |
@@ -232,9 +232,9 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [tunnelRegistry.test.js](tunnelRegistry.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 225 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 263 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 449 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 458 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 15 个函数/类节点 |

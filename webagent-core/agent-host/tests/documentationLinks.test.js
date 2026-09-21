@@ -51,13 +51,20 @@ console.log('documentationLinks: selected live navigation, negative targets, enc
 
 // Real viewer functions in a minimal DOM: do not claim an actual browser session.
 const app = read('docs-site/app.js');
-let searchHtml = '', query = 'needle', scrollTarget = null;
+const mapLinks = [...app.matchAll(/class="layer [^"]+" href="#\/guide\/([^"]+)"/g)];
+assert.equal(mapLinks.length,3,'architecture cards use native links');
+for (const [,fragment] of mapLinks) {
+  const compact = text => text.replace(/[^\w\u4e00-\u9fff]+/g,'');
+  const needle = compact(decodeURIComponent(fragment));
+  assert.ok(docs.guide.sections.some(s => compact(s.title).includes(needle) || compact(s.id).includes(needle)), 'architecture link resolves: '+fragment);
+}
+let searchHtml = '', query = 'needle', scrollTarget = null, focusTarget = null;
 const main = { innerHTML: '', insertAdjacentHTML(_position, html) { searchHtml = html; } };
 const viewer = {
   window: { DOCS: { guide: { introHtml: '', sections: [{ title: 'needle <img src=x>', id: 'section', html: '' }] }, impl: { toc: [{ id: '中文/标题', text: 'other', level: 2 }], html: '' }, fileIndex: [], terms: [] } },
   $: selector => selector === '#q' ? { value: query } : selector === '#search-hits' ? searchHtml ? { remove() { searchHtml = ''; }, set outerHTML(html) { searchHtml = html; } } : null : main,
   pageChrome: () => '', route: () => ({ rest: ['%xx'] }),
-  document: { getElementById(id) { return { scrollIntoView() { scrollTarget = id; } }; } }
+  document: { getElementById(id) { return { scrollIntoView() { scrollTarget = id; }, focus() { focusTarget = id; } }; } }
 };
 vm.createContext(viewer);
 vm.runInContext(app.slice(app.indexOf('  function escapeText('), app.indexOf('  function escapeAttr(')) +
@@ -68,6 +75,8 @@ query = 'no-match'; vm.runInContext('onSearch()', viewer); assert(searchHtml.inc
 query = ''; vm.runInContext('onSearch()', viewer); assert.equal(searchHtml, '');
 query = 'needle'; vm.runInContext('onSearch()', viewer); query = 'n'; vm.runInContext('onSearch()', viewer); assert.equal(searchHtml, '');
 vm.runInContext('renderGuide()', viewer); assert(main.innerHTML.includes('架构') || main.innerHTML.includes('guide-sec')); assert.equal(scrollTarget, null);
+viewer.route = () => ({ rest: ['needle'] });
+vm.runInContext('renderGuide()', viewer); assert.equal(scrollTarget, 'section'); assert.equal(focusTarget, 'section');
 viewer.route = () => ({ rest: [encodeURIComponent('中文'), encodeURIComponent('标题')] });
 vm.runInContext('renderProsePage("impl", "title", "kicker")', viewer); assert.equal(scrollTarget, '中文/标题');
 viewer.route = () => ({ rest: ['%xx'] }); scrollTarget = null;

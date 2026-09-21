@@ -28,7 +28,7 @@
 ### 本机控制面
 isLocalControlPlane先拒绝隧道特征头，再要求Host为localhost、127.0.0.1或[::1]及有效可选端口，最后检查回环地址。未知/缺失Host不放行。HTTP路由和WS升级各自接入检查；不允许用“本机代理转发”绕过既定local-only边界。
 
-API浏览器Origin只接受本机；没有Origin时还检查可用Referer。MCP有独立白名单和WEBAGENT_CORS_ORIGINS扩展项，不在名单的显式Origin返回403。放行MCP Origin不放行API，也不跳过MCP令牌验证。
+API浏览器Origin只接受本机；没有Origin时还检查可用Referer。MCP有独立白名单和WEBAGENT_CORS_ORIGINS扩展项，不在名单的显式Origin返回403。放行MCP Origin不放行API，也不跳过MCP令牌验证。MCP仅额外暴露会话ID与认证挑战两个响应头，避免浏览器初始化200却无法读取会话；其他响应头仍按浏览器CORS规则处理。
 
 ### 取消与读取
 runWithSignal建立异步链上下文；checkCancelled看到aborted抛E_CANCELLED。fetchText将父取消连接到内部controller，并用deadline覆盖fetch和body读取，finally清理timer/listener；readResponseText优先以WHATWG reader或Node异步流逐块累计原始字节，默认8MiB，越界抛E_RESPONSE_TOO_LARGE并尝试取消。只有text()的旧fetch/测试替身会先完整读取再核对。外层是否建立scope、是否收紧预算及是否拒绝重定向仍看调用方，不能对所有REST或MCP请求一概保证。

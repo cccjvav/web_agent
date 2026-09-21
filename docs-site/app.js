@@ -34,7 +34,8 @@
           <small>可读 · 可视的架构与源码导览</small>
         </div>
       </div>
-      <input class="search" id="q" placeholder="搜标题、文件、术语…" value="${escapeAttr(q)}" />
+      <label class="search-label" for="q">搜索文档</label>
+      <input class="search" id="q" type="search" placeholder="搜标题、文件、术语…" value="${escapeAttr(q)}" />
       <div class="sec">导览</div>
       ${PAGES.map((p) => `
         <button type="button" class="item ${p.id === active ? 'on' : ''}" data-go="${p.id}">
@@ -77,32 +78,32 @@
           <h3>电脑上同时活着谁</h3>
           <p class="muted" style="margin-top:0">经典模式中主机同一进程提供两套 Express；code-server 是另一个进程。点一层跳到导读。</p>
           <div class="arch">
-            <div class="layer remote" data-jump="#/guide/临时门牌隧道">
+            <a class="layer remote" href="#/guide/临时门牌与启动失败">
               <div class="tag">远端</div>
               <div>
                 <strong>网页 AI</strong>
                 <p>具备兼容 MCP 工具通道的客户端；通过工具访问文件，不是直接挂载本机磁盘。</p>
               </div>
               <span class="port">HTTPS</span>
-            </div>
+            </a>
             <div class="connector">↓ Quick Tunnel 把 48271 映成 trycloudflare.com（本机 Chat 不需要）</div>
-            <div class="layer kitchen" data-jump="#/guide/你电脑上同时活着谁">
+            <a class="layer kitchen" href="#/guide/你电脑上同时活着谁">
               <div class="tag">车间</div>
               <div>
                 <strong>agent-host</strong>
                 <p>MCP、OAuth、callTool、补丁、PowerShell。入口 <code>src/index.js</code>。</p>
               </div>
               <span class="port">:48271</span>
-            </div>
+            </a>
             <div class="connector">↓ 同一进程 · 店堂 3000 的 /api · /ws；公网提供认证 MCP/OAuth；/api 仅本机</div>
-            <div class="layer shop" data-jump="#/guide/三条路一把扳手">
+            <a class="layer shop" href="#/guide/四条路，共享工具但不同时执行两种模式">
               <div class="tag">店堂</div>
               <div>
                 <strong>工作台 或 网页 VS Code</strong>
                 <p>界面通过 API 请求主机操作磁盘；Chat 使用 /api/chat，Bridge 显示连接、统计和任务。</p>
               </div>
               <span class="port">:3000</span>
-            </div>
+            </a>
           </div>
         </div>
         <div class="card">
@@ -151,7 +152,6 @@
     `;
     paintPath('a');
     paintPatch();
-    $$('[data-jump]').forEach((el) => el.addEventListener('click', () => go(el.dataset.jump.replace('#/', ''))));
     $$('[data-path]').forEach((btn) => btn.addEventListener('click', () => {
       $$('[data-path]').forEach((b) => b.classList.toggle('on', b === btn));
       paintPath(btn.dataset.path);
@@ -235,7 +235,11 @@
       const hit = g.sections.find((s) => compact(s.title).includes(needle) || compact(s.id).includes(needle));
       if (hit) {
         const el = document.getElementById(hit.id);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (el) {
+          el.tabIndex = -1;
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          el.focus({ preventScroll: true });
+        }
       }
     }
   }
@@ -343,6 +347,9 @@
     const range = /^L(\d+)(?:-L?(\d+))?$/.exec(route().rest[1] || '');
     const start = range ? Number(range[1]) : 0, end = range ? Number(range[2] || range[1]) : 0;
     const pre = document.createElement('pre');
+    pre.className = 'source-code';
+    pre.tabIndex = 0;
+    pre.setAttribute('aria-label', '源码快照，可用方向键横向滚动');
     source.text.split('\n').forEach((text, i) => {
       const line = document.createElement('span');
       line.id = 'source-L' + (i + 1);
@@ -367,6 +374,8 @@
     else if (page === 'files') renderFiles();
     else if (page === 'terms') renderTerms();
     else if (page === 'source') renderSource();
+    // Scrollable examples and tables remain keyboard-readable at narrow widths.
+    $$('.main pre, .main .table-wrap').forEach(el => { el.tabIndex = 0; });
   }
 
   window.addEventListener('hashchange', render);

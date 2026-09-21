@@ -133,7 +133,7 @@
         </div>
         <div id="agent-pane" class="hidden">
           <div class="agent-head">智能体窗口 · Agent（Ask / Plan / Code）</div>
-          <div id="agent-stream" class="chat-stream" role="log" aria-live="polite" aria-label="智能体记录"></div>
+          <div id="agent-stream" class="chat-stream" tabindex="0" role="log" aria-live="polite" aria-label="智能体记录"></div>
           <div class="chat-compose">
             <div class="composer-box">
               <textarea id="agent-input" rows="2" placeholder="描述要构建的内容" aria-label="智能体任务"></textarea>
@@ -173,7 +173,7 @@
         <button type="button" id="rb-bridge-tab" role="tab" aria-selected="false" aria-controls="right-bridge" tabindex="-1">BRIDGE</button>
       </div>
       <div id="right-chat" class="rb-body" role="tabpanel" aria-labelledby="rb-chat-tab">
-        <div id="chat-stream" class="chat-stream" role="log" aria-live="polite" aria-label="聊天记录"></div>
+        <div id="chat-stream" class="chat-stream" tabindex="0" role="log" aria-live="polite" aria-label="聊天记录"></div>
         <div id="chat-tasks" class="task-box hidden">
           <div class="task-h"><span>Tasks</span><span id="chat-task-count">0/0</span></div>
           <ul id="chat-todo-list"></ul>
@@ -233,7 +233,7 @@
           <div class="task-h"><span>Tasks</span><span id="bridge-task-count">等待主机任务快照</span></div>
           <ul id="bridge-todo-list"></ul>
         </div>
-        <div id="bridge-log" class="bridge-log"></div>
+        <div id="bridge-log" class="bridge-log" tabindex="0" role="region" aria-label="Bridge 调用记录"></div>
         <div class="mcp-session" id="mcp-session">
           <button type="button" class="sess-head" id="btn-sess-toggle" aria-expanded="true">
             <span class="sess-head-left">

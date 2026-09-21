@@ -7,6 +7,7 @@ const path = require('path');
 const net = require('net');
 const { spawn } = require('child_process');
 const { chromium } = require('playwright');
+const AXE_SCRIPT = process.env.AXE_PATH || require.resolve('axe-core/axe.min.js');
 async function narrowWorkspaceBrowser(browser, base) {
   const page = await browser.newPage(), errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -14,7 +15,7 @@ async function narrowWorkspaceBrowser(browser, base) {
   try {
     await page.goto(base);
     await page.waitForFunction(() => document.querySelector('#tabs .tab-label'));
-    if (process.env.AXE_PATH) await page.addScriptTag({path:process.env.AXE_PATH});
+    await page.addScriptTag({path:AXE_SCRIPT});
     for (const width of [390, 320, 640]) {
       await page.setViewportSize({width, height:width === 640 ? 360 : 640});
       await page.evaluate(async () => (await import('/js/tabs.js')).activateTab('welcome'));
@@ -30,7 +31,7 @@ async function narrowWorkspaceBrowser(browser, base) {
           fs.mkdirSync(process.env.UI_EVIDENCE_DIR, {recursive:true});
           await page.screenshot({path:path.join(process.env.UI_EVIDENCE_DIR, `${width}-${view}.png`)});
         }
-        if (process.env.AXE_PATH) {
+        {
           const violations = await page.evaluate(async () => (await window.axe.run(document, {runOnly:{type:'rule',values:['aria-required-children','aria-required-parent']}})).violations);
           assert.deepStrictEqual(violations, [], 'tab ownership rules must pass in every narrow workspace');
         }
@@ -87,6 +88,36 @@ async function narrowWorkspaceBrowser(browser, base) {
     await page.keyboard.press('Delete');
     assert.equal(await page.locator('#tabs [role="tab"]').count(), 1);
     assert.equal(await page.locator('#tabs [aria-selected="true"]').evaluate(el => el === document.activeElement), true);
+    await page.setViewportSize({width:1440,height:900});
+    // Force a genuine overflow, independent of the CI machine's CJK font coverage.
+    await page.locator('#bridge-log').evaluate(el => {
+      const text = document.createElement('pre'); text.dataset.scrollFixture = 'true';
+      text.textContent = 'keyboard-readable log\n'.repeat(80); el.appendChild(text); el.scrollTop = 0;
+    });
+    await page.locator('#bridge-log').focus(); await page.keyboard.press('ArrowDown');
+    await page.waitForFunction(() => document.querySelector('#bridge-log').scrollTop > 0);
+    await page.locator('#bridge-log [data-scroll-fixture]').evaluate(el => el.remove());
+    for (const theme of ['dark','light']) {
+      await page.evaluate(async theme => (await import('/js/dom.js')).applyTheme(theme),theme);
+      for (const width of [1440,768,390,320]) {
+        await page.setViewportSize({width,height:900});
+        const editorSwitch = page.locator('[data-workspace-view="editor"]');
+        if (await editorSwitch.isVisible()) await editorSwitch.click();
+        for (const target of ['welcome','settings']) {
+          await page.evaluate(async target => {
+            const dom = await import('/js/dom.js');
+            if (target === 'settings') dom.openModal('api'); else dom.closeModal();
+          },target);
+          const result = await page.evaluate(async () => ({
+            overflow:document.documentElement.scrollWidth > innerWidth,
+            violations:(await window.axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}})).violations.map(v => ({id:v.id,targets:v.nodes.map(n => n.target)}))
+          }));
+          assert.equal(result.overflow,false,`${theme} ${width}px ${target}: no page overflow`);
+          assert.deepStrictEqual(result.violations,[],`${theme} ${width}px ${target}: selected WCAG rules`);
+        }
+        await page.evaluate(async () => (await import('/js/dom.js')).closeModal());
+      }
+    }
     assert.deepStrictEqual(errors, []);
   } finally { await page.close(); }
 }
@@ -96,6 +127,63 @@ async function freePort() {
   const port = server.address().port;
   await new Promise(resolve => server.close(resolve));
   return port;
+}
+async function mcpCorsBrowser(browser, base, mcp) {
+  const page = await browser.newPage();
+  await page.route('https://cdn.jsdelivr.net/**', route => route.abort());
+  try {
+    await page.goto(base);
+    const result = await page.evaluate(async mcp => {
+      const headers = {'Content-Type':'application/json', Accept:'application/json'};
+      const init = await fetch(mcp, {method:'POST',headers,body:JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2025-06-18',clientInfo:{name:'browser-cors-fixture'}}})});
+      const sid = init.headers.get('Mcp-Session-Id');
+      const initialized = Boolean((await init.json()).result);
+      // A protocol-only follow-up must work without a counted tools/call side effect.
+      const follow = await fetch(mcp, {method:'POST',headers:{...headers,'Mcp-Session-Id':sid || ''},body:JSON.stringify({jsonrpc:'2.0',id:2,method:'tools/list'})});
+      const tools = Array.isArray((await follow.json()).result?.tools);
+      if (sid) await fetch(mcp, {method:'DELETE',headers:{'Mcp-Session-Id':sid}});
+      const challenge = await fetch(mcp.replace(/\/[^/]+$/, '/invalid'), {method:'POST',headers,body:JSON.stringify({jsonrpc:'2.0',id:3,method:'ping'})});
+      return {status:init.status,initialized,sessionReadable:/^[a-f0-9]{32}$/.test(sid || ''),followStatus:follow.status,tools,challengeStatus:challenge.status,challengeReadable:/resource_metadata=/.test(challenge.headers.get('WWW-Authenticate') || '')};
+    }, mcp);
+    assert.deepStrictEqual(result, {status:200,initialized:true,sessionReadable:true,followStatus:200,tools:true,challengeStatus:401,challengeReadable:true});
+  } finally { await page.close(); }
+}
+async function classicChatStreamBrowser(browser, base) {
+  const page = await browser.newPage();
+  await page.route('https://cdn.jsdelivr.net/**', route => route.abort());
+  try {
+    await page.goto(base);
+    await page.waitForFunction(() => document.querySelector('#tabs .tab-label'));
+    const findings = await page.evaluate(async () => {
+      const {state,ui} = await import('/js/state.js'), {sendChat} = await import('/js/chat.js');
+      const original = window.fetch, savedRefresh = ui.refreshStatus, savedTree = ui.loadTree;
+      ui.refreshStatus = async () => {}; ui.loadTree = async () => {};
+      const findings = [];
+      try {
+        for (const [name,text,open] of [
+          ['after-done','{"type":"message","text":"partial"}\n{"type":"done"}\n{"type":"message","text":"UNCONFIRMED"}\n',false],
+          ['bad-message','{"type":"message","text":{"unexpected":true}}\n{"type":"done"}\n',false],
+          ['open-bad-frame','not-json\n',true]
+        ]) {
+          let cancelled = false, options, response;
+          state.history = [];
+          window.fetch = async (url,input) => {
+            if (url !== '/api/chat') return original(url,input);
+            options = input;
+            response = new Response(new ReadableStream({start(controller) {
+              controller.enqueue(new TextEncoder().encode(text));
+              if (!open) controller.close();
+            },cancel() { cancelled = true; return new Promise(() => {}); }}), {headers:{'Content-Type':'application/x-ndjson'}});
+            return response;
+          };
+          const accepted = await sendChat(name);
+          findings.push({name,accepted,assistant:state.history.filter(m => m.role === 'assistant').length,aborted:options.signal.aborted,redirect:options.redirect,locked:response.body.locked,cancelled:open ? cancelled : true});
+        }
+      } finally { window.fetch = original; ui.refreshStatus = savedRefresh; ui.loadTree = savedTree; }
+      return findings;
+    });
+    for (const result of findings) assert.deepStrictEqual(result, {name:result.name,accepted:false,assistant:0,aborted:true,redirect:'error',locked:false,cancelled:true});
+  } finally { await page.close(); }
 }
 async function docsViewerBrowser(browser) {
   const fixture = await browser.newPage(), errors = [];
@@ -126,6 +214,48 @@ async function docsViewerBrowser(browser) {
       return target.id;
     });
     await fixture.waitForFunction(target => window.lastDocAnchor === target, anchor);
+    await fixture.evaluate(() => { location.hash = '#/map'; });
+    await fixture.locator('.arch .layer').first().waitFor();
+    const targets = await fixture.locator('.arch .layer').evaluateAll(elements => elements.map(el => {
+      const href = el.getAttribute('href') || el.dataset.jump;
+      const compact = s => s.replace(/[^\w\u4e00-\u9fff]+/g,'');
+      const needle = compact(decodeURIComponent(href.replace('#/guide/','')));
+      const section = window.DOCS.guide.sections.find(s => compact(s.title).includes(needle) || compact(s.id).includes(needle));
+      return {href,id:section?.id,keyboard:el.tagName === 'A' && el.tabIndex === 0};
+    }));
+    assert.equal(targets.length,3);
+    assert.ok(targets.every(item => item.id), 'every architecture card targets an actual guide section');
+    assert.ok(targets.every(item => item.keyboard), 'architecture navigation must use keyboard-operable links');
+    for (const target of targets) {
+      await fixture.evaluate(() => { window.lastDocAnchor = ''; location.hash = '#/map'; });
+      const link = fixture.locator(`.arch a[href="${target.href}"]`);
+      await link.focus(); await fixture.keyboard.press('Enter');
+      await fixture.waitForFunction(id => window.lastDocAnchor === id && document.activeElement?.id === id, target.id);
+    }
+    await fixture.addScriptTag({path:AXE_SCRIPT});
+    for (const width of [1440,768,390,320]) {
+      await fixture.setViewportSize({width,height:900});
+      for (const route of ['#/map','#/guide','#/source/'+encodeURIComponent('webagent-core/workbench/js/bridge.js')]) {
+        await fixture.evaluate(route => { location.hash = route; },route);
+        await fixture.waitForFunction(route => {
+          if (route === '#/map') return Boolean(document.querySelector('.arch'));
+          if (route === '#/guide') return Boolean(document.querySelector('.guide-sec'));
+          return Boolean(document.querySelector('#source-L1'));
+        },route);
+        const result = await fixture.evaluate(async () => ({
+          overflow:document.documentElement.scrollWidth > innerWidth,
+          clippedNavigation:innerWidth <= 980 && document.querySelector('.nav').clientHeight < document.querySelector('.nav').scrollHeight,
+          violations:(await window.axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}})).violations.map(v => ({id:v.id,targets:v.nodes.map(n => n.target)}))
+        }));
+        assert.equal(result.overflow,false,`${width}px ${route}: document must not overflow; code scrolls locally`);
+        assert.equal(result.clippedNavigation,false,`${width}px ${route}: mobile navigation must not collapse into a clipped row`);
+        assert.deepStrictEqual(result.violations,[],`${width}px ${route}: selected WCAG rules`);
+        if (process.env.UI_EVIDENCE_DIR) await fixture.screenshot({path:path.join(process.env.UI_EVIDENCE_DIR,`docs-${width}-${route.split('/')[1]}.png`)});
+      }
+    }
+    await fixture.locator('.source-code').focus();
+    await fixture.keyboard.press('ArrowRight');
+    await fixture.waitForFunction(() => document.querySelector('.source-code').scrollLeft > 0);
     assert.deepEqual(errors, [], 'actual docs browser reports no unhandled rendering errors');
   } finally { await fixture.close(); }
 }
@@ -553,6 +683,8 @@ async function main() {
     };
     await rpc('ping'); // History exists before the page opens.
     browser = await chromium.launch({ headless: true, ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
+    await mcpCorsBrowser(browser, base, `http://127.0.0.1:${mcpPort}/mcp/${status.secretKey}`);
+    await classicChatStreamBrowser(browser, base);
     await narrowWorkspaceBrowser(browser, base);
     await probeHudBrowser(browser);
     await docsViewerBrowser(browser);
@@ -920,7 +1052,7 @@ async function main() {
     assert.ok((await page.locator('#bridge-result').textContent()).includes('停止结果未确认'));
     await page.unroute('**/api/bridge/stop');
     assert.deepStrictEqual(errors, []);
-    console.log('Browser PASS: minimal page observation + authenticated connection echo/forged session rejection/clear, help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');
+    console.log('Browser PASS: cross-origin MCP headers/session, classic bad-stream cleanup, 16 workbench + 12 docs axe/layout states, keyboard navigation/scrolling; minimal page observation + authenticated connection echo/forged session rejection/clear, help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');
   } finally {
     if (browser) await browser.close();
     if (child.exitCode === null) child.kill();

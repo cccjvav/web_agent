@@ -6,7 +6,7 @@
 
 | 入口 | 作用 |
 |---|---|
-| [F54独立复审](INDEPENDENT_AUDIT_2026-09-20.md) | 基线50c03be；新增真实负例、UI截图、ShunCode逐项取舍；产品代码未修，范围/验证/未执行分开 |
+| [独立复审与接手修复](INDEPENDENT_AUDIT_2026-09-20.md) | 第1–6节保留F54基线50c03be；第7节F55从67f4f96独立复查并实修浏览器MCP/经典Chat/文档与UI，范围和未验分开 |
 | [逐句审查台账](SEMANTIC_REVIEW_2026-09-16.md) | 已核对范围、未审范围及每批实际证据 |
 | [Windows人工清单](CHECKLIST_WINDOWS.md) | 实机结果与未执行项；不由CI代签 |
 | [上游采用映射](UPSTREAM_ADOPTION_MAP_2026-09-15.md) | 26类机会、实现/候选/延期的区别 |
@@ -25,3 +25,5 @@
 [R4-handoff-ci-2026-09-21.json](evidence/R4-handoff-ci-2026-09-21.json)保存本轮重新从GitHub取得的dcc321b成功基线、a22428a失败及7f62350代码验证的run/job链接与脱敏失败事实，不是原始日志。这是声明排除源码覆盖的取证数据，不是运行时JSON配置或程序代码；程序源码守卫未排除。逐字段用途：runs的headSha/status/conclusion/url与jobs标明哪次提交/哪些job；failure记测试专用echo的时长/空输出及rootCause=unknown；availability区分已复取的API信息、不可得完整日志和当前工作区不含的旧沙箱ZIP。
 
 此前聊天中的 `/home/user/...` ZIP路径不保证在新沙箱存在；缺失就标记不可得，不能写成已经传给新助手或伪造重建日志。接手以Git中的manager/CONTEXT与阶段10为入口，GitHub可能受权限/保留期影响，取不到原始数据不改变历史失败结论。
+
+F55补充三张隔离页面的宽/窄屏截图（evidence/F55-*.png）及正式HTTP/VM/Chromium断言。字体仅为仓库外审查回退，不当Windows字体验收；原始会话缓存仍不保证可跨沙箱移交，精确提交与CI见阶段10。

@@ -21,7 +21,7 @@ npm start
 | `package.json` | scripts.start/scripts.test、Node要求和依赖 |
 | `package-lock.json` | 锁定依赖树；应与package.json一起更新 |
 
-运行依赖为Express、ws、cors、diff。**开发依赖含Acorn**，用于文档结构检查；不能再写“无devDependencies”。只安装production依赖可用于部分运行入口，但不足以执行完整文档/测试流程。
+运行依赖为Express、ws、cors、diff。**开发依赖含Acorn、Playwright及固定版本axe-core**，分别用于文档结构检查、真实浏览器与选定WCAG规则回归；axe脚本只由测试页加载，不成为产品运行时或在线字体依赖。只安装production依赖可用于部分运行入口，但不足以执行完整文档/测试流程。
 
 包清单version不是产品展示版本：展示版本由src/extensionVersion.js读取扩展清单。支持范围以engines及实际CI为依据，不因包能安装就断言所有Node版本已验收。
 

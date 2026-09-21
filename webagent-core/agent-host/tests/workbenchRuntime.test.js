@@ -750,10 +750,15 @@ if (!process.argv.includes('--vm-child')) {
   assert.equal(await statusNodes.get('#execution-save').onclick(),false);
   assert.ok(statusNodes.get('#execution-result').textContent.includes('未确认'));
 
-  context.TextDecoder=TextDecoder;
-  const streamResponse=(chunks,status=200)=>({ok:status>=200&&status<300,status,
-    body:{getReader(){let index=0;return{async read(){return index<chunks.length?{done:false,value:Buffer.from(chunks[index++])}:{done:true};}};}},
-    async text(){return chunks.join('');}});
+  context.TextDecoder=TextDecoder; context.TextEncoder=TextEncoder;
+  const streamResponse=(chunks,status=200,type='application/x-ndjson; charset=utf-8')=>{
+    const lifecycle={reads:0,cancelled:0,released:0};
+    return {ok:status>=200&&status<300,status,headers:{get:name=>name.toLowerCase()==='content-type'?type:null},lifecycle,
+      body:{getReader(){let index=0;return{
+        async read(){lifecycle.reads++;return index<chunks.length?{done:false,value:Buffer.from(chunks[index++])}:{done:true};},
+        cancel(){lifecycle.cancelled++;return Promise.resolve();},releaseLock(){lifecycle.released++;}
+      };}},async text(){return chunks.join('');}};
+  };
   const chatQuery=context.document.querySelector;
   context.document.querySelector=selector=>['#chat-stream','#agent-stream'].includes(selector)?null:chatQuery(selector);
   state.namespace.ui.refreshStatus=async()=>true;state.namespace.ui.loadTree=async()=>true;
@@ -772,6 +777,52 @@ if (!process.argv.includes('--vm-child')) {
   context.fetch=async()=>streamResponse(['{"type":"status","text":"partial"}\n']);
   assert.equal(await chat.namespace.sendChat('truncated stream'),false);
   assert.ok(state.namespace.state.messages.at(-1).text.includes('提前结束'));
+  // The classic consumer must enforce the same reliable-termination boundary as
+  // the native consumer. A resolved fetch/read is not a confirmed assistant turn.
+  const invalidStreams = [
+    ['data after done', ['{"type":"message","text":"partial"}\n{"type":"done"}\n{"type":"message","text":"must not persist"}\n']],
+    ['late chunk after done', ['{"type":"done"}\n','{"type":"status","text":"late"}\n']],
+    ['duplicate done', ['{"type":"done"}\n{"type":"done"}\n']],
+    ['invalid message', ['{"type":"message","text":{"bad":true}}\n{"type":"done"}\n']],
+    ['empty type', ['{"type":""}\n{"type":"done"}\n']],
+    ['wrong media type', ['{"type":"done"}\n'], 200, 'text/html'],
+    ['byte-sized frame budget', [JSON.stringify({type:'status',text:'海'.repeat(400000)})+'\n{"type":"done"}\n']],
+    ['total response budget', [...Array(19).fill(' '.repeat(900000)+'\n'),'{"type":"done"}\n']],
+    ['invalid UTF-8', [Buffer.from([0xc3,0x28]),'\n{"type":"done"}\n']],
+    ['HTTP error body budget', ['x'.repeat(65537)], 500, 'application/json']
+  ];
+  for (const [label,chunks,status,type] of invalidStreams) {
+    const response=streamResponse(chunks,status,type);let options;
+    context.fetch=async(_url,input)=>{options=input;return response;};
+    const oldHistory=state.namespace.state.history.length;
+    assert.equal(await chat.namespace.sendChat(label),false,label+' cannot be accepted');
+    assert.equal(state.namespace.state.history.length,oldHistory+1,label+' keeps only the user prompt');
+    assert.equal(options.redirect,'error','a mutation-bearing chat must not follow a redirect');
+    assert.equal(options.signal.aborted,true,label+' aborts the request');
+    assert.equal(response.lifecycle.cancelled,1,label+' cancels the reader');
+    assert.equal(response.lifecycle.released,1,label+' releases the reader lock');
+  }
+  const utf8=Buffer.from('{"type":"message","text":"海风"}\n{"type":"done"}\n');
+  const unicodeStart=utf8.indexOf(Buffer.from('海'));
+  const split=streamResponse([utf8.subarray(0,unicodeStart+1),utf8.subarray(unicodeStart+1,unicodeStart+2),utf8.subarray(unicodeStart+2)]);
+  context.fetch=async()=>split;
+  assert.equal(await chat.namespace.sendChat('split Unicode'),true);
+  assert.equal(state.namespace.state.history.at(-1).content,'海风');
+  assert.equal(split.lifecycle.released,1);
+  // The frame limit applies to a line, not to a network chunk containing many short lines.
+  context.fetch=async()=>streamResponse([(' '.repeat(64)+'\n').repeat(17000)+'{"type":"done"}\n\n']);
+  assert.equal(await chat.namespace.sendChat('coalesced short frames'),true);
+  const stopped=streamResponse(['{"type":"done"}\n']);
+  context.fetch=async()=>{state.namespace.state.chatAbort.abort();return stopped;};
+  assert.equal(await chat.namespace.sendChat('stop before buffered done'),false);
+  assert.equal(stopped.lifecycle.reads,0);assert.equal(stopped.lifecycle.cancelled,1);assert.equal(stopped.lifecycle.released,1);
+  const originalSetTimeout=context.setTimeout;let deadline,deadlineOptions;
+  context.setTimeout=(fn,ms)=>{if(ms===300000)deadline=fn;return originalSetTimeout(fn,ms);};
+  context.fetch=async(_url,input)=>{deadlineOptions=input;assert.equal(typeof deadline,'function');deadline();return streamResponse(['{"type":"done"}\n']);};
+  assert.equal(await chat.namespace.sendChat('deadline'),false);
+  assert.equal(deadlineOptions.signal.aborted,true);
+  assert.ok(state.namespace.state.messages.at(-1).text.includes('5分钟'));
+  context.setTimeout=originalSetTimeout;
   context.document.querySelector=chatQuery;
   state.namespace.state.status={...confirmedStatus,activeModelId:'new'};
 

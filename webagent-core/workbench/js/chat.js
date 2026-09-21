@@ -1,6 +1,11 @@
 import { $, $$, state, ui } from './state.js';
 import { escapeHtml, renderMd } from './dom.js';
 
+const CHAT_RESPONSE_BYTES = 16 * 1024 * 1024;
+const CHAT_FRAME_BYTES = 1024 * 1024;
+const CHAT_ERROR_BYTES = 64 * 1024;
+const CHAT_TIMEOUT_MS = 5 * 60 * 1000;
+
 export function emptyChat() {
   return `<div class="chat-empty">
     <div class="bubble">💬</div>
@@ -154,7 +159,8 @@ export async function sendChat(text, opts = {}) {
     }
   }
   state.sending = true;
-  state.chatAbort = new AbortController();
+  const controller = new AbortController();
+  state.chatAbort = controller;
   const sendButton = $('#btn-send');
   if (sendButton) { sendButton.textContent = '停止'; sendButton.title = '停止当前任务'; }
   state.stayOnBridge = !!opts.stayOnBridge;
@@ -170,9 +176,15 @@ export async function sendChat(text, opts = {}) {
   }
   const modelId = ($('#model-select') && $('#model-select').value) || (state.status && state.status.activeModelId);
   const thinkLevel = ($('#think-select') && $('#think-select').value) || 'high';
+  let reader, confirmed = false, timedOut = false;
+  const deadline = setTimeout(() => { timedOut = true; controller.abort(); }, CHAT_TIMEOUT_MS);
+  const checkStopped = () => {
+    if (controller.signal.aborted) throw Object.assign(new Error('请求已停止'), { name: 'AbortError' });
+  };
   try {
     const res = await fetch('/api/chat', {
-      signal: state.chatAbort.signal,
+      signal: controller.signal,
+      redirect: 'error',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -184,47 +196,84 @@ export async function sendChat(text, opts = {}) {
         planAction: planAction || undefined
       })
     });
+    if (res.body && typeof res.body.getReader === 'function') reader = res.body.getReader();
+    checkStopped();
     if (!res.ok) {
-      const raw = typeof res.text === 'function' ? await res.text() : '';
+      // Bound the bytes while reading, not just the final message displayed by the UI.
+      let raw = '', bytes = 0;
+      const errorDecoder = new TextDecoder();
+      while (reader) {
+        const { done, value } = await reader.read();
+        checkStopped();
+        if (done) break;
+        bytes += value.byteLength;
+        if (bytes > CHAT_ERROR_BYTES) throw new Error(`HTTP ${res.status} 错误响应超过64KiB上限`);
+        raw += errorDecoder.decode(value, { stream: true });
+      }
+      raw += errorDecoder.decode();
       let detail = '';
       try { detail = JSON.parse(raw).error || ''; } catch (_) { detail = raw; }
       throw new Error(String(detail || `HTTP ${res.status}`).slice(0, 180));
     }
-    if (!res.body || typeof res.body.getReader !== 'function') throw new Error('对话响应不是可读事件流');
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '', assistantText = '', sawDone = false, sawError = false;
+    if (!reader) throw new Error('对话响应不是可读事件流');
+    if (!/^application\/x-ndjson(?:\s*;|$)/i.test(res.headers.get('content-type') || '')) {
+      throw new Error('对话响应不是NDJSON事件流');
+    }
+    const decoder = new TextDecoder('utf-8', { fatal: true });
+    let buffer = '', assistantText = '', sawDone = false, bytes = 0, frameBytes = 0;
     const consumeLine = (line) => {
       if (!line.trim()) return;
+      checkStopped();
+      if (sawDone) throw new Error('完成事件之后仍有数据，结果未确认');
       let event;
       try { event = JSON.parse(line); } catch (_) { throw new Error('对话事件流包含无效 JSON'); }
-      if (!event || typeof event !== 'object' || Array.isArray(event) || typeof event.type !== 'string') {
+      if (!event || typeof event !== 'object' || Array.isArray(event) || typeof event.type !== 'string' || !event.type
+        || event.type === 'message' && typeof event.text !== 'string') {
         throw new Error('对话事件格式无效');
       }
-      if (event.type === 'done') sawDone = true;
-      if (event.type === 'error') sawError = true;
       handleEvent(event);
-      if (event.type === 'message' && typeof event.text === 'string') assistantText += event.text;
+      checkStopped();
+      if (event.type === 'error') throw new Error('主机报告任务失败；未自动重试');
+      if (event.type === 'done') sawDone = true;
+      if (event.type === 'message') assistantText += event.text;
     };
     while (true) {
       const { done, value } = await reader.read();
+      checkStopped();
       if (done) break;
+      bytes += value.byteLength;
+      if (bytes > CHAT_RESPONSE_BYTES) throw new Error('对话响应超过16MiB处理上限');
+      // Count original UTF-8 bytes per line, including a partial multibyte character.
+      // A large network chunk containing many short frames is still legitimate.
+      for (const byte of value) {
+        if (byte === 10) frameBytes = 0;
+        else if (++frameBytes > CHAT_FRAME_BYTES) throw new Error('对话事件超过1MiB处理上限');
+      }
       buffer += decoder.decode(value, { stream: true });
-      if (buffer.length > 1024 * 1024) throw new Error('对话事件超过客户端处理上限');
       const lines = buffer.split('\n');
       buffer = lines.pop();
       for (const line of lines) consumeLine(line);
     }
     buffer += decoder.decode();
     if (buffer.trim()) consumeLine(buffer);
-    if (!sawDone && !sawError) throw new Error('对话连接提前结束，结果未确认；未自动重试');
-    if (sawDone && !sawError && assistantText) state.history.push({ role: 'assistant', content: assistantText });
-    return sawDone && !sawError;
+    checkStopped();
+    if (!sawDone) throw new Error('对话连接提前结束，结果未确认；未自动重试');
+    if (assistantText) state.history.push({ role: 'assistant', content: assistantText });
+    confirmed = true;
+    return true;
   } catch (err) {
-    const prefix = err && err.name === 'AbortError' ? '请求已停止，结果可能不完整：' : '请求失败或结果未确认：';
+    const prefix = timedOut ? '请求超过5分钟，结果未确认；未自动重试：'
+      : err && err.name === 'AbortError' ? '请求已停止，结果可能不完整：' : '请求失败或结果未确认：';
     pushMsg({ kind: 'assistant', text: (prefix + (err.message || '请核对状态')).slice(0, 240) });
     return false;
   } finally {
+    clearTimeout(deadline);
+    if (!confirmed) {
+      controller.abort();
+      // Do not wait indefinitely for an underlying source's cancellation promise.
+      try { Promise.resolve(reader?.cancel()).catch(() => {}); } catch (_) {}
+    }
+    try { reader?.releaseLock(); } catch (_) {}
     state.sending = false;
     state.chatAbort = null;
     if (sendButton) { sendButton.textContent = '↑'; sendButton.title = '发送'; }
