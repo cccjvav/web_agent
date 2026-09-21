@@ -964,7 +964,7 @@ C#从预览至执行持有同一SafeProcessHandle，确认后重查身份/活宿
 
 所有清理只通过测试创建对象的原始句柄，不按PID补杀；嵌套finally恢复DACL并观察子进程退出，30秒/64KiB辅助预算、子进程60秒自退，不改现有产品/回归期限。测试JS/PS/C#不入安装包并由禁止项断言守卫。Linux只能检查静态/打包与既有套件，Windows原生结果见上；图形按钮、真实隧道桌面、跨用户及实际PID复用仍未完成。R5整体/R4根因和其他包不关闭，三个探针继续原分工暂停。
 
-第四包后续befee7d / CI35602748192八项通过、Windows22失败：tunnelCleanupWindows登记unavailable（20119ms）、tunnelReceiptProtection不可用（8913ms）、tunnelRegistry期望orphan-candidate而实际unknown（16731ms）；新增ACL测试未报失败。时长接近辅助期限不足以确定根因，不把后续绿灯当根因修复。复核夹具发现直接调整主令牌不能仅凭进程隔离排除共享风险，因此再改为DuplicateTokenEx私有线程模拟副本，只调整副本，RevertToSelf并逐字节检查原令牌特权未变。此修订不改产品或期限，不能断言它导致了先前失败；新增隔离的真实结果待核验。
+第四包后续befee7d / CI35602748192八项通过、Windows22失败：tunnelCleanupWindows登记unavailable（20119ms）、tunnelReceiptProtection不可用（8913ms）、tunnelRegistry期望orphan-candidate而实际unknown（16731ms）；新增ACL测试未报失败。时长接近辅助期限不足以确定根因，不把后续绿灯当根因修复。复核夹具发现直接调整主令牌不能仅凭进程隔离排除共享风险，因此再改为DuplicateTokenEx私有线程模拟副本，只调整副本，RevertToSelf并逐字节检查原令牌特权未变。此修订不改产品或期限，不能断言它导致了先前失败；私有线程令牌修订8d49bea426a45868522ae43ba6bbe4f18409639b / CI35603422500九项通过，Windows Node20/22/24执行DACL拒绝与主令牌不变断言；本地92/92。befee7d的Windows22原有辅助失败根因仍未定位，没有因修订绿灯注销；后续须补仅阶段/耗时/退出码的脱敏诊断，不增加超时或重放。
 
 ## 复盘
 
