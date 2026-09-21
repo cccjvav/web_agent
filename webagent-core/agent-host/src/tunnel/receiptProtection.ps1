@@ -1,8 +1,13 @@
 # CurrentUser DPAPI is an OS-user boundary, NOT a WebAgent application signature.
 $ErrorActionPreference = 'Stop'
+function TracePhase([string]$phase) {
+  if ($env:WEBAGENT_DEBUG_PROCESS -eq '1') { try { [Console]::Error.WriteLine($phase) } catch {} }
+}
 try {
+  TracePhase 'WA_TUNNEL_STARTED'
   [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
   Add-Type -AssemblyName System.Security
+  TracePhase 'WA_TUNNEL_READY'
   $reader = [IO.StreamReader]::new([Console]::OpenStandardInput(), [Text.UTF8Encoding]::new($false, $true), $false, 4096, $true)
   try { $inputText = $reader.ReadToEnd() } finally { $reader.Dispose() }
   if ($inputText.Length -gt 524288) { throw 'budget' }
@@ -28,6 +33,7 @@ try {
       }
     } catch { $rows += $null }
   }
+  TracePhase 'WA_TUNNEL_COMPLETED'
   ConvertTo-Json -InputObject @($rows) -Compress
 } catch {
   [Console]::Error.WriteLine('Tunnel receipt protection unavailable')

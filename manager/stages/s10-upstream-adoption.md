@@ -966,6 +966,14 @@ C#从预览至执行持有同一SafeProcessHandle，确认后重查身份/活宿
 
 第四包后续befee7d / CI35602748192八项通过、Windows22失败：tunnelCleanupWindows登记unavailable（20119ms）、tunnelReceiptProtection不可用（8913ms）、tunnelRegistry期望orphan-candidate而实际unknown（16731ms）；新增ACL测试未报失败。时长接近辅助期限不足以确定根因，不把后续绿灯当根因修复。复核夹具发现直接调整主令牌不能仅凭进程隔离排除共享风险，因此再改为DuplicateTokenEx私有线程模拟副本，只调整副本，RevertToSelf并逐字节检查原令牌特权未变。此修订不改产品或期限，不能断言它导致了先前失败；私有线程令牌修订8d49bea426a45868522ae43ba6bbe4f18409639b / CI35603422500九项通过，Windows Node20/22/24执行DACL拒绝与主令牌不变断言；本地92/92。befee7d的Windows22原有辅助失败根因仍未定位，没有因修订绿灯注销；后续须补仅阶段/耗时/退出码的脱敏诊断，不增加超时或重放。
 
+### R5第五包：Windows收据/身份辅助诊断（2026-09-21）
+
+接续037b0ce；该提交CI35603908774为8/9，Windows Node20/22/24主机套件通过、windows-installer在原有Probe Companion打包步骤失败，原因未定，仍保持原分工暂停，不改源码/门禁。前次befee7d Windows22原有辅助不可用/unknown根因继续开放。
+
+本轮启动发现本地Git指针/索引回到50c03be，但文件保留交付内容；fetch当前绑定分支并逐blob比较037b0ce后仅mixed恢复指针/索引，不改工作文件。暂停探针文件的原始哈希差异未读源码/覆盖，恢复后Git规范化状态干净；没有整体替换或捎带提交。
+
+先复核receiptProtection/processIdentity的8秒/并发2/严格形状/错误保守及相邻清理租约合同，再只补默认关闭的阶段元数据：helperDiagnostics每调用≤10行，固定字段/错误白名单、无参数/收据/PID/路径/原输出。PS固定阶段标记仅在回调转成布尔值；区分脚本未到达/安全程序集已加载/条目处理完与结果解析失败，不假定spawn=ready、killed=timeout或8秒耗时=DPAPI根因。不改变期限/权限/重试、不解除unknown不终止。模拟回归覆盖脱敏、日志异常、预算及原回包，Windows旧套件待精确CI验证；新诊断不是历史故障复现或根因修复。
+
 ## 复盘
 
 - 上一轮只改文件所在目录，没有消除额外管理层次；应先核对已有规则，而不是先引入新文件类型。

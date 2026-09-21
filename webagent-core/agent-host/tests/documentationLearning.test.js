@@ -9,6 +9,8 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const config = JSON.parse(read('docs-site/documentation.config.json'));
 const routes = new Map(config.extraSiteDocs.map(d => [d.path, d.id]));
 const pairs = [
+  ["webagent-core/agent-host/src/tunnel/helperDiagnostics.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
+  ["webagent-core/agent-host/tests/tunnelHelperDiagnostics.test.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
   ["webagent-core/agent-host/tests/tunnelCleanupAcl.test.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
   ["webagent-core/agent-host/src/tunnel/tunnelCleanup.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
   ["webagent-core/agent-host/tests/tunnelCleanup.test.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],

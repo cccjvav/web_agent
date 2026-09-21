@@ -45,6 +45,8 @@ R5记录完整性续包：Windows新收据使用CurrentUser DPAPI，封装失败
 
 预览60秒有效，本机输入RECYCLE才会重读记录指纹并在持有的目标句柄上再次核对、终止和观察退出。权限/身份不确定即跳过，结果未知不自动重放。DPAPI不隔离同用户恶意代码/管理员，TTY也不是防自动化的人类身份认证；无HTTP/MCP清理接口、不提权。图形按钮、非Windows回收及真实隧道桌面验收仍待。完整合同见[句柄回收](停止进程详解.md)。
 
+R5第五包：helperDiagnostics在既有WEBAGENT_DEBUG_PROCESS=1下记录有界脱敏辅助阶段，不记录收据/参数/路径/输出正文，默认关闭；不改8秒期限或unknown保护，历史Windows22根因仍待。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -53,9 +55,10 @@ R5记录完整性续包：Windows新收据使用CurrentUser DPAPI，封装失败
 | 源码 | 定位证据 |
 |---|---|
 | [cloudflared.js](cloudflared.js) | 44 个函数/类节点 |
+| [helperDiagnostics.js](helperDiagnostics.js) | 6 个函数/类节点 |
 | [ngrok.js](ngrok.js) | 25 个函数/类节点 |
-| [processIdentity.js](processIdentity.js) | 14 个函数/类节点 |
-| [receiptProtection.js](receiptProtection.js) | 13 个函数/类节点 |
+| [processIdentity.js](processIdentity.js) | 15 个函数/类节点 |
+| [receiptProtection.js](receiptProtection.js) | 14 个函数/类节点 |
 | [receiptProtection.ps1](receiptProtection.ps1) | 文件级登记；未做符号完整性证明 |
 | [stopProcess.js](stopProcess.js) | 8 个函数/类节点 |
 | [tunnelCleanup.cs](tunnelCleanup.cs) | 文件级登记；未做符号完整性证明 |

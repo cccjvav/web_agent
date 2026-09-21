@@ -32,7 +32,7 @@ try {
   assert.ok(manifest.files.some(f => f.path === 'installer/launch.js'));
   assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/src/utils/fileCheckpoints.js'));
   for (const file of ['stdioBridge.cs', 'stdioBridge.ps1', 'stdioSupervisor.js', 'stdioTransport.js', 'stdioLaunch.js', 'publicHttps.js']) assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/src/mcp/' + file));
-  for (const file of ['scripts/tunnel-cleanup.js', 'src/tunnel/tunnelCleanup.js', 'src/tunnel/tunnelCleanup.ps1', 'src/tunnel/tunnelCleanup.cs', 'scripts/tunnel-residue.js', 'src/tunnel/tunnelRegistry.js', 'src/tunnel/processIdentity.js', 'src/tunnel/receiptProtection.js', 'src/tunnel/receiptProtection.ps1']) assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/' + file));
+  for (const file of ['src/tunnel/helperDiagnostics.js', 'scripts/tunnel-cleanup.js', 'src/tunnel/tunnelCleanup.js', 'src/tunnel/tunnelCleanup.ps1', 'src/tunnel/tunnelCleanup.cs', 'scripts/tunnel-residue.js', 'src/tunnel/tunnelRegistry.js', 'src/tunnel/processIdentity.js', 'src/tunnel/receiptProtection.js', 'src/tunnel/receiptProtection.ps1']) assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/' + file));
   assert.ok(manifest.files.some(f => f.path === 'computer-use/win/input.cs'));
   for (const f of manifest.files) assert.ok(!fs.readFileSync(path.join(output, f.path), 'utf8').includes('PRIVATE_FIXTURE_DO_NOT_PACKAGE'));
   assert.ok(!manifest.files.some(f => f.path.startsWith('webagent-repro/')));
