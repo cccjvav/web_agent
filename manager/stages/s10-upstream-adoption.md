@@ -1022,7 +1022,7 @@ CONTEXT的长批次摘要先核对其中所有提交/CI标识均已在本阶段�
 
 施工失败保留：浏览器夹具最初误将SSE当JSON，明确Accept修正（非产品缺陷）；新滚动pre触发axe，补停靠点；首轮完整93/94为新增compact漏主说明，补齐而不删守卫。中文字体只在仓库外审查环境，CDP确认Noto Sans SC，未把缺字/截图当Windows字体问题。精选lint四个清理finally提示未冒充四个已复现功能bug；Windows20历史原日志再次下载EOF，不改期限、不重跑追绿。
 
-本地修后完整94/94、文档273/28/111且updated=0、生产audit 0漏洞；扩展后Chromium（含16+12状态、真实中文字体回退）已通过，最终独立退出码/提交前复核另保留日志。提交/精确CI尚待记录，不能借来源绿色代签。正式清单只扩大受影响段的局部核对，整篇已逐句仍8；探针/冻结原型零施工。R2/R3其他合同、R4原因、R5桌面/跨用户/PID复用、R7逐句及R8用户MCP/IDE继续开放。
+最终以独立subprocess分别记录真实退出码0：完整94/94、扩展后Chromium（含16+12状态）、生产audit 0漏洞；文档273/28/111且updated=0。再次检查194 JS/MJS语法，精选lint仍仅原有四个清理finally提示、无新增所选规则报警；185登记指纹同步。代码提交`33fc9ed8670ff51e94939549e05961ad65919e09`已推当前固定分支，[CI35632024550](https://github.com/cccjvav/web_agent/actions/runs/35632024550)按精确SHA核实全部9个job completed/success：Ubuntu Node18/20/22/24、Windows Node20/22/24（含既有重复取消/stdio）、Windows安装器及真实Chromium。不是来源绿灯、Windows桌面或历史根因结案。后续本段证据记录提交的CI仍须按其实际HEAD核对。正式清单只扩大受影响段的局部核对，整篇已逐句仍8；探针/冻结原型零施工。R2/R3其他合同、R4原因、R5桌面/跨用户/PID复用、R7逐句及R8用户MCP/IDE继续开放。
 
 ## 复盘
 

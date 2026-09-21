@@ -278,6 +278,8 @@ axe-core4.13.0在这9个状态均报告同一项`aria-required-children`：`#tab
 
 [文档站桌面](evidence/F55-docs-desktop.png) · [文档站手机源码](evidence/F55-docs-mobile.png) · [工作台手机Chat](evidence/F55-workbench-chat-mobile.png)。截图只含隔离测试页/公开仓库内容，不含有效连接密钥；仅取证，不是产品素材。
 
+本批最终源码提交`33fc9ed8670ff51e94939549e05961ad65919e09`已推送；[CI35632024550](https://github.com/cccjvav/web_agent/actions/runs/35632024550)的9个job已按此SHA逐一核实completed/success，包括Windows/Ubuntu矩阵、安装器和真实浏览器。本地独立进程再次确认94/94、扩充Chromium、生产audit均退出0，文档273/28/111、updated=0；语法194项再过，精选lint仅原有四个提示。记录本结果的后续文档提交须另核对其HEAD，不拿本次源码CI代签新代码。
+
 ### 保留的失败与未完范围
 
 1. 新浏览器夹具最初把协商到的SSE当JSON解析，改为明确Accept application/json；这是夹具错误，不是产品缺陷。代码容器加滚动后，axe检出导读pre还缺键盘停靠点，补齐后通过。加入中文字体暴露日志焦点缺口，另有手机导航红测，均没有跳过规则。
