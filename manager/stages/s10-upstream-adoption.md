@@ -245,6 +245,14 @@ CI证据：第一批实现`48b08ab`的[CI35520116029](https://github.com/cccjvav
 
 用户指令审查另一助手在`arena/01a0bfa9-web-agent`分支的工作（共同基点50c03be，41提交/112文件，与本分支F54两批相互独立演化）。方法与证据：独立worktree实测其HEAD e805bef完整93/93、docs 271/28/110零漂移、探针目录零diff，CI 35612499554九项成功；对本分支HEAD红测复现其patchEngine缺失目标三例缺陷（旧expectedHash静默重建、非空SEARCH原文整段写成新文件、多块创建静默丢弃后续块）——确认为本分支现存数据丢失级缺口；对其HEAD以raw socket运行时抽查重复会话头400、非ASCII头400、批量65项400、纯通知202、容量满initialize 503，全部与其声明一致。其MCP会话修复与本分支F54语义同向但为功能超集（active计数覆盖SSE、503背压、MCP-Protocol-Version锁定、批内信封准入）。其Windows隧道清理子系统（tunnelCleanup.cs持句柄校验创建时间/镜像路径/双向PPID后在同一句柄上terminate）细读裁决为PID复用安全、宁漏杀不误杀，但只能实机验收，其台账亦如实登记未验。其历史CI四次失败逐一核对为文档导航漏生成、Windows22夹具unknown（登记未定根因）与暂停Probe打包失败（未越界处理），无掩盖失败或代签行为。完整发现、可疑项裁决与收敛建议见[平行分支审查报告](../../review/BRANCH_COMPARISON_01a0bfa9_2026-09-21.md)；本组只登记审查结论，合并/收敛未获授权不执行。本地完整84/84（documentationLinks首轮红：新报告未登记正式清单，登记后绿）、249/28/110零漂移。
 
+#### 第56组：平行分支增量审查与本分支全仓扫描（2026-09-22）
+
+用户指令"再看看+全仓审查"。开头沙箱第九次ref漂移（HEAD回50c03be、文件保留），fetch后核对工作树与远端24c1364逐字节一致，仅soft恢复ref/index，未hard reset/clean。
+
+平行分支增量：e805bef..63cbbdc共17提交（其自述F55–F60），worktree实测其HEAD完整97/97、docs 278/28/111零漂移、探针零diff、CI 35663331086 success。细读全部产品diff：F55浏览器消费链（mcpCors暴露头、经典Chat流合同、无障碍/axe门禁）、F56–F58启动编排（waitHealth独立deadline+abort、appWindow.js双探测主机身份、preparation.js异步可取消npm、删taskkill树补杀）、R5开始菜单回收入口（tunnel-recovery.ps1拒参数/管道+每用户mutex）、run-tests生命周期诊断摘要。增量期间1个新CI失败（a22428a Windows20 echo 30秒超时，与R4历史症状同类），其台账如实登记不重跑；F59自纠F58证据错误、F60当日红测修复，自纠链完整。裁决追加在对照报告末节。
+
+本分支全仓扫描（非Probe全部JS/HTML/CSS+文档+UI）：完整84/84、audit 0、249/28/110零漂移、git diff --check干净为基线。红测复现S1：跨源initialize 200带Mcp-Session-Id但无Access-Control-Expose-Headers，浏览器JS读不到会话头；实测S5：批量65项/批内重复id/浮点id/坏MCP-Protocol-Version头均200、纯通知204非202；结构比对确认S3 waitHealth接受连接不回包即永久挂起（与平行分支修复前逐行一致）及S6–S8（SSE req close、externalClient error真值、launch.js spawnSync/ready误判）。renderMd/innerHTML全部插值点、oauth恒时比较、extension定时器清理抽查未见新问题。S1–S9详单与"优先收敛而非重复修复"建议见[全仓复审报告](../../review/FULL_SWEEP_2026-09-22.md)；本组只登记发现，修复须另行红测交付。
+
 #### 已交付：限流与生成测试批次
 
 - 11限流：OAuth JSON/HTML 429都返回Retry-After；超额请求不增加计数/延长窗口；1000-key容量有恢复提示且旧key剩余额度不被挤掉；来源不直接回退不可信转发头。原固定窗口本来不会被连续拒绝无限延长，此处不虚报修复了不存在的问题。

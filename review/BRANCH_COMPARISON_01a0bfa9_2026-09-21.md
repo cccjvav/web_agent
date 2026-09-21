@@ -50,3 +50,30 @@
 ## 五、结论与建议
 
 该分支质量高于预期：本沙箱实测 93/93 全绿、HEAD CI 九项 success、探针边界干净、失败记录诚实。其修复中 patchEngine 缺失目标、信封准入、协议版本头、externalClient error 存在性判断、resources remote 门控均为**我方分支现存真实缺陷**（patchEngine 三例已在我方 HEAD 红测复现）。若用户决定收敛两分支，建议以该分支的 MCP 会话/准入实现为基础（我方 F54 的独立价值——畸形头 400 语义——其已等价覆盖），另行合入我方 `4f522f1` 之后的台账与文档差异；patchEngine 行为变更随附迁移说明；R5 隧道清理保持"代码合入、实机验收单列"。合并动作本身未获授权，本报告不执行。
+
+---
+
+## 追加：增量审查（2026-09-22，e805bef..63cbbdc，17 提交）
+
+首次审查后该分支又推进 17 提交（79 文件，+19524/−12502），自述批次 F55–F60。本次增量在新 worktree 实测其 HEAD `63cbbdc`：**完整 97/97 测试文件通过、docs 278/28/111 零漂移、探针目录零 diff、HEAD CI 35663331086 success**。
+
+### 增量修复内容（细读 diff 后逐项裁决）
+
+1. **F55 浏览器消费链（确认为真实缺陷，我方同样存在）**：
+   - `mcpCors` 缺 `Access-Control-Expose-Headers`——跨源浏览器 initialize 成功却读不到 `Mcp-Session-Id`（401 也读不到 `WWW-Authenticate`）。**已在我方 HEAD 用真实 HTTP 红测复现**（本报告作者，2026-09-22）：`expose-headers` 为空、会话头对浏览器 JS 不可见。其修复只暴露这两个头，未放开 Origin/token，方向正确。
+   - 经典 Chat 流（workbench/js/chat.js）：我方现版仍接受 done 之后的 message 并写入助手历史、`sawError` 后仍算部分成功路径、无 NDJSON content-type 校验、错误正文读取无字节上限、无 5 分钟 deadline、失败不 cancel reader/abort 请求。其修复补齐全部（1MiB 行/16MiB 总量/64KiB 错误正文/严格 UTF-8/done 后数据拒绝），且逐帧字节计数按原始 UTF-8 字节而非字符串长度——我方现版 `buffer.length > 1MiB` 是字符数近似。
+   - 文档站/工作台无障碍：架构卡改原生链接、日志区 tabindex+role、灰字对比度、320–390px 布局横溢修复；配 axe-core 固定开发依赖默认执行（16 工作台+12 文档状态）。
+2. **F56–F58 启动生命周期（外层编排重构，质量高）**：
+   - `run-code-oss.js` waitHealth 旧版（=我方现版）只在响应/错误回调里查期限：服务器接受连接但不回包时 promise 永不结束；新版共享 deadline+abort signal+销毁在途请求。旧版 spawn 失败直接 `process.exit(1)`、主机退出不收尾编辑器子进程；新版单一 owner 统一 finally，SIGTERM 9 秒宽限→同句柄 SIGKILL→1 秒观察，删除了旧 `taskkill /pid /t /f` 按 PID 树补杀路径（避免 stale PID 误杀，同时明确"不再承诺清掉所有后代"的范围收窄）。
+   - `installer/appWindow.js`（新 268 行）：修"端口上有任何 200 就当自己人"的就绪误判——现在 /healthz 严格 schema+/api/diagnostics 主机身份（hostInstanceId/版本/端口/workspaceRoot 归一化比对）双探测，非预期占用拒绝打开窗口不停止已有服务；浏览器 spawn 失败显式报错（旧版静默）；启动失败只收尾本轮 IPC 直接子进程，超时后明确"未按名称/端口/PID 补杀"。异常路径审查未发现误杀面；`hostIdentity` 拒绝不匹配时不泄漏细节。
+   - `installer/preparation.js`：npm ci 从 spawnSync（阻塞不可取消）改为异步+timeout+abort；强制停止后 1 秒观察期，未确认时标记 `cleanupUnconfirmed` 不谎报已清理。
+3. **F55 之后新增 R5 桌面入口**：`installer/tunnel-recovery.ps1` + launch.js recovery 分支。PS 侧拒绝任何参数/管道输入（防确认重放）、每用户 mutex 防并发、只解析 node.exe Application；launch 侧要求 win32+TTY。设计与 R5 既有"预览→输入 RECYCLE 确认"链一致，未见新攻击面。
+4. **测试运行器诊断**：run-tests.js 从 stderr 提取固定 schema 生命周期摘要（≤6 行/1800 字节，白名单事件/字段），坏行不破坏 runner——为 Windows echo 超时未决根因积累证据，克制。
+
+### 增量期间 CI 红点核对
+
+近 20 次 run 中新增 1 个 failure：`a22428a`（开始菜单入口批）Windows Node20 主机 job——mcpProtocol 测试专用 echo 30 秒超时无输出，与 R4 历史症状相同；其台账如实登记"八项成功+该失败、不确认同根因、不重跑抹绿"，且新入口相关测试全过。**仍未发现掩盖失败行为**。另其台账 F59 自纠了 F58 的一个证据错误（"同步阻塞取消"声明与实际不符），F60 当天即以真实红测修复——自纠链完整。
+
+### 增量结论
+
+该分支 F55–F60 与首次审查同等质量。其中 **F55 的 CORS expose-headers 与经典 Chat 流合同、F56 的 waitHealth 挂起，均为我方分支现存真实缺陷**（CORS 一项已在我方红测复现；waitHealth 我方代码结构与其修复前完全一致）。收敛建议不变且更强：两分支差距在扩大，其分支已覆盖我方全部独立修复（F54 两批的语义其均有等价或超集实现），建议尽快决策收敛方向，避免重复施工。

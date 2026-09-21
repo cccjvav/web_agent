@@ -56,13 +56,14 @@
 - F53：继续非探针query、状态/诊断公开投影和external/workflow接线。真实HTTP红测证明七个只读入口会忽略未知query，Bridge reset-round与tool/call也会越过query产生副作用；现apiRequestBody/bridgeRequestBody统一要求空query，其余路由显式门禁，静态核对确认除暂停的Probe路由外全部REST入口固定query。external/request与两个workflow入口改固定body显式异步接线，未知包装在服务或审批前400。MCP clientInfo入库与status快照固定有界字段；customizations拒绝空/未知/错类型写入并从历史GET投影掉未知顶层/嵌套/列表项，已知损坏仍保留。首轮完整80/84仅为说明/库存/站点未同步，业务测试80项全绿；同步后最终84/84、249/28/110且updated=0、audit 0漏洞、正式哈希183项、git diff与探针零diff。实现397476c的CI35459273776九项成功，证据0b8b9a4的CI35459466444也九项成功。画像与记忆详解仅customizations段由待逐句转局部，因此清单变为局部56、待78；其它状态不变，探针暂停边界不变。
 - F54（进行中）：用户上传只读ShunCode Bridge参考zip和任务TXT，先核对交接索引/阶段/语义/正式清单并登记新增证据；上传提交3fbe872的CI35466582618中Chromium/安装器通过，七个主机任务仅因TXT未登记正式清单而同点失败。zip只在仓库外经安全预算解包，不安装/执行；本组将完整复审全部当前可负责的非Probe源码、配置、UI、文档与工程门禁，重点回答会话驱逐、自适应并发、事件重放、请求ID占用和重复会话头，逐项给采用/拒绝依据。Probe及外部trace项目继续暂停。2026-09-20续批已裁决五问并落实两处最小修复：重复/畸形`Mcp-Session-Id`头在会话查找前400（旧行为是误导性404，真实raw socket负例先红后绿）；在途HTTP/SSE会话不因TTL/容量被驱逐（红测证明旧实现会驱逐最旧的在飞会话）。JSON-RPC ID登记、自适应并发、事件重放经对照后不采用，理由与文件工具“不替换”确认见[语义台账F54续批](SEMANTIC_REVIEW_2026-09-16.md)。定向与完整84/84、249/28/110零漂移；其余非Probe面复审与最终CI继续。
 - F55（2026-09-21）：按用户指令审查平行分支`arena/01a0bfa9-web-agent`（共同基点50c03be，41提交/112文件）。在独立worktree实测其HEAD e805bef完整93/93、docs零漂移、探针目录零diff、CI 35612499554九项成功；对本分支HEAD红测复现其patchEngine三例缺失目标缺陷（旧哈希静默重建、SEARCH原文写成新文件、多块丢弃），对其HEAD以raw socket验证重复头400/批量65项400/通知202/容量满503。结论、可疑项裁决与收敛建议见[平行分支审查报告](BRANCH_COMPARISON_01a0bfa9_2026-09-21.md)；本批只登记审查，不执行合并。
+- F56（2026-09-22）：用户指令"再看看+全仓审查"。①增量审查平行分支e805bef..63cbbdc共17提交（F55–F60）：worktree实测其HEAD 97/97、docs 278/28/111零漂移、CI success；细读appWindow.js/preparation.js/run-code-oss重构、chat.js流合同、CORS暴露头、tunnel-recovery.ps1入口与run-tests诊断，逐项裁决与新增1个CI红点（a22428a Windows20 echo超时，其如实登记）核对追加在对照报告末节。②本分支全仓扫描：红测复现S1（mcpCors缺Expose-Headers致浏览器读不到会话头），实测S5（批量65项/重复id/浮点id/坏协议版本头均200、通知204），结构比对确认S3（waitHealth挂起）与S6–S8；innerHTML/XSS面、秘钥恒时比较、定时器清理抽查未见新问题。发现S1–S9与收敛建议见[全仓复审报告](FULL_SWEEP_2026-09-22.md)；登记不代签修复。本批开头沙箱第九次ref漂移按程序soft恢复到24c1364并逐项核对零diff。
 
 ## 逐文件状态
 
 最近完整成功基线为第53组实现`397476c7bc29d256781c759f3386beac91d9c147`、证据`0b8b9a4e642d2a813be1e2413056b01c64f96890`及[CI35459273776](https://github.com/cccjvav/web_agent/actions/runs/35459273776)/[CI35459466444](https://github.com/cccjvav/web_agent/actions/runs/35459466444)，两轮九项覆盖Ubuntu/Windows Node矩阵、重复取消/stdio、Windows安装器与真实Chromium。当前上传提交`3fbe872`的CI35466582618因新TXT未登记本清单而失败，F54正在同步并复审；第51组首推c1ea0f8的真实Chromium失败证据继续保留。本清单自身属于维护索引，不自我授予语义通过。新文件须登记；历史先前批次仅作证据，未自动标为本轮完成。
 
 <!-- review-status-counts:start -->
-现存条目数：201（合并退役2项，不计通过）；状态：待逐句核对 78、暂停，只登记路径 15、生成定位，非语义认证 1、已逐句核对 9、待边界核对 7、只读规范副本 1、待历史定位核对 32、原始证据，受限 2、局部核对 56。这是文件计数，不是语义准确率。
+现存条目数：202（合并退役2项，不计通过）；状态：待逐句核对 78、暂停，只登记路径 15、生成定位，非语义认证 1、已逐句核对 10、待边界核对 7、只读规范副本 1、待历史定位核对 32、原始证据，受限 2、局部核对 56。这是文件计数，不是语义准确率。
 <!-- review-status-counts:end -->
 
 | 文件 | 状态 | SHA-256前16位 | 依据/下一动作 |
@@ -123,7 +124,7 @@
 | [installer/README.md](../installer/README.md) | 待逐句核对 | f2edbd500219def5 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/函数详解.md](../installer/函数详解.md) | 待逐句核对 | e56bd9d538e2a089 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/安装声明详解.md](../installer/安装声明详解.md) | 待逐句核对 | 5c8566d2ce5b1bc8 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | e6b9b1a5d79efd8c | F53同步范围；F55补平行分支审查一句并重算哈希（发现F54后哈希未回填，本行以当前文件为准）；其它阶段/实机事实不重签 |
+| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | 05d31ce3cfe98a2a | F55/F56各补审查摘要句并重算哈希；其它阶段/实机事实不重签 |
 | [manager/SKILL.md](../manager/SKILL.md) | 只读规范副本 | 5c8c93d50e52332b | 只核对引用与适用范围，不修改技能副本 |
 | [manager/agents.md](../manager/agents.md) | 待逐句核对 | 4466f9c59524232f | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [manager/docs/documentation.md](../manager/docs/documentation.md) | 待逐句核对 | dff435c047431d16 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
@@ -133,7 +134,7 @@
 | [manager/stages/documentation-2026-09-12.md](../manager/stages/documentation-2026-09-12.md) | 待历史定位核对 | c23c09e4b3615d99 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/probe-dual-integration-2026-09-15.md](../manager/stages/probe-dual-integration-2026-09-15.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
 | [manager/stages/s1-handoff.md](../manager/stages/s1-handoff.md) | 待历史定位核对 | cfc0e427dc08e55c | 核对归档/引用/证据，不将旧结论改成现状 |
-| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | ab8eb8936a9110c6 | F53登记query闭环；F55新增平行分支审查节并重算哈希（发现F54后哈希未回填，本行以当前文件为准）；历史批次不重签 |
+| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | bfd4e21c2f7abd99 | F55/F56新增第55/56组审查节并重算哈希；历史批次不重签 |
 | [manager/stages/s2-shell.md](../manager/stages/s2-shell.md) | 待历史定位核对 | 5ac447fe582ce09e | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s3-bridge-image.md](../manager/stages/s3-bridge-image.md) | 待历史定位核对 | fbe64b3265d3cf1a | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s4-terminal.md](../manager/stages/s4-terminal.md) | 待历史定位核对 | 1cf1fcca01c51478 | 核对归档/引用/证据，不将旧结论改成现状 |
@@ -144,11 +145,12 @@
 | [manager/stages/s9-workspace-entry.md](../manager/stages/s9-workspace-entry.md) | 待历史定位核对 | 77367a885aa57c03 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [multi-agent-board/SKILL.md](../multi-agent-board/SKILL.md) | 待逐句核对 | 29b4015a8d562bfb | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [project-manager/SKILL.md](../project-manager/SKILL.md) | 待逐句核对 | 5c8c93d50e52332b | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [review/BRANCH_COMPARISON_01a0bfa9_2026-09-21.md](../review/BRANCH_COMPARISON_01a0bfa9_2026-09-21.md) | 已逐句核对 | 34783af6c058334d | 本批新增：平行分支01a0bfa9对照审查报告，红测证据在报告内列明；仅登记结论，未授权合并 |
+| [review/BRANCH_COMPARISON_01a0bfa9_2026-09-21.md](../review/BRANCH_COMPARISON_01a0bfa9_2026-09-21.md) | 已逐句核对 | 4ff18380c6ccaae0 | F55新增平行分支对照审查；F56追加e805bef..63cbbdc增量节并重算哈希；红测证据在报告内列明，未授权合并 |
+| [review/FULL_SWEEP_2026-09-22.md](../review/FULL_SWEEP_2026-09-22.md) | 已逐句核对 | b0431a05748d409a | F56新增：本分支全仓扫描S1–S9发现与收敛建议；S1已红测复现，S4引用首次对照红测；登记不代签修复 |
 | [review/CHECKLIST_WINDOWS.md](../review/CHECKLIST_WINDOWS.md) | 待逐句核对 | 6cbc79b4c85111ed | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [review/OPTIMIZATION_REPORT_2026-09-18.md](../review/OPTIMIZATION_REPORT_2026-09-18.md) | 已逐句核对 | 29391f9e3e15ea70 | F45逐项交叉复核；P1-A/P2-D/P2-A已处置，原始发现保留，剩余取舍见顶部链接 |
 | [review/FULL_AUDIT_FOLLOWUP_2026-09-18.md](../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md) | 待逐句核对 | 8a0799b45e63fcdb | F45–48交叉审查/实修与验证报告；本页不自我授予整篇语义认证，结论按列明证据边界复核 |
-| [review/README.md](../review/README.md) | 局部核对 | f231dc433b82f6da | F45新增交叉审查入口并区分原始报告/现行处置；本批加平行分支审查导航行；其它历史入口范围保留 |
+| [review/README.md](../review/README.md) | 局部核对 | c30972b04804c5eb | F45新增交叉审查入口；F55/F56各加一行审查报告导航；其它历史入口范围保留 |
 | [review/SEMANTIC_REVIEW_2026-09-16.md](../review/SEMANTIC_REVIEW_2026-09-16.md) | 待逐句核对 | cde026ca6e06db26 | F53仅更新当前状态块及最终CI；整份历史长台账仍须按用途/证据逐段定位，不自授整篇通过 |
 | [review/UPSTREAM_ADOPTION_MAP_2026-09-15.md](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md) | 待逐句核对 | e454a1ff6891f7bc | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [review/archive/01a08d85-web-agent-audit.md](../review/archive/01a08d85-web-agent-audit.md) | 待历史定位核对 | 95fc2e2b61e4c58c | 核对归档/引用/证据，不将旧结论改成现状 |
