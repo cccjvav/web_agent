@@ -892,7 +892,7 @@ nativeChatStream先以真实HTTP证明旧postNdjson对302正常resolve（/home/u
 
 新增测试使用真实回环HTTP、实际workspaceMatch/轮换/BridgeView消费者，只替换VS Code和缩短夹具deadline。覆盖实际/声明超限、临界8MiB、跨UTF8字节、截断、滴流、无头、302、409/500/空200/204/坏JSON；所有服务端response关闭、timer清除。轮换/停止未知结果各只POST一次、不刷新报成功；有界409拒绝仍正确。没有真的轮换密钥/停止隧道；不是Windows桌面或长期RSS/并发压测。
 
-自审核对第五批NDJSON与第六批布局未被修改，复用旧轮换/PTY/副本回归；发行副本由syncExtension生成。七项定向、完整86/86、真实Chromium（含上一批窄屏/两条axe规则）通过，docs251/28/110。自审增加多字节超限与HEAD零正文兼容：HEAD的Content-Length代表资源长度，不冒充待接收正文；未改变总deadline。精确CI待提交后核验。R4历史超时及CI审计失败未明根因、R5/PTY平台与R7/R8等继续，不据此认证全部原生代码或全仓逐句完成。
+自审核对第五批NDJSON与第六批布局未被修改，复用旧轮换/PTY/副本回归；发行副本由syncExtension生成。七项定向、完整86/86、真实Chromium（含上一批窄屏/两条axe规则）通过，docs251/28/110。自审增加多字节超限与HEAD零正文兼容：HEAD的Content-Length代表资源长度，不冒充待接收正文；未改变总deadline。实现`c37ef280ec408d22d86c1967098bdd3138df3496`的[CI35559183087](https://github.com/cccjvav/web_agent/actions/runs/35559183087)已逐job核实9/9成功。R4历史超时及CI审计失败未明根因、R5/PTY平台与R7/R8等继续，不据此认证全部原生代码或全仓逐句完成。
 
 ## 复盘
 
