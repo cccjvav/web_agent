@@ -5,7 +5,7 @@
 接手先读本索引和[项目约定](agents.md)，再按需读[阶段10的工作包与交接](stages/s10-upstream-adoption.md#当前工作包与交接约束)。不另建路线图或根交接文件。
 
 ## 当前状态
-- **本轮续作启动可靠性（F56）。** 真实HTTP/Node红测后修可选code-server编排的健康总期限/取消、配置与启动失败收尾、同伴退出和直接子进程观察；本地95/95、扩充Chromium、audit 0。不是全部进程树或全仓审完，精确提交/CI与下一项在阶段10第56组。
+- **本轮续作启动可靠性（F56）。** 真实HTTP/Node红测后修可选code-server编排的健康总期限/取消、配置与启动失败收尾、同伴退出和直接子进程观察；本地95/95、扩充Chromium、audit 0。源码`a68a77e6fa82e509b3dc8a09ac27c38a402eadfb` / [CI35641420076](https://github.com/cccjvav/web_agent/actions/runs/35641420076)九job已核实通过；不是全部进程树或全仓审完，后续记录提交及下一项在阶段10第56组。
 - **接手基线：** `67f4f966720c2d6f657f53e3dc3b02cbf3860b98`，[CI35624122815](https://github.com/cccjvav/web_agent/actions/runs/35624122815)九项已逐job核实，本地94/94。F55新修改的验证与精确提交CI见阶段10，不借此基线绿灯代签。
 - **F55交付基线已补核实：** 用户重连后，证据提交`036d65b735805f13381f3ab1b0a5408d999c872d`的[CI35632714383](https://github.com/cccjvav/web_agent/actions/runs/35632714383)九job逐项success；源码33fc9ed及其CI也已通过。不能借此代签F56或用户桌面。
 - **接手顺序：** 本页→[项目约定](agents.md)→[即时接手检查](stages/s10-upstream-adoption.md#即时接手检查2026-09-21)。先核对分支/HEAD/未提交文件与在跑任务；外部沙箱ZIP不保证可移交，[仓库内CI摘要](../review/evidence/R4-handoff-ci-2026-09-21.json)明确哪些事实可得、哪些原日志不可得。

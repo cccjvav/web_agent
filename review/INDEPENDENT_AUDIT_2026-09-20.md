@@ -326,7 +326,7 @@ axe-core4.13.0在这9个状态均报告同一项`aria-required-children`：`#tab
 - 自审核对可选入口的auth/workspace/端口/argv/env、主机8秒shutdown、installer对子进程退出码的传播，以及F55累计修改的既有回归。没有更动核心权限/文件工具/主机API、经典UI、原生扩展、冻结原型或暂停探针运行源码。
 - 对应文档原地替换旧waitHealth/立即exit/taskkill描述；另修既有测试说明中的“经典Shell默认mkdir”“固定0.7.0副本/全部只读”等与当前断言不符的句子。只有7份受影响说明转局部，正式201项仍只有8份已逐句，不自授整篇或全仓通过。
 
-本批精确提交与CI见阶段10第56组，不使用F55的9项绿色代签。原始本地红/绿日志在当前会话仓库外，跨沙箱不保证可得；可携带证据为正式断言、本文范围与对应提交CI。
+本批源码`a68a77e6fa82e509b3dc8a09ac27c38a402eadfb` / [CI35641420076](https://github.com/cccjvav/web_agent/actions/runs/35641420076)已按精确SHA核实9项completed/success，覆盖Windows/Ubuntu矩阵、安装器及真实Chromium；不是F55绿色代签。查询401在用户再次重连后已补核实，不算CI失败。后续证据文档提交需另核对自身HEAD，完整范围见阶段10第56组。原始本地红/绿日志在当前会话仓库外，跨沙箱不保证可得；可携带证据为正式断言、本文范围与对应提交CI。
 
 ### 继续开放
 

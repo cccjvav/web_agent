@@ -1036,7 +1036,7 @@ stopChild区分killed与已退出；保留对象仅清本轮直接子进程，9�
 
 新增codeServerLifecycle的28个命名场景，组合真实HTTP/Node和可控时钟/进程：开放503/200响应处置、请求失败重试、迟到回包、取消/期限、初始化参数兼容、agent/editor各退出码、mkdir/spawn失败、安装器成功/失败/取消、重复停止、killed但尚未退出、unknown有界与无关同名进程存活；CLI尾表达式退出码另测。主说明逐函数更新，并原地纠正测试说明“经典Shell默认mkdir”“固定0.7.0副本/全部只读”等过期表述，未改复制/安装架构。
 
-本地首轮完整95/95、既有扩充Chromium（含F55跨源/坏流与16+12布局/axe状态）、生产audit 0漏洞均以独立进程退出0确认；文档274文件/28目录/111排除且updated=0，精选195份JS lint仅原四个清理finally提示，无新增所选规则报警。提交前最终复核与精确提交CI待记录。UI、核心权限/工具、原生扩展、暂停探针和冻结原型运行源码零diff；不是全仓审完，不关闭R4历史原因、R5实机后代/窗口、R7逐句或R8用户MCP。
+本地首轮完整95/95、既有扩充Chromium（含F55跨源/坏流与16+12布局/axe状态）、生产audit 0漏洞均以独立进程退出0确认；文档274文件/28目录/111排除且updated=0，精选195份JS lint仅原四个清理finally提示，无新增所选规则报警。提交前再次确认95/95、Chromium/audit退出0、文档零漂移及185指纹。代码`a68a77e6fa82e509b3dc8a09ac27c38a402eadfb`已推当前固定分支，[CI35641420076](https://github.com/cccjvav/web_agent/actions/runs/35641420076)按该SHA逐一核实9个job completed/success：Ubuntu Node18/20/22/24、Windows Node20/22/24（含原重复取消/stdio）、Windows安装器与真实Chromium。查询曾因401中断，用户再次重连后已补核实；这是查询连接问题，不是CI测试失败。后续证据文档提交仍须核对其自身HEAD，不借源码绿色代签。UI、核心权限/工具、原生扩展、暂停探针和冻结原型运行源码零diff；不是全仓审完，不关闭R4历史原因、R5实机后代/窗口、R7逐句或R8用户MCP。
 
 ## 复盘
 
