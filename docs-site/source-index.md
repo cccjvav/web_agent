@@ -3963,13 +3963,13 @@
 
 ## webagent-core/agent-host/tests/tunnelCleanupAcl.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `cdae8482bba5712859f50c661c847455ae7192d44007d92ede7d32f750b856d2`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `317255c0dbcda737caf5add4966cc0cf6718d4836b63c8073cc7bb1b6a196fb8`
 
-- `main` — FunctionDeclaration，[L7–L23](../webagent-core/agent-host/tests/tunnelCleanupAcl.test.js#L7-L23)
+- `main` — FunctionDeclaration，[L7–L24](../webagent-core/agent-host/tests/tunnelCleanupAcl.test.js#L7-L24)
 
 ## webagent-core/agent-host/tests/tunnelCleanupAclFixture.cs
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `d3de5f37fb630f0426cd729a94e8559a8c6259d4a58748696e50ba3f47d87ed9`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `13d5a473589e066570653c8d7788d6cbf5e0f2722b4a80fa2df9da34ffcd6393`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 

@@ -19,6 +19,22 @@ public static class TunnelAclFixture
     [DllImport("kernel32.dll", SetLastError=true)]
     private static extern uint WaitForSingleObject(SafeProcessHandle h, uint ms);
 
+    [DllImport("advapi32.dll", SetLastError=true)]
+    private static extern bool OpenProcessToken(IntPtr process, uint access, out SafeFileHandle token);
+    [DllImport("advapi32.dll", SetLastError=true)]
+    private static extern bool AdjustTokenPrivileges(SafeFileHandle token, bool disableAll, IntPtr state, uint size, IntPtr previous, IntPtr returned);
+
+    private static void DisableFixturePrivileges()
+    {
+        // Full-framework Process inspection / elevated CI may enable SeDebugPrivilege.
+        // Reduce only this disposable host's token, after gathering identity/restore handles.
+        SafeFileHandle token;
+        if (!OpenProcessToken(new IntPtr(-1), 0x20, out token)) throw new Win32Exception();
+        using (token) {
+            if (!AdjustTokenPrivileges(token, true, IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero)) throw new Win32Exception();
+        }
+        Console.WriteLine("fixture-privileges-disabled");
+    }
     private static void Require(bool condition, string message) { if (!condition) throw new Exception(message); }
     private static byte[] Save(SafeProcessHandle h)
     {
@@ -33,11 +49,11 @@ public static class TunnelAclFixture
     {
         if (!SetKernelObjectSecurity(h, 4, bytes)) throw new Win32Exception();
     }
-    private static void Denied(int pid, uint mask)
+    private static void Denied(int pid, uint mask, string phase)
     {
         using (var h = OpenProcess(mask, false, pid)) {
             int error = Marshal.GetLastWin32Error();
-            Require(h.IsInvalid && error == 5, "Expected actual ERROR_ACCESS_DENIED, not exit/identity mismatch or privilege bypass");
+            Require(h.IsInvalid && error == 5, phase + ": expected ERROR_ACCESS_DENIED; invalid=" + h.IsInvalid + ", error=" + error);
         }
     }
     public static void Run(string program)
@@ -58,8 +74,9 @@ public static class TunnelAclFixture
             string targetExe = child.MainModule.FileName;
             string ownerStart = owner.StartTime.ToUniversalTime().Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture);
             string ownerExe = owner.MainModule.FileName;
+                DisableFixturePrivileges();
                 Set(targetHandle, deniedAcl);
-                Denied(child.Id, 0x00101401);
+                Denied(child.Id, 0x00101401, "target");
                 using (var lease = new WebAgentTunnelLease(child.Id, targetStart, targetExe, owner.Id, ownerStart, ownerExe, "cloudflare", owner.Id)) {
                     Require(lease.Status == "inaccessible", "Denied target must not become a candidate");
                     Require(lease.Commit(500) == "inaccessible", "Denied target must not terminate");
@@ -68,7 +85,7 @@ public static class TunnelAclFixture
                 Require(WaitForSingleObject(targetHandle, 0) == 258, "Denied target was terminated");
                 Set(targetHandle, targetAcl);
                 Set(ownerHandle, deniedAcl);
-                Denied(owner.Id, 0x00101400);
+                Denied(owner.Id, 0x00101400, "owner");
                 using (var lease = new WebAgentTunnelLease(child.Id, targetStart, targetExe, owner.Id, ownerStart, ownerExe, "cloudflare", owner.Id)) {
                     Require(lease.Status == "owner-unknown", "Denied live owner must not be mistaken for absent");
                     Require(lease.Commit(500) == "owner-unknown", "Denied owner must block termination");
