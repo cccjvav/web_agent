@@ -107,6 +107,59 @@
           "url": "https://github.com/cccjvav/web_agent/actions/runs/35614219553/job/106380686315"
         }
       ]
+    },
+    {
+      "headSha": "7f62350246f682c5f1c23f912a1206900904d7db",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/cccjvav/web_agent/actions/runs/35620755160",
+      "jobs": [
+        {
+          "name": "workbench-browser",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35620755160/job/106402905859"
+        },
+        {
+          "name": "windows-installer",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35620755160/job/106402906135"
+        },
+        {
+          "name": "agent-host (ubuntu-latest, 20)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35620755160/job/106402906140"
+        },
+        {
+          "name": "agent-host (ubuntu-latest, 22)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35620755160/job/106402906180"
+        },
+        {
+          "name": "agent-host (windows-latest, 20)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35620755160/job/106402906286"
+        },
+        {
+          "name": "agent-host (windows-latest, 24)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35620755160/job/106402906296"
+        },
+        {
+          "name": "agent-host (ubuntu-latest, 24)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35620755160/job/106402906305"
+        },
+        {
+          "name": "agent-host (windows-latest, 22)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35620755160/job/106402906339"
+        },
+        {
+          "name": "agent-host (ubuntu-latest, 18)",
+          "conclusion": "success",
+          "url": "https://github.com/cccjvav/web_agent/actions/runs/35620755160/job/106402906523"
+        }
+      ]
     }
   ],
   "failure": {
@@ -127,5 +180,11 @@
     "failureFacts": "rechecked from GitHub Checks annotations in this turn",
     "completeFailedJobLog": "previous TLS EOF; unavailable, not reconstructed",
     "earlierSandboxZipFiles": "not present in this workspace; do not treat absolute /home/user paths as portable evidence"
+  },
+  "currentValidation": {
+    "codeCommit": "7f62350246f682c5f1c23f912a1206900904d7db",
+    "local": "94/94; includes red-to-green isolated lifecycle annotation test",
+    "ci": "9/9 exact code SHA; later handoff documentation commits must check their own HEAD",
+    "rootCause": "Windows echo timeout still unresolved; diagnostics fix is not cause fix"
   }
 }

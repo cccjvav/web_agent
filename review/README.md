@@ -22,6 +22,6 @@
 
 ## 可携带的交接证据
 
-[R4-handoff-ci-2026-09-21.json](evidence/R4-handoff-ci-2026-09-21.json)保存本轮重新从GitHub取得的dcc321b成功基线、a22428a失败run/job链接与脱敏失败事实，不是原始日志。这是声明排除源码覆盖的取证数据，不是运行时JSON配置或程序代码；程序源码守卫未排除。逐字段用途：runs的headSha/status/conclusion/url与jobs标明哪次提交/哪些job；failure记测试专用echo的时长/空输出及rootCause=unknown；availability区分已复取的API信息、不可得完整日志和当前工作区不含的旧沙箱ZIP。
+[R4-handoff-ci-2026-09-21.json](evidence/R4-handoff-ci-2026-09-21.json)保存本轮重新从GitHub取得的dcc321b成功基线、a22428a失败及7f62350代码验证的run/job链接与脱敏失败事实，不是原始日志。这是声明排除源码覆盖的取证数据，不是运行时JSON配置或程序代码；程序源码守卫未排除。逐字段用途：runs的headSha/status/conclusion/url与jobs标明哪次提交/哪些job；failure记测试专用echo的时长/空输出及rootCause=unknown；availability区分已复取的API信息、不可得完整日志和当前工作区不含的旧沙箱ZIP。
 
 此前聊天中的 `/home/user/...` ZIP路径不保证在新沙箱存在；缺失就标记不可得，不能写成已经传给新助手或伪造重建日志。接手以Git中的manager/CONTEXT与阶段10为入口，GitHub可能受权限/保留期影响，取不到原始数据不改变历史失败结论。
