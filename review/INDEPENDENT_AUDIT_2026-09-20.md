@@ -364,7 +364,7 @@ axe-core4.13.0在这9个状态均报告同一项`aria-required-children`：`#tab
 - 自审核对启动链：外层代理、内层探测/身份、IPC、清理及浏览器参数；未改核心权限/文件工具/主机API、经典UI、原生扩展、冻结原型或暂停探针运行源码。
 - 对应说明原地替换旧ready/appWindow描述，并补appWindowLifecycle测试说明；只有9份受影响说明转局部，正式201项仍只有8份已逐句，不自授整篇或全仓通过。
 
-本批精确提交与CI见阶段10第57组，不使用F56绿色代签。原始本地日志在仓库外，跨沙箱不保证可得；可携带证据为正式断言、本文范围与对应提交CI。
+本批源码`4cf4d6f81bfd9e0f85af690aa84d0ba0fdb48910` / [CI35647781757](https://github.com/cccjvav/web_agent/actions/runs/35647781757)已按精确SHA核实9项completed/success，覆盖Windows/Ubuntu矩阵、安装器及真实Chromium；不使用F56绿色代签。后续证据文档提交需另核对自身HEAD，完整范围见阶段10第57组。原始本地日志在仓库外，跨沙箱不保证可得；可携带证据为正式断言、本文范围与对应提交CI。
 
 ### 继续开放
 
