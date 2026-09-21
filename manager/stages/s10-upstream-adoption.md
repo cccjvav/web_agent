@@ -1100,3 +1100,5 @@ ensure/runNpm/ensureVscodeDeps改Promise，CLI与run-code-oss await并在跨阶�
 **下一轮先复审本组：** 核查精确提交CI、Promise调用方、正常/异常/取消与未知结算，尤其Windows shell后代与部分安装边界；然后再处理旧后端依赖fallback的独立期限，不把更多范围混入本轮。不改用户授权的清理边界，不延长预算或重跑追绿。
 
 修订后本地完整97/97，文档278源码/28目录/111排除且updated=0、diff --check通过。新增运行helper的发行断言与逐函数归属已验证；精确提交CI收尾另查，不使用80de651绿灯代签。
+
+F60运行时提交`ce685609d8c517e63acca54d0fc41661518b8532`的[CI35662916656](https://github.com/cccjvav/web_agent/actions/runs/35662916656)已按headSha及逐job状态核实九项completed/success：Ubuntu Node18/20/22/24、Windows Node20/22/24（含新准备测试及既有取消/stdio重跑）、Windows安装器、Chromium。不是用户桌面或真实npm后代验收；后续证据文档提交需另验自身CI。

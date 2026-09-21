@@ -475,3 +475,5 @@ F59证据/正文最终修订后，本地完整套件再次**97/97**、文档277/
 首轮完整96/97的唯一失败是文档具名函数登记；已以真实EventEmitter替代空方法夹具并登记新helper，不弱化守卫。尚未用真实npm安装或启动code-server；强制中断可能留下部分node_modules，没有事务回滚。同步复制/扩展同步及整个启动流程没有总硬实时保证；原后端依赖缺失fallback的异步npm install仍缺独立deadline，明确列为下一小包，而非本批已修。F59的两个缺陷仅对本组修改的准备命令链修复，不关闭全仓/实机或R4/R5历史项。
 
 F60修订后本地完整97/97、文档278/28/111 updated=0、diff --check通过。精确SHA的CI须另查；本地测试不代签Windows桌面或实际npm后代。
+
+F60运行时提交`ce685609d8c517e63acca54d0fc41661518b8532`的[CI35662916656](https://github.com/cccjvav/web_agent/actions/runs/35662916656)已按headSha及逐job状态核实九项completed/success：Ubuntu Node18/20/22/24、Windows Node20/22/24（含新准备测试及既有取消/stdio重跑）、Windows安装器、Chromium。不是用户桌面或真实npm后代验收；后续证据文档提交需另验自身CI。
