@@ -12,10 +12,11 @@ if (!process.argv.includes('--vm-child')) {
 }
 (async () => {
   const button = { setAttribute(name, value) { this[name] = value; } };
+  const cssVars = {};
   const storage = new Map();
   const themes = [];
   const context = vm.createContext({
-    document: { documentElement: { dataset: {} }, querySelector: () => button },
+    document: { documentElement: { dataset: {}, style: { setProperty: (k, v) => { cssVars[k] = v; } } }, querySelector: () => button },
     window: { monaco: { editor: { setTheme: value => themes.push(value) } } },
     localStorage: { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value) }
   });
@@ -38,6 +39,39 @@ if (!process.argv.includes('--vm-child')) {
   context.localStorage.setItem = () => { throw new Error('storage unavailable'); };
   assert.doesNotThrow(() => dom.namespace.initTheme());
   assert.strictEqual(state.namespace.ui.applyTheme, dom.namespace.applyTheme);
+
+  // Text scale: the stylesheet sizes everything in rem, so this control is the only way a user
+  // can enlarge the dense 11px metadata. Verify it clamps, persists and survives a hostile store.
+  context.localStorage.getItem = key => storage.get(key);
+  context.localStorage.setItem = (key, value) => storage.set(key, value);
+  const { applyTextScale, initTextScale, stepTextScale, currentTextScale,
+    TEXT_SCALE_MIN, TEXT_SCALE_MAX } = dom.namespace;
+  assert.strictEqual(initTextScale(), 1, 'default scale is 1 so existing rendering is unchanged');
+  assert.strictEqual(cssVars['--text-scale'], '1', 'the CSS variable drives the rem scale');
+  // Stepping must clamp at both ends rather than running away, and must not drift on floats.
+  let scale;
+  for (let i = 0; i < 20; i += 1) scale = stepTextScale(1);
+  assert.strictEqual(scale, TEXT_SCALE_MAX, 'enlarging clamps at the declared maximum');
+  assert.strictEqual(cssVars['--text-scale'], String(TEXT_SCALE_MAX));
+  assert.strictEqual(button.disabled, true, 'the control reports its own limit instead of no-opping');
+  for (let i = 0; i < 20; i += 1) scale = stepTextScale(-1);
+  assert.strictEqual(scale, TEXT_SCALE_MIN, 'shrinking clamps at the declared minimum');
+  assert.strictEqual(applyTextScale(1.2), 1.2);
+  assert.strictEqual(currentTextScale(), 1.2);
+  assert.strictEqual(storage.get('webagent-text-scale'), '1.2', 'the choice is persisted');
+  assert.strictEqual(initTextScale(), 1.2, 'and restored on the next load');
+  assert.ok(/120%/.test(button['aria-label']), 'the current size is announced to assistive tech');
+  // A corrupt or hostile stored value must fall back, never produce an unreadable page.
+  for (const [stored, expected] of [['not-a-number', 1], ['99', TEXT_SCALE_MAX], ['-5', 1], ['0', 1], ['', 1]]) {
+    storage.set('webagent-text-scale', stored);
+    assert.strictEqual(initTextScale(), expected, `stored ${JSON.stringify(stored)} must resolve to ${expected}`);
+  }
+  context.localStorage.getItem = () => { throw new Error('storage unavailable'); };
+  context.localStorage.setItem = () => { throw new Error('storage unavailable'); };
+  assert.doesNotThrow(() => initTextScale(), 'a storage-disabled browser must still render');
+  context.localStorage.getItem = key => storage.get(key);
+  context.localStorage.setItem = (key, value) => storage.set(key, value);
+  applyTextScale(1);
   // Exercise the actual picker, geometry and resource cleanup separately from the real Chromium CI job.
   const listeners = new Map(), timers = new Map();
   let serial = 0, box, focused;

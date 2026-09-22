@@ -247,8 +247,8 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
 | [workbench.browser.js](workbench.browser.js) | 263 个函数/类节点 |
-| [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 458 个函数/类节点 |
+| [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 466 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 15 个函数/类节点 |

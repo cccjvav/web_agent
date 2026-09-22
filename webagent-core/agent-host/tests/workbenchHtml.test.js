@@ -120,6 +120,25 @@ for (const match of html.matchAll(/<(input|textarea|select)\b[^>]*>/g)) {
 const styles = fs.readFileSync(path.resolve(__dirname, '../../workbench/styles.css'), 'utf8');
 assert.match(styles, /input:focus-visible,\s*textarea:focus-visible/);
 assert.match(styles, /@media \(max-width: 700px\)[\s\S]*?#sidebar \{[\s\S]*?position: absolute/);
+// Typography must stay relative to the root font size. Hardcoded px ignores both the browser's
+// and the OS's font-size setting, which left a lot of secondary text at an unadjustable 11px.
+const pxFontSizes = [...styles.matchAll(/font-size:\s*([\d.]+)px/g)].map(m => m[0]);
+assert.deepStrictEqual(pxFontSizes, [], 'font sizes must use the rem type scale, not hardcoded px');
+assert.match(styles, /--fs-xs:\s*[\d.]+rem/, 'the type scale must be declared');
+assert.match(styles, /html\s*\{\s*font-size:\s*calc\(100% \* var\(--text-scale/,
+  'the root font size must honour the user text-scale control');
+// Every font-size must resolve through the scale, so one control moves all of them together.
+for (const match of styles.matchAll(/font-size:\s*([^;]+);/g)) {
+  const value = match[1].trim();
+  assert.ok(/^(var\(--fs-|inherit|calc\(100% \* var\(--text-scale)/.test(value),
+    `unexpected font-size "${value}"; use the --fs-* scale so the text-size control applies`);
+}
+const controls = ['btn-text-smaller', 'btn-text-larger'];
+for (const id of controls) {
+  assert.ok(html.includes(`id="${id}"`), id + ' must exist so users can resize the workbench text');
+  const tag = html.match(new RegExp('<button[^>]*id="' + id + '"[^>]*>'))?.[0] || '';
+  assert.ok(/aria-label="/.test(tag), id + ' must be labelled for assistive tech');
+}
 const tabsSrc = fs.readFileSync(path.resolve(__dirname, '../../workbench/js/tabs.js'), 'utf8');
 assert.ok(tabsSrc.includes('class="tab-label" role="tab"'));
 assert.ok(tabsSrc.includes('aria-controls="editor-wrap" tabindex="${active ? 0 : -1}"'));

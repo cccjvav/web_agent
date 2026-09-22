@@ -19,6 +19,62 @@ export function initTheme() {
   return applyTheme(saved);
 }
 
+
+// Text size. The stylesheet expresses every font size in rem, so scaling the root font size
+// scales the whole workbench together instead of leaving hardcoded 11px labels unreadable.
+// This only affects this page's rendering; it never touches file contents, the Monaco editor's
+// own font setting, or anything on the host.
+export const TEXT_SCALE_MIN = 0.85;
+export const TEXT_SCALE_MAX = 1.6;
+export const TEXT_SCALE_STEP = 0.1;
+
+// Authoritative value lives here rather than being re-read from computed styles: the element may
+// not have been laid out yet at boot, and reading back a percentage would re-introduce rounding.
+let textScale = 1;
+
+function clampScale(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return 1;
+  // Round to two decimals so repeated steps cannot accumulate float drift in localStorage.
+  return Math.round(Math.min(TEXT_SCALE_MAX, Math.max(TEXT_SCALE_MIN, n)) * 100) / 100;
+}
+
+export function applyTextScale(scale) {
+  const value = clampScale(scale);
+  textScale = value;
+  const root = document.documentElement;
+  if (root && root.style && typeof root.style.setProperty === 'function') {
+    root.style.setProperty('--text-scale', String(value));
+  }
+  try { localStorage.setItem('webagent-text-scale', String(value)); } catch (_) { /* private/storage-disabled browser */ }
+  const percent = Math.round(value * 100);
+  for (const [selector, label, atLimit] of [
+    ['#btn-text-smaller', '缩小', value <= TEXT_SCALE_MIN],
+    ['#btn-text-larger', '放大', value >= TEXT_SCALE_MAX]
+  ]) {
+    const button = $(selector);
+    if (!button) continue;
+    button.setAttribute('aria-label', `${label}工作台文字（当前 ${percent}%）`);
+    // Disable at the ends so the control reports its own limit instead of silently no-opping.
+    button.disabled = atLimit;
+  }
+  return value;
+}
+
+export function currentTextScale() {
+  return textScale;
+}
+
+export function stepTextScale(direction) {
+  return applyTextScale(textScale + (direction > 0 ? TEXT_SCALE_STEP : -TEXT_SCALE_STEP));
+}
+
+export function initTextScale() {
+  let saved = 1;
+  try { saved = Number(localStorage.getItem('webagent-text-scale')) || 1; } catch (_) { /* storage disabled */ }
+  return applyTextScale(saved);
+}
+
 // Measure only after the popover is attached and visible. Keep it inside the viewport.
 export function positionPopover(box, anchor) {
   const margin = 8, gap = 4;
@@ -129,6 +185,10 @@ export function setRight(which) {
 
 ui.applyTheme = applyTheme;
 ui.initTheme = initTheme;
+ui.applyTextScale = applyTextScale;
+ui.initTextScale = initTextScale;
+ui.stepTextScale = stepTextScale;
+ui.currentTextScale = currentTextScale;
 ui.toast = toast;
 ui.escapeHtml = escapeHtml;
 ui.renderMd = renderMd;

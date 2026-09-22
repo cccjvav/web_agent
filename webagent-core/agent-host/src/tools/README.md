@@ -77,7 +77,9 @@ board从调用上下文获取当前peer，不相信参数任意指定owner；先
 
 用户Skill限定在工作区允许路径，普通UTF8文件128KiB上限；每页最多8000 UTF16字符，用nextOffset/expectedHash续读。来源ID区分工作区根与内置产品目录，引用/脚本资源只读。Skill是说明文本，不等于后台插件执行器；详见技能与隐藏规则详解。
 
-readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略，不具备models/store那样的损坏拒绝策略；不要把缓存当完整事务日志。
+readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略（落盘已改为临时文件+rename，避免半截JSON被当成"没有任何hash"），但仍不具备models/store那样的损坏拒绝策略；不要把缓存当完整事务日志。
+
+**两个覆盖路径的hash口径不同，这是有意的，不要"统一"掉。** `apply_patch`在没给expectedHash时会回退到`recalledHash()`，即**可跨进程重启**的落盘记录——补丁本身自带SEARCH/REPLACE或unified diff的上下文，内容对不上会先失败，落盘hash只是省掉一次重读。`write_file`用整块新内容覆盖，没有任何内容级校验，所以它只认`sessionHash()`——**本进程内确实读过**才允许免确认覆盖，重启后一律要求显式`confirm_overwrite`。把write_file也改成认落盘hash，等于让新进程凭上一次运行留下的记录盲覆盖文件。
 
 ## 验证与定位
 `patchEngine`、`workspaceTools`、`auditStorage`、`resourceBudget`覆盖文件与预算；`ptyLifecycle`覆盖审批、所属客户端及捕获；`mcpBoard`/`board`覆盖协作；`modelLifecycle`/`planRound`覆盖轮次。缺省的模块/进程fixture不能代替VS Code和Windows交互验收。

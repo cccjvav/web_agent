@@ -35,10 +35,10 @@ F54第六批：dom.setWorkspaceView与bind/tabs联动窄屏展示和抽屉；工
 
 | 源码 | 定位证据 |
 |---|---|
-| [bind.js](bind.js) | 123 个函数/类节点 |
+| [bind.js](bind.js) | 125 个函数/类节点 |
 | [bridge.js](bridge.js) | 60 个函数/类节点 |
 | [chat.js](chat.js) | 42 个函数/类节点 |
-| [dom.js](dom.js) | 17 个函数/类节点 |
+| [dom.js](dom.js) | 22 个函数/类节点 |
 | [monaco.js](monaco.js) | 9 个函数/类节点 |
 | [operations.js](operations.js) | 79 个函数/类节点 |
 | [picker.js](picker.js) | 16 个函数/类节点 |

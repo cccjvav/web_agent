@@ -67,6 +67,9 @@ export function bind() {
     const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
     ui.applyTheme(cur === 'light' ? 'dark' : 'light');
   });
+  if (ui.initTextScale) ui.initTextScale();
+  onClick('#btn-text-smaller', () => ui.stepTextScale && ui.stepTextScale(-1));
+  onClick('#btn-text-larger', () => ui.stepTextScale && ui.stepTextScale(1));
   onClick('#btn-sess-toggle', () => {
     const box = $('#mcp-session');
     if (!box) return;

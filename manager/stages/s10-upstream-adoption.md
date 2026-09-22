@@ -46,7 +46,28 @@
 
 三个新红测都用`git stash`回到基线验证过确实为红（非"写完就绿"的空测）；已加入`scripts/run-tests.js`的preferred列表。相关正文已改（`SECURITY.md`、`使用指南.md`、tools/utils/tests/admin-host的README与中文详解、本表第85行Git只读工具边界），再走`check-docs.js --write`与`build.js`。
 
-**仍待修（已取证未动，下一批候选）：** readCache落盘O(n²)（400次读重写6.2MB）；`auth/github.js`与`usage/tracker.js`裸fetch无超时/无字节上限（应改走`utils/requestScope.js`的`fetchText`，注意`bridgeTunnel.test.js`替换了`github.startDeviceLogin/loginWithToken`）；`patchEngine.applyPatchBody`的`recalledHash()`与`fileOps.sessionHash()`口径不一致；F54-04疑似已修待红测确认；UI无响应式（`workbench/styles.css` 595行零`@media`、26处10–11px硬编码、无rem或字号变量）。
+**第2批已修并测绿（101/101）：**
+
+| 项 | 独立复现的事实 | 修法 | 红测 |
+|---|---|---|---|
+| F62-08 身份裸fetch | `auth/github.js`三个外发请求无signal/超时/字节上限，端点黑洞时登录与设备码轮询永久挂起 | 统一经新的`githubJson`走`fetchText`，默认15s超时+1MiB上限；错误消息不回显原始正文 | `networkBudget.test.js` |
+| F62-09 遥测裸fetch | `usage/tracker.js`同样无超时，而它跑在4秒debounce与15分钟周期里，不可达端点会让每个tick叠加一个永不结束的请求 | 经`fetchText`，10s超时+256KiB上限；请求层失败转`{ok:false}`而非抛出 | 同上 |
+| F62-10 readCache空转重写 | 重复读同一未改动文件时每次重写整张表（400次读＝400次整表写、6.2MB） | 已是最新且hash未变只更新session不落盘；删不存在的key不落盘；persist改临时文件+rename | 同上 |
+| — | `fetchText`原本写死全局fetch，无法覆盖已公开`fetchFn`注入点的模块 | 新增`options.fetchImpl`，注入传输照样受超时/预算约束，发出前剥离 | 同上 |
+
+`networkBudget.test.js`有一个**必须保留**的细节：文件末尾持有一个referenced的`setInterval`保活句柄。`fetchText`的deadline计时器是`unref`的（正确行为），生产里有HTTP服务器撑着事件循环，测试进程里没有——少了保活句柄，Node会在黑洞请求还在飞时直接以0退出，后面的断言一条都不跑，测试"通过"其实是空转。删掉它等于注销这个测试。
+
+**第3批已修并测绿（101/101）：UI 字号与排版**
+
+先纠正上一批留下的一处错误记载：`workbench/styles.css`**不是**"零`@media`"，实际有4处（980px与700px各两处），窄屏抽屉、工作区切换、模态导航都已有响应式规则。真正的缺陷是**排版而非布局**——104处font-size全是硬编码px，浏览器与操作系统的字号设置对本工作台完全无效，大量次要文字（时间戳、胶囊、工具卡正文）被钉死在11px，用户没有任何办法调大。
+
+修法：引入`--fs-xs`(0.6875rem≈11px)到`--fs-hero`(2.625rem≈42px)的rem字阶，104处font-size全部改为引用字阶，默认16px根字号下渲染与原来逐像素一致；`html { font-size: calc(100% * var(--text-scale, 1)); }`把标题栏新增的A-/A+控件接进同一套字阶（`--text-scale`设在`<html>`，挂到`<body>`的模态与浮层一起缩放；`100%`是继承来的浏览器/系统字号，故系统设置与本控件**相乘**而非互相覆盖）。范围0.85–1.6，到端点按钮置disabled而不是静默无反应，aria-label播报当前百分比，选择持久化在localStorage。
+
+守卫：`workbenchHtml.test.js`新增断言——样式表里不得再出现硬编码px字号（已用旧样式表验证确为红）、字阶变量与`--text-scale`根规则必须存在、每条font-size都必须解析到字阶、两个按钮必须有aria-label；`workbenchRuntime.test.js`在真实ES模块上验证钳制、持久化、坏存储（`not-a-number`/`99`/`-5`/`0`/空串）回退与storage不可用不崩。
+
+另复核一项前批列为"待修"的疑点并**判定为非缺陷**：`patchEngine`回退到可跨重启的`recalledHash()`、而`write_file`只认本进程的`sessionHash()`，这个口径差异是有意的——补丁自带SEARCH/REPLACE或diff上下文，内容对不上会先失败；`write_file`整块覆盖没有任何内容级校验，若也认落盘hash，新进程就能凭上次运行留下的记录盲覆盖文件。已实测确认（清空session后write_file报`E_BAD_ARGS`、apply_patch仍成功），并把这条"不要统一掉"的理由写进`src/tools/README.md`。
+
+**仍待修（已取证未动，下一批候选）：** F54-04（`mcp/resources.js`疑似已修，待红测确认）；`reports.json`无条数上限与轮转，长期运行需外部归档；F61-05/06尚未独立复核。
 
 **本批未审范围（不得当作已审）：** `executor.js`、`tools/index.js`、`api/routes.js`、`agent/runChat.js`、`mcp/server.js`、`mcp/oauth.js`、`installer/preparation.js`、`scripts/run-code-oss.js`、`extension/`、`workbench/js/bind.js|bridge.js|operations.js`、`.github/workflows`。浏览器项因本机Chromium下载TLS中断未验；Windows/C#/PS无本地环境。
 
