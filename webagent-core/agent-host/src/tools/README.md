@@ -46,7 +46,7 @@ read_files返回带行号的content和hash；offset从1开始，不是字节位�
 
 ### 写入/补丁步骤
 1. 对规范真实路径取得进程内写锁，锁获得后再检查取消。
-2. 读取当前正文计算完整SHA-256，与显式或该操作允许的缓存hash比较。短前缀不当作相等；write_file对已有文件还要求覆盖确认，持久缓存不能简单替代本进程确认。
+2. 读取当前正文计算完整SHA-256，与显式或该操作允许的缓存hash比较。短前缀不当作相等；write_file可由显式覆盖确认、匹配的expectedHash或匹配的本进程读取hash满足覆盖条件；明示旧hash即使已确认仍拒绝，持久缓存不等于本进程确认。
 3. apply_patch对已有文件接受支持的单文件unified diff或SEARCH/REPLACE；多处匹配需要正确occurrence。新文件不能把unified diff头当正文，应使用正文或空SEARCH。
 4. dryRun只检查并返回结果，不发布写入。实际发布先写独占临时文件、保留已有普通权限，再rename；新建补丁与write_file的显式createOnly都用排他发布，期间目标被创建则以EEXIST/E_FILE_EXISTS失败而不覆盖。
 5. 成功更新hash缓存并广播变更。取消或失败不是回滚已完成写入；进程内锁也不锁住外部编辑器。符号链接写入跟随已校验目标，不用新文件替掉链接本身。
@@ -59,7 +59,7 @@ read_files返回带行号的content和hash；offset从1开始，不是字节位�
 | list_directory | 扫描1000项，深度最多8；truncated表示需缩小目录，不承诺存在下一页cursor |
 | find_files | 默认最多40结果，夹到1–200；扫描条目有上限；支持简化的*、**、?及**/零层匹配 |
 | search_files | query最长200字符；regex另限制120字符并做启发式预检；最多800文件、8MiB扫描、2000匹配；单文件超过1.5MiB跳过 |
-| 搜索worker | 最多4个，2秒deadline，可随当前请求取消；结束后等待worker终止才释放名额 |
+| 搜索worker | 最多4个，启动10秒、ready后扫描2秒（不是整体2秒），可随当前请求取消；结束后等待worker终止才释放名额 |
 
 搜索返回cursor/nextCursor、scannedFiles及跳过/截短信息。页是本次扫描的结果切片，不是持久化快照；两次调用之间文件变化时不保证稳定顺序。正则启发式检查不是时间复杂度证明，可终止worker才是额外的执行边界。
 

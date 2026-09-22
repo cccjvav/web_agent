@@ -56,6 +56,6 @@ Resolve-Path→StorageFile.GetFileFromPathAsync→OpenAsync(Read)→BitmapDecode
 
 ## 7. 验证边界
 
-CI解析所有PS1语法，但当前Windows编译步骤只覆盖input/input2/keys三个C#，不能冒充capture/mark的实际GDI/OCR验证。请在独立测试桌面执行截图→看META→标记→人工校准再操作；OCR不等于视觉确认。
+当前Windows CI解析PS1并编译capture/mark以及input/input2/keys（另有主机Job/stdio辅助）；这只是编译/无效输入检查，不是capture/mark的实际GDI、OCR或桌面验证。请在独立测试桌面执行截图→看META→标记→人工校准再操作；OCR不等于视觉确认。
 
 `npm test --prefix webagent-core/agent-host -- --filter=installerPackaging`仅关联脚本静态/打包回归，不是截图实测。本轮Linux环境不执行Windows截图或OCR，也不会启动桌面输入来“自动验证”文档。

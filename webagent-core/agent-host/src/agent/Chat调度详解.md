@@ -8,9 +8,11 @@
 
 ## 1. 普通入口的执行流程
 
-### runChat(payload = {}, emit)
+### runChat(payload = {}, emit) 与 runChatBody(payload = {}, emit)
 
-第二参数是函数时优先作为 send，否则取 payload.emit。同步 `store.load()` 在模型 try/catch 之前，坏配置会直接使 async 函数拒绝。mode 缺省为 `ask`，保证只读工具集；未知mode发送error并返回ok:false，不静默降级为空工具集。HTTP/扩展的模式处理另看调用方。
+runChat先取得Chat模式租约并通过withTask建立本次任务上下文，再调用runChatBody；下述模型选择和store读取属于body。租约在完成/失败后释放，不自动取消已返回的后台命令。
+
+第二参数是函数时优先作为 send，否则取 payload.emit。同步 `store.load()` 在模型 try/catch 之前，坏配置会直接使 async 函数拒绝。mode缺省ask，只限制普通项目文件写入/命令，特定元数据工具仍允许；未知mode发送error并返回ok:false，不静默降级为空工具集。HTTP/扩展的模式处理另看调用方。
 
 Plan 直接委托 runPlanRound。普通模式 pickModel；选中非 builtin 但字段不齐时 emit error、返回失败，不执行内置写入；字段齐则 await runOpenAI，异常转换为 error 事件及失败对象。其他情况走 runBuiltin。
 
@@ -34,7 +36,7 @@ Plan 直接委托 runPlanRound。普通模式 pickModel；选中非 builtin 但�
 |---|---|---|
 | flattenDir(items, acc=[]) | 目录树 → 扁平数组 | 深度优先将每项（包括目录）push，再递归 children；修改传入 acc，不做循环引用防护 |
 | keywordsFrom(message) | 文本 → 最多 6 个词 | 分隔标点/空白；map trim；filter 长度至少2且不在停用词表；不是分词模型。后面拼 regex 时没有做正则转义 |
-| pickExisting(relPaths) | 固定候选名 → 存在的普通文件名 | 用 workspaceRoot 拼路径，exists/stat；将反斜杠转正斜杠。此辅助只用于内部候选，不替代工具路径检查；stat 竞争失败会抛出 |
+| pickExisting(relPaths) | 固定候选名 → 存在的普通文件名 | 先resolveSafePath校验候选，再exists/stat；将反斜杠转正斜杠，仍不提供外部文件系统一致性锁 |
 | detectTestCommand() | 无 → `{cmd,kind}` 或 null | resolveTechStack 有 testCommand 就标 declared（即使它是启发式探测结果）；否则有 tests 目录就猜包管理器 test；不执行、不确认安装了 pytest/Conda |
 | extractPatch(message) | 文本 → 第一段 SEARCH/REPLACE 或 null | 正则提取首个成对标记，不校验补丁目标或能否应用 |
 | extractWriteIntent(message) | 文本 → `{filePath,content}` 或 null | 同时匹配写入/创建关键词后的简单文件路径和第一个代码围栏；路径字符集有限，不是任意中文/空格文件名解析器 |
@@ -43,19 +45,19 @@ Plan 直接委托 runPlanRound。普通模式 pickModel；选中非 builtin 但�
 
 ### explore(emit, mode, message)
 
-返回 facts：files、readme、pkg、testCmd、testOutput。依次执行：
+返回facts：files、readme、pkg、testCmd、testOutput，以及requested和evidence。依次执行：
 
 1. list_directory 深度3，成功才 flatten，再 filter 文件/map 路径、截前80。
 2. git_status；find_files 最多100，成功结果按路径去重加入 facts.files，因此最终不是严格80项。
 3. 有关键词时取前三项拼成 regex，search_files 限30；搜索结果以事件呈现，没有塞入 facts 正文。
-4. 固定 README/语言清单候选先 pickExisting，再补文件树中的项；读取最多6文件、每文件 limit120。跳过错误项，去行号；遇到多个 README 后者覆盖前者，只有 package.json 放入 facts.pkg。
+4. requestedFiles提取的显式路径非空时仅将它们交pickExisting，不因缺失而转读其它候选；没有显式路径才用固定README/清单及文件树补齐。正文最多6文件/每文件120行，evidence每份再截1200字符；跳过错误项，README/pkg汇总另保留原行为。
 5. detectTestCommand 非空才覆盖 facts.testCmd，然后返回。
 
 `testCmd`初始化为空；只有画像明确声明测试命令，或检测到tests目录并按包管理器形成有限猜测时才填写。因此空工作区不会再凭空声称`npm test`。该函数仍不是全仓分析：有深度、结果数、文件数和读行数限制。多数工具失败只得到错误事件，探索仍继续；直接fs/画像异常可能使函数拒绝。
 
 ### summarizeAsk(message, facts)
 
-纯格式化：取前30路径，README 最多800字符，pkg 最多600，拼工作区、问题、探测命令和提示。路径 map 回调加列表符号；末尾 filter 去空行。返回 Markdown，不 emit、不验证业务结论。尾部旧提示“没 Key 会跑测试/补丁”只适合显式选内置的路径，不能推导为外部模型失败自动回退。
+纯格式化：取前30路径，README 最多800字符，pkg 最多600，拼工作区、问题、探测命令和提示。路径 map 回调加列表符号；末尾 filter 去空行。返回 Markdown，不 emit、不验证业务结论。有显式请求时另显示逐文件证据及未读取项，不猜正文；尾部当前明确只有内置模式可按给定写入/补丁与探测命令执行，不再泛称缺Key自动回退。
 
 ## 3. runBuiltin(payload, emit)
 
@@ -128,4 +130,4 @@ modelLifecycle 用假 fetch 检查服务失败不重放修改、超8项工具反
 ## 内置诚实读取与任务关联更新
 原入口主体改名**runChatBody()**；**runChat()**先用executionControl.run(chat)获得主机模式租约，再用withTask(source=Chat)保持同一次对话任务ID；Bridge模式时拒绝，finally释放请求计数，不自动取消后台命令。**requestedFiles(message)**提取反引号/双引号路径及基础文件名，去重最多6项；pickExisting改为先resolveSafePath后stat，不探测工作区外路径。有显式路径时只读这些路径，缺失不退而读取其他候选；无显式路径才采用原候选扫描。explore保存读取证据；summarizeAsk明确确定性流程、截断证据和未读取项，不伪造一般推理能力。
 
-新手指南对齐：facts.testCmd初始为空，仅detectTestCommand成功才填值，避免空工作区也声称发现npm test。Ask只展示命令信息，不执行测试。操作例子与读取截断边界见仓库根内置探索Agent使用指南.md。
+新手指南对齐：facts.testCmd初始为空，仅detectTestCommand成功才填值，避免空工作区也声称发现npm test。Ask只展示命令信息，不执行测试。操作例子与读取截断边界见[内置探索Agent指南](../../../../docs/guides/内置探索Agent使用指南.md)。

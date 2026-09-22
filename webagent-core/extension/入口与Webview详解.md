@@ -16,7 +16,7 @@
 | revealWorkspaceFile(rel) | 相对路径→undefined | 首工作区joinPath，openTextDocument.then成功show预览/保留焦点，打开失败吞；此函数本身不是写入沙箱检查 |
 | registerChatParticipant(context) | 上下文→undefined | API存在才尝试创建webagent.agent，设SVG icon，加入订阅；不支持/注册异常不阻止Webview |
 | activate(context) | VS Code上下文→undefined | PTY→ChatView/BridgeView provider→原生Chat→状态栏→命令订阅；不是启动agent-host服务器 |
-| validWebviewMessage(msg,surface) | 不可信消息→boolean | 拒绝空/数组/非字符串type；chat只openNative/cancel/合法模式send且正文非空≤128000；bridge只合法copy或refresh/start/stop/reset。没有通配API代理 |
+| validWebviewMessage(msg,surface) | 不可信消息→boolean | 拒绝空/数组/非字符串type；chat只openNative/cancel/合法模式send且正文非空≤128000；bridge只合法copy、refresh/start/stop/reset或严格形状的control消息。没有通配API代理 |
 | chatHtml()/bridgeHtml() | 无→完整HTML字符串 | 各生成随机nonce，默认资源禁用，script仅nonce，允许内联style，禁止base/form；事件内容不作HTML注入 |
 
 **registerChatParticipant的handler(request,chatContext,stream,token)**：AbortController关联取消订阅并处理预取消；modeFromChatRequest取模式，去首个slash命令。空正文输出帮助、dispose返回；非空progress→postNdjson。事件回调先忽略已取消，再PTY分派；status为进度，tool显示结果/补丁打开与reference，message Markdown，error错误，consensus区分模拟汇总。正常完成返回metadata.webagentCompleted=true，失败/预取消返回false；catch提示结果未完成、核对已发生操作、不自动重试，主动取消不弹错误模态框；finally dispose取消订阅。
@@ -25,7 +25,7 @@
 
 **refreshBar()**每5秒GET status，明确检查status≥400/无JSON；有工作区差异显示warning，正常显示Bridge状态，catch离线。context.dispose清interval；已有请求不会因clearInterval自动取消。
 
-三个registerCommand：openBridge打开侧栏；openAgentChat尝试原生Chat预填@webagent，失败回侧栏；resetSecret委托**resetSecretCommand({refresh:()=>bridge.refresh()})**，把确认/绑定/回包消费集中在一个可测函数里，不再用内联箭头吞掉HTTP状态。statusBar自身也加入subscriptions管理。
+extension.js直接注册三个registerCommand，另由editorReview登记两个草稿命令：openBridge打开侧栏；openAgentChat尝试原生Chat预填@webagent，失败回侧栏；resetSecret委托**resetSecretCommand({refresh:()=>bridge.refresh()})**，把确认/绑定/回包消费集中在一个可测函数里，不再用内联箭头吞掉HTTP状态。statusBar自身也加入subscriptions管理。
 
 ### 原生密钥轮换与停止（第43组）
 
@@ -59,7 +59,7 @@
 
 **resolveWebviewView(webviewView)**设_view/options/html，消息验证后switch式if处理：refresh调用refresh；start POST cloudflare并校验HTTP与success；stop先取绑定再POST，严格校验success/running，失败弹未确认而非静默刷新；copy写系统剪贴板并通知；reset委托命令。catch统一modal显示错误。初始化立即refresh。
 
-**refresh()**没有_view即返回；GET status后post状态JSON，网络失败回带error的状态。和状态栏不同，该方法未检查HTTP错误码，所以不要仅凭界面无exception认定成功。
+**refresh()**没有_view即返回；refreshPending合并本页在途读取；GET status必须HTTP200且有JSON才post，错误回带error的状态，finally释放pending。它是HTTP完成/非空候选门禁，不是完整status所有字段的业务真实性验证。
 
 ## 5. chatHtml内嵌脚本（不是Node AST中的普通函数）
 
@@ -87,7 +87,7 @@ window message只接受status，规范对象后更新URL/状态pill，paintTasks
 
 ## 8. package.json与SVG（非JS也属于实现）
 
-[package.json](package.json)不是启动命令脚本：name/publisher/version标识扩展，engines.vscode声明兼容最低范围；main指extension.js；activationEvents的`*`让加载积极激活，onChatParticipant声明原生Chat入口。contributes.configuration给本机host默认地址；chatParticipants id必须与createChatParticipant一致、commands对应模式；viewsContainers activitybar icon对应[resources/icon.svg](resources/icon.svg)；views两个id必须匹配registerWebviewViewProvider；commands三个id必须匹配注册处理器。配置声明不代表VS Code每版本原生Chat API都存在，因此实现有特性检测。
+[package.json](package.json)不是启动命令脚本：name/publisher/version标识扩展，engines.vscode声明兼容最低范围；main指extension.js；activationEvents的`*`让加载积极激活，onChatParticipant声明原生Chat入口。contributes.configuration给本机host默认地址；chatParticipants id必须与createChatParticipant一致、commands对应模式；viewsContainers activitybar icon对应[resources/icon.svg](resources/icon.svg)；views两个id必须匹配registerWebviewViewProvider；commands五个id须分别匹配extension直接注册的三项和editorReview注册的两项。配置声明不代表VS Code每版本原生Chat API都存在，因此实现有特性检测。
 
 SVG根元素指定24×24尺寸和同范围viewBox，fill=none、紫色stroke=#6366f1、宽2、圆端点/拐角；三个path分别画右尖括号、左尖括号和斜线，组合成代码图标。没有script、外链或事件属性。SVG是静态图标，由活动栏和participant引用；不是浏览器应用入口、HTTP鉴权或点击处理器。图形坐标、路径与描边决定图标外观，交互由贡献声明和activate注册负责。要验证资源本身有效，应解析SVG及检查打包包含，而不是用JS函数名覆盖率替代资产检查。
 
@@ -106,7 +106,7 @@ chatHtml在日志区外增加原生details使用帮助，首屏可见且不随�
 
 ## 10. 工作区绑定与启动拒绝（0.7.1）
 
-**workspaceSnapshot()**（见第2节）返回status与binding；**workspaceBinding()**是它的薄封装。**workspacePaths()**先检查workspace.isTrusted；要求首文件夹为file URI并有fsPath，空窗口/虚拟目录直接抛中文提醒。返回本地文件夹路径。**workspaceBinding()**先取before，再请求实时/api/status，核对HTTP、workspaceRoot及identity.hostInstanceId，之后再取after；内部**matches**按sameWorkspace比较首文件夹。前后任一不匹配则拒绝。首根规则与revealWorkspaceFile和PTY identity一致；多根项目建议将目标单独打开，不支持运行中自动改绑主机。
+**workspaceSnapshot()**（见第2节）返回status与binding；**workspaceBinding()**是它的薄封装。**workspacePaths()**先检查workspace.isTrusted；要求首文件夹为file URI并有fsPath，空窗口/虚拟目录直接抛中文提醒。返回本地文件夹路径。实体workspaceSnapshot先取before，再请求实时/api/status，核对HTTP、workspaceRoot及identity.hostInstanceId，之后再取after；内部**matches**按sameWorkspace比较首文件夹。前后任一不匹配则拒绝。首根规则与revealWorkspaceFile和PTY identity一致；多根项目建议将目标单独打开，不支持运行中自动改绑主机。
 
 BridgeView启动/停止、原生Chat handler及ChatView send都先await workspaceBinding，然后把两个绑定字段随POST送往主机；失败showErrorMessage以modal=true弹窗，Bridge启动校验HTTP及success，停止另要求running为false。原生轮换改用workspaceSnapshot以取得旧密钥做比较。Chat校验后才登记历史，取消后不发送；postNdjson遇HTTP错误明确reject，不能把409正文吞成完成。refreshBar对空/不信任/首根不匹配给出警告，工作区变更会刷新，轮询仍保留。
 

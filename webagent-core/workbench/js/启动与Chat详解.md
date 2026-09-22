@@ -24,7 +24,7 @@ ES imports首先填ui，后执行boot。WS_BACKOFF_MIN/MAX为1/30秒，wsBackoff
 | renderMsg(m) | 消息→DOM节点 | 按user/status/tool/consensus/assistant分支，细节下述 |
 | pushMsg(m) | 消息→undefined | push共享messages，filter已有两个stream，移空提示，分别renderMsg追加；没有消息数组上限 |
 | paintPlanComposer() | 无→undefined | mode/planRound控制分支n/max badge、canMerge按钮和输入placeholder，不改后端Plan状态 |
-| paintTodos(todos) | todos→undefined | filter统计completed，chat/bridge两个prefix中map任务HTML，escape状态/标题；不像扩展Webview版有对象过滤/500上限，依赖服务端有效数组 |
+| paintTodos(todos) | todos→undefined | 只绘chat-tasks、最多50项，统计completed并转义状态/标题；Bridge由paintBridgeTasks独立按远程分组绘制，不能混入本地计划 |
 | agentLabel(mode) | 模式→标签 | ask/code明确，其余按Plan显示，不是权限验证 |
 | setAgentMode(mode) | 模式→undefined | 改state.mode、两select、Agent标签再paintPlanComposer；真正工具模式锁在服务端 |
 

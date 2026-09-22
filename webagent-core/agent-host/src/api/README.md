@@ -55,7 +55,7 @@ GET tree拒绝任意query；GET content只接受单个有界path，再经安全�
 hello、取任务和报告都只接受clientId/workspace身份字段：clientId须为8–80位ASCII字母/数字/下划线/连字符，workspace为非空单行且不超过4096字节；POST还要求空query。未知/缺失/错类型固定400/E_BAD_API_REQUEST，发生在noteClient前，因此不会刷新客户端存活。结构合法但workspace不匹配409。jobId严格为16位小写十六进制；报告顶层只接受身份及state/status/message/stdout/stderr/ok/exitCode/outputCaptured，并按check/claimed/accepted/progress/终态限制字段。progress必须显式给stdout或stderr且每项≤1MiB；终态状态为done/denied/error/timeout/cancelled，可带有界结果，非done状态不能通过矛盾status/ok重标成功。结构通过后才登记身份，路由只把投影后的报告交PTY模块；模块继续核对所有权和状态，终态不能通过迟到accepted复活。真正终端运行在扩展端。
 
 ## 边界与验证
-requestScope由 `/chat`显式创建，**不代表所有REST请求自动拥有同样的断连取消机制**。除明确由另一专项负责的`/probe/*`外，当前非Probe路由均在业务调用前固定query；`apiRequestBody`还会先要求空query再固定顶层body，Bridge使用对应固定错误，models/provider/customizations的嵌套合同由各自严格服务校验。它们仍不是router全局JSON Schema，也不替代路径检查、工作区绑定、审批、取消或效果核验语义。
+Chat、Provider发现和GitHub身份三条网络路由各自显式接入requestScope，预算与取消接线按各自实现，**不代表所有REST请求自动拥有同样的断连取消机制**。除明确由另一专项负责的`/probe/*`外，当前非Probe路由均在业务调用前固定query；`apiRequestBody`还会先要求空query再固定顶层body，Bridge使用对应固定错误，models/provider/customizations的嵌套合同由各自严格服务校验。它们仍不是router全局JSON Schema，也不替代路径检查、工作区绑定、审批、取消或效果核验语义。
 
 `httpSmoke`、`apiFiles`、`bridgeTunnel`、`auditControl`、`ptyLifecycle`覆盖实际HTTP和模块边界；不是手机OAuth、真实终端或浏览器全部操作的验收。
 
