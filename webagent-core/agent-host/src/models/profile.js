@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
-const { readBoundedText } = require('../utils/boundedFile');
+const { readBoundedJsonText } = require('../utils/boundedFile');
 
 function detectEnvironment() {
   const plat = process.platform;
@@ -19,7 +19,7 @@ function detectEnvironment() {
 function readJson(file) {
   try {
     if (fs.lstatSync(file).isSymbolicLink()) return null;
-    const value = JSON.parse(readBoundedText(file, 256 * 1024));
+    const value = JSON.parse(readBoundedJsonText(file, 256 * 1024));
     return value && typeof value === 'object' && !Array.isArray(value) ? value : null;
   } catch {
     return null;

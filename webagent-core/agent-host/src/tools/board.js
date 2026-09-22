@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { config } = require('../config');
-const { readBoundedText } = require('../utils/boundedFile');
+const { readBoundedJsonText } = require('../utils/boundedFile');
 const { allSessions } = require('../mcp/session');
 
 const BOARD_REL = path.join('.webagent', 'board.json');
@@ -35,7 +35,7 @@ function boardPath() {
 
 function loadBoard() {
   try {
-    const raw = readBoundedText(boardPath());
+    const raw = readBoundedJsonText(boardPath());
     const parsed = JSON.parse(raw);
     if (parsed && Array.isArray(parsed.tasks)) return parsed;
     throw new Error('tasks must be an array');

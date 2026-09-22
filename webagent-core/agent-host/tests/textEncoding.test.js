@@ -46,6 +46,31 @@ async function run() {
   assert.strictEqual(bomText, '\uFEFFafter bom\n', 'the BOM is kept as U+FEFF, not stripped');
   assert.ok(Buffer.from(bomText, 'utf8').equals(bomBytes), 'decoded text must re-encode to the original bytes');
 
+  // Keeping the BOM for text reads and feeding JSON.parse are in direct conflict: JSON.parse
+  // rejects a leading U+FEFF outright. Windows editors (Notepad, PowerShell Out-File) write config
+  // files with a BOM, so after the round-trip fix above, a BOM'd config was reported to the user as
+  // corrupt -- Windows CI went red on all three Node versions while Linux stayed green, because
+  // Linux fixtures happen not to carry a BOM. readBoundedJsonText is the explicit JSON-side strip.
+  {
+    const { readBoundedJsonText, stripBom } = require('../src/utils/boundedFile');
+    const rel = 'bom-config.json';
+    const payload = { instructions: 'keep me', nested: { n: 1 } };
+    write(rel, Buffer.from('\uFEFF' + JSON.stringify(payload), 'utf8'));
+    const full = path.join(tmp, rel);
+
+    // The text read still keeps the BOM, so hashes stay faithful to the bytes on disk.
+    assert.strictEqual(readBoundedText(full).charCodeAt(0), 0xfeff, 'text reads still keep the BOM');
+
+    // The JSON read strips it, so a BOM'd config is not reported as corrupt.
+    assert.deepStrictEqual(JSON.parse(readBoundedJsonText(full)), payload);
+
+    // Only ONE leading BOM is removed: a second U+FEFF is real content, and silently dropping it
+    // would repeat the very bug this file exists to prevent.
+    assert.strictEqual(stripBom('\uFEFF\uFEFFx'), '\uFEFFx');
+    assert.strictEqual(stripBom('no bom'), 'no bom');
+    assert.strictEqual(stripBom('x\uFEFFy'), 'x\uFEFFy', 'a BOM that is not leading is content');
+  }
+
   // End to end: an ordinary read -> patch -> write cycle must leave the BOM bytes on disk.
   // This is the failure the unit assertion above would not have caught on its own.
   {

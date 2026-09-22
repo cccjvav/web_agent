@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { readBoundedText, MAX_TEXT_BYTES } = require('../utils/boundedFile');
+const { readBoundedText, readBoundedJsonText, MAX_TEXT_BYTES } = require('../utils/boundedFile');
 const { resolveSafePath } = require('../tools/patchEngine');
 const { ProtocolError } = require('../mcp/errors');
 const { markdownPreference, markdownTechStack } = require('./profile');
@@ -132,7 +132,7 @@ function normalizeCustom(value, { strict = true } = {}) {
 
 function loadCustom() {
   try {
-    const raw = normalizeCustom(JSON.parse(readBoundedText(file())), { strict: false });
+    const raw = normalizeCustom(JSON.parse(readBoundedJsonText(file())), { strict: false });
     const base = defaults();
     return {
       ...base,

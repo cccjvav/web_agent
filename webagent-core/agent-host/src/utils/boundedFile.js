@@ -63,4 +63,29 @@ function readBoundedText(file, maxBytes = MAX_TEXT_BYTES, options = {}) {
   } finally { fs.closeSync(fd); }
 }
 
-module.exports = { MAX_TEXT_BYTES, readBoundedText, decodeStrictUtf8, EncodingError };
+/**
+ * Read bounded UTF-8 text that is about to be handed to JSON.parse.
+ *
+ * readBoundedText deliberately KEEPS a leading BOM so that decoded text re-encodes to the exact
+ * bytes on disk (that round trip is what makes the sha256 a faithful version token). JSON.parse,
+ * however, rejects a leading U+FEFF outright — so every JSON caller must strip it explicitly.
+ * Editors on Windows (Notepad, PowerShell's default Out-File) write config files with a BOM, and
+ * before this helper existed such a file was reported to the user as corrupt.
+ *
+ * Only the JSON path strips. Text reads still round-trip, so the two requirements stop fighting:
+ * hashes stay faithful to the bytes, and a BOM'd config still loads.
+ * @param {string} file absolute path, already validated by the caller
+ * @param {number} [maxBytes] hard byte budget
+ * @returns {string} decoded text with any single leading BOM removed
+ */
+function readBoundedJsonText(file, maxBytes = MAX_TEXT_BYTES) {
+  return stripBom(readBoundedText(file, maxBytes));
+}
+
+// Strips one leading BOM, never more: a second U+FEFF is real content and dropping it silently
+// would be the same class of bug as swallowing the first one during a text read.
+function stripBom(text) {
+  return typeof text === 'string' && text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+}
+
+module.exports = { MAX_TEXT_BYTES, readBoundedText, readBoundedJsonText, stripBom, decodeStrictUtf8, EncodingError };
