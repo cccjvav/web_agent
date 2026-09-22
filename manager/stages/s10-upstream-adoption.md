@@ -99,7 +99,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 下一项，高 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，第四批现补资源caller与目录ACL及错误hash指引，第五批已补原生流确认，第六批补窄屏/页签ARIA，F55又补浏览器会话/挑战响应头可读性，其余UI/实机项待续修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
-| R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54第三批已补新文件patch显式hash与块校验，第五批补原生postNdjson坏流/终态及失败历史；F55补经典流严格完成/预算/取消清理；F56补可选编辑器编排健康期限与直接子进程收尾；F57补App窗口身份绑定与浏览器失败；F58同步准备的取消缺口已由F59纠偏、F60改异步；F62补Git/UTF-8/diff，F63补统计/入口/UI，F64补身份网络；剩余fallback另验，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
+| R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54第三批已补新文件patch显式hash与块校验，第五批补原生postNdjson坏流/终态及失败历史；F55补经典流严格完成/预算/取消清理；F56补可选编辑器编排健康期限与直接子进程收尾；F57补App窗口身份绑定与浏览器失败；F58同步准备的取消缺口已由F59纠偏、F60改异步；F62补Git/UTF-8/diff，F63补统计/入口/UI，F64补身份网络、F65补后端fallback独立准备期限；其它消费链按证据另验，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 根因未定位；已复取历史annotations并补阶段诊断首包，等待可解释复现 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 用户优先 | 已授权安全隧道残留回收；已交付只读检测、Windows保护记录/稳定句柄终端回收及负例/诊断；本机开始菜单入口已接入，面板/桌面与PTY互操作仍待 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -1189,3 +1189,18 @@ F61-06负例先行：用真实run-code-oss/真实preparation函数体、共同�
 定向codeServerLifecycle与installerPreparation通过，测试日志的Downloading为被测函数文案，实际安装被夹具拦截。运行器/准备/测试主说明、目录README、主指南及review/CONTEXT同步，最终完整/浏览器结果以下实际续记。R4根因、telemetry在途、跨进程/长期统计、真实桌面与暂停模块继续开放，不为本批再扩展施工范围。
 
 **本包本地累计验证完成：** 完整101/101、真实Chromium（工作台/文档/admin）、文档282/28/111零漂移、示例6/6、npm audit含dev各级0；暂停/冻结源码零diff。基线CSV875项不变，局部人工核对按实际续读更新至76，不增加整篇认证。之后仅追加结果/覆盖记录并复验文档/站点；本包精确SHA与远端CI待实际推送回查。
+
+
+### 本次审查续作最终交付记录（2026-09-22）
+
+本次约定的独立审查与优先修复小包已交付，不再扩展功能施工。本段仅补验证事实，没有改运行时或删除历史失败。
+
+| 提交 | 内容与精确CI |
+|---|---|
+| bd0d060da23403576c3103d50284df31b4c5a7fc | F62 Git/UTF-8/diff；CI35736429947九job成功 |
+| 1fbd2af2b517c975683da5c33a51447acb7a3018 | 恢复F63、完成F64；[CI35767869533](https://github.com/cccjvav/web_agent/actions/runs/35767869533)九job成功 |
+| 7d363053f2d39a6e482fe4d72f5fb30532ee059e | F65最后运行时修复；[CI35770111467](https://github.com/cccjvav/web_agent/actions/runs/35770111467)与[CI35770113640](https://github.com/cccjvav/web_agent/actions/runs/35770113640)均为push事件、精确同SHA，各九job全部success，已逐job回查 |
+
+本地累计101测试文件、真实Chromium、示例6/6、完整依赖audit各级0和282/28/111文档零漂移已实跑。最后仅补提交/CI和覆盖记录，再生成并复验文档/站点；该交接补记不引入其它运行时变更。工作始终在arena/01a0c932-web-agent，不推来源分支；未执行真实code-server/npm准备安装、用户Windows桌面/IDE/MCP、真实GitHub账号或暂停专项。
+
+后续仍按既有工作包：telemetry在途/响应预算、长期统计与跨进程存储、R2/R3剩余消费者/权限、R7其余逐句、R4历史失败根因、R8用户实机。Shell旁路/全部后代清理不由Node准备的120秒承诺代签。875文件机械账本与76份局部人工核对不等于全仓语义通过；当前任务收尾不关闭这些明确遗留。

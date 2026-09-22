@@ -74,7 +74,7 @@ F62：本会话从2f6e7ab独立复现并交叉，新增Git根边界/admin URL/�
 
 | 文件 | 状态 | SHA-256前16位 | 依据/下一动作 |
 |---|---|---|---|
-| [review/INDEPENDENT_AUDIT_2026-09-22.md](INDEPENDENT_AUDIT_2026-09-22.md) | 待逐句核对 | e6053851f4d341c8 | F62原创独立报告；自身结论仍需交叉，不自认证 |
+| [review/INDEPENDENT_AUDIT_2026-09-22.md](INDEPENDENT_AUDIT_2026-09-22.md) | 待逐句核对 | aa953868b8d522d5 | F62原创独立报告；自身结论仍需交叉，不自认证 |
 | [.config/code-server/README.md](../.config/code-server/README.md) | 待逐句核对 | 488ad9897d5593bb | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [.github/workflows/README.md](../.github/workflows/README.md) | 局部核对 | 528e8f49477f3a6b | F45核对最小权限、高危生产依赖门禁及九任务边界；其余历史证据不自动认证 |
 | [.webagent/skills/commit-now/SKILL.md](../.webagent/skills/commit-now/SKILL.md) | 待逐句核对 | 579a602c15977541 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
@@ -131,7 +131,7 @@ F62：本会话从2f6e7ab独立复现并交叉，新增Git根边界/admin URL/�
 | [installer/README.md](../installer/README.md) | 局部核对 | 3e9656d86f3e7d2d | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台；F65仅核对本批相关段，非整篇认证 |
 | [installer/函数详解.md](../installer/函数详解.md) | 局部核对 | bfcb271c081d350d | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台；F65仅核对本批相关段，非整篇认证 |
 | [installer/安装声明详解.md](../installer/安装声明详解.md) | 待逐句核对 | 5c8566d2ce5b1bc8 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | dcc755ef801c006b | F54压缩为轻量当前索引，记录来源同步/50c03be精确CI与未修新证据；历史保留阶段，不自授整篇通过；F62仅复核本轮相关边界/说明，非整篇认证；F63仅复核本轮相关边界/说明，非整篇认证；F64仅核对本批相关段，非整篇认证；F65仅核对本批相关段，非整篇认证 |
+| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | 618f3f4e26d5b1ec | F54压缩为轻量当前索引，记录来源同步/50c03be精确CI与未修新证据；历史保留阶段，不自授整篇通过；F62仅复核本轮相关边界/说明，非整篇认证；F63仅复核本轮相关边界/说明，非整篇认证；F64仅核对本批相关段，非整篇认证；F65仅核对本批相关段，非整篇认证 |
 | [manager/SKILL.md](../manager/SKILL.md) | 只读规范副本 | 5c8c93d50e52332b | 只核对引用与适用范围，不修改技能副本 |
 | [manager/agents.md](../manager/agents.md) | 待逐句核对 | e60bbaf520ef1d85 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [manager/docs/documentation.md](../manager/docs/documentation.md) | 待逐句核对 | dff435c047431d16 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
@@ -141,7 +141,7 @@ F62：本会话从2f6e7ab独立复现并交叉，新增Git根边界/admin URL/�
 | [manager/stages/documentation-2026-09-12.md](../manager/stages/documentation-2026-09-12.md) | 待历史定位核对 | c23c09e4b3615d99 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/probe-dual-integration-2026-09-15.md](../manager/stages/probe-dual-integration-2026-09-15.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
 | [manager/stages/s1-handoff.md](../manager/stages/s1-handoff.md) | 待历史定位核对 | cfc0e427dc08e55c | 核对归档/引用/证据，不将旧结论改成现状 |
-| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | 4483edb7f8c1858e | F54更新R2/R3与实际审查/未修边界、基线和ShunCode取舍；保留历史失败，其余阶段不重签；F62仅复核本轮相关边界/说明，非整篇认证；F63仅复核本轮相关边界/说明，非整篇认证；F64仅核对本批相关段，非整篇认证；F65仅核对本批相关段，非整篇认证 |
+| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | 299fee23a9cc158e | F54更新R2/R3与实际审查/未修边界、基线和ShunCode取舍；保留历史失败，其余阶段不重签；F62仅复核本轮相关边界/说明，非整篇认证；F63仅复核本轮相关边界/说明，非整篇认证；F64仅核对本批相关段，非整篇认证；F65仅核对本批相关段，非整篇认证 |
 | [manager/stages/s2-shell.md](../manager/stages/s2-shell.md) | 待历史定位核对 | 5ac447fe582ce09e | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s3-bridge-image.md](../manager/stages/s3-bridge-image.md) | 待历史定位核对 | fbe64b3265d3cf1a | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s4-terminal.md](../manager/stages/s4-terminal.md) | 待历史定位核对 | 1cf1fcca01c51478 | 核对归档/引用/证据，不将旧结论改成现状 |
@@ -157,8 +157,8 @@ F62：本会话从2f6e7ab独立复现并交叉，新增Git根边界/admin URL/�
 | [review/OPTIMIZATION_REPORT_2026-09-18.md](../review/OPTIMIZATION_REPORT_2026-09-18.md) | 已逐句核对 | 29391f9e3e15ea70 | F45逐项交叉复核；P1-A/P2-D/P2-A已处置，原始发现保留，剩余取舍见顶部链接 |
 | [review/COMPREHENSIVE_AUDIT_2026-09-22.md](../review/COMPREHENSIVE_AUDIT_2026-09-22.md) | 局部核对 | 3311792cb2b31b4c | F61本轮新增报告；独立反例/覆盖与局限，不自授整篇认证；F62仅复核本轮相关边界/说明，非整篇认证 |
 | [review/FULL_AUDIT_FOLLOWUP_2026-09-18.md](../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md) | 待逐句核对 | 8a0799b45e63fcdb | F45–48交叉审查/实修与验证报告；本页不自我授予整篇语义认证，结论按列明证据边界复核 |
-| [review/README.md](../review/README.md) | 局部核对 | d47f2658622df2e2 | F54加入独立报告并明确未修/未验；历史入口不扩大认证；F62仅复核本轮相关边界/说明，非整篇认证；F63仅复核本轮相关边界/说明，非整篇认证；F64仅核对本批相关段，非整篇认证；F65仅核对本批相关段，非整篇认证 |
-| [review/SEMANTIC_REVIEW_2026-09-16.md](../review/SEMANTIC_REVIEW_2026-09-16.md) | 局部核对 | 79e4d6a80a2c0e98 | F54只更新当前状态/新证据和精确基线，历史长台账仍逐段待核，不自授整篇通过；F62仅复核本轮相关边界/说明，非整篇认证；F63仅复核本轮相关边界/说明，非整篇认证；F64仅核对本批相关段，非整篇认证；F65仅核对本批相关段，非整篇认证 |
+| [review/README.md](../review/README.md) | 局部核对 | bd7d2bd3f7695e59 | F54加入独立报告并明确未修/未验；历史入口不扩大认证；F62仅复核本轮相关边界/说明，非整篇认证；F63仅复核本轮相关边界/说明，非整篇认证；F64仅核对本批相关段，非整篇认证；F65仅核对本批相关段，非整篇认证 |
+| [review/SEMANTIC_REVIEW_2026-09-16.md](../review/SEMANTIC_REVIEW_2026-09-16.md) | 局部核对 | 86af09df57589a30 | F54只更新当前状态/新证据和精确基线，历史长台账仍逐段待核，不自授整篇通过；F62仅复核本轮相关边界/说明，非整篇认证；F63仅复核本轮相关边界/说明，非整篇认证；F64仅核对本批相关段，非整篇认证；F65仅核对本批相关段，非整篇认证 |
 | [review/UPSTREAM_ADOPTION_MAP_2026-09-15.md](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md) | 待逐句核对 | e454a1ff6891f7bc | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [review/archive/01a08d85-web-agent-audit.md](../review/archive/01a08d85-web-agent-audit.md) | 待历史定位核对 | 95fc2e2b61e4c58c | 核对归档/引用/证据，不将旧结论改成现状 |
 | [review/archive/ARENA_PROBE_INTEGRATION_2026-09-15.md](../review/archive/ARENA_PROBE_INTEGRATION_2026-09-15.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |

@@ -312,3 +312,5 @@ HTTP/stdio对message.error作真假判断会将result+error:null/false/0视作�
 
 ## F65：准备fallback及文档同步
 以真实函数体/受控时钟与直接子进程补F61-06，改用既有runPreparation而不新增清理权限；对应源码旁说明、README、测试主解释与主指南同步。部分node_modules、后代/真实Windows与Shell独立边界保留。前包1fbd2af精确CI九job成功；本批结果另按阶段10记录，不增加整篇审查通过数。
+
+F65最终代码7d36305已推；CI35770111467与35770113640均push/同SHA、各九job success。此后仅补文档证据，原红测/夹具失败/恢复经历不删除，暂停与实机范围不代签。
