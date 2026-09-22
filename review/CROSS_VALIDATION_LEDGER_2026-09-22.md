@@ -243,3 +243,51 @@ B 分支停止更新后，A 把 B 独有与互补的三项逐条复现、采纳�
 **C1 写测试时踩的坑（记录以免重演）**：最初把红测合写进 `networkBudget.test.js`，结果**基线也绿**。原因是 `github.js` 有模块级身份状态（`identityGeneration`/`pendingDevice`）会主动作废在途尝试，同进程里早先的身份测试会在约 150ms 把本测试的上游调用 abort 掉——断言因**错误原因**通过。改为独立文件后才能让"是谁取消的"没有歧义。这也是一个通用教训：**看到新测试变绿，要先确认它是为正确的原因变绿**。
 
 吸收后本地 104/104 通过。至此 B 分支的全部可吸收内容已并入 A。
+
+
+---
+
+## 11. 全量合并记录（2026-09-23，合并提交 `3dd6447`）
+
+**为什么会有这一节**：§10 的"吸收"只覆盖了对方的**代码**改动。用户指出后核实——我此前用 `git diff -- '*.js'` 做比对，**把对方 4 个纯文档提交整个滤掉了**，其中包括 R7「200 份 Markdown 逐份时效核对」。7 个提交我只看过 3 个。这是我的方法错误：过滤器决定了我能看见什么，而我没有复核过滤器本身。
+
+本次执行完整 `git merge`，34 处冲突**逐一人工裁决**，没有用 `-X ours/theirs` 批量压过。
+
+### 11.1 吸收的对方成果
+
+- **R7 文档时效核对**：`FULL_REVIEW_INDEX.md` 重构为逐文件时效清单（200 份，每份含内容指纹、时效处置、对照依据、保留边界）。加上本分支的交叉验证台账，现为 201 份。
+- **59 个我从未编辑过的文档**的时效修正直接受益：`README`/`SECURITY`/`使用指南`/`docs/guides/*`/各模块详解等。
+- **3 个新回归测试**：`githubNetwork` / `fileReadSafety` / `adminIntegrity`。
+
+### 11.2 合并过程中发现并修复的真实缺陷
+
+这些不是"合并冲突"，是两边实现对撞后暴露出来的行为缺口。每条都先复现再改。
+
+| # | 缺陷 | 复现 | 修法 |
+|---|---|---|---|
+| 1 | **`fetchText` 期限不设防** | `abort()` 只是*请求*传输停止。黑洞传输（忽略 signal）下 Promise 永久挂起，实测 25 秒未返回，期限形同虚设 | 超时侧自己 `reject(E_TIMEOUT)`，与 `send`/`readResponseText` 分别 `Promise.race`。期限由本机强制，不依赖对端配合 |
+| 2 | **git diff 重命名泄露** | `git mv rename.key renamed-public.txt` → 差异里出现 `RENAMED_SECRET` 全文。旧名被排除、新名放行 | 重命名/复制是**一条**两名变更，两侧任一命中敏感规则就整条 withhold |
+| 3 | **跨工作区边界重命名** | 工作区为 `<repo>/scope` 时 `git mv ../outside.txt scope/from-parent.txt`，父仓库内容被带进来 | 任一侧 `stripPrefix` 为 null（落在工作区外）即整条 withhold |
+| 4 | **显式目录绕过过滤** | `filePath:'.'` 或传目录时跳过敏感枚举，直接 diff 整棵子树 | 一律先枚举元数据再按允许清单取内容，聚合/目录/单文件走同一条路径 |
+| 5 | **过滤后谎报完整** | `excludedSensitivePaths` 有值，`truncated` 仍为 `false` | 过滤即置 `truncated`，并给出 `omittedFiles` 计数显式披露 |
+| 6 | **`diff.relative=true` 导致误删** | 用户本地偏好使元数据变为工作区相对，`stripPrefix` 二次剥前缀 → 合法改动被全部丢弃 | 元数据枚举固定加 `--no-relative` |
+| 7 | **`saveReports` 泄露底层错误** | 写入/rename 失败时 EIO/EACCES 直接逃逸，HTTP 层拿不到稳定形状 | 统一包成 `E_STORE_CORRUPT`，携带文件名与原因 |
+
+其中 #2/#3 是**安全性质**的：一个把敏感文件改名就能读出内容的过滤器，等于没有过滤器。
+
+### 11.3 冲突裁决原则：取并集，不二选一
+
+| 文件 | 裁决 |
+|---|---|
+| `diff.js` | 我的时间/编辑预算 **+** 对方的输入字节、行数与输出字节上限 |
+| `requestScope.js` | 我的 `fetchImpl` 注入 **+** 对方的 `timeoutMs` 校验与 `checkDeadline` 双查 |
+| `github.js` | **取对方**更硬的实现（`redirect:'error'`、字段校验、错误分类），改用本分支的 `fetchImpl` 注入口；超时 15s→**10s**、响应上限 1MiB→**64KiB** |
+| `boundedFile.js` / `admin-host/app.js` | 保留本分支（`readBoundedJsonText`、`corruptStore` 带文件与原因），**并入**对方的逐行 `validReport`、大小上限与 `mode 0600` |
+| `routes.js` / `run-code-oss.js` / `codeServerLifecycle` | 纯格式或注释差异，保留本分支 |
+| `diffBudget.test.js` | 双方各自新建了同名文件；保留本分支，**补入**对方独有的三条断言（输入/输出上限、patch 往返可应用、超预算新建不得创建父目录） |
+
+**错误码差异不是行为差异。** 对方测试断言 `E_INVALID_TEXT`/`E_REPORT_STORE`，本分支存活的是 `E_ENCODING`/`E_STORE_CORRUPT`，合同完全相同（拒绝非法 UTF-8、损坏存储 fail-closed 且不改原字节）。我改的是**测试里的码名**并在文件头注明原因，**没有放宽任何一条断言**。
+
+### 11.4 结果
+
+本地 **107/107** 通过（含对方 3 个新测试文件）。Windows 侧由 CI 复核。
