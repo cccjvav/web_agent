@@ -4,19 +4,19 @@
 
 这是 **code-server 的插件安装目录**，不是第二份源码。`scripts/ensure-code-server.js` 的 `syncExtension()` 把 `../extension/` 拷到这里。
 
-2026-09-11：已从源同步webview动态文本/CSP/消息校验修复，extensionCopy回归保证副本一致。
+副本以核心扩展package版本定位，完整文件集合与逐字节一致性由extensionCopy回归核对；不是重新审过全部扩展或用户IDE验收。
 
 **不要在本目录改 JS。** 改 `../extension/extension.js` / `package.json`，再跑 vscode 入口即可覆盖副本。
 
-无 Python。本层无手写源码；副本文件与 `../extension/` 相同（`extension.js`、`modeFromChatRequest.js`、`workspaceMatch.js`、`package.json`、`resources/icon.svg`）。桌面 VS Code **不**读本目录，走用户 `~/.vscode/extensions`。
+无 Python。本层无手写源码；除源目录根README不复制外，规范扩展的代码、资源和子目录说明均须同步（包括PTY、请求/流消费及editorReview模块），不把下面的部分文件示例当完整清单。桌面 VS Code **不**读本目录，走用户 `~/.vscode/extensions`。
 
 ---
 
 ## 1. 模块概述
 
 - **定位：** `--extensions-dir` 指向的已安装树，让网页 VS Code 侧栏出现 Web Agent。
-- **兄弟依赖：** 源是 `../extension/`；被 `../scripts/ensure-code-server.js` 写入；`extensions.json` 含**本机绝对路径**，故 `.gitignore` 忽略该 json（见仓库根 `.gitignore` L28）。
-- **谁调用：** `run-code-oss.js` 把 code-server 的 `--extensions-dir` 指过来。自绘工作台 **不读** 本目录。
+- **兄弟依赖：** 源是 `../extension/`；被 `../scripts/ensure-code-server.js` 写入；`extensions.json` 含**本机绝对路径**，故 `.gitignore` 忽略该 json（规则见仓库根`.gitignore`，不依赖固定行号）。
+- **谁调用：** `run-code-oss.js` 把 code-server 的 `--extensions-dir` 指过来。经典工作台不从这里加载扩展；安装载荷等流程仍可能校验/复制这些文件。
 
 行级函数说明见 [../extension/README.md](../extension/README.md)，本 README 不把 `extension.js` 再译一遍。
 
@@ -52,7 +52,7 @@
 
 ## 3. 执行逻辑流（仅本目录）
 
-1. `run-webagent-vscode.cmd` → `scripts/run-code-oss.js` → `syncExtension()`。
+1. vscode/app启动编排（或ensure-code-server的直接CLI）调用syncExtension；当前版本来自规范extension/package.json，不另手填副本版本。
 2. 覆盖拷贝 `extension/` → `webagent.webagent-core-0.7.2/`。
 3. 写 `extensions.json`（gitignore）。
 4. code-server 从本目录加载插件，HTTP 打 agent-host `:48271`。

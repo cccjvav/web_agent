@@ -52,7 +52,7 @@ VS Code 自带 Chat、其他 AI 扩展和 Web Agent Chat 不是同一入口。�
 读取 `not-existing-demo.txt`
 ```
 
-应说明“未读取”，而不是编造正文。如果工作区不是 Git 仓库，Git 工具可能报错；这不等于文件一定不能读。
+应说明“未读取”，而不是编造正文。如果工作区不是Git仓库或未安装Git，git_status正常返回available:false；其它Git错误仍可能报错，都不表示普通文件一定不能读取。
 
 ## 4. Ask、Plan、Code 怎么选
 
@@ -64,7 +64,7 @@ VS Code 自带 Chat、其他 AI 扩展和 Web Agent Chat 不是同一入口。�
 
 本机 Code 不等同于第三方 MCP 的“逐次审批队列”。写入格式可能覆盖现有文件，补丁不要省略目标文件，不建议新手拿正式文件练习。先使用 Git 或副本备份，并检查实际 diff；停止/取消不等于撤销已经写下的内容。
 
-测试命令来自技术栈声明，或存在 tests 目录时按包管理器猜测；它不会深入理解所有项目。**显示命令不等于命令有效，没执行更不等于测试通过。**在本仓库运行 agent-host 测试通常需要 `npm test --prefix webagent-core/agent-host`，不是在没有 package.json 的仓库根直接运行 `npm test`。维护环境仍使用桌面 VS Code 集成 CMD + Conda。
+测试命令来自技术栈声明，或存在 tests 目录时按包管理器猜测；它不会深入理解所有项目。**显示命令不等于命令有效，没执行更不等于测试通过。**本仓库根package.json已提供转发：`npm test`即运行agent-host测试，也可显式用`npm test --prefix webagent-core/agent-host`；筛选可用`npm test -- --filter=文件名子串`。先安装该包开发依赖；计算器示例是另一个入口，不代替产品测试。维护环境仍使用桌面 VS Code 集成 CMD + Conda。
 
 ## 5. 为什么它的回答像模板？什么时候用真模型？
 

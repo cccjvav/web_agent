@@ -34,7 +34,7 @@ code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容�
 
 - 主机模式与所有者权限：[Bridge权限与工作模式](docs/guides/Bridge权限与工作模式.md)。Chat/Bridge互斥，同类型可并行；远端Read/Edit/Execute/Capture由本机保存，Execute不是OS沙箱。
 
-- 核心版本为 **0.7.2**，探针 Companion／统一浏览器 Inspector 为 **0.5.2**；以各自包清单为版本来源。
+- 核心版本为 **0.7.2**。暂停专项的既有交付记录为Companion／统一浏览器 Inspector **0.5.2**；本次不重新核对外部整合项目或宣称其最新版已接入，以对应交付/包清单为准。
 - Bridge 统计和 Tasks 来自主机快照，刷新页面不清零。Tasks 是 Agent 显式上报的待办，不是工具日志，也不是完成质量证明。见[任务栏说明](docs/guides/Bridge任务栏说明.md)及[统计排查](docs/guides/Bridge统计与刷新排查.md)。
 - 文件补丁有 dryRun/hash 保护，经典工作台有草稿diff及单次保存回退，原生扩展有草稿diff/恢复；现增加任务前手动建立的跨文件内容检查点，任务后预览/确认恢复。都是有界、版本保护的文本恢复，不是全项目原子回滚或shell副作用撤销。见[使用指南](使用指南.md#跨文件内容检查点任务前备份任务后恢复)。
 - 出站外部 MCP 支持本机 HTTP、显式批准的 stdio，以及显式确认的公网 HTTPS（每次DNS/连接地址检查、拒绝跳转、工具逐次审批；真实供应商兼容性须另验）。这与公网客户端通过认证 Bridge **入站**连接本机是两回事。

@@ -14,7 +14,7 @@
 | 改文件的引擎 | 同一套 MCP 工具 | 同一套 | 同一套 |
 | 同时开 A 与 B | **不要**（抢 3000） | **不要** | C 不抢 3000 |
 
-官方 [coder/code-server](https://github.com/coder/code-server) **不发布 Windows 安装包**。Git 里也不再内嵌 code-server。  
+本仓库不捆绑Windows版code-server，也没有取得此npm路径在用户Windows上的完整实机可用证据。请按指定版本核对[coder/code-server](https://github.com/coder/code-server)的当前平台支持；Windows主路径仍推荐桌面VS Code＋核心扩展。Git里不内嵌code-server。
 **做法：** 第一次启动时用 **npm** 下载完整的 `code-server@4.135.0`（带 `out/`），装到 `bin/code-server-runtime/`（不进 Git）。主机的 Node 测试矩阵不等于 code-server 运行时兼容矩阵；应按所用 code-server 版本核对 Node 要求，不忽略 engines 警告作为验收办法。
 
 ---
@@ -38,10 +38,10 @@ run-webagent-vscode.cmd D:\code\my-app
 
 1. `npm install code-server@4.135.0`（约 50MB 包 + VS Code 依赖，需要能访问 npm）
 2. 启动 agent-host（**不**占用 3000）
-3. 启动 code-server 监听 **http://127.0.0.1:3000**（要登录）
+3. agent-host在15秒健康期限内就绪后，才启动code-server，默认 **http://127.0.0.1:3000**、password登录；失败不会继续启动编辑器。
 
 浏览器打开：**http://127.0.0.1:3000**  
-启动窗口会打印 **登录密码**（也写在仓库 `.local\\share\\code-server\\webagent-password`，该目录不进 Git）。下次启动还是同一串，除非你改 `CODE_SERVER_PASSWORD` 或删掉那个文件。
+启动窗口会显示本机登录所需信息。非空CODE_SERVER_PASSWORD优先且不写密码文件；否则使用当前userData下的webagent-password。userData优先WEBAGENT_USER_DATA_DIR，源码默认仓库`.local/share/code-server`，安装版使用用户目录；是否有文件以窗口给出的来源为准，不是所有口令都写源码仓库。请勿公开日志或口令。
 
 自定密码、或不要登录页：
 
@@ -101,9 +101,9 @@ GitHub Copilot 自己的 Ask/Edit/Agent 下拉是 Copilot 扩展私有 UI，第�
 
 1. 已安装 cloudflared（`check-env.cmd`）
 2. 侧栏 Bridge → **启动 Bridge**，等到 `https://….trycloudflare.com/mcp/…`
-3. **Arena 类：** **复制提示词**，整段作为新对话第一句。**DeepSeek第三方候选：** 先核对当前版本/权限/认证，不保证只填URL即可使用，见 [网页DeepSeek使用指南.md](网页DeepSeek使用指南.md)
+3. **Arena 类：** 按实际MCP连接入口接入；只有该客户端明确支持时才使用**复制提示词**，普通聊天粘贴不等于建立工具通道。**DeepSeek第三方候选：** 先核对当前版本/权限/认证，不保证只填URL即可使用，见 [网页DeepSeek使用指南.md](网页DeepSeek使用指南.md)
 
-密钥仍在工作区 `.webagent\config.json`。Quick Tunnel 域名每次启动都会变。
+密钥仍在工作区 `.webagent\config.json`。Quick Tunnel域名重启后可能变化，应始终核对，不保证每次必变或永不复用。
 
 ---
 
@@ -125,7 +125,7 @@ CODE_SERVER_PORT=3000 AGENT_HOST_PORT=48271 ./run-webagent-vscode.sh
 
 ## 4. 可选：WSL（仅当本机 npm 装 code-server 失败时）
 
-官方推荐 Linux。若 Windows 上 npm 报原生模块错误：
+这是另一个平台环境，不是修复经典Windows工作台的必经步骤。若明确选择WSL，需要用户同意新增系统组件、可能的提升权限和重启，再按系统指引操作；Windows上的源码、Conda与桌面控制不能自动当作WSL中同一环境。不要为了文档验收直接更改日常机器。准备条件满足时才使用：
 
 ```bat
 wsl --install
@@ -142,10 +142,10 @@ wsl --install
 |---|---|
 | `run-webagent-vscode.cmd` / `.sh` | 本方式入口 |
 | `install-vscode-extension.cmd` | 方式 C：侧载到本机桌面 VS Code |
-| `webagent-core/scripts/run-code-oss.js` | 先 ensure，再同时拉起 agent-host + code-server |
+| `webagent-core/scripts/run-code-oss.js` | 先准备，启动agent-host并等待健康确认，再启动code-server |
 | `webagent-core/scripts/install-desktop-extension.js` | 拷插件到 `~/.vscode/extensions` |
 | `webagent-core/scripts/ensure-code-server.js` | 从 npm 安装到 `bin/code-server-runtime/` |
-| `bin/code-server-runtime/` | **完整可运行** 的 code-server（Git 忽略内容） |
+| `bin/code-server-runtime/` | 运行时下载目录（内容被Git忽略）；入口存在不证明本机平台可运行 |
 | `webagent-core/extension/` | 插件源码 |
 | `webagent-core/extensions-installed/` | code-server `--extensions-dir` |
 
@@ -154,7 +154,7 @@ wsl --install
 ## 6. 故障排除
 
 **第一次 npm install 很慢或失败**  
-检查能否访问 registry.npmjs.org。可用国内镜像后再跑一次启动脚本。
+核对可信npm源、平台/Node要求及原始失败原因。下载工作预算180秒，必要依赖与后端补装各120秒；取消/超时不会继续启动，部分node_modules不自动回滚。先核查再明确重试，不关闭TLS校验或为追绿随意换不可信源。
 
 **端口 3000 被占用**  
 关掉 `run-webagent.cmd` 或其它占用。或：
@@ -176,7 +176,7 @@ agent-host 没起来。看黑色窗口报错；防火墙是否拦了 Node。
 见上文「集成终端」。用 Chat CODE 模式跑命令。
 
 **打开 3000 要密码**  
-看启动窗口「登录密码」那一行，或打开 `.local\\share\\code-server\\webagent-password`。
+核对启动窗口报告的口令来源；环境口令分支没有对应密码文件，其它分支读取当前userData下的webagent-password。不要公开该内容。
 
 **页面提示 Node 版本**  
 核对当前 code-server 包的 Node 要求与完整启动日志；不要仅忽略 engines 警告，也不要把 agent-host CI 当作真实网页 VS Code 验收。

@@ -2,7 +2,7 @@
 
 ## 工具记录与任务计划是两回事
 
-工具记录说明主机实际接到了哪些工具调用；Tasks显示Agent明确调用set_todos上报的计划。普通聊天、读文件或运行命令不会自动生成计划，工具成功也不会自动把计划标完成。report_progress是单独上报的百分比/步骤，目前该工具需要Code模式；set_todos允许Ask/Plan/Code。
+工具记录说明主机实际接到了哪些工具调用；Tasks显示Agent明确调用set_todos上报的计划。普通聊天、读文件或运行命令不会自动生成计划，工具成功也不会自动把计划标完成。report_progress是单独上报的百分比/步骤，该工具允许Plan/Code、不允许Ask；set_todos允许Ask/Plan/Code。
 
 可以请外部Agent：
 
@@ -26,7 +26,7 @@
 
 ## 更新和核对
 
-停止旧主机、拉取更新后，桌面VSCode执行install-vscode-extension.cmd并重载窗口，确认核心0.7.2；code-server启动器同步同版本核心副本。普通工作台重启主机并刷新网页。Probe Companion仍0.5.2，本次没有新增探针入口。
+停止旧主机、拉取更新后，桌面VSCode执行install-vscode-extension.cmd并重载窗口，确认核心0.7.2；code-server启动器同步同版本核心副本。普通工作台重启主机并刷新网页。暂停专项沿用既有0.5.2交付记录，不在本文复核其外部新版本或新增入口。
 
 1. 没有set_todos时，应看见空状态说明，不是一个消失的区域。
 2. 让当前MCP会话上报两项任务，Tasks应显示分组和0/2。
