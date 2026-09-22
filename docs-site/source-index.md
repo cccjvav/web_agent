@@ -2560,13 +2560,13 @@
 
 ## webagent-core/agent-host/tests/commandEncoding.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `e65e2b0617df4d19373b8210e3ff3bcf28d4cb95b2a03dd22ff1ee05b2a01937`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `7467f7f4abff7c2dc3064ba66bc811f96e9efefc517d6538dfdf1a65ab2979ad`
 
 - `dribbleScript` — FunctionDeclaration，[L23–L35](../webagent-core/agent-host/tests/commandEncoding.test.js#L23-L35)
-- `run` — FunctionDeclaration，[L37–L120](../webagent-core/agent-host/tests/commandEncoding.test.js#L37-L120)
-- `run/anonymous@114:22` — ArrowFunctionExpression，[L114–L114](../webagent-core/agent-host/tests/commandEncoding.test.js#L114-L114)
-- `anonymous@123:9` — ArrowFunctionExpression，[L123–L123](../webagent-core/agent-host/tests/commandEncoding.test.js#L123-L123)
-- `anonymous@124:11` — ArrowFunctionExpression，[L124–L124](../webagent-core/agent-host/tests/commandEncoding.test.js#L124-L124)
+- `run` — FunctionDeclaration，[L37–L128](../webagent-core/agent-host/tests/commandEncoding.test.js#L37-L128)
+- `run/anonymous@122:22` — ArrowFunctionExpression，[L122–L122](../webagent-core/agent-host/tests/commandEncoding.test.js#L122-L122)
+- `anonymous@131:9` — ArrowFunctionExpression，[L131–L131](../webagent-core/agent-host/tests/commandEncoding.test.js#L131-L131)
+- `anonymous@132:11` — ArrowFunctionExpression，[L132–L132](../webagent-core/agent-host/tests/commandEncoding.test.js#L132-L132)
 
 ## webagent-core/agent-host/tests/connectionCheck.test.js
 

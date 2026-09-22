@@ -78,12 +78,17 @@ process.exit(0);
   );
 
   // --- Ordinary ASCII output and exit codes are unchanged. ---
-  const ascii = await callTool('run_command', { command: 'printf "hello world"', timeoutSec: 30 }, 'code');
+  // Driven through Node scripts rather than shell builtins: `printf`, `>&2` and `;` are POSIX
+  // shell syntax that Windows cmd.exe does not provide, and this suite must assert decoding
+  // behaviour on every platform rather than silently only on Linux.
+  fs.writeFileSync(path.join(tmp, 'ascii.js'), "process.stdout.write('hello world');\n");
+  const ascii = await callTool('run_command', { command: 'node ascii.js', timeoutSec: 30 }, 'code');
   assert.strictEqual(ascii.stdout, 'hello world');
   assert.strictEqual(ascii.exitCode, 0);
   assert.strictEqual(ascii.status, 'done');
 
-  const failing = await callTool('run_command', { command: 'printf "出错了" >&2; exit 3', timeoutSec: 30 }, 'code');
+  fs.writeFileSync(path.join(tmp, 'failing.js'), "process.stderr.write('出错了');\nprocess.exit(3);\n");
+  const failing = await callTool('run_command', { command: 'node failing.js', timeoutSec: 30 }, 'code');
   assert.strictEqual(failing.exitCode, 3);
   assert.strictEqual(failing.status, 'error');
   assert.strictEqual(failing.stderr, '出错了', 'non-zero exits still report intact stderr');
@@ -91,9 +96,12 @@ process.exit(0);
   // --- Bulk multi-byte output stays intact through the capture buffer and the tail window. ---
   // get_command_output returns the LAST `tail` characters (default 8000), so the assertion is
   // about the returned window being clean CJK, not about receiving all 20000 characters.
+  // A script file rather than `node -e "...'...'..."`: nested quoting is parsed differently by
+  // cmd.exe and by POSIX shells, and the point here is the decoder, not shell quoting.
+  fs.writeFileSync(path.join(tmp, 'bulk.js'), "process.stdout.write('中'.repeat(20000));\n");
   const bulk = await callTool(
     'run_command',
-    { command: `node -e "process.stdout.write('中'.repeat(20000))"`, timeoutSec: 30 },
+    { command: 'node bulk.js', timeoutSec: 30 },
     'code'
   );
   assert.strictEqual(bulk.stdout.length, 8000, 'the default tail window is 8000 characters');
