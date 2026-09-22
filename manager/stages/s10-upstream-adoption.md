@@ -26,6 +26,30 @@
 
 > 更新：2026-09-21。面向接力助手与项目主人，不替代产品《使用指南》。本交接以Git checkout为准，安装包不保证包含开发测试/管理资料。这是经管理索引按需进入的现行施工计划与交接约束，不是“全部完成”报告。每次完成一项，应更新对应路线状态和证据，而不是只在末尾追加新结论。
 
+#### F62 独立复审（2026-09-22，本会话）
+
+用户要求"自己独立再做一遍完整审查与修复"，与F61报告**交叉验证**而不是复述。基线`2f6e7ab`（已从`arena/01a0bfa9-web-agent`ff-only快进），绑定分支`arena/01a0c925-web-agent`，进入时本地97/97。
+
+独立取证手段（脚本在沙箱`/tmp/audit/`，非仓库内容，随沙箱消失，结论记在此处）：非暂停区跟踪js/cjs/mjs逐个`node --check`零错、跟踪json逐个`JSON.parse`零错、`src`空catch零命中；文档链接扫描缺失锚点0/缺失文件目标2；workbench 38处innerHTML全部经escapeHtml或renderMd；自建临时仓库复现git子目录越界与重命名双侧name-status行为。
+
+**第1批已修并测绿（100/100测试文件）：**
+
+| 项 | 独立复现的事实 | 修法 | 红测 |
+|---|---|---|---|
+| F62-01 敏感规则加载 | 600项目录一次列目录里`.webagentignore`被完整读601次；448KiB规则文件把扫描放大约90倍 | 按"工作区根+规则文件stat身份"缓存解析结果，globRegex按模式memo（上限2048）；新增512条/64KiB上限与`customRuleStatus()` | `sensitiveBoundary.test.js` |
+| F62-02 git越界与broad diff | 工作区是仓库子目录时status/diff投影出工作区外文件；不带路径的diff整体返回含已跟踪`.env` | status/diff一律附`-- .`并按`--show-prefix`裁剪；无filePath时先枚举差异路径、逐条套用与显式diff相同的敏感规则，再以allowed作白名单取差异，上限300条 | 同上 |
+| F62-03 非法UTF-8同hash | `41 ff 0a`与`41 fe 0a`宽松解码后同为`A\uFFFD\n`、同一hash，据前者取得的hash可覆盖后者 | `readBoundedText`先拼齐字节再整体解码（跨块多字节不再被切断），默认严格UTF-8，非法抛`EncodingError`/`E_ENCODING`（不可重试）；仅grep与memory.recall两条纯扫描路径传`{strict:false}` | `textEncoding.test.js` |
+| F62-04 同步diff无预算 | 8000行全文替换同步占住宿主事件循环数秒 | `createUnifiedDiff`改为单次`structuredPatch`（原先算两遍），带1500ms/20000编辑预算，超限抛`E_DIFF_BUDGET`；patchEngine新建分支改为先渲染后落盘，拒绝对应零写 | `diffBudget.test.js` |
+| F62-05 admin坏存储 | 损坏`reports.json`被当空库，下一条上报整体覆盖历史 | 区分"缺文件/零字节＝空库"与"能读到但不是JSON数组＝损坏"；损坏时读写都抛`E_STORE_CORRUPT`并保留原字节，发布走临时文件+rename | 同上 |
+| D2 陈旧注释 | `computerUse.js`/`mcp/server.js`指向已归档的`review/REPORT_SHUNCODE_S3.md` | 改为`review/archive/` | 无 |
+| D5 扩展副本死链 | `extensions-installed/…/PTY扩展详解.md`两条相对链接在副本层级失效，但`extensionCopy`要求逐字节一致 | 不改副本；在`extensions-installed/README.md`登记原因并指向源文件，同时补齐副本文件清单 | 无 |
+
+三个新红测都用`git stash`回到基线验证过确实为红（非"写完就绿"的空测）；已加入`scripts/run-tests.js`的preferred列表。相关正文已改（`SECURITY.md`、`使用指南.md`、tools/utils/tests/admin-host的README与中文详解、本表第85行Git只读工具边界），再走`check-docs.js --write`与`build.js`。
+
+**仍待修（已取证未动，下一批候选）：** readCache落盘O(n²)（400次读重写6.2MB）；`auth/github.js`与`usage/tracker.js`裸fetch无超时/无字节上限（应改走`utils/requestScope.js`的`fetchText`，注意`bridgeTunnel.test.js`替换了`github.startDeviceLogin/loginWithToken`）；`patchEngine.applyPatchBody`的`recalledHash()`与`fileOps.sessionHash()`口径不一致；F54-04疑似已修待红测确认；UI无响应式（`workbench/styles.css` 595行零`@media`、26处10–11px硬编码、无rem或字号变量）。
+
+**本批未审范围（不得当作已审）：** `executor.js`、`tools/index.js`、`api/routes.js`、`agent/runChat.js`、`mcp/server.js`、`mcp/oauth.js`、`installer/preparation.js`、`scripts/run-code-oss.js`、`extension/`、`workbench/js/bind.js|bridge.js|operations.js`、`.github/workflows`。浏览器项因本机Chromium下载TLS中断未验；Windows/C#/PS无本地环境。
+
 #### 即时接手检查（2026-09-21）
 
 这份交接随施工维护，用户可随时要求切换助手，不要求对方读取全部聊天。**“可交接”不是全项目完成，也不是所有外部证据仍可下载。**
@@ -82,7 +106,7 @@
 | 文本恢复 | 经典保存回退、原生未保存草稿恢复、任务前跨文件检查点三种入口 | 非原子项目回滚，不恢复创建/删除/重命名/数据库/外部命令效果；部分完成须如实报告 |
 | 文档站/测试入口 | 中文和斜线锚点、搜索状态已修；npm test有依赖预检，真实Chromium另跑 | 不认证全部Markdown或真实VSCode窗口 |
 | Skill与隧道 | Skill新建拒绝重名覆盖；启停不假报成功；Named/ngrok逐流遮盖跨块Token | 不清洗历史日志，不隐藏进程argv/env，不是所有秘密扫描器 |
-| Git只读工具 | 字面路径，NUL状态/原路径，准确截断；禁外部diff/textconv/fsmonitor及已发现自定义filter | 与LFS/转换驱动终端结果可能不同；整仓diff仍可能含已跟踪秘密，不隔离同用户配置竞态 |
+| Git只读工具 | 字面路径，NUL状态/原路径，准确截断；限定工作区子树；默认diff逐路径套用与显式diff相同的敏感规则；禁外部diff/textconv/fsmonitor及已发现自定义filter | 与LFS/转换驱动终端结果可能不同；规则未覆盖的文件仍可能含秘密，不是脱敏导出，也不隔离同用户配置竞态 |
 
 ##### 恢复功能的不可丢约束
 

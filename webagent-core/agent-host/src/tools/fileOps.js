@@ -240,7 +240,15 @@ function grepFile(fullItemPath, pattern, matches, budget) {
   if (stat.size > MAX_GREP_FILE_BYTES) return 'large';
   if (budget.bytes + stat.size > MAX_GREP_SCAN_BYTES) return 'budget';
   budget.bytes += stat.size;
-  const text = readBoundedText(fullItemPath, MAX_GREP_FILE_BYTES);
+  // Search never hashes or writes back what it reads, so a mixed-encoding file is scanned
+  // lossily instead of aborting the whole scan. Anything that is hashed goes through the
+  // strict path in readFile / the patch engine.
+  let text;
+  try {
+    text = readBoundedText(fullItemPath, MAX_GREP_FILE_BYTES, { strict: false });
+  } catch (_) {
+    return 'binary';
+  }
   if (text.includes('\0')) return 'binary';
   const lines = text.split(/\r?\n/);
   for (let idx = 0; idx < lines.length; idx++) {

@@ -24,7 +24,7 @@ MCP、本机Chat和部分REST操作复用 `index.js` 的callTool。它做工具�
 | `sensitive.js` | 内置敏感文件及忽略规则，含真实目标检查 |
 | `findFiles.js` | 简化glob文件定位；不是完整shell glob实现 |
 | `searchWorker.js` | 在worker中执行fileOps.scanSearch，隔离主线程与可终止搜索 |
-| `gitOps.js` | 有预算的git status/diff；字面路径、NUL状态，禁外部diff/textconv/fsmonitor和已发现的自定义filter |
+| `gitOps.js` | 有预算的git status/diff；字面路径、NUL状态，限定工作区子树，默认diff与显式diff用同一套逐路径敏感规则，禁外部diff/textconv/fsmonitor和已发现的自定义filter |
 | `executor.js` | 普通子进程和PTY转发的run/start/output/cancel/input行为 |
 | `ptyJobs.js` | 本机扩展任务队列、所有权、审批/执行期限与报告状态 |
 | `dangerous.js` | 常见危险命令的词法判断；不是操作系统命令沙箱 |
@@ -102,7 +102,7 @@ R4：executor/fileOps复用WEBAGENT_DEBUG_PROCESS=1输出有界生命周期元�
 | [executor.js](executor.js) | 36 个函数/类节点 |
 | [fileOps.js](fileOps.js) | 33 个函数/类节点 |
 | [findFiles.js](findFiles.js) | 3 个函数/类节点 |
-| [gitOps.js](gitOps.js) | 5 个函数/类节点 |
+| [gitOps.js](gitOps.js) | 9 个函数/类节点 |
 | [index.js](index.js) | 21 个函数/类节点 |
 | [normalize.js](normalize.js) | 4 个函数/类节点 |
 | [patchEngine.js](patchEngine.js) | 33 个函数/类节点 |
@@ -111,7 +111,7 @@ R4：executor/fileOps复用WEBAGENT_DEBUG_PROCESS=1输出有界生命周期元�
 | [ptyJobs.js](ptyJobs.js) | 23 个函数/类节点 |
 | [readCache.js](readCache.js) | 10 个函数/类节点 |
 | [searchWorker.js](searchWorker.js) | 1 个函数/类节点 |
-| [sensitive.js](sensitive.js) | 12 个函数/类节点 |
+| [sensitive.js](sensitive.js) | 18 个函数/类节点 |
 | [skills.js](skills.js) | 20 个函数/类节点 |
 | [workflows.js](workflows.js) | 23 个函数/类节点 |
 | [workspaceInfo.js](workspaceInfo.js) | 3 个函数/类节点 |

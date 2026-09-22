@@ -30,6 +30,8 @@ function classifyToolError(err) {
   if (/STALE_FILE/.test(msg)) return new ExecutionError('E_STALE_FILE', msg);
   if (/Patch conflict/.test(msg)) return new ExecutionError('E_CONFLICT', msg);
   if (/GIT_UNAVAILABLE|not a git repository/i.test(msg)) return new ExecutionError('E_NOT_READY', msg);
+  // Invalid UTF-8 is a property of the target file, not a transient failure: never retry it.
+  if (err?.code === 'E_ENCODING' || /E_ENCODING/.test(msg)) return new ExecutionError('E_ENCODING', msg);
   if (/timeout|isTimeout/i.test(msg)) return new ExecutionError('E_TIMEOUT', msg);
   if (/ACCESS_DENIED_SENSITIVE_FILE|E_FORBIDDEN/i.test(msg)) return new ExecutionError('E_FORBIDDEN', msg);
   if (/confirm_dangerous|confirm_overwrite|confirm=true/i.test(msg)) return new ProtocolError('E_BAD_ARGS', msg);

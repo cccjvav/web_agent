@@ -18,7 +18,7 @@ const { touch, snapshot, createHttpSession, touchHttpSession, getHttpSession, de
 const oauth = require('./oauth');
 const tracker = require('../usage/tracker');
 // 第三阶段（用户 2026-09-07 书面同意）：run_command 截图以 MCP image 内容回给网页 Agent。
-// 白名单与 6MB 上限复用 agent 层 computerUse；授权记录见 review/REPORT_SHUNCODE_S3.md。
+// 白名单与 6MB 上限复用 agent 层 computerUse；授权记录见 review/archive/REPORT_SHUNCODE_S3.md。
 const { collectShot } = require('../agent/computerUse');
 
 const router = express.Router();

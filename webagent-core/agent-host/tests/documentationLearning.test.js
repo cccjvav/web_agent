@@ -109,6 +109,7 @@ const pairs = [
 
   ["webagent-core/agent-host/tests/patchEngine.test.js", "webagent-core/agent-host/tests/补丁与编辑API测试详解.md"],
   ["webagent-core/agent-host/tests/apiFiles.test.js", "webagent-core/agent-host/tests/补丁与编辑API测试详解.md"],
+  ["webagent-core/agent-host/tests/diffBudget.test.js", "webagent-core/agent-host/tests/补丁与编辑API测试详解.md"],
 
   ["webagent-core/agent-host/tests/oauth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
   ["webagent-core/agent-host/tests/oauthClientAuth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
@@ -121,6 +122,8 @@ const pairs = [
   ["webagent-core/agent-host/tests/dangerousCommands.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
   ["webagent-core/agent-host/tests/sandbox.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
   ["webagent-core/agent-host/tests/workspaceTools.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
+  ["webagent-core/agent-host/tests/sensitiveBoundary.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
+  ["webagent-core/agent-host/tests/textEncoding.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
 
   ["webagent-core/agent-host/tests/board.test.js", "webagent-core/agent-host/tests/任务板与事件流测试详解.md"],
   ["webagent-core/agent-host/tests/mcpBoard.test.js", "webagent-core/agent-host/tests/任务板与事件流测试详解.md"],

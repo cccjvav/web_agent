@@ -33,18 +33,52 @@ function ensureToken(dataDir) {
   return created;
 }
 
-function loadReports(dataDir) {
-  try {
-    const raw = JSON.parse(fs.readFileSync(reportsFile(dataDir), 'utf8'));
-    return Array.isArray(raw) ? raw : [];
-  } catch {
-    return [];
-  }
+// A missing store is an empty store; anything else that cannot be parsed is a *damaged* store.
+// Treating damage as "empty" used to let the next report silently overwrite existing statistics
+// with a single row, destroying the original bytes. Damage now fails closed and the file is left
+// exactly as found, so an operator can inspect or restore it.
+function corruptStore(file, reason) {
+  const err = new Error(
+    `E_STORE_CORRUPT: ${file} could not be read as a JSON array (${reason}). `
+    + 'The original file was left untouched. Inspect or restore it before accepting new reports.'
+  );
+  err.code = 'E_STORE_CORRUPT';
+  err.status = 500;
+  return err;
 }
 
+function loadReports(dataDir) {
+  const file = reportsFile(dataDir);
+  let raw;
+  try {
+    raw = fs.readFileSync(file, 'utf8');
+  } catch (err) {
+    if (err && err.code === 'ENOENT') return [];
+    throw corruptStore(file, err.code || err.message);
+  }
+  if (!raw.trim()) return [];
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    throw corruptStore(file, 'invalid JSON');
+  }
+  if (!Array.isArray(parsed)) throw corruptStore(file, 'top level is not an array');
+  return parsed;
+}
+
+// Publish atomically: a crash or full disk mid-write must not leave a half-written store where
+// the previous good one was.
 function saveReports(dataDir, rows) {
   fs.mkdirSync(dataDir, { recursive: true });
-  fs.writeFileSync(reportsFile(dataDir), JSON.stringify(rows, null, 2), 'utf8');
+  const file = reportsFile(dataDir);
+  const tmp = `${file}.tmp.${process.pid}.${crypto.randomBytes(6).toString('hex')}`;
+  try {
+    fs.writeFileSync(tmp, JSON.stringify(rows, null, 2), { encoding: 'utf8', flag: 'wx' });
+    fs.renameSync(tmp, file);
+  } finally {
+    try { fs.unlinkSync(tmp); } catch (err) { if (err && err.code !== 'ENOENT') throw err; }
+  }
 }
 
 function today() {

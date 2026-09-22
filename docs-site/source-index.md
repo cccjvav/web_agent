@@ -439,35 +439,36 @@
 
 ## webagent-core/admin-host/app.js
 
-[目录说明](../webagent-core/admin-host/README.md) · SHA-256 `8d5a105fc88d7d4948ad66216c844e8359f9f68eff51e4db81e9a495aa5f9a9c`
+[目录说明](../webagent-core/admin-host/README.md) · SHA-256 `c672e192e27e7c5e2af0ff1b6181934d3015e2c9983b8bafc103212e60e0a394`
 
 - `defaultDataDir` — FunctionDeclaration，[L6–L9](../webagent-core/admin-host/app.js#L6-L9)
 - `reportsFile` — FunctionDeclaration，[L11–L13](../webagent-core/admin-host/app.js#L11-L13)
 - `tokenFile` — FunctionDeclaration，[L15–L17](../webagent-core/admin-host/app.js#L15-L17)
 - `ensureToken` — FunctionDeclaration，[L19–L34](../webagent-core/admin-host/app.js#L19-L34)
-- `loadReports` — FunctionDeclaration，[L36–L43](../webagent-core/admin-host/app.js#L36-L43)
-- `saveReports` — FunctionDeclaration，[L45–L48](../webagent-core/admin-host/app.js#L45-L48)
-- `today` — FunctionDeclaration，[L50–L52](../webagent-core/admin-host/app.js#L50-L52)
-- `ingest` — FunctionDeclaration，[L54–L83](../webagent-core/admin-host/app.js#L54-L83)
-- `ingest/anonymous@79:43` — ArrowFunctionExpression，[L79–L79](../webagent-core/admin-host/app.js#L79-L79)
-- `rankDay` — FunctionDeclaration，[L85–L111](../webagent-core/admin-host/app.js#L85-L111)
-- `rankDay/anonymous@96:10` — ArrowFunctionExpression，[L96–L96](../webagent-core/admin-host/app.js#L96-L96)
-- `rankDay/anonymous@97:9` — ArrowFunctionExpression，[L97–L110](../webagent-core/admin-host/app.js#L97-L110)
-- `escapeHtml` — FunctionDeclaration，[L113–L119](../webagent-core/admin-host/app.js#L113-L119)
-- `renderPage` — FunctionDeclaration，[L121–L182](../webagent-core/admin-host/app.js#L121-L182)
-- `renderPage/anonymous@124:17` — ArrowFunctionExpression，[L124–L136](../webagent-core/admin-host/app.js#L124-L136)
-- `readBody` — FunctionDeclaration，[L186–L219](../webagent-core/admin-host/app.js#L186-L219)
-- `readBody/anonymous@187:21` — ArrowFunctionExpression，[L187–L218](../webagent-core/admin-host/app.js#L187-L218)
-- `readBody/anonymous@187:21/fail` — ArrowFunctionExpression，[L191–L195](../webagent-core/admin-host/app.js#L191-L195)
-- `readBody/anonymous@187:21/anonymous@196:19` — ArrowFunctionExpression，[L196–L205](../webagent-core/admin-host/app.js#L196-L205)
-- `readBody/anonymous@187:21/anonymous@206:18` — ArrowFunctionExpression，[L206–L216](../webagent-core/admin-host/app.js#L206-L216)
-- `bearer` — FunctionDeclaration，[L221–L225](../webagent-core/admin-host/app.js#L221-L225)
-- `unauthorized` — FunctionDeclaration，[L227–L230](../webagent-core/admin-host/app.js#L227-L230)
-- `timingSafeEqualString` — FunctionDeclaration，[L232–L237](../webagent-core/admin-host/app.js#L232-L237)
-- `tokenOk` — FunctionDeclaration，[L239–L241](../webagent-core/admin-host/app.js#L239-L241)
-- `createHandler` — FunctionDeclaration，[L243–L284](../webagent-core/admin-host/app.js#L243-L284)
-- `createHandler/handle` — FunctionExpression，[L244–L283](../webagent-core/admin-host/app.js#L244-L283)
-- `createServer` — FunctionDeclaration，[L286–L292](../webagent-core/admin-host/app.js#L286-L292)
+- `corruptStore` — FunctionDeclaration，[L40–L48](../webagent-core/admin-host/app.js#L40-L48)
+- `loadReports` — FunctionDeclaration，[L50–L68](../webagent-core/admin-host/app.js#L50-L68)
+- `saveReports` — FunctionDeclaration，[L72–L82](../webagent-core/admin-host/app.js#L72-L82)
+- `today` — FunctionDeclaration，[L84–L86](../webagent-core/admin-host/app.js#L84-L86)
+- `ingest` — FunctionDeclaration，[L88–L117](../webagent-core/admin-host/app.js#L88-L117)
+- `ingest/anonymous@113:43` — ArrowFunctionExpression，[L113–L113](../webagent-core/admin-host/app.js#L113-L113)
+- `rankDay` — FunctionDeclaration，[L119–L145](../webagent-core/admin-host/app.js#L119-L145)
+- `rankDay/anonymous@130:10` — ArrowFunctionExpression，[L130–L130](../webagent-core/admin-host/app.js#L130-L130)
+- `rankDay/anonymous@131:9` — ArrowFunctionExpression，[L131–L144](../webagent-core/admin-host/app.js#L131-L144)
+- `escapeHtml` — FunctionDeclaration，[L147–L153](../webagent-core/admin-host/app.js#L147-L153)
+- `renderPage` — FunctionDeclaration，[L155–L216](../webagent-core/admin-host/app.js#L155-L216)
+- `renderPage/anonymous@158:17` — ArrowFunctionExpression，[L158–L170](../webagent-core/admin-host/app.js#L158-L170)
+- `readBody` — FunctionDeclaration，[L220–L253](../webagent-core/admin-host/app.js#L220-L253)
+- `readBody/anonymous@221:21` — ArrowFunctionExpression，[L221–L252](../webagent-core/admin-host/app.js#L221-L252)
+- `readBody/anonymous@221:21/fail` — ArrowFunctionExpression，[L225–L229](../webagent-core/admin-host/app.js#L225-L229)
+- `readBody/anonymous@221:21/anonymous@230:19` — ArrowFunctionExpression，[L230–L239](../webagent-core/admin-host/app.js#L230-L239)
+- `readBody/anonymous@221:21/anonymous@240:18` — ArrowFunctionExpression，[L240–L250](../webagent-core/admin-host/app.js#L240-L250)
+- `bearer` — FunctionDeclaration，[L255–L259](../webagent-core/admin-host/app.js#L255-L259)
+- `unauthorized` — FunctionDeclaration，[L261–L264](../webagent-core/admin-host/app.js#L261-L264)
+- `timingSafeEqualString` — FunctionDeclaration，[L266–L271](../webagent-core/admin-host/app.js#L266-L271)
+- `tokenOk` — FunctionDeclaration，[L273–L275](../webagent-core/admin-host/app.js#L273-L275)
+- `createHandler` — FunctionDeclaration，[L277–L318](../webagent-core/admin-host/app.js#L277-L318)
+- `createHandler/handle` — FunctionExpression，[L278–L317](../webagent-core/admin-host/app.js#L278-L317)
+- `createServer` — FunctionDeclaration，[L320–L326](../webagent-core/admin-host/app.js#L320-L326)
 
 ## webagent-core/admin-host/index.js
 
@@ -483,14 +484,14 @@
 
 ## webagent-core/agent-host/scripts/run-tests.js
 
-[目录说明](../webagent-core/agent-host/scripts/README.md) · SHA-256 `f95e90484dd3772845fdaaac88fbad1337ee65bc325a187b5754a29726162483`
+[目录说明](../webagent-core/agent-host/scripts/README.md) · SHA-256 `2bc700b06c627ab7f4a6449fc256c02dcd082f5d0fe087061181570d0974af7a`
 
 - `lifecycleSummary` — FunctionDeclaration，[L9–L38](../webagent-core/agent-host/scripts/run-tests.js#L9-L38)
 - `anonymous@43:56` — ArrowFunctionExpression，[L43–L43](../webagent-core/agent-host/scripts/run-tests.js#L43-L43)
-- `anonymous@85:46` — ArrowFunctionExpression，[L85–L85](../webagent-core/agent-host/scripts/run-tests.js#L85-L85)
-- `anonymous@86:27` — ArrowFunctionExpression，[L86–L86](../webagent-core/agent-host/scripts/run-tests.js#L86-L86)
-- `anonymous@87:33` — ArrowFunctionExpression，[L87–L87](../webagent-core/agent-host/scripts/run-tests.js#L87-L87)
-- `anonymous@100:46` — ArrowFunctionExpression，[L100–L100](../webagent-core/agent-host/scripts/run-tests.js#L100-L100)
+- `anonymous@88:46` — ArrowFunctionExpression，[L88–L88](../webagent-core/agent-host/scripts/run-tests.js#L88-L88)
+- `anonymous@89:27` — ArrowFunctionExpression，[L89–L89](../webagent-core/agent-host/scripts/run-tests.js#L89-L89)
+- `anonymous@90:33` — ArrowFunctionExpression，[L90–L90](../webagent-core/agent-host/scripts/run-tests.js#L90-L90)
+- `anonymous@103:46` — ArrowFunctionExpression，[L103–L103](../webagent-core/agent-host/scripts/run-tests.js#L103-L103)
 
 ## webagent-core/agent-host/scripts/tunnel-cleanup.js
 
@@ -514,7 +515,7 @@
 
 ## webagent-core/agent-host/src/agent/computerUse.js
 
-[目录说明](../webagent-core/agent-host/src/agent/README.md) · SHA-256 `06aa9b202e8b7c4ab45647ff6ea07418877a2211b37ad7331103c557330ebfb0`
+[目录说明](../webagent-core/agent-host/src/agent/README.md) · SHA-256 `982c3a9acf041a165220bedecbc2fe2b6a4417943fbd70cc92c38192dcef8f15`
 
 - `stripQuotes` — FunctionDeclaration，[L22–L24](../webagent-core/agent-host/src/agent/computerUse.js#L22-L24)
 - `findShotCandidates` — FunctionDeclaration，[L30–L42](../webagent-core/agent-host/src/agent/computerUse.js#L30-L42)
@@ -821,14 +822,14 @@
 
 ## webagent-core/agent-host/src/mcp/errors.js
 
-[目录说明](../webagent-core/agent-host/src/mcp/README.md) · SHA-256 `d0c58eef6ab33e9b7456fc3198153b17fd066103824e9c8f49be7d9baf92f7bc`
+[目录说明](../webagent-core/agent-host/src/mcp/README.md) · SHA-256 `e9cbc59524f3eb4a53fc830c8533e10dd7b6a45958e6f0886b3b0f9a8786ccd8`
 
 - `ProtocolError` — ClassDeclaration，[L1–L9](../webagent-core/agent-host/src/mcp/errors.js#L1-L9)
 - `ProtocolError/constructor` — FunctionExpression，[L2–L8](../webagent-core/agent-host/src/mcp/errors.js#L2-L8)
 - `ExecutionError` — ClassDeclaration，[L11–L19](../webagent-core/agent-host/src/mcp/errors.js#L11-L19)
 - `ExecutionError/constructor` — FunctionExpression，[L12–L18](../webagent-core/agent-host/src/mcp/errors.js#L12-L18)
-- `classifyToolError` — FunctionDeclaration，[L21–L37](../webagent-core/agent-host/src/mcp/errors.js#L21-L37)
-- `publicError` — FunctionDeclaration，[L39–L47](../webagent-core/agent-host/src/mcp/errors.js#L39-L47)
+- `classifyToolError` — FunctionDeclaration，[L21–L39](../webagent-core/agent-host/src/mcp/errors.js#L21-L39)
+- `publicError` — FunctionDeclaration，[L41–L49](../webagent-core/agent-host/src/mcp/errors.js#L41-L49)
 
 ## webagent-core/agent-host/src/mcp/externalClient.js
 
@@ -966,7 +967,7 @@
 
 ## webagent-core/agent-host/src/mcp/server.js
 
-[目录说明](../webagent-core/agent-host/src/mcp/README.md) · SHA-256 `910cbbc42e2eb27807518ebcd7bf6ca701a8df541b872905b6bd8462e2b9f53e`
+[目录说明](../webagent-core/agent-host/src/mcp/README.md) · SHA-256 `06516c4f9b628543db0e3390190ac9eccfc954b88657f1ccd1bd75f0d2f12edb`
 
 - `extractToken` — FunctionDeclaration，[L28–L35](../webagent-core/agent-host/src/mcp/server.js#L28-L35)
 - `isAuthorized` — FunctionDeclaration，[L37–L39](../webagent-core/agent-host/src/mcp/server.js#L37-L39)
@@ -1129,7 +1130,7 @@
 
 ## webagent-core/agent-host/src/models/memory.js
 
-[目录说明](../webagent-core/agent-host/src/models/README.md) · SHA-256 `dda16dbc2871d67466658ccdbf5ba37e27b59906ada3864ad2e5a373d284e41d`
+[目录说明](../webagent-core/agent-host/src/models/README.md) · SHA-256 `712a83e3f887e04ad79b402766cff471ceb4b95ca0afdd0e0e2aeedcaaff9bcc`
 
 - `memoryDir` — FunctionDeclaration，[L8–L10](../webagent-core/agent-host/src/models/memory.js#L8-L10)
 - `dayFile` — FunctionDeclaration，[L12–L20](../webagent-core/agent-host/src/models/memory.js#L12-L20)
@@ -1137,9 +1138,9 @@
 - `memoryFiles` — FunctionDeclaration，[L39–L56](../webagent-core/agent-host/src/models/memory.js#L39-L56)
 - `memoryScore` — FunctionDeclaration，[L57–L60](../webagent-core/agent-host/src/models/memory.js#L57-L60)
 - `memoryScore/anonymous@59:22` — ArrowFunctionExpression，[L59–L59](../webagent-core/agent-host/src/models/memory.js#L59-L59)
-- `recall` — FunctionDeclaration，[L61–L96](../webagent-core/agent-host/src/models/memory.js#L61-L96)
-- `recall/anonymous@88:33` — ArrowFunctionExpression，[L88–L88](../webagent-core/agent-host/src/models/memory.js#L88-L88)
-- `recall/anonymous@91:26` — ArrowFunctionExpression，[L91–L91](../webagent-core/agent-host/src/models/memory.js#L91-L91)
+- `recall` — FunctionDeclaration，[L61–L97](../webagent-core/agent-host/src/models/memory.js#L61-L97)
+- `recall/anonymous@89:33` — ArrowFunctionExpression，[L89–L89](../webagent-core/agent-host/src/models/memory.js#L89-L89)
+- `recall/anonymous@92:26` — ArrowFunctionExpression，[L92–L92](../webagent-core/agent-host/src/models/memory.js#L92-L92)
 
 ## webagent-core/agent-host/src/models/modelSettings.js
 
@@ -1315,7 +1316,7 @@
 
 ## webagent-core/agent-host/src/tools/fileOps.js
 
-[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `fddb7442090e10953928d02e95f6001d142c27de48dc555e6635d38e54b9754f`
+[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `5ac31c9734972122bbcc72d762a6ebe41abb3f61cfd0a84480bd03785631f070`
 
 - `isUnsafeRegex` — FunctionDeclaration，[L18–L24](../webagent-core/agent-host/src/tools/fileOps.js#L18-L24)
 - `readFiles` — FunctionDeclaration，[L26–L44](../webagent-core/agent-host/src/tools/fileOps.js#L26-L44)
@@ -1333,23 +1334,23 @@
 - `writeFileBody` — FunctionDeclaration，[L145–L198](../webagent-core/agent-host/src/tools/fileOps.js#L145-L198)
 - `listDir` — FunctionDeclaration，[L200–L235](../webagent-core/agent-host/src/tools/fileOps.js#L200-L235)
 - `listDir/scan` — FunctionDeclaration，[L208–L231](../webagent-core/agent-host/src/tools/fileOps.js#L208-L231)
-- `grepFile` — FunctionDeclaration，[L237–L254](../webagent-core/agent-host/src/tools/fileOps.js#L237-L254)
-- `scanSearch` — FunctionDeclaration，[L256–L360](../webagent-core/agent-host/src/tools/fileOps.js#L256-L360)
-- `scanSearch/noteSkip` — FunctionDeclaration，[L298–L302](../webagent-core/agent-host/src/tools/fileOps.js#L298-L302)
-- `scanSearch/searchInDir` — FunctionDeclaration，[L304–L333](../webagent-core/agent-host/src/tools/fileOps.js#L304-L333)
-- `grepSearch` — FunctionDeclaration，[L363–L415](../webagent-core/agent-host/src/tools/fileOps.js#L363-L415)
-- `grepSearch/anonymous@369:21` — ArrowFunctionExpression，[L369–L414](../webagent-core/agent-host/src/tools/fileOps.js#L369-L414)
-- `grepSearch/anonymous@369:21/trace` — ArrowFunctionExpression，[L378–L385](../webagent-core/agent-host/src/tools/fileOps.js#L378-L385)
-- `grepSearch/anonymous@369:21/anonymous@387:37` — ArrowFunctionExpression，[L387–L387](../webagent-core/agent-host/src/tools/fileOps.js#L387-L387)
-- `grepSearch/anonymous@369:21/finish` — ArrowFunctionExpression，[L389–L395](../webagent-core/agent-host/src/tools/fileOps.js#L389-L395)
-- `grepSearch/anonymous@369:21/finish/anonymous@393:31` — ArrowFunctionExpression，[L393–L393](../webagent-core/agent-host/src/tools/fileOps.js#L393-L393)
-- `grepSearch/anonymous@369:21/finish/anonymous@393:78` — ArrowFunctionExpression，[L393–L393](../webagent-core/agent-host/src/tools/fileOps.js#L393-L393)
-- `grepSearch/anonymous@369:21/abort` — ArrowFunctionExpression，[L396–L396](../webagent-core/agent-host/src/tools/fileOps.js#L396-L396)
-- `grepSearch/anonymous@369:21/anonymous@397:30` — ArrowFunctionExpression，[L397–L397](../webagent-core/agent-host/src/tools/fileOps.js#L397-L397)
-- `grepSearch/anonymous@369:21/anonymous@399:25` — ArrowFunctionExpression，[L399–L411](../webagent-core/agent-host/src/tools/fileOps.js#L399-L411)
-- `grepSearch/anonymous@369:21/anonymous@399:25/anonymous@403:31` — ArrowFunctionExpression，[L403–L403](../webagent-core/agent-host/src/tools/fileOps.js#L403-L403)
-- `grepSearch/anonymous@369:21/anonymous@412:25` — ArrowFunctionExpression，[L412–L412](../webagent-core/agent-host/src/tools/fileOps.js#L412-L412)
-- `grepSearch/anonymous@369:21/anonymous@413:24` — ArrowFunctionExpression，[L413–L413](../webagent-core/agent-host/src/tools/fileOps.js#L413-L413)
+- `grepFile` — FunctionDeclaration，[L237–L262](../webagent-core/agent-host/src/tools/fileOps.js#L237-L262)
+- `scanSearch` — FunctionDeclaration，[L264–L368](../webagent-core/agent-host/src/tools/fileOps.js#L264-L368)
+- `scanSearch/noteSkip` — FunctionDeclaration，[L306–L310](../webagent-core/agent-host/src/tools/fileOps.js#L306-L310)
+- `scanSearch/searchInDir` — FunctionDeclaration，[L312–L341](../webagent-core/agent-host/src/tools/fileOps.js#L312-L341)
+- `grepSearch` — FunctionDeclaration，[L371–L423](../webagent-core/agent-host/src/tools/fileOps.js#L371-L423)
+- `grepSearch/anonymous@377:21` — ArrowFunctionExpression，[L377–L422](../webagent-core/agent-host/src/tools/fileOps.js#L377-L422)
+- `grepSearch/anonymous@377:21/trace` — ArrowFunctionExpression，[L386–L393](../webagent-core/agent-host/src/tools/fileOps.js#L386-L393)
+- `grepSearch/anonymous@377:21/anonymous@395:37` — ArrowFunctionExpression，[L395–L395](../webagent-core/agent-host/src/tools/fileOps.js#L395-L395)
+- `grepSearch/anonymous@377:21/finish` — ArrowFunctionExpression，[L397–L403](../webagent-core/agent-host/src/tools/fileOps.js#L397-L403)
+- `grepSearch/anonymous@377:21/finish/anonymous@401:31` — ArrowFunctionExpression，[L401–L401](../webagent-core/agent-host/src/tools/fileOps.js#L401-L401)
+- `grepSearch/anonymous@377:21/finish/anonymous@401:78` — ArrowFunctionExpression，[L401–L401](../webagent-core/agent-host/src/tools/fileOps.js#L401-L401)
+- `grepSearch/anonymous@377:21/abort` — ArrowFunctionExpression，[L404–L404](../webagent-core/agent-host/src/tools/fileOps.js#L404-L404)
+- `grepSearch/anonymous@377:21/anonymous@405:30` — ArrowFunctionExpression，[L405–L405](../webagent-core/agent-host/src/tools/fileOps.js#L405-L405)
+- `grepSearch/anonymous@377:21/anonymous@407:25` — ArrowFunctionExpression，[L407–L419](../webagent-core/agent-host/src/tools/fileOps.js#L407-L419)
+- `grepSearch/anonymous@377:21/anonymous@407:25/anonymous@411:31` — ArrowFunctionExpression，[L411–L411](../webagent-core/agent-host/src/tools/fileOps.js#L411-L411)
+- `grepSearch/anonymous@377:21/anonymous@420:25` — ArrowFunctionExpression，[L420–L420](../webagent-core/agent-host/src/tools/fileOps.js#L420-L420)
+- `grepSearch/anonymous@377:21/anonymous@421:24` — ArrowFunctionExpression，[L421–L421](../webagent-core/agent-host/src/tools/fileOps.js#L421-L421)
 
 ## webagent-core/agent-host/src/tools/findFiles.js
 
@@ -1361,13 +1362,17 @@
 
 ## webagent-core/agent-host/src/tools/gitOps.js
 
-[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `1a3d1f397656988a33a4628212666df2549a84e97e38f839b5c1dcb391dafca0`
+[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `411f5d05454b16266fe064a133f9e9c8f33800a2ab970be24e0a9a200be7a586`
 
-- `notGitResult` — FunctionDeclaration，[L7–L20](../webagent-core/agent-host/src/tools/gitOps.js#L7-L20)
-- `git` — FunctionDeclaration，[L22–L65](../webagent-core/agent-host/src/tools/gitOps.js#L22-L65)
-- `git/anonymous@29:77` — ArrowFunctionExpression，[L29–L29](../webagent-core/agent-host/src/tools/gitOps.js#L29-L29)
-- `gitStatus` — FunctionDeclaration，[L67–L100](../webagent-core/agent-host/src/tools/gitOps.js#L67-L100)
-- `gitDiff` — FunctionDeclaration，[L102–L131](../webagent-core/agent-host/src/tools/gitOps.js#L102-L131)
+- `notGitResult` — FunctionDeclaration，[L20–L33](../webagent-core/agent-host/src/tools/gitOps.js#L20-L33)
+- `git` — FunctionDeclaration，[L35–L78](../webagent-core/agent-host/src/tools/gitOps.js#L35-L78)
+- `git/anonymous@42:77` — ArrowFunctionExpression，[L42–L42](../webagent-core/agent-host/src/tools/gitOps.js#L42-L42)
+- `workspacePrefix` — FunctionDeclaration，[L83–L86](../webagent-core/agent-host/src/tools/gitOps.js#L83-L86)
+- `stripPrefix` — FunctionDeclaration，[L88–L92](../webagent-core/agent-host/src/tools/gitOps.js#L88-L92)
+- `gitStatus` — FunctionDeclaration，[L94–L137](../webagent-core/agent-host/src/tools/gitOps.js#L94-L137)
+- `diffPathspecs` — FunctionDeclaration，[L141–L164](../webagent-core/agent-host/src/tools/gitOps.js#L141-L164)
+- `diffPathspecs/anonymous@145:47` — ArrowFunctionExpression，[L145–L145](../webagent-core/agent-host/src/tools/gitOps.js#L145-L145)
+- `gitDiff` — FunctionDeclaration，[L166–L226](../webagent-core/agent-host/src/tools/gitOps.js#L166-L226)
 
 ## webagent-core/agent-host/src/tools/index.js
 
@@ -1406,7 +1411,7 @@
 
 ## webagent-core/agent-host/src/tools/patchEngine.js
 
-[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `1950d28e737b595542b1b7d5804ef848da1164071a66ee686a2faa9b5e04b119`
+[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `3dbd51ae43cbaa1f119962284e96ec3cae4ffab60bc9314d427f5f4247cf217e`
 
 - `computeHash` — FunctionDeclaration，[L13–L15](../webagent-core/agent-host/src/tools/patchEngine.js#L13-L15)
 - `tempSibling` — FunctionDeclaration，[L17–L19](../webagent-core/agent-host/src/tools/patchEngine.js#L17-L19)
@@ -1440,7 +1445,7 @@
 - `applySearchBlocks` — FunctionDeclaration，[L229–L272](../webagent-core/agent-host/src/tools/patchEngine.js#L229-L272)
 - `applyPatch` — FunctionDeclaration，[L274–L276](../webagent-core/agent-host/src/tools/patchEngine.js#L274-L276)
 - `applyPatch/anonymous@275:38` — ArrowFunctionExpression，[L275–L275](../webagent-core/agent-host/src/tools/patchEngine.js#L275-L275)
-- `applyPatchBody` — FunctionDeclaration，[L278–L429](../webagent-core/agent-host/src/tools/patchEngine.js#L278-L429)
+- `applyPatchBody` — FunctionDeclaration，[L278–L433](../webagent-core/agent-host/src/tools/patchEngine.js#L278-L433)
 
 ## webagent-core/agent-host/src/tools/planRound.js
 
@@ -1525,20 +1530,26 @@
 
 ## webagent-core/agent-host/src/tools/sensitive.js
 
-[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `6d4031b96cee0f1647c47f8863c365036a5f7344314086015d8cbac647cf248e`
+[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `cc7f5fad343d3e8bf1187c52127248861fde0ca231362e269b4ee76e1cb5d71d`
 
-- `toPosix` — FunctionDeclaration，[L58–L60](../webagent-core/agent-host/src/tools/sensitive.js#L58-L60)
-- `globMatch` — FunctionDeclaration，[L62–L79](../webagent-core/agent-host/src/tools/sensitive.js#L62-L79)
-- `loadCustomPatterns` — FunctionDeclaration，[L81–L93](../webagent-core/agent-host/src/tools/sensitive.js#L81-L93)
-- `loadCustomPatterns/anonymous@88:11` — ArrowFunctionExpression，[L88–L88](../webagent-core/agent-host/src/tools/sensitive.js#L88-L88)
-- `loadCustomPatterns/anonymous@89:14` — ArrowFunctionExpression，[L89–L89](../webagent-core/agent-host/src/tools/sensitive.js#L89-L89)
-- `isSensitive` — FunctionDeclaration，[L95–L113](../webagent-core/agent-host/src/tools/sensitive.js#L95-L113)
-- `isSensitive/anonymous@99:29` — ArrowFunctionExpression，[L99–L99](../webagent-core/agent-host/src/tools/sensitive.js#L99-L99)
-- `isSensitive/anonymous@103:22` — ArrowFunctionExpression，[L103–L103](../webagent-core/agent-host/src/tools/sensitive.js#L103-L103)
-- `isNoise` — FunctionDeclaration，[L115–L120](../webagent-core/agent-host/src/tools/sensitive.js#L115-L120)
-- `isNoise/anonymous@119:20` — ArrowFunctionExpression，[L119–L119](../webagent-core/agent-host/src/tools/sensitive.js#L119-L119)
-- `isHidden` — FunctionDeclaration，[L122–L124](../webagent-core/agent-host/src/tools/sensitive.js#L122-L124)
-- `assertNotSensitive` — FunctionDeclaration，[L126–L132](../webagent-core/agent-host/src/tools/sensitive.js#L126-L132)
+- `toPosix` — FunctionDeclaration，[L64–L66](../webagent-core/agent-host/src/tools/sensitive.js#L64-L66)
+- `globRegex` — FunctionDeclaration，[L73–L86](../webagent-core/agent-host/src/tools/sensitive.js#L73-L86)
+- `globMatch` — FunctionDeclaration，[L88–L99](../webagent-core/agent-host/src/tools/sensitive.js#L88-L99)
+- `ruleIdentity` — FunctionDeclaration，[L103–L108](../webagent-core/agent-host/src/tools/sensitive.js#L103-L108)
+- `statRuleFile` — FunctionDeclaration，[L110–L117](../webagent-core/agent-host/src/tools/sensitive.js#L110-L117)
+- `readCustomRules` — FunctionDeclaration，[L119–L144](../webagent-core/agent-host/src/tools/sensitive.js#L119-L144)
+- `readCustomRules/anonymous@139:24` — ArrowFunctionExpression，[L139–L139](../webagent-core/agent-host/src/tools/sensitive.js#L139-L139)
+- `readCustomRules/anonymous@139:48` — ArrowFunctionExpression，[L139–L139](../webagent-core/agent-host/src/tools/sensitive.js#L139-L139)
+- `loadCustomPatterns` — FunctionDeclaration，[L149–L164](../webagent-core/agent-host/src/tools/sensitive.js#L149-L164)
+- `customRuleStatus` — FunctionDeclaration，[L166–L169](../webagent-core/agent-host/src/tools/sensitive.js#L166-L169)
+- `resetCustomPatternCache` — FunctionDeclaration，[L171–L173](../webagent-core/agent-host/src/tools/sensitive.js#L171-L173)
+- `isSensitive` — FunctionDeclaration，[L175–L193](../webagent-core/agent-host/src/tools/sensitive.js#L175-L193)
+- `isSensitive/anonymous@179:29` — ArrowFunctionExpression，[L179–L179](../webagent-core/agent-host/src/tools/sensitive.js#L179-L179)
+- `isSensitive/anonymous@183:22` — ArrowFunctionExpression，[L183–L183](../webagent-core/agent-host/src/tools/sensitive.js#L183-L183)
+- `isNoise` — FunctionDeclaration，[L195–L200](../webagent-core/agent-host/src/tools/sensitive.js#L195-L200)
+- `isNoise/anonymous@199:20` — ArrowFunctionExpression，[L199–L199](../webagent-core/agent-host/src/tools/sensitive.js#L199-L199)
+- `isHidden` — FunctionDeclaration，[L202–L204](../webagent-core/agent-host/src/tools/sensitive.js#L202-L204)
+- `assertNotSensitive` — FunctionDeclaration，[L206–L212](../webagent-core/agent-host/src/tools/sensitive.js#L206-L212)
 
 ## webagent-core/agent-host/src/tools/skills.js
 
@@ -1852,9 +1863,12 @@
 
 ## webagent-core/agent-host/src/utils/boundedFile.js
 
-[目录说明](../webagent-core/agent-host/src/utils/README.md) · SHA-256 `e7a72aa6291d66f0580c4d75988d730160b93cca970c4bb1da6e9e69d15c5e08`
+[目录说明](../webagent-core/agent-host/src/utils/README.md) · SHA-256 `3334ec48ff3fc46ad013f664ebc9ee3b824d8e65483ad234bc44ef0708b246c2`
 
-- `readBoundedText` — FunctionDeclaration，[L4–L21](../webagent-core/agent-host/src/utils/boundedFile.js#L4-L21)
+- `EncodingError` — ClassDeclaration，[L12–L18](../webagent-core/agent-host/src/utils/boundedFile.js#L12-L18)
+- `EncodingError/constructor` — FunctionExpression，[L13–L17](../webagent-core/agent-host/src/utils/boundedFile.js#L13-L17)
+- `decodeStrictUtf8` — FunctionDeclaration，[L20–L29](../webagent-core/agent-host/src/utils/boundedFile.js#L20-L29)
+- `readBoundedText` — FunctionDeclaration，[L38–L58](../webagent-core/agent-host/src/utils/boundedFile.js#L38-L58)
 
 ## webagent-core/agent-host/src/utils/connectionCheck.js
 
@@ -1891,9 +1905,10 @@
 
 ## webagent-core/agent-host/src/utils/diff.js
 
-[目录说明](../webagent-core/agent-host/src/utils/README.md) · SHA-256 `09e0e9a1853a1e696874b579643964402295e8d2033ba0b1e945e2fa4c476361`
+[目录说明](../webagent-core/agent-host/src/utils/README.md) · SHA-256 `7f0cddf274a6249b2a675daabc78e35f752f89d18588180eadc886ca7a9203a9`
 
-- `createUnifiedDiff` — FunctionDeclaration，[L3–L29](../webagent-core/agent-host/src/utils/diff.js#L3-L29)
+- `diffBudgetExceeded` — FunctionDeclaration，[L13–L21](../webagent-core/agent-host/src/utils/diff.js#L13-L21)
+- `createUnifiedDiff` — FunctionDeclaration，[L28–L58](../webagent-core/agent-host/src/utils/diff.js#L28-L58)
 
 ## webagent-core/agent-host/src/utils/editorUndo.js
 
@@ -2591,6 +2606,23 @@
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
+## webagent-core/agent-host/tests/diffBudget.test.js
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `b354df7d8ee73b8ffa91a2decc30b01d8e25b97973b7b49d26beb21d8322d4a0`
+
+- `run` — FunctionDeclaration，[L20–L145](../webagent-core/agent-host/tests/diffBudget.test.js#L20-L145)
+- `run/anonymous@40:44` — ArrowFunctionExpression，[L40–L40](../webagent-core/agent-host/tests/diffBudget.test.js#L40-L40)
+- `run/anonymous@41:45` — ArrowFunctionExpression，[L41–L41](../webagent-core/agent-host/tests/diffBudget.test.js#L41-L41)
+- `run/anonymous@69:9` — ArrowFunctionExpression，[L69–L69](../webagent-core/agent-host/tests/diffBudget.test.js#L69-L69)
+- `run/anonymous@69:27` — ArrowFunctionExpression，[L69–L69](../webagent-core/agent-host/tests/diffBudget.test.js#L69-L69)
+- `run/anonymous@81:9` — ArrowFunctionExpression，[L81–L81](../webagent-core/agent-host/tests/diffBudget.test.js#L81-L81)
+- `run/anonymous@81:27` — ArrowFunctionExpression，[L81–L81](../webagent-core/agent-host/tests/diffBudget.test.js#L81-L81)
+- `run/anonymous@121:18` — ArrowFunctionExpression，[L121–L121](../webagent-core/agent-host/tests/diffBudget.test.js#L121-L121)
+- `run/anonymous@123:6` — ArrowFunctionExpression，[L123–L123](../webagent-core/agent-host/tests/diffBudget.test.js#L123-L123)
+- `run/anonymous@141:51` — ArrowFunctionExpression，[L141–L141](../webagent-core/agent-host/tests/diffBudget.test.js#L141-L141)
+- `anonymous@148:9` — ArrowFunctionExpression，[L148–L148](../webagent-core/agent-host/tests/diffBudget.test.js#L148-L148)
+- `anonymous@149:11` — ArrowFunctionExpression，[L149–L149](../webagent-core/agent-host/tests/diffBudget.test.js#L149-L149)
+
 ## webagent-core/agent-host/tests/docsHttp.test.js
 
 [目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `9fcdadae2ac0cb025dcb96703f042626a2b5869d225ec08a0da99fb602a3a23f`
@@ -2624,15 +2656,15 @@
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `406fa7f17d61a801fad3f8d4c5d1535a4f721e7ae348979542d495fc0197a6af`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `2f93ee409886da40f47ca3e1bf10eac7a381644831a65a8c29c21571a7b7abdf`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)
-- `namedFunctions` — FunctionDeclaration，[L266–L281](../webagent-core/agent-host/tests/documentationLearning.test.js#L266-L281)
-- `namedFunctions/anonymous@277:44` — ArrowFunctionExpression，[L277–L277](../webagent-core/agent-host/tests/documentationLearning.test.js#L277-L277)
-- `anonymous@380:66` — ArrowFunctionExpression，[L380–L380](../webagent-core/agent-host/tests/documentationLearning.test.js#L380-L380)
-- `anonymous@385:43` — ArrowFunctionExpression，[L385–L385](../webagent-core/agent-host/tests/documentationLearning.test.js#L385-L385)
-- `anonymous@385:68` — ArrowFunctionExpression，[L385–L385](../webagent-core/agent-host/tests/documentationLearning.test.js#L385-L385)
+- `namedFunctions` — FunctionDeclaration，[L269–L284](../webagent-core/agent-host/tests/documentationLearning.test.js#L269-L284)
+- `namedFunctions/anonymous@280:44` — ArrowFunctionExpression，[L280–L280](../webagent-core/agent-host/tests/documentationLearning.test.js#L280-L280)
+- `anonymous@383:66` — ArrowFunctionExpression，[L383–L383](../webagent-core/agent-host/tests/documentationLearning.test.js#L383-L383)
+- `anonymous@388:43` — ArrowFunctionExpression，[L388–L388](../webagent-core/agent-host/tests/documentationLearning.test.js#L388-L388)
+- `anonymous@388:68` — ArrowFunctionExpression，[L388–L388](../webagent-core/agent-host/tests/documentationLearning.test.js#L388-L388)
 
 ## webagent-core/agent-host/tests/documentationLinks.test.js
 
@@ -4099,6 +4131,17 @@
 - `main/anonymous@41:47` — ArrowFunctionExpression，[L41–L41](../webagent-core/agent-host/tests/searchWorkerLifecycle.test.js#L41-L41)
 - `anonymous@47:13` — ArrowFunctionExpression，[L47–L47](../webagent-core/agent-host/tests/searchWorkerLifecycle.test.js#L47-L47)
 
+## webagent-core/agent-host/tests/sensitiveBoundary.test.js
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `20899f6aa120fe13170b9641e8c582ee894e03f0c6b7cf51cdee2b3d09258296`
+
+- `countIgnoreReads` — FunctionDeclaration，[L21–L40](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L21-L40)
+- `countIgnoreReads/anonymous@26:20` — FunctionExpression，[L26–L29](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L26-L29)
+- `countIgnoreReads/anonymous@30:18` — FunctionExpression，[L30–L33](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L30-L33)
+- `run` — FunctionDeclaration，[L42–L176](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L42-L176)
+- `run/anonymous@75:33` — ArrowFunctionExpression，[L75–L79](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L75-L79)
+- `run/git` — ArrowFunctionExpression，[L114–L114](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L114-L114)
+
 ## webagent-core/agent-host/tests/skillsLifecycle.test.js
 
 [目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `8bd710da9394e80607e861cabe8c116f1ec7fc118a6b551bbc6a7d91f33d62c8`
@@ -4257,6 +4300,21 @@
 - `anonymous@81:22` — ArrowFunctionExpression，[L81–L81](../webagent-core/agent-host/tests/testRunner.test.js#L81-L81)
 - `anonymous@82:62` — ArrowFunctionExpression，[L82–L82](../webagent-core/agent-host/tests/testRunner.test.js#L82-L82)
 - `anonymous@83:23` — ArrowFunctionExpression，[L83–L83](../webagent-core/agent-host/tests/testRunner.test.js#L83-L83)
+
+## webagent-core/agent-host/tests/textEncoding.test.js
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `adf8c88509f6306b563cdcc7c073c98a8f47bca5ef9d18c8ba712cde2a65755c`
+
+- `write` — FunctionDeclaration，[L21–L26](../webagent-core/agent-host/tests/textEncoding.test.js#L21-L26)
+- `run` — FunctionDeclaration，[L28–L121](../webagent-core/agent-host/tests/textEncoding.test.js#L28-L121)
+- `run/anonymous@62:18` — ArrowFunctionExpression，[L62–L62](../webagent-core/agent-host/tests/textEncoding.test.js#L62-L62)
+- `run/anonymous@68:16` — ArrowFunctionExpression，[L68–L68](../webagent-core/agent-host/tests/textEncoding.test.js#L68-L68)
+- `run/anonymous@71:16` — ArrowFunctionExpression，[L71–L71](../webagent-core/agent-host/tests/textEncoding.test.js#L71-L71)
+- `run/anonymous@107:18` — ArrowFunctionExpression，[L107–L107](../webagent-core/agent-host/tests/textEncoding.test.js#L107-L107)
+- `run/anonymous@107:30` — ArrowFunctionExpression，[L107–L107](../webagent-core/agent-host/tests/textEncoding.test.js#L107-L107)
+- `run/anonymous@118:30` — ArrowFunctionExpression，[L118–L118](../webagent-core/agent-host/tests/textEncoding.test.js#L118-L118)
+- `anonymous@124:9` — ArrowFunctionExpression，[L124–L124](../webagent-core/agent-host/tests/textEncoding.test.js#L124-L124)
+- `anonymous@125:11` — ArrowFunctionExpression，[L125–L125](../webagent-core/agent-host/tests/textEncoding.test.js#L125-L125)
 
 ## webagent-core/agent-host/tests/toolLabel.test.js
 

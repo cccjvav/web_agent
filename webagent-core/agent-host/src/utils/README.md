@@ -22,7 +22,7 @@
 | `requestScope.js` | AsyncLocalStorage传递AbortSignal；fetchText包装请求/body deadline与逐块字节预算 | 标准Response预缓冲限8MiB，调用方可收紧；text-only兼容替身只能事后计字节；只有显式runWithSignal的调用链才拥有请求上下文 |
 | `boundedFile.js` | 普通文件与8MiB默认文本读取预算 | 是有界同步读取，不是所有IO异步化或OS沙箱 |
 | `eventBus.js` | 进程内事件、脱敏日志和WS广播 | 内部订阅者仍收到原始payload；脱敏不适用于所有数据通道 |
-| `diff.js` | 用diff库生成展示补丁和增删统计 | 展示统计不负责决定写入是否安全 |
+| `diff.js` | 用diff库生成展示补丁和增删统计，单次有界计算（默认1500ms/20000编辑，可用WEBAGENT_DIFF_TIMEOUT_MS与WEBAGENT_DIFF_MAX_EDIT调整）| 超预算抛`E_DIFF_BUDGET`表示"渲染不出"而非"没有变化"；展示统计不负责决定写入是否安全 |
 
 ## 执行流程与边界
 ### 本机控制面
@@ -33,7 +33,9 @@ API浏览器Origin只接受本机；没有Origin时还检查可用Referer。MCP�
 ### 取消与读取
 runWithSignal建立异步链上下文；checkCancelled看到aborted抛E_CANCELLED。fetchText将父取消连接到内部controller，并用deadline覆盖fetch和body读取，finally清理timer/listener；readResponseText优先以WHATWG reader或Node异步流逐块累计原始字节，默认8MiB，越界抛E_RESPONSE_TOO_LARGE并尝试取消。只有text()的旧fetch/测试替身会先完整读取再核对。外层是否建立scope、是否收紧预算及是否拒绝重定向仍看调用方，不能对所有REST或MCP请求一概保证。
 
-readBoundedText在路径与打开的fd上检查普通文件和大小，以64KiB块读取，最多多读1字节检测超预算，finally关fd。文件仍可能被其他进程修改；读取上限不是一致性事务。
+readBoundedText在路径与打开的fd上检查普通文件和大小，以64KiB块读取，最多多读1字节检测超预算，finally关fd。读满后一次性解码，跨块边界的多字节字符不会被拆坏；默认严格UTF-8，非法字节抛`EncodingError`（`E_ENCODING`），只有既不取hash也不回写的纯扫描路径才可传`{strict:false}`。文件仍可能被其他进程修改；读取上限不是一致性事务。
+
+差异渲染同样是有界的：字节在预算内不代表CPU在预算内，所以createUnifiedDiff只做一次带时间与编辑距离上限的计算，算不完就抛`E_DIFF_BUDGET`。调用方必须把它当"太大、没渲染"，绝不能当成"没有差异"；补丁引擎在写盘之前先渲染，因此这种拒绝对应零次写入。
 
 ### 事件、日志与WS
 broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于日志和WS。日志最多500条；WS最多32路，空闲计时30分钟，有发送活动会刷新。秘密键和常见token模式会被替换，大字段、深度、键/数组数受限。
@@ -50,10 +52,10 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 
 | 源码 | 定位证据 |
 |---|---|
-| [boundedFile.js](boundedFile.js) | 1 个函数/类节点 |
+| [boundedFile.js](boundedFile.js) | 4 个函数/类节点 |
 | [connectionCheck.js](connectionCheck.js) | 9 个函数/类节点 |
 | [corsAllow.js](corsAllow.js) | 14 个函数/类节点 |
-| [diff.js](diff.js) | 1 个函数/类节点 |
+| [diff.js](diff.js) | 2 个函数/类节点 |
 | [editorUndo.js](editorUndo.js) | 6 个函数/类节点 |
 | [eventBus.js](eventBus.js) | 15 个函数/类节点 |
 | [executionControl.js](executionControl.js) | 22 个函数/类节点 |

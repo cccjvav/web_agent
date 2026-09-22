@@ -72,7 +72,8 @@ function recall({ limit = 40, day, query = '' } = {}) {
     if (bytesLeft <= 0 || scannedLines >= 5000) { truncated = true; break; }
     const relative = path.relative(config.workspaceRoot, file);
     let body;
-    try { body = readBoundedText(file, Math.min(256 * 1024, bytesLeft)); }
+    // Recall only reads and scores notes; it never hashes or rewrites them.
+    try { body = readBoundedText(file, Math.min(256 * 1024, bytesLeft), { strict: false }); }
     catch (_) { truncated = true; warnings.push(`${relative}: unreadable or exceeds remaining text budget`); continue; }
     bytesLeft -= Buffer.byteLength(body);
     files.push(relative);

@@ -78,3 +78,13 @@ apiFiles用真实本地HTTP验证addProvider追加两模型，旧模型/真实fi
 同组临时替换externalClient.request与workflows.previewRequest/request作服务调用计数：query或body未知字段必须在外部查询、预览和审批分配前400且计数为零，固定合法包装各调用一次；finally恢复原方法。MCP session夹具向touch塞入未知记录字段和clientInfo凭据/嵌套对象，先核对allSessions只给固定七字段并证明修改返回副本不会回写内部记录，再要求GET status的latest/sessions保持同一形状、clientInfo只含name/title/version，所有注入/副本变异秘密不得出现在整份响应，随后reset清夹具。
 
 customizations链还验证空对象/数组、未知顶层、environment未知键及agent未知键均400且配置逐字节不变；直接写入历史JSON的三层未知秘密后，GET只返回defaults顶层、固定environment和agent字段，秘密不发布，再由测试显式恢复基线。该证据证明路由顺序、固定公开投影及单进程临时磁盘不变量，不证明已登记URL/命令可信、四文件事务、真实外部MCP执行或公网攻击面。
+
+## diffBudget.test.js
+
+F62独立复审新增，只有一个**run** helper负责建临时工作区、跑断言、清理。
+
+前半段针对`utils/diff.js`：小差异照常渲染，补丁头仍是`--- a/<path>`/`+++ b/<path>`加`@@`hunk，增删计数与旧实现一致，相同输入给出零增零删而不是报错。随后构造8000行的全文替换，要求在声明的预算附近被拒并抛`E_DIFF_BUDGET`，而不是长时间占住事件循环；错误正文不回显文件内容。断言只检查"在预算的数倍之内返回"，不宣称某个具体行数一定算得完，也不是性能基准。
+
+后半段是写入安全：对已有文件提交一个渲染不出来的补丁，必须失败且目标文件逐字节不变，`dryRun`走同一条预算并同样零写；紧接着一个正常的SEARCH/REPLACE补丁仍能成功，证明拒绝没有污染后续状态。补丁引擎在新建与改写两条路径上都先渲染再落盘，所以预算拒绝始终对应零次写入。
+
+同一文件还覆盖admin-host的统计库，因为它和补丁引擎共享"坏状态不许被覆盖"这条口径：缺文件或零字节视为合法空库；截断JSON、顶层是对象、顶层是标量、二进制噪声一律视为损坏，`loadReports`与`ingest`都抛`E_STORE_CORRUPT`并保留原字节；发布走临时文件加rename且不留残留。它证明的是本程序不会覆盖损坏数据，不能恢复已损坏的内容，也管不住别的进程继续写这个文件。

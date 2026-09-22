@@ -27,7 +27,7 @@ Windows从仓库根运行run-admin.cmd；macOS/Linux可运行run-admin.sh。直�
 
 客户端同时配置WEBAGENT_TELEMETRY_URL与WEBAGENT_TELEMETRY_TOKEN才上报；payload包含安装ID和可选GitHub身份，因此不是完全匿名。服务默认回环，改公网监听需要独立部署评估。
 
-reports.json是普通文件读写，读取失败可回空列表；不是数据库事务、持久队列或严格schema系统。令牌文件应保密，gitignore不能消除已提交的秘密。
+reports.json是普通文件读写。**缺文件或零字节**视为空库；**能读到却不是JSON数组**视为损坏，读取与写入都抛`E_STORE_CORRUPT`并原样保留磁盘字节，不再把损坏当空库从而被下一条上报覆盖掉历史。写入走临时文件+rename发布，避免中途崩溃留下半截文件。这仍不是数据库事务、持久队列或严格schema系统：单条记录的字段不做深度校验，也没有条数上限或轮转，长期运行需要外部归档。令牌文件应保密，gitignore不能消除已提交的秘密。
 
 ## 验证
 adminHost覆盖本地HTTP鉴权、报告与body边界；usageTracker验证客户端部分统计。真实远端部署、浏览器登录体验、长期数据恢复和精确计费不在此测试结论内。
@@ -39,6 +39,6 @@ adminHost覆盖本地HTTP鉴权、报告与body边界；usageTracker验证客户
 
 | 源码 | 定位证据 |
 |---|---|
-| [app.js](app.js) | 27 个函数/类节点 |
+| [app.js](app.js) | 28 个函数/类节点 |
 | [index.js](index.js) | 1 个函数/类节点 |
 <!-- docs-inventory:end -->

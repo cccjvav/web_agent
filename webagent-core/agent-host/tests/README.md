@@ -131,6 +131,12 @@ R5第三包：tunnelCleanup为协议/过期/确认/未知的模拟测试，tunne
 
 R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；Linux明确不执行原生测试。夹具不入安装包，实际状态见阶段10。
 
+F62独立复审新增三个回归，均在自建临时工作区里跑，不碰用户数据：
+
+- `sensitiveBoundary.test.js`：`.webagentignore`在一次列目录里只被stat而不是被每个候选路径重读；编辑或删除规则文件后下一次检查即刻生效；超过512条模式或64KiB的规则文件按上限截断并标记`truncated`，不静默半截生效。它测的是规则**加载**的代价与上限，不证明匹配语义覆盖了所有秘密文件名。
+- `textEncoding.test.js`：合法UTF-8（含CJK、emoji、CRLF、BOM，以及正好跨64KiB读块边界的多字节字符）内容与hash不变；非法字节（孤立代理、截断序列、overlong、`F5`）一律`E_ENCODING`且不发hash，覆盖写入时原字节保持不变。它锁定的是"被接受的读取里hash与磁盘字节一一对应"，不是编码探测或转码能力。
+- `diffBudget.test.js`：差异计算有显式时间/编辑距离预算，超限抛`E_DIFF_BUDGET`而不是长期占住事件循环；被拒的补丁（含dryRun）让目标文件逐字节不变。同一文件还覆盖admin-host统计库：损坏的`reports.json`读取和写入都fail-closed并保留原字节，零字节文件仍算合法空库，发布走临时文件+rename且不留残留。预算数值可由`WEBAGENT_DIFF_TIMEOUT_MS`/`WEBAGENT_DIFF_MAX_EDIT`覆盖；测试不断言某个具体行数一定能算完。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -155,6 +161,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [corsAllow.test.js](corsAllow.test.js) | 20 个函数/类节点 |
 | [dangerousCommands.test.js](dangerousCommands.test.js) | 11 个函数/类节点 |
 | [desktopExtension.test.js](desktopExtension.test.js) | 0 个函数/类节点 |
+| [diffBudget.test.js](diffBudget.test.js) | 12 个函数/类节点 |
 | [docsHttp.test.js](docsHttp.test.js) | 14 个函数/类节点 |
 | [docsSite.test.js](docsSite.test.js) | 7 个函数/类节点 |
 | [documentationLearning.test.js](documentationLearning.test.js) | 7 个函数/类节点 |
@@ -211,6 +218,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [runChat.test.js](runChat.test.js) | 29 个函数/类节点 |
 | [sandbox.test.js](sandbox.test.js) | 3 个函数/类节点 |
 | [searchWorkerLifecycle.test.js](searchWorkerLifecycle.test.js) | 14 个函数/类节点 |
+| [sensitiveBoundary.test.js](sensitiveBoundary.test.js) | 6 个函数/类节点 |
 | [skillsLifecycle.test.js](skillsLifecycle.test.js) | 19 个函数/类节点 |
 | [skipWorkbench.test.js](skipWorkbench.test.js) | 16 个函数/类节点 |
 | [stateIntegrity.test.js](stateIntegrity.test.js) | 33 个函数/类节点 |
@@ -219,6 +227,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [stdioServerFixture.js](stdioServerFixture.js) | 3 个函数/类节点 |
 | [taskProgress.test.js](taskProgress.test.js) | 9 个函数/类节点 |
 | [testRunner.test.js](testRunner.test.js) | 12 个函数/类节点 |
+| [textEncoding.test.js](textEncoding.test.js) | 10 个函数/类节点 |
 | [toolLabel.test.js](toolLabel.test.js) | 0 个函数/类节点 |
 | [traceIntegration.test.js](traceIntegration.test.js) | 4 个函数/类节点 |
 | [tunnel.test.js](tunnel.test.js) | 14 个函数/类节点 |

@@ -8,7 +8,7 @@
 
 **不要在本目录改 JS。** 改 `../extension/extension.js` / `package.json`，再跑 vscode 入口即可覆盖副本。
 
-无 Python。本层无手写源码；副本文件与 `../extension/` 相同（`extension.js`、`modeFromChatRequest.js`、`workspaceMatch.js`、`package.json`、`resources/icon.svg`）。桌面 VS Code **不**读本目录，走用户 `~/.vscode/extensions`。
+无 Python。本层无手写源码；副本文件与 `../extension/` 相同（`extension.js`、`dangerousPolicy.js`、`editorReview.js`、`modeFromChatRequest.js`、`ptyHost.js`、`ptyPolicy.js`、`workspaceMatch.js`、`package.json`、`PTY扩展详解.md`、`入口与Webview详解.md`、`resources/icon.svg`）。桌面 VS Code **不**读本目录，走用户 `~/.vscode/extensions`。
 
 ---
 
@@ -43,6 +43,11 @@
 ### 📄 文件名：`webagent.webagent-core-0.7.2/resources/icon.svg`
 
 - **文件职责：** 活动栏图标副本。
+
+### 📄 文件名：`webagent.webagent-core-0.7.2/PTY扩展详解.md`
+
+- **文件职责：** PTY 宿主说明的副本，以 `../extension/PTY扩展详解.md` 为准。
+- **已知副作用（不修副本）：** 正文里两条指向 `../agent-host/src/tools/…` 的相对链接是按**源目录** `webagent-core/extension/` 写的，在源位置能正确解析；副本位于更深一层，同样的相对路径在本目录下指不到目标。`extensionCopy` 回归要求副本与源逐字节相同，因此**不单独修改副本**；要读这两篇请从 [../extension/PTY扩展详解.md](../extension/PTY扩展详解.md) 进入。这是拷贝布局造成的链接失效，不是运行时缺陷——VS Code 加载插件不读这两条链接。
 
 ### 📄 文件名：`extensions.json`（启动时生成，不进 Git）
 
