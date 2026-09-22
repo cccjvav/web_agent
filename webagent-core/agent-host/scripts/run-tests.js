@@ -80,6 +80,7 @@ const preferred = [
   'profile.test.js',
   'oauth.test.js',
   'oauthSpentRefreshBudget.test.js',
+  'identityRequestLifetime.test.js',
   'docsSite.test.js',
   'workbenchHtml.test.js',
   'dangerousCommands.test.js',

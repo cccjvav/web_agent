@@ -4,7 +4,8 @@
 - 本文作者：分支 `arena/01a0c925-web-agent`（下称 **A**）
 - 对照分支：`arena/01a0c932-web-agent`（下称 **B**），对照时其顶点为 `08aa942`
 - 共同基线：`2f6e7ab`
-- A 当前顶点：`710f6c3`，本地 102/102 测试文件通过
+- A 当前顶点：见下方"吸收状态"，本地 104/104 测试文件通过
+- **吸收状态（2026-09-23 更新）：B 分支已冻结不再更新，A 已把 B 独有/互补项全部吸收完毕，逐条实测后采纳，见 §10**
 - 读者：B 分支助手，以及后续做集成的人
 
 > 本台账的用途是让两条并行审查线**收敛**，不是评比。凡分歧项一律以可复现实测定论，不投票、不折中。
@@ -31,12 +32,20 @@
 
 | 编号 | 缺陷 | A 的提交 | B 的提交 | 备注 |
 |---|---|---|---|---|
-| X1 | `git diff` 绕过敏感文件过滤，可泄露被排除路径内容 | `c7acac4` | `bd0d060` | 两边都改为先按 `--name-status` 求允许集合再取 diff；B 额外用 `rev-parse --show-prefix` 处理"工作区是仓库子目录"的情形，**这一点 A 没有，建议取 B** |
+| X1 | `git diff` 绕过敏感文件过滤，可泄露被排除路径内容 | `c7acac4` | `bd0d060` | 两边都改为先按 `--name-status` 求允许集合再取 diff，**且两边都用 `rev-parse --show-prefix` 处理"工作区是仓库子目录"**（A 的 `workspacePrefix()`+`stripPrefix()`，B 的 `workspacePrefix()`+`localGitPath()`）。命名不同、语义等价 |
 | X2 | 非法 UTF-8 不同字节序列产生相同 hash | `c7acac4` | `bd0d060` | 都改为 `fatal:true` 严格解码。**但 BOM 处理有分歧，见 §3** |
 | X3 | diff 生成无预算，超大变更可阻塞事件循环 | `c7acac4` | `bd0d060` | 都引入预算并抛专用错误码 |
 | X4 | admin-host 存储损坏时的处理 | `c7acac4` | `1fbd2af` | 同向修复 |
 
-**X1 的行动项**：A 的 `gitOps.js` 缺少 `workspacePrefix()` 处理。当工作区是 git 仓库的子目录时，porcelain 输出的路径是仓库相对而非工作区相对，A 的过滤可能错判。**建议集成时采用 B 的 gitOps 实现**，或把 `workspacePrefix()`/`localGitPath()` 移植进 A。A 尚未对此写红测。
+**X1 更正（2026-09-23）**：本台账初版称"A 缺少 `workspacePrefix()` 处理、建议取 B"，**这是错的**。A 在 `c7acac4`（第 1 批）就已加入 `workspacePrefix()` + `stripPrefix()`，是我核对时看漏了自己的改动。已实测确认 A 的实现行为正确：
+
+```
+工作区 = <repo>/sub 时
+status.files : [{" M","inside.txt"},{" M","nested/deep.txt"}]   ← 已剥前缀
+误含仓库顶层 top.txt : false      diff 泄露 top.txt : false
+```
+
+两边命名不同（A 用 `stripPrefix`，B 用 `localGitPath`）但语义等价，**无需移植**。记录此更正以免后来者据错误结论做无谓改动；也说明台账本身同样需要被核对，不能因为它是"交叉验证产物"就默认可信。
 
 ---
 
@@ -47,6 +56,15 @@
 | C1 | GitHub 身份请求无界 | 在 `auth/github.js` 内部加 `githubJson` 超时预算（`66f5dc7`） | 在 `api/routes.js` 加 `identityRequest()`，把 `AbortController` 绑到**真实 HTTP 请求生命周期**（`1fbd2af`） | A 管"上游不响应时自己超时"，B 管"客户端断开时立刻取消"。缺任一边都会留下一类挂起 |
 
 **集成方式**：直接取并集，两者无冲突（改的是不同文件的不同层）。
+
+**已吸收（2026-09-23）**：A 已加入 `identityRequest()`。吸收前先实测确认缺口真实存在——客户端断开后上游 signal 不 abort：
+
+```
+模式 current(基线) : 上游已发出 true | 客户端断开后上游取消 false
+模式 fixed        : 上游已发出 true | 客户端断开后上游取消 true
+```
+
+配套红测 `tests/identityRequestLifetime.test.js`，已验基线红。
 
 ---
 
@@ -123,7 +141,7 @@ assert.ok(readBoundedText(f).endsWith('after bom\n'), 'BOM file still readable')
 
 | 编号 | 缺陷 | B 的提交 | A 的态度 |
 |---|---|---|---|
-| B1 | `run-code-oss.js` 里 agent-host 依赖安装的回退路径无界，且与 server 子进程清理策略重复 | `7d36305` | A **未审过此文件**。B 改为交给 `runPreparation()` 统一持有该直接子进程（带 `timeoutMs` 与 `signal`），避免双重清理策略。方案合理，A 认可，无异议 |
+| B1 | `run-code-oss.js` 里 agent-host 依赖安装的回退路径无界，且与 server 子进程清理策略重复 | `7d36305` | A **未审过此文件**。B 改为交给 `runPreparation()` 统一持有该直接子进程（带 `timeoutMs` 与 `signal`），避免双重清理策略。**已吸收，见 §10** |
 
 ---
 
@@ -206,3 +224,22 @@ git cherry-pick 0861e31
 - `node_modules` 属于快照排除目录，重建后会消失，需要 `npm ci --prefix webagent-core/agent-host --include=dev` 重装。
 - `git ls-files` 默认 `core.quotePath=true`，中文文件名会被转义成八进制。脚本里请用 `git -c core.quotePath=false ls-files -z`。
 - 改了源码里的具名函数后，文档门禁会红：`documentationLearning.test.js` 要求**每个具名函数**（含私有函数）在配对中文详解里逐字出现；随后要跑 `node docs-site/check-docs.js --write` 与 `node docs-site/build.js` 回填。新增测试文件还要同时登记到 `documentationLearning.test.js` 的 pairs 与 `scripts/run-tests.js`。
+
+
+---
+
+## 10. 吸收记录（2026-09-23，B 分支已冻结）
+
+B 分支停止更新后，A 把 B 独有与互补的三项逐条复现、采纳并补红测。**没有直接照搬**：每项先在 A 的代码上复现缺口，确认缺口真实存在才改，改完再验红。
+
+| 项 | 复现结论 | 处置 | 红测 |
+|---|---|---|---|
+| X1 gitOps 子目录前缀 | **台账原判有误**。A 在 `c7acac4` 就已有 `workspacePrefix()`+`stripPrefix()`，实测工作区为 `<repo>/sub` 时路径已正确剥前缀、未泄露仓库顶层文件 | **无需吸收**，已更正 §1 | 既有 |
+| C1 身份请求生命周期 | 缺口属实：客户端断开后上游 signal 不 abort（`current` false / `fixed` true） | 吸收 `identityRequest()`，三条 bridge 路由统一包裹，回错补 `code`、写响应前查 `res.destroyed` | 新增 `identityRequestLifetime.test.js`，已验基线红 |
+| B1 依赖准备无期限 | 缺口属实：模拟卡住的 install，5 秒后仍无任何期限介入，只能靠用户 Ctrl+C；且它被登记进 `children`，停止路径会对 runPreparation 已持有的进程再套 9 秒服务器宽限 | 吸收 `runPreparation(...)`（120s deadline + `controller.signal`），移出 `children` | 吸收 B 的 harness 沙箱化改造 + 8 条新测，已验基线全红 |
+
+**B1 吸收时发现的连带问题**：`codeServerLifecycle.test.js` 的 harness 通过 `vm` 注入假 `child_process`，但 `preparation.js` 自己 `require('child_process')`，**会逃出沙箱去跑真实 npm**（实测报错 `npm.cmd: not found`，说明确实在尝试真实安装）。B 的 harness 改造把 `preparation.js` 也放进同一沙箱执行，这一段必须一起吸收，否则测试会真的动网络。
+
+**C1 写测试时踩的坑（记录以免重演）**：最初把红测合写进 `networkBudget.test.js`，结果**基线也绿**。原因是 `github.js` 有模块级身份状态（`identityGeneration`/`pendingDevice`）会主动作废在途尝试，同进程里早先的身份测试会在约 150ms 把本测试的上游调用 abort 掉——断言因**错误原因**通过。改为独立文件后才能让"是谁取消的"没有歧义。这也是一个通用教训：**看到新测试变绿，要先确认它是为正确的原因变绿**。
+
+吸收后本地 104/104 通过。至此 B 分支的全部可吸收内容已并入 A。

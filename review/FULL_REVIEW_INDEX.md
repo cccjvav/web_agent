@@ -153,7 +153,7 @@ F59/F60：同步与六提交复审、准备阶段缺陷及后续异步修复范�
 | [review/INDEPENDENT_AUDIT_2026-09-20.md](../review/INDEPENDENT_AUDIT_2026-09-20.md) | 局部核对 | 3b4217a39ab62041 | F55新增接手/红绿修复/截图及未验边界局部核对；F54原始证据保留，不自授整篇通过 |
 | [review/OPTIMIZATION_REPORT_2026-09-18.md](../review/OPTIMIZATION_REPORT_2026-09-18.md) | 已逐句核对 | 29391f9e3e15ea70 | F45逐项交叉复核；P1-A/P2-D/P2-A已处置，原始发现保留，剩余取舍见顶部链接 |
 | [review/COMPREHENSIVE_AUDIT_2026-09-22.md](../review/COMPREHENSIVE_AUDIT_2026-09-22.md) | 待逐句核对 | b4158d219bc0b868 | F61本轮新增报告；独立反例/覆盖与局限，不自授整篇认证 |
-| [review/CROSS_VALIDATION_LEDGER_2026-09-22.md](../review/CROSS_VALIDATION_LEDGER_2026-09-22.md) | 待逐句核对 | 695793ade6346511 | F62并行分支01a0c925×01a0c932交叉验证台账；逐项比对与归属建议，含1项分歧（BOM）已按对方方案修正，不自授整篇认证 |
+| [review/CROSS_VALIDATION_LEDGER_2026-09-22.md](../review/CROSS_VALIDATION_LEDGER_2026-09-22.md) | 待逐句核对 | 59a9640aa1744496 | F62并行分支01a0c925×01a0c932交叉验证台账；逐项比对与归属建议，含1项分歧（BOM）已按对方方案修正，不自授整篇认证 |
 | [review/FULL_AUDIT_FOLLOWUP_2026-09-18.md](../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md) | 待逐句核对 | 8a0799b45e63fcdb | F45–48交叉审查/实修与验证报告；本页不自我授予整篇语义认证，结论按列明证据边界复核 |
 | [review/README.md](../review/README.md) | 局部核对 | c75bd98c7d5b4632 | F54加入独立报告并明确未修/未验；历史入口不扩大认证 |
 | [review/SEMANTIC_REVIEW_2026-09-16.md](../review/SEMANTIC_REVIEW_2026-09-16.md) | 待逐句核对 | c48ecee3747161a8 | F54只更新当前状态/新证据和精确基线，历史长台账仍逐段待核，不自授整篇通过 |

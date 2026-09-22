@@ -99,3 +99,22 @@ F62第5批新增。`spentRefresh`是refresh令牌的重放墓碑集合，条目�
 - **淘汰不打扰在用会话**：当前有效的refresh令牌在大量轮换之后仍能正常换票。
 
 `spentRefreshSize()`与`MAX_SPENT_REFRESH`是为此测试导出的只读视图，只暴露**条数**不暴露令牌本身。
+
+## identityRequestLifetime.test.js
+
+F62第6批新增，从并行分支01a0c932吸收的互补修复配套红测。
+
+超时预算只解决"上游不回话"，不解决"客户端已经走了"。`/api/bridge/token`、`/bridge/device`、`/bridge/device/poll`都要走网络问GitHub；浏览器一旦跳走或socket断掉，这几个请求本应立刻停，而修前会继续跑满自己的预算、算完再把结果丢给一个没人听的响应。修法是`routes.js`里的`identityRequest()`把`AbortController`绑到req的`aborted`与res的`close`，再用`runWithSignal`跑处理器，`requestScope.fetchText`会把这个环境signal传到传输层。
+
+夹具**hangingTransport(state)**接受连接但永不回话（黑洞主机的样子），并记录**谁在什么时刻**abort它；**waitFor(predicate,timeoutMs)**轮询等待条件成立，内部用递归的**tick()**每10ms重试一次直到条件满足或超时。
+
+断言按"排除法"设计，避免为错误的原因变绿：
+
+- 路由必须真的走到上游调用（否则后面的断言没有意义）。
+- 客户端**仍连着**时多等500ms，上游**不得**被取消。这条排除掉"其实是别的机制在取消"。
+- 客户端断开后上游必须被abort。
+- abort时刻必须**晚于**断开时刻且间隔小于1秒，把abort与断开绑定，而不是撞上了某个巧合的定时器。
+
+**为什么单独一个文件**：`github.js`有模块级身份状态（`identityGeneration`/`pendingDevice`）并会主动作废在途尝试，同进程里早先的身份测试会在约150ms把本测试的上游调用abort掉，使断言**因错误原因**通过。实测过这个陷阱——在`networkBudget.test.js`里合写时，基线代码也能变绿。独立进程才能让"是谁取消的"没有歧义。
+
+全程不发真实网络请求。

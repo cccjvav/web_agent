@@ -99,6 +99,20 @@ F62-13 最值得记的不是缺陷本身而是**为什么自测没抓到**：实
 
 **对方独有项复核**：`run-code-oss.js`把依赖安装交给`runPreparation()`统一持有直接子进程（带timeoutMs与signal），避免双重清理策略；本分支未审过该文件，认可其方案，无异议。
 
+**第6批已修并测绿（104/104）：吸收并行分支的互补与独有修复**
+
+对方分支`arena/01a0c932-web-agent`已冻结，本批把其独有与互补项逐条复现后吸收。**未直接照搬**：每项先在本分支代码上复现缺口，确认属实才改，改完验红。
+
+| 项 | 复现结论 | 处置 |
+|---|---|---|
+| C1 身份请求生命周期 | 缺口属实。客户端断开后上游signal不abort（基线false/修后true）。超时预算只解决"上游不回话"，不解决"客户端已经走了" | 吸收`identityRequest()`，`/bridge/token`、`/bridge/device`、`/bridge/device/poll`统一包裹；回错补`code`、写响应前查`res.destroyed`。新增`identityRequestLifetime.test.js` |
+| B1 依赖准备无期限 | 缺口属实。模拟卡住的install，5秒后无任何期限介入，只能靠用户Ctrl+C；且登记进`children`，停止路径会对`runPreparation`已持有的进程再套9秒服务器宽限，两套清理策略叠加 | 改由`runPreparation()`独占持有（120s deadline + `controller.signal`），移出`children`。吸收对方harness沙箱化改造+8条新测 |
+| X1 gitOps子目录前缀 | **台账原判有误**：本分支在`c7acac4`就已有`workspacePrefix()`+`stripPrefix()`。实测工作区为`<repo>/sub`时路径已正确剥前缀、未泄露仓库顶层文件 | 无需吸收，已更正台账 |
+
+**B1 连带发现**：`codeServerLifecycle.test.js`的harness用`vm`注入假`child_process`，但`preparation.js`自己`require('child_process')`会**逃出沙箱跑真实npm**（实测报`npm.cmd: not found`，确在尝试真实安装）。对方的harness改造把`preparation.js`也放进同一沙箱，必须一并吸收，否则测试会真的动网络。
+
+**C1 写测试踩的坑（记录以免重演）**：最初把红测合写进`networkBudget.test.js`，**基线也绿**。原因是`github.js`的模块级身份状态（`identityGeneration`/`pendingDevice`）会作废在途尝试，同进程中早先的身份测试在约150ms就把本测试的上游调用abort掉，断言**因错误原因**通过。改独立文件才消除歧义。通用教训：**新测试变绿要先确认它是为正确的原因变绿**。
+
 **仍待修（已取证未动，下一批候选）：** F54-04（`mcp/resources.js`疑似已修，待红测确认）；`reports.json`无条数上限与轮转，长期运行需外部归档；F61-05/06尚未独立复核。
 
 **未审范围（不得当作已审）：** 第4批已覆盖`executor.js`/`tools/index.js`/`api/routes.js`（路由清单与写入链）/`runChat.js`/`dangerous*`。**仍未审**：`mcp/server.js`、`installer/preparation.js`、`scripts/run-code-oss.js`、`extension/extension.js`与`ptyHost.js`、`workbench/js/bind.js|bridge.js|operations.js`、`.github/workflows`。浏览器项因本机Chromium下载TLS中断未验；Windows/C#/PS无本地环境。

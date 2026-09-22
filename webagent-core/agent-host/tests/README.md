@@ -157,7 +157,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [chatMode.test.js](chatMode.test.js) | 0 个函数/类节点 |
 | [chatVision.test.js](chatVision.test.js) | 21 个函数/类节点 |
 | [codeServerAuth.test.js](codeServerAuth.test.js) | 0 个函数/类节点 |
-| [codeServerLifecycle.test.js](codeServerLifecycle.test.js) | 105 个函数/类节点 |
+| [codeServerLifecycle.test.js](codeServerLifecycle.test.js) | 118 个函数/类节点 |
 | [codeServerNotRunnable.test.js](codeServerNotRunnable.test.js) | 0 个函数/类节点 |
 | [commandEncoding.test.js](commandEncoding.test.js) | 5 个函数/类节点 |
 | [connectionCheck.test.js](connectionCheck.test.js) | 18 个函数/类节点 |
@@ -182,6 +182,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
+| [identityRequestLifetime.test.js](identityRequestLifetime.test.js) | 16 个函数/类节点 |
 | [installerPackaging.test.js](installerPackaging.test.js) | 26 个函数/类节点 |
 | [installerPreparation.test.js](installerPreparation.test.js) | 61 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
