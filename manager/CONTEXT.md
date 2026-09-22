@@ -5,10 +5,10 @@
 接手先读本索引和[项目约定](agents.md)，再按需读[阶段10的工作包与交接](stages/s10-upstream-adoption.md#当前工作包与交接约束)。不另建路线图或根交接文件。
 
 ## 当前状态
-- **F62独立复审已交付3批（2f6e7ab起，提交c7acac4/66f5dc7＋UI批）：** 不复述F61报告，独立重新取证后修复：①不带路径的git diff改为逐路径套用与显式diff相同的敏感规则且限定工作区子树；②读取改严格UTF-8，非法字节抛`E_ENCODING`，不再出现不同字节同hash导致过期写入被接受；③差异渲染加时间/编辑距离预算并先渲染后落盘；④admin坏存储fail-closed且原子发布；⑤GitHub身份与遥测的裸fetch统一走`fetchText`（超时+字节上限），readCache停止空转重写整表；⑥104处硬编码px字号改rem字阶并新增A-/A+字号控件。新增4个测试文件，均已stash回基线确认为红。
+- **F62独立复审已交付3批（2f6e7ab起，提交c7acac4/66f5dc7＋UI批）：** 不复述F61报告，独立重新取证后修复：①不带路径的git diff改为逐路径套用与显式diff相同的敏感规则且限定工作区子树；②读取改严格UTF-8，非法字节抛`E_ENCODING`，不再出现不同字节同hash导致过期写入被接受；③差异渲染加时间/编辑距离预算并先渲染后落盘；④admin坏存储fail-closed且原子发布；⑤GitHub身份与遥测的裸fetch统一走`fetchText`（超时+字节上限），readCache停止空转重写整表；⑥104处硬编码px字号改rem字阶并新增A-/A+字号控件；⑦命令输出改StringDecoder，修掉跨管道分块把中文打成U+FFFD（逐字节输出"项目已完成"实测返回15个替换字符，模型会当真实结果用）；⑧危险命令检测新增argv包装器剥壳，`sudo rm -rf /`此前**未被识别**。新增5个测试文件，均已stash回基线确认为红。
 - **两处前批记载已纠正：** `workbench/styles.css`**有**4处`@media`（非"零"），真正缺陷是排版不是布局；`patchEngine`用落盘hash而`write_file`只认会话hash是**有意设计**（write_file整块覆盖无内容级校验，认落盘hash等于让新进程盲覆盖），已实测确认并写入`src/tools/README.md`，不要"统一"掉。
-- **仍待修（已取证未动）：** F54-04待红测确认；`reports.json`无条数上限与轮转；F61-05/06尚未独立复核。下一批先复核本批相邻调用链，再按小包续修，不先扩功能。原F60源码ce68560/CI35662916656九项与交接63cbbdc/CI35663331086九项保留。
-- **本轮验证边界：** 本地101/101测试文件通过；Chromium缺失且下载TLS中断，浏览器E2E与真实DPI/字体回退观感本轮未验，UI改动只有静态断言与DOM夹具证据。无本地Windows/C#/PS实机环境，旧CI不代签新反例或桌面。
+- **仍待修（已取证未动）：** F54-04待红测确认；`reports.json`无条数上限与轮转；F61-05/06尚未独立复核。**仍未审**：`mcp/server.js`、`mcp/oauth.js`、`installer/preparation.js`、`run-code-oss.js`、`extension/extension.js`与`ptyHost.js`、`workbench/js/bind.js|bridge.js|operations.js`、`.github/workflows`。下一批先复核本批相邻调用链，再按小包续修，不先扩功能。原F60源码ce68560/CI35662916656九项与交接63cbbdc/CI35663331086九项保留。
+- **本轮验证边界：** 本地102/102测试文件通过；Chromium缺失且下载TLS中断，浏览器E2E与真实DPI/字体回退观感本轮未验，UI改动只有静态断言与DOM夹具证据。无本地Windows/C#/PS实机环境，旧CI不代签新反例或桌面。
 - **来源验证：** bbe7985 / [CI35651963406](https://github.com/cccjvav/web_agent/actions/runs/35651963406)精确SHA九job success，本地原树97/97。此前ffb7589 / CI35651611509为2/9，七主机任务均有生成物漂移证据，不能用最终绿灯抹去。
 - **接手顺序：** 本页→[项目约定](agents.md)→[即时接手检查](stages/s10-upstream-adoption.md#即时接手检查2026-09-21)。先核对分支/HEAD/未提交文件与在跑任务；外部沙箱日志不保证可移交，复现代码/结果及CI摘要保存在独立报告内。
 - **当前会话固定分支** `arena/01a0c925-web-agent`，由`01a0c4b1`的bbe7985分出后已ff-only快进到`01a0bfa9`的2f6e7ab再施工；没有切换或推送其他分支。旧交接中的01a0bfa9/01a0c4b1固定分支描述仅适用于来源会话。`origin/arena/01a0c5ba-web-agent`(33bd177,3提交)仍未合并，去留待定。

@@ -22,8 +22,48 @@ const VARIANTS = [
   'rm --recursive --force X',
   'rm -fr X',
   'r""m -rf X',
-  'find X -delete'
+  'find X -delete',
+  // F62: argv wrappers. `sudo rm -rf /` is not "encoding or env indirection" -- it is the plain
+  // destructive command with one word in front, and it used to pass the detector unflagged.
+  'sudo rm -rf X',
+  'sudo -u root rm -rf X',
+  'nohup rm -rf X',
+  'setsid rm -rf X',
+  'nice rm -rf X',
+  'ionice -c3 rm -rf X',
+  'stdbuf -o0 rm -rf X',
+  'time rm -rf X',
+  'command rm -rf X',
+  'exec rm -rf X',
+  'xargs rm -rf',
+  'xargs -0 -n1 rm -rf',
+  'env rm -rf X',
+  'env FOO=bar rm -rf X',
+  'env FOO=bar BAZ=qux rm -rf X',
+  'sudo git push',
+  'nohup dd if=/dev/zero of=/dev/sda',
+  'sudo nohup rm -rf X'
 ];
+
+// Wrapper handling must not turn ordinary work into false positives; a blocked `npm test`
+// would push users to disable the guard entirely.
+const ORDINARY = [
+  'npm test', 'npm run build', 'git status', 'git diff', 'ls -la', 'cat file.txt',
+  'time npm test', 'sudo -v', 'env', 'env | sort', 'nice npm run build', 'command -v node',
+  'exec node app.js', 'stdbuf -o0 cat file', 'env NODE_ENV=production npm run build',
+  'xargs --help', 'rm file.txt', 'find . -name "*.js"', 'sudo', 'time', 'nohup'
+];
+
+for (const cmd of ORDINARY) {
+  assert.strictEqual(isDangerousCommand(cmd), false, `must not flag ordinary command: ${cmd}`);
+}
+// The documented out-of-scope cases stay out of scope: a wrapper that re-parses a *string*
+// (bash -c, eval) or an interpreter body is explicitly NOT covered, and this test records that
+// rather than pretending the detector is a sandbox.
+for (const cmd of ['bash -c "rm -rf X"', 'eval "rm -rf X"', 'python -c "import shutil"']) {
+  assert.strictEqual(isDangerousCommand(cmd), false,
+    `known limitation must stay documented, not silently change: ${cmd}`);
+}
 
 function req(method, params) {
   return {

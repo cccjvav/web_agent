@@ -135,6 +135,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 
 - `sensitiveBoundary.test.js`：`.webagentignore`在一次列目录里只被stat而不是被每个候选路径重读；编辑或删除规则文件后下一次检查即刻生效；超过512条模式或64KiB的规则文件按上限截断并标记`truncated`，不静默半截生效。它测的是规则**加载**的代价与上限，不证明匹配语义覆盖了所有秘密文件名。
 - `textEncoding.test.js`：合法UTF-8（含CJK、emoji、CRLF、BOM，以及正好跨64KiB读块边界的多字节字符）内容与hash不变；非法字节（孤立代理、截断序列、overlong、`F5`）一律`E_ENCODING`且不发hash，覆盖写入时原字节保持不变。它锁定的是"被接受的读取里hash与磁盘字节一一对应"，不是编码探测或转码能力。
+- `commandEncoding.test.js`：命令输出跨管道分块边界必须还原成原文；基线下逐字节输出的中文会变成一串U+FFFD并被模型当作真实结果。同时钉住尾窗口按字符截断、stdout/stderr各自独立解码。
 - `networkBudget.test.js`：GitHub身份与遥测上报的外发请求必须带deadline，打到"永不回话"的端点时以`AbortError`结束且不自行重试；注入传输照样受预算约束；readCache重复记录同一hash不再重写整张表。用进程内传输替身，不发真实网络请求；它证明单次请求一定会结束，不证明端点可达或上报送达。
 - `diffBudget.test.js`：差异计算有显式时间/编辑距离预算，超限抛`E_DIFF_BUDGET`而不是长期占住事件循环；被拒的补丁（含dryRun）让目标文件逐字节不变。同一文件还覆盖admin-host统计库：损坏的`reports.json`读取和写入都fail-closed并保留原字节，零字节文件仍算合法空库，发布走临时文件+rename且不留残留。预算数值可由`WEBAGENT_DIFF_TIMEOUT_MS`/`WEBAGENT_DIFF_MAX_EDIT`覆盖；测试不断言某个具体行数一定能算完。
 
@@ -158,6 +159,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [codeServerAuth.test.js](codeServerAuth.test.js) | 0 个函数/类节点 |
 | [codeServerLifecycle.test.js](codeServerLifecycle.test.js) | 105 个函数/类节点 |
 | [codeServerNotRunnable.test.js](codeServerNotRunnable.test.js) | 0 个函数/类节点 |
+| [commandEncoding.test.js](commandEncoding.test.js) | 5 个函数/类节点 |
 | [connectionCheck.test.js](connectionCheck.test.js) | 18 个函数/类节点 |
 | [corsAllow.test.js](corsAllow.test.js) | 20 个函数/类节点 |
 | [dangerousCommands.test.js](dangerousCommands.test.js) | 11 个函数/类节点 |

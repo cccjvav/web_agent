@@ -121,8 +121,52 @@ function alwaysDangerousName(name) {
   return false;
 }
 
+// Wrappers that run another command with the SAME argument vector. `sudo rm -rf /` is not
+// "encoding or env indirection" -- it is the plain destructive command with one word in front,
+// and it used to pass unflagged. Peel these off and judge the real command underneath.
+// Deliberately narrow: only wrappers whose remaining tokens are still an ordinary argv. Things
+// like `bash -c "..."` and `eval` take a *string* to re-parse, which is the documented
+// out-of-scope case and is not handled here.
+const ARGV_WRAPPERS = new Set(['sudo', 'doas', 'nohup', 'setsid', 'stdbuf', 'nice', 'ionice', 'time', 'command', 'builtin', 'exec', 'xargs']);
+
+function stripWrappers(tokens) {
+  let rest = tokens;
+  // Bounded loop: each pass must consume at least one token, and wrappers are rare.
+  for (let guard = 0; guard < 8 && rest.length > 1; guard += 1) {
+    const name = cmdName(rest[0]);
+    // `env` may be followed by VAR=value assignments before the real command.
+    if (name === 'env') {
+      let i = 1;
+      // Bare `-i`/`--ignore-environment` style flags, then any VAR=value assignments.
+      while (i < rest.length && /^-/.test(rest[i])) i += 1;
+      while (i < rest.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(rest[i])) i += 1;
+      // `env` alone, or `env` with nothing but assignments, runs no wrapped command.
+      if (i >= rest.length) return rest;
+      rest = rest.slice(i);
+      continue;
+    }
+    if (!ARGV_WRAPPERS.has(name)) return rest;
+    let i = 1;
+    // Skip the wrapper's own flags (e.g. `sudo -u root`, `xargs -0 -n1`), but stop at the first
+    // bare word, which is the wrapped command.
+    while (i < rest.length && /^-/.test(rest[i])) {
+      const flag = rest[i];
+      i += 1;
+      // Flags that take a separate value (-u user, -n 1). Conservative: only skip a value that
+      // is not itself a flag and not the last token.
+      if (/^-[a-zA-Z]$/.test(flag) && i < rest.length - 1 && !/^-/.test(rest[i])) i += 1;
+    }
+    if (i >= rest.length) return rest;
+    rest = rest.slice(i);
+  }
+  return rest;
+}
+
 function stageDangerous(tokens) {
   if (!tokens.length) return false;
+  const unwrapped = stripWrappers(tokens);
+  // Judge the unwrapped command, but never let unwrapping make a flagged command look safe.
+  if (unwrapped !== tokens && unwrapped.length && stageDangerous(unwrapped)) return true;
   const name = cmdName(tokens[0]);
   if (alwaysDangerousName(name)) return true;
   if (rmDangerous(tokens)) return true;

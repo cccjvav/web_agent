@@ -121,6 +121,7 @@ const pairs = [
   ["webagent-core/agent-host/tests/corsAllow.test.js", "webagent-core/agent-host/tests/本机边界与跨站测试详解.md"],
 
   ["webagent-core/agent-host/tests/dangerousCommands.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
+  ["webagent-core/agent-host/tests/commandEncoding.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
   ["webagent-core/agent-host/tests/sandbox.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
   ["webagent-core/agent-host/tests/workspaceTools.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
   ["webagent-core/agent-host/tests/sensitiveBoundary.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],

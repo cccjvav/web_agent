@@ -24,7 +24,11 @@ running≥8拒绝，prune，生成execId与带内部owner的运行记录；验�
 
 保存child后接入当前请求signal。内部 **abort()**先标cancelled/ok=false，killChild，再2秒force回调；deadline回调设isTimeout、发送停止并2秒升级。计时器支持unref。
 
-**append(field,chunk)**追加保留尾200Ki字符、广播原chunk；stdout/stderr data回调转换字符串。**done Promise**的error回调移除signal、清timer、仅在未成功启动或已有退出状态时删children、更新错误/耗时、广播并reject；close回调同样清理，保存code/signal/耗时，仅仍running时改为done/error/timeout，算ok并resolve publicRecord。取消状态不被普通close覆盖。
+**append(field,chunk)**追加保留尾200Ki字符、广播原chunk；空串直接返回。
+
+**decoders与flushDecoders()**：stdout/stderr各持一个`StringDecoder('utf8')`。管道的分块边界由操作系统决定，**不会**对齐字符边界，所以原先每块各自`data.toString()`会把跨块的多字节字符打成替换字符——实测一个逐字节输出"项目已完成"的程序，返回的是15个U+FFFD（F62）。StringDecoder把不完整的尾字节留到下一块拼齐才吐出字符。两个流各自独立解码，不能共用状态，否则stderr的半个字符会接到stdout的尾巴上。**flushDecoders()**在error与close回调里各调一次`decoder.end()`，把最后一个被截断字符的残余字节以单个替换字符收尾，而不是悄悄丢弃。
+
+注意这保证的是"跨块不被打碎"，不是"输出一定是合法UTF-8"：程序本身输出非UTF-8字节时仍会得到替换字符，这是它自己的编码问题。**done Promise**的error回调移除signal、清timer、仅在未成功启动或已有退出状态时删children、更新错误/耗时、广播并reject；close回调同样清理，保存code/signal/耗时，仅仍running时改为done/error/timeout，算ok并resolve publicRecord。取消状态不被普通close覆盖。
 
 返回 `{rec,done}`，其中rec是可变记录。spawn成功不是业务成功；事件回调异常不都被隔离。killChild在Windows有3秒spawnSync超时，且“cancelled记录”不等于等待真实退出。
 

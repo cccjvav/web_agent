@@ -1,5 +1,6 @@
 const { scrubEnv } = require('../../../extension/ptyPolicy');
 const { spawn, spawnSync } = require('child_process');
+const { StringDecoder } = require('string_decoder');
 const crypto = require('crypto');
 const path = require('path');
 const { config } = require('../config');
@@ -211,23 +212,38 @@ ${command}`;
   if (timer.unref) timer.unref();
 
   const append = (field, chunk) => {
+    if (!chunk) return;
     rec[field] += chunk;
     if (rec[field].length > MAX_CAPTURE) rec[field] = rec[field].slice(-MAX_CAPTURE);
     eventBus.broadcast('command_output', { execId, stream: field, chunk });
   };
 
+  // Pipe chunk boundaries fall wherever the OS puts them, not on character boundaries. Decoding
+  // each chunk independently with data.toString() turns any multi-byte character that straddles
+  // two chunks into replacement characters -- a program printing Chinese one byte at a time came
+  // back as pure U+FFFD. StringDecoder retains the incomplete tail bytes until the rest arrives,
+  // so a character is only emitted once it is complete. One decoder per stream, since stdout and
+  // stderr are independent byte streams and must not share partial state.
+  const decoders = { stdout: new StringDecoder('utf8'), stderr: new StringDecoder('utf8') };
+
   child.stdout.on('data', (data) => {
     if (debug) { const first = stdoutBytes === 0; stdoutBytes += data.length; if (first) trace('stdout-first'); }
-    append('stdout', data.toString());
+    append('stdout', decoders.stdout.write(data));
   });
   child.stderr.on('data', (data) => {
     if (debug) { const first = stderrBytes === 0; stderrBytes += data.length; if (first) trace('stderr-first'); }
-    append('stderr', data.toString());
+    append('stderr', decoders.stderr.write(data));
   });
+  // Flush any trailing bytes of a truncated final character so they surface as a single
+  // replacement char rather than being dropped silently.
+  const flushDecoders = () => {
+    for (const field of ['stdout', 'stderr']) append(field, decoders[field].end());
+  };
 
   const done = new Promise((resolve, reject) => {
     child.on('error', (err) => {
       trace('error');
+      flushDecoders();
       if (requestSignal) requestSignal.removeEventListener('abort', abort);
       clearTimeout(timer);
       if (!child.pid || child.exitCode !== null || child.signalCode !== null) children.delete(String(execId));
@@ -239,6 +255,7 @@ ${command}`;
     });
     child.on('close', (code, signal) => {
       trace('close', code);
+      flushDecoders();
       if (requestSignal) requestSignal.removeEventListener('abort', abort);
       clearTimeout(timer);
       children.delete(String(execId));

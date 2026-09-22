@@ -51,7 +51,7 @@ F54第七批：requestJson最多接收8MiB响应，15秒总deadline与空闲time
 
 | 源码 | 定位证据 |
 |---|---|
-| [dangerousPolicy.js](dangerousPolicy.js) | 31 个函数/类节点 |
+| [dangerousPolicy.js](dangerousPolicy.js) | 32 个函数/类节点 |
 | [editorReview.js](editorReview.js) | 10 个函数/类节点 |
 | [extension.js](extension.js) | 64 个函数/类节点 |
 | [modeFromChatRequest.js](modeFromChatRequest.js) | 1 个函数/类节点 |

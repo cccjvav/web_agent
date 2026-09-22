@@ -67,9 +67,24 @@
 
 另复核一项前批列为"待修"的疑点并**判定为非缺陷**：`patchEngine`回退到可跨重启的`recalledHash()`、而`write_file`只认本进程的`sessionHash()`，这个口径差异是有意的——补丁自带SEARCH/REPLACE或diff上下文，内容对不上会先失败；`write_file`整块覆盖没有任何内容级校验，若也认落盘hash，新进程就能凭上次运行留下的记录盲覆盖文件。已实测确认（清空session后write_file报`E_BAD_ARGS`、apply_patch仍成功），并把这条"不要统一掉"的理由写进`src/tools/README.md`。
 
+**第4批已修并测绿（102/102）：命令输出编码与危险命令包装器**
+
+本批开始审查此前明确未覆盖的面：`tools/executor.js`、`tools/index.js`、`api/routes.js`、`agent/runChat.js`、`tools/dangerous.js` 与 `extension/dangerousPolicy.js`。
+
+| 项 | 独立复现的事实 | 修法 | 红测 |
+|---|---|---|---|
+| F62-11 命令输出跨块损坏 | `executor.js`对每个stdout/stderr块各自`data.toString()`。管道分块边界由OS决定、不对齐字符边界，逐字节输出"项目已完成"实测返回**15个U+FFFD**。模型会把损坏输出当作真实结果去推理 | stdout/stderr各持一个`StringDecoder('utf8')`，不完整尾字节留到下一块拼齐；close/error时`flushDecoders()`把截断残余以单个替换字符收尾而非丢弃 | `commandEncoding.test.js` |
+| F62-12 危险命令包装器绕过 | `sudo rm -rf /`**未被识别**。同类还有nohup/setsid/nice/ionice/stdbuf/time/command/exec/xargs/env前缀。这既不是编码混淆也不是环境变量间接，就是原命令前加一个词 | 新增`ARGV_WRAPPERS`与`stripWrappers()`，剥掉同argv包装器（含其自身带值短flag）与`env`的`-i`/`VAR=value`前缀后递归判定；剥壳只能更严、不能洗白已命中的命令 | `dangerousCommands.test.js`扩充 |
+
+`dangerousPolicy.js`改动已同步到`extensions-installed`副本（`extensionCopy`要求逐字节一致）。同时用31条日常命令验证**零误报**（`npm test`/`git status`/`time npm test`/`sudo -v`/`env | sort`等）——误报会逼用户整个关掉保护，比漏报更糟。
+
+**明确记录为"不覆盖"并用断言钉住**：`bash -c "rm -rf X"`、`eval "..."`、`python -c`/`node -e` 正文、`$(echo rm)`命令替换。这些需要重新解析字符串或进入解释器，词法检测器做不到，真正兜底的是进程组终止与工作区路径限制。测试里有专门断言防止有人误以为它是沙箱。
+
+**本批复核未发现问题的**：`/files/preview`直接调`diff`但正确把budget的`undefined`判成413；`stdioTransport.js`按字节缓冲、不受同类编码缺陷影响；隧道日志只匹配ASCII URL故分块解码无实质影响；API全面经`rejectUnlessLocalControl`+`rejectCrossSiteApi`；`runChat`的`detectTestCommand`虽取自配置但仍过`callTool`→`assertCommandAllowed`。另实测fork bomb（`:(){ :|:& };:`）词法层未识别但进程组终止成功回收，无残留进程。
+
 **仍待修（已取证未动，下一批候选）：** F54-04（`mcp/resources.js`疑似已修，待红测确认）；`reports.json`无条数上限与轮转，长期运行需外部归档；F61-05/06尚未独立复核。
 
-**本批未审范围（不得当作已审）：** `executor.js`、`tools/index.js`、`api/routes.js`、`agent/runChat.js`、`mcp/server.js`、`mcp/oauth.js`、`installer/preparation.js`、`scripts/run-code-oss.js`、`extension/`、`workbench/js/bind.js|bridge.js|operations.js`、`.github/workflows`。浏览器项因本机Chromium下载TLS中断未验；Windows/C#/PS无本地环境。
+**未审范围（不得当作已审）：** 第4批已覆盖`executor.js`/`tools/index.js`/`api/routes.js`（路由清单与写入链）/`runChat.js`/`dangerous*`。**仍未审**：`mcp/server.js`、`mcp/oauth.js`、`installer/preparation.js`、`scripts/run-code-oss.js`、`extension/extension.js`与`ptyHost.js`、`workbench/js/bind.js|bridge.js|operations.js`、`.github/workflows`。浏览器项因本机Chromium下载TLS中断未验；Windows/C#/PS无本地环境。
 
 #### 即时接手检查（2026-09-21）
 

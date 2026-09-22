@@ -82,6 +82,7 @@ const preferred = [
   'docsSite.test.js',
   'workbenchHtml.test.js',
   'dangerousCommands.test.js',
+  'commandEncoding.test.js',
   'extensionCopy.test.js',
   'ptyJobs.test.js'
 ];
