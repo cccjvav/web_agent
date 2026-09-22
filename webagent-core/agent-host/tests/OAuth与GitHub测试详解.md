@@ -64,3 +64,18 @@ refresh同样检查机密客户端缺认证401，再正确认证200，旧access�
 **main**以createRequire加载真实oauth源码到VM，仅把Date.now替换成可控clock；追加fixture访问器只存在测试VM，不从产品导出内部状态。clientIp检查不直接信任X-Forwarded-For；重复500次拒绝后n与expiresAt不变，恰好过期时恢复。1000个key后新key拒绝但旧key剩余额度可用，窗口到期释放容量。固定LCG seed生成2000个跨7个客户端/时间推进事件，对照独立model的count/until，不引入随机网络不稳定。
 
 真实Express挂载该VM的router，**post**发HTTP并每次消耗响应体；注册两个别名共用预算、伪造头不能分裂来源，授权HTML错误与JSON错误都有Retry-After。时钟前进60秒恢复为正常校验400而非429。finally关闭本测试server；不联网第三方、不验证实际代理用户隔离。验证不等同通用性质/变异测试门禁。
+
+
+## F64：githubNetwork.test.js的独立网络与REST负例
+
+[githubNetwork.test.js](githubNetwork.test.js)的run()建立临时工作区、假App/凭据和真实回环http.Server；fetchProxy只把固定GitHub路径重定向到该自建服务，保留产品method/headers/signal/redirect。不访问GitHub，不读取用户账号。check(name,fn)收集失败；resetServer()在每例后关本测试socket/重开随机端口，避免未消费连接池跨例复用；最后清目录/恢复依赖。bounded(promise,ms)是1.5秒测试看门狗，超时即失败，不冒充产品超时。
+
+注入的scope.fetchText先断言产品确实传入10000ms/65536字节/redirect:error，仅期限场景把测试调用预算缩至500ms；生产值未放宽。正文期限场景必须实际收到头；正文取消在body锁定读取后发生。预先取消不得触网或清健康pending；正常设备流仍可完成，旧githubAuth的generation/clear/poll单飞保留。
+
+真实HTTP另覆盖三端点的流式预算、拒跳转；Response夹具覆盖非对象JSON/错误字段、远端error_description不反射、非法授权URL/期限及非Error拒绝。WHATWG ReadableStream的start()/cancel()模拟清理Promise永不settle，必须及时得到预算错误；它不是声称远端已攻破Node的原生cancel。
+
+VM仅替换共享读取模块的单调时钟/计时器：timer不触发、正文完成或socket错误发生在expires之后，均必须E_TIMEOUT。REST用真实Express/router，将三个身份动作临时替为等待scope的函数；真实client.destroy必须触发其AbortSignal，finally还原。这个场景验证接线，不代签主机所有Origin/权限或真实GitHub授权。
+
+初版夹具关闭共用端口的池连接导致合法流程UND_ERR_SOCKET，先改每例新端口而非放宽产品网络错误；失败历史见阶段10。验证：`npm test -- --filter=githubNetwork`，再跑githubAuth、modelLifecycle、resourceBudget、requestLifecycle、bridgeTunnel和完整累计测试。
+
+夹具中的entered()通知服务端请求到达，received()通知客户端取得响应头；每例恢复为空通知，避免复用前例Promise。VM假timer的unref()为空接口实现，clearTimeout不执行实际定时；只为了验证逻辑expires不能依赖timer先运行。

@@ -214,12 +214,18 @@ config.workspaceRoot = tmp;
   }
   const oldFetch = global.fetch;
   try {
+    let fetches = 0, aborts = 0, requestSignal;
     global.fetch = (_, options) => new Promise((resolve, reject) => {
-      options.signal.addEventListener('abort', () => reject(new Error('request aborted')), { once: true });
+      fetches++; requestSignal = options.signal;
+      options.signal.addEventListener('abort', () => { aborts++; reject(new Error('request aborted')); }, { once: true });
     });
     // Keep the test alive; production requests have sockets keeping the loop alive.
     const keep = setTimeout(() => {}, 1000);
-    try { await assert.rejects(() => fetchText('https://model.invalid', {}, 30), /aborted/); }
+    try {
+      await assert.rejects(() => fetchText('https://model.invalid', {}, 30), error => error.code === 'E_TIMEOUT');
+      assert.strictEqual(fetches, 1); assert.strictEqual(aborts, 1);
+      assert.strictEqual(requestSignal.aborted, true, 'a stable timeout code must still cancel the underlying request');
+    }
     finally { clearTimeout(keep); }
   } finally { global.fetch = oldFetch; }
   console.log('PTY ownership/approval/result/capture/cancellation and request deadline tests passed');

@@ -1,4 +1,5 @@
 const store = require('../models/store');
+const { fetchText, currentSignal, checkCancelled } = require('../utils/requestScope');
 
 let pendingDevice = null;
 let identityGeneration = 0;
@@ -32,37 +33,68 @@ function deviceAvailable() {
   return Boolean(githubClientId());
 }
 
+function githubResponseError() {
+  const error = new Error('GitHub 返回了无效或不支持的身份响应，请停止本次登录并核对。');
+  error.code = 'E_GITHUB_RESPONSE'; error.status = 502; return error;
+}
+
+function githubText(value, maxBytes, optional = false) {
+  return typeof value === 'string' && Buffer.byteLength(value, 'utf8') <= maxBytes
+    && !/[\x00-\x1f\x7f]/.test(value) && (optional || Boolean(value.trim()));
+}
+
+function deviceUri(value, fallback, userCode) {
+  if (value == null || value === '') return fallback;
+  if (!githubText(value, 2048)) throw githubResponseError();
+  try {
+    const url = new URL(value);
+    if (url.origin !== 'https://github.com' || url.pathname !== '/login/device' || url.username || url.password || url.hash
+      || [...url.searchParams.keys()].some(key => key !== 'user_code')
+      || url.searchParams.getAll('user_code').length > 1
+      || (url.searchParams.has('user_code') && url.searchParams.get('user_code') !== userCode)) throw githubResponseError();
+    return url.href;
+  } catch (_) { throw githubResponseError(); }
+}
+
+async function githubRequest(url, options, fetchFn) {
+  let result;
+  try {
+    result = await fetchText(url, { ...options, redirect: 'error' }, 10000, { maxBytes: 65536 }, fetchFn);
+  } catch (cause) {
+    const code = currentSignal()?.aborted || cause?.code === 'E_CANCELLED' ? 'E_CANCELLED'
+      : cause?.code === 'E_RESPONSE_TOO_LARGE' ? 'E_RESPONSE_TOO_LARGE'
+      : cause?.code === 'E_TIMEOUT' || cause?.name === 'AbortError' ? 'E_TIMEOUT' : 'E_GITHUB_NETWORK';
+    const messages = { E_CANCELLED: 'GitHub 身份请求已取消', E_RESPONSE_TOO_LARGE: 'GitHub 身份响应超过64KiB预算', E_TIMEOUT: 'GitHub 身份请求超过10秒期限', E_GITHUB_NETWORK: 'GitHub 网络请求失败或发生不允许的重定向' };
+    const error = new Error(messages[code]); error.code = code;
+    error.status = code === 'E_CANCELLED' ? 499 : code === 'E_TIMEOUT' ? 504 : 502;
+    throw error;
+  }
+  let data;
+  try { data = JSON.parse(result.text); } catch (_) { if (result.response.ok) throw githubResponseError(); data = {}; }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    if (result.response.ok) throw githubResponseError();
+    data = {};
+  }
+  return { response: result.response, data };
+}
+
 async function fetchGitHubUser(token, fetchFn = fetch) {
-  const resp = await fetchFn('https://api.github.com/user', {
+  const { response: resp, data } = await githubRequest('https://api.github.com/user', {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: 'application/vnd.github+json',
       'User-Agent': 'Web-Agent'
     }
-  });
-  const raw = await resp.text();
-  let data = {};
-  try {
-    data = raw ? JSON.parse(raw) : {};
-  } catch {
-    data = {};
-  }
+  }, fetchFn);
   if (!resp.ok) {
     const err = new Error(`GitHub 拒绝该令牌（HTTP ${resp.status}）。需要 read:user 权限。`);
-    err.status = resp.status;
-    throw err;
+    err.status = resp.status; err.code = 'E_GITHUB_HTTP'; throw err;
   }
-  const login = String(data.login || '').trim();
-  if (!login) {
-    const err = new Error('GitHub 未返回用户名');
-    err.status = 502;
-    throw err;
-  }
-  return {
-    login,
-    id: String(data.id || ''),
-    name: String(data.name || login)
-  };
+  const id = data.id ?? '', name = data.name ?? data.login;
+  if (!githubText(data.login, 256) || !githubText(name, 256, true)
+    || !(githubText(id, 128, true) || (Number.isSafeInteger(id) && id >= 0))) throw githubResponseError();
+  const login = data.login.trim();
+  return { login, id: String(id), name: name.trim() || login };
 }
 
 function applyGithubUser(user) {
@@ -99,6 +131,7 @@ function clearGithubKeepDemo() {
 }
 
 async function loginWithToken(token, fetchFn = fetch) {
+  checkCancelled();
   const trimmed = String(token || '').trim();
   if (!trimmed) {
     const err = new Error('请粘贴 GitHub Personal Access Token（read:user）');
@@ -112,6 +145,7 @@ async function loginWithToken(token, fetchFn = fetch) {
 }
 
 async function startDeviceLogin(fetchFn = fetch) {
+  checkCancelled();
   const clientId = githubClientId();
   if (!clientId) {
     const err = new Error('未设置 WEBAGENT_GITHUB_CLIENT_ID。也可改用令牌验证。');
@@ -123,7 +157,7 @@ async function startDeviceLogin(fetchFn = fetch) {
   const params = new URLSearchParams({ client_id: clientId, scope: 'read:user' });
   const secret = githubClientSecret();
   if (secret) params.set('client_secret', secret);
-  const resp = await fetchFn('https://github.com/login/device/code', {
+  const { response: resp, data } = await githubRequest('https://github.com/login/device/code', {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -131,32 +165,38 @@ async function startDeviceLogin(fetchFn = fetch) {
       'User-Agent': 'Web-Agent'
     },
     body: params
-  });
-  const data = await resp.json().catch(() => ({}));
+  }, fetchFn);
   if (generation !== identityGeneration) throw supersededError();
-  if (!resp.ok || !data.device_code || !data.user_code) {
-    const err = new Error(data.error_description || data.error || `无法开始 GitHub 设备码登录（HTTP ${resp.status}）`);
-    err.status = resp.ok ? 400 : (resp.status || 502);
+  if (!resp.ok) {
+    const err = new Error(`无法开始 GitHub 设备码登录（HTTP ${resp.status}）`);
+    err.status = resp.status || 502; err.code = 'E_GITHUB_HTTP';
     throw err;
   }
+  const interval = data.interval ?? 5, expiresIn = data.expires_in ?? 900;
+  if (!githubText(data.device_code, 4096) || !githubText(data.user_code, 128)
+    || !Number.isInteger(interval) || interval <= 0 || interval > 60
+    || !Number.isInteger(expiresIn) || expiresIn <= 0 || expiresIn > 86400) throw githubResponseError();
+  const verificationUri = deviceUri(data.verification_uri, 'https://github.com/login/device', data.user_code);
+  const verificationUriComplete = deviceUri(data.verification_uri_complete, '', data.user_code);
   pendingDevice = {
     generation,
     deviceCode: data.device_code,
-    interval: Math.max(5, Number(data.interval) || 5),
-    expiresAt: Date.now() + (Number(data.expires_in) || 900) * 1000,
+    interval: Math.max(5, interval),
+    expiresAt: Date.now() + expiresIn * 1000,
     userCode: data.user_code,
     polling: false
   };
   return {
     userCode: data.user_code,
-    verificationUri: data.verification_uri || 'https://github.com/login/device',
-    verificationUriComplete: data.verification_uri_complete || '',
+    verificationUri,
+    verificationUriComplete,
     interval: pendingDevice.interval,
-    expiresIn: Number(data.expires_in) || 900
+    expiresIn
   };
 }
 
 async function pollDeviceLogin(fetchFn = fetch) {
+  checkCancelled();
   const attempt = pendingDevice;
   if (!attempt) return { pending: false, done: false, error: '没有进行中的设备码登录' };
   const current = () => pendingDevice === attempt && identityGeneration === attempt.generation;
@@ -175,7 +215,7 @@ async function pollDeviceLogin(fetchFn = fetch) {
     });
     const secret = githubClientSecret();
     if (secret) params.set('client_secret', secret);
-    const resp = await fetchFn('https://github.com/login/oauth/access_token', {
+    const { response: resp, data } = await githubRequest('https://github.com/login/oauth/access_token', {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -183,12 +223,11 @@ async function pollDeviceLogin(fetchFn = fetch) {
         'User-Agent': 'Web-Agent'
       },
       body: params
-    });
-    const data = await resp.json().catch(() => ({}));
+    }, fetchFn);
     if (!current()) return supersededResult();
     if (!resp.ok) {
-      const error = new Error(data.error_description || data.error || `GitHub 设备码轮询失败（HTTP ${resp.status}）`);
-      error.status = resp.status || 502;
+      const error = new Error(`GitHub 设备码轮询失败（HTTP ${resp.status}）`);
+      error.status = resp.status || 502; error.code = 'E_GITHUB_HTTP';
       throw error;
     }
     if (data.error === 'authorization_pending' || data.error === 'slow_down') {
@@ -197,8 +236,9 @@ async function pollDeviceLogin(fetchFn = fetch) {
     }
     if (!data.access_token) {
       supersedeIdentityAttempt();
-      return { pending: false, done: false, error: data.error_description || data.error || 'GitHub 未返回 access_token' };
+      return { pending: false, done: false, error: 'GitHub 未完成设备码授权，请重新开始或核对授权状态' };
     }
+    if (!githubText(data.access_token, 4096)) throw githubResponseError();
     const user = await fetchGitHubUser(data.access_token, fetchFn);
     if (!current()) return supersededResult();
     pendingDevice = null;

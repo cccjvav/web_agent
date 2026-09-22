@@ -133,6 +133,10 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 
 F62新增fileReadSafety/diffBudget：严格UTF-8与可逆hash、子目录Git范围/敏感两侧、单次有界差异及写前拒绝；详细断言见[存储完整性与预算](存储完整性与预算测试详解.md)。
 
+F63新增adminIntegrity及浏览器adminLayoutBrowser：损坏报告保留、写中断、畸形URL不退出、schema与统计页窄屏/字号/对比度；testRunner另验证根npm参数传递。详见[统计与文档测试](统计与文档测试详解.md)。
+
+F64新增githubNetwork：真实HTTP头/体期限、逐块预算、取消不晚发布/不清旧pending、重定向/响应形状、真实REST断开与单调截止；见[OAuth与GitHub测试](OAuth与GitHub测试详解.md)。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -141,6 +145,7 @@ F62新增fileReadSafety/diffBudget：严格UTF-8与可逆hash、子目录Git范�
 | 源码 | 定位证据 |
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
+| [adminIntegrity.test.js](adminIntegrity.test.js) | 43 个函数/类节点 |
 | [apiFiles.test.js](apiFiles.test.js) | 59 个函数/类节点 |
 | [appWindowLifecycle.test.js](appWindowLifecycle.test.js) | 79 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
@@ -173,6 +178,7 @@ F62新增fileReadSafety/diffBudget：严格UTF-8与可逆hash、子目录Git范�
 | [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
 | [fileReadSafety.test.js](fileReadSafety.test.js) | 21 个函数/类节点 |
 | [githubAuth.test.js](githubAuth.test.js) | 21 个函数/类节点 |
+| [githubNetwork.test.js](githubNetwork.test.js) | 82 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
@@ -208,7 +214,7 @@ F62新增fileReadSafety/diffBudget：严格UTF-8与可逆hash、子目录Git范�
 | [profile.test.js](profile.test.js) | 8 个函数/类节点 |
 | [providers.test.js](providers.test.js) | 30 个函数/类节点 |
 | [ptyJobs.test.js](ptyJobs.test.js) | 12 个函数/类节点 |
-| [ptyLifecycle.test.js](ptyLifecycle.test.js) | 68 个函数/类节点 |
+| [ptyLifecycle.test.js](ptyLifecycle.test.js) | 69 个函数/类节点 |
 | [publicHttps.test.js](publicHttps.test.js) | 19 个函数/类节点 |
 | [requestLifecycle.test.js](requestLifecycle.test.js) | 13 个函数/类节点 |
 | [resourceBudget.test.js](resourceBudget.test.js) | 14 个函数/类节点 |
@@ -222,7 +228,7 @@ F62新增fileReadSafety/diffBudget：严格UTF-8与可逆hash、子目录Git范�
 | [stdioOwnerFixture.js](stdioOwnerFixture.js) | 2 个函数/类节点 |
 | [stdioServerFixture.js](stdioServerFixture.js) | 3 个函数/类节点 |
 | [taskProgress.test.js](taskProgress.test.js) | 9 个函数/类节点 |
-| [testRunner.test.js](testRunner.test.js) | 12 个函数/类节点 |
+| [testRunner.test.js](testRunner.test.js) | 13 个函数/类节点 |
 | [toolLabel.test.js](toolLabel.test.js) | 0 个函数/类节点 |
 | [traceIntegration.test.js](traceIntegration.test.js) | 4 个函数/类节点 |
 | [tunnel.test.js](tunnel.test.js) | 14 个函数/类节点 |
@@ -239,7 +245,7 @@ F62新增fileReadSafety/diffBudget：严格UTF-8与可逆hash、子目录Git范�
 | [tunnelRegistry.test.js](tunnelRegistry.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 263 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 271 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 0 个函数/类节点 |
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 458 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |

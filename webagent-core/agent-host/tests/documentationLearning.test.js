@@ -112,6 +112,7 @@ const pairs = [
 
   ["webagent-core/agent-host/tests/oauth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
   ["webagent-core/agent-host/tests/oauthClientAuth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
+  ["webagent-core/agent-host/tests/githubNetwork.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
   ["webagent-core/agent-host/tests/githubAuth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
 
   ["webagent-core/agent-host/tests/auditControl.test.js", "webagent-core/agent-host/tests/本机边界与跨站测试详解.md"],
@@ -174,6 +175,7 @@ const pairs = [
   ["docs-site/build.js", "docs-site/清单与构建详解.md"],
   ["docs-site/app.js", "docs-site/浏览与服务详解.md"],
   ["docs-site/serve.js", "docs-site/浏览与服务详解.md"],
+  ["webagent-core/agent-host/tests/adminIntegrity.test.js", "webagent-core/agent-host/tests/统计与文档测试详解.md"],
   ["webagent-core/agent-host/tests/adminHost.test.js", "webagent-core/agent-host/tests/统计与文档测试详解.md"],
   ["webagent-core/agent-host/tests/docsSite.test.js", "webagent-core/agent-host/tests/统计与文档测试详解.md"],
   ["webagent-core/agent-host/tests/docsHttp.test.js", "webagent-core/agent-host/tests/统计与文档测试详解.md"],

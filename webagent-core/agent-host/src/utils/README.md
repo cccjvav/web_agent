@@ -31,7 +31,7 @@ isLocalControlPlane先拒绝隧道特征头，再要求Host为localhost、127.0.
 API浏览器Origin只接受本机；没有Origin时还检查可用Referer。MCP有独立白名单和WEBAGENT_CORS_ORIGINS扩展项，不在名单的显式Origin返回403。放行MCP Origin不放行API，也不跳过MCP令牌验证。MCP仅额外暴露会话ID与认证挑战两个响应头，避免浏览器初始化200却无法读取会话；其他响应头仍按浏览器CORS规则处理。
 
 ### 取消与读取
-runWithSignal建立异步链上下文；checkCancelled看到aborted抛E_CANCELLED。fetchText将父取消连接到内部controller，并用deadline覆盖fetch和body读取，finally清理timer/listener；readResponseText优先以WHATWG reader或Node异步流逐块累计原始字节，默认8MiB，越界抛E_RESPONSE_TOO_LARGE并尝试取消。只有text()的旧fetch/测试替身会先完整读取再核对。外层是否建立scope、是否收紧预算及是否拒绝重定向仍看调用方，不能对所有REST或MCP请求一概保证。
+runWithSignal建立异步链上下文；checkCancelled看到aborted抛E_CANCELLED。fetchText将父取消连接到内部controller，并用deadline覆盖fetch和body读取，头/体返回及异常时另核对单调expires，拒绝计时器延后的迟到结果，finally清理timer/listener；readResponseText优先以WHATWG reader或Node异步流逐块累计原始字节，默认8MiB，越界抛E_RESPONSE_TOO_LARGE并尝试取消；WHATWG的cancel Promise不等待，不能让不合作的清理钩子拖住预算错误。只有text()的旧fetch/测试替身会先完整读取再核对。外层是否建立scope、是否收紧预算及是否拒绝重定向仍看调用方，不能对所有REST或MCP请求一概保证。
 
 readBoundedText在路径与打开的fd上检查普通文件和大小，以64KiB块读取，最多多读1字节检测超预算，finally关fd；fatal解码拒绝非法UTF-8，ignoreBOM:true保留BOM，合法文本再编码与磁盘字节一致。文件仍可能被其他进程修改；读取上限不是一致性事务。
 
@@ -62,7 +62,7 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 | [localControl.js](localControl.js) | 7 个函数/类节点 |
 | [operatorQueue.js](operatorQueue.js) | 19 个函数/类节点 |
 | [probeBridge.js](probeBridge.js) | 23 个函数/类节点 |
-| [requestScope.js](requestScope.js) | 11 个函数/类节点 |
+| [requestScope.js](requestScope.js) | 13 个函数/类节点 |
 | [toolTrace.js](toolTrace.js) | 12 个函数/类节点 |
 | [workspaceBinding.js](workspaceBinding.js) | 2 个函数/类节点 |
 <!-- docs-inventory:end -->

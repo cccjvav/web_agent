@@ -50,6 +50,8 @@ setlocal EnableExtensions，title设置窗口标题，cd /d `%~dp0`可跨盘。w
 
 [源码](../../webagent-core/start-webagent.sh)：set-e，ROOT取本文件上一级仓库目录，exec根run-webagent.sh，`"$@"`逐个保留所有参数。它只是转发层，不设第二套工作区/端口规则；目标脚本实际只用首参数。
 
+根[package.json](../../package.json)的test脚本末尾保留`--`，让`npm test -- --filter=profile.test`真正转发到内层运行器；否则npm会把filter吞成自身配置。F63用独立临时npm层级验证参数及退出2透传，不递归触发真实全套。run-tests.cmd仍不接受筛选参数。
+
 ## 4. agent-host/package.json每组字段
 
 [package.json](../../webagent-core/agent-host/package.json)的name/version标识npm包，并非安装器AppVer；main=index.js是模块默认入口声明，实际npm start脚本为node src/index.js，所以不要因main文字而去运行不存在的根入口。scripts.test调用scripts/run-tests.js，负责真实子进程测试发现/退出；engines node>=18是声明范围，不证明当前所有依赖/场景在18均验收过。

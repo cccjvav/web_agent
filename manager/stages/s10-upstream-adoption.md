@@ -99,7 +99,7 @@
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
 | R2 / 下一项，高 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，第四批现补资源caller与目录ACL及错误hash指引，第五批已补原生流确认，第六批补窄屏/页签ARIA，F55又补浏览器会话/挑战响应头可读性，其余UI/实机项待续修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
-| R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54第三批已补新文件patch显式hash与块校验，第五批补原生postNdjson坏流/终态及失败历史；F55补经典流严格完成/预算/取消清理；F56补可选编辑器编排健康期限与直接子进程收尾；F57补App窗口身份绑定与浏览器失败；F58补同步准备阶段超时/取消，按新证据续修，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
+| R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54第三批已补新文件patch显式hash与块校验，第五批补原生postNdjson坏流/终态及失败历史；F55补经典流严格完成/预算/取消清理；F56补可选编辑器编排健康期限与直接子进程收尾；F57补App窗口身份绑定与浏览器失败；F58同步准备的取消缺口已由F59纠偏、F60改异步；F62补Git/UTF-8/diff，F63补统计/入口/UI，F64补身份网络；剩余fallback另验，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 根因未定位；已复取历史annotations并补阶段诊断首包，等待可解释复现 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 用户优先 | 已授权安全隧道残留回收；已交付只读检测、Windows保护记录/稳定句柄终端回收及负例/诊断；本机开始菜单入口已接入，面板/桌面与PTY互操作仍待 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
 | R6 / 中 | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
@@ -1137,3 +1137,42 @@ F60运行时提交`ce685609d8c517e63acca54d0fc41661518b8532`的[CI35662916656](h
 **下一包：** 先复审本包Git/文本/差异及消费链，跑最终全量/浏览器，再小包处理admin坏存储/畸形URL、根测试参数、GitHub网络及可复现UI可读性；F61-06、telemetry在途、真实Windows/本机MCP与R4仍开放，不靠加超时或重复到绿结案。最终精确提交和CI结果只记本阶段。
 
 **本包验证：** 本地完整99/99与真实Chromium均退出0，文档280/28/111且updated=0，示例6/6、锁定依赖audit各级0。提交前另加diff.relative=true负例，先复现新筛选误判为空，元数据命令固定--no-relative后再跑完整累计验证；不扩大Git配置权限。当前提交的远端CI须按实际SHA回查，不能继承来源结果。
+
+
+### 第63组：可选统计完整性、测试入口与字号/窄屏（2026-09-22）
+
+**前包精确证据：** bd0d060da23403576c3103d50284df31b4c5a7fc已commit/push到本会话01a0c932；CI35736429947精确同SHA，七主机矩阵+Windows安装器+Chromium九项均success，已逐job回查。旧R4与实机边界不关闭。
+
+独立续审将admin URL风险升级为真实原生HTTP证据：隔离Node因`//[`退出1/ERR_INVALID_URL。adminIntegrity六场景原树红（坏存储/读取错误/写中断/schema/JSON错误码等），修后连同新增stat/open消失负例转绿。仅初次ENOENT空表；严格已知字段、4MiB/10000行；wx/0600临时文件+rename，失败保留旧字节/清临时；畸形URL/坏JSON400，stats先算完再200。没有引入自动备份/跨进程锁/强制清坏数据；真实EACCES/断电没有代签。
+
+根npm脚本吞filter也由隔离真实npm入口确认（原内层argv=[]）；末尾显式--后参数与无匹配退出2完整传递，真实根命令只跑profile一份。指南误称audit非阻断的防回退断言原树红，现按高/严重阻断改正；文档与源码相邻解释均更新。
+
+UI新增独立admin浏览器负例：320px/长ID原表撑宽页面。现表内局部横滚、可见提示/焦点、方向键、scope表头、字号与对比度修复；不是用隐藏整页裁数据。补仓库外中文测试字体后，既有工作台16/文档12状态加admin三个视口通过，截图保留review/evidence/F63-admin-*（假数据）。63份局部人工核对的CSV仍冻结875基线项；继续读C#/PS/Inno相关段，没有Linux代签Windows桌面或暂停专项。
+
+**本包验证：** 本地完整100/100、扩充Chromium、文档281/28/111零漂移通过；最终提交前再检查累计树。精确本包SHA/CI下一次实际查询记录，不继承bd0d060。继续F61-03网络取消/预算与F61-06 fallback期限，telemetry/实机/R4仍开放。
+
+
+### 第64组施工中与会话恢复复核（2026-09-22，尚未交付）
+
+前两批当时已完成：bd0d060实际推送且CI35736429947九job成功；caf2ba9当时本地commit成功，但push失败（GitHub认证），已请用户在Arena重连，不索取凭据。
+
+本批仍未提交：github.js三条身份请求接入共享fetchText、10秒/64KiB/拒跳转/稳定错误，REST断开信号接线；共享读取超限不等待不合作cancel Promise，单调时钟拒绝迟到成功/失败。githubNetwork使用真实隔离HTTP、REST及控制时钟固化负例；修复过程中曾因共用HTTP连接池被夹具销毁而出现UND_ERR_SOCKET，已按用例关闭并重开随机端口，不改生产期限。另发现预先取消的login/start仍会清健康pending，新增红测后补入口checkCancelled。
+
+**用户询问完成情况后，当前工作区实际复核与此前不同：** 分支仍固定arena/01a0c932-web-agent，但HEAD为bbe79854a8b56d0fd096235275db419c3a0db415；本地找不到bd0d060/caf2ba9对象。源码/报告/截图等改动仍在工作树（包括来源F60/F61改动），未做reset/checkout/delete。express/node_modules缺失。最后一次githubNetwork运行通过前12个场景，但REST场景因MODULE_NOT_FOUND express失败；不能把该命令末尾git status的退出0当测试成功，githubAuth后续命令没有执行。此前100/100、浏览器与CI仅是此前具体树的证据，不代签当前恢复树。
+
+**接续顺序：** 先核对并安全恢复来源与已推固定分支的Git对象，保留全部工作树改动；GitHub认证仍需Arena连接，不读取/借用项目PAT。恢复开发依赖后完成F64定向/文档主说明与登记/生成/全量/浏览器，然后重建合理的小提交。F61-06启动fallback期限尚未修；telemetry、暂停专项、R4和Windows实机边界继续保留。此处明确是施工交接，不是已完成认证。
+
+
+### 第64组恢复续作：身份网络收尾与文档同步（2026-09-22）
+
+用户明确继续并要求及时更新相关文档。先把68份修改/未跟踪源码和报告存仓库外恢复包及SHA-256账本，再取回来源2f6e7ab与已推bd0d060。确认bbe7985是祖先、分支仍绑定01a0c932后，只用update-ref/read-tree对齐HEAD/索引，不写工作文件；68项逐字节相同。没有reset、改分支、清私密运行数据。npm ci --include=dev恢复76包，网络身份两套定向已过。caf2ba9的对象未在远端，本次将其保留的F63源改动和F64一起重新验证提交，不伪造旧SHA；上一轮认证失败仍保留。
+
+F64复审/修复：固定三个GitHub端点统一10秒头体/64KiB/拒跳转与受控错误；device URL及关键响应类型有界，错误正文不回显。REST身份三路显式建立HTTP断开scope；预先取消在改generation/polling前拒绝，不清健康pending。原generation、单飞、slow_down及无token持久化不变。共享fetchText增加可注入fetchFn、单调expires及成功/错误出口复查；超限不等待WHATWG cancel Promise，但不冒称底层退出已确认。一个成功poll可能两段各10秒，不写成统一10秒总期限。
+
+独立负例包括真实回环HTTP头/体停滞/取消/重定向/预算，三个真实REST断开，以及合成流清理不settle、VM定时器延迟和预先取消不清pending。早期UND_ERR_SOCKET为夹具销毁公共池连接所致，最终每例关闭重开随机端口；生产10秒不改，测试显式缩至500ms并确认正文场景已经收到响应头。此前非Error拒绝与过期socket错误也先红后归一。无真实GitHub登录、令牌或公网请求。
+
+已同步auth README/逐函数说明、requestScope主说明、API路由详解、OAuth测试说明/登记、tests README、SECURITY、审查报告与本索引。首次documentationLearning仅因新夹具entered通知未写进主说明而失败，已补entered/received及假timer说明，不删守卫。恢复后的完整测试、浏览器与新提交CI以下按实际结果续记；目前不代签。
+
+**恢复后首轮累计证据：** 完整100/101，唯一失败是ptyLifecycle末尾对共享fetchText的旧`/aborted/`文本断言，实际五组命令取消均有stdout/exit/close，非R4超时。F64已明确改为E_TIMEOUT，现保留30ms并新增fetch/abort各一次、signal.aborted真，定向转绿；不靠改长期限或重复到绿。恢复后的Chromium153独立套件（含admin三视口）与生产audit 0已实际通过。最终全量在上述兼容测试更新及文档生成后重新执行。
+
+**本包累计验证完成：** 修正兼容断言后完整101/101退出0；恢复后的真实Chromium套件退出0（既有工作台/文档及admin三视口），文档282/28/111且updated=0，生产npm audit 0。这里只追加验证记录，源实现/断言未再改变；重新生成并复验文档/站点门禁后提交恢复的F63+F64。精确新SHA与远端CI仍待实际推送/查询。

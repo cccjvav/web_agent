@@ -30,6 +30,24 @@ console.log('test runner filtering/argument regressions passed');
 // Isolated launcher copies: never rename/remove dependencies in the real checkout.
 const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'runner-dependencies-'));
 try {
+  // Copy only npm scripts into an isolated hierarchy: never recursively run the real suite.
+  const npmRoot=path.join(fixture,'npm-root');
+  const host=path.join(npmRoot,'webagent-core','agent-host');
+  fs.mkdirSync(path.join(host,'scripts'),{recursive:true});
+  const project=JSON.parse(fs.readFileSync(path.resolve(root,'../..','package.json'),'utf8'));
+  fs.writeFileSync(path.join(npmRoot,'package.json'),JSON.stringify({private:true,scripts:{test:project.scripts.test}}));
+  fs.writeFileSync(path.join(host,'package.json'),JSON.stringify({private:true,scripts:{test:'node scripts/run-tests.js'}}));
+  fs.writeFileSync(path.join(host,'scripts','run-tests.js'),"console.log('FORWARDED '+JSON.stringify(process.argv.slice(2)));if(process.argv.includes('--filter=no-match'))process.exitCode=2;");
+  const npmCli=process.env.npm_execpath;
+  for(const filter of ['profile.test','no-match']) {
+    const args=['test','--','--filter='+filter];
+    const result=spawnSync(npmCli?process.execPath:(process.platform==='win32'?'npm.cmd':'npm'),npmCli?[npmCli,...args]:args,{cwd:npmRoot,encoding:'utf8',timeout:20000,shell:!npmCli&&process.platform==='win32'});
+    assert.ifError(result.error);
+    assert.strictEqual(result.status,filter==='no-match'?2:0,result.stderr+result.stdout);
+    const line=result.stdout.split('\n').find(line=>line.startsWith('FORWARDED '));
+    assert.deepStrictEqual(JSON.parse(line.slice('FORWARDED '.length)),['--filter='+filter],'root npm entry must pass arguments to the host runner');
+  }
+
   fs.mkdirSync(path.join(fixture, 'scripts'));
   fs.copyFileSync(path.join(root, 'scripts/run-tests.js'), path.join(fixture, 'scripts/run-tests.js'));
   for (const installed of [[], ['express']]) {

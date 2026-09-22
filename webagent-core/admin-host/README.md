@@ -27,10 +27,10 @@ Windows从仓库根运行run-admin.cmd；macOS/Linux可运行run-admin.sh。直�
 
 客户端同时配置WEBAGENT_TELEMETRY_URL与WEBAGENT_TELEMETRY_TOKEN才上报；payload包含安装ID和可选GitHub身份，因此不是完全匿名。服务默认回环，改公网监听需要独立部署评估。
 
-reports.json是普通文件读写，读取失败可回空列表；不是数据库事务、持久队列或严格schema系统。令牌文件应保密，gitignore不能消除已提交的秘密。
+reports.json只有初次确实不存在才作为空表；损坏、不可读、非普通文件或超4MiB/10000行均拒绝并保留原文，返回E_REPORT_STORE。先人工备份再明确修复/恢复，不自动清空。新报告校验有界字符串、真实日期、非负安全整数/失败数与成功率；未知字段或坏JSON返回400。发布用同目录排他临时文件+rename，失败清临时文件；没有跨进程锁、自动备份或断电事务。令牌文件应保密，gitignore不能消除已提交的秘密。
 
 ## 验证
-adminHost覆盖本地HTTP鉴权、报告与body边界；usageTracker验证客户端部分统计。真实远端部署、浏览器登录体验、长期数据恢复和精确计费不在此测试结论内。
+adminHost保留本地HTTP鉴权/排名/body边界；adminIntegrity覆盖真实子进程畸形URL400且不退出、坏存储保留、schema和写中断。浏览器套件新增320/390/1440统计页：14px正文/12px安装ID、对比度、可聚焦的表格内横向滚动，不让整页溢出；长ID折行。usageTracker只验证客户端部分统计。真实远端部署、浏览器登录体验、长期数据恢复和精确计费不在此测试结论内。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航
@@ -39,6 +39,6 @@ adminHost覆盖本地HTTP鉴权、报告与body边界；usageTracker验证客户
 
 | 源码 | 定位证据 |
 |---|---|
-| [app.js](app.js) | 27 个函数/类节点 |
+| [app.js](app.js) | 33 个函数/类节点 |
 | [index.js](index.js) | 1 个函数/类节点 |
 <!-- docs-inventory:end -->

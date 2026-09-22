@@ -33,6 +33,8 @@ for (const file of docs) {
   assert.ok(!inFence, file + ': balanced code fences');
 }
 const read = rel => fs.readFileSync(path.join(root, rel), 'utf8');
+const testingGuide = read('docs/development/测试说明.md');
+assert.ok(testingGuide.includes('阻断门禁') && !testingGuide.includes('非阻断公告检查'), 'test guide must match the current high-severity audit gate');
 const hostPackage = JSON.parse(read('webagent-core/agent-host/package.json'));
 const projectPackage = JSON.parse(read('package.json'));
 assert.ok(projectPackage.private && projectPackage.scripts.test.includes('agent-host'));

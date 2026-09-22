@@ -971,35 +971,46 @@ router.post('/bridge/login', (req, res) => {
   res.json({ success: true, demo: true, provider: 'local-demo', username: 'local' });
 });
 
+// Identity IO inherits the actual HTTP request lifetime, not just a publication generation.
+async function identityRequest(req, res, action) {
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  const disconnected = () => { if (!res.writableEnded) abort(); };
+  req.on('aborted', abort); res.on('close', disconnected);
+  if (req.aborted || res.destroyed) abort();
+  try { return await runWithSignal(controller.signal, action); }
+  finally { req.removeListener('aborted', abort); res.removeListener('close', disconnected); }
+}
+
 router.post('/bridge/token', async (req, res) => {
   const body = bridgeRequestBody(req, res, ['token']);
   if (!body) return;
   if (!validOptionalString(body, 'token', 4096)) return rejectBridgeRequest(res);
   try {
-    const out = await github.loginWithToken(body.token || '');
-    res.json(out);
+    const out = await identityRequest(req, res, () => github.loginWithToken(body.token || ''));
+    if (!res.destroyed) res.json(out);
   } catch (err) {
-    res.status(err.status || 400).json({ success: false, error: err.message });
+    if (!res.destroyed) res.status(err.status || 400).json({ success: false, error: err.message, code: err.code });
   }
 });
 
 router.post('/bridge/device', async (req, res) => {
   if (!bridgeRequestBody(req, res, [])) return;
   try {
-    const out = await github.startDeviceLogin();
-    res.json({ success: true, ...out });
+    const out = await identityRequest(req, res, () => github.startDeviceLogin());
+    if (!res.destroyed) res.json({ success: true, ...out });
   } catch (err) {
-    res.status(err.status || 400).json({ success: false, error: err.message, code: err.code });
+    if (!res.destroyed) res.status(err.status || 400).json({ success: false, error: err.message, code: err.code });
   }
 });
 
 router.post('/bridge/device/poll', async (req, res) => {
   if (!bridgeRequestBody(req, res, [])) return;
   try {
-    const out = await github.pollDeviceLogin();
-    res.json(out);
+    const out = await identityRequest(req, res, () => github.pollDeviceLogin());
+    if (!res.destroyed) res.json(out);
   } catch (err) {
-    res.status(err.status || 400).json({ success: false, error: err.message });
+    if (!res.destroyed) res.status(err.status || 400).json({ success: false, error: err.message, code: err.code });
   }
 });
 
