@@ -131,6 +131,8 @@ R5第三包：tunnelCleanup为协议/过期/确认/未知的模拟测试，tunne
 
 R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；Linux明确不执行原生测试。夹具不入安装包，实际状态见阶段10。
 
+F62新增fileReadSafety/diffBudget：严格UTF-8与可逆hash、子目录Git范围/敏感两侧、单次有界差异及写前拒绝；详细断言见[存储完整性与预算](存储完整性与预算测试详解.md)。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -155,6 +157,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [corsAllow.test.js](corsAllow.test.js) | 20 个函数/类节点 |
 | [dangerousCommands.test.js](dangerousCommands.test.js) | 11 个函数/类节点 |
 | [desktopExtension.test.js](desktopExtension.test.js) | 0 个函数/类节点 |
+| [diffBudget.test.js](diffBudget.test.js) | 8 个函数/类节点 |
 | [docsHttp.test.js](docsHttp.test.js) | 14 个函数/类节点 |
 | [docsSite.test.js](docsSite.test.js) | 7 个函数/类节点 |
 | [documentationLearning.test.js](documentationLearning.test.js) | 7 个函数/类节点 |
@@ -168,6 +171,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
 | [externalDiscovery.test.js](externalDiscovery.test.js) | 13 个函数/类节点 |
 | [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
+| [fileReadSafety.test.js](fileReadSafety.test.js) | 21 个函数/类节点 |
 | [githubAuth.test.js](githubAuth.test.js) | 21 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |

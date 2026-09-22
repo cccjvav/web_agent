@@ -307,18 +307,17 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
       });
     }
     const newContent = blocksEarly.length ? blocksEarly[0].replace : patch;
+    // Budget the display before ANY filesystem mutation, including parent creation.
+    const diffInfo = createUnifiedDiff(filePath, '', newContent);
 
     if (dryRun) {
-      const preview = createUnifiedDiff(filePath, '', newContent);
       return { success: true, isNewFile: true, filePath, baseHash: null, proposedHash: computeHash(newContent),
-        diff: preview.patch, diffSummary: `+${preview.additions} -${preview.deletions}`, message: 'Dry run check passed (New file)' };
+        diff: diffInfo.patch, diffSummary: `+${diffInfo.additions} -${diffInfo.deletions}`, message: 'Dry run check passed (New file)' };
     }
 
     await Promise.resolve();
     fs.mkdirSync(path.dirname(fullPath), { recursive: true });
     atomicWriteText(fullPath, newContent, { exclusive: true });
-
-    const diffInfo = createUnifiedDiff(filePath, '', newContent);
     eventBus.broadcast('file_patched', {
       filePath,
       isNewFile: true,

@@ -20,9 +20,9 @@
 | `localControl.js` | 校验回环socket、显式本机Host及隧道特征 | 回环socket本身不足以证明本机来源；不是用户登录系统 |
 | `corsAllow.js` | 本机API浏览器Origin与MCP Origin规则 | MCP入口在正文解析前硬拒绝不允许Origin；CORS不是认证，无Origin仍需相应入口认证 |
 | `requestScope.js` | AsyncLocalStorage传递AbortSignal；fetchText包装请求/body deadline与逐块字节预算 | 标准Response预缓冲限8MiB，调用方可收紧；text-only兼容替身只能事后计字节；只有显式runWithSignal的调用链才拥有请求上下文 |
-| `boundedFile.js` | 普通文件与8MiB默认文本读取预算 | 是有界同步读取，不是所有IO异步化或OS沙箱 |
+| `boundedFile.js` | 普通文件、严格UTF-8（保留BOM/CRLF）与8MiB默认读取预算 | 是有界同步读取，不是所有IO异步化或OS沙箱 |
 | `eventBus.js` | 进程内事件、脱敏日志和WS广播 | 内部订阅者仍收到原始payload；脱敏不适用于所有数据通道 |
-| `diff.js` | 用diff库生成展示补丁和增删统计 | 展示统计不负责决定写入是否安全 |
+| `diff.js` | 一次structuredPatch计算展示与增删统计，输入/算法/输出有界 | 100ms是合作检查，不是抢占式worker；调用方必须在写前完成预检 |
 
 ## 执行流程与边界
 ### 本机控制面
@@ -33,7 +33,7 @@ API浏览器Origin只接受本机；没有Origin时还检查可用Referer。MCP�
 ### 取消与读取
 runWithSignal建立异步链上下文；checkCancelled看到aborted抛E_CANCELLED。fetchText将父取消连接到内部controller，并用deadline覆盖fetch和body读取，finally清理timer/listener；readResponseText优先以WHATWG reader或Node异步流逐块累计原始字节，默认8MiB，越界抛E_RESPONSE_TOO_LARGE并尝试取消。只有text()的旧fetch/测试替身会先完整读取再核对。外层是否建立scope、是否收紧预算及是否拒绝重定向仍看调用方，不能对所有REST或MCP请求一概保证。
 
-readBoundedText在路径与打开的fd上检查普通文件和大小，以64KiB块读取，最多多读1字节检测超预算，finally关fd。文件仍可能被其他进程修改；读取上限不是一致性事务。
+readBoundedText在路径与打开的fd上检查普通文件和大小，以64KiB块读取，最多多读1字节检测超预算，finally关fd；fatal解码拒绝非法UTF-8，ignoreBOM:true保留BOM，合法文本再编码与磁盘字节一致。文件仍可能被其他进程修改；读取上限不是一致性事务。
 
 ### 事件、日志与WS
 broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于日志和WS。日志最多500条；WS最多32路，空闲计时30分钟，有发送活动会刷新。秘密键和常见token模式会被替换，大字段、深度、键/数组数受限。
@@ -53,7 +53,7 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 | [boundedFile.js](boundedFile.js) | 1 个函数/类节点 |
 | [connectionCheck.js](connectionCheck.js) | 9 个函数/类节点 |
 | [corsAllow.js](corsAllow.js) | 14 个函数/类节点 |
-| [diff.js](diff.js) | 1 个函数/类节点 |
+| [diff.js](diff.js) | 2 个函数/类节点 |
 | [editorUndo.js](editorUndo.js) | 6 个函数/类节点 |
 | [eventBus.js](eventBus.js) | 15 个函数/类节点 |
 | [executionControl.js](executionControl.js) | 22 个函数/类节点 |

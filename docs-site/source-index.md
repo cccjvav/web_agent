@@ -214,7 +214,7 @@
 
 ## docs-site/documentation.config.json
 
-[目录说明](README.md) · SHA-256 `bf0c0870e45c0adbbd538c6b4f682525c041cf6719f196b2d20a58871776d9bd`
+[目录说明](README.md) · SHA-256 `56f75fa70c75d4bd6811b4eec2a17a1dc659ba5289e7ac5375a81952b4898d41`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -1361,13 +1361,21 @@
 
 ## webagent-core/agent-host/src/tools/gitOps.js
 
-[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `1a3d1f397656988a33a4628212666df2549a84e97e38f839b5c1dcb391dafca0`
+[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `24e0566081edc943659446571d28bf19f9b7b37926db64b35261e360d5c6a43d`
 
-- `notGitResult` — FunctionDeclaration，[L7–L20](../webagent-core/agent-host/src/tools/gitOps.js#L7-L20)
-- `git` — FunctionDeclaration，[L22–L65](../webagent-core/agent-host/src/tools/gitOps.js#L22-L65)
-- `git/anonymous@29:77` — ArrowFunctionExpression，[L29–L29](../webagent-core/agent-host/src/tools/gitOps.js#L29-L29)
-- `gitStatus` — FunctionDeclaration，[L67–L100](../webagent-core/agent-host/src/tools/gitOps.js#L67-L100)
-- `gitDiff` — FunctionDeclaration，[L102–L131](../webagent-core/agent-host/src/tools/gitOps.js#L102-L131)
+- `notGitResult` — FunctionDeclaration，[L8–L21](../webagent-core/agent-host/src/tools/gitOps.js#L8-L21)
+- `git` — FunctionDeclaration，[L23–L66](../webagent-core/agent-host/src/tools/gitOps.js#L23-L66)
+- `git/anonymous@30:77` — ArrowFunctionExpression，[L30–L30](../webagent-core/agent-host/src/tools/gitOps.js#L30-L30)
+- `workspacePrefix` — FunctionDeclaration，[L69–L69](../webagent-core/agent-host/src/tools/gitOps.js#L69-L69)
+- `localGitPath` — FunctionDeclaration，[L70–L72](../webagent-core/agent-host/src/tools/gitOps.js#L70-L72)
+- `gitStatus` — FunctionDeclaration，[L74–L111](../webagent-core/agent-host/src/tools/gitOps.js#L74-L111)
+- `gitDiff` — FunctionDeclaration，[L113–L165](../webagent-core/agent-host/src/tools/gitOps.js#L113-L165)
+- `gitDiff/anonymous@127:21` — ArrowFunctionExpression，[L127–L127](../webagent-core/agent-host/src/tools/gitOps.js#L127-L127)
+- `gitDiff/anonymous@128:31` — ArrowFunctionExpression，[L128–L128](../webagent-core/agent-host/src/tools/gitOps.js#L128-L128)
+- `gitDiff/anonymous@129:23` — ArrowFunctionExpression，[L129–L129](../webagent-core/agent-host/src/tools/gitOps.js#L129-L129)
+- `gitDiff/anonymous@130:32` — ArrowFunctionExpression，[L130–L133](../webagent-core/agent-host/src/tools/gitOps.js#L130-L133)
+- `gitDiff/anonymous@136:52` — ArrowFunctionExpression，[L136–L136](../webagent-core/agent-host/src/tools/gitOps.js#L136-L136)
+- `gitDiff/anonymous@137:37` — ArrowFunctionExpression，[L137–L137](../webagent-core/agent-host/src/tools/gitOps.js#L137-L137)
 
 ## webagent-core/agent-host/src/tools/index.js
 
@@ -1406,7 +1414,7 @@
 
 ## webagent-core/agent-host/src/tools/patchEngine.js
 
-[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `1950d28e737b595542b1b7d5804ef848da1164071a66ee686a2faa9b5e04b119`
+[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `b22ae7a75ab2a8d6a3278f4091099c5ec6a5c124cef94da16aae7a384bb754ac`
 
 - `computeHash` — FunctionDeclaration，[L13–L15](../webagent-core/agent-host/src/tools/patchEngine.js#L13-L15)
 - `tempSibling` — FunctionDeclaration，[L17–L19](../webagent-core/agent-host/src/tools/patchEngine.js#L17-L19)
@@ -1440,7 +1448,7 @@
 - `applySearchBlocks` — FunctionDeclaration，[L229–L272](../webagent-core/agent-host/src/tools/patchEngine.js#L229-L272)
 - `applyPatch` — FunctionDeclaration，[L274–L276](../webagent-core/agent-host/src/tools/patchEngine.js#L274-L276)
 - `applyPatch/anonymous@275:38` — ArrowFunctionExpression，[L275–L275](../webagent-core/agent-host/src/tools/patchEngine.js#L275-L275)
-- `applyPatchBody` — FunctionDeclaration，[L278–L429](../webagent-core/agent-host/src/tools/patchEngine.js#L278-L429)
+- `applyPatchBody` — FunctionDeclaration，[L278–L428](../webagent-core/agent-host/src/tools/patchEngine.js#L278-L428)
 
 ## webagent-core/agent-host/src/tools/planRound.js
 
@@ -1852,9 +1860,9 @@
 
 ## webagent-core/agent-host/src/utils/boundedFile.js
 
-[目录说明](../webagent-core/agent-host/src/utils/README.md) · SHA-256 `e7a72aa6291d66f0580c4d75988d730160b93cca970c4bb1da6e9e69d15c5e08`
+[目录说明](../webagent-core/agent-host/src/utils/README.md) · SHA-256 `be5b25bc65b190facd60c10725cb9cef0385cf1a26750b44e41f0d5e9d97494b`
 
-- `readBoundedText` — FunctionDeclaration，[L4–L21](../webagent-core/agent-host/src/utils/boundedFile.js#L4-L21)
+- `readBoundedText` — FunctionDeclaration，[L6–L30](../webagent-core/agent-host/src/utils/boundedFile.js#L6-L30)
 
 ## webagent-core/agent-host/src/utils/connectionCheck.js
 
@@ -1891,9 +1899,10 @@
 
 ## webagent-core/agent-host/src/utils/diff.js
 
-[目录说明](../webagent-core/agent-host/src/utils/README.md) · SHA-256 `09e0e9a1853a1e696874b579643964402295e8d2033ba0b1e945e2fa4c476361`
+[目录说明](../webagent-core/agent-host/src/utils/README.md) · SHA-256 `ced4d3511b9636cae5723cc63341fd18572ef6dcdb3e91839d87d6ee1f7671e6`
 
-- `createUnifiedDiff` — FunctionDeclaration，[L3–L29](../webagent-core/agent-host/src/utils/diff.js#L3-L29)
+- `createUnifiedDiff` — FunctionDeclaration，[L4–L26](../webagent-core/agent-host/src/utils/diff.js#L4-L26)
+- `createUnifiedDiff/fail` — ArrowFunctionExpression，[L5–L5](../webagent-core/agent-host/src/utils/diff.js#L5-L5)
 
 ## webagent-core/agent-host/src/utils/editorUndo.js
 
@@ -2591,6 +2600,19 @@
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
+## webagent-core/agent-host/tests/diffBudget.test.js
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `9106d3c16712c63ca8e2c7b8e6daac1ecb77ec2359b04d460b22a0d61b20bf8b`
+
+- `run` — FunctionDeclaration，[L12–L49](../webagent-core/agent-host/tests/diffBudget.test.js#L12-L49)
+- `run/anonymous@31:18` — ArrowFunctionExpression，[L31–L31](../webagent-core/agent-host/tests/diffBudget.test.js#L31-L31)
+- `run/anonymous@31:74` — ArrowFunctionExpression，[L31–L31](../webagent-core/agent-host/tests/diffBudget.test.js#L31-L31)
+- `run/anonymous@32:18` — ArrowFunctionExpression，[L32–L32](../webagent-core/agent-host/tests/diffBudget.test.js#L32-L32)
+- `run/anonymous@32:91` — ArrowFunctionExpression，[L32–L32](../webagent-core/agent-host/tests/diffBudget.test.js#L32-L32)
+- `run/anonymous@37:89` — ArrowFunctionExpression，[L37–L37](../webagent-core/agent-host/tests/diffBudget.test.js#L37-L37)
+- `run/anonymous@42:109` — ArrowFunctionExpression，[L42–L42](../webagent-core/agent-host/tests/diffBudget.test.js#L42-L42)
+- `anonymous@50:12` — ArrowFunctionExpression，[L50–L50](../webagent-core/agent-host/tests/diffBudget.test.js#L50-L50)
+
 ## webagent-core/agent-host/tests/docsHttp.test.js
 
 [目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `9fcdadae2ac0cb025dcb96703f042626a2b5869d225ec08a0da99fb602a3a23f`
@@ -2624,15 +2646,15 @@
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `406fa7f17d61a801fad3f8d4c5d1535a4f721e7ae348979542d495fc0197a6af`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `49c924196994004b61fd9e3e1f04ac8cf5ae7d7922b4ef60b6cd2ef6bb61ff18`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)
-- `namedFunctions` — FunctionDeclaration，[L266–L281](../webagent-core/agent-host/tests/documentationLearning.test.js#L266-L281)
-- `namedFunctions/anonymous@277:44` — ArrowFunctionExpression，[L277–L277](../webagent-core/agent-host/tests/documentationLearning.test.js#L277-L277)
-- `anonymous@380:66` — ArrowFunctionExpression，[L380–L380](../webagent-core/agent-host/tests/documentationLearning.test.js#L380-L380)
-- `anonymous@385:43` — ArrowFunctionExpression，[L385–L385](../webagent-core/agent-host/tests/documentationLearning.test.js#L385-L385)
-- `anonymous@385:68` — ArrowFunctionExpression，[L385–L385](../webagent-core/agent-host/tests/documentationLearning.test.js#L385-L385)
+- `namedFunctions` — FunctionDeclaration，[L268–L283](../webagent-core/agent-host/tests/documentationLearning.test.js#L268-L283)
+- `namedFunctions/anonymous@279:44` — ArrowFunctionExpression，[L279–L279](../webagent-core/agent-host/tests/documentationLearning.test.js#L279-L279)
+- `anonymous@382:66` — ArrowFunctionExpression，[L382–L382](../webagent-core/agent-host/tests/documentationLearning.test.js#L382-L382)
+- `anonymous@387:43` — ArrowFunctionExpression，[L387–L387](../webagent-core/agent-host/tests/documentationLearning.test.js#L387-L387)
+- `anonymous@387:68` — ArrowFunctionExpression，[L387–L387](../webagent-core/agent-host/tests/documentationLearning.test.js#L387-L387)
 
 ## webagent-core/agent-host/tests/documentationLinks.test.js
 
@@ -2878,6 +2900,32 @@
 - `main/anonymous@94:74` — ArrowFunctionExpression，[L94–L94](../webagent-core/agent-host/tests/fileCheckpoints.test.js#L94-L94)
 - `main/anonymous@95:77` — ArrowFunctionExpression，[L95–L95](../webagent-core/agent-host/tests/fileCheckpoints.test.js#L95-L95)
 - `anonymous@103:13` — ArrowFunctionExpression，[L103–L103](../webagent-core/agent-host/tests/fileCheckpoints.test.js#L103-L103)
+
+## webagent-core/agent-host/tests/fileReadSafety.test.js
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `60c7507f69f846d6603d3c015902cdcdb5a90e83e2e3ac439a01e9887d78e19e`
+
+- `git` — FunctionDeclaration，[L16–L16](../webagent-core/agent-host/tests/fileReadSafety.test.js#L16-L16)
+- `run` — FunctionDeclaration，[L17–L116](../webagent-core/agent-host/tests/fileReadSafety.test.js#L17-L116)
+- `run/check` — FunctionDeclaration，[L19–L22](../webagent-core/agent-host/tests/fileReadSafety.test.js#L19-L22)
+- `run/anonymous@24:89` — ArrowFunctionExpression，[L24–L30](../webagent-core/agent-host/tests/fileReadSafety.test.js#L24-L30)
+- `run/anonymous@24:89/anonymous@27:22` — ArrowFunctionExpression，[L27–L27](../webagent-core/agent-host/tests/fileReadSafety.test.js#L27-L27)
+- `run/anonymous@24:89/anonymous@27:77` — ArrowFunctionExpression，[L27–L27](../webagent-core/agent-host/tests/fileReadSafety.test.js#L27-L27)
+- `run/anonymous@31:96` — ArrowFunctionExpression，[L31–L38](../webagent-core/agent-host/tests/fileReadSafety.test.js#L31-L38)
+- `run/anonymous@39:95` — ArrowFunctionExpression，[L39–L47](../webagent-core/agent-host/tests/fileReadSafety.test.js#L39-L47)
+- `run/anonymous@39:95/anonymous@44:122` — ArrowFunctionExpression，[L44–L44](../webagent-core/agent-host/tests/fileReadSafety.test.js#L44-L44)
+- `run/anonymous@39:95/anonymous@45:99` — ArrowFunctionExpression，[L45–L45](../webagent-core/agent-host/tests/fileReadSafety.test.js#L45-L45)
+- `run/anonymous@48:102` — ArrowFunctionExpression，[L48–L55](../webagent-core/agent-host/tests/fileReadSafety.test.js#L48-L55)
+- `run/anonymous@48:102/anonymous@53:94` — ArrowFunctionExpression，[L53–L53](../webagent-core/agent-host/tests/fileReadSafety.test.js#L53-L53)
+- `run/anonymous@67:97` — ArrowFunctionExpression，[L67–L76](../webagent-core/agent-host/tests/fileReadSafety.test.js#L67-L76)
+- `run/anonymous@67:97/anonymous@74:20` — ArrowFunctionExpression，[L74–L74](../webagent-core/agent-host/tests/fileReadSafety.test.js#L74-L74)
+- `run/anonymous@78:97` — ArrowFunctionExpression，[L78–L84](../webagent-core/agent-host/tests/fileReadSafety.test.js#L78-L84)
+- `run/anonymous@85:95` — ArrowFunctionExpression，[L85–L103](../webagent-core/agent-host/tests/fileReadSafety.test.js#L85-L103)
+- `run/anonymous@85:95/anonymous@92:34` — ArrowFunctionExpression，[L92–L92](../webagent-core/agent-host/tests/fileReadSafety.test.js#L92-L92)
+- `run/anonymous@85:95/anonymous@93:35` — ArrowFunctionExpression，[L93–L93](../webagent-core/agent-host/tests/fileReadSafety.test.js#L93-L93)
+- `run/anonymous@85:95/anonymous@101:34` — ArrowFunctionExpression，[L101–L101](../webagent-core/agent-host/tests/fileReadSafety.test.js#L101-L101)
+- `run/anonymous@105:114` — ArrowFunctionExpression，[L105–L113](../webagent-core/agent-host/tests/fileReadSafety.test.js#L105-L113)
+- `anonymous@117:12` — ArrowFunctionExpression，[L117–L117](../webagent-core/agent-host/tests/fileReadSafety.test.js#L117-L117)
 
 ## webagent-core/agent-host/tests/githubAuth.test.js
 

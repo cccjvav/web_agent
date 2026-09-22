@@ -133,6 +133,8 @@ const pairs = [
   ["webagent-core/agent-host/tests/bridgeTunnel.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
 
   ["webagent-core/agent-host/tests/stateIntegrity.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
+  ["webagent-core/agent-host/tests/fileReadSafety.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
+  ["webagent-core/agent-host/tests/diffBudget.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
   ["webagent-core/agent-host/tests/resourceBudget.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
   ["webagent-core/agent-host/tests/auditStorage.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
   ["webagent-core/agent-host/tests/hostPersist.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],

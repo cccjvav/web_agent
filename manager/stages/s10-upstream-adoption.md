@@ -82,7 +82,7 @@
 | 文本恢复 | 经典保存回退、原生未保存草稿恢复、任务前跨文件检查点三种入口 | 非原子项目回滚，不恢复创建/删除/重命名/数据库/外部命令效果；部分完成须如实报告 |
 | 文档站/测试入口 | 中文和斜线锚点、搜索状态已修；npm test有依赖预检，真实Chromium另跑 | 不认证全部Markdown或真实VSCode窗口 |
 | Skill与隧道 | Skill新建拒绝重名覆盖；启停不假报成功；Named/ngrok逐流遮盖跨块Token | 不清洗历史日志，不隐藏进程argv/env，不是所有秘密扫描器 |
-| Git只读工具 | 字面路径，NUL状态/原路径，准确截断；禁外部diff/textconv/fsmonitor及已发现自定义filter | 与LFS/转换驱动终端结果可能不同；整仓diff仍可能含已跟踪秘密，不隔离同用户配置竞态 |
+| Git只读工具 | 字面路径，NUL状态/原路径，准确截断；禁外部diff/textconv/fsmonitor及已发现自定义filter | 与LFS/转换驱动终端结果可能不同；F62已用两侧检查/白名单过滤敏感及工作区外差异，普通文件内秘密仍可能存在，不隔离同用户配置竞态 |
 
 ##### 恢复功能的不可丢约束
 
@@ -1122,3 +1122,18 @@ F60运行时提交`ce685609d8c517e63acca54d0fc41661518b8532`的[CI35662916656](h
 元复审结论：缺陷不是必须新引入才值得修；文档诚实列出限制也不能代替实现完善。每包需要针对性红→绿与旧合同/未知效果验证。本文报告是本轮证据交付，执行优先级只在本阶段维护，不新增并行路线文件。
 
 报告/CSV/导航完成后再次完整97/97；从报告附录实际抽取并执行三段可携带代码，反例结果一致（diff本次2010ms触发同一2秒观察窗）；CSV与63cbbdc的git ls-tree精确匹配873个唯一文件，正式文档202项分布另行重算正确。产品运行源码、依赖锁、现有测试断言及暂停/冻结源码均零diff。
+
+
+### 第62组：本会话独立交叉审查与文件安全修复（2026-09-22）
+
+**当前接手覆盖旧会话即时说明：** 本会话固定arena/01a0c932-web-agent，干净树从bbe7985快进来源arena/01a0bfa9-web-agent的2f6e7ab，不切分支、不reset、不推来源。先沿源码独立复现再对照F61全文；manager摘要已提示旧风险，不假称全盲测。来源本地97/97、真实Chromium、示例6/6与audit 0实跑；来源CI35665317209精确2f6e7ab九job均success（已逐job核实）。暂停118项及私密/冻结边界未解除。
+
+[F62报告](../../review/INDEPENDENT_AUDIT_2026-09-22.md)与875项CSV重新枚举；217 JS/13 JSON/4 sh/2 SVG和159 Markdown简单文件链接检查已跑，51份局部人工复核不升级全仓语义通过。独立新增：Git子目录workspace泄露父仓正文/状态；admin畸形URL在try外；根npm test不转发filter。与F61交叉确认01/02/04，独立8000行diff负例也超时；其余网络/fallback等未关闭。
+
+本小包（R2/R3/R7）修复：gitStatus限定工作区与相对路径；gitDiff先NUL元数据、识别rename两侧范围/敏感规则，再仅对允许路径--no-renames输出，空选择不回退全仓，并显式omittedFiles/truncated。readBoundedText fatal UTF-8且保留BOM/CRLF，非法编码不改原字节。diff复用structuredPatch单次搜索，输入/行数/算法/输出四层预算，新建也在mkdir/写入前预检。没有取消hash/审批/unknown或改变普通8MiB读写上限。
+
+新增fileReadSafety原树5场景红、diffBudget原树3秒测试看门狗超时；修后新两套与旧workspaceTools/patchEngine/stateIntegrity/resourceBudget/apiFiles/fileCheckpoints通过。施工时并行同文件编辑产生diffInfo重复声明，错误根filter又导致误跑全套49/99失败；已修语法，后续不再并发编辑同一文件。不删除断言或抹除这次自身回归。Git跨边界改名fixture改为可识别100% rename，明确不是内容污点追踪。对应主指南/SECURITY/源码和测试教学已原地同步，生成物只能经工具更新。
+
+**下一包：** 先复审本包Git/文本/差异及消费链，跑最终全量/浏览器，再小包处理admin坏存储/畸形URL、根测试参数、GitHub网络及可复现UI可读性；F61-06、telemetry在途、真实Windows/本机MCP与R4仍开放，不靠加超时或重复到绿结案。最终精确提交和CI结果只记本阶段。
+
+**本包验证：** 本地完整99/99与真实Chromium均退出0，文档280/28/111且updated=0，示例6/6、锁定依赖audit各级0。提交前另加diff.relative=true负例，先复现新筛选误判为空，元数据命令固定--no-relative后再跑完整累计验证；不扩大Git配置权限。当前提交的远端CI须按实际SHA回查，不能继承来源结果。
