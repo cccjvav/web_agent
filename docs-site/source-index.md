@@ -2712,19 +2712,19 @@
 
 ## webagent-core/agent-host/tests/docsSite.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `7190606dcf310daadf77475ab8c2532fc048402d7b4615718de598f2a6399550`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `0880cf96069b884fbe67924f91a6ea2a9afeb4b79d1ab4ac176478b358e711d9`
 
 - `readFileSync` — FunctionExpression，[L33–L36](../webagent-core/agent-host/tests/docsSite.test.js#L33-L36)
 - `writeFileSync` — FunctionExpression，[L37–L40](../webagent-core/agent-host/tests/docsSite.test.js#L37-L40)
 - `require` — FunctionExpression，[L44–L44](../webagent-core/agent-host/tests/docsSite.test.js#L44-L44)
 - `log` — FunctionExpression，[L45–L45](../webagent-core/agent-host/tests/docsSite.test.js#L45-L45)
-- `anonymous@55:45` — ArrowFunctionExpression，[L55–L55](../webagent-core/agent-host/tests/docsSite.test.js#L55-L55)
-- `anonymous@59:47` — ArrowFunctionExpression，[L59–L59](../webagent-core/agent-host/tests/docsSite.test.js#L59-L59)
-- `anonymous@62:56` — ArrowFunctionExpression，[L62–L62](../webagent-core/agent-host/tests/docsSite.test.js#L62-L62)
+- `anonymous@56:45` — ArrowFunctionExpression，[L56–L56](../webagent-core/agent-host/tests/docsSite.test.js#L56-L56)
+- `anonymous@60:47` — ArrowFunctionExpression，[L60–L60](../webagent-core/agent-host/tests/docsSite.test.js#L60-L60)
+- `anonymous@63:56` — ArrowFunctionExpression，[L63–L63](../webagent-core/agent-host/tests/docsSite.test.js#L63-L63)
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `8c96ccda80ac9758aeb89f251b95860f359e2f147dd754b124e89c92da7b2ad0`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `1d0cf9429ac8e3313069b836f5f29acbcbc342921d6ae5cdba6e1ddd7896deea`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)

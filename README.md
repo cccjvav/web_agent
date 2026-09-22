@@ -41,7 +41,7 @@ code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容�
 - 探测相关施工暂停，等待另一助手的外部整合项目正式交接；既有桌面探针保留，不提前宣称新工作台/code-server/VSCode整合已验收。见[暂停范围与交接门槛](manager/stages/s8-probe-integration.md)、[存量入口矩阵](探针入口与实际可用范围.md)。探针结果仍是参考，不鉴定真实后台模型。
 - 第三方 Chat Plus／DeepSeek 扩展只是候选接入，不能保证当前版本、站点、认证或订阅条件；分别见[Chat Plus](docs/guides/网页ChatPlus使用指南.md)、[DeepSeek](docs/guides/网页DeepSeek使用指南.md)。不要把聊天栏里的一条 URL 当作已经建立 MCP 连接。
 
-剩余施工、候选设计与人工验收分开记录在[阶段 10](manager/stages/s10-upstream-adoption.md)和[上游采用队列](review/UPSTREAM_ADOPTION_MAP_2026-09-15.md)。当前文档审查范围见[文档状态](review/SEMANTIC_REVIEW_2026-09-16.md)，不以索引生成或 CI 绿灯宣称全仓逐句审查完成。
+剩余施工、候选设计与人工验收分开记录在[阶段 10](manager/stages/s10-upstream-adoption.md)和[上游采用队列](review/UPSTREAM_ADOPTION_MAP_2026-09-15.md)。文档维护目标是确认项目.md与当前实现/状态一致，范围和处置见[文档时效清单](review/FULL_REVIEW_INDEX.md)，历史证据见[核对台账](review/SEMANTIC_REVIEW_2026-09-16.md)。不要求全仓源码逐行认证，也不把索引生成或CI绿灯当作全部文档已核对。
 
 ## 文档导航
 

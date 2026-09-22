@@ -20276,8 +20276,8 @@
     {
       "path": "webagent-core/agent-host/tests/docsSite.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "7190606dcf310daadf77475ab8c2532fc048402d7b4615718de598f2a6399550",
-      "lineCount": 73,
+      "sha256": "0880cf96069b884fbe67924f91a6ea2a9afeb4b79d1ab4ac176478b358e711d9",
+      "lineCount": 74,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -20322,31 +20322,31 @@
           "parameters": []
         },
         {
-          "id": "anonymous@55:45",
-          "name": "anonymous@55:45",
+          "id": "anonymous@56:45",
+          "name": "anonymous@56:45",
           "kind": "ArrowFunctionExpression",
-          "startLine": 55,
-          "endLine": 55,
+          "startLine": 56,
+          "endLine": 56,
           "parameters": [
             "doc"
           ]
         },
         {
-          "id": "anonymous@59:47",
-          "name": "anonymous@59:47",
+          "id": "anonymous@60:47",
+          "name": "anonymous@60:47",
           "kind": "ArrowFunctionExpression",
-          "startLine": 59,
-          "endLine": 59,
+          "startLine": 60,
+          "endLine": 60,
           "parameters": [
             "doc"
           ]
         },
         {
-          "id": "anonymous@62:56",
-          "name": "anonymous@62:56",
+          "id": "anonymous@63:56",
+          "name": "anonymous@63:56",
           "kind": "ArrowFunctionExpression",
-          "startLine": 62,
-          "endLine": 62,
+          "startLine": 63,
+          "endLine": 63,
           "parameters": [
             "doc"
           ]
@@ -20356,8 +20356,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLearning.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "8c96ccda80ac9758aeb89f251b95860f359e2f147dd754b124e89c92da7b2ad0",
-      "lineCount": 419,
+      "sha256": "1d0cf9429ac8e3313069b836f5f29acbcbc342921d6ae5cdba6e1ddd7896deea",
+      "lineCount": 422,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [

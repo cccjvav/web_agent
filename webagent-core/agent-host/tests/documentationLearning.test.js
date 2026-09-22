@@ -414,5 +414,8 @@ assert.ok(!checklist.includes('33 test files passed'));
 assert.ok(!checklist.includes('不需要在真机做的（沙箱已覆盖）'));
 const packaged = require('../../../installer/package').collect(root);
 for (const p of ['docs/guides/Conda环境说明.md', 'docs/development/代码复盘指南.md', 'docs/guides/Windows新手逐步验收.md', 'review/CHECKLIST_WINDOWS.md']) assert.ok(packaged.includes(p), p + ': ships with product');
-assert.ok(read('docs/development/代码复盘指南.md').includes('尚须继续补齐'));
+const learningGuide = read('docs/development/代码复盘指南.md');
+for (const contract of ['文档时效、学习复盘与实机验证分开', '不要求全仓源码逐行认证', '未核实的事实明确列出']) {
+  assert.ok(learningGuide.includes(contract), 'learning guide preserves documentation scope and unverified boundaries: ' + contract);
+}
 console.log('learning documentation names, navigation, formatting and Conda/acceptance contracts passed; not semantic certification');

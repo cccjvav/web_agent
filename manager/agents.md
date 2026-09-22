@@ -9,6 +9,7 @@
 
 ## 编码规范
 - 解释对得上磁盘，不杜撰未实现的逻辑
+- 用户2026-09-22澄清：“逐行认证”原意是确认项目Markdown文档是否与最新实现/项目状态一致，不是全仓源码逐行认证。按文档实际承诺有针对性地读代码/测试；明确代码缺陷另立修复项，不把无止境源码审计当文档完成条件。
 - 改功能同步对应夹 README；动「为什么这样装」改 `docs/development/架构导读.md`（四层）
 - 文档唯一规范：`manager/docs/documentation.md`；先审查正文，再运行 `node docs-site/check-docs.js --write` 与 `node docs-site/build.js`，禁止把结构校验等同语义认证。
 
