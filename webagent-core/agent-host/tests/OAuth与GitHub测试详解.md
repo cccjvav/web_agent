@@ -82,3 +82,20 @@ F62第2批新增。全程不发真实网络请求：所有传输都是进程内�
 - readCache：同一文件重复记录同一hash只落盘一次（基线是400次读写400次整表）；删除不存在的key不落盘；真正变化仍立即落盘；落盘走临时文件+rename且不留残留。重载后取值、最近使用顺序与旧行为一致。
 
 它证明的是**单次请求一定会结束**，不证明GitHub或遥测端点可达、上报送达、或者不存在在途请求重叠（周期与debounce仍可重叠，这一点没有改变）。
+
+## oauthSpentRefreshBudget.test.js
+
+F62第5批新增。`spentRefresh`是refresh令牌的重放墓碑集合，条目只在超过`REFRESH_TTL_MS`（7天）后才被清理。修前没有任何容量上限：一个**已完成配对**的客户端持续轮换refresh令牌，每次调用就留下一条几乎不会消失的记录。按`/oauth/token`限流60/min在7天TTL内持续做，约60万条、实测每条约188字节，合计约109MB常驻。`oauth.js`里其他存储都是有界的（`MAX_CLIENTS`=80、限流表1000个key），这张表是唯一的例外。
+
+辅助**b64url(buf)**做base64url编码（PKCE的verifier与challenge要求无填充的URL安全字符集）；**refresh(clientId,token)**包一层refresh_token授权调用；**refuses(fn)**捕获并返回错误消息，没抛错返回null，用来区分"被拒绝"与"被放行"。
+
+夹具**pairedClient()**走完整真实链路：`registerClient`→`ensurePairing`→`completeAuthorize`→用授权码换第一对令牌。不绕过PKCE也不直接塞内部Map，否则测的就不是真实路径。
+
+断言四条合同：
+
+- **近期重放仍被检测**：刚被轮换掉的refresh令牌再次提交，必须命中`replay detected`，并且撤销该client的**全部**令牌——包括刚刚轮换出来的那一个。容量上限不能削弱这条。
+- **内存有界**：连续轮换`MAX_SPENT_REFRESH`×3次后，`spentRefreshSize()`必须不超过上限。这里直接断言**集合条数**而不是堆增长——堆增长是症状，但在不带`--expose-gc`时不可靠，而`run-tests.js`不传该flag。
+- **被淘汰的墓碑降级但不放行**：最早那个令牌的墓碑被挤掉后，重放它仍然**被拒绝**，只是错误变成普通的`invalid refresh_token`而不再声称检测到重放。这是有意的取舍：丢掉的是额外的惩罚性撤销，不是拒绝本身；断言用`doesNotMatch`钉住"不再声称检测到自己已无法证明的事"。
+- **淘汰不打扰在用会话**：当前有效的refresh令牌在大量轮换之后仍能正常换票。
+
+`spentRefreshSize()`与`MAX_SPENT_REFRESH`是为此测试导出的只读视图，只暴露**条数**不暴露令牌本身。

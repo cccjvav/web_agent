@@ -82,9 +82,26 @@
 
 **本批复核未发现问题的**：`/files/preview`直接调`diff`但正确把budget的`undefined`判成413；`stdioTransport.js`按字节缓冲、不受同类编码缺陷影响；隧道日志只匹配ASCII URL故分块解码无实质影响；API全面经`rejectUnlessLocalControl`+`rejectCrossSiteApi`；`runChat`的`detectTestCommand`虽取自配置但仍过`callTool`→`assertCommandAllowed`。另实测fork bomb（`:(){ :|:& };:`）词法层未识别但进程组终止成功回收，无残留进程。
 
+**第5批已修并测绿（103/103）：交叉验证与OAuth墓碑预算**
+
+本批先与并行审查分支`arena/01a0c932-web-agent`（顶点08aa942）做交叉验证，再继续未审面。完整台账见[交叉验证合并台账](../../review/CROSS_VALIDATION_LEDGER_2026-09-22.md)。
+
+比对结果：4项独立同解（互证）、1项互补（GitHub身份请求，本分支管上游超时、对方管客户端断开取消，**须取并集**）、本分支独有3项（命令输出编码、包装器绕过、UI字号）、对方独有1项（`run-code-oss`安装回退）、**分歧1项**。
+
+| 项 | 事实 | 处置 |
+|---|---|---|
+| F62-13 BOM被静默删除 | 本分支严格解码用`ignoreBOM:false`。该参数语义反直觉：`true`才是"保留BOM为普通字符U+FEFF"，`false`会剥掉它。后果是一次普通read→patch→write把用户文件的BOM删掉（实测首三字节`efbbbf`消失），而严格解码的全部意义就是"重编码==磁盘字节"。**对方做对、本分支做错** | 改为`ignoreBOM:true`；测试断言由`endsWith`（两种行为都通过、等于没测）改为往返断言+端到端断言 |
+| F62-14 `spentRefresh`无容量上限 | refresh重放墓碑只在7天TTL后清理，无条数上限。已配对客户端持续轮换，按限流60/min×7天约60万条、每条约188字节、合计约109MB。`oauth.js`其余存储都有界（MAX_CLIENTS=80、限流表1000），这张表是唯一例外 | `MAX_SPENT_REFRESH=5000`+按Map插入序淘汰最旧。**代价写明**：被淘汰墓碑的重放降级为普通`invalid_grant`、不再额外撤销该client全部令牌；拒绝本身不变 |
+
+F62-13 最值得记的不是缺陷本身而是**为什么自测没抓到**：实现与测试由同一人带着同一个错误假设写成，断言用`endsWith`两种行为都通过，等于把错误确认了一遍。这是单人审查的结构性盲区，也是交叉验证的直接收益。
+
+**本批复核未发现问题的**：`oauth.js`的PKCE强制S256且校验43字符形状、`redirect_uri`精确匹配且仅允许https或回环http、`authenticateClient`用`timingSafeEqualString`且校验注册时声明的认证方式、`clientIp`不回退到可伪造的转发头、`randomPairingCode`用32字母表对256取模无偏、配对码5分钟且按**已验证的**clientId计尝试次数（攻击者无法用伪造ID挤掉他人配额）、`registerClient`在校验全部通过后才改注册表。
+
+**对方独有项复核**：`run-code-oss.js`把依赖安装交给`runPreparation()`统一持有直接子进程（带timeoutMs与signal），避免双重清理策略；本分支未审过该文件，认可其方案，无异议。
+
 **仍待修（已取证未动，下一批候选）：** F54-04（`mcp/resources.js`疑似已修，待红测确认）；`reports.json`无条数上限与轮转，长期运行需外部归档；F61-05/06尚未独立复核。
 
-**未审范围（不得当作已审）：** 第4批已覆盖`executor.js`/`tools/index.js`/`api/routes.js`（路由清单与写入链）/`runChat.js`/`dangerous*`。**仍未审**：`mcp/server.js`、`mcp/oauth.js`、`installer/preparation.js`、`scripts/run-code-oss.js`、`extension/extension.js`与`ptyHost.js`、`workbench/js/bind.js|bridge.js|operations.js`、`.github/workflows`。浏览器项因本机Chromium下载TLS中断未验；Windows/C#/PS无本地环境。
+**未审范围（不得当作已审）：** 第4批已覆盖`executor.js`/`tools/index.js`/`api/routes.js`（路由清单与写入链）/`runChat.js`/`dangerous*`。**仍未审**：`mcp/server.js`、`installer/preparation.js`、`scripts/run-code-oss.js`、`extension/extension.js`与`ptyHost.js`、`workbench/js/bind.js|bridge.js|operations.js`、`.github/workflows`。浏览器项因本机Chromium下载TLS中断未验；Windows/C#/PS无本地环境。
 
 #### 即时接手检查（2026-09-21）
 

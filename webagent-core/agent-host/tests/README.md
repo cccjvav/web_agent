@@ -198,6 +198,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [oauth.test.js](oauth.test.js) | 15 个函数/类节点 |
 | [oauthClientAuth.test.js](oauthClientAuth.test.js) | 29 个函数/类节点 |
 | [oauthRateLimit.test.js](oauthRateLimit.test.js) | 15 个函数/类节点 |
+| [oauthSpentRefreshBudget.test.js](oauthSpentRefreshBudget.test.js) | 8 个函数/类节点 |
 | [operatorQueueCapacity.test.js](operatorQueueCapacity.test.js) | 5 个函数/类节点 |
 | [patchEngine.test.js](patchEngine.test.js) | 11 个函数/类节点 |
 | [planRound.test.js](planRound.test.js) | 6 个函数/类节点 |

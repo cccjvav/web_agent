@@ -15,6 +15,16 @@ const CODE_TTL_MS = 5 * 60 * 1000;
 const ACCESS_TTL_MS = 60 * 60 * 1000;
 const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_CLIENTS = 80;
+// spentRefresh is the replay-detection tombstone set. Entries only expire after REFRESH_TTL_MS,
+// so a paired client that keeps rotating its refresh token adds one permanent-ish entry per call
+// with nothing to evict it: at the /oauth/token rate limit of 60/min sustained over the 7 day TTL
+// that is ~604800 entries (~109MB measured). Every other store here is bounded (MAX_CLIENTS,
+// the 1000-key rate limiter), so this one was the outlier. Cap it and drop oldest-first.
+// Consequence of eviction, stated plainly: replaying a refresh token whose tombstone has been
+// evicted is reported as a plain invalid_grant instead of triggering revokeClientTokens. The
+// token is still refused either way -- what is lost is the extra punitive revocation, not the
+// rejection. Bounding memory is worth that, and the cap is far above real client behaviour.
+const MAX_SPENT_REFRESH = 5000;
 
 let pairing = null;
 
@@ -145,6 +155,16 @@ function pruneExpiredTokens() {
   }
   for (const [code, rec] of authCodes) {
     if (rec.exp < t) authCodes.delete(code);
+  }
+}
+
+function rememberSpentRefresh(token, clientId) {
+  // Map preserves insertion order, so the first key is the oldest tombstone.
+  spentRefresh.set(token, { clientId, at: now() });
+  while (spentRefresh.size > MAX_SPENT_REFRESH) {
+    const oldest = spentRefresh.keys().next();
+    if (oldest.done) break;
+    spentRefresh.delete(oldest.value);
   }
 }
 
@@ -424,7 +444,7 @@ function handleToken(body = {}, authorization = '') {
       err.status = 400;
       throw err;
     }
-    spentRefresh.set(rec.refresh, { clientId: rec.clientId, at: now() });
+    rememberSpentRefresh(rec.refresh, rec.clientId);
     accessTokens.delete(rec.access);
     refreshTokens.delete(rec.refresh);
     const issued = issueAccess(rec.clientId);
@@ -569,5 +589,10 @@ module.exports = {
   snapshotPairing,
   consumePairing,
   revokeAll,
-  s256
+  s256,
+  MAX_SPENT_REFRESH,
+  // Test-only view of the replay tombstone set size. Exposing the count (not the tokens) lets the
+  // budget test assert the bound directly instead of inferring it from heap growth, which is not
+  // reliable without --expose-gc.
+  spentRefreshSize: () => spentRefresh.size
 };

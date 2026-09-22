@@ -79,6 +79,7 @@ const preferred = [
   'toolLabel.test.js',
   'profile.test.js',
   'oauth.test.js',
+  'oauthSpentRefreshBudget.test.js',
   'docsSite.test.js',
   'workbenchHtml.test.js',
   'dangerousCommands.test.js',

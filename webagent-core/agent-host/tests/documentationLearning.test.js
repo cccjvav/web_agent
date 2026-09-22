@@ -42,6 +42,7 @@ const pairs = [
   ["webagent-core/agent-host/tests/mcpCancellation.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
   ["webagent-core/agent-host/tests/taskProgress.test.js", "webagent-core/agent-host/tests/任务板与事件流测试详解.md"],
   ["webagent-core/agent-host/tests/oauthRateLimit.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
+  ["webagent-core/agent-host/tests/oauthSpentRefreshBudget.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
   ["webagent-core/agent-host/src/utils/workspaceBinding.js", "webagent-core/agent-host/src/utils/函数详解.md"],
   ["webagent-core/agent-host/tests/workspaceEntry.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
   ["webagent-core/agent-host/tests/nativeRotationCommands.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],

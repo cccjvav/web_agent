@@ -48,7 +48,15 @@
 
 ### pruneExpiredTokens()
 
-分别在各自截止严格小于now时删除access/refresh，spentRefresh按记录时间超过7天删，authCodes按exp删；调用触发的清理，不是定时器。清一个access不自动清仍有效的refresh。
+分别在各自截止严格小于now时删除access/refresh，spentRefresh按记录时间超过7天删，authCodes按exp删；调用触发的清理，不是定时器。spentRefresh除这条时间清理外还有容量上限，见rememberSpentRefresh。清一个access不自动清仍有效的refresh。
+
+### rememberSpentRefresh(token,clientId)
+
+写入重放墓碑并施加容量上限**MAX_SPENT_REFRESH**（5000），超出时利用Map的插入序**从最旧开始淘汰**。
+
+为什么需要：`spentRefresh`条目只在超过7天TTL后才被`pruneExpiredTokens`清理，此前没有任何容量上限——一个已完成配对的客户端持续轮换refresh令牌，每次就留下一条几乎不会消失的记录。按`/oauth/token`限流60/min在TTL内持续做约60万条、实测每条约188字节，合计约109MB常驻。本文件其余存储都有界（MAX_CLIENTS=80、限流表1000个key），这张表原是唯一例外。
+
+**淘汰的代价要讲清楚**：墓碑被挤掉之后再重放该令牌，会按普通`invalid refresh_token`拒绝，而**不再**触发`revokeClientTokens`。令牌两种情况下都被拒绝，丢掉的是额外的惩罚性撤销、不是拒绝本身。上限远高于真实客户端的轮换量，近期重放仍然照常检测。
 
 ### revokeClientTokens(clientId)
 
