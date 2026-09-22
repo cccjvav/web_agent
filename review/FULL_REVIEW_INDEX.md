@@ -58,13 +58,14 @@
 - F55（2026-09-21）：按用户指令审查平行分支`arena/01a0bfa9-web-agent`（共同基点50c03be，41提交/112文件）。在独立worktree实测其HEAD e805bef完整93/93、docs零漂移、探针目录零diff、CI 35612499554九项成功；对本分支HEAD红测复现其patchEngine三例缺失目标缺陷（旧哈希静默重建、SEARCH原文写成新文件、多块丢弃），对其HEAD以raw socket验证重复头400/批量65项400/通知202/容量满503。结论、可疑项裁决与收敛建议见[平行分支审查报告](BRANCH_COMPARISON_01a0bfa9_2026-09-21.md)；本批只登记审查，不执行合并。
 - F56（2026-09-22）：用户指令"再看看+全仓审查"。①增量审查平行分支e805bef..63cbbdc共17提交（F55–F60）：worktree实测其HEAD 97/97、docs 278/28/111零漂移、CI success；细读appWindow.js/preparation.js/run-code-oss重构、chat.js流合同、CORS暴露头、tunnel-recovery.ps1入口与run-tests诊断，逐项裁决与新增1个CI红点（a22428a Windows20 echo超时，其如实登记）核对追加在对照报告末节。②本分支全仓扫描：红测复现S1（mcpCors缺Expose-Headers致浏览器读不到会话头），实测S5（批量65项/重复id/浮点id/坏协议版本头均200、通知204），结构比对确认S3（waitHealth挂起）与S6–S8；innerHTML/XSS面、秘钥恒时比较、定时器清理抽查未见新问题。发现S1–S9与收敛建议见[全仓复审报告](FULL_SWEEP_2026-09-22.md)；登记不代签修复。本批开头沙箱第九次ref漂移按程序soft恢复到24c1364并逐项核对零diff。
 - F57（2026-09-22）：用户澄清任务为"拉取对方分支最新+全面审查+与其自审对照验证"。对方新增2f6e7ab（F61自审报告+873行覆盖CSV）；worktree实测其HEAD 97/97+CI九项success，其附录三段复现脚本原样重跑输出逐字段一致，同脚本在本分支复现F61-01/02/03/05、静态确认04/06——六项均共同基点遗留，补录为本分支S10–S15；覆盖CSV行数与git事实精确一致，挑战性抽查（search敏感过滤/gitOps导出面/admin-host转义与预算）未见其漏报。裁决与收敛建议见[对照报告追加二](BRANCH_COMPARISON_01a0bfa9_2026-09-21.md)。开工时第十次ref漂移已按程序soft恢复9ecc0e1。
+- F58（2026-09-22）：用户要求"由我自己对该分支做全面审查并给出错误集合"。独立审查对方HEAD 2f6e7ab新增[本人审查报告](BRANCH_AUDIT_2f6e7ab_2026-09-22.md)：**两项F61未披露缺陷**——A1 SSE满员503仍先分配会话，被拒请求可驱逐合法空闲会话（真实回环HTTP实测 victimEvicted=true；基点继承）；A2 首次复制被打断后 release 目录残留致 rename ENOTEMPTY 永久阻断启动（真实文件系统两次复现）。同时逐项实测无问题面（敏感路径全通道拒绝、symlink逃逸拒绝、MCP协议11项对抗、命令子进程无泄漏、打包require零缺件、OAuth PKCE/限流、CI权限）并列出Windows/桌面/浏览器未覆盖边界。
 
 ## 逐文件状态
 
 最近完整成功基线为第53组实现`397476c7bc29d256781c759f3386beac91d9c147`、证据`0b8b9a4e642d2a813be1e2413056b01c64f96890`及[CI35459273776](https://github.com/cccjvav/web_agent/actions/runs/35459273776)/[CI35459466444](https://github.com/cccjvav/web_agent/actions/runs/35459466444)，两轮九项覆盖Ubuntu/Windows Node矩阵、重复取消/stdio、Windows安装器与真实Chromium。当前上传提交`3fbe872`的CI35466582618因新TXT未登记本清单而失败，F54正在同步并复审；第51组首推c1ea0f8的真实Chromium失败证据继续保留。本清单自身属于维护索引，不自我授予语义通过。新文件须登记；历史先前批次仅作证据，未自动标为本轮完成。
 
 <!-- review-status-counts:start -->
-现存条目数：202（合并退役2项，不计通过）；状态：待逐句核对 78、暂停，只登记路径 15、生成定位，非语义认证 1、已逐句核对 10、待边界核对 7、只读规范副本 1、待历史定位核对 32、原始证据，受限 2、局部核对 56。这是文件计数，不是语义准确率。
+现存条目数：203（合并退役2项，不计通过）；状态：待逐句核对 78、暂停，只登记路径 15、生成定位，非语义认证 1、已逐句核对 11、待边界核对 7、只读规范副本 1、待历史定位核对 32、原始证据，受限 2、局部核对 56。这是文件计数，不是语义准确率。
 <!-- review-status-counts:end -->
 
 | 文件 | 状态 | SHA-256前16位 | 依据/下一动作 |
@@ -125,7 +126,7 @@
 | [installer/README.md](../installer/README.md) | 待逐句核对 | f2edbd500219def5 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/函数详解.md](../installer/函数详解.md) | 待逐句核对 | e56bd9d538e2a089 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [installer/安装声明详解.md](../installer/安装声明详解.md) | 待逐句核对 | 5c8566d2ce5b1bc8 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
-| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | 180c99b29f90c679 | F55–F57各补审查摘要句并重算哈希；其它阶段/实机事实不重签 |
+| [manager/CONTEXT.md](../manager/CONTEXT.md) | 局部核对 | 041e470dc4ffb7ab | F55–F58各补审查摘要句并重算哈希；其它阶段/实机事实不重签 |
 | [manager/SKILL.md](../manager/SKILL.md) | 只读规范副本 | 5c8c93d50e52332b | 只核对引用与适用范围，不修改技能副本 |
 | [manager/agents.md](../manager/agents.md) | 待逐句核对 | 4466f9c59524232f | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [manager/docs/documentation.md](../manager/docs/documentation.md) | 待逐句核对 | dff435c047431d16 | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
@@ -135,7 +136,7 @@
 | [manager/stages/documentation-2026-09-12.md](../manager/stages/documentation-2026-09-12.md) | 待历史定位核对 | c23c09e4b3615d99 | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/probe-dual-integration-2026-09-15.md](../manager/stages/probe-dual-integration-2026-09-15.md) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
 | [manager/stages/s1-handoff.md](../manager/stages/s1-handoff.md) | 待历史定位核对 | cfc0e427dc08e55c | 核对归档/引用/证据，不将旧结论改成现状 |
-| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | c483c3cf8f6fe705 | F55–F57新增第55–57组审查节并重算哈希；历史批次不重签 |
+| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 局部核对 | 04a400a929598f84 | F55–F58新增第55–58组审查节并重算哈希；历史批次不重签 |
 | [manager/stages/s2-shell.md](../manager/stages/s2-shell.md) | 待历史定位核对 | 5ac447fe582ce09e | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s3-bridge-image.md](../manager/stages/s3-bridge-image.md) | 待历史定位核对 | fbe64b3265d3cf1a | 核对归档/引用/证据，不将旧结论改成现状 |
 | [manager/stages/s4-terminal.md](../manager/stages/s4-terminal.md) | 待历史定位核对 | 1cf1fcca01c51478 | 核对归档/引用/证据，不将旧结论改成现状 |
@@ -148,10 +149,11 @@
 | [project-manager/SKILL.md](../project-manager/SKILL.md) | 待逐句核对 | 5c8c93d50e52332b | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [review/BRANCH_COMPARISON_01a0bfa9_2026-09-21.md](../review/BRANCH_COMPARISON_01a0bfa9_2026-09-21.md) | 已逐句核对 | 05c8fd8506ec9d9e | F55对照审查；F56增量节；F57追加二：对方F61自审报告三段复现脚本逐字段核验一致，未授权合并 |
 | [review/FULL_SWEEP_2026-09-22.md](../review/FULL_SWEEP_2026-09-22.md) | 已逐句核对 | 1cd3aaf745acecbb | F56扫描S1–S9；F57补录S10–S15（对方F61六项经本分支复现/静态确认）；登记不代签修复 |
+| [review/BRANCH_AUDIT_2f6e7ab_2026-09-22.md](../review/BRANCH_AUDIT_2f6e7ab_2026-09-22.md) | 已逐句核对 | 651e4ada9b305e0d | F58新增：对对方分支的本人独立审查；新发现A1（SSE满员503先分配会话致驱逐空闲会话）与A2（半成品release目录永久阻断启动）均有复现；另列实测无问题面与未覆盖边界 |
 | [review/CHECKLIST_WINDOWS.md](../review/CHECKLIST_WINDOWS.md) | 待逐句核对 | 6cbc79b4c85111ed | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [review/OPTIMIZATION_REPORT_2026-09-18.md](../review/OPTIMIZATION_REPORT_2026-09-18.md) | 已逐句核对 | 29391f9e3e15ea70 | F45逐项交叉复核；P1-A/P2-D/P2-A已处置，原始发现保留，剩余取舍见顶部链接 |
 | [review/FULL_AUDIT_FOLLOWUP_2026-09-18.md](../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md) | 待逐句核对 | 8a0799b45e63fcdb | F45–48交叉审查/实修与验证报告；本页不自我授予整篇语义认证，结论按列明证据边界复核 |
-| [review/README.md](../review/README.md) | 局部核对 | c30972b04804c5eb | F45新增交叉审查入口；F55/F56各加一行审查报告导航；其它历史入口范围保留 |
+| [review/README.md](../review/README.md) | 局部核对 | 9235d6cf79977d70 | F45新增交叉审查入口；F55–F58各加一行报告导航；其它历史入口范围保留 |
 | [review/SEMANTIC_REVIEW_2026-09-16.md](../review/SEMANTIC_REVIEW_2026-09-16.md) | 待逐句核对 | cde026ca6e06db26 | F53仅更新当前状态块及最终CI；整份历史长台账仍须按用途/证据逐段定位，不自授整篇通过 |
 | [review/UPSTREAM_ADOPTION_MAP_2026-09-15.md](../review/UPSTREAM_ADOPTION_MAP_2026-09-15.md) | 待逐句核对 | e454a1ff6891f7bc | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | [review/archive/01a08d85-web-agent-audit.md](../review/archive/01a08d85-web-agent-audit.md) | 待历史定位核对 | 95fc2e2b61e4c58c | 核对归档/引用/证据，不将旧结论改成现状 |

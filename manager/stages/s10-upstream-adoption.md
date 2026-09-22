@@ -261,6 +261,14 @@ worktree实测其HEAD 2f6e7ab：97/97、docs 278/28/111零漂移、CI 3566531720
 
 对照验证全文见[分支对照报告追加二](../../review/BRANCH_COMPARISON_01a0bfa9_2026-09-21.md)，S10–S15详单见[全仓复审报告追加](../../review/FULL_SWEEP_2026-09-22.md)。收敛建议升级为强烈：其分支修复进度（我方S1–S9其全修完）、测试覆盖（97 vs 84）、审查深度（873文件账本）均领先，F61六项双方共有而其已列修复计划。本组只登记审查与验证，不执行合并/修复。
 
+#### 第58组：对方分支独立审查（本人，2026-09-22，基线2f6e7ab）
+
+用户要求"由我自己对该分支做一次全面审查并给错误集合，重点找其报告未披露的问题"。worktree检出其HEAD重跑97/97与docs零漂移后，按"静态读码+真实回环HTTP/真实文件系统/真实子进程探针"独立审查，产出[本人审查报告](../../review/BRANCH_AUDIT_2f6e7ab_2026-09-22.md)。
+
+**两项F61未披露缺陷**：A1 `handleGet` 在查 MAX_SSE 之前已 bind/create 会话，被 503 拒绝的 SSE GET 占位并使 createHttpSession 驱逐最旧空闲会话；实测 `{"sseOpened":32,"pingBefore":200,"rejected503":250,"pingAfterAttack":404,"victimEvicted":true}`，基点同序属继承性，其F54/F55不变量与文档均未披露被拒路径的驱逐副作用，建议改为上限判断前置于分配或503分支回收自建会话。A2 `prepareRuntime` 在 `dest` 已有残骸（复制中途被打断）时 `renameSync` 报 ENOTEMPTY 且不清理不复用，导致此后所有启动模式永久失败、错误不可理解；真实文件系统两次复现同为 ENOTEMPTY，建议缺 `.ready` 时先删 dest 再 rename 并改错误提示，其函数详解与F61均未披露该永久阻断后果。
+
+同轮实测无问题面（敏感路径含改名为.env全拒、symlink工作区逃逸拒绝、MCP协议11项对抗全对、start/cancel与run超时不泄漏子进程、打包清单相对require零缺件、appWindow IPC形状与身份双探测、OAuth PKCE/一次性码/redirect匹配/限流、CI contents:read 无 pull_request_target）与未覆盖边界（Windows专有C#/PS/DPAPI、真实桌面与浏览器、冷安装、暂停探针）已在报告第三节、第五节列明。本组只登记发现与核验，不代签修复、不合并分支。
+
 #### 已交付：限流与生成测试批次
 
 - 11限流：OAuth JSON/HTML 429都返回Retry-After；超额请求不增加计数/延长窗口；1000-key容量有恢复提示且旧key剩余额度不被挤掉；来源不直接回退不可信转发头。原固定窗口本来不会被连续拒绝无限延长，此处不虚报修复了不存在的问题。
