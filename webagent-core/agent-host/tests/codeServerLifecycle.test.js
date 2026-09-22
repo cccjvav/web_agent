@@ -84,6 +84,15 @@ function harness(options = {}) {
       resolveAuth() { if (options.authError) throw options.authError; return { mode: 'password', password: 'fixture-only', passwordFile: null }; }
     }
   };
+  // Execute the real preparation helper with this harness's owned spawn and clock.
+  // Never let a new dependency fallback escape to real npm installation in tests.
+  const preparation = { exports: {} };
+  vm.runInNewContext(fs.readFileSync(path.resolve(__dirname, '../../../installer/preparation.js'), 'utf8'), {
+    module: preparation,
+    require(name) { return bindings[name] || originalRequire(name); },
+    setTimeout: options.clock?.setTimeout || setTimeout, clearTimeout: options.clock?.clearTimeout || clearTimeout
+  });
+  bindings['../../installer/preparation'] = preparation.exports;
   const context = { process: proc, console: { log(...args) { logs.push(args.join(' ')); }, error(...args) { logs.push(args.join(' ')); } },
     require(name) { return bindings[name] || originalRequire(name); },
     setTimeout: options.clock?.setTimeout || setTimeout, clearTimeout: options.clock?.clearTimeout || clearTimeout, AbortController };
@@ -410,6 +419,77 @@ async function serverFixture(handler) {
       assert.equal(await bounded(running), 1); assert.equal(h.calls.length, 0);
       assert.ok(h.logs.some(line => line.includes('unconfirmed preparation')));
     } finally { await h.close(); }
+  });
+  await test('backend dependency fallback has its own 120s deadline and cannot start late services', async () => {
+    const clock = fakeClock(), h = harness({ clock, install: true, platform: 'win32' });
+    try {
+      const running = h.api.main(); await nextTurn();
+      assert.equal(h.calls.length, 1);
+      assert.deepStrictEqual(Array.from(h.calls[0].args), ['install', '--no-audit', '--no-fund']);
+      assert.ok([...clock.timers.values()].some(t => t.delay === 120000), 'fallback needs a distinct dependency work budget');
+      clock.advance(120000);
+      assert.equal(await bounded(running), 1);
+      assert.equal(h.calls.length, 1, 'timeout must start neither agent nor editor');
+      assert.deepStrictEqual(h.children[0].signals, ['SIGKILL']);
+      assert.ok(h.logs.some(line => line.includes('120000')));
+      assert.equal(clock.timers.size, 0);
+    } finally { h.proc.emit('SIGTERM'); await h.close(); }
+  });
+  await test('late npm exit zero cannot win against an elapsed fallback deadline', async () => {
+    const clock = fakeClock(), h = harness({ clock, install: true });
+    try {
+      const running = h.api.main(); await nextTurn();
+      clock.elapse(120001); h.children[0].end(0); await nextTurn();
+      assert.equal(h.calls.length, 1, 'delayed deadline callback is not permission to launch services');
+      assert.equal(await bounded(running), 1);
+      assert.deepStrictEqual(h.children[0].signals, []);
+      assert.equal(clock.timers.size, 0);
+    } finally { h.proc.emit('SIGTERM'); await h.close(); }
+  });
+  await test('unconfirmed npm stop overrides cancellation without a second cleanup owner', async () => {
+    const clock = fakeClock(), h = harness({ clock, install: true });
+    try {
+      const running = h.api.main(); await nextTurn();
+      const child = h.children[0];
+      child.kill = signal => { child.signals.push(signal); child.killed = true; return false; };
+      h.proc.emit('SIGTERM'); await nextTurn();
+      assert.deepStrictEqual(child.signals, ['SIGKILL']);
+      clock.advance(1000);
+      assert.equal(await bounded(running), 1);
+      assert.equal(child.unrefs, 1); assert.equal(h.calls.length, 1);
+      assert.deepStrictEqual(child.signals, ['SIGKILL'], 'main must not signal a helper-owned child again');
+      assert.ok(h.logs.some(line => line.includes('退出未确认')));
+      assert.equal(clock.timers.size, 0);
+    } finally { h.proc.emit('SIGTERM'); await h.close(); }
+  });
+  for (const event of ['SIGINT', 'SIGTERM', 'message', 'disconnect']) {
+    await test('backend fallback cancellation via ' + event + ' observes only its retained child', async () => {
+      const h = harness({ install: true, env: { WEBAGENT_APP_BOOTSTRAP: '1' } });
+      h.proc.send = (_message, callback) => callback?.();
+      try {
+        const running = h.api.main(); await nextTurn();
+        assert.equal(h.children.length, 1);
+        h.proc.emit(event, { type: 'webagent-app-stop' });
+        h.proc.emit(event, { type: 'webagent-app-stop' });
+        assert.equal(await bounded(running), 0);
+        assert.equal(h.calls.length, 1);
+        assert.deepStrictEqual(h.children[0].signals, ['SIGKILL']);
+        assert.equal(h.proc.listenerCount('SIGTERM'), 0); assert.equal(h.proc.listenerCount('message'), 0);
+      } finally { h.proc.emit('SIGTERM'); await h.close(); }
+    });
+  }
+  await test('backend fallback cancellation waits for a real fixture child to exit', async () => {
+    const h = harness({ install: true, spawn(_command, _args, opts) {
+      const child = realSpawn(process.execPath, ['-e', 'setInterval(()=>{},1000)'], { cwd: opts.cwd, stdio: 'ignore', env: process.env });
+      child.once('spawn', () => h.proc.emit('SIGTERM'));
+      return child;
+    } });
+    try {
+      assert.equal(await bounded(h.api.main(), 5000), 0);
+      assert.equal(h.children.length, 1);
+      assert.ok(h.children[0].exitCode !== null || h.children[0].signalCode !== null);
+      assert.equal(h.calls.length, 1);
+    } finally { h.proc.emit('SIGTERM'); await h.close(); }
   });
   await test('CLI forwards the settled exit code and reports unexpected rejection', async () => {
     for (const expected of [0,7,1]) {

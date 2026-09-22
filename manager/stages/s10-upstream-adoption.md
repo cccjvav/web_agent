@@ -1176,3 +1176,16 @@ F64复审/修复：固定三个GitHub端点统一10秒头体/64KiB/拒跳转与�
 **恢复后首轮累计证据：** 完整100/101，唯一失败是ptyLifecycle末尾对共享fetchText的旧`/aborted/`文本断言，实际五组命令取消均有stdout/exit/close，非R4超时。F64已明确改为E_TIMEOUT，现保留30ms并新增fetch/abort各一次、signal.aborted真，定向转绿；不靠改长期限或重复到绿。恢复后的Chromium153独立套件（含admin三视口）与生产audit 0已实际通过。最终全量在上述兼容测试更新及文档生成后重新执行。
 
 **本包累计验证完成：** 修正兼容断言后完整101/101退出0；恢复后的真实Chromium套件退出0（既有工作台/文档及admin三视口），文档282/28/111且updated=0，生产npm audit 0。这里只追加验证记录，源实现/断言未再改变；重新生成并复验文档/站点门禁后提交恢复的F63+F64。精确新SHA与远端CI仍待实际推送/查询。
+
+
+### 第65组：最后已列出的后端fallback准备期限（2026-09-22）
+
+**前包已交付：** 恢复F63与完成F64合为1fbd2af2b517c975683da5c33a51447acb7a3018，实际推送本会话01a0c932；CI35767869533精确同SHA，七主机矩阵、Windows安装器、Chromium九job全部success，已逐项核对。旧caf2ba9没有伪造恢复，原100/101失败及认证故障继续保留。
+
+F61-06负例先行：用真实run-code-oss/真实preparation函数体、共同受控spawn/clock验证fallback无独立期限、迟到exit0仍可启动服务，以及无法确认退出时的所有权/观察期限。四个取消入口的新策略断言也在旧树失败（原TERM与准备原语SIGKILL不同），这是接线合同，不把正常TERM单独算漏洞。真实无害Node退出正例旧树即通过，保留为防回归。
+
+最小修复：缺express marker时await runPreparation，120000ms工作、controller.signal、1000ms退出观察；仍npm install --no-audit --no-fund、相同cwd/windowsHide/平台shell，不改依赖策略、不下载测试中的code-server。helper独占准备child，main不重复登记/清理；准备失败/取消/迟到成功均不启动agent/editor，cleanupUnconfirmed仍覆盖普通停止码为1。无自动重放、部分依赖回滚、PID/名称/端口/树补杀；不是所有npm后代或整体启动硬实时保证。手写Shell入口不因此自动有相同期限。
+
+定向codeServerLifecycle与installerPreparation通过，测试日志的Downloading为被测函数文案，实际安装被夹具拦截。运行器/准备/测试主说明、目录README、主指南及review/CONTEXT同步，最终完整/浏览器结果以下实际续记。R4根因、telemetry在途、跨进程/长期统计、真实桌面与暂停模块继续开放，不为本批再扩展施工范围。
+
+**本包本地累计验证完成：** 完整101/101、真实Chromium（工作台/文档/admin）、文档282/28/111零漂移、示例6/6、npm audit含dev各级0；暂停/冻结源码零diff。基线CSV875项不变，局部人工核对按实际续读更新至76，不增加整篇认证。之后仅追加结果/覆盖记录并复验文档/站点；本包精确SHA与远端CI待实际推送回查。

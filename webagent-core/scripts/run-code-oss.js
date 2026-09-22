@@ -5,6 +5,7 @@ const { performance } = require('perf_hooks');
 const { spawn } = require('child_process');
 const { ensure, syncExtension, repoRoot } = require('./ensure-code-server');
 const { resolveAuth, trustedOrigins } = require('./codeServerAuth');
+const { runPreparation } = require('../../installer/preparation');
 
 const workspace = path.resolve(
   process.argv[2] || process.env.WORKSPACE_ROOT || repoRoot
@@ -167,13 +168,16 @@ async function main() {
     if (!fs.existsSync(path.join(agentHostDir, 'node_modules/express'))) {
       console.log('Installing agent-host dependencies…');
       const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-      const install = launch(npm, ['install', '--no-audit', '--no-fund'], {
+      // The preparation helper owns this direct child; do not also register it
+      // as a server child or apply a second cleanup policy after cancellation.
+      await runPreparation(npm, ['install', '--no-audit', '--no-fund'], {
         cwd: agentHostDir,
-        shell: process.platform === 'win32'
-      }, 'install');
-      const result = await Promise.race([install.finished, stopped]);
+        windowsHide: true,
+        shell: process.platform === 'win32',
+        timeoutMs: 120000,
+        signal: controller.signal
+      });
       checkRunning();
-      if (result.code !== 0) throw new Error('npm install agent-host 失败');
     }
 
     launch(process.execPath, ['src/index.js'], {

@@ -11,7 +11,7 @@
 | `package.js` | 从显式白名单构建output/payload与installation.json SHA-256清单 |
 | `webagent.iss` | Inno Setup安装定义、入口/PATH及安装前检查 |
 | `build-installer.cmd` | 先stage，再调用Inno Setup 6编译 |
-| `preparation.js` | 异步npm准备期限/取消与所持直接子进程退出观察 |
+| `preparation.js` | 外层ci、编辑器依赖与后端fallback的异步准备期限/取消、所持直接子进程退出观察 |
 | `launch.js` | 无依赖Node启动器，准备用户runtime、解析工作区并启动所选模式 |
 
 ## 执行流程
