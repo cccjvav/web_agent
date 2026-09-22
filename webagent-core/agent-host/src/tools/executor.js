@@ -158,8 +158,14 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }, owner) {
   const jobSource = path.join(__dirname, 'commandJob.cs').replace(/'/g, "''");
   // Attach before user code may spawn descendants. If the host is killed while
   // taskkill is enumerating the tree, the OS job still terminates late children.
+  // `exit $LASTEXITCODE` is required, not cosmetic. powershell.exe -Command exits with the status
+  // of the LAST STATEMENT, so a multi-statement script ends 0/1 by pipeline success and throws
+  // away the native program's real code: `node failing.js` exiting 3 was reported as 1. rec.ok and
+  // rec.status are derived from that code, so Windows silently mis-reported which commands failed
+  // and with what. $LASTEXITCODE is only set once a native program has run, hence the null guard.
   const guardedCommand = `try { Add-Type -Path '${jobSource}' -ErrorAction Stop; [WebAgentCommandJob]::Attach() } catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 };
-${command}`;
+${command}
+if ($null -ne $LASTEXITCODE) { exit $LASTEXITCODE }`;
   const args = win
     ? ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', guardedCommand]
     : ['-c', command];

@@ -26,6 +26,8 @@ running≥8拒绝，prune，生成execId与带内部owner的运行记录；验�
 
 **append(field,chunk)**追加保留尾200Ki字符、广播原chunk；空串直接返回。
 
+**Windows 退出码传递**：`powershell.exe -Command` 的退出状态取**最后一条语句**的结果，多语句脚本会按管道成败给出 0/1，把原生程序的真实退出码丢掉——实测 `node failing.js` 明明 `exit 3`，主机侧收到的是 1。`rec.exitCode`/`rec.status`/`rec.ok` 全部由这个码推导，所以 Windows 曾**静默误报**哪些命令失败、以什么码失败。因此 guardedCommand 末尾补 `if ($null -ne $LASTEXITCODE) { exit $LASTEXITCODE }`：`$LASTEXITCODE` 只有在跑过原生程序后才有值，故需 null 判断，纯 PowerShell 语句（如只有 cmdlet）不受影响。POSIX 侧 `/bin/bash -c` 本来就直接传递退出码，无需处理。
+
 **decoders与flushDecoders()**：stdout/stderr各持一个`StringDecoder('utf8')`。管道的分块边界由操作系统决定，**不会**对齐字符边界，所以原先每块各自`data.toString()`会把跨块的多字节字符打成替换字符——实测一个逐字节输出"项目已完成"的程序，返回的是15个U+FFFD（F62）。StringDecoder把不完整的尾字节留到下一块拼齐才吐出字符。两个流各自独立解码，不能共用状态，否则stderr的半个字符会接到stdout的尾巴上。**flushDecoders()**在error与close回调里各调一次`decoder.end()`，把最后一个被截断字符的残余字节以单个替换字符收尾，而不是悄悄丢弃。
 
 注意这保证的是"跨块不被打碎"，不是"输出一定是合法UTF-8"：程序本身输出非UTF-8字节时仍会得到替换字符，这是它自己的编码问题。**done Promise**的error回调移除signal、清timer、仅在未成功启动或已有退出状态时删children、更新错误/耗时、广播并reject；close回调同样清理，保存code/signal/耗时，仅仍running时改为done/error/timeout，算ok并resolve publicRecord。取消状态不被普通close覆盖。
