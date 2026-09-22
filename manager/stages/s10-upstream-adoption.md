@@ -253,6 +253,14 @@ CI证据：第一批实现`48b08ab`的[CI35520116029](https://github.com/cccjvav
 
 本分支全仓扫描（非Probe全部JS/HTML/CSS+文档+UI）：完整84/84、audit 0、249/28/110零漂移、git diff --check干净为基线。红测复现S1：跨源initialize 200带Mcp-Session-Id但无Access-Control-Expose-Headers，浏览器JS读不到会话头；实测S5：批量65项/批内重复id/浮点id/坏MCP-Protocol-Version头均200、纯通知204非202；结构比对确认S3 waitHealth接受连接不回包即永久挂起（与平行分支修复前逐行一致）及S6–S8（SSE req close、externalClient error真值、launch.js spawnSync/ready误判）。renderMd/innerHTML全部插值点、oauth恒时比较、extension定时器清理抽查未见新问题。S1–S9详单与"优先收敛而非重复修复"建议见[全仓复审报告](../../review/FULL_SWEEP_2026-09-22.md)；本组只登记发现，修复须另行红测交付。
 
+#### 第57组：对方F61自审报告对照验证与S10–S15补录（2026-09-22）
+
+开工时沙箱第十次ref漂移（HEAD回50c03be，工作树含135行"删除"假象——实为两份新报告未入索引），fetch后核对文件完好，仅soft恢复到9ecc0e1。用户澄清任务：拉取对方分支最新（新增2f6e7ab=其F61自审报告COMPREHENSIVE_AUDIT_2026-09-22.md+873行覆盖CSV），对其全面审查并与其自审对照验证。
+
+worktree实测其HEAD 2f6e7ab：97/97、docs 278/28/111零漂移、CI 35665317209九项success。其报告附录三段复现脚本（A文件/Git/统计/网络参数、B真实HTTP父取消、C同步diff看门狗）逐段原样执行，输出与其声称基线**逐字段一致**；同脚本在本分支运行，F61-01/02/03/05直接复现、04/06静态确认同在——六项均为共同基点遗留，非其新引入，已补录为本分支S10–S15。覆盖CSV 873行与其基线git跟踪文件数精确一致；D2注释旧路径两分支属实；挑战性抽查（search敏感过滤、gitOps导出面、admin-host转义/恒时比较/正文预算）未发现其自审漏报的同级问题。其证据纪律（复现/静态/风险三档区分、Chromium阻塞不冒充已验、绿灯不注销问题）经独立复核成立。
+
+对照验证全文见[分支对照报告追加二](../../review/BRANCH_COMPARISON_01a0bfa9_2026-09-21.md)，S10–S15详单见[全仓复审报告追加](../../review/FULL_SWEEP_2026-09-22.md)。收敛建议升级为强烈：其分支修复进度（我方S1–S9其全修完）、测试覆盖（97 vs 84）、审查深度（873文件账本）均领先，F61六项双方共有而其已列修复计划。本组只登记审查与验证，不执行合并/修复。
+
 #### 已交付：限流与生成测试批次
 
 - 11限流：OAuth JSON/HTML 429都返回Retry-After；超额请求不增加计数/延长窗口；1000-key容量有恢复提示且旧key剩余额度不被挤掉；来源不直接回退不可信转发头。原固定窗口本来不会被连续拒绝无限延长，此处不虚报修复了不存在的问题。
