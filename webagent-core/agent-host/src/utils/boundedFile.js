@@ -19,7 +19,13 @@ class EncodingError extends Error {
 
 function decodeStrictUtf8(buffer, file) {
   try {
-    return new TextDecoder('utf-8', { fatal: true, ignoreBOM: false }).decode(buffer);
+    // ignoreBOM:true means "do not strip the BOM", i.e. U+FEFF is kept as an ordinary character.
+    // That is required for round-tripping: the whole point of strict decoding here is that the
+    // decoded string re-encodes to the exact bytes on disk, so its hash identifies those bytes.
+    // With ignoreBOM:false the decoder silently swallows a leading BOM, and a perfectly ordinary
+    // read->patch->write cycle would drop it from the user's file. Cross-checked against the
+    // parallel audit on branch 01a0c932, which caught this; reproduced here before fixing.
+    return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(buffer);
   } catch (_) {
     throw new EncodingError(
       `E_ENCODING: "${file}" is not valid UTF-8. Text tools read and hash UTF-8 only; `

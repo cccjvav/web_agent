@@ -36,7 +36,36 @@ async function run() {
   assert.strictEqual(readBoundedText(path.join(tmp, 'cjk.txt')), '中文内容\nsecond 行\n');
   assert.strictEqual(readBoundedText(path.join(tmp, 'emoji.txt')), 'a 🚀 b\n');
   assert.strictEqual(readBoundedText(path.join(tmp, 'crlf.txt')), 'one\r\ntwo\r\n');
-  assert.ok(readBoundedText(path.join(tmp, 'bom.txt')).endsWith('after bom\n'), 'BOM file still readable');
+  // A BOM must be RETAINED, not swallowed. The whole point of strict decoding is that the decoded
+  // string re-encodes to the exact bytes on disk, so its hash identifies those bytes. An earlier
+  // version of this file used ignoreBOM:false plus an endsWith() assertion that passed either way;
+  // a plain read->patch->write cycle then silently deleted the BOM from the user's file. The
+  // parallel audit on branch 01a0c932 caught it. Assert the round trip, not merely readability.
+  const bomBytes = Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from('after bom\n', 'utf8')]);
+  const bomText = readBoundedText(path.join(tmp, 'bom.txt'));
+  assert.strictEqual(bomText, '\uFEFFafter bom\n', 'the BOM is kept as U+FEFF, not stripped');
+  assert.ok(Buffer.from(bomText, 'utf8').equals(bomBytes), 'decoded text must re-encode to the original bytes');
+
+  // End to end: an ordinary read -> patch -> write cycle must leave the BOM bytes on disk.
+  // This is the failure the unit assertion above would not have caught on its own.
+  {
+    const rel = 'bom-roundtrip.txt';
+    const original = Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from('line one\nline two\n', 'utf8')]);
+    write(rel, original);
+    const read = await callTool('read_files', { filePath: rel, limit: 50 }, 'code');
+    const patched = await callTool('apply_patch', {
+      filePath: rel,
+      patch: '<<<<<<< SEARCH\nline two\n=======\nline TWO\n>>>>>>> REPLACE',
+      expectedHash: read.hash
+    }, 'code');
+    assert.strictEqual(patched.success, true, 'patching a BOM file still works');
+    const after = fs.readFileSync(path.join(tmp, rel));
+    assert.ok(
+      after.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf])),
+      'a patch must not silently delete the BOM from the user file'
+    );
+    assert.strictEqual(after.toString('utf8'), '\uFEFFline one\nline TWO\n');
+  }
 
   // --- A multi-byte sequence split across the internal 64KiB chunk boundary must survive. ---
   const filler = 'x'.repeat(65535);
