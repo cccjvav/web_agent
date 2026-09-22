@@ -68,7 +68,10 @@ async function run() {
       fetchText('https://example.invalid/slow', { fetchImpl: blackHole(seen) }, 120),
       'fetchText deadline'
     );
-    assert.strictEqual(err.name, 'AbortError');
+    // After the 01a0c932 merge fetchText classifies its own deadline as E_TIMEOUT rather than
+    // surfacing the transport's raw AbortError, so callers can distinguish "we gave up" from
+    // "the peer hung up". Assert the code, which is the part callers branch on.
+    assert.strictEqual(err.code, 'E_TIMEOUT');
     assert.ok(Date.now() - started < 5000, 'the deadline must fire, not the test harness');
     assert.deepStrictEqual(seen, ['https://example.invalid/slow'], 'the injected transport is used');
   }
@@ -99,7 +102,9 @@ async function run() {
     const started = Date.now();
     const err = await rejects(invoke(blackHole(seen)), label);
     const elapsed = Date.now() - started;
-    assert.strictEqual(err.name, 'AbortError', label + ' must abort rather than hang');
+    // The merged fetchText enforces its own deadline (E_TIMEOUT) instead of depending on the
+    // transport to honour the abort signal, so assert the code rather than AbortError.
+    assert.strictEqual(err.code, 'E_TIMEOUT', label + ' must abort rather than hang');
     assert.ok(elapsed < 5000, `${label} must end near its deadline; took ${elapsed}ms`);
     assert.strictEqual(seen.length, 1, label + ' must not retry on its own');
   }
@@ -117,7 +122,7 @@ async function run() {
     const seen = [];
     const started = Date.now();
     const err = await rejects(gh.pollDeviceLogin(blackHole(seen)), 'pollDeviceLogin');
-    assert.strictEqual(err.name, 'AbortError');
+    assert.strictEqual(err.code, 'E_TIMEOUT', 'polling classifies its own deadline');
     assert.ok(Date.now() - started < 5000, 'polling must not hang on a dead endpoint');
     gh.resetPending();
   }

@@ -147,6 +147,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | 源码 | 定位证据 |
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
+| [adminIntegrity.test.js](adminIntegrity.test.js) | 43 个函数/类节点 |
 | [apiFiles.test.js](apiFiles.test.js) | 59 个函数/类节点 |
 | [appWindowLifecycle.test.js](appWindowLifecycle.test.js) | 79 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
@@ -164,7 +165,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [corsAllow.test.js](corsAllow.test.js) | 20 个函数/类节点 |
 | [dangerousCommands.test.js](dangerousCommands.test.js) | 11 个函数/类节点 |
 | [desktopExtension.test.js](desktopExtension.test.js) | 0 个函数/类节点 |
-| [diffBudget.test.js](diffBudget.test.js) | 12 个函数/类节点 |
+| [diffBudget.test.js](diffBudget.test.js) | 19 个函数/类节点 |
 | [docsHttp.test.js](docsHttp.test.js) | 14 个函数/类节点 |
 | [docsSite.test.js](docsSite.test.js) | 7 个函数/类节点 |
 | [documentationLearning.test.js](documentationLearning.test.js) | 7 个函数/类节点 |
@@ -178,7 +179,9 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
 | [externalDiscovery.test.js](externalDiscovery.test.js) | 13 个函数/类节点 |
 | [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
+| [fileReadSafety.test.js](fileReadSafety.test.js) | 21 个函数/类节点 |
 | [githubAuth.test.js](githubAuth.test.js) | 21 个函数/类节点 |
+| [githubNetwork.test.js](githubNetwork.test.js) | 82 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
@@ -217,7 +220,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [profile.test.js](profile.test.js) | 8 个函数/类节点 |
 | [providers.test.js](providers.test.js) | 30 个函数/类节点 |
 | [ptyJobs.test.js](ptyJobs.test.js) | 12 个函数/类节点 |
-| [ptyLifecycle.test.js](ptyLifecycle.test.js) | 68 个函数/类节点 |
+| [ptyLifecycle.test.js](ptyLifecycle.test.js) | 69 个函数/类节点 |
 | [publicHttps.test.js](publicHttps.test.js) | 19 个函数/类节点 |
 | [requestLifecycle.test.js](requestLifecycle.test.js) | 13 个函数/类节点 |
 | [resourceBudget.test.js](resourceBudget.test.js) | 14 个函数/类节点 |
@@ -232,7 +235,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [stdioOwnerFixture.js](stdioOwnerFixture.js) | 2 个函数/类节点 |
 | [stdioServerFixture.js](stdioServerFixture.js) | 3 个函数/类节点 |
 | [taskProgress.test.js](taskProgress.test.js) | 9 个函数/类节点 |
-| [testRunner.test.js](testRunner.test.js) | 12 个函数/类节点 |
+| [testRunner.test.js](testRunner.test.js) | 13 个函数/类节点 |
 | [textEncoding.test.js](textEncoding.test.js) | 10 个函数/类节点 |
 | [toolLabel.test.js](toolLabel.test.js) | 0 个函数/类节点 |
 | [traceIntegration.test.js](traceIntegration.test.js) | 4 个函数/类节点 |
@@ -250,7 +253,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [tunnelRegistry.test.js](tunnelRegistry.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 263 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 271 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 466 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |

@@ -16,10 +16,10 @@
 ## 执行流程
 1. run-code-oss从参数/WORKSPACE_ROOT/默认目录选工作区，不存在则拒绝；安装器在其外层还负责用户runtime和工作区解析。
 2. ensure准备code-server运行时，缺依赖时可能访问npm；仅存在下载目录不代表安装完整。
-3. 同步扩展后启动agent-host，设WEBAGENT_SKIP_WORKBENCH=1，默认只占MCP端口48271；health共享15秒总期限及取消信号，收到200也会释放连接；它不认证实际实例/工作区。
+3. 同步扩展后，若express marker缺失，用runPreparation持有后端npm install，限120秒、继承取消、退出另观察1秒；成功且未取消才启动agent-host，设WEBAGENT_SKIP_WORKBENCH=1，默认只占MCP端口48271；health共享15秒总期限及取消信号，收到200也会释放连接；它不认证实际实例/工作区。
 4. code-server占默认3000，载入工作区、扩展目录和用户设置；配置/启动失败、主机退出（包括0）或停止信号统一取消探测并清理本轮直接子进程。保留对象而非按PID另起taskkill；9秒宽限后必要时force，再观察1秒，未确认退出须非零并明确提示，不自动重启/按名称或端口补杀。
 
-这不是全部进程树退出保证：npm脚本、code-server worker、PTY和隧道等孙进程及用户窗口仍须单列验收；不会回滚已写目录/口令，也不把unref当终止。异步ensure/npm准备有各自120/180秒预算，不计入15秒健康检查；退出另观察至多1秒，未知不继续启动，不保证npm后代停止。
+这不是全部进程树退出保证：npm脚本、code-server worker、PTY和隧道等孙进程及用户窗口仍须单列验收；不会回滚已写目录/口令，也不把unref当终止。异步ensure/npm准备（含旧后端依赖fallback）有各自120/180秒预算，不计入15秒健康检查；退出另观察至多1秒，未知不继续启动，不保证npm后代停止。
 
 安装版由installer/launch.js从用户可写runtime执行，并注入WEBAGENT_USER_DATA_DIR以保留code-server用户数据。源码模式回退仓库.local/share/code-server；不能把源码默认路径写成所有安装模式的路径。
 
@@ -31,7 +31,7 @@ codeServerAuth默认password，优先环境CODE_SERVER_PASSWORD，再复用用�
 下载、npm安装和实际code-server启动受网络、Node/系统版本影响。日志和口令文件应保密；清单路径是本机生成信息，不应把本机绝对路径硬编码到跨机器包中。
 
 ## 验证
-codeServerAuth、codeServerNotRunnable、skipWorkbench、desktopExtension、extensionCopy检查配置、入口和副本；codeServerLifecycle另用真实HTTP/Node子进程与受控故障验证启动期限/取消及直接子进程收尾。真实Windows code-server和原生VS Code会话仍需端到端验证；不能以参数字符串存在推断启动成功。
+codeServerAuth、codeServerNotRunnable、skipWorkbench、desktopExtension、extensionCopy检查配置、入口和副本；codeServerLifecycle另用真实HTTP/Node子进程与受控故障验证启动期限/取消及直接子进程收尾；fallback新增独立120秒、迟到exit0、未知退出/单一所有者和四种取消入口。测试的npm被拦截，不下载或运行真实code-server。真实Windows code-server和原生VS Code会话仍需端到端验证；不能以参数字符串存在推断启动成功。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航

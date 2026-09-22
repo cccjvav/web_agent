@@ -121,6 +121,43 @@ async function narrowWorkspaceBrowser(browser, base) {
     assert.deepStrictEqual(errors, []);
   } finally { await page.close(); }
 }
+async function adminLayoutBrowser(browser) {
+  const { createServer, ingest } = require('../../admin-host/app');
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-admin-ui-'));
+  const token = 'isolated-admin-ui-fixture';
+  const { server } = createServer({ dataDir, token });
+  let page;
+  try {
+    ingest(dataDir, { installId:'unbound-fixture-' + 'a'.repeat(100), day:'2026-09-22', toolCalls:12, fail:1 });
+    ingest(dataDir, { installId:'named-fixture', githubUser:'fixture-user', day:'2026-09-22', toolCalls:9, fail:0 });
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    page = await browser.newPage({ extraHTTPHeaders:{Authorization:'Bearer ' + token} });
+    await page.goto('http://127.0.0.1:' + server.address().port + '/?day=2026-09-22');
+    await page.addScriptTag({path:AXE_SCRIPT});
+    for (const width of [320, 390, 1440]) {
+      await page.setViewportSize({width,height:720});
+      const metrics = await page.evaluate(() => ({width:innerWidth,scroll:document.documentElement.scrollWidth,sub:parseFloat(getComputedStyle(document.querySelector('.sub')).fontSize)}));
+      assert.ok(metrics.scroll <= metrics.width + 1, 'admin table must scroll locally instead of expanding the whole narrow page');
+      assert.ok(metrics.sub >= 12, 'installation metadata must remain readable');
+      const violations = await page.evaluate(async () => (await window.axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})));
+      assert.deepStrictEqual(violations,[], 'admin contrast and labelled table scrolling region');
+      if (width === 320) {
+        await page.locator('.table-scroll').focus();
+        await page.keyboard.press('ArrowRight');
+        await page.waitForFunction(() => document.querySelector('.table-scroll').scrollLeft > 0);
+      }
+      if (process.env.UI_EVIDENCE_DIR) {
+        fs.mkdirSync(process.env.UI_EVIDENCE_DIR,{recursive:true});
+        await page.screenshot({path:path.join(process.env.UI_EVIDENCE_DIR,`admin-${width}.png`)});
+      }
+    }
+  } finally {
+    if (page) await page.close();
+    if (server.listening) await new Promise(resolve=>server.close(resolve));
+    fs.rmSync(dataDir,{recursive:true,force:true});
+  }
+}
+
 async function freePort() {
   const server = net.createServer();
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
@@ -683,6 +720,7 @@ async function main() {
     };
     await rpc('ping'); // History exists before the page opens.
     browser = await chromium.launch({ headless: true, ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
+    await adminLayoutBrowser(browser);
     await mcpCorsBrowser(browser, base, `http://127.0.0.1:${mcpPort}/mcp/${status.secretKey}`);
     await classicChatStreamBrowser(browser, base);
     await narrowWorkspaceBrowser(browser, base);
@@ -1052,7 +1090,7 @@ async function main() {
     assert.ok((await page.locator('#bridge-result').textContent()).includes('停止结果未确认'));
     await page.unroute('**/api/bridge/stop');
     assert.deepStrictEqual(errors, []);
-    console.log('Browser PASS: cross-origin MCP headers/session, classic bad-stream cleanup, 16 workbench + 12 docs axe/layout states, keyboard navigation/scrolling; minimal page observation + authenticated connection echo/forged session rejection/clear, help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');
+    console.log('Browser PASS: admin 3-viewport table/contrast/keyboard, cross-origin MCP headers/session, classic bad-stream cleanup, 16 workbench + 12 docs axe/layout states, keyboard navigation/scrolling; minimal page observation + authenticated connection echo/forged session rejection/clear, help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');
   } finally {
     if (browser) await browser.close();
     if (child.exitCode === null) child.kill();

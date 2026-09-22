@@ -138,10 +138,23 @@ function gitStatus() {
 
 // Enumerate what the requested diff would touch, drop anything the per-path sensitive rules
 // deny, and report both sides of a rename. Returns workspace-relative pathspecs.
-function diffPathspecs(prefix, staged) {
-  const args = ['diff', '-M', '--name-status', '-z', '--no-ext-diff', '--no-textconv'];
+// `scope` is a workspace-relative path or '' for the whole workspace. Every candidate — including
+// BOTH sides of a rename — is checked against the sensitive rules, so a protected file can never
+// reach the content-producing diff regardless of how the caller spelled the request.
+function diffPathspecs(prefix, staged, scope = '') {
+  // --no-relative pins the metadata to REPOSITORY-relative coordinates. A user's local
+  // `diff.relative=true` would otherwise make Git emit workspace-relative names here, stripPrefix
+  // would remove the prefix a second time, and every path would fall outside the subtree — the
+  // filter would silently discard legitimate changes. From branch 01a0c932.
+  const args = ['diff', '-M', '--name-status', '-z', '--no-ext-diff', '--no-textconv', '--submodule=short', '--no-relative'];
   if (staged) args.push('--cached');
-  args.push(...SCOPE_PATHSPEC);
+  // Enumerate the WHOLE repository, not `-- .`. Restricting the pathspec makes Git report a
+  // rename whose source lies outside the workspace as a plain add, hiding the origin: the
+  // cross-boundary check below would then never see the parent-side name and would happily
+  // render content that came from outside the workspace. Scoping happens in this function, on
+  // metadata we can actually inspect. Only the metadata pass is repository-wide; the content
+  // diff is still restricted to the explicit allow-list built here.
+  args.push('--');
   const records = git(args).split('\0').filter((part) => part !== '');
   const allowed = [];
   const excluded = [];
@@ -149,14 +162,29 @@ function diffPathspecs(prefix, staged) {
     const code = records[i];
     // Rename/copy status records carry two names; every other status carries one.
     const sides = /^[RC]/.test(code) ? [records[++i], records[++i]] : [records[++i]];
-    for (const side of sides) {
-      if (side == null) continue;
-      const scoped = stripPrefix(prefix, side);
-      if (scoped == null || scoped === '') continue;
-      if (isSensitive(scoped)) {
-        if (!excluded.includes(scoped)) excluded.push(scoped);
-        continue;
+    const rawSides = sides.filter((side) => side != null && side !== '');
+    const scopedSides = rawSides.map((side) => stripPrefix(prefix, side));
+    // stripPrefix returns null for a path outside the workspace subtree. For a rename that
+    // CROSSES the boundary (`git mv ../outside.txt inside.txt`) one side is null, and rendering
+    // the surviving side would disclose content that entered from the parent repository. Withhold
+    // the whole record, exactly as for a protected side. From branch 01a0c932.
+    if (scopedSides.some((side) => side == null || side === '')) {
+      for (const side of scopedSides) {
+        if (side && !excluded.includes(side)) excluded.push(side);
       }
+      continue;
+    }
+    // A rename/copy is ONE change with two names. If EITHER name is protected the whole record is
+    // withheld: `git mv secret.key public.txt` otherwise renders the secret's full contents under
+    // the innocuous new name, which defeats the filter entirely (reproduced before fixing).
+    const protectedSides = scopedSides.filter((side) => isSensitive(side));
+    if (protectedSides.length) {
+      for (const side of protectedSides) if (!excluded.includes(side)) excluded.push(side);
+      continue;
+    }
+    for (const scoped of scopedSides) {
+      // Apply the caller's scope only after the protection decision above.
+      if (scope && scoped !== scope && !scoped.startsWith(scope + '/')) continue;
       if (!allowed.includes(scoped)) allowed.push(scoped);
     }
   }
@@ -166,7 +194,7 @@ function diffPathspecs(prefix, staged) {
 function gitDiff({ filePath, staged = false, stat = false } = {}) {
   try {
     const prefix = workspacePrefix();
-    const args = ['diff', '--no-ext-diff', '--no-textconv'];
+    const args = ['diff', '--no-ext-diff', '--no-textconv', '--submodule=short'];
     if (staged) args.push('--cached');
     if (stat) args.push('--stat');
     // --relative keeps reported paths workspace-relative for a nested root and is a no-op at
@@ -176,24 +204,30 @@ function gitDiff({ filePath, staged = false, stat = false } = {}) {
 
     let excluded = [];
     let pathspecCapped = false;
-    if (filePath) {
-      // Explicit paths already pass resolveSafePath, which rejects sensitive and out-of-root
-      // targets before anything is executed.
-      const full = resolveSafePath(filePath);
-      args.push(path.relative(config.workspaceRoot, full) || '.');
-    } else {
-      const scope = diffPathspecs(prefix, staged);
+    {
+      // resolveSafePath rejects an explicitly named sensitive or out-of-root target, but a
+      // DIRECTORY (or '.') passes it and would then diff everything beneath it unfiltered.
+      // Enumerate metadata first in every case and diff only the allowed paths, so aggregate,
+      // directory and single-file requests all obey the same rules. From branch 01a0c932.
+      let requested = '';
+      if (filePath) {
+        const full = resolveSafePath(filePath);
+        requested = toPosix(path.relative(config.workspaceRoot, full));
+        if (requested === '.' || requested === '') requested = '';
+      }
+      const scope = diffPathspecs(prefix, staged, requested);
       excluded = scope.excluded;
       if (!scope.allowed.length) {
         return {
           ok: true,
           available: true,
           git: true,
-          filePath: '.',
+          filePath: filePath || '.',
           staged: Boolean(staged),
           totalLines: 0,
           diff: '',
-          truncated: false,
+          truncated: excluded.length > 0,
+          omittedFiles: excluded.length,
           ...(excluded.length ? { excludedSensitivePaths: excluded } : {})
         };
       }
@@ -213,7 +247,12 @@ function gitDiff({ filePath, staged = false, stat = false } = {}) {
       staged: Boolean(staged),
       totalLines: lines.length,
       diff: lines.slice(0, max).join('\n'),
-      truncated: lines.length > max || pathspecCapped,
+      // A filtered diff IS an incomplete diff. Reporting truncated:false while silently dropping
+      // protected paths lets a caller treat the output as a full change list; omittedFiles makes
+      // the count explicit rather than leaving it to be inferred from excludedSensitivePaths.
+      // Contract adopted from branch 01a0c932.
+      truncated: lines.length > max || pathspecCapped || excluded.length > 0,
+      omittedFiles: excluded.length,
       ...(excluded.length ? { excludedSensitivePaths: excluded } : {}),
       ...(pathspecCapped ? { pathspecLimit: MAX_DIFF_PATHSPECS } : {})
     };

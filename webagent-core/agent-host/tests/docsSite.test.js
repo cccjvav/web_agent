@@ -50,7 +50,8 @@ console.log('docs-site content.js matches build.js');
 
 const context = { window: {} };
 require('vm').runInNewContext(after, context);
-assert.ok(context.window.DOCS.files.summary.html.includes('文档语义审查台账'), 'legacy summary route must show the current review ledger, not retired statistics');
+assert.strictEqual(context.window.DOCS.files.summary.path, 'review/SEMANTIC_REVIEW_2026-09-16.md', 'legacy summary route must resolve to the current ledger source');
+assert.ok(context.window.DOCS.files.summary.html.includes('不是全仓源码逐行认证'), 'current ledger must retain the user-clarified Markdown scope');
 assert.ok(!fs.existsSync(path.join(repoRoot, 'DOCUMENTATION_SUMMARY.md')), 'retired duplicate statistics must not return');
 assert.ok(context.window.DOCS.fileIndex.some(doc => doc.id === 'summary'));
 

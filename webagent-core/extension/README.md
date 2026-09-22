@@ -1,6 +1,6 @@
 # VS Code扩展：本机Chat界面与可观测PTY宿主
 
-逐函数与嵌入脚本详解：[入口与Webview](入口与Webview详解.md) · [PTY扩展](PTY扩展详解.md)。覆盖本目录5个JS文件，并讲解package.json贡献声明和SVG资源。
+逐函数与嵌入脚本详解：[入口与Webview](入口与Webview详解.md) · [PTY扩展](PTY扩展详解.md)。覆盖本目录现行JS模块（包含危险命令策略和原生草稿操作，不沿用旧5文件数量），并讲解package.json贡献声明和SVG资源。
 
 
 ## 职责与入口
@@ -16,6 +16,8 @@
 | `ptyHost.js` | 注册随机clientId、轮询/接收任务、审批、终端运行、捕获输出和报告 |
 | `ptyPolicy.js` | 不依赖VS Code的命令判断；决定是否可自动批准或必须重新询问 |
 | `workspaceMatch.js` | 规范路径并比较当前文件夹与host工作区 |
+| `dangerousPolicy.js` | 与后端共用的危险命令词法规则，不是OS沙箱 |
+| `editorReview.js` | 原生草稿差异/恢复、版本核对和显式确认，不主动保存 |
 | `modeFromChatRequest.js` | 将命令/提示前缀收敛为ask、plan、code，未指定时默认code |
 | `resources/` | 图标；见该目录说明 |
 
@@ -37,7 +39,7 @@ webview动态文本使用DOM文本节点，CSP含nonce，宿主只接受预期�
 
 ## 自定义主机端口
 
-agentHostUrl优先读取VS Code设置`webagent.agentHostUrl`，其次扩展进程环境`WEBAGENT_AGENT_HOST_URL`，最后默认http://127.0.0.1:48271。设置界面修改该配置后重载扩展；环境变量方式必须在启动VS Code前设置并完整退出旧进程再启动。不要把此URL指向不受信服务。端口与host实际启动配置需要一致，不能只修改扩展一端。
+agentHostUrl优先读取VS Code设置`webagent.agentHostUrl`，其次扩展进程环境`WEBAGENT_AGENT_HOST_URL`，最后默认http://127.0.0.1:48271。清单给该设置定义了默认URL，因此通常会先命中设置，环境变量不是无条件覆盖。自定端口优先直接改此VS Code设置；确需环境回退时让设置为空并在启动宿主前设置环境。设置界面修改该配置后重载扩展；环境变量方式必须在启动VS Code前设置并完整退出旧进程再启动。不要把此URL指向不受信服务。端口与host实际启动配置需要一致，不能只修改扩展一端。
 
 ## 验证
 `extensionCopy`验证规范源码与副本，`webviewRuntime`运行实际模板/消息fixture，`desktopExtension`、`ptyLifecycle`覆盖接口与任务边界。尚不能据此声称真实VS Code多窗口、shell integration、Windows审批和取消全部验收。

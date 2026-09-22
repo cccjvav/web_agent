@@ -8,12 +8,12 @@
 |---|---|---|
 | formatClock(ms) | 时间→本地时钟文本 | 空值空字符串；内部pad(n)补两位；本地时区不是UTC |
 | logBridgeTool() | 无→Promise | 兼容事件入口，仅委托refreshBridgeActivity，不在浏览器累加，以免重复或混入本地Chat |
-| paintBridgeActivity(snapshot) | 服务端快照→undefined | 校验stats/logs，epoch:revision未变不重复绘制；覆盖state.stats、paintStats、转义后重建最近100条完成摘要；计数不等于当前仍连接 |
+| paintBridgeActivity(snapshot) | 服务端快照→undefined | 校验stats/logs及身份，先绘远程Tasks；epoch:revision未变仅跳过日志重绘。覆盖state.stats、paintStats，按追踪/摘要重建有界日志，计数不等于当前仍连接 |
 | refreshBridgeActivity() | 无→Promise<boolean> | 单飞GET本机/api/bridge/activity，5秒AbortController超时；成功完整paint后true，HTTP/解析/快照失败显示同步错误并false，允许下一次相同版本快照恢复；finally清timer与pending |
 | paintStats() | 无→undefined | 显示调用/失败/成功率/平均秒；healthLine优先；会话数取httpSessions/alive/clients或调用记录启发式，最后工具附formatClock |
 | resetRound() | 无→Promise<boolean> | resetRoundPending拒绝页内重复；POST后要求HTTP成功、JSON对象且success严格true才确认写入，再分别刷新status和活动快照。写确认但读取失败仍返回true并提示手动核对；写未确认false且不假装本地清零、不自动重试 |
 | selectedClientInfo() | 无→客户端或null | 当前selectedClient优先，否则arena；找不到null |
-| promptText() | 无→字符串 | 客户端专用prompt优先、status.prompt其次，再拼mcpUrl+连接说明；可能含密钥，不公开粘贴 |
+| promptText() | 无→字符串 | 有选中卡片时只返回其prompt或空字符串；仅找不到卡片时才用status.prompt或mcpUrl+说明回退，不能向不支持卡片泄露全局密钥提示 |
 | paintClients() | 无→undefined | map卡片/步骤；needsPlus严格true/false/其他分别显示要Plus/无需Plus/待核对，verification=unverified加未验证徽标；click修改selectedClient并重画；copyRules按connectMode显示；配对码只在Bridge运行且有效信息存在时展示，供兼容OAuth客户端使用，不称某厂商专属 |
 | renderBrowser(tab) | tab→undefined | 绘连接指引页面，不是加载官方站点的真实浏览器进程；各分支如下 |
 | arenaConnect() | 无→Promise<void> | 仅切右Bridge、灭会话灯、提示去真实Arena配置；不发送任务给本机Code或外部Arena |
@@ -43,11 +43,11 @@
 
 **resetSecret()**使用页内secretRotating与禁按钮防并发；捕获页面工作区/主机/旧密钥，先GET当前状态验证核心形状及同绑定/同旧密钥。明确confirm告知OAuth撤销但任务/隧道不停止，确认前后复查页面；取消不POST。请求携workspaceRoot/hostInstanceId/expectedSecret，服务端单进程比较后再轮换，旧页面不应直接重发。轮换响应通过完整消费合同才确认；随后只刷新状态，不再POST。刷新失败/被取代/主机或secret不匹配保留“原主机轮换已确认、当前地址未核对”。
 
-请求发出后遇HTTP/业务/JSON/网络/超时/坏合同一律结果未确认，旧显示地址可能过期，先读状态而非再次重置；没有自动重试。发送前失败明确未发送。结果写独立secret-result（aria-live），不沿用无条件成功toast，不自动复制地址；finally释放guard。仅页内互斥，不是跨标签锁或永久幂等；服务端旧空体扩展调用仍兼容，不因此获得新绑定/CAS保证。经典UI改进不代表原生扩展命令已复核。启动/停止没有共用此锁，启动在途停止不能被密钥轮换锁挡住；本批经典启停消费见上节，原生扩展仍另审。
+请求发出后遇HTTP/业务/JSON/网络/超时/坏合同一律结果未确认，旧显示地址可能过期，先读状态而非再次重置；没有自动重试。发送前失败明确未发送。结果写独立secret-result（aria-live），不沿用无条件成功toast，不自动复制地址；finally释放guard。仅页内互斥，不是跨标签锁或永久幂等；服务端旧空体扩展调用仍兼容，不因此获得新绑定/CAS保证。经典UI的证据不代签原生路径；原生命令随后已有独立F43回归，实机/其它消费者仍单列。启动/停止没有共用此锁，启动在途停止不能被密钥轮换锁挡住；本批经典启停消费见上节，原生扩展的绑定/确认/未知消费见入口与Webview详解及F43回归，不据此宣称所有实机场景已验。
 
 **paintBridge()**把state.status映射为运行pill/toggle/MCP块/URL/底栏/installId，domain空输入才回填，radio规范named别名；paintClients。按provider/URL判断隧道类型，显示就绪文案；账目信息区GitHub实际身份、演示授权、未授权分开，deviceAvailable控制按钮；usage显示今日工具计数及是否配置上报；mcpSession.alive/latest/空决定Connected/Idle/Waiting/Stopped，最后paintStats。
 
-需要区分文案与数据：bridge-sub的“活动请求”使用state.stats.calls累计次数，不是并发数；Bridge运行不代表外部Agent已连接；隧道URL存在也不是全公网端到端健康证明。
+需要区分文案与数据：bridge-sub已将累计完成数标为“外部工具调用”，不再误称活动请求；Bridge运行不代表外部Agent已连接；隧道URL存在也不是全公网端到端健康证明。
 
 **checkBridgeHealth()**以no-store GET /health，只有HTTP 2xx且health.ok严格true才继续refreshStatus；被更新读取取代也算未确认。成功再拼工作台/Bridge/隧道摘要到healthLine，失败走错误摘要，不用拒绝正文里的ok真值假报健康；只检查本源，不从手机侧探测公网。
 

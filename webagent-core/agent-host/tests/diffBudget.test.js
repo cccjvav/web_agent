@@ -13,7 +13,7 @@ process.env.WORKSPACE_ROOT = tmp;
 const { config } = require('../src/config');
 config.workspaceRoot = tmp;
 
-const { createUnifiedDiff, DIFF_TIMEOUT_MS, DIFF_MAX_EDIT_LENGTH } = require('../src/utils/diff');
+const { createUnifiedDiff, DIFF_TIMEOUT_MS, DIFF_MAX_EDIT_LENGTH, DIFF_MAX_INPUT_BYTES } = require('../src/utils/diff');
 const { callTool } = require('../src/tools');
 const admin = require('../../admin-host/app');
 
@@ -54,6 +54,47 @@ async function run() {
     `rejection must happen near the declared budget; took ${elapsed}ms for a ${DIFF_TIMEOUT_MS}ms budget`
   );
   assert.ok(!/before-|after-/.test(budgetError.message), 'the error must not echo file content');
+
+  // --- Input and output ceilings, adopted from branch 01a0c932. ---
+  // The time/edit budget bounds one run; these bound what may enter and leave it at all. A
+  // 1MiB+ input should never reach the super-linear algorithm, and a diff that fits the edit
+  // budget can still render into something too large to ship to a browser or a model.
+  assert.throws(
+    () => createUnifiedDiff('big.txt', 'a'.repeat(DIFF_MAX_INPUT_BYTES + 1), 'b'),
+    (err) => err.code === 'E_DIFF_BUDGET',
+    'an oversized input must be refused before the algorithm runs'
+  );
+  assert.throws(
+    () => createUnifiedDiff('wide.txt', 'a'.repeat(150000), 'b'.repeat(150000)),
+    (err) => err.code === 'E_DIFF_BUDGET',
+    'a patch that renders past the output ceiling must be refused'
+  );
+
+  // --- The rendered patch must actually reconstruct the target. ---
+  // A diff that reports plausible counts but does not apply cleanly would be worse than no diff.
+  {
+    const beforeText = 'a\nb\nc\n';
+    const afterText = 'a\nB\nc\nd\n';
+    const round = createUnifiedDiff('round.txt', beforeText, afterText);
+    assert.strictEqual(require('diff').applyPatch(beforeText, round.patch), afterText,
+      'the rendered patch must apply back to the new content');
+  }
+
+  // --- An over-budget NEW file must not even create its parent directory. ---
+  {
+    const huge = Array.from({ length: 8000 }, (_, i) => 'line-' + i).join('\n');
+    const created = await callTool(
+      'apply_patch',
+      { filePath: 'new-folder/new.txt', patch: huge },
+      'code'
+    ).then((ok) => ({ ok }), (err) => ({ err }));
+    if (created.err) {
+      assert.ok(
+        !fs.existsSync(path.join(tmp, 'new-folder')),
+        'a rejected creation must not leave its parent directory behind'
+      );
+    }
+  }
 
   // --- A rejected patch on an EXISTING file must leave the file byte-identical. ---
   // (Creating a file diffs against '', which is linear and always inside budget; the

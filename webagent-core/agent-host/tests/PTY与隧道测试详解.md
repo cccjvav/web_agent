@@ -20,7 +20,7 @@ AbortController取消enqueue返回cancelled；预取消runWithSignal中的write_
 
 再把postJob替换为reports收集器；**onDidEndTerminalShellExecution**存ended并返回**dispose()**空清理接口；execution的异步生成器**read()**先yield output，再queueMicrotask上报exit3；**executeCommand**仅返回此execution。runShellIntegration必须报告error/3。createTerminal fixture的**show/dispose**为空，**sendText**一调用即抛：spawnFallback必须“未执行命令”拒绝，不能退回不可观测执行。host.dispose结束实例。
 
-最后真executeCommand启动Node30秒有限定时器，100ms abort后cancelled/ok:false，并要求10秒内管道关闭（不能等自然退出冒充取消）；global.fetch替身只监听signal abort并reject，用30ms fetchText deadline证明请求超时传播，keep定时器维持事件循环，finally清timer/恢复fetch。外层finally reset jobs/删tmp。这里有真实子进程取消，但没有真实node-pty或Windows窗口批准测试。
+最后真executeCommand启动Node30秒有限定时器，分别50/100/200/400ms以及确认stdout后abort，要求cancelled/ok:false及10秒内管道关闭（不能等自然退出冒充取消）；global.fetch替身监听signal，用不变的30ms fetchText期限验证E_TIMEOUT、fetch/abort各恰好一次及底层signal.aborted=true。F64将原只匹配aborted文案的断言升级为错误码和真实中止的共同约束，不删除取消断言；keep定时器维持事件循环，finally清timer/恢复fetch。外层finally reset jobs/删tmp。这里有真实子进程取消，但没有真实node-pty或Windows窗口批准测试。
 
 ## tunnel.test.js
 

@@ -55,7 +55,7 @@ Named/ngrok的tunnel_log在进入事件总线前，对stdout/stderr各自进行�
 
 MCP 密钥和模型 API Key 写在工作区 `.webagent/config.json`（尽量 `chmod 0600`，并 gitignore）。不是系统钥匙串，也不搬到 `%APPDATA%`（密钥跟着这台「车」）。非 Git 场景（打包、备份、网盘同步、把工作区目录整个拷走）仍可能带上明文 Key。GitHub PAT 不会写入该文件。
 
-敏感路径拦截（`.env`、`*.pem`、`.ssh/`、`.webagent/config.json` 等）**只作用于文件工具**。`read_files ".env"` 会被拒；`run_command "cat .env"` 可以读出内容。
+敏感路径拦截（`.env`、`*.pem`、`.ssh/`、`.webagent/config.json`等）作用于受控文件/搜索/只读Git等路径，不约束任意命令。`read_files ".env"` 会被拒；`run_command "cat .env"` 可以读出内容。
 
 工作台 `GET /api/status` **仍带** `secretKey`：本机拼 MCP 地址要用，且`/api`限制回环socket＋明确本机Host＋如有Origin则要求本机HTTP(S)来源（允许本机不同端口，无Origin的CLI路径仍可用，不是严格同源）。不另开 `/api/bridge/secret`。
 
@@ -77,8 +77,11 @@ Chat断开/停止会传递取消信号；每请求5分钟总期限，模型响�
 
 ## 外部网络依赖与用量上报
 
+可选GitHub身份的三个固定端点每次头/体合计10秒、响应64KiB、拒跳转；本机REST断开传递AbortSignal，身份generation继续防旧成功结果覆盖。预先取消不清健康设备流；错误不反射上游正文，设备授权URL固定官方路径。一次poll可能有两段请求；取消不能撤回GitHub已处理的授权/签发，也不代表统计上报等其它网络链已经同样有界。
+
 - 经典工作台从jsDelivr加载Monaco可执行脚本，同页能访问本机状态，因此存在第三方CDN供应链信任面。加载失败提供纯文本回退；当前尚未vendor Monaco，不把离线回退当供应链隔离。
 - 配置WEBAGENT_TELEMETRY_URL与WEBAGENT_TELEMETRY_TOKEN两者后才可能外发统计，默认未配置不发送。payload包含installId、可选githubUser/githubId/provider、日期、调用数、失败数、成功率、lastAt、产品与版本，不包含模型key、MCP secret或命令正文，但不是匿名数据。
+- 可选admin统计后台仍只以共享Bearer授权且默认回环，不证明上报者身份。报告坏存储或超4MiB/10000行拒绝而不清空；同目录临时文件原子发布不是跨进程锁或断电备份。管理员应先备份再显式修复；令牌创建/权限和公网限流另有边界，见[统计实现](webagent-core/admin-host/统计服务详解.md)。
 - 关闭上报：停止产品，删除启动环境中的上述两项配置，再从清理后的新进程启动；本地usage.json仍可能记录统计，关闭上报不等于删除本地记录。不公开遥测令牌。
 - 截图自动回传除工作区外还允许本项目computer-use目录（现有技能兼容例外），该目录不要放私人截图。命令stdout中图片路径可能触发附件读取；尚未改成显式附件协议，此例外不能误说成严格仅工作区。
 - 强杀主机进程后应人工确认对应cloudflared/ngrok已退出；仅凭旧PID自动强杀可能误伤PID复用的其他进程，当前不实施这种回收。断电时进程不会继续运行，但重启后的外部服务/残留启动机制仍需核对。

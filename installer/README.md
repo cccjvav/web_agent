@@ -11,7 +11,7 @@
 | `package.js` | 从显式白名单构建output/payload与installation.json SHA-256清单 |
 | `webagent.iss` | Inno Setup安装定义、入口/PATH及安装前检查 |
 | `build-installer.cmd` | 先stage，再调用Inno Setup 6编译 |
-| `preparation.js` | 异步npm准备期限/取消与所持直接子进程退出观察 |
+| `preparation.js` | 外层ci、编辑器依赖与后端fallback的异步准备期限/取消、所持直接子进程退出观察 |
 | `launch.js` | 无依赖Node启动器，准备用户runtime、解析工作区并启动所选模式 |
 
 ## 执行流程
@@ -43,7 +43,7 @@ recovery是独立Windows本机交互回收入口，不解析工作区/装依赖/
 
 installerPackaging验证白名单、私密fixture不入包、runtime路径和重要声明；Windows CI编译输入C#、解析PS并编译安装器。普通用户安装/升级迁移/卸载、PATH和浏览器窗口的实际效果仍需Windows实机验收。
 
-R5首包发行：只读tunnel-residue.js加入明确文件白名单，src/tunnel身份与记录模块随原源码树打包；用户home记录不属于产品载荷，未加入清理执行器。
+R5最初只发行只读tunnel-residue.js；现在还包含下节本机明确确认的回收入口和保护/持有句柄辅助。用户home记录仍不属于产品载荷，未新增HTTP/MCP或无需确认的清理权限。
 
 ## 本机回收快捷入口
 

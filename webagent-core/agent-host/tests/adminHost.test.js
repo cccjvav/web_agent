@@ -134,6 +134,7 @@ async function run() {
     void token;
   } finally {
     await new Promise((resolve) => server.close(resolve));
+    fs.rmSync(dataDir, { recursive: true, force: true });
   }
   console.log('adminHost.test.js ok');
 }

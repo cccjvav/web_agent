@@ -1,6 +1,7 @@
 'use strict';
 const { AsyncLocalStorage } = require('async_hooks');
 const { TextDecoder } = require('util');
+const { performance } = require('perf_hooks');
 
 const scope = new AsyncLocalStorage();
 const DEFAULT_TIMEOUT_MS = 120000;
@@ -44,7 +45,7 @@ async function readWebStream(body, maxBytes) {
       const chunk = chunkBytes(part.value);
       bytes += chunk.byteLength;
       if (bytes > maxBytes) {
-        try { await reader.cancel(); } catch (_) { /* retain the stable budget error */ }
+        try { Promise.resolve(reader.cancel()).catch(() => {}); } catch (_) { /* retain the stable budget error */ }
         throw responseTooLarge(maxBytes);
       }
       text += decoder.decode(chunk, { stream: true });
@@ -83,20 +84,59 @@ async function readResponseText(response, limits) {
 // `options.fetchImpl` lets a caller that already accepts an injected fetch (tests, or a module
 // whose public API exposes `fetchFn`) keep that injection while still getting the timeout,
 // parent-cancellation and byte budget. It is stripped before reaching the transport.
-async function fetchText(url, options, timeoutMs = DEFAULT_TIMEOUT_MS, limits) {
+async function fetchText(url, options, timeoutMs = DEFAULT_TIMEOUT_MS, limits, fetchFn) {
   checkCancelled();
+  // A non-finite or non-positive timeout would make setTimeout fire immediately (or never) and
+  // silently defeat the whole budget, so reject it loudly instead. From branch 01a0c932.
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) throw new TypeError('timeoutMs 必须是正有限数');
   const { fetchImpl, ...init } = options || {};
-  const send = typeof fetchImpl === 'function' ? fetchImpl : fetch;
+  // Two injection seams, both honoured: `options.fetchImpl` (used by callers that already expose
+  // an injected fetch through their own public API) and a trailing positional argument. Resolving
+  // the global lazily also matters -- a caller that supplies a transport must not require a global
+  // `fetch` to exist at all, which is exactly the case in a bare vm context.
+  const send = typeof fetchImpl === 'function' ? fetchImpl
+    : typeof fetchFn === 'function' ? fetchFn
+      : (typeof fetch === 'function' ? fetch : null);
+  if (!send) throw new TypeError('没有可用的 fetch 实现');
+  const maxBytes = responseBudget(limits), expires = performance.now() + timeoutMs;
   const parent = currentSignal(), controller = new AbortController();
   const cancel = () => controller.abort();
+  const checkDeadline = () => {
+    if (controller.signal.aborted || performance.now() >= expires) {
+      cancel();
+      const error = new Error('HTTP 请求超过截止时间'); error.code = 'E_TIMEOUT'; throw error;
+    }
+  };
   if (parent) parent.addEventListener('abort', cancel, { once: true });
-  const timer = setTimeout(cancel, timeoutMs); if (timer.unref) timer.unref();
+  // Aborting the signal is a REQUEST to stop; it is not a guarantee that the transport honours it.
+  // An implementation that ignores `signal` (a test double, or a poorly behaved polyfill) would
+  // otherwise leave this promise pending forever and the deadline would be decorative. Race the
+  // send against a timer that actually settles, so the budget is enforced by us, not by the peer.
+  let expire;
+  const timedOut = new Promise((_resolve, reject) => {
+    expire = setTimeout(() => {
+      cancel();
+      const error = new Error('HTTP 请求超过截止时间');
+      error.code = 'E_TIMEOUT';
+      reject(error);
+    }, timeoutMs);
+    if (expire.unref) expire.unref();
+  });
+  const timer = expire;
   try {
     if (parent && parent.aborted) cancel();
-    const response = await send(url, { ...init, signal: controller.signal });
-    const text = await readResponseText(response, limits);
-    checkCancelled();
+    const response = await Promise.race([send(url, { ...init, signal: controller.signal }), timedOut]);
+    // Check the deadline after the response head AND after the body: a slow trickle can keep a
+    // stream technically alive long past the budget without ever aborting. From branch 01a0c932.
+    checkCancelled(); checkDeadline();
+    const text = await Promise.race([readResponseText(response, { maxBytes }), timedOut]);
+    checkCancelled(); checkDeadline();
     return { response, text };
+  } catch (error) {
+    // Transport implementations may surface an abort as a socket/type error.
+    // Preserve cancellation/deadline intent rather than relying on its error name.
+    checkCancelled(); checkDeadline();
+    throw error;
   } finally {
     clearTimeout(timer); if (parent) parent.removeEventListener('abort', cancel);
   }

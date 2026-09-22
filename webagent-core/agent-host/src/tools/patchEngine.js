@@ -307,17 +307,16 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
       });
     }
     const newContent = blocksEarly.length ? blocksEarly[0].replace : patch;
+    // Render the diff BEFORE any filesystem mutation, including parent directory creation.
+    // createUnifiedDiff enforces a computation budget and throws E_DIFF_BUDGET when it cannot
+    // finish; computing it first keeps that rejection at zero writes instead of leaving a
+    // created file behind a failed call.
+    const diffInfo = createUnifiedDiff(filePath, '', newContent);
 
     if (dryRun) {
-      const preview = createUnifiedDiff(filePath, '', newContent);
       return { success: true, isNewFile: true, filePath, baseHash: null, proposedHash: computeHash(newContent),
-        diff: preview.patch, diffSummary: `+${preview.additions} -${preview.deletions}`, message: 'Dry run check passed (New file)' };
+        diff: diffInfo.patch, diffSummary: `+${diffInfo.additions} -${diffInfo.deletions}`, message: 'Dry run check passed (New file)' };
     }
-
-    // Render the diff BEFORE publishing the file. createUnifiedDiff enforces a computation
-    // budget and throws E_DIFF_BUDGET when it cannot finish; computing it first keeps that
-    // rejection at zero writes instead of leaving a created file behind a failed call.
-    const diffInfo = createUnifiedDiff(filePath, '', newContent);
 
     await Promise.resolve();
     fs.mkdirSync(path.dirname(fullPath), { recursive: true });

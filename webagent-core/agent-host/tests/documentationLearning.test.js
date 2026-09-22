@@ -114,6 +114,7 @@ const pairs = [
 
   ["webagent-core/agent-host/tests/oauth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
   ["webagent-core/agent-host/tests/oauthClientAuth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
+  ["webagent-core/agent-host/tests/githubNetwork.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
   ["webagent-core/agent-host/tests/githubAuth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
   ["webagent-core/agent-host/tests/networkBudget.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
   ["webagent-core/agent-host/tests/identityRequestLifetime.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
@@ -140,6 +141,8 @@ const pairs = [
   ["webagent-core/agent-host/tests/bridgeTunnel.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
 
   ["webagent-core/agent-host/tests/stateIntegrity.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
+  ["webagent-core/agent-host/tests/fileReadSafety.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
+  ["webagent-core/agent-host/tests/diffBudget.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
   ["webagent-core/agent-host/tests/resourceBudget.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
   ["webagent-core/agent-host/tests/auditStorage.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
   ["webagent-core/agent-host/tests/hostPersist.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],
@@ -179,6 +182,7 @@ const pairs = [
   ["docs-site/build.js", "docs-site/清单与构建详解.md"],
   ["docs-site/app.js", "docs-site/浏览与服务详解.md"],
   ["docs-site/serve.js", "docs-site/浏览与服务详解.md"],
+  ["webagent-core/agent-host/tests/adminIntegrity.test.js", "webagent-core/agent-host/tests/统计与文档测试详解.md"],
   ["webagent-core/agent-host/tests/adminHost.test.js", "webagent-core/agent-host/tests/统计与文档测试详解.md"],
   ["webagent-core/agent-host/tests/docsSite.test.js", "webagent-core/agent-host/tests/统计与文档测试详解.md"],
   ["webagent-core/agent-host/tests/docsHttp.test.js", "webagent-core/agent-host/tests/统计与文档测试详解.md"],
@@ -417,5 +421,8 @@ assert.ok(!checklist.includes('33 test files passed'));
 assert.ok(!checklist.includes('不需要在真机做的（沙箱已覆盖）'));
 const packaged = require('../../../installer/package').collect(root);
 for (const p of ['docs/guides/Conda环境说明.md', 'docs/development/代码复盘指南.md', 'docs/guides/Windows新手逐步验收.md', 'review/CHECKLIST_WINDOWS.md']) assert.ok(packaged.includes(p), p + ': ships with product');
-assert.ok(read('docs/development/代码复盘指南.md').includes('尚须继续补齐'));
+const learningGuide = read('docs/development/代码复盘指南.md');
+for (const contract of ['文档时效、学习复盘与实机验证分开', '不要求全仓源码逐行认证', '未核实的事实明确列出']) {
+  assert.ok(learningGuide.includes(contract), 'learning guide preserves documentation scope and unverified boundaries: ' + contract);
+}
 console.log('learning documentation names, navigation, formatting and Conda/acceptance contracts passed; not semantic certification');

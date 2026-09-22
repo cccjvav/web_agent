@@ -10,7 +10,7 @@ Git **不再内嵌** code-server。以前那份残缺切片 `code-server-dist/` 
 
 - **定位：** 网页 VS Code 运行时的落盘目录（下载结果）。不是 MCP 实现。
 - **兄弟依赖：** `webagent-core/scripts/ensure-code-server.js` 往 `code-server-runtime/` 写文件；`run-code-oss.js` 从这里找 `entry.js`。
-- **谁调用：** 仅第二种跑法 `run-webagent-vscode.cmd`。主路径 `run-webagent.cmd` **不读**本目录。
+- **谁调用：** 仅第二种跑法 `run-webagent-vscode.cmd`。经典入口不启动或依赖这个code-server运行时；安装载荷准备仍可能校验/复制包清单。
 
 | 路径 | 进 Git？ | 职责 |
 |---|---|---|
@@ -33,7 +33,7 @@ Git **不再内嵌** code-server。以前那份残缺切片 `code-server-dist/` 
   | `description` | 说明 | 写明下载官方 npm `code-server 4.135.0`；不要用残缺 git 切片 `lib/code-server-4.135.0` |
   | `dependencies.code-server` | 要安装的版本 | **恰好** `4.135.0`（与 `ensure-code-server.js` 的 `VERSION` 一致） |
 
-无 scripts、无 main。本文件被 `ensure()` 在缺失 entry 时也可能重写（见 `scripts/README.md`），以磁盘当时内容为准。
+无 scripts、无 main。本文件被 `ensure()` 在缺失 entry 时也可能重写（见[编排说明](../webagent-core/scripts/README.md)），以磁盘当时内容为准。
 
 ---
 

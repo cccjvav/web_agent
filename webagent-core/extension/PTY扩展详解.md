@@ -2,7 +2,7 @@
 
 ## 职责与调用链
 
-[ptyHost.js](ptyHost.js)从本机API领取任务，使用VS Code终端与node-pty/shell integration执行；[ptyPolicy.js](ptyPolicy.js)决定本地是否自动允许。后端队列不等于真实终端，见[队列详解](../agent-host/src/tools/命令与PTY详解.md)。
+[ptyHost.js](ptyHost.js)从本机API领取任务，使用VS Code终端与node-pty/shell integration执行；[ptyPolicy.js](ptyPolicy.js)决定本地是否自动允许。后端队列不等于真实终端，主机队列说明位于`webagent-core/agent-host/src/tools/命令与PTY详解.md`。
 
 ## 1. ptyHost.js顶层函数
 
@@ -103,4 +103,4 @@ spawnNodePty局部cleanup清除progressTimer/killer并移除spec.cleanupDir，en
 
 这是有界合并，不保证每个输出字节都被HTTP逐条传输；最终快照与终端缓冲仍有200Ki字符上限。进程异常强杀扩展仍可能留下临时文件，不能承诺finally在断电时执行；Windows目录权限继承用户Temp ACL，0600不是完整Windows ACL证明。
 
-ptyPolicy的looksDangerousCommand先调用共享dangerousPolicy.isDangerousCommand，再叠加EXTRA_DANGER，原独立DANGEROUS正则已删除。共享检测器逐函数说明见[命令策略详解](../agent-host/src/tools/工具入口与命令策略详解.md)。
+ptyPolicy的looksDangerousCommand先调用共享dangerousPolicy.isDangerousCommand，再叠加EXTRA_DANGER，原独立DANGEROUS正则已删除。共享检测器逐函数说明主机策略说明位于`webagent-core/agent-host/src/tools/工具入口与命令策略详解.md`。

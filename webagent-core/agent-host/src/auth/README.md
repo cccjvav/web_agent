@@ -15,10 +15,10 @@
 ## 边界
 没有client ID时设备流不可用；验证用户名不等于验证仓库写权限、订阅权益或MCP客户端授权。设备流是模块级内存状态，重启丢失，不能宣传成多窗口独立持久登录。
 
-fetchGitHubUser的请求失败、非预期数据或无login会报错；实际HTTP deadline能力须看本文件，不自动继承Chat的requestScope包装。
+三条身份网络请求共用requestScope.fetchText，每次头/体10秒、响应64KiB、拒绝重定向；成功JSON与关键身份/设备字段、授权URL先校验再发布。REST通过identityRequest继承实际断开信号，入口预先取消不清健康pending。poll最多串行两段请求，不是整体只有10秒；clear的generation屏障不等于远端token撤销，也不主动中止其它连接。
 
 ## 验证
-githubAuth使用可注入fetch响应验证流程、身份字段、清除/替换时的迟到结果和重复poll单飞。真实GitHub应用设置、网络、跨进程并发和用户授权仍需集成测试。API入口见[api说明](../api/README.md)。
+githubNetwork另用真实回环HTTP/REST及控制时钟验证取消、头/体期限、预算、重定向、形状和预先取消不清旧pending；不使用真实凭据。githubAuth使用可注入fetch响应验证流程、身份字段、清除/替换时的迟到结果和重复poll单飞。真实GitHub应用设置、网络、跨进程并发和用户授权仍需集成测试。API入口见[api说明](../api/README.md)。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航
@@ -27,5 +27,5 @@ githubAuth使用可注入fetch响应验证流程、身份字段、清除/替换�
 
 | 源码 | 定位证据 |
 |---|---|
-| [github.js](github.js) | 15 个函数/类节点 |
+| [github.js](github.js) | 19 个函数/类节点 |
 <!-- docs-inventory:end -->

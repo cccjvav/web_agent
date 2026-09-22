@@ -39,12 +39,12 @@
 
 - **文件职责：** 被 Agent 改的演示模块。
 - **核心类/函数清单：**
-  - **Function `add(a, b)`（L5–L7）** — 返回 `a + b`。
-  - **Function `subtract(a, b)`（L9–L11）** — 返回 `a - b`。
-  - **Function `multiply(a, b)`（L13–L15）** — 返回 `a * b`。
-  - **Function `divide(a, b)`（L17–L22）** — L18–L20：`b === 0` 则 throw `Cannot divide by zero`；L21 返回 `a / b`。
-  - **Function `power(base, exponent)`（L24–L26）** — `Math.pow`。
-  - L28–L34：`module.exports` 五函数。
+  - **Function `add(a, b)`** — 返回 `a + b`。
+  - **Function `subtract(a, b)`** — 返回 `a - b`。
+  - **Function `multiply(a, b)`** — 返回 `a * b`。
+  - **Function `divide(a, b)`** — `b === 0` 则 throw `Cannot divide by zero`；返回 `a / b`。
+  - **Function `power(base, exponent)`** — `Math.pow`。
+  - `module.exports` 五函数。
 - **关键变量：** 无模块级配置。
 
 ---
@@ -52,19 +52,19 @@
 ### 📄 文件名：`tests/calculator.test.js`
 
 - **文件职责：** 手写 assert 套件，对应 `npm test`。
-- **模块变量：** L7–L8 `passed` / `failed` 计数。
-- **Function `test(name, fn)`（L10–L19）**
+- **模块变量：** `passed` / `failed` 计数。
+- **Function `test(name, fn)`**
   - 输入：`name` 字符串；`fn` 无参函数。
-  - L11–L14：`fn()` 成功则打印 PASS，`passed++`。
-  - L14–L18：catch 打印 FAIL 与 `err.message`，`failed++`。无返回值。
-- **用例（L21–L40）：**
-  - L21–L23：`add(2,3)===5`
-  - L25–L27：`subtract(10,4)===6`
-  - L29–L31：`multiply(6,7)===42`
-  - L33–L35：`divide(10,2)===5`
-  - L37–L40：`divide(10,0)` 必须 throw，消息匹配 `/Cannot divide by zero/`
-- L42–L52：打印 Summary；`failed>0` → `exit(1)`，否则 `exit(0)`。
-- **已测 `power(2, 10) === 1024`。**
+  - `fn()` 成功则打印 PASS，`passed++`。
+  - catch 打印 FAIL 与 `err.message`，`failed++`。无返回值。
+- **用例：**
+  - `add(2,3)===5`
+  - `subtract(10,4)===6`
+  - `multiply(6,7)===42`
+  - `divide(10,2)===5`
+  - `divide(10,0)` 必须 throw，消息匹配 `/Cannot divide by zero/`
+- 所有用例结束后打印Summary；`failed>0` → `exit(1)`，否则 `exit(0)`。
+- 第六项断言 `power(2, 10) === 1024`，不把示例通过当产品测试通过。
 
 ---
 
@@ -103,7 +103,7 @@
 1. 显式传入examples/calculator时 `workspaceRoot` 才是本目录。
 2. MCP / Chat 工具的相对路径都相对这里：`src/calculator.js`、`tests/`、`.webagent/`。
 3. 用户或 Agent 执行 `npm test` → `tests/calculator.test.js` 调 `src/calculator.js`。
-4. `load_skill` 仅扫描所选工作区的Skills；不会越过边界自动读取根工作区Skills。`getInstructions`拼本示例的customizations.instructions。
+4. `load_skill`读取所选工作区Skills并保留三个固定bundled Skill例外；不会自动带入产品根`.webagent/skills`里的示例Skill。`getInstructions`拼本示例的customizations.instructions。
 5. 换工作区：`run-webagent.cmd D:\code\my-repo`，就不再用本演示树。
 
 ## 运行数据迁移
