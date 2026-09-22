@@ -113,9 +113,23 @@ F62-13 最值得记的不是缺陷本身而是**为什么自测没抓到**：实
 
 **C1 写测试踩的坑（记录以免重演）**：最初把红测合写进`networkBudget.test.js`，**基线也绿**。原因是`github.js`的模块级身份状态（`identityGeneration`/`pendingDevice`）会作废在途尝试，同进程中早先的身份测试在约150ms就把本测试的上游调用abort掉，断言**因错误原因**通过。改独立文件才消除歧义。通用教训：**新测试变绿要先确认它是为正确的原因变绿**。
 
+**第7批已修并测绿（本地104/104 + CI 35794970708 九job全绿）：Windows回归与新审面**
+
+本批先追查一个**我自己造成的**CI回归，再继续未审面。教训优先记录：**本地全绿不等于没回归**——我连推四个提交，Linux 全绿而 Windows 三个 Node 版本全红，而我直到开始审 `.github/workflows` 才发现。此后每批必须查 CI 结论，不能只看本地。
+
+| 项 | 事实 | 修法 |
+|---|---|---|
+| F62-15 BOM保留破坏JSON配置 | 我在 `710f6c3` 把解码改成 `ignoreBOM:true` 保证字节往返，但 `JSON.parse` 遇前导 U+FEFF 直接抛错。Windows 编辑器（记事本、PowerShell `Out-File`）写配置带 BOM，于是带BOM的配置被当成损坏文件报给用户 | 新增 `readBoundedJsonText()=stripBom(readBoundedText())`，剥离**只放JSON这一侧**：文本读取仍字节往返、hash 仍忠实，带BOM配置也能加载。`stripBom` 只剥一个，第二个 U+FEFF 是真实内容。改到 `customizations.js`/`profile.js`/`board.js` |
+| F62-16 测试用POSIX-only语法 | `commandEncoding.test.js` 用 `printf "x" >&2; exit 3`，cmd.exe 无此语法。等于该测试此前只在 Linux 真正跑过 | 三处改为先写 `.js` 再 `node` 执行 |
+| F62-17 **Windows丢失原生退出码** | 改成纯 node 脚本后 Windows 仍在同一断言失败 ⇒ 不是测试问题而是**产品缺陷**：`powershell.exe -Command` 取最后一条语句的状态，多语句脚本按管道成败给 0/1，丢掉原生程序真实退出码（`exit 3` 收到 1）。`rec.status`/`rec.ok` 均由此码推导，Windows 上主机**静默误报**哪些命令失败 | guardedCommand 末尾补 `if ($null -ne $LASTEXITCODE) { exit $LASTEXITCODE }`（`$LASTEXITCODE` 仅在跑过原生程序后有值，故需 null 判断） |
+
+**取证方法记录**：本沙箱下载 CI 日志被 TLS 阻断（与 Chromium 下载同一问题），改用 `gh api repos/.../check-runs/<id>/annotations` 拿到真实断言与 platform/node，不靠猜测。这条对后续排查 Windows 问题直接可复用。
+
+**本批复核未发现问题的**：`mcp/server.js` 实测认证（无token/错token均401）、batch上限64、重复`Mcp-Session-Id`头拒绝、未知会话404、GET状态页不泄露secret、SSE上限32且计数正确回收、250次SSE开关不钉死会话表、断开后批次余项确实停止执行；`mcp/resources.js` 是固定枚举无任意文件读取，F54-04 已修且有既有测试覆盖；workbench 前端 114 处模板插值全部经 `escapeHtml`/整数校验，`renderMd` 先转义后替换、14 条XSS载荷无标签逃逸，`treeHtml` 递归深度前置校验上限8，33 处 fetch 均经 `confirmedJson` 或显式超时；`.github/workflows` 无 `pull_request_target`、无不可信插值、权限为 `contents: read`。
+
 **仍待修（已取证未动，下一批候选）：** F54-04（`mcp/resources.js`疑似已修，待红测确认）；`reports.json`无条数上限与轮转，长期运行需外部归档；F61-05/06尚未独立复核。
 
-**未审范围（不得当作已审）：** 第4批已覆盖`executor.js`/`tools/index.js`/`api/routes.js`（路由清单与写入链）/`runChat.js`/`dangerous*`。**仍未审**：`mcp/server.js`、`installer/preparation.js`、`scripts/run-code-oss.js`、`extension/extension.js`与`ptyHost.js`、`workbench/js/bind.js|bridge.js|operations.js`、`.github/workflows`。浏览器项因本机Chromium下载TLS中断未验；Windows/C#/PS无本地环境。
+**未审范围（不得当作已审）：** 第4批已覆盖`executor.js`/`tools/index.js`/`api/routes.js`（路由清单与写入链）/`runChat.js`/`dangerous*`。**仍未审**：`installer/preparation.js`、`scripts/run-code-oss.js`、`extension/extension.js`与`ptyHost.js`、`workbench/js/bind.js|bridge.js|operations.js`、`.github/workflows`。浏览器项因本机Chromium下载TLS中断未验；Windows/C#/PS无本地环境。
 
 #### 即时接手检查（2026-09-21）
 
