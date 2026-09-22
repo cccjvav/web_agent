@@ -26,5 +26,5 @@ usageTracker与auditStorage覆盖统计和延迟报告期间计数不回退。�
 
 | 源码 | 定位证据 |
 |---|---|
-| [tracker.js](tracker.js) | 19 个函数/类节点 |
+| [tracker.js](tracker.js) | 18 个函数/类节点 |
 <!-- docs-inventory:end -->

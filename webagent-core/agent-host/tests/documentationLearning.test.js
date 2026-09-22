@@ -114,6 +114,7 @@ const pairs = [
   ["webagent-core/agent-host/tests/oauth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
   ["webagent-core/agent-host/tests/oauthClientAuth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
   ["webagent-core/agent-host/tests/githubAuth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
+  ["webagent-core/agent-host/tests/networkBudget.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
 
   ["webagent-core/agent-host/tests/auditControl.test.js", "webagent-core/agent-host/tests/本机边界与跨站测试详解.md"],
   ["webagent-core/agent-host/tests/localControl.test.js", "webagent-core/agent-host/tests/本机边界与跨站测试详解.md"],

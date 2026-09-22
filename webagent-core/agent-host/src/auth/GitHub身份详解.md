@@ -14,19 +14,21 @@
 | githubClientId() | 无→trim后的字符串 | 读WEBAGENT_GITHUB_CLIENT_ID，缺省空，不联网 |
 | githubClientSecret() | 无→trim后的字符串 | 读WEBAGENT_GITHUB_CLIENT_SECRET，内部辅助，不作为前端展示字段 |
 | deviceAvailable() | 无→boolean | 仅判断clientId是否非空，不证明App配置/网络有效 |
-| fetchGitHubUser(token,fetchFn=fetch) | token/可注入fetch→Promise<{login,id,name}> | GET GitHub /user，Bearer/Accept/User-Agent；读text解析JSON失败退空对象。非2xx抛带HTTP status的Error；成功但无login抛status502；id/name转字符串 |
+| GITHUB_TIMEOUT_MS / GITHUB_MAX_BYTES | 常量 | 每次外发请求的挂钟上限（默认15000毫秒，`WEBAGENT_GITHUB_TIMEOUT_MS`可覆盖）与响应正文字节上限（1MiB）。限制单次请求，不是整个登录流程的总时长 |
+| githubJson(fetchFn,url,init) | 传输/地址/init→Promise<{response,data}> | 内部辅助。把fetchFn作为传输交给`utils/requestScope`的fetchText，于是自动获得超时、父请求取消与字节预算；正文解析失败退空对象，**原始正文不外传**，HTML错误页不会经由错误消息泄漏 |
+| fetchGitHubUser(token,fetchFn=fetch) | token/可注入fetch→Promise<{login,id,name}> | 经githubJson GET GitHub /user，Bearer/Accept/User-Agent。非2xx抛带HTTP status的Error；成功但无login抛status502；id/name转字符串 |
 | applyGithubUser(user) | 用户对象→成功展示对象 | store.patch写provider/githubId/username等身份字段；不写token；存储异常会抛出，不“登录已成功但身份一定落盘” |
 | loginWithToken(token,fetchFn=fetch) | 输入token→Promise<展示对象> | String/trim空值抛status400；先开启新身份代次，再fetchGitHubUser；返回后仍是当前代次才applyGithubUser，否则抛E_SUPERSEDED |
 | clearGithubKeepDemo() | 无→undefined | 淘汰所有旧身份请求并store.patch回local-demo；不是禁用Bridge，也不注销远端GitHub令牌 |
 | resetPending() | 无→undefined | 递增代次并清内存设备码，通常供测试/状态清理；不改落盘身份 |
 
-fetchGitHubUser直接fetch，没有显式超时/父请求取消；可注入fetchFn用于测试。只验证能读user，不检查所有后续GitHub操作权限。GitHub身份字段落盘可跨重启存在；不能把“token不持久化”误写成“重启后所有用户名都消失”。
+本模块的三个外发请求（/user、device/code、access_token）**全部**经githubJson走fetchText，因此都有超时、父信号取消和1MiB正文上限；可注入fetchFn仍然有效，它只是被当作传输层，预算照样生效。以前是裸fetch：连接被黑洞吞掉时登录会永久挂着，设备码轮询也一样，用户只能看到一个永不结束的转圈。超时表现为`AbortError`，由调用方决定如何呈现；模块自身**不重试**。这只保证单次请求会结束，不保证GitHub可达、也不校验后续GitHub操作权限。GitHub身份字段落盘可跨重启存在；不能把“token不持久化”误写成“重启后所有用户名都消失”。
 
 ## 2. startDeviceLogin(fetchFn=fetch)
 
 async，返回给UI的userCode、verificationUri、verificationUriComplete、interval、expiresIn。无clientId抛E_NO_GITHUB_APP/status400。
 
-先用supersedeIdentityAttempt开启新代次，再POST GitHub device/code；URLSearchParams带client_id/scope=read:user，有secret才加；resp.json解析失败的匿名catch回调返回{}。响应回来时若已有更新身份操作则抛E_SUPERSEDED；HTTP失败沿用实际status，2xx但缺device_code/user_code按400拒绝。成功覆盖全局pendingDevice，记录generation和polling=false；interval至少5秒，过期默认900秒，保存私密deviceCode和userCode。
+先用supersedeIdentityAttempt开启新代次，再经githubJson POST GitHub device/code（带超时与字节预算）；URLSearchParams带client_id/scope=read:user，有secret才加；正文解析失败退{}。响应回来时若已有更新身份操作则抛E_SUPERSEDED；HTTP失败沿用实际status，2xx但缺device_code/user_code按400拒绝。成功覆盖全局pendingDevice，记录generation和polling=false；interval至少5秒，过期默认900秒，保存私密deviceCode和userCode。
 
 返回verificationUri默认官方设备授权页，不将deviceCode作为前端字段。这里不自动打开浏览器、不启动后台轮询；新一次start会替换旧pending，全局没有按客户端分槽。
 

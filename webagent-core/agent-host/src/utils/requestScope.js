@@ -80,15 +80,20 @@ async function readResponseText(response, limits) {
   if (Buffer.byteLength(text, 'utf8') > maxBytes) throw responseTooLarge(maxBytes);
   return text;
 }
+// `options.fetchImpl` lets a caller that already accepts an injected fetch (tests, or a module
+// whose public API exposes `fetchFn`) keep that injection while still getting the timeout,
+// parent-cancellation and byte budget. It is stripped before reaching the transport.
 async function fetchText(url, options, timeoutMs = DEFAULT_TIMEOUT_MS, limits) {
   checkCancelled();
+  const { fetchImpl, ...init } = options || {};
+  const send = typeof fetchImpl === 'function' ? fetchImpl : fetch;
   const parent = currentSignal(), controller = new AbortController();
   const cancel = () => controller.abort();
   if (parent) parent.addEventListener('abort', cancel, { once: true });
   const timer = setTimeout(cancel, timeoutMs); if (timer.unref) timer.unref();
   try {
     if (parent && parent.aborted) cancel();
-    const response = await fetch(url, { ...options, signal: controller.signal });
+    const response = await send(url, { ...init, signal: controller.signal });
     const text = await readResponseText(response, limits);
     checkCancelled();
     return { response, text };

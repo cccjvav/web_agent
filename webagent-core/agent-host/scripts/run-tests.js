@@ -65,6 +65,7 @@ const preferred = [
   'eventBus.test.js',
   'corsAllow.test.js',
   'githubAuth.test.js',
+  'networkBudget.test.js',
   'usageTracker.test.js',
   'adminHost.test.js',
   'providers.test.js',

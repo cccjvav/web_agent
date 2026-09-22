@@ -2,8 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
 const store = require('../models/store');
+const { fetchText } = require('../utils/requestScope');
 
 const INTERVAL_MS = 15 * 60 * 1000;
+const REPORT_TIMEOUT_MS = Number(process.env.WEBAGENT_TELEMETRY_TIMEOUT_MS || 10000);
+const REPORT_MAX_BYTES = 256 * 1024;
 
 let timer = null;
 let debounce = null;
@@ -111,17 +114,32 @@ async function reportNow({ fetchFn = fetch } = {}) {
   const rec = load();
   if (!rec.toolCalls) return { skipped: true, reason: 'no-calls' };
   const body = payload();
-  const resp = await fetchFn(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify(body)
-  });
+  // Telemetry is fire-and-forget on a 4s debounce and a recurring interval. With a bare fetch a
+  // black-holed endpoint would leave one request pending forever and every later tick would stack
+  // another, so a single unreachable host could accumulate sockets for the life of the process.
+  // fetchText gives it a deadline and a response budget; a rejection is reported, never retried here.
+  let resp;
+  let text;
+  try {
+    ({ response: resp, text } = await fetchText(
+      url,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(body),
+        fetchImpl: fetchFn
+      },
+      REPORT_TIMEOUT_MS,
+      { maxBytes: REPORT_MAX_BYTES }
+    ));
+  } catch (err) {
+    return { skipped: false, ok: false, error: String((err && err.code) || (err && err.message) || err).slice(0, 200) };
+  }
   if (!resp.ok) {
-    const text = await resp.text().catch(() => '');
-    return { skipped: false, ok: false, status: resp.status, error: text.slice(0, 200) };
+    return { skipped: false, ok: false, status: resp.status, error: String(text || '').slice(0, 200) };
   }
   const lastReportAt = new Date().toISOString();
   // Calls may have arrived (or the day changed) while the HTTP request was in flight.
@@ -159,6 +177,8 @@ function stopReporter() {
 }
 
 module.exports = {
+  REPORT_TIMEOUT_MS,
+  REPORT_MAX_BYTES,
   INTERVAL_MS,
   load,
   save,

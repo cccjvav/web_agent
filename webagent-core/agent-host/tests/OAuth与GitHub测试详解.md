@@ -64,3 +64,21 @@ refresh同样检查机密客户端缺认证401，再正确认证200，旧access�
 **main**以createRequire加载真实oauth源码到VM，仅把Date.now替换成可控clock；追加fixture访问器只存在测试VM，不从产品导出内部状态。clientIp检查不直接信任X-Forwarded-For；重复500次拒绝后n与expiresAt不变，恰好过期时恢复。1000个key后新key拒绝但旧key剩余额度可用，窗口到期释放容量。固定LCG seed生成2000个跨7个客户端/时间推进事件，对照独立model的count/until，不引入随机网络不稳定。
 
 真实Express挂载该VM的router，**post**发HTTP并每次消耗响应体；注册两个别名共用预算、伪造头不能分裂来源，授权HTML错误与JSON错误都有Retry-After。时钟前进60秒恢复为正常校验400而非429。finally关闭本测试server；不联网第三方、不验证实际代理用户隔离。验证不等同通用性质/变异测试门禁。
+
+## networkBudget.test.js
+
+F62第2批新增。全程不发真实网络请求：所有传输都是进程内替身，磁盘只用自建临时工作区。
+
+夹具helper：**jsonResp**造带`text()`/`json()`的响应替身；**blackHole**是"连上了但永远不回话"的传输，它先断言请求确实带了`signal`（裸fetch不会有），再只在signal中止时才reject——所以只有客户端自己的deadline能结束它；**deviceFetch**给设备码启动返回一个正常响应；**rejects**把预期的拒绝转成可断言的错误对象；**run**串起全部断言。
+
+文件末尾故意留了一个referenced的`setInterval`保活句柄。这不是凑数：`fetchText`把deadline计时器`unref`了（正确行为，宿主关闭时不该被它拖住），生产里有HTTP服务器撑着事件循环，而在这个测试进程里没有别的东西撑着——少了保活句柄，Node会在黑洞请求还在飞的时候直接以0退出，剩下的断言一条都不会跑，测试看起来"通过"其实是空转。
+
+覆盖的合同：
+
+- `fetchText`接受`options.fetchImpl`指定传输，注入传输**照样**受超时约束；注入不是绕过预算的后门。
+- `loginWithToken`、`startDeviceLogin`、`fetchGitHubUser`、`pollDeviceLogin`打到黑洞端点时都必须在各自deadline附近以`AbortError`结束，而不是永远挂着；并且每次调用**只发一个请求**，模块自身不重试。基线是裸fetch，这些调用会一直挂到进程退出。
+- 正常响应仍照旧成功；超过1MiB的响应正文抛`E_RESPONSE_TOO_LARGE`。
+- 遥测上报超时返回`{ok:false}`而不是抛出——它跑在debounce与周期定时器里，故障不能冒泡出回调；成功路径仍记录`lastReportAt`。
+- readCache：同一文件重复记录同一hash只落盘一次（基线是400次读写400次整表）；删除不存在的key不落盘；真正变化仍立即落盘；落盘走临时文件+rename且不留残留。重载后取值、最近使用顺序与旧行为一致。
+
+它证明的是**单次请求一定会结束**，不证明GitHub或遥测端点可达、上报送达、或者不存在在途请求重叠（周期与debounce仍可重叠，这一点没有改变）。

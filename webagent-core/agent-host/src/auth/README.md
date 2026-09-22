@@ -27,5 +27,5 @@ githubAuth使用可注入fetch响应验证流程、身份字段、清除/替换�
 
 | 源码 | 定位证据 |
 |---|---|
-| [github.js](github.js) | 16 个函数/类节点 |
+| [github.js](github.js) | 15 个函数/类节点 |
 <!-- docs-inventory:end -->

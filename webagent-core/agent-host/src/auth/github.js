@@ -1,4 +1,33 @@
 const store = require('../models/store');
+const { fetchText } = require('../utils/requestScope');
+
+// Identity calls are interactive: a user is staring at a spinner. A bare fetch has no timeout at
+// all, so a black-holed connection to github.com would hang the login attempt (and the device-code
+// poller) indefinitely with no way to cancel. Route every request through fetchText, which adds a
+// deadline, honours the ambient request signal, and caps the response body so a hostile or
+// misconfigured endpoint cannot stream unbounded bytes into memory.
+const GITHUB_TIMEOUT_MS = Number(process.env.WEBAGENT_GITHUB_TIMEOUT_MS || 15000);
+const GITHUB_MAX_BYTES = 1024 * 1024;
+
+// The fetchFn parameter is part of this module's public shape (tests and callers inject doubles),
+// so it is forwarded as the transport rather than replaced.
+async function githubJson(fetchFn, url, init) {
+  const { response, text } = await fetchText(
+    url,
+    { ...init, fetchImpl: fetchFn },
+    GITHUB_TIMEOUT_MS,
+    { maxBytes: GITHUB_MAX_BYTES }
+  );
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    // A non-JSON body is treated as an empty object, exactly as before; callers decide what a
+    // missing field means. The raw body is never surfaced, so an HTML error page cannot leak.
+    data = {};
+  }
+  return { response, data };
+}
 
 let pendingDevice = null;
 let identityGeneration = 0;
@@ -33,20 +62,13 @@ function deviceAvailable() {
 }
 
 async function fetchGitHubUser(token, fetchFn = fetch) {
-  const resp = await fetchFn('https://api.github.com/user', {
+  const { response: resp, data } = await githubJson(fetchFn, 'https://api.github.com/user', {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: 'application/vnd.github+json',
       'User-Agent': 'Web-Agent'
     }
   });
-  const raw = await resp.text();
-  let data = {};
-  try {
-    data = raw ? JSON.parse(raw) : {};
-  } catch {
-    data = {};
-  }
   if (!resp.ok) {
     const err = new Error(`GitHub 拒绝该令牌（HTTP ${resp.status}）。需要 read:user 权限。`);
     err.status = resp.status;
@@ -123,7 +145,7 @@ async function startDeviceLogin(fetchFn = fetch) {
   const params = new URLSearchParams({ client_id: clientId, scope: 'read:user' });
   const secret = githubClientSecret();
   if (secret) params.set('client_secret', secret);
-  const resp = await fetchFn('https://github.com/login/device/code', {
+  const { response: resp, data } = await githubJson(fetchFn, 'https://github.com/login/device/code', {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -132,7 +154,6 @@ async function startDeviceLogin(fetchFn = fetch) {
     },
     body: params
   });
-  const data = await resp.json().catch(() => ({}));
   if (generation !== identityGeneration) throw supersededError();
   if (!resp.ok || !data.device_code || !data.user_code) {
     const err = new Error(data.error_description || data.error || `无法开始 GitHub 设备码登录（HTTP ${resp.status}）`);
@@ -175,7 +196,7 @@ async function pollDeviceLogin(fetchFn = fetch) {
     });
     const secret = githubClientSecret();
     if (secret) params.set('client_secret', secret);
-    const resp = await fetchFn('https://github.com/login/oauth/access_token', {
+    const { response: resp, data } = await githubJson(fetchFn, 'https://github.com/login/oauth/access_token', {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -184,7 +205,6 @@ async function pollDeviceLogin(fetchFn = fetch) {
       },
       body: params
     });
-    const data = await resp.json().catch(() => ({}));
     if (!current()) return supersededResult();
     if (!resp.ok) {
       const error = new Error(data.error_description || data.error || `GitHub 设备码轮询失败（HTTP ${resp.status}）`);
@@ -213,6 +233,8 @@ function resetPending() {
 }
 
 module.exports = {
+  GITHUB_TIMEOUT_MS,
+  GITHUB_MAX_BYTES,
   githubClientId,
   deviceAvailable,
   fetchGitHubUser,
