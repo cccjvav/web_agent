@@ -57,5 +57,5 @@ memory的day必须为有效日历日期；路径和真实链接目标经过工�
 | [memory.js](memory.js) | 9 个函数/类节点 |
 | [modelSettings.js](modelSettings.js) | 21 个函数/类节点 |
 | [profile.js](profile.js) | 15 个函数/类节点 |
-| [store.js](store.js) | 29 个函数/类节点 |
+| [store.js](store.js) | 30 个函数/类节点 |
 <!-- docs-inventory:end -->

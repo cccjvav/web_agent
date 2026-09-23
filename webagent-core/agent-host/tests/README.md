@@ -160,7 +160,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [codeServerAuth.test.js](codeServerAuth.test.js) | 0 个函数/类节点 |
 | [codeServerLifecycle.test.js](codeServerLifecycle.test.js) | 118 个函数/类节点 |
 | [codeServerNotRunnable.test.js](codeServerNotRunnable.test.js) | 0 个函数/类节点 |
-| [commandEncoding.test.js](commandEncoding.test.js) | 5 个函数/类节点 |
+| [commandEncoding.test.js](commandEncoding.test.js) | 6 个函数/类节点 |
 | [connectionCheck.test.js](connectionCheck.test.js) | 18 个函数/类节点 |
 | [corsAllow.test.js](corsAllow.test.js) | 20 个函数/类节点 |
 | [dangerousCommands.test.js](dangerousCommands.test.js) | 11 个函数/类节点 |
@@ -204,7 +204,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [oauthRateLimit.test.js](oauthRateLimit.test.js) | 15 个函数/类节点 |
 | [oauthSpentRefreshBudget.test.js](oauthSpentRefreshBudget.test.js) | 8 个函数/类节点 |
 | [operatorQueueCapacity.test.js](operatorQueueCapacity.test.js) | 5 个函数/类节点 |
-| [patchEngine.test.js](patchEngine.test.js) | 11 个函数/类节点 |
+| [patchEngine.test.js](patchEngine.test.js) | 20 个函数/类节点 |
 | [planRound.test.js](planRound.test.js) | 6 个函数/类节点 |
 | [probeAnalysis.test.js](probeAnalysis.test.js) | 6 个函数/类节点 |
 | [probeBridge.test.js](probeBridge.test.js) | 11 个函数/类节点 |

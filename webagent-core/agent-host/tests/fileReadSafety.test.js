@@ -45,7 +45,8 @@ async function run() {
       const changed = Buffer.from([0x41,0xfe,10]);
       fs.writeFileSync(path.join(root, 'protected.txt'), changed);
       await assert.rejects(writeFile({filePath:'protected.txt',content:'wrong',expectedHash:hash,confirmOverwrite:true}), error => error.code === 'E_ENCODING');
-      await assert.rejects(applyPatch({filePath:'protected.txt',patch:'wrong',expectedHash:hash}), error => error.code === 'E_ENCODING');
+      // A well-formed block, so the refusal under test is the encoding gate, not F70's unmarked-body gate.
+      await assert.rejects(applyPatch({filePath:'protected.txt',patch:'<<<<<<< SEARCH\nA\n=======\nwrong\n>>>>>>> REPLACE',expectedHash:hash}), error => error.code === 'E_ENCODING');
       assert.deepStrictEqual(fs.readFileSync(path.join(root, 'protected.txt')), changed);
     });
     await check('valid stale hashes still refuse writes and BOM files still support reviewed writes', async () => {

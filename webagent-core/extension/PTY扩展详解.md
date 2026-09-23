@@ -49,7 +49,7 @@ spawnSpec的临时脚本不是凭据文件，仍要注意命令正文可能敏�
 
 ### spawnNodePty(nodePty,job,cwd)
 
-spawnSpec，创建写/关VS Code EventEmitter，序号命名终端，nodePty.spawn传120×30尺寸、cwd和scrubEnv。onData回调保留尾200Ki字符、发终端显示、40ms合并进pending再由flushProgress串行post progress（失败吞）。PTY对象的open为空回调，close尝试kill，handleInput尝试write；createTerminal并show，sessions按execId保存proc/terminal/emitter以及buf()闭包。
+spawnSpec，创建写/关VS Code EventEmitter，序号命名终端，nodePty.spawn传120×30尺寸、cwd和scrubEnv。onData回调经sliceTextTail保留尾200Ki字符（不切断代理对）、发终端显示、40ms合并进pending再由flushProgress串行post progress（失败吞）。PTY对象的open为空回调，close尝试kill，handleInput尝试write；createTerminal并show，sessions按execId保存proc/terminal/emitter以及buf()闭包。
 
 timeout回调设timedOut并kill；onExit通过cleanup清timer/临时目录，发关闭事件、删session，等待在途progress并释放emitter，再报告真实exitCode、完整尾部输出、outputCaptured=true。超时不因code0变成功。stdout是PTY合并输出，不承诺独立stderr；事件发送/网络回报失败不会恢复已结束进程。
 
@@ -92,6 +92,8 @@ npm test --prefix webagent-core/agent-host -- --filter=webviewRuntime
 检查队列与VS Code API fixture相关路径；真实node-pty版本、shell integration、焦点、取消和Conda解释器继续按人工G/E节。不要把Mock事件顺序当所有VS Code版本都支持的证明。
 
 ### 2026-09-14 凭据与审批加固
+
+ptyPolicy的**sliceTextTail(text,limit)**（F70，外部复审§5.4-7）保留文本最后limit个UTF-16单元，但若起点落在代理对的低半部分就后移一位丢掉孤立的低代理项；普通`.slice(-limit)`在emoji或CJK扩展B字符中间截断时会留下不是合法Unicode的孤立代理项。它被主机executor的输出尾窗/捕获上限、ptyJobs的任务输出以及本扩展ptyHost的两处200Ki缓冲共用。
 
 ptyPolicy的**scrubEnv(base)**是经典executor和PTY共用的纯函数：复制输入对象，遍历键名删除token、access key、storage key、secret等模式，原对象不改。不按值识别未知命名的凭据。spawnFallback创建终端用strictEnv:true，防VS Code合并父环境把已删除字段重新继承回来。
 

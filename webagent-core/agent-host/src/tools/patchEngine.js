@@ -207,23 +207,129 @@ function rejectUnsupportedPatchFormat(filePath, patch, blocks) {
   );
 }
 
+// SEARCH/REPLACE markers are whole lines. The opening marker's run length N (5+ '<') fixes the
+// divider (exactly N '=') and the closing marker (N '>'), so a `# ==========` banner or a
+// Markdown setext underline inside the SEARCH text stays content. The previous single regex made
+// the newline before the divider optional and accepted any 5+ '=' run: such a line silently
+// ended SEARCH early and the host wrote a corrupted file while reporting success. It also could
+// not express an empty REPLACE (line deletion) at all.
+const SR_OPEN = /^\s*(<{5,})\s*SEARCH\s*$/;
+const SR_DIVIDER = /^\s*(={5,})\s*$/;
+const SR_CLOSE = /^\s*(>{5,})\s*REPLACE\s*$/;
+
+function malformedPatch(message, hint) {
+  return new ProtocolError('E_BAD_ARGS', message, {
+    retryHint: hint || 'Resend complete SEARCH/REPLACE blocks, including every closing REPLACE marker. Use write_file for literal marker text.'
+  });
+}
+
 function parseSearchReplaceBlocks(patchText) {
+  const text = String(patchText);
+  // Only a SEARCH or REPLACE marker makes this a SEARCH/REPLACE patch. A body with nothing but
+  // '=====' lines (a setext heading in a new Markdown file) is content: for a new file it is the
+  // full body, and for an existing file it is refused later as an unmarked body.
+  if (!/^\s*(?:<{5,}\s*SEARCH|>{5,}\s*REPLACE)\s*$/m.test(text)) return [];
+  // Split into lines while keeping each line's own terminator, so SEARCH/REPLACE text keeps its
+  // exact bytes and the final line break before a marker belongs to the marker line.
+  const lines = text.match(/[^\r\n]*(?:\r\n|\n|\r|$)/g).filter((line, i, all) => line !== '' || i < all.length - 1);
+  const bare = (line) => line.replace(/\r?\n$|\r$/, '');
   const blocks = [];
-  const regex = /<{5,}\s*SEARCH\r?\n([\s\S]*?)\r?\n?={5,}\r?\n([\s\S]*?)\r?\n>{5,}\s*REPLACE/g;
-  let match;
-  while ((match = regex.exec(patchText)) !== null) {
+  let i = 0;
+  while (i < lines.length) {
+    const open = SR_OPEN.exec(bare(lines[i]));
+    if (!open) {
+      if (SR_DIVIDER.test(bare(lines[i])) || SR_CLOSE.test(bare(lines[i]))) {
+        throw malformedPatch('Incomplete or malformed SEARCH/REPLACE patch; original file preserved.');
+      }
+      i += 1;
+      continue;
+    }
+    const n = open[1].length;
+    // Scope of this block: up to the next same-length opener. Markers of a different length are
+    // content, which is what lets longer markers carry literal 7-character marker lines.
+    let end = lines.length;
+    for (let j = i + 1; j < lines.length; j++) {
+      const inner = SR_OPEN.exec(bare(lines[j]));
+      if (inner && inner[1].length === n) { end = j; break; }
+    }
+    const markerLines = (re, from, to, sameLength) => {
+      const hits = [];
+      for (let j = from; j < to; j++) {
+        const m = re.exec(bare(lines[j]));
+        if (m && (!sameLength || m[1].length === n)) hits.push(j);
+      }
+      return hits;
+    };
+    // Prefer markers matching the opener's length; fall back to any length (models sometimes mix
+    // 5- and 7-character markers) only where that is still unambiguous.
+    let close = markerLines(SR_CLOSE, i + 1, end, true)[0];
+    if (close === undefined) close = markerLines(SR_CLOSE, i + 1, end, false)[0];
+    if (close === undefined) {
+      throw malformedPatch('Incomplete or malformed SEARCH/REPLACE patch; original file preserved.');
+    }
+    let dividers = markerLines(SR_DIVIDER, i + 1, close, true);
+    if (!dividers.length) dividers = markerLines(SR_DIVIDER, i + 1, close, false);
+    if (!dividers.length) {
+      throw malformedPatch('Incomplete or malformed SEARCH/REPLACE patch; original file preserved.');
+    }
+    if (dividers.length > 1) {
+      // e.g. Git conflict markers inside SEARCH: guessing which divider is ours would write a
+      // corrupted file, so refuse with zero writes.
+      throw malformedPatch(
+        'Ambiguous SEARCH/REPLACE block: more than one divider line of the same length; original file preserved.',
+        'Use longer markers (e.g. 9 characters each: <<<<<<<<< SEARCH / ========= / >>>>>>>>> REPLACE), or send a unified diff.'
+      );
+    }
+    const join = (from, to) => {
+      const body = lines.slice(from, to).join('');
+      // The line break before a marker line is part of the marker, not of the text.
+      return body.replace(/\r?\n$|\r$/, '');
+    };
+    const replaceLines = lines.slice(dividers[0] + 1, close);
     blocks.push({
-      search: match[1],
-      replace: match[2]
+      search: join(i + 1, dividers[0]),
+      replace: join(dividers[0] + 1, close),
+      // Distinguishes an empty REPLACE (delete) from a REPLACE that is one blank line.
+      replaceEmpty: replaceLines.length === 0
     });
-  }
-  const remainder = String(patchText).replace(regex, '');
-  if (/^\s*(?:<{5,}\s*SEARCH\b|>{5,}\s*REPLACE\b|={5,}\s*$)/m.test(remainder)) {
-    throw new ProtocolError('E_BAD_ARGS', 'Incomplete or malformed SEARCH/REPLACE patch; original file preserved.', {
-      retryHint: 'Resend complete SEARCH/REPLACE blocks, including every closing REPLACE marker. Use write_file for literal marker text.'
-    });
+    i = close + 1;
   }
   return blocks;
+}
+
+// Deleting whole lines: when REPLACE is empty and every match of SEARCH covers complete lines,
+// widen the needle to also take the line's indentation and one line break, so no stray blank
+// or whitespace-only line is left behind. Only applied when every occurrence qualifies, so the
+// occurrence count (and therefore uniqueness / `occurrence`) is exactly the same as for the
+// plain needle. A mid-line match keeps the plain needle and removes just the matched text.
+function wholeLineDeletionNeedle(haystack, needle, block) {
+  if (!block.replaceEmpty || !needle || needle.includes('\n\n')) return needle;
+  const core = needle.replace(/\n$/, '');
+  if (!core) return needle;
+  const hits = [];
+  for (let from = 0; ;) {
+    const at = haystack.indexOf(core, from);
+    if (at < 0) break;
+    hits.push(at);
+    from = at + core.length;
+  }
+  if (!hits.length) return needle;
+  let widened = null;
+  for (const at of hits) {
+    let start = at;
+    while (start > 0 && (haystack[start - 1] === ' ' || haystack[start - 1] === '\t')) start -= 1;
+    let end = at + core.length;
+    while (end < haystack.length && (haystack[end] === ' ' || haystack[end] === '\t')) end += 1;
+    const lineStart = start === 0 || haystack[start - 1] === '\n';
+    const lineEnd = end === haystack.length || haystack[end] === '\n';
+    if (!lineStart || !lineEnd) return needle;
+    // Take the following line break; for the final line take the preceding one instead.
+    const span = end < haystack.length ? haystack.slice(start, end + 1)
+      : start > 0 ? haystack.slice(start - 1, end) : haystack.slice(start, end);
+    if (widened === null) widened = span;
+    else if (widened !== span) return needle; // Different indentation per match: keep it simple.
+  }
+  return countOccurrences(haystack, widened) === hits.length ? widened : needle;
 }
 
 function applySearchBlocks(currentContent, blocks, { filePath, occurrence } = {}) {
@@ -235,11 +341,11 @@ function applySearchBlocks(currentContent, blocks, { filePath, occurrence } = {}
   for (let i = 0; i < blocks.length; i++) {
     const searchLf = toLf(blocks[i].search);
     const replaceLf = toLf(blocks[i].replace);
-    let needle = searchLf;
+    let needle = wholeLineDeletionNeedle(patchedLf, searchLf, blocks[i]);
     let replacement = replaceLf;
     let n = countOccurrences(patchedLf, needle);
     if (n === 0 && searchLf.trim()) {
-      needle = searchLf.trim();
+      needle = wholeLineDeletionNeedle(patchedLf, searchLf.trim(), blocks[i]);
       replacement = replaceLf.trim();
       n = countOccurrences(patchedLf, needle);
     }
@@ -342,6 +448,27 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
     };
   }
 
+  // An existing file is only ever PATCHED, never wholesale replaced by unmarked text. The hash
+  // gate proves the caller saw the current bytes; it cannot prove the caller meant to replace the
+  // whole file — and the host silently reuses the path's last read hash, so a patch with a
+  // forgotten SEARCH/REPLACE marker used to turn a 3-line file into a fragment in one call while
+  // reporting success. Whole-file replacement is write_file's explicit contract
+  // (confirm_overwrite / expectedHash). This check runs before the hash gate: resending the same
+  // body with a fresh hash can never succeed, so the caller must learn the real problem first.
+  const unifiedDiffBody = !blocksEarly.length && (looksLikeUnifiedDiff(patch) || /^--- |^\+\+\+ |^@@/m.test(patch));
+  if (!blocksEarly.length && !unifiedDiffBody) {
+    throw new ProtocolError(
+      'E_BAD_ARGS',
+      `Patch for existing file ${filePath} contains neither SEARCH/REPLACE blocks nor a unified diff; original file preserved. `
+      + 'apply_patch never replaces an existing file with unmarked text.',
+      {
+        filePath,
+        format: 'unmarked',
+        retryHint: 'Resend as <<<<<<< SEARCH / ======= / >>>>>>> REPLACE blocks or one unified diff. For a deliberate whole-file replacement use write_file with confirm_overwrite=true or expectedHash.'
+      }
+    );
+  }
+
   const currentContent = readBoundedText(fullPath);
   const currentHash = computeHash(currentContent);
   if (!expectedHash) {
@@ -375,7 +502,8 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
 
   if (blocks.length > 0) {
     patchedContent = applySearchBlocks(currentContent, blocks, { filePath, occurrence });
-  } else if (looksLikeUnifiedDiff(patch) || /^--- |^\+\+\+ |^@@/m.test(patch)) {
+  } else {
+    // unifiedDiffBody is guaranteed here: every other body was refused before the hash gate.
     const jsdiff = require('diff');
     let parsed;
     try {
@@ -392,8 +520,6 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
       throw new Error(`Unified diff failed to apply cleanly to "${filePath}".`);
     }
     patchedContent = applyEol(applied, eol);
-  } else {
-    patchedContent = applyEol(patch, eol);
   }
 
   const diffInfo = createUnifiedDiff(filePath, currentContent, patchedContent);

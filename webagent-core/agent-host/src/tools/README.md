@@ -42,12 +42,12 @@ callTool先检查当前请求取消，再定位工具、检查模式、归一参
 ## 文件读取与安全边界
 路径必须通过resolveSafePath及敏感规则；绝对盘符、越界路径、真实链接目标等按实现检查。目录遍历跳过链接及隐藏项，不能据此宣称任意外部程序也被限制在工作区。
 
-read_files返回带行号的content和hash；offset从1开始，不是字节位置。批读最多20路径；单个文本读写和补丁结果上限8MiB。读取使用严格UTF-8，非法字节抛E_INVALID_TEXT且不改码；保留BOM和CRLF，因此合法文本hash对应原字节。apply_patch另有展示预算：每侧1MiB/20000行、算法100ms/4000编辑、diff输出256KiB，超限E_DIFF_LIMIT在写入及建目录前拒绝。有界读取检查普通文件，按块读取并探测读取期间增长，不先无限readFileSync再截字符串。
+read_files返回带行号的content和hash；offset从1开始，不是字节位置。批读最多20路径；单个文本读写和补丁结果上限8MiB。读取使用严格UTF-8，非法字节抛E_ENCODING且不改码；保留BOM和CRLF，因此合法文本hash对应原字节。apply_patch另有展示预算：每侧1MiB/20000行、算法1500ms/20000编辑、diff输出256KiB，超限E_DIFF_BUDGET在写入及建目录前拒绝。有界读取检查普通文件，按块读取并探测读取期间增长，不先无限readFileSync再截字符串。
 
 ### 写入/补丁步骤
 1. 对规范真实路径取得进程内写锁，锁获得后再检查取消。
 2. 读取当前正文计算完整SHA-256，与显式或该操作允许的缓存hash比较。短前缀不当作相等；write_file可由显式覆盖确认、匹配的expectedHash或匹配的本进程读取hash满足覆盖条件；明示旧hash即使已确认仍拒绝，持久缓存不等于本进程确认。
-3. apply_patch对已有文件接受支持的单文件unified diff或SEARCH/REPLACE；多处匹配需要正确occurrence。新文件不能把unified diff头当正文，应使用正文或空SEARCH。
+3. apply_patch对已有文件只接受单文件unified diff或SEARCH/REPLACE；既无标记也不是diff的正文在hash门前就E_BAD_ARGS拒绝，不再当成整文件内容写回（F70，外部复审P1-1；整文件替换走write_file）。标记须独占整行、分隔行与开头标记同长，空REPLACE整行删除；多处匹配需要正确occurrence。新文件不能把unified diff头当正文，应使用正文或空SEARCH。
 4. dryRun只检查并返回结果，不发布写入。实际发布先写独占临时文件、保留已有普通权限，再rename；新建补丁与write_file的显式createOnly都用排他发布，期间目标被创建则以EEXIST/E_FILE_EXISTS失败而不覆盖。
 5. 成功更新hash缓存并广播变更。取消或失败不是回滚已完成写入；进程内锁也不锁住外部编辑器。符号链接写入跟随已校验目标，不用新文件替掉链接本身。
 
@@ -107,7 +107,7 @@ R4：executor/fileOps复用WEBAGENT_DEBUG_PROCESS=1输出有界生命周期元�
 | [gitOps.js](gitOps.js) | 13 个函数/类节点 |
 | [index.js](index.js) | 21 个函数/类节点 |
 | [normalize.js](normalize.js) | 4 个函数/类节点 |
-| [patchEngine.js](patchEngine.js) | 33 个函数/类节点 |
+| [patchEngine.js](patchEngine.js) | 39 个函数/类节点 |
 | [planRound.js](planRound.js) | 10 个函数/类节点 |
 | [progressTracker.js](progressTracker.js) | 12 个函数/类节点 |
 | [ptyJobs.js](ptyJobs.js) | 23 个函数/类节点 |

@@ -314,8 +314,123 @@ x = 2;
   assert.ok(v4aNewRejected, 'V4A must not create a new file');
   assert.ok(!fs.existsSync(path.join(tmp, 'v4a-new.js')));
 
+  await unmarkedBodyNeverReplacesExistingFile();
+  await searchReplaceDividerIsLineBased();
+
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('patchEngine tests passed');
+}
+
+// F70 (external review P1-1): an existing file is only ever PATCHED. A body with no
+// SEARCH/REPLACE block and no unified diff used to replace the whole file — and because the
+// host silently reuses the path's last read hash, one call with a forgotten marker turned a
+// 3-line file into a 1-line fragment and reported success (+1 -3). Whole-file replacement
+// is write_file's explicit contract; apply_patch must refuse with zero side effects.
+async function unmarkedBodyNeverReplacesExistingFile() {
+  const bus = require('../src/utils/eventBus');
+  const { recalledHash } = require('../src/tools/readCache');
+  const events = []; const observe = event => events.push(event);
+  bus.on('file_patched', observe);
+  try {
+    const original = 'line1\nline2\nline3\n';
+    fs.writeFileSync(path.join(tmp, 'unmarked.txt'), original);
+    const { hash } = readFile({ filePath: 'unmarked.txt' });
+    const attempts = [
+      { patch: 'line2 changed\n' },                                   // recalled hash only
+      { patch: 'line2 changed\n', expectedHash: hash },               // explicit hash
+      { patch: 'line2 changed\n', expectedHash: hash, dryRun: true }, // a dry run must not "pass"
+      { patch: '', expectedHash: hash }                               // empty body would wipe the file
+    ];
+    for (const input of attempts) {
+      await assert.rejects(applyPatch({ filePath: 'unmarked.txt', ...input }), error => {
+        assert.strictEqual(error.code, 'E_BAD_ARGS', JSON.stringify(input));
+        assert.ok(/neither SEARCH\/REPLACE/.test(error.message), error.message);
+        assert.ok(/write_file/.test(error.detail.retryHint), 'the refusal must name the explicit whole-file tool');
+        return true;
+      });
+      assert.strictEqual(fs.readFileSync(path.join(tmp, 'unmarked.txt'), 'utf8'), original, 'file bytes unchanged');
+    }
+    assert.strictEqual(recalledHash('unmarked.txt'), hash, 'a refused patch must not publish a new hash');
+    assert.strictEqual(events.length, 0, 'a refused patch must not broadcast file_patched');
+    // The format refusal comes before the hash gate: retrying the same body with a fresh hash
+    // can never succeed, so the model must learn the real problem first.
+    await assert.rejects(applyPatch({ filePath: 'unmarked.txt', patch: 'x', expectedHash: '0'.repeat(64) }),
+      error => error.code === 'E_BAD_ARGS');
+    // Creation keeps its documented full-body contract.
+    const created = await applyPatch({ filePath: 'unmarked-new.txt', patch: 'fresh body\n' });
+    assert.strictEqual(created.isNewFile, true);
+    assert.strictEqual(fs.readFileSync(path.join(tmp, 'unmarked-new.txt'), 'utf8'), 'fresh body\n');
+  } finally { bus.off('file_patched', observe); }
+}
+
+// F70: SEARCH/REPLACE markers are whole lines. The old regex made the newline before the
+// divider optional, so ANY run of 5+ '=' ended the SEARCH text — a `# ==========` banner or a
+// Markdown setext underline silently corrupted the file while reporting success, and an empty
+// REPLACE (deleting lines) could not be expressed at all.
+async function searchReplaceDividerIsLineBased() {
+  const patchWith = async (file, content, patch) => {
+    fs.writeFileSync(path.join(tmp, file), content);
+    const { hash } = readFile({ filePath: file });
+    return applyPatch({ filePath: file, patch, expectedHash: hash });
+  };
+  const read = file => fs.readFileSync(path.join(tmp, file), 'utf8');
+
+  await patchWith('banner.py', 'x = 1\n# ==========\ndef f():\n    return 1\n',
+    '<<<<<<< SEARCH\n# ==========\ndef f():\n    return 1\n=======\n# ==========\ndef f():\n    return 2\n>>>>>>> REPLACE');
+  assert.strictEqual(read('banner.py'), 'x = 1\n# ==========\ndef f():\n    return 2\n', 'a banner line is content, not the divider');
+
+  // A setext underline shorter than the 7-character markers is content; the divider is the
+  // line whose length matches the opening marker.
+  await patchWith('setext.md', 'Title\n=====\nold para\n',
+    '<<<<<<< SEARCH\nTitle\n=====\nold para\n=======\nTitle\n=====\nnew para\n>>>>>>> REPLACE');
+  assert.strictEqual(read('setext.md'), 'Title\n=====\nnew para\n');
+
+  // An empty REPLACE deletes whole lines cleanly instead of leaving a blank line behind.
+  await patchWith('delete.txt', 'keep\ndrop me\nand me\nkeep2\n', '<<<<<<< SEARCH\ndrop me\nand me\n=======\n>>>>>>> REPLACE');
+  assert.strictEqual(read('delete.txt'), 'keep\nkeep2\n');
+  await patchWith('delete-crlf.txt', 'keep\r\ndrop me\r\nkeep2\r\n', '<<<<<<< SEARCH\r\ndrop me\r\n=======\r\n>>>>>>> REPLACE');
+  assert.strictEqual(read('delete-crlf.txt'), 'keep\r\nkeep2\r\n', 'CRLF files keep CRLF after a line deletion');
+  // A mid-line match with an empty REPLACE only removes the matched text.
+  await patchWith('inline.txt', 'a = b + c;\n', '<<<<<<< SEARCH\n + c\n=======\n>>>>>>> REPLACE');
+  assert.strictEqual(read('inline.txt'), 'a = b;\n');
+
+  // Git conflict markers inside SEARCH make the divider genuinely ambiguous: refuse with zero
+  // writes instead of guessing (the old parser picked the first '=======' and corrupted the file).
+  const conflict = 'start\n<<<<<<< HEAD\nours\n=======\ntheirs\n>>>>>>> feature\nend\n';
+  fs.writeFileSync(path.join(tmp, 'conflict.txt'), conflict);
+  const { hash } = readFile({ filePath: 'conflict.txt' });
+  await assert.rejects(applyPatch({
+    filePath: 'conflict.txt', expectedHash: hash,
+    patch: '<<<<<<< SEARCH\n<<<<<<< HEAD\nours\n=======\ntheirs\n>>>>>>> feature\n=======\nresolved\n>>>>>>> REPLACE'
+  }), error => {
+    assert.strictEqual(error.code, 'E_BAD_ARGS');
+    assert.ok(/ambiguous/i.test(error.message), error.message);
+    assert.ok(/unified diff/i.test(error.detail.retryHint));
+    return true;
+  });
+  assert.strictEqual(read('conflict.txt'), conflict, 'an ambiguous block writes nothing');
+  // The same edit as a unified diff is unambiguous and applies.
+  const resolved = await applyPatch({
+    filePath: 'conflict.txt', expectedHash: hash,
+    patch: '--- a/conflict.txt\n+++ b/conflict.txt\n@@ -1,7 +1,3 @@\n start\n-<<<<<<< HEAD\n-ours\n-=======\n-theirs\n->>>>>>> feature\n+resolved\n end\n'
+  });
+  assert.strictEqual(resolved.success, true);
+  assert.strictEqual(read('conflict.txt'), 'start\nresolved\nend\n');
+
+  // Marker lines that do not form a complete block are still refused.
+  for (const bad of ['<<<<<<< SEARCH\nold\n=======\nnew\n', '<<<<<<< SEARCH\nold\nnew\n>>>>>>> REPLACE', 'old\n=======\nnew\n>>>>>>> REPLACE',
+    '<<<<<<< SEARCH\nold\n=======\nnew\n>>>>>>> REPLACE\n=======\n']) {
+    fs.writeFileSync(path.join(tmp, 'malformed.txt'), 'old\n');
+    const current = readFile({ filePath: 'malformed.txt' });
+    await assert.rejects(applyPatch({ filePath: 'malformed.txt', patch: bad, expectedHash: current.hash }),
+      error => error.code === 'E_BAD_ARGS' && /malformed/i.test(error.message), bad);
+    assert.strictEqual(read('malformed.txt'), 'old\n');
+  }
+
+  // A NEW file body without any marker may contain '=' lines (a setext heading) as content.
+  const md = await applyPatch({ filePath: 'new-heading.md', patch: 'Heading\n=======\n\ntext\n' });
+  assert.strictEqual(md.isNewFile, true);
+  assert.strictEqual(read('new-heading.md'), 'Heading\n=======\n\ntext\n');
 }
 
 main().catch((err) => {

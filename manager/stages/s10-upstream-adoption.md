@@ -1366,3 +1366,36 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **F69最终本地验证：** 完整101/101、真实Chromium（含工作台16状态、文档12状态、admin三视口）、示例6/6、npm audit含dev各级0；文档282/28/111且updated=0，git diff --check通过。额外逐份扫描200个Markdown：UTF-8均无U+FFFD，围栏外行内本地文件目标全部存在；首次发现同步扩展PTY说明两个相对链接只在正本目录成立，改为仓库路径文本后正本/副本均无坏链接，extensionCopy再绿。首轮浏览器失败仅恢复环境缺Chromium文件，重新从仓库外npm包准备浏览器/动态库后真实套件通过，没有改产品或关闭TLS。
 
 最终清单：已核对一致84、已修正58、外部待证据2、历史保留37、只读保留2、生成核验4、暂停13，共200，无待核对。数量是文档处置，不是所有功能/源码/实机通过率。产品运行时JS/C#/PS/CSS/HTML/JSON未改；改动是Markdown、生成content及同步扩展Markdown副本。下一项仍R8待用户本机项目根MCP验收；R2/R3/R4/R5/R6/R9等按原表继续，不因R7完成关闭。
+
+
+### 第70组：接手01a0c925、第三方复审分拣与第一批数据安全修复（2026-09-23，会话01a0ce8d）
+
+**接手与基线。** 本会话固定分支`arena/01a0ce8d-web-agent`，由用户指定同步`arena/01a0c925-web-agent`；两者同为`26a167e`（用户上传的单根提交，与9766c6c相比只多`review/web_agent_review_2026-09-23.md`），0/0分叉，无需合并。并行分支`01a0cdcf`（26a167e之上6提交）经询问后**按用户选择完全不参考、不合并**，本组所有结论均在26a167e上独立复现。**基线CI为红**：CI35850879210七个主机job全部失败于documentationLinks——上传的复审报告未登记进FULL_REVIEW_INDEX；本地同样106/107。
+
+**验证环境补齐（不入库）。** Playwright CDN与Google存储TLS握手失败，但npm可达：从npm取`@sparticuz/chromium@153`（与Playwright期望的153一致）解出Chromium及其NSS库，再从npm取Noto Sans SC中文字体，经仓库外包装脚本`CHROMIUM_PATH`运行，`npm run test:browser`在基线上完整通过。自此本会话UI改动可用真实浏览器取证，不再只有静态断言。PowerShell/.NET下载地址同样不可达，Windows专属行为仍只能由CI的三个Windows job验证。
+
+**第三方复审分拣（逐条在26a167e复现，不照单全收）：**
+
+| 报告项 | 本组结论 | 证据 |
+|---|---|---|
+| P1-1 apply_patch裸正文整文件覆盖 | **属实，已修** | 3行文件读后发无标记片段→`success:true +1 -3`，文件只剩片段 |
+| P1-5 危险命令剩余绕过 | **属实且更严重，已修** | 报告列19条全部放行；另发现`sudo -n/-E/-H rm -rf /`（旧规则把单字母选项的下一个词当值）、`git -C dir push --force`、`ri -Recurse`、`Remove-Item -Rec`等 |
+| P1-6 启动改写用户根.gitignore | **属实，已修** | store.ensureWorkspaceGitignore每次启动追加 |
+| §5.4-1 Windows退出码尾语句 | **按代码属实，已修（待Windows CI）** | 尾语句仅转发$LASTEXITCODE，纯cmdlet失败时为null→退出0 |
+| §5.4-2 合并丢失argv字节预算 | **假阳性** | 26a167e的gitOps.js已有`MAX_DIFF_PATHSPEC_BYTES=12000`与`--no-renames`（9766c6c恢复），报告看的是f8ab6d0 |
+| §5.4-3 文档旧错误码/预算 | **属实，已修** | tools/README、补丁与路径详解、差异展示详解、统计服务详解仍写E_INVALID_TEXT/E_DIFF_LIMIT/100ms/4000/E_REPORT_STORE |
+| §5.4-7 尾窗切断代理对 | **属实，已修** | `'😀'.repeat(3).slice(-1)`得孤立低代理；影响executor、ptyJobs、扩展ptyHost共6处 |
+| P1-3/P1-4、P2、P3其余 | 待后续批次逐条复核 | 见下方“仍开放” |
+
+**本组修复（均先红后绿）：**
+1. **patchEngine（P1-1）**：已有文件的裸正文在hash门之前E_BAD_ARGS拒绝（format:'unmarked'，retryHint指向SEARCH/REPLACE、unified diff或write_file），零写入/零事件/不更新hash，dryRun同拒。连带修复同文件内独立缺陷：SEARCH/REPLACE旧正则把分隔符前换行设为可选、接受任意5+个`=`，`# ==========`横幅或setext下划线会提前截断SEARCH并**静默写坏文件报成功**（实测复现）；改为按行解析、分隔/结束标记与开头同长、多条同长分隔（如SEARCH含Git冲突标记）报ambiguous零写入；支持空REPLACE整行删除（wholeLineDeletionNeedle保证匹配次数与occurrence语义不变）。新增unmarkedBodyNeverReplacesExistingFile与searchReplaceDividerIsLineBased，基线红。四个依赖旧“裸正文即整文件”行为的既有用例改用等价SEARCH/REPLACE块，原断言目的（hash、编码、预算、可执行位保留）不变。
+2. **dangerousPolicy（P1-5）**：包装器表改为逐个声明带值选项（修`sudo -n`类旁路），新增裸`VAR=x`、timeout/busybox/chroot/flock/pkexec/runuser/wsl等；对`bash -c`/`cmd /c`/`powershell -Command`/`su -c`/`env -S`的**字面**脚本按同一规则有界再扫描（深度3，不求值）；git全局选项跳过、branch -D/stash clear|drop/restore/filter-branch/reflog expire/update-ref -d/worktree remove --force；npm/pnpm/yarn/bun publish；递归chmod/chown到系统根、crontab -r、kill -1、mv到/dev/null、`: > file`；PowerShell参数前缀与-EncodedCommand任意前缀；tokenizer按shell词拼接（`r"m"`）。表驱动矩阵：90条必须拦截（基线**实测漏69条**）与135条日常命令必须放行（放行表不得短于拦截表），基线对`git push --dry-run/-n`的误报一并消除。刻意保留无视引号的阶段切分（各shell转义规则不同，感知引号的切分器可被骗过）。已同步extensions-installed副本。
+3. **store（P1-6）**：不再写用户根.gitignore；改为经`git rev-parse --git-path info/exclude`写本机exclude（兼容worktree/子模块、每根每进程一次）；嵌套.webagent/.gitignore本就覆盖全部受保护文件。hostPersist改为断言用户.gitignore逐字节不变，基线红。
+4. **executor（§5.4-1）**：Windows尾语句改为三条合同（原生非零码优先、`$?`为假则1、否则0），并在用户命令前重置$LASTEXITCODE。新增windowsExitCodeContract八例，仅win32运行，**本地无法执行，须看Windows CI**。
+5. **sliceTextTail（§5.4-7）**：放在ptyPolicy供executor/ptyJobs/ptyHost共用，六处切片全部替换；纯函数与端到端emoji尾窗测试，基线executor端到端红。
+
+**文档**：工具入口与命令策略详解（dangerous全部函数重写）、补丁与路径详解、tools/README、配置存储详解、models/README、PTY扩展详解（及副本）、差异展示详解、统计服务详解、三份测试详解与tests/README、MCP instructions与apply_patch工具描述同步；FULL_REVIEW_INDEX登记上传报告（202份，历史保留），被改文档指纹刷新。
+
+**本地验证**：`npm test` 107/107、真实Chromium浏览器套件通过、`check-docs` 288/28/111 updated=0、`git diff --check`通过。精确提交的CI结论以下批记录为准（Windows退出码合同只有CI能证）。
+
+**仍开放（下一批起逐条复核，不因本组关闭）：** P1-3 Windows原生程序输出代码页；P1-4每条命令Add-Type编译（与R4症状相符，需证据）；P2-1 findCloudflared同步spawn、P2-2 permissions每次读盘、P2-5 grep Worker、P2-6 双SIGINT与子进程收尾、P2-7 MCP宣告未实现的listChanged/logging、P2-8 openai参数、P2-9文件树截断提示、P2-10 20MB全局body、P2-11安全头；P3元数据（agent-host版本1.0.0/main）、Ask/Plan“只读”措辞、UI结构高度px；reports.json轮转；s10篇幅治理。探针三模块继续完全暂停。

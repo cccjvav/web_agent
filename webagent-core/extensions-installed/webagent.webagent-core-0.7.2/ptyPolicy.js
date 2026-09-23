@@ -17,6 +17,20 @@ function scrubEnv(base) {
 
 const COMPOUND = /[;&|<>`$(){}\r\n]/;
 
+// Keep the last `limit` UTF-16 units of `text` without splitting a surrogate pair. A plain
+// `.slice(-limit)` can start on the low half of an emoji or CJK Extension B character, leaving a
+// lone surrogate that renders as U+FFFD and is not valid Unicode to send to a model.
+// Shared by the host executor/PTY job store and this extension's ptyHost output buffers.
+function sliceTextTail(text, limit) {
+  const s = String(text == null ? '' : text);
+  const n = Math.max(0, Math.floor(Number(limit) || 0));
+  if (s.length <= n) return s;
+  let start = s.length - n;
+  const code = s.charCodeAt(start);
+  if (code >= 0xdc00 && code <= 0xdfff) start += 1; // Drop the orphaned low surrogate.
+  return s.slice(start);
+}
+
 
 function isReadishCommand(command) {
   return READISH.test(String(command || '').trim());
@@ -51,6 +65,7 @@ function shouldAutoAllow(command, state = {}) {
 
 module.exports = {
   scrubEnv,
+  sliceTextTail,
   isReadishCommand,
   looksDangerousCommand,
   commandFamily,

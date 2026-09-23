@@ -19,10 +19,15 @@
 | dup.js有两处相同SEARCH | 默认拒matched 2 times且原文不变，occurrence:2只改第二处 |
 | race.js同hash两Promise并发补丁 | allSettled筛选恰一success、一STALE_FILE，结果只能2或3，不能混合 |
 | V4A *** Begin Patch | looksLikeV4A识别；已有文件E_BAD_ARGS/V4A且retryHint提SEARCH，原文保持；新文件也拒且不存在 |
+| 裸正文与标记整行（F70） | 见下方unmarkedBodyNeverReplacesExistingFile与searchReplaceDividerIsLineBased |
 
 computeHash用于构造明确版本前提及预览/落盘hash对照，readFile提供真实读取版本；样例正文里的add不是测试辅助函数，也未执行该JS计算结果。成功和main.catch均清理tmp；并发只测一个Node进程内锁，不能外推跨进程协同或断电一致性。
 
 **missingTargetSafety()**用真实临时磁盘、file_patched的observe监听和readCache做第三批回归：不存在目标+显式旧hash（包括空文件hash）在dryRun/正式执行均E_STALE_FILE；非空SEARCH E_CONFLICT，新建多块E_BAD_ARGS。所有拒绝不能创建父目录、发布成功事件或新hash。读取后外部unlink仍拒绝旧hash且保持缓存旧值。合法正文/单空块预览不创建目录/更新缓存，写入hash与预览一致、只发一次成功事件；已有文件的两个串联块必须完整应用。finally移除事件监听。
+
+**unmarkedBodyNeverReplacesExistingFile()**（F70，外部复审P1-1）：已有3行文件读取后，裸正文分别以“只靠recalled hash”“显式hash”“dryRun”“空正文”四种形式提交，全部E_BAD_ARGS，消息含neither SEARCH/REPLACE、retryHint指向write_file；文件字节不变、recalledHash不变、零file_patched事件。错误hash的裸正文也先报格式错误（格式拒绝在hash门前，否则换新hash重试永远成功不了）。新建文件的完整正文合同保持。基线26a167e该函数红（Missing expected rejection：裸正文把文件替换成片段并报+1 -3成功）。
+
+**searchReplaceDividerIsLineBased()**（F70）用两个局部helper：**patchWith(file,content,patch)**写入夹具、readFile取hash后以该hash调用applyPatch；**read(file)**读回磁盘正文供逐字节比较。SEARCH/REPLACE标记必须独占整行、长度与开头标记一致。`# ==========`注释横幅与Markdown setext下划线留在SEARCH正文里不再被当成分隔符（旧正则把分隔符前的换行设为可选、接受任意5个以上`=`，静默写坏文件还报成功）；空REPLACE整行删除且不留空行，CRLF文件删除后仍全CRLF，行内匹配只删匹配文本；SEARCH里含Git冲突标记（两条同长分隔符）时E_BAD_ARGS“ambiguous”零写入，retryHint给出更长标记/unified diff两种办法，同一编辑改用unified diff可成功；四种不完整块仍malformed拒绝且零写入；新文件正文里的`=======`标题行按内容写入。
 
 ## apiFiles.test.js
 

@@ -103,9 +103,13 @@ async function run() {
   fs.writeFileSync(victim, left);
   const before = fs.readFileSync(victim);
   const read = await callTool('read_files', { filePath: 'existing.txt', limit: 1 }, 'code');
+  // Replace the whole body with a SEARCH/REPLACE block: since F70 apply_patch refuses an
+  // unmarked body on an existing file before any diff is computed, and this test is about the
+  // diff budget, not the format gate.
+  const wholeBody = `<<<<<<< SEARCH\n${left}\n=======\n${right}\n>>>>>>> REPLACE`;
   const rejected = await callTool(
     'apply_patch',
-    { filePath: 'existing.txt', patch: right, expectedHash: read.hash },
+    { filePath: 'existing.txt', patch: wholeBody, expectedHash: read.hash },
     'code'
   ).then((ok) => ({ ok }), (err) => ({ err }));
   assert.ok(rejected.err, 'a patch whose diff cannot be rendered must fail');
@@ -117,7 +121,7 @@ async function run() {
   // dryRun on the same pair is rejected the same way, and also writes nothing.
   const dry = await callTool(
     'apply_patch',
-    { filePath: 'existing.txt', patch: right, expectedHash: read.hash, dryRun: true },
+    { filePath: 'existing.txt', patch: wholeBody, expectedHash: read.hash, dryRun: true },
     'code'
   ).then((ok) => ({ ok }), (err) => ({ err }));
   assert.strictEqual(dry.err && dry.err.code, 'E_DIFF_BUDGET', 'dryRun must apply the same budget');

@@ -178,31 +178,57 @@ function ensureNestedIgnore() {
   fs.writeFileSync(nested, prefix + block + eol, 'utf8');
 }
 
-function ensureWorkspaceGitignore() {
-  const gitDir = path.join(config.workspaceRoot, '.git');
-  if (!fs.existsSync(gitDir)) return;
-  const gi = path.join(config.workspaceRoot, '.gitignore');
+// Machine-local second layer: the repository's own `info/exclude`, which Git reads like a
+// .gitignore but which is never committed and never shows up in the user's diffs.
+//
+// F70 (external review P1-6): this used to append to the user's TRACKED root `.gitignore` on every
+// start — a tool process silently editing a version-controlled file in the user's project. It was
+// also redundant: the nested `.webagent/.gitignore` above already ignores every protected file on
+// its own. The exclude entry only matters when someone deletes that nested file. The path comes
+// from `git rev-parse --git-path`, so worktrees and `.git` files (submodules) resolve correctly;
+// a workspace that is not a repository, or has no usable Git, gets nothing here and loses nothing.
+// Once per workspace root and process: save() calls protectWorkspaceSecrets on every config write
+// and must not spawn git each time. `--path-format` needs Git 2.31+; older Git fails the call and
+// the nested .gitignore stays the protection.
+const excludeChecked = new Set();
+
+function ensureLocalExclude() {
+  if (excludeChecked.has(config.workspaceRoot)) return;
+  // Not a repository (yet): cheap check, not cached, so a later `git init` is still picked up.
+  if (!fs.existsSync(path.join(config.workspaceRoot, '.git'))) return;
+  excludeChecked.add(config.workspaceRoot);
+  const r = spawnSync('git', ['rev-parse', '--path-format=absolute', '--git-path', 'info/exclude'], {
+    cwd: config.workspaceRoot, encoding: 'utf8', windowsHide: true, timeout: 4000
+  });
+  const exclude = r && r.status === 0 ? String(r.stdout || '').trim() : '';
+  if (!exclude || !path.isAbsolute(exclude)) return;
   let cur = '';
   try {
-    cur = fs.readFileSync(gi, 'utf8');
+    cur = fs.readFileSync(exclude, 'utf8');
   } catch (_) {}
-  const missing = SECRET_REL.filter((rel) => !alreadyIgnored(cur, rel));
+  // Anchored at the repository root, i.e. only when the workspace IS the repository root; for a
+  // nested workspace the nested `.webagent/.gitignore` remains the protection.
+  const missing = SECRET_REL.filter((rel) => !alreadyIgnored(cur, rel)).map((rel) => `/${rel}`);
   if (!missing.length) return;
   const eol = detectEol(cur);
   const start = cur && !cur.endsWith('\n') && !cur.endsWith('\r\n') ? eol : '';
   const gap = cur ? eol : '';
   const block = [
-    '# Web Agent — do not commit MCP secret or API keys',
+    '# Web Agent — keep MCP secret and API keys out of Git (local exclude; the tracked .gitignore is left alone)',
     ...missing
   ].join(eol);
-  fs.writeFileSync(gi, cur + start + gap + block + eol, 'utf8');
+  fs.mkdirSync(path.dirname(exclude), { recursive: true });
+  fs.writeFileSync(exclude, cur + start + gap + block + eol, 'utf8');
 }
 
 function protectWorkspaceSecrets() {
   try {
     ensureNestedIgnore();
-    ensureWorkspaceGitignore();
     if (fs.existsSync(storePath())) restrictFileMode(storePath());
+  } catch (_) {}
+  // Independent of the nested file: a read-only or odd .git layout must not skip the steps above.
+  try {
+    ensureLocalExclude();
   } catch (_) {}
 }
 

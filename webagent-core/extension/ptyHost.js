@@ -1,6 +1,6 @@
 'use strict';
 
-const { scrubEnv } = require('./ptyPolicy');
+const { scrubEnv, sliceTextTail } = require('./ptyPolicy');
 
 const vscode = require('vscode');
 const fs = require('fs');
@@ -280,9 +280,9 @@ class PtyHost {
     proc.onData((d) => {
       if (ended) return;
       const chunk = String(d);
-      buf = (buf + chunk).slice(-200 * 1024);
+      buf = sliceTextTail(buf + chunk, 200 * 1024);
       writeEmitter.fire(chunk.replace(/\n/g, '\r\n'));
-      pending = (pending + stripAnsi(chunk)).slice(-200 * 1024);
+      pending = sliceTextTail(pending + stripAnsi(chunk), 200 * 1024);
       if (!ended && !flight && !progressTimer) progressTimer = setTimeout(flushProgress, 40);
     });
     const pty = {
@@ -338,7 +338,7 @@ class PtyHost {
       const reading = (async () => {
         if (!execution || typeof execution.read !== 'function') throw new Error('无法捕获终端输出');
         for await (const chunk of execution.read()) {
-          buf = (buf + String(chunk)).slice(-200 * 1024);
+          buf = sliceTextTail(buf + String(chunk), 200 * 1024);
           await this.postJob(job.jobId, { state: 'progress', stdout: stripAnsi(chunk) });
         }
       })();

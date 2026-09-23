@@ -124,7 +124,60 @@ process.exit(0);
   assert.strictEqual(polled.status, 'done', 'the background command must finish');
   assert.strictEqual(polled.stdout, '后台任务完成', 'streamed output must also decode across chunks');
 
+  // --- F70 (external review §5.4-7): tails never split a surrogate pair. ---
+  // Tail windows count UTF-16 units, so an odd window over astral characters (emoji, CJK
+  // Extension B) used to start on a low surrogate: a lone U+DC00–U+DFFF that is not valid
+  // Unicode. Checked on the shared helper and end to end through the tail window.
+  const { sliceTextTail } = require('../../extension/ptyPolicy');
+  assert.strictEqual(sliceTextTail('😀😀😀', 1), '', 'half of an emoji is dropped, never returned alone');
+  assert.strictEqual(sliceTextTail('😀😀😀', 3), '😀', 'an odd window keeps whole characters only');
+  assert.strictEqual(sliceTextTail('a😀', 2), '😀');
+  assert.strictEqual(sliceTextTail('abc', 10), 'abc');
+  assert.strictEqual(sliceTextTail(null, 5), '');
+  assert.strictEqual(sliceTextTail('abc', 0), '');
+  fs.writeFileSync(path.join(tmp, 'emoji.js'), "process.stdout.write('😀'.repeat(3000));\n");
+  const emoji = await callTool('run_command', { command: 'node emoji.js', timeoutSec: 30 }, 'code');
+  const emojiTail = await callTool('get_command_output', { execId: emoji.execId, tail: 501 }, 'code');
+  assert.ok(!/[\uD800-\uDFFF]/.test(emojiTail.stdout.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '')),
+    'the tail window must not contain a lone surrogate');
+  assert.strictEqual(emojiTail.stdout, '😀'.repeat(250));
+
+  await windowsExitCodeContract();
+
   console.log('commandEncoding.test.js ok');
+}
+
+// F70 (external review §5.4-1): the Windows trailer must keep all three cases of its contract.
+// The F62 trailer `if ($null -ne $LASTEXITCODE) { exit $LASTEXITCODE }` fixed case 1 but broke
+// case 2: a failing cmdlet never sets $LASTEXITCODE, so the trailer was the last statement and
+// the run exited 0 — the host reported `Get-Item missing.txt` as a success. PowerShell-only
+// syntax, so this runs on the Windows CI matrix; Linux has no powershell.exe executor path.
+async function windowsExitCodeContract() {
+  if (process.platform !== 'win32') return;
+  fs.writeFileSync(path.join(tmp, 'ok.js'), 'process.exit(0);\n');
+  fs.writeFileSync(path.join(tmp, 'three.js'), 'process.exit(3);\n');
+  const cases = [
+    // [command, expected exit code or 'nonzero', why]
+    ['Get-Item (Join-Path $PWD "definitely-missing.txt")', 'nonzero', 'a failing cmdlet alone must fail'],
+    ['node ok.js; Get-Item (Join-Path $PWD "definitely-missing.txt")', 'nonzero', 'a failing cmdlet after a passing native program must fail'],
+    ['Get-Item (Join-Path $PWD "definitely-missing.txt"); node ok.js', 0, 'the last command decides when it is a passing native program'],
+    ['node three.js', 3, 'a native exit code survives unchanged'],
+    ['node three.js; node ok.js', 0, 'the most recent native code wins'],
+    ['node ok.js; node three.js', 3, 'a failing native program at the end fails with its own code'],
+    ['Write-Output hello', 0, 'a passing cmdlet exits 0'],
+    ['node ok.js', 0, 'a passing native program exits 0']
+  ];
+  for (const [command, expected, why] of cases) {
+    const result = await callTool('run_command', { command, timeoutSec: 60 }, 'code');
+    if (expected === 'nonzero') {
+      assert.notStrictEqual(result.exitCode, 0, `${why}: ${command}`);
+      assert.strictEqual(result.status, 'error', `${why}: ${command}`);
+      assert.strictEqual(result.ok, false, `${why}: ${command}`);
+    } else {
+      assert.strictEqual(result.exitCode, expected, `${why}: ${command} (stderr: ${result.stderr})`);
+      assert.strictEqual(result.status, expected === 0 ? 'done' : 'error', `${why}: ${command}`);
+    }
+  }
 }
 
 run()

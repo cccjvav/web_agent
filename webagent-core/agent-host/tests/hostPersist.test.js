@@ -89,15 +89,29 @@ function main() {
 
   const gitInit = spawnSync('git', ['init'], { cwd: tmp, encoding: 'utf8' });
   assert.strictEqual(gitInit.status, 0, gitInit.stderr || gitInit.stdout);
+  // F70 (external review P1-6): the host must not edit a tracked file in the user's repository.
+  // It used to append a block to the root .gitignore on every start. Protection now comes from
+  // the nested .webagent/.gitignore plus the machine-local info/exclude, neither of which the
+  // user ever commits or sees in a diff.
+  const userIgnore = '# the user\'s own rules\nnode_modules/\n';
+  fs.writeFileSync(path.join(tmp, '.gitignore'), userIgnore);
   store.protectWorkspaceSecrets();
-  const gi = fs.readFileSync(path.join(tmp, '.gitignore'), 'utf8');
-  assert.ok(gi.includes('.webagent/config.json'));
-  assert.ok(gi.includes('.webagent/read-hashes.json'));
-  assert.ok(gi.includes('.webagent/usage.json'));
-  for (const rel of ['board.json', 'memory/note.md', 'customizations.json', 'instructions.md', 'preference.md', 'tech-stack.md']) {
+  persistIdentity(store);
+  assert.strictEqual(fs.readFileSync(path.join(tmp, '.gitignore'), 'utf8'), userIgnore, 'the tracked .gitignore must stay byte-identical');
+  const exclude = fs.readFileSync(path.join(tmp, '.git', 'info', 'exclude'), 'utf8');
+  assert.ok(exclude.includes('/.webagent/config.json'));
+  assert.ok(exclude.includes('/.webagent/read-hashes.json'));
+  assert.ok(exclude.includes('/.webagent/usage.json'));
+  for (const rel of ['config.json', 'board.json', 'memory/note.md', 'customizations.json', 'instructions.md', 'preference.md', 'tech-stack.md']) {
     const result = spawnSync('git', ['check-ignore', '-q', '.webagent/' + rel], { cwd: tmp });
     assert.strictEqual(result.status, 0, rel + ' must be private by default');
   }
+  // The local exclude alone still protects: delete the nested file and check again.
+  fs.renameSync(nested, nested + '.bak');
+  const excludeOnly = spawnSync('git', ['check-ignore', '-q', '.webagent/config.json'], { cwd: tmp });
+  assert.strictEqual(excludeOnly.status, 0, 'info/exclude must protect even without the nested .gitignore');
+  fs.renameSync(nested + '.bak', nested);
+  fs.unlinkSync(path.join(tmp, '.gitignore'));
   const ignored = spawnSync('git', ['check-ignore', '-q', '.webagent/config.json'], { cwd: tmp });
   assert.strictEqual(ignored.status, 0);
   assert.deepStrictEqual(store.trackedSecretFiles(), []);
@@ -112,8 +126,9 @@ function main() {
   spawnSync('git', ['rm', '-f', '--cached', '--', '.webagent/config.json'], { cwd: tmp });
   assert.deepStrictEqual(store.trackedSecretFiles(), []);
   store.protectWorkspaceSecrets();
-  const gi2 = fs.readFileSync(path.join(tmp, '.gitignore'), 'utf8');
-  assert.strictEqual(gi2.split('.webagent/config.json').length - 1, 1);
+  assert.ok(!fs.existsSync(path.join(tmp, '.gitignore')), 'repeated protection never creates a root .gitignore');
+  const exclude2 = fs.readFileSync(path.join(tmp, '.git', 'info', 'exclude'), 'utf8');
+  assert.strictEqual(exclude2.split('/.webagent/config.json').length - 1, 1, 'the exclude block is written once');
 
   const rootGi = fs.readFileSync(path.join(__dirname, '../../../.gitignore'), 'utf8');
   assert.ok(rootGi.includes('**/.webagent/config.json'));

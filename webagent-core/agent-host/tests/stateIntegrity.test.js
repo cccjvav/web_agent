@@ -165,7 +165,7 @@ config.workspaceRoot = tmp;
     assert.ok(!fs.readdirSync(path.dirname(file)).some(n => n.includes('.tmp.')));
   } finally { fs.renameSync = rename; }
   fs.writeFileSync(path.join(tmp, 'one.txt'), 'original');
-  await assert.rejects(() => applyPatch({ filePath: 'one.txt', patch: 'new', expectedHash: computeHash('original').slice(0, 8) }), /STALE/);
+  await assert.rejects(() => applyPatch({ filePath: 'one.txt', patch: '<<<<<<< SEARCH\noriginal\n=======\nnew\n>>>>>>> REPLACE', expectedHash: computeHash('original').slice(0, 8) }), /STALE/);
   await assert.rejects(() => writeFile({ filePath: 'deleted.txt', content: 'no', expectedHash: computeHash('original') }), /删除/);
   assert.ok(!fs.existsSync(path.join(tmp, 'deleted.txt')));
   if (process.platform !== 'win32') {
