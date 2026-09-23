@@ -13,7 +13,7 @@
 ## 本轮进度
 
 <!-- review-status-counts:start -->
-Markdown：201（对方本轮分母200 + 01a0c925新增交叉验证台账1）；已核对一致 85、已修正 58、待证据确认 2、历史保留 37、只读保留 2、生成核验 4、暂停 13。分类处置不是全仓安全认证；逐项依据见表。
+Markdown：202（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a167e上传的第三方复审报告1）；已核对一致 85、已修正 58、待证据确认 2、历史保留 38、只读保留 2、生成核验 4、暂停 13。分类处置不是全仓安全认证；逐项依据见表。
 <!-- review-status-counts:end -->
 
 ## 逐文件状态
@@ -106,6 +106,7 @@ Markdown：201（对方本轮分母200 + 01a0c925新增交叉验证台账1）；
 | [review/OPTIMIZATION_REPORT_2026-09-18.md](OPTIMIZATION_REPORT_2026-09-18.md) | 历史保留 | 29391f9e3e15ea70 | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [review/README.md](README.md) | 已修正 | 67d720fab39c15ec | 更新F67时效工作入口和报告处置边界；历史/截图/私密证据不作当前实现或验收承诺。 依据：本轮清单、独立报告、阶段10 |
 | [review/SEMANTIC_REVIEW_2026-09-16.md](SEMANTIC_REVIEW_2026-09-16.md) | 已修正 | 4392ef6fea8b4ea6 | 仅核对当前入口/批次基线及新进度；旧正文作为当时记录保留，不重写或继承旧PASS。 依据：F62–66提交/阶段记录与本轮清单 |
+| [review/web_agent_review_2026-09-23.md](web_agent_review_2026-09-23.md) | 历史保留 | e04844e605713fc6 | 用户上传的第三方只读复审（基线08aa942/f8ab6d0两冻结点），作输入证据原样保留、不改写。F70在26a167e逐条复现后分拣：P1-1/P1-5剩余绕过/P1-6/§5.4-1 Windows退出码/§5.4-3文档漂移/§5.4-7 UTF-16截断等属实并修复；§5.4-2“合并丢失argv字节预算”为**假阳性**（9766c6c已恢复12000字节预算，报告看的是旧基线）。处置与修复记录见阶段10。 依据：26a167e源码实测; gitOps.js MAX_DIFF_PATHSPEC_BYTES |
 | [review/UPSTREAM_ADOPTION_MAP_2026-09-15.md](UPSTREAM_ADOPTION_MAP_2026-09-15.md) | 已修正 | d7fd4319833b70d6 | 明确固定上游SHA和2026-09-15/16深度、旧测试/下一步不是当前队列；26类来源与已/候选/延期边界保留，现行取舍转阶段10。 依据：固定外部审阅来源; 阶段10 R2–R9/P |
 | [review/archive/01a08d85-web-agent-audit.md](archive/01a08d85-web-agent-audit.md) | 历史保留 | 95fc2e2b61e4c58c | 归档入口已明确仅历史基线/授权/证据；核对文件位置存在，不按当前实现重写原稿，不把旧PASS/待办当本次结论。专项原稿正文未接手。 依据：review/archive/README.md; Git路径元数据 |
 | [review/archive/ARENA_PROBE_INTEGRATION_2026-09-15.md](archive/ARENA_PROBE_INTEGRATION_2026-09-15.md) | 历史保留 | 不读取正文 | 归档入口已明确仅历史基线/授权/证据；核对文件位置存在，不按当前实现重写原稿，不把旧PASS/待办当本次结论。专项原稿正文未接手。 依据：review/archive/README.md; Git路径元数据 |
