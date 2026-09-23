@@ -112,6 +112,22 @@ function validateConfig(value) {
   return value;
 }
 
+// Cheap change detector for hot readers that cache something derived from load() (e.g. the
+// Bridge permission policy, read on every remote tool call). Folds in:
+//  * saves — bumped by save() in this process, so a save inside one mtime tick is still seen;
+//  * the workspace root — tests and future callers may switch it;
+//  * the file's size, mtime and inode — so an external edit, replace or delete invalidates too.
+// A key is only a hint to re-read; it never replaces load()'s own validation.
+let saves = 0;
+function revisionKey() {
+  let stat = 'absent';
+  try {
+    const st = fs.statSync(storePath(), { bigint: true });
+    stat = `${st.size}:${st.mtimeNs}:${st.ino}`;
+  } catch (_) {}
+  return `${config.workspaceRoot}\0${saves}\0${stat}`;
+}
+
 function load() {
   try {
     const raw = validateConfig(JSON.parse(fs.readFileSync(storePath(), 'utf8')));
@@ -275,7 +291,12 @@ function save(next) {
   try {
     fs.writeFileSync(tmp, JSON.stringify(cfg, null, 2), { encoding: 'utf8', flag: 'wx', mode: 0o600 });
     fs.renameSync(tmp, storePath());
-  } finally { try { fs.unlinkSync(tmp); } catch (err) { if (err.code !== 'ENOENT') throw err; } }
+  } finally {
+    // Bump even when the rename failed: the file may or may not have changed, so derived caches
+    // must re-read rather than trust their old copy.
+    saves += 1;
+    try { fs.unlinkSync(tmp); } catch (err) { if (err.code !== 'ENOENT') throw err; }
+  }
   restrictFileMode(storePath());
   protectWorkspaceSecrets();
   return cfg;
@@ -300,6 +321,7 @@ function reset() {
 module.exports = {
   load,
   save,
+  revisionKey,
   patch,
   defaults,
   protectWorkspaceSecrets,

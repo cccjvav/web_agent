@@ -203,11 +203,14 @@ async function handleRpc(req) {
       eventBus.broadcast('agent_connected', { clientInfo, ip: req.ip });
       return {
         protocolVersion,
+        // Declare only what this server actually does. It never sends list_changed or
+        // notifications/message, and logging/setLevel changes nothing; advertising those told
+        // clients to wait for pushes that never come (review P2-7). logging/setLevel is still
+        // answered with {} below so clients that call it regardless keep working.
         capabilities: {
-          tools: { listChanged: true },
-          resources: { listChanged: true },
-          prompts: { listChanged: true },
-          logging: {}
+          tools: { listChanged: false },
+          resources: { listChanged: false },
+          prompts: { listChanged: false }
         },
         serverInfo: { name: config.serverName, version: config.version },
         _meta: { identity: hostIdentity() },

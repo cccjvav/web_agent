@@ -1,4 +1,5 @@
 const { spawn, spawnSync } = require('child_process');
+const { cachedLookup } = require('./binaryLookup');
 const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
@@ -34,7 +35,7 @@ function resolveNgrokToken(token) {
   return String(process.env.NGROK_AUTHTOKEN || '').trim();
 }
 
-function findNgrok() {
+function lookupNgrok() {
   if (process.env.NGROK_PATH && fs.existsSync(process.env.NGROK_PATH)) {
     return process.env.NGROK_PATH;
   }
@@ -42,7 +43,8 @@ function findNgrok() {
   const r = spawnSync(which, ['ngrok'], {
     encoding: 'utf8',
     shell: process.platform === 'win32',
-    windowsHide: true
+    windowsHide: true,
+    timeout: 5000
   });
   const hit = String(r.stdout || '')
     .split(/\r?\n/)
@@ -57,6 +59,13 @@ function findNgrok() {
     ]
     : ['/usr/local/bin/ngrok', '/opt/homebrew/bin/ngrok', '/usr/bin/ngrok'];
   return guesses.find((p) => p && fs.existsSync(p)) || null;
+}
+
+// Same status-poll hot path as cloudflared (snapshot() runs on every /api/status).
+const ngrokLookup = cachedLookup(lookupNgrok, () => process.env.NGROK_PATH);
+
+function findNgrok({ fresh = false } = {}) {
+  return ngrokLookup({ fresh });
 }
 
 function installHint() {
@@ -97,7 +106,7 @@ async function startNgrokTunnel({ hostname, token, port = config.port, timeoutMs
   const ticket = generation;
   await stopped;
   if (ticket !== generation) throw new Error('Tunnel start superseded');
-  const bin = findNgrok();
+  const bin = findNgrok({ fresh: true });
   if (!bin) {
     const err = new Error(installHint());
     err.code = 'E_NO_NGROK';

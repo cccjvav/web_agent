@@ -68,6 +68,11 @@ async function httpAdmission() {
     const result = await request({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:version,clientInfo:{name:'admission-fixture',version:'1'},capabilities:{}}});
     assert.strictEqual(result.status,200);assert.ok(result.sid);
     assert.strictEqual(result.body.result.protocolVersion,version);
+    // F70 (review P2-7): declare only implemented capabilities. The server never pushes
+    // list_changed or log messages, so it must not advertise them.
+    const caps = result.body.result.capabilities;
+    for (const kind of ['tools','resources','prompts']) assert.strictEqual(caps[kind].listChanged,false,kind+' must not advertise listChanged');
+    assert.strictEqual(caps.logging,undefined,'logging capability must not be advertised');
     return result.sid;
   }
   try {

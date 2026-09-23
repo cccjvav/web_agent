@@ -1399,3 +1399,19 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **本地验证**：`npm test` 107/107、真实Chromium浏览器套件通过、`check-docs` 288/28/111 updated=0、`git diff --check`通过。精确提交的CI结论以下批记录为准（Windows退出码合同只有CI能证）。
 
 **仍开放（下一批起逐条复核，不因本组关闭）：** P1-3 Windows原生程序输出代码页；P1-4每条命令Add-Type编译（与R4症状相符，需证据）；P2-1 findCloudflared同步spawn、P2-2 permissions每次读盘、P2-5 grep Worker、P2-6 双SIGINT与子进程收尾、P2-7 MCP宣告未实现的listChanged/logging、P2-8 openai参数、P2-9文件树截断提示、P2-10 20MB全局body、P2-11安全头；P3元数据（agent-host版本1.0.0/main）、Ask/Plan“只读”措辞、UI结构高度px；reports.json轮转；s10篇幅治理。探针三模块继续完全暂停。
+
+
+**第70组第一批精确证据：** `6014ea3`（登记上传报告，修基线红）与`50fc5ae`（第一批修复）已推本会话分支；[CI35881884224](https://github.com/cccjvav/web_agent/actions/runs/35881884224)精确`50fc5ae`九job全部success，已逐job核对——含Windows Node20/22/24，因此windowsExitCodeContract八例（纯cmdlet失败非零、原生码保留、最近原生码为准）已在真实powershell.exe上通过。首推前沙箱GitHub令牌过期（`GH_TOKEN is no longer valid`），用户重连后推送，未索取凭据。
+
+### 第70组第二批：主机热路径、统一shutdown与MCP能力声明（2026-09-23）
+
+先复审第一批相邻链：apply_patch格式门只在已有文件分支、runChat内置补丁与workbench提示均发SEARCH/REPLACE块，不受影响；dangerousPolicy经ptyPolicy.looksDangerousCommand复用，PTY审批路径同样变严；store的exclude写入仅在`.git`存在时spawn一次git。未发现需回退的点。
+
+| 项 | 复现事实 | 修法 | 红测 |
+|---|---|---|---|
+| P2-6 主机退出留下孤儿命令 | 真实主机经本机API start_command起`sleep`，SIGINT后主机退出0，sleep继续运行（POSIX独立进程组收不到Ctrl+C；shutdown只关外部MCP）；cloudflared.js另挂SIGINT/SIGTERM与shutdown抢process.exit | executor.stopAll()把在跑记录标cancelled并对进程组SIGKILL；index.js唯一shutdown依次停命令、并行关外部MCP与隧道，逐步隔离失败、保留8秒期限；删除cloudflared的独立信号处理器（保留exit兜底） | 新增hostShutdown.test.js（POSIX；Windows跳过并说明原因），基线红 |
+| P2-2 权限每次读盘 | 远程tools/list对39个工具各load一次config.json；100次列表92ms | store.revisionKey()（工作区＋save计数＋size/mtimeNs/inode）作缓存键，permissions()缓存已校验策略，失败不缓存、返回副本；getToolList整表一次快照 | executionControl.permissionCacheContract：基线89次load，红；100次列表降至约5ms |
+| P2-1 状态轮询同步spawn | /api/status的snapshot每次spawn where/which两次（cloudflared+ngrok） | 新增tunnel/binaryLookup.cachedLookup：30秒复用、existsSync复核、覆盖变量变化失效；启动隧道fresh:true强制真实查找 | 实测100次snapshot由200次spawn降为0（首次2次）；bridgeTunnel/tunnelLifecycle回归通过 |
+| P2-7 宣告未实现的MCP能力 | initialize宣告tools/resources/prompts listChanged:true与logging，但从不推送 | 三项改listChanged:false、去掉logging；logging/setLevel仍回{}兼容 | mcpProtocol的initialize断言 |
+
+文档：命令与PTY详解（stopAll）、隧道生命周期详解（lookup/find与binaryLookup）、配置存储详解（revisionKey）、执行控制详解（缓存与新测试）、请求分发详解（能力声明）、tests/README与工作区与命令安全测试详解（hostShutdown）；documentationLearning登记hostShutdown与binaryLookup。本地108/108、docs 290/28/111零漂移。

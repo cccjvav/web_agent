@@ -1,5 +1,6 @@
 const { StringDecoder } = require('string_decoder');
 const { spawn, spawnSync } = require('child_process');
+const { cachedLookup } = require('./binaryLookup');
 const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
@@ -50,7 +51,7 @@ function parseTunnelUrl(chunk) {
   return m ? m[0].replace(/\/$/, '') : null;
 }
 
-function findCloudflared() {
+function lookupCloudflared() {
   if (process.env.CLOUDFLARED_PATH && fs.existsSync(process.env.CLOUDFLARED_PATH)) {
     return process.env.CLOUDFLARED_PATH;
   }
@@ -58,7 +59,8 @@ function findCloudflared() {
   const r = spawnSync(which, ['cloudflared'], {
     encoding: 'utf8',
     shell: process.platform === 'win32',
-    windowsHide: true
+    windowsHide: true,
+    timeout: 5000
   });
   const hit = String(r.stdout || '')
     .split(/\r?\n/)
@@ -73,6 +75,14 @@ function findCloudflared() {
     ]
     : ['/usr/local/bin/cloudflared', '/opt/homebrew/bin/cloudflared', '/usr/bin/cloudflared'];
   return guesses.find((p) => p && fs.existsSync(p)) || null;
+}
+
+// /api/status calls snapshot() on every workbench poll; lookupCloudflared spawns where/which
+// synchronously. See cachedLookup for the staleness contract; starts pass fresh:true.
+const cloudflaredLookup = cachedLookup(lookupCloudflared, () => process.env.CLOUDFLARED_PATH);
+
+function findCloudflared({ fresh = false } = {}) {
+  return cloudflaredLookup({ fresh });
 }
 
 function installHint() {
@@ -125,7 +135,7 @@ async function startNamedTunnel({ hostname, token, port = config.port, timeoutMs
   const ticket = generation;
   await stopped;
   if (ticket !== generation) throw new Error('Tunnel start superseded');
-  const bin = findCloudflared();
+  const bin = findCloudflared({ fresh: true });
   if (!bin) {
     const err = new Error(installHint());
     err.code = 'E_NO_CLOUDFLARED';
@@ -203,7 +213,7 @@ async function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) 
   const ticket = generation;
   await stopped;
   if (ticket !== generation) throw new Error('Tunnel start superseded');
-  const bin = findCloudflared();
+  const bin = findCloudflared({ fresh: true });
   if (!bin) {
     const err = new Error(installHint());
     err.code = 'E_NO_CLOUDFLARED';
@@ -286,9 +296,10 @@ function snapshot() {
   };
 }
 
+// Last-resort signal to the tunnel child on any exit (only synchronous work runs here). Graceful
+// SIGINT/SIGTERM handling lives in the host's single shutdown() in src/index.js; a second
+// handler here used to race it for process.exit.
 process.on('exit', () => { stopTunnel().catch(() => {}); });
-process.on('SIGINT', () => { stopTunnel().then(() => process.exit(0), () => process.exit(1)); });
-process.on('SIGTERM', () => { stopTunnel().then(() => process.exit(0), () => process.exit(1)); });
 
 module.exports = {
   createTokenRedactor,

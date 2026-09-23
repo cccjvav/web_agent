@@ -512,10 +512,14 @@ for (const t of TOOLS) {
 }
 
 function getToolList(currentMode = null, opts = {}) {
+  // One policy snapshot for the whole list: consistent within a single response, and one config
+  // read instead of one per tool.
+  const control = opts.remote ? require('../utils/executionControl') : null;
+  const policy = control ? control.permissions() : null;
   return TOOLS
     .filter((t) => !currentMode || t.mode.includes(currentMode))
     .filter((t) => (opts && opts.includeHidden) || !t.hidden)
-    .filter(t => !opts.remote || require('../utils/executionControl').allowed(t.name))
+    .filter(t => !policy || control.requirements(t.name).every(k => policy[k]))
     .map(({ name, description, inputSchema }) => ({ name, description, inputSchema }));
 }
 

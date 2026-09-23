@@ -139,6 +139,8 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 - `networkBudget.test.js`：GitHub身份与遥测上报的外发请求必须带deadline，打到"永不回话"的端点时以`AbortError`结束且不自行重试；注入传输照样受预算约束；readCache重复记录同一hash不再重写整张表。用进程内传输替身，不发真实网络请求；它证明单次请求一定会结束，不证明端点可达或上报送达。
 - `diffBudget.test.js`：差异计算有显式时间/编辑距离预算，超限抛`E_DIFF_BUDGET`而不是长期占住事件循环；被拒的补丁（含dryRun）让目标文件逐字节不变。同一文件还覆盖admin-host统计库：损坏的`reports.json`读取和写入都fail-closed并保留原字节，零字节文件仍算合法空库，发布走临时文件+rename且不留残留。预算数值可由`WEBAGENT_DIFF_TIMEOUT_MS`/`WEBAGENT_DIFF_MAX_EDIT`覆盖；测试不断言某个具体行数一定能算完。
 
+F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给Windows子进程投递真实Ctrl+C，且commandJob已把命令绑到关闭即杀的OS作业）：启动真实主机、经本机API的start_command起一个带唯一参数的sleep，向主机发SIGINT后要求8秒内以0退出、且该命令不再存活。基线26a167e红——命令在独立进程组里收不到Ctrl+C，shutdown只关外部MCP，命令成了孤儿。详解见[工作区与命令安全测试](工作区与命令安全测试详解.md)。
+
 <!-- docs-inventory:start -->
 ## 自动源码导航
 
@@ -175,7 +177,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [editorReview.test.js](editorReview.test.js) | 29 个函数/类节点 |
 | [editorRuntime.test.js](editorRuntime.test.js) | 38 个函数/类节点 |
 | [eventBus.test.js](eventBus.test.js) | 9 个函数/类节点 |
-| [executionControl.test.js](executionControl.test.js) | 32 个函数/类节点 |
+| [executionControl.test.js](executionControl.test.js) | 41 个函数/类节点 |
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
 | [externalDiscovery.test.js](externalDiscovery.test.js) | 13 个函数/类节点 |
 | [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
@@ -184,6 +186,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [githubNetwork.test.js](githubNetwork.test.js) | 82 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
+| [hostShutdown.test.js](hostShutdown.test.js) | 13 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
 | [identityRequestLifetime.test.js](identityRequestLifetime.test.js) | 16 个函数/类节点 |
 | [installerPackaging.test.js](installerPackaging.test.js) | 26 个函数/类节点 |

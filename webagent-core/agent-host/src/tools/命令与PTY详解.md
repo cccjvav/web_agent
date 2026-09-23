@@ -12,6 +12,7 @@
 | lastCommandId(owner) | 所有者键→ID/空串 | 只在最多40条commandStore中反向找该调用者最新记录，不共享全局最近命令 |
 | countRunning() | 无→数量 | 遍历commandStore中status=running；取消标终态可早于进程真正退出 |
 | pruneCommands() | 无→undefined | 记录≥40时按Map顺序删非running至<40；不主动kill、不提供无限历史 |
+| stopAll() | 无→已处理数 | F70（外部复审P2-6）主机shutdown调用：遍历children，把仍running的记录标cancelled/ok=false/message“Host shut down”，再killChild(child,true)。POSIX子进程在独立进程组里收不到终端Ctrl+C，此前主机退出后成为孤儿（真实主机复现）；Windows已由commandJob的关闭即杀作业与taskkill /t覆盖。同步执行，只保证信号已发出，不等待退出证明 |
 | killChild(child,force=false) | 子进程→undefined | Windows同步taskkill PID树（3秒期限，失败记录退出状态/错误；WEBAGENT_DEBUG_PROCESS=1额外记录成功结果）；其他先杀进程组再回退child.kill，TERM/KILL按force。吞发送错误，不等待退出证明 |
 | workingDirFrom(cwd) | 目录→安全绝对路径 | resolveSafePath，任何异常统一改成outside workspace提示，原失败原因可能被泛化 |
 | scrubEnv(base)，导入extension/ptyPolicy | 环境对象→副本 | 删除名称匹配凭据模式的字段；不是值扫描；保留PATH/一般Conda变量，不自动conda activate |

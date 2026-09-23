@@ -125,6 +125,8 @@ const pairs = [
 
   ["webagent-core/agent-host/tests/dangerousCommands.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
   ["webagent-core/agent-host/tests/commandEncoding.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
+  ["webagent-core/agent-host/tests/hostShutdown.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
+  ["webagent-core/agent-host/src/tunnel/binaryLookup.js", "webagent-core/agent-host/src/tunnel/隧道生命周期详解.md"],
   ["webagent-core/agent-host/tests/sandbox.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
   ["webagent-core/agent-host/tests/workspaceTools.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
   ["webagent-core/agent-host/tests/sensitiveBoundary.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],

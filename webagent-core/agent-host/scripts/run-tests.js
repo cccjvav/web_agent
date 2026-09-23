@@ -85,6 +85,7 @@ const preferred = [
   'workbenchHtml.test.js',
   'dangerousCommands.test.js',
   'commandEncoding.test.js',
+  'hostShutdown.test.js',
   'extensionCopy.test.js',
   'ptyJobs.test.js'
 ];

@@ -156,13 +156,29 @@ mcpServer.on('listening', () => {
   console.log(`agent-host MCP listening on ${config.host}:${config.port}`);
 });
 
+// The ONE shutdown path. It used to race a second, independent SIGINT/SIGTERM handler in
+// tunnel/cloudflared.js — whichever called process.exit first won, so the other cleanup could be
+// cut short — and nothing stopped commands started by run_command/start_command: they run in
+// their own process group, so Ctrl+C never reached them and they outlived the host.
+// Order: stop issuing work (commands), then external stdio servers and the tunnel in parallel.
+// Each step is isolated so one failure cannot skip the others; the 8 s deadline stays.
 let shuttingDown = false;
 async function shutdown() {
   if (shuttingDown) return;
   shuttingDown = true;
   const deadline = setTimeout(() => process.exit(1), 8000); deadline.unref();
-  try { await require('./mcp/externalClient').closeAll(); }
-  finally { clearTimeout(deadline); process.exit(0); }
+  let failed = false;
+  try { require('./tools/executor').stopAll(); } catch (error) { failed = true; console.error('command cleanup failed:', error.message); }
+  const steps = [
+    ['external MCP', () => require('./mcp/externalClient').closeAll()],
+    ['tunnel', () => require('./tunnel/cloudflared').stopTunnel()]
+  ];
+  const results = await Promise.allSettled(steps.map(([, run]) => Promise.resolve().then(run)));
+  results.forEach((result, i) => {
+    if (result.status === 'rejected') { failed = true; console.error(`${steps[i][0]} cleanup failed:`, result.reason && result.reason.message); }
+  });
+  clearTimeout(deadline);
+  process.exit(failed ? 1 : 0);
 }
 process.once('SIGTERM', shutdown); process.once('SIGINT', shutdown);
 

@@ -56,9 +56,10 @@ R5第六包：Windows安装器增加本机“隧道残留回收（需确认）�
 
 | 源码 | 定位证据 |
 |---|---|
-| [cloudflared.js](cloudflared.js) | 44 个函数/类节点 |
+| [binaryLookup.js](binaryLookup.js) | 2 个函数/类节点 |
+| [cloudflared.js](cloudflared.js) | 40 个函数/类节点 |
 | [helperDiagnostics.js](helperDiagnostics.js) | 6 个函数/类节点 |
-| [ngrok.js](ngrok.js) | 25 个函数/类节点 |
+| [ngrok.js](ngrok.js) | 27 个函数/类节点 |
 | [processIdentity.js](processIdentity.js) | 15 个函数/类节点 |
 | [receiptProtection.js](receiptProtection.js) | 14 个函数/类节点 |
 | [receiptProtection.ps1](receiptProtection.ps1) | 文件级登记；未做符号完整性证明 |

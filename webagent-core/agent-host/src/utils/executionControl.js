@@ -15,9 +15,19 @@ function validate(value) {
   if (value.execute && keys.some(k => !value[k])) fail('E_BAD_ARGS', '任意Execute可读写和截图，必须同时允许Read/Edit/Capture；否则请关闭Execute');
   return Object.fromEntries(keys.map(k => [k, value[k]]));
 }
+// permissions() runs on every remote tool call and once PER TOOL in a remote tools/list (39
+// store.load() JSON parses of config.json for one list). Cache the validated policy keyed on the
+// config file's identity (size + mtime + inode) plus the store's in-process save counter, so an
+// in-process save and an external edit of config.json both invalidate it. A failed load or
+// validation is never cached: the next call re-reads and throws again (fail closed).
+let permissionCache = null;
 function permissions() {
+  const key = store.revisionKey();
+  if (permissionCache && permissionCache.key === key) return { ...permissionCache.policy };
   const saved = store.load().bridge?.permissions;
-  return saved === undefined ? { read: true, edit: true, execute: true, capture: true } : validate(saved);
+  const policy = saved === undefined ? { read: true, edit: true, execute: true, capture: true } : validate(saved);
+  permissionCache = { key, policy };
+  return { ...policy };
 }
 function revision(policy) { return crypto.createHash('sha256').update(JSON.stringify(policy)).digest('hex'); }
 function snapshot() { const policy = permissions(); return { mode: state.mode, active: { ...state.active }, permissions: policy, revision: revision(policy) }; }

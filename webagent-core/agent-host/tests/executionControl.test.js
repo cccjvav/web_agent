@@ -175,6 +175,47 @@ async function main() {
   const child=spawnSync(process.execPath,['-e',`require('./src/config').config.workspaceRoot=process.argv[1]; console.log(JSON.stringify(require('./src/utils/executionControl').snapshot()))`,tmp],{cwd:path.resolve(__dirname,'..'),encoding:'utf8'});
   assert.equal(child.status,0,child.stderr);const restarted=JSON.parse(child.stdout.trim());
   assert.deepEqual(restarted.permissions,readOnly);assert.equal(restarted.mode,'idle');
+  await permissionCacheContract();
   console.log('execution control: owner binding, strict persisted ACL, aliases/elevation/nested revocation, same-type HTTP concurrency, live command and PTY barriers passed');
 }
+// F70 (review P2-2): permissions() is cached on store.revisionKey() because it runs on every
+// remote tool call and once per tool in a remote tools/list. The cache must never serve a stale
+// or failed policy: an in-process save, an external edit of config.json and a corrupted file are
+// all seen on the very next call, and a caller mutating the returned object cannot poison it.
+async function permissionCacheContract() {
+  const store = require('../src/models/store');
+  const file = path.join(tmp, '.webagent', 'config.json');
+  const readOnly = {read:true,edit:false,execute:false,capture:false};
+  const readEdit = {read:true,edit:true,execute:false,capture:false};
+  const loads = () => { let n = 0; const original = store.load; store.load = (...args) => { n += 1; return original(...args); }; return { count: () => n, restore: () => { store.load = original; } }; };
+  control.updatePermissions(readOnly, control.snapshot().revision);
+  const counter = loads();
+  try {
+    for (let i = 0; i < 50; i++) control.permissions();
+    const names = tools.getToolList('code', { remote: true }).map(t => t.name);
+    assert.ok(counter.count() <= 1, 'repeated reads of an unchanged config reuse the validated policy: ' + counter.count());
+    assert.ok(names.includes('read_files') && !names.includes('apply_patch') && !names.includes('run_command'), 'remote list follows the cached read-only policy');
+  } finally { counter.restore(); }
+  // An external edit (same process never saved) is seen on the next call.
+  const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+  raw.bridge.permissions = readEdit;
+  fs.writeFileSync(file, JSON.stringify(raw, null, 2) + '\n'.repeat(3));
+  assert.deepEqual(control.permissions(), readEdit, 'an external edit of config.json invalidates the cache');
+  assert.ok(tools.getToolList('code', { remote: true }).some(t => t.name === 'apply_patch'));
+  // Mutating a returned policy never changes what the next caller sees.
+  const leaked = control.permissions(); leaked.execute = true; leaked.capture = true;
+  assert.equal(control.permissions().execute, false, 'returned policy is a copy');
+  assert.throws(() => control.assertAllowed('run_command'), /E_FORBIDDEN|Bridge权限禁止/);
+  // A corrupt file fails closed on every call; nothing stale is served in between.
+  const good = fs.readFileSync(file, 'utf8');
+  fs.writeFileSync(file, '{"bridge":');
+  for (let i = 0; i < 2; i++) assert.throws(() => control.permissions(), /配置读取|E_CONFIG_CORRUPT/, 'corrupt config must throw each time');
+  assert.equal(tools.getToolList('code', { remote: false }).length > 0, true, 'local listing does not depend on the Bridge policy');
+  fs.writeFileSync(file, good);
+  assert.deepEqual(control.permissions(), readEdit);
+  // An in-process save within the same mtime tick is still seen (save counter in the key).
+  control.updatePermissions({read:true,edit:true,execute:true,capture:true}, control.snapshot().revision);
+  assert.equal(control.permissions().execute, true, 'an in-process save invalidates the cache immediately');
+}
+
 main().catch(error=>{console.error(error);process.exitCode=1;}).finally(async()=>{pty.resetForTests();server.closeAllConnections();await new Promise(r=>server.close(r));fs.rmSync(tmp,{recursive:true,force:true});});

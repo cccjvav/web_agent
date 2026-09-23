@@ -458,8 +458,27 @@ function wait({ ms = 800 } = {}) {
 
 function activeCount() { return Math.max(countRunning(), children.size); }
 
+// Host shutdown: terminate every command this process started. POSIX children run detached in
+// their own process group, so they do NOT receive the terminal's Ctrl+C and used to outlive the
+// host as orphans (reproduced: `start_command sleep 300`, SIGINT to the host, the sleep kept
+// running). Windows children are already bound to a kill-on-close OS job by commandJob, and
+// killChild's taskkill /t covers the tree as well. Records are marked cancelled first so no
+// late close handler reports them as a normal completion. Synchronous by design: it runs from
+// the shutdown path, where only already-issued signals are guaranteed to take effect.
+function stopAll() {
+  let stopped = 0;
+  for (const [id, child] of children) {
+    const rec = commandStore.get(id);
+    if (rec && rec.status === 'running') { rec.status = 'cancelled'; rec.ok = false; rec.message = 'Host shut down'; }
+    killChild(child, true);
+    stopped += 1;
+  }
+  return stopped;
+}
+
 module.exports = {
   activeCount,
+  stopAll,
   executeCommand,
   startCommand,
   getCommandOutput,
