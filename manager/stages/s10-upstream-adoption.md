@@ -1488,4 +1488,6 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **教训。** 外部API约束要按当前在售型号逐代核对，不能只修掉看到的第一个400；第五批的表述“推理模型族改发reasoning_effort”对2026年的gpt-5.4+与gpt-6并不成立，直到本次复审才发现。
 
+**第六批精确证据：** `09e656d`的[CI35913876271](https://github.com/cccjvav/web_agent/actions/runs/35913876271)为push事件、精确同SHA，九job全部success，已逐job核对：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、workbench-browser。提交前本地108/108、真实Chromium浏览器套件通过、check-docs 290/28/111零漂移。
+
 **仍开放：** gpt-5.4+带工具时无法推理（需/v1/responses）；P1-4每条命令Add-Type编译（需Windows耗时实测）；P2-10全局20MB body与/health版本（已记录保留理由）；ESLint入CI需项目主人同意新增开发依赖；探针三模块继续完全暂停。
