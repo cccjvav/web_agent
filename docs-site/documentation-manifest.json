@@ -9897,8 +9897,8 @@
     {
       "path": "webagent-core/agent-host/src/tools/gitOps.js",
       "doc": "webagent-core/agent-host/src/tools/README.md",
-      "sha256": "06076044143914853bffff0187f198b2b176d1430e33927e5cf856af5141615d",
-      "lineCount": 268,
+      "sha256": "d5bb4fa2ce9931b8c92dc9754f78a7ee6521e2f7a289d3b7c6b648781300f803",
+      "lineCount": 286,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -9906,8 +9906,8 @@
           "id": "notGitResult",
           "name": "notGitResult",
           "kind": "FunctionDeclaration",
-          "startLine": 20,
-          "endLine": 33,
+          "startLine": 22,
+          "endLine": 35,
           "parameters": [
             "extra = {}"
           ]
@@ -9916,19 +9916,19 @@
           "id": "git",
           "name": "git",
           "kind": "FunctionDeclaration",
-          "startLine": 35,
-          "endLine": 78,
+          "startLine": 37,
+          "endLine": 80,
           "parameters": [
             "args",
             "timeoutMs = 8000"
           ]
         },
         {
-          "id": "git/anonymous@42:77",
-          "name": "anonymous@42:77",
+          "id": "git/anonymous@44:77",
+          "name": "anonymous@44:77",
           "kind": "ArrowFunctionExpression",
-          "startLine": 42,
-          "endLine": 42,
+          "startLine": 44,
+          "endLine": 44,
           "parameters": [
             "key"
           ]
@@ -9937,16 +9937,16 @@
           "id": "workspacePrefix",
           "name": "workspacePrefix",
           "kind": "FunctionDeclaration",
-          "startLine": 83,
-          "endLine": 86,
+          "startLine": 85,
+          "endLine": 88,
           "parameters": []
         },
         {
           "id": "stripPrefix",
           "name": "stripPrefix",
           "kind": "FunctionDeclaration",
-          "startLine": 88,
-          "endLine": 92,
+          "startLine": 90,
+          "endLine": 94,
           "parameters": [
             "prefix",
             "repoPath"
@@ -9956,16 +9956,16 @@
           "id": "gitStatus",
           "name": "gitStatus",
           "kind": "FunctionDeclaration",
-          "startLine": 94,
-          "endLine": 137,
+          "startLine": 96,
+          "endLine": 139,
           "parameters": []
         },
         {
           "id": "diffPathspecs",
           "name": "diffPathspecs",
           "kind": "FunctionDeclaration",
-          "startLine": 144,
-          "endLine": 192,
+          "startLine": 146,
+          "endLine": 194,
           "parameters": [
             "prefix",
             "staged",
@@ -9973,51 +9973,51 @@
           ]
         },
         {
-          "id": "diffPathspecs/anonymous@158:47",
-          "name": "anonymous@158:47",
+          "id": "diffPathspecs/anonymous@160:47",
+          "name": "anonymous@160:47",
           "kind": "ArrowFunctionExpression",
-          "startLine": 158,
-          "endLine": 158,
+          "startLine": 160,
+          "endLine": 160,
           "parameters": [
             "part"
           ]
         },
         {
-          "id": "diffPathspecs/anonymous@165:34",
-          "name": "anonymous@165:34",
+          "id": "diffPathspecs/anonymous@167:34",
+          "name": "anonymous@167:34",
           "kind": "ArrowFunctionExpression",
-          "startLine": 165,
-          "endLine": 165,
+          "startLine": 167,
+          "endLine": 167,
           "parameters": [
             "side"
           ]
         },
         {
-          "id": "diffPathspecs/anonymous@166:37",
-          "name": "anonymous@166:37",
+          "id": "diffPathspecs/anonymous@168:37",
+          "name": "anonymous@168:37",
           "kind": "ArrowFunctionExpression",
-          "startLine": 166,
-          "endLine": 166,
+          "startLine": 168,
+          "endLine": 168,
           "parameters": [
             "side"
           ]
         },
         {
-          "id": "diffPathspecs/anonymous@171:25",
-          "name": "anonymous@171:25",
+          "id": "diffPathspecs/anonymous@173:25",
+          "name": "anonymous@173:25",
           "kind": "ArrowFunctionExpression",
-          "startLine": 171,
-          "endLine": 171,
+          "startLine": 173,
+          "endLine": 173,
           "parameters": [
             "side"
           ]
         },
         {
-          "id": "diffPathspecs/anonymous@180:46",
-          "name": "anonymous@180:46",
+          "id": "diffPathspecs/anonymous@182:46",
+          "name": "anonymous@182:46",
           "kind": "ArrowFunctionExpression",
-          "startLine": 180,
-          "endLine": 180,
+          "startLine": 182,
+          "endLine": 182,
           "parameters": [
             "side"
           ]
@@ -10026,8 +10026,8 @@
           "id": "gitDiff",
           "name": "gitDiff",
           "kind": "FunctionDeclaration",
-          "startLine": 194,
-          "endLine": 265,
+          "startLine": 196,
+          "endLine": 283,
           "parameters": [
             "{ filePath, staged = false, stat = false } = {}"
           ]

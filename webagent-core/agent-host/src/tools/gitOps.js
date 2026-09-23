@@ -16,6 +16,8 @@ const SCOPE_PATHSPEC = ['--', '.'];
 // default (path-less) diff under the same per-path sensitive rules as an explicit one. Renames
 // contribute both sides, so a rename away from `.env` cannot expose the old content either.
 const MAX_DIFF_PATHSPECS = 300;
+// Total argv budget for pathspecs. Windows caps a command line near 32KiB; stay well under it.
+const MAX_DIFF_PATHSPEC_BYTES = 12000;
 
 function notGitResult(extra = {}) {
   return {
@@ -194,7 +196,12 @@ function diffPathspecs(prefix, staged, scope = '') {
 function gitDiff({ filePath, staged = false, stat = false } = {}) {
   try {
     const prefix = workspacePrefix();
-    const args = ['diff', '--no-ext-diff', '--no-textconv', '--submodule=short'];
+    // --no-renames on the CONTENT pass: the allow-list was computed by the metadata pass with -M,
+    // where both sides of a rename are checked. If the content command were free to re-detect
+    // renames within its own (narrower) pathspec it could pair an allowed file against a source
+    // that pass never approved. Defence in depth -- no leak is reachable today, because the
+    // metadata pass already withholds a record when either side is protected. From 01a0c932.
+    const args = ['diff', '--no-ext-diff', '--no-textconv', '--submodule=short', '--no-renames'];
     if (staged) args.push('--cached');
     if (stat) args.push('--stat');
     // --relative keeps reported paths workspace-relative for a nested root and is a no-op at
@@ -231,7 +238,18 @@ function gitDiff({ filePath, staged = false, stat = false } = {}) {
           ...(excluded.length ? { excludedSensitivePaths: excluded } : {})
         };
       }
-      const capped = scope.allowed.slice(0, MAX_DIFF_PATHSPECS);
+      // Bound argv by BYTES as well as by count. 300 long CJK paths can exceed the Windows
+      // command-line limit even though the count looks modest, and the failure mode there is an
+      // opaque spawn error rather than a clean budget message. From 01a0c932.
+      const capped = [];
+      let argumentBytes = 0;
+      for (const name of scope.allowed) {
+        if (capped.length >= MAX_DIFF_PATHSPECS) break;
+        const bytes = Buffer.byteLength(name, 'utf8') + 3;
+        if (argumentBytes + bytes > MAX_DIFF_PATHSPEC_BYTES) break;
+        capped.push(name);
+        argumentBytes += bytes;
+      }
       pathspecCapped = capped.length < scope.allowed.length;
       args.push(...capped);
     }

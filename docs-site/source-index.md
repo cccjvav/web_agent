@@ -1379,21 +1379,21 @@
 
 ## webagent-core/agent-host/src/tools/gitOps.js
 
-[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `06076044143914853bffff0187f198b2b176d1430e33927e5cf856af5141615d`
+[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `d5bb4fa2ce9931b8c92dc9754f78a7ee6521e2f7a289d3b7c6b648781300f803`
 
-- `notGitResult` — FunctionDeclaration，[L20–L33](../webagent-core/agent-host/src/tools/gitOps.js#L20-L33)
-- `git` — FunctionDeclaration，[L35–L78](../webagent-core/agent-host/src/tools/gitOps.js#L35-L78)
-- `git/anonymous@42:77` — ArrowFunctionExpression，[L42–L42](../webagent-core/agent-host/src/tools/gitOps.js#L42-L42)
-- `workspacePrefix` — FunctionDeclaration，[L83–L86](../webagent-core/agent-host/src/tools/gitOps.js#L83-L86)
-- `stripPrefix` — FunctionDeclaration，[L88–L92](../webagent-core/agent-host/src/tools/gitOps.js#L88-L92)
-- `gitStatus` — FunctionDeclaration，[L94–L137](../webagent-core/agent-host/src/tools/gitOps.js#L94-L137)
-- `diffPathspecs` — FunctionDeclaration，[L144–L192](../webagent-core/agent-host/src/tools/gitOps.js#L144-L192)
-- `diffPathspecs/anonymous@158:47` — ArrowFunctionExpression，[L158–L158](../webagent-core/agent-host/src/tools/gitOps.js#L158-L158)
-- `diffPathspecs/anonymous@165:34` — ArrowFunctionExpression，[L165–L165](../webagent-core/agent-host/src/tools/gitOps.js#L165-L165)
-- `diffPathspecs/anonymous@166:37` — ArrowFunctionExpression，[L166–L166](../webagent-core/agent-host/src/tools/gitOps.js#L166-L166)
-- `diffPathspecs/anonymous@171:25` — ArrowFunctionExpression，[L171–L171](../webagent-core/agent-host/src/tools/gitOps.js#L171-L171)
-- `diffPathspecs/anonymous@180:46` — ArrowFunctionExpression，[L180–L180](../webagent-core/agent-host/src/tools/gitOps.js#L180-L180)
-- `gitDiff` — FunctionDeclaration，[L194–L265](../webagent-core/agent-host/src/tools/gitOps.js#L194-L265)
+- `notGitResult` — FunctionDeclaration，[L22–L35](../webagent-core/agent-host/src/tools/gitOps.js#L22-L35)
+- `git` — FunctionDeclaration，[L37–L80](../webagent-core/agent-host/src/tools/gitOps.js#L37-L80)
+- `git/anonymous@44:77` — ArrowFunctionExpression，[L44–L44](../webagent-core/agent-host/src/tools/gitOps.js#L44-L44)
+- `workspacePrefix` — FunctionDeclaration，[L85–L88](../webagent-core/agent-host/src/tools/gitOps.js#L85-L88)
+- `stripPrefix` — FunctionDeclaration，[L90–L94](../webagent-core/agent-host/src/tools/gitOps.js#L90-L94)
+- `gitStatus` — FunctionDeclaration，[L96–L139](../webagent-core/agent-host/src/tools/gitOps.js#L96-L139)
+- `diffPathspecs` — FunctionDeclaration，[L146–L194](../webagent-core/agent-host/src/tools/gitOps.js#L146-L194)
+- `diffPathspecs/anonymous@160:47` — ArrowFunctionExpression，[L160–L160](../webagent-core/agent-host/src/tools/gitOps.js#L160-L160)
+- `diffPathspecs/anonymous@167:34` — ArrowFunctionExpression，[L167–L167](../webagent-core/agent-host/src/tools/gitOps.js#L167-L167)
+- `diffPathspecs/anonymous@168:37` — ArrowFunctionExpression，[L168–L168](../webagent-core/agent-host/src/tools/gitOps.js#L168-L168)
+- `diffPathspecs/anonymous@173:25` — ArrowFunctionExpression，[L173–L173](../webagent-core/agent-host/src/tools/gitOps.js#L173-L173)
+- `diffPathspecs/anonymous@182:46` — ArrowFunctionExpression，[L182–L182](../webagent-core/agent-host/src/tools/gitOps.js#L182-L182)
+- `gitDiff` — FunctionDeclaration，[L196–L283](../webagent-core/agent-host/src/tools/gitOps.js#L196-L283)
 
 ## webagent-core/agent-host/src/tools/index.js
 

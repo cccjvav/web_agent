@@ -97,7 +97,7 @@ Markdown：201（对方本轮分母200 + 01a0c925新增交叉验证台账1）；
 | [multi-agent-board/SKILL.md](../multi-agent-board/SKILL.md) | 已修正 | add1cea18f6915d6 | 纠正client@ip、持久化、E_TAKEN owner位置、单进程认领保证及Read/Edit认证范围。 依据：tools/board.js; mcp/session.js; tools/index.js |
 | [project-manager/SKILL.md](../project-manager/SKILL.md) | 只读保留 | 5c8c93d50e52332b | 规范源/副本逐字节相同，作为既有规则保留，不冒称外部最新版；项目特色与F66澄清在manager/agents和唯一文档规范处理。 依据：cmp source/copy; AGENTS只读约定 |
 | [review/CHECKLIST_WINDOWS.md](CHECKLIST_WINDOWS.md) | 已修正 | 4f5e788414e21c55 | 唯一人工基线、用户已报告项/未执行W/T/M等边界保留；现行指针改为文档与修复证据/管理索引，不把CI代实机。 依据：用户历史反馈; 当前指南/CONTEXT |
-| [review/CROSS_VALIDATION_LEDGER_2026-09-22.md](CROSS_VALIDATION_LEDGER_2026-09-22.md) | 已核对一致 | ffb0f7c98d01b4c6 | 分支01a0c925×01a0c932双线交叉验证台账：4项独立同解、1项互补、各自独有3+1、1项分歧（BOM，01a0c925错并已修）；§10记录对方冻结后的逐条吸收结论。本文件由01a0c925新增，不在对方200份分母内，故总数记201。 依据：两分支提交与实测复现脚本 |
+| [review/CROSS_VALIDATION_LEDGER_2026-09-22.md](CROSS_VALIDATION_LEDGER_2026-09-22.md) | 已核对一致 | 58394e6dd5cded38 | 分支01a0c925×01a0c932双线交叉验证台账：4项独立同解、1项互补、各自独有3+1、1项分歧（BOM，01a0c925错并已修）；§10记录对方冻结后的逐条吸收结论。本文件由01a0c925新增，不在对方200份分母内，故总数记201。 依据：两分支提交与实测复现脚本 |
 | [review/COMPREHENSIVE_AUDIT_2026-09-22.md](COMPREHENSIVE_AUDIT_2026-09-22.md) | 历史保留 | 3311792cb2b31b4c | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [review/FULL_AUDIT_FOLLOWUP_2026-09-18.md](FULL_AUDIT_FOLLOWUP_2026-09-18.md) | 历史保留 | 8a0799b45e63fcdb | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [review/FULL_REVIEW_INDEX.md](FULL_REVIEW_INDEX.md) | 已修正 | 本清单，见提交 | 本清单用200份Markdown实际处置替换旧深度进度，附随非MD单列；待核对没有冒称完成。 依据：Git Markdown库存与逐份核对记录 |
