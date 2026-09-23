@@ -174,7 +174,18 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }, owner) {
   // holds the MOST RECENT native program's code, so `node fail.js; node ok.js` exits 0 (sh-like),
   // while `node fail.js; Write-Output done` keeps 3 — a cmdlet does not reset it. That stickiness
   // is kept from F62 on purpose: reporting that run as failed is the safer reading.
-  const guardedCommand = `try { Add-Type -Path '${jobSource}' -ErrorAction Stop; [WebAgentCommandJob]::Attach() } catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 };
+  //
+  // Output encoding (review P1-3). The host decodes child output as UTF-8, but powershell.exe
+  // writes redirected output — its own cmdlet output, its (localized) error messages, and native
+  // program output it relays — in the OEM code page: CP936 on Chinese Windows, where every
+  // Chinese message reached the model as replacement characters. The first statement switches
+  // PowerShell's console encoding (and $OutputEncoding, used when piping into native programs) to
+  // UTF-8 before anything is written. Scope of the change: the executor pipes all three stdio
+  // streams, so libuv creates powershell.exe with CREATE_NO_WINDOW and it runs in a hidden console
+  // of its own — the code page change stays there and never reaches the user's terminal. Without
+  // a console the assignment throws and is ignored, keeping the previous behaviour.
+  const guardedCommand = `try { [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false); $OutputEncoding = [Console]::OutputEncoding } catch {};
+try { Add-Type -Path '${jobSource}' -ErrorAction Stop; [WebAgentCommandJob]::Attach() } catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 };
 $global:LASTEXITCODE = $null
 ${command}
 $__wa_ok = $?
@@ -190,7 +201,11 @@ exit 0`;
     cwd: workingDir,
     windowsHide: true,
     detached: process.platform !== 'win32',
-    env: { ...scrubEnv(process.env), CI: 'true', TERM: 'xterm-256color', FORCE_COLOR: '1' }
+    // Windows Python encodes redirected stdio in the ANSI code page (cp936/cp1252), which the
+    // UTF-8 decoder above turns into replacement characters. Ask for UTF-8 unless the user has
+    // chosen something else. Other platforms already default to UTF-8 locales.
+    env: { ...scrubEnv(process.env), CI: 'true', TERM: 'xterm-256color', FORCE_COLOR: '1',
+      ...(win && !process.env.PYTHONIOENCODING ? { PYTHONIOENCODING: 'utf-8' } : {}) }
   });
   children.set(String(execId), child);
   let spawned = false, exited = false, stdoutBytes = 0, stderrBytes = 0;

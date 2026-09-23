@@ -21,12 +21,28 @@ persistIdentity(store);
 tracker.startReporter();
 
 
+// Baseline response hardening (review P2-11). Deliberately narrow, so nothing that works today
+// breaks: nosniff stops content-type guessing on user-controlled text; frame-ancestors/X-Frame-
+// Options stop other sites from framing the local control plane (clickjacking the approval
+// buttons) — nothing in this product frames the workbench, the VS Code extension renders its own
+// webview HTML; no-referrer keeps the secret-bearing MCP URL out of Referer headers. A full
+// script-src CSP is NOT set: the workbench loads Monaco from jsDelivr and uses one inline theme
+// script, so it would need a reviewed allow-list and its own browser test first.
+function securityHeaders(req, res, next) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  next();
+}
+
 function applyCommon(app, { mcp = false } = {}) {
   app.disable('x-powered-by');
   app.use((req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
     next();
   });
+  app.use(securityHeaders);
   app.use('/probe-link', require('./utils/probeBridge').transport());
   // Reject nonlocal/cross-site API and disallowed-origin/unauthenticated MCP before body parsing.
   app.use('/api', rejectUnlessLocalControl, rejectCrossSiteApi);

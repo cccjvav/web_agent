@@ -29,7 +29,7 @@
 
 **main**spawn process.execPath并传tmp/两port，stdout/stderr的data回调累积log；exit回调目前条件体仅注释，没有检测提前退出，真正失败靠health或请求错误。try内按如下链验证：
 
-1. health 200/ok/Web Agent；首页包含产品、API、picker、环境/技术栈/技能、连接/统计/授权、隧道、模型/Plan/规则/think等控件与限制说明；禁止旧授权/模式限制文案。app.js/state.js真能HTTP读取，模块入口、WS重连代码与状态ID存在。**均是源字符串，不是点击控件**。
+1. health 200/ok/Web Agent；F70起工作台首页、两端/health与MCP 401四个响应都须带nosniff、X-Frame-Options DENY、frame-ancestors 'none'、Referrer-Policy no-referrer且无x-powered-by（基线红）。首页包含产品、API、picker、环境/技术栈/技能、连接/统计/授权、隧道、模型/Plan/规则/think等控件与限制说明；禁止旧授权/模式限制文案。app.js/state.js真能HTTP读取，模块入口、WS重连代码与状态ID存在。**均是源字符串，不是点击控件**。
 2. MCP端口本机/api/status含secret、连接prompt、35个简化tools（无inputSchema）、客户端目录及规则、canonical /mcp；默认bridge本机demo登录，Plan inactive/maxBranches4。这里secret只应给本机管理面。
 3. 错secret和无Bearer canonical /mcp initialize 401；正确secret initialize有instructions，tools/list30项、discovery有授权端点，ping工具成功。
 4. status recentLogs存在ping，每个payload键只能tool/success/durationMs；get_logs不含args/chunk/patch；usage.json落盘有调用数。空bridge token400，reset-round后session客户端0但累计usage不能减少。

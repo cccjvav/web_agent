@@ -1437,3 +1437,18 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 
 **第三批CI失败与修复（不抹除）：** `c422ab9`的[CI35885792918](https://github.com/cccjvav/web_agent/actions/runs/35885792918)八job成功、**workbench-browser失败**：新增的textScaleChromeBrowser在390px×1.6断言标题栏菜单按钮0..56落在48px栏内（annotations取得）。原因：菜单文字可换行，CI的较宽回退字体在390px下折成两行，本地Noto字体恰好还放得下，所以本地绿、CI红——测试写对了，修复不完整。修法：标题栏菜单/右侧按钮nowrap、菜单条可横向滚动且窄屏列改minmax(0,1fr)；测试加入360/320宽度，使“超出可用宽度”由宽度本身保证、不依赖字体，已确认该用例在c422ab9的CSS上本地红、修后绿。教训：布局断言须用确定性条件触发，不能依赖开发机字体度量。
+
+
+**修复精确证据：** `11dee04`的[CI35887149817](https://github.com/cccjvav/web_agent/actions/runs/35887149817)九job全部success（含workbench-browser与Windows三版本）。
+
+### 第70组第四批：Windows输出编码、响应安全头、会话key与说明纠偏（2026-09-23）
+
+| 项 | 事实 | 修法 | 验证 |
+|---|---|---|---|
+| P1-3 Windows输出代码页 | executor的powershell.exe按OEM代码页写出重定向输出（中文系统CP936、CI为CP437），主机按UTF-8解码，中文成替换字符/`??` | guardedCommand首句设`[Console]::OutputEncoding`与`$OutputEncoding`为无BOM UTF-8（隐藏控制台内生效，不影响用户终端；无控制台时忽略）；未设置时补`PYTHONIOENCODING=utf-8` | 新增windowsOutputEncoding（仅Windows CI可验：PowerShell stdout/stderr、cmd /c echo、有Python时Python） |
+| P2-11 响应头 | 两个监听端口均无nosniff/防框/Referrer策略 | securityHeaders：nosniff、X-Frame-Options DENY、frame-ancestors 'none'、no-referrer；不设完整script-src CSP（Monaco CDN与内联主题脚本需另行审定） | httpSmoke四个响应断言，基线红；真实浏览器套件通过 |
+| P3-13 会话key读X-Forwarded-For | req.ip为空时原始转发头决定匿名展示key | 只用req.ip/socket.remoteAddress，与sessionKeyFallback、oauth.clientIp一致 | board.test断言，基线红 |
+| 文档纠偏（自查） | 命令与PTY详解仍按F62描述尾语句并称“纯cmdlet不受影响”——正是第一批修掉的缺陷，第一批漏改 | 重写为三条合同与编码段 | documentationLearning |
+| SECURITY补充 | 未说明`X-MCP-Secret`等四种凭据位置（外部复审P3-21） | 按extractToken实际顺序写明四种位置与日志风险 | — |
+
+未做（记录理由）：P1-4每条命令Add-Type编译——Add-Type在同一PowerShell会话内按程序集缓存，但每条run_command都是新进程，确实每次编译；它与R4历史“30秒无输出”症状吻合但无法在本沙箱复现Windows耗时，改为预编译DLL涉及生成物落盘位置、签名/杀软与缓存失效，属于需要Windows实测证据的独立工作包，不在没有测量的情况下改动。P2-10全局20MB body：/api与/mcp均先经认证/本机门禁再解析，现有文件写入路由需要大正文，改动收益小于回归风险，保留。/health返回版本：本机工作台与run-code-oss健康检查使用，公网仅/mcp与OAuth发现可达（见入口说明），保留。

@@ -84,6 +84,12 @@ async function main() {
   const many = board.peersList({}, A);
   assert.strictEqual(many.count, 9);
 
+  // F70 (review P3-13): a raw X-Forwarded-For header must not choose the session key. Only
+  // Express's req.ip (explicit trust-proxy policy; none configured) or the socket address count.
+  assert.strictEqual(sess.sessionKey({ headers: { 'x-forwarded-for': '6.6.6.6' }, body: {} }), 'mcp@local');
+  assert.strictEqual(sess.sessionKey({ socket: { remoteAddress: '::1' }, headers: { 'x-forwarded-for': '6.6.6.6' }, body: {} }), 'mcp@::1');
+  assert.strictEqual(sess.sessionKey({ ip: '127.0.0.1', headers: { 'x-forwarded-for': '6.6.6.6' }, body: {} }), 'mcp@127.0.0.1');
+
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('board.test ok');
 }

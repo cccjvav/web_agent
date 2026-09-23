@@ -17,6 +17,10 @@
 
 文件路径检查同时验证逻辑路径和真实链接目标；内置敏感规则不区分大小写并覆盖嵌套目录。记忆day仅接收有效日历日期；用户Skill必须实际位于工作区内，产品固定bundled目录例外保留。这是应用层保护，不是OS沙箱，不承诺抵抗有本机文件系统写权限进程的所有竞态或硬链接操作。
 
+两个监听端口的所有响应带`X-Content-Type-Options: nosniff`、`X-Frame-Options: DENY`、`Content-Security-Policy: frame-ancestors 'none'`与`Referrer-Policy: no-referrer`（F70）：外站不能把本机工作台装进iframe诱导点击审批按钮，用户可控文本不会被按类型嗅探执行，带密钥的MCP地址不会经Referer外泄。工作台仍从jsDelivr加载Monaco并含一段内联主题脚本，因此**没有**设置限制script-src的完整CSP；那需要单独审定白名单并加浏览器测试。
+
+MCP认证凭据可以放在`Authorization: Bearer`、URL路径`/mcp/<密钥>`、`X-MCP-Secret`请求头或`?secret=`查询参数中任一处（按此顺序取第一个）。查询参数与路径形式会进入代理/服务器访问日志和浏览器历史，优先用Bearer或请求头；四种形式都是同一把密钥，轮换一次全部失效。
+
 现有webview动态文本已改为DOM/textContent并加nonce CSP与宿主消息校验（真实VS Code验收尚待）；PTY已加入审批到期、取消与所有者绑定，具体边界见下文“请求与终端取消”；旧[交叉验证台账](review/archive/AUDIT_CROSSCHECK_2026-09-11.md)仅作历史来源，不作为未修清单。不要把新增回归通过视为整体安全验收完成。
 
 ## Bridge所有者权限与工作模式

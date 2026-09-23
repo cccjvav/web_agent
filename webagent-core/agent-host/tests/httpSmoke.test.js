@@ -119,6 +119,17 @@ async function main() {
     const page = await request('GET', `http://127.0.0.1:${workbenchPort}/`);
     assert.strictEqual(page.status, 200);
     assert.ok(page.raw.includes('Web Agent'));
+    // F70 (review P2-11): baseline hardening on BOTH listeners. Framing the local control plane
+    // (clickjacking approval buttons) and MIME sniffing are refused; the secret-bearing MCP URL
+    // never leaks through Referer.
+    const mcpHealth = await request('GET', `http://127.0.0.1:${mcpPort}/health`);
+    for (const [label, response] of [['workbench page', page], ['workbench health', health], ['MCP health', mcpHealth], ['MCP 401', unauthBody]]) {
+      assert.strictEqual(response.headers['x-content-type-options'], 'nosniff', label + ': nosniff');
+      assert.strictEqual(response.headers['x-frame-options'], 'DENY', label + ': X-Frame-Options');
+      assert.ok(/frame-ancestors 'none'/.test(response.headers['content-security-policy'] || ''), label + ': frame-ancestors');
+      assert.strictEqual(response.headers['referrer-policy'], 'no-referrer', label + ': Referrer-Policy');
+      assert.strictEqual(response.headers['x-powered-by'], undefined, label + ': no framework banner');
+    }
     assert.ok(page.raw.includes('编辑进化') || page.raw.includes('CHAT'));
     assert.ok(page.raw.includes('Add API'));
     assert.ok(page.raw.includes('btn-agent-pick'));

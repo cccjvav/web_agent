@@ -143,8 +143,33 @@ process.exit(0);
   assert.strictEqual(emojiTail.stdout, '😀'.repeat(250));
 
   await windowsExitCodeContract();
+  await windowsOutputEncoding();
 
   console.log('commandEncoding.test.js ok');
+}
+
+// F70 (external review P1-3): Windows output encoding. powershell.exe writes redirected output
+// in the OEM code page, so on the CI runner (CP437) Chinese text came back as '??', and on Chinese
+// Windows (CP936) as replacement characters. Covers PowerShell's own stdout and stderr, cmd.exe
+// relayed through PowerShell, and Python when it is installed. Windows only.
+async function windowsOutputEncoding() {
+  if (process.platform !== 'win32') return;
+  const text = '中文输出 ✅';
+  const clean = s => String(s || '').replace(/\r?\n$/, '');
+  const ps = await callTool('run_command', { command: `Write-Output '${text}'`, timeoutSec: 60 }, 'code');
+  assert.strictEqual(clean(ps.stdout), text, 'PowerShell cmdlet output must arrive as UTF-8: ' + JSON.stringify(ps.stdout));
+  const err = await callTool('run_command', { command: `[Console]::Error.WriteLine('错误信息')`, timeoutSec: 60 }, 'code');
+  assert.ok(String(err.stderr).includes('错误信息'), 'PowerShell stderr must arrive as UTF-8: ' + JSON.stringify(err.stderr));
+  const cmd = await callTool('run_command', { command: 'cmd /c echo 中文输出', timeoutSec: 60 }, 'code');
+  assert.ok(String(cmd.stdout).includes('中文输出'), 'cmd.exe output relayed through PowerShell must arrive as UTF-8: ' + JSON.stringify(cmd.stdout));
+  const python = require('child_process').spawnSync('python', ['-c', 'print(1)'], { encoding: 'utf8', timeout: 20000 });
+  if (python.status === 0 && String(python.stdout).trim() === '1') {
+    fs.writeFileSync(path.join(tmp, 'zh.py'), "print('中文输出')\n", 'utf8');
+    const py = await callTool('run_command', { command: 'python zh.py', timeoutSec: 60 }, 'code');
+    assert.ok(String(py.stdout).includes('中文输出'), 'Python output must arrive as UTF-8: ' + JSON.stringify(py.stdout));
+  } else {
+    console.log('windowsOutputEncoding: python not available, Python case skipped');
+  }
 }
 
 // F70 (external review §5.4-1): the Windows trailer must keep all three cases of its contract.

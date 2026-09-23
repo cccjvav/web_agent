@@ -6,7 +6,11 @@ const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_HTTP_SESSIONS = 200;
 
 function sessionKey(req) {
-  const ip = (req && (req.ip || req.headers && req.headers['x-forwarded-for'])) || 'local';
+  // req.ip only (Express applies its explicit trust-proxy policy there; the host configures none).
+  // A raw X-Forwarded-For header is client-controlled: when req.ip was empty it let a caller pick
+  // the display key its anonymous calls were counted under (review P3-13). Same rule as
+  // server.js sessionKeyFallback and oauth.js clientIp.
+  const ip = (req && (req.ip || req.socket && req.socket.remoteAddress)) || 'local';
   const client = (req && req.body && req.body.params && req.body.params.clientInfo && req.body.params.clientInfo.name) || 'mcp';
   return `${client}@${ip}`;
 }

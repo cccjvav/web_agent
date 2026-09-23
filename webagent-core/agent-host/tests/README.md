@@ -162,7 +162,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [codeServerAuth.test.js](codeServerAuth.test.js) | 0 个函数/类节点 |
 | [codeServerLifecycle.test.js](codeServerLifecycle.test.js) | 118 个函数/类节点 |
 | [codeServerNotRunnable.test.js](codeServerNotRunnable.test.js) | 0 个函数/类节点 |
-| [commandEncoding.test.js](commandEncoding.test.js) | 6 个函数/类节点 |
+| [commandEncoding.test.js](commandEncoding.test.js) | 8 个函数/类节点 |
 | [connectionCheck.test.js](connectionCheck.test.js) | 18 个函数/类节点 |
 | [corsAllow.test.js](corsAllow.test.js) | 20 个函数/类节点 |
 | [dangerousCommands.test.js](dangerousCommands.test.js) | 11 个函数/类节点 |
