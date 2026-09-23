@@ -129,18 +129,43 @@ function temperatureFor(level) {
 // `400 Unsupported value: 'temperature' ... Only the default (1) value is supported`. Because
 // provider error bodies are deliberately never reflected (see runOpenAI), a user who picked such
 // a model saw nothing but "模型 HTTP 400" on every request. Matched on the configured modelId,
-// optionally behind a provider prefix (`openai/gpt-5`); an unmatched id keeps today's behaviour.
-const REASONING_MODEL = /^(?:[\w.-]+\/)?(?:o\d+(?:$|[-_.])|gpt-5)/i;
+// optionally behind provider prefixes (`openai/gpt-5`); an unmatched id keeps today's behaviour.
+
+// `gpt-<major>[.<minor>]` behind optional provider prefixes; null for every other id (gpt-4o too).
+function gptVersion(modelId) {
+  const m = /^(?:[\w.-]+\/)*gpt-(\d+)(?:\.(\d+))?(?:$|[-_.])/i.exec(String(modelId || ''));
+  return m ? { major: Number(m[1]), minor: m[2] === undefined ? 0 : Number(m[2]) } : null;
+}
+
+// o-series ids (o1, o3-mini, o4-mini-2025-04-16) and every gpt-5 or later model (gpt-6 included).
+function isReasoningModel(modelId) {
+  const id = String(modelId || '');
+  if (/^(?:[\w.-]+\/)*o\d+(?:$|[-_.])/i.test(id)) return true;
+  const version = gptVersion(id);
+  return Boolean(version && version.major >= 5);
+}
+
+// From gpt-5.4 on (all gpt-6 models included) chat/completions refuses function tools combined with
+// any reasoning_effort except 'none': `400 Function tools with reasoning_effort are not supported
+// for <model> in /v1/chat/completions. To use function tools, use /v1/responses or set
+// reasoning_effort to 'none'`. gpt-5.5 and later default to medium, so omitting the field fails as
+// well. gpt-5/5.1/5.2 and the o-series still accept tools with an effort.
+function toolsNeedNoEffort(modelId) {
+  const version = gptVersion(modelId);
+  return Boolean(version && (version.major > 5 || (version.major === 5 && version.minor >= 4)));
+}
 
 // Request fields that carry the 思考 low/medium/high choice. Reasoning families get
 // `reasoning_effort` (same three values) and no temperature; the gpt-5 `-chat` variants are
-// non-reasoning models that also reject a custom temperature, so they get neither. Every other
-// model keeps the temperature mapping. Omitting a sampling field is always valid: both are
-// optional in the chat/completions contract.
-function samplingParams(modelId, level) {
+// non-reasoning models that also reject a custom temperature, so they get neither. When the
+// request carries tools, gpt-5.4+ get 'none' because this module only speaks chat/completions.
+// Every other model keeps the temperature mapping. Omitting a sampling field is always valid:
+// both are optional in the chat/completions contract.
+function samplingParams(modelId, level, withTools = false) {
   const id = String(modelId || '');
-  if (!REASONING_MODEL.test(id)) return { temperature: temperatureFor(level) };
+  if (!isReasoningModel(id)) return { temperature: temperatureFor(level) };
   if (/-chat(?:$|[-_.])/i.test(id)) return {};
+  if (withTools && toolsNeedNoEffort(id)) return { reasoning_effort: 'none' };
   return { reasoning_effort: ['low', 'medium', 'high'].includes(level) ? level : 'high' };
 }
 
@@ -183,10 +208,14 @@ async function runOpenAI({
     { role: 'user', content: message || '' }
   ];
 
+  const sampling = samplingParams(model.modelId, thinkLevel, Boolean(tools && tools.length));
+  const effortNote = sampling.reasoning_effort === 'none'
+    ? '（该模型经chat/completions带工具时只接受reasoning_effort=none，思考强度本次不生效）'
+    : '';
   const bodyBase = {
     model: model.modelId,
     messages,
-    ...samplingParams(model.modelId, thinkLevel)
+    ...sampling
   };
   if (tools && tools.length) {
     bodyBase.tools = tools;
@@ -194,7 +223,7 @@ async function runOpenAI({
   }
 
   for (let step = 0; step < 10; step++) {
-    send('status', { text: step === 0 ? `请求 ${model.modelId || 'model'}…` : '模型继续调用工具…' });
+    send('status', { text: step === 0 ? `请求 ${model.modelId || 'model'}…${effortNote}` : '模型继续调用工具…' });
     checkCancelled();
     const requestBody = encodeModelRequest({ ...bodyBase, messages });
     const { response: resp, text: raw } = await fetchText(`${base}/chat/completions`, {

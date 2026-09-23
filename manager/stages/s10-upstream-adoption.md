@@ -1475,3 +1475,17 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **第五批精确证据：** 本批本地提交后GitHub令牌再次过期，中断时`bd8c519`只在本地、**未推送**（如实记录）。令牌恢复有效后快进推送（f9f7c8b..bd8c519），[CI35908981268](https://github.com/cccjvav/web_agent/actions/runs/35908981268)为push事件、精确`bd8c519`，九job全部success，已逐job核对：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、workbench-browser。日志下载仍被TLS阻断，证据仅为job结论。
 
 **仍开放：** P1-4每条命令Add-Type编译（需Windows耗时实测，理由见第四批）；P2-10全局20MB body与/health版本（第四批已记录保留理由）；ESLint入CI仍属R9候选、需项目主人同意新增开发依赖；经典工作台/扩展的OpenAI协议仍只支持chat/completions非流式；探针三模块继续完全暂停。
+
+### 第70组第六批：复审第五批——gpt-5.4+带工具的reasoning_effort与gpt-6识别（2026-09-23）
+
+**先复审上轮交付。** `bd8c519`的CI35908981268与证据提交`87c9918`的[CI35910354537](https://github.com/cccjvav/web_agent/actions/runs/35910354537)均为push事件、精确同SHA，九job全部success（含Windows三版本与workbench-browser），已逐job核对。复读第五批的samplingParams及其调用链（runChat主路径、runPlanBranch、Plan合并）后发现**第五批修复对当前主流OpenAI型号不成立**，本批补正，不抹除第五批记录。
+
+**实测事实（本地请求体）。** 第五批只处理了“推理模型拒收temperature”这一个400来源，漏了第二个约束：gpt-5.4及以后（含全部gpt-6）在chat/completions上拒绝function tools与非`none`的reasoning_effort同时出现，返回`400 Function tools with reasoning_effort are not supported for <model> in /v1/chat/completions`；gpt-5.5起默认effort为medium，所以不发该字段也同样失败。runChat主路径始终带工具（ask 28、plan 29、code 39个），而第五批对gpt-5.4/5.5/5.6发送`reasoning_effort:'high'`——每次请求仍是400，用户照样只看到“模型 HTTP 400 请求失败”。另外第五批的正则只认gpt-5前缀，gpt-6-luna/sol/astra根本不被识别为推理模型，仍发temperature。依据：OpenAI的gpt-6-luna/gpt-6-sol模型页写明Chat Completions仅在reasoning_effort为none时支持函数调用；Azure推理模型文档对gpt-5.6的同一说明；litellm PR #33242以真实API前后对比把范围定为gpt-5.4+、明确gpt-5.1/5.2不受影响；gpt-5.4（litellm #23156）与gpt-5.5（opencode #26219）的真实400报告。未对真实OpenAI账号实测。
+
+**修法。** openai.js新增gptVersion（解析`gpt-主.次`，允许多层提供方前缀）、isReasoningModel（o系列或gpt-5及以后，取代原正则）、toolsNeedNoEffort（gpt-5.4+）；samplingParams增加withTools参数：带工具且toolsNeedNoEffort时发`reasoning_effort:'none'`，这是只走chat/completions时唯一能带工具的取值，其余规则不变（gpt-5/5.1/5.2、o系列带工具仍发所选档位；`-chat`变体两者都不发；非推理模型仍是温度）。代价如实写明：这类模型在带工具请求里不做推理，思考强度不生效，runOpenAI首条status附“思考强度本次不生效”说明，不静默降级。要让它们带工具推理需改走/v1/responses，与“仅chat/completions非流式”同属一个独立工作包。
+
+**红测。** modelLifecycle新增十二例带/不带工具组合，并断言tools确实随allowTools出现、status说明只在effort被强制为none时出现；把openai.js换回bd8c519版本后在gpt-5.4带工具一例红，修后绿。文档：模型调用详解（三个新函数、samplingParams四条规则与不处理项：`-pro`变体仅Responses API、o1-mini已下线）、Chat模型与图像测试详解。
+
+**教训。** 外部API约束要按当前在售型号逐代核对，不能只修掉看到的第一个400；第五批的表述“推理模型族改发reasoning_effort”对2026年的gpt-5.4+与gpt-6并不成立，直到本次复审才发现。
+
+**仍开放：** gpt-5.4+带工具时无法推理（需/v1/responses）；P1-4每条命令Add-Type编译（需Windows耗时实测）；P2-10全局20MB body与/health版本（已记录保留理由）；ESLint入CI需项目主人同意新增开发依赖；探针三模块继续完全暂停。

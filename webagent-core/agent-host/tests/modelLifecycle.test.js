@@ -50,6 +50,40 @@ const reply = message => ({ ok: true, text: async () => JSON.stringify({ choices
     for (const key of ['temperature', 'reasoning_effort']) if (key in body) got[key] = body[key];
     assert.deepStrictEqual(got, expected, `sampling fields for ${modelId}/${thinkLevel}`);
   }
+  // F70 re-review: from gpt-5.4 on (every gpt-6 model included) chat/completions answers function
+  // tools plus any reasoning_effort other than 'none' with HTTP 400, and gpt-5.5+/gpt-6 default to
+  // medium, so omitting the field fails too. The main chat path always sends tools, so those models
+  // must get 'none' when tools are present, and their chosen level when they are not. gpt-5.1/5.2 and
+  // the o-series still accept tools with an effort. gpt-6 was not recognised as a reasoning family
+  // at all and still received a temperature. The step-0 status line must say the level was dropped.
+  const samplingWithTools = [
+    ['gpt-5.4', 'high', true, { reasoning_effort: 'none' }],
+    ['openai/gpt-5.5', 'low', true, { reasoning_effort: 'none' }],
+    ['gpt-5.6-sol', 'medium', true, { reasoning_effort: 'none' }],
+    ['gpt-6-luna', 'high', true, { reasoning_effort: 'none' }],
+    ['gpt-5.2', 'high', true, { reasoning_effort: 'high' }],
+    ['gpt-4.1', 'medium', true, { temperature: 0.4 }],
+    ['gpt-6-luna', 'low', false, { reasoning_effort: 'low' }],
+    ['gpt-5.4', 'high', false, { reasoning_effort: 'high' }],
+    ['gpt-5', 'medium', true, { reasoning_effort: 'medium' }],
+    ['gpt-5-mini', 'low', true, { reasoning_effort: 'low' }],
+    ['o4-mini', 'high', true, { reasoning_effort: 'high' }],
+    ['gpt-5.4-chat-latest', 'high', true, {}],
+    ['gpt-4o', 'low', true, { temperature: 0.1 }]
+  ];
+  for (const [modelId, thinkLevel, allowTools, expected] of samplingWithTools) {
+    sentBodies.length = 0;
+    const statuses = [];
+    const emit = (type, data) => { if (type === 'status') statuses.push(String(data && data.text)); };
+    await runOpenAI({ mode: 'ask', message: 'sampling', history: [], emit, model: { ...model, modelId }, thinkLevel, allowTools });
+    const body = sentBodies[0];
+    assert.strictEqual(Array.isArray(body.tools) && body.tools.length > 0, allowTools, `tools presence for ${modelId}`);
+    const got = {};
+    for (const key of ['temperature', 'reasoning_effort']) if (key in body) got[key] = body[key];
+    assert.deepStrictEqual(got, expected, `sampling fields for ${modelId}/${thinkLevel}/tools=${allowTools}`);
+    const dropped = expected.reasoning_effort === 'none';
+    assert.strictEqual(/思考强度本次不生效/.test(statuses[0] || ''), dropped, `status note for ${modelId}: ${statuses[0]}`);
+  }
 
   const reflectedProviderBody = 'REMOTE_SECRET_SHOULD_NOT_BE_REFLECTED';
   global.fetch = async () => new Response(reflectedProviderBody, { status: 401 });

@@ -196,7 +196,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 24 个函数/类节点 |
 | [mcpProtocol.test.js](mcpProtocol.test.js) | 53 个函数/类节点 |
 | [memoryRecall.test.js](memoryRecall.test.js) | 8 个函数/类节点 |
-| [modelLifecycle.test.js](modelLifecycle.test.js) | 54 个函数/类节点 |
+| [modelLifecycle.test.js](modelLifecycle.test.js) | 55 个函数/类节点 |
 | [monacoLoading.test.js](monacoLoading.test.js) | 12 个函数/类节点 |
 | [nativeChatStream.test.js](nativeChatStream.test.js) | 27 个函数/类节点 |
 | [nativeRequestJson.test.js](nativeRequestJson.test.js) | 28 个函数/类节点 |

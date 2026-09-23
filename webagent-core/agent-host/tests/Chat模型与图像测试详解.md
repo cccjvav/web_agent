@@ -21,7 +21,7 @@ filter/map/find/some都是从事件数组找上述证据，不代表全部事件
 
 [源码](modelLifecycle.test.js)保留workspace/fetch，临时store保存外部模型。**reply(message)**返回带异步text()的兼容响应，不联网。首个缺mode调用核对默认只读工具，同时直接断言模型fetch的`redirect==='error'`，防以后无意恢复默认跟随。
 
-F70先用九个modelId核对真实请求体的采样字段：gpt-5/o3/o4-mini/`openai/gpt-5-mini`发送同档`reasoning_effort`（缺省high）且不发temperature，`gpt-5-chat-latest`两者都不发，gpt-4o/deepseek-chat/qwen-max及以o开头但不是o系列的`omni-model`保持0.1/0.4/0.7温度映射；基线在gpt-5这一例红（推理模型收到temperature会被提供方400拒绝）。
+F70先用九个modelId核对真实请求体的采样字段：gpt-5/o3/o4-mini/`openai/gpt-5-mini`发送同档`reasoning_effort`（缺省high）且不发temperature，`gpt-5-chat-latest`两者都不发，gpt-4o/deepseek-chat/qwen-max及以o开头但不是o系列的`omni-model`保持0.1/0.4/0.7温度映射；基线在gpt-5这一例红（推理模型收到temperature会被提供方400拒绝）。复审补充十二例带/不带工具的组合：gpt-5.4、`openai/gpt-5.5`、gpt-5.6-sol、gpt-6-luna带工具时必须发`reasoning_effort:'none'`且首条status含“思考强度本次不生效”；同一gpt-6-luna/gpt-5.4不带工具时保留所选档位；gpt-5.2、gpt-5、gpt-5-mini、o4-mini带工具仍发所选档位；gpt-5.4-chat-latest两者都不发；gpt-4o/gpt-4.1带工具仍是温度。同时断言tools确实随allowTools出现。基线在gpt-5.4带工具这一例红（发了high，真实端点会400），gpt-6系列在基线还被当成普通模型发temperature。
 
 随后用标准WHATWG Response造401正文`REMOTE_SECRET_SHOULD_NOT_BE_REFLECTED`：异常必须保留HTTP 401但不得含该标记；再造1MiB+1字节200正文，必须以`E_RESPONSE_TOO_LARGE`失败而不是读完后落到JSON语法错。这证明模拟fetch下的错误反射与模型响应预算合同，不是实际供应商、代理或网络内存剖析。
 
