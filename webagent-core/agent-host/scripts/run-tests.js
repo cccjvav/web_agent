@@ -53,6 +53,7 @@ const preferred = [
   'patchEngine.test.js',
   'mcpProtocol.test.js',
   'mcpInterop.test.js',
+  'mcpCallerIsolation.test.js',
   'workspaceTools.test.js',
   'sensitiveBoundary.test.js',
   'textEncoding.test.js',

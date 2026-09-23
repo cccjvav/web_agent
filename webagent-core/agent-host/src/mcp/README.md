@@ -32,7 +32,7 @@ stdio/受控外部接入：[受控工具与工作流详解](../utils/受控工�
 ### initialize与会话
 initialize协商支持的协议版本，返回能力、服务器信息和instructions，并建立Mcp-Session-Id。当前声明支持2024-11-05、2025-03-26、2025-06-18；客户端应保存服务器选择的版本和会话ID。版本保存在私有会话；缺省版本头沿用已知协商值，无已知信息才按2025-03-26兼容。重复/不支持/冲突版本头在POST/GET/DELETE副作用前400，活会话不允许重新initialize降级。
 
-HTTP会话使用私有随机ID，初始化peer另取独立随机公开标签，公开peers/任务归属不能还原会话头。会话绑定OAuth注册client或当前长期secret的主体摘要；同client刷新沿用，跨client不可复用/删除，不以IP/显示名称判身份。initialize提交的clientInfo在统计入库时只保留有界name/title/version，未知extra不保留；status/snapshot再按固定key/时间/计数/busy/clientInfo深投影，不能把远端任意对象展开进本机状态响应。无会话仍可走部分兼容调用，但修改board必须先初始化；未知已提供的session通常404，重新initialize可建立新会话。会话和授权凭据不是同一个对象，不能把显示名称当认证用户；同主体持有真正会话ID仍可使用它，需保密，非完整多租户隔离。
+HTTP会话使用私有随机ID，初始化peer另取独立随机公开标签，公开peers/任务归属不能还原会话头。会话绑定OAuth注册client或当前长期secret的主体摘要；同client刷新沿用，跨client不可复用/删除，不以IP/显示名称判身份。initialize提交的clientInfo在统计入库时只保留有界name/title/version，未知extra不保留；status/snapshot再按固定key/时间/计数/busy/clientInfo深投影，不能把远端任意对象展开进本机状态响应。无会话仍可走部分兼容调用，但修改board必须先初始化；无会话调用者按“显示名称@来源IP＋由已验证凭据派生的盐化标签”区分（F71）：经隧道时来源IP恒为127.0.0.1，URL密钥与各OAuth客户端仍是不同调用者，命令输出与get_logs互不可见；同一凭据下的多个对话仍合并为一个调用者，要按对话区分须initialize并保留会话ID。未知已提供的session通常404，重新initialize可建立新会话。会话和授权凭据不是同一个对象，不能把显示名称当认证用户；同主体持有真正会话ID仍可使用它，需保密，非完整多租户隔离。
 
 HTTP会话有24小时TTL及200上限。进程重启会丢失内存会话；客户端需要重新初始化，而不是持续重发失效ID。
 
@@ -101,7 +101,7 @@ R2/R3会话提交时序：HTTP/SSE响应SID先校验但不立即保存，RPC响�
 | [publicHttps.js](publicHttps.js) | 17 个函数/类节点 |
 | [requestLifecycle.js](requestLifecycle.js) | 8 个函数/类节点 |
 | [resources.js](resources.js) | 5 个函数/类节点 |
-| [server.js](server.js) | 40 个函数/类节点 |
+| [server.js](server.js) | 39 个函数/类节点 |
 | [session.js](session.js) | 21 个函数/类节点 |
 | [stdioBridge.cs](stdioBridge.cs) | 文件级登记；未做符号完整性证明 |
 | [stdioBridge.ps1](stdioBridge.ps1) | 文件级登记；未做符号完整性证明 |

@@ -5,14 +5,26 @@ const httpSessions = new Map();
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_HTTP_SESSIONS = 200;
 
+// Per-process salt for sessionless caller tags. Never persisted or published; a host restart re-keys all
+// sessionless callers, which is harmless because their command/trace records are in-memory too.
+const CALLER_TAG_SALT = crypto.randomBytes(32);
+
+// Sessionless remote callers (no Mcp-Session-Id) are owned by the *verified credential*, not by IP alone.
+// Behind cloudflared/ngrok every request comes from 127.0.0.1, so the old "<client>@<ip>" key merged the
+// URL-secret caller and every OAuth client into one owner: one could read another's command output and
+// get_logs (F71). req.mcpPrincipal is set by server.js requireAuth after the token is verified; the tag is
+// a salted HMAC of it, so the public label neither contains nor reveals the credential or its digest.
+// Direct module fixtures without an authenticated request keep the plain "<client>@<ip>" label.
 function sessionKey(req) {
   // req.ip only (Express applies its explicit trust-proxy policy there; the host configures none).
   // A raw X-Forwarded-For header is client-controlled: when req.ip was empty it let a caller pick
-  // the display key its anonymous calls were counted under (review P3-13). Same rule as
-  // server.js sessionKeyFallback and oauth.js clientIp.
+  // the display key its anonymous calls were counted under (review P3-13). Same rule as oauth.js clientIp.
   const ip = (req && (req.ip || req.socket && req.socket.remoteAddress)) || 'local';
   const client = (req && req.body && req.body.params && req.body.params.clientInfo && req.body.params.clientInfo.name) || 'mcp';
-  return `${client}@${ip}`;
+  const principal = req && typeof req.mcpPrincipal === 'string' && req.mcpPrincipal ? req.mcpPrincipal : '';
+  if (!principal) return `${client}@${ip}`;
+  const tag = crypto.createHmac('sha256', CALLER_TAG_SALT).update(principal).digest('hex').slice(0, 24);
+  return `${client}@${ip}~${tag}`;
 }
 
 function pruneSessions() {

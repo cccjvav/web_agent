@@ -14,7 +14,7 @@ const { listResources, readResource } = require('./resources');
 const { clipJson } = require('./budget');
 const { resolveToolName } = require('../tools/normalize');
 const { ProtocolError, publicError } = require('./errors');
-const { touch, snapshot, createHttpSession, touchHttpSession, getHttpSession, destroyHttpSession, keyForReq, setHttpSessionKey, beginHttpSessionWork } = require('./session');
+const { touch, snapshot, sessionKey, createHttpSession, touchHttpSession, getHttpSession, destroyHttpSession, keyForReq, setHttpSessionKey, beginHttpSessionWork } = require('./session');
 const oauth = require('./oauth');
 const tracker = require('../usage/tracker');
 // 第三阶段（用户 2026-09-07 书面同意）：run_command 截图以 MCP image 内容回给网页 Agent。
@@ -67,15 +67,11 @@ const MAX_SSE = 32;
 const SSE_IDLE_MS = 10 * 60 * 1000;
 let sseOpen = 0;
 
-// 身份感知 touch：握手后同 ip 的后续调用归回具名会话行，不造匿名 mcp@ip 幻影 peer
+// 身份感知 touch：握手后的调用归回具名会话行；无会话调用归到按已验证凭据区分的
+// 调用者行（session.sessionKey，F71），与tools/call的callerKey为同一行，不再另记一条mcp@ip。
 function sessTouch(req, extra) {
-  const k = keyForReq(req);
-  return touch(req, k ? Object.assign({ key: k }, extra || {}) : (extra || {}));
-}
-
-function sessionKeyFallback(req) {
-  const client = (req && req.body && req.body.params && req.body.params.clientInfo && req.body.params.clientInfo.name) || 'mcp';
-  return `${client}@${(req && req.ip) || 'local'}`;
+  const k = keyForReq(req) || sessionKey(req);
+  return touch(req, Object.assign({ key: k }, extra || {}));
 }
 
 function incomingSessionId(req) {
@@ -244,7 +240,7 @@ async function handleRpc(req) {
         eventBus.broadcast('tool_call_end', { source: 'Bridge-Remote', tool: name, success: false, durationMs: Date.now() - started });
         return { content: [{ type: 'text', text: JSON.stringify({ ok: false, error: 'E_SESSION_REQUIRED', detail: 'Initialize and retain Mcp-Session-Id before session-bound operations' }) }], isError: true };
       }
-      const callerKey = initializedKey || sessionKeyFallback(req);
+      const callerKey = initializedKey || sessionKey(req);
       const sess0 = touch(req, { key: callerKey });
       try {
         const result = await callTool(name, toolArgs || {}, remoteToolMode(params), { remote: true, initializedSession: Boolean(initializedKey), callerKey: sess0.key, taskId: params?._meta?.['webagent/taskId'] });

@@ -1526,3 +1526,21 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 推荐形态为双代：同一/mcp按版本头分流，旧代路径不动。新代路径需要server/discover、每请求_meta与版本头及Mcp-Method/Mcp-Name校验（-32020/-32022错误码）、resultType与ttlMs/cacheScope、不发会话ID、新代下移除ping与logging/setLevel。难点是**无会话身份**：6个工具（任务板3个、external_request、workflow_request、confirm_connection）及workspace资源现在要求初始化会话，新代下只能按认证主体（OAuth客户端或密钥）区分，同一凭据的多个对话会合并成一个身份，除非按规范改用服务器签发的句柄。估算：约8–10个源码文件、400–700行代码与测试、约8份文档，2–3个批次；旧代测试基本不动，只新增新代测试。不建议改成只支持新代：SDK 1.x等旧客户端会连不上。
 
 **评估中发现的现存缺陷（未修）：** 不带会话的远程调用以`<clientInfo.name或mcp>@req.ip`作调用者，经cloudflared/ngrok时req.ip恒为127.0.0.1，于是**不同凭据**（URL密钥与OAuth客户端）落到同一身份。真实主机实测：OAuth客户端B不带execId调用get_command_output，拿到密钥调用方A的命令输出；get_logs也能看到A的调用，与“远程只返回当前caller”的文档合同矛盾。两个凭据都经本机授权且都能执行命令，实际风险低，但属真实隔离缺陷；新代适配后所有调用都没有会话，这条会成为主路径，应先修（按认证主体区分，公开标签不得泄露凭据摘要）。
+
+### 第71组：接手01a0ce8d，无会话调用者按凭据区分（2026-09-24，会话01a0d084）
+
+**接手与基线。** 本会话固定分支`arena/01a0d084-web-agent`，起点`4a868ae`（=01a0ce8d的F70最后源码提交）；用户上传到01a0ce8d的`d5b976a`只新增上一助手最后一轮对话记录，未合入本分支。进入时本地109/109，[CI35929798225](https://github.com/cccjvav/web_agent/actions/runs/35929798225)精确4a868ae九job success。用户确认顺序：先修本缺陷→用户用Arena实机验收第七批（R8）→新规范按需做成新旧两代并存。
+
+**先复审上一批相邻链（按项目约定）。** 读第七批server.js的ping/未知方法/handleGet/jsonErrors与tools/call路径，以及所有callerKey消费者：executor.commandOwner（命令输出与“最近一条”）、toolTrace.sessionIdFor（get_logs过滤）、progressTracker.stateFor（任务上报，16槽）、board.callerOf、operatorQueue与connectionCheck（要求`peer:`前缀，无会话本就拒绝）、resources的workspace（要求keyForReq）、requestLifecycle.owner（无会话无取消键，已有文档）。第七批未发现需回退的点。
+
+| 项 | 实测事实（修前） | 修法 | 红测 |
+|---|---|---|---|
+| 无会话调用者合并 | server.sessionKeyFallback以`<clientInfo.name或mcp>@req.ip`作callerKey；经隧道req.ip恒为127.0.0.1，URL密钥与各OAuth客户端落到同一调用者：B不带execId调get_command_output拿到A的输出，B持A的execId也能读，get_logs列出A的执行 | session.sessionKey在请求带req.mcpPrincipal（requireAuth验证后写入）时追加`~`+24位hex：进程内随机32字节盐对principal做HMAC-SHA256，标签不含凭据或其摘要，盐不落盘；删除重复的sessionKeyFallback，tools/call与sessTouch都用它，计数与归属落同一行 | 新增mcpCallerIsolation（真实HTTP、全部来自127.0.0.1、从不带会话）：只撤销src/mcp修复时失败于“OAuth client B read the URL-secret caller A's latest output”；日志断言单独运行时修前同样红 |
+
+**合同与代价（写明）：** 同一凭据保持连续性（A仍取回自己的最近输出，OAuth refresh保持同一调用者）；同一凭据下多个对话仍合并为一个调用者，要按对话区分须initialize并保留Mcp-Session-Id——这正是新规范适配时要用服务器签发句柄解决的部分。主机重启后无会话调用者标签改变，其命令/轨迹记录本来也只在内存。无principal的直接模块夹具仍得纯client@ip（board.test的P3-13断言不变）。
+
+文档：会话与结果详解（sessionKey）、请求分发详解（sessTouch、删去sessionKeyFallback、tools/call第2步）、MCP README（无会话调用者区分规则）、任务板与工作区详解（peersList的key说明）、阶段6归属身份一句、MCP协议与整机入口测试详解与tests/README（新测试）；run-tests与documentationLearning登记。
+
+**本地验证：** `npm test` 110/110，`check-docs --write`零漂移（292/28/111），`docs-site/build.js`重建。精确提交CI见下方证据行。
+
+**仍开放：** R8用户Arena实机验收（第七批ping/旧版SSE处理与本批）；新规范2026-07-28双代分流（用户已同意形态，按需实施，见第70组评估）；其余见第70组第六批“仍开放”与工作包表。

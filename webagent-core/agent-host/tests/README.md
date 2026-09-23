@@ -18,7 +18,7 @@
 | [本机边界与跨站测试详解](本机边界与跨站测试详解.md) | auditControl、localControl、corsAllow |
 | [OAuth与GitHub测试详解](OAuth与GitHub测试详解.md) | oauth、oauthClientAuth、githubAuth |
 | [补丁与编辑API测试详解](补丁与编辑API测试详解.md) | patchEngine、apiFiles |
-| [MCP协议与整机入口测试详解](MCP协议与整机入口测试详解.md) | mcpProtocol、httpSmoke、skipWorkbench、operatorQueueCapacity |
+| [MCP协议与整机入口测试详解](MCP协议与整机入口测试详解.md) | mcpProtocol、mcpInterop、mcpCallerIsolation、httpSmoke、skipWorkbench、operatorQueueCapacity |
 | [统计与文档测试](统计与文档测试详解.md) | adminHost、docsSite、docsHttp |
 | [工作台HTML结构与测试](../../workbench/页面结构详解.md) | workbenchHtml |
 
@@ -193,6 +193,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [installerPreparation.test.js](installerPreparation.test.js) | 61 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 19 个函数/类节点 |
+| [mcpCallerIsolation.test.js](mcpCallerIsolation.test.js) | 18 个函数/类节点 |
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 24 个函数/类节点 |
 | [mcpInterop.test.js](mcpInterop.test.js) | 12 个函数/类节点 |
 | [mcpProtocol.test.js](mcpProtocol.test.js) | 53 个函数/类节点 |

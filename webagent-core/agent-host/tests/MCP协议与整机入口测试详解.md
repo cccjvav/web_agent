@@ -37,6 +37,19 @@
 
 finally停止上报定时器、关闭两个服务器并删除临时目录。基线红测已逐项核对：分别只撤销九处修复中的一处，都在对应断言失败（ping、404、注解、JSON错误、transports、endpoint事件、start上限、run上限、截断标志）。
 
+## mcpCallerIsolation.test.js：无会话调用者按凭据区分（F71）
+
+[源码](mcpCallerIsolation.test.js)加载真实src/index.js（端口0、临时工作区），所有请求都从127.0.0.1发出且**从不带Mcp-Session-Id**，正是经cloudflared/ngrok时主机看到的情形。异步**main**内的**call(target,name,args)**以给定凭据发tools/call，断言HTTP 200且响应不分配会话；**authorize()**用真实oauth模块完成注册→配对码→PKCE换token。A用URL密钥路径`/mcp/<secret>`，B、C是两个独立配对的OAuth客户端。
+
+1. A跑一条打印随机标记的run_command；B不带execId调get_command_output时found为false且结果不含标记（修前B直接拿到A的输出）。
+2. B即使持有A的execId也不是所有者，found为false。
+3. B跑自己的命令后，C的“最近一条”查询同样found为false——两个OAuth客户端也是两个调用者。
+4. 局部**execIds(logs)**只从tool为run_command的日志行取execId，**sessionIds(logs)**取轨迹sessionId集合：A能看到自己的执行，B与C都看不到A的；A与B的轨迹sessionId不相交。只统计run_command是因为B自己调用get_command_output时回显它传入的execId，那是B自己的日志行。
+5. 同一凭据保持连续性：A的“最近一条”仍是自己的execId；B经refresh换新access token后仍是同一调用者，能取回自己的输出。
+6. 局部**principalOf(parts)**按requireAuth同一方式重算URL密钥的principal摘要，用作“不得出现”的探针；peers_list、snapshot与allSessions的公开文本不含URL密钥、principal摘要、原始密钥SHA-256、任何access token或它们的16字符前缀；三个凭据至少是三行调用者，且没有一行以peer:开头（无会话调用者不冒充初始化peer）。
+
+基线红测：只撤销src/mcp的修复时，第1项在“OAuth client B read the URL-secret caller A's latest output”失败；单独运行第4项的日志断言在修前同样失败于“B's get_logs listed A's execution”。finally停止上报定时器、撤销OAuth、关闭两个服务器并删除临时目录。
+
 ## httpSmoke.test.js
 
 [源码](httpSmoke.test.js)在两个随机范围端口启动真实src/index.js。**request(method,url,body,extraHeaders)**解析URL、JSON序列化、补Content-Type/长度，data收集、end同时给raw/json（坏JSON为null），error拒。**waitHealth(url,timeoutMs)**内部**tick**每120ms重试HTTP，响应resume释放流，超12秒拒。**stop(proc)**Windows taskkill树、其他SIGTERM；已killed跳过，**并未等待确切exit证明**。
