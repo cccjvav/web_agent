@@ -1453,6 +1453,8 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 未做（记录理由）：P1-4每条命令Add-Type编译——Add-Type在同一PowerShell会话内按程序集缓存，但每条run_command都是新进程，确实每次编译；它与R4历史“30秒无输出”症状吻合但无法在本沙箱复现Windows耗时，改为预编译DLL涉及生成物落盘位置、签名/杀软与缓存失效，属于需要Windows实测证据的独立工作包，不在没有测量的情况下改动。P2-10全局20MB body：/api与/mcp均先经认证/本机门禁再解析，现有文件写入路由需要大正文，改动收益小于回归风险，保留。/health返回版本：本机工作台与run-code-oss健康检查使用，公网仅/mcp与OAuth发现可达（见入口说明），保留。
 
+**第四批精确证据：** `f9f7c8b`的[CI35888237369](https://github.com/cccjvav/web_agent/actions/runs/35888237369)为push事件、精确同SHA，九job全部success，已逐job核对。windowsOutputEncoding（commandEncoding.test.js）只在Windows执行，所以Windows Node20/22/24通过是P1-3目前唯一的真机证据；其中Python子例是否实际执行取决于runner上的python，日志下载仍被TLS阻断，无法确认，不据此宣称Python路径已验。
+
 ### 第70组第五批：接手复审前四批、推理模型参数、统计轮转与写入错误遮蔽（2026-09-23）
 
 **先复审前四批（按项目约定）。** 本会话中途沙箱重启，本地工作树回到26a167e但文件改动仍在；逐文件对比确认40个改动与已推的50fc5ae逐字节相同后，只mixed重置指针再ff到远端f9f7c8b，没有reset --hard或覆盖文件。f9f7c8b的CI35888237369九job全绿（含Windows三版本）。复读91f68d5..f9f7c8b的主机shutdown、权限缓存、binaryLookup、安全头、样式与会话key改动：未发现需回退的问题。补充核对：安全头的`frame-ancestors 'none'`不影响任何现有功能——工作台的“内置浏览器”并不嵌入iframe（bridge.js只渲染连接指引），扩展用自己的webview HTML；另用ESLint核心规则（仓库外临时配置，未入库）扫223个非暂停JS：0错误，清掉6处死导入（routes的path、server的clipText与未用id、tools/index的readFile、settings/tabs的`$$`），其余警告均为测试轮询写法或暂停专项，保留。
@@ -1469,5 +1471,7 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **核对为非缺陷/有意保留：** docs-site/anchors.js中`[📄\`]`无u标志会逐个代理单元删除——对2775个仓库标题逐一比较加u前后的slug，零差异，且站点锚点是已发布的URL，不为lint改动；tunnelRegistry的未用循环变量是计数写法；openai的10轮/每轮8工具与12条历史是既有有界设计，文档已写明，本批不改。
 
 文档：模型调用详解（samplingParams）、统计服务详解（rotateReports/rowBytes/fits）、admin README、SECURITY、技术实现、utils函数详解（removeScratch）、Plan状态详解（parts并入canonical，原“parts未使用”说明改写）、入口与Webview详解（激活事件）、状态与编辑器详解（welcomeFiles）、样式规则与页面结构详解（SVG图标）、四份测试详解。本地108/108、真实Chromium浏览器套件通过、check-docs 290/28/111零漂移。
+
+**第五批精确证据：** 本批本地提交后GitHub令牌再次过期，中断时`bd8c519`只在本地、**未推送**（如实记录）。令牌恢复有效后快进推送（f9f7c8b..bd8c519），[CI35908981268](https://github.com/cccjvav/web_agent/actions/runs/35908981268)为push事件、精确`bd8c519`，九job全部success，已逐job核对：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、workbench-browser。日志下载仍被TLS阻断，证据仅为job结论。
 
 **仍开放：** P1-4每条命令Add-Type编译（需Windows耗时实测，理由见第四批）；P2-10全局20MB body与/health版本（第四批已记录保留理由）；ESLint入CI仍属R9候选、需项目主人同意新增开发依赖；经典工作台/扩展的OpenAI协议仍只支持chat/completions非流式；探针三模块继续完全暂停。
