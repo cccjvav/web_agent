@@ -133,8 +133,11 @@ async function textScaleChromeBrowser(browser, base) {
   try {
     await page.goto(base);
     await page.waitForFunction(() => document.querySelector('#tabs .tab-label'));
-    for (const width of [1440, 390]) {
-      await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+    // 360/320 at 1.6 force the menu labels past the available width on ANY font: CI's wider
+    // fallback fonts wrapped them onto 2 lines at 390 while this suite's first run (narrower
+    // local fonts) still fit, so width alone must be enough to exercise the no-wrap rule.
+    for (const width of [1440, 390, 360, 320]) {
+      await page.setViewportSize({ width, height: width >= 1000 ? 900 : 844 });
       for (const scale of [0.85, 1, 1.6]) {
         const result = await page.evaluate(async scale => {
           (await import('/js/dom.js')).applyTextScale(scale);
@@ -159,11 +162,13 @@ async function textScaleChromeBrowser(browser, base) {
           }
           const doc = document.documentElement;
           return { clipped, pageOverflowY: doc.scrollHeight > innerHeight + 1, pageOverflowX: doc.scrollWidth > innerWidth + 1,
-            statusBottom: Math.round(document.querySelector('#statusbar').getBoundingClientRect().bottom), height: innerHeight };
+            statusBottom: Math.round(document.querySelector('#statusbar').getBoundingClientRect().bottom), height: innerHeight,
+            rightEdge: Math.round(document.querySelector('.tb-right').getBoundingClientRect().right) };
         }, scale);
         assert.deepStrictEqual(result.clipped, [], `${width}px text scale ${scale}: chrome bars must fit their text`);
         assert.equal(result.pageOverflowY || result.pageOverflowX, false, `${width}px text scale ${scale}: no page overflow`);
         assert.ok(Math.abs(result.statusBottom - result.height) <= 1, `${width}px text scale ${scale}: status bar stays pinned to the window bottom`);
+        assert.ok(result.rightEdge <= width + 1, `${width}px text scale ${scale}: title-bar controls stay inside the window`);
       }
     }
     await page.evaluate(async () => (await import('/js/dom.js')).applyTextScale(1));

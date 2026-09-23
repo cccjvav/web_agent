@@ -1434,3 +1434,6 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 | P3-4 Ask/Plan“只读”措辞 | remember/board_*/set_todos（及Plan的report_progress）在Ask/Plan可用，写的是.webagent/下的主机记录 | 说明与锁定错误改为“不改项目文件、不跑命令；主机记录仍可用”；errors映射同步 | mcpProtocol锁定文案断言 |
 
 截图复核：160%下标题栏、状态栏、页签完整显示；默认缩放与1280/390视口布局无回归，全部axe状态继续通过。文档：样式规则详解（字阶/高度/控件字号）、状态与编辑器详解（loadTree）、文件与搜索详解（sortItems）、浏览器与Webview测试详解及主机诊断与调用追踪详解（新浏览器用例）。本地108/108、真实浏览器套件通过。未改：Monaco编辑器自身fontSize 13（A-/A+说明中已声明不影响编辑器字体）；docs-site与admin页面的px字号（独立页面，不在工作台缩放合同内）。
+
+
+**第三批CI失败与修复（不抹除）：** `c422ab9`的[CI35885792918](https://github.com/cccjvav/web_agent/actions/runs/35885792918)八job成功、**workbench-browser失败**：新增的textScaleChromeBrowser在390px×1.6断言标题栏菜单按钮0..56落在48px栏内（annotations取得）。原因：菜单文字可换行，CI的较宽回退字体在390px下折成两行，本地Noto字体恰好还放得下，所以本地绿、CI红——测试写对了，修复不完整。修法：标题栏菜单/右侧按钮nowrap、菜单条可横向滚动且窄屏列改minmax(0,1fr)；测试加入360/320宽度，使“超出可用宽度”由宽度本身保证、不依赖字体，已确认该用例在c422ab9的CSS上本地红、修后绿。教训：布局断言须用确定性条件触发，不能依赖开发机字体度量。

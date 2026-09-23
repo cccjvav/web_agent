@@ -66,9 +66,14 @@ u { text-decoration: none; }
   height: var(--title); display: grid; grid-template-columns: 1fr minmax(220px, 480px) 1fr;
   align-items: center; background: var(--bg0); border-bottom: 1px solid var(--border); user-select: none;
 }
-.tb-menu { display: flex; padding-left: 8px; }
+/* One line, always: at large text scales on narrow screens the menu labels used to wrap onto
+   2–3 lines inside the single-line title bar (e.g. 91px-tall buttons in a 48px bar at 320px).
+   Labels never wrap; if they do not fit, the menu strip scrolls horizontally instead. */
+.tb-menu { display: flex; padding-left: 8px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.tb-menu::-webkit-scrollbar { display: none; }
 .tb-menu button {
   background: none; border: 0; color: var(--text); font-size: var(--fs-sm); padding: 4px 8px; border-radius: 4px;
+  white-space: nowrap; flex-shrink: 0;
 }
 .tb-menu button:hover { background: var(--hover); }
 .tb-center { display: flex; justify-content: center; }
@@ -77,6 +82,7 @@ u { text-decoration: none; }
   text-align: center; font-size: var(--fs-sm); color: var(--text2); padding: 3px 10px;
 }
 .tb-right { display: flex; justify-content: flex-end; align-items: center; gap: 4px; padding-right: 8px; }
+.tb-right button { white-space: nowrap; flex-shrink: 0; }
 .tb-theme {
   background: none; border: 1px solid var(--border); color: var(--text2); font-size: var(--fs-xs);
   border-radius: 4px; padding: 2px 8px;
@@ -564,7 +570,9 @@ input::placeholder, textarea::placeholder { color: var(--mute); opacity: 1; }
 .legacy-settings summary { cursor: pointer; color: var(--text2); font-size: var(--fs-sm); }
 .composer-tools { flex-wrap: wrap; }
 @media (max-width: 700px) {
-  #titlebar { grid-template-columns: 1fr auto; }
+  /* minmax(0, 1fr): the menu column may shrink below its content and scroll inside itself;
+     a plain 1fr keeps its min-content width and pushed the whole bar past the viewport. */
+  #titlebar { grid-template-columns: minmax(0, 1fr) auto; }
   .tb-center { display: none; }
   #workbench { position: relative; }
   #activitybar { position: relative; z-index: 21; flex-shrink: 0; }
