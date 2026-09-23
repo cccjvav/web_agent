@@ -1,4 +1,4 @@
-import { $, $$, state, ui } from './state.js';
+import { $, state, ui } from './state.js';
 import { escapeHtml } from './dom.js';
 
 export function paintTabs() {
@@ -242,6 +242,29 @@ export function treeHtml(items, depth = 0) {
   }).join('');
 }
 
+// The welcome page's "工作区文件" list. It used to be the first six files in depth-first order,
+// which in a real repository meant `.config/…` and `.github/…` files ahead of anything a person
+// opens. Now: top-level entry files first (README, package manifests, in that order), then the
+// most recently modified files anywhere in the tree (the tree already carries mtime), skipping
+// dot-directories. Still derived from the tree listing, not a real "recently opened" history.
+const ENTRY_FILES = ['readme.md', 'readme', 'package.json', 'pyproject.toml', 'cargo.toml', 'go.mod', 'pom.xml', 'build.gradle', 'makefile'];
+
+export function welcomeFiles(items, limit = 6) {
+  const files = [];
+  (function walk(list, depth) {
+    for (const it of list || []) {
+      if (it.type === 'file') files.push({ ...it, depth });
+      else if (it.children && !String(it.name || '').startsWith('.')) walk(it.children, depth + 1);
+    }
+  })(items || [], 0);
+  const entry = (f) => (f.depth === 0 ? ENTRY_FILES.indexOf(String(f.name || '').toLowerCase()) : -1);
+  const time = (f) => { const t = Date.parse(f.mtime); return Number.isFinite(t) ? t : 0; };
+  const firsts = files.filter((f) => entry(f) >= 0).sort((a, b) => entry(a) - entry(b));
+  const rest = files.filter((f) => entry(f) < 0 && !String(f.name || '').startsWith('.'))
+    .sort((a, b) => time(b) - time(a) || String(a.path).localeCompare(String(b.path)));
+  return [...firsts, ...rest].slice(0, limit);
+}
+
 export async function loadTree() {
   const response = await fetch('/api/files/tree');
   const data = await response.json();
@@ -268,14 +291,7 @@ export async function loadTree() {
     const item = e.target.closest('.tree-item[data-path]');
     if (item) openFile(item.dataset.path);
   };
-  const files = [];
-  (function walk(items) {
-    for (const it of items || []) {
-      if (it.type === 'file') files.push(it);
-      if (it.children) walk(it.children);
-    }
-  })(data.items || []);
-  $('#recent-list').innerHTML = files.slice(0, 6).map((f) =>
+  $('#recent-list').innerHTML = welcomeFiles(data.items).map((f) =>
     `<button type="button" data-open="${escapeHtml(f.path)}">${escapeHtml(f.name)} <span class="path">${escapeHtml(f.path)}</span></button>`
   ).join('') || '<p class="hint">工作区还没有文件</p>';
   $('#recent-list').onclick = (e) => {

@@ -1,5 +1,5 @@
 const { checkCancelled } = require('../utils/requestScope');
-const { readBoundedText, MAX_TEXT_BYTES } = require('../utils/boundedFile');
+const { readBoundedText, MAX_TEXT_BYTES, removeScratch } = require('../utils/boundedFile');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -25,14 +25,18 @@ function atomicWriteText(fullPath, content, { exclusive = false } = {}) {
   if (fs.existsSync(fullPath)) fullPath = fs.realpathSync(fullPath); // Replace the checked target, not the symlink itself.
   const tmp = tempSibling(fullPath);
   const mode = fs.existsSync(fullPath) ? fs.statSync(fullPath).mode & 0o777 : null;
+  let failure = null;
   try {
     fs.writeFileSync(tmp, content, { encoding: 'utf8', flag: 'wx', ...(mode == null ? {} : { mode }) });
     if (mode != null) fs.chmodSync(tmp, mode);
     checkCancelled();
     if (exclusive) fs.linkSync(tmp, fullPath);
     else fs.renameSync(tmp, fullPath);
+  } catch (err) {
+    failure = err;
+    throw err;
   } finally {
-    try { fs.unlinkSync(tmp); } catch (err) { if (err.code !== 'ENOENT') throw err; }
+    removeScratch(tmp, failure);
   }
 }
 

@@ -125,6 +125,25 @@ function temperatureFor(level) {
   return 0.7;
 }
 
+// Reasoning model families reject sampling parameters: OpenAI answers o1/o3/o4-mini/gpt-5* with
+// `400 Unsupported value: 'temperature' ... Only the default (1) value is supported`. Because
+// provider error bodies are deliberately never reflected (see runOpenAI), a user who picked such
+// a model saw nothing but "模型 HTTP 400" on every request. Matched on the configured modelId,
+// optionally behind a provider prefix (`openai/gpt-5`); an unmatched id keeps today's behaviour.
+const REASONING_MODEL = /^(?:[\w.-]+\/)?(?:o\d+(?:$|[-_.])|gpt-5)/i;
+
+// Request fields that carry the 思考 low/medium/high choice. Reasoning families get
+// `reasoning_effort` (same three values) and no temperature; the gpt-5 `-chat` variants are
+// non-reasoning models that also reject a custom temperature, so they get neither. Every other
+// model keeps the temperature mapping. Omitting a sampling field is always valid: both are
+// optional in the chat/completions contract.
+function samplingParams(modelId, level) {
+  const id = String(modelId || '');
+  if (!REASONING_MODEL.test(id)) return { temperature: temperatureFor(level) };
+  if (/-chat(?:$|[-_.])/i.test(id)) return {};
+  return { reasoning_effort: ['low', 'medium', 'high'].includes(level) ? level : 'high' };
+}
+
 async function runOpenAI({
   mode,
   message,
@@ -167,7 +186,7 @@ async function runOpenAI({
   const bodyBase = {
     model: model.modelId,
     messages,
-    temperature: temperatureFor(thinkLevel)
+    ...samplingParams(model.modelId, thinkLevel)
   };
   if (tools && tools.length) {
     bodyBase.tools = tools;
@@ -287,5 +306,6 @@ module.exports = {
   runOpenAI,
   systemPrompt,
   temperatureFor,
+  samplingParams,
   modelSeesImages
 };

@@ -11,7 +11,7 @@ const { loadCustom } = require('../models/customizations');
 const eventBus = require('../utils/eventBus');
 const { getInstructions, getBootstrapPrompt } = require('./instructions');
 const { listResources, readResource } = require('./resources');
-const { clipJson, clipText } = require('./budget');
+const { clipJson } = require('./budget');
 const { resolveToolName } = require('../tools/normalize');
 const { ProtocolError, publicError } = require('./errors');
 const { touch, snapshot, createHttpSession, touchHttpSession, getHttpSession, destroyHttpSession, keyForReq, setHttpSessionKey, beginHttpSessionWork } = require('./session');
@@ -187,7 +187,7 @@ function remoteToolMode(params) {
 }
 
 async function handleRpc(req) {
-  const { id, method, params } = req.body || {};
+  const { method, params } = req.body || {};
   switch (method) {
     case 'initialize': {
       const clientInfo = (params && params.clientInfo) || { name: 'External-Agent' };

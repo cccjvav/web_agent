@@ -42,9 +42,9 @@ String、trim，超过n取前段并加省略号。用于本地摘要，不是模
 
 ### mergeLocalBranches({taskDescription,branches=[],facts={}}={})
 
-创建本地合并结果，返回前广播 consensus_finished。canonical只是任务/分支数/验证提示；unifiedActionPlan固定三项：确认入口、Code读hash后补丁、测试。participants 的 map 保留每个分支的模型名、focus/thinkLevel及答案；disagreements为空、consensusReached=false、agreementRate=null。
+创建本地合并结果，返回前广播 consensus_finished。canonical是任务/分支数/验证提示加上**各分支原文**（每支最多4000字符，超出标注截断，全文仍在participants）；unifiedActionPlan固定三项：确认入口、Code读hash后补丁、测试。participants 的 map 保留每个分支的模型名、focus/thinkLevel及答案；disagreements为空、consensusReached=false、agreementRate=null。
 
-源码里另一个 map 创建 parts（逐分支标题与答案），**目前该局部变量未被放进返回结果**。不要看到局部拼接就写“canonical 包含所有原文”；完整答案实际在 participants。输出也不代表模型间真有共识或没有分歧。
+parts按分支生成“### 分支 N · 模型名”标题与答案。F70之前这个局部变量拼好后**被丢弃**，本地合并的总结消息（以及只渲染canonical的VS Code原生Chat）只剩一句模板话、看不到任何分支答案；现在它经截断后并入canonical。本地合并没有模型阅读分支，所以这只是原文并排，不代表模型间有共识或没有分歧。
 
 ### runMultiModelConsensus({taskDescription,facts={},emit}={})
 

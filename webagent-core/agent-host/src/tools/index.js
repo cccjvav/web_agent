@@ -1,6 +1,6 @@
 const probeBridge = require('../utils/probeBridge');
 const { applyPatch } = require('./patchEngine');
-const { readFile, readFiles, writeFile, deleteFile, renameFile, listDir, grepSearch } = require('./fileOps');
+const { readFiles, writeFile, deleteFile, renameFile, listDir, grepSearch } = require('./fileOps');
 const { findFiles } = require('./findFiles');
 const { executeCommand, startCommand, getCommandOutput, cancelCommand, sendCommandInput, wait } = require('./executor');
 const { reportProgress, setTodos, getTaskState } = require('./progressTracker');

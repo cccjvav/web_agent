@@ -740,6 +740,19 @@ if (!process.argv.includes('--vm-child')) {
   assert.ok(treeBox.innerHTML.includes('tree-truncated') && treeBox.innerHTML.includes('1000'), 'a truncated listing must be announced');
   context.fetch=async()=>({ok:true,status:200,json:async()=>({items:[{name:'a.txt',path:'a.txt',type:'file'}],truncated:'yes'})});
   assert.equal(await tabs.namespace.loadTree(),true);assert.ok(!treeBox.innerHTML.includes('tree-truncated'), 'only a boolean true counts');
+  // F70: the welcome list was the first six files depth-first, i.e. `.config/…`/`.github/…` in a
+  // real repository. Entry files first, then most recently modified, never dot-directories.
+  const f=(p,mtime)=>({name:p.split('/').pop(),path:p,type:'file',mtime});
+  const welcomePicked=tabs.namespace.welcomeFiles([
+    {name:'.config',path:'.config',type:'directory',children:[f('.config/code-server/config.yaml','2026-09-23T00:00:00Z')]},
+    {name:'.github',path:'.github',type:'directory',children:[f('.github/workflows/test.yml','2026-09-23T00:00:01Z')]},
+    {name:'src',path:'src',type:'directory',children:[f('src/old.js','2026-01-01T00:00:00Z'),f('src/new.js','2026-09-20T00:00:00Z'),
+      {name:'deep',path:'src/deep',type:'directory',children:[f('src/deep/README.md','2026-09-21T00:00:00Z')]}]},
+    f('.env.example','2026-09-23T00:00:02Z'),f('package.json','2020-01-01T00:00:00Z'),f('README.md','2020-01-01T00:00:00Z')
+  ]).map(x=>x.path);
+  assert.deepEqual(welcomePicked,['README.md','package.json','src/deep/README.md','src/new.js','src/old.js'],
+    'entry files first (README before manifests), then newest; dot-directories and dotfiles skipped; a nested README is not an entry file');
+  assert.deepEqual(tabs.namespace.welcomeFiles(null),[]);
 
   const skill={id:'workspace:test',name:'test',description:'fixture skill'};
   context.URLSearchParams=URLSearchParams;

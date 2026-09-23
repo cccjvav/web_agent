@@ -114,6 +114,42 @@ async function run() {
         assert.strictEqual((await request(server.address().port,'/health')).status,200);
       } finally {await new Promise(resolve=>server.close(resolve));}
     });
+    // F70: a HEALTHY store at its budget used to refuse every later report with 500
+    // E_STORE_CORRUPT (measured: the 10000th row did it, permanently, for every client). Now the
+    // oldest days rotate out; the incoming report is always kept; a damaged store still fails
+    // closed (checked above), so rotation never runs on data it could not validate.
+    await check('a healthy store at its row budget rotates out the oldest day instead of refusing reports',()=>{
+      const day=d=>new Date(Date.UTC(2026,0,1)+d*86400000).toISOString().slice(0,10);
+      const row=(i,d)=>({installId:'inst-'+i,githubUser:'',githubId:'',provider:'',day:day(d),toolCalls:5,fail:1,successRate:null,
+        lastAt:day(d)+'T10:00:00.000Z',reportedAt:day(d)+'T10:00:00.000Z',product:'Web Agent',version:'0.7.2'});
+      const rows=[];for(let k=0;k<10000;k++)rows.push(row(k%50,Math.floor(k/50)));
+      fs.writeFileSync(file,JSON.stringify(rows,null,2));
+      const rec=ingest(root,{installId:'late',day:day(900),toolCalls:1});
+      assert.strictEqual(rec.installId,'late');
+      const after=loadReports(root);
+      assert.ok(after.length<=10000 && after.some(r=>r.installId==='late'),'the new report is stored');
+      assert.ok(!after.some(r=>r.day===day(0)),'the oldest day rotated out');
+      assert.strictEqual(after.filter(r=>r.day===day(1)).length,50,'surviving days keep their complete ranking');
+      // An ancient-day report at capacity is still kept: ingest answered 200 with it.
+      ingest(root,{installId:'ancient',day:'2001-01-01',toolCalls:1});
+      assert.ok(loadReports(root).some(r=>r.installId==='ancient'));
+    });
+    await check('a healthy store at its byte budget stays under 4MiB and keeps every incoming report',()=>{
+      const big='x'.repeat(250);
+      const day=d=>new Date(Date.UTC(2026,0,1)+d*86400000).toISOString().slice(0,10);
+      const fat=(i,d)=>({installId:'i'+i,githubUser:big,githubId:big,provider:big,day:day(d),toolCalls:5,fail:1,successRate:null,
+        lastAt:day(d)+'T10:00:00.000Z',reportedAt:day(d)+'T10:00:00.000Z',product:big,version:big});
+      const rows=[];for(let k=0;k<2700;k++)rows.push(fat(k,Math.floor(k/20)));
+      let text=JSON.stringify(rows,null,2);
+      while(Buffer.byteLength(text)>4*1024*1024-1500){rows.pop();text=JSON.stringify(rows,null,2);}
+      fs.writeFileSync(file,text);
+      for(let i=0;i<5;i++)ingest(root,{installId:'late-'+i,githubUser:big,githubId:big,provider:big,product:big,version:big,day:day(5000),toolCalls:1});
+      const size=fs.statSync(file).size;
+      assert.ok(size<=4*1024*1024,'the published store stays within its byte budget');
+      const after=loadReports(root);
+      assert.strictEqual(after.filter(r=>r.installId.startsWith('late-')).length,5);
+      assert.ok(!after.some(r=>r.day===day(0)),'the oldest day went first');
+    });
     await check('only a genuinely absent store starts empty',()=>{
       fs.rmSync(file,{force:true});assert.deepStrictEqual(loadReports(root),[]);
       ingest(root,valid);assert.strictEqual(loadReports(root).length,1);

@@ -88,4 +88,20 @@ function stripBom(text) {
   return typeof text === 'string' && text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 }
 
-module.exports = { MAX_TEXT_BYTES, readBoundedText, readBoundedJsonText, stripBom, decodeStrictUtf8, EncodingError };
+// Cleanup for the write-temp-then-rename pattern used by every atomic writer in this repo. Called
+// from a `finally`: it must never replace the error that is already propagating. The old inline
+// form `try { unlink } catch (err) { if (err.code !== 'ENOENT') throw err; }` did exactly that —
+// a disk-full ENOSPC during the write surfaced as an unrelated EPERM from the scratch-file
+// removal (reproduced). `failure` is the error of the try block (null when it succeeded); only a
+// successful write reports a cleanup failure, because then the cleanup IS the first problem.
+function removeScratch(tmp, failure) {
+  try {
+    fs.unlinkSync(tmp);
+  } catch (err) {
+    if (err && err.code === 'ENOENT') return;
+    if (failure) return; // Keep the primary error; the scratch file is the lesser problem.
+    throw err;
+  }
+}
+
+module.exports = { MAX_TEXT_BYTES, readBoundedText, readBoundedJsonText, stripBom, decodeStrictUtf8, EncodingError, removeScratch };

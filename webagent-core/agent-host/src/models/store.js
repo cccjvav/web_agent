@@ -288,14 +288,18 @@ function save(next) {
   };
   fs.mkdirSync(dir(), { recursive: true });
   const tmp = storePath() + '.tmp.' + require('crypto').randomBytes(8).toString('hex');
+  let failure = null;
   try {
     fs.writeFileSync(tmp, JSON.stringify(cfg, null, 2), { encoding: 'utf8', flag: 'wx', mode: 0o600 });
     fs.renameSync(tmp, storePath());
+  } catch (err) {
+    failure = err;
+    throw err;
   } finally {
     // Bump even when the rename failed: the file may or may not have changed, so derived caches
     // must re-read rather than trust their old copy.
     saves += 1;
-    try { fs.unlinkSync(tmp); } catch (err) { if (err.code !== 'ENOENT') throw err; }
+    require('../utils/boundedFile').removeScratch(tmp, failure);
   }
   restrictFileMode(storePath());
   protectWorkspaceSecrets();

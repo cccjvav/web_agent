@@ -149,7 +149,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | 源码 | 定位证据 |
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
-| [adminIntegrity.test.js](adminIntegrity.test.js) | 43 个函数/类节点 |
+| [adminIntegrity.test.js](adminIntegrity.test.js) | 55 个函数/类节点 |
 | [apiFiles.test.js](apiFiles.test.js) | 59 个函数/类节点 |
 | [appWindowLifecycle.test.js](appWindowLifecycle.test.js) | 79 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
@@ -196,7 +196,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 24 个函数/类节点 |
 | [mcpProtocol.test.js](mcpProtocol.test.js) | 53 个函数/类节点 |
 | [memoryRecall.test.js](memoryRecall.test.js) | 8 个函数/类节点 |
-| [modelLifecycle.test.js](modelLifecycle.test.js) | 53 个函数/类节点 |
+| [modelLifecycle.test.js](modelLifecycle.test.js) | 54 个函数/类节点 |
 | [monacoLoading.test.js](monacoLoading.test.js) | 12 个函数/类节点 |
 | [nativeChatStream.test.js](nativeChatStream.test.js) | 27 个函数/类节点 |
 | [nativeRequestJson.test.js](nativeRequestJson.test.js) | 28 个函数/类节点 |
@@ -227,13 +227,13 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [publicHttps.test.js](publicHttps.test.js) | 19 个函数/类节点 |
 | [requestLifecycle.test.js](requestLifecycle.test.js) | 13 个函数/类节点 |
 | [resourceBudget.test.js](resourceBudget.test.js) | 14 个函数/类节点 |
-| [runChat.test.js](runChat.test.js) | 29 个函数/类节点 |
+| [runChat.test.js](runChat.test.js) | 30 个函数/类节点 |
 | [sandbox.test.js](sandbox.test.js) | 3 个函数/类节点 |
 | [searchWorkerLifecycle.test.js](searchWorkerLifecycle.test.js) | 14 个函数/类节点 |
 | [sensitiveBoundary.test.js](sensitiveBoundary.test.js) | 6 个函数/类节点 |
 | [skillsLifecycle.test.js](skillsLifecycle.test.js) | 19 个函数/类节点 |
 | [skipWorkbench.test.js](skipWorkbench.test.js) | 16 个函数/类节点 |
-| [stateIntegrity.test.js](stateIntegrity.test.js) | 33 个函数/类节点 |
+| [stateIntegrity.test.js](stateIntegrity.test.js) | 40 个函数/类节点 |
 | [stdioMcp.test.js](stdioMcp.test.js) | 25 个函数/类节点 |
 | [stdioOwnerFixture.js](stdioOwnerFixture.js) | 2 个函数/类节点 |
 | [stdioServerFixture.js](stdioServerFixture.js) | 3 个函数/类节点 |
@@ -258,7 +258,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
 | [workbench.browser.js](workbench.browser.js) | 278 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 470 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 472 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 17 个函数/类节点 |

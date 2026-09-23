@@ -57,6 +57,12 @@ try {
   assert.ok(!fs.existsSync(stale), '旧版本目录应被摘掉');
   const pkg = JSON.parse(fs.readFileSync(path.join(installed.dest, 'package.json'), 'utf8'));
   assert.strictEqual(pkg.publisher, 'webagent');
+  // F70: `*` activates synchronously on every window's startup path (VS Code advises against
+  // it). onStartupFinished keeps the always-on status bar/PTY host without slowing startup;
+  // the chat participant keeps its own activation event.
+  assert.ok(!pkg.activationEvents.includes('*'), 'no eager `*` activation');
+  assert.ok(pkg.activationEvents.includes('onStartupFinished'));
+  assert.ok(pkg.activationEvents.includes('onChatParticipant:webagent.agent'));
   pruneOld(tmp, installed.folderName);
 } finally {
   fs.rmSync(tmp, { recursive: true, force: true });

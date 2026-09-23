@@ -80,9 +80,9 @@
               <p class="sub">轻量本机工作台 · 完整 IDE 请使用桌面 VS Code 扩展</p>
               <h3>启动</h3>
               <div class="start-links">
-                <button type="button" id="lnk-new-file"><span class="codicon">📄</span>新建文件...</button>
-                <button type="button" id="lnk-open-file"><span class="codicon">📝</span>打开文件...</button>
-                <button type="button" id="lnk-open-folder"><span class="codicon">📁</span>浏览当前工作区</button>
+                <button type="button" id="lnk-new-file"><span class="codicon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15h6"/></svg></span>新建文件...</button>
+                <button type="button" id="lnk-open-file"><span class="codicon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span>打开文件...</button>
+                <button type="button" id="lnk-open-folder"><span class="codicon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>浏览当前工作区</button>
               </div>
               <h3>工作区文件</h3>
               <div class="recent" id="recent-list"></div>
@@ -97,21 +97,21 @@
                 </span>
               </button>
               <button type="button" class="walk-card" id="walk-basics">
-                <span class="walk-ico">💡</span>
+                <span class="walk-ico"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2h5c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3z"/></svg></span>
                 <span>
                   <span class="walk-title">了解基础知识</span>
                 </span>
               </button>
               <h3>两条路</h3>
               <button type="button" class="walk-card" id="walk-local-chat">
-                <span class="walk-ico">💬</span>
+                <span class="walk-ico"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4A2.5 2.5 0 0 1 4 13.5z"/></svg></span>
                 <span>
                   <span class="walk-title">本机 Chat —— 右侧对话框</span>
                   <span class="walk-desc">模型直接改当前工作区（Ask / Plan / Code），能按 computer-use 说明跑截屏/键鼠脚本；标了「可看图」的模型会收到截图当图片。不用隧道，随时可用。</span>
                 </span>
               </button>
               <button type="button" class="walk-card" id="walk-bridge">
-                <span class="walk-ico">🌉</span>
+                <span class="walk-ico"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 17h18M5 17V9M19 17V9M3 9c3 0 6-3 9-3s6 3 9 3M9 17v-4M15 17v-4"/></svg></span>
                 <span>
                   <span class="walk-title">Bridge —— 把工作区交给网页 AI</span>
                   <span class="walk-desc">把当前工作区变成 MCP，给 Arena / ChatGPT 自制插件 / DeepSeek++ 等网页 Agent。run_command 截图以 image 内容回传；远程危险命令仍被拒。要先启动 Bridge 拿公网地址。</span>

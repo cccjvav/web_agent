@@ -10,7 +10,7 @@
 | Plan第一轮 | 无consensus，branches1，状态/消息标分支1及simulated，含set_todos，不引用演示文件 |
 | 空输入branch | 两分支且canMerge，仍未自动合并 |
 | 新回合一支merge | error含至少两个，不伪造总结 |
-| 两支merge | simulated=true、consensusReached=false、agreementRate=null、参与者2，不伪造投票比例 |
+| 两支merge | simulated=true、consensusReached=false、agreementRate=null、参与者2，不伪造投票比例；F70：canonical必须包含每个分支答案、总结消息含“### 分支 1/2”（此前分支原文拼好后被丢弃，VS Code里只显示一句模板话；基线红） |
 | Code跑测试 | 真run_command事件存在且ok，消息含npm test或ok，实际运行临时项目测试 |
 | emit放payload | 和第二参数回调方式均能收到工具和消息 |
 | Code显式写notes.md | 文件实际存在且内容匹配 |
@@ -20,6 +20,8 @@ filter/map/find/some都是从事件数组找上述证据，不代表全部事件
 ## modelLifecycle.test.js
 
 [源码](modelLifecycle.test.js)保留workspace/fetch，临时store保存外部模型。**reply(message)**返回带异步text()的兼容响应，不联网。首个缺mode调用核对默认只读工具，同时直接断言模型fetch的`redirect==='error'`，防以后无意恢复默认跟随。
+
+F70先用九个modelId核对真实请求体的采样字段：gpt-5/o3/o4-mini/`openai/gpt-5-mini`发送同档`reasoning_effort`（缺省high）且不发temperature，`gpt-5-chat-latest`两者都不发，gpt-4o/deepseek-chat/qwen-max及以o开头但不是o系列的`omni-model`保持0.1/0.4/0.7温度映射；基线在gpt-5这一例红（推理模型收到temperature会被提供方400拒绝）。
 
 随后用标准WHATWG Response造401正文`REMOTE_SECRET_SHOULD_NOT_BE_REFLECTED`：异常必须保留HTTP 401但不得含该标记；再造1MiB+1字节200正文，必须以`E_RESPONSE_TOO_LARGE`失败而不是读完后落到JSON语法错。这证明模拟fetch下的错误反射与模型响应预算合同，不是实际供应商、代理或网络内存剖析。
 

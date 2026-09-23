@@ -1452,3 +1452,22 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 | SECURITY补充 | 未说明`X-MCP-Secret`等四种凭据位置（外部复审P3-21） | 按extractToken实际顺序写明四种位置与日志风险 | — |
 
 未做（记录理由）：P1-4每条命令Add-Type编译——Add-Type在同一PowerShell会话内按程序集缓存，但每条run_command都是新进程，确实每次编译；它与R4历史“30秒无输出”症状吻合但无法在本沙箱复现Windows耗时，改为预编译DLL涉及生成物落盘位置、签名/杀软与缓存失效，属于需要Windows实测证据的独立工作包，不在没有测量的情况下改动。P2-10全局20MB body：/api与/mcp均先经认证/本机门禁再解析，现有文件写入路由需要大正文，改动收益小于回归风险，保留。/health返回版本：本机工作台与run-code-oss健康检查使用，公网仅/mcp与OAuth发现可达（见入口说明），保留。
+
+### 第70组第五批：接手复审前四批、推理模型参数、统计轮转与写入错误遮蔽（2026-09-23）
+
+**先复审前四批（按项目约定）。** 本会话中途沙箱重启，本地工作树回到26a167e但文件改动仍在；逐文件对比确认40个改动与已推的50fc5ae逐字节相同后，只mixed重置指针再ff到远端f9f7c8b，没有reset --hard或覆盖文件。f9f7c8b的CI35888237369九job全绿（含Windows三版本）。复读91f68d5..f9f7c8b的主机shutdown、权限缓存、binaryLookup、安全头、样式与会话key改动：未发现需回退的问题。补充核对：安全头的`frame-ancestors 'none'`不影响任何现有功能——工作台的“内置浏览器”并不嵌入iframe（bridge.js只渲染连接指引），扩展用自己的webview HTML；另用ESLint核心规则（仓库外临时配置，未入库）扫223个非暂停JS：0错误，清掉6处死导入（routes的path、server的clipText与未用id、tools/index的readFile、settings/tabs的`$$`），其余警告均为测试轮询写法或暂停专项，保留。
+
+| 项 | 实测事实 | 修法 | 红测 |
+|---|---|---|---|
+| 推理模型收temperature即400 | runOpenAI对所有模型都发temperature（0.1/0.4/0.7）；o1/o3/o4-mini/gpt-5*拒绝自定义温度，而提供方错误正文按设计不回显，用户每次只看到“模型 HTTP 400 请求失败” | samplingParams：推理族改发同三档`reasoning_effort`，gpt-5 `-chat`变体两者都不发，其余不变；按modelId（可带`openai/`前缀）判断 | modelLifecycle九个modelId核对真实请求体，基线gpt-5例红 |
+| 统计账本到上限永久拒收 | 健康的10000行账本再收一条即saveReports拒绝发布，之后**所有客户端每天**的上报都500/E_STORE_CORRUPT（实测） | rotateReports：整日轮出最旧日期（仅剩一天才删该日最旧行），本次上报永不删除；字节精确核算，与真实序列化逐字节一致 | adminIntegrity新增行数上限/字节上限两例，基线都红 |
+| 写入错误被清理错误顶替 | 五个原子写入者的finally里清临时文件失败会抛出并**顶替**写入错误：磁盘满ENOSPC变成EPERM（实测） | boundedFile.removeScratch：写入已失败则保留原错误、吞清理错误；仅写入成功时才报告清理失败 | stateIntegrity注入ENOSPC+EPERM逐一驱动五个写入者，基线五个都红 |
+| 本地多模型合并丢弃分支原文 | consensusEngine把各分支答案拼成parts后没有使用；无模型合并的总结消息与VS Code原生Chat（只渲染canonical）只剩一句模板话 | 各分支原文（每支≤4000字）并入canonical | runChat断言总结含每个分支答案，基线红 |
+| 扩展`*`激活 | activationEvents含`*`，每个VS Code窗口启动关键路径同步激活 | 改onStartupFinished（状态栏/PTY宿主仍常驻），chat participant事件保留 | desktopExtension断言；**未在真实VS Code窗口实测激活时序** |
+| 欢迎页 | 真实Chromium截图：💬等emoji在无彩色emoji字体环境渲染成空圈/空框；“工作区文件”取深度优先前6个，真实仓库全是.config/.github文件 | 六处emoji改内联SVG（em尺寸随A-/A+缩放）；welcomeFiles：顶层README/清单优先，其余按mtime新到旧，跳过点目录 | workbenchRuntime的welcomeFiles断言；截图复核深浅两主题 |
+
+**核对为非缺陷/有意保留：** docs-site/anchors.js中`[📄\`]`无u标志会逐个代理单元删除——对2775个仓库标题逐一比较加u前后的slug，零差异，且站点锚点是已发布的URL，不为lint改动；tunnelRegistry的未用循环变量是计数写法；openai的10轮/每轮8工具与12条历史是既有有界设计，文档已写明，本批不改。
+
+文档：模型调用详解（samplingParams）、统计服务详解（rotateReports/rowBytes/fits）、admin README、SECURITY、技术实现、utils函数详解（removeScratch）、Plan状态详解（parts并入canonical，原“parts未使用”说明改写）、入口与Webview详解（激活事件）、状态与编辑器详解（welcomeFiles）、样式规则与页面结构详解（SVG图标）、四份测试详解。本地108/108、真实Chromium浏览器套件通过、check-docs 290/28/111零漂移。
+
+**仍开放：** P1-4每条命令Add-Type编译（需Windows耗时实测，理由见第四批）；P2-10全局20MB body与/health版本（第四批已记录保留理由）；ESLint入CI仍属R9候选、需项目主人同意新增开发依赖；经典工作台/扩展的OpenAI协议仍只支持chat/completions非流式；探针三模块继续完全暂停。

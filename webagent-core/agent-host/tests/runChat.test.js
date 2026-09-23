@@ -110,6 +110,15 @@ async function main() {
   assert.strictEqual(consensus.result.consensusReached, false);
   assert.ok(consensus.result.agreementRate == null);
   assert.ok(consensus.result.participants && consensus.result.participants.length === 2);
+  // F70: a local merge has no model to read the branches, so the branch answers themselves are the
+  // summary. They used to be assembled and dropped; the VS Code chat (which renders only canonical)
+  // then showed a boilerplate sentence and no answer at all.
+  for (const participant of consensus.result.participants) {
+    assert.ok(participant.answer && consensus.result.canonical.includes(participant.answer.slice(0, 80)),
+      'the local merge summary carries every branch answer');
+  }
+  const mergeMessage = planMerge.events.find((e) => e.type === 'message');
+  assert.ok(mergeMessage && mergeMessage.text.includes('### 分支 1') && mergeMessage.text.includes('### 分支 2'));
 
   const code = collect();
   await runChat({ mode: 'code', message: '跑测试' }, code.emit);

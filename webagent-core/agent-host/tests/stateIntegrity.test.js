@@ -164,6 +164,36 @@ config.workspaceRoot = tmp;
     assert.strictEqual(fs.readFileSync(file, 'utf8'), original);
     assert.ok(!fs.readdirSync(path.dirname(file)).some(n => n.includes('.tmp.')));
   } finally { fs.renameSync = rename; }
+  // F70: when the write fails AND removing the scratch file fails too, the caller must see the
+  // write failure. The old `finally { try { unlink } catch (e) { if (e.code !== 'ENOENT') throw e } }`
+  // replaced it: a disk-full ENOSPC surfaced as an unrelated EPERM (reproduced). One shared
+  // helper now does the cleanup for every atomic writer; checked on each of them here.
+  const unlink = fs.unlinkSync, link = fs.linkSync;
+  const writers = [
+    ['config store', () => store.patch({ activeModelId: 'changed-again' })],
+    ['patch writer', () => atomicWriteText(path.join(tmp, 'one.txt'), 'rewritten')],
+    ['customizations', () => require('../src/models/customizations').patchCustom({ instructions: 'x' })],
+    ['board', () => require('../src/tools/board').boardCreate({ title: 'masking check' })],
+    ['admin ledger', () => require('../../admin-host/app').ingest(path.join(tmp, 'admin-mask'), { installId: 'x', day: '2026-09-23' })]
+  ];
+  fs.writeFileSync(path.join(tmp, 'one.txt'), 'original');
+  for (const [label, write] of writers) {
+    try {
+      fs.renameSync = () => { const e = new Error('ENOSPC: disk full (fixture)'); e.code = 'ENOSPC'; throw e; };
+      fs.linkSync = fs.renameSync;
+      fs.unlinkSync = (target) => { if (String(target).includes('.tmp.')) { const e = new Error('EPERM: scratch cleanup denied (fixture)'); e.code = 'EPERM'; throw e; } return unlink(target); };
+      let seen = null;
+      try { await write(); } catch (err) { seen = err; }
+      assert.ok(seen, `${label}: a failed write must throw`);
+      assert.ok(/ENOSPC|disk full/.test(String(seen.message)), `${label}: the write failure must surface, got: ${seen.message}`);
+      assert.ok(!/EPERM/.test(String(seen.message)), `${label}: the cleanup failure must not replace it`);
+    } finally { fs.renameSync = rename; fs.unlinkSync = unlink; fs.linkSync = link; }
+  }
+  // Leftover scratch files from the denied cleanups are removed now that unlink works again.
+  for (const dir of [path.dirname(file), tmp, path.join(tmp, 'admin-mask')]) {
+    if (!fs.existsSync(dir)) continue;
+    for (const name of fs.readdirSync(dir)) if (name.includes('.tmp.')) unlink(path.join(dir, name));
+  }
   fs.writeFileSync(path.join(tmp, 'one.txt'), 'original');
   await assert.rejects(() => applyPatch({ filePath: 'one.txt', patch: '<<<<<<< SEARCH\noriginal\n=======\nnew\n>>>>>>> REPLACE', expectedHash: computeHash('original').slice(0, 8) }), /STALE/);
   await assert.rejects(() => writeFile({ filePath: 'deleted.txt', content: 'no', expectedHash: computeHash('original') }), /删除/);

@@ -25,6 +25,32 @@ const reply = message => ({ ok: true, text: async () => JSON.stringify({ choices
   assert.ok(!defaultTools.some(t => t.function.name === 'write_file'));
   assert.strictEqual((await runChat({ mode: 'invalid', message: 'list' }, () => {})).ok, false);
 
+  // F70: reasoning models reject a custom temperature with HTTP 400, and because provider error
+  // bodies are never reflected the user only ever saw "模型 HTTP 400". Checked on the real request
+  // body: reasoning families get reasoning_effort (the same 思考 low/medium/high), gpt-5 -chat
+  // variants get neither field, everything else keeps the temperature mapping.
+  const sentBodies = [];
+  global.fetch = async (_, options) => { sentBodies.push(JSON.parse(options.body)); return reply({ role: 'assistant', content: 'ok' }); };
+  const sampling = [
+    ['gpt-5', 'medium', { reasoning_effort: 'medium' }],
+    ['o3', 'low', { reasoning_effort: 'low' }],
+    ['o4-mini', undefined, { reasoning_effort: 'high' }],
+    ['openai/gpt-5-mini', 'high', { reasoning_effort: 'high' }],
+    ['gpt-5-chat-latest', 'low', {}],
+    ['gpt-4o', 'low', { temperature: 0.1 }],
+    ['deepseek-chat', 'medium', { temperature: 0.4 }],
+    ['qwen-max', undefined, { temperature: 0.7 }],
+    ['omni-model', 'high', { temperature: 0.7 }]
+  ];
+  for (const [modelId, thinkLevel, expected] of sampling) {
+    sentBodies.length = 0;
+    await runOpenAI({ mode: 'ask', message: 'sampling', history: [], model: { ...model, modelId }, thinkLevel, allowTools: false });
+    const body = sentBodies[0];
+    const got = {};
+    for (const key of ['temperature', 'reasoning_effort']) if (key in body) got[key] = body[key];
+    assert.deepStrictEqual(got, expected, `sampling fields for ${modelId}/${thinkLevel}`);
+  }
+
   const reflectedProviderBody = 'REMOTE_SECRET_SHOULD_NOT_BE_REFLECTED';
   global.fetch = async () => new Response(reflectedProviderBody, { status: 401 });
   await assert.rejects(

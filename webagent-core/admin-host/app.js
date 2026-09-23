@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const http = require('http');
-const { readBoundedJsonText } = require('../agent-host/src/utils/boundedFile');
+const { readBoundedJsonText, removeScratch } = require('../agent-host/src/utils/boundedFile');
 const MAX_STORE_BYTES = 4 * 1024 * 1024;
 const MAX_REPORTS = 10000;
 
@@ -117,6 +117,7 @@ function saveReports(dataDir, rows) {
   fs.mkdirSync(dataDir, { recursive: true });
   const file = reportsFile(dataDir);
   const tmp = `${file}.tmp.${process.pid}.${crypto.randomBytes(12).toString('hex')}`;
+  let failure = null;
   try {
     // mode 0600: the ledger carries installIds and GitHub handles, so the temporary copy must not
     // be world-readable even for the moment before the rename.
@@ -126,11 +127,12 @@ function saveReports(dataDir, rows) {
     // A half-written temporary or a failed rename is a storage failure, not a caller error.
     // Report it under the store's own code so the HTTP layer answers 500 with a stable shape
     // instead of leaking a raw EIO/EACCES; the previous file is still intact on disk.
-    throw corruptStore(file, `publish failed (${(error && (error.code || error.message)) || 'unknown'})`);
+    failure = corruptStore(file, `publish failed (${(error && (error.code || error.message)) || 'unknown'})`);
+    throw failure;
   } finally {
     // Always remove the scratch file, including the interrupted-write case where it exists but
-    // holds partial content.
-    try { fs.unlinkSync(tmp); } catch (err) { if (err && err.code !== 'ENOENT') throw err; }
+    // holds partial content — without letting a cleanup error replace the publish error.
+    removeScratch(tmp, failure);
   }
 }
 
@@ -160,9 +162,43 @@ function ingest(dataDir, body) {
   rec.installId = rec.installId.trim();
   rec.githubUser = rec.githubUser.replace(/^@/, '').trim();
   const rows = loadReports(dataDir).filter((r) => !(r.installId === rec.installId && r.day === rec.day));
-  rows.push(rec);
-  saveReports(dataDir, rows);
+  saveReports(dataDir, rotateReports(rows, rec));
   return rec;
+}
+
+// Keep the ledger inside its budget by dropping the OLDEST DAYS first. Without this the store grew
+// until saveReports refused to publish it: measured, the 10000th row turned every later report —
+// every client, every day — into a permanent 500 E_STORE_CORRUPT, although nothing was corrupt.
+//  * Whole days go at once, so a day that is still present keeps its complete ranking. Only when a
+//    single day is left and alone exceeds the budget are that day's oldest rows trimmed.
+//  * `incoming` (the report being ingested) is never dropped: ingest answers 200 with it.
+//  * Runs only on a store that loaded and validated; a damaged store still fails closed earlier
+//    and keeps its bytes.
+// Sizes are exact and computed once per row: the pretty-printed array is "[\n" + elements joined
+// by ",\n" + "\n]", each element being the row's own pretty print indented one level deeper.
+function rowBytes(row) {
+  return Buffer.byteLength(JSON.stringify([row], null, 2), 'utf8') - 4;
+}
+
+function rotateReports(rows, incoming) {
+  const all = [...rows, incoming];
+  if (all.length <= MAX_REPORTS && Buffer.byteLength(JSON.stringify(all, null, 2), 'utf8') <= MAX_STORE_BYTES) return all;
+  const byAge = [...rows].sort((a, b) => a.day.localeCompare(b.day)
+    || String(a.reportedAt || '').localeCompare(String(b.reportedAt || '')));
+  const sizes = byAge.map(rowBytes);
+  // Final size = 4 + incoming + Σ(kept row + its ",\n" separator).
+  let bytes = 4 + rowBytes(incoming) + sizes.reduce((sum, size) => sum + size + 2, 0);
+  let start = 0;
+  const fits = () => byAge.length - start + 1 <= MAX_REPORTS && bytes <= MAX_STORE_BYTES;
+  while (!fits()) {
+    let end = start;
+    while (end < byAge.length && byAge[end].day === byAge[start].day) end += 1;
+    if (end >= byAge.length) break; // One day left: trim its oldest rows below instead.
+    for (let i = start; i < end; i += 1) bytes -= sizes[i] + 2;
+    start = end;
+  }
+  while (!fits() && start < byAge.length) { bytes -= sizes[start] + 2; start += 1; }
+  return [...byAge.slice(start), incoming];
 }
 
 function rankDay(rows, day) {

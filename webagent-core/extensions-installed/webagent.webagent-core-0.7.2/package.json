@@ -12,7 +12,7 @@
     "Chat"
   ],
   "activationEvents": [
-    "*",
+    "onStartupFinished",
     "onChatParticipant:webagent.agent"
   ],
   "main": "./extension.js",

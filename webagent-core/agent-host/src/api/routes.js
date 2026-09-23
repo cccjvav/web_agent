@@ -10,7 +10,6 @@ const workflows = require('../tools/workflows');
 const { diagnostics, hostIdentity } = require('../utils/hostDiagnostics');
 const { readBoundedText, MAX_TEXT_BYTES } = require('../utils/boundedFile');
 const express = require('express');
-const path = require('path');
 const fs = require('fs');
 const { config, generateNewSecret } = require('../config');
 const { getToolList, callTool, runMultiModelConsensus } = require('../tools');

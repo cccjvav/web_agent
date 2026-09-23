@@ -87,7 +87,7 @@ window message只接受status，规范对象后更新URL/状态pill，paintTasks
 
 ## 8. package.json与SVG（非JS也属于实现）
 
-[package.json](package.json)不是启动命令脚本：name/publisher/version标识扩展，engines.vscode声明兼容最低范围；main指extension.js；activationEvents的`*`让加载积极激活，onChatParticipant声明原生Chat入口。contributes.configuration给本机host默认地址；chatParticipants id必须与createChatParticipant一致、commands对应模式；viewsContainers activitybar icon对应[resources/icon.svg](resources/icon.svg)；views两个id必须匹配registerWebviewViewProvider；commands五个id须分别匹配extension直接注册的三项和editorReview注册的两项。配置声明不代表VS Code每版本原生Chat API都存在，因此实现有特性检测。
+[package.json](package.json)不是启动命令脚本：name/publisher/version标识扩展，engines.vscode声明兼容最低范围；main指extension.js；activationEvents用`onStartupFinished`在窗口启动完成后激活（状态栏与PTY宿主需要常驻；F70由`*`改来，`*`会在每个窗口启动关键路径上同步激活，VS Code文档明确不建议），onChatParticipant声明原生Chat入口；视图、命令在engines ^1.90下由contributes自动生成激活事件。只在源码上核对，未在真实VS Code/code-server窗口实测激活时序。contributes.configuration给本机host默认地址；chatParticipants id必须与createChatParticipant一致、commands对应模式；viewsContainers activitybar icon对应[resources/icon.svg](resources/icon.svg)；views两个id必须匹配registerWebviewViewProvider；commands五个id须分别匹配extension直接注册的三项和editorReview注册的两项。配置声明不代表VS Code每版本原生Chat API都存在，因此实现有特性检测。
 
 SVG根元素指定24×24尺寸和同范围viewBox，fill=none、紫色stroke=#6366f1、宽2、圆端点/拐角；三个path分别画右尖括号、左尖括号和斜线，组合成代码图标。没有script、外链或事件属性。SVG是静态图标，由活动栏和participant引用；不是浏览器应用入口、HTTP鉴权或点击处理器。图形坐标、路径与描边决定图标外观，交互由贡献声明和activate注册负责。要验证资源本身有效，应解析SVG及检查打包包含，而不是用JS函数名覆盖率替代资产检查。
 

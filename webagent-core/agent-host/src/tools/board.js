@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { config } = require('../config');
-const { readBoundedJsonText } = require('../utils/boundedFile');
+const { readBoundedJsonText, removeScratch } = require('../utils/boundedFile');
 const { allSessions } = require('../mcp/session');
 
 const BOARD_REL = path.join('.webagent', 'board.json');
@@ -49,11 +49,15 @@ function saveBoard(board) {
   const file = boardPath();
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const tmp = `${file}.tmp.${crypto.randomBytes(8).toString('hex')}`;
+  let failure = null;
   try {
     fs.writeFileSync(tmp, JSON.stringify(board, null, 2), { encoding: 'utf8', mode: 0o600, flag: 'wx' });
     fs.renameSync(tmp, file);
+  } catch (err) {
+    failure = err;
+    throw err;
   } finally {
-    try { fs.unlinkSync(tmp); } catch (err) { if (err.code !== 'ENOENT') throw err; }
+    removeScratch(tmp, failure);
   }
 }
 

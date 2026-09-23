@@ -1,4 +1,4 @@
-import { $, $$, state, ui } from './state.js';
+import { $, state, ui } from './state.js';
 import { escapeHtml } from './dom.js';
 
 export function rowList(items, render, empty) {

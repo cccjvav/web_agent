@@ -45,11 +45,20 @@ function mergeLocalBranches({ taskDescription, branches = [], facts = {} } = {})
     const name = b.modelName || b.model || `分支 ${i + 1}`;
     return `### 分支 ${i + 1} · ${name}\n\n${b.answer || ''}`;
   });
+  // The branch answers ARE the content of a local merge (no model reads them). `parts` used to be
+  // built and then dropped, so the summary message — and the VS Code chat, which renders only
+  // `canonical` — showed a boilerplate sentence while the answers sat unread in `participants`.
+  // Each answer is clipped so N long branches cannot flood the chat; full text stays in
+  // participants (the workbench's per-branch tabs).
+  const clipped = parts.map((part) => (part.length > 4000 ? `${part.slice(0, 4000)}\n\n…（已截断，完整内容见分支页签）` : part));
   const canonical = [
-    `合并总结（本机拼接，没有调用合并主模型 HTTP）：针对「${task}」。`,
-    `共 ${branches.length} 个分支。没配 API Key 时无法让主模型读分支。`,
-    `落地前仍只读；切 Code 再补丁，验证命令 \`${testCmd}\`。`
-  ].join(' ');
+    [
+      `合并总结（本机拼接，没有调用合并主模型 HTTP）：针对「${task}」。`,
+      `共 ${branches.length} 个分支。没配 API Key 时无法让主模型读分支，下面是各分支原文。`,
+      `落地前仍只读；切 Code 再补丁，验证命令 \`${testCmd}\`。`
+    ].join(' '),
+    ...clipped
+  ].join('\n\n');
   const unifiedActionPlan = [
     { id: '1', title: '对照各分支，确认入口文件与最小改动面', status: 'pending' },
     { id: '2', title: '切 Code：read_files 取哈希后 apply_patch', status: 'pending' },

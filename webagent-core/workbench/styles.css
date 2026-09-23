@@ -151,7 +151,11 @@ u { text-decoration: none; }
   font-size: var(--fs-md); padding: 4px 0;
 }
 .start-links button:hover { text-decoration: underline; }
-.codicon { width: 16px; display: inline-block; color: var(--link); }
+/* Welcome-page icons are inline SVG (currentColor): the former emoji (📄📝📁💡💬🌉) rendered as
+   blank boxes/circles on systems without a color-emoji font, which is what real Chromium showed.
+   Sized in em so the A-/A+ text scale enlarges them with the labels. */
+.codicon { width: 1.25em; display: inline-flex; align-items: center; color: var(--link); flex-shrink: 0; }
+.codicon svg, .walk-ico svg { width: 1.15em; height: 1.15em; display: block; }
 .recent button {
   display: block; background: none; border: 0; color: var(--link); font-size: var(--fs-md); padding: 3px 0; text-align: left;
 }
@@ -161,7 +165,7 @@ u { text-decoration: none; }
   padding: 12px 14px; margin-bottom: 10px; cursor: pointer;
 }
 .walk-card:hover { background: #303030; }
-.walk-ico { color: var(--link); }
+.walk-ico { color: var(--link); display: inline-flex; align-items: center; min-width: 1.15em; }
 .walk-title { display: block; color: #fff; font-size: var(--fs-md); }
 .walk-desc { display: block; color: var(--mute); font-size: var(--fs-sm); margin-top: 2px; }
 .welcome-bottom {
@@ -216,8 +220,11 @@ u { text-decoration: none; }
 .chat-empty { text-align: center; padding: 48px 20px 16px; color: var(--text2); }
 .chat-empty .bubble {
   width: 54px; height: 54px; margin: 0 auto 14px; border-radius: 50%; border: 1px solid #3c3c3c;
-  display: grid; place-items: center; font-size: var(--fs-4xl); color: var(--text);
+  display: grid; place-items: center; color: var(--text);
 }
+/* Inline SVG instead of the 💬 emoji: Windows without a color-emoji font and many Linux setups
+   rendered the emoji as an empty circle (seen in real Chromium). Sized in em so A-/A+ scales it. */
+.chat-empty .bubble svg { width: 1.5em; height: 1.5em; font-size: var(--fs-lg); }
 .chat-empty h3 { margin: 0 0 8px; font-size: var(--fs-lg); font-weight: 600; color: var(--text); }
 .chat-empty p { margin: 0; font-size: var(--fs-sm); color: var(--mute); line-height: 1.5; }
 .chat-empty .gen-instr {

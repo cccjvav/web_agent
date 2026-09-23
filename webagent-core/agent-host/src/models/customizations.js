@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { readBoundedText, readBoundedJsonText, MAX_TEXT_BYTES } = require('../utils/boundedFile');
+const { readBoundedJsonText, MAX_TEXT_BYTES, removeScratch } = require('../utils/boundedFile');
 const { resolveSafePath } = require('../tools/patchEngine');
 const { ProtocolError } = require('../mcp/errors');
 const { markdownPreference, markdownTechStack } = require('./profile');
@@ -151,11 +151,15 @@ function loadCustom() {
 
 function writeCustomFile(target, text) {
   const tmp = target + '.tmp.' + crypto.randomBytes(8).toString('hex');
+  let failure = null;
   try {
     fs.writeFileSync(tmp, text, { encoding: 'utf8', mode: 0o600, flag: 'wx' });
     fs.renameSync(tmp, target);
+  } catch (err) {
+    failure = err;
+    throw err;
   } finally {
-    try { fs.unlinkSync(tmp); } catch (err) { if (err.code !== 'ENOENT') throw err; }
+    removeScratch(tmp, failure);
   }
 }
 
