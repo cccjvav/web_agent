@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { AsyncLocalStorage } = require('async_hooks');
 const { currentSignal, checkCancelled } = require('../utils/requestScope');
+const { sliceTextTail } = require('../../../extension/ptyPolicy');
 const als = new AsyncLocalStorage();
 const jobs = new Map(), clients = new Map();
 let clientSeenAt = 0;
@@ -84,8 +85,8 @@ function finish(jobId, result = {}) {
   if (!job || job.state === 'done') return false;
   job.state = 'done'; job.finishedAt = Date.now();
   clearTimeout(job.timer); if (job.cleanup) job.cleanup();
-  job.stdout = String(result.stdout != null ? result.stdout : job.stdout).slice(-OUTPUT_LIMIT);
-  job.stderr = String(result.stderr != null ? result.stderr : job.stderr).slice(-OUTPUT_LIMIT);
+  job.stdout = sliceTextTail(result.stdout != null ? result.stdout : job.stdout, OUTPUT_LIMIT);
+  job.stderr = sliceTextTail(result.stderr != null ? result.stderr : job.stderr, OUTPUT_LIMIT);
   const status = result.status || 'done';
   const ok = status === 'done' && result.ok !== false && result.outputCaptured !== false
     && (job.kind === 'run' ? result.exitCode === 0 : result.ok === true);
@@ -118,8 +119,8 @@ function report(jobId, body = {}, clientId) {
   if (state === 'progress') {
     if (job.state !== 'running') return { ok: false, error: 'PTY is not running' };
     for (const field of ['stdout', 'stderr']) if (body[field]) {
-      const chunk = String(body[field]).slice(-OUTPUT_LIMIT);
-      job[field] = (job[field] + chunk).slice(-OUTPUT_LIMIT);
+      const chunk = sliceTextTail(body[field], OUTPUT_LIMIT);
+      job[field] = sliceTextTail(job[field] + chunk, OUTPUT_LIMIT);
       if (job.onChunk) job.onChunk(chunk, field);
     }
     return { ok: true };

@@ -79,6 +79,7 @@ READISH仅自动许可有限元数据/目录/简单echo，不自动许可cat/typ
 - **looksDangerousCommand(command)**共享词法检测加附加正则，非完整shell解析。
 - **commandFamily(command)**去前导调用符，提取首段名字小写；带路径/复杂引号未必得到用户以为的程序名。
 - **shouldAutoAllow(command,state={})**先CONTENT_READ正文读取、复合/危险→allow:false、alwaysAsk:true；然后只读→允许；再allowSession、allowedFamilies；其余需要询问但可提供持久到本会话的选项。危险/复合不会因会话允许就跳过询问。
+- **sliceTextTail(text, limit)**（F63）UTF-16安全截尾：按码元slice后若开头落在代理对中间（前导是孤立低半代理）先修剪再返回；executor的publicRecord/append、PTY onChunk、ptyHost与ptyJobs共用它替代各处手写尾剪，防多字节输出被拆成U+FFFD。
 
 扩展审批不绕过后端Code模式或远程拒绝策略。自动放行不是撤销操作系统权限，用户仍要在独立测试工作区验收。
 

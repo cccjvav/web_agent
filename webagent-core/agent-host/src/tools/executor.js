@@ -1,4 +1,4 @@
-const { scrubEnv } = require('../../../extension/ptyPolicy');
+const { scrubEnv, sliceTextTail } = require('../../../extension/ptyPolicy');
 const { spawn, spawnSync } = require('child_process');
 const { StringDecoder } = require('string_decoder');
 const crypto = require('crypto');
@@ -93,8 +93,8 @@ function publicRecord(rec, tail) {
     signal: rec.signal,
     durationMs: rec.durationMs,
     isTimeout: rec.isTimeout || false,
-    stdout: String(rec.stdout || '').slice(-limit),
-    stderr: String(rec.stderr || '').slice(-limit),
+    stdout: sliceTextTail(rec.stdout, limit),
+    stderr: sliceTextTail(rec.stderr, limit),
     suggestedWaitMs: running ? rec.suggestedWaitMs : 0,
     hint: running ? 'Still running. Poll get_command_output with this execId.' : undefined,
     execution: rec.execution,
@@ -103,6 +103,9 @@ function publicRecord(rec, tail) {
     ok: rec.ok
   };
 }
+
+// sliceTextTail lives in extension/ptyPolicy.js (shared with the extension's ptyHost): a plain
+// .slice(-limit) cuts on UTF-16 code units and can strand the low half of a surrogate pair.
 
 function storePtyResult(result, owner) {
   const rec = {
@@ -158,14 +161,24 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }, owner) {
   const jobSource = path.join(__dirname, 'commandJob.cs').replace(/'/g, "''");
   // Attach before user code may spawn descendants. If the host is killed while
   // taskkill is enumerating the tree, the OS job still terminates late children.
-  // `exit $LASTEXITCODE` is required, not cosmetic. powershell.exe -Command exits with the status
-  // of the LAST STATEMENT, so a multi-statement script ends 0/1 by pipeline success and throws
-  // away the native program's real code: `node failing.js` exiting 3 was reported as 1. rec.ok and
-  // rec.status are derived from that code, so Windows silently mis-reported which commands failed
-  // and with what. $LASTEXITCODE is only set once a native program has run, hence the null guard.
+  //
+  // Exit-code contract (all three cases must hold):
+  //  1. A native program's real code survives: `node failing.js` exiting 3 must be reported as 3,
+  //     not 1. powershell.exe -Command exits with the status of the LAST STATEMENT, so a
+  //     multi-statement script would otherwise collapse every failure to 0/1.
+  //  2. A failing cmdlet-only script must still fail: `Get-Item missing.txt` sets $?=false but
+  //     never sets $LASTEXITCODE, so a tail that only forwards $LASTEXITCODE would exit 0 and the
+  //     host would silently report broken commands as successful.
+  //  3. A successful command exits 0.
+  // $__wa_ok is captured immediately after the user command, before any of our own trailing
+  // statements can overwrite $?. A non-zero native exit code wins over $? (sh-style last-command
+  // semantics); a zero native code does NOT override a failing trailing cmdlet.
   const guardedCommand = `try { Add-Type -Path '${jobSource}' -ErrorAction Stop; [WebAgentCommandJob]::Attach() } catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 };
 ${command}
-if ($null -ne $LASTEXITCODE) { exit $LASTEXITCODE }`;
+$__wa_ok = $?
+if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+if (-not $__wa_ok) { exit 1 }
+exit 0`;
   const args = win
     ? ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', guardedCommand]
     : ['-c', command];
@@ -220,7 +233,7 @@ if ($null -ne $LASTEXITCODE) { exit $LASTEXITCODE }`;
   const append = (field, chunk) => {
     if (!chunk) return;
     rec[field] += chunk;
-    if (rec[field].length > MAX_CAPTURE) rec[field] = rec[field].slice(-MAX_CAPTURE);
+    if (rec[field].length > MAX_CAPTURE) rec[field] = sliceTextTail(rec[field], MAX_CAPTURE);
     eventBus.broadcast('command_output', { execId, stream: field, chunk });
   };
 
@@ -338,7 +351,7 @@ function startCommand(opts, options = {}) {
       onChunk: (chunk, stream) => {
         const field = stream === 'stderr' ? 'stderr' : 'stdout';
         rec[field] += chunk;
-        if (rec[field].length > MAX_CAPTURE) rec[field] = rec[field].slice(-MAX_CAPTURE);
+        if (rec[field].length > MAX_CAPTURE) rec[field] = sliceTextTail(rec[field], MAX_CAPTURE);
         eventBus.broadcast('command_output', { execId, stream: field, chunk });
       }
     }).then((result) => {

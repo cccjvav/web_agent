@@ -49,10 +49,24 @@ function shouldAutoAllow(command, state = {}) {
   return { allow: false, alwaysAsk: false, family };
 }
 
+// String.prototype.slice cuts on UTF-16 code units. When the cut lands inside a surrogate pair
+// (emoji, CJK Extension B), the surviving text starts with an orphaned low surrogate that JSON
+// round-trips into a replacement character — readers then see garbage the program never printed.
+// Trim the orphan half instead. Shared by the host executor/ptyJobs and the extension ptyHost.
+function sliceTextTail(text, limit) {
+  const s = String(text == null ? '' : text);
+  if (s.length <= limit) return s;
+  const dropped = s.slice(0, s.length - limit);
+  const kept = s.slice(s.length - limit);
+  // The head we dropped ended with a high surrogate → the tail begins with its now-orphaned half.
+  return /[\ud800-\udbff]$/.test(dropped) ? kept.slice(1) : kept;
+}
+
 module.exports = {
   scrubEnv,
   isReadishCommand,
   looksDangerousCommand,
   commandFamily,
-  shouldAutoAllow
+  shouldAutoAllow,
+  sliceTextTail
 };

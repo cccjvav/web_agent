@@ -78,9 +78,10 @@ process.exit(0);
   );
 
   // --- Ordinary ASCII output and exit codes are unchanged. ---
-  // Driven through Node scripts rather than shell builtins: `printf`, `>&2` and `;` are POSIX
-  // shell syntax that Windows cmd.exe does not provide, and this suite must assert decoding
-  // behaviour on every platform rather than silently only on Linux.
+  // Driven through Node scripts rather than shell builtins: `printf` and `>&2` are POSIX
+  // shell syntax, and this suite must assert decoding behaviour on every platform rather than
+  // silently only on Linux. (On Windows the executor runs powershell.exe, where `;` happens to
+  // be valid but `>&2` is not — Node scripts sidestep both shells' quoting entirely.)
   fs.writeFileSync(path.join(tmp, 'ascii.js'), "process.stdout.write('hello world');\n");
   const ascii = await callTool('run_command', { command: 'node ascii.js', timeoutSec: 30 }, 'code');
   assert.strictEqual(ascii.stdout, 'hello world');
@@ -110,6 +111,50 @@ process.exit(0);
   // Truncation must cut on character boundaries, never leave half a character at the edge.
   const windowed = await callTool('get_command_output', { execId: bulk.execId, tail: 501 }, 'code');
   assert.strictEqual(windowed.stdout, '中'.repeat(501), 'an odd tail size still yields whole characters');
+
+  // --- Astral-plane characters must not be cut into orphaned surrogate halves. ---
+  // `.slice()` counts UTF-16 code units: an emoji is TWO units, so any tail window of odd size
+  // can start with the LOW half of a pair. JSON serialises that lone surrogate into U+FFFD and
+  // the model reads a replacement character the program never printed. (A leading HIGH surrogate
+  // is legitimate — it may open a complete pair; only a leading low half is an orphan.)
+  fs.writeFileSync(path.join(tmp, 'emoji.js'), "process.stdout.write('😀'.repeat(500));\n");
+  const emoji = await callTool('run_command', { command: 'node emoji.js', timeoutSec: 30 }, 'code');
+  assert.strictEqual(emoji.stdout, '😀'.repeat(500), 'astral output survives the capture buffer whole');
+  // The tail window is clamped to >= 500 units: 500 lands exactly on a pair boundary,
+  // and 501 would land inside one without the boundary fix.
+  assert.strictEqual((await callTool('get_command_output', { execId: emoji.execId, tail: 500 }, 'code')).stdout, '😀'.repeat(250));
+  const odd = await callTool('get_command_output', { execId: emoji.execId, tail: 501 }, 'code');
+  assert.ok(!/^[\udc00-\udfff]/.test(odd.stdout), 'an odd tail must not begin with an orphaned low surrogate');
+  assert.strictEqual((odd.stdout.match(/\uFFFD/g) || []).length, 0, 'odd tail has no replacement chars');
+  assert.strictEqual(odd.stdout, '😀'.repeat(250), 'the orphan half is trimmed, leaving whole characters');
+  const full = await callTool('get_command_output', { execId: emoji.execId, tail: 8000 }, 'code');
+  assert.strictEqual(full.stdout, '😀'.repeat(500), 'a tail larger than the buffer returns it whole');
+
+  // --- The guardedCommand tail keeps all three Windows exit-code contracts. ---
+  // The generated script is asserted statically (no pwsh in this sandbox); the behavioural
+  // assertions run below on Windows CI only.
+  const executorSource = fs.readFileSync(path.join(__dirname, '../src/tools/executor.js'), 'utf8');
+  assert.ok(executorSource.includes('$__wa_ok = $?'), 'guardedCommand must capture $? before its own tail statements');
+  assert.ok(
+    executorSource.includes('if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }'),
+    'a non-zero native exit code must win'
+  );
+  assert.ok(
+    executorSource.includes('if (-not $__wa_ok) { exit 1 }'),
+    'a failing cmdlet-only script must still exit non-zero'
+  );
+
+  // --- Windows-only: real cmdlet semantics through the real powershell.exe. ---
+  // F63 regression guard: `Get-Item missing` sets $?=false but never sets $LASTEXITCODE, so a
+  // tail that only forwarded $LASTEXITCODE reported broken commands as successful (exit 0).
+  if (process.platform === 'win32') {
+    const cmdlet = await callTool('run_command', { command: "Get-Item (Join-Path (Get-Location) 'definitely-missing-file.txt')", timeoutSec: 30 }, 'code');
+    assert.notStrictEqual(cmdlet.exitCode, 0, 'a failing cmdlet-only script must exit non-zero');
+    assert.strictEqual(cmdlet.status, 'error');
+    const mixed = await callTool('run_command', { command: "Get-Item (Join-Path (Get-Location) 'definitely-missing-file.txt'); node ascii.js", timeoutSec: 30 }, 'code');
+    assert.strictEqual(mixed.exitCode, 0, 'a later successful command restores 0, matching sh semantics');
+  }
+
 
   // --- The same guarantee must hold for the streaming (start_command) path. ---
   fs.writeFileSync(path.join(tmp, 'dribble2.js'), dribbleScript('后台任务完成', 'stdout'));
