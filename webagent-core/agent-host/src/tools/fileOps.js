@@ -231,6 +231,16 @@ function listDir({ dirPath = '.', recursive = false, maxDepth = 3 }) {
   }
 
   const items = scan(fullPath, 1);
+  // Directory order first, then files, each alphabetical. opendir order is filesystem-defined
+  // (often creation order on Windows/NTFS, inode order on Linux), and an unsorted 1000-entry
+  // dump makes the model guess where a file lives. Stable, predictable order is part of the
+  // tool's usefulness, not presentation.
+  const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+  const sortItems = (list) => {
+    list.sort((a, b) => (a.type === b.type ? collator.compare(a.name, b.name) : (a.type === 'directory' ? -1 : 1)));
+    for (const item of list) if (Array.isArray(item.children)) sortItems(item.children);
+  };
+  sortItems(items);
   return { dirPath, items, truncated };
 }
 

@@ -31,9 +31,9 @@
   --fs-5xl: 1.75rem;    /* 28px */
   --fs-6xl: 1.875rem;   /* 30px */
   --fs-hero: 2.625rem;  /* 42px */
-  --title: 30px;
-  --status: 22px;
-  --activity: 48px;
+  --title: 1.875rem;
+  --status: 1.375rem;
+  --activity: 3rem;
   --right: 356px;
   --sess-bg: #1c1c1c;
   --sess-border: #333;
@@ -78,7 +78,7 @@ u { text-decoration: none; }
   width: var(--activity); background: var(--bg0); display: flex; flex-direction: column; align-items: center; padding: 4px 0;
 }
 .ab-btn {
-  width: 48px; height: 48px; background: none; border: 0; color: var(--text2); display: grid; place-items: center; position: relative;
+  width: 3rem; height: 3rem; background: none; border: 0; color: var(--text2); display: grid; place-items: center; position: relative;
 }
 .ab-btn:hover { color: var(--text); }
 .ab-btn.active { color: #fff; }
@@ -95,6 +95,7 @@ u { text-decoration: none; }
 .side-title { padding: 10px 16px 6px; font-size: var(--fs-xs); letter-spacing: .08em; color: var(--text2); font-weight: 600; }
 .side-workspace { padding: 4px 16px; font-size: var(--fs-xs); color: var(--mute); letter-spacing: .04em; }
 .file-tree { overflow: auto; padding: 4px 8px 12px; font-size: var(--fs-md); }
+.tree-truncated { margin: 0 8px 8px; font-size: var(--fs-xs); color: var(--warn); }
 .tree-item { display: flex; width: 100%; align-items: center; gap: 6px; padding: 3px 8px; border: 0; border-radius: 4px; cursor: pointer; background: none; color: inherit; font: inherit; text-align: left; }
 .tree-item:hover { background: var(--hover); }
 .tree-item.dir { color: var(--text2); }
@@ -104,7 +105,7 @@ u { text-decoration: none; }
 
 #center { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--bg); }
 #tabs {
-  height: 35px; display: flex; background: var(--bg0); border-bottom: 1px solid var(--border); overflow: auto;
+  height: 2.1875rem; display: flex; background: var(--bg0); border-bottom: 1px solid var(--border); overflow: auto;
 }
 .tab {
   display: flex; align-items: center; gap: 4px; padding: 0 6px 0 10px; font-size: var(--fs-md); color: var(--text2);
@@ -175,7 +176,7 @@ u { text-decoration: none; }
 
 #panel { height: 160px; border-top: 1px solid var(--border); background: var(--bg0); display: flex; flex-direction: column; }
 #panel.hidden { display: none !important; }
-.panel-head { height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-size: var(--fs-xs); letter-spacing: .06em; border-bottom: 1px solid var(--border); }
+.panel-head { height: 1.75rem; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-size: var(--fs-xs); letter-spacing: .06em; border-bottom: 1px solid var(--border); }
 .terminal { flex: 1; overflow: auto; padding: 8px 12px; font-family: var(--mono); font-size: var(--fs-sm); color: var(--text); }
 .terminal .info { color: var(--link); }
 .terminal .err { color: var(--danger); }
@@ -594,16 +595,21 @@ button.walk-card { width: 100%; text-align: left; color: var(--text); font: inhe
 
 /* One visible workspace on small screens; hidden panes retain drafts and models. */
 #workspace-switcher { display: none; }
-#editor-heading { display: flex; flex: 0 0 35px; min-width: 0; }
+#editor-heading { display: flex; flex: 0 0 2.1875rem; min-width: 0; }
 #editor-heading #tabs { flex: 1; min-width: 0; }
-#btn-close-tab { flex: 0 0 36px; border: 1px solid var(--border); background: var(--bg0); }
+#btn-close-tab { flex: 0 0 2.25rem; border: 1px solid var(--border); background: var(--bg0); }
 #btn-close-tab:disabled { opacity: .45; cursor: default; }
 .tab { flex-shrink: 0; }
 @media (max-width: 700px) {
-  #workspace-switcher { display: flex; height: 36px; background: var(--bg0); }
+  #workspace-switcher { display: flex; height: 2.25rem; background: var(--bg0); }
+  /* Narrow screens + A+ zoom: keep every status item reachable by swiping the bar instead of
+     ellipsizing each one into "…" (at 1.6x the editor path lost ~30% of its characters). */
+  #statusbar { overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+  .sb-left, .sb-right { flex-shrink: 0; }
+  .sb-item { overflow: visible; text-overflow: clip; }
   #workspace-switcher button { flex: 1; min-width: 0; border: 1px solid var(--border); background: var(--bg0); }
   #workspace-switcher button[aria-pressed="true"] { background: var(--bg3); border-bottom: 2px solid var(--focus); }
-  #workbench { height: calc(100% - var(--title) - var(--status) - 36px); }
+  #workbench { height: calc(100% - var(--title) - var(--status) - 2.25rem); }
   #workbench #center, #workbench #rightbar { flex: 1; min-width: 0; width: auto; }
   #workbench[data-workspace-active="editor"] #rightbar { display: none; }
   #workbench:not([data-workspace-active="editor"]) #center { display: none; }

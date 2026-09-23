@@ -248,7 +248,12 @@ export async function loadTree() {
   if (!response.ok) throw new Error(data && data.error || `文件树请求失败（HTTP ${response.status || '错误'}）`);
   if (!data || typeof data !== 'object' || !validTreeItems(data.items)) throw new Error('文件树响应格式无效');
   const box = $('#file-tree');
-  box.innerHTML = treeHtml(data.items);
+  // The tree is capped at 1000 scanned entries; silently showing a partial tree made files look
+  // like they were gone. Say so, and how to see the rest.
+  const notice = data.truncated
+    ? '<p class="tree-truncated" role="note">文件树超过上限已截断：搜索或直接打开具体路径可到达未显示的文件。</p>'
+    : '';
+  box.innerHTML = treeHtml(data.items) + notice;
   box.onclick = (e) => {
     const dir = e.target.closest('.tree-item.dir');
     if (dir) {

@@ -139,6 +139,21 @@ for (const id of controls) {
   const tag = html.match(new RegExp('<button[^>]*id="' + id + '"[^>]*>'))?.[0] || '';
   assert.ok(/aria-label="/.test(tag), id + ' must be labelled for assistive tech');
 }
+// Structural chrome that hosts text (titlebar, statusbar, tabs strip, panel heads, activity bar,
+// narrow-screen workspace switcher, close-tab button) must size in rem: at the 1.6x text scale a
+// px-locked statusbar grew its text past 22px and clipped it vertically.
+for (const pin of [
+  /--title:\s*1\.875rem;/,
+  /--status:\s*1\.375rem;/,
+  /--activity:\s*3rem;/,
+  /\.panel-head\s*\{\s*height:\s*1\.75rem;/,
+  /#editor-heading\s*\{\s*display:\s*flex;\s*flex:\s*0 0 2\.1875rem;/,
+  /#btn-close-tab\s*\{\s*flex:\s*0 0 2\.25rem;/,
+  /#workspace-switcher\s*\{\s*display:\s*flex;\s*height:\s*2\.25rem;/,
+  /#workbench\s*\{\s*height:\s*calc\(100% - var\(--title\) - var\(--status\) - 2\.25rem\);/
+]) {
+  assert.ok(pin.test(styles), 'structural chrome must scale with the text size: ' + pin);
+}
 const tabsSrc = fs.readFileSync(path.resolve(__dirname, '../../workbench/js/tabs.js'), 'utf8');
 assert.ok(tabsSrc.includes('class="tab-label" role="tab"'));
 assert.ok(tabsSrc.includes('aria-controls="editor-wrap" tabindex="${active ? 0 : -1}"'));

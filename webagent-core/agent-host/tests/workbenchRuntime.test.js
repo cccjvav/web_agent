@@ -732,6 +732,13 @@ if (!process.argv.includes('--vm-child')) {
   await assert.rejects(tabs.namespace.loadTree());assert.equal(treeBox.innerHTML,'trusted tree');
   context.fetch=async()=>({ok:true,status:200,json:async()=>({items:[{name:'a.txt',path:'a.txt',type:'file'}]})});
   assert.equal(await tabs.namespace.loadTree(),true);assert.ok(treeBox.innerHTML.includes('a.txt'));
+  // A capped tree must say it is truncated instead of silently looking complete.
+  context.fetch=async()=>({ok:true,status:200,json:async()=>({items:[{name:'a.txt',path:'a.txt',type:'file'}],truncated:true})});
+  assert.equal(await tabs.namespace.loadTree(),true);
+  assert.ok(treeBox.innerHTML.includes('已截断'),'truncated tree must be labelled');
+  context.fetch=async()=>({ok:true,status:200,json:async()=>({items:[{name:'a.txt',path:'a.txt',type:'file'}],truncated:false})});
+  assert.equal(await tabs.namespace.loadTree(),true);
+  assert.ok(!treeBox.innerHTML.includes('已截断'),'untruncated tree carries no warning');
 
   const skill={id:'workspace:test',name:'test',description:'fixture skill'};
   context.URLSearchParams=URLSearchParams;
