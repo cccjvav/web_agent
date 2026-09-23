@@ -41,12 +41,14 @@ HTTP会话有24小时TTL及200上限。进程重启会丢失内存会话；客�
 - `tools/list`返回可见工具schema；`tools/call`最终经过共享callTool，远程命令权限与本机审批不同。
 - 工具结果经共享isToolFailure检查，显式失败、非零退出、超时、取消或unknown时，MCP结果带 `isError:true`；抛出的异常也变成失败内容。客户端应检查isError及错误对象，而非只看HTTP状态。
 - 公共工具错误含layer、code、msg、detail；未分类错误可能归为E_INTERNAL。错误分类器的字符串匹配不是完整异常类型系统。
+- JSON-RPC层：`ping`只回`{}`（MCP规定；主机快照用ping工具或GET /mcp）；未知方法是HTTP 200上的-32601，HTTP 404只表示会话不存在；畸形JSON回HTTP 400的-32700。任何路径的解析/超限错误都只回JSON，不含调用栈或安装路径（F70第七批，用官方SDK与一致性套件对真实主机复核）。
+- tools/list带MCP annotations（readOnlyHint等）。ChatGPT开发者模式据此只对写入类工具要求确认；注解是客户端提示，不放宽主机权限与审批。
 - run_command可附截图image内容；无可用截图则只有文本，识别图片失败不应把文本结果丢掉。图片有真实路径和6MiB边界，base64不广播到日志。
 
 **请求取消**：HTTP tools/call通过requestLifecycle在requestScope中执行；通知仅可取消相同初始化peer＋相同凭据＋同类型RPC ID的在途调用。无会话兼容调用没有可寻址取消键；仍有断连和5分钟abort信号。通知始终无查询结果，不泄露其他调用是否存在。信号是协作式取消，不回滚已执行修改；已返回execId的start_command不再属于在途RPC。完整逐函数边界见[请求分发详解](请求分发详解.md)。
 
 ### SSE
-POST在Accept要求时可返回SSE格式的RPC结果后结束；GET SSE用于连接/心跳，最多32路，15秒发送心跳，10分钟定时结束。这里的结束计时不因心跳刷新，不能描述成永久事件订阅或可靠消息重放。
+POST在Accept要求时可返回SSE格式的RPC结果后结束；带Mcp-Session-Id的GET SSE是Streamable HTTP监听流，只发注释（本主机从不主动推送服务器消息），最多32路，15秒发送心跳，10分钟定时结束。这里的结束计时不因心跳刷新，不能描述成永久事件订阅或可靠消息重放。**只支持Streamable HTTP**：不带会话ID的GET流是旧版2024-11-05 HTTP+SSE握手，本主机未实现，直接405（F70第七批前会开流并发endpoint事件，官方旧版SSE客户端因此永远等不到initialize响应）；GET流从不分配会话，过期会话404。
 
 ## OAuth授权流程与边界
 1. register登记redirect URI及token端点认证方式：none、client_secret_basic或client_secret_post。三种方式都返回客户端secret，但none不校验该secret，不等于机密客户端认证。
@@ -99,7 +101,7 @@ R2/R3会话提交时序：HTTP/SSE响应SID先校验但不立即保存，RPC响�
 | [publicHttps.js](publicHttps.js) | 17 个函数/类节点 |
 | [requestLifecycle.js](requestLifecycle.js) | 8 个函数/类节点 |
 | [resources.js](resources.js) | 5 个函数/类节点 |
-| [server.js](server.js) | 41 个函数/类节点 |
+| [server.js](server.js) | 40 个函数/类节点 |
 | [session.js](session.js) | 21 个函数/类节点 |
 | [stdioBridge.cs](stdioBridge.cs) | 文件级登记；未做符号完整性证明 |
 | [stdioBridge.ps1](stdioBridge.ps1) | 文件级登记；未做符号完整性证明 |

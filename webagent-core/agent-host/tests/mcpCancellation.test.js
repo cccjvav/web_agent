@@ -141,8 +141,10 @@ async function main() {
   sessions.reset();const ids=[],releases=[];
   for(let i=0;i<200;i++){const id=sessions.createHttpSession();ids.push(id);releases.push(sessions.beginHttpSessionWork(id));}
   const full = await init();assert.strictEqual(full.status,503);await full.json();
+  // A GET stream never allocates a session (sessionless GET is the unsupported legacy handshake: 405), so the
+  // full registry is observed through POST initialize above; the GET must not evict busy work either way.
   const fullStream = await fetch(base+'/mcp',{headers:{authorization:'Bearer '+config.secretKey,accept:'text/event-stream'}});
-  assert.strictEqual(fullStream.status,503);await fullStream.json();
+  assert.strictEqual(fullStream.status,405);await fullStream.json();
   assert.ok(ids.every(id=>sessions.touchHttpSession(id)));
   releases.forEach(release=>release());sessions.reset();
   console.log('authenticated HTTP cancellation and direct API failure tests passed');

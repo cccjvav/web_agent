@@ -511,6 +511,40 @@ for (const t of TOOLS) {
   }
 }
 
+// MCP tool annotations (2025-03-26+). Clients act on them: ChatGPT developer mode asks the user to confirm
+// every tool call that lacks readOnlyHint:true, so without annotations all 39 tools — including every
+// read — were treated as write actions. They are hints for the client UI only; the host still enforces
+// permissions, modes, dangerous-command policy and local approvals regardless of what a client does.
+// Explicit per-tool table (not derived from executionControl's permission sets): submitting a workflow
+// only needs Read permission, yet it queues writes, so "which permission gates it" and "does it change
+// anything" are different questions. toolAnnotations() fails closed for any tool missing from the table.
+//   R = read-only (no state change)   W = changes state   D = may destroy/overwrite existing data
+//   I = repeating the same call has no further effect      O = reaches systems outside the workspace
+const TOOL_EFFECTS = {
+  probe_links: 'R O', probe_report: 'R O', probe_request: 'W D O',
+  external_servers: 'R', external_request: 'W D O', operation_result: 'R',
+  workflow_preview: 'R', workflow_request: 'W D', confirm_connection: 'W I',
+  ping: 'R', workspace_info: 'R', get_capabilities: 'R', get_logs: 'R', get_task_status: 'R',
+  remember: 'W', recall: 'R',
+  list_directory: 'R', find_files: 'R', search_files: 'R', read_files: 'R', git_status: 'R', git_diff: 'R',
+  peers_list: 'R', board_list: 'R', board_create: 'W', board_claim: 'W', board_update: 'W I',
+  load_skill: 'R',
+  apply_patch: 'W D', write_file: 'W D I', delete_file: 'W D I', rename_file: 'W D',
+  run_command: 'W D O', start_command: 'W D O', get_command_output: 'R', cancel_command: 'W D I',
+  send_command_input: 'W D', wait: 'R',
+  report_progress: 'W I', set_todos: 'W I'
+};
+function toolAnnotations(name) {
+  const flags = String(TOOL_EFFECTS[name] || 'W D O').split(' ');
+  const readOnly = flags.includes('R');
+  return {
+    readOnlyHint: readOnly,
+    destructiveHint: !readOnly && flags.includes('D'),
+    idempotentHint: readOnly || flags.includes('I'),
+    openWorldHint: flags.includes('O')
+  };
+}
+
 function getToolList(currentMode = null, opts = {}) {
   // One policy snapshot for the whole list: consistent within a single response, and one config
   // read instead of one per tool.
@@ -520,7 +554,21 @@ function getToolList(currentMode = null, opts = {}) {
     .filter((t) => !currentMode || t.mode.includes(currentMode))
     .filter((t) => (opts && opts.includeHidden) || !t.hidden)
     .filter(t => !policy || control.requirements(t.name).every(k => policy[k]))
-    .map(({ name, description, inputSchema }) => ({ name, description, inputSchema }));
+    .map(({ name, description, inputSchema }) => ({ name, description, inputSchema, annotations: toolAnnotations(name) }));
+}
+
+// Remote time limits (seconds). run_command answers inside ONE MCP request, and the official SDK clients
+// abandon a request after 60 s by default: with the old 60 s clamp the client gave up at 60.002 s, just
+// before the host sent its timeout result, so the model saw a transport error instead of the partial
+// output. 50 s leaves room to answer. start_command returns at once and is polled with
+// get_command_output — the instructions tell remote agents to use it for long work — so it gets the same
+// 600 s ceiling the PTY queue uses instead of being killed at 60 s.
+const REMOTE_RUN_MAX_SEC = 50;
+const REMOTE_START_MAX_SEC = 600;
+function remoteTimeoutSec(toolName, requested) {
+  const t = Number(requested);
+  const wanted = Number.isFinite(t) && t > 0 ? t : 30;
+  return Math.min(toolName === 'start_command' ? REMOTE_START_MAX_SEC : REMOTE_RUN_MAX_SEC, wanted);
 }
 
 async function dispatchTool(name, args = {}, currentMode = null, opts = {}) {
@@ -558,8 +606,7 @@ async function dispatchTool(name, args = {}, currentMode = null, opts = {}) {
     });
   }
   if (remote && (toolDef.name === 'run_command' || toolDef.name === 'start_command')) {
-    const t = Number(input.timeoutSec);
-    input.timeoutSec = Math.min(60, Number.isFinite(t) && t > 0 ? t : 30);
+    input.timeoutSec = remoteTimeoutSec(toolDef.name, input.timeoutSec);
   }
   const result = await toolDef.handler(input, opts);
   if (result && result.isTimeout) {
@@ -586,5 +633,6 @@ module.exports = {
   TOOLS,
   getToolList,
   callTool,
+  remoteTimeoutSec,
   runMultiModelConsensus
 };

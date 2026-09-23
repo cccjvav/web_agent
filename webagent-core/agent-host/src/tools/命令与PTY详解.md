@@ -16,7 +16,8 @@
 | killChild(child,force=false) | 子进程→undefined | Windows同步taskkill PID树（3秒期限，失败记录退出状态/错误；WEBAGENT_DEBUG_PROCESS=1额外记录成功结果）；其他先杀进程组再回退child.kill，TERM/KILL按force。吞发送错误，不等待退出证明 |
 | workingDirFrom(cwd) | 目录→安全绝对路径 | resolveSafePath，任何异常统一改成outside workspace提示，原失败原因可能被泛化 |
 | scrubEnv(base)，导入extension/ptyPolicy | 环境对象→副本 | 删除名称匹配凭据模式的字段；不是值扫描；保留PATH/一般Conda变量，不自动conda activate |
-| publicRecord(rec,tail) | 内部记录→展示对象 | stdout/stderr取尾部，tail默认8000钳500–200Ki字符，附状态/退出码/建议等待；截断不保留完整日志 |
+| streamChars(rec,field) | 记录/流名→字符数 | F70第七批：取逐块累计计数（startProcess与PTY onChunk维护，不受200Ki环形裁剪影响）与当前文本长度的较大者；PTY结果/晚到错误直接写文本时也不少算 |
+| publicRecord(rec,tail) | 内部记录→展示对象 | stdout/stderr取尾部，tail默认8000钳500–200Ki字符，附状态/退出码/建议等待与timeoutSec；另给stdoutChars/stderrChars总量及stdoutTruncated/stderrTruncated（返回尾部短于总量即true），此前只回尾部、调用方无法区分3万字符日志与8000字符日志。截断不保留完整日志 |
 | storePtyResult(result,owner) | PTY结果/所有者→记录 | 写入带内部owner的commandStore，标execution=pty；不启动/查询系统进程 |
 
 ## 2. startProcess({command,cwd='.',timeoutSec=30},owner)

@@ -23,6 +23,20 @@
 
 局部**fakeRes()**提供headers/statusCode/body；**setHeader(k,v)**小写记键，**status/json**记录并链式返回，**end()**仅返回this，**write()**空（本组不验证SSE字节）。**post(body)**用无header/params的请求直接handlePost：空batch→400/-32600；ping+tools/list batch保两id与对应result；notification+ping只回ping；纯notification→202；id0必须返回0而非误作通知。成功与catch均rm tmp，catch exit1；session状态由单文件进程结束隔离。
 
+## mcpInterop.test.js：官方客户端互操作合同（F70第七批）
+
+[源码](mcpInterop.test.js)加载真实src/index.js（端口0、临时工作区），用真实HTTP按远程客户端的方式对话，不替换handler。异步**main**内的**rpc(body,{sid,accept,headers})**发POST并解析JSON或单条SSE消息。每一项都是官方TypeScript SDK 1.30.1/2.1.0客户端或官方一致性套件0.1.16会强制、而本主机此前违反的合同（这些外部工具在仓库外运行，不是CI依赖）：
+
+1. ping结果必须严格等于`{}`；旧的`{ok,ts,busy,session,host}`让SDK的client.ping()抛“Unrecognized keys”。
+2. resources/templates/list、completion/complete、任意未知方法都是HTTP 200上的-32601；未知**会话**仍是404/-32001。
+3. tools/list注解：读取类readOnlyHint为true；写入/命令类readOnlyHint为false；delete_file、run_command、apply_patch为destructive，board_create不是；每个工具openWorldHint为布尔，external_request为true、read_files为false。
+4. `/mcp`、`/oauth/register`（带隧道头）、超限`/oauth/token`、任意路径的坏JSON/超限正文都回JSON且状态为400/413，正文不得含node_modules、调用栈、`<pre>`/`<html>`或安装路径；`/mcp`为-32700、id为null。
+5. 状态接口transports只列streamable-http；不带会话的GET流405、`Allow: POST`、不分配会话；过期会话GET流404且不回新会话ID；带会话的GET流200且没有endpoint事件。
+6. remoteTimeoutSec：run 120→50、缺省30；start 300→300、5000→600、缺省与负数→30；真实远程start_command请求120秒得到timeoutSec=120。
+7. 远程run_command打印30003字符时保留以END结尾的尾部，stdoutTruncated=true、stdoutChars=30003、stderrTruncated=false；两字符输出的截断标志为false。
+
+finally停止上报定时器、关闭两个服务器并删除临时目录。基线红测已逐项核对：分别只撤销九处修复中的一处，都在对应断言失败（ping、404、注解、JSON错误、transports、endpoint事件、start上限、run上限、截断标志）。
+
 ## httpSmoke.test.js
 
 [源码](httpSmoke.test.js)在两个随机范围端口启动真实src/index.js。**request(method,url,body,extraHeaders)**解析URL、JSON序列化、补Content-Type/长度，data收集、end同时给raw/json（坏JSON为null），error拒。**waitHealth(url,timeoutMs)**内部**tick**每120ms重试HTTP，响应resume释放流，超12秒拒。**stop(proc)**Windows taskkill树、其他SIGTERM；已killed跳过，**并未等待确切exit证明**。

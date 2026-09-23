@@ -61,6 +61,33 @@ function applyCommon(app, { mcp = false } = {}) {
   app.use(express.urlencoded({ extended: false, limit: '64kb', parameterLimit: 32 }));
 }
 
+// Final error handler for both listeners. Without it Express answers body-parser failures (malformed JSON,
+// an oversized body, a bad charset) with its default HTML page: the exception text, the absolute install
+// path and a stack trace — on ANY path, before authentication, and through the tunnel (POST
+// /oauth/register '{bad' was enough). Keep the status the parser chose (400/413/415…), never echo
+// err.message or a stack, and answer JSON-RPC-shaped errors on /mcp so MCP clients can parse them.
+// eslint-disable-next-line no-unused-vars -- Express recognises error middleware by its four parameters.
+function jsonErrors(err, req, res, next) {
+  const raw = err && (err.status || err.statusCode);
+  const status = Number.isInteger(raw) && raw >= 400 && raw < 600 ? raw : 500;
+  if (status >= 500) console.error('request failed:', req.method, req.path, err && err.message);
+  if (res.headersSent) return res.end();
+  const known = {
+    'entity.parse.failed': 'Request body is not valid JSON',
+    'entity.too.large': 'Request body too large',
+    'encoding.unsupported': 'Unsupported request body encoding',
+    'charset.unsupported': 'Unsupported request body charset',
+    'request.aborted': 'Request aborted',
+    'request.size.invalid': 'Request body size mismatch'
+  };
+  const message = known[err && err.type] || (status >= 500 ? 'Internal server error' : 'Bad request');
+  if (/^\/mcp(?:\/|$)/.test(req.path)) {
+    const code = err && err.type === 'entity.parse.failed' ? -32700 : status >= 500 ? -32603 : -32600;
+    return res.status(status).json({ jsonrpc: '2.0', error: { code, message }, id: null });
+  }
+  return res.status(status).json({ error: message });
+}
+
 function mountHealth(app) {
   app.get('/health', (req, res) => {
     res.json({ ok: true, product: config.productName, version: config.version });
@@ -91,6 +118,7 @@ applyCommon(uiApp);
 mountHealth(uiApp);
 uiApp.use('/api', rejectUnlessLocalControl, rejectCrossSiteApi, apiRouter);
 mountWorkbench(uiApp);
+uiApp.use(jsonErrors);
 
 const mcpApp = express();
 applyCommon(mcpApp, { mcp: true });
@@ -98,6 +126,7 @@ mountHealth(mcpApp);
 mcpApp.use(oauth.router);
 mcpApp.use('/mcp', rejectDisallowedMcpOrigin, mcpRouter);
 mcpApp.use('/api', rejectUnlessLocalControl, rejectCrossSiteApi, apiRouter);
+mcpApp.use(jsonErrors);
 
 function attachWss(server) {
   const wss = new WebSocketServer({

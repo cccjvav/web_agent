@@ -81,9 +81,20 @@ function workingDirFrom(cwd) {
   }
 }
 
+// Total characters a stream produced. The per-chunk counter survives the MAX_CAPTURE ring trim; the
+// string length covers paths that set the text directly (PTY results, error messages appended late).
+function streamChars(rec, field) {
+  const counted = rec[`${field}Chars`];
+  return Math.max(Number.isSafeInteger(counted) ? counted : 0, String(rec[field] || '').length);
+}
+
 function publicRecord(rec, tail) {
   const limit = Math.min(MAX_CAPTURE, Math.max(500, Number(tail) || 8000));
   const running = rec.status === 'running';
+  const stdout = sliceTextTail(rec.stdout, limit);
+  const stderr = sliceTextTail(rec.stderr, limit);
+  const stdoutChars = streamChars(rec, 'stdout');
+  const stderrChars = streamChars(rec, 'stderr');
   return {
     execId: rec.execId,
     command: rec.command,
@@ -93,8 +104,15 @@ function publicRecord(rec, tail) {
     signal: rec.signal,
     durationMs: rec.durationMs,
     isTimeout: rec.isTimeout || false,
-    stdout: sliceTextTail(rec.stdout, limit),
-    stderr: sliceTextTail(rec.stderr, limit),
+    timeoutSec: rec.timeoutSec,
+    stdout,
+    stderr,
+    // Only the tail is returned (default 8000 characters). Without these a caller could not tell a
+    // 30 000-character build log from an 8000-character one and took the tail for the whole output.
+    stdoutChars,
+    stderrChars,
+    stdoutTruncated: stdout.length < stdoutChars,
+    stderrTruncated: stderr.length < stderrChars,
     suggestedWaitMs: running ? rec.suggestedWaitMs : 0,
     hint: running ? 'Still running. Poll get_command_output with this execId.' : undefined,
     execution: rec.execution,
@@ -141,7 +159,10 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }, owner) {
     status: 'running',
     stdout: '',
     stderr: '',
+    stdoutChars: 0,
+    stderrChars: 0,
     isTimeout: false,
+    timeoutSec: timeoutMs / 1000,
     suggestedWaitMs: Math.min(4000, Math.max(800, Math.round(timeoutMs / 8)))
   };
   commandStore.set(String(execId), rec);
@@ -249,6 +270,7 @@ exit 0`;
 
   const append = (field, chunk) => {
     if (!chunk) return;
+    rec[`${field}Chars`] += chunk.length;
     rec[field] += chunk;
     if (rec[field].length > MAX_CAPTURE) rec[field] = sliceTextTail(rec[field], MAX_CAPTURE);
     eventBus.broadcast('command_output', { execId, stream: field, chunk });
@@ -351,6 +373,7 @@ function startCommand(opts, options = {}) {
       stdout: '',
       stderr: '',
       execution: 'pty',
+      timeoutSec: timeoutMs / 1000,
       suggestedWaitMs: Math.min(4000, Math.max(800, Math.round(timeoutMs / 8)))
     };
     commandStore.set(String(execId), rec);
@@ -367,6 +390,7 @@ function startCommand(opts, options = {}) {
       timeoutSec: (opts && opts.timeoutSec) || 30,
       onChunk: (chunk, stream) => {
         const field = stream === 'stderr' ? 'stderr' : 'stdout';
+        rec[`${field}Chars`] = (rec[`${field}Chars`] || 0) + String(chunk || '').length;
         rec[field] += chunk;
         if (rec[field].length > MAX_CAPTURE) rec[field] = sliceTextTail(rec[field], MAX_CAPTURE);
         eventBus.broadcast('command_output', { execId, stream: field, chunk });
@@ -396,6 +420,7 @@ function startCommand(opts, options = {}) {
       execId: rec.execId,
       status: 'running',
       command: rec.command,
+      timeoutSec: rec.timeoutSec,
       suggestedWaitMs: rec.suggestedWaitMs,
       hint: 'Poll get_command_output until status is done or timeout. Desktop Chat runs this in Web Agent · 1.'
     };
@@ -409,6 +434,7 @@ function startCommand(opts, options = {}) {
     execId: rec.execId,
     status: 'running',
     command: rec.command,
+    timeoutSec: rec.timeoutSec,
     suggestedWaitMs: rec.suggestedWaitMs,
     hint: 'Poll get_command_output until status is done or timeout.'
   };

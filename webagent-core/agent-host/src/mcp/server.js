@@ -124,11 +124,6 @@ function bindHttpSession(req, { createIfMissing = false } = {}) {
   return { ok: true };
 }
 
-function mcpEndpointPath(req) {
-  if (req.params && req.params.secret) return `/mcp/${req.params.secret}`;
-  return '/mcp';
-}
-
 function rejectSessionCapacity(req, res) {
   return res.status(503).json({ jsonrpc: '2.0', error: { code: -32000, message: 'Session capacity exhausted. Retry when active work completes.' }, id: null });
 }
@@ -226,16 +221,13 @@ async function handleRpc(req) {
       lifecycle.cancel(lifecycle.owner(keyForReq(req), extractToken(req)), params?.requestId);
       return {};
 
-    case 'ping': {
-      const sess = sessTouch(req, { incCall: true });
-      return {
-        ok: true,
-        ts: Date.now(),
-        busy: false,
-        session: { lastSeen: sess.lastSeen, calls: sess.calls },
-        host: snapshot()
-      };
-    }
+    case 'ping':
+      // MCP ping MUST answer an empty result. SDK clients validate it with a strict EmptyResult schema,
+      // so the old {ok,ts,busy,session,host} body made client.ping() throw ("Unrecognized keys") and the
+      // official conformance "ping" scenario fail. It still counts as liveness for this session; the host
+      // snapshot stays available through the ping tool, workspace_info and GET /mcp.
+      sessTouch(req, { incCall: true });
+      return {};
 
     case 'tools/list':
       sessTouch(req);
@@ -358,7 +350,10 @@ function hostStatus() {
     resources: listResources().map((r) => r.uri),
     instructions: control.permissions().read ? getInstructions() : 'Bridge文件读取已被本机操作者禁止。' ,
     session: snapshot(),
-    transports: ['streamable-http', 'sse'],
+    // Only Streamable HTTP. The legacy 2024-11-05 HTTP+SSE transport (responses delivered on the GET
+    // stream) is not implemented — POST answers inline — and advertising it made the official
+    // SSEClientTransport wait forever for its initialize response.
+    transports: ['streamable-http'],
     auth: ['url-secret', 'bearer', 'oauth']
   };
 }
@@ -444,7 +439,10 @@ async function dispatchOne(req, body, res) {
   } catch (err) {
     if (notify) return { kind: 'notification' };
     const info = publicError(err);
-    const httpStatus = info.code === 'E_UNKNOWN_CMD' ? 404 : 200;
+    // Always HTTP 200 for a JSON-RPC error. On the Streamable HTTP endpoint a 404 means "this session is
+    // gone, initialize again": answering 404 for an unknown *method* (clients probe optional ones such as
+    // resources/templates/list or completion/complete) told them their session had expired.
+    const httpStatus = 200;
     const rpcCode = err.rpcCode || (info.code === 'E_UNKNOWN_CMD' ? -32601 : info.layer === 'protocol' ? -32602 : -32603);
     return {
       kind: 'response',
@@ -498,9 +496,21 @@ async function handlePost(req, res) {
 function handleGet(req, res) {
   if (hasMalformedSessionHeader(req)) return rejectMalformedSessionHeader(req, res);
   if (!protocolForRequest(req)) return res.status(400).json(invalidRpc(null, 'Invalid, unsupported or inconsistent MCP-Protocol-Version'));
+  // A GET stream without Mcp-Session-Id is the legacy 2024-11-05 HTTP+SSE handshake (open a stream, wait for
+  // an `endpoint` event, read responses from the stream). That transport is not implemented — POST answers
+  // inline — and a Streamable HTTP client MUST send the session id it got from initialize on this GET, so only
+  // legacy or SSE-first clients arrive here without one. 405 is the Streamable HTTP answer for "no SSE stream
+  // here": SDK clients treat it as benign, SSE-first clients fall back to POST, pure legacy clients fail at
+  // once instead of waiting forever. Checked before anything else: no session, no Bridge mode switch.
+  if (wantsSse(req) && !incomingSessionId(req)) {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ jsonrpc: '2.0', error: { code: -32000, message: 'Legacy HTTP+SSE is not supported. Use Streamable HTTP: POST initialize to this URL, then send Mcp-Session-Id.' }, id: null });
+  }
   try { const release = control.enter('bridge'); release(); }
   catch(error) { return res.status(409).json({error:error.message}); }
-  const bound = bindHttpSession(req, { createIfMissing: wantsSse(req) });
+  // Never allocate here. An unknown or expired session is 404 so the client re-initializes; this used to mint a
+  // fresh, never-initialized session and hand back its id as if the old one had continued.
+  const bound = bindHttpSession(req, { createIfMissing: false });
   if (!bound.ok) return bound.full ? rejectSessionCapacity(req, res) : rejectUnknownSession(req, res);
 
   if (wantsSse(req)) {
@@ -512,7 +522,10 @@ function handleGet(req, res) {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     if (req.mcpSessionId) res.setHeader('Mcp-Session-Id', req.mcpSessionId);
-    res.write(`event: endpoint\ndata: ${mcpEndpointPath(req)}\n\n`);
+    // Streamable HTTP listen stream: comments only (this server never pushes server-initiated messages).
+    // It used to open with the legacy HTTP+SSE `endpoint` event, which told 2024-11-05 clients to expect
+    // their responses on this stream — they never arrive there, so those clients hung on initialize.
+    res.write(': stream open\n\n');
     const timer = setInterval(() => {
       try { res.write(': ping\n\n'); } catch (_) {}
     }, 15000);

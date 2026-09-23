@@ -37,7 +37,7 @@ MCP、本机Chat和部分REST操作复用 `index.js` 的callTool。它做工具�
 ## 调用流程与模式
 callTool先检查当前请求取消，再定位工具、检查模式、归一参数，最后执行handler并clipJson。Ask/Plan不开放普通源码写入和命令运行；但todos、memory和协作board属于允许的元数据操作，所以“只读”不能解释为磁盘上一个字节都不会变化。
 
-远程MCP拒绝交互send_command_input；run/start命令还经过远程危险命令限制，并把timeoutSec夹到最多60秒。远程get_capabilities与tools/list使用同一ACL过滤，get_logs只返回当前caller的执行追踪，get_task_status只返回当前caller计划；本机入口仍可看宿主/Local状态。本机显式确认和远程权限不是同一个开关。完整实时工具名单以getToolList/tools/list为准，不手写容易失真的数量。
+远程MCP拒绝交互send_command_input；run/start命令还经过远程危险命令限制。远程时限（remoteTimeoutSec，F70第七批）：run_command最多50秒——它在一次MCP请求内回答，官方SDK客户端默认60秒放弃请求，旧的60秒上限让客户端在主机送出超时结果前2毫秒放弃；start_command立即返回并轮询，上限600秒（与PTY队列一致），此前也被夹到60秒而杀掉合法的长构建。命令结果带stdoutChars/stderrChars与stdoutTruncated/stderrTruncated，只返回尾部时调用方能知道输出被截断。tools/list每个工具带MCP annotations（readOnlyHint/destructiveHint/idempotentHint/openWorldHint），ChatGPT开发者模式据此只对写入类工具要求确认；它们只是客户端界面提示，主机照常执行权限、模式、危险命令和本机审批。远程get_capabilities与tools/list使用同一ACL过滤，get_logs只返回当前caller的执行追踪，get_task_status只返回当前caller计划；本机入口仍可看宿主/Local状态。本机显式确认和远程权限不是同一个开关。完整实时工具名单以getToolList/tools/list为准，不手写容易失真的数量。
 
 ## 文件读取与安全边界
 路径必须通过resolveSafePath及敏感规则；绝对盘符、越界路径、真实链接目标等按实现检查。目录遍历跳过链接及隐藏项，不能据此宣称任意外部程序也被限制在工作区。
@@ -101,11 +101,11 @@ R4：executor/fileOps复用WEBAGENT_DEBUG_PROCESS=1输出有界生命周期元�
 | [commandJob.cs](commandJob.cs) | 文件级登记；未做符号完整性证明 |
 | [consensusEngine.js](consensusEngine.js) | 8 个函数/类节点 |
 | [dangerous.js](dangerous.js) | 1 个函数/类节点 |
-| [executor.js](executor.js) | 38 个函数/类节点 |
+| [executor.js](executor.js) | 39 个函数/类节点 |
 | [fileOps.js](fileOps.js) | 35 个函数/类节点 |
 | [findFiles.js](findFiles.js) | 3 个函数/类节点 |
 | [gitOps.js](gitOps.js) | 13 个函数/类节点 |
-| [index.js](index.js) | 22 个函数/类节点 |
+| [index.js](index.js) | 24 个函数/类节点 |
 | [normalize.js](normalize.js) | 4 个函数/类节点 |
 | [patchEngine.js](patchEngine.js) | 39 个函数/类节点 |
 | [planRound.js](planRound.js) | 10 个函数/类节点 |

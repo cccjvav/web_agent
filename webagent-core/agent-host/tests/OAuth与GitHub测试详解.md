@@ -18,7 +18,7 @@
 | 重新配对授权取token | 独立新族可供后续Bearer访问；不存在code+wrong verifier应抛 |
 | Bearer canonical workspace_info | 200且非工具错误、正文有root信息 |
 | initialize返回session ID，复用/未知/DELETE/删除后复用 | 原id保持，未知404，删除204，再用404 |
-| GET SSE | data回调等endpoint事件再destroy请求，核对200及data路径；3秒请求超时reject，预期ECONNRESET忽略 |
+| GET流 | **openStream(headers)**对URL-secret路径发GET：非200时读完正文返回，200时等到第一个空行就destroy请求；3秒超时reject，预期ECONNRESET忽略。不带Mcp-Session-Id必须405且`Allow: POST`（旧版HTTP+SSE握手未实现，F70第七批前会开流发endpoint事件，旧客户端永远等不到响应）；先initialize再带会话ID则200，流中没有endpoint事件、也不回显URL secret |
 | 连续21次HTTP register | 最后429，验证IP速率限制 |
 | revokeAll再Bearer ping | 401 |
 

@@ -160,7 +160,7 @@ async function main() {
   assert.ok(init.serverInfo.name);
 
   const ping = await handleRpc(req('ping'));
-  assert.strictEqual(ping.ok, true);
+  assert.deepStrictEqual(ping, {}, 'MCP ping answers an empty result (strict EmptyResult in SDK clients)');
 
   const listed = await handleRpc(req('resources/list'));
   const uris = listed.resources.map((r) => r.uri);
@@ -401,7 +401,7 @@ async function main() {
   assert.ok(Array.isArray(batch.body));
   assert.strictEqual(batch.body.length, 2);
   assert.strictEqual(batch.body[0].id, 1);
-  assert.strictEqual(batch.body[0].result.ok, true);
+  assert.deepStrictEqual(batch.body[0].result, {}, 'MCP ping answers an empty result');
   assert.strictEqual(batch.body[1].id, 2);
   assert.ok(Array.isArray(batch.body[1].result.tools));
 
@@ -420,7 +420,7 @@ async function main() {
 
   const zero = await post({ jsonrpc: '2.0', id: 0, method: 'ping', params: {} });
   assert.strictEqual(zero.body.id, 0);
-  assert.strictEqual(zero.body.result.ok, true);
+  assert.deepStrictEqual(zero.body.result, {});
 
   // 重复 Mcp-Session-Id 头被 Node 合并成 "a, b"，或以数组出现；两种形态都必须
   // 在会话查找前给 400 说明，而不是误导性的 404 会话不存在（F54，对照ShunCode缺陷5）。

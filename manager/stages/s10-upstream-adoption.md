@@ -1491,3 +1491,28 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **第六批精确证据：** `09e656d`的[CI35913876271](https://github.com/cccjvav/web_agent/actions/runs/35913876271)为push事件、精确同SHA，九job全部success，已逐job核对：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、workbench-browser。提交前本地108/108、真实Chromium浏览器套件通过、check-docs 290/28/111零漂移。
 
 **仍开放：** gpt-5.4+带工具时无法推理（需/v1/responses）；P1-4每条命令Add-Type编译（需Windows耗时实测）；P2-10全局20MB body与/health版本（已记录保留理由）；ESLint入CI需项目主人同意新增开发依赖；探针三模块继续完全暂停。
+
+### 第70组第七批：MCP bridge专项——官方SDK客户端与官方一致性套件对真实主机复核（2026-09-23）
+
+**起因与方法。** 用户指出Chat模式问题优先级不高，更看重MCP bridge能力，并问是否已完善彻底检查。如实回答：本会话此前**没有**做过bridge专项检查，只碰过相邻模块（apply_patch、危险命令、shutdown、能力声明）。本批改用外部权威工具在真实主机上复现，不只读代码：官方TypeScript SDK客户端1.30.1（当前主流部署）与2.1.0（含2026-07-28双代协商），官方`@modelcontextprotocol/conformance` 0.1.16服务器套件32个场景，均装在仓库外、不入依赖。主机以隔离临时工作区启动，全部经真实HTTP。
+
+**先复审上一批。** `e2365d1`的CI35914430816九job全绿。复读第六批samplingParams与runChat调用链，未发现需回退的问题。本批开工时沙箱再次重启：HEAD回到26a167e而文件保留；用`git hash-object --path`按Git过滤规则逐一核对e2365d1的893个跟踪文件，仅两个暂停模块文件因CRLF规范化显示不同、原始字节与blob一致，确认工作树即e2365d1后只做mixed指针恢复，没有reset --hard或覆盖文件。
+
+**已通过、无需修改（真实复现）：** SDK 1.30.1/2.1.0连接、initialize、tools/list（39个工具schema均为object）、tools/call、resources/list与8个资源读取、prompts、logging/setLevel、会话终止与重连；读→带expectedHash的apply_patch→过期hash被拒E_STALE_FILE；start_command轮询；单会话8路并发；远程`rm -rf /`被拒；`.webagent/config.json`被拒；路径越界被拒；SDK取消（AbortSignal→notifications/cancelled）后主机进程确实被停止；OAuth三种token端点认证方式（none/client_secret_post/client_secret_basic）用官方SDK完成注册→配对授权→PKCE换token→调用→刷新轮换；隧道来源访问/api即使带有效密钥也404；一致性套件的DNS重绑定场景通过。
+
+| 项 | 实测事实（修前） | 修法 | 红测 |
+|---|---|---|---|
+| ping结果 | 回`{ok,ts,busy,session,host}`；两个SDK的client.ping()都抛ZodError“Unrecognized keys”，一致性ping场景失败，依赖ping保活的SDK客户端会误判断线 | 只回`{}`，仍记会话活跃；快照改由ping工具/GET /mcp提供 | mcpInterop 1 |
+| 未知方法HTTP 404 | resources/templates/list、completion/complete等可选方法被探测时回404；Streamable HTTP中404表示“会话失效需重新initialize” | JSON-RPC错误一律HTTP 200，未知方法-32601；未知会话仍404/-32001 | mcpInterop 2 |
+| 工具无annotations | 39个工具都没有readOnlyHint；ChatGPT开发者模式把缺该提示的工具全部当写入，每次读取都要用户确认 | 显式TOOL_EFFECTS表生成readOnlyHint/destructiveHint/idempotentHint/openWorldHint，缺表项按写入+破坏+外部失败关闭；不从权限集合推导（workflow_request只需Read却会排队写入） | mcpInterop 3 |
+| HTML错误页泄露 | 畸形JSON/超限正文由Express默认处理器回HTML：异常文本、绝对安装路径、完整调用栈；认证前、任意路径、经隧道头均可触发（`POST /oauth/register`带`{bad`） | 两个app最后挂jsonErrors：保留4xx/5xx，固定说明，从不回显message/栈；/mcp回JSON-RPC（-32700/-32600/-32603，id null） | mcpInterop 4 |
+| 虚报旧版HTTP+SSE | 状态接口transports含'sse'，无会话GET流发`endpoint`事件，但POST从不把响应送到流上；官方SSEClientTransport永远等不到initialize响应 | transports只列streamable-http；无会话GET流405+`Allow: POST`并给说明，不分配会话；GET流从不分配会话，过期会话404（此前悄悄新建一条未初始化会话）；带会话的监听流只发注释 | mcpInterop 5 |
+| 远程run_command 60秒上限 | 与SDK默认60秒请求超时相同，客户端在60.002秒放弃，主机的超时结果与部分输出永远到不了模型（实测） | run_command最多50秒 | mcpInterop 6 |
+| 远程start_command 60秒上限 | 异步+轮询的start_command也被夹到60秒：请求300秒、60秒被杀（实测），而说明正要求长任务用它 | 上限600秒（与PTY队列一致），结果回显timeoutSec | mcpInterop 6 |
+| 截断不可见 | 30003字符输出只回最后8000字符且无任何标记，模型把尾部当完整输出 | stdoutChars/stderrChars总量与stdoutTruncated/stderrTruncated；逐块计数不受200Ki环形裁剪影响 | mcpInterop 7 |
+
+逐项红测：分别只撤销九处修复中的一处（ping、404、注解、JSON错误、transports、endpoint事件、start上限、run上限、截断标志），每次都在对应断言失败；全部恢复后通过且源码与修后逐字节一致。既有mcpProtocol/oauth/mcpCancellation对旧行为（ping.ok、endpoint事件、无会话GET流503）的断言按新合同改写并写明原因。修后复跑：两版SDK全部流程通过且ping正常；旧版SSE客户端54毫秒内明确失败（此前无限等待）；SDK的Streamable HTTP交换为POST 200→POST 202→带会话GET 200→POST 200；一致性套件12通过（修前11），其余22个均为套件专用test_*夹具工具/资源/提示或本主机未实现的可选能力（completion、resources/templates与subscribe、进度/日志通知、sampling/elicitation、图片/音频/嵌入资源内容），逐条核对不是缺陷。
+
+**如实保留（未改）：** 现行MCP规范2026-07-28为无状态核心（去掉initialize与Mcp-Session-Id），本主机仍是旧代实现；官方SDK 2.x双代客户端自动回退已验证可用，纯新代客户端无法连接，属独立工作包。未实现：outputSchema/structuredContent、进度与日志通知、resources/templates/subscribe、completion。隧道启动前OAuth元数据的issuer为http://127.0.0.1（设计如此，从不信任Host头；启动隧道后改用publicTunnelUrl）。路径越界的错误分类为E_INTERNAL而非E_FORBIDDEN（仅分类，已拒绝）。以上结论来自沙箱内真实主机+官方工具，**不等于**Arena/ChatGPT/手机等真实客户端的实机验收（R8仍待用户）。
+
+文档：MCP README（JSON-RPC层、只支持Streamable HTTP、annotations）、请求分发详解（ping、未知方法、handleGet、hostStatus、协议复核结论）、入口详解（jsonErrors与装配顺序）、工具README、工具入口与命令策略详解（toolAnnotations、remoteTimeoutSec）、命令与PTY详解（streamChars、截断字段）、MCP协议与整机入口测试详解（mcpInterop）、OAuth与GitHub测试详解（openStream）。

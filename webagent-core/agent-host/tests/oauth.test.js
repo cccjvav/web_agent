@@ -218,21 +218,24 @@ async function main() {
     });
     assert.strictEqual(afterDelete.status, 404);
 
-    const sseGet = await new Promise((resolve, reject) => {
+    // GET stream on the URL-secret path. Without Mcp-Session-Id it is the legacy 2024-11-05 HTTP+SSE handshake,
+    // which this host does not implement: 405 at once (it used to open a stream announcing an `endpoint` whose
+    // responses never arrived there, so legacy clients waited forever). With the session id from initialize it
+    // is the Streamable HTTP listen stream: opens, comments only, never echoes the URL secret.
+    const openStream = (headers) => new Promise((resolve, reject) => {
       const addr = server.address();
       const req = http.request(
-        {
-          hostname: '127.0.0.1',
-          port: addr.port,
-          path: `/mcp/${config.secretKey}`,
-          method: 'GET',
-          headers: { Accept: 'text/event-stream' }
-        },
+        { hostname: '127.0.0.1', port: addr.port, path: `/mcp/${config.secretKey}`, method: 'GET', headers },
         (res) => {
           let raw = '';
+          if (res.statusCode !== 200) {
+            res.on('data', (c) => { raw += c.toString(); });
+            res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, raw }));
+            return;
+          }
           res.on('data', (c) => {
             raw += c.toString();
-            if (raw.includes('event: endpoint')) {
+            if (raw.includes('\n\n')) {
               req.destroy();
               resolve({ status: res.statusCode, headers: res.headers, raw });
             }
@@ -249,8 +252,16 @@ async function main() {
       });
       req.end();
     });
+    const legacyGet = await openStream({ Accept: 'text/event-stream' });
+    assert.strictEqual(legacyGet.status, 405, 'sessionless GET stream (legacy HTTP+SSE) is refused at once');
+    assert.strictEqual(legacyGet.headers.allow, 'POST');
+    const streamInit = await request(server, 'POST', `/mcp/${config.secretKey}`, {
+      body: { jsonrpc: '2.0', id: 23, method: 'initialize', params: { clientInfo: { name: 'listen-stream' } } }
+    });
+    const sseGet = await openStream({ Accept: 'text/event-stream', 'Mcp-Session-Id': streamInit.headers['mcp-session-id'] });
     assert.strictEqual(sseGet.status, 200);
-    assert.ok(sseGet.raw.includes(`data: /mcp/${config.secretKey}`));
+    assert.ok(!sseGet.raw.includes('event: endpoint'), 'no legacy endpoint announcement');
+    assert.ok(!sseGet.raw.includes(config.secretKey), 'the stream never echoes the URL secret');
 
     let lastReg = null;
     for (let i = 0; i < 21; i++) {

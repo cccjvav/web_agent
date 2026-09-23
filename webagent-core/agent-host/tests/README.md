@@ -194,6 +194,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 19 个函数/类节点 |
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 24 个函数/类节点 |
+| [mcpInterop.test.js](mcpInterop.test.js) | 12 个函数/类节点 |
 | [mcpProtocol.test.js](mcpProtocol.test.js) | 53 个函数/类节点 |
 | [memoryRecall.test.js](memoryRecall.test.js) | 8 个函数/类节点 |
 | [modelLifecycle.test.js](modelLifecycle.test.js) | 55 个函数/类节点 |
@@ -202,7 +203,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [nativeRequestJson.test.js](nativeRequestJson.test.js) | 28 个函数/类节点 |
 | [nativeRotationCommands.test.js](nativeRotationCommands.test.js) | 54 个函数/类节点 |
 | [networkBudget.test.js](networkBudget.test.js) | 22 个函数/类节点 |
-| [oauth.test.js](oauth.test.js) | 15 个函数/类节点 |
+| [oauth.test.js](oauth.test.js) | 18 个函数/类节点 |
 | [oauthClientAuth.test.js](oauthClientAuth.test.js) | 29 个函数/类节点 |
 | [oauthRateLimit.test.js](oauthRateLimit.test.js) | 15 个函数/类节点 |
 | [oauthSpentRefreshBudget.test.js](oauthSpentRefreshBudget.test.js) | 8 个函数/类节点 |
