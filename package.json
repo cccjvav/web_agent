@@ -9,5 +9,6 @@
     "test": "npm --prefix webagent-core/agent-host test --",
     "test:example": "npm --prefix examples/calculator test",
     "docs:check": "node docs-site/check-docs.js"
-  }
+  },
+  "license": "ISC"
 }

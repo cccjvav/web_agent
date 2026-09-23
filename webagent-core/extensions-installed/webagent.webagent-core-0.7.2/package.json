@@ -96,5 +96,6 @@
         "title": "Web Agent: 预览并恢复当前草稿为磁盘版本"
       }
     ]
-  }
+  },
+  "license": "ISC"
 }
