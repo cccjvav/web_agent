@@ -20,7 +20,10 @@
      OS's font-size setting actually changes this UI. Hardcoded px ignored both, which pushed
      a lot of secondary text to an effective 11px with no way for the user to enlarge it.
      The rem values keep the default rendering identical at the standard 16px root. */
-  --fs-xs: 0.6875rem;   /* 11px at default root: pills, timestamps, dense metadata */
+  /* Smallest step raised 11px -> 12px (F70): 25 CJK labels (badges, section titles, status
+     chips, the theme button) rendered at 11px, below the usual 12px legibility floor for Chinese
+     glyphs. xs and sm now coincide at the default root; the tokens stay separate by purpose. */
+  --fs-xs: 0.75rem;     /* 12px at default root: pills, timestamps, dense metadata */
   --fs-sm: 0.75rem;     /* 12px: the default control/body size */
   --fs-md: 0.8125rem;   /* 13px: primary reading text and inputs */
   --fs-lg: 0.875rem;    /* 14px */
@@ -31,8 +34,13 @@
   --fs-5xl: 1.75rem;    /* 28px */
   --fs-6xl: 1.875rem;   /* 30px */
   --fs-hero: 2.625rem;  /* 42px */
-  --title: 30px;
-  --status: 22px;
+  /* Chrome heights are rem as well, so the bars grow with the text they hold. With the
+     A-/A+ control at 160% the old px heights clipped the title bar (6px) and status bar (4px);
+     measured in real Chromium. At the default 16px root these are the same 30/22/35/36px. */
+  --title: 1.875rem;    /* 30px */
+  --status: 1.375rem;   /* 22px */
+  --tabs: 2.1875rem;    /* 35px: editor tab strip */
+  --switcher: 2.25rem;  /* 36px: narrow-screen workspace switcher */
   --activity: 48px;
   --right: 356px;
   --sess-bg: #1c1c1c;
@@ -46,7 +54,10 @@
    inside modals and popovers that are appended to <body>. */
 html { font-size: calc(100% * var(--text-scale, 1)); }
 html, body { height: 100%; margin: 0; background: var(--bg0); color: var(--text); font-family: var(--font); overflow: hidden; }
-button, input, select, textarea { font-family: inherit; color: inherit; }
+/* Form controls do not inherit font-size by default: without this, every button/input without its
+   own rule stayed at the browser's fixed 13.33px and ignored the A-/A+ control (32 controls,
+   measured). --fs-md is 13px at the default root, so default rendering is unchanged. */
+button, input, select, textarea { font-family: inherit; color: inherit; font-size: var(--fs-md); }
 button { cursor: pointer; }
 .hidden { display: none !important; }
 u { text-decoration: none; }
@@ -101,10 +112,11 @@ u { text-decoration: none; }
 .search-hit { align-items: flex-start; flex-direction: column; margin-top: 2px; }
 .search-hit .hint { display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .side-pad { padding: 8px 12px; }
+.tree-truncated { margin: 8px; padding: 6px 8px; border: 1px dashed var(--border); border-radius: 4px; }
 
 #center { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--bg); }
 #tabs {
-  height: 35px; display: flex; background: var(--bg0); border-bottom: 1px solid var(--border); overflow: auto;
+  height: var(--tabs); display: flex; background: var(--bg0); border-bottom: 1px solid var(--border); overflow: auto;
 }
 .tab {
   display: flex; align-items: center; gap: 4px; padding: 0 6px 0 10px; font-size: var(--fs-md); color: var(--text2);
@@ -175,7 +187,7 @@ u { text-decoration: none; }
 
 #panel { height: 160px; border-top: 1px solid var(--border); background: var(--bg0); display: flex; flex-direction: column; }
 #panel.hidden { display: none !important; }
-.panel-head { height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-size: var(--fs-xs); letter-spacing: .06em; border-bottom: 1px solid var(--border); }
+.panel-head { height: 1.75rem; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-size: var(--fs-xs); letter-spacing: .06em; border-bottom: 1px solid var(--border); }
 .terminal { flex: 1; overflow: auto; padding: 8px 12px; font-family: var(--mono); font-size: var(--fs-sm); color: var(--text); }
 .terminal .info { color: var(--link); }
 .terminal .err { color: var(--danger); }
@@ -379,7 +391,7 @@ u { text-decoration: none; }
 details.block summary { cursor: pointer; }
 
 #manage-menu {
-  position: fixed; bottom: 28px; left: 50px; background: var(--bg2); border: 1px solid #333; border-radius: 6px;
+  position: fixed; bottom: calc(var(--status) + 6px); left: 50px; background: var(--bg2); border: 1px solid #333; border-radius: 6px;
   min-width: 220px; z-index: 40; padding: 4px;
 }
 #manage-menu button {
@@ -387,7 +399,7 @@ details.block summary { cursor: pointer; }
 }
 #manage-menu button:hover { background: #04395e; }
 #toast {
-  position: fixed; bottom: 36px; right: 16px; background: var(--bg2); border: 1px solid #333;
+  position: fixed; bottom: calc(var(--status) + 14px); right: 16px; background: var(--bg2); border: 1px solid #333;
   padding: 8px 12px; border-radius: 6px; font-size: var(--fs-sm); z-index: 50;
 }
 
@@ -400,7 +412,7 @@ details.block summary { cursor: pointer; }
 .diff-hunk { color: var(--link); }
 
 .dropdown {
-  position: fixed; top: 30px; left: 8px; background: var(--bg2); border: 1px solid #333;
+  position: fixed; top: var(--title); left: 8px; background: var(--bg2); border: 1px solid #333;
   border-radius: 6px; min-width: 220px; z-index: 40; padding: 4px;
 }
 .dropdown button {
@@ -594,16 +606,16 @@ button.walk-card { width: 100%; text-align: left; color: var(--text); font: inhe
 
 /* One visible workspace on small screens; hidden panes retain drafts and models. */
 #workspace-switcher { display: none; }
-#editor-heading { display: flex; flex: 0 0 35px; min-width: 0; }
+#editor-heading { display: flex; flex: 0 0 var(--tabs); min-width: 0; }
 #editor-heading #tabs { flex: 1; min-width: 0; }
 #btn-close-tab { flex: 0 0 36px; border: 1px solid var(--border); background: var(--bg0); }
 #btn-close-tab:disabled { opacity: .45; cursor: default; }
 .tab { flex-shrink: 0; }
 @media (max-width: 700px) {
-  #workspace-switcher { display: flex; height: 36px; background: var(--bg0); }
+  #workspace-switcher { display: flex; height: var(--switcher); background: var(--bg0); }
   #workspace-switcher button { flex: 1; min-width: 0; border: 1px solid var(--border); background: var(--bg0); }
   #workspace-switcher button[aria-pressed="true"] { background: var(--bg3); border-bottom: 2px solid var(--focus); }
-  #workbench { height: calc(100% - var(--title) - var(--status) - 36px); }
+  #workbench { height: calc(100% - var(--title) - var(--status) - var(--switcher)); }
   #workbench #center, #workbench #rightbar { flex: 1; min-width: 0; width: auto; }
   #workbench[data-workspace-active="editor"] #rightbar { display: none; }
   #workbench:not([data-workspace-active="editor"]) #center { display: none; }

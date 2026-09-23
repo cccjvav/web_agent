@@ -244,6 +244,16 @@ async function main() {
   const dirNames = (dirList.items || []).map((i) => i.name);
   assert.ok(!dirNames.includes('.env'));
   assert.ok(dirNames.includes('.env.example'));
+  // F70 (review P3-18): readdir order is filesystem-dependent. Listings are directories first,
+  // then files, case-insensitive with numeric awareness, recursively.
+  const orderRoot = path.join(tmp, 'order-fixture');
+  fs.mkdirSync(path.join(orderRoot, 'Zeta'), { recursive: true });
+  fs.mkdirSync(path.join(orderRoot, 'alpha'));
+  for (const name of ['file10.txt', 'File2.txt', 'b.txt', 'A.txt']) fs.writeFileSync(path.join(orderRoot, name), 'x');
+  for (const name of ['z.js', 'a.js']) fs.writeFileSync(path.join(orderRoot, 'alpha', name), 'x');
+  const ordered = await callTool('list_directory', { dirPath: 'order-fixture', recursive: true }, 'ask');
+  assert.deepStrictEqual(ordered.items.map(i => i.name), ['alpha', 'Zeta', 'A.txt', 'b.txt', 'File2.txt', 'file10.txt']);
+  assert.deepStrictEqual(ordered.items[0].children.map(i => i.name), ['a.js', 'z.js']);
 
   const info = await callTool('workspace_info', {}, 'ask');
   assert.ok(info.root === tmp);

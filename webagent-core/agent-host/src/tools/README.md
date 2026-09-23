@@ -102,7 +102,7 @@ R4：executor/fileOps复用WEBAGENT_DEBUG_PROCESS=1输出有界生命周期元�
 | [consensusEngine.js](consensusEngine.js) | 7 个函数/类节点 |
 | [dangerous.js](dangerous.js) | 1 个函数/类节点 |
 | [executor.js](executor.js) | 38 个函数/类节点 |
-| [fileOps.js](fileOps.js) | 33 个函数/类节点 |
+| [fileOps.js](fileOps.js) | 35 个函数/类节点 |
 | [findFiles.js](findFiles.js) | 3 个函数/类节点 |
 | [gitOps.js](gitOps.js) | 13 个函数/类节点 |
 | [index.js](index.js) | 22 个函数/类节点 |

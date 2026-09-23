@@ -24,7 +24,7 @@ function classifyToolError(err) {
   const msg = String(err && err.message ? err.message : err);
   if (/not found|No such file/i.test(msg)) return new ExecutionError('E_NOT_FOUND', msg);
   if (/Unknown tool/i.test(msg)) return new ProtocolError('E_UNKNOWN_CMD', msg);
-  if (/locked in|Ask\/Plan are read-only/i.test(msg)) return new ProtocolError('E_BAD_ARGS', msg);
+  if (/locked in|Ask\/Plan (?:are read-only|never edit)/i.test(msg)) return new ProtocolError('E_BAD_ARGS', msg);
   if (/requires |required/i.test(msg)) return new ProtocolError('E_BAD_ARGS', msg);
   if (/HASH_REQUIRED/.test(msg)) return new ProtocolError('E_BAD_ARGS', msg);
   if (/STALE_FILE/.test(msg)) return new ExecutionError('E_STALE_FILE', msg);

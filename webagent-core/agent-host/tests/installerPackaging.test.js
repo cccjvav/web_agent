@@ -82,6 +82,14 @@ try {
   assert.ok(userHome({ LOCALAPPDATA: tmp }).startsWith(tmp));
   const iss = fs.readFileSync(path.join(root, 'installer/webagent.iss'), 'utf8');
   assert.strictEqual((iss.match(/^#define AppVer "([^"]+)"/m) || [])[1], require('../../extension/package.json').version, 'installer and extension release versions must agree');
+  // F70 (review P3-3): the host package said 1.0.0 with a nonexistent main while everything else
+  // shipped as 0.7.2. All release manifests must name the same version, and main must exist.
+  const release = require('../../extension/package.json').version;
+  const hostPackage = require('../package.json');
+  assert.strictEqual(hostPackage.version, release, 'agent-host package.json must carry the release version');
+  assert.strictEqual(require('../package-lock.json').version, release, 'agent-host lockfile must carry the release version');
+  assert.strictEqual(require('../../../package.json').version, release, 'root package.json must carry the release version');
+  assert.ok(fs.existsSync(path.resolve(__dirname, '..', hostPackage.main)), 'agent-host package.json main must point at a real file');
   assert.ok(iss.includes('function PrepareToInstall(var NeedsRestart: Boolean): String;'));
   assert.ok(!iss.includes('ShellExec('));
   assert.ok(iss.includes("CompareText(NormalizePathEntry(Entry), AppDir)"));

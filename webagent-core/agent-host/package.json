@@ -1,7 +1,8 @@
 {
   "name": "agent-host",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "0.7.2",
+  "private": true,
+  "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "test": "node scripts/run-tests.js",
@@ -10,7 +11,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Web Agent local host: workbench server, MCP bridge and workspace tools (not published to npm)",
   "engines": {
     "node": ">=18"
   },

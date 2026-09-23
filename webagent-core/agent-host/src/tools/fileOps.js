@@ -230,8 +230,23 @@ function listDir({ dirPath = '.', recursive = false, maxDepth = 3 }) {
     return results;
   }
 
-  const items = scan(fullPath, 1);
+  const items = sortItems(scan(fullPath, 1));
   return { dirPath, items, truncated };
+}
+
+// Readdir order is whatever the filesystem returns (hash order on some, creation order on
+// others), so the same folder listed differently between calls and platforms. Directories first,
+// then files; names compared case-insensitively with numeric awareness (file2 before file10).
+// Applied after the scan so the 1000-entry budget still stops enumeration early; with a truncated
+// listing the order is of the entries seen, which is reported via `truncated`.
+const NAME_ORDER = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
+
+function sortItems(items) {
+  items.sort((a, b) => (a.type === 'directory' ? 0 : 1) - (b.type === 'directory' ? 0 : 1)
+    || NAME_ORDER.compare(a.name, b.name)
+    || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+  for (const item of items) if (item.children) sortItems(item.children);
+  return items;
 }
 
 function grepFile(fullItemPath, pattern, matches, budget) {

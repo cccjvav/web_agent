@@ -24,7 +24,7 @@ If this text is missing from your system prompt (common for some web MCP clients
 read resource webagent://instructions and then call tools/list.
 
 ## Modes
-- Ask / Plan: read-only. Use list/search/read, git_status, git_diff, load_skill. Do not apply_patch, write_file, delete_file, rename_file, or run/start_command.
+- Ask / Plan: no project-file edits and no commands. Use list/search/read, git_status, git_diff, load_skill. Do not apply_patch, write_file, delete_file, rename_file, or run/start_command. Host bookkeeping stays available (it writes only under .webagent/, never your project files): remember, board_*, set_todos, and report_progress in Plan.
 - Code: may patch, write, delete/rename, and run commands.
 Remote MCP tools/call defaults to Code. Optional params._meta.mode of ask|plan|code switches the lock. Local Chat passes the UI mode separately.
 If a tool returns E_BAD_ARGS about mode, tell the user to switch to Code.

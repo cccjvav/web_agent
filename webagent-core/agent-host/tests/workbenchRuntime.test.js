@@ -732,6 +732,14 @@ if (!process.argv.includes('--vm-child')) {
   await assert.rejects(tabs.namespace.loadTree());assert.equal(treeBox.innerHTML,'trusted tree');
   context.fetch=async()=>({ok:true,status:200,json:async()=>({items:[{name:'a.txt',path:'a.txt',type:'file'}]})});
   assert.equal(await tabs.namespace.loadTree(),true);assert.ok(treeBox.innerHTML.includes('a.txt'));
+  // F70 (review P2-9): the host stops at 1000 entries and reports truncated:true; the tree must
+  // say so instead of looking complete. No notice for a complete listing.
+  assert.ok(!treeBox.innerHTML.includes('tree-truncated'), 'a complete listing shows no truncation notice');
+  context.fetch=async()=>({ok:true,status:200,json:async()=>({items:[{name:'a.txt',path:'a.txt',type:'file'}],truncated:true})});
+  assert.equal(await tabs.namespace.loadTree(),true);
+  assert.ok(treeBox.innerHTML.includes('tree-truncated') && treeBox.innerHTML.includes('1000'), 'a truncated listing must be announced');
+  context.fetch=async()=>({ok:true,status:200,json:async()=>({items:[{name:'a.txt',path:'a.txt',type:'file'}],truncated:'yes'})});
+  assert.equal(await tabs.namespace.loadTree(),true);assert.ok(!treeBox.innerHTML.includes('tree-truncated'), 'only a boolean true counts');
 
   const skill={id:'workspace:test',name:'test',description:'fixture skill'};
   context.URLSearchParams=URLSearchParams;

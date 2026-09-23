@@ -1415,3 +1415,22 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 | P2-7 宣告未实现的MCP能力 | initialize宣告tools/resources/prompts listChanged:true与logging，但从不推送 | 三项改listChanged:false、去掉logging；logging/setLevel仍回{}兼容 | mcpProtocol的initialize断言 |
 
 文档：命令与PTY详解（stopAll）、隧道生命周期详解（lookup/find与binaryLookup）、配置存储详解（revisionKey）、执行控制详解（缓存与新测试）、请求分发详解（能力声明）、tests/README与工作区与命令安全测试详解（hostShutdown）；documentationLearning登记hostShutdown与binaryLookup。本地108/108、docs 290/28/111零漂移。
+
+
+**第70组第二批精确证据：** `91f68d5`推送后[CI35883433324](https://github.com/cccjvav/web_agent/actions/runs/35883433324)九job全部success（含Windows三版本；hostShutdown在Windows按设计跳过）。
+
+### 第70组第三批：界面排版与文字缩放、文件树与元数据（2026-09-23）
+
+用户要求检查前端字号与排版。本批以真实Chromium（npm取得的153版＋Noto Sans SC）截图与DOM测量取证，而非只看静态CSS：
+
+| 项 | 实测事实 | 修法 | 红测 |
+|---|---|---|---|
+| §5.4-6 结构高度px | A+到160%时标题栏按钮0..36落在30px栏内（溢出6px）、状态栏溢出4px、页签条3px，文字被裁切 | `--title/--status/--tabs/--switcher`与.panel-head改rem（默认根字号下逐像素不变），菜单/下拉/toast定位改引用同一组变量 | 新增textScaleChromeBrowser：1440/390×0.85/1/1.6，基线1.6档红 |
+| 表单控件不随缩放 | 32个button/input/select/textarea无自身字号规则，停在浏览器固定13.33px，A-/A+对它们无效 | 全局`button,input,select,textarea{font-size:var(--fs-md)}`（默认13px） | 同上测量：160%下残留0个 |
+| 最小字号11px | 默认缩放下25处中文标签（徽章、侧栏/面板标题、状态胶囊、主题按钮）为11px，低于中文常用12px可读下限 | `--fs-xs`由0.6875rem提到0.75rem | 测量：默认缩放下<12px的中文文本由25处降为0 |
+| P2-9 文件树静默截断 | 主机1000项截断返回truncated:true，工作台忽略，树看起来完整 | 树末追加role=note提示（仅严格布尔true） | workbenchRuntime，基线红 |
+| P3-18 list_directory无序 | readdir顺序依文件系统而变 | sortItems：目录在前、Intl.Collator数字感知不区分大小写、递归 | workspaceTools，基线红 |
+| P3-3 元数据 | agent-host/package.json写1.0.0且main指向不存在的index.js，其余全为0.7.2 | 版本0.7.2、main=src/index.js、private、说明；lockfile根版本同步 | installerPackaging断言四处版本一致且main存在 |
+| P3-4 Ask/Plan“只读”措辞 | remember/board_*/set_todos（及Plan的report_progress）在Ask/Plan可用，写的是.webagent/下的主机记录 | 说明与锁定错误改为“不改项目文件、不跑命令；主机记录仍可用”；errors映射同步 | mcpProtocol锁定文案断言 |
+
+截图复核：160%下标题栏、状态栏、页签完整显示；默认缩放与1280/390视口布局无回归，全部axe状态继续通过。文档：样式规则详解（字阶/高度/控件字号）、状态与编辑器详解（loadTree）、文件与搜索详解（sortItems）、浏览器与Webview测试详解及主机诊断与调用追踪详解（新浏览器用例）。本地108/108、真实浏览器套件通过。未改：Monaco编辑器自身fontSize 13（A-/A+说明中已声明不影响编辑器字体）；docs-site与admin页面的px字号（独立页面，不在工作台缩放合同内）。

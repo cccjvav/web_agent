@@ -538,7 +538,7 @@ async function dispatchTool(name, args = {}, currentMode = null, opts = {}) {
   if (currentMode && !toolDef.mode.includes(currentMode)) {
     throw new ProtocolError(
       'E_BAD_ARGS',
-      `Tool "${toolDef.name}" is locked in ${String(currentMode).toUpperCase()} mode. Ask/Plan are read-only; switch to CODE to apply_patch or run_command.`
+      `Tool "${toolDef.name}" is locked in ${String(currentMode).toUpperCase()} mode. Ask/Plan never edit project files or run commands; switch to CODE to apply_patch or run_command.`
     );
   }
   const input = normalizeToolArgs(toolDef.name, args || {});

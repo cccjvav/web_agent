@@ -256,12 +256,12 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [tunnelRegistry.test.js](tunnelRegistry.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 271 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 278 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 466 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 470 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
-| [workspaceTools.test.js](workspaceTools.test.js) | 15 个函数/类节点 |
+| [workspaceTools.test.js](workspaceTools.test.js) | 17 个函数/类节点 |
 <!-- docs-inventory:end -->
 
 ## 真实浏览器回归（不是DOM fixture）

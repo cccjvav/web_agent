@@ -121,6 +121,55 @@ async function narrowWorkspaceBrowser(browser, base) {
     assert.deepStrictEqual(errors, []);
   } finally { await page.close(); }
 }
+// F70 (external review §5.4-6, reproduced in real Chromium): the A-/A+ control scales every rem
+// font size up to 160%, but the title bar (30px), status bar (22px), editor tabs (35px) and panel
+// header (28px) had fixed pixel heights. At 1.6 the status text (25px line) and title-bar buttons
+// (36px) overflowed their bars and were clipped. Every chrome bar must fit its content at both
+// ends of the scale, and the workbench must still fill the window exactly (no page overflow).
+async function textScaleChromeBrowser(browser, base) {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } }), errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.route('https://cdn.jsdelivr.net/**', route => route.abort());
+  try {
+    await page.goto(base);
+    await page.waitForFunction(() => document.querySelector('#tabs .tab-label'));
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+      for (const scale of [0.85, 1, 1.6]) {
+        const result = await page.evaluate(async scale => {
+          (await import('/js/dom.js')).applyTextScale(scale);
+          await new Promise(requestAnimationFrame);
+          const bars = ['#titlebar', '#statusbar', '#editor-heading', '#tabs', '.panel-head', '.rb-head', '#workspace-switcher'];
+          const clipped = [];
+          for (const selector of bars) {
+            for (const el of document.querySelectorAll(selector)) {
+              const style = getComputedStyle(el);
+              if (style.display === 'none' || el.getClientRects().length === 0) continue;
+              // Children must fit inside the bar's box (vertical clipping is the defect).
+              const box = el.getBoundingClientRect();
+              for (const child of el.querySelectorAll('*')) {
+                const cs = getComputedStyle(child);
+                if (cs.display === 'none' || cs.visibility === 'hidden' || child.getClientRects().length === 0) continue;
+                if (![...child.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
+                const r = child.getBoundingClientRect();
+                if (r.top < box.top - 1 || r.bottom > box.bottom + 1) clipped.push(`${selector} > ${child.tagName.toLowerCase()}${child.id ? '#' + child.id : ''} (${Math.round(r.top - box.top)}..${Math.round(r.bottom - box.top)} in ${Math.round(box.height)})`);
+              }
+              if (el.scrollHeight > el.clientHeight + 1 && style.overflowY !== 'auto' && style.overflowY !== 'scroll') clipped.push(`${selector} scroll ${el.scrollHeight}>${el.clientHeight}`);
+            }
+          }
+          const doc = document.documentElement;
+          return { clipped, pageOverflowY: doc.scrollHeight > innerHeight + 1, pageOverflowX: doc.scrollWidth > innerWidth + 1,
+            statusBottom: Math.round(document.querySelector('#statusbar').getBoundingClientRect().bottom), height: innerHeight };
+        }, scale);
+        assert.deepStrictEqual(result.clipped, [], `${width}px text scale ${scale}: chrome bars must fit their text`);
+        assert.equal(result.pageOverflowY || result.pageOverflowX, false, `${width}px text scale ${scale}: no page overflow`);
+        assert.ok(Math.abs(result.statusBottom - result.height) <= 1, `${width}px text scale ${scale}: status bar stays pinned to the window bottom`);
+      }
+    }
+    await page.evaluate(async () => (await import('/js/dom.js')).applyTextScale(1));
+    assert.deepStrictEqual(errors, []);
+  } finally { await page.close(); }
+}
 async function adminLayoutBrowser(browser) {
   const { createServer, ingest } = require('../../admin-host/app');
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-admin-ui-'));
@@ -724,6 +773,7 @@ async function main() {
     await mcpCorsBrowser(browser, base, `http://127.0.0.1:${mcpPort}/mcp/${status.secretKey}`);
     await classicChatStreamBrowser(browser, base);
     await narrowWorkspaceBrowser(browser, base);
+    await textScaleChromeBrowser(browser, base);
     await probeHudBrowser(browser);
     await docsViewerBrowser(browser);
     await modelStateBrowser(browser, base);

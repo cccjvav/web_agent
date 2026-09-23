@@ -159,6 +159,10 @@ workbenchRuntime先以挂起POST复现两次startBridge发两POST（实际2、�
 
 start/stop各自单飞，启动中停止可达并携绑定，停止中不得再启动；旧启动迟到不能覆盖已停文案或灯。停止发生于GET等待时零启动POST。domain/token与provider同时捕获，等待期间编辑不混入旧请求。缺绑定的停止零POST；模拟计时器过期后迟到JSON不能被消费为成功。actionTimeout/actionClear恢复计时器，VM响应/灯/剪贴板均为替身，不是公网或真实桌面证据。真实bind切换按钮与浏览器执行见bridgeLifecycleBrowser，真实HTTP见bridgeTunnel。
 
+### textScaleChromeBrowser(browser,base)
+
+F70（外部复审§5.4-6，真实Chromium复现）：真实主机页面、阻断Monaco CDN。1440×900与390×844两种视口下，经dom.applyTextScale依次设0.85/1/1.6，等一帧后逐个检查标题栏、状态栏、编辑器页签条/页签、面板头、右栏头、窄屏工作区切换条：每个含文字的可见子元素上下边都必须在所属栏框内（容差1px），不可滚动的栏不得scrollHeight>clientHeight；整页不得横向/纵向溢出；状态栏底边必须贴住窗口底部。基线（px结构高度）在1.6档红——标题栏按钮0..36落在30px栏内、状态栏文字越界。结束恢复缩放1并断言无pageerror。不代签Windows系统字体、真实DPI或操作系统放大。
+
 ### narrowWorkspaceBrowser(browser,base)
 
 新开真实主机页面、仅阻断Monaco CDN而使用fallback，不发模型或写盘请求。320/390/640（含640×360）逐editor/chat/bridge断言可用宽度至少viewport−49，另一工作面不可见；聊天草稿往返保留、elementFromPoint确认输入框未被欢迎页遮挡。注入页面内存文件tab检查超长名称仍可关闭、Home/End焦点、dirty确认取消保留/确认关闭与焦点恢复、Delete关闭；这部分不是磁盘保存测试，旧main的真实保存/回退/审批链继续执行。768/1024/1440双栏保留，宽→窄跟随正在输入的工作面。默认加载开发依赖axe-core，AXE_PATH仅作为显式脚本覆盖，不再是跳过axe的开关。逐窄屏工作面执行两条父子角色规则，另对深浅主题×1440/768/390/320×欢迎页/API设置16个状态执行WCAG2/2.1 A/AA标签规则及页面溢出检查；插入仅页面内的长日志，必须能聚焦并用方向键实际滚动。UI_EVIDENCE_DIR可保存窄屏工作面与文档站截图。finally关页、收集pageerror；不代表真实Windows/DPI/读屏器验收。editorRuntime夹具新增querySelectorAll返回空导航集合，使实际dom.setWorkspaceView可运行；原dirty/hash/保存/恢复断言未删。

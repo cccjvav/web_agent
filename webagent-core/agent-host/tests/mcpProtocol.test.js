@@ -275,7 +275,7 @@ async function main() {
     _meta: { mode: 'ask' }
   }));
   assert.strictEqual(askLocked.isError, true);
-  assert.ok(/locked in ASK|Ask\/Plan are read-only|switch to CODE/i.test(askLocked.content[0].text));
+  assert.ok(/locked in ASK|Ask\/Plan never edit|switch to CODE/i.test(askLocked.content[0].text));
 
   // 第三阶段（用户 2026-09-07 书面同意）：run_command 截图以 image 内容回给网页 Agent
   const shotPng = path.join(tmp, 'shot.png');
