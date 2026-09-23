@@ -1543,4 +1543,6 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **本地验证：** `npm test` 110/110，`check-docs --write`零漂移（292/28/111），`docs-site/build.js`重建。精确提交CI见下方证据行。
 
+**第71组精确证据：** `b9522be`的[CI35934665823](https://github.com/cccjvav/web_agent/actions/runs/35934665823)为push事件、精确同SHA，九job全部success，已逐job核对：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、workbench-browser。
+
 **仍开放：** R8用户Arena实机验收（第七批ping/旧版SSE处理与本批）；新规范2026-07-28双代分流（用户已同意形态，按需实施，见第70组评估）；其余见第70组第六批“仍开放”与工作包表。
