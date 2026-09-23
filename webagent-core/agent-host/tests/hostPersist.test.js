@@ -90,7 +90,10 @@ function main() {
   const gitInit = spawnSync('git', ['init'], { cwd: tmp, encoding: 'utf8' });
   assert.strictEqual(gitInit.status, 0, gitInit.stderr || gitInit.stdout);
   store.protectWorkspaceSecrets();
-  const gi = fs.readFileSync(path.join(tmp, '.gitignore'), 'utf8');
+  // F63: the host protects secrets through .git/info/exclude (machine-local) and must NOT
+  // rewrite the user's tracked .gitignore.
+  assert.ok(!fs.existsSync(path.join(tmp, '.gitignore')), 'the tracked .gitignore must not be created or rewritten');
+  const gi = fs.readFileSync(path.join(tmp, '.git', 'info', 'exclude'), 'utf8');
   assert.ok(gi.includes('.webagent/config.json'));
   assert.ok(gi.includes('.webagent/read-hashes.json'));
   assert.ok(gi.includes('.webagent/usage.json'));
@@ -112,7 +115,7 @@ function main() {
   spawnSync('git', ['rm', '-f', '--cached', '--', '.webagent/config.json'], { cwd: tmp });
   assert.deepStrictEqual(store.trackedSecretFiles(), []);
   store.protectWorkspaceSecrets();
-  const gi2 = fs.readFileSync(path.join(tmp, '.gitignore'), 'utf8');
+  const gi2 = fs.readFileSync(path.join(tmp, '.git', 'info', 'exclude'), 'utf8');
   assert.strictEqual(gi2.split('.webagent/config.json').length - 1, 1);
 
   const rootGi = fs.readFileSync(path.join(__dirname, '../../../.gitignore'), 'utf8');

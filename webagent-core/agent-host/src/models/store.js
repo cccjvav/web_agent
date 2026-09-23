@@ -112,6 +112,19 @@ function validateConfig(value) {
   return value;
 }
 
+// Bumped on every in-process save so hot readers (permissions() runs on EVERY tool call) can
+// cache without missing an update. stateKey() also folds in mtime/size so an external edit of
+// config.json still invalidates a cache that only watches `version`.
+let version = 0;
+function stateKey() {
+  try {
+    const st = fs.statSync(storePath());
+    return `${version}:${st.mtimeMs}:${st.size}`;
+  } catch (_) {
+    return `absent:${version}`;
+  }
+}
+
 function load() {
   try {
     const raw = validateConfig(JSON.parse(fs.readFileSync(storePath(), 'utf8')));
@@ -179,12 +192,21 @@ function ensureNestedIgnore() {
 }
 
 function ensureWorkspaceGitignore() {
+  // F63: the host must not silently rewrite a file under version control in the user's repo.
+  // The same ignore protection goes to `.git/info/exclude` instead — machine-local by design,
+  // never committed, and never shows up in the user's diffs. (The nested `.webagent/.gitignore`
+  // stays: that path is the host's own directory.) Limitation kept from the old behaviour: this
+  // only handles a workspace root that IS the repository root (`.git` directory present); a
+  // workspace that is a repo subdirectory gets no root exclude either way.
   const gitDir = path.join(config.workspaceRoot, '.git');
-  if (!fs.existsSync(gitDir)) return;
-  const gi = path.join(config.workspaceRoot, '.gitignore');
+  let st = null;
+  try { st = fs.statSync(gitDir); } catch (_) {}
+  if (!st || !st.isDirectory()) return;
+  const infoDir = path.join(gitDir, 'info');
+  const exclude = path.join(infoDir, 'exclude');
   let cur = '';
   try {
-    cur = fs.readFileSync(gi, 'utf8');
+    cur = fs.readFileSync(exclude, 'utf8');
   } catch (_) {}
   const missing = SECRET_REL.filter((rel) => !alreadyIgnored(cur, rel));
   if (!missing.length) return;
@@ -192,10 +214,13 @@ function ensureWorkspaceGitignore() {
   const start = cur && !cur.endsWith('\n') && !cur.endsWith('\r\n') ? eol : '';
   const gap = cur ? eol : '';
   const block = [
-    '# Web Agent — do not commit MCP secret or API keys',
+    '# Web Agent — do not commit MCP secret or API keys (local exclude, not the tracked .gitignore)',
     ...missing
   ].join(eol);
-  fs.writeFileSync(gi, cur + start + gap + block + eol, 'utf8');
+  try {
+    fs.mkdirSync(infoDir, { recursive: true });
+    fs.writeFileSync(exclude, cur + start + gap + block + eol, 'utf8');
+  } catch (_) { /* read-only or exotic .git layouts: warn path still covers tracked files */ }
 }
 
 function protectWorkspaceSecrets() {
@@ -252,6 +277,7 @@ function save(next) {
   } finally { try { fs.unlinkSync(tmp); } catch (err) { if (err.code !== 'ENOENT') throw err; } }
   restrictFileMode(storePath());
   protectWorkspaceSecrets();
+  version += 1;
   return cfg;
 }
 
@@ -274,6 +300,7 @@ function reset() {
 module.exports = {
   load,
   save,
+  stateKey,
   patch,
   defaults,
   protectWorkspaceSecrets,

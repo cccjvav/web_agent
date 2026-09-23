@@ -15,9 +15,19 @@ function validate(value) {
   if (value.execute && keys.some(k => !value[k])) fail('E_BAD_ARGS', '任意Execute可读写和截图，必须同时允许Read/Edit/Capture；否则请关闭Execute');
   return Object.fromEntries(keys.map(k => [k, value[k]]));
 }
+// permissions() runs on every tool call and every status poll; it used to re-read and re-parse
+// the whole config.json each time. Cache the validated policy and re-read only when the store
+// itself changes (in-process save bumps store.stateKey(); external edits move mtime/size).
+let cachedPolicy = null;
+let cachedKey = null;
 function permissions() {
+  const key = store.stateKey();
+  if (cachedKey === key && cachedPolicy) return cachedPolicy;
   const saved = store.load().bridge?.permissions;
-  return saved === undefined ? { read: true, edit: true, execute: true, capture: true } : validate(saved);
+  const policy = saved === undefined ? { read: true, edit: true, execute: true, capture: true } : validate(saved);
+  cachedKey = key;
+  cachedPolicy = policy;
+  return policy;
 }
 function revision(policy) { return crypto.createHash('sha256').update(JSON.stringify(policy)).digest('hex'); }
 function snapshot() { const policy = permissions(); return { mode: state.mode, active: { ...state.active }, permissions: policy, revision: revision(policy) }; }

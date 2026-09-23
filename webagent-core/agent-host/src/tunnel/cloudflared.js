@@ -50,10 +50,22 @@ function parseTunnelUrl(chunk) {
   return m ? m[0].replace(/\/$/, '') : null;
 }
 
+// snapshot() feeds /api/status, which the workbench polls — it used to run a synchronous
+// `where`/`which cloudflared` on every poll, blocking the host event loop each time. A found
+// binary is cached for the process lifetime (its path does not move while we run); a miss is
+// retried on a short TTL so a just-installed cloudflared is still picked up. CLOUDFLARED_PATH
+// always wins and is never shadowed by the cache.
+let foundBinary = null;
+let foundAt = 0;
+const MISS_TTL_MS = 30000;
+
 function findCloudflared() {
   if (process.env.CLOUDFLARED_PATH && fs.existsSync(process.env.CLOUDFLARED_PATH)) {
     return process.env.CLOUDFLARED_PATH;
   }
+  if (foundBinary) return foundBinary;
+  if (foundAt && Date.now() - foundAt < MISS_TTL_MS) return null;
+  foundAt = Date.now();
   const which = process.platform === 'win32' ? 'where' : 'which';
   const r = spawnSync(which, ['cloudflared'], {
     encoding: 'utf8',
@@ -64,7 +76,10 @@ function findCloudflared() {
     .split(/\r?\n/)
     .map((s) => s.trim())
     .find((s) => s && fs.existsSync(s));
-  if (hit) return hit;
+  if (hit) {
+    foundBinary = hit;
+    return hit;
+  }
   const guesses = process.platform === 'win32'
     ? [
       path.join(process.env.LOCALAPPDATA || '', 'cloudflared', 'cloudflared.exe'),

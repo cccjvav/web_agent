@@ -95,6 +95,26 @@ public static class TunnelAclFixture
             Require(h.IsInvalid && error == 5, phase + ": expected ERROR_ACCESS_DENIED; invalid=" + h.IsInvalid + ", error=" + error);
         }
     }
+    // .NET Framework's Process.MainModule can be null or throw right after process creation:
+    // EnumProcessModules returns ERROR_PARTIAL_COPY while the loader is still populating the
+    // module table. A one-shot read made this fixture intermittently fail with an NRE before
+    // its first assertion (CI run 35795513487). The lease compares the executable against the
+    // live module path, so prefer MainModule (retry briefly) and only fall back to the known
+    // program path.
+    private static string ExecutableOf(Process p, string fallback)
+    {
+        for (int i = 0; i < 40; i++) {
+            try {
+                if (p.HasExited) break;
+                string f = p.MainModule != null ? p.MainModule.FileName : null;
+                if (!string.IsNullOrEmpty(f)) return f;
+            } catch (Win32Exception) { }
+            catch (InvalidOperationException) { }
+            System.Threading.Thread.Sleep(25);
+        }
+        return System.IO.Path.GetFullPath(fallback);
+    }
+
     public static void Run(string program)
     {
         var info = new ProcessStartInfo(program, "-e \"setTimeout(()=>{},60000)\"");
@@ -111,9 +131,9 @@ public static class TunnelAclFixture
             var descriptor = new RawSecurityDescriptor("D:(D;;0x00101401;;;WD)(A;;GA;;;WD)");
             byte[] deniedAcl = new byte[descriptor.BinaryLength]; descriptor.GetBinaryForm(deniedAcl, 0);
             string targetStart = child.StartTime.ToUniversalTime().Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            string targetExe = child.MainModule.FileName;
+            string targetExe = ExecutableOf(child, program);
             string ownerStart = owner.StartTime.ToUniversalTime().Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            string ownerExe = owner.MainModule.FileName;
+            string ownerExe = ExecutableOf(owner, System.Reflection.Assembly.GetExecutingAssembly().Location);
                 reduced = DisableFixturePrivileges();
                 Console.WriteLine("fixture-privileges-disabled");
                 Set(targetHandle, deniedAcl);
