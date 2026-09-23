@@ -42,7 +42,7 @@ callTool先检查当前请求取消，再定位工具、检查模式、归一参
 ## 文件读取与安全边界
 路径必须通过resolveSafePath及敏感规则；绝对盘符、越界路径、真实链接目标等按实现检查。目录遍历跳过链接及隐藏项，不能据此宣称任意外部程序也被限制在工作区。
 
-read_files返回带行号的content和hash；offset从1开始，不是字节位置。批读最多20路径；单个文本读写和补丁结果上限8MiB。读取使用严格UTF-8，非法字节抛E_INVALID_TEXT且不改码；保留BOM和CRLF，因此合法文本hash对应原字节。apply_patch另有展示预算：每侧1MiB/20000行、算法100ms/4000编辑、diff输出256KiB，超限E_DIFF_LIMIT在写入及建目录前拒绝。有界读取检查普通文件，按块读取并探测读取期间增长，不先无限readFileSync再截字符串。
+read_files返回带行号的content和hash；offset从1开始，不是字节位置。批读最多20路径；单个文本读写和补丁结果上限8MiB。读取使用严格UTF-8，非法字节抛E_ENCODING且不改码；保留BOM和CRLF，因此合法文本hash对应原字节。apply_patch另有展示预算：每侧1MiB/20000行、算法1500ms/20000编辑、diff输出256KiB，超限抛E_DIFF_BUDGET在写入及建目录前拒绝。已有文件只接受SEARCH/REPLACE或单个unified diff，无标记裸文本E_BAD_ARGS拒绝不覆盖（F63）。有界读取检查普通文件，按块读取并探测读取期间增长，不先无限readFileSync再截字符串。
 
 ### 写入/补丁步骤
 1. 对规范真实路径取得进程内写锁，锁获得后再检查取消。
@@ -102,7 +102,7 @@ R4：executor/fileOps复用WEBAGENT_DEBUG_PROCESS=1输出有界生命周期元�
 | [consensusEngine.js](consensusEngine.js) | 7 个函数/类节点 |
 | [dangerous.js](dangerous.js) | 1 个函数/类节点 |
 | [executor.js](executor.js) | 37 个函数/类节点 |
-| [fileOps.js](fileOps.js) | 33 个函数/类节点 |
+| [fileOps.js](fileOps.js) | 35 个函数/类节点 |
 | [findFiles.js](findFiles.js) | 3 个函数/类节点 |
 | [gitOps.js](gitOps.js) | 13 个函数/类节点 |
 | [index.js](index.js) | 21 个函数/类节点 |

@@ -91,7 +91,11 @@ async function main() {
       fs.writeFileSync(executable, 'old\n', { mode: 0o755 });
       await writeFile({ filePath: 'run.sh', content: 'new\n', confirm_overwrite: true });
       assert.strictEqual(fs.statSync(executable).mode & 0o777, 0o755);
-      await applyPatch({ filePath: 'run.sh', patch: 'updated\n', expectedHash: computeHash('new\n') });
+      await applyPatch({
+        filePath: 'run.sh',
+        patch: '<<<<<<< SEARCH\nnew\n=======\nupdated\n>>>>>>> REPLACE',
+        expectedHash: computeHash('new\n')
+      });
       assert.strictEqual(fs.statSync(executable).mode & 0o777, 0o755);
     }
 

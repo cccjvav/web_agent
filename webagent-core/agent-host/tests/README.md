@@ -204,7 +204,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [oauthRateLimit.test.js](oauthRateLimit.test.js) | 15 个函数/类节点 |
 | [oauthSpentRefreshBudget.test.js](oauthSpentRefreshBudget.test.js) | 8 个函数/类节点 |
 | [operatorQueueCapacity.test.js](operatorQueueCapacity.test.js) | 5 个函数/类节点 |
-| [patchEngine.test.js](patchEngine.test.js) | 11 个函数/类节点 |
+| [patchEngine.test.js](patchEngine.test.js) | 15 个函数/类节点 |
 | [planRound.test.js](planRound.test.js) | 6 个函数/类节点 |
 | [probeAnalysis.test.js](probeAnalysis.test.js) | 6 个函数/类节点 |
 | [probeBridge.test.js](probeBridge.test.js) | 11 个函数/类节点 |
@@ -255,7 +255,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
 | [workbench.browser.js](workbench.browser.js) | 271 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 466 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 470 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 15 个函数/类节点 |

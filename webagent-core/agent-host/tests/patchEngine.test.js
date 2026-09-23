@@ -72,8 +72,51 @@ async function missingTargetSafety() {
   } finally { bus.removeListener('file_patched', observe); }
 }
 
+// F63: a marker-less patch must never overwrite an EXISTING file. The hash gate proves the
+// caller saw the current bytes; it cannot prove the caller MEANT "replace the whole file".
+// Baseline: a 3-line file + unmarked fragment patch (even with a valid hash, even dryRun)
+// returned success and left the file as the fragment.
+async function unmarkedPatchOnExistingFileRejected() {
+  const bus = require('../src/utils/eventBus');
+  const events = []; const observe = event => events.push(event);
+  bus.on('file_patched', observe);
+  const target = 'existing-unmarked.txt';
+  const original = 'line one\nline two\nline three\n';
+  fs.writeFileSync(path.join(tmp, target), original, 'utf8');
+  const before = fs.readFileSync(path.join(tmp, target));
+  const read = readFile({ filePath: target });
+  for (const dryRun of [true, false]) {
+    // With an explicit valid hash (the strongest possible precondition)…
+    await assert.rejects(
+      applyPatch({ filePath: target, patch: '  return x;\n', expectedHash: read.hash, dryRun }),
+      error => {
+        assert.strictEqual(error.code, 'E_BAD_ARGS');
+        assert.ok(/SEARCH\/REPLACE|unified diff/i.test(error.message), 'the error must name the accepted formats');
+        return true;
+      }
+    );
+    // …and with a hash silently satisfied by the persisted read cache.
+    await assert.rejects(applyPatch({ filePath: target, patch: '  return x;\n', dryRun }), error => error.code === 'E_BAD_ARGS');
+    assert.ok(fs.readFileSync(path.join(tmp, target)).equals(before), 'file bytes must be untouched after every rejection');
+    assert.strictEqual(events.length, 0, 'no file_patched event may be broadcast');
+  }
+  // The same body remains VALID for creating a file (creation contract) and SEARCH/REPLACE
+  // still patches this file afterwards.
+  const created = await applyPatch({ filePath: 'unmarked-new.txt', patch: '  return x;\n' });
+  assert.strictEqual(created.isNewFile, true);
+  const patched = await applyPatch({
+    filePath: target,
+    expectedHash: read.hash,
+    patch: '<<<<<<< SEARCH\nline two\n=======\nLINE TWO\n>>>>>>> REPLACE'
+  });
+  assert.strictEqual(patched.success, true);
+  assert.strictEqual(fs.readFileSync(path.join(tmp, target), 'utf8'), 'line one\nLINE TWO\nline three\n');
+  bus.off('file_patched', observe);
+}
+
 async function main() {
   await missingTargetSafety();
+  await unmarkedPatchOnExistingFileRejected();
   const safeBody = 'keep this line\nold\n';
   fs.writeFileSync(path.join(tmp, 'truncated.txt'), safeBody);
   const complete = '<<<<<<< SEARCH\nold\n=======\nnew\n>>>>>>> REPLACE';

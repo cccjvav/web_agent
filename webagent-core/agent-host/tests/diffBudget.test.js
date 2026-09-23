@@ -98,14 +98,16 @@ async function run() {
 
   // --- A rejected patch on an EXISTING file must leave the file byte-identical. ---
   // (Creating a file diffs against '', which is linear and always inside budget; the
-  // expensive shape is replacing existing content.)
+  // expensive shape is replacing existing content. The 8000-line replacement rides in a
+  // SEARCH/REPLACE block: apply_patch no longer accepts unmarked whole-file text.)
   const victim = path.join(tmp, 'existing.txt');
   fs.writeFileSync(victim, left);
   const before = fs.readFileSync(victim);
   const read = await callTool('read_files', { filePath: 'existing.txt', limit: 1 }, 'code');
+  const overBudgetPatch = `<<<<<<< SEARCH\n${left}\n=======\n${right}\n>>>>>>> REPLACE`;
   const rejected = await callTool(
     'apply_patch',
-    { filePath: 'existing.txt', patch: right, expectedHash: read.hash },
+    { filePath: 'existing.txt', patch: overBudgetPatch, expectedHash: read.hash },
     'code'
   ).then((ok) => ({ ok }), (err) => ({ err }));
   assert.ok(rejected.err, 'a patch whose diff cannot be rendered must fail');
@@ -117,7 +119,7 @@ async function run() {
   // dryRun on the same pair is rejected the same way, and also writes nothing.
   const dry = await callTool(
     'apply_patch',
-    { filePath: 'existing.txt', patch: right, expectedHash: read.hash, dryRun: true },
+    { filePath: 'existing.txt', patch: overBudgetPatch, expectedHash: read.hash, dryRun: true },
     'code'
   ).then((ok) => ({ ok }), (err) => ({ err }));
   assert.strictEqual(dry.err && dry.err.code, 'E_DIFF_BUDGET', 'dryRun must apply the same budget');

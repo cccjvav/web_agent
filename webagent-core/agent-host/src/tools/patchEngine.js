@@ -393,7 +393,22 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
     }
     patchedContent = applyEol(applied, eol);
   } else {
-    patchedContent = applyEol(patch, eol);
+    // An existing file is only ever patched, never wholesale replaced by unmarked text. The
+    // hash gate proves we saw the current bytes; it cannot prove the model MEANT to replace the
+    // whole file — a patch with a forgotten SEARCH/REPLACE marker used to overwrite a 3-line file
+    // with a fragment in one call. Whole-file replacement is write_file's explicit contract
+    // (confirm_overwrite / expectedHash); apply_patch must stay a patch.
+    throw new ProtocolError(
+      'E_BAD_ARGS',
+      `Patch for existing file ${filePath} contains neither SEARCH/REPLACE blocks nor a unified diff. ` +
+      'apply_patch never replaces an existing file with unmarked text. Use SEARCH/REPLACE, a unified diff, ' +
+      'or write_file (confirm_overwrite / expectedHash) for a whole-file replacement.',
+      {
+        filePath,
+        format: 'unmarked',
+        retryHint: 'Resend with <<<<<<< SEARCH / ======= / >>>>>>> REPLACE blocks or a unified diff; use write_file for full replacement.'
+      }
+    );
   }
 
   const diffInfo = createUnifiedDiff(filePath, currentContent, patchedContent);

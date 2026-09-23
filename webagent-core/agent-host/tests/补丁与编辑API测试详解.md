@@ -22,6 +22,8 @@
 
 computeHash用于构造明确版本前提及预览/落盘hash对照，readFile提供真实读取版本；样例正文里的add不是测试辅助函数，也未执行该JS计算结果。成功和main.catch均清理tmp；并发只测一个Node进程内锁，不能外推跨进程协同或断电一致性。
 
+**unmarkedPatchOnExistingFileRejected()**（F63）钉住apply_patch对已有文件的裸正文拒绝：不带SEARCH/REPLACE/unified标记的正文在显式hash、缓存hash与dryRun三种入口均E_BAD_ARGS，message/detail.retryHint指向SEARCH/REPLACE与write_file；事件零广播、rememberHash不更新，且新建文件的裸正文仍合法（合同只收紧已有文件）。
+
 **missingTargetSafety()**用真实临时磁盘、file_patched的observe监听和readCache做第三批回归：不存在目标+显式旧hash（包括空文件hash）在dryRun/正式执行均E_STALE_FILE；非空SEARCH E_CONFLICT，新建多块E_BAD_ARGS。所有拒绝不能创建父目录、发布成功事件或新hash。读取后外部unlink仍拒绝旧hash且保持缓存旧值。合法正文/单空块预览不创建目录/更新缓存，写入hash与预览一致、只发一次成功事件；已有文件的两个串联块必须完整应用。finally移除事件监听。
 
 ## apiFiles.test.js
