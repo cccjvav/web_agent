@@ -1366,3 +1366,13 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **F69最终本地验证：** 完整101/101、真实Chromium（含工作台16状态、文档12状态、admin三视口）、示例6/6、npm audit含dev各级0；文档282/28/111且updated=0，git diff --check通过。额外逐份扫描200个Markdown：UTF-8均无U+FFFD，围栏外行内本地文件目标全部存在；首次发现同步扩展PTY说明两个相对链接只在正本目录成立，改为仓库路径文本后正本/副本均无坏链接，extensionCopy再绿。首轮浏览器失败仅恢复环境缺Chromium文件，重新从仓库外npm包准备浏览器/动态库后真实套件通过，没有改产品或关闭TLS。
 
 最终清单：已核对一致84、已修正58、外部待证据2、历史保留37、只读保留2、生成核验4、暂停13，共200，无待核对。数量是文档处置，不是所有功能/源码/实机通过率。产品运行时JS/C#/PS/CSS/HTML/JSON未改；改动是Markdown、生成content及同步扩展Markdown副本。下一项仍R8待用户本机项目根MCP验收；R2/R3/R4/R5/R6/R9等按原表继续，不因R7完成关闭。
+
+### 第70组：第三方复审报告消化与F63修复批（2026-09-23，会话01a0cdcf）
+
+接手新会话（分支`arena/01a0cdcf-web-agent`，ff到01a0c925的26a167e）。先读交接并逐项复核外部报告`review/web_agent_review_2026-09-23.md`（08aa942 vs f8ab6d0两冻结基线）：**gitOps字节预算为假阳性**（9766c6c已修，报告看的是旧基线）；P1-1属实并修复；P1-2（多字节U+FFFD）在26a167e已有F62 StringDecoder实现、本组再补sliceTextTail统一尾剪；报告5.4-1指出的Windows退出码回归（cmdlet失败退0）属实，本组以`$__wa_ok`三分支合同修复并加win32测试；P1-6属实并修复；Windows CI偶发（35795513487，`TunnelAclFixture.Run` NRE）根因判为.NET `Process.MainModule`在进程刚创建时ERROR_PARTIAL_COPY，产品侧PS脚本已有try/catch降级、仅测试夹具裸读，修夹具。
+
+本组落地（红绿均验）：dangerousPolicy重写+~130条矩阵（零误报口径：ORDINARY全放行，已知不覆盖钉住）；apply_patch已有文件裸正文→E_BAD_ARGS；executor Windows退出码`$__wa_ok`三分支+sliceTextTail共用截尾；store改维护`.git/info/exclude`不改写受控`.gitignore`（hostPersist断言改为断言不创建）；tunnelCleanupAclFixture ExecutableOf重试40×25ms+program回退（Windows CI验证待推后）；permissions()缓存（store.stateKey=版本+mtime/size）；findCloudflared命中缓存/未命中30秒TTL；listDir目录在前数字感知字母序；工作台结构性高度px→rem（Chromium实测1.6×状态栏裁切21/25px后归零，窄屏状态栏改横向滑动）；文件树truncated提示；package.json元数据（agent-host 0.7.2/main/description/license/private；extension副本同步）。
+
+文档：使用指南/SECURITY/配置存储/隧道生命周期/执行控制/样式规则/页面结构/PTY扩展/文件与搜索/补丁与编辑API测试详解同步；review/README与FULL_REVIEW_INDEX登记新报告（202份，被改文档指纹刷新）；CONTEXT计数更新。补documentationLearning具名函数登记（unmarkedPatchOnExistingFileRejected/sliceTextTail/sortItems/stateKey）。最终本地**107/107全绿**、docs 288/28/111 updated=0、content.js重建一致、extensionCopy含PTY扩展详解副本同步。
+
+边界：Windows退出码合同与AclFixture重试在CI（Windows矩阵）验证；未深审extension.js/ptyHost.js（bridge/operations/admin-host/computer-use只做静态扫描未见新缺陷）；reports.json上限、F61-05/06复核、实机M1–M5仍开放。CI结论核对见下批记录。

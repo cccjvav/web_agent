@@ -13,7 +13,7 @@
 ## 本轮进度
 
 <!-- review-status-counts:start -->
-Markdown：201（对方本轮分母200 + 01a0c925新增交叉验证台账1）；已核对一致 85、已修正 58、待证据确认 2、历史保留 37、只读保留 2、生成核验 4、暂停 13。分类处置不是全仓安全认证；逐项依据见表。
+Markdown：202（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 2026-09-23第三方复审报告1）；已核对一致 86、已修正 58、待证据确认 2、历史保留 37、只读保留 2、生成核验 4、暂停 13。分类处置不是全仓安全认证；逐项依据见表。
 <!-- review-status-counts:end -->
 
 ## 逐文件状态
@@ -32,7 +32,7 @@ Markdown：201（对方本轮分母200 + 01a0c925新增交叉验证台账1）；
 | [AGENTS.md](../AGENTS.md) | 已核对一致 | 436905c57093ee1a | 管家入口、同级文档/生成命令、固定分支与隐私规则均可定位，详情由F66规范限定。 依据：manager/CONTEXT.md; agents.md; documentation.md |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | 已核对一致 | 1a54f3466ead86dd | 开发依赖/测试、Conda/CMD、文档闭环及权限边界与现行入口一致。 依据：package.json; run-tests.cmd; CI; SECURITY |
 | [README.md](../README.md) | 已修正 | 4bb3061c3709fa9a | 核对启动入口、默认端口/工作区、0.7.2、现有功能与导航；暂停版本改为既有交付记录，不冒称外部最新版。 依据：package.json; launch.js; extension/package.json; 主机/工作台入口 |
-| [SECURITY.md](../SECURITY.md) | 已修正 | bb5d2a26e2119c7f | 核对控制面、OAuth/peer、Git/文本、审批/stdio、网络/统计/恢复与清理的现行边界；敏感路径措辞补只读Git/搜索，不约束任意Execute。OS竞态/真实桌面等仍保留。 依据：localControl/corsAllow; mcp/session/oauth; tools; F62–65; 安全相关现有回归 |
+| [SECURITY.md](../SECURITY.md) | 已修正 | c4fe28e55b1fccd9 | F63复核更新：危险命令覆盖面与apply_patch裸文本拒绝口径已同步F63；密钥忽略改为.webagent/.gitignore+本地.git/info/exclude（不改写受控.gitignore）。|
 | [arena-model-probe/README-PYTHON.md](../arena-model-probe/README-PYTHON.md) | 暂停 | 未读正文 | 沿用用户完全暂停的专项边界，仅登记路径/大小，不读正文、不认证最新。 依据：manager/agents.md暂停约定 |
 | [arena-model-probe/README.md](../arena-model-probe/README.md) | 暂停 | 未读正文 | 沿用用户完全暂停的专项边界，仅登记路径/大小，不读正文、不认证最新。 依据：manager/agents.md暂停约定 |
 | [arena-model-probe/TRANSPORT_REVIEW.md](../arena-model-probe/TRANSPORT_REVIEW.md) | 暂停 | 未读正文 | 沿用用户完全暂停的专项边界，仅登记路径/大小，不读正文、不认证最新。 依据：manager/agents.md暂停约定 |
@@ -130,9 +130,9 @@ Markdown：201（对方本轮分母200 + 01a0c925新增交叉验证台账1）；
 | [review/archive/REPORT_v6.md](archive/REPORT_v6.md) | 历史保留 | d95e82629f539f37 | 归档入口已明确仅历史基线/授权/证据；核对文件位置存在，不按当前实现重写原稿，不把旧PASS/待办当本次结论。专项原稿正文未接手。 依据：review/archive/README.md; Git路径元数据 |
 | [review/archive/SEMANTIC_BATCHES_01_15_2026-09-16.md](archive/SEMANTIC_BATCHES_01_15_2026-09-16.md) | 历史保留 | ef0de062d90e338f | 归档入口已明确仅历史基线/授权/证据；核对文件位置存在，不按当前实现重写原稿，不把旧PASS/待办当本次结论。专项原稿正文未接手。 依据：review/archive/README.md; Git路径元数据 |
 | [review/shuncode-ui/README.md](shuncode-ui/README.md) | 已修正 | add734fa9168d9ce | 明确25张分批索引，去掉仅凭截图断言必为Electron/安装栈和URL已失效的保证；仅历史参考不认证第三方。 依据：25个图文件路径; 既有来源记录; installer/webagent.iss |
-| [webagent-core/README.md](../webagent-core/README.md) | 已核对一致 | ecfd98d990a19163 | 代码/界面分工、主机与独立admin以及工作区/启动导航一致。 依据：各入口、index.js与scripts |
+| [review/web_agent_review_2026-09-23.md](web_agent_review_2026-09-23.md) | 已核对一致 | e04844e605713fc6 | 第三方只读复审报告（基线08aa942与f8ab6d0），仓库外成稿后上传；其发现已由本会话在26a167e逐项复核：P1-1/P1-5剩余/5.4-1/5.4-7属实并已修，5.4-2（gitOps字节预算）在9766c6c后为误报，P1-3/P1-4/P1-6等Windows项仍待实机。不把其§六当当前指令。 依据：本会话F63批次; executor/dangerousPolicy/patchEngine; gitOps.js || [webagent-core/README.md](../webagent-core/README.md) | 已核对一致 | ecfd98d990a19163 | 代码/界面分工、主机与独立admin以及工作区/启动导航一致。 依据：各入口、index.js与scripts |
 | [webagent-core/admin-host/README.md](../webagent-core/admin-host/README.md) | 已核对一致 | 914395977bb2c544 | F63后Bearer/独立端口/坏存储保留/4MiB与10000行、输入/schema/原子发布与窄屏说明均一致。 依据：admin app/index; adminHost/adminIntegrity/浏览器断言 |
-| [webagent-core/admin-host/统计服务详解.md](../webagent-core/admin-host/统计服务详解.md) | 已核对一致 | ff131bac04869de8 | F63输入/存储/URL/HTTP码/先序列化再200/静态表格样式及旧token文件/慢请求局限准确，未混入客户端上报改造。 依据：admin/app/index; adminIntegrity/adminHost/浏览器断言 |
+| [webagent-core/admin-host/统计服务详解.md](../webagent-core/admin-host/统计服务详解.md) | 已核对一致 | 935d552faf53969e | F63输入/存储/URL/HTTP码/先序列化再200/静态表格样式及旧token文件/慢请求局限准确，未混入客户端上报改造。 依据：admin/app/index; adminIntegrity/adminHost/浏览器断言 |
 | [webagent-core/agent-host/README.md](../webagent-core/agent-host/README.md) | 已核对一致 | 50e76b0dd2ea53b4 | npm入口/运行与开发依赖、版本来源、控制面/双端口、测试过滤和预算一致。 依据：host/package.json; extensionVersion.js; src/index.js; scripts/run-tests.js |
 | [webagent-core/agent-host/scripts/README.md](../webagent-core/agent-host/scripts/README.md) | 已核对一致 | 3b7be8f24f9eb7a6 | 运行器过滤/错误、诊断及两个独立只读/本机确认回收CLI的职责和权限边界一致。 依据：scripts/run-tests.js; tunnel-residue/tunnel-cleanup.js |
 | [webagent-core/agent-host/scripts/运行器详解.md](../webagent-core/agent-host/scripts/运行器详解.md) | 已修正 | 764e039db1bc6bc8 | 核对发现/过滤/退出码/120秒/CI注解及两个回收CLI边界；纠正现在已有lifecycleSummary函数，不靠标题猜实现。 依据：run-tests.js; testRunner; tunnel-residue/cleanup; R4限定诊断 |
@@ -152,19 +152,19 @@ Markdown：201（对方本轮分母200 + 01a0c925新增交叉验证台账1）；
 | [webagent-core/agent-host/src/mcp/资源与客户端详解.md](../webagent-core/agent-host/src/mcp/资源与客户端详解.md) | 已修正 | deb36f57f7017426 | 资源八项与caller/ACL、七候选卡片/三态/规则一致，修report_progress旧Code-only；外部客户端不作兼容保证。 依据：instructions/resources/clients; tools/index; protocol回归 |
 | [webagent-core/agent-host/src/models/README.md](../webagent-core/agent-host/src/models/README.md) | 已核对一致 | 61421d785bb25d42 | 配置/定制/模型掩码绑定/记忆不同存储保证、真实路径/预算/失败与当前实现一致。 依据：models各模块; modelSettings; stateIntegrity/apiFiles/auditStorage |
 | [webagent-core/agent-host/src/models/画像与记忆详解.md](../webagent-core/agent-host/src/models/画像与记忆详解.md) | 已核对一致 | d2fcac4884ea2c8d | 定制投影/严格写入与四文件非事务、有限探测/用户覆盖、记忆UTC日期/路径/读写预算/排名同实现。 依据：customizations/profile/memory; profile/memoryRecall等 |
-| [webagent-core/agent-host/src/models/配置存储详解.md](../webagent-core/agent-host/src/models/配置存储详解.md) | 已核对一致 | 0a9fe111d7732267 | 配置缺失/坏结构、正规化/单文件发布、模型掩码及端点绑定、ignore/权限/历史兼容描述一致，非全schema/跨进程事务。 依据：store/modelSettings; apiFiles/stateIntegrity/auditStorage |
+| [webagent-core/agent-host/src/models/配置存储详解.md](../webagent-core/agent-host/src/models/配置存储详解.md) | 已核对一致 | 7841158eba0d95ea | 配置缺失/坏结构、正规化/单文件发布、模型掩码及端点绑定、ignore/权限/历史兼容描述一致（F63：ensureWorkspaceGitignore改维护.git/info/exclude）；非全schema/跨进程事务。|
 | [webagent-core/agent-host/src/tools/Plan状态详解.md](../webagent-core/agent-host/src/tools/Plan状态详解.md) | 已核对一致 | 41b1274526eaa6ee | 全局round/2–8/至少两支与本地模板的simulated/null共识分开，函数副作用/浅引用与调用方代次一致。 依据：planRound/consensusEngine; runChat; planRound/modelLifecycle |
-| [webagent-core/agent-host/src/tools/README.md](../webagent-core/agent-host/src/tools/README.md) | 已修正 | b4b4d05dd842730e | 修搜索启动10+扫描2秒和write_file覆盖条件非强制双重AND；文件/工具/缓存/PTY/协作边界已对照。 依据：tools/index/fileOps/patchEngine/readCache; worker和文件回归 |
+| [webagent-core/agent-host/src/tools/README.md](../webagent-core/agent-host/src/tools/README.md) | 已修正 | bea21cca08d30ebb | F63复核更新：错误码/预算与已有文件补丁合同按实际实现更正。 修搜索启动10+扫描2秒和write_file覆盖条件非强制双重AND；文件/工具/缓存/PTY/协作边界已对照。 依据：tools/index/fileOps/patchEngine/readCache; worker和文件回归 |
 | [webagent-core/agent-host/src/tools/任务板与工作区详解.md](../webagent-core/agent-host/src/tools/任务板与工作区详解.md) | 已核对一致 | fd8324c66858caaa | 任务板单写者/归属/持久坏存储、F62 Git双名/子目录/argv与输出预算、workspaceInfo错误边界一致。 依据：board/gitOps/workspaceInfo; board/workspaceTools/fileReadSafety |
 | [webagent-core/agent-host/src/tools/命令与PTY详解.md](../webagent-core/agent-host/src/tools/命令与PTY详解.md) | 已核对一致 | e26a95c6fa2f7019 | 所有者隔离、8并发/40记录/200KiB、取消/timeout与Windows Job、PTY32/256/90秒审批/输出捕获均匹配，发送信号不当退出证明。 依据：executor/ptyJobs/commandJob; ptyLifecycle/executionControl/workspaceTools |
-| [webagent-core/agent-host/src/tools/工具入口与命令策略详解.md](../webagent-core/agent-host/src/tools/工具入口与命令策略详解.md) | 已修正 | 570081c799f3c166 | 去旧固定工具数、统一dispatchTool与callTool追踪/核验分工；模式、别名、remote ACL和词法危险规则与源码一致。 依据：tools/index/normalize/dangerous; extension/dangerousPolicy; 回归 |
+| [webagent-core/agent-host/src/tools/工具入口与命令策略详解.md](../webagent-core/agent-host/src/tools/工具入口与命令策略详解.md) | 已修正 | a33246888bfe6a24 | F63复核更新：包装器/字符串再解析/动词表按F63实现更新。 去旧固定工具数、统一dispatchTool与callTool追踪/核验分工；模式、别名、remote ACL和词法危险规则与源码一致。 依据：tools/index/normalize/dangerous; extension/dangerousPolicy; 回归 |
 | [webagent-core/agent-host/src/tools/技能与隐藏规则详解.md](../webagent-core/agent-host/src/tools/技能与隐藏规则详解.md) | 已核对一致 | a3087c1481326910 | 读取/发现/分页/来源/资源与命名规则同实现，显式说明先匹配先返、符号链接、字节/层数与全局Conda未识别边界。 依据：skills/sensitive; skillsLifecycle/workspaceTools |
 | [webagent-core/agent-host/src/tools/文件与搜索详解.md](../webagent-core/agent-host/src/tools/文件与搜索详解.md) | 已修正 | d5ba606a076d591b | 核对文件/搜索预算和共享worker握手，修请求完成不等待terminate与ready后才扫描，计数释放仍待终止Promise。 依据：fileOps/searchWorker/findFiles; searchWorkerLifecycle/resourceBudget |
 | [webagent-core/agent-host/src/tools/缓存与进度详解.md](../webagent-core/agent-host/src/tools/缓存与进度详解.md) | 已修正 | 96a1f9ce2c95715d | 修report_progress Plan/Code，核对双hash缓存/重置/TTL与caller计划、上报非质量证明；清统计会清会话但不删除原计划对象。 依据：readCache/progressTracker; api reset; taskProgress |
-| [webagent-core/agent-host/src/tools/补丁与路径详解.md](../webagent-core/agent-host/src/tools/补丁与路径详解.md) | 已核对一致 | d909b2db35916abb | 真实路径/写锁/排他发布、格式/新建/过期hash/严格UTF8与F62写前diff限制匹配；明确外部竞态/混合换行不事务。 依据：patchEngine/boundedFile/diff; patchEngine/fileReadSafety/diffBudget |
+| [webagent-core/agent-host/src/tools/补丁与路径详解.md](../webagent-core/agent-host/src/tools/补丁与路径详解.md) | 已核对一致 | 651de93a5f079f85 | F63复核更新：E_ENCODING/E_DIFF_BUDGET与裸文本拒绝已按F63实现更正。 真实路径/写锁/排他发布、格式/新建/过期hash/严格UTF8与F62写前diff限制匹配；明确外部竞态/混合换行不事务。 依据：patchEngine/boundedFile/diff; patchEngine/fileReadSafety/diffBudget |
 | [webagent-core/agent-host/src/tunnel/README.md](../webagent-core/agent-host/src/tunnel/README.md) | 已核对一致 | f6a686c02c8227a0 | 对照25秒日志就绪与正常stopProcess实际Windows taskkill/非Windows信号，区别于R5持句柄残留回收/准备child；不认可任意旧PID清理。 依据：cloudflared/ngrok/stopProcess; registry/cleanup; 生命周期回归 |
 | [webagent-core/agent-host/src/tunnel/停止进程详解.md](../webagent-core/agent-host/src/tunnel/停止进程详解.md) | 已核对一致 | 52019de18e237923 | 正常stopProcess的Windows taskkill/非Windows信号与R5收据/DPAPI/稳定句柄/确认回收分开，历史失败和未验范围不抹除。 依据：stopProcess/processIdentity/registry/protection/cleanup; R5全套回归与CI记录 |
-| [webagent-core/agent-host/src/tunnel/隧道生命周期详解.md](../webagent-core/agent-host/src/tunnel/隧道生命周期详解.md) | 已核对一致 | 6485a54cd57872ed | Quick/Named/ngrok发现/参数/generation/25秒/日志红action与旧事件隔离匹配；广播异常和公网未验边界明确。 依据：cloudflared/ngrok/stopProcess; tunnel/tunnelLifecycle/bridgeTunnel |
+| [webagent-core/agent-host/src/tunnel/隧道生命周期详解.md](../webagent-core/agent-host/src/tunnel/隧道生命周期详解.md) | 已核对一致 | 20a3939c1051afb4 | Quick/Named/ngrok发现/参数/generation/25秒/日志红action与旧事件隔离匹配（F63：findCloudflared命中缓存/未命中30秒TTL）；广播异常和公网未验边界明确。|
 | [webagent-core/agent-host/src/usage/README.md](../webagent-core/agent-host/src/usage/README.md) | 已核对一致 | 07c4af39ec8eb89c | UTC日统计、双配置才报告、写后重读计数、非可靠账本及未完善在途控制如实保留。 依据：tracker.js; usageTracker/auditStorage |
 | [webagent-core/agent-host/src/usage/用量上报详解.md](../webagent-core/agent-host/src/usage/用量上报详解.md) | 已修正 | 4a0fb5224ad1ec73 | 读取/直接保存/计数/首事件4秒与15分钟调度、无网络期限/单飞、stop不取消在途均与源码一致；纠正计数漂移回归所属文件。 依据：tracker.js; usageTracker/auditStorage/stateIntegrity |
 | [webagent-core/agent-host/src/utils/README.md](../webagent-core/agent-host/src/utils/README.md) | 已核对一致 | 761c548d27c4a3ae | 本机控制面、WS、共享请求/严格UTF8/有界diff及事件脱敏范围与F62/64后源码匹配。 依据：utils对应模块及相关控制面/预算/网络回归 |
@@ -173,7 +173,7 @@ Markdown：201（对方本轮分母200 + 01a0c925新增交叉验证台账1）；
 | [webagent-core/agent-host/src/utils/函数详解.md](../webagent-core/agent-host/src/utils/函数详解.md) | 已核对一致 | 4b1d0c700f0df7a5 | 核对scope/共享reader/fetchFn与单调deadline、严格文本BOM/CRLF/上限及workspaceBinding；区分传输解码/文件解码和合作取消。 依据：requestScope/boundedFile/workspaceBinding; F62/64与对应回归 |
 | [webagent-core/agent-host/src/utils/受控工具与工作流详解.md](../webagent-core/agent-host/src/utils/受控工具与工作流详解.md) | 已核对一致 | d82ebae6fbf4a2c2 | 审批状态/容量/结果分层、HTTP/stdio/public HTTPS、工作流引用/前后条件、connectionCheck及operations页代次和不重放与现实现一致；真实第三方/OS沙箱不代验。 依据：operatorQueue/externalClient/workflows/stdio/connectionCheck/operations; 对应回归与函数登记 |
 | [webagent-core/agent-host/src/utils/差异展示详解.md](../webagent-core/agent-host/src/utils/差异展示详解.md) | 已核对一致 | ca307a15d94aa22a | 单次structuredPatch计数、1MiB/2万行/100ms/4000编辑/256KiB及新建写前预检与代码一致。 依据：utils/diff.js; patchEngine; diffBudget |
-| [webagent-core/agent-host/src/utils/执行控制详解.md](../webagent-core/agent-host/src/utils/执行控制详解.md) | 已核对一致 | 48f2de7e8bd2eec3 | 模式租约、四权限依赖/持久化/修订、后台/审批/PTY/stdio屏障与远端限定准确，未扩大为OS/本机人工隔离。 依据：executionControl.js及调用点; executionControl.test.js |
+| [webagent-core/agent-host/src/utils/执行控制详解.md](../webagent-core/agent-host/src/utils/执行控制详解.md) | 已核对一致 | 5e4954f6ed20b3d7 | 模式租约、四权限依赖/持久化/修订、后台/审批/PTY/stdio屏障与远端限定准确（F63：permissions()按store.stateKey缓存）；未扩大为OS/本机人工隔离。|
 | [webagent-core/agent-host/src/utils/控制面与Origin详解.md](../webagent-core/agent-host/src/utils/控制面与Origin详解.md) | 已核对一致 | 8cf9f53e823a6a79 | 入口顺序、回环Host/socket/隧道、Origin与Referer兼容、MCP双响应头与权限独立匹配；真实代理和全面CSRF仍非认证。 依据：localControl/corsAllow/index; auditControl/corsAllow |
 | [webagent-core/agent-host/src/utils/编辑回退详解.md](../webagent-core/agent-host/src/utils/编辑回退详解.md) | 已核对一致 | fd0c59d4ec1f5014 | 核对经典16项/15min/64KiB、检查点8×12/256KiB/一次ticket、全预检及部分unknown、readback与UI消费；无自动/全项目回滚。 依据：editorUndo/fileCheckpoints; apiFiles/fileCheckpoints/editorRuntime |
 | [webagent-core/agent-host/src/入口详解.md](../webagent-core/agent-host/src/入口详解.md) | 已修正 | a933ebde252864ee | 消除第1步已优先检查根却又说不能保证先检查的旧矛盾；核对装配/监听错误/健康/WS/shutdown8秒边界。 依据：src/index.js; workspaceEntry/httpSmoke/skipWorkbench |
@@ -213,10 +213,10 @@ Markdown：201（对方本轮分母200 + 01a0c925新增交叉验证台账1）；
 | [webagent-core/workbench/js/交互绑定详解.md](../webagent-core/workbench/js/交互绑定详解.md) | 已修正 | ef284880bdac07b2 | 核对控件ID/模式/身份代次/写入确认/配置与文件动作，补预览/回退、清轮hash及页面customBusy已有单飞，非跨窗口事务。 依据：bind.js; settings.js; tabs.js; workbenchRuntime/editorRuntime |
 | [webagent-core/workbench/js/启动与Chat详解.md](../webagent-core/workbench/js/启动与Chat详解.md) | 已修正 | cabd73406feac7fd | 修paintTodos旧的两面绘制描述，核对先WS、3秒活动、严格NDJSON/字节/UTF8/唯一done/取消及补丁重读流程。 依据：app.js; chat.js; workbenchRuntime/真实浏览器 |
 | [webagent-core/workbench/js/状态与编辑器详解.md](../webagent-core/workbench/js/状态与编辑器详解.md) | 已核对一致 | 4318edf0ac044837 | 对照标签/模型/草稿/预览回退、7秒0.52.2Monaco迟到升级、picker/DOM模式与预算；真实卸载/IME/DPI不代验。 依据：state/dom/tabs/monaco/picker.js; editorRuntime等 |
-| [webagent-core/workbench/样式规则详解.md](../webagent-core/workbench/样式规则详解.md) | 已修正 | 3013d84e8c36bfea | 核对变量/选择器/700与980断点/焦点/本地滚动及主题；去过期的可选axe说法，默认开发门禁真实存在。 依据：styles.css; DOM/HTML; workbench.browser/HTML |
-| [webagent-core/workbench/页面结构详解.md](../webagent-core/workbench/页面结构详解.md) | 已修正 | 917b89c9e1783580 | 核对页面/表单/ARIA/脚本/控件入口，修未同步统计应为—、文件菜单动作；未实施全读屏/桌面验收。 依据：index.html; app/bind/tabs; workbenchHtml/Runtime |
+| [webagent-core/workbench/样式规则详解.md](../webagent-core/workbench/样式规则详解.md) | 已修正 | 3eeb387305a190b8 | 核对变量/选择器/700与980断点/焦点/本地滚动及主题（F63：结构性高度改rem随字号缩放，窄屏状态栏可横向滑动）；去过期的可选axe说法，默认开发门禁真实存在。|
+| [webagent-core/workbench/页面结构详解.md](../webagent-core/workbench/页面结构详解.md) | 已修正 | d29551ffedb428ef | 核对页面/表单/ARIA/脚本/控件入口，修未同步统计应为—、文件菜单动作（F63：文件树truncated提示）；未实施全读屏/桌面验收。|
 | [webagent-repro/README.md](../webagent-repro/README.md) | 历史保留 | 64dae4453a269b66 | 首部明确冻结/不要运行、主线入口及旧说明适用范围；未执行或改JS，不把旧端口/工具清单套到现产品。 依据：README冻结声明; 主线启动路径 |
-| [使用指南.md](../使用指南.md) | 已修正 | 7b647c361c029bcf | 核对入口/安装/模型/Bridge/工具/恢复/审批主要流程；修Clear log/hash、本机Chat与远端ACL、Ask/Plan元数据、地址重核及已交付原生重置。诊断专项段只保留既有边界，不接手暂停源码；实机不代签。 依据：launcher/appWindow; tools/index/readCache; api/routes; executionControl; F62–65实现与测试 |
+| [使用指南.md](../使用指南.md) | 已修正 | 62f386cdb27b7981 | 核对入口/安装/模型/Bridge/工具/恢复/审批主要流程；修Clear log/hash、本机Chat与远端ACL、Ask/Plan元数据、地址重核及已交付原生重置；F63：密钥忽略改.git/info/exclude口径。诊断专项段只保留既有边界，不接手暂停源码；实机不代签。|
 | [启动脚本说明.md](../启动脚本说明.md) | 已修正 | b7a0740059d0f6f3 | 核对CMD模式/相对路径/端口；补可配置app端口、主机身份/工作区/IPC核对，不只看healthz。 依据：root CMD/sh; installer/launch.js; appWindow.js |
 | [探针入口与实际可用范围.md](../探针入口与实际可用范围.md) | 暂停 | 未读正文 | 沿用用户完全暂停的专项边界，仅登记路径/大小，不读正文、不认证最新。 依据：manager/agents.md暂停约定 |
 | [探针完整整合实施与验收.md](../探针完整整合实施与验收.md) | 暂停 | 未读正文 | 沿用用户完全暂停的专项边界，仅登记路径/大小，不读正文、不认证最新。 依据：manager/agents.md暂停约定 |
