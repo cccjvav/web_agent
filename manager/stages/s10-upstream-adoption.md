@@ -1516,3 +1516,13 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **如实保留（未改）：** 现行MCP规范2026-07-28为无状态核心（去掉initialize与Mcp-Session-Id），本主机仍是旧代实现；官方SDK 2.x双代客户端自动回退已验证可用，纯新代客户端无法连接，属独立工作包。未实现：outputSchema/structuredContent、进度与日志通知、resources/templates/subscribe、completion。隧道启动前OAuth元数据的issuer为http://127.0.0.1（设计如此，从不信任Host头；启动隧道后改用publicTunnelUrl）。路径越界的错误分类为E_INTERNAL而非E_FORBIDDEN（仅分类，已拒绝）。以上结论来自沙箱内真实主机+官方工具，**不等于**Arena/ChatGPT/手机等真实客户端的实机验收（R8仍待用户）。
 
 文档：MCP README（JSON-RPC层、只支持Streamable HTTP、annotations）、请求分发详解（ping、未知方法、handleGet、hostStatus、协议复核结论）、入口详解（jsonErrors与装配顺序）、工具README、工具入口与命令策略详解（toolAnnotations、remoteTimeoutSec）、命令与PTY详解（streamChars、截断字段）、MCP协议与整机入口测试详解（mcpInterop）、OAuth与GitHub测试详解（openStream）。
+
+**第七批精确证据：** `1ae9975`在令牌过期后补推，[CI35927907136](https://github.com/cccjvav/web_agent/actions/runs/35927907136)为push事件、精确同SHA，九job全部success，已逐job核对：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、workbench-browser。
+
+#### 2026-07-28新规范适配评估（只评估，未实施，2026-09-24）
+
+用户问适配是否必要、工作量与改动面。真实主机实测：带`MCP-Protocol-Version: 2026-07-28`的server/discover与tools/list均回400/-32600；官方SDK 2.1.0固定2026-07-28的纯新代客户端连接失败（“server did not offer pinned protocol version 2026-07-28 via server/discover”），默认legacy与auto模式都能连（auto在400且非新代错误码时按规范回退initialize；SDK源码中默认协商模式就是legacy）。外部事实：旧版本继续有效，弃用至少保留12个月；已出现纯新代客户端（OpenAI Secure MCP Tunnel的tunnel-client 0.0.14先发server/discover，旧服务器回400即无法发现）。用户主客户端Arena在新规范发布后（2026-09-16）已实测可连。结论：当前不必须；当所需客户端只讲新规范时才需要。
+
+推荐形态为双代：同一/mcp按版本头分流，旧代路径不动。新代路径需要server/discover、每请求_meta与版本头及Mcp-Method/Mcp-Name校验（-32020/-32022错误码）、resultType与ttlMs/cacheScope、不发会话ID、新代下移除ping与logging/setLevel。难点是**无会话身份**：6个工具（任务板3个、external_request、workflow_request、confirm_connection）及workspace资源现在要求初始化会话，新代下只能按认证主体（OAuth客户端或密钥）区分，同一凭据的多个对话会合并成一个身份，除非按规范改用服务器签发的句柄。估算：约8–10个源码文件、400–700行代码与测试、约8份文档，2–3个批次；旧代测试基本不动，只新增新代测试。不建议改成只支持新代：SDK 1.x等旧客户端会连不上。
+
+**评估中发现的现存缺陷（未修）：** 不带会话的远程调用以`<clientInfo.name或mcp>@req.ip`作调用者，经cloudflared/ngrok时req.ip恒为127.0.0.1，于是**不同凭据**（URL密钥与OAuth客户端）落到同一身份。真实主机实测：OAuth客户端B不带execId调用get_command_output，拿到密钥调用方A的命令输出；get_logs也能看到A的调用，与“远程只返回当前caller”的文档合同矛盾。两个凭据都经本机授权且都能执行命令，实际风险低，但属真实隔离缺陷；新代适配后所有调用都没有会话，这条会成为主路径，应先修（按认证主体区分，公开标签不得泄露凭据摘要）。
