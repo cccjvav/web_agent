@@ -39,7 +39,7 @@ webview动态文本使用DOM文本节点，CSP含nonce，宿主只接受预期�
 
 ## 自定义主机端口
 
-agentHostUrl优先读取VS Code设置`webagent.agentHostUrl`，其次扩展进程环境`WEBAGENT_AGENT_HOST_URL`，最后默认http://127.0.0.1:48271。清单给该设置定义了默认URL，因此通常会先命中设置，环境变量不是无条件覆盖。自定端口优先直接改此VS Code设置；确需环境回退时让设置为空并在启动宿主前设置环境。设置界面修改该配置后重载扩展；环境变量方式必须在启动VS Code前设置并完整退出旧进程再启动。不要把此URL指向不受信服务。端口与host实际启动配置需要一致，不能只修改扩展一端。
+agentHostUrl优先读取VS Code设置`webagent.agentHostUrl`，其次扩展进程环境`WEBAGENT_AGENT_HOST_URL`，最后默认http://127.0.0.1:48271。清单给该设置定义了默认URL，因此通常会先命中设置，环境变量不是无条件覆盖。自定端口优先直接改此VS Code设置；确需环境回退时让设置为空并在启动宿主前设置环境。设置界面修改该配置后重载扩展；环境变量方式必须在启动VS Code前设置并完整退出旧进程再启动。F71起扩展只接受本机根地址（http(s)://127.0.0.1、localhost或[::1]加端口），其它值在发请求前即被拒绝并在状态栏提示——主机/api本来只回应这三种Host，其它地址不可能是真正的主机。端口与host实际启动配置需要一致，不能只修改扩展一端。
 
 ## 验证
 `extensionCopy`验证规范源码与副本，`webviewRuntime`运行实际模板/消息fixture，`desktopExtension`、`ptyLifecycle`覆盖接口与任务边界。尚不能据此声称真实VS Code多窗口、shell integration、Windows审批和取消全部验收。
@@ -55,10 +55,10 @@ F54第七批：requestJson最多接收8MiB响应，15秒总deadline与空闲time
 |---|---|
 | [dangerousPolicy.js](dangerousPolicy.js) | 52 个函数/类节点 |
 | [editorReview.js](editorReview.js) | 10 个函数/类节点 |
-| [extension.js](extension.js) | 64 个函数/类节点 |
+| [extension.js](extension.js) | 65 个函数/类节点 |
 | [modeFromChatRequest.js](modeFromChatRequest.js) | 1 个函数/类节点 |
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
-| [ptyHost.js](ptyHost.js) | 59 个函数/类节点 |
+| [ptyHost.js](ptyHost.js) | 60 个函数/类节点 |
 | [ptyPolicy.js](ptyPolicy.js) | 6 个函数/类节点 |
 | [workspaceMatch.js](workspaceMatch.js) | 2 个函数/类节点 |
 <!-- docs-inventory:end -->

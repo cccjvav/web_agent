@@ -15,9 +15,25 @@ function dispatchPty(ev) {
   if (typeof ptyHost.handleIncoming === 'function') ptyHost.handleIncoming(ev);
 }
 
+// The host's /api answers only Host localhost/127.0.0.1/[::1] from a loopback socket (localControl.js), so no
+// other URL can be a real Web Agent host. Refuse it before any request: this URL receives chat prompts, the
+// workspace path (PTY hello) and hands out PTY command jobs, and a trusted workspace can set it (F71).
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
 function agentHostUrl() {
   const fromCfg = vscode.workspace.getConfiguration('webagent').get('agentHostUrl');
-  return String(fromCfg || process.env.WEBAGENT_AGENT_HOST_URL || 'http://127.0.0.1:48271').replace(/\/$/, '');
+  const raw = String(fromCfg || process.env.WEBAGENT_AGENT_HOST_URL || 'http://127.0.0.1:48271').trim();
+  let url = null;
+  try { url = new URL(raw); } catch { /* reported below */ }
+  if (!url || !['http:', 'https:'].includes(url.protocol) || !LOOPBACK_HOSTS.has(url.hostname)
+    || url.username || url.password || url.pathname !== '/' || url.search || url.hash || /[?#]/.test(raw)) {
+    throw new Error('webagent.agentHostUrl 只能是本机主机根地址（http(s)://127.0.0.1、localhost 或 [::1] 加端口），已拒绝连接：' + raw.slice(0, 200));
+  }
+  return url.origin;
+}
+
+// URL.hostname keeps IPv6 brackets ("[::1]") and http.request would look that up as a DNS name.
+function requestHost(u) {
+  return u.hostname.replace(/^\[(.*)\]$/, '$1');
 }
 
 function requestJson(method, url, body) {
@@ -40,7 +56,7 @@ function requestJson(method, url, body) {
       } else resolve(value);
     };
     const req = lib.request({
-      hostname: u.hostname, port: u.port, path: u.pathname + u.search,
+      hostname: requestHost(u), port: u.port, path: u.pathname + u.search,
       method, timeout: 15000,
       headers: payload ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) } : {}
     }, (res) => {
@@ -176,7 +192,7 @@ function postNdjson(url, body, onEvent, signal) {
       } else resolve();
     };
     const req = lib.request({
-      hostname: u.hostname, port: u.port, path: u.pathname + u.search,
+      hostname: requestHost(u), port: u.port, path: u.pathname + u.search,
       method: 'POST', signal, timeout: 300000,
       headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
     }, (res) => {
@@ -364,9 +380,10 @@ function activate(context) {
       const running = r.json.bridgeRunning;
       statusBar.text = running ? '$(zap) Web Agent Bridge 运行中' : '$(hubot) Web Agent';
       statusBar.tooltip = r.json.workspaceRoot ? `工作区 ${r.json.workspaceRoot}` : '已连接 agent-host';
-    } catch {
-      statusBar.text = '$(warning) Web Agent 未连接 48271';
-      statusBar.tooltip = '先运行 run-webagent.cmd（或 run-webagent-vscode.cmd）让 agent-host 听 48271。';
+    } catch (error) {
+      const badUrl = /webagent\.agentHostUrl/.test(String(error && error.message));
+      statusBar.text = badUrl ? '$(warning) Web Agent 主机地址无效' : '$(warning) Web Agent 未连接 48271';
+      statusBar.tooltip = badUrl ? error.message : '先运行 run-webagent.cmd（或 run-webagent-vscode.cmd）让 agent-host 听 48271。';
     }
   }
   refreshBar();

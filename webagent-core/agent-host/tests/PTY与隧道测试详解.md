@@ -22,6 +22,18 @@ AbortController取消enqueue返回cancelled；预取消runWithSignal中的write_
 
 最后真executeCommand启动Node30秒有限定时器，分别50/100/200/400ms以及确认stdout后abort，要求cancelled/ok:false及10秒内管道关闭（不能等自然退出冒充取消）；global.fetch替身监听signal，用不变的30ms fetchText期限验证E_TIMEOUT、fetch/abort各恰好一次及底层signal.aborted=true。F64将原只匹配aborted文案的断言升级为错误码和真实中止的共同约束，不删除取消断言；keep定时器维持事件循环，finally清timer/恢复fetch。外层finally reset jobs/删tmp。这里有真实子进程取消，但没有真实node-pty或Windows窗口批准测试。
 
+
+## extensionHostSafety.test.js：扩展与主机的信任边界（F71）
+
+[源码](extensionHostSafety.test.js)把真实extension.js放进vm（**loadExtension(getUrl)**注入可变的设置读取），用Module._load替换vscode后加载真实ptyHost（**loadPty(fakeVscode)**，每次清require缓存）。
+
+1. **agentHostUrlContract**：127.0.0.1/localhost（大小写）/[::1]/https与尾斜杠都规范为origin；外部主机名、127.0.0.2、0.0.0.0、`127.0.0.1.evil.test`、IPv4映射IPv6、带用户信息/路径/查询/片段、file/ftp与非URL全部抛含`webagent.agentHostUrl`的错误；空设置得默认值，环境变量回退同样受限。随后用返回被拒地址的PtyHost调用hello与poll，requestJson调用次数必须为0（工作区路径不外发）。
+2. **ipv6Loopback**：在::1起HTTP服务，requestJson请求`http://[::1]:端口`得到200，且服务端收到的Host正是`[::1]:端口`（主机本机判断接受的形式）；环境没有IPv6回环时打印跳过原因。
+3. **familyContract**：裸程序名（npm、npm.cmd、node、`& git`、带引号的node、Get-ChildItem）得到小写family；C:\路径、./与.\脚本、bin/lint、../、绝对路径、~/、未闭合引号与空白都没有family。批准三条路径形式命令后，format.com、下载目录exe、./other.sh、bin/../../x都不得自动放行；npm家族仍可用。
+4. **confirmButtons**：对./build.sh弹窗不含“同类都允许”，即使桩返回该按钮也不加入family且不运行；npm test含该按钮并记入npm。
+5. **windowsExitContract**：九条命令覆盖-Command与-File（换行、非ASCII、超长且末行是注释）两条分支，期望退出码为原生码优先（3/4/6/2）、cmdlet失败1、失败后继续成功的语句0（与executor同一合同）、`exit 5`为5、正常0。Windows上用真实powershell.exe经spawnSync执行spawnSpec产物并比对退出码；其他平台断言POSIX参数不变，并临时把process.platform设为win32结构性核对：命令原样保留、重置语句在前、紧随一行记`$?`、三段退出合同。node-pty自身的Windows参数拼接不在此测试范围内。
+
+基线红测：修复前五组各自单独运行都失败（LOCALHOST未规范化、`[::1]` ENOTFOUND、C:\程序得到family、路径命令仍出现同类按钮并被批准、缺少退出合同）。
 ## tunnel.test.js
 
 [源码](tunnel.test.js)的**sliceHits(src)**数日志裁剪固定代码：Cloudflare两处、ngrok一处，不准buf += text无界增长，是静态回归锁。真实parse函数验证Quick URL、ngrok键值/JSON/Forwarding三格式、无URL null；canonicalNamedUrl去路径/默认443/小写，空值和localhost拒。

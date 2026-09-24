@@ -1546,3 +1546,20 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **第71组精确证据：** `b9522be`的[CI35934665823](https://github.com/cccjvav/web_agent/actions/runs/35934665823)为push事件、精确同SHA，九job全部success，已逐job核对：Ubuntu Node18/20/22/24、Windows Node20/22/24、Windows安装器、workbench-browser。
 
 **仍开放：** R8用户Arena实机验收（第七批ping/旧版SSE处理与本批）；新规范2026-07-28双代分流（用户已同意形态，按需实施，见第70组评估）；其余见第70组第六批“仍开放”与工作包表。
+
+### 第71组第二批：VS Code扩展首次审查——主机地址、同类授权与Windows PTY退出码（2026-09-24）
+
+**先复审上一批。** 本批开工时沙箱重启：HEAD回到4a868ae而工作树保留。fetch远端`7bfa566`后确认跟踪文件与之零差异、唯一未跟踪文件`mcpCallerIsolation.test.js`与远端blob一致，只做mixed指针恢复，未reset --hard；`node_modules`不在快照内，重新`npm ci`。`7bfa566`的CI九job全绿。复读第一批：新键只影响无会话调用者，按凭据计数仍受session表200上限约束，progressTracker 16槽不变。**自查发现本组第一批两处违规并纠正**：①改了`manager/stages/s6-multi-agent-board.md`，它在FULL_REVIEW_INDEX中是“历史保留”，不得改写，已恢复为4a868ae原文（现行规则只在会话与结果详解）；②改过的现行文档没有刷新FULL_REVIEW_INDEX指纹，本批统一刷新（处置结论不变）。
+
+**审查范围：** `extension/extension.js`、`ptyHost.js`、`ptyPolicy.js`、`editorReview.js`、`workspaceMatch.js`、`modeFromChatRequest.js`全文（此前列为“仍未审”）。依据VS Code工作区信任指南：未声明`untrustedWorkspaces`的扩展在受限模式下不启用，但工作区一旦被信任，其`.vscode/settings.json`即可设置`webagent.agentHostUrl`。
+
+| 项 | 实测事实（修前） | 修法 | 红测 |
+|---|---|---|---|
+| 主机地址不设限 | agentHostUrl原样使用任意URL；它接收Chat正文与历史、PTY hello每3秒带工作区路径，并下发PTY命令任务（READISH直接运行，其余弹窗）。而主机localControl只回应Host为localhost/127.0.0.1/[::1]且来自回环socket的/api请求，其它地址不可能是真正的主机 | 只接受http/https＋这三种主机名、无用户信息/路径/查询/片段，返回origin；否则抛错且不发任何请求，状态栏显示“主机地址无效”。未改设置作用域：按工作区指向不同本机端口仍是正当用法 | extensionHostSafety.agentHostUrlContract（含PtyHost对被拒地址零请求） |
+| `[::1]`无法连接 | URL.hostname保留方括号，http.request按DNS名查找`[::1]`而ENOTFOUND（实测） | requestHost去括号，Node自动生成`Host: [::1]:端口`，与主机本机判断一致 | ipv6Loopback（沙箱实测IPv6回环可用并通过） |
+| 同类授权过宽 | commandFamily取首个`[A-Za-z0-9_.+-]+`片段：批准一次`"C:\Program Files\nodejs\node.exe" --version`即family `c`，之后`C:\Windows\System32\format.com D:`等所有C:\程序不弹窗直接运行；`./build.sh`批准`./*`（实测） | family取完整首词且仅限裸程序名；路径形式无family，确认框不再提供“同类都允许”，伪造的该回答也不生效 | familyContract、confirmButtons |
+| Windows PTY吞失败 | spawnSpec无退出合同：微软about_PowerShell_exe写明-File正常结束退出码恒为0，-Command只报最后语句`$?`；多行/中文/超长命令走-File，失败的npm test被报成ok（与§5.4-1同类，扩展未获同修） | windowsGuarded：与executor同一三段合同，收尾另起一行防注释吞掉 | windowsExitContract：Windows上以真实powershell.exe跑九例；其他平台结构核对。**真机结论以Windows CI为准；node-pty自身的Windows参数拼接未覆盖** |
+
+五组各自单独运行在修前均红。复核未发现问题：editorReview（可信工作区、工作区内普通文件、O_NOFOLLOW、64KiB、严格UTF-8、恢复前复核版本/草稿/磁盘）、workspaceMatch、modeFromChatRequest；postNdjson用setEncoding('utf8')（内部StringDecoder，跨块中文不坏）；webview消息白名单与CSP nonce；轮换/停止的未知结果不重放。**未改、记录**：Chat参与者把模型文本交给`stream.markdown`（VS Code按不受信MarkdownString渲染，未实测图片外链行为）；Windows上node-pty的`proc.kill()`是否回收子进程树未验。
+
+文档：PTY扩展详解（windowsGuarded、spawnSpec、confirm、commandFamily）、入口与Webview详解（agentHostUrl、requestHost、refreshBar）及两份副本、扩展README、使用指南5.1、PTY与隧道测试详解与tests/README；documentationLearning登记。

@@ -9,7 +9,8 @@
 | 函数 | 输入/返回 | 调用与限制 |
 |---|---|---|
 | dispatchPty(ev) | 事件→undefined | 只转发pty_request给全局ptyHost，noteStream再handleIncoming；未await返回Promise，不统一接收其异步拒绝 |
-| agentHostUrl() | 无→URL文本 | VS Code设置优先，然后环境变量，再48271；去尾部一个斜杠。manifest设置带默认值，所以通常设置读取本身已有默认 |
+| agentHostUrl() | 无→origin文本或抛错 | VS Code设置优先，然后环境变量，再48271；manifest设置带默认值，所以通常设置读取本身已有默认。F71起必须是http/https、主机名为127.0.0.1、localhost或[::1]、不带用户信息/路径/查询/片段，返回URL.origin（去尾斜杠、主机名小写）；否则抛含`webagent.agentHostUrl`的错误，**不发任何请求**。依据：主机localControl只接受这三种Host且来自回环socket，其它地址不可能是真正的Web Agent主机；而这个地址会收到Chat正文、PTY hello里的工作区路径并下发PTY命令任务，被信任的工作区可在.vscode/settings.json中设置它。未改设置作用域：按工作区指向不同本机端口仍是正当用法 |
+| requestHost(u) | URL→主机名 | 去掉IPv6方括号：URL.hostname为`[::1]`，http.request会把它当DNS名查找而ENOTFOUND；Node据去括号后的地址自动生成`Host: [::1]:端口`，与主机本机判断一致 |
 | requestJson(method,url,body) | HTTP参数→Promise<{status,json,raw}> | 根据http/https选库，JSON正文带长度；响应最多8MiB，Content-Length声明超限提前拒绝（HEAD仅描述资源长度，不按正文拒绝），实际Buffer字节累计仍独立检查（含chunked）。15秒空闲timeout加总deadline；响应error/aborted/提前close/不完整end拒绝。finish单次结算、清deadline及chunks，失败销毁请求/响应；3xx拒绝且不跟随/重试。完整且有界响应保留{status,json,raw}，坏JSON/空正文仍json=null，4xx/5xx仍由调用方判断业务结果；响应上限不代表进程RSS上限 |
 | postNdjson(url,body,onEvent,signal) | Chat请求→Promise<void> | POST JSON+AbortSignal；仅2xx且application/x-ndjson；5分钟空闲timeout及总deadline。UTF8解码保留跨chunk字符与半行，单行1MiB/总响应16MiB上限；consume验证对象/type及message.text，回调异常向上传播。仅一个done且随后正常end才resolve；error、done后数据、坏帧、aborted/error/提前close均finish拒绝并销毁请求/响应，单次结算清deadline；不跟随重定向或重试 |
 | historyFromChatContext(context) | VS Code历史→role/content数组 | 每turn.prompt变user；本扩展result.metadata.webagentCompleted=false的失败turn不回送assistant，未标记的旧历史保持兼容；response.map识别value或value.value后join变assistant；最后12消息，不是12轮；不传引用/工具结构 |
@@ -23,7 +24,7 @@
 
 ## 2. activate内部回调
 
-**refreshBar()**每5秒GET status，明确检查status≥400/无JSON；有工作区差异显示warning，正常显示Bridge状态，catch离线。context.dispose清interval；已有请求不会因clearInterval自动取消。
+**refreshBar()**每5秒GET status，明确检查status≥400/无JSON；有工作区差异显示warning，正常显示Bridge状态，catch离线；若错误来自agentHostUrl拒绝，状态栏改显“主机地址无效”并把原因放进tooltip。context.dispose清interval；已有请求不会因clearInterval自动取消。
 
 extension.js直接注册三个registerCommand，另由editorReview登记两个草稿命令：openBridge打开侧栏；openAgentChat尝试原生Chat预填@webagent，失败回侧栏；resetSecret委托**resetSecretCommand({refresh:()=>bridge.refresh()})**，把确认/绑定/回包消费集中在一个可测函数里，不再用内联箭头吞掉HTTP状态。statusBar自身也加入subscriptions管理。
 

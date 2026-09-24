@@ -12,7 +12,8 @@
 | stripAnsi(s) | 文本→显示文本 | 去常见CSI/OSC和回车，不是完整终端模拟器 |
 | successfulResponse(response) | requestJson结果→boolean | 只接受整数status且在200–299；JSON里自称成功不能覆盖HTTP拒绝 |
 | scrubEnv(base)，导入ptyPolicy | 环境→副本 | 去凭据命名字段，保留一般PATH/Conda变量；不加载Conda profile |
-| spawnSpec(command) | 文本→shell/args/cleanup | 非Windows选SHELL或bash -lc；Windows短ASCII单行用powershell -Command，其他用crypto随机前缀+mkdtemp私有目录，wx/0600写带UTF-8 BOM的ps1再-File；cleanup/cleanupDir给调用者，写失败删除目录并抛错 |
+| windowsGuarded(text) | 命令文本→PowerShell脚本 | F71：与主机executor的guardedCommand同一退出合同。先`$global:LASTEXITCODE = $null`，原样放入用户命令，下一行记`$__wa_ok = $?`，再依次：原生程序非零码优先退出该码、`$?`为假退出1、否则退出0。收尾从新行开始，用户命令末尾的注释吞不掉它。修前`-File`正常结束恒为0、`-Command`只报最后一条语句的`$?`，多行命令里失败的npm test会被报成成功 |
+| spawnSpec(command) | 文本→shell/args/cleanup | 非Windows选SHELL或bash -lc，命令原样；Windows短ASCII单行用powershell -Command，其他用crypto随机前缀+mkdtemp私有目录，wx/0600写带UTF-8 BOM的ps1再-File；两条分支的正文都经windowsGuarded包裹。cleanup/cleanupDir给调用者，写失败删除目录并抛错 |
 | waitForShellIntegration(terminal,ms=2500) | 终端→Promise<integration或null> | 已可executeCommand直接返回；无事件API返回null；否则注册变更回调，只接该终端；finish一次性清timer/dispose订阅/resolve，超时读当前integration |
 | startPtyHost(context,deps) | VS Code上下文/依赖→host或null | new PtyHost再start，初始化异常console.warn并null；不保证异步hello已成功 |
 
@@ -37,7 +38,7 @@ spawnSpec的临时脚本不是凭据文件，仍要注意命令正文可能敏�
 
 ## 3. 审批与目录检查
 
-**confirm(command)**调用shouldAutoAllow；允许直接true，否则最多400字符预览，危险/复合只给运行/拒绝，普通还给会话/同类允许。showWarningMessage取消视拒绝；会话允许改实例布尔，同类允许把family加入Set。
+**confirm(command)**调用shouldAutoAllow；允许直接true，否则最多400字符预览，危险/复合只给运行/拒绝，普通还给会话允许，且**只有**命令有family（首词是裸程序名）时才给同类允许（F71）。showWarningMessage取消视拒绝；会话允许改实例布尔，同类允许仅在该按钮确实展示过时把family加入Set。
 
 **cwdFor(job)**要求当前首工作区与job.workspaceRoot sameWorkspace，resolve cwd并realpath根和目标，relative不能离开根；目标不存在也抛错，不自行建cwd。
 
@@ -77,7 +78,7 @@ READISH仅自动许可有限元数据/目录/简单echo，不自动许可cat/typ
 
 - **isReadishCommand(command)**trim后白名单匹配，不证明命令读取绝无敏感信息。
 - **looksDangerousCommand(command)**共享词法检测加附加正则，非完整shell解析。
-- **commandFamily(command)**去前导调用符，提取首段名字小写；带路径/复杂引号未必得到用户以为的程序名。
+- **commandFamily(command)**去前导`&`调用符后取完整首词（可带一对双/单引号），只有首词是裸程序名（字母数字下划线开头，仅含字母数字`_.+-`）时返回其小写，否则空串。F71前取首个`[A-Za-z0-9_.+-]+`片段：`"C:\…\node.exe"`得到`c`、`./a.sh`得到`.`，一次同类允许即自动放行所有C:\程序或所有./脚本（实测含`C:\Windows\System32\format.com D:`）。现在路径形式的程序没有family，只能逐条或经“本会话都允许”批准。
 - **shouldAutoAllow(command,state={})**先CONTENT_READ正文读取、复合/危险→allow:false、alwaysAsk:true；然后只读→允许；再allowSession、allowedFamilies；其余需要询问但可提供持久到本会话的选项。危险/复合不会因会话允许就跳过询问。
 
 扩展审批不绕过后端Code模式或远程拒绝策略。自动放行不是撤销操作系统权限，用户仍要在独立测试工作区验收。

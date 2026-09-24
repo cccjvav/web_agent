@@ -40,10 +40,15 @@ function looksDangerousCommand(command) {
   return isDangerousCommand(command) || EXTRA_DANGER.test(String(command || ''));
 }
 
+// The family is the whole first word, and only when it is a bare program name. The old prefix match took the
+// first [A-Za-z0-9_.+-]+ run, so `"C:\\…\\node.exe"` had family "c" and `./a.sh` had ".": one 同类都允许 then
+// auto-ran every C:\\ program or every ./ script (F71). Path-like programs have no family and must be approved
+// one by one (or via the explicit whole-session choice).
 function commandFamily(command) {
   const t = String(command || '').trim().replace(/^&\s*/, '');
-  const m = t.match(/^["']?([A-Za-z0-9_.+-]+)/);
-  return m ? m[1].toLowerCase() : '';
+  const m = t.match(/^(?:"([^"]*)"|'([^']*)'|([^\s"']+))(?=\s|$)/);
+  const word = m ? (m[1] ?? m[2] ?? m[3]) : '';
+  return /^[A-Za-z0-9_][A-Za-z0-9_.+-]*$/.test(word) ? word.toLowerCase() : '';
 }
 
 function shouldAutoAllow(command, state = {}) {

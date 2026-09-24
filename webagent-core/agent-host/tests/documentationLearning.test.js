@@ -140,6 +140,7 @@ const pairs = [
 
   ["webagent-core/agent-host/tests/ptyJobs.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
   ["webagent-core/agent-host/tests/ptyLifecycle.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
+  ["webagent-core/agent-host/tests/extensionHostSafety.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
   ["webagent-core/agent-host/tests/tunnel.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
   ["webagent-core/agent-host/tests/tunnelLifecycle.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
   ["webagent-core/agent-host/tests/bridgeTunnel.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],

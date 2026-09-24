@@ -10,7 +10,7 @@
 - **互知**：会话注册表（mcp/session.js，键 clientName@ip）本就存在 ⇒ 暴露为 `peers_list`（10 分钟 alive 窗）。
 - **临时任务表**：`.webagent/board.json`（随工作区、删即清）；5 工具：peers_list/board_list/board_create/board_claim/board_update。
 - **认领原子**：单写者 promise 队列串行化读-改-写；并发 claim 仅一胜，输家 E_TAKEN（带 owner）。
-- **归属身份**：tools/call 穿 callerKey（Mcp-Session-Id→initialize 键绑定；无头时回落到无会话调用者键，F71起为client@ip加由已验证凭据派生的盐化标签，不同凭据不再因同IP合并）；所有 touch 身份感知，杜绝匿名 mcp@ip 幻影 peer。
+- **归属身份**：tools/call 穿 callerKey（Mcp-Session-Id→initialize 键绑定；无头时 ip 回落且具名行优先）；所有 touch 身份感知，杜绝匿名 mcp@ip 幻影 peer。
 - **权限矩阵**：状态仅 owner 改（open=释放）；注记任何在场者可加；done/failed 为终态信号（交付以仓库改动为准）。
 - **是分配不是协作**：无消息总线、无锁步；协作协议留作未来候选（用户提及「还没有引申出这个能力」）。
 

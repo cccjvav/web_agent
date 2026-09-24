@@ -36,6 +36,17 @@ function successfulResponse(response) {
   return Boolean(response && Number.isInteger(response.status) && response.status >= 200 && response.status < 300);
 }
 
+// Same exit contract as the host executor (agent-host tools/executor.js guardedCommand): `powershell -File`
+// exits 0 on normal termination and `-Command` reports only the last statement's $?, so a failing native
+// program followed by anything (or on its own in -File) was reported as success (F71). A native non-zero
+// code wins, else a false $? gives 1, else 0; the tail starts on its own line so a trailing comment in the
+// user's command cannot swallow it.
+function windowsGuarded(text) {
+  return `$global:LASTEXITCODE = $null\n${text}\n$__wa_ok = $?\n`
+    + 'if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }\n'
+    + 'if (-not $__wa_ok) { exit 1 }\nexit 0';
+}
+
 function spawnSpec(command) {
   const win = process.platform === 'win32';
   if (!win) {
@@ -46,13 +57,13 @@ function spawnSpec(command) {
   if (!needsFile) {
     return {
       shell: 'powershell.exe',
-      args: ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', text],
+      args: ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', windowsGuarded(text)],
       cleanup: null
     };
   }
   const cleanupDir = fs.mkdtempSync(path.join(os.tmpdir(), `webagent-pty-${crypto.randomBytes(12).toString('hex')}-`));
   const file = path.join(cleanupDir, 'command.ps1');
-  try { fs.writeFileSync(file, '\uFEFF' + text, { encoding: 'utf8', flag: 'wx', mode: 0o600 }); }
+  try { fs.writeFileSync(file, '\uFEFF' + windowsGuarded(text), { encoding: 'utf8', flag: 'wx', mode: 0o600 }); }
   catch (err) { fs.rmSync(cleanupDir, { recursive: true, force: true }); throw err; }
   return {
     shell: 'powershell.exe',
@@ -182,9 +193,10 @@ class PtyHost {
     });
     if (decision.allow) return true;
     const preview = String(command || '').slice(0, 400);
+    // 同类都允许 only exists for a bare program name; a path-like program has no family to remember.
     const buttons = decision.alwaysAsk
       ? ['运行', '拒绝']
-      : ['运行', '本会话都允许', '同类都允许', '拒绝'];
+      : ['运行', '本会话都允许', ...(decision.family ? ['同类都允许'] : []), '拒绝'];
     const pick = await vscode.window.showWarningMessage(
       `Web Agent 要在集成终端「Web Agent · 1」运行：\n${preview}`,
       { modal: true },
@@ -194,8 +206,8 @@ class PtyHost {
       this.allowSession = true;
       return true;
     }
-    if (pick === '同类都允许') {
-      if (decision.family) this.allowedFamilies.add(decision.family);
+    if (pick === '同类都允许' && buttons.includes(pick)) {
+      this.allowedFamilies.add(decision.family);
       return true;
     }
     return pick === '运行';

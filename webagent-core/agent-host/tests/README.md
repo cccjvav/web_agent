@@ -12,7 +12,7 @@
 | [Chat模型与图像测试详解](Chat模型与图像测试详解.md) | runChat、modelLifecycle、chatVision |
 | [浏览器与Webview测试详解](浏览器与Webview测试详解.md) | monacoLoading、workbenchRuntime、editorRuntime、webviewRuntime |
 | [存储完整性与预算测试详解](存储完整性与预算测试详解.md) | stateIntegrity、resourceBudget、auditStorage、hostPersist、usageTracker |
-| [PTY与隧道测试详解](PTY与隧道测试详解.md) | ptyJobs、ptyLifecycle、tunnel、tunnelLifecycle、bridgeTunnel |
+| [PTY与隧道测试详解](PTY与隧道测试详解.md) | ptyJobs、ptyLifecycle、extensionHostSafety、tunnel、tunnelLifecycle、bridgeTunnel |
 | [任务板与事件流测试详解](任务板与事件流测试详解.md) | board、mcpBoard、eventBus |
 | [工作区与命令安全测试详解](工作区与命令安全测试详解.md) | dangerousCommands、sandbox、workspaceTools |
 | [本机边界与跨站测试详解](本机边界与跨站测试详解.md) | auditControl、localControl、corsAllow |
@@ -179,6 +179,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [eventBus.test.js](eventBus.test.js) | 9 个函数/类节点 |
 | [executionControl.test.js](executionControl.test.js) | 41 个函数/类节点 |
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
+| [extensionHostSafety.test.js](extensionHostSafety.test.js) | 26 个函数/类节点 |
 | [externalDiscovery.test.js](externalDiscovery.test.js) | 13 个函数/类节点 |
 | [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
 | [fileReadSafety.test.js](fileReadSafety.test.js) | 21 个函数/类节点 |
