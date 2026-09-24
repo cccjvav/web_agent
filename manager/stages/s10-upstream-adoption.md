@@ -1563,3 +1563,19 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 五组各自单独运行在修前均红。复核未发现问题：editorReview（可信工作区、工作区内普通文件、O_NOFOLLOW、64KiB、严格UTF-8、恢复前复核版本/草稿/磁盘）、workspaceMatch、modeFromChatRequest；postNdjson用setEncoding('utf8')（内部StringDecoder，跨块中文不坏）；webview消息白名单与CSP nonce；轮换/停止的未知结果不重放。**未改、记录**：Chat参与者把模型文本交给`stream.markdown`（VS Code按不受信MarkdownString渲染，未实测图片外链行为）；Windows上node-pty的`proc.kill()`是否回收子进程树未验。
 
 文档：PTY扩展详解（windowsGuarded、spawnSpec、confirm、commandFamily）、入口与Webview详解（agentHostUrl、requestHost、refreshBar）及两份副本、扩展README、使用指南5.1、PTY与隧道测试详解与tests/README；documentationLearning登记。
+
+**证据：** 提交`09fd548`，CI run 35978847422九个job全部success（含windows-latest Node 20/22/24：windowsExitContract在真实powershell.exe上跑过九例）。
+
+### 第72组：admin-host首次审查，与共享危险命令检测器的换行绕过（2026-09-24，会话01a0d084）
+
+**先复审上一批。** `09fd548` CI全绿，Windows三job实跑了PTY退出合同。复读第二批相邻链路：ptyPolicy的COMPOUND含`\r\n`，多行命令在PTY里总要逐条确认；但它和引擎共用的`extension/dangerousPolicy.js`此前我只当作“已被dangerousCommands钉住”，没有逐行读过——本组补读，发现下面第一项。
+
+| 项 | 实测事实（修前） | 修法 | 红测 |
+|---|---|---|---|
+| **换行隐藏破坏性命令（严重）** | splitStages只按`; | & && ||`切，normalizeRaw先把换行变空格：`echo hi`＋换行＋`rm -rf victim`被判为一个echo阶段。端到端实测：远端MCP `tools/call run_command`返回isError=false、目录被删；“远端一律E_FORBIDDEN”与本地confirm_dangerous同时失效。续行拆开（`rm \`＋换行＋`-rf x`、`r\`＋换行＋`m`）、`if …; then rm …`、`(rm -rf x)`、PowerShell`{ Remove-Item -Recurse x }`同样漏过 | 先按CRLF/LF/CR切行；`( ) { }`与既有分隔符一样无视引号地切；stripWrappers剥掉命令前的`if then else elif do while until !`；新readings对含续行的命令给三种读法（按行／拼接无空格／拼接加空格），任一危险即危险。normalizeRaw里从未生效的`\\\n`替换删除 | dangerousCommands：VARIANTS 24→40（本地须confirm、远端须E_FORBIDDEN、真HTTP两路）、ORDINARY 135→145、病态输入加三种、端到端victim目录必须留存 |
+| 令牌文件先宽后窄 | ensureToken按默认权限写再chmod：umask 022下chmod前为0644（实测），chmod失败则一直可读 | `wx`＋`mode 0600`创建；空白文件先删再建；路径被占（含悬空链接）时报错不跟随 | adminIntegrity③（POSIX；chmod被替换为必抛EPERM仍须0600） |
+| 500正文泄露数据路径 | 所有上报客户端共用同一令牌，损坏存储时500正文含`E_STORE_CORRUPT: /home/<user>/…/reports.json`（实测） | 5xx详情写console.error，对外固定文案＋code；4xx固定文案不变 | adminIntegrity④（stats、首页、上报三路） |
+
+复核未发现问题：admin的Bearer比较为等长timingSafeEqual、令牌非空；readBody 1MiB/413、坏JSON 400；URL解析失败400不崩；HTML全部经escapeHtml（含day查询参数）；ingest同步读改写在单进程内无交错；F70轮转与字节核算。**未改、记录**：admin HTML无CSP/nosniff（页面需Bearer头，普通浏览器无法带上，框架嵌入无从利用）；共用令牌下任一客户端可以任意installId/githubUser上报（README已声明自报数据不可作计费/审计证据）；检测器仍不覆盖需求值的形式（eval、`$(…)`、反引号、变量、别名、解释器正文），PowerShell函数定义后再调用同样不覆盖。
+
+文档：工具入口与命令策略详解（normalizeRaw、splitStages、readings、stripWrappers、commandDangerous、覆盖范围）、工作区与命令安全测试详解、统计服务详解（ensureToken、corruptStore、createHandler）、admin README、统计与文档测试详解。

@@ -42,7 +42,27 @@ const VARIANTS = [
   'env FOO=bar BAZ=qux rm -rf X',
   'sudo git push',
   'nohup dd if=/dev/zero of=/dev/sda',
-  'sudo nohup rm -rf X'
+  'sudo nohup rm -rf X',
+  // F72: a newline separates commands in bash, PowerShell and batch files, but the detector
+  // collapsed it into a space, so `echo hi` + newline + `rm -rf X` was judged as one harmless
+  // `echo` (measured end to end: remote MCP ran it and deleted the directory). Line continuations,
+  // subshell/group brackets and shell reserved words hid the destructive word the same way.
+  'echo hi\nrm -rf X',
+  'echo hi\r\nrm -rf X',
+  'echo hi\rRemove-Item -Recurse X',
+  'npm test\ngit push origin main',
+  'cd sub\n\n  git reset --hard',
+  'rm \\\n  -rf X',
+  'r\\\nm -rf X',
+  'Remove-Item `\n  -Recurse X',
+  'rd ^\n /s /q X',
+  'if true; then rm -rf X; fi',
+  'while true; do rm -rf X; done',
+  '! rm -rf X',
+  '(rm -rf X)',
+  '(cd sub && rm -rf X)',
+  'if ($true) { Remove-Item -Recurse X }',
+  'Get-ChildItem | ForEach-Object { Remove-Item -Recurse $_ }'
 ];
 
 // F70 (external review P1-5 + own reproduction): table-driven matrix. The 26a167e detector
@@ -112,7 +132,11 @@ const ORDINARY = [
   'true && echo ok', 'true >> f', 'true >&2', 'ls > out.txt',
   'echo hi > out.txt', '> important.txt', 'npm test > log.txt 2>&1', 'npm test &> log.txt',
   'echo x 2>&1 > log', 'cat a >> b', 'systemctl status nginx', 'reg query HKCU\\x',
-  'net use', 'net start', 'certutil -hashfile x SHA256'
+  'net use', 'net start', 'certutil -hashfile x SHA256',
+  // F72: multi-line and bracketed everyday commands stay unflagged.
+  'npm ci\nnpm test', 'git status\r\ngit diff --stat', 'echo "(done)"', 'python -c "print(1)"\nnode -e 1',
+  'Get-ChildItem | ForEach-Object { $_.Name }', "awk '{print $1}' file.txt", 'if [ -f x ]; then echo ok; fi',
+  'for f in *.js; do node --check "$f"; done', 'git commit -m "feat: add (optional) flag"', 'npm test \\\n  -- --filter=x'
 ];
 
 for (const cmd of ORDINARY) {
@@ -134,7 +158,8 @@ for (const cmd of ['eval "rm -rf X"', 'bash -c "$CMD"', 'python -c "import shuti
 }
 
 // Pathological input stays linear: this runs on every command a model sends.
-for (const input of ['echo ' + 'a '.repeat(100000), '"'.repeat(100000), 'bash -c "'.repeat(200) + 'rm -rf x', ';'.repeat(100000)]) {
+for (const input of ['echo ' + 'a '.repeat(100000), '"'.repeat(100000), 'bash -c "'.repeat(200) + 'rm -rf x', ';'.repeat(100000),
+  '\n'.repeat(100000), Array.from({ length: 20000 }, (_, i) => `echo ${i} \\`).join('\n'), '({'.repeat(50000)]) {
   const started = Date.now();
   isDangerousCommand(input);
   assert.ok(Date.now() - started < 2000, 'detector must stay fast on pathological input');
@@ -218,6 +243,14 @@ async function main() {
       `remote MCP must E_FORBIDDEN even with confirm_dangerous: ${cmd}`
     );
   }
+
+  // F72 end to end: before the fix this remote call answered isError=false and the directory was gone.
+  const victim = path.join(tmp, 'victim');
+  fs.mkdirSync(victim, { recursive: true });
+  fs.writeFileSync(path.join(victim, 'keep.txt'), 'x');
+  const hidden = await handleRpc(req('tools/call', { name: 'run_command', arguments: { command: 'echo hi\nrm -rf victim' } }));
+  assert.strictEqual(hidden.isError, true, 'a newline must not hide rm -rf from the remote block');
+  assert.ok(fs.existsSync(path.join(victim, 'keep.txt')), 'the directory survives');
 
   const app = express();
   app.use(express.json());

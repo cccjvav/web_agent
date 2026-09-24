@@ -150,6 +150,53 @@ async function run() {
       assert.strictEqual(after.filter(r=>r.installId.startsWith('late-')).length,5);
       assert.ok(!after.some(r=>r.day===day(0)),'the oldest day went first');
     });
+    // F72: the generated admin token was written with the default mode and only then chmod'ed to
+    // 0600 (measured: 0644 under umask 022 before the chmod). A failed or ignored chmod left it
+    // readable by every local account. It is now created 0600 from its first byte.
+    await check('a generated admin token is never readable beyond its owner, even if chmod fails',()=>{
+      if(process.platform==='win32')return;
+      const dir=fs.mkdtempSync(path.join(os.tmpdir(),'webagent-admin-token-'));
+      const saved={env:process.env.WEBAGENT_ADMIN_TOKEN,umask:process.umask(0o022),chmod:fs.chmodSync};
+      delete process.env.WEBAGENT_ADMIN_TOKEN;
+      fs.chmodSync=()=>{throw Object.assign(new Error('chmod unsupported here'),{code:'EPERM'});};
+      try {
+        const {ensureToken}=require('../../admin-host/app');
+        const tokenPath=path.join(dir,'admin-token.txt');
+        const created=ensureToken(dir);
+        assert.ok(/^[0-9a-f]{32}$/.test(created));
+        assert.strictEqual(fs.statSync(tokenPath).mode&0o777,0o600,'new token file');
+        assert.strictEqual(ensureToken(dir),created,'an existing token is reused');
+        fs.writeFileSync(tokenPath,'  \n',{mode:0o644});fs.chmodSync=saved.chmod;fs.chmodSync(tokenPath,0o644);
+        fs.chmodSync=()=>{throw Object.assign(new Error('chmod unsupported here'),{code:'EPERM'});};
+        const replaced=ensureToken(dir);
+        assert.ok(/^[0-9a-f]{32}$/.test(replaced));
+        assert.strictEqual(fs.statSync(tokenPath).mode&0o777,0o600,'a blank token file is replaced, not rewritten in place');
+      } finally {
+        fs.chmodSync=saved.chmod;process.umask(saved.umask);
+        if(saved.env===undefined)delete process.env.WEBAGENT_ADMIN_TOKEN;else process.env.WEBAGENT_ADMIN_TOKEN=saved.env;
+        fs.rmSync(dir,{recursive:true,force:true});
+      }
+    });
+    // F72: every telemetry client shares the one report token, so a storage 500 must not hand each
+    // of them the operator's absolute data path (measured: "E_STORE_CORRUPT: /home/<user>/...").
+    // The stable code stays; the detail goes to the operator's console.
+    await check('storage failures answer a stable code without the server data path',async()=>{
+      fs.writeFileSync(file,'{broken');
+      const {server}=createServer({dataDir:root,token:'fixture-admin'});
+      await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+      const logged=[];const saved=console.error;console.error=(...args)=>logged.push(args.join(' '));
+      try {
+        for(const [target,body] of [['/api/stats'],['/'],['/api/report',JSON.stringify(valid)]]){
+          const res=await request(server.address().port,target,body);
+          assert.strictEqual(res.status,500,target);
+          const parsed=JSON.parse(res.body);
+          assert.strictEqual(parsed.code,'E_STORE_CORRUPT',target);
+          assert.ok(!res.body.includes(root)&&!res.body.includes(os.tmpdir()),`${target} leaks the data path: ${res.body}`);
+        }
+        assert.ok(logged.some(line=>line.includes(file)),'the operator console still gets the full detail');
+        assert.strictEqual(fs.readFileSync(file,'utf8'),'{broken');
+      } finally {console.error=saved;await new Promise(resolve=>server.close(resolve));fs.writeFileSync(file,'[]');}
+    });
     await check('only a genuinely absent store starts empty',()=>{
       fs.rmSync(file,{force:true});assert.deepStrictEqual(loadReports(root),[]);
       ingest(root,valid);assert.strictEqual(loadReports(root).length,1);

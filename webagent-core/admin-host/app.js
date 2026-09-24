@@ -24,14 +24,21 @@ function ensureToken(dataDir) {
   const fromEnv = String(process.env.WEBAGENT_ADMIN_TOKEN || '').trim();
   if (fromEnv) return fromEnv;
   const file = tokenFile(dataDir);
+  let blank = false;
   try {
     const existing = fs.readFileSync(file, 'utf8').trim();
     if (existing) return existing;
+    blank = true;
   } catch (_) {}
+  // F72: create the secret 0600 from its first byte. Writing with the default mode and chmod'ing
+  // afterwards left it readable by every local account (0644 under umask 022) until the chmod,
+  // and forever if the chmod failed. A blank file is removed and recreated, because `mode` only
+  // applies when a file is created. `wx` refuses to follow a link planted at the token path.
+  if (blank) fs.rmSync(file, { force: true });
   const created = crypto.randomBytes(16).toString('hex');
-  fs.writeFileSync(file, `${created}\n`, 'utf8');
+  fs.writeFileSync(file, `${created}\n`, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
   try {
-    fs.chmodSync(file, 0o600);
+    fs.chmodSync(file, 0o600); // Also narrows a umask that removed nothing; harmless where unsupported.
   } catch (_) {}
   return created;
 }
@@ -409,8 +416,18 @@ function createHandler({ dataDir, token }) {
       res.end(JSON.stringify({ error: 'not found' }));
     } catch (err) {
       const status = err.status || 500;
+      // F72: every telemetry client shares the one report token, so a 5xx answer must not hand
+      // them the operator's absolute data path or a raw exception. They get a stable code; the
+      // full detail goes to the operator's console. 4xx messages are fixed texts and stay.
+      let message = err.message || String(err);
+      if (status >= 500) {
+        console.error(`[webagent-admin] ${req.method} ${String(req.url || '').slice(0, 200)} -> ${status}: ${message}`);
+        message = err.code === 'E_STORE_CORRUPT'
+          ? 'E_STORE_CORRUPT: the report store could not be read or published. The operator console has the details; nothing was overwritten.'
+          : 'internal error';
+      }
       res.writeHead(status, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message || String(err), ...(err.code ? { code: err.code } : {}) }));
+      res.end(JSON.stringify({ error: message, ...(err.code ? { code: err.code } : {}) }));
     }
   };
 }

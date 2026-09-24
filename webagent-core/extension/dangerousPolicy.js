@@ -27,7 +27,6 @@ function stripEmptyQuotes(s) {
 function normalizeRaw(cmd) {
   return stripEmptyQuotes(cmd)
     .replace(/[\u0000-\u001f\u00a0]/g, ' ')
-    .replace(/\\\n/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -37,11 +36,27 @@ function normalizeRaw(cmd) {
 // quote-aware splitter can be talked into swallowing a real separator on one of the three. The
 // naive split never under-splits; its only cost is flagging a quoted `; rm -rf x` inside an echo or
 // commit message, which is a harmless confirmation prompt.
+// F72: a line break is a separator too (bash, PowerShell and batch files all run the next line as
+// a new command). normalizeRaw used to turn it into a space, so `echo hi` + newline + `rm -rf x`
+// was one harmless `echo` stage — measured end to end, remote MCP ran it. Brackets ( ) { } split
+// the same naive way, so a subshell `(rm -rf x)` or a script block `{ Remove-Item -Recurse x }`
+// is judged by its own first word; the reserved words in front (if/then/do…) are dropped in
+// stripWrappers.
 function splitStages(cmd) {
-  return normalizeRaw(cmd)
-    .split(/\s*(?:&&|\|\||[|;&])\s*/)
+  return String(cmd || '')
+    .split(/\r\n|[\r\n]/)
+    .flatMap((line) => normalizeRaw(line).split(/\s*(?:&&|\|\||[|;&(){}])\s*/))
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+// Line continuations join physical lines back into one command: bash `\`, PowerShell backtick,
+// cmd `^`. Whether that happens depends on the shell (a trailing `\` is literal in PowerShell), so
+// every reading is judged and ANY dangerous reading counts: the lines as written, the lines joined
+// with nothing (bash turns `r\` + newline + `m` into `rm`), and joined with a space.
+function readings(raw) {
+  if (!/[\\`^]\r?\n/.test(raw)) return [raw];
+  return [raw, raw.replace(/[\\`^]\r?\n/g, ''), raw.replace(/[\\`^]\r?\n/g, ' ')];
 }
 
 // Shell-style words: quoted segments concatenate with their neighbours, so `r"m"` and `'rm'` are
@@ -314,13 +329,17 @@ const ARGV_WRAPPERS = {
   wsl: { value: ['-d', '-u', '--distribution', '--user', '--cd'] }
 };
 
+const SHELL_KEYWORDS = new Set(['if', 'then', 'else', 'elif', 'do', 'while', 'until', '!']);
+
 function stripWrappers(tokens) {
   let rest = tokens;
   // Bounded loop: each pass consumes at least one token.
   for (let guard = 0; guard < 16 && rest.length; guard += 1) {
-    // Bare `VAR=value cmd` assignments, and PowerShell/grouping punctuation (`& cmd`, `{ cmd }`).
+    // Bare `VAR=value cmd` assignments, PowerShell/grouping punctuation (`& cmd`, `{ cmd }`), and
+    // shell reserved words that precede a command (`then rm …`, `do rm …`, `! rm …`; F72).
     let i = 0;
-    while (i < rest.length && (/^[A-Za-z_][A-Za-z0-9_]*=/.test(rest[i]) || /^[&({]$/.test(rest[i]))) i += 1;
+    while (i < rest.length && (/^[A-Za-z_][A-Za-z0-9_]*=/.test(rest[i]) || /^[&({]$/.test(rest[i])
+      || SHELL_KEYWORDS.has(rest[i].toLowerCase()))) i += 1;
     if (i > 0) {
       if (i >= rest.length) return rest;
       rest = rest.slice(i);
@@ -427,10 +446,12 @@ function redirectDangerous(raw) {
 function commandDangerous(command, depth) {
   const raw = String(command || '');
   if (!raw.trim()) return false;
-  if (redirectDangerous(raw)) return true;
-  const stages = splitStages(raw);
-  if (pipelineDangerous(stages)) return true;
-  return stages.some((st) => stageDangerous(tokenize(st), depth));
+  return readings(raw).some((text) => {
+    if (redirectDangerous(text)) return true;
+    const stages = splitStages(text);
+    if (pipelineDangerous(stages)) return true;
+    return stages.some((st) => stageDangerous(tokenize(st), depth));
+  });
 }
 
 function isDangerousCommand(command) {

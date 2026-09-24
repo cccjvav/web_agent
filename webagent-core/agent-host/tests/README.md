@@ -149,7 +149,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | 源码 | 定位证据 |
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
-| [adminIntegrity.test.js](adminIntegrity.test.js) | 55 个函数/类节点 |
+| [adminIntegrity.test.js](adminIntegrity.test.js) | 63 个函数/类节点 |
 | [apiFiles.test.js](apiFiles.test.js) | 59 个函数/类节点 |
 | [appWindowLifecycle.test.js](appWindowLifecycle.test.js) | 79 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
@@ -165,7 +165,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [commandEncoding.test.js](commandEncoding.test.js) | 8 个函数/类节点 |
 | [connectionCheck.test.js](connectionCheck.test.js) | 18 个函数/类节点 |
 | [corsAllow.test.js](corsAllow.test.js) | 20 个函数/类节点 |
-| [dangerousCommands.test.js](dangerousCommands.test.js) | 11 个函数/类节点 |
+| [dangerousCommands.test.js](dangerousCommands.test.js) | 12 个函数/类节点 |
 | [desktopExtension.test.js](desktopExtension.test.js) | 0 个函数/类节点 |
 | [diffBudget.test.js](diffBudget.test.js) | 19 个函数/类节点 |
 | [docsHttp.test.js](docsHttp.test.js) | 14 个函数/类节点 |
