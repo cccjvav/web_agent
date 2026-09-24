@@ -18,7 +18,7 @@
 | `snap.ps1 -WindowTitle <子串> -Out <png路径> [-Quality n] [-B64]` | 截目标窗口(标题子串匹配)或全屏到 PNG/JPEG | `META` JSON含file/bytes/window/rect；窗口rect为x/y/width/height，全屏可为null；截图文件(输出目录不存在会自动创建) |
 | `info.ps1` | 枚举主窗口pid/name/title、虚拟屏幕几何与系统DPI/scale（不返回所有句柄、前台或光标位置） | JSON(UTF-8) |
 | `act-bg.ps1 -WindowTitle <子串> -X <图上x> -Y <图上y>` | **默认点击**:PostMessage(WM_MOUSEMOVE/DOWN/UP)后台注入目标窗口;不 SetCursorPos、不抢前台、窗口无需置顶 | `BGCLICK SUBMITTED before=x,y after=x,y` |
-| `mark.ps1 -Path <png> -Pts "x:y[,x:y…]" [-Size n] [-Out <png>]` | 点击前**画点确认**:在截图副本画白晕红芯准星+编号(1..N),源文件不动;坐标=同一截图像素空间 | 手工拼接的JSON样文本（Windows路径未完整转义，不保证合法JSON）；输出默认 `<名>-marked.png` |
+| `mark.ps1 -Path <png> -Pts "x:y[,x:y…]" [-Size n] [-Out <png>]` | 点击前**画点确认**:在截图副本画白晕红芯准星+编号(1..N),源文件不动;坐标=同一截图像素空间 | JSON（in/out/pts/ok，路径已转义，F72起为合法JSON）；输出默认 `<名>-marked.png` |
 | `act.ps1 -WindowTitle <子串> -X <图上x> -Y <图上y>` | 前台点击(SetForegroundWindow+SetCursorPos+mouse_event)—— 会动用户光标、抢焦点 | `CLICK <detail> at x,y win=<title>` |
 | `type.ps1 -WindowTitle <子串> -Text <文本> [-Method clip\|fg] [-Mode char]` | 文字输入(见"打字原语与实测"节):clip=后台剪贴板+Ctrl+V(默认);fg=真实 Ctrl+V(需前台);char=后台 WM_CHAR 兜底 | `BGTYPE <method> SUBMITTED before=x,y after=x,y chars=N` |
 | `ocr.ps1 -Path <img>` | (可选)图片 OCR | `TEXT <x> <y> <w> <h> <text>` 每行一条 |
@@ -73,7 +73,7 @@
 - base64文本通道不应作大图可靠传输协议：命令尾部输出、工具结果和模型上下文各有裁剪/预算，旧的65,537字符或256KB经验不是当前统一阈值。不要以-B64输出或分片聊天替代受支持图像附件。
 
 ## 2026-09-11 失败与状态契约
-- 点击/输入脚本的标题按忽略大小写字面子串要求唯一；snap仍是通配匹配并取首个，不具同样唯一性保证。必须核对META.window/截图目标，不能把截图成功当输入窗口已绑定。
+- 截图、点击、输入脚本的标题都按忽略大小写字面子串要求**唯一**（snap自F72起同规则，零个或多个输出ERR_WINDOW_MISSING_OR_AMBIGUOUS）；标题唯一不等于窗口身份核验，仍须核对META.window/截图目标，不能把截图成功当输入窗口已绑定。`-Out`可用绝对路径。
 - ERR_* 返回非零退出。SUBMITTED仅表示输入提交，不证明应用接受；前台旧式输入API无法提供完整送达确认。
 - 检查窗口边界、坐标范围与可检测的焦点/WinAPI错误；DPI、遮挡和提交期间焦点变更仍须截图复核。
 - type使用Windows Forms快照可读取的全部剪贴板格式；快照失败不修改，finally恢复失败明确非零。若序号说明用户/应用改了剪贴板，不覆盖新内容。延迟渲染/特殊格式不能保证无损，实机验收仍待。

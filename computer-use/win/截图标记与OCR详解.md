@@ -16,9 +16,9 @@
 
 ## 2. snap.ps1参数与执行
 
-Out默认skills/computer-use/state/screen.png，WindowTitle空表示全屏，Quality80，B64开关。UTF8输出、Stop异常策略；从脚本目录找capture.cs并Add-Type引用System.Drawing。Out后缀jpg/jpeg用JPEG，否则PNG；输出路径用当前Get-Location与Out Join-Path，不是固定脚本目录。
+Out默认skills/computer-use/state/screen.png，WindowTitle空表示全屏，Quality80，B64开关。UTF8输出、Stop异常策略；从脚本目录找capture.cs并Add-Type引用System.Drawing。Out后缀jpg/jpeg用JPEG，否则PNG；输出路径：Out为绝对路径（IsPathRooted）时GetFullPath原样使用，否则与当前Get-Location拼接后GetFullPath，不是固定脚本目录。F72前一律Join-Path，绝对路径被拼成`<当前目录>\C:\…`而截图失败（主机collectShot本来支持绝对-Out）。
 
-有WindowTitle：Get-Process管道Where-Object按通配`*title*`匹配，Select-Object First1；无结果输出ERR_NO_WINDOW/exit2；有结果调用CaptureWindow。无标题调用CaptureFull。**这里选择第一项，不像输入脚本要求唯一匹配**，星号/问号还具通配含义；截图确认时必须核对META.window，别把标题模糊匹配当唯一窗口身份证。
+有WindowTitle：与act/type同一规则——主句柄非零且MainWindowTitle按忽略大小写的**字面子串**（IndexOf）命中，且**恰好一个**；零个或多个都输出ERR_WINDOW_MISSING_OR_AMBIGUOUS/exit2，然后CaptureWindow。无标题调用CaptureFull。F72前按通配`*title*`取第一项：多窗口同名时可能截到别的窗口并把画面交给模型，标题含`[`还会抛通配模式异常。唯一匹配仍只是标题层面，截图后照样核对META.window与画面。
 
 返回非OK输出CAP_ERR/exit3；成功Get-Item，再可选GetWindowRect构x/y/width/height；输出META JSON含file/bytes/window/rect。B64额外读全文件输出LEN=字节数、base64、END，增加内存/输出预算，不是自动上传任意服务。无额外try兜底的Add-Type/路径失败会由PowerShell异常结束。
 
@@ -34,7 +34,7 @@ Out默认skills/computer-use/state/screen.png，WindowTitle空表示全屏，Qua
 
 静态类**WinMark.Mark(inPath,outPath,pts,size,label)**try using Bitmap输入+Graphics抗锯齿，pts按逗号拆非空项，每项按冒号int.Parse x/y；逐点idx++。先**DrawMarker**白色粗线(size+4,pen7)，再红色细线(size,pen3)。多点且idx≤99时Arial11粗体MeasureString，右上绘半透明黑偏移阴影再白数字；Font/Brush均using。
 
-绘完后大小写不敏感比较原始inPath/outPath字符串，相同ERR_SAME_FILE；否则创建目标目录保存PNG；成功手工拼JSON in/out/pts/ok。**未JSON转义路径反斜杠/引号**，因此Windows返回文本不保证是合法JSON；label参数未使用。路径只文本比较不是realpath同一文件校验，不宣称能阻止所有路径别名覆写。size/点数/越界坐标未全面校验，异常返回ERR message。
+绘完后大小写不敏感比较原始inPath/outPath字符串，相同ERR_SAME_FILE；否则创建目标目录保存PNG；成功输出JSON in/out/pts/ok，三个字符串经**JsonText(s)**转义（反斜杠、双引号加反斜杠，控制字符写成`\uXXXX`）；F72前原样拼接，Windows路径的反斜杠使结果不是合法JSON。label参数未使用。路径只文本比较不是realpath同一文件校验，不宣称能阻止所有路径别名覆写。size/点数/越界坐标未全面校验，异常返回ERR message。
 
 **DrawMarker(Graphics g,x,y,size,Color c,penW)**using Pen，中心圆环（x-size/2,y-size/2,width=size）、水平/竖直臂(x±size/y±size)、3px中心小环；不用鼠标，不点击窗口。绘制半径/臂长不是目标控件大小判定。
 

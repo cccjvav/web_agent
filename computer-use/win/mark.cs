@@ -55,12 +55,25 @@ public static class WinMark
                 if (!String.IsNullOrEmpty(dir)) System.IO.Directory.CreateDirectory(dir);
                 bmp.Save(outPath, ImageFormat.Png);
             }
-            return "{\"in\":\"" + inPath + "\",\"out\":\"" + outPath + "\",\"pts\":\"" + pts + "\",\"ok\":true}";
+            return "{\"in\":\"" + JsonText(inPath) + "\",\"out\":\"" + JsonText(outPath) + "\",\"pts\":\"" + JsonText(pts) + "\",\"ok\":true}";
         }
         catch (Exception ex)
         {
             return "ERR " + ex.Message;
         }
+    }
+
+    // Windows paths are full of backslashes; printed raw they made the result invalid JSON (F72).
+    static string JsonText(string s)
+    {
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        foreach (char c in s ?? "")
+        {
+            if (c == '\\' || c == '"') { sb.Append('\\'); sb.Append(c); }
+            else if (c < ' ') { sb.Append("\\u"); sb.Append(((int)c).ToString("x4")); }
+            else sb.Append(c);
+        }
+        return sb.ToString();
     }
 
     private static void DrawMarker(Graphics g, int x, int y, int size, Color c, int penW)

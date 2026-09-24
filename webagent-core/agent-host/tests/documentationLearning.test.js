@@ -161,6 +161,7 @@ const pairs = [
   ["webagent-core/agent-host/tests/runChat.test.js", "webagent-core/agent-host/tests/Chat模型与图像测试详解.md"],
   ["webagent-core/agent-host/tests/modelLifecycle.test.js", "webagent-core/agent-host/tests/Chat模型与图像测试详解.md"],
   ["webagent-core/agent-host/tests/chatVision.test.js", "webagent-core/agent-host/tests/Chat模型与图像测试详解.md"],
+  ["webagent-core/agent-host/tests/computerUseScripts.test.js", "webagent-core/agent-host/tests/Chat模型与图像测试详解.md"],
 
   ["webagent-core/agent-host/tests/documentationPolicy.test.js", "webagent-core/agent-host/tests/文档守卫测试详解.md"],
   ["webagent-core/agent-host/tests/documentationQuality.test.js", "webagent-core/agent-host/tests/文档守卫测试详解.md"],

@@ -1583,3 +1583,19 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **证据：** 提交`1ff4796`，CI run 35979636757九个job全部success（ubuntu Node 18/20/22/24、windows Node 20/22/24、windows-installer、workbench-browser）。
 
 **R8逐步手册（用户要求，2026-09-24）：** 用户要求验收基于其本机环境并提供逐步文档，参考既有[Windows新手逐步验收](../../docs/guides/Windows新手逐步验收.md)与CHECKLIST_WINDOWS的M1–M5，新增[R8本轮Arena实机验收](../../docs/guides/R8本轮Arena实机验收.md)：Windows桌面VS Code＋集成CMD＋Conda＋系统Node、仓库根工作区、Quick Tunnel；按第七批（截断字段、50/600秒上限、空闲后ping、坏JSON不回HTML）、F71（两凭据隔离，可选）、F72（远端多行夹`Remove-Item -Recurse`须E_FORBIDDEN且演练目录留存、agentHostUrl、PTY确认框与退出码）逐项给出Arena提示词、CMD命令与预期；参数名、返回字段、错误原文、按钮与状态栏文字逐项对照源码。全部用户机器步骤待执行，沙箱不代签。
+
+### 第72组第二批：computer-use/win首次逐行审查（2026-09-24）
+
+**先复审上一批。** `1ff4796`/`e931018` CI全绿；R8手册`68435df`只改文档。复读检测器修复的相邻消费者：ptyPolicy.looksDangerousCommand与引擎assertCommandAllowed共用isDangerousCommand，新切分只会多判危险，PTY原本对多行/括号命令就总是确认，无回归。
+
+**范围：** computer-use/win全部12个PS1/C#，与主机消费链`agent/computerUse.js`（collectShot被本机Chat与Bridge回图共用）。沙箱无PowerShell，结论按源码与微软文档语义判断，实跑交给Windows CI。
+
+| 项 | 事实（修前） | 修法 | 测试 |
+|---|---|---|---|
+| snap绝对-Out失败 | `$abs = Join-Path (Get-Location) $Out`：绝对路径被拼成`<cwd>\C:\…`，CaptureRect建目录抛“路径格式不受支持”，CAP_ERR；而主机collectShot明确支持绝对-Out | IsPathRooted时GetFullPath原样用，否则拼当前目录 | computerUseScripts：Windows全屏写入带空格子目录的绝对路径，成功须META.file一致，runner无桌面时容许exit3但不得是路径格式错误 |
+| snap截错窗口 | `-like "*$WindowTitle*"`取第一个：同名多窗口时可能截到另一个窗口并把画面交给模型；标题含`[`抛通配异常（exit1） | 与act/type相同：忽略大小写字面子串、恰好一个，否则ERR_WINDOW_MISSING_OR_AMBIGUOUS/exit2 | 结构断言（修前红）＋Windows以`[…*`不存在标题实跑 |
+| mark输出不是JSON | 手工拼接未转义路径，`C:\Users\…`不是合法JSON（文档此前如实标注为限制） | JsonText转义反斜杠/引号/控制字符；主机findShotCandidates先JSON解码、原文保留作旧副本兼容（解码出控制字符即丢弃） | 结构断言（修前红）、主机解码与旧格式单元断言、Windows实跑JSON.parse＋collectShot找到标记图 |
+
+复核未发现问题：act/act-bg/type标题唯一匹配与越界/焦点检查；input2的lParam在0–32767内不溢出；type剪贴板先快照失败即拒绝、finally按序列号拒绝覆盖外部变化；capture/mark异常都转ERR；mark对同名输出拒绝且源图被Bitmap锁住不会被覆盖。**未改、记录**：info.ps1把所有主窗口标题交给调用方（标题常含文档名/邮件主题，属Execute已能取得的信息）；CopyFromScreen截的是窗口矩形里屏幕上实际显示的内容，含遮挡它的其他窗口；DPI虚拟化与焦点竞争须真实桌面验证。
+
+文档：截图标记与OCR详解（snap路径与匹配、mark JsonText）、win/README、computer-use/SKILL、模型调用详解（findShotCandidates）、Chat模型与图像测试详解与tests/README；documentationLearning登记。

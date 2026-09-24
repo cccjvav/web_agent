@@ -95,8 +95,8 @@
     {
       "path": "computer-use/win/mark.cs",
       "doc": "computer-use/win/README.md",
-      "sha256": "a6bc81f80b9d5e7ae430f5458bc7334a5e6ed81a76aa356cfdd36c3e0c9e151c",
-      "lineCount": 80,
+      "sha256": "cfb4deee68e27dd99854cab1b82cd19793ad137a9c104968386cd7e5828fcc71",
+      "lineCount": 93,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -122,8 +122,8 @@
     {
       "path": "computer-use/win/snap.ps1",
       "doc": "computer-use/win/README.md",
-      "sha256": "7ef48a346c8c9c73aaba9fb8a8a9ebfee1f1beba813280845b4324862ac02633",
-      "lineCount": 45,
+      "sha256": "7d08875e8952e9cf56e3de6ce5e6f83c7abec90dccd6d60d7a0f839bc672d860",
+      "lineCount": 51,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []
@@ -2928,8 +2928,8 @@
     {
       "path": "webagent-core/agent-host/src/agent/computerUse.js",
       "doc": "webagent-core/agent-host/src/agent/README.md",
-      "sha256": "982c3a9acf041a165220bedecbc2fe2b6a4417943fbd70cc92c38192dcef8f15",
-      "lineCount": 111,
+      "sha256": "68ca877b41920af8a66b35aac1d82de0dc039fd624ccb2c2147b031688edc259",
+      "lineCount": 119,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -2948,7 +2948,7 @@
           "name": "findShotCandidates",
           "kind": "FunctionDeclaration",
           "startLine": 30,
-          "endLine": 42,
+          "endLine": 50,
           "parameters": [
             "{ command = '', stdout = '' } = {}"
           ]
@@ -2957,8 +2957,8 @@
           "id": "realOrSelf",
           "name": "realOrSelf",
           "kind": "FunctionDeclaration",
-          "startLine": 44,
-          "endLine": 50,
+          "startLine": 52,
+          "endLine": 58,
           "parameters": [
             "p"
           ]
@@ -2967,8 +2967,8 @@
           "id": "inside",
           "name": "inside",
           "kind": "FunctionDeclaration",
-          "startLine": 52,
-          "endLine": 54,
+          "startLine": 60,
+          "endLine": 62,
           "parameters": [
             "child",
             "parent"
@@ -2978,8 +2978,8 @@
           "id": "resolveShotPath",
           "name": "resolveShotPath",
           "kind": "FunctionDeclaration",
-          "startLine": 57,
-          "endLine": 67,
+          "startLine": 65,
+          "endLine": 75,
           "parameters": [
             "raw",
             "roots = {}"
@@ -2989,8 +2989,8 @@
           "id": "readShotAsDataUrl",
           "name": "readShotAsDataUrl",
           "kind": "FunctionDeclaration",
-          "startLine": 70,
-          "endLine": 80,
+          "startLine": 78,
+          "endLine": 88,
           "parameters": [
             "abs"
           ]
@@ -2999,8 +2999,8 @@
           "id": "collectShot",
           "name": "collectShot",
           "kind": "FunctionDeclaration",
-          "startLine": 84,
-          "endLine": 101,
+          "startLine": 92,
+          "endLine": 109,
           "parameters": [
             "input = {}",
             "roots = {}"
@@ -20319,6 +20319,79 @@
       ]
     },
     {
+      "path": "webagent-core/agent-host/tests/computerUseScripts.test.js",
+      "doc": "webagent-core/agent-host/tests/README.md",
+      "sha256": "8b55813655ebc900d70afb34a53be11a30af3ee578fc2c5cd7d8730d82a41d31",
+      "lineCount": 105,
+      "structure": "javascript-ast",
+      "semanticReview": "not-certified",
+      "symbols": [
+        {
+          "id": "read",
+          "name": "read",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 19,
+          "endLine": 19,
+          "parameters": [
+            "name"
+          ]
+        },
+        {
+          "id": "snapContract",
+          "name": "snapContract",
+          "kind": "FunctionDeclaration",
+          "startLine": 22,
+          "endLine": 30,
+          "parameters": []
+        },
+        {
+          "id": "markContract",
+          "name": "markContract",
+          "kind": "FunctionDeclaration",
+          "startLine": 32,
+          "endLine": 38,
+          "parameters": []
+        },
+        {
+          "id": "hostParsesEscapedJson",
+          "name": "hostParsesEscapedJson",
+          "kind": "FunctionDeclaration",
+          "startLine": 40,
+          "endLine": 48,
+          "parameters": []
+        },
+        {
+          "id": "powershell",
+          "name": "powershell",
+          "kind": "FunctionDeclaration",
+          "startLine": 50,
+          "endLine": 53,
+          "parameters": [
+            "file",
+            "args"
+          ]
+        },
+        {
+          "id": "windowsRuns",
+          "name": "windowsRuns",
+          "kind": "FunctionDeclaration",
+          "startLine": 55,
+          "endLine": 97,
+          "parameters": []
+        },
+        {
+          "id": "windowsRuns/anonymous@86:69",
+          "name": "anonymous@86:69",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 86,
+          "endLine": 86,
+          "parameters": [
+            "l"
+          ]
+        }
+      ]
+    },
+    {
       "path": "webagent-core/agent-host/tests/connectionCheck.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
       "sha256": "800c0f982fe1fe52c5fbd439fae7a99143af7703aad8658eead2808026bdf05e",
@@ -21232,8 +21305,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLearning.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "d4e32f1c458fb0a619ef779ae3e6ec50eac2c7360d057e6499269743f94e46f0",
-      "lineCount": 434,
+      "sha256": "35fb57a4f0ebf44d5681702f634a824ea363e4b72f95a6034d660c3a57c2dc29",
+      "lineCount": 435,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -21261,49 +21334,49 @@
           "id": "namedFunctions",
           "name": "namedFunctions",
           "kind": "FunctionDeclaration",
-          "startLine": 282,
-          "endLine": 297,
+          "startLine": 283,
+          "endLine": 298,
           "parameters": [
             "node",
             "result = new Set()"
           ]
         },
         {
-          "id": "namedFunctions/anonymous@293:44",
-          "name": "anonymous@293:44",
+          "id": "namedFunctions/anonymous@294:44",
+          "name": "anonymous@294:44",
           "kind": "ArrowFunctionExpression",
-          "startLine": 293,
-          "endLine": 293,
+          "startLine": 294,
+          "endLine": 294,
           "parameters": [
             "child"
           ]
         },
         {
-          "id": "anonymous@396:66",
-          "name": "anonymous@396:66",
+          "id": "anonymous@397:66",
+          "name": "anonymous@397:66",
           "kind": "ArrowFunctionExpression",
-          "startLine": 396,
-          "endLine": 396,
+          "startLine": 397,
+          "endLine": 397,
           "parameters": [
             "pair"
           ]
         },
         {
-          "id": "anonymous@401:43",
-          "name": "anonymous@401:43",
+          "id": "anonymous@402:43",
+          "name": "anonymous@402:43",
           "kind": "ArrowFunctionExpression",
-          "startLine": 401,
-          "endLine": 401,
+          "startLine": 402,
+          "endLine": 402,
           "parameters": [
             "p"
           ]
         },
         {
-          "id": "anonymous@401:68",
-          "name": "anonymous@401:68",
+          "id": "anonymous@402:68",
+          "name": "anonymous@402:68",
           "kind": "ArrowFunctionExpression",
-          "startLine": 401,
-          "endLine": 401,
+          "startLine": 402,
+          "endLine": 402,
           "parameters": [
             "p"
           ]

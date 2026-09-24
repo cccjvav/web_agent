@@ -64,7 +64,7 @@
 
 ## computer-use/win/mark.cs
 
-[目录说明](../computer-use/win/README.md) · SHA-256 `a6bc81f80b9d5e7ae430f5458bc7334a5e6ed81a76aa356cfdd36c3e0c9e151c`
+[目录说明](../computer-use/win/README.md) · SHA-256 `cfb4deee68e27dd99854cab1b82cd19793ad137a9c104968386cd7e5828fcc71`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -82,7 +82,7 @@
 
 ## computer-use/win/snap.ps1
 
-[目录说明](../computer-use/win/README.md) · SHA-256 `7ef48a346c8c9c73aaba9fb8a8a9ebfee1f1beba813280845b4324862ac02633`
+[目录说明](../computer-use/win/README.md) · SHA-256 `7d08875e8952e9cf56e3de6ce5e6f83c7abec90dccd6d60d7a0f839bc672d860`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -525,15 +525,15 @@
 
 ## webagent-core/agent-host/src/agent/computerUse.js
 
-[目录说明](../webagent-core/agent-host/src/agent/README.md) · SHA-256 `982c3a9acf041a165220bedecbc2fe2b6a4417943fbd70cc92c38192dcef8f15`
+[目录说明](../webagent-core/agent-host/src/agent/README.md) · SHA-256 `68ca877b41920af8a66b35aac1d82de0dc039fd624ccb2c2147b031688edc259`
 
 - `stripQuotes` — FunctionDeclaration，[L22–L24](../webagent-core/agent-host/src/agent/computerUse.js#L22-L24)
-- `findShotCandidates` — FunctionDeclaration，[L30–L42](../webagent-core/agent-host/src/agent/computerUse.js#L30-L42)
-- `realOrSelf` — FunctionDeclaration，[L44–L50](../webagent-core/agent-host/src/agent/computerUse.js#L44-L50)
-- `inside` — FunctionDeclaration，[L52–L54](../webagent-core/agent-host/src/agent/computerUse.js#L52-L54)
-- `resolveShotPath` — FunctionDeclaration，[L57–L67](../webagent-core/agent-host/src/agent/computerUse.js#L57-L67)
-- `readShotAsDataUrl` — FunctionDeclaration，[L70–L80](../webagent-core/agent-host/src/agent/computerUse.js#L70-L80)
-- `collectShot` — FunctionDeclaration，[L84–L101](../webagent-core/agent-host/src/agent/computerUse.js#L84-L101)
+- `findShotCandidates` — FunctionDeclaration，[L30–L50](../webagent-core/agent-host/src/agent/computerUse.js#L30-L50)
+- `realOrSelf` — FunctionDeclaration，[L52–L58](../webagent-core/agent-host/src/agent/computerUse.js#L52-L58)
+- `inside` — FunctionDeclaration，[L60–L62](../webagent-core/agent-host/src/agent/computerUse.js#L60-L62)
+- `resolveShotPath` — FunctionDeclaration，[L65–L75](../webagent-core/agent-host/src/agent/computerUse.js#L65-L75)
+- `readShotAsDataUrl` — FunctionDeclaration，[L78–L88](../webagent-core/agent-host/src/agent/computerUse.js#L78-L88)
+- `collectShot` — FunctionDeclaration，[L92–L109](../webagent-core/agent-host/src/agent/computerUse.js#L92-L109)
 
 ## webagent-core/agent-host/src/agent/openai.js
 
@@ -2691,6 +2691,18 @@
 - `anonymous@209:9` — ArrowFunctionExpression，[L209–L209](../webagent-core/agent-host/tests/commandEncoding.test.js#L209-L209)
 - `anonymous@210:11` — ArrowFunctionExpression，[L210–L210](../webagent-core/agent-host/tests/commandEncoding.test.js#L210-L210)
 
+## webagent-core/agent-host/tests/computerUseScripts.test.js
+
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `8b55813655ebc900d70afb34a53be11a30af3ee578fc2c5cd7d8730d82a41d31`
+
+- `read` — ArrowFunctionExpression，[L19–L19](../webagent-core/agent-host/tests/computerUseScripts.test.js#L19-L19)
+- `snapContract` — FunctionDeclaration，[L22–L30](../webagent-core/agent-host/tests/computerUseScripts.test.js#L22-L30)
+- `markContract` — FunctionDeclaration，[L32–L38](../webagent-core/agent-host/tests/computerUseScripts.test.js#L32-L38)
+- `hostParsesEscapedJson` — FunctionDeclaration，[L40–L48](../webagent-core/agent-host/tests/computerUseScripts.test.js#L40-L48)
+- `powershell` — FunctionDeclaration，[L50–L53](../webagent-core/agent-host/tests/computerUseScripts.test.js#L50-L53)
+- `windowsRuns` — FunctionDeclaration，[L55–L97](../webagent-core/agent-host/tests/computerUseScripts.test.js#L55-L97)
+- `windowsRuns/anonymous@86:69` — ArrowFunctionExpression，[L86–L86](../webagent-core/agent-host/tests/computerUseScripts.test.js#L86-L86)
+
 ## webagent-core/agent-host/tests/connectionCheck.test.js
 
 [目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `800c0f982fe1fe52c5fbd439fae7a99143af7703aad8658eead2808026bdf05e`
@@ -2819,15 +2831,15 @@
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `d4e32f1c458fb0a619ef779ae3e6ec50eac2c7360d057e6499269743f94e46f0`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `35fb57a4f0ebf44d5681702f634a824ea363e4b72f95a6034d660c3a57c2dc29`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)
-- `namedFunctions` — FunctionDeclaration，[L282–L297](../webagent-core/agent-host/tests/documentationLearning.test.js#L282-L297)
-- `namedFunctions/anonymous@293:44` — ArrowFunctionExpression，[L293–L293](../webagent-core/agent-host/tests/documentationLearning.test.js#L293-L293)
-- `anonymous@396:66` — ArrowFunctionExpression，[L396–L396](../webagent-core/agent-host/tests/documentationLearning.test.js#L396-L396)
-- `anonymous@401:43` — ArrowFunctionExpression，[L401–L401](../webagent-core/agent-host/tests/documentationLearning.test.js#L401-L401)
-- `anonymous@401:68` — ArrowFunctionExpression，[L401–L401](../webagent-core/agent-host/tests/documentationLearning.test.js#L401-L401)
+- `namedFunctions` — FunctionDeclaration，[L283–L298](../webagent-core/agent-host/tests/documentationLearning.test.js#L283-L298)
+- `namedFunctions/anonymous@294:44` — ArrowFunctionExpression，[L294–L294](../webagent-core/agent-host/tests/documentationLearning.test.js#L294-L294)
+- `anonymous@397:66` — ArrowFunctionExpression，[L397–L397](../webagent-core/agent-host/tests/documentationLearning.test.js#L397-L397)
+- `anonymous@402:43` — ArrowFunctionExpression，[L402–L402](../webagent-core/agent-host/tests/documentationLearning.test.js#L402-L402)
+- `anonymous@402:68` — ArrowFunctionExpression，[L402–L402](../webagent-core/agent-host/tests/documentationLearning.test.js#L402-L402)
 
 ## webagent-core/agent-host/tests/documentationLinks.test.js
 

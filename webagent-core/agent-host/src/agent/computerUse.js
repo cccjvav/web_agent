@@ -35,7 +35,15 @@ function findShotCandidates({ command = '', stdout = '' } = {}) {
   const reOut = /-Out\s+("[^"]+"|'[^']+'|[^\s;|&"']+)/gi;
   while ((m = reOut.exec(cmd)) !== null) out.push(stripQuotes(m[1]));
   const reJsonOut = /"out"\s*:\s*"([^"]+\.(?:png|jpe?g))"/gi;
-  while ((m = reJsonOut.exec(text)) !== null) out.push(m[1]);
+  while ((m = reJsonOut.exec(text)) !== null) {
+    // mark.cs prints real JSON since F72 ("C:\\Users\\…"): decode it. The raw text stays a candidate for
+    // output from an older copy that printed unescaped paths; a decode that yields control characters
+    // (legacy "C:\temp\new.png" read as tab/newline escapes) is not a path and is dropped.
+    let decoded = null;
+    try { decoded = JSON.parse(`"${m[1]}"`); } catch (_) { decoded = null; }
+    if (typeof decoded === 'string' && decoded !== m[1] && !/[\u0000-\u001f]/.test(decoded)) out.push(decoded);
+    out.push(m[1]);
+  }
   const reBare = /[^\s"'=<>|]+\.(?:png|jpe?g)\b/gi;
   while ((m = reBare.exec(text)) !== null) out.push(m[0]);
   return out.filter(Boolean);

@@ -45,6 +45,12 @@ collectShot须返回PNG data URL、bytes/rel；MAX_BYTES断言等于6MiB，**未
 
 末尾删除两tmp，main.catch退出1；无finally包所有前置同步assert，错误可留下文件。测试中“我看到截图”只是假provider固定回答，绝不是视觉理解质量或真实远程截图授权的证据。
 
+## computerUseScripts.test.js（F72）
+
+[源码](computerUseScripts.test.js)首次逐行审查computer-use/win后新增，锁住三处修复。所有平台先跑三项：**snapContract()**核对snap.ps1不再用`-like "*$WindowTitle*"`、改用与act/type相同的忽略大小写字面子串IndexOf且`.Count -ne 1`时输出ERR_WINDOW_MISSING_OR_AMBIGUOUS/exit2、绝对-Out走IsPathRooted；**markContract()**核对mark.cs经JsonText转义in/out/pts；**hostParsesEscapedJson()**给findShotCandidates一段转义JSON，候选须含解码后的`C:\repo\shots\cur-marked.png`，再给旧式未转义输出（`C:\temp\new-marked.png`，其中`\t` `\n`会被JSON误解码），原文候选仍须在。
+
+Windows上**windowsRuns()**经**powershell(file,args)**（`powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File`，120秒上限）真实执行：mark.ps1以绝对路径输入输出，末行必须能JSON.parse、out等于给定路径、文件非空，且collectShot能把这份标记图作为附件找到；snap.ps1以含`[`与`*`的不存在标题运行须exit2并输出ERR_WINDOW_MISSING_OR_AMBIGUOUS、不生成文件；snap.ps1全屏写到带空格子目录的绝对路径：成功时文件非空且META.file等于该路径，runner无可截桌面时容许exit3，但输出不得是路径格式错误（修前正是“given path's format is not supported”）。其他平台打印SKIP。结构断言在修前即红；Windows实跑的红/绿以Windows CI为准，截图能力取决于runner桌面，不代表真实桌面验收。
+
 ## 验证
 
 `npm test --prefix webagent-core/agent-host -- --filter=runChat`，另分别filter=modelLifecycle、chatVision。涉及命令仅操作临时工作区，真实模型账户/图像理解、Windows桌面与手机MCP仍需单列实测。

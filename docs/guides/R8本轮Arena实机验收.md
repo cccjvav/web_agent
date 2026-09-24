@@ -83,7 +83,7 @@ npm test --prefix webagent-core/agent-host
 echo %ERRORLEVEL%
 ```
 
-每个`echo`紧跟上一条。**预期：** 三个退出码都是`0`；最后汇总行形如`111 test files passed`，把实际数字写进记录。Windows上这一步会用真实powershell跑PTY退出码测试。任何一步非0就停，保留原始报错，不运行`--write`去“修”。
+每个`echo`紧跟上一条。**预期：** 三个退出码都是`0`；最后汇总行形如`112 test files passed`（文件数以你拉到的提交为准，本手册更新时为112），把实际数字写进记录。Windows上这一步会用真实powershell跑PTY退出码测试。任何一步非0就停，保留原始报错，不运行`--write`去“修”。
 
 **可选：浏览器回归（M3要求与上面分开记录）。** 需要Playwright的Chromium；第一条会下载浏览器（约一两百MB），不想下载就记“浏览器回归未执行”：
 

@@ -9,7 +9,7 @@
 | [模式画像与Plan测试详解](模式画像与Plan测试详解.md) | chatMode、toolLabel、providers、profile、planRound |
 | [安装与运行器测试详解](安装与运行器测试详解.md) | testRunner、codeServerAuth、extensionCopy、desktopExtension、codeServerNotRunnable、installerPackaging |
 | [文档守卫测试详解](文档守卫测试详解.md) | documentationPolicy、documentationQuality、documentationLearning |
-| [Chat模型与图像测试详解](Chat模型与图像测试详解.md) | runChat、modelLifecycle、chatVision |
+| [Chat模型与图像测试详解](Chat模型与图像测试详解.md) | runChat、modelLifecycle、chatVision、computerUseScripts |
 | [浏览器与Webview测试详解](浏览器与Webview测试详解.md) | monacoLoading、workbenchRuntime、editorRuntime、webviewRuntime |
 | [存储完整性与预算测试详解](存储完整性与预算测试详解.md) | stateIntegrity、resourceBudget、auditStorage、hostPersist、usageTracker |
 | [PTY与隧道测试详解](PTY与隧道测试详解.md) | ptyJobs、ptyLifecycle、extensionHostSafety、tunnel、tunnelLifecycle、bridgeTunnel |
@@ -163,6 +163,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [codeServerLifecycle.test.js](codeServerLifecycle.test.js) | 118 个函数/类节点 |
 | [codeServerNotRunnable.test.js](codeServerNotRunnable.test.js) | 0 个函数/类节点 |
 | [commandEncoding.test.js](commandEncoding.test.js) | 8 个函数/类节点 |
+| [computerUseScripts.test.js](computerUseScripts.test.js) | 7 个函数/类节点 |
 | [connectionCheck.test.js](connectionCheck.test.js) | 18 个函数/类节点 |
 | [corsAllow.test.js](corsAllow.test.js) | 20 个函数/类节点 |
 | [dangerousCommands.test.js](dangerousCommands.test.js) | 12 个函数/类节点 |
