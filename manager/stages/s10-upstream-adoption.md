@@ -1579,3 +1579,5 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 复核未发现问题：admin的Bearer比较为等长timingSafeEqual、令牌非空；readBody 1MiB/413、坏JSON 400；URL解析失败400不崩；HTML全部经escapeHtml（含day查询参数）；ingest同步读改写在单进程内无交错；F70轮转与字节核算。**未改、记录**：admin HTML无CSP/nosniff（页面需Bearer头，普通浏览器无法带上，框架嵌入无从利用）；共用令牌下任一客户端可以任意installId/githubUser上报（README已声明自报数据不可作计费/审计证据）；检测器仍不覆盖需求值的形式（eval、`$(…)`、反引号、变量、别名、解释器正文），PowerShell函数定义后再调用同样不覆盖。
 
 文档：工具入口与命令策略详解（normalizeRaw、splitStages、readings、stripWrappers、commandDangerous、覆盖范围）、工作区与命令安全测试详解、统计服务详解（ensureToken、corruptStore、createHandler）、admin README、统计与文档测试详解。
+
+**证据：** 提交`1ff4796`，CI run 35979636757九个job全部success（ubuntu Node 18/20/22/24、windows Node 20/22/24、windows-installer、workbench-browser）。
