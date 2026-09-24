@@ -1599,3 +1599,5 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 复核未发现问题：act/act-bg/type标题唯一匹配与越界/焦点检查；input2的lParam在0–32767内不溢出；type剪贴板先快照失败即拒绝、finally按序列号拒绝覆盖外部变化；capture/mark异常都转ERR；mark对同名输出拒绝且源图被Bitmap锁住不会被覆盖。**未改、记录**：info.ps1把所有主窗口标题交给调用方（标题常含文档名/邮件主题，属Execute已能取得的信息）；CopyFromScreen截的是窗口矩形里屏幕上实际显示的内容，含遮挡它的其他窗口；DPI虚拟化与焦点竞争须真实桌面验证。
 
 文档：截图标记与OCR详解（snap路径与匹配、mark JsonText）、win/README、computer-use/SKILL、模型调用详解（findShotCandidates）、Chat模型与图像测试详解与tests/README；documentationLearning登记。
+
+**证据：** R8手册`68435df`的CI run 35982298504、本批`7949da3`的CI run 35982836956，均九job全部success（含windows-latest Node 20/22/24，computerUseScripts在其上以powershell.exe实跑mark.ps1与snap.ps1）。沙箱无法下载job日志（日志存储连接被拒），因此**未能确认**Windows runner上snap全屏截图是实际成功还是走了“无可截桌面、容许exit3”分支；mark的JSON解析、collectShot附图与“不存在标题须exit2”在Windows上是无条件断言，已随CI通过。
