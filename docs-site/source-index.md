@@ -214,7 +214,7 @@
 
 ## docs-site/documentation.config.json
 
-[目录说明](README.md) · SHA-256 `56f75fa70c75d4bd6811b4eec2a17a1dc659ba5289e7ac5375a81952b4898d41`
+[目录说明](README.md) · SHA-256 `2ee552212e23a9e193603d4c41249495b9c337e091e3eb6d2430654dcad3d4f7`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 

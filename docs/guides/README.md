@@ -5,6 +5,7 @@
 - [Bridge任务栏说明](Bridge任务栏说明.md)
 - [Bridge权限与工作模式](Bridge权限与工作模式.md)
 - [Conda环境说明](Conda环境说明.md)
+- [R8本轮Arena实机验收](R8本轮Arena实机验收.md)（第七批、F71、F72的逐步操作）
 - [Bridge统计与刷新排查](Bridge统计与刷新排查.md)
 - [Windows新手逐步验收](Windows新手逐步验收.md)
 - [内置探索Agent使用指南](内置探索Agent使用指南.md)

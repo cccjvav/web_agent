@@ -407,6 +407,11 @@
       "group": "使用"
     },
     {
+      "id": "r8-round-acceptance",
+      "path": "docs/guides/R8本轮Arena实机验收.md",
+      "group": "使用"
+    },
+    {
       "id": "host-diagnostics-trace",
       "path": "webagent-core/agent-host/src/utils/主机诊断与调用追踪详解.md",
       "group": "实现"

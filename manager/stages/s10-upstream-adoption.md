@@ -1581,3 +1581,5 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 文档：工具入口与命令策略详解（normalizeRaw、splitStages、readings、stripWrappers、commandDangerous、覆盖范围）、工作区与命令安全测试详解、统计服务详解（ensureToken、corruptStore、createHandler）、admin README、统计与文档测试详解。
 
 **证据：** 提交`1ff4796`，CI run 35979636757九个job全部success（ubuntu Node 18/20/22/24、windows Node 20/22/24、windows-installer、workbench-browser）。
+
+**R8逐步手册（用户要求，2026-09-24）：** 用户要求验收基于其本机环境并提供逐步文档，参考既有[Windows新手逐步验收](../../docs/guides/Windows新手逐步验收.md)与CHECKLIST_WINDOWS的M1–M5，新增[R8本轮Arena实机验收](../../docs/guides/R8本轮Arena实机验收.md)：Windows桌面VS Code＋集成CMD＋Conda＋系统Node、仓库根工作区、Quick Tunnel；按第七批（截断字段、50/600秒上限、空闲后ping、坏JSON不回HTML）、F71（两凭据隔离，可选）、F72（远端多行夹`Remove-Item -Recurse`须E_FORBIDDEN且演练目录留存、agentHostUrl、PTY确认框与退出码）逐项给出Arena提示词、CMD命令与预期；参数名、返回字段、错误原文、按钮与状态栏文字逐项对照源码。全部用户机器步骤待执行，沙箱不代签。

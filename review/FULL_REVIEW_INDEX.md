@@ -13,7 +13,7 @@
 ## 本轮进度
 
 <!-- review-status-counts:start -->
-Markdown：202（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a167e上传的第三方复审报告1）；已核对一致 85、已修正 58、待证据确认 2、历史保留 38、只读保留 2、生成核验 4、暂停 13。分类处置不是全仓安全认证；逐项依据见表。
+Markdown：203（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a167e上传的第三方复审报告1 + 01a0d084新增R8本轮验收手册1）；已核对一致 86、已修正 58、待证据确认 2、历史保留 38、只读保留 2、生成核验 4、暂停 13。分类处置不是全仓安全认证；逐项依据见表。
 <!-- review-status-counts:end -->
 
 ## 逐文件状态
@@ -44,7 +44,7 @@ Markdown：202（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [computer-use/win/截图标记与OCR详解.md](../computer-use/win/截图标记与OCR详解.md) | 已修正 | 23f744c60fbf7c0d | 核对截图/元信息/标记/OCR方法、参数/局限；修CI现已编译capture/mark，但未实际操作GDI/OCR。 依据：六个PS/C#源码与test.yml编译名单 |
 | [computer-use/win/鼠标键盘与剪贴板详解.md](../computer-use/win/鼠标键盘与剪贴板详解.md) | 已核对一致 | 2f5dba67bb07f984 | 参数、窗口唯一性/焦点/坐标、消息提交、Clipboard序号/特殊格式/错误码与源码一致；只读核对未操作桌面。 依据：act/act-bg/type与input/input2/keys源码；既有CI无效句柄检查 |
 | [docs-site/README.md](../docs-site/README.md) | 已核对一致 | 6f1b7ea39ee4d415 | 构建/启动/静态范围、内嵌与未内嵌文档、源码快照/生成守卫及发行预构建边界一致；非全网/全文语义检查。 依据：docs-site build/serve/check-docs; config; docsSite/docsHttp现有回归 |
-| [docs-site/source-index.md](../docs-site/source-index.md) | 生成核验 | abee729edb9a6c7b | source-index由check-docs生成核验；扩展Markdown按规范源码与整个发行文件集合逐字节比较，不手改副本。 依据：check-docs updated=0; extensionCopy.test.js通过 |
+| [docs-site/source-index.md](../docs-site/source-index.md) | 生成核验 | a7056194fbb2391e | source-index由check-docs生成核验；扩展Markdown按规范源码与整个发行文件集合逐字节比较，不手改副本。 依据：check-docs updated=0; extensionCopy.test.js通过 |
 | [docs-site/样式规则详解.md](../docs-site/样式规则详解.md) | 已核对一致 | e8a5d4704e7cc503 | 核对变量/260px网格/组件选择器/980px断点、局部滚动/焦点和实际渲染配合；不代签全部页面或系统字体。 依据：styles.css; app.js; docsViewerBrowser选定状态 |
 | [docs-site/浏览与服务详解.md](../docs-site/浏览与服务详解.md) | 已核对一致 | 9d6ef43698a5a8d9 | 核对八路页面/搜索/锚点/源码滚动、预构建/开发服务器与静态路径/方法/匿名边界及真实浏览器验证范围。 依据：app.js; serve.js; index.html; 现有docs相关回归 |
 | [docs-site/清单与构建详解.md](../docs-site/清单与构建详解.md) | 已修正 | 798ad5314908b02c | 核对库存/归属/AST、解析/链接重写、快照/排除与输出，原地修CRLF及四主文档独立路径上下文；解析器局限保留。 依据：check-docs.js; build.js; anchors.js; documentationLinks/docsSite |
@@ -62,8 +62,9 @@ Markdown：202（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [docs/guides/Bridge权限与工作模式.md](../docs/guides/Bridge权限与工作模式.md) | 已核对一致 | 939f1e237de312b3 | 核对idle/互斥/权限依赖、revision、后台/审批/stdio/PTY屏障；仍只约束远端工具，不冒称实机或OS沙箱。 依据：executionControl.js; mcp/server.js; tools/index.js |
 | [docs/guides/Bridge统计与刷新排查.md](../docs/guides/Bridge统计与刷新排查.md) | 已修正 | d72a923e211a4429 | 恢复2026-09-15用户已确认结果；区分未来复发诊断，补Clear log同时清hash缓存。 依据：CHECKLIST_WINDOWS.md用户记录; bridge.js; routes.js; readCache.js |
 | [docs/guides/Conda环境说明.md](../docs/guides/Conda环境说明.md) | 已核对一致 | 563f5c01a267970b | 核对Node与业务Python分层、CMD/PATH/子进程继承、测试/日志/文档命令及E1–E6未验边界。环境导出副作用和本机条件明示，不把可选新环境当产品必需。 依据：launch/executor/ptyPolicy; package/CI; run-tests.cmd; 当前无Conda |
-| [docs/guides/README.md](../docs/guides/README.md) | 已核对一致 | d46da3929bd2f0f0 | 11篇用户专题真实路径、主指南/管家/暂停边界一致。 依据：Git文档清单; 根文档中心 |
-| [docs/guides/Windows新手逐步验收.md](../docs/guides/Windows新手逐步验收.md) | 已修正 | fd7345483d36c9eb | 移除拉取历史固定分支，改先核当前分支/上游；修已报告完成范围与统计已确认记录、路径引用和MCP连接条件措辞。新增/用户机器步骤保留未执行。 依据：CHECKLIST_WINDOWS/manager用户反馈; 当前启动/测试/恢复/回收接口 |
+| [docs/guides/README.md](../docs/guides/README.md) | 已核对一致 | de8539a382b7fe51 | 11篇用户专题真实路径、主指南/管家/暂停边界一致。 依据：Git文档清单; 根文档中心 |
+| [docs/guides/R8本轮Arena实机验收.md](../docs/guides/R8本轮Arena实机验收.md) | 已核对一致 | d269f83c2767b9d2 | 01a0d084新增：第七批/F71/F72的本机逐步验收。参数名、返回字段（stdoutChars/stdoutTruncated/timeoutSec/suggestedWaitMs）、jsonErrors原文、确认框按钮与状态栏文字逐项对照源码；用户机器步骤全部待执行，不代签。 依据：tools/index.js; tools/executor.js; src/index.js; extension/ptyHost.js; extension/extension.js |
+| [docs/guides/Windows新手逐步验收.md](../docs/guides/Windows新手逐步验收.md) | 已修正 | 790b7f861178a574 | 移除拉取历史固定分支，改先核当前分支/上游；修已报告完成范围与统计已确认记录、路径引用和MCP连接条件措辞。新增/用户机器步骤保留未执行。 依据：CHECKLIST_WINDOWS/manager用户反馈; 当前启动/测试/恢复/回收接口 |
 | [docs/guides/内置探索Agent使用指南.md](../docs/guides/内置探索Agent使用指南.md) | 已修正 | 89b7d9a5514edc51 | 修根package/test入口和非Git available:false；核对6文件/120行、固定探索与真实模型及模式界限。 依据：package.json; agent/runChat.js; gitOps.js; extension |
 | [docs/guides/技能使用指南.md](../docs/guides/技能使用指南.md) | 已修正 | 018cc5c558d4b1bc | 目录512/128/3层、128KiB/8000UTF16分页、资源只读、三bundled例外及审批/创建均与源码一致；修gitignore不会撤销既有跟踪的保证。 依据：tools/skills.js; api/skills; customizations; index schema |
 | [docs/guides/网页ChatPlus使用指南.md](../docs/guides/网页ChatPlus使用指南.md) | 待证据确认 | a0fbe858990f07d3 | 本项目候选/未验证/不自动安装的文案与clients一致；外部当前版本、安装、套餐、许可及真实认证互操作未验，不虚称最新兼容。 依据：mcp/clients.js; 既定第三方边界 |
@@ -75,7 +76,7 @@ Markdown：202（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [installer/README.md](../installer/README.md) | 已修正 | fbe4daa4cfd71a36 | 核对载荷白名单、可写runtime与.ready复用、各模式/准备预算、数据保留及回收边界；将只读R5首包改为历史，衔接已交付确认回收。 依据：package.js; launch.js; appWindow.js; webagent.iss; F65 |
 | [installer/函数详解.md](../installer/函数详解.md) | 已修正 | b67627fad63a75d1 | 核对manifest/runtime/工作区/三种准备预算、app身份/IPC/回收及打包副作用，修职责漏列appWindow/preparation；平台/全部后代仍未代验。 依据：installer四Node模块/PS/ISS; F60/65真实函数回归; package collect/stage |
 | [installer/安装声明详解.md](../installer/安装声明详解.md) | 已修正 | a11f53ac346c3684 | 核对Inno声明/路径权限/注册表/卸载/事件，修默认版本0.7.2和缺漏的回收开始菜单；Windows实操仍未代验。 依据：webagent.iss; installerPackaging/现有Windows CI |
-| [manager/CONTEXT.md](../manager/CONTEXT.md) | 已修正 | 775e5aad2b85294f | 按F67实际进度更新入口/基线和.md分母；旧CI只作对应提交证据，实机/暂停/遗留单列。 依据：本轮清单、Git HEAD、阶段10与用户更正 |
+| [manager/CONTEXT.md](../manager/CONTEXT.md) | 已修正 | ffaabf6ad7bcc5f0 | 按F67实际进度更新入口/基线和.md分母；旧CI只作对应提交证据，实机/暂停/遗留单列。 依据：本轮清单、Git HEAD、阶段10与用户更正 |
 | [manager/SKILL.md](../manager/SKILL.md) | 只读保留 | 5c8c93d50e52332b | 规范源/副本逐字节相同，作为既有规则保留，不冒称外部最新版；项目特色与F66澄清在manager/agents和唯一文档规范处理。 依据：cmp source/copy; AGENTS只读约定 |
 | [manager/agents.md](../manager/agents.md) | 已核对一致 | 1910cbf1d32d899b | 技术栈/同进程双端口、代码文档和安全/暂停/固定分支约定与当前授权一致。 依据：AGENTS、用户F66澄清、package/CI |
 | [manager/docs/documentation.md](../manager/docs/documentation.md) | 已核对一致 | ac757d0b6f4700c0 | 核对用户新口径、唯一主说明、生成/链接/测试与分类处置；教学标准不膨胀为源码逐行认证。 依据：用户澄清、check-docs/build/tests的实际职责 |
@@ -85,7 +86,7 @@ Markdown：202（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [manager/stages/documentation-2026-09-12.md](../manager/stages/documentation-2026-09-12.md) | 历史保留 | c23c09e4b3615d99 | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [manager/stages/probe-dual-integration-2026-09-15.md](../manager/stages/probe-dual-integration-2026-09-15.md) | 暂停 | 未读正文 | 沿用用户完全暂停的专项边界，仅登记路径/大小，不读正文、不认证最新。 依据：manager/agents.md暂停约定 |
 | [manager/stages/s1-handoff.md](../manager/stages/s1-handoff.md) | 历史保留 | cfc0e427dc08e55c | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
-| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 已核对一致 | 0692ea3c66d39ef8 | 当前唯一工作包表/失败/批次与F66–68实际进度一致；历史段按时间保留，R7仍为下一项。 依据：CONTEXT; 本轮200文档清单; 实际提交/测试/CI记录 |
+| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 已核对一致 | 4ced86d4f3c1b0ec | 当前唯一工作包表/失败/批次与F66–68实际进度一致；历史段按时间保留，R7仍为下一项。 依据：CONTEXT; 本轮200文档清单; 实际提交/测试/CI记录 |
 | [manager/stages/s2-shell.md](../manager/stages/s2-shell.md) | 历史保留 | 5ac447fe582ce09e | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [manager/stages/s3-bridge-image.md](../manager/stages/s3-bridge-image.md) | 历史保留 | fbe64b3265d3cf1a | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [manager/stages/s4-terminal.md](../manager/stages/s4-terminal.md) | 历史保留 | 1cf1fcca01c51478 | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
@@ -96,7 +97,7 @@ Markdown：202（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [manager/stages/s9-workspace-entry.md](../manager/stages/s9-workspace-entry.md) | 历史保留 | 77367a885aa57c03 | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [multi-agent-board/SKILL.md](../multi-agent-board/SKILL.md) | 已修正 | add1cea18f6915d6 | 纠正client@ip、持久化、E_TAKEN owner位置、单进程认领保证及Read/Edit认证范围。 依据：tools/board.js; mcp/session.js; tools/index.js |
 | [project-manager/SKILL.md](../project-manager/SKILL.md) | 只读保留 | 5c8c93d50e52332b | 规范源/副本逐字节相同，作为既有规则保留，不冒称外部最新版；项目特色与F66澄清在manager/agents和唯一文档规范处理。 依据：cmp source/copy; AGENTS只读约定 |
-| [review/CHECKLIST_WINDOWS.md](CHECKLIST_WINDOWS.md) | 已修正 | 4f5e788414e21c55 | 唯一人工基线、用户已报告项/未执行W/T/M等边界保留；现行指针改为文档与修复证据/管理索引，不把CI代实机。 依据：用户历史反馈; 当前指南/CONTEXT |
+| [review/CHECKLIST_WINDOWS.md](CHECKLIST_WINDOWS.md) | 已修正 | 2e4e158e3119e861 | 唯一人工基线、用户已报告项/未执行W/T/M等边界保留；现行指针改为文档与修复证据/管理索引，不把CI代实机。 依据：用户历史反馈; 当前指南/CONTEXT |
 | [review/CROSS_VALIDATION_LEDGER_2026-09-22.md](CROSS_VALIDATION_LEDGER_2026-09-22.md) | 已核对一致 | 58394e6dd5cded38 | 分支01a0c925×01a0c932双线交叉验证台账：4项独立同解、1项互补、各自独有3+1、1项分歧（BOM，01a0c925错并已修）；§10记录对方冻结后的逐条吸收结论。本文件由01a0c925新增，不在对方200份分母内，故总数记201。 依据：两分支提交与实测复现脚本 |
 | [review/COMPREHENSIVE_AUDIT_2026-09-22.md](COMPREHENSIVE_AUDIT_2026-09-22.md) | 历史保留 | 3311792cb2b31b4c | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [review/FULL_AUDIT_FOLLOWUP_2026-09-18.md](FULL_AUDIT_FOLLOWUP_2026-09-18.md) | 历史保留 | 8a0799b45e63fcdb | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
