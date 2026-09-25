@@ -50,7 +50,7 @@ Markdown：205（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [docs-site/清单与构建详解.md](../docs-site/清单与构建详解.md) | 已修正 | 798ad5314908b02c | 核对库存/归属/AST、解析/链接重写、快照/排除与输出，原地修CRLF及四主文档独立路径上下文；解析器局限保留。 依据：check-docs.js; build.js; anchors.js; documentationLinks/docsSite |
 | [docs/README.md](../docs/README.md) | 已核对一致 | fea451c15541844e | 现行文档任务、11/8专题和主指南/历史/管家入口真实存在且与新口径一致。 依据：目录清单与F66约定 |
 | [docs/development/README.md](../docs/development/README.md) | 已核对一致 | d307d5db7afbe601 | 8篇开发专题与源码旁说明/管理导航一致。 依据：Git文档清单; documentation.config.json |
-| [docs/development/插件一体化启动返工方案.md](../docs/development/插件一体化启动返工方案.md) | 已核对一致 | 7727dc0babae4983 | 01a0d084新增R6方案稿：现状事实按c8c2711源码核对（插件视图/按钮、SKIP_WORKBENCH、工作台独有功能与接口、capabilities未声明）；设计与分期为待确认提案，不代表已实现。 依据：extension.js/package.json、agent-host config/index/routes、workbench js、installer/launch.js。 |
+| [docs/development/插件一体化启动返工方案.md](../docs/development/插件一体化启动返工方案.md) | 已核对一致 | b160a93bdcd92af5 | 01a0d084新增R6方案稿：现状事实按c8c2711源码核对（插件视图/按钮、SKIP_WORKBENCH、工作台独有功能与接口、capabilities未声明）；设计与分期为待确认提案（用户澄清后改为两期、网页工作台保留），不代表已实现。 依据：extension.js/package.json、agent-host config/index/routes、workbench js、installer/launch.js。 |
 | [docs/development/代码复盘指南.md](../docs/development/代码复盘指南.md) | 已修正 | a674449ec578d89d | 核对全部导航目标和学习主题，修旧requestScope导出数量及避免把教学提纲当全源码必写任务；暂停链接仅定位。 依据：源码/详解路径; requestScope.js; F66标准 |
 | [docs/development/借鉴优化说明（新手版）.md](../docs/development/借鉴优化说明（新手版）.md) | 已修正 | 6fb6d72ddef8ea22 | 核对当前已实现能力与候选/延期区别；Windows特定修复不覆盖未解R4，旧59文件/2d42c39留作当时证据并指当前阶段。 依据：src/相关功能; CI矩阵; 阶段10; 上游来源归档边界 |
 | [docs/development/平台启动与CI详解.md](../docs/development/平台启动与CI详解.md) | 已核对一致 | fc444924f4233a4b | 逐组核对CMD/sh参数/cwd/退出、npm入口与依赖、CI九任务/权限/审计/编译和浏览器边界。 依据：根脚本; package.json; .github/workflows/test.yml; installer |
@@ -77,7 +77,7 @@ Markdown：205（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [installer/README.md](../installer/README.md) | 已修正 | fbe4daa4cfd71a36 | 核对载荷白名单、可写runtime与.ready复用、各模式/准备预算、数据保留及回收边界；将只读R5首包改为历史，衔接已交付确认回收。 依据：package.js; launch.js; appWindow.js; webagent.iss; F65 |
 | [installer/函数详解.md](../installer/函数详解.md) | 已修正 | b67627fad63a75d1 | 核对manifest/runtime/工作区/三种准备预算、app身份/IPC/回收及打包副作用，修职责漏列appWindow/preparation；平台/全部后代仍未代验。 依据：installer四Node模块/PS/ISS; F60/65真实函数回归; package collect/stage |
 | [installer/安装声明详解.md](../installer/安装声明详解.md) | 已修正 | a11f53ac346c3684 | 核对Inno声明/路径权限/注册表/卸载/事件，修默认版本0.7.2和缺漏的回收开始菜单；Windows实操仍未代验。 依据：webagent.iss; installerPackaging/现有Windows CI |
-| [manager/CONTEXT.md](../manager/CONTEXT.md) | 已修正 | 37cf6a9148c71a86 | 按F67实际进度更新入口/基线和.md分母；旧CI只作对应提交证据，实机/暂停/遗留单列。 依据：本轮清单、Git HEAD、阶段10与用户更正 |
+| [manager/CONTEXT.md](../manager/CONTEXT.md) | 已修正 | 60d9c5b7fdfd9384 | 按F67实际进度更新入口/基线和.md分母；旧CI只作对应提交证据，实机/暂停/遗留单列。 依据：本轮清单、Git HEAD、阶段10与用户更正 |
 | [manager/SKILL.md](../manager/SKILL.md) | 只读保留 | 5c8c93d50e52332b | 规范源/副本逐字节相同，作为既有规则保留，不冒称外部最新版；项目特色与F66澄清在manager/agents和唯一文档规范处理。 依据：cmp source/copy; AGENTS只读约定 |
 | [manager/agents.md](../manager/agents.md) | 已核对一致 | 1910cbf1d32d899b | 技术栈/同进程双端口、代码文档和安全/暂停/固定分支约定与当前授权一致。 依据：AGENTS、用户F66澄清、package/CI |
 | [manager/docs/documentation.md](../manager/docs/documentation.md) | 已核对一致 | ac757d0b6f4700c0 | 核对用户新口径、唯一主说明、生成/链接/测试与分类处置；教学标准不膨胀为源码逐行认证。 依据：用户澄清、check-docs/build/tests的实际职责 |
@@ -87,7 +87,7 @@ Markdown：205（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [manager/stages/documentation-2026-09-12.md](../manager/stages/documentation-2026-09-12.md) | 历史保留 | c23c09e4b3615d99 | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [manager/stages/probe-dual-integration-2026-09-15.md](../manager/stages/probe-dual-integration-2026-09-15.md) | 暂停 | 未读正文 | 沿用用户完全暂停的专项边界，仅登记路径/大小，不读正文、不认证最新。 依据：manager/agents.md暂停约定 |
 | [manager/stages/s1-handoff.md](../manager/stages/s1-handoff.md) | 历史保留 | cfc0e427dc08e55c | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
-| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 已核对一致 | 59fa92e8e09757ff | 当前唯一工作包表/失败/批次与F66–68实际进度一致；历史段按时间保留，R7仍为下一项。 依据：CONTEXT; 本轮200文档清单; 实际提交/测试/CI记录 |
+| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 已核对一致 | 7756ab29890c96ce | 当前唯一工作包表/失败/批次与F66–68实际进度一致；历史段按时间保留，R7仍为下一项。 依据：CONTEXT; 本轮200文档清单; 实际提交/测试/CI记录 |
 | [manager/stages/s2-shell.md](../manager/stages/s2-shell.md) | 历史保留 | 5ac447fe582ce09e | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [manager/stages/s3-bridge-image.md](../manager/stages/s3-bridge-image.md) | 历史保留 | fbe64b3265d3cf1a | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [manager/stages/s4-terminal.md](../manager/stages/s4-terminal.md) | 历史保留 | 1cf1fcca01c51478 | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
