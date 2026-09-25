@@ -26,7 +26,7 @@
 
 ## 执行流程与边界
 ### 本机控制面
-isLocalControlPlane先拒绝隧道特征头，再要求Host为localhost、127.0.0.1或[::1]及有效可选端口，最后检查回环地址。未知/缺失Host不放行。HTTP路由和WS升级各自接入检查；不允许用“本机代理转发”绕过既定local-only边界。
+isLocalControlPlane先拒绝隧道特征头（Cloudflare头与反向代理转发头，第77组起含X-Forwarded-*等），再要求Host为localhost、127.0.0.1或[::1]及有效可选端口，最后检查回环地址。未知/缺失Host不放行。HTTP路由和WS升级各自接入检查；不允许用“本机代理转发”绕过既定local-only边界。
 
 API浏览器Origin只接受本机；没有Origin时还检查可用Referer。MCP有独立白名单和WEBAGENT_CORS_ORIGINS扩展项，不在名单的显式Origin返回403。放行MCP Origin不放行API，也不跳过MCP令牌验证。MCP仅额外暴露会话ID与认证挑战两个响应头，避免浏览器初始化200却无法读取会话；其他响应头仍按浏览器CORS规则处理。
 
@@ -62,7 +62,7 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 | [fileCheckpoints.js](fileCheckpoints.js) | 15 个函数/类节点 |
 | [hostDiagnostics.js](hostDiagnostics.js) | 4 个函数/类节点 |
 | [lifeline.js](lifeline.js) | 10 个函数/类节点 |
-| [localControl.js](localControl.js) | 7 个函数/类节点 |
+| [localControl.js](localControl.js) | 8 个函数/类节点 |
 | [operatorQueue.js](operatorQueue.js) | 19 个函数/类节点 |
 | [probeBridge.js](probeBridge.js) | 23 个函数/类节点 |
 | [requestScope.js](requestScope.js) | 15 个函数/类节点 |

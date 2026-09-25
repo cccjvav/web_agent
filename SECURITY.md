@@ -13,7 +13,7 @@
 
 ## 本机控制面与文件工具
 
-`/api`要求Host为localhost、127.0.0.1或[::1]（可带有效端口），且socket回环、无隧道特征头；非本机Origin被拒绝；无Origin时浏览器标记的`Sec-Fetch-Site: cross-site`（外站页面可以同时去掉Origin和Referer，但去不掉这个头）或可解析的外站Referer被拒绝；三者都缺失（Node/CLI客户端、旧浏览器）或Referer不可解析时仍允许本机CLI路径，不是严格同源登录机制。`/ws`在upgrade阶段也验证本机控制面和Origin；无Origin的本机Node客户端仍允许。`WEBAGENT_CORS_ORIGINS`只扩展MCP网页白名单，不能放开API或WS。
+`/api`要求Host为localhost、127.0.0.1或[::1]（可带有效端口），且socket回环、无隧道特征头（Cloudflare头，以及X-Forwarded-For/Host/Proto、Forwarded、X-Real-IP、X-Original-Host等反向代理转发头：自行运行`ngrok --host-header=rewrite`或本机反向代理把Host改成localhost时，仍会被识别为公网请求）；非本机Origin被拒绝；无Origin时浏览器标记的`Sec-Fetch-Site: cross-site`（外站页面可以同时去掉Origin和Referer，但去不掉这个头）或可解析的外站Referer被拒绝；三者都缺失（Node/CLI客户端、旧浏览器）或Referer不可解析时仍允许本机CLI路径，不是严格同源登录机制。`/ws`在upgrade阶段也验证本机控制面和Origin；无Origin的本机Node客户端仍允许。`WEBAGENT_CORS_ORIGINS`只扩展MCP网页白名单，不能放开API或WS。
 
 文件路径检查同时验证逻辑路径和真实链接目标；内置敏感规则不区分大小写并覆盖嵌套目录。记忆day仅接收有效日历日期；用户Skill必须实际位于工作区内，产品固定bundled目录例外保留。这是应用层保护，不是OS沙箱，不承诺抵抗有本机文件系统写权限进程的所有竞态或硬链接操作。
 

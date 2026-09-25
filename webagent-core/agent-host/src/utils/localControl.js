@@ -8,6 +8,13 @@ function isLoopbackAddress(addr) {
   return v4 === '127.0.0.1';
 }
 
+// Reverse-proxy forwarding headers. A local browser, the VS Code extension and the CLI never send
+// them, but a proxy that rewrites Host to localhost does: `ngrok http --host-header=rewrite` (or
+// --host-header=localhost:PORT, a common tutorial fix) connects from 127.0.0.1 with Host localhost
+// and no cf-* headers, and records the public host in X-Forwarded-Host (ngrok v3) plus
+// X-Forwarded-For. Presence alone is enough; the values are client-controlled and never trusted.
+const FORWARDING_HEADERS = ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'forwarded', 'x-real-ip', 'x-original-host'];
+
 function isTunnelRequest(req) {
   const h = (req && req.headers) || {};
   return Boolean(
@@ -16,7 +23,7 @@ function isTunnelRequest(req) {
     || h['cf-visitor']
     || h['cf-ew-via']
     || h['cdn-loop']
-  );
+  ) || FORWARDING_HEADERS.some(name => h[name] !== undefined);
 }
 
 function hostName(req) {

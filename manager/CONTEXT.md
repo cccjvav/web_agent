@@ -5,7 +5,7 @@
 接手先读本索引和[项目约定](agents.md)，再按需读[阶段10的工作包与交接](stages/s10-upstream-adoption.md#当前工作包与交接约束)。不另建路线图或根交接文件。
 
 ## 当前状态
-- **F77（2026-09-25，本会话）：** 审计余下范围第一批：`find_files`的glob在主线程指数回溯（12个`**/`约103秒冻结主机，只需Read）改为线性动态规划且语义不变；无会话调用者自填怪名字时key退化为常量、不同凭据合并（低危）已修；patchEngine（含悬空符号链接）、skills未发现问题。详见[第77组](stages/s10-upstream-adoption.md#第77组审计余下范围第一批无会话调用者键与find_files回溯2026-09-25)。
+- **F77（2026-09-25，本会话）：** 审计余下范围完成（延后清单第1行已关闭）：用户自行运行改写Host的代理（`ngrok --host-header=rewrite`等）时公网请求被当成本机控制面、免密钥调用整个`/api`（高影响、条件触发），现以转发头识别；`find_files`的glob在主线程指数回溯（12个`**/`约103秒冻结主机）改为线性动态规划；无会话调用者键退化（低危）已修；其余模块未发现问题。详见[第77组](stages/s10-upstream-adoption.md#第77组审计余下范围find_files回溯本机控制面误判无会话调用者键2026-09-25)。
 - **F76（2026-09-25，本会话）：** 开头复审F75补两处漏改（MCP资源与启动日志仍按OAuth可用描述），查明两道“未单独抓到”的防线是冗余防线并锁住可观察行为；处理第74组三个非OAuth低危项：跨站GET按`Sec-Fetch-Site`拒绝、Windows保留设备名拒绝、`.webagentignore`列入内置敏感模式。Windows分支只由CI验证。详见[第76组](stages/s10-upstream-adoption.md#第76组f75开头复审与第74组三个低危项2026-09-25)。
 - **F75 OAuth默认关闭（2026-09-25，本会话）：** 用户选方案B：`bridge.oauthEnabled`缺省false，关闭时OAuth全部路由404、令牌失效、401不再引导OAuth，URL密钥（Arena）不受影响；工作台BRIDGE区可开关。复审修正一处自己引入的回归（config.json损坏时URL密钥变500）。复审可延后但须登记到[延后复审清单](stages/s10-upstream-adoption.md#延后复审清单)。详见[第75组](stages/s10-upstream-adoption.md#第75组oauth配对改为默认关闭2026-09-25)。
 - **F74 安全审计（2026-09-25，本会话）：** 用户要求每轮交付前自我复审（已写入agents.md）并按判断审计早期实现。审远程面（MCP认证、OAuth、权限门控、文件工具边界）与本机`/api`防护，修两处中等问题：Windows 8.3短名可绕过敏感文件规则（Windows CI基线`27511d7`证实，`f8ffd03`修复）；改名`.webagent`等祖先目录可让带目录的规则失效。均在关闭Execute时才是真实越权（默认全开时shell本可读）。低危记录不修与未审范围见[第74组](stages/s10-upstream-adoption.md#第74组远程暴露面与本机api的安全审计2026-09-25)。

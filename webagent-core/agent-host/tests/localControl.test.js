@@ -55,4 +55,13 @@ for (const host of ['localhost:0', 'localhost:65536', '127.1', '2130706433', 'lo
 for (const host of ['localhost:1', 'LOCALHOST:65535', '[::1]:48271']) {
   assert.strictEqual(isLocalControlPlane(req({ host })), true, host);
 }
+// 2026-09-25 group 77: a user-run proxy that rewrites Host to localhost (ngrok --host-header=rewrite)
+// connects from loopback without cf-* headers; its forwarding headers must still mark it remote.
+const ngrokRewrite = { host: 'localhost:48271', 'x-forwarded-host': 'abc.ngrok-free.app', 'x-forwarded-for': '203.0.113.9', 'x-forwarded-proto': 'https' };
+assert.strictEqual(isLocalControlPlane(req({ headers: ngrokRewrite })), false, 'ngrok host-header rewrite');
+for (const name of ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'forwarded', 'x-real-ip', 'x-original-host']) {
+  assert.strictEqual(isTunnelRequest(req({ headers: { [name]: 'x' } })), true, name);
+  assert.strictEqual(isLocalControlPlane(req({ headers: { [name]: '' } })), false, name + ' (empty value still present)');
+}
+assert.strictEqual(isLocalControlPlane(req({ headers: { 'user-agent': 'vscode', origin: 'http://127.0.0.1:3000' } })), true, 'ordinary local headers stay local');
 console.log('localControl tests passed');

@@ -2092,15 +2092,16 @@
 
 ## webagent-core/agent-host/src/utils/localControl.js
 
-[目录说明](../webagent-core/agent-host/src/utils/README.md) · SHA-256 `ac6129fc07407a3d0f9f76ba3e9c3e3cb74caf557e1bcc0207db67633ebe373a`
+[目录说明](../webagent-core/agent-host/src/utils/README.md) · SHA-256 `09c2dfec8c2797cd34261f2cbbf752097a1f0fc64d19f49a106345745de95e59`
 
 - `isLoopbackAddress` — FunctionDeclaration，[L3–L9](../webagent-core/agent-host/src/utils/localControl.js#L3-L9)
-- `isTunnelRequest` — FunctionDeclaration，[L11–L20](../webagent-core/agent-host/src/utils/localControl.js#L11-L20)
-- `hostName` — FunctionDeclaration，[L22–L28](../webagent-core/agent-host/src/utils/localControl.js#L22-L28)
-- `publicTunnelHost` — FunctionDeclaration，[L30–L34](../webagent-core/agent-host/src/utils/localControl.js#L30-L34)
-- `isPublicHost` — FunctionDeclaration，[L36–L45](../webagent-core/agent-host/src/utils/localControl.js#L36-L45)
-- `isLocalControlPlane` — FunctionDeclaration，[L47–L56](../webagent-core/agent-host/src/utils/localControl.js#L47-L56)
-- `rejectUnlessLocalControl` — FunctionDeclaration，[L58–L61](../webagent-core/agent-host/src/utils/localControl.js#L58-L61)
+- `isTunnelRequest` — FunctionDeclaration，[L18–L27](../webagent-core/agent-host/src/utils/localControl.js#L18-L27)
+- `isTunnelRequest/anonymous@26:31` — ArrowFunctionExpression，[L26–L26](../webagent-core/agent-host/src/utils/localControl.js#L26-L26)
+- `hostName` — FunctionDeclaration，[L29–L35](../webagent-core/agent-host/src/utils/localControl.js#L29-L35)
+- `publicTunnelHost` — FunctionDeclaration，[L37–L41](../webagent-core/agent-host/src/utils/localControl.js#L37-L41)
+- `isPublicHost` — FunctionDeclaration，[L43–L52](../webagent-core/agent-host/src/utils/localControl.js#L43-L52)
+- `isLocalControlPlane` — FunctionDeclaration，[L54–L63](../webagent-core/agent-host/src/utils/localControl.js#L54-L63)
+- `rejectUnlessLocalControl` — FunctionDeclaration，[L65–L68](../webagent-core/agent-host/src/utils/localControl.js#L65-L68)
 
 ## webagent-core/agent-host/src/utils/operatorQueue.js
 
@@ -3584,7 +3585,7 @@
 
 ## webagent-core/agent-host/tests/localControl.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `b30cee54ee8420d4cae8deffd3f460bac9833fe217522b14472facf9e82c2843`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `13618524f0dbeb85384d44bf5686a44b1a60227af24e547485295d9f8772f682`
 
 - `req` — FunctionDeclaration，[L10–L16](../webagent-core/agent-host/tests/localControl.test.js#L10-L16)
 

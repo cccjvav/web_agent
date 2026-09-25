@@ -1724,7 +1724,7 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **残余与未做：** Sec-Fetch-Site对不发该头的旧浏览器无效；Windows设备名的真实效果以CI为准，无本机实测；`.webagentignore`对有Execute的模型仍只是约定。第74组未审范围（延后清单第1行）本组未处理。
 
-### 第77组：审计余下范围第一批——无会话调用者键与find_files回溯（2026-09-25）
+### 第77组：审计余下范围——find_files回溯、本机控制面误判、无会话调用者键（2026-09-25）
 
 **开头复审（F76）：** 查相邻调用链：`/ws`握手浏览器必带Origin、表单POST必带Origin，不依赖新的Sec-Fetch-Site分支；`.webagentignore`唯一读取方`loadCustomPatterns`直接`path.join`读盘，不经工具路径；`resolveSafePath`的其它调用方（customizations的`.webagent/*`、executor的cwd、stdioLaunch）不会遇到保留设备名，遇到时拒绝也合理。未发现缺陷。
 
@@ -1737,8 +1737,14 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 | `tools/patchEngine.js` | 未发现新问题。另测悬空符号链接（仓库自带、指向工作区外尚不存在的路径）：write_file新建/覆盖、apply_patch新建、在链接目录下新建、改名覆盖，均未在工作区外产生文件（覆盖时替换的是链接本身，链接目录下mkdir失败） | 一次性脚本，结论记于此 |
 | `tools/skills.js` safeSkillFile | 未发现问题：拒`..`/冒号/隐藏路径，逐级拒符号链接，realpath复核，读取带O_NOFOLLOW | 读码 |
 | 内容正则搜索 | 已有保护：worker线程2秒期限+terminate，另有isUnsafeRegex | 读码 |
+| `utils/localControl.js`（第二批） | **高影响、条件触发，已修**：本机控制面只看Host是localhost、socket回环、无cf-*头。用户自行运行`ngrok http --host-header=rewrite`（或`--host-header=localhost:端口`，常见教程写法）或本机反向代理把Host改成localhost时，公网请求满足全部条件，不需任何密钥即可调用整个`/api`（tool/call、chat、重置密钥等）与`/ws`。主机内置的ngrok不改写Host、Cloudflare边缘必加cf头，这两条内置路径不受影响。修：出现任一反向代理转发头（X-Forwarded-For/Host/Proto、Forwarded、X-Real-IP、X-Original-Host，空值也算）即视为隧道请求；ngrok v3改写Host时会写X-Forwarded-Host并加X-Forwarded-For | 真实主机curl：旧代码带转发头`/api/status`为200、`/api/tool/call`进入处理函数；修后两个端口均404，普通本机请求200。localControl单测换回旧实现即红 |
+| `utils/fileCheckpoints.js`、`editorUndo.js` | 未发现问题：真实路径复核工作区策略、O_NOFOLLOW读取；恢复前全部预检、每个文件写前再比哈希，写入走write_file哈希闸门；单次执行不可重放 | 读码 |
+| `mcp/stdioLaunch.js`、`externalClient.js`、`publicHttps.js` | 未发现问题：stdio仅本机操作员、程序须绝对路径、拒shell/包管理器、环境变量白名单并拒LD_/NODE_等、预览单次且启动前复核哈希；HTTP端点仅环回（localhost改写为127.0.0.1）或显式确认的公网HTTPS，拒URL凭据、禁重定向；公网HTTPS每次解析、任一非公网地址即拒、连接复用已解析地址（防DNS重绑定），IPv6只放行2000::/3（IPv4映射与NAT64被拒）；远程只见工具清单，不见端点和令牌 | 读码 |
+| `admin-host/app.js` | 未发现新问题：除/health外均要Bearer且恒定时间比较，输出转义，损坏存储拒写。已知的无CSP、共享令牌可冒充installId见F72 | 读码 |
+| `api/routes.js` POST路由 | 全部挂在rejectUnlessLocalControl+rejectCrossSiteApi之后；抽查检查点、撤销、文件写入处理函数。其余处理函数只有本机可信操作员可调用，增量风险低，不再逐项 | 读码 |
+| 危险命令检测器 | 不再复审：F72已专项，定位为尽力而为的词法检测 | — |
 
-**残余与未做：** 本批未审：`api/routes.js`的POST路由逐项、`editorUndo`/检查点恢复路径、外部MCP客户端（externalClient/stdioLaunch）、admin-host、危险命令检测器（F72已专项，定位为尽力而为）；留待下一批。
+**残余：** 完全不留转发头、又把Host改成localhost的代理仍无法与本机区分（文档已写明）；用户已安装的旧ngrok命令若曾改写Host，升级后会变成`/api`404，这是预期。
 
 ### 延后复审清单
 
@@ -1746,6 +1752,6 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 | 登记 | 来源 | 待复审内容 | 状态 |
 |---|---|---|---|
-| 2026-09-25 | 第74组审计未审范围 | `mcp/session.js`；`api/routes.js`的POST路由逐项；`executor.js`/`dangerous.js`检测器；`patchEngine`补丁应用；`editorUndo`/`fileCheckpoints`恢复路径；`skills.safeSkillFile`；`findFiles`；外部MCP客户端（`externalClient`/`stdioLaunch`）；admin-host | 进行中：第77组审完session.js（低危已修）、findFiles（中危已修）、patchEngine、skills.safeSkillFile；其余待下一批 |
+| 2026-09-25 | 第74组审计未审范围 | `mcp/session.js`；`api/routes.js`的POST路由逐项；`executor.js`/`dangerous.js`检测器；`patchEngine`补丁应用；`editorUndo`/`fileCheckpoints`恢复路径；`skills.safeSkillFile`；`findFiles`；外部MCP客户端（`externalClient`/`stdioLaunch`）；admin-host | 已处理（第77组）：find_files回溯（中危）、本机控制面被改写Host的代理绕过（高影响、条件触发）、无会话调用者键退化（低危）已修；其余模块未发现问题，routes逐项处理函数与危险命令检测器按理由不再复审 |
 | 2026-09-25 | 第74组记录不修的低危项 | OAuth限流全体共享（无trust proxy）；授权页不显示客户端/回调主机；`/oauth/revoke`无限流；`GET /pty/jobs`副作用；Windows设备名；`.webagentignore`可被Edit改写 | 用户选方案B（第75组）：前三项属于OAuth，默认关闭后不再暴露，**只在用户开启OAuth时**仍然成立，留待真要接OAuth客户端时再修；后三项已于第76组处理（跨站GET按Sec-Fetch-Site拒绝、Windows设备名拒绝、规则文件列入内置敏感模式），结论与证据见第76组 |
 | 2026-09-25 | 第74组测试 | 完整测试首跑1次失败未保留输出，之后6轮未复现 | 待再观察 |

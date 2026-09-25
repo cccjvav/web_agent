@@ -17,7 +17,7 @@ WS：本机控制面 + 允许API浏览器Origin → 握手/连接
 | 函数 | 参数/返回 | 判定与边界 |
 |---|---|---|
 | isLoopbackAddress(addr) | 地址→boolean | trim/lowercase；::1/localhost或去IPv4映射前缀后的127.0.0.1；不是所有127网段都允许 |
-| isTunnelRequest(req) | 请求→boolean | 检查指定Cloudflare/CDN头是否存在真值；不是验证这些头签名，也不代表识别所有代理 |
+| isTunnelRequest(req) | 请求→boolean | 检查指定Cloudflare/CDN头是否存在真值，或FORWARDING_HEADERS中任一反向代理转发头（x-forwarded-for/-host/-proto、forwarded、x-real-ip、x-original-host）**存在**（空值也算）。后者为2026-09-25第77组补上：用户自行运行`ngrok http --host-header=rewrite`（或`--host-header=localhost:端口`，常见教程写法）时，请求从127.0.0.1进来、Host是localhost、没有cf头，此前被当成本机控制面，公网访客不需任何密钥即可调用整个`/api`（真实主机实测旧代码200、修后404）；ngrok v3改写Host时把原Host放进X-Forwarded-Host并加X-Forwarded-For。主机自己启动的ngrok不改写Host，本来就被isPublicHost拒绝。不验证头的值，也不代表识别所有代理：完全不留痕迹、又把Host改成localhost的代理仍无法区分 |
 | hostName(req) | 请求→规范主机名 | Host取逗号首项、小写、去数字端口和方括号；内部辅助 |
 | publicTunnelHost() | 无→主机名 | 从config.publicTunnelUrl去协议/路径/端口/方括号；不是完整URL解析器 |
 | isPublicHost(req) | 请求→boolean | 本机名除外；识别常见Cloudflare/ngrok后缀或当前配置公网名 |

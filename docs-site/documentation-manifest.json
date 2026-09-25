@@ -15412,8 +15412,8 @@
     {
       "path": "webagent-core/agent-host/src/utils/localControl.js",
       "doc": "webagent-core/agent-host/src/utils/README.md",
-      "sha256": "ac6129fc07407a3d0f9f76ba3e9c3e3cb74caf557e1bcc0207db67633ebe373a",
-      "lineCount": 70,
+      "sha256": "09c2dfec8c2797cd34261f2cbbf752097a1f0fc64d19f49a106345745de95e59",
+      "lineCount": 77,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -15431,18 +15431,28 @@
           "id": "isTunnelRequest",
           "name": "isTunnelRequest",
           "kind": "FunctionDeclaration",
-          "startLine": 11,
-          "endLine": 20,
+          "startLine": 18,
+          "endLine": 27,
           "parameters": [
             "req"
+          ]
+        },
+        {
+          "id": "isTunnelRequest/anonymous@26:31",
+          "name": "anonymous@26:31",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 26,
+          "endLine": 26,
+          "parameters": [
+            "name"
           ]
         },
         {
           "id": "hostName",
           "name": "hostName",
           "kind": "FunctionDeclaration",
-          "startLine": 22,
-          "endLine": 28,
+          "startLine": 29,
+          "endLine": 35,
           "parameters": [
             "req"
           ]
@@ -15451,16 +15461,16 @@
           "id": "publicTunnelHost",
           "name": "publicTunnelHost",
           "kind": "FunctionDeclaration",
-          "startLine": 30,
-          "endLine": 34,
+          "startLine": 37,
+          "endLine": 41,
           "parameters": []
         },
         {
           "id": "isPublicHost",
           "name": "isPublicHost",
           "kind": "FunctionDeclaration",
-          "startLine": 36,
-          "endLine": 45,
+          "startLine": 43,
+          "endLine": 52,
           "parameters": [
             "req"
           ]
@@ -15469,8 +15479,8 @@
           "id": "isLocalControlPlane",
           "name": "isLocalControlPlane",
           "kind": "FunctionDeclaration",
-          "startLine": 47,
-          "endLine": 56,
+          "startLine": 54,
+          "endLine": 63,
           "parameters": [
             "req"
           ]
@@ -15479,8 +15489,8 @@
           "id": "rejectUnlessLocalControl",
           "name": "rejectUnlessLocalControl",
           "kind": "FunctionDeclaration",
-          "startLine": 58,
-          "endLine": 61,
+          "startLine": 65,
+          "endLine": 68,
           "parameters": [
             "req",
             "res",
@@ -27387,8 +27397,8 @@
     {
       "path": "webagent-core/agent-host/tests/localControl.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "b30cee54ee8420d4cae8deffd3f460bac9833fe217522b14472facf9e82c2843",
-      "lineCount": 59,
+      "sha256": "13618524f0dbeb85384d44bf5686a44b1a60227af24e547485295d9f8772f682",
+      "lineCount": 68,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
