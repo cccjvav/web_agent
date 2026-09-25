@@ -1,4 +1,5 @@
 import { $, state, ui } from './state.js';
+import { apiFetch } from './api.js';
 import { escapeHtml } from './dom.js';
 
 export function rowList(items, render, empty) {
@@ -143,7 +144,7 @@ async function postModelSettings(partial) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
-    const res = await fetch('/api/models', {
+    const res = await apiFetch('/api/models', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(partial), signal: controller.signal
     });
@@ -170,7 +171,7 @@ async function probeProvider(input) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 20000);
   try {
-    const res = await fetch('/api/providers/probe', {
+    const res = await apiFetch('/api/providers/probe', {
       method:'POST', headers:{'Content-Type':'application/json'}, signal:controller.signal,
       body:JSON.stringify({baseUrl:input.baseUrl,apiKey:input.apiKey})
     });
@@ -234,7 +235,7 @@ export async function loadCustomizations() {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
-    const res = await fetch('/api/customizations', { cache: 'no-store', signal: controller.signal });
+    const res = await apiFetch('/api/customizations', { cache: 'no-store', signal: controller.signal });
     const data = await res.json();
     if (!res.ok || data?.success === false || !isCustomSnapshot(data)) throw new Error(data?.error || '设置响应无效');
     state.custom = data;
@@ -252,7 +253,7 @@ export async function saveCustom(partial) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
-    const res = await fetch('/api/customizations', {
+    const res = await apiFetch('/api/customizations', {
       method: 'PUT',
       signal: controller.signal,
       headers: { 'Content-Type': 'application/json' },
@@ -313,7 +314,7 @@ export async function readSkillPage(id, resource = 'SKILL.md', offset = 0, hash 
   try {
     const query = new URLSearchParams({ name: id, resource, offset: String(offset) });
     if (hash) query.set('expectedHash', hash);
-    const response = await fetch('/api/skills/load?' + query, { signal: controller.signal });
+    const response = await apiFetch('/api/skills/load?' + query, { signal: controller.signal });
     const data = await response.json();
     if (ticket !== skillRequest) return false;
     if (!response.ok || !validSkillPage(data, id, resource, offset)) throw new Error(data && (data.error || data.hint) || `HTTP ${response.status}`);
@@ -337,7 +338,7 @@ export async function readSkillPage(id, resource = 'SKILL.md', offset = 0, hash 
 export async function loadSkills() {
   let loaded = false;
   try {
-    const response = await fetch('/api/skills', { cache: 'no-store' });
+    const response = await apiFetch('/api/skills', { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     if (!data || typeof data !== 'object' || !Array.isArray(data.skills) || !data.skills.every(validSkillSummary) ||

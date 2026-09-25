@@ -1,4 +1,5 @@
 import { $, ui, state } from './state.js';
+import { apiFetch } from './api.js';
 
 async function api(path, method = 'GET', body, signal) {
   const controller = new AbortController();
@@ -8,7 +9,7 @@ async function api(path, method = 'GET', body, signal) {
   const timeout = path.endsWith('/approve') ? 70000 : method === 'POST' && ['/external/servers','/external/stdio/start'].includes(path) ? 40000 : 10000;
   const timer = setTimeout(onAbort, timeout);
   try {
-    const response = await fetch(`/api${path}`, {method,signal:controller.signal,headers:{'Content-Type':'application/json'},...(body ? {body:JSON.stringify(body)} : {})});
+    const response = await apiFetch(`/api${path}`, {method,signal:controller.signal,headers:{'Content-Type':'application/json'},...(body ? {body:JSON.stringify(body)} : {})});
     const result = await response.json();
     if (controller.signal.aborted) throw new Error('请求中断，结果未确认；请查询原请求，不要重放。');
     if (!response.ok || result?.ok === false || result?.success === false) throw new Error(result?.error || '请求失败');

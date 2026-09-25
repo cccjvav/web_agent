@@ -1,4 +1,5 @@
 import { $, $$, state, ui } from './state.js';
+import { apiFetch } from './api.js';
 import { escapeHtml, renderMd } from './dom.js';
 
 const CHAT_RESPONSE_BYTES = 16 * 1024 * 1024;
@@ -182,7 +183,7 @@ export async function sendChat(text, opts = {}) {
     if (controller.signal.aborted) throw Object.assign(new Error('请求已停止'), { name: 'AbortError' });
   };
   try {
-    const res = await fetch('/api/chat', {
+    const res = await apiFetch('/api/chat', {
       signal: controller.signal,
       redirect: 'error',
       method: 'POST',
@@ -311,7 +312,7 @@ export function handleEvent(ev) {
       if (tab) {
         (async () => {
           try {
-            const response = await fetch(`/api/files/content?path=${encodeURIComponent(filePath)}`);
+            const response = await apiFetch(`/api/files/content?path=${encodeURIComponent(filePath)}`);
             const data = await response.json();
             if (!response.ok) throw new Error(data && data.error || `HTTP ${response.status || '错误'}`);
             if (data.path !== undefined && data.path !== filePath) throw new Error('文件响应路径不一致');

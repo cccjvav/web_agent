@@ -205,6 +205,7 @@ const pairs = [
   ["webagent-core/agent-host/src/tunnel/ngrok.js", "webagent-core/agent-host/src/tunnel/隧道生命周期详解.md"],
 
   ["webagent-core/workbench/js/state.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
+  ["webagent-core/workbench/js/api.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
   ["webagent-core/workbench/js/dom.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
   ["webagent-core/workbench/js/tabs.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
   ["webagent-core/workbench/js/monaco.js", "webagent-core/workbench/js/状态与编辑器详解.md"],

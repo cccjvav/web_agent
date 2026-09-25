@@ -176,7 +176,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [documentationPolicy.test.js](documentationPolicy.test.js) | 12 个函数/类节点 |
 | [documentationQuality.test.js](documentationQuality.test.js) | 10 个函数/类节点 |
 | [editorReview.test.js](editorReview.test.js) | 29 个函数/类节点 |
-| [editorRuntime.test.js](editorRuntime.test.js) | 38 个函数/类节点 |
+| [editorRuntime.test.js](editorRuntime.test.js) | 39 个函数/类节点 |
 | [eventBus.test.js](eventBus.test.js) | 9 个函数/类节点 |
 | [executionControl.test.js](executionControl.test.js) | 41 个函数/类节点 |
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
@@ -263,7 +263,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
 | [workbench.browser.js](workbench.browser.js) | 278 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 472 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 484 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 17 个函数/类节点 |

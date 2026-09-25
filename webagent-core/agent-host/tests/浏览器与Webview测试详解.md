@@ -10,7 +10,7 @@ loadMonaco状态先加载中；手动script.onerror→Promise false/纯文本提
 
 ## workbenchRuntime.test.js
 
-[源码](workbenchRuntime.test.js)父进程以--experimental-vm-modules/--vm-child重启自身，10秒超限，status null算失败。子进程vm.SourceTextModule真实加载state/dom，link回调断言依赖路径并evaluate，防import阶段就异常。
+[源码](workbenchRuntime.test.js)父进程以--experimental-vm-modules/--vm-child重启自身，10秒超限，status null算失败。子进程vm.SourceTextModule真实加载state/dom，link回调断言依赖路径并evaluate，防import阶段就异常。R6第二期第一批起另加载api.js为**wbApi**，各模块的link把`./api.js`解析到它；紧接着做源码守卫（除api.js外全部模块与app.js无裸`fetch(`，用apiFetch者须从`./api.js`导入，至少六个模块已迁移）与apiFetch语义检查（参数原样传给fetch、每次调用才查找fetch、setApiTransport转发与传null恢复、非函数抛TypeError——vm另一realm，按name判断）；Bridge活动刷新段末尾再安装转发函数，断言真实refreshBridgeActivity只走转发（路径与no-store原样）、不碰fetch。放回一处裸fetch、改为加载时抓取fetch、忽略转发函数，三种变异均红。
 
 按钮**setAttribute**记录属性；Map存储getItem/setItem，Monaco.setTheme记录themes。验证默认dark、切light同步dataset/storage/Monaco vs/按钮深色标签、重初始化恢复light；非法存储回dark，读写存储抛错不崩；ui.applyTheme必须等于导出函数。
 
@@ -36,7 +36,7 @@ workbenchRuntime执行真实bind/settings：Test HTTP500即使JSON success:true�
 
 ## editorRuntime.test.js
 
-[源码](editorRuntime.test.js)父进程15秒VM子模式。**element()**生成value/innerHTML/children/handlers，appendChild、querySelector、addEventListener等最小DOM；**get(id)**Map复用节点；window.confirm由布尔控制；fetch记录calls，从responses队列shift，没有计划响应直接assert失败，Error项抛错。
+[源码](editorRuntime.test.js)父进程15秒VM子模式，加载state、api、dom、tabs四个真实模块（tabs经api.js请求，替身fetch在调用时被读取）。**element()**生成value/innerHTML/children/handlers，appendChild、querySelector、addEventListener等最小DOM；**get(id)**Map复用节点；window.confirm由布尔控制；fetch记录calls，从responses队列shift，没有计划响应直接assert失败，Error项抛错。
 
 element.classList.toggle为空回调；beforeunload传入的preventDefault只置布尔标志，不真的关闭页面；editor.setModel把引用记到fixture，非渲染。真实state/dom/tabs模块link/evaluate，toast收messages；initEditorSafety连调两次。**response(data,status=200)**带异步json，**hash(letter)**重复64位生成假版本值。
 

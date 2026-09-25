@@ -1,4 +1,5 @@
 import { $, state, ui } from './state.js';
+import { apiFetch } from './api.js';
 import { escapeHtml } from './dom.js';
 
 export function paintTabs() {
@@ -152,7 +153,7 @@ export async function openFile(filePath) {
   try {
     let tab = state.tabs.find(t => t.id === 'file:' + filePath);
     if (!tab) {
-      const res = await fetch(`/api/files/content?path=${encodeURIComponent(filePath)}`);
+      const res = await apiFetch(`/api/files/content?path=${encodeURIComponent(filePath)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '无法打开');
       if (typeof data.content !== 'string' || !/^[a-f0-9]{64}$/.test(data.hash || '')) {
@@ -266,7 +267,7 @@ export function welcomeFiles(items, limit = 6) {
 }
 
 export async function loadTree() {
-  const response = await fetch('/api/files/tree');
+  const response = await apiFetch('/api/files/tree');
   const data = await response.json();
   if (!response.ok) throw new Error(data && data.error || `文件树请求失败（HTTP ${response.status || '错误'}）`);
   if (!data || typeof data !== 'object' || !validTreeItems(data.items)) throw new Error('文件树响应格式无效');
@@ -311,7 +312,7 @@ export async function saveActive() {
 async function saveFile(tab, content, expectedHash) {
   tab.saving = true;
   try {
-    const res = await fetch('/api/files/content', {
+    const res = await apiFetch('/api/files/content', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ path: tab.path, content, expectedHash })
@@ -359,7 +360,7 @@ export async function previewActive() {
   const content = tab.content, expectedHash = tab.hash;
   tab.previewing = true;
   try {
-    const response = await fetch('/api/files/preview', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:tab.path,content,expectedHash}) });
+    const response = await apiFetch('/api/files/preview', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:tab.path,content,expectedHash}) });
     const data = await response.json();
     if (!response.ok || data.success !== true) throw Error(data.error || '预览失败');
     captureActiveFile();
@@ -382,7 +383,7 @@ export async function savePreview() {
   source.saving = true;
   source.undo = null;
   try {
-    const response = await fetch('/api/files/undo/' + encodeURIComponent(preview.undo), { method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({confirmed:true,expectedHash:preview.expectedHash,workspaceRoot:state.status?.workspaceRoot,hostInstanceId:state.status?.identity?.hostInstanceId}) });
+    const response = await apiFetch('/api/files/undo/' + encodeURIComponent(preview.undo), { method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({confirmed:true,expectedHash:preview.expectedHash,workspaceRoot:state.status?.workspaceRoot,hostInstanceId:state.status?.identity?.hostInstanceId}) });
     const data = await response.json();
     if (!response.ok || data.success !== true || data.path !== source.path || typeof data.content !== 'string' || !/^[a-f0-9]{64}$/.test(data.hash || '')) throw Error(data.error || '回退结果未知，请检查磁盘');
     captureActiveFile();
@@ -411,7 +412,7 @@ export async function previewUndo() {
   const content = tab.content, expectedHash = tab.hash, id = tab.undo.id;
   tab.previewing = true;
   try {
-    const response = await fetch('/api/files/undo/' + encodeURIComponent(id));
+    const response = await apiFetch('/api/files/undo/' + encodeURIComponent(id));
     const data = await response.json();
     if (!response.ok || data.success !== true) throw Error(data.error || '回退预览失败');
     captureActiveFile();

@@ -1,4 +1,5 @@
 import { $, $$, state, SITES, ui } from './state.js';
+import { apiFetch } from './api.js';
 import { escapeHtml } from './dom.js';
 
 function formatClock(ms) {
@@ -50,7 +51,7 @@ export function refreshBridgeActivity() {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 5000);
     try {
-      const response = await fetch('/api/bridge/activity', { signal: controller.signal, cache: 'no-store' });
+      const response = await apiFetch('/api/bridge/activity', { signal: controller.signal, cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       paintBridgeActivity(await response.json());
       return true;
@@ -103,7 +104,7 @@ export async function resetRound() {
   if (resetRoundPending) return false;
   resetRoundPending = true;
   try {
-    const response = await fetch('/api/bridge/reset-round', { method: 'POST' });
+    const response = await apiFetch('/api/bridge/reset-round', { method: 'POST' });
     const data = await response.json();
     if (!response.ok || !data || data.success !== true) throw new Error(data && data.error || `HTTP ${response.status}`);
     let refreshed = true;
@@ -294,7 +295,7 @@ async function bridgeRequest(path, body, timeoutMs = 10000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(path, {cache:'no-store', signal:controller.signal,
+    const response = await apiFetch(path, {cache:'no-store', signal:controller.signal,
       ...(body ? {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)} : {})});
     const data = await response.json();
     if (controller.signal.aborted) throw new Error('deadline');
@@ -365,7 +366,7 @@ async function secretRequest(path, body) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
-    const response = await fetch(path, { cache: 'no-store', signal: controller.signal,
+    const response = await apiFetch(path, { cache: 'no-store', signal: controller.signal,
       ...(body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}) });
     const data = await response.json();
     if (controller.signal.aborted || !response.ok || !data || data.success === false) throw new Error('unconfirmed');
@@ -537,7 +538,7 @@ export function paintBridge() {
 
 export async function checkBridgeHealth() {
   try {
-    const response = await fetch('/health', { cache: 'no-store' });
+    const response = await apiFetch('/health', { cache: 'no-store' });
     const health = await response.json().catch(() => ({}));
     if (!response.ok || health.ok !== true) throw new Error(`健康端点未确认（HTTP ${response.status || '错误'}）`);
     if (await ui.refreshStatus() === false) throw new Error('状态读取已被更新请求取代');
@@ -580,7 +581,7 @@ export async function refreshStatus() {
   const timer = setTimeout(() => controller.abort(), 10000);
   let published = false;
   try {
-    const res = await fetch('/api/status', { cache: 'no-store', signal: controller.signal });
+    const res = await apiFetch('/api/status', { cache: 'no-store', signal: controller.signal });
     if (ticket !== statusRequest) return false;
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const snapshot = await res.json();
@@ -643,7 +644,7 @@ export async function refreshDiagnostics() {
   currentDiagnostics = null;
   $('#host-comparison').textContent = '';
   try {
-    const response = await fetch('/api/diagnostics', { cache: 'no-store' });
+    const response = await apiFetch('/api/diagnostics', { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const diagnostics = await response.json();
     if (!diagnostics || typeof diagnostics !== 'object' || !diagnostics.identity ||
@@ -692,7 +693,7 @@ export function initExecutionControl() {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 10000);
     try {
-      const response = await fetch('/api/execution-control', {method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({...value,workspaceRoot:state.status?.workspaceRoot,hostInstanceId:state.status?.identity?.hostInstanceId})});
+      const response = await apiFetch('/api/execution-control', {method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({...value,workspaceRoot:state.status?.workspaceRoot,hostInstanceId:state.status?.identity?.hostInstanceId})});
       const data = await response.json();
       if (!response.ok || !data || data.success !== true) throw Error(data && data.error || '主机未确认设置');
       controlDirty = false;

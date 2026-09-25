@@ -1,4 +1,5 @@
 import { $, $$, state, ui } from './state.js';
+import { apiFetch } from './api.js';
 import { escapeHtml, positionPopover } from './dom.js';
 import { openModelPicker, closeModelPicker } from './picker.js';
 
@@ -26,7 +27,7 @@ async function detectProfile() {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 10000);
     try {
-      const data = await confirmedJson(await fetch('/api/profile/detect', { cache: 'no-store', signal: controller.signal }), '工作区探测');
+      const data = await confirmedJson(await apiFetch('/api/profile/detect', { cache: 'no-store', signal: controller.signal }), '工作区探测');
       const environment = data.environment, techStack = data.techStack;
       const validStrings = (value, keys) => value && typeof value === 'object' && !Array.isArray(value)
         && keys.every(key => typeof value[key] === 'string');
@@ -329,7 +330,7 @@ export function bind() {
   $('#btn-gh-login').onclick = async () => {
     cancelDevicePoll();
     try {
-      const response = await fetch('/api/bridge/login', {
+      const response = await apiFetch('/api/bridge/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})
@@ -354,7 +355,7 @@ export function bind() {
       const token = (input && input.value) || '';
       if (!token.trim()) { ui.toast('请先粘贴 GitHub 令牌'); return false; }
       try {
-        const response = await fetch('/api/bridge/token', {
+        const response = await apiFetch('/api/bridge/token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token })
@@ -382,7 +383,7 @@ export function bind() {
       const button = $('#btn-gh-device');
       button.disabled = true;
       try {
-        const response = await fetch('/api/bridge/device', { method: 'POST', signal: controller.signal });
+        const response = await apiFetch('/api/bridge/device', { method: 'POST', signal: controller.signal });
         const data = await confirmedJson(response, '设备码登录');
         if (generation !== devicePollGeneration) return false;
         if (data.success !== true || typeof data.userCode !== 'string' || !data.userCode ||
@@ -396,7 +397,7 @@ export function bind() {
         const tick = async () => {
           if (generation !== devicePollGeneration) return false;
           try {
-            const poll = await fetch('/api/bridge/device/poll', { method: 'POST', signal: controller.signal });
+            const poll = await apiFetch('/api/bridge/device/poll', { method: 'POST', signal: controller.signal });
             const out = await confirmedJson(poll, '设备码轮询');
             if (generation !== devicePollGeneration) return false;
             if (out.done === true && out.success === true && typeof out.username === 'string' && out.username) {
@@ -440,7 +441,7 @@ export function bind() {
     $('#btn-gh-clear').onclick = async () => {
       cancelDevicePoll();
       try {
-        const response = await fetch('/api/bridge/github/clear', { method: 'POST' });
+        const response = await apiFetch('/api/bridge/github/clear', { method: 'POST' });
         const data = await confirmedJson(response, '清除 GitHub 身份');
         if (data.success !== true || data.provider !== 'local-demo' || data.username !== 'local') {
           throw new Error(data.error || '服务器未确认清除 GitHub 身份');
@@ -528,7 +529,7 @@ export function bind() {
     try {
       const name = $('#sk-name').value;
       const content = $('#sk-body').value || skillMarkdown(name, $('#sk-when').value, $('#sk-steps').value);
-      const response = await fetch('/api/skills', {
+      const response = await apiFetch('/api/skills', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, content })
@@ -697,7 +698,7 @@ export function bind() {
     fileCreatePending = true;
     button.disabled = true;
     try {
-      const response = await fetch('/api/files/content', {
+      const response = await apiFetch('/api/files/content', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ path: name, content: '', createOnly: true })
@@ -736,7 +737,7 @@ export function bind() {
     $('#term-input').value = '';
     ui.termLine('$ ' + cmd, 'info');
     try {
-      const response = await fetch('/api/tool/call', {
+      const response = await apiFetch('/api/tool/call', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'run_command', mode: 'code', arguments: { command: cmd } })
@@ -760,7 +761,7 @@ export function bind() {
     if (!q) return false;
     const box = $('#search-results');
     try {
-      const response = await fetch('/api/tool/call', {
+      const response = await apiFetch('/api/tool/call', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'search_files', mode: 'ask', arguments: { query: q } })

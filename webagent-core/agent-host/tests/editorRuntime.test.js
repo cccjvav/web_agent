@@ -34,8 +34,9 @@ if (!process.argv.includes('--vm-child')) {
   });
   const root = path.resolve(__dirname, '../../workbench/js');
   const modules = {};
-  for (const name of ['state', 'dom', 'tabs']) modules[name] = new vm.SourceTextModule(fs.readFileSync(path.join(root, name + '.js'), 'utf8'), { context });
+  for (const name of ['state', 'api', 'dom', 'tabs']) modules[name] = new vm.SourceTextModule(fs.readFileSync(path.join(root, name + '.js'), 'utf8'), { context });
   await modules.state.link(() => {});
+  await modules.api.link(() => {});
   await modules.dom.link(() => modules.state);
   await modules.tabs.link(specifier => modules[specifier.slice(2, -3)]);
   await modules.tabs.evaluate();

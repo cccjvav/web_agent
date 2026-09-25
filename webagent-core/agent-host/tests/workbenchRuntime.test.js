@@ -24,6 +24,35 @@ if (!process.argv.includes('--vm-child')) {
   const state = new vm.SourceTextModule(fs.readFileSync(path.join(root, 'state.js'), 'utf8'), { context });
   const dom = new vm.SourceTextModule(fs.readFileSync(path.join(root, 'dom.js'), 'utf8'), { context });
   await state.link(() => {});
+  // R6 phase 2: every module requests through js/api.js (apiFetch), which reads context.fetch per call.
+  const wbApi = new vm.SourceTextModule(fs.readFileSync(path.join(root, 'api.js'), 'utf8'), { context });
+  await wbApi.link(() => {}); await wbApi.evaluate();
+  {
+    // Source guard: the settings panel can only relay what goes through apiFetch, so no module may
+    // call bare fetch, and every apiFetch user imports it from ./api.js (one shared transport).
+    const sources = fs.readdirSync(root).filter(name => name.endsWith('.js') && name !== 'api.js').map(name => [name, path.join(root, name)]);
+    sources.push(['app.js', path.join(root, '../app.js')]);
+    for (const [name, file] of sources) {
+      const text = fs.readFileSync(file, 'utf8');
+      assert.ok(!/(?<![\w.$])fetch\(/.test(text), `${name} must request through apiFetch, not bare fetch`);
+      if (/\bapiFetch\(/.test(text)) assert.ok(text.includes("import { apiFetch } from './api.js';"), `${name} imports apiFetch from ./api.js`);
+    }
+    assert.ok(sources.filter(([, file]) => /\bapiFetch\(/.test(fs.readFileSync(file, 'utf8'))).length >= 6, 'the six requesting modules were migrated');
+    const { apiFetch, setApiTransport } = wbApi.namespace, seen = [];
+    context.fetch = async (...args) => { seen.push(['fetch', ...args]); return 'from-fetch'; };
+    const init = { method: 'POST', body: '{}' };
+    assert.strictEqual(await apiFetch('/api/x', init), 'from-fetch');
+    assert.deepStrictEqual(seen.pop(), ['fetch', '/api/x', init], 'plain fetch receives the identical arguments');
+    context.fetch = async () => 'replaced-later';
+    assert.strictEqual(await apiFetch('/api/y'), 'replaced-later', 'fetch is looked up per call, not captured at load');
+    setApiTransport(async (...args) => { seen.push(['relay', ...args]); return 'from-relay'; });
+    assert.strictEqual(await apiFetch('/api/z', init), 'from-relay');
+    assert.deepStrictEqual(seen.pop(), ['relay', '/api/z', init]);
+    setApiTransport(null);
+    assert.strictEqual(await apiFetch('/api/y'), 'replaced-later', 'null restores plain fetch');
+    assert.throws(() => setApiTransport('fetch'), err => err.name === 'TypeError' && /function or null/.test(err.message)); // vm realm: not instanceof TypeError
+    delete context.fetch;
+  }
   await dom.link(specifier => { assert.strictEqual(specifier, './state.js'); return state; });
   await dom.evaluate(); // F01 used to throw here, before boot's catch could run.
   assert.strictEqual(dom.namespace.initTheme(), 'dark');
@@ -143,7 +172,7 @@ if (!process.argv.includes('--vm-child')) {
   assert.strictEqual(box.style.top, '34px', 'a top anchor opens below when space permits');
   context.URL = URL;
   const bridge = new vm.SourceTextModule(fs.readFileSync(path.join(root, 'bridge.js'), 'utf8'), { context });
-  await bridge.link(specifier => specifier === './state.js' ? state : dom);
+  await bridge.link(specifier => specifier === './state.js' ? state : specifier === './api.js' ? wbApi : dom);
   await bridge.evaluate();
   button.classList = { remove() {}, toggle() {} };
   state.namespace.ui.setRight = () => {};
@@ -190,6 +219,15 @@ if (!process.argv.includes('--vm-child')) {
   context.fetch = async () => ({ ok: true, json: async () => ({}) });
   await bridge.namespace.refreshBridgeActivity();
   assert.ok(button.textContent.includes('同步失败'));
+  {
+    // A real module request follows an installed transport (the same api.js instance), and fetch is untouched.
+    const relayed = [];
+    context.fetch = async () => { throw new Error('bare fetch must not be used while a transport is installed'); };
+    wbApi.namespace.setApiTransport(async (url, options) => { relayed.push([url, options.cache]); return { ok: true, json: async () => activity }; });
+    try { assert.strictEqual(await bridge.namespace.refreshBridgeActivity(), true); }
+    finally { wbApi.namespace.setApiTransport(null); }
+    assert.deepStrictEqual(relayed, [['/api/bridge/activity', 'no-store']]);
+  }
   assert.strictEqual(state.namespace.state.stats.calls, 7, 'bad snapshot must not erase known statistics');
   bridge.namespace.paintBridgeActivity({ ...activity, revision: 2, stats: { calls: 0, fail: 0, totalMs: 0 }, logs: [] });
   assert.strictEqual(state.namespace.state.stats.calls, 0);
@@ -370,9 +408,9 @@ if (!process.argv.includes('--vm-child')) {
     return taskNodes.get(selector);
   };
   const tabs = new vm.SourceTextModule(fs.readFileSync(path.join(root,'tabs.js'),'utf8'),{context});
-  await tabs.link(specifier=>specifier==='./state.js'?state:dom);await tabs.evaluate();
+  await tabs.link(specifier=>specifier==='./state.js'?state:specifier==='./api.js'?wbApi:dom);await tabs.evaluate();
   const chat = new vm.SourceTextModule(fs.readFileSync(path.join(root,'chat.js'),'utf8'),{context});
-  await chat.link(specifier=>specifier==='./state.js'?state:dom);await chat.evaluate();
+  await chat.link(specifier=>specifier==='./state.js'?state:specifier==='./api.js'?wbApi:dom);await chat.evaluate();
   chat.namespace.paintTodos([{title:'Local task',status:'pending'}]);
   chat.namespace.paintBridgeTasks([{sessionId:'remote-a',todos:[{title:'Remote <script>',status:'completed'}]}]);
   assert.ok(taskNodes.get('#chat-todo-list').innerHTML.includes('Local task'));
@@ -385,7 +423,7 @@ if (!process.argv.includes('--vm-child')) {
   bridge.namespace.paintBridgeActivity({...activity,taskStates:[{sessionId:'b',todos:[{title:'Another task'}]}]});
   assert.ok(taskNodes.get('#bridge-todo-list').innerHTML.includes('Another task'));
   const settings = new vm.SourceTextModule(fs.readFileSync(path.join(root,'settings.js'),'utf8'),{context});
-  await settings.link(specifier => specifier === './state.js' ? state : dom); await settings.evaluate();
+  await settings.link(specifier => specifier === './state.js' ? state : specifier === './api.js' ? wbApi : dom); await settings.evaluate();
   const custom = {instructions:'saved',preference:'old',environment:{},techStack:{},agents:[],prompts:[],hooks:[],mcpServers:[],plugins:[],quickLinks:[]};
   state.namespace.state.custom = custom;
   const notices = []; state.namespace.ui.toast = message => notices.push(message);
@@ -589,7 +627,7 @@ if (!process.argv.includes('--vm-child')) {
   context.document.querySelectorAll = selector => selector === '#activitybar [data-left]' ? [activityNode] : [];
   context.window.innerWidth = 1000;
   const binding = new vm.SourceTextModule(fs.readFileSync(path.join(root,'bind.js'),'utf8'),{context});
-  await binding.link(specifier => specifier==='./state.js'?state:specifier==='./picker.js'?picker:dom);
+  await binding.link(specifier => specifier==='./state.js'?state:specifier==='./api.js'?wbApi:specifier==='./picker.js'?picker:dom);
   await binding.evaluate();
   state.namespace.ui.initOperations = () => {};
   state.namespace.ui.initExecutionControl = () => {};
@@ -1101,7 +1139,7 @@ if (!process.argv.includes('--vm-child')) {
   context.document.createElement=()=>opsNode();
   context.confirm=()=>true;
   const operations=new vm.SourceTextModule(fs.readFileSync(path.join(root,'operations.js'),'utf8'),{context});
-  await operations.link(()=>state);await operations.evaluate();
+  await operations.link(specifier=>specifier==='./api.js'?wbApi:state);await operations.evaluate();
   state.namespace.ui.initOperations();
   const opsJobs=['review-a','review-b'].map(requestId=>({requestId,kind:'workflow',status:'waiting-approval',input:{definition:{steps:[]}}}));
   let finishReviewA, finishReviewB, finishApproval, finishSubmission, approvalCount=0, submissionCount=0, previewFailure=false;
