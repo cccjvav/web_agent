@@ -5,6 +5,7 @@
 接手先读本索引和[项目约定](agents.md)，再按需读[阶段10的工作包与交接](stages/s10-upstream-adoption.md#当前工作包与交接约束)。不另建路线图或根交接文件。
 
 ## 当前状态
+- **F81（2026-09-26，本会话）：** 验收反馈跟进（用户同意先做两项）：侧栏按钮加禁用/处理中样式，点击立即显示“启动中…”等并在卡片结果行回报结果（扩展以actionDone应答每次点击，hostStart按实际状态判定，stopHost返回结果）；原生与侧栏Chat的失败工具显示原因。新增sidebarFeedback测试，18种变异全红（自查修正启动中【停止】被禁用的回退）。改插件，需重装；实机确认并入第二期第4批手册。详见[第81组](stages/s10-upstream-adoption.md#第81组验收反馈跟进侧栏按钮反馈与chat失败原因2026-09-26)。
 - **F80（2026-09-26，本会话）：** R6第一期用户Windows实机验收通过（`506cd0a`），记录由根`r6result.md`按R8先例归档到`review/`（未登记曾使`6503ab9`的CI红）。手册三处措辞修订（CMD-A须独立cmd窗口、地址在MCP卡片、重载后看不到`[lifeline]`）。复查4.7：用户看到的是code模式输出，内置循环`npm test`受60秒上限必然超时，插件Chat丢失工具失败原因。待用户决定产品跟进（按钮反馈、失败原因等）后再做第二期第3批。详见[第80组](stages/s10-upstream-adoption.md#第80组r6第一期实机验收通过与手册修订2026-09-26)。
 - **F79（2026-09-25，本会话）：** R6第二期第2批：扩展进程转发层`extension/apiRelay.js`（默认拒绝白名单，按D4不含外部MCP/多模型）与webview端`workbench/js/vscodeRelay.js`（fetch语义），`requestJson`加可选rawBody/timeoutMs/signal；真实主机端到端通过，尚未接入面板。详见[第79组](stages/s10-upstream-adoption.md#第79组r6第二期第2批设置页请求转发层2026-09-25)。
 - **F78（2026-09-25，本会话）：** 用户同意R6第一期验收与第二期并行。第二期第1批：新增`workbench/js/api.js`，工作台六个模块33处`fetch`收拢为`apiFetch`（默认即fetch，行为不变），为插件设置页经扩展进程转发做准备；插件未改动。计划见[方案第9节](../docs/development/插件一体化启动返工方案.md#9-第二期实施记录2026-09-25起)，详见[第78组](stages/s10-upstream-adoption.md#第78组r6第二期第1批网页工作台请求收拢2026-09-25)。

@@ -18,9 +18,12 @@
 | registerChatParticipant(context) | 上下文→undefined | API存在才尝试创建webagent.agent，设SVG icon，加入订阅；不支持/注册异常不阻止Webview |
 | activate(context) | VS Code上下文→undefined | 输出面板“Web Agent Host”→PTY→ChatView/BridgeView provider→HostManager（见第12节）→原生Chat→状态栏→命令订阅；可管理时按`webagent.autoStartHost`启动主机，否则只尝试**attachExisting**接管同一文件夹上已运行的主机，不自动spawn |
 | validWebviewMessage(msg,surface) | 不可信消息→boolean | 拒绝空/数组/非字符串type；chat只openNative/cancel/合法模式send且正文非空≤128000；bridge只合法copy、`start`（tunnelProvider缺省或cloudflare/cloudflare-named/ngrok）、布尔`autoBridge`、refresh/stop/reset/hostStart/hostStop/hostLog或严格形状的control消息。没有通配API代理 |
+| toolFailureReason(error) | 工具事件的error→单行文本 | 字符串原样、对象取message否则JSON（不会显示[object Object]）、其他为空；空白折叠为一个空格，超300字符截断加“…”。R6第一期验收时Chat里失败工具只显示“Failed”，用户分不清超时还是路径错误 |
+| markdownText(value) | 文本→Markdown转义文本 | 主机文本放进原生Chat的Markdown前，给反斜杠、反引号、竖线和`*_{}[]()#+-.!<>~&`逐个加反斜杠，错误原文里的链接、强调、HTML都按字面显示 |
+| toolLineMarkdown(ev) | tool事件→Markdown一行 | 成功`- **名称** · N ms`；失败`Failed：原因`（经上两个函数），没有原因时仍是`Failed`。名称沿用主机的label/name |
 | chatHtml()/bridgeHtml() | 无→完整HTML字符串 | 各生成随机nonce，默认资源禁用，script仅nonce，允许内联style，禁止base/form；事件内容不作HTML注入 |
 
-**registerChatParticipant的handler(request,chatContext,stream,token)**：AbortController关联取消订阅并处理预取消；modeFromChatRequest取模式，去首个slash命令。空正文输出帮助、dispose返回；非空progress→postNdjson。事件回调先忽略已取消，再PTY分派；status为进度，tool显示结果/补丁打开与reference，message Markdown，error错误，consensus区分模拟汇总。正常完成返回metadata.webagentCompleted=true，失败/预取消返回false；catch提示结果未完成、核对已发生操作、不自动重试，主动取消不弹错误模态框；finally dispose取消订阅。
+**registerChatParticipant的handler(request,chatContext,stream,token)**：AbortController关联取消订阅并处理预取消；modeFromChatRequest取模式，去首个slash命令。空正文输出帮助、dispose返回；非空progress→postNdjson。事件回调先忽略已取消，再PTY分派；status为进度，tool经**toolLineMarkdown(ev)**显示耗时或失败原因、补丁打开与reference，message Markdown，error错误，consensus区分模拟汇总。正常完成返回metadata.webagentCompleted=true，失败/预取消返回false；catch提示结果未完成、核对已发生操作、不自动重试，主动取消不弹错误模态框；finally dispose取消订阅。
 
 ## 2. activate内部回调
 
@@ -58,7 +61,7 @@ extension.js直接注册三个registerCommand，另由editorReview登记两个�
 
 ## 4. BridgeView全部方法与回调
 
-**resolveWebviewView(webviewView)**设_view/options/html，消息验证后逐项处理（每个分支都在try内await，失败统一模态弹窗）：refresh调用refresh；start调用**startBridge(tunnelProvider)**（先取工作区绑定，POST `/api/bridge/start`，校验HTTP与success）；hostStart/hostStop/hostLog转给activate注入的hostCommands；autoBridge写globalState`webagent.startBridgeWithHost`；stop先取绑定再POST，严格校验success/running，失败弹未确认而非静默刷新；copy写系统剪贴板并通知；reset执行resetSecret命令。**constructor(context)**保存扩展上下文供globalState使用。
+**resolveWebviewView(webviewView)**设_view/options/html，消息验证后交给**handleMessage(msg)**并await：抛错统一模态弹窗，并记为失败结果`失败：原因`；消息带actionId（侧栏按钮点击，见第6节）时，finally里无论成败都回`{type:'actionDone',actionId,ok,text}`，面板已关闭时吞掉发送错误。handleMessage逐项处理并返回`{ok,text}`：refresh调用refresh；start调用**startBridge(tunnelProvider)**（先取工作区绑定，POST `/api/bridge/start`，校验HTTP与success）；hostStart/hostStop/hostLog转给activate注入的hostCommands——hostStart结束后按`hostCommands.snapshot()`的**实际状态**给结果（running为“主机已启动”，startHost返回null但主机在运行时说明“后续步骤出错”，例如启动后同时开Bridge失败；external为“已接管”；其余失败），hostStop把stopHost的返回值映射成文字（见第12节）；autoBridge写globalState`webagent.startBridgeWithHost`；stop先取绑定再POST，严格校验success/running，失败弹未确认而非静默刷新；copy写系统剪贴板并通知；reset执行resetSecret命令，只有命令返回true（已轮换）才算成功，取消或失败都说“未重置（见提示）”，结果文字不含密钥；control成功为“已由主机应用”，start/stop为“Bridge 已启动/已停止”。**constructor(context)**保存扩展上下文供globalState使用。
 
 **refresh()**没有_view即返回；refreshPending合并本页在途读取；先组装主机信息（HostManager快照、是否手工地址、autoBridge），GET status必须HTTP200且有JSON才连同host一起post，错误时status只带经hostErrorHint转换的error，finally释放pending。它是HTTP完成/非空候选门禁，不是完整status所有字段的业务真实性验证。
 
@@ -70,15 +73,15 @@ Webview通过acquireVsCodeApi取得postMessage；mode初始code，sending=false�
 - **add(cls,text)**移除empty提示，createElement+textContent安全显示，append并滚动；不渲染HTML/Markdown。
 - **paintTasks(todos)**只对象数组前500项，filter统计completed，控制容器显示，replaceChildren，forEach建立li/textContent；符号区分completed/in_progress/其他。
 - go.onclick：sending时仅发cancel，否则trim输入，清输入，切停止图标，post send。q.onkeydown Enter且无Shift阻止默认并click；open-native.onclick只发openNative。
-- window message回调校验对象；finished恢复按钮，user用add，event按status/tool/message/error/consensus渲染；tool失败色并从set_todos结果paintTasks。未知事件忽略，不直接执行来自服务端的脚本。
+- window message回调校验对象；finished恢复按钮，user用add，event按status/tool/message/error/consensus渲染；tool失败色，文字经**failedText(error)**附上原因（与扩展侧toolFailureReason同一规则；它在模板字符串里，正则写成`\\s`，否则模板会把`\s`吞成`s`），并从set_todos结果paintTasks。未知事件忽略，不直接执行来自服务端的脚本。
 
 HTML log/flex滚动区域、任务栏、模式菜单、输入框与发送按钮由id绑定；CSS控制深色布局/状态，不承载授权规则。maxLength是交互限制，宿主validWebviewMessage才是额外输入边界。
 
 ## 6. bridgeHtml内嵌脚本
 
-顶部“主机”卡片：【启动】【停止】【日志】与“启动主机后同时开启 Bridge”复选框，**paintHost(host)**按状态（未启动/启动中/运行中/外部启动/启动失败/手工地址；idle但默认端口有主机回答时提示“可能属于其他文件夹，点【启动】核对”）写文字、禁用按钮（手工地址、启动中、运行中、外部时禁用启动；只有插件自己启动的主机或启动中才能点停止，启动中点停止即取消）并显示错误或来源告警。MCP卡片新增隧道下拉框（Quick/Named/ngrok），未被用户改动时跟随status.tunnelProvider（旧值named视为cloudflare-named）；start发送所选tunnelProvider。保存status对象。stop/reset的onclick仅发固定type；copy.onclick优先status.prompt，否则mcpUrl+连接提示，交宿主剪贴板。**paintTasks(todos)**与Chat同样构建安全DOM，不共享函数作用域。**paintLogs(logs)**取tool_call_end前12，payload检查对象，工具名/数值时长写textContent；无工具显示等待。不是倒序重排后的最新12保证，取决于服务端顺序。
+顶部“主机”卡片：【启动】【停止】【日志】与“启动主机后同时开启 Bridge”复选框，**paintHost(host)**按状态（未启动/启动中/运行中/外部启动/启动失败/手工地址；idle但默认端口有主机回答时提示“可能属于其他文件夹，点【启动】核对”）写文字、禁用按钮（手工地址、启动中、运行中、外部时禁用启动；只有插件自己启动的主机或启动中才能点停止，启动中点停止即取消）并显示错误或来源告警。**点击反馈（R6第一期验收反馈）：** 原先按钮只有一条样式，禁用与可点看不出区别，点击后要等下一次4秒轮询才有变化。现在禁用按钮为透明底、灰字、虚线边框、禁止光标，处理中的按钮另有样式；**act(id,msg,busyText,resultId)**把被点的按钮改成“启动中…/停止中…/切换中…”等并禁用，消息附带递增的actionId（a1、a2…），并立即重绘其他按钮（【停止】依赖是否有启动在进行）；**finishAction(actionId,ok,text)**收到actionDone后恢复原文字，在卡片的结果行（主机卡片`#host-result`、MCP卡片`#bridge-result`、权限区`#access-result`，role=status）写结果，失败为红色，未知或已处理过的actionId忽略。**setDisabled(id,off,why)**让处理中的按钮在轮询重绘时保持禁用（不能重复点），禁用时title说明原因；**paintButtons()**每次status后重绘：主机按钮规则见下，【启动 Bridge】在主机未连接或Bridge已运行时禁用，【停止】只在确知Bridge未运行且本页没有进行中的Bridge启动或主机启动时禁用（主机连不上、状态未知时保持可点，不把可能仍在运行的隧道的停止按钮藏起来；主机在隧道地址到手前一直报bridgeRunning=false，而`/api/bridge/stop`正是中止进行中启动的办法，主机启动也可能顺带开Bridge），【复制提示词】没有地址时禁用，【重置密钥】主机未连接时禁用；模式与保存权限只受处理中限制。启动中【停止】保持可点，用于取消启动。**setResult(id,text,failed)**写结果行。MCP卡片新增隧道下拉框（Quick/Named/ngrok），未被用户改动时跟随status.tunnelProvider（旧值named视为cloudflare-named）；start发送所选tunnelProvider。保存status对象。stop/reset的onclick仅发固定type；copy.onclick优先status.prompt，否则mcpUrl+连接提示，交宿主剪贴板。**paintTasks(todos)**与Chat同样构建安全DOM，不共享函数作用域。**paintLogs(logs)**取tool_call_end前12，payload检查对象，工具名/数值时长写textContent；无工具显示等待。不是倒序重排后的最新12保证，取决于服务端顺序。
 
-window message只接受status，规范对象后更新URL/状态pill，paintTasks/paintLogs。4秒定时post refresh，加载后立即refresh。这里浏览器脚本不直接fetch本机API，CSP也不授予网络连接。
+window message接受actionDone（文字截到300字符）、controlSaved与status；status规范对象后记下主机信息并paintButtons，更新URL/状态pill，paintTasks/paintLogs。4秒定时post refresh，加载后立即refresh。这里浏览器脚本不直接fetch本机API，CSP也不授予网络连接。
 
 ## 7. 其余两个JS文件
 
@@ -143,6 +146,8 @@ Bridge任务区域不再因空列表隐藏，限制35vh并滚动/长词换行，
 | waitReady(workspace) | 轮询probeStatus直到回答且工作区相同；回答了别的工作区立即报错；子进程退出或超时报错（提示首次需联网装依赖） |
 | stop({quiet,cancel}) | 启动中但进程尚未生成（探测、核对来源、选端口）时只置取消标记，`throwIfCancelled()`在各步与spawn前抛出，保证不再生成进程；之后只停**自己启动**的主机：关闭stdin管道（主机随即执行自己的shutdown，先停命令与隧道），10秒不退出才killTree；接管的外部主机只记录说明、返回external:true，绝不关闭 |
 | markLost() / dispose() | 外部主机不再回答时忘掉它；dispose供deactivate调用，停止自己启动的主机 |
+
+activate里的stopHost（命令`webagent.stopHost`与侧栏【停止】共用）返回发生了什么，供侧栏结果行使用：`cancelled-start`（进程生成前取消启动）、`external`（外部主机，提示在它的窗口Ctrl+C）、`none`（没有插件启动的主机）、`declined`（Bridge运行中弹模态确认时用户没选“停止”，主机不动）、`stopped`、`unconfirmed`（HostManager.stop报告强制结束后仍未确认退出）。
 
 extension.js新增：**explicitHostUrl()**用`inspect`区分“用户/工作区真的填了”与package.json默认值（填了就只连接、不自启）；**nodePathSetting()**只读用户级`webagent.nodePath`（package.json声明scope为machine，工作区值被忽略），必须是绝对路径，留空用PATH中的node；**hostErrorHint(err)**把ECONNREFUSED/ECONNRESET译成“主机未启动，请点【启动】”；activate内的**startHost({quiet})**（拒绝手工地址→首个文件夹→HostManager.start→接管时提示→按复选框用主机记录的隧道类型启动Bridge）与**stopHost()**（启动中直接取消；外部主机只提示；Bridge运行或状态未知时先模态确认会断开远程连接）；**deactivate()**返回dispose的Promise。新命令：`webagent.startHost`、`webagent.stopHost`、`webagent.showHostLog`；新设置：`webagent.nodePath`、`webagent.autoStartHost`（默认false，只启动本机主机，从不自动开Bridge）。
 

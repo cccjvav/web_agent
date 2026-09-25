@@ -196,6 +196,28 @@ async function resetSecretCommand({ refresh } = {}) {
   }
 }
 
+// A failed tool used to render as a bare "Failed": the user could not tell a timeout from a bad path.
+// One line, clipped; objects fall back to their message or JSON so nothing prints as [object Object].
+function toolFailureReason(error) {
+  let text = '';
+  if (typeof error === 'string') text = error;
+  else if (error && typeof error === 'object') {
+    try { text = typeof error.message === 'string' ? error.message : JSON.stringify(error); } catch { text = ''; }
+  }
+  text = String(text || '').replace(/\s+/g, ' ').trim();
+  return text.length > 300 ? text.slice(0, 300) + '…' : text;
+}
+
+// Host text is untrusted inside chat markdown: escape every markdown/HTML punctuation character.
+function markdownText(value) { return String(value).replace(/[\\`*_{}\[\]()#+\-.!|<>~&]/g, '\\$&'); }
+
+function toolLineMarkdown(ev) {
+  const ok = ev.ok !== false && !ev.error;
+  const reason = ok ? '' : toolFailureReason(ev.error);
+  const right = ok ? `${ev.durationMs || 0} ms` : 'Failed' + (reason ? '：' + markdownText(reason) : '');
+  return `\n\n- **${ev.label || ev.name}** · ${right}\n`;
+}
+
 function postNdjson(url, body, onEvent, signal) {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
@@ -333,9 +355,7 @@ function registerChatParticipant(context) {
           dispatchPty(ev);
           if (ev.type === 'status' && ev.text) stream.progress(ev.text);
           else if (ev.type === 'tool') {
-            const ok = ev.ok !== false && !ev.error;
-            const right = ok ? `${ev.durationMs || 0} ms` : 'Failed';
-            stream.markdown(`\n\n- **${ev.label || ev.name}** · ${right}\n`);
+            stream.markdown(toolLineMarkdown(ev));
             if (ev.name === 'apply_patch' && ev.result && ev.result.filePath) {
               revealWorkspaceFile(ev.result.filePath);
               const folder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0];
@@ -400,7 +420,7 @@ function activate(context) {
     else hostOutput.appendLine(`[host] 插件来源提交 ${info.commit || '未知'}；主机仓库当前提交 ${info.repoCommit || '未知'}`);
     if (info.warning) vscode.window.showWarningMessage(info.warning);
   });
-  bridge.hostCommands = { start: () => startHost(), stop: () => stopHost(), log: () => hostOutput.show(true) };
+  bridge.hostCommands = { start: () => startHost(), stop: () => stopHost(), log: () => hostOutput.show(true), snapshot: () => hostManager.snapshot() };
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider('webagent.chatView', chat),
     vscode.window.registerWebviewViewProvider('webagent.bridgeView', bridge)
@@ -433,23 +453,25 @@ function activate(context) {
     } finally { refreshBar(); bridge.refresh(); }
   }
 
+  // Returns what happened, for the sidebar's click feedback: cancelled-start | external | none | declined | stopped | unconfirmed.
   async function stopHost() {
     const snap = hostManager.snapshot();
-    if (snap.state === 'starting' && !snap.owned) { await hostManager.stop(); refreshBar(); bridge.refresh(); return; }
+    if (snap.state === 'starting' && !snap.owned) { await hostManager.stop(); refreshBar(); bridge.refresh(); return 'cancelled-start'; }
     if (!snap.owned) {
       if (snap.state === 'external') vscode.window.showInformationMessage('这个主机不是插件启动的（例如由 run-webagent.cmd 启动），插件不会关闭它；请在启动它的窗口按 Ctrl+C。');
-      return;
+      return snap.state === 'external' ? 'external' : 'none';
     }
     if (snap.state === 'running') {
       let bridgeOn = false;
       try { bridgeOn = Boolean((await requestJson('GET', `${agentHostUrl()}/api/status`)).json?.bridgeRunning); } catch { /* unknown: still ask */ bridgeOn = true; }
       if (bridgeOn) {
         const ok = await vscode.window.showWarningMessage('停止主机会同时停止 Bridge 隧道和正在运行的命令，Arena 等远程连接会断开。确定停止？', { modal: true }, '停止');
-        if (ok !== '停止') return;
+        if (ok !== '停止') return 'declined';
       }
     }
-    await hostManager.stop();
+    const result = await hostManager.stop();
     refreshBar(); bridge.refresh();
+    return result && result.stopped === false && !result.cancelled ? 'unconfirmed' : 'stopped';
   }
 
   async function refreshBar() {
@@ -536,6 +558,8 @@ function validWebviewMessage(msg, surface) {
       && typeof msg.text === 'string' && msg.text.trim().length > 0 && msg.text.length <= 128000;
   }
   if (surface !== 'bridge') return false;
+  // Optional click-feedback id, echoed back in actionDone; the page generates a1, a2, …
+  if (msg.actionId !== undefined && !(typeof msg.actionId === 'string' && /^a[0-9]{1,9}$/.test(msg.actionId))) return false;
   if (msg.type === 'control') return Boolean(['chat','bridge'].includes(msg.workMode) || (typeof msg.revision === 'string' && /^[a-f0-9]{64}$/.test(msg.revision) && msg.permissions && Object.keys(msg.permissions).length === 4 && ['read','edit','execute','capture'].every(k => typeof msg.permissions[k] === 'boolean')));
   if (msg.type === 'copy') return typeof msg.text === 'string' && msg.text.length <= 128000;
   if (msg.type === 'start') return msg.tunnelProvider === undefined || ['cloudflare', 'cloudflare-named', 'ngrok'].includes(msg.tunnelProvider);
@@ -613,52 +637,87 @@ class BridgeView {
     webviewView.webview.html = bridgeHtml();
     webviewView.webview.onDidReceiveMessage(async (msg) => {
       if (!validWebviewMessage(msg, 'bridge')) return;
+      let outcome = { ok: true, text: '' };
       try {
-        if (msg.type === 'refresh') return this.refresh();
-        if (msg.type === 'control') {
-          const binding = await workspaceBinding();
-          const data = ['chat','bridge'].includes(msg.workMode) ? {workMode:msg.workMode} : {permissions:msg.permissions,revision:msg.revision};
-          const result = await requestJson('POST', `${agentHostUrl()}/api/execution-control`, {...binding,...data});
-          if (result.status >= 400 || !result.json?.success) throw Error(result.json?.error || '设置失败');
-          this._view.webview.postMessage({type:'controlSaved'});
-          return this.refresh();
-        }
-        // await inside the try: a rejected start must reach the modal error below, not escape.
-        if (msg.type === 'start') { await this.startBridge(msg.tunnelProvider); return; }
-        if (msg.type === 'hostStart') { await this.hostCommands?.start(); return; }
-        if (msg.type === 'hostStop') { await this.hostCommands?.stop(); return; }
-        if (msg.type === 'hostLog') { this.hostCommands?.log(); return; }
-        if (msg.type === 'autoBridge') {
-          await this.context?.globalState?.update('webagent.startBridgeWithHost', msg.value);
-          await this.refresh();
-          return;
-        }
-        if (msg.type === 'stop') {
-          const binding = await workspaceBinding();
-          let result;
-          try {
-            result = await requestJson('POST', `${agentHostUrl()}/api/bridge/stop`, binding);
-          } catch {
-            throw new Error('停止结果未确认；请刷新状态并核对隧道进程。请求失败不证明未执行，没有自动重试。');
-          }
-          if (result.status === 409) throw new Error('停止被主机拒绝：绑定已变化，未停止；请刷新状态后重试。');
-          if (result.status >= 400 || result.json?.success !== true || result.json.running !== false) {
-            throw new Error('停止结果未确认；请刷新状态并核对隧道进程。');
-          }
-          return this.refresh();
-        }
-        if (msg.type === 'copy') {
-          await vscode.env.clipboard.writeText(msg.text || '');
-          vscode.window.showInformationMessage('已复制到剪贴板');
-        }
-        if (msg.type === 'reset') {
-          await vscode.commands.executeCommand('webagent.resetSecret');
-        }
+        outcome = (await this.handleMessage(msg)) || outcome;
       } catch (e) {
+        outcome = { ok: false, text: '失败：' + e.message };
         vscode.window.showErrorMessage(e.message, {modal:true});
+      } finally {
+        // Always answer a click, success or not, so the button leaves its busy state.
+        if (msg.actionId !== undefined) {
+          try { Promise.resolve(this._view.webview.postMessage({ type: 'actionDone', actionId: msg.actionId, ok: outcome.ok, text: outcome.text })).catch(() => {}); }
+          catch { /* view disposed */ }
+        }
       }
     });
     this.refresh();
+  }
+
+  // Returns { ok, text } for the clicked button's feedback line; a throw becomes a modal error plus a failed line.
+  async handleMessage(msg) {
+    if (msg.type === 'refresh') { await this.refresh(); return; }
+    if (msg.type === 'control') {
+      const binding = await workspaceBinding();
+      const data = ['chat','bridge'].includes(msg.workMode) ? {workMode:msg.workMode} : {permissions:msg.permissions,revision:msg.revision};
+      const result = await requestJson('POST', `${agentHostUrl()}/api/execution-control`, {...binding,...data});
+      if (result.status >= 400 || !result.json?.success) throw Error(result.json?.error || '设置失败');
+      this._view.webview.postMessage({type:'controlSaved'});
+      await this.refresh();
+      return { ok: true, text: '已由主机应用' };
+    }
+    // Await here (never return the bare promise): a rejected start must reach the listener's modal error.
+    if (msg.type === 'start') { await this.startBridge(msg.tunnelProvider); return { ok: true, text: 'Bridge 已启动' }; }
+    if (msg.type === 'hostStart') {
+      const snap = await this.hostCommands?.start();
+      // startHost already reported any error; judge by the host's actual state, not the return value,
+      // because a failed "also start Bridge" step returns null although the host is up.
+      const now = this.hostCommands?.snapshot ? this.hostCommands.snapshot() : snap;
+      if (now && now.state === 'running') return { ok: true, text: snap ? '主机已启动' : '主机已启动，但后续步骤出错（见提示）' };
+      if (now && now.state === 'external') return { ok: true, text: '已接管外部启动的主机' };
+      return { ok: false, text: '未启动：原因见提示与【日志】' };
+    }
+    if (msg.type === 'hostStop') {
+      const how = await this.hostCommands?.stop();
+      const texts = {
+        stopped: [true, '主机已停止'], 'cancelled-start': [true, '已取消本次启动'], declined: [true, '已取消，主机继续运行'],
+        external: [true, '外部启动的主机，插件不关闭（见提示）'], none: [true, '没有插件启动的主机'],
+        unconfirmed: [false, '停止未确认：见【日志】并检查任务管理器']
+      };
+      const [ok, text] = texts[how] || [true, ''];
+      return { ok, text };
+    }
+    if (msg.type === 'hostLog') { this.hostCommands?.log(); return; }
+    if (msg.type === 'autoBridge') {
+      await this.context?.globalState?.update('webagent.startBridgeWithHost', msg.value);
+      await this.refresh();
+      return;
+    }
+    if (msg.type === 'stop') {
+      const binding = await workspaceBinding();
+      let result;
+      try {
+        result = await requestJson('POST', `${agentHostUrl()}/api/bridge/stop`, binding);
+      } catch {
+        throw new Error('停止结果未确认；请刷新状态并核对隧道进程。请求失败不证明未执行，没有自动重试。');
+      }
+      if (result.status === 409) throw new Error('停止被主机拒绝：绑定已变化，未停止；请刷新状态后重试。');
+      if (result.status >= 400 || result.json?.success !== true || result.json.running !== false) {
+        throw new Error('停止结果未确认；请刷新状态并核对隧道进程。');
+      }
+      await this.refresh();
+      return { ok: true, text: 'Bridge 已停止' };
+    }
+    if (msg.type === 'copy') {
+      await vscode.env.clipboard.writeText(msg.text || '');
+      vscode.window.showInformationMessage('已复制到剪贴板');
+      return;
+    }
+    if (msg.type === 'reset') {
+      // resetSecretCommand shows its own confirm and result notifications and returns true only when rotated.
+      const rotated = await vscode.commands.executeCommand('webagent.resetSecret');
+      return rotated === true ? { ok: true, text: '密钥已重置（见通知），请重新复制地址' } : { ok: false, text: '未重置（见提示）' };
+    }
   }
 
   async refresh() {
@@ -699,7 +758,7 @@ body{margin:0;font:12px/1.45 system-ui;background:#1e1e1e;color:#ccc;height:100v
 .user{background:#2a2a2a;margin-left:8%}
 .bot{background:#222;border:1px solid #333}
 .tool{font-family:ui-monospace,monospace;font-size:11px;color:#9cdcfe;border:1px solid #333;padding:6px 8px;border-radius:6px;margin:0 0 8px;display:flex;justify-content:space-between}
-.tool.fail{color:#f14c4c;border-color:#5a2d2d}
+.tool.fail{color:#f14c4c;border-color:#5a2d2d;overflow-wrap:anywhere}
 #tasks{display:none;border-top:1px solid #333;padding:8px 10px;background:#1a1a1a}
 #tasks h4{margin:0 0 6px;font-size:11px;letter-spacing:.06em;color:#bbb;display:flex;justify-content:space-between}
 #task-list{margin:0;padding:0;list-style:none}
@@ -763,6 +822,13 @@ menu.onclick = (e) => {
   menu.classList.remove('on');
 };
 const log = document.getElementById('log');
+// Same wording as the native chat (toolFailureReason in the extension): the reason, one line, clipped.
+function failedText(error){
+  let text = typeof error === 'string' ? error : (error && typeof error === 'object' ? (typeof error.message === 'string' ? error.message : JSON.stringify(error)) : '');
+  text = String(text || '').replace(/\\s+/g, ' ').trim();
+  if (text.length > 300) text = text.slice(0, 300) + '…';
+  return text ? 'Failed：' + text : 'Failed';
+}
 function add(cls, text){
   const empty = log.querySelector('.empty');
   if (empty) empty.remove();
@@ -801,7 +867,7 @@ window.addEventListener('message', e => {
     if (ev.type==='status') add('msg bot', ev.text || '');
     else if (ev.type==='tool') {
       const ok = ev.ok !== false && !ev.error;
-      add('tool' + (ok ? '' : ' fail'), (ev.label || ev.name || 'tool') + '   ' + (ok ? ((ev.durationMs||0) + ' ms') : 'Failed'));
+      add('tool' + (ok ? '' : ' fail'), (ev.label || ev.name || 'tool') + '   ' + (ok ? ((ev.durationMs||0) + ' ms') : failedText(ev.error)));
       if (ev.name === 'set_todos' && ev.result && ev.result.todos) paintTasks(ev.result.todos);
     }
     else if (ev.type==='message') add('msg bot', ev.text || '');
@@ -822,7 +888,12 @@ body{margin:0;padding:12px;font:12px/1.4 system-ui;background:var(--vscode-sideB
 .pill{display:inline-block;padding:3px 10px;border-radius:12px;margin-bottom:10px;border:1px solid #4fc1ff;color:#4fc1ff}
 .card{background:var(--vscode-editor-background,#252526);border:1px solid var(--vscode-panel-border,#555);border-radius:8px;padding:10px;margin-bottom:10px}
 .url{word-break:break-all;font-family:ui-monospace,monospace;color:#9cdcfe;background:#111;padding:8px;border-radius:4px}
-button{background:#0e639c;color:#fff;border:0;padding:7px 10px;border-radius:4px;cursor:pointer;margin:4px 4px 0 0}
+button{background:#0e639c;color:#fff;border:1px solid transparent;padding:7px 10px;border-radius:4px;cursor:pointer;margin:4px 4px 0 0}
+button:hover:not(:disabled){background:#1177bb}
+button:disabled{background:transparent;color:var(--vscode-disabledForeground,#8b8b8b);border:1px dashed var(--vscode-panel-border,#555);cursor:not-allowed}
+button.busy,button.busy:disabled{background:#3a3d41;color:#fff;border:1px solid #0e639c;cursor:progress}
+.result{margin:6px 0 0;min-height:1em;color:#89d185}
+.result.fail{color:var(--vscode-errorForeground,#f48771)}
 .hint{color:var(--vscode-descriptionForeground,#b0b0b0)}
 .tool{font-family:ui-monospace,monospace;font-size:11px;color:#9cdcfe;border:1px solid #333;padding:6px 8px;border-radius:6px;margin:0 0 6px;display:flex;justify-content:space-between}
 #tasks{max-height:35vh;overflow:auto;overflow-wrap:anywhere}
@@ -833,6 +904,7 @@ button{background:#0e639c;color:#fff;border:0;padding:7px 10px;border-radius:4px
 <div class="card" id="host-card">
   <strong>主机</strong> <span id="host-state">检查中…</span>
   <div><button id="host-start">启动</button><button id="host-stop">停止</button><button id="host-log">日志</button></div>
+  <p class="result" id="host-result" role="status" aria-live="polite"></p>
   <label><input id="auto-bridge" type="checkbox">启动主机后同时开启 Bridge</label>
   <p class="hint" id="host-hint">以当前打开的文件夹为工作区启动，不需要 CMD 或浏览器。关闭 VS Code 窗口时，插件启动的主机与隧道会一起停止。</p>
 </div>
@@ -845,6 +917,7 @@ button{background:#0e639c;color:#fff;border:0;padding:7px 10px;border-radius:4px
   <button id="stop">停止</button>
   <button id="copy">复制提示词</button>
   <button id="reset">重置密钥</button>
+  <p class="result" id="bridge-result" role="status" aria-live="polite"></p>
 </div>
 <div class="card">
   <strong>工作模式与 Bridge 权限</strong><p id="execution-mode">待同步</p>
@@ -864,11 +937,60 @@ button{background:#0e639c;color:#fff;border:0;padding:7px 10px;border-radius:4px
 <p class="hint" id="hint">启动后等 trycloudflare.com。Arena：把提示词整段当第一句。ChatGPT：不要贴进聊天栏，走设置里的自制 MCP 插件。</p>
 <script nonce="${nonce}">
 const vscode = acquireVsCodeApi();
-let status = {}, policyDirty = false, policyRevision = '';
-document.getElementById('mode-chat').onclick = () => vscode.postMessage({type:'control',workMode:'chat'});
-document.getElementById('mode-bridge').onclick = () => vscode.postMessage({type:'control',workMode:'bridge'});
+let status = {}, policyDirty = false, policyRevision = '', lastHost = {};
+// Click feedback: the clicked button shows what is happening until the extension reports the outcome
+// (actionDone); the 4-second repaint never re-enables a busy button, so it cannot be clicked twice.
+const busy = new Map();
+let actionSeq = 0;
+function setDisabled(id, off, why){
+  const el = document.getElementById(id);
+  el.disabled = busy.has(id) || Boolean(off);
+  el.title = !busy.has(id) && off && why ? why : '';
+}
+function setResult(id, text, failed){
+  const el = document.getElementById(id);
+  el.textContent = text || '';
+  el.className = 'result' + (failed ? ' fail' : '');
+}
+function act(id, msg, busyText, resultId){
+  const el = document.getElementById(id);
+  if (el.disabled || [...busy.values()].some(b => b.id === id)) return;
+  const actionId = 'a' + (++actionSeq);
+  busy.set(id, { id, actionId, label: el.textContent, resultId });
+  el.textContent = busyText;
+  el.classList.toggle('busy', true);
+  el.disabled = true;
+  setResult(resultId, '', false);
+  paintButtons(); // other buttons depend on what is in flight (Stop during a start)
+  vscode.postMessage({ ...msg, actionId });
+}
+function finishAction(actionId, ok, text){
+  const entry = [...busy.values()].find(b => b.actionId === actionId);
+  if (!entry) return;
+  busy.delete(entry.id);
+  const el = document.getElementById(entry.id);
+  el.textContent = entry.label;
+  el.classList.toggle('busy', false);
+  setResult(entry.resultId, text, !ok);
+  paintButtons();
+}
+function paintButtons(){
+  paintHost(lastHost);
+  const offline = Boolean(status.error);
+  setDisabled('start', offline || status.bridgeRunning === true, offline ? '主机未连接' : 'Bridge 已在运行');
+  // Unknown state (host unreachable) keeps Stop available: never hide a stop for a tunnel that may be up.
+  // So does a start in flight: the host reports bridgeRunning=false until the tunnel URL arrives, and
+  // /api/bridge/stop is what supersedes that start (a host start may also be starting Bridge).
+  const starting = busy.has('start') || busy.has('host-start');
+  setDisabled('stop', !offline && status.bridgeRunning !== true && !starting, 'Bridge 未运行');
+  setDisabled('copy', !status.mcpUrl && !status.prompt, '还没有 MCP 地址');
+  setDisabled('reset', offline, '主机未连接');
+  for (const id of ['mode-chat', 'mode-bridge', 'save-access']) setDisabled(id, false);
+}
+document.getElementById('mode-chat').onclick = () => act('mode-chat', {type:'control',workMode:'chat'}, '切换中…', 'access-result');
+document.getElementById('mode-bridge').onclick = () => act('mode-bridge', {type:'control',workMode:'bridge'}, '切换中…', 'access-result');
 document.getElementById('refresh-access').onclick = () => {policyDirty=false;vscode.postMessage({type:'refresh'});};
-document.getElementById('save-access').onclick = () => vscode.postMessage({type:'control',revision:policyRevision,permissions:Object.fromEntries(['read','edit','execute','capture'].map(k=>[k,document.getElementById('access-'+k).checked]))});
+document.getElementById('save-access').onclick = () => act('save-access', {type:'control',revision:policyRevision,permissions:Object.fromEntries(['read','edit','execute','capture'].map(k=>[k,document.getElementById('access-'+k).checked]))}, '保存中…', 'access-result');
 for (const k of ['read','edit','execute','capture']) document.getElementById('access-'+k).onchange = () => {
   policyDirty=true;
   if (!document.getElementById('access-read').checked) document.getElementById('access-edit').checked=false;
@@ -878,9 +1000,9 @@ for (const k of ['read','edit','execute','capture']) document.getElementById('ac
   }
 };
 const CONNECT = '快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。';
-document.getElementById('start').onclick = () => vscode.postMessage({ type:'start', tunnelProvider: document.getElementById('tunnel').value });
-document.getElementById('host-start').onclick = () => vscode.postMessage({ type:'hostStart' });
-document.getElementById('host-stop').onclick = () => vscode.postMessage({ type:'hostStop' });
+document.getElementById('start').onclick = () => act('start', { type:'start', tunnelProvider: document.getElementById('tunnel').value }, '启动中…（等隧道地址）', 'bridge-result');
+document.getElementById('host-start').onclick = () => act('host-start', { type:'hostStart' }, '启动中…', 'host-result');
+document.getElementById('host-stop').onclick = () => act('host-stop', { type:'hostStop' }, '停止中…', 'host-result');
 document.getElementById('host-log').onclick = () => vscode.postMessage({ type:'hostLog' });
 document.getElementById('auto-bridge').onchange = (e) => vscode.postMessage({ type:'autoBridge', value: e.target.checked });
 let tunnelTouched = false;
@@ -888,23 +1010,26 @@ document.getElementById('tunnel').onchange = () => { tunnelTouched = true; };
 const HOST_TEXT = { idle:'未启动', starting:'启动中…（首次需安装依赖）', running:'运行中（由插件启动）', external:'已连接（外部启动，插件不会关闭它）', error:'启动失败' };
 function paintHost(host){
   host = host && typeof host === 'object' ? host : {};
+  lastHost = host;
   const connected = !status.error;
   let text = HOST_TEXT[host.state] || '未知';
   if (host.manual) text = connected ? '已连接（手工设置的主机地址）' : '未连接（手工设置的主机地址）';
   else if (host.state === 'idle' && connected) text = '默认端口上有主机（可能属于其他文件夹）；点【启动】核对并接管，或另起一个';
   document.getElementById('host-state').textContent = text;
-  document.getElementById('host-start').disabled = Boolean(host.manual) || host.state === 'starting' || host.state === 'running' || host.state === 'external';
-  document.getElementById('host-stop').disabled = !(host.owned || host.state === 'starting');
+  setDisabled('host-start', Boolean(host.manual) || host.state === 'starting' || host.state === 'running' || host.state === 'external',
+    host.manual ? '已手工设置主机地址' : host.state === 'starting' ? '正在启动' : '主机已在运行');
+  setDisabled('host-stop', !(host.owned || host.state === 'starting'),
+    host.state === 'external' ? '外部启动的主机，插件不关闭' : '没有插件启动的主机');
   document.getElementById('auto-bridge').checked = host.autoBridge === true;
   document.getElementById('host-hint').textContent = [host.error, host.warning].filter(Boolean).join(' ')
     || (host.manual ? '已手工设置 webagent.agentHostUrl：插件只连接该地址，不自己启动主机。' : '以当前打开的文件夹为工作区启动，不需要 CMD 或浏览器。关闭 VS Code 窗口时，插件启动的主机与隧道会一起停止。');
 }
-document.getElementById('stop').onclick = () => vscode.postMessage({ type:'stop' });
+document.getElementById('stop').onclick = () => act('stop', { type:'stop' }, '停止中…', 'bridge-result');
 document.getElementById('copy').onclick = () => {
   const url = status.prompt || ((status.mcpUrl||'') + '\\n\\n' + CONNECT);
   vscode.postMessage({ type:'copy', text: url });
 };
-document.getElementById('reset').onclick = () => vscode.postMessage({ type:'reset' });
+document.getElementById('reset').onclick = () => act('reset', { type:'reset' }, '重置中…', 'bridge-result');
 function paintTasks(todos){
   const list = Array.isArray(todos) ? todos.filter(t => t && typeof t === 'object').slice(0, 800) : [];
   document.getElementById('tasks').style.display = 'block';
@@ -956,10 +1081,12 @@ function paintLogs(logs){
   }
 }
 window.addEventListener('message', e => {
+  if (e.data?.type === 'actionDone') { finishAction(e.data.actionId, e.data.ok === true, typeof e.data.text === 'string' ? e.data.text.slice(0, 300) : ''); return; }
   if (e.data?.type === 'controlSaved') {policyDirty=false;document.getElementById('access-result').textContent='已由主机应用';return;}
   if (!e.data || e.data.type !== 'status') return;
   status = e.data.status && typeof e.data.status === 'object' ? e.data.status : {};
-  paintHost(e.data.host);
+  lastHost = e.data.host && typeof e.data.host === 'object' ? e.data.host : {};
+  paintButtons();
   if (!tunnelTouched && ['cloudflare','cloudflare-named','ngrok'].includes(status.tunnelProvider)) document.getElementById('tunnel').value = status.tunnelProvider;
   else if (!tunnelTouched && status.tunnelProvider === 'named') document.getElementById('tunnel').value = 'cloudflare-named';
   const ctl = status.executionControl;

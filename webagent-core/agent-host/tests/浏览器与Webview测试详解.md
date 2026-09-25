@@ -76,6 +76,18 @@ paintTasks带HTML样式文本和null：仅一个li、textContent保留尖括号�
 
 反向验证：去掉白名单、查询规则、GET正文限制、并发上限、重复编号检查、dispose标记、状态码检查、客户端取消消息、客户端ok判断，以及requestJson的信号、预取消检查、timeoutMs、rawBody，均变红。去掉路径规范化检查不红：白名单正则锚定且ID字符受限，属冗余防线。
 
+## sidebarFeedback.test.js：侧栏点击反馈与Chat失败原因（R6第一期验收反馈）
+
+[源码](sidebarFeedback.test.js)仿照nativeRotationCommands跑**真实activate**，只替换VS Code、HTTP传输（`requestJson = transport`）与HostManager。**FakeHostManager**的**snapshot**、**start**、**stop**由测试控制（**currentUrl**、**checkSource**、**attachExisting**、**markLost**、**dispose**为无害桩），**workspaceFolders**指向临时目录；**main()**结束后像VS Code停用插件那样dispose全部订阅（否则5秒状态栏定时器让进程不退出）。**clear()**复位通知、请求与假主机状态。
+
+1. **stopHost**命令返回值：启动中未生成进程→cancelled-start；外部主机→external且提示“插件不会关闭它”；无主机→none；Bridge运行中弹模态确认、未选“停止”→declined且未调用stop；确认→stopped；Bridge未运行不弹窗；stop报告未退出→unconfirmed。
+2. 经真实Bridge provider发消息，**done(msg)**/**one(msg)**收集actionDone：每个带actionId的点击恰好回一次；hostStop各结果文字；hostStart按实际状态判定（start抛错时startHost仍显示原因、结果为失败；start抛错但主机已running时为“后续步骤出错”）；Bridge停止成功、请求失败为`失败：停止结果未确认…`且仍弹模态；Bridge启动；重置密钥取消时不发请求、结果“未重置”，确认后“密钥已重置”且文字不含新旧密钥；control为“已由主机应用”；无actionId不回，格式错的actionId整条消息被拒绝、不执行停止。
+3. validWebviewMessage的actionId只接受`a`加1–9位数字字符串。
+4. **toolLineMarkdown**/**toolFailureReason**：成功耗时、无原因的Failed、原样原因、恶意Markdown（强调、链接、`<img>`、反引号、下划线）全部转义且折成一行、对象取message或JSON、超长截断为301字符。
+5. **runPage(html)**以**element(id)**（带**toggle**/**remove**/**contains**的classList、**appendChild**、**replaceChildren**、**querySelector**、**querySelectorAll**）和**node**替身运行生成的页面脚本，**status**推送状态、**click**只点未禁用的按钮。主机卡片：点【启动】发hostStart+a1、按钮变“启动中…”并禁用、带busy样式，强行再点不重发；轮询重绘保持禁用；启动中【停止】可点；未知actionId不影响；actionDone后恢复“启动”、按实际状态禁用并有title原因、结果行文字与失败红色，同一actionId第二次到达不覆盖。Bridge按钮随状态禁用，主机离线时【停止】仍可点、启动/重置/复制禁用；点【启动 Bridge】后主机仍报未运行，【停止】保持可点（含其后的轮询重绘）；结果文字截到300；模式按钮“切换中…”后恢复；CSS里有禁用样式与覆盖禁用的busy样式。侧栏Chat的**failedText**折叠换行与多空格（证明模板字符串里的`\\s`没被吞）、截断，失败工具行显示`search_files   Failed：bad regex`。
+
+反向验证18种变异全部变红（均为断言失败、语法正常）：点击时不重绘其他按钮、【停止】不考虑进行中的启动，以及去掉轮询时的处理中保护、完成后不清处理中、不改按钮文字、删禁用样式、离线时禁用【停止】、不回actionDone、hostStart只看返回值、declined返回undefined、不转义Markdown、模板里写单反斜杠`\s`、去掉actionId校验、原生Chat不带原因、完成后不重绘、unconfirmed当stopped、抛错记为成功、失败不标红。
+
 ## 验证
 
 按monacoLoading、workbenchRuntime、editorRuntime、webviewRuntime分别filter，或全量npm test。真实焦点、浏览器安全策略、CDN、桌面VS Code插件与终端仍应执行人工验收。

@@ -10,7 +10,7 @@
 | [安装与运行器测试详解](安装与运行器测试详解.md) | testRunner、codeServerAuth、extensionCopy、desktopExtension、codeServerNotRunnable、installerPackaging |
 | [文档守卫测试详解](文档守卫测试详解.md) | documentationPolicy、documentationQuality、documentationLearning |
 | [Chat模型与图像测试详解](Chat模型与图像测试详解.md) | runChat、modelLifecycle、chatVision、computerUseScripts |
-| [浏览器与Webview测试详解](浏览器与Webview测试详解.md) | monacoLoading、workbenchRuntime、editorRuntime、webviewRuntime、settingsRelay |
+| [浏览器与Webview测试详解](浏览器与Webview测试详解.md) | monacoLoading、workbenchRuntime、editorRuntime、webviewRuntime、settingsRelay、sidebarFeedback |
 | [存储完整性与预算测试详解](存储完整性与预算测试详解.md) | stateIntegrity、resourceBudget、auditStorage、hostPersist、usageTracker |
 | [PTY与隧道测试详解](PTY与隧道测试详解.md) | ptyJobs、ptyLifecycle、extensionHostSafety、tunnel、tunnelLifecycle、bridgeTunnel |
 | [任务板与事件流测试详解](任务板与事件流测试详解.md) | board、mcpBoard、eventBus |
@@ -78,7 +78,7 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 | 本机控制面、WS、Origin | auditControl、localControl、corsAllow、httpSmoke | 真实入口双端口API门禁、MCP Origin/认证先于解析、预检与WS；代理/跨站浏览器须另测 |
 | PTY审批、取消、归属、捕获 | ptyLifecycle、ptyJobs、desktopExtension | 部分真实子进程+VS Code事件fixture，含扩展对非2xx回包的拒绝；原生终端效果须另测 |
 | 隧道启停 | tunnel、bridgeTunnel、tunnelLifecycle | 解析、API及进程引用fixture；非真实公网隧道 |
-| 原生扩展命令消费 | nativeRotationCommands | 真实activate+VS Code/HTTP替身；非真实IDE或隧道进程退出证明 |
+| 原生扩展命令消费 | nativeRotationCommands、sidebarFeedback | 真实activate+VS Code/HTTP替身（sidebarFeedback另替换HostManager并运行生成的侧栏页面脚本）；非真实IDE或隧道进程退出证明 |
 | 文件编辑、webview、主题、Monaco、无障碍结构 | editorRuntime、webviewRuntime、workbenchRuntime、monacoLoading、workbenchHtml | 真实源码配DOM/Monaco/宿主fixture及静态语义检查；不等同浏览器E2E、屏幕阅读器或手机实测 |
 | 配置、环境、统计、后台 | stateIntegrity、hostPersist、profile、usageTracker、adminHost | 模块与HTTP边界；不代表所有配置事务一致 |
 | 截图 | chatVision、mcpProtocol | 图片路径/大小/内容契约，不证明模型理解画面 |
@@ -237,6 +237,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [searchWorkerLifecycle.test.js](searchWorkerLifecycle.test.js) | 14 个函数/类节点 |
 | [sensitiveBoundary.test.js](sensitiveBoundary.test.js) | 33 个函数/类节点 |
 | [settingsRelay.test.js](settingsRelay.test.js) | 59 个函数/类节点 |
+| [sidebarFeedback.test.js](sidebarFeedback.test.js) | 80 个函数/类节点 |
 | [skillsLifecycle.test.js](skillsLifecycle.test.js) | 19 个函数/类节点 |
 | [skipWorkbench.test.js](skipWorkbench.test.js) | 16 个函数/类节点 |
 | [stateIntegrity.test.js](stateIntegrity.test.js) | 40 个函数/类节点 |

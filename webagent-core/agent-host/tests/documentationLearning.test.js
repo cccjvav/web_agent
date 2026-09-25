@@ -209,6 +209,7 @@ const pairs = [
   ["webagent-core/workbench/js/vscodeRelay.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
   ["webagent-core/extension/apiRelay.js", "webagent-core/extension/入口与Webview详解.md"],
   ["webagent-core/agent-host/tests/settingsRelay.test.js", "webagent-core/agent-host/tests/浏览器与Webview测试详解.md"],
+  ["webagent-core/agent-host/tests/sidebarFeedback.test.js", "webagent-core/agent-host/tests/浏览器与Webview测试详解.md"],
   ["webagent-core/workbench/js/dom.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
   ["webagent-core/workbench/js/tabs.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
   ["webagent-core/workbench/js/monaco.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
