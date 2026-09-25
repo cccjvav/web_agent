@@ -407,6 +407,11 @@
       "group": "使用"
     },
     {
+      "id": "integrated-launch-rework-plan",
+      "path": "docs/development/插件一体化启动返工方案.md",
+      "group": "实现"
+    },
+    {
       "id": "r8-round-acceptance",
       "path": "docs/guides/R8本轮Arena实机验收.md",
       "group": "使用"

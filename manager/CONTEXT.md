@@ -43,7 +43,7 @@
 | 10 上游借鉴与文档整顿 | 进行中，不虚报全队列完成 | [落地与剩余](stages/s10-upstream-adoption.md) |
 
 ## 用户环境与最终验收
-- 用户指定：剩余施工完成后，从Arena实际连接本机WebAgent MCP，选择本项目根；先核对工具/ping/workspace_info的身份/root、Git提交与现有改动，再受控测试。R8结果：[R8实机验收记录](../review/R8实机验收记录-2026-09-24.md)总判定通过（M1–M4覆盖，M5/9.2、7.8双凭据、浏览器回归未执行）；沙箱不能代签。用户下一步选定：插件一体化启动返工方案（先方案后施工）。本轮逐步手册：[R8本轮Arena实机验收](../docs/guides/R8本轮Arena实机验收.md)（用户环境：Windows桌面VS Code＋集成CMD＋Conda＋系统Node，仓库根工作区，Quick Tunnel）。
+- 用户指定：剩余施工完成后，从Arena实际连接本机WebAgent MCP，选择本项目根；先核对工具/ping/workspace_info的身份/root、Git提交与现有改动，再受控测试。R8结果：[R8实机验收记录](../review/R8实机验收记录-2026-09-24.md)总判定通过（M1–M4覆盖，M5/9.2、7.8双凭据、浏览器回归未执行）；沙箱不能代签。用户下一步选定：插件一体化启动返工，[方案稿](../docs/development/插件一体化启动返工方案.md)待用户确认D1–D6，未施工。本轮逐步手册：[R8本轮Arena实机验收](../docs/guides/R8本轮Arena实机验收.md)（用户环境：Windows桌面VS Code＋集成CMD＋Conda＋系统Node，仓库根工作区，Quick Tunnel）。
 - Windows桌面VSCode集成CMD、已有Conda环境、系统Node；不是默认Anaconda Prompt，不新建venv。当前会话没有用户本机MCP/桌面权限，不编造日志。
 - 用户已报告7～10与11.1/11.2完成；11.3于2026-09-16报告完成/关闭，仍属协作说明而非本助手独立验收。
 - 用户已确认刷新后Bridge计数/记录保留；手机Arena浏览器通过MCP链接连接成功（2026-09-16）。不扩大为全部工具、OS/蜂窝或经典手机工作台UI验收，详见人工清单F2。
