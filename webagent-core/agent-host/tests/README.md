@@ -133,7 +133,7 @@ R5第四包新增tunnelCleanupAcl：真实Windows测试专用进程DACL拒绝；
 
 F62独立复审新增三个回归，均在自建临时工作区里跑，不碰用户数据：
 
-- `sensitiveBoundary.test.js`：`.webagentignore`在一次列目录里只被stat而不是被每个候选路径重读；编辑或删除规则文件后下一次检查即刻生效；超过512条模式或64KiB的规则文件按上限截断并标记`truncated`，不静默半截生效。它测的是规则**加载**的代价与上限，不证明匹配语义覆盖了所有秘密文件名。
+- `sensitiveBoundary.test.js`：`.webagentignore`在一次列目录里只被stat而不是被每个候选路径重读；编辑或删除规则文件后下一次检查即刻生效；超过512条模式或64KiB的规则文件按上限截断并标记`truncated`，不静默半截生效。它测的是规则**加载**的代价与上限，不证明匹配语义覆盖了所有秘密文件名。另测规则文件自身不能被文件工具读写删改名，以及Windows保留设备名（Windows分支只在CI真跑）。
 - `textEncoding.test.js`：合法UTF-8（含CJK、emoji、CRLF、BOM，以及正好跨64KiB读块边界的多字节字符）内容与hash不变；非法字节（孤立代理、截断序列、overlong、`F5`）一律`E_ENCODING`且不发hash，覆盖写入时原字节保持不变。它锁定的是"被接受的读取里hash与磁盘字节一一对应"，不是编码探测或转码能力。
 - `commandEncoding.test.js`：命令输出跨管道分块边界必须还原成原文；基线下逐字节输出的中文会变成一串U+FFFD并被模型当作真实结果。同时钉住尾窗口按字符截断、stdout/stderr各自独立解码。
 - `networkBudget.test.js`：GitHub身份与遥测上报的外发请求必须带deadline，打到"永不回话"的端点时以`AbortError`结束且不自行重试；注入传输照样受预算约束；readCache重复记录同一hash不再重写整张表。用进程内传输替身，不发真实网络请求；它证明单次请求一定会结束，不证明端点可达或上报送达。
@@ -165,7 +165,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [commandEncoding.test.js](commandEncoding.test.js) | 8 个函数/类节点 |
 | [computerUseScripts.test.js](computerUseScripts.test.js) | 7 个函数/类节点 |
 | [connectionCheck.test.js](connectionCheck.test.js) | 18 个函数/类节点 |
-| [corsAllow.test.js](corsAllow.test.js) | 20 个函数/类节点 |
+| [corsAllow.test.js](corsAllow.test.js) | 22 个函数/类节点 |
 | [dangerousCommands.test.js](dangerousCommands.test.js) | 12 个函数/类节点 |
 | [desktopExtension.test.js](desktopExtension.test.js) | 0 个函数/类节点 |
 | [diffBudget.test.js](diffBudget.test.js) | 19 个函数/类节点 |
@@ -207,7 +207,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [nativeRequestJson.test.js](nativeRequestJson.test.js) | 28 个函数/类节点 |
 | [nativeRotationCommands.test.js](nativeRotationCommands.test.js) | 58 个函数/类节点 |
 | [networkBudget.test.js](networkBudget.test.js) | 22 个函数/类节点 |
-| [oauth.test.js](oauth.test.js) | 22 个函数/类节点 |
+| [oauth.test.js](oauth.test.js) | 24 个函数/类节点 |
 | [oauthClientAuth.test.js](oauthClientAuth.test.js) | 29 个函数/类节点 |
 | [oauthRateLimit.test.js](oauthRateLimit.test.js) | 15 个函数/类节点 |
 | [oauthSpentRefreshBudget.test.js](oauthSpentRefreshBudget.test.js) | 8 个函数/类节点 |
@@ -235,7 +235,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [runChat.test.js](runChat.test.js) | 30 个函数/类节点 |
 | [sandbox.test.js](sandbox.test.js) | 3 个函数/类节点 |
 | [searchWorkerLifecycle.test.js](searchWorkerLifecycle.test.js) | 14 个函数/类节点 |
-| [sensitiveBoundary.test.js](sensitiveBoundary.test.js) | 15 个函数/类节点 |
+| [sensitiveBoundary.test.js](sensitiveBoundary.test.js) | 33 个函数/类节点 |
 | [skillsLifecycle.test.js](skillsLifecycle.test.js) | 19 个函数/类节点 |
 | [skipWorkbench.test.js](skipWorkbench.test.js) | 16 个函数/类节点 |
 | [stateIntegrity.test.js](stateIntegrity.test.js) | 40 个函数/类节点 |

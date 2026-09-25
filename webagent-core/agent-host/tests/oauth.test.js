@@ -290,6 +290,10 @@ async function main() {
     assert.strictEqual(oauth.verifyAccessToken(config.secretKey).kind, 'secret', 'off: the URL secret still works');
     assert.strictEqual(oauth.issuePairing().code, null, 'off: no pairing code is issued');
     assert.strictEqual(oauth.snapshotPairing().enabled, false);
+    // Model-facing MCP resources must not advertise OAuth as available while it is off.
+    const { readResource } = require('../src/mcp/resources');
+    const resourceText = () => ['webagent://protocol', 'webagent://clients'].map((u) => readResource(u).text).join('\n');
+    assert.match(resourceText(), /OAuth pairing is currently off/, 'off: protocol/clients resources say OAuth is off');
     const offMcp = await request(server, 'POST', '/mcp', {
       body: { jsonrpc: '2.0', id: 5, method: 'ping', params: {} },
       headers: { Authorization: `Bearer ${t1.access_token}` }
@@ -300,6 +304,14 @@ async function main() {
     assert.strictEqual(oauth.verifyAccessToken(t1.access_token), null, 're-enabling must not revive a token revoked by turning off');
     assert.throws(() => oauth.handleToken({ grant_type: 'refresh_token', refresh_token: t1.refresh_token, client_id: t1.clientId }),
       're-enabling must not revive the refresh token either');
+    assert.doesNotMatch(resourceText(), /currently off/, 'on: resources drop the off notice');
+    // Observable contract for an off->on flip with no request in between: the old token must not
+    // survive. Today two paths revoke here (setOauthEnabled's explicit revokeAll, and the lazy revoke
+    // its own snapshotPairing() triggers), so removing either one alone is not caught; removing both is.
+    const tFlip = freshTokens();
+    oauth.setOauthEnabled(false);
+    oauth.setOauthEnabled(true);
+    assert.strictEqual(oauth.verifyAccessToken(tFlip.access_token), null, 'an immediate off/on flip must not keep the old token');
     const t2 = freshTokens();
     assert.ok(oauth.verifyAccessToken(t2.access_token));
     const store = require('../src/models/store');

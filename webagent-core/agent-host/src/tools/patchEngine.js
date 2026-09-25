@@ -187,6 +187,16 @@ function assertNoShortNameAlias(root, resolved) {
   }
 }
 
+// Win32 reserved device names (learn.microsoft.com "Naming Files, Paths, and Namespaces"): CON, PRN,
+// AUX, NUL, COM0-9, LPT0-9 (incl. superscript 1-3), plus CONIN$/CONOUT$. "NUL.txt"/"nul.tar.gz" are
+// treated the same way. Such a path never names an ordinary workspace file: through Win32 path parsing
+// it reaches the device ("NUL" swallows a write that reports success, "CON" can block a read); through
+// a \\?\ namespaced path it creates a file most Windows tools cannot open or delete. Windows only.
+const WINDOWS_RESERVED_NAME = /^(?:con|prn|aux|nul|com[0-9\u00b9\u00b2\u00b3]|lpt[0-9\u00b9\u00b2\u00b3]|conin\$|conout\$)(?:\..*)?$/i;
+function isWindowsReservedName(part) {
+  return WINDOWS_RESERVED_NAME.test(String(part || ''));
+}
+
 function resolveSafePath(relPath) {
   if (looksLikeUncOrDrive(relPath)) {
     throw new Error(`Security error: path "${relPath}" is outside workspace root.`);
@@ -196,6 +206,9 @@ function resolveSafePath(relPath) {
   if (process.platform === 'win32' && incoming.split(path.sep).some(part =>
     part !== '.' && part !== '..' && (part.includes(':') || /[. ]$/.test(part)))) {
     throw new ProtocolError('E_BAD_ARGS', 'Ambiguous Windows path component.');
+  }
+  if (process.platform === 'win32' && incoming.split(path.sep).some(isWindowsReservedName)) {
+    throw new ProtocolError('E_BAD_ARGS', 'Windows reserved device name in path (CON, PRN, AUX, NUL, COM*, LPT*).');
   }
   const resolved = path.resolve(root, incoming);
   const rel = path.relative(root, resolved);
@@ -597,6 +610,7 @@ module.exports = {
   atomicWriteText,
   tempSibling,
   resolveSafePath,
+  isWindowsReservedName,
   isInsideWorkspace,
   toPosixRel,
   detectEol,

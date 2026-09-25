@@ -5,6 +5,7 @@
 接手先读本索引和[项目约定](agents.md)，再按需读[阶段10的工作包与交接](stages/s10-upstream-adoption.md#当前工作包与交接约束)。不另建路线图或根交接文件。
 
 ## 当前状态
+- **F76（2026-09-25，本会话）：** 开头复审F75补两处漏改（MCP资源与启动日志仍按OAuth可用描述），查明两道“未单独抓到”的防线是冗余防线并锁住可观察行为；处理第74组三个非OAuth低危项：跨站GET按`Sec-Fetch-Site`拒绝、Windows保留设备名拒绝、`.webagentignore`列入内置敏感模式。Windows分支只由CI验证。详见[第76组](stages/s10-upstream-adoption.md#第76组f75开头复审与第74组三个低危项2026-09-25)。
 - **F75 OAuth默认关闭（2026-09-25，本会话）：** 用户选方案B：`bridge.oauthEnabled`缺省false，关闭时OAuth全部路由404、令牌失效、401不再引导OAuth，URL密钥（Arena）不受影响；工作台BRIDGE区可开关。复审修正一处自己引入的回归（config.json损坏时URL密钥变500）。复审可延后但须登记到[延后复审清单](stages/s10-upstream-adoption.md#延后复审清单)。详见[第75组](stages/s10-upstream-adoption.md#第75组oauth配对改为默认关闭2026-09-25)。
 - **F74 安全审计（2026-09-25，本会话）：** 用户要求每轮交付前自我复审（已写入agents.md）并按判断审计早期实现。审远程面（MCP认证、OAuth、权限门控、文件工具边界）与本机`/api`防护，修两处中等问题：Windows 8.3短名可绕过敏感文件规则（Windows CI基线`27511d7`证实，`f8ffd03`修复）；改名`.webagent`等祖先目录可让带目录的规则失效。均在关闭Execute时才是真实越权（默认全开时shell本可读）。低危记录不修与未审范围见[第74组](stages/s10-upstream-adoption.md#第74组远程暴露面与本机api的安全审计2026-09-25)。
 - **F73 / R6第一期（本会话）：** 插件一键启动主机：侧栏“主机”卡片【启动】后台运行`launch.js host <文件夹>`（不开3000），先接管同一文件夹已有主机（run-webagent.cmd启动的不会被插件关闭）；stdin生命线＋父PID轮询让主机随VS Code退出并先停隧道；`host.json`记录仓库与提交（修R8偏差c）。新增hostLaunch真实主机测试，本地113/113。自查修正5处未提交缺陷（探测字段、取消误判、早期停止无效、未await、静默换端口）。**用户追问后第二轮完整复审**又修正：启动变量（生命线与SKIP_WORKBENCH）泄漏给Agent命令（严重；修后经插件主机start_command跑整套测试113/113）、测试失败挂起、测试假主机被外部强杀后成孤儿、卡片与连接不一致、换文件夹产生孤儿主机、手册一处与代码不符。待用户实机；残余风险见[第73组](stages/s10-upstream-adoption.md#第73组r6第一期插件一键启动主机2026-09-25会话01a0d084)。

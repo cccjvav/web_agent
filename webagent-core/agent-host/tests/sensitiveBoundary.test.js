@@ -93,6 +93,72 @@ async function windowsShortNameAliases() {
   console.log(`sensitiveBoundary: 8.3 alias cases ran (${sd}, ${sf}, ${sc})`);
 }
 
+// The custom rule file is operator-owned: file tools must not read, overwrite, delete or rename onto
+// or away from it, in any letter case, and a "!" rule inside it cannot unprotect it. Some of these
+// tools throw synchronously on a denied path, so every rejection is wrapped in an async function.
+async function ruleFileIsProtected() {
+  const rules = path.join(tmp, '.webagentignore');
+  fs.writeFileSync(rules, 'private-notes.txt\n!.webagentignore\n');
+  fs.writeFileSync(path.join(tmp, 'private-notes.txt'), 'CUSTOM_RULE_FAKE_SECRET\n');
+  sensitive.resetCustomPatternCache();
+  assert.throws(() => fileOps.readFile({ filePath: 'private-notes.txt' }), /ACCESS_DENIED_SENSITIVE_FILE/, 'positive control: the custom rule is active');
+  assert.throws(() => fileOps.readFile({ filePath: '.webagentignore' }), /ACCESS_DENIED_SENSITIVE_FILE/, 'read of the rule file is denied');
+  assert.throws(() => fileOps.readFile({ filePath: '.WebAgentIgnore' }), /ACCESS_DENIED_SENSITIVE_FILE/, 'case variants are denied');
+  await assert.rejects(async () => fileOps.writeFile({ filePath: '.webagentignore', content: '\n', confirmOverwrite: true }), /ACCESS_DENIED_SENSITIVE_FILE/, 'overwrite denied');
+  fs.writeFileSync(path.join(tmp, 'decoy.txt'), '\n');
+  await assert.rejects(async () => fileOps.renameFile({ from: 'decoy.txt', to: '.webagentignore' }), /ACCESS_DENIED_SENSITIVE_FILE/, 'rename onto the rule file denied');
+  await assert.rejects(async () => fileOps.renameFile({ from: '.webagentignore', to: 'gone.txt' }), /ACCESS_DENIED_SENSITIVE_FILE/, 'rename away denied');
+  await assert.rejects(async () => fileOps.deleteFile({ filePath: '.webagentignore', confirm: true }), /ACCESS_DENIED_SENSITIVE_FILE/, 'delete denied even with confirm=true');
+  assert.ok(!fileOps.listDir({ dirPath: '.' }).items.some((i) => i.name.toLowerCase() === '.webagentignore'), 'hidden from list_dir');
+  assert.strictEqual(fs.readFileSync(rules, 'utf8'), 'private-notes.txt\n!.webagentignore\n', 'rule file untouched');
+  assert.throws(() => fileOps.readFile({ filePath: 'private-notes.txt' }), /ACCESS_DENIED_SENSITIVE_FILE/, 'custom rule still active afterwards');
+  for (const f of ['.webagentignore', 'private-notes.txt', 'decoy.txt']) fs.rmSync(path.join(tmp, f), { force: true });
+  sensitive.resetCustomPatternCache();
+}
+
+// Windows reserved device names never name an ordinary workspace file (they reach the device, or
+// create an entry Windows tools cannot handle). Refused on Windows only; elsewhere they are ordinary.
+async function windowsReservedNames() {
+  const { isWindowsReservedName } = require('../src/tools/patchEngine');
+  for (const name of ['NUL', 'nul', 'con.txt', 'COM1', 'com\u00b9', 'LPT9.log', 'nul.tar.gz', 'CONIN$', 'aux', 'prn.md']) {
+    assert.strictEqual(isWindowsReservedName(name), true, `${name} is reserved`);
+  }
+  for (const name of ['console.log', 'nullable', 'com10', 'lpt', 'CONFIG', 'nul_', 'x.nul', 'CON1', '']) {
+    assert.strictEqual(isWindowsReservedName(name), false, `${name} is an ordinary name`);
+  }
+  if (process.platform !== 'win32') {
+    const w = await fileOps.writeFile({ filePath: 'nul.txt', content: 'ordinary\n' });
+    assert.ok(w && fs.readFileSync(path.join(tmp, 'nul.txt'), 'utf8') === 'ordinary\n', 'non-Windows: nul.txt is an ordinary file');
+    fs.rmSync(path.join(tmp, 'nul.txt'), { force: true });
+    console.log('sensitiveBoundary: reserved-device cases need Windows; predicate only on ' + process.platform);
+    return;
+  }
+  // Observation only (not asserted): depending on how the path reaches Win32, a raw write to "NUL"
+  // either goes to the device (no entry, nothing stored) or -- via a \\?\ namespaced path -- creates
+  // a file most Windows tools cannot open or delete. Either outcome is what the gate prevents; the CI
+  // log records which one this runner showed.
+  let rawOutcome = 'threw';
+  try {
+    fs.writeFileSync(path.join(tmp, 'NUL'), 'swallowed');
+    rawOutcome = fs.readdirSync(tmp).some((n) => n.toLowerCase() === 'nul') ? 'created a literal NUL entry' : 'went to the device (no entry)';
+  } catch (e) { rawOutcome = 'threw ' + (e && e.code); }
+  console.log('sensitiveBoundary: raw fs write to NUL ' + rawOutcome);
+  try { fs.rmSync(path.join(tmp, 'NUL'), { force: true }); } catch (_) { /* device or already gone */ }
+  for (const rel of ['NUL', 'sub/con.txt', 'COM1', 'nul.tar.gz']) {
+    await assert.rejects(async () => fileOps.writeFile({ filePath: rel, content: 'x\n' }), (e) => e && e.code === 'E_BAD_ARGS' && /reserved device/.test(e.message),
+      `write_file ${rel} must be refused`);
+  }
+  assert.throws(() => fileOps.readFile({ filePath: 'nul' }), (e) => e && e.code === 'E_BAD_ARGS', 'read_file nul must be refused, not return empty content');
+  // The pre-existing ambiguity rules (alternate data stream, trailing dot) were untested until now.
+  for (const rel of ['ads.txt:hidden', 'trail.']) {
+    await assert.rejects(async () => fileOps.writeFile({ filePath: rel, content: 'x\n' }), (e) => e && e.code === 'E_BAD_ARGS', `write_file ${rel} must be refused`);
+  }
+  await fileOps.writeFile({ filePath: 'console.log', content: 'ok\n' });
+  assert.strictEqual(fs.readFileSync(path.join(tmp, 'console.log'), 'utf8'), 'ok\n', 'ordinary look-alike names keep working');
+  fs.rmSync(path.join(tmp, 'console.log'), { force: true });
+  console.log('sensitiveBoundary: reserved-device cases ran on win32');
+}
+
 // Renaming an ancestor must not move a protected file out from under a path-shaped rule
 // (".webagent/config.json", or a custom "private/*"): the directory name itself is not sensitive.
 async function renameCannotUnprotect() {
@@ -267,6 +333,8 @@ function run() {
   try {
     run();
     await windowsShortNameAliases();
+    await windowsReservedNames();
+    await ruleFileIsProtected();
     await renameCannotUnprotect();
     console.log('sensitiveBoundary.test.js ok');
   } finally {

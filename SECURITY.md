@@ -13,7 +13,7 @@
 
 ## 本机控制面与文件工具
 
-`/api`要求Host为localhost、127.0.0.1或[::1]（可带有效端口），且socket回环、无隧道特征头；非本机Origin或无Origin时可解析的外站Referer被拒绝；两者缺失或Referer不可解析时仍允许本机CLI路径，不是严格同源登录机制。`/ws`在upgrade阶段也验证本机控制面和Origin；无Origin的本机Node客户端仍允许。`WEBAGENT_CORS_ORIGINS`只扩展MCP网页白名单，不能放开API或WS。
+`/api`要求Host为localhost、127.0.0.1或[::1]（可带有效端口），且socket回环、无隧道特征头；非本机Origin被拒绝；无Origin时浏览器标记的`Sec-Fetch-Site: cross-site`（外站页面可以同时去掉Origin和Referer，但去不掉这个头）或可解析的外站Referer被拒绝；三者都缺失（Node/CLI客户端、旧浏览器）或Referer不可解析时仍允许本机CLI路径，不是严格同源登录机制。`/ws`在upgrade阶段也验证本机控制面和Origin；无Origin的本机Node客户端仍允许。`WEBAGENT_CORS_ORIGINS`只扩展MCP网页白名单，不能放开API或WS。
 
 文件路径检查同时验证逻辑路径和真实链接目标；内置敏感规则不区分大小写并覆盖嵌套目录。记忆day仅接收有效日历日期；用户Skill必须实际位于工作区内，产品固定bundled目录例外保留。这是应用层保护，不是OS沙箱，不承诺抵抗有本机文件系统写权限进程的所有竞态或硬链接操作。
 
@@ -59,7 +59,7 @@ Named/ngrok的tunnel_log在进入事件总线前，对stdout/stderr各自进行�
 
 MCP 密钥和模型 API Key 写在工作区 `.webagent/config.json`（尽量 `chmod 0600`，并 gitignore）。不是系统钥匙串，也不搬到 `%APPDATA%`（密钥跟着这台「车」）。非 Git 场景（打包、备份、网盘同步、把工作区目录整个拷走）仍可能带上明文 Key。GitHub PAT 不会写入该文件。
 
-敏感路径拦截（`.env`、`*.pem`、`.ssh/`、`.webagent/config.json`等）作用于受控文件/搜索/只读Git等路径，不约束任意命令。`read_files ".env"` 会被拒；`run_command "cat .env"` 可以读出内容。
+敏感路径拦截（`.env`、`*.pem`、`.ssh/`、`.webagent/config.json`、自定义规则文件`.webagentignore`本身等）作用于受控文件/搜索/只读Git等路径，不约束任意命令。`read_files ".env"` 会被拒；`run_command "cat .env"` 可以读出内容。
 
 工作台 `GET /api/status` **仍带** `secretKey`：本机拼 MCP 地址要用，且`/api`限制回环socket＋明确本机Host＋如有Origin则要求本机HTTP(S)来源（允许本机不同端口，无Origin的CLI路径仍可用，不是严格同源）。不另开 `/api/bridge/secret`。
 

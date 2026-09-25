@@ -85,6 +85,23 @@ function fakeRes() {
   assert.strictEqual(nextCalled, true);
 }
 
+// A cross-site page can drop Origin and Referer (plain GET + referrerpolicy=no-referrer) but not
+// Sec-Fetch-Site. Before this check such a GET reached e.g. /api/pty/jobs and marked a PTY client live.
+for (const [site, allowed] of [['cross-site', false], ['CROSS-SITE', false], ['same-site', true], ['same-origin', true], ['none', true]]) {
+  let nextCalled = false;
+  const res = fakeRes();
+  rejectCrossSiteApi({ headers: { 'sec-fetch-site': site } }, res, () => { nextCalled = true; });
+  assert.strictEqual(nextCalled, allowed, `Sec-Fetch-Site ${site} without Origin/Referer`);
+  if (!allowed) assert.strictEqual(res.statusCode, 404);
+}
+{
+  // A loopback Origin keeps its existing meaning even when the browser labels it cross-site
+  // (localhost vs 127.0.0.1 are different sites).
+  let nextCalled = false;
+  rejectCrossSiteApi({ headers: { origin: 'http://localhost:5173', 'sec-fetch-site': 'cross-site' } }, fakeRes(), () => { nextCalled = true; });
+  assert.strictEqual(nextCalled, true);
+}
+
 {
   let nextCalled = false;
   const res = fakeRes();

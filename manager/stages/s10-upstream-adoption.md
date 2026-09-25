@@ -1706,6 +1706,22 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **残余与未做：** 开启OAuth后第74组的三个OAuth低危项仍成立；插件（VS Code扩展）尚无OAuth开关，只能在经典工作台切换，第二期设置面板若纳入需另做；不影响已有的Arena连接，但依赖OAuth的第三方客户端（若有人用过）升级后需要先手动开启并重新配对。
 
+### 第76组：F75开头复审与第74组三个低危项（2026-09-25）
+
+**开头复审（F75）：** 按调用方全仓grep `oauth|pairing`，找到两处漏改：模型可读的MCP资源`webagent://protocol`与`webagent://clients`仍说“OAuth客户端注册授权后即可用/mcp”（不提默认关闭），启动日志仍写“公网收OAuth发现文档”。资源文本改为随`oauth.oauthEnabled()`变化，日志改为“OAuth配对默认关闭，开启后另收”。F75交付时记为“未被单独抓到”的两道防线查明原因：`setOauthEnabled(false)`与`issuePairing`返回前都调用`snapshotPairing`，其中的`oauthEnabled`看到关闭即清空全部OAuth状态，所以两者是冗余防线；新增“关→立即开”断言锁住可观察行为，两条清空路径同时去掉时变红（单独去掉任一不红，已写进测试注释与详解）。
+
+**第74组低危项（延后清单第2行后三项）：**
+
+| 项 | 修法 | 证据 |
+|---|---|---|
+| 跨站GET可到达`/api`（`GET /pty/jobs`可把PTY客户端标为在线） | `rejectCrossSiteApi`在无Origin分支拒绝`Sec-Fetch-Site: cross-site`（浏览器总会发送，脚本无法伪造或删除）；same-site/same-origin/none与不带该头的Node/CLI（扩展）不受影响；带本机Origin的请求维持原规则（localhost与127.0.0.1互为cross-site） | corsAllow单元断言，去掉检查即红；真实主机curl：无头200、cross-site 404、same-site/none 200 |
+| Windows设备名 | 新增`isWindowsReservedName`，`resolveSafePath`在win32拒绝CON/PRN/AUX/NUL/COM0-9/LPT0-9（含¹²³）/CONIN$/CONOUT$及带扩展名形式，E_BAD_ARGS；非Windows照常 | 判断函数正反例在所有平台跑；Windows分支（含此前**无测试**的冒号/结尾点规则）只在CI Windows任务跑。原始fs写`NUL`的实际结果（到达设备还是经`\\?\`路径创建字面文件）不确定，测试只记录不断言，见CI日志 |
+| `.webagentignore`可被模型改写 | 加入内置`SENSITIVE_PATTERNS`，继承大小写、8.3短名、改名祖先等既有加固；内置模式不能被`!`取消。代价：文件工具读不到它，操作者在编辑器里直接改（使用指南/SECURITY已写明）；命令仍可改它，与其它敏感文件同一前提 | 逐条反向核对：去掉内置模式后读、写、移出、带confirm删除、列目录都会成功；自审发现删除断言原本被“缺confirm”挡住而非保护，已改为带`confirm:true`；真实主机经MCP URL密钥read_files被E_FORBIDDEN |
+
+**自审纠正：** ①首版把“原始写NUL必到达设备”写成断言与源码注释，但Node在Windows对绝对路径使用`\\?\`命名空间，结果可能是创建字面文件，改为只记录；②一次反向验证的变异把`else if`留成悬空导致SyntaxError，被误读为“已变红”，重做为语义等价变异；③测试里“同步抛错需包async”的注释未真正写入（替换片段范围不含该行且未断言），已补。
+
+**残余与未做：** Sec-Fetch-Site对不发该头的旧浏览器无效；Windows设备名的真实效果以CI为准，无本机实测；`.webagentignore`对有Execute的模型仍只是约定。第74组未审范围（延后清单第1行）本组未处理。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。
@@ -1713,5 +1729,5 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 | 登记 | 来源 | 待复审内容 | 状态 |
 |---|---|---|---|
 | 2026-09-25 | 第74组审计未审范围 | `mcp/session.js`；`api/routes.js`的POST路由逐项；`executor.js`/`dangerous.js`检测器；`patchEngine`补丁应用；`editorUndo`/`fileCheckpoints`恢复路径；`skills.safeSkillFile`；`findFiles`；外部MCP客户端（`externalClient`/`stdioLaunch`）；admin-host | 待处理 |
-| 2026-09-25 | 第74组记录不修的低危项 | OAuth限流全体共享（无trust proxy）；授权页不显示客户端/回调主机；`/oauth/revoke`无限流；`GET /pty/jobs`副作用；Windows设备名；`.webagentignore`可被Edit改写 | 用户选方案B（第75组）：前三项属于OAuth，默认关闭后不再暴露，**只在用户开启OAuth时**仍然成立，留待真要接OAuth客户端时再修；后三项待处理 |
+| 2026-09-25 | 第74组记录不修的低危项 | OAuth限流全体共享（无trust proxy）；授权页不显示客户端/回调主机；`/oauth/revoke`无限流；`GET /pty/jobs`副作用；Windows设备名；`.webagentignore`可被Edit改写 | 用户选方案B（第75组）：前三项属于OAuth，默认关闭后不再暴露，**只在用户开启OAuth时**仍然成立，留待真要接OAuth客户端时再修；后三项已于第76组处理（跨站GET按Sec-Fetch-Site拒绝、Windows设备名拒绝、规则文件列入内置敏感模式），结论与证据见第76组 |
 | 2026-09-25 | 第74组测试 | 完整测试首跑1次失败未保留输出，之后6轮未复现 | 待再观察 |

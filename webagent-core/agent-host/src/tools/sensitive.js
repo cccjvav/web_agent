@@ -28,7 +28,10 @@ const SENSITIVE_PATTERNS = [
   'credentials.json',
   'service-account*.json',
   'secrets.json',
-  '.webagent/config.json'
+  '.webagent/config.json',
+  // The operator's custom rule file is itself protected: a model with Edit could otherwise rewrite or
+  // delete it and switch the custom rules off. Built-in patterns cannot be negated by "!" rules.
+  '.webagentignore'
 ];
 
 const SENSITIVE_EXCEPTIONS = ['.env.example', '.env.sample', '.env.template'];

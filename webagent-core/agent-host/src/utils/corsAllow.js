@@ -87,6 +87,15 @@ function rejectCrossSiteApi(req, res, next) {
     if (isAllowedApiBrowserOrigin(origin)) return next();
     return res.status(404).json({ error: 'not found' });
   }
+  // A cross-site page can omit both Origin (plain GET, img/script/link navigation) and Referer
+  // (referrerpolicy=no-referrer), but browsers always send Sec-Fetch-Site and scripts cannot forge or
+  // drop it. Only "cross-site" is refused: same-origin/none (address bar) and same-site (another
+  // loopback port) keep working, and Node/CLI clients (the VS Code extension) never send it. Checked
+  // only when Origin is absent so a loopback Origin keeps its existing meaning.
+  const fetchSite = String((req && req.headers && req.headers['sec-fetch-site']) || '').trim().toLowerCase();
+  if (fetchSite === 'cross-site') {
+    return res.status(404).json({ error: 'not found' });
+  }
   const ref = refererOrigin(req);
   if (ref && !isLoopbackOrigin(ref)) {
     return res.status(404).json({ error: 'not found' });

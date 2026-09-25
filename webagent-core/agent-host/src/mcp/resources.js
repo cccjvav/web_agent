@@ -11,6 +11,7 @@ const { getInstructions } = require('./instructions');
 const { listClients } = require('./clients');
 const { ProtocolError } = require('./errors');
 const control = require('../utils/executionControl');
+const oauth = require('./oauth');
 
 const RESOURCE_DEFS = [
   { uri: 'webagent://instructions', name: 'Instructions', mimeType: 'text/markdown', description: 'Full server + workspace instructions (same payload as initialize.instructions).' },
@@ -45,7 +46,7 @@ function readResource(uri, options = {}) {
         text: [
           '# Web Agent MCP',
           '',
-          '- Transport: Streamable HTTP JSON-RPC 2.0. Paste-URL clients use `/mcp/<secret>`; OAuth clients use `/mcp` + Bearer.',
+          `- Transport: Streamable HTTP JSON-RPC 2.0. Paste-URL clients use \`/mcp/<secret>\`; OAuth clients use \`/mcp\` + Bearer${oauth.oauthEnabled() ? '' : ' (OAuth pairing is currently off on this host; only the operator can enable it locally)'}.`,
           '- initialize → notifications/initialized → workspace_info → tools/list → tools/call; retain Mcp-Session-Id and the negotiated MCP-Protocol-Version.',
           '- workspace resource task state requires an initialized session and reflects only that peer; use get_logs for caller-scoped execution logs.',
           '- resources: webagent://protocol|capabilities|config|workspace|memory|profile|clients',
@@ -109,7 +110,7 @@ function readResource(uri, options = {}) {
       const text = [
         '# Connecting web agents',
         '',
-        'This host is not ChatGPT-only. Compatible OAuth clients can use canonical /mcp after registration and authorization; vendor versions, menus and subscription availability require separate verification. Pasting a URL into ordinary chat is not connection setup or authorization.',
+        `This host is not ChatGPT-only. Compatible OAuth clients can use canonical /mcp after registration and authorization${oauth.oauthEnabled() ? '' : ' once the operator enables OAuth pairing locally (it is currently off; URL-secret clients do not need it)'}; vendor versions, menus and subscription availability require separate verification. Pasting a URL into ordinary chat is not connection setup or authorization.`,
         '',
         ...rows.map((c) => `- **${c.name}**: ${c.summary} (Plus=${c.needsPlus === true ? 'yes' : c.needsPlus === false ? 'no' : 'unknown'}, tunnel=${c.needsTunnel === true ? 'yes' : c.needsTunnel === false ? 'no' : 'unknown'})`)
       ].join('\n');

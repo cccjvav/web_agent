@@ -44,7 +44,7 @@ EXTENSION_PROTOCOLS列chrome/moz/safari扩展协议，PAGE_ORIGINS列当前维�
 
 ## 3. 三个中间件/工厂
 
-**rejectCrossSiteApi(req,res,next)**：Origin有值时只按API来源检查，拒绝404；无Origin才读Referer，非空且非本机拒绝，否则next。不能独立部署它替代本机控制面，非浏览器无头请求本来允许继续。
+**rejectCrossSiteApi(req,res,next)**：Origin有值时只按API来源检查，拒绝404；无Origin时先看`Sec-Fetch-Site`：值为cross-site（大小写不敏感）拒绝404——外站页面可用普通GET加`referrerpolicy=no-referrer`同时去掉Origin与Referer，但浏览器总带这个头且脚本无法伪造/删除（2026-09-25，第74组记录的`GET /pty/jobs`可被外站标记PTY客户端在线）；same-site（本机另一端口）、same-origin、none（地址栏）放行。只在无Origin分支检查，带本机Origin的请求即使被浏览器标为cross-site（localhost与127.0.0.1是不同站点）仍按原规则放行。再读Referer，非空且非本机拒绝，否则next。旧浏览器不发该头时仍按原规则。不能独立部署它替代本机控制面，非浏览器无头请求本来允许继续。
 
 **mcpCors()**：返回cors包中间件，内部origin(origin,cb)回调以 `cb(null,isAllowedMcpOrigin(origin))`决定CORS头。仅显式暴露响应头`Mcp-Session-Id`和`WWW-Authenticate`，让已允许的浏览器来源能够读取会话ID及401认证挑战；没有暴露全部响应头、开放任意Origin或免除token验证。**仅不发CORS允许头不等于业务没有执行**，所以还有下一层硬拒绝。
 

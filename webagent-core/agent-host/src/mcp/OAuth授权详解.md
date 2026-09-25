@@ -22,7 +22,7 @@
 
 **setOauthEnabled(enabled)**只接受严格的`true`为开启，写入store；关闭时立即revokeAll，开启且Bridge正在运行时ensurePairing；返回snapshotPairing。本机入口是`POST /api/bridge/oauth`。
 
-关闭时的行为：router开头的中间件对全部OAuth路由`next('router')`，请求落到应用的404；`verifyAccessToken`在URL密钥比较之后对OAuth令牌返回null；`wwwAuthenticate`只返回`Bearer realm="Web Agent"`，不再给出resource_metadata；`issuePairing`不生成配对码；`snapshotPairing`带`enabled:false`且code为null。URL密钥与Bearer形式的URL密钥始终不受影响。
+关闭时的行为：router开头的中间件对全部OAuth路由`next('router')`，请求落到应用的404；`verifyAccessToken`在URL密钥比较之后对OAuth令牌返回null；`wwwAuthenticate`只返回`Bearer realm="Web Agent"`，不再给出resource_metadata；`issuePairing`不生成配对码；`snapshotPairing`带`enabled:false`且code为null；模型可读的MCP资源`webagent://protocol`与`webagent://clients`注明OAuth当前关闭。URL密钥与Bearer形式的URL密钥始终不受影响。
 
 ## 1. 时间、随机数与地址函数
 
