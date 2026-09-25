@@ -4691,14 +4691,18 @@
 
 ## webagent-core/agent-host/tests/sensitiveBoundary.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `20899f6aa120fe13170b9641e8c582ee894e03f0c6b7cf51cdee2b3d09258296`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `b00831a054d3ef16736caefa7726d8d3b81929492dcaf044b9f3284ab19d03a7`
 
 - `countIgnoreReads` — FunctionDeclaration，[L21–L40](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L21-L40)
 - `countIgnoreReads/anonymous@26:20` — FunctionExpression，[L26–L29](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L26-L29)
 - `countIgnoreReads/anonymous@30:18` — FunctionExpression，[L30–L33](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L30-L33)
-- `run` — FunctionDeclaration，[L42–L176](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L42-L176)
-- `run/anonymous@75:33` — ArrowFunctionExpression，[L75–L79](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L75-L79)
-- `run/git` — ArrowFunctionExpression，[L114–L114](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L114-L114)
+- `shortNameOf` — FunctionDeclaration，[L45–L50](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L45-L50)
+- `windowsShortNameAliases` — FunctionDeclaration，[L52–L94](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L52-L94)
+- `windowsShortNameAliases/anonymous@71:16` — ArrowFunctionExpression，[L71–L71](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L71-L71)
+- `windowsShortNameAliases/anonymous@82:60` — ArrowFunctionExpression，[L82–L82](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L82-L82)
+- `run` — FunctionDeclaration，[L96–L232](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L96-L232)
+- `run/anonymous@129:33` — ArrowFunctionExpression，[L129–L133](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L129-L133)
+- `run/git` — ArrowFunctionExpression，[L168–L168](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L168-L168)
 
 ## webagent-core/agent-host/tests/skillsLifecycle.test.js
 

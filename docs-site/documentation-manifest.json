@@ -36092,8 +36092,8 @@
     {
       "path": "webagent-core/agent-host/tests/sensitiveBoundary.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "20899f6aa120fe13170b9641e8c582ee894e03f0c6b7cf51cdee2b3d09258296",
-      "lineCount": 183,
+      "sha256": "b00831a054d3ef16736caefa7726d8d3b81929492dcaf044b9f3284ab19d03a7",
+      "lineCount": 239,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -36129,27 +36129,63 @@
           ]
         },
         {
-          "id": "run",
-          "name": "run",
+          "id": "shortNameOf",
+          "name": "shortNameOf",
           "kind": "FunctionDeclaration",
-          "startLine": 42,
-          "endLine": 176,
+          "startLine": 45,
+          "endLine": 50,
+          "parameters": [
+            "fullPath"
+          ]
+        },
+        {
+          "id": "windowsShortNameAliases",
+          "name": "windowsShortNameAliases",
+          "kind": "FunctionDeclaration",
+          "startLine": 52,
+          "endLine": 94,
           "parameters": []
         },
         {
-          "id": "run/anonymous@75:33",
-          "name": "anonymous@75:33",
+          "id": "windowsShortNameAliases/anonymous@71:16",
+          "name": "anonymous@71:16",
           "kind": "ArrowFunctionExpression",
-          "startLine": 75,
-          "endLine": 79,
+          "startLine": 71,
+          "endLine": 71,
+          "parameters": []
+        },
+        {
+          "id": "windowsShortNameAliases/anonymous@82:60",
+          "name": "anonymous@82:60",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 82,
+          "endLine": 82,
+          "parameters": [
+            "i"
+          ]
+        },
+        {
+          "id": "run",
+          "name": "run",
+          "kind": "FunctionDeclaration",
+          "startLine": 96,
+          "endLine": 232,
+          "parameters": []
+        },
+        {
+          "id": "run/anonymous@129:33",
+          "name": "anonymous@129:33",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 129,
+          "endLine": 133,
           "parameters": []
         },
         {
           "id": "run/git",
           "name": "git",
           "kind": "ArrowFunctionExpression",
-          "startLine": 114,
-          "endLine": 114,
+          "startLine": 168,
+          "endLine": 168,
           "parameters": [
             "...args"
           ]

@@ -235,7 +235,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [runChat.test.js](runChat.test.js) | 30 个函数/类节点 |
 | [sandbox.test.js](sandbox.test.js) | 3 个函数/类节点 |
 | [searchWorkerLifecycle.test.js](searchWorkerLifecycle.test.js) | 14 个函数/类节点 |
-| [sensitiveBoundary.test.js](sensitiveBoundary.test.js) | 6 个函数/类节点 |
+| [sensitiveBoundary.test.js](sensitiveBoundary.test.js) | 10 个函数/类节点 |
 | [skillsLifecycle.test.js](skillsLifecycle.test.js) | 19 个函数/类节点 |
 | [skipWorkbench.test.js](skipWorkbench.test.js) | 16 个函数/类节点 |
 | [stateIntegrity.test.js](stateIntegrity.test.js) | 40 个函数/类节点 |

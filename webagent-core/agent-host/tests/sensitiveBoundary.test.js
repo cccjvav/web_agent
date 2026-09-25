@@ -39,6 +39,60 @@ function countIgnoreReads(fn) {
   }
 }
 
+// Windows 8.3 short names are a second spelling of an existing file (".webagent" -> "WEBAGE~1").
+// Built-in rules match by name, so a short spelling must not reach a protected file through read,
+// write, list or search. Only a real NTFS volume with 8.3 generation can produce such aliases.
+function shortNameOf(fullPath) {
+  const out = spawnSync('cmd.exe', ['/d', '/c', `for %I in ("${fullPath}") do @echo %~sI`],
+    { encoding: 'utf8', windowsVerbatimArguments: true, windowsHide: true });
+  const line = String(out.stdout || '').trim().split(/\r?\n/).pop() || '';
+  return line ? path.basename(line) : '';
+}
+
+function windowsShortNameAliases() {
+  if (process.platform !== 'win32') {
+    console.log('sensitiveBoundary: 8.3 alias cases need Windows; skipped on ' + process.platform);
+    return;
+  }
+  const dir = path.join(tmp, '.webagent');
+  fs.mkdirSync(dir, { recursive: true });
+  const secret = 'AUDIT_SHORTNAME_FAKE_SECRET';
+  fs.writeFileSync(path.join(dir, 'config.json'), secret + '\n');
+  fs.writeFileSync(path.join(tmp, 'credentials.json'), secret + '\n');
+  const sd = shortNameOf(dir);
+  const sf = shortNameOf(path.join(dir, 'config.json'));
+  const sc = shortNameOf(path.join(tmp, 'credentials.json'));
+  if (!sd || sd.toLowerCase() === '.webagent' || !sc || sc.toLowerCase() === 'credentials.json') {
+    console.log(`sensitiveBoundary: volume produced no 8.3 aliases (${sd}, ${sc}); alias cases skipped`);
+    return;
+  }
+  assert.ok(sd.includes('~') && sc.includes('~'), `fixture must yield real 8.3 aliases, got ${sd} ${sc}`);
+  // Positive control: the long spelling is denied today; the alias must be denied the same way.
+  assert.throws(() => fileOps.readFile({ filePath: '.webagent/config.json' }));
+  const aliases = [`${sd}/config.json`, `.webagent/${sf}`, `${sd}/${sf}`, sc, `${sd.toLowerCase()}/config.json`];
+  for (const rel of aliases) {
+    let leaked = null;
+    try { leaked = fileOps.readFile({ filePath: rel }).content; } catch (_) { /* denied */ }
+    assert.strictEqual(leaked, null, `read_file through 8.3 alias ${rel} must be denied`);
+  }
+  let found = 0;
+  try { found = fileOps.scanSearch({ query: secret, searchPath: sd }).totalMatches; } catch (_) { /* denied */ }
+  assert.strictEqual(found, 0, `search through 8.3 alias ${sd} must not return protected content`);
+  let listed = [];
+  try { listed = fileOps.listDir({ dirPath: sd }).items.map((i) => i.name.toLowerCase()); } catch (_) { /* denied */ }
+  assert.ok(!listed.includes('config.json'), `list_dir through 8.3 alias ${sd} must not expose config.json`);
+  let wrote = false;
+  try { fileOps.writeFile({ filePath: `${sd}/config.json`, content: 'overwritten\n', confirmOverwrite: true }); wrote = true; } catch (_) { /* denied */ }
+  assert.strictEqual(wrote, false, 'write_file through an 8.3 alias must be denied');
+  assert.strictEqual(fs.readFileSync(path.join(dir, 'config.json'), 'utf8'), secret + '\n');
+  // Ordinary long names inside the workspace keep working.
+  fs.writeFileSync(path.join(tmp, 'ordinary-long-name.txt'), 'hello\n');
+  assert.ok(fileOps.readFile({ filePath: 'ordinary-long-name.txt' }).content.includes('hello'));
+  fs.rmSync(dir, { recursive: true, force: true });
+  fs.rmSync(path.join(tmp, 'credentials.json'), { force: true });
+  console.log(`sensitiveBoundary: 8.3 alias cases ran (${sd}, ${sf}, ${sc})`);
+}
+
 function run() {
   // --- Built-in rules stay exactly as documented. ---
   assert.strictEqual(sensitive.isSensitive('.env'), true);
@@ -171,6 +225,8 @@ function run() {
     config.workspaceRoot = tmp;
     fs.rmSync(repo, { recursive: true, force: true });
   }
+
+  windowsShortNameAliases();
 
   console.log('sensitiveBoundary.test.js ok');
 }

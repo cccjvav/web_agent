@@ -44,7 +44,7 @@ Markdown：206（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [computer-use/win/截图标记与OCR详解.md](../computer-use/win/截图标记与OCR详解.md) | 已修正 | 0659f33cbbd7189f | 核对截图/元信息/标记/OCR方法、参数/局限；修CI现已编译capture/mark，但未实际操作GDI/OCR。 依据：六个PS/C#源码与test.yml编译名单 |
 | [computer-use/win/鼠标键盘与剪贴板详解.md](../computer-use/win/鼠标键盘与剪贴板详解.md) | 已核对一致 | 2f5dba67bb07f984 | 参数、窗口唯一性/焦点/坐标、消息提交、Clipboard序号/特殊格式/错误码与源码一致；只读核对未操作桌面。 依据：act/act-bg/type与input/input2/keys源码；既有CI无效句柄检查 |
 | [docs-site/README.md](../docs-site/README.md) | 已核对一致 | 6f1b7ea39ee4d415 | 构建/启动/静态范围、内嵌与未内嵌文档、源码快照/生成守卫及发行预构建边界一致；非全网/全文语义检查。 依据：docs-site build/serve/check-docs; config; docsSite/docsHttp现有回归 |
-| [docs-site/source-index.md](../docs-site/source-index.md) | 生成核验 | 7c8c61f2a269fe18 | source-index由check-docs生成核验；扩展Markdown按规范源码与整个发行文件集合逐字节比较，不手改副本。 依据：check-docs updated=0; extensionCopy.test.js通过 |
+| [docs-site/source-index.md](../docs-site/source-index.md) | 生成核验 | ab93bc9727a85b7e | source-index由check-docs生成核验；扩展Markdown按规范源码与整个发行文件集合逐字节比较，不手改副本。 依据：check-docs updated=0; extensionCopy.test.js通过 |
 | [docs-site/样式规则详解.md](../docs-site/样式规则详解.md) | 已核对一致 | e8a5d4704e7cc503 | 核对变量/260px网格/组件选择器/980px断点、局部滚动/焦点和实际渲染配合；不代签全部页面或系统字体。 依据：styles.css; app.js; docsViewerBrowser选定状态 |
 | [docs-site/浏览与服务详解.md](../docs-site/浏览与服务详解.md) | 已核对一致 | 9d6ef43698a5a8d9 | 核对八路页面/搜索/锚点/源码滚动、预构建/开发服务器与静态路径/方法/匿名边界及真实浏览器验证范围。 依据：app.js; serve.js; index.html; 现有docs相关回归 |
 | [docs-site/清单与构建详解.md](../docs-site/清单与构建详解.md) | 已修正 | 798ad5314908b02c | 核对库存/归属/AST、解析/链接重写、快照/排除与输出，原地修CRLF及四主文档独立路径上下文；解析器局限保留。 依据：check-docs.js; build.js; anchors.js; documentationLinks/docsSite |
@@ -80,7 +80,7 @@ Markdown：206（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [installer/安装声明详解.md](../installer/安装声明详解.md) | 已修正 | a11f53ac346c3684 | 核对Inno声明/路径权限/注册表/卸载/事件，修默认版本0.7.2和缺漏的回收开始菜单；Windows实操仍未代验。 依据：webagent.iss; installerPackaging/现有Windows CI |
 | [manager/CONTEXT.md](../manager/CONTEXT.md) | 已修正 | 2cb696eb1b78d53b | 按F67实际进度更新入口/基线和.md分母；旧CI只作对应提交证据，实机/暂停/遗留单列。 依据：本轮清单、Git HEAD、阶段10与用户更正 |
 | [manager/SKILL.md](../manager/SKILL.md) | 只读保留 | 5c8c93d50e52332b | 规范源/副本逐字节相同，作为既有规则保留，不冒称外部最新版；项目特色与F66澄清在manager/agents和唯一文档规范处理。 依据：cmp source/copy; AGENTS只读约定 |
-| [manager/agents.md](../manager/agents.md) | 已核对一致 | 1910cbf1d32d899b | 技术栈/同进程双端口、代码文档和安全/暂停/固定分支约定与当前授权一致。 依据：AGENTS、用户F66澄清、package/CI |
+| [manager/agents.md](../manager/agents.md) | 已核对一致 | 406ec10bbc2a9937 | 技术栈/同进程双端口、代码文档和安全/暂停/固定分支约定与当前授权一致。 依据：AGENTS、用户F66澄清、package/CI |
 | [manager/docs/documentation.md](../manager/docs/documentation.md) | 已核对一致 | ac757d0b6f4700c0 | 核对用户新口径、唯一主说明、生成/链接/测试与分类处置；教学标准不膨胀为源码逐行认证。 依据：用户澄清、check-docs/build/tests的实际职责 |
 | [manager/docs/experience.md](../manager/docs/experience.md) | 已核对一致 | b91f7f0d2abb4f6e | 仅保留可复用方法，恢复/测试/并发/文档口径/F62–65经验仍适用，不重复维护当前待办。 依据：本轮实际恢复/文档核对及阶段10历史 |
 | [manager/stages/audit-2026-09-11.md](../manager/stages/audit-2026-09-11.md) | 已修正 | 3b8de4f6609d2311 | 补历史阶段横幅，旧分支/基线/授权只属当时；原审计事实不重写。 依据：CONTEXT和阶段10现行入口。 |
@@ -187,12 +187,12 @@ Markdown：206（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md](../webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md) | 已核对一致 | 5d1a9cf5ab653480 | 协议/HTTP/容量/审批等测试入口和隔离边界匹配，未把真实服务代入。 依据：documentationLearning具名函数/主说明守卫；本轮完整101/101；相应定向测试。 |
 | [webagent-core/agent-host/tests/OAuth与GitHub测试详解.md](../webagent-core/agent-host/tests/OAuth与GitHub测试详解.md) | 已核对一致 | d54fd2861ff7c739 | OAuth/GitHub及F64真实回环网络、假凭据/取消/形状/期限证据与测试对应。 依据：documentationLearning具名函数/主说明守卫；本轮完整101/101；相应定向测试。 |
 | [webagent-core/agent-host/tests/PTY与隧道测试详解.md](../webagent-core/agent-host/tests/PTY与隧道测试详解.md) | 已核对一致 | 5df52a13002f2307 | PTY真实子进程/取消、隧道fixture及平台边界、F64稳定E_TIMEOUT断言与现测试一致。 依据：documentationLearning具名函数/主说明守卫；本轮完整101/101；相应定向测试。 |
-| [webagent-core/agent-host/tests/README.md](../webagent-core/agent-host/tests/README.md) | 已核对一致 | b2a9794e89390cf4 | 测试发现/分类/完整与浏览器分离、fixture/真实平台边界及当前新增回归导航完整；不写固定总数。 依据：documentationLearning具名函数/主说明守卫；本轮完整101/101；相应定向测试。 |
+| [webagent-core/agent-host/tests/README.md](../webagent-core/agent-host/tests/README.md) | 已核对一致 | 5629f09bfaeffe75 | 测试发现/分类/完整与浏览器分离、fixture/真实平台边界及当前新增回归导航完整；不写固定总数。 依据：documentationLearning具名函数/主说明守卫；本轮完整101/101；相应定向测试。 |
 | [webagent-core/agent-host/tests/fixtures/README.md](../webagent-core/agent-host/tests/fixtures/README.md) | 已核对一致 | f12a23987a0213b4 | 仅说明隔离测试夹具与非产品/非真实凭据边界，目录职责一致。 依据：documentationLearning具名函数/主说明守卫；本轮完整101/101；相应定向测试。 |
 | [webagent-core/agent-host/tests/任务板与事件流测试详解.md](../webagent-core/agent-host/tests/任务板与事件流测试详解.md) | 已核对一致 | 7641edbf28f33515 | board/mcpBoard/eventBus归属/持久化/脱敏/事件统计的fixture与现测试一致。 依据：documentationLearning具名函数/主说明守卫；本轮完整101/101；相应定向测试。 |
 | [webagent-core/agent-host/tests/存储完整性与预算测试详解.md](../webagent-core/agent-host/tests/存储完整性与预算测试详解.md) | 已核对一致 | 8e8214fde2c87c20 | state/resource/audit/usage及F62/F63文件/diff/admin负例已登记，故障注入不冒充实机。 依据：documentationLearning具名函数/主说明守卫；本轮完整101/101；相应定向测试。 |
 | [webagent-core/agent-host/tests/安装与运行器测试详解.md](../webagent-core/agent-host/tests/安装与运行器测试详解.md) | 已核对一致 | b10589b57d07f8e6 | runner/安装/扩展/code-server/app/F60/F65受控子进程与未真实下载安装边界一致。 依据：documentationLearning具名函数/主说明守卫；本轮完整101/101；相应定向测试。 |
-| [webagent-core/agent-host/tests/工作区与命令安全测试详解.md](../webagent-core/agent-host/tests/工作区与命令安全测试详解.md) | 已核对一致 | d9534053356e1752 | 工具/路径/危险命令/Git工作区及夹具范围匹配，不称shell完整解析。 依据：documentationLearning具名函数/主说明守卫；本轮完整101/101；相应定向测试。 |
+| [webagent-core/agent-host/tests/工作区与命令安全测试详解.md](../webagent-core/agent-host/tests/工作区与命令安全测试详解.md) | 已核对一致 | 14fbeb8827c82dc3 | 工具/路径/危险命令/Git工作区及夹具范围匹配，不称shell完整解析。 依据：documentationLearning具名函数/主说明守卫；本轮完整101/101；相应定向测试。 |
 | [webagent-core/agent-host/tests/文档守卫测试详解.md](../webagent-core/agent-host/tests/文档守卫测试详解.md) | 已核对一致 | 5b0449d4607a709a | 文档策略/质量/学习及F66新口径防回退与当前断言匹配，明确非语义认证。 依据：documentationLearning具名函数/主说明守卫；本轮完整101/101；相应定向测试。 |
 | [webagent-core/agent-host/tests/本机边界与跨站测试详解.md](../webagent-core/agent-host/tests/本机边界与跨站测试详解.md) | 已核对一致 | 958f3e8095c48122 | 回环Host/Origin/Referer/WS及真实HTTP/浏览器头范围与测试一致。 依据：documentationLearning具名函数/主说明守卫；本轮完整101/101；相应定向测试。 |
 | [webagent-core/agent-host/tests/模式画像与Plan测试详解.md](../webagent-core/agent-host/tests/模式画像与Plan测试详解.md) | 已核对一致 | ba7dfd66ace424fa | 模式/Provider/画像/Plan的替身与状态边界对应，不代真实模型。 依据：documentationLearning具名函数/主说明守卫；本轮完整101/101；相应定向测试。 |
