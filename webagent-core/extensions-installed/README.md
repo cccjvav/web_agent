@@ -8,7 +8,7 @@
 
 **不要在本目录改 JS。** 改 `../extension/extension.js` / `package.json`，再跑 vscode 入口即可覆盖副本。
 
-无 Python。本层无手写源码；副本文件与 `../extension/` 相同（`extension.js`、`dangerousPolicy.js`、`editorReview.js`、`modeFromChatRequest.js`、`ptyHost.js`、`ptyPolicy.js`、`workspaceMatch.js`、`package.json`、`PTY扩展详解.md`、`入口与Webview详解.md`、`resources/icon.svg`）。桌面 VS Code **不**读本目录，走用户 `~/.vscode/extensions`。
+无 Python。本层无手写源码；副本文件与 `../extension/` 相同（`extension.js`、`hostManager.js`、`dangerousPolicy.js`、`editorReview.js`、`modeFromChatRequest.js`、`ptyHost.js`、`ptyPolicy.js`、`workspaceMatch.js`、`package.json`、`PTY扩展详解.md`、`入口与Webview详解.md`、`resources/icon.svg`）。桌面 VS Code **不**读本目录，走用户 `~/.vscode/extensions`。本目录不含 `host.json`（只有 install-desktop-extension.js 写入桌面安装目录），code-server 里的主机由 run-webagent-vscode.cmd 启动，插件只接管。
 
 ---
 

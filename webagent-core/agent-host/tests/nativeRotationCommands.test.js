@@ -25,6 +25,7 @@ async function main() {
       showWarningMessage: (message, options) => { warnings.push({ message, options }); return Promise.resolve(confirmAnswer); },
       showErrorMessage: (message, options) => { errors.push({ message, options }); },
       createStatusBarItem: () => ({ show: () => {}, dispose: () => {} }),
+      createOutputChannel: () => ({ appendLine: () => {}, show: () => {}, dispose: () => {} }),
       registerWebviewViewProvider: (id, provider) => { providers.set(id, provider); return { dispose: () => {} }; }
     },
     commands: { registerCommand: (id, fn) => { commands.set(id, fn); return { dispose: () => {} }; }, executeCommand: async () => {} },
@@ -37,6 +38,7 @@ async function main() {
     module: { exports: {} }, console, process, URL, Buffer, setTimeout, clearTimeout, setInterval, clearInterval,
     require: name => name === 'vscode' ? vscode
       : name === './workspaceMatch' ? require('../../extension/workspaceMatch')
+      : name === './hostManager' ? require('../../extension/hostManager')
       : name === './editorReview' ? { registerEditorReview: () => {} }
       : name === './ptyHost' ? { startPtyHost: () => ({ dispose: () => {} }) }
       : name === './modeFromChatRequest' ? { modeFromChatRequest: () => 'code' }

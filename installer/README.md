@@ -34,7 +34,7 @@
 显式相对工作区相对于调用者cwd解析；传文件取父目录；不存在的显式路径拒绝，缺省路径可创建；Windows盘符根分隔符不随意裁掉。被编辑工作区自身的.webagent配置与用户runtime不是同一层数据。
 
 ## 模式、升级与卸载
-recovery是独立Windows本机交互回收入口，不解析工作区/装依赖/启动服务，详见下节；classic启动自绘工作台；vscode启动code-server编排；app在前置复制/依赖准备之后进入独立120秒启动确认，检查配置端口的healthz及主机身份/工作区，再尝试打开窗口；该120秒不覆盖前置同步准备，异步npm准备的取消/期限与直接子进程边界见函数详解；admin启动独立后台；extension侧载桌面扩展。
+recovery是独立Windows本机交互回收入口，不解析工作区/装依赖/启动服务，详见下节；classic启动自绘工作台；vscode启动code-server编排；app在前置复制/依赖准备之后进入独立120秒启动确认，检查配置端口的healthz及主机身份/工作区，再尝试打开窗口；该120秒不覆盖前置同步准备，异步npm准备的取消/期限与直接子进程边界见函数详解；admin启动独立后台；extension侧载桌面扩展；host供VS Code插件在后台启动主机（同classic准备依赖，但设`WEBAGENT_SKIP_WORKBENCH=1`不开3000工作台；仅当插件设置`WEBAGENT_LIFELINE=stdin`时读取stdin，插件断开即把EOF交给主机自行关闭，见函数详解ownerLifeline）。安装版的host.json指向哪一个runtime目录、一键启动是否可用尚未在安装版实机验证。
 
 升级保留用户数据与旧runtime，不自动迁移旧安装目录中的workspace。升级前备份并显式选择用户可写工作区。卸载不删除LocalAppData/WebAgent；彻底清理要先备份，不触碰其他用户目录。PATH按分号条目规范比较，不按子串删除同前缀目录。
 
@@ -66,7 +66,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File installer\tunnel-recovery.ps
 |---|---|
 | [appWindow.js](appWindow.js) | 56 个函数/类节点 |
 | [build-installer.cmd](build-installer.cmd) | 文件级登记；未做符号完整性证明 |
-| [launch.js](launch.js) | 20 个函数/类节点 |
+| [launch.js](launch.js) | 28 个函数/类节点 |
 | [package.js](package.js) | 9 个函数/类节点 |
 | [preparation.js](preparation.js) | 10 个函数/类节点 |
 | [tunnel-recovery.ps1](tunnel-recovery.ps1) | 文件级登记；未做符号完整性证明 |

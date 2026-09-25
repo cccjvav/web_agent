@@ -9,22 +9,22 @@
 | 函数 | 输入/返回 | 调用与限制 |
 |---|---|---|
 | dispatchPty(ev) | 事件→undefined | 只转发pty_request给全局ptyHost，noteStream再handleIncoming；未await返回Promise，不统一接收其异步拒绝 |
-| agentHostUrl() | 无→origin文本或抛错 | VS Code设置优先，然后环境变量，再48271；manifest设置带默认值，所以通常设置读取本身已有默认。F71起必须是http/https、主机名为127.0.0.1、localhost或[::1]、不带用户信息/路径/查询/片段，返回URL.origin（去尾斜杠、主机名小写）；否则抛含`webagent.agentHostUrl`的错误，**不发任何请求**。依据：主机localControl只接受这三种Host且来自回环socket，其它地址不可能是真正的Web Agent主机；而这个地址会收到Chat正文、PTY hello里的工作区路径并下发PTY命令任务，被信任的工作区可在.vscode/settings.json中设置它。未改设置作用域：按工作区指向不同本机端口仍是正当用法 |
+| agentHostUrl() | 无→origin文本或抛错 | 顺序：**explicitHostUrl()**（用户/工作区设置或环境变量`WEBAGENT_AGENT_HOST_URL`）→ 插件管理的主机地址`hostManager.currentUrl()` → 默认48271。F71起必须是http/https、主机名为127.0.0.1、localhost或[::1]、不带用户信息/路径/查询/片段，返回URL.origin；否则抛出含`webagent.agentHostUrl`的错误 |
 | requestHost(u) | URL→主机名 | 去掉IPv6方括号：URL.hostname为`[::1]`，http.request会把它当DNS名查找而ENOTFOUND；Node据去括号后的地址自动生成`Host: [::1]:端口`，与主机本机判断一致 |
 | requestJson(method,url,body) | HTTP参数→Promise<{status,json,raw}> | 根据http/https选库，JSON正文带长度；响应最多8MiB，Content-Length声明超限提前拒绝（HEAD仅描述资源长度，不按正文拒绝），实际Buffer字节累计仍独立检查（含chunked）。15秒空闲timeout加总deadline；响应error/aborted/提前close/不完整end拒绝。finish单次结算、清deadline及chunks，失败销毁请求/响应；3xx拒绝且不跟随/重试。完整且有界响应保留{status,json,raw}，坏JSON/空正文仍json=null，4xx/5xx仍由调用方判断业务结果；响应上限不代表进程RSS上限 |
 | postNdjson(url,body,onEvent,signal) | Chat请求→Promise<void> | POST JSON+AbortSignal；仅2xx且application/x-ndjson；5分钟空闲timeout及总deadline。UTF8解码保留跨chunk字符与半行，单行1MiB/总响应16MiB上限；consume验证对象/type及message.text，回调异常向上传播。仅一个done且随后正常end才resolve；error、done后数据、坏帧、aborted/error/提前close均finish拒绝并销毁请求/响应，单次结算清deadline；不跟随重定向或重试 |
 | historyFromChatContext(context) | VS Code历史→role/content数组 | 每turn.prompt变user；本扩展result.metadata.webagentCompleted=false的失败turn不回送assistant，未标记的旧历史保持兼容；response.map识别value或value.value后join变assistant；最后12消息，不是12轮；不传引用/工具结构 |
 | revealWorkspaceFile(rel) | 相对路径→undefined | 首工作区joinPath，openTextDocument.then成功show预览/保留焦点，打开失败吞；此函数本身不是写入沙箱检查 |
 | registerChatParticipant(context) | 上下文→undefined | API存在才尝试创建webagent.agent，设SVG icon，加入订阅；不支持/注册异常不阻止Webview |
-| activate(context) | VS Code上下文→undefined | PTY→ChatView/BridgeView provider→原生Chat→状态栏→命令订阅；不是启动agent-host服务器 |
-| validWebviewMessage(msg,surface) | 不可信消息→boolean | 拒绝空/数组/非字符串type；chat只openNative/cancel/合法模式send且正文非空≤128000；bridge只合法copy、refresh/start/stop/reset或严格形状的control消息。没有通配API代理 |
+| activate(context) | VS Code上下文→undefined | 输出面板“Web Agent Host”→PTY→ChatView/BridgeView provider→HostManager（见第12节）→原生Chat→状态栏→命令订阅；可管理时按`webagent.autoStartHost`启动主机，否则只尝试**attachExisting**接管同一文件夹上已运行的主机，不自动spawn |
+| validWebviewMessage(msg,surface) | 不可信消息→boolean | 拒绝空/数组/非字符串type；chat只openNative/cancel/合法模式send且正文非空≤128000；bridge只合法copy、`start`（tunnelProvider缺省或cloudflare/cloudflare-named/ngrok）、布尔`autoBridge`、refresh/stop/reset/hostStart/hostStop/hostLog或严格形状的control消息。没有通配API代理 |
 | chatHtml()/bridgeHtml() | 无→完整HTML字符串 | 各生成随机nonce，默认资源禁用，script仅nonce，允许内联style，禁止base/form；事件内容不作HTML注入 |
 
 **registerChatParticipant的handler(request,chatContext,stream,token)**：AbortController关联取消订阅并处理预取消；modeFromChatRequest取模式，去首个slash命令。空正文输出帮助、dispose返回；非空progress→postNdjson。事件回调先忽略已取消，再PTY分派；status为进度，tool显示结果/补丁打开与reference，message Markdown，error错误，consensus区分模拟汇总。正常完成返回metadata.webagentCompleted=true，失败/预取消返回false；catch提示结果未完成、核对已发生操作、不自动重试，主动取消不弹错误模态框；finally dispose取消订阅。
 
 ## 2. activate内部回调
 
-**refreshBar()**每5秒GET status，明确检查status≥400/无JSON；有工作区差异显示warning，正常显示Bridge状态，catch离线；若错误来自agentHostUrl拒绝，状态栏改显“主机地址无效”并把原因放进tooltip。context.dispose清interval；已有请求不会因clearInterval自动取消。
+**refreshBar()**每5秒GET status，明确检查status≥400/无JSON。主机“启动中”时显示转圈并把点击改为查看日志；有工作区差异显示warning；正常显示Bridge状态，悬停注明“由插件启动/外部启动”和来源提交告警。catch时：错误来自agentHostUrl拒绝→“主机地址无效”；手工设置了地址→“未连接”并说明；否则→“未启动”，点击即`webagent.startHost`，同时对已接管的外部主机调用markLost。context.dispose清interval。
 
 extension.js直接注册三个registerCommand，另由editorReview登记两个草稿命令：openBridge打开侧栏；openAgentChat尝试原生Chat预填@webagent，失败回侧栏；resetSecret委托**resetSecretCommand({refresh:()=>bridge.refresh()})**，把确认/绑定/回包消费集中在一个可测函数里，不再用内联箭头吞掉HTTP状态。statusBar自身也加入subscriptions管理。
 
@@ -58,9 +58,9 @@ extension.js直接注册三个registerCommand，另由editorReview登记两个�
 
 ## 4. BridgeView全部方法与回调
 
-**resolveWebviewView(webviewView)**设_view/options/html，消息验证后switch式if处理：refresh调用refresh；start POST cloudflare并校验HTTP与success；stop先取绑定再POST，严格校验success/running，失败弹未确认而非静默刷新；copy写系统剪贴板并通知；reset委托命令。catch统一modal显示错误。初始化立即refresh。
+**resolveWebviewView(webviewView)**设_view/options/html，消息验证后逐项处理（每个分支都在try内await，失败统一模态弹窗）：refresh调用refresh；start调用**startBridge(tunnelProvider)**（先取工作区绑定，POST `/api/bridge/start`，校验HTTP与success）；hostStart/hostStop/hostLog转给activate注入的hostCommands；autoBridge写globalState`webagent.startBridgeWithHost`；stop先取绑定再POST，严格校验success/running，失败弹未确认而非静默刷新；copy写系统剪贴板并通知；reset执行resetSecret命令。**constructor(context)**保存扩展上下文供globalState使用。
 
-**refresh()**没有_view即返回；refreshPending合并本页在途读取；GET status必须HTTP200且有JSON才post，错误回带error的状态，finally释放pending。它是HTTP完成/非空候选门禁，不是完整status所有字段的业务真实性验证。
+**refresh()**没有_view即返回；refreshPending合并本页在途读取；先组装主机信息（HostManager快照、是否手工地址、autoBridge），GET status必须HTTP200且有JSON才连同host一起post，错误时status只带经hostErrorHint转换的error，finally释放pending。它是HTTP完成/非空候选门禁，不是完整status所有字段的业务真实性验证。
 
 ## 5. chatHtml内嵌脚本（不是Node AST中的普通函数）
 
@@ -76,7 +76,7 @@ HTML log/flex滚动区域、任务栏、模式菜单、输入框与发送按钮�
 
 ## 6. bridgeHtml内嵌脚本
 
-保存status对象。start/stop/reset的onclick仅发固定type；copy.onclick优先status.prompt，否则mcpUrl+连接提示，交宿主剪贴板。**paintTasks(todos)**与Chat同样构建安全DOM，不共享函数作用域。**paintLogs(logs)**取tool_call_end前12，payload检查对象，工具名/数值时长写textContent；无工具显示等待。不是倒序重排后的最新12保证，取决于服务端顺序。
+顶部“主机”卡片：【启动】【停止】【日志】与“启动主机后同时开启 Bridge”复选框，**paintHost(host)**按状态（未启动/启动中/运行中/外部启动/启动失败/手工地址）写文字、禁用按钮（手工地址、启动中、运行中、外部时禁用启动；只有插件自己启动的主机或启动中才能点停止，启动中点停止即取消）并显示错误或来源告警。MCP卡片新增隧道下拉框（Quick/Named/ngrok），未被用户改动时跟随status.tunnelProvider（旧值named视为cloudflare-named）；start发送所选tunnelProvider。保存status对象。stop/reset的onclick仅发固定type；copy.onclick优先status.prompt，否则mcpUrl+连接提示，交宿主剪贴板。**paintTasks(todos)**与Chat同样构建安全DOM，不共享函数作用域。**paintLogs(logs)**取tool_call_end前12，payload检查对象，工具名/数值时长写textContent；无工具显示等待。不是倒序重排后的最新12保证，取决于服务端顺序。
 
 window message只接受status，规范对象后更新URL/状态pill，paintTasks/paintLogs。4秒定时post refresh，加载后立即refresh。这里浏览器脚本不直接fetch本机API，CSP也不授予网络连接。
 
@@ -119,6 +119,36 @@ BridgeView启动/停止、原生Chat handler及ChatView send都先await workspac
 BridgeView.refresh以refreshPending合并并行请求、拒绝HTTP错误，避免轮询重叠导致旧状态倒灌；finally释放单飞状态。服务端status.bridgeTaskStates是远程报告，status.taskState只属于本地Chat，不能混读。Bridge页**paintBridgeTasks(groups)**规范最多16组/每组50项，带会话摘要把todo交给paintTasks（Bridge最多800条，Chat仍500）；追加报告进度及空状态/非自动核验说明，所有文字textContent渲染，不接受HTML。
 
 Bridge任务区域不再因空列表隐藏，限制35vh并滚动/长词换行，颜色使用VSCode主题变量。请求失败保留最近计划但标记“同步失败，当前状态未知”；4秒消息刷新保留。code-server和桌面都加载该核心扩展，发行副本字节一致由extensionCopy验证。这里只说明代码/VM覆盖，未声称已在用户桌面或code-server窗口实测。
+
+## 12. 一键启动主机（R6第一期）
+
+[hostManager.js](hostManager.js)是纯Node模块（不引用vscode，便于测试），由activate创建一个**HostManager**实例。它让插件版不再需要CMD和浏览器：以VS Code首个文件夹为工作区，在后台运行`node installer/launch.js host <文件夹>`（不开3000端口的网页工作台）。
+
+| 函数/方法 | 作用与边界 |
+|---|---|
+| readHostLocation(extensionDir) | 读插件目录的`host.json`（由install-desktop-extension.js写入）：format必须为1、root为绝对路径且含`installer/launch.js`与`agent-host/src/index.js`；缺文件、格式错、目录已搬走分别给出“重新运行install-vscode-extension.cmd”的说明。commit/contentHash格式不对时置null |
+| portFree(port,host) / findFreePort({base,span,isFree}) | 在127.0.0.1上试监听判断空闲；从48271起最多找20个端口，全占用返回null |
+| probeStatus(url,{timeoutMs}) | 1.5秒内GET `/api/status`，响应超1MiB、非200、非JSON、缺`workspaceRoot`或`identity.hostInstanceId`都返回null；其中`done`保证只结算一次 |
+| repoCommit(root) | `git -C root rev-parse HEAD`，失败/非Git返回null |
+| killTree(pid,platform) | Windows用`taskkill /pid <pid> /T /F`；其他平台对进程组发SIGKILL（spawn时detached建组），失败再杀单进程 |
+| waitExit(child,ms) | 等exit事件或超时，返回是否已退出；内部`onExit`清定时器 |
+| short(sha) / sleep(ms) | 提交号取前7位；等待辅助 |
+| constructor(options) | 可注入log、onChange、workspaceMatches（插件用sameWorkspace）、nodePath、probe、spawnImpl、isPortFree、killTreeImpl、repoCommit、端口范围与各超时，默认就绪180秒、轮询1秒、停止等待10秒 |
+| snapshot() / currentUrl() / setState(state,extra) | 状态为idle、starting、running、external、error；snapshot的warning合并来源告警与端口说明（离开starting/running时setState清除端口说明）；currentUrl在idle/error时为null，其余返回地址供agentHostUrl使用；setState后回调onChange刷新状态栏与侧栏 |
+| checkSource() | 读host.json并比较主机仓库当前提交，不一致时给出warning（R8偏差c：插件装旧了不再无声） |
+| locate(workspace) | 并行探测48271–48290，找到**工作区相同**的主机才返回；服务其他文件夹的主机记入others，从不接管或关闭。若最终端口不是48271，_start写端口说明：48271被谁占用、本主机用哪个端口，以及token模式Named Tunnel入口写死48271时远程会连到占用者 |
+| attachExisting(workspace) | 只接管、从不启动：激活时若同一文件夹已有主机（例如run-webagent.cmd启动的），状态设为external |
+| start(workspace) / _start(workspace) | 在途启动合并；已running/external且同一文件夹直接返回。先locate，找到就接管；否则checkSource、读host.json、找空闲端口、spawnHost、waitReady。失败时先内部清理（stop的cancel:false），再置error；用户在启动中点停止则置idle并抛cancelled错误，不当失败 |
+| spawnHost(workspace,port) | env加`AGENT_HOST_PORT`、`WEBAGENT_PARENT_PID`（扩展宿主pid）、`WEBAGENT_LIFELINE=stdin`，删`WEBAGENT_AGENT_HOST_URL`；stdio三路管道、windowsHide、shell:false。`pipeLines`把stdout/stderr逐行写入输出面板（单行2000字符截断）；ENOENT提示安装Node或设置webagent.nodePath；exit区分就绪前退出与运行中意外退出 |
+| waitReady(workspace) | 轮询probeStatus直到回答且工作区相同；回答了别的工作区立即报错；子进程退出或超时报错（提示首次需联网装依赖） |
+| stop({quiet,cancel}) | 启动中但进程尚未生成（探测、核对来源、选端口）时只置取消标记，`throwIfCancelled()`在各步与spawn前抛出，保证不再生成进程；之后只停**自己启动**的主机：关闭stdin管道（主机随即执行自己的shutdown，先停命令与隧道），10秒不退出才killTree；接管的外部主机只记录说明、返回external:true，绝不关闭 |
+| markLost() / dispose() | 外部主机不再回答时忘掉它；dispose供deactivate调用，停止自己启动的主机 |
+
+extension.js新增：**explicitHostUrl()**用`inspect`区分“用户/工作区真的填了”与package.json默认值（填了就只连接、不自启）；**nodePathSetting()**只读用户级`webagent.nodePath`（package.json声明scope为machine，工作区值被忽略），必须是绝对路径，留空用PATH中的node；**hostErrorHint(err)**把ECONNREFUSED/ECONNRESET译成“主机未启动，请点【启动】”；activate内的**startHost({quiet})**（拒绝手工地址→首个文件夹→HostManager.start→接管时提示→按复选框用主机记录的隧道类型启动Bridge）与**stopHost()**（启动中直接取消；外部主机只提示；Bridge运行或状态未知时先模态确认会断开远程连接）；**deactivate()**返回dispose的Promise。新命令：`webagent.startHost`、`webagent.stopHost`、`webagent.showHostLog`；新设置：`webagent.nodePath`、`webagent.autoStartHost`（默认false，只启动本机主机，从不自动开Bridge）。
+
+**与网页工作台并存：** 网页工作台版不变。已用run-webagent.cmd为同一文件夹启动主机时插件自动接管（显示“外部启动”），VS Code与网页看到同一主机；插件停止或关闭窗口不会结束它。两个VS Code窗口打开同一文件夹时，第二个窗口接管第一个的主机；第一个窗口关闭后主机随之停止，第二个窗口状态栏回到“未启动”，需再点一次启动。
+
+**限制：** 主机代码仍来自仓库或安装目录（host.json），未打包进插件；Named Tunnel/ngrok的域名与Token仍在网页工作台保存（第二期迁移）；token模式Named Tunnel若在Cloudflare后台把入口写死为48271，需让插件主机拿到48271（第一个窗口通常就是）。Windows进程树结束与父进程看护由Windows CI上的hostLaunch测试验证，真实桌面关闭VS Code后的端口/cloudflared释放仍需用户实机验收。
 
 ## Bridge所有者控件
 

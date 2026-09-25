@@ -7,10 +7,10 @@
 
 | | 方式 A：自绘工作台 | 方式 B：网页 VS Code | 方式 C：本机桌面 VS Code |
 |---|---|---|---|
-| 启动 | `run-webagent.cmd` | `run-webagent-vscode.cmd` | `run-webagent.cmd` + `install-vscode-extension.cmd` |
+| 启动 | `run-webagent.cmd` | `run-webagent-vscode.cmd` | 装一次 `install-vscode-extension.cmd`，之后在侧栏点【启动】（也可接管 `run-webagent.cmd`） |
 | 界面 | 仿 VS Code 的工作台 | code-server（基于 Code-OSS） | 已安装的微软 VS Code |
 | 端口 3000 | 工作台 UI | code-server | **不占用**（可与 A 同时开） |
-| 端口 48271 | agent-host MCP | 同样 | 同样（插件打这扇门） |
+| 端口 48271 | agent-host MCP | 同样 | 同样（一键启动时从 48271 起找空闲端口） |
 | 改文件的引擎 | 同一套 MCP 工具 | 同一套 | 同一套 |
 | 同时开 A 与 B | **不要**（抢 3000） | **不要** | C 不抢 3000 |
 
@@ -196,9 +196,9 @@ agent-host 没起来。看黑色窗口报错；防火墙是否拦了 Node。
 不经过浏览器、不占 3000。插件源码仍是 `webagent-core/extension/`，和方式 B 同一份。
 
 1. 仓库根双击 `install-vscode-extension.cmd`（拷到 `%USERPROFILE%\.vscode\extensions\webagent.webagent-core-<版本>`，不要 vsix）。
-2. `run-webagent.cmd D:\code\my-app`，黑色窗口保持开着。
-3. 完全退出 VS Code 再打开；**文件 → 打开文件夹** = 第 2 步那个路径（默认启动时可以是 `web_agent` 源码根；显式指定其他项目时打开那个目录）。
-4. 活动栏 **Web Agent**；Chat 里 `@webagent`。状态栏「未连接 48271」= 引擎没起来；「工作区不一致」= 打开的文件夹和 `Workspace` 不是同一个。
+2. 完全退出 VS Code 再打开；**文件 → 打开文件夹** = 要让 Agent 工作的项目（例如 `D:\code\my-app`）。
+3. 活动栏 **Web Agent** → 侧栏“主机”卡片点【启动】（或点状态栏「Web Agent 未启动」）。插件在后台以这个文件夹为工作区启动主机，不需要 CMD 窗口。也可以先 `run-webagent.cmd D:\code\my-app`，插件会接管它。
+4. 状态栏变成「Web Agent」后，Chat 里 `@webagent`。「工作区不一致」= 打开的文件夹和主机的工作区不是同一个。
 
 逐步与排错见 [使用指南.md](../../使用指南.md) 第 5 节。
 

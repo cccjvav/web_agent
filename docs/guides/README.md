@@ -6,6 +6,7 @@
 - [Bridge权限与工作模式](Bridge权限与工作模式.md)
 - [Conda环境说明](Conda环境说明.md)
 - [R8本轮Arena实机验收](R8本轮Arena实机验收.md)（第七批、F71、F72的逐步操作）
+- [插件一键启动实机验收](插件一键启动实机验收.md)（R6第一期：不开CMD和浏览器，侧栏点【启动】；关闭VS Code释放端口与cloudflared；接管run-webagent.cmd）
 - [Bridge统计与刷新排查](Bridge统计与刷新排查.md)
 - [Windows新手逐步验收](Windows新手逐步验收.md)
 - [内置探索Agent使用指南](内置探索Agent使用指南.md)

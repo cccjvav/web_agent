@@ -23,7 +23,18 @@
         "webagent.agentHostUrl": {
           "type": "string",
           "default": "http://127.0.0.1:48271",
-          "description": "agent-host 根地址（MCP /api 与 /mcp）。Windows 本机保持默认即可。"
+          "description": "手工指定已运行主机的根地址（仅限本机）。不修改（保持默认、未在用户或工作区设置中填写）时，插件自己管理主机：侧栏“主机”卡片一键启动，或自动接管同一文件夹上已运行的主机。一旦在设置中填写（即使填的是默认值），插件只连接该地址、不会自己启动主机。"
+        },
+        "webagent.nodePath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "启动主机用的 node 可执行文件完整路径；留空使用系统 PATH 中的 node。只读用户设置，工作区设置不生效。"
+        },
+        "webagent.autoStartHost": {
+          "type": "boolean",
+          "default": false,
+          "description": "打开已信任的文件夹时自动启动主机（只启动本机主机，从不自动开启 Bridge 隧道）。"
         }
       }
     },
@@ -94,6 +105,18 @@
       {
         "command": "webagent.restoreEditorDraft",
         "title": "Web Agent: 预览并恢复当前草稿为磁盘版本"
+      },
+      {
+        "command": "webagent.startHost",
+        "title": "Web Agent: 启动主机"
+      },
+      {
+        "command": "webagent.stopHost",
+        "title": "Web Agent: 停止主机"
+      },
+      {
+        "command": "webagent.showHostLog",
+        "title": "Web Agent: 查看主机日志"
       }
     ]
   }

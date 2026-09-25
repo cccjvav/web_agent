@@ -85,17 +85,35 @@ function launchRecovery() {
   child.on('error', () => { console.error('Recovery process unavailable; no automatic retry.'); process.exitCode = 1; });
   child.on('exit', code => { process.exitCode = Number.isInteger(code) ? code : 1; });
 }
+// launch.js host: headless host for the VS Code extension (no workbench port). When the extension
+// passes WEBAGENT_LIFELINE=stdin it holds the write end of our stdin; EOF (explicit stop, or the
+// extension host dying) aborts dependency preparation, or is forwarded to the host's own stdin so
+// its single shutdown() stops commands and the tunnel. Classic/CMD starts never read stdin.
+function ownerLifeline(mode, env = process.env, stdin = process.stdin) {
+  const waiters = [];
+  const state = { enabled: mode === 'host' && env.WEBAGENT_LIFELINE === 'stdin', gone: false,
+    onGone(fn) { if (state.gone) fn(); else waiters.push(fn); },
+    release() { if (state.enabled) { try { stdin.destroy(); } catch (_) { /* already closed */ } } } };
+  if (state.enabled) {
+    const gone = () => { if (state.gone) return; state.gone = true; waiters.splice(0).forEach(fn => { try { fn(); } catch (_) { /* best effort */ } }); };
+    stdin.on('data', () => {}); stdin.once('end', gone); stdin.once('close', gone); stdin.once('error', gone); stdin.resume();
+  }
+  return state;
+}
 async function main() {
   const mode = process.argv[2];
   if (mode === 'recovery') return launchRecovery();
-  const entries = { classic: 'webagent-core/agent-host/src/index.js', vscode: 'webagent-core/scripts/run-code-oss.js',
+  const entries = { classic: 'webagent-core/agent-host/src/index.js', host: 'webagent-core/agent-host/src/index.js',
+    vscode: 'webagent-core/scripts/run-code-oss.js',
     admin: 'webagent-core/admin-host/index.js', extension: 'webagent-core/scripts/install-desktop-extension.js' };
   if (!entries[mode] && mode !== 'app') throw new Error('Unknown launch mode');
+  const lifeline = ownerLifeline(mode);
   const home = userHome();
   const runtime = prepareRuntime();
   const workspace = resolveWorkspace(process.argv[3] || process.env.WORKSPACE_ROOT, process.cwd(),
     runtime.installed ? path.join(home, 'workspace') : runtime.root);
   const env = { ...process.env, WORKSPACE_ROOT: workspace };
+  if (mode === 'host') env.WEBAGENT_SKIP_WORKBENCH = '1';
   if (runtime.installed) {
     env.WEBAGENT_USER_DATA_DIR = path.join(home, 'code-server');
     env.WEBAGENT_ADMIN_DATA = path.join(home, 'admin');
@@ -104,6 +122,7 @@ async function main() {
     const controller = new AbortController();
     const onSignal = () => controller.abort();
     process.on('SIGINT', onSignal); process.on('SIGTERM', onSignal);
+    lifeline.onGone(onSignal);
     try {
       await ensureDependencies(runtime.root, { signal: controller.signal });
       checkLaunchSignal(controller.signal);
@@ -113,9 +132,13 @@ async function main() {
   }
   if (mode === 'app') return appWindow(runtime.root, workspace, env, home);
   const child = spawn(process.execPath, [path.join(runtime.root, entries[mode]), ...(mode === 'vscode' ? [workspace] : [])],
-    { cwd: runtime.root, env, stdio: 'inherit' });
-  child.on('error', err => { console.error(err.message); process.exitCode = 1; });
-  child.on('exit', (code, signal) => { process.exitCode = code == null ? 1 : code; });
+    { cwd: runtime.root, env, stdio: lifeline.enabled ? ['pipe', 'inherit', 'inherit'] : 'inherit' });
+  if (lifeline.enabled) {
+    child.stdin.on('error', () => {});
+    lifeline.onGone(() => child.stdin.end());
+  }
+  child.on('error', err => { console.error(err.message); process.exitCode = 1; lifeline.release(); });
+  child.on('exit', (code, signal) => { process.exitCode = code == null ? 1 : code; lifeline.release(); });
 }
 if (require.main === module) main().catch(err => { console.error(err.message); process.exitCode = 1; });
-module.exports = { userHome, safeRelative, prepareRuntime, resolveWorkspace, ensureDependencies, appOrigin, ready, launchRecovery };
+module.exports = { userHome, safeRelative, prepareRuntime, resolveWorkspace, ensureDependencies, appOrigin, ready, launchRecovery, ownerLifeline };

@@ -187,6 +187,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [githubAuth.test.js](githubAuth.test.js) | 21 个函数/类节点 |
 | [githubNetwork.test.js](githubNetwork.test.js) | 82 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
+| [hostLaunch.test.js](hostLaunch.test.js) | 59 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
 | [hostShutdown.test.js](hostShutdown.test.js) | 13 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
@@ -204,7 +205,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [monacoLoading.test.js](monacoLoading.test.js) | 12 个函数/类节点 |
 | [nativeChatStream.test.js](nativeChatStream.test.js) | 27 个函数/类节点 |
 | [nativeRequestJson.test.js](nativeRequestJson.test.js) | 28 个函数/类节点 |
-| [nativeRotationCommands.test.js](nativeRotationCommands.test.js) | 54 个函数/类节点 |
+| [nativeRotationCommands.test.js](nativeRotationCommands.test.js) | 58 个函数/类节点 |
 | [networkBudget.test.js](networkBudget.test.js) | 22 个函数/类节点 |
 | [oauth.test.js](oauth.test.js) | 18 个函数/类节点 |
 | [oauthClientAuth.test.js](oauthClientAuth.test.js) | 29 个函数/类节点 |

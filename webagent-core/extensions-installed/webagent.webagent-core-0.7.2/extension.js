@@ -6,8 +6,10 @@ const crypto = require('crypto');
 const { modeFromChatRequest } = require('./modeFromChatRequest');
 const { sameWorkspace } = require('./workspaceMatch');
 const { startPtyHost } = require('./ptyHost');
+const { HostManager } = require('./hostManager');
 
 let ptyHost = null;
+let hostManager = null;
 
 function dispatchPty(ev) {
   if (!ev || ev.type !== 'pty_request' || !ptyHost) return;
@@ -19,9 +21,20 @@ function dispatchPty(ev) {
 // other URL can be a real Web Agent host. Refuse it before any request: this URL receives chat prompts, the
 // workspace path (PTY hello) and hands out PTY command jobs, and a trusted workspace can set it (F71).
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
+// A user/workspace value (not the package.json default) or the code-server launcher's env var
+// means "connect to this host": the extension then never spawns one.
+function explicitHostUrl() {
+  const cfg = vscode.workspace.getConfiguration('webagent');
+  let value;
+  if (typeof cfg.inspect === 'function') {
+    const info = cfg.inspect('agentHostUrl') || {};
+    value = info.workspaceFolderValue ?? info.workspaceValue ?? info.globalValue;
+  } else value = cfg.get('agentHostUrl');
+  return String(value || process.env.WEBAGENT_AGENT_HOST_URL || '').trim();
+}
 function agentHostUrl() {
-  const fromCfg = vscode.workspace.getConfiguration('webagent').get('agentHostUrl');
-  const raw = String(fromCfg || process.env.WEBAGENT_AGENT_HOST_URL || 'http://127.0.0.1:48271').trim();
+  const managed = hostManager && hostManager.currentUrl();
+  const raw = String(explicitHostUrl() || managed || 'http://127.0.0.1:48271').trim();
   let url = null;
   try { url = new URL(raw); } catch { /* reported below */ }
   if (!url || !['http:', 'https:'].includes(url.protocol) || !LOOPBACK_HOSTS.has(url.hostname)
@@ -344,11 +357,42 @@ function registerChatParticipant(context) {
   }
 }
 
+// Only a machine-level (user settings) value is honoured: a workspace must not pick the executable.
+function nodePathSetting() {
+  const cfg = vscode.workspace.getConfiguration('webagent');
+  const info = typeof cfg.inspect === 'function' ? (cfg.inspect('nodePath') || {}) : {};
+  const value = String(info.globalValue || '').trim();
+  if (!value) return 'node';
+  if (!path.isAbsolute(value)) throw new Error('webagent.nodePath 必须是 node 可执行文件的完整路径，或留空使用系统 PATH 中的 node。');
+  return value;
+}
+
+function hostErrorHint(err) {
+  const code = err && (err.code || err.cause?.code);
+  if (code === 'ECONNREFUSED' || code === 'ECONNRESET') return '主机未启动或已退出：请在侧栏“主机”卡片点【启动】（或命令“Web Agent: 启动主机”）。';
+  return err && err.message ? err.message : String(err);
+}
+
 function activate(context) {
   require('./editorReview').registerEditorReview(vscode, context);
+  const hostOutput = vscode.window.createOutputChannel('Web Agent Host');
+  context.subscriptions.push(hostOutput);
   ptyHost = startPtyHost(context, { agentHostUrl, requestJson });
   const chat = new ChatView();
-  const bridge = new BridgeView();
+  const bridge = new BridgeView(context);
+  hostManager = new HostManager({
+    extensionDir: context.extensionPath || __dirname,
+    log: (line) => hostOutput.appendLine(line),
+    workspaceMatches: sameWorkspace,
+    nodePath: nodePathSetting,
+    onChange: () => { refreshBar(); bridge.refresh(); }
+  });
+  hostManager.checkSource().then((info) => {
+    if (info.error) hostOutput.appendLine('[host] ' + info.error);
+    else hostOutput.appendLine(`[host] 插件来源提交 ${info.commit || '未知'}；主机仓库当前提交 ${info.repoCommit || '未知'}`);
+    if (info.warning) vscode.window.showWarningMessage(info.warning);
+  });
+  bridge.hostCommands = { start: () => startHost(), stop: () => stopHost(), log: () => hostOutput.show(true) };
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider('webagent.chatView', chat),
     vscode.window.registerWebviewViewProvider('webagent.bridgeView', bridge)
@@ -361,7 +405,54 @@ function activate(context) {
   statusBar.show();
   context.subscriptions.push(statusBar);
 
+  async function startHost({ quiet = false } = {}) {
+    try {
+      if (explicitHostUrl()) throw new Error('已手工设置 webagent.agentHostUrl（或环境变量 WEBAGENT_AGENT_HOST_URL），插件只连接该地址、不会自己启动主机。清除该设置后即可一键启动。');
+      const folder = workspacePaths()[0];
+      const snap = await hostManager.start(folder);
+      if (snap.state === 'external' && !quiet) vscode.window.showInformationMessage('已接管同一文件夹上正在运行的主机（外部启动，插件停止时不会关闭它）。');
+      if (context.globalState?.get('webagent.startBridgeWithHost') === true) {
+        const status = await requestJson('GET', `${agentHostUrl()}/api/status`);
+        if (status.json && !status.json.bridgeRunning) await bridge.startBridge(status.json.tunnelProvider || 'cloudflare');
+      }
+      return snap;
+    } catch (error) {
+      if (!error.cancelled) {
+        hostOutput.appendLine('[host] ' + error.message);
+        if (!quiet) vscode.window.showErrorMessage(error.message, '查看日志').then((pick) => { if (pick) hostOutput.show(true); });
+      }
+      return null;
+    } finally { refreshBar(); bridge.refresh(); }
+  }
+
+  async function stopHost() {
+    const snap = hostManager.snapshot();
+    if (snap.state === 'starting' && !snap.owned) { await hostManager.stop(); refreshBar(); bridge.refresh(); return; }
+    if (!snap.owned) {
+      if (snap.state === 'external') vscode.window.showInformationMessage('这个主机不是插件启动的（例如由 run-webagent.cmd 启动），插件不会关闭它；请在启动它的窗口按 Ctrl+C。');
+      return;
+    }
+    if (snap.state === 'running') {
+      let bridgeOn = false;
+      try { bridgeOn = Boolean((await requestJson('GET', `${agentHostUrl()}/api/status`)).json?.bridgeRunning); } catch { /* unknown: still ask */ bridgeOn = true; }
+      if (bridgeOn) {
+        const ok = await vscode.window.showWarningMessage('停止主机会同时停止 Bridge 隧道和正在运行的命令，Arena 等远程连接会断开。确定停止？', { modal: true }, '停止');
+        if (ok !== '停止') return;
+      }
+    }
+    await hostManager.stop();
+    refreshBar(); bridge.refresh();
+  }
+
   async function refreshBar() {
+    const snap = hostManager ? hostManager.snapshot() : { state: 'idle' };
+    if (snap.state === 'starting') {
+      statusBar.text = '$(sync~spin) Web Agent 启动中…';
+      statusBar.tooltip = '正在准备并启动主机（首次需安装依赖）。点击查看日志。';
+      statusBar.command = 'webagent.showHostLog';
+      return;
+    }
+    statusBar.command = 'webagent.openAgentChat';
     try {
       const r = await requestJson('GET', `${agentHostUrl()}/api/status`);
       if (!r.json || r.status >= 400) throw new Error('http ' + r.status);
@@ -379,11 +470,18 @@ function activate(context) {
       }
       const running = r.json.bridgeRunning;
       statusBar.text = running ? '$(zap) Web Agent Bridge 运行中' : '$(hubot) Web Agent';
-      statusBar.tooltip = r.json.workspaceRoot ? `工作区 ${r.json.workspaceRoot}` : '已连接 agent-host';
+      const origin = snap.owned ? '由插件启动' : snap.state === 'external' ? '外部启动（插件不会关闭它）' : '';
+      statusBar.tooltip = [r.json.workspaceRoot ? `工作区 ${r.json.workspaceRoot}` : '已连接 agent-host', origin, snap.warning].filter(Boolean).join('\n');
     } catch (error) {
       const badUrl = /webagent\.agentHostUrl/.test(String(error && error.message));
-      statusBar.text = badUrl ? '$(warning) Web Agent 主机地址无效' : '$(warning) Web Agent 未连接 48271';
-      statusBar.tooltip = badUrl ? error.message : '先运行 run-webagent.cmd（或 run-webagent-vscode.cmd）让 agent-host 听 48271。';
+      if (!badUrl && hostManager) hostManager.markLost();
+      const manual = !badUrl && explicitHostUrl();
+      statusBar.text = badUrl ? '$(warning) Web Agent 主机地址无效'
+        : manual ? '$(warning) Web Agent 未连接' : '$(debug-start) Web Agent 未启动';
+      statusBar.tooltip = badUrl ? error.message
+        : manual ? `已手工设置主机地址 ${manual}，但它没有回答。请先启动那个主机，或清除 webagent.agentHostUrl 改用一键启动。`
+        : [snap.error, '点击启动主机（以当前文件夹为工作区，不需要 CMD 或浏览器）。'].filter(Boolean).join('\n');
+      if (!badUrl && !manual) statusBar.command = 'webagent.startHost';
     }
   }
   refreshBar();
@@ -405,8 +503,17 @@ function activate(context) {
         vscode.commands.executeCommand('workbench.view.extension.webagent-sidebar');
       }
     }),
-    vscode.commands.registerCommand('webagent.resetSecret', () => resetSecretCommand({ refresh: () => bridge.refresh() }))
+    vscode.commands.registerCommand('webagent.resetSecret', () => resetSecretCommand({ refresh: () => bridge.refresh() })),
+    vscode.commands.registerCommand('webagent.startHost', () => startHost()),
+    vscode.commands.registerCommand('webagent.stopHost', () => stopHost()),
+    vscode.commands.registerCommand('webagent.showHostLog', () => hostOutput.show(true))
   );
+
+  const canManage = vscode.workspace.isTrusted !== false && !explicitHostUrl() && (vscode.workspace.workspaceFolders || []).length;
+  if (canManage && vscode.workspace.getConfiguration('webagent').get('autoStartHost') === true) startHost({ quiet: true });
+  else if (canManage) {
+    try { hostManager.attachExisting(workspacePaths()[0]).catch(() => {}); } catch { /* no usable folder yet */ }
+  }
 }
 
 // Webview messages are untrusted input, even with a restrictive page CSP.
@@ -420,7 +527,9 @@ function validWebviewMessage(msg, surface) {
   if (surface !== 'bridge') return false;
   if (msg.type === 'control') return Boolean(['chat','bridge'].includes(msg.workMode) || (typeof msg.revision === 'string' && /^[a-f0-9]{64}$/.test(msg.revision) && msg.permissions && Object.keys(msg.permissions).length === 4 && ['read','edit','execute','capture'].every(k => typeof msg.permissions[k] === 'boolean')));
   if (msg.type === 'copy') return typeof msg.text === 'string' && msg.text.length <= 128000;
-  return ['refresh', 'start', 'stop', 'reset'].includes(msg.type);
+  if (msg.type === 'start') return msg.tunnelProvider === undefined || ['cloudflare', 'cloudflare-named', 'ngrok'].includes(msg.tunnelProvider);
+  if (msg.type === 'autoBridge') return typeof msg.value === 'boolean';
+  return ['refresh', 'stop', 'reset', 'hostStart', 'hostStop', 'hostLog'].includes(msg.type);
 }
 
 class ChatView {
@@ -463,10 +572,11 @@ class ChatView {
         );
         if (assistantText) this.history.push({ role: 'assistant', content: assistantText });
       } catch (err) {
-        if (!this.controller.signal.aborted) vscode.window.showErrorMessage(err.message, {modal:true});
+        const message = hostErrorHint(err);
+        if (!this.controller.signal.aborted) vscode.window.showErrorMessage(message, {modal:true});
         this._view.webview.postMessage({
           type: 'event',
-          ev: { type: 'error', message: err.message + '（请核对主机状态及已发生的操作；未自动重试）' }
+          ev: { type: 'error', message: message + '（请核对主机状态及已发生的操作；未自动重试）' }
         });
       } finally {
         this.controller = null;
@@ -477,6 +587,15 @@ class ChatView {
 }
 
 class BridgeView {
+  constructor(context) { this.context = context; this.hostCommands = null; }
+
+  async startBridge(tunnelProvider) {
+    const binding = await workspaceBinding();
+    const result = await requestJson('POST', `${agentHostUrl()}/api/bridge/start`, { tunnelProvider: tunnelProvider || 'cloudflare', ...binding });
+    if(result.status >= 400 || !result.json?.success) throw new Error(result.json?.error || 'Bridge 启动被拒绝');
+    return this.refresh();
+  }
+
   resolveWebviewView(webviewView) {
     this._view = webviewView;
     webviewView.webview.options = { enableScripts: true };
@@ -493,11 +612,15 @@ class BridgeView {
           this._view.webview.postMessage({type:'controlSaved'});
           return this.refresh();
         }
-        if (msg.type === 'start') {
-          const binding = await workspaceBinding();
-          const result = await requestJson('POST', `${agentHostUrl()}/api/bridge/start`, { tunnelProvider: 'cloudflare', ...binding });
-          if(result.status >= 400 || !result.json?.success) throw new Error(result.json?.error || 'Bridge 启动被拒绝');
-          return this.refresh();
+        // await inside the try: a rejected start must reach the modal error below, not escape.
+        if (msg.type === 'start') { await this.startBridge(msg.tunnelProvider); return; }
+        if (msg.type === 'hostStart') { await this.hostCommands?.start(); return; }
+        if (msg.type === 'hostStop') { await this.hostCommands?.stop(); return; }
+        if (msg.type === 'hostLog') { this.hostCommands?.log(); return; }
+        if (msg.type === 'autoBridge') {
+          await this.context?.globalState?.update('webagent.startBridgeWithHost', msg.value);
+          await this.refresh();
+          return;
         }
         if (msg.type === 'stop') {
           const binding = await workspaceBinding();
@@ -531,12 +654,17 @@ class BridgeView {
     if (!this._view) return;
     if (this.refreshPending) return this.refreshPending;
     this.refreshPending = (async () => {
+      const host = hostManager ? hostManager.snapshot() : { state: 'idle' };
+      const autoBridge = this.context?.globalState?.get('webagent.startBridgeWithHost') === true;
+      let manual = '';
+      try { manual = explicitHostUrl(); } catch { /* shown via status error */ }
+      const hostInfo = { state: host.state, owned: host.owned, url: host.url, error: host.error, warning: host.warning, commit: host.commit, manual: Boolean(manual), autoBridge };
       try {
         const r = await requestJson('GET', `${agentHostUrl()}/api/status`);
         if (r.status !== 200 || !r.json) throw new Error('HTTP ' + r.status);
-        this._view.webview.postMessage({ type: 'status', status: r.json });
+        this._view.webview.postMessage({ type: 'status', status: r.json, host: hostInfo });
       } catch (e) {
-        this._view.webview.postMessage({ type: 'status', status: { error: e.message } });
+        this._view.webview.postMessage({ type: 'status', status: { error: hostErrorHint(e) }, host: hostInfo });
       }
     })();
     try { await this.refreshPending; } finally { this.refreshPending = null; }
@@ -691,9 +819,17 @@ button{background:#0e639c;color:#fff;border:0;padding:7px 10px;border-radius:4px
 #task-list{margin:0;padding:0;list-style:none}
 </style></head><body>
 <div class="pill" id="pill">检查中…</div>
+<div class="card" id="host-card">
+  <strong>主机</strong> <span id="host-state">检查中…</span>
+  <div><button id="host-start">启动</button><button id="host-stop">停止</button><button id="host-log">日志</button></div>
+  <label><input id="auto-bridge" type="checkbox">启动主机后同时开启 Bridge</label>
+  <p class="hint" id="host-hint">以当前打开的文件夹为工作区启动，不需要 CMD 或浏览器。关闭 VS Code 窗口时，插件启动的主机与隧道会一起停止。</p>
+</div>
 <div class="card">
   <div>MCP 地址</div>
   <div class="url" id="url">—</div>
+  <label>隧道 <select id="tunnel"><option value="cloudflare">Cloudflare Quick Tunnel</option><option value="cloudflare-named">Cloudflare Named Tunnel</option><option value="ngrok">ngrok</option></select></label>
+  <p class="hint">Named Tunnel 与 ngrok 的域名/Token 仍在网页工作台的 Bridge 页保存（下一期搬进 VS Code）；Quick Tunnel 无需配置。</p>
   <button id="start">启动 Bridge</button>
   <button id="stop">停止</button>
   <button id="copy">复制提示词</button>
@@ -731,7 +867,27 @@ for (const k of ['read','edit','execute','capture']) document.getElementById('ac
   }
 };
 const CONNECT = '快速连接这个 MCP（URL），明确使用规则，熟悉可用工具，做好处理接下来一系列工作的准备。';
-document.getElementById('start').onclick = () => vscode.postMessage({ type:'start' });
+document.getElementById('start').onclick = () => vscode.postMessage({ type:'start', tunnelProvider: document.getElementById('tunnel').value });
+document.getElementById('host-start').onclick = () => vscode.postMessage({ type:'hostStart' });
+document.getElementById('host-stop').onclick = () => vscode.postMessage({ type:'hostStop' });
+document.getElementById('host-log').onclick = () => vscode.postMessage({ type:'hostLog' });
+document.getElementById('auto-bridge').onchange = (e) => vscode.postMessage({ type:'autoBridge', value: e.target.checked });
+let tunnelTouched = false;
+document.getElementById('tunnel').onchange = () => { tunnelTouched = true; };
+const HOST_TEXT = { idle:'未启动', starting:'启动中…（首次需安装依赖）', running:'运行中（由插件启动）', external:'已连接（外部启动，插件不会关闭它）', error:'启动失败' };
+function paintHost(host){
+  host = host && typeof host === 'object' ? host : {};
+  const connected = !status.error;
+  let text = HOST_TEXT[host.state] || '未知';
+  if (host.manual) text = connected ? '已连接（手工设置的主机地址）' : '未连接（手工设置的主机地址）';
+  else if (host.state === 'idle' && connected) text = '默认端口上有主机（可能属于其他文件夹）；点【启动】核对并接管，或另起一个';
+  document.getElementById('host-state').textContent = text;
+  document.getElementById('host-start').disabled = Boolean(host.manual) || host.state === 'starting' || host.state === 'running' || host.state === 'external';
+  document.getElementById('host-stop').disabled = !(host.owned || host.state === 'starting');
+  document.getElementById('auto-bridge').checked = host.autoBridge === true;
+  document.getElementById('host-hint').textContent = [host.error, host.warning].filter(Boolean).join(' ')
+    || (host.manual ? '已手工设置 webagent.agentHostUrl：插件只连接该地址，不自己启动主机。' : '以当前打开的文件夹为工作区启动，不需要 CMD 或浏览器。关闭 VS Code 窗口时，插件启动的主机与隧道会一起停止。');
+}
 document.getElementById('stop').onclick = () => vscode.postMessage({ type:'stop' });
 document.getElementById('copy').onclick = () => {
   const url = status.prompt || ((status.mcpUrl||'') + '\\n\\n' + CONNECT);
@@ -792,6 +948,9 @@ window.addEventListener('message', e => {
   if (e.data?.type === 'controlSaved') {policyDirty=false;document.getElementById('access-result').textContent='已由主机应用';return;}
   if (!e.data || e.data.type !== 'status') return;
   status = e.data.status && typeof e.data.status === 'object' ? e.data.status : {};
+  paintHost(e.data.host);
+  if (!tunnelTouched && ['cloudflare','cloudflare-named','ngrok'].includes(status.tunnelProvider)) document.getElementById('tunnel').value = status.tunnelProvider;
+  else if (!tunnelTouched && status.tunnelProvider === 'named') document.getElementById('tunnel').value = 'cloudflare-named';
   const ctl = status.executionControl;
   document.getElementById('execution-mode').textContent=ctl ? ('主机模式：'+ctl.mode+'；Chat在途'+ctl.active.chat+'，Bridge在途'+ctl.active.bridge) : '模式/权限未知，请更新主机';
   if (ctl && !policyDirty) {policyRevision=ctl.revision;for(const key of ['read','edit','execute','capture']) document.getElementById('access-'+key).checked=ctl.permissions[key];}
@@ -806,4 +965,7 @@ vscode.postMessage({ type:'refresh' });
 </script></body></html>`;
 }
 
-module.exports = { activate, deactivate: () => {}, modeFromChatRequest };
+// VS Code awaits this promise briefly on window close; the stdin lifeline covers the rest.
+function deactivate() { return hostManager ? hostManager.dispose() : undefined; }
+
+module.exports = { activate, deactivate, modeFromChatRequest };

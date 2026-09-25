@@ -226,5 +226,12 @@ async function shutdown() {
   process.exit(failed ? 1 : 0);
 }
 process.once('SIGTERM', shutdown); process.once('SIGINT', shutdown);
+// Only a host started by the VS Code extension sets these (see utils/lifeline.js).
+require('./utils/lifeline').watchLifeline({
+  onLost(reason) {
+    console.log(`[lifeline] ${reason === 'stdin-closed' ? '启动它的 VS Code 插件已断开' : '启动它的 VS Code 进程已退出'}，主机正在关闭（先停命令与隧道）`);
+    shutdown();
+  }
+});
 
 module.exports = { uiApp, mcpApp, uiServer, mcpServer };

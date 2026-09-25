@@ -12,7 +12,8 @@
 | 文件 | 主要职责 |
 |---|---|
 | `package.json` | 扩展元数据、激活条件、命令和配置贡献 |
-| `extension.js` | 激活、HTTP/NDJSON客户端、侧栏webview、原生Chat接线和取消 |
+| `extension.js` | 激活、HTTP/NDJSON客户端、侧栏webview（含主机卡片与隧道选择）、原生Chat接线和取消 |
+| `hostManager.js` | 一键启动/接管/停止本机agent-host：读host.json、找端口、后台运行`launch.js host`、就绪与工作区核对、stdin生命线，不引用vscode |
 | `ptyHost.js` | 注册随机clientId、轮询/接收任务、审批、终端运行、捕获输出和报告 |
 | `ptyPolicy.js` | 不依赖VS Code的命令判断；决定是否可自动批准或必须重新询问 |
 | `workspaceMatch.js` | 规范路径并比较当前文件夹与host工作区 |
@@ -22,6 +23,7 @@
 | `resources/` | 图标；见该目录说明 |
 
 ## 执行流程
+0. 主机来源：用户点【启动】（或开启`webagent.autoStartHost`）时，hostManager先在48271–48290找同一文件夹的主机并接管，找不到才后台启动`node installer/launch.js host <文件夹>`（不开3000工作台）；关闭VS Code时经stdin生命线让主机自己正常关闭。手工设置`webagent.agentHostUrl`时只连接该地址。
 1. 激活时建立agent-host客户端，注册侧栏及当前VS Code版本支持的Chat能力。HTTP普通请求和NDJSON有各自的超时/取消处理。
 2. 用户消息发到 `/api/chat`；原生取消token和webview停止消息可中止请求。响应中的tool、message、error、done由各界面分别呈现。
 3. 扩展PTY以clientId和workspace标识自己。队列、hello、claim、accepted与运行中check都同时要求HTTP 2xx和预期JSON形状；拒绝或畸形响应保留最近可信队列状态。接到job先验证工作区和cwd真实路径，再claim；批准后重新向host报告accepted并确认仍可执行，不凭一个过期弹窗或HTTP拒绝正文里的真值字段启动。
@@ -39,10 +41,12 @@ webview动态文本使用DOM文本节点，CSP含nonce，宿主只接受预期�
 
 ## 自定义主机端口
 
-agentHostUrl优先读取VS Code设置`webagent.agentHostUrl`，其次扩展进程环境`WEBAGENT_AGENT_HOST_URL`，最后默认http://127.0.0.1:48271。清单给该设置定义了默认URL，因此通常会先命中设置，环境变量不是无条件覆盖。自定端口优先直接改此VS Code设置；确需环境回退时让设置为空并在启动宿主前设置环境。设置界面修改该配置后重载扩展；环境变量方式必须在启动VS Code前设置并完整退出旧进程再启动。F71起扩展只接受本机根地址（http(s)://127.0.0.1、localhost或[::1]加端口），其它值在发请求前即被拒绝并在状态栏提示——主机/api本来只回应这三种Host，其它地址不可能是真正的主机。端口与host实际启动配置需要一致，不能只修改扩展一端。
+agentHostUrl顺序：用户/工作区显式填写的`webagent.agentHostUrl`或扩展进程环境`WEBAGENT_AGENT_HOST_URL` → 插件启动/接管的主机地址 → 默认http://127.0.0.1:48271。清单里的默认值不算“显式填写”（用`inspect`区分）。显式填写后插件不再一键启动，只连接该地址。地址只能是本机根地址（127.0.0.1、localhost或[::1]），否则状态栏显示“主机地址无效”。
+
+`webagent.nodePath`（machine范围，工作区值被忽略）可指定node.exe完整路径；留空用PATH中的node。`webagent.autoStartHost`默认关闭。
 
 ## 验证
-`extensionCopy`验证规范源码与副本，`webviewRuntime`运行实际模板/消息fixture，`desktopExtension`、`ptyLifecycle`覆盖接口与任务边界。尚不能据此声称真实VS Code多窗口、shell integration、Windows审批和取消全部验收。
+`extensionCopy`验证规范源码与副本，`hostLaunch`真实启动/接管/停止主机并覆盖失败路径，`webviewRuntime`运行实际模板/消息fixture，`desktopExtension`、`ptyLifecycle`覆盖接口与任务边界。尚不能据此声称真实VS Code多窗口、shell integration、Windows审批和取消全部验收。
 
 F54第七批：requestJson最多接收8MiB响应，15秒总deadline与空闲timeout；重定向/超限/断流明确失败且清理，不自动重试。完整4xx/5xx及有界坏JSON仍交由既有消费者判断，不混同HTTP完成与业务成功。
 
@@ -55,7 +59,8 @@ F54第七批：requestJson最多接收8MiB响应，15秒总deadline与空闲time
 |---|---|
 | [dangerousPolicy.js](dangerousPolicy.js) | 55 个函数/类节点 |
 | [editorReview.js](editorReview.js) | 10 个函数/类节点 |
-| [extension.js](extension.js) | 65 个函数/类节点 |
+| [extension.js](extension.js) | 83 个函数/类节点 |
+| [hostManager.js](hostManager.js) | 61 个函数/类节点 |
 | [modeFromChatRequest.js](modeFromChatRequest.js) | 1 个函数/类节点 |
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
 | [ptyHost.js](ptyHost.js) | 60 个函数/类节点 |
