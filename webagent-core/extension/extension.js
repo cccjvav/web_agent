@@ -49,18 +49,25 @@ function requestHost(u) {
   return u.hostname.replace(/^\[(.*)\]$/, '$1');
 }
 
-function requestJson(method, url, body) {
+// options (R6 phase 2 settings-panel relay; omitted by every other caller, whose behaviour is unchanged):
+// rawBody = an already serialised JSON string sent as-is instead of JSON.stringify(body); timeoutMs replaces
+// the 15 s total deadline; signal aborts the request as unconfirmed. The result also carries contentType.
+function requestJson(method, url, body, options = {}) {
+  const timeoutMs = options.timeoutMs || 15000, signal = options.signal;
+  if (signal && signal.aborted) return Promise.reject(new Error('本机API请求已取消，结果未确认；没有自动重试'));
   return new Promise((resolve, reject) => {
     const u = new URL(url);
     const lib = u.protocol === 'https:' ? https : http;
-    const payload = body === undefined ? null : JSON.stringify(body);
+    const payload = typeof options.rawBody === 'string' ? options.rawBody : body === undefined ? null : JSON.stringify(body);
     const limit = 8 * 1024 * 1024;
     let settled = false, response, deadline, bytes = 0;
     const chunks = [];
+    const onAbort = () => finish(new Error('本机API请求已取消，结果未确认；没有自动重试'));
     const finish = (error, value) => {
       if (settled) return;
       settled = true;
       clearTimeout(deadline);
+      if (signal) signal.removeEventListener('abort', onAbort);
       chunks.length = 0;
       if (error) {
         reject(error);
@@ -70,7 +77,7 @@ function requestJson(method, url, body) {
     };
     const req = lib.request({
       hostname: requestHost(u), port: u.port, path: u.pathname + u.search,
-      method, timeout: 15000,
+      method, timeout: timeoutMs,
       headers: payload ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) } : {}
     }, (res) => {
       response = res;
@@ -99,10 +106,11 @@ function requestJson(method, url, body) {
         let json = null;
         try { json = raw ? JSON.parse(raw) : null; } catch { /* Keep bounded raw for existing callers. */ }
         // HTTP/JSON business success remains the caller's responsibility, including 409.
-        finish(null, { status: res.statusCode, json, raw });
+        finish(null, { status: res.statusCode, json, raw, contentType: String(res.headers['content-type'] || '') });
       });
     });
-    deadline = setTimeout(() => finish(new Error('本机API请求超过15秒，结果未确认；没有自动重试')), 15000);
+    deadline = setTimeout(() => finish(new Error(`本机API请求超过${Math.round(timeoutMs / 1000)}秒，结果未确认；没有自动重试`)), timeoutMs);
+    if (signal) signal.addEventListener('abort', onAbort, { once: true });
     req.on('timeout', () => finish(new Error('本机API请求超时，结果未确认；没有自动重试')));
     req.on('error', error => finish(error));
     req.end(payload);

@@ -64,6 +64,18 @@ validator负例包括null/数组/字符串/未知type/非法mode/正文对象，
 
 paintTasks带HTML样式文本和null：仅一个li、textContent保留尖括号而不创建子HTML；非法对象清列表。两次chatHtml nonce不同。Bridge.paintLogs同样尖括号工具名保留纯文本，12ms正确、失败显示Failed、非法列表显示等待。这里CSP只检查字符串，**没有真正浏览器强制执行CSP**；随机nonce“不相同”不是密码学检验。
 
+## settingsRelay.test.js：设置页请求转发（R6第二期第2批）
+
+[源码](settingsRelay.test.js)三部分，最后process.exit隔离真实主机。**loadRelayTransport()**读取浏览器ES模块vscodeRelay.js，断言只有一个export后去掉export、在本realm以脚本求值（CI含Node 18/20，无法直接import无package.json目录下的ESM），使Response/DOMException为真实全局。**tick()**等一次setImmediate。
+
+**partA()**只测extension/apiRelay.js：假send记录参数，**behaviour**可切换为成功、网络失败、非法状态码、409或挂起；**post**收集回复，**ask(message)**发一条并等两轮。覆盖：放行路径与原样正文（含ID路由、唯一查询路由、PUT/DELETE、/health）；默认拒绝20条（chat、tool/call、files、pty、tasks、external、consensus、probe、logs、错方法、尾斜杠、大小写）和15种路径花招（绝对/协议相对URL、点段及编码点、#、反斜杠、换行、多余查询、编码斜杠ID、超长），均断言send未被调用；正文规则；非法编号不回复、非转发消息不消费；失败不编造状态码、409原样转回；并发16满时重复编号与超限各得确切错误；abort只回一次失败；迟到的有效结果照常回复；dispose后不再发任何消息。
+
+**partB()**只测vscodeRelay.js：**postMessage**与**onMessage**替身，**answer(index,reply)**按编号回复。只外传method/path/body；409解析为ok=false的Response并可读JSON与content-type；204无正文；拒绝为TypeError；取消得AbortError、发出abort消息、迟到回复被丢弃；已取消信号不发送；缺少ok的回复被拒绝；postMessage抛错被拒绝。
+
+**partC()**端到端：进程内启动真实主机（端口0、临时工作区），以VM加载扩展的真实requestJson。先对永不响应的本地服务器验证requestJson新选项：取消与1秒期限都迅速以“未确认”拒绝、已取消信号不发请求、套接字关闭。再以webview转发函数→转发层→requestJson→主机：/api/status为200且工作区一致（主机把转发请求当本机控制面）；无效检查点请求得4xx回答而非异常；带工作区绑定关闭Execute并读回生效（rawBody原样到达）；tool/call在扩展侧被拒且主机请求日志中没有它。
+
+反向验证：去掉白名单、查询规则、GET正文限制、并发上限、重复编号检查、dispose标记、状态码检查、客户端取消消息、客户端ok判断，以及requestJson的信号、预取消检查、timeoutMs、rawBody，均变红。去掉路径规范化检查不红：白名单正则锚定且ID字符受限，属冗余防线。
+
 ## 验证
 
 按monacoLoading、workbenchRuntime、editorRuntime、webviewRuntime分别filter，或全量npm test。真实焦点、浏览器安全策略、CDN、桌面VS Code插件与终端仍应执行人工验收。
