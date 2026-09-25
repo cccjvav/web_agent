@@ -26,6 +26,30 @@ const { runWithSignal } = require('../src/utils/requestScope');
     assert.throws(() => readBoundedText(path.join(tmp, 'root.txt'), 3), /budget/);
     assert.throws(() => readFiles({ paths: Array(21).fill('root.txt') }), /20 paths/);
     assert.ok(findFiles({ glob: '**/*.txt' }).files.includes('root.txt'));
+    // find_files runs on the main thread. The old glob->RegExp translation backtracked
+    // exponentially on repeated "**/": ten of them on a 25-deep path took ~9 s, twelve ~100 s,
+    // freezing every other request. The matcher must stay linear and keep the old semantics.
+    {
+      let deep = tmp;
+      for (let i = 0; i < 25; i++) deep = path.join(deep, 'd' + i);
+      fs.mkdirSync(deep, { recursive: true });
+      fs.writeFileSync(path.join(deep, 'leaf.txt'), '');
+      const started = Date.now();
+      assert.deepStrictEqual(findFiles({ glob: '**/'.repeat(10) + 'nomatch' }).files, []);
+      assert.ok(Date.now() - started < 3000, `repeated **/ must not backtrack (took ${Date.now() - started} ms)`);
+      const { compileGlob, matchGlob, MAX_GLOB_LENGTH } = require('../src/tools/findFiles');
+      const cases = [ // [glob, path, expected] -- the old RegExp semantics, including edge precedence
+        ['**/*', 'a/b.js', true], ['*.js', 'a.js', true], ['*.js', 'a/b.js', false], ['src/**', 'src/a/b', true],
+        ['src/**/*.js', 'src/a.js', true], ['src/**/*.js', 'src/x/y/a.js', true], ['**/test?.js', 'test1.js', true],
+        ['**/test?.js', 'test12.js', false], ['a/*/c', 'a/x/c', true], ['a/*/c', 'a/x/y/c', false], ['**.md', 'd/R.md', true],
+        ['a.b', 'axb', false], ['(x)', '(x)', true], ['[ab]', 'a', false], ['***/', 'b', true], ['***/', 'b/', true],
+        ['***\\', 'b', true], ['*\\**', 'x/yz', true], ['?', '/', false], ['', '', true], ['中*', '中文.md', true]
+      ];
+      for (const [g, p, want] of cases) assert.strictEqual(matchGlob(compileGlob(g), p), want, `glob ${JSON.stringify(g)} vs ${JSON.stringify(p)}`);
+      assert.ok(findFiles({ glob: '**/leaf.txt' }).files.some(f => f.endsWith('d24/leaf.txt')));
+      assert.throws(() => findFiles({ glob: 'a'.repeat(MAX_GLOB_LENGTH + 1) }), err => err.code === 'E_BAD_ARGS');
+      fs.rmSync(path.join(tmp, 'd0'), { recursive: true, force: true });
+    }
     assert.throws(() => atomicWriteText(path.join(tmp, 'root.txt'), 'overwrite', { exclusive: true }), /EEXIST/);
     assert.strictEqual(fs.readFileSync(path.join(tmp, 'root.txt'), 'utf8'), 'needle');
     let release;

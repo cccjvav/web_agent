@@ -46,6 +46,7 @@ finally停止上报定时器、关闭两个服务器并删除临时目录。基�
 3. B跑自己的命令后，C的“最近一条”查询同样found为false——两个OAuth客户端也是两个调用者。
 4. 局部**execIds(logs)**只从tool为run_command的日志行取execId，**sessionIds(logs)**取轨迹sessionId集合：A能看到自己的执行，B与C都看不到A的；A与B的轨迹sessionId不相交。只统计run_command是因为B自己调用get_command_output时回显它传入的execId，那是B自己的日志行。
 5. 同一凭据保持连续性：A的“最近一条”仍是自己的execId；B经refresh换新access token后仍是同一调用者，能取回自己的输出。
+5b. 自填客户端名（第77组）：**named(target,name,args)**与call相同但在params里附clientInfo；A与B2（B刷新后的令牌）经它带同一个含换行或600字符的clientInfo.name；A运行命令（正向对照），B2取“最近一条”不得含A的标记，A自己仍能取回；最后断言没有调用者的key等于常量`mcp@local`。修前在B2读到A输出处变红（基线实测）；只去掉sessionKey清洗或只去掉touch兜底任一不红，两者互为冗余。
 6. 局部**principalOf(parts)**按requireAuth同一方式重算URL密钥的principal摘要，用作“不得出现”的探针；peers_list、snapshot与allSessions的公开文本不含URL密钥、principal摘要、原始密钥SHA-256、任何access token或它们的16字符前缀；三个凭据至少是三行调用者，且没有一行以peer:开头（无会话调用者不冒充初始化peer）。
 
 基线红测：只撤销src/mcp的修复时，第1项在“OAuth client B read the URL-secret caller A's latest output”失败；单独运行第4项的日志断言在修前同样失败于“B's get_logs listed A's execution”。finally停止上报定时器、撤销OAuth、关闭两个服务器并删除临时目录。

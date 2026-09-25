@@ -94,6 +94,26 @@ async function main() {
     const b2Latest = await call(B2, 'get_command_output', {});
     assert.ok(String(b2Latest.stdout || '').includes('B-OWN'), 'OAuth refresh keeps the same sessionless caller');
 
+    // 5b. The client name inside params is caller-chosen. A name with a control character (or an
+    // oversized one) used to make the caller key fail the public-text check and collapse to the
+    // constant "mcp@local", merging different credentials into one owner again.
+    for (const oddName of ['odd\nname', 'N'.repeat(600)]) {
+      const named = async (target, name, args) => {
+        const res = await fetch(target.url, { method: 'POST', headers: { ...target.headers, 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ jsonrpc: '2.0', id: nextId++, method: 'tools/call', params: { name, arguments: args || {}, clientInfo: { name: oddName } } }) });
+        assert.strictEqual(res.status, 200, `${name}: HTTP ${res.status}`);
+        return JSON.parse((await res.json()).result.content[0].text);
+      };
+      const oddMarker = 'A-ODD-' + crypto.randomBytes(6).toString('hex');
+      const oddRan = await named(A, 'run_command', { command: `node -e "process.stdout.write('${oddMarker}')"` });
+      assert.ok(String(oddRan.stdout || '').includes(oddMarker), 'positive control: A ran its command under the odd name');
+      const bOdd = await named(B2, 'get_command_output', {}); // B2: B's refreshed token (the original was rotated above)
+      assert.ok(!JSON.stringify(bOdd).includes(oddMarker), `B read A's output by sending the same odd client name (${JSON.stringify(oddName.slice(0, 12))})`);
+      const aOdd = await named(A, 'get_command_output', {});
+      assert.ok(String(aOdd.stdout || '').includes(oddMarker), 'the same credential with the same odd name keeps continuity');
+    }
+    assert.ok(!sessions.allSessions().some(s => s.key === 'mcp@local'), 'no caller collapses to the constant mcp@local key');
+
     // 6. Public caller labels (peers_list, status snapshot) must not disclose the credential or its digest.
     const principalOf = parts => crypto.createHash('sha256').update(JSON.stringify(parts)).digest('hex');
     const secretDigest = principalOf(['secret', config.secretKey]);

@@ -20,7 +20,11 @@ function sessionKey(req) {
   // A raw X-Forwarded-For header is client-controlled: when req.ip was empty it let a caller pick
   // the display key its anonymous calls were counted under (review P3-13). Same rule as oauth.js clientIp.
   const ip = (req && (req.ip || req.socket && req.socket.remoteAddress)) || 'local';
-  const client = (req && req.body && req.body.params && req.body.params.clientInfo && req.body.params.clientInfo.name) || 'mcp';
+  // The client name is caller-chosen: strip control characters and cap it so the key always passes
+  // touch()'s public-text check. Otherwise the key was replaced by a constant and the credential tag
+  // was lost, merging different credentials into one owner (the F71 problem again).
+  const rawClient = req && req.body && req.body.params && req.body.params.clientInfo && req.body.params.clientInfo.name;
+  const client = (typeof rawClient === 'string' ? rawClient.replace(/[\x00-\x1f\x7f]/g, '').slice(0, 64) : '') || 'mcp';
   const principal = req && typeof req.mcpPrincipal === 'string' && req.mcpPrincipal ? req.mcpPrincipal : '';
   if (!principal) return `${client}@${ip}`;
   const tag = crypto.createHmac('sha256', CALLER_TAG_SALT).update(principal).digest('hex').slice(0, 24);
@@ -36,7 +40,9 @@ function pruneSessions() {
 function touch(req, extra = {}) {
   pruneSessions();
   const requestedKey = extra.key || sessionKey(req);
-  const key = publicText(requestedKey, 512) || 'mcp@local';
+  // An unusable key still maps to a distinct owner: a constant fallback would merge unrelated callers.
+  const key = publicText(requestedKey, 512)
+    || `mcp@local~${crypto.createHash('sha256').update(String(requestedKey)).digest('hex').slice(0, 24)}`;
   const prev = sessions.get(key) || {
     key,
     connectedAt: new Date().toISOString(),

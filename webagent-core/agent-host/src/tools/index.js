@@ -163,7 +163,7 @@ const TOOLS = [
   tool({
     name: 'find_files',
     aliases: [],
-    description: 'Simple glob (*, **, ?; no brace expansion or negation), not regex. Basename patterns match at any depth. Up to 10000 visited entries; maxResults defaults to 40 and is capped at 200. Check truncated.',
+    description: 'Simple glob (*, **, ?; no brace expansion or negation; at most 256 characters), not regex. Basename patterns match at any depth. Up to 10000 visited entries; maxResults defaults to 40 and is capped at 200. Check truncated.',
     mode: ['ask', 'plan', 'code'],
     inputSchema: {
       type: 'object',

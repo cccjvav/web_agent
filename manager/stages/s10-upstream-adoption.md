@@ -1724,12 +1724,28 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **残余与未做：** Sec-Fetch-Site对不发该头的旧浏览器无效；Windows设备名的真实效果以CI为准，无本机实测；`.webagentignore`对有Execute的模型仍只是约定。第74组未审范围（延后清单第1行）本组未处理。
 
+### 第77组：审计余下范围第一批——无会话调用者键与find_files回溯（2026-09-25）
+
+**开头复审（F76）：** 查相邻调用链：`/ws`握手浏览器必带Origin、表单POST必带Origin，不依赖新的Sec-Fetch-Site分支；`.webagentignore`唯一读取方`loadCustomPatterns`直接`path.join`读盘，不经工具路径；`resolveSafePath`的其它调用方（customizations的`.webagent/*`、executor的cwd、stdioLaunch）不会遇到保留设备名，遇到时拒绝也合理。未发现缺陷。
+
+**审计（延后清单第1行）：**
+
+| 模块 | 结论 | 证据 |
+|---|---|---|
+| `mcp/session.js` | **低危，已修**：无会话调用者的key含调用方自填的`clientInfo.name`；名字含控制字符或超长时整个key过不了`touch`的publicText，被换成常量`mcp@local`，凭据标签丢失，不同凭据又合并成同一归属者（F71同类）。前提是受害方也发同样的怪名字，正常客户端不会。修：`sessionKey`清洗名字（去控制字符、截64），`touch`兜底改为`mcp@local~sha256(key)[:24]`，两者互为冗余 | mcpCallerIsolation 5b经真实HTTP：修前B2读到A的命令输出（基线红），修后隔离；单去任一处不红（已记入详解） |
+| `tools/findFiles.js` | **中危，已修**：glob在主线程被译成RegExp，每个`**/`变`(?:.*/)?`，重复时指数回溯：25层深目录上10个`**/`约9秒、12个约103秒，期间MCP、工作台、心跳全冻结，只需Read权限。修：`compileGlob`+`matchGlob`动态规划，O(记号×路径长)，语义与旧实现一致（随机比对零差异：最终实现上30万组含中文与emoji，此前60万组不含代理对；另有`***/`优先级等固定用例），glob上限256字符 | resourceBudget：换回旧实现在3秒断言处红（9.7秒）；最坏256字符模式在3000余文件上约0.24秒 |
+| `tools/patchEngine.js` | 未发现新问题。另测悬空符号链接（仓库自带、指向工作区外尚不存在的路径）：write_file新建/覆盖、apply_patch新建、在链接目录下新建、改名覆盖，均未在工作区外产生文件（覆盖时替换的是链接本身，链接目录下mkdir失败） | 一次性脚本，结论记于此 |
+| `tools/skills.js` safeSkillFile | 未发现问题：拒`..`/冒号/隐藏路径，逐级拒符号链接，realpath复核，读取带O_NOFOLLOW | 读码 |
+| 内容正则搜索 | 已有保护：worker线程2秒期限+terminate，另有isUnsafeRegex | 读码 |
+
+**残余与未做：** 本批未审：`api/routes.js`的POST路由逐项、`editorUndo`/检查点恢复路径、外部MCP客户端（externalClient/stdioLaunch）、admin-host、危险命令检测器（F72已专项，定位为尽力而为）；留待下一批。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。
 
 | 登记 | 来源 | 待复审内容 | 状态 |
 |---|---|---|---|
-| 2026-09-25 | 第74组审计未审范围 | `mcp/session.js`；`api/routes.js`的POST路由逐项；`executor.js`/`dangerous.js`检测器；`patchEngine`补丁应用；`editorUndo`/`fileCheckpoints`恢复路径；`skills.safeSkillFile`；`findFiles`；外部MCP客户端（`externalClient`/`stdioLaunch`）；admin-host | 待处理 |
+| 2026-09-25 | 第74组审计未审范围 | `mcp/session.js`；`api/routes.js`的POST路由逐项；`executor.js`/`dangerous.js`检测器；`patchEngine`补丁应用；`editorUndo`/`fileCheckpoints`恢复路径；`skills.safeSkillFile`；`findFiles`；外部MCP客户端（`externalClient`/`stdioLaunch`）；admin-host | 进行中：第77组审完session.js（低危已修）、findFiles（中危已修）、patchEngine、skills.safeSkillFile；其余待下一批 |
 | 2026-09-25 | 第74组记录不修的低危项 | OAuth限流全体共享（无trust proxy）；授权页不显示客户端/回调主机；`/oauth/revoke`无限流；`GET /pty/jobs`副作用；Windows设备名；`.webagentignore`可被Edit改写 | 用户选方案B（第75组）：前三项属于OAuth，默认关闭后不再暴露，**只在用户开启OAuth时**仍然成立，留待真要接OAuth客户端时再修；后三项已于第76组处理（跨站GET按Sec-Fetch-Site拒绝、Windows设备名拒绝、规则文件列入内置敏感模式），结论与证据见第76组 |
 | 2026-09-25 | 第74组测试 | 完整测试首跑1次失败未保留输出，之后6轮未复现 | 待再观察 |

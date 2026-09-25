@@ -196,7 +196,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [installerPreparation.test.js](installerPreparation.test.js) | 61 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 19 个函数/类节点 |
-| [mcpCallerIsolation.test.js](mcpCallerIsolation.test.js) | 18 个函数/类节点 |
+| [mcpCallerIsolation.test.js](mcpCallerIsolation.test.js) | 20 个函数/类节点 |
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 24 个函数/类节点 |
 | [mcpInterop.test.js](mcpInterop.test.js) | 12 个函数/类节点 |
 | [mcpProtocol.test.js](mcpProtocol.test.js) | 53 个函数/类节点 |
@@ -231,7 +231,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [ptyLifecycle.test.js](ptyLifecycle.test.js) | 69 个函数/类节点 |
 | [publicHttps.test.js](publicHttps.test.js) | 19 个函数/类节点 |
 | [requestLifecycle.test.js](requestLifecycle.test.js) | 13 个函数/类节点 |
-| [resourceBudget.test.js](resourceBudget.test.js) | 14 个函数/类节点 |
+| [resourceBudget.test.js](resourceBudget.test.js) | 17 个函数/类节点 |
 | [runChat.test.js](runChat.test.js) | 30 个函数/类节点 |
 | [sandbox.test.js](sandbox.test.js) | 3 个函数/类节点 |
 | [searchWorkerLifecycle.test.js](searchWorkerLifecycle.test.js) | 14 个函数/类节点 |
