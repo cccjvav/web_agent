@@ -2,7 +2,7 @@
 
 ## 文件协作
 
-[extension.js](extension.js)在扩展宿主(Node)运行，两个HTML模板里的script在Webview运行，两边只能通过postMessage桥接。本机HTTP默认127.0.0.1指的是**扩展宿主所在机器**，不是远程手机浏览器。[PTY扩展详解](PTY扩展详解.md)接续真实终端链。
+[extension.js](extension.js)在扩展宿主(Node)运行，两个HTML模板里的script在Webview运行，两边只能通过postMessage桥接。本机HTTP默认127.0.0.1指的是**扩展宿主所在机器**，不是远程手机浏览器。[PTY扩展详解](PTY扩展详解.md)接续真实终端链。[apiRelay.js](apiRelay.js)是R6第二期设置页的请求转发层（见第13节）。
 
 ## 1. 顶层函数
 
@@ -11,7 +11,7 @@
 | dispatchPty(ev) | 事件→undefined | 只转发pty_request给全局ptyHost，noteStream再handleIncoming；未await返回Promise，不统一接收其异步拒绝 |
 | agentHostUrl() | 无→origin文本或抛错 | 顺序：**explicitHostUrl()**（用户/工作区设置或环境变量`WEBAGENT_AGENT_HOST_URL`）→ 插件管理的主机地址`hostManager.currentUrl()` → 默认48271。F71起必须是http/https、主机名为127.0.0.1、localhost或[::1]、不带用户信息/路径/查询/片段，返回URL.origin；否则抛出含`webagent.agentHostUrl`的错误 |
 | requestHost(u) | URL→主机名 | 去掉IPv6方括号：URL.hostname为`[::1]`，http.request会把它当DNS名查找而ENOTFOUND；Node据去括号后的地址自动生成`Host: [::1]:端口`，与主机本机判断一致 |
-| requestJson(method,url,body) | HTTP参数→Promise<{status,json,raw}> | 根据http/https选库，JSON正文带长度；响应最多8MiB，Content-Length声明超限提前拒绝（HEAD仅描述资源长度，不按正文拒绝），实际Buffer字节累计仍独立检查（含chunked）。15秒空闲timeout加总deadline；响应error/aborted/提前close/不完整end拒绝。finish单次结算、清deadline及chunks，失败销毁请求/响应；3xx拒绝且不跟随/重试。完整且有界响应保留{status,json,raw}，坏JSON/空正文仍json=null，4xx/5xx仍由调用方判断业务结果；响应上限不代表进程RSS上限 |
+| requestJson(method,url,body,options={}) | HTTP参数→Promise<{status,json,raw,contentType}> | 根据http/https选库，JSON正文带长度；响应最多8MiB，Content-Length声明超限提前拒绝（HEAD仅描述资源长度，不按正文拒绝），实际Buffer字节累计仍独立检查（含chunked）。15秒空闲timeout加总deadline；响应error/aborted/提前close/不完整end拒绝。finish单次结算、清deadline及chunks，失败销毁请求/响应；3xx拒绝且不跟随/重试。完整且有界响应保留{status,json,raw}，坏JSON/空正文仍json=null，4xx/5xx仍由调用方判断业务结果；响应上限不代表进程RSS上限。R6第二期第2批加可选options，只有设置页转发层使用，其他调用方不传、行为不变：rawBody为已序列化的JSON文本、原样发送；timeoutMs替换15秒总期限（错误文字随之写秒数）；signal取消时由内部**onAbort**以“已取消，结果未确认；没有自动重试”结束，信号已取消则直接拒绝、不发请求；结束时移除监听。结果另带响应的contentType |
 | postNdjson(url,body,onEvent,signal) | Chat请求→Promise<void> | POST JSON+AbortSignal；仅2xx且application/x-ndjson；5分钟空闲timeout及总deadline。UTF8解码保留跨chunk字符与半行，单行1MiB/总响应16MiB上限；consume验证对象/type及message.text，回调异常向上传播。仅一个done且随后正常end才resolve；error、done后数据、坏帧、aborted/error/提前close均finish拒绝并销毁请求/响应，单次结算清deadline；不跟随重定向或重试 |
 | historyFromChatContext(context) | VS Code历史→role/content数组 | 每turn.prompt变user；本扩展result.metadata.webagentCompleted=false的失败turn不回送assistant，未标记的旧历史保持兼容；response.map识别value或value.value后join变assistant；最后12消息，不是12轮；不传引用/工具结构 |
 | revealWorkspaceFile(rel) | 相对路径→undefined | 首工作区joinPath，openTextDocument.then成功show预览/保留焦点，打开失败吞；此函数本身不是写入沙箱检查 |
@@ -149,6 +149,16 @@ extension.js新增：**explicitHostUrl()**用`inspect`区分“用户/工作区�
 **与网页工作台并存：** 网页工作台版不变。已用run-webagent.cmd为同一文件夹启动主机时插件自动接管（显示“外部启动”），VS Code与网页看到同一主机；插件停止或关闭窗口不会结束它。两个VS Code窗口打开同一文件夹时，第二个窗口接管第一个的主机；第一个窗口关闭后主机随之停止，第二个窗口状态栏回到“未启动”，需再点一次启动。
 
 **限制：** 主机代码仍来自仓库或安装目录（host.json），未打包进插件；Named Tunnel/ngrok的域名与Token仍在网页工作台保存（第二期迁移）；token模式Named Tunnel若在Cloudflare后台把入口写死为48271，需让插件主机拿到48271（第一个窗口通常就是）。Windows进程树结束与父进程看护由Windows CI上的hostLaunch测试验证，真实桌面关闭VS Code后的端口/cloudflared释放仍需用户实机验收。
+
+## 13. 设置页请求转发（R6第二期第2批）
+
+[apiRelay.js](apiRelay.js)不依赖vscode，可单独测试。设置页webview里的工作台模块经`js/api.js`→`js/vscodeRelay.js`把请求`postMessage`给扩展进程，由这里转发到本窗口启动或接管的主机（第3批接线时注入的send绑定agentHostUrl()与requestJson）。webview自身不访问127.0.0.1，主机的Origin与本机控制面检查不放宽：转发请求不带Origin/Sec-Fetch-*，Host为127.0.0.1，即主机已接受的本机CLI路径。
+
+**checkRequest(message)**：默认拒绝。路径须以单个`/`开头、不超过2048字符、不含反斜杠/控制字符/`#`；用URL解析后若来源变化、pathname与原文不同（点段）或含`%2e`，直接拒绝而不是规范化——白名单正则两端锚定且ID只允许字母数字`_-`，这一层是冗余防线（去掉它测试不红，已记录）。方法+路径须命中RULES：状态/诊断/执行控制、Bridge启停与重置、GitHub登录、模型与Provider探测、自定义配置、画像探测、技能列表/读取/新增、审批列表与批准/取消、工作流预览/请求、检查点、连接自检。**不转发**：chat、tool/call、pty、files、tasks/reset（不属于设置，tool/call会让设置页变成任意工具入口）；external、consensus（决定D4：第二期结束前只在网页工作台）；probe（探针暂停、由他人负责）。只有`/api/skills/load`接受查询串。GET/DELETE不得带正文；正文须为1MiB内的有效JSON文本，原样转发。
+
+**createApiRelay({send,post,maxInFlight=16,timeoutMs=120000})**：返回handle/request/abort/dispose与size。**request(message)**：编号须为1–64位`[A-Za-z0-9_-]`字符串，否则忽略（无处回复）；重复编号、超过并发上限、白名单拒绝都回`ok:false`且不调用send。send结果的状态码须为200–599整数，否则按失败回复；网络失败、期限、取消、重定向都回`ok:false`与原因，从不编造状态码；HTTP 4xx/5xx作为正常回答原样转回（`ok:true,status`）。120秒上限高于工作台各模块自己的计时器，模块超时先以取消消息到达。**abort(message)**取消在途请求，已结束的返回false。**handle(message)**分发`webagent-api`/`webagent-api-abort`，其他消息返回false留给原有处理。**dispose()**在面板关闭时取消全部在途请求；之后经**reply**的任何结果都不再发给已关闭的webview，新请求也不回复。**size**为在途数。
+
+验证见[浏览器与Webview测试详解](../agent-host/tests/浏览器与Webview测试详解.md)的settingsRelay：单元、webview端与真实主机端到端。
 
 ## Bridge所有者控件
 
