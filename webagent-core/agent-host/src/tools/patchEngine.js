@@ -158,6 +158,35 @@ function isInsideWorkspace(absPath) {
   return !(posix === '..' || posix.startsWith('../') || path.isAbsolute(rel));
 }
 
+// NTFS can give a file a second, 8.3 spelling (".webagent" -> "WEBAGE~1", "credentials.json" ->
+// "CREDEN~1.JSO"). Built-in sensitive rules match names, and the JS realpath keeps the spelling it
+// was given, so an alias reached protected files through read/write/list/search. A component that
+// contains "~", exists, yet is not literally one of its parent's entries is such an alias. Only
+// components with "~" pay for the directory read; admin-set short names without "~" are not seen.
+function assertNoShortNameAlias(root, resolved) {
+  if (process.platform !== 'win32') return;
+  const rel = path.relative(root, resolved);
+  if (!rel.includes('~')) return;
+  let cur = root;
+  for (const part of rel.split(path.sep)) {
+    const next = path.join(cur, part);
+    if (part.includes('~')) {
+      let names;
+      try { names = fs.readdirSync(cur); } catch (_) { return; }
+      const lower = part.toLowerCase();
+      if (!names.some((name) => name.toLowerCase() === lower)) {
+        if (fs.existsSync(next)) {
+          throw new ProtocolError('E_BAD_ARGS', `Path component "${part}" is a Windows 8.3 short-name alias.`, {
+            retryHint: 'Use the long file or folder name as shown by list_dir.'
+          });
+        }
+        return;
+      }
+    }
+    cur = next;
+  }
+}
+
 function resolveSafePath(relPath) {
   if (looksLikeUncOrDrive(relPath)) {
     throw new Error(`Security error: path "${relPath}" is outside workspace root.`);
@@ -177,6 +206,7 @@ function resolveSafePath(relPath) {
   if (!isInsideWorkspace(resolved)) {
     throw new Error(`Security error: path "${relPath}" is outside workspace root.`);
   }
+  assertNoShortNameAlias(root, resolved);
   if (posix && posix !== '.') assertNotSensitive(posix);
   const real = realPathOrJoin(resolved);
   const realRel = toPosixRel(path.relative(realPathOrJoin(root), real));

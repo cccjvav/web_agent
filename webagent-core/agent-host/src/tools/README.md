@@ -107,7 +107,7 @@ R4：executor/fileOps复用WEBAGENT_DEBUG_PROCESS=1输出有界生命周期元�
 | [gitOps.js](gitOps.js) | 13 个函数/类节点 |
 | [index.js](index.js) | 24 个函数/类节点 |
 | [normalize.js](normalize.js) | 4 个函数/类节点 |
-| [patchEngine.js](patchEngine.js) | 39 个函数/类节点 |
+| [patchEngine.js](patchEngine.js) | 41 个函数/类节点 |
 | [planRound.js](planRound.js) | 10 个函数/类节点 |
 | [progressTracker.js](progressTracker.js) | 12 个函数/类节点 |
 | [ptyJobs.js](ptyJobs.js) | 23 个函数/类节点 |

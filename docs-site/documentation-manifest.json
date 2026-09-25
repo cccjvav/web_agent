@@ -10629,8 +10629,8 @@
     {
       "path": "webagent-core/agent-host/src/tools/patchEngine.js",
       "doc": "webagent-core/agent-host/src/tools/README.md",
-      "sha256": "321fc79ed58be26587858bebf6021f7ba3a8e59ff6cc20903f3addfdcc58fa3e",
-      "lineCount": 578,
+      "sha256": "561f8e7392eb08ada7251d56ba35e8c292892f7b55205d28e5aaf29d8626752f",
+      "lineCount": 608,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -10865,21 +10865,42 @@
           ]
         },
         {
+          "id": "assertNoShortNameAlias",
+          "name": "assertNoShortNameAlias",
+          "kind": "FunctionDeclaration",
+          "startLine": 166,
+          "endLine": 188,
+          "parameters": [
+            "root",
+            "resolved"
+          ]
+        },
+        {
+          "id": "assertNoShortNameAlias/anonymous@177:22",
+          "name": "anonymous@177:22",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 177,
+          "endLine": 177,
+          "parameters": [
+            "name"
+          ]
+        },
+        {
           "id": "resolveSafePath",
           "name": "resolveSafePath",
           "kind": "FunctionDeclaration",
-          "startLine": 161,
-          "endLine": 185,
+          "startLine": 190,
+          "endLine": 215,
           "parameters": [
             "relPath"
           ]
         },
         {
-          "id": "resolveSafePath/anonymous@167:68",
-          "name": "anonymous@167:68",
+          "id": "resolveSafePath/anonymous@196:68",
+          "name": "anonymous@196:68",
           "kind": "ArrowFunctionExpression",
-          "startLine": 167,
-          "endLine": 168,
+          "startLine": 196,
+          "endLine": 197,
           "parameters": [
             "part"
           ]
@@ -10888,8 +10909,8 @@
           "id": "looksLikeUnifiedDiff",
           "name": "looksLikeUnifiedDiff",
           "kind": "FunctionDeclaration",
-          "startLine": 187,
-          "endLine": 192,
+          "startLine": 217,
+          "endLine": 222,
           "parameters": [
             "text"
           ]
@@ -10898,8 +10919,8 @@
           "id": "looksLikeV4A",
           "name": "looksLikeV4A",
           "kind": "FunctionDeclaration",
-          "startLine": 194,
-          "endLine": 198,
+          "startLine": 224,
+          "endLine": 228,
           "parameters": [
             "text"
           ]
@@ -10908,8 +10929,8 @@
           "id": "rejectUnsupportedPatchFormat",
           "name": "rejectUnsupportedPatchFormat",
           "kind": "FunctionDeclaration",
-          "startLine": 200,
-          "endLine": 212,
+          "startLine": 230,
+          "endLine": 242,
           "parameters": [
             "filePath",
             "patch",
@@ -10920,8 +10941,8 @@
           "id": "malformedPatch",
           "name": "malformedPatch",
           "kind": "FunctionDeclaration",
-          "startLine": 224,
-          "endLine": 228,
+          "startLine": 254,
+          "endLine": 258,
           "parameters": [
             "message",
             "hint"
@@ -10931,18 +10952,18 @@
           "id": "parseSearchReplaceBlocks",
           "name": "parseSearchReplaceBlocks",
           "kind": "FunctionDeclaration",
-          "startLine": 230,
-          "endLine": 302,
+          "startLine": 260,
+          "endLine": 332,
           "parameters": [
             "patchText"
           ]
         },
         {
-          "id": "parseSearchReplaceBlocks/anonymous@238:63",
-          "name": "anonymous@238:63",
+          "id": "parseSearchReplaceBlocks/anonymous@268:63",
+          "name": "anonymous@268:63",
           "kind": "ArrowFunctionExpression",
-          "startLine": 238,
-          "endLine": 238,
+          "startLine": 268,
+          "endLine": 268,
           "parameters": [
             "line",
             "i",
@@ -10953,8 +10974,8 @@
           "id": "parseSearchReplaceBlocks/bare",
           "name": "bare",
           "kind": "ArrowFunctionExpression",
-          "startLine": 239,
-          "endLine": 239,
+          "startLine": 269,
+          "endLine": 269,
           "parameters": [
             "line"
           ]
@@ -10963,8 +10984,8 @@
           "id": "parseSearchReplaceBlocks/markerLines",
           "name": "markerLines",
           "kind": "ArrowFunctionExpression",
-          "startLine": 259,
-          "endLine": 266,
+          "startLine": 289,
+          "endLine": 296,
           "parameters": [
             "re",
             "from",
@@ -10976,8 +10997,8 @@
           "id": "parseSearchReplaceBlocks/join",
           "name": "join",
           "kind": "ArrowFunctionExpression",
-          "startLine": 287,
-          "endLine": 291,
+          "startLine": 317,
+          "endLine": 321,
           "parameters": [
             "from",
             "to"
@@ -10987,8 +11008,8 @@
           "id": "wholeLineDeletionNeedle",
           "name": "wholeLineDeletionNeedle",
           "kind": "FunctionDeclaration",
-          "startLine": 309,
-          "endLine": 337,
+          "startLine": 339,
+          "endLine": 367,
           "parameters": [
             "haystack",
             "needle",
@@ -10999,8 +11020,8 @@
           "id": "applySearchBlocks",
           "name": "applySearchBlocks",
           "kind": "FunctionDeclaration",
-          "startLine": 339,
-          "endLine": 382,
+          "startLine": 369,
+          "endLine": 412,
           "parameters": [
             "currentContent",
             "blocks",
@@ -11011,26 +11032,26 @@
           "id": "applyPatch",
           "name": "applyPatch",
           "kind": "FunctionDeclaration",
-          "startLine": 384,
-          "endLine": 386,
+          "startLine": 414,
+          "endLine": 416,
           "parameters": [
             "opts = {}"
           ]
         },
         {
-          "id": "applyPatch/anonymous@385:38",
-          "name": "anonymous@385:38",
+          "id": "applyPatch/anonymous@415:38",
+          "name": "anonymous@415:38",
           "kind": "ArrowFunctionExpression",
-          "startLine": 385,
-          "endLine": 385,
+          "startLine": 415,
+          "endLine": 415,
           "parameters": []
         },
         {
           "id": "applyPatchBody",
           "name": "applyPatchBody",
           "kind": "FunctionDeclaration",
-          "startLine": 388,
-          "endLine": 562,
+          "startLine": 418,
+          "endLine": 592,
           "parameters": [
             "{ filePath, patch, expectedHash = null, dryRun = false, occurrence } = {}"
           ]

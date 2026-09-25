@@ -1464,7 +1464,7 @@
 
 ## webagent-core/agent-host/src/tools/patchEngine.js
 
-[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `321fc79ed58be26587858bebf6021f7ba3a8e59ff6cc20903f3addfdcc58fa3e`
+[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `561f8e7392eb08ada7251d56ba35e8c292892f7b55205d28e5aaf29d8626752f`
 
 - `computeHash` — FunctionDeclaration，[L13–L15](../webagent-core/agent-host/src/tools/patchEngine.js#L13-L15)
 - `tempSibling` — FunctionDeclaration，[L17–L19](../webagent-core/agent-host/src/tools/patchEngine.js#L17-L19)
@@ -1489,22 +1489,24 @@
 - `existingAncestor` — FunctionDeclaration，[L129–L142](../webagent-core/agent-host/src/tools/patchEngine.js#L129-L142)
 - `realPathOrJoin` — FunctionDeclaration，[L144–L150](../webagent-core/agent-host/src/tools/patchEngine.js#L144-L150)
 - `isInsideWorkspace` — FunctionDeclaration，[L152–L159](../webagent-core/agent-host/src/tools/patchEngine.js#L152-L159)
-- `resolveSafePath` — FunctionDeclaration，[L161–L185](../webagent-core/agent-host/src/tools/patchEngine.js#L161-L185)
-- `resolveSafePath/anonymous@167:68` — ArrowFunctionExpression，[L167–L168](../webagent-core/agent-host/src/tools/patchEngine.js#L167-L168)
-- `looksLikeUnifiedDiff` — FunctionDeclaration，[L187–L192](../webagent-core/agent-host/src/tools/patchEngine.js#L187-L192)
-- `looksLikeV4A` — FunctionDeclaration，[L194–L198](../webagent-core/agent-host/src/tools/patchEngine.js#L194-L198)
-- `rejectUnsupportedPatchFormat` — FunctionDeclaration，[L200–L212](../webagent-core/agent-host/src/tools/patchEngine.js#L200-L212)
-- `malformedPatch` — FunctionDeclaration，[L224–L228](../webagent-core/agent-host/src/tools/patchEngine.js#L224-L228)
-- `parseSearchReplaceBlocks` — FunctionDeclaration，[L230–L302](../webagent-core/agent-host/src/tools/patchEngine.js#L230-L302)
-- `parseSearchReplaceBlocks/anonymous@238:63` — ArrowFunctionExpression，[L238–L238](../webagent-core/agent-host/src/tools/patchEngine.js#L238-L238)
-- `parseSearchReplaceBlocks/bare` — ArrowFunctionExpression，[L239–L239](../webagent-core/agent-host/src/tools/patchEngine.js#L239-L239)
-- `parseSearchReplaceBlocks/markerLines` — ArrowFunctionExpression，[L259–L266](../webagent-core/agent-host/src/tools/patchEngine.js#L259-L266)
-- `parseSearchReplaceBlocks/join` — ArrowFunctionExpression，[L287–L291](../webagent-core/agent-host/src/tools/patchEngine.js#L287-L291)
-- `wholeLineDeletionNeedle` — FunctionDeclaration，[L309–L337](../webagent-core/agent-host/src/tools/patchEngine.js#L309-L337)
-- `applySearchBlocks` — FunctionDeclaration，[L339–L382](../webagent-core/agent-host/src/tools/patchEngine.js#L339-L382)
-- `applyPatch` — FunctionDeclaration，[L384–L386](../webagent-core/agent-host/src/tools/patchEngine.js#L384-L386)
-- `applyPatch/anonymous@385:38` — ArrowFunctionExpression，[L385–L385](../webagent-core/agent-host/src/tools/patchEngine.js#L385-L385)
-- `applyPatchBody` — FunctionDeclaration，[L388–L562](../webagent-core/agent-host/src/tools/patchEngine.js#L388-L562)
+- `assertNoShortNameAlias` — FunctionDeclaration，[L166–L188](../webagent-core/agent-host/src/tools/patchEngine.js#L166-L188)
+- `assertNoShortNameAlias/anonymous@177:22` — ArrowFunctionExpression，[L177–L177](../webagent-core/agent-host/src/tools/patchEngine.js#L177-L177)
+- `resolveSafePath` — FunctionDeclaration，[L190–L215](../webagent-core/agent-host/src/tools/patchEngine.js#L190-L215)
+- `resolveSafePath/anonymous@196:68` — ArrowFunctionExpression，[L196–L197](../webagent-core/agent-host/src/tools/patchEngine.js#L196-L197)
+- `looksLikeUnifiedDiff` — FunctionDeclaration，[L217–L222](../webagent-core/agent-host/src/tools/patchEngine.js#L217-L222)
+- `looksLikeV4A` — FunctionDeclaration，[L224–L228](../webagent-core/agent-host/src/tools/patchEngine.js#L224-L228)
+- `rejectUnsupportedPatchFormat` — FunctionDeclaration，[L230–L242](../webagent-core/agent-host/src/tools/patchEngine.js#L230-L242)
+- `malformedPatch` — FunctionDeclaration，[L254–L258](../webagent-core/agent-host/src/tools/patchEngine.js#L254-L258)
+- `parseSearchReplaceBlocks` — FunctionDeclaration，[L260–L332](../webagent-core/agent-host/src/tools/patchEngine.js#L260-L332)
+- `parseSearchReplaceBlocks/anonymous@268:63` — ArrowFunctionExpression，[L268–L268](../webagent-core/agent-host/src/tools/patchEngine.js#L268-L268)
+- `parseSearchReplaceBlocks/bare` — ArrowFunctionExpression，[L269–L269](../webagent-core/agent-host/src/tools/patchEngine.js#L269-L269)
+- `parseSearchReplaceBlocks/markerLines` — ArrowFunctionExpression，[L289–L296](../webagent-core/agent-host/src/tools/patchEngine.js#L289-L296)
+- `parseSearchReplaceBlocks/join` — ArrowFunctionExpression，[L317–L321](../webagent-core/agent-host/src/tools/patchEngine.js#L317-L321)
+- `wholeLineDeletionNeedle` — FunctionDeclaration，[L339–L367](../webagent-core/agent-host/src/tools/patchEngine.js#L339-L367)
+- `applySearchBlocks` — FunctionDeclaration，[L369–L412](../webagent-core/agent-host/src/tools/patchEngine.js#L369-L412)
+- `applyPatch` — FunctionDeclaration，[L414–L416](../webagent-core/agent-host/src/tools/patchEngine.js#L414-L416)
+- `applyPatch/anonymous@415:38` — ArrowFunctionExpression，[L415–L415](../webagent-core/agent-host/src/tools/patchEngine.js#L415-L415)
+- `applyPatchBody` — FunctionDeclaration，[L418–L592](../webagent-core/agent-host/src/tools/patchEngine.js#L418-L592)
 
 ## webagent-core/agent-host/src/tools/planRound.js
 
