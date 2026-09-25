@@ -14,6 +14,16 @@
 
 当前TTL：配对5分钟、授权码5分钟、access1小时、refresh7天。重启全部内存授权丢失，重新注册/配对；长期URL secret来自另一份运行配置。
 
+## 0. 默认关闭的开关（2026-09-25）
+
+用户决定把OAuth配对改为**默认关闭、按需开启**：Arena等贴URL的连接只用URL密钥，从不经过OAuth，而发现/注册/授权/换令牌/吊销地址此前在每条隧道上都对公网开放。开关存于`.webagent/config.json`的`bridge.oauthEnabled`，缺省`false`，所以老配置升级后同样是关闭。
+
+**oauthEnabled()**按`store.revisionKey()`缓存读取开关（`verifyAccessToken`每个MCP请求都调用，不能每次解析config.json），与Bridge权限策略的缓存方式相同。config.json损坏或读不到时按“关闭”处理且不缓存失败：这个闸门在每个`/mcp`请求之前，若让它抛错，URL密钥请求（开关出现前从不读config.json）会全部变成笼统的500；现在URL密钥照常认证，`initialize`仍像以前一样报出配置损坏，匿名请求仍是401。观察到“关闭”且内存里还有客户端、令牌、授权码或配对码时立即调用revokeAll：用户直接编辑config.json关掉开关时，旧授权不会在之后重新打开时复活。
+
+**setOauthEnabled(enabled)**只接受严格的`true`为开启，写入store；关闭时立即revokeAll，开启且Bridge正在运行时ensurePairing；返回snapshotPairing。本机入口是`POST /api/bridge/oauth`。
+
+关闭时的行为：router开头的中间件对全部OAuth路由`next('router')`，请求落到应用的404；`verifyAccessToken`在URL密钥比较之后对OAuth令牌返回null；`wwwAuthenticate`只返回`Bearer realm="Web Agent"`，不再给出resource_metadata；`issuePairing`不生成配对码；`snapshotPairing`带`enabled:false`且code为null。URL密钥与Bearer形式的URL密钥始终不受影响。
+
 ## 1. 时间、随机数与地址函数
 
 | 函数 | 参数/返回 | 边界 |
@@ -28,9 +38,9 @@
 
 ## 2. 配对生命周期：四个函数
 
-**issuePairing()**覆盖全局pairing，写新code、createdAt、expiresAt、attempts为空Map，返回snapshotPairing。不会保留多个客户端各自的码。
+**issuePairing()**在OAuth关闭时直接返回snapshotPairing而不生成配对码；开启时覆盖全局pairing，写新code、createdAt、expiresAt、attempts为空Map，返回snapshotPairing。不会保留多个客户端各自的码。
 
-**snapshotPairing()**无值或expiresAt严格小于now时返回code:null、expired:true；否则返回实际code和四舍五入的剩余秒数，expired:false。它不主动删除过期对象；实际code只能通过本机控制面适当展示，不可公开日志。
+**snapshotPairing()**总带`enabled`字段；OAuth关闭、无值或expiresAt严格小于now时返回code:null、expired:true；否则返回实际code和四舍五入的剩余秒数，expired:false。它不主动删除过期对象；实际code只能通过本机控制面适当展示，不可公开日志。
 
 **ensurePairing()**若快照过期/无码则issue，否则返回当前快照。
 
@@ -40,7 +50,7 @@
 
 - **authorizationServerMetadata(origin)**返回issuer及authorize/token/register/revoke端点，声明code/refresh、S256、none/post/basic三种认证方式和scope。
 - **protectedResourceMetadata(origin)**给resource=`origin/mcp`、授权服务器及header bearer方式。
-- **wwwAuthenticate(origin)**先safeOrigin排除非法输入（失败回本机），再构造Bearer挑战，指向protected-resource元数据。
+- **wwwAuthenticate(origin)**在OAuth关闭时只返回`Bearer realm="Web Agent"`；开启时先safeOrigin排除非法输入（失败回本机），再构造Bearer挑战，指向protected-resource元数据。
 
 这些函数不验证客户端；origin语法/来源限制不等于验证域名归属。metadata包含openid scope，但本文件没有签发ID token/UserInfo完整OIDC流程；不能因此称为完整OpenID Connect提供者。
 
@@ -80,7 +90,7 @@ issueAccess生成access/refresh，创建含两个截止的共享记录，同时�
 
 ### verifyAccessToken(token)
 
-空null；先常时比较当前config.secretKey，匹配返回kind=secret、clientId=url-secret；否则prune后查access，超时删并返回null，有效返回kind=oauth及clientId。refresh不能直接作为access使用；验证不续期，不把HTTP session ID当token。
+空null；先常时比较当前config.secretKey，匹配返回kind=secret、clientId=url-secret；OAuth关闭时到此返回null；否则prune后查access，超时删并返回null，有效返回kind=oauth及clientId。refresh不能直接作为access使用；验证不续期，不把HTTP session ID当token。
 
 ### revokeAll()
 

@@ -25,9 +25,9 @@ stdio/受控外部接入：[受控工具与工作流详解](../utils/受控工�
 
 ## 建立连接
 ### 地址和凭据
-规范路径为 `/mcp`，兼容 `/mcp/<secret>`。extractToken依次检查Bearer、路径secret、x-mcp-secret和query secret；验证由oauth模块完成，支持主机连接密钥或有效OAuth访问令牌。不要把带secret的URL当普通公开链接。
+规范路径为 `/mcp`，兼容 `/mcp/<secret>`。extractToken依次检查Bearer、路径secret、x-mcp-secret和query secret；验证由oauth模块完成，支持主机连接密钥或有效OAuth访问令牌（后者仅在OAuth配对开启时）。不要把带secret的URL当普通公开链接。
 
-未认证返回401并给WWW-Authenticate发现提示。允许浏览器Origin只是CORS层条件，不代替凭据认证。OAuth发现/注册/授权/token端点挂在MCP端口，由上层index挂载。
+未认证返回401；WWW-Authenticate只在OAuth开启时给发现提示，关闭时只是`Bearer realm`。允许浏览器Origin只是CORS层条件，不代替凭据认证。OAuth发现/注册/授权/token端点挂在MCP端口，由上层index挂载；OAuth默认关闭，关闭时这些端点404（开关`bridge.oauthEnabled`，本机`POST /api/bridge/oauth`，见[OAuth授权详解](OAuth授权详解.md)第0节）。
 
 ### initialize与会话
 initialize协商支持的协议版本，返回能力、服务器信息和instructions，并建立Mcp-Session-Id。当前声明支持2024-11-05、2025-03-26、2025-06-18；客户端应保存服务器选择的版本和会话ID。版本保存在私有会话；缺省版本头沿用已知协商值，无已知信息才按2025-03-26兼容。重复/不支持/冲突版本头在POST/GET/DELETE副作用前400，活会话不允许重新initialize降级。
@@ -97,7 +97,7 @@ R2/R3会话提交时序：HTTP/SSE响应SID先校验但不立即保存，RPC响�
 | [errors.js](errors.js) | 6 个函数/类节点 |
 | [externalClient.js](externalClient.js) | 24 个函数/类节点 |
 | [instructions.js](instructions.js) | 3 个函数/类节点 |
-| [oauth.js](oauth.js) | 49 个函数/类节点 |
+| [oauth.js](oauth.js) | 52 个函数/类节点 |
 | [publicHttps.js](publicHttps.js) | 17 个函数/类节点 |
 | [requestLifecycle.js](requestLifecycle.js) | 8 个函数/类节点 |
 | [resources.js](resources.js) | 5 个函数/类节点 |

@@ -12,6 +12,7 @@ const { config } = require('../src/config');
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-mcp-caller-'));
 config.workspaceRoot = tmp;
+require('../src/mcp/oauth').setOauthEnabled(true); // OAuth pairing is opt-in (2026-09-25); this test exercises it.
 config.host = '127.0.0.1';
 config.port = 0;
 config.workbenchPort = 0;

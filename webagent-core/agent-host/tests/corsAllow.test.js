@@ -201,7 +201,10 @@ function request(server, method, urlPath, body, headers) {
       jsonrpc: '2.0', id: 11, method: 'ping'
     }, { Origin: 'https://arena.ai' });
     assert.strictEqual(challenge.status, 401);
-    assert.match(challenge.headers['www-authenticate'], /resource_metadata=/);
+    // OAuth pairing is off by default (2026-09-25): the challenge is a plain Bearer realm with no OAuth
+    // discovery pointer, and it stays browser-readable -- the CORS contract does not depend on OAuth.
+    assert.match(challenge.headers['www-authenticate'], /^Bearer realm=/);
+    assert.doesNotMatch(challenge.headers['www-authenticate'], /resource_metadata=/);
     assert.ok(challenge.headers['access-control-expose-headers'].toLowerCase().includes('www-authenticate'));
     assert.strictEqual(evil.headers['access-control-allow-origin'], undefined, 'do not widen the allowed origins');
 

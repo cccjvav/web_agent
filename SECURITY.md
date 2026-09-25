@@ -63,7 +63,7 @@ MCP 密钥和模型 API Key 写在工作区 `.webagent/config.json`（尽量 `ch
 
 工作台 `GET /api/status` **仍带** `secretKey`：本机拼 MCP 地址要用，且`/api`限制回环socket＋明确本机Host＋如有Origin则要求本机HTTP(S)来源（允许本机不同端口，无Origin的CLI路径仍可用，不是严格同源）。不另开 `/api/bridge/secret`。
 
-ChatGPT 自制 MCP 插件用的 OAuth access / refresh **只在内存**。关掉 `run-webagent` 进程后要重新配对。
+OAuth 配对**默认关闭**：关闭时发现/注册/授权/换令牌/吊销地址一律404，已发出的OAuth令牌不再被接受，401也不再引导客户端走OAuth；只有在本机工作台 BRIDGE 区开启后才对外提供。关闭即撤销全部OAuth客户端与令牌，URL密钥不受影响。ChatGPT 自制 MCP 插件用的 OAuth access / refresh **只在内存**。关掉 `run-webagent` 进程后要重新配对。
 
 ## 报告漏洞
 
@@ -91,6 +91,8 @@ Chat断开/停止会传递取消信号；每请求5分钟总期限，模型响�
 - 强杀主机进程后应人工确认对应cloudflared/ngrok已退出；仅凭旧PID自动强杀可能误伤PID复用的其他进程，当前不实施这种回收。断电时进程不会继续运行，但重启后的外部服务/残留启动机制仍需核对。
 
 ## OAuth注册与配对的当前限制
+
+以下限制只在OAuth配对开启时适用（默认关闭）。
 
 注册最多80客户端，活跃令牌或授权码保护其注册；满时仅回收超过5分钟的无活动注册，否则503，不撤销正常连接来腾位置。回调最多16个、每个2048字符，只支持HTTPS或HTTP回环，精确匹配；不支持自定义URI scheme。公开授权GET不再生成/更新码，须从本机工作台生成。授权请求另有IP限流，五次错误预算按已注册clientId隔离，不能用另一注册者全局作废码；ID不是秘密，不声称消除针对已知目标ID或流量层的拒绝服务。
 

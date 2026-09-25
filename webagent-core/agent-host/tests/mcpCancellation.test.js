@@ -7,6 +7,7 @@ const express = require('express');
 const { config } = require('../src/config');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mcp-cancel-'));
 config.workspaceRoot = tmp;
+require('../src/mcp/oauth').setOauthEnabled(true); // OAuth pairing is opt-in (2026-09-25); this test exercises it.
 const { currentSignal } = require('../src/utils/requestScope');
 const { TOOLS } = require('../src/tools');
 const tool = TOOLS.find(t => t.name === 'workspace_info');

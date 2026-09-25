@@ -1685,6 +1685,27 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **未审范围：** `mcp/session.js`、`api/routes.js`的POST路由逐项、`tools/executor.js`与`dangerous.js`的检测器（F72已知为词法检测）、`patchEngine`补丁应用、`editorUndo`/`fileCheckpoints`恢复路径、`skills.safeSkillFile`、`findFiles`、外部MCP客户端（`externalClient`/`stdioLaunch`）、admin-host、扩展与探针（暂停）。
 
+### 第75组：OAuth配对改为默认关闭（2026-09-25）
+
+用户询问OAuth配对负责什么、考虑降级或取消。解释后给出三案（保持/默认关闭保留开关/彻底删除），用户选推荐的B。事实依据：Arena（电脑与手机）只用URL密钥，从未经过OAuth；OAuth未在任何真实客户端上验收；第74组六个低危项中三个属于OAuth。原计划的“授权页显示客户端与回调主机”随之不做。
+
+**改动：** 开关`bridge.oauthEnabled`（config.json，缺省false，老配置升级后同样关闭）。关闭时oauth.router全部9个路由404、已发OAuth令牌不再认证、401只给`Bearer realm`并在消息里说明OAuth已关闭、Bridge启动不发配对码、hostStatus不列oauth；URL密钥不受影响。关闭即撤销全部OAuth客户端与令牌，直接编辑config.json关闭也会在首次观察到时清空，重新开启不复活旧授权。本机入口`POST /api/bridge/oauth`（严格布尔、拒绝未知字段、可选工作区/主机绑定不符409）；工作台BRIDGE区新增“开启/关闭 OAuth 配对”按钮，两个方向都先确认后果。OAuth连接器卡片、使用指南、Windows验收、隧道指南、SECURITY、MCP README与技术实现同步写明默认关闭。
+
+**本轮自我复审（当轮做，未延后）发现并修正：**
+
+| 问题 | 事实 | 处置 |
+|---|---|---|
+| 配置损坏时拖垮URL密钥（回归） | 首版`oauthEnabled()`直接`store.load()`，而router闸门在每个`/mcp`请求前；config.json损坏时URL密钥的ping/initialize与匿名请求全部变成笼统500。用git worktree在基线上跑同一场景：改前ping 200、initialize报出“配置读取失败”、匿名401 | 读取失败按关闭处理且不缓存；新增断言与基线行为一致，去掉try/catch即变红 |
+| 文档说“全部OAuth地址404”但只测了4个 | httpSmoke首版只查发现×2、register、authorize | 扩为oauth.router全部9个路由 |
+
+**反向验证：** 去掉verifyAccessToken的关闭检查、去掉“观察到关闭即清空”、去掉router闸门、去掉简化挑战、把默认改为开启，各自使对应断言变红。`setOauthEnabled`里的立即revokeAll与`issuePairing`守卫是双保险，单独去掉不会变红（下一次检查兜底），如实保留。
+
+**真实场景：** 在真实主机（src/index.js，临时工作区）上用curl核对：默认发现与注册404、401挑战为`Bearer realm="Web Agent"`、URL密钥ping正常；经`/api/bridge/oauth`开启后发现地址200、status.pairing.enabled为true；再关闭恢复404，config.json里为false；进程与端口均已释放。
+
+**自审补漏（二）：** 首轮按`oauth`/`pairing`找依赖测试，漏了按响应头内容断言的两处：`corsAllow.test.js`断言401挑战含`resource_metadata`（全量测试1/113红后发现），以及不在`npm test`里的`workbench.browser.js`（mcpCorsBrowser的challengeReadable同样按`resource_metadata`判断，只在CI的workbench-browser任务跑）。两处都改为按`Bearer realm=`判断：它们验证的是CORS暴露/浏览器可读，与OAuth开关无关。沙箱无法下载Chromium（cdn.playwright.dev连接被重置），浏览器测试的这处修改只能由CI验证。
+
+**残余与未做：** 开启OAuth后第74组的三个OAuth低危项仍成立；插件（VS Code扩展）尚无OAuth开关，只能在经典工作台切换，第二期设置面板若纳入需另做；不影响已有的Arena连接，但依赖OAuth的第三方客户端（若有人用过）升级后需要先手动开启并重新配对。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。
@@ -1692,5 +1713,5 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 | 登记 | 来源 | 待复审内容 | 状态 |
 |---|---|---|---|
 | 2026-09-25 | 第74组审计未审范围 | `mcp/session.js`；`api/routes.js`的POST路由逐项；`executor.js`/`dangerous.js`检测器；`patchEngine`补丁应用；`editorUndo`/`fileCheckpoints`恢复路径；`skills.safeSkillFile`；`findFiles`；外部MCP客户端（`externalClient`/`stdioLaunch`）；admin-host | 待处理 |
-| 2026-09-25 | 第74组记录不修的低危项 | OAuth限流全体共享（无trust proxy）；授权页不显示客户端/回调主机；`/oauth/revoke`无限流；`GET /pty/jobs`副作用；Windows设备名；`.webagentignore`可被Edit改写 | 等用户对OAuth去留的决定后再定 |
+| 2026-09-25 | 第74组记录不修的低危项 | OAuth限流全体共享（无trust proxy）；授权页不显示客户端/回调主机；`/oauth/revoke`无限流；`GET /pty/jobs`副作用；Windows设备名；`.webagentignore`可被Edit改写 | 用户选方案B（第75组）：前三项属于OAuth，默认关闭后不再暴露，**只在用户开启OAuth时**仍然成立，留待真要接OAuth客户端时再修；后三项待处理 |
 | 2026-09-25 | 第74组测试 | 完整测试首跑1次失败未保留输出，之后6轮未复现 | 待再观察 |

@@ -321,6 +321,35 @@ async function main() {
     });
     assert.strictEqual(bare.status, 401);
 
+    // OAuth pairing is off by default (2026-09-25): discovery and registration are absent, a 401
+    // no longer points clients at OAuth discovery, and status does not list OAuth. It is then turned
+    // on through the real local control endpoint, after which the discovery document appears.
+    // Every route oauth.router serves, so the documented "all OAuth endpoints 404" is what is checked.
+    const offRoutes = [
+      ['GET', '/.well-known/oauth-authorization-server'], ['GET', '/.well-known/oauth-protected-resource'],
+      ['GET', '/.well-known/oauth-protected-resource/mcp'], ['POST', '/oauth/register'], ['POST', '/register'],
+      ['GET', '/oauth/authorize?client_id=x'], ['POST', '/oauth/authorize'], ['POST', '/oauth/token'], ['POST', '/oauth/revoke']
+    ];
+    for (const [method, route] of offRoutes) {
+      const body = method === 'POST' ? { client_name: 'x', redirect_uris: ['https://example.com/cb'] } : undefined;
+      assert.strictEqual((await request(method, `http://127.0.0.1:${mcpPort}${route}`, body)).status, 404, `${method} ${route} must be absent while OAuth is off`);
+    }
+    const offChallenge = String(bare.headers['www-authenticate'] || '');
+    assert.ok(/^Bearer /.test(offChallenge) && !offChallenge.includes('resource_metadata'), `401 must not advertise OAuth while off: ${offChallenge}`);
+    assert.ok(!/OAuth pairing\./.test(bare.raw) && /OAuth pairing is off/.test(bare.raw), 'the 401 message states OAuth is off');
+    const offStatus = await request('GET', `http://127.0.0.1:${workbenchPort}/api/status`);
+    assert.strictEqual(offStatus.json.pairing.enabled, false);
+    assert.strictEqual(offStatus.json.pairing.code, null);
+    assert.strictEqual((await request('POST', `http://127.0.0.1:${workbenchPort}/api/bridge/oauth`, { enabled: 'yes' })).status, 400, 'enabled must be a boolean');
+    assert.strictEqual((await request('POST', `http://127.0.0.1:${workbenchPort}/api/bridge/oauth`, { enabled: true, extra: 1 })).status, 400, 'unknown fields are refused');
+    assert.strictEqual((await request('POST', `http://127.0.0.1:${workbenchPort}/api/bridge/oauth`, { enabled: true, workspaceRoot: '/elsewhere' })).status, 409, 'a stale workspace binding is refused');
+    assert.strictEqual((await request('GET', `http://127.0.0.1:${mcpPort}/.well-known/oauth-authorization-server`)).status, 404, 'refused toggles change nothing');
+    const turnedOn = await request('POST', `http://127.0.0.1:${workbenchPort}/api/bridge/oauth`, { enabled: true });
+    assert.strictEqual(turnedOn.status, 200);
+    assert.strictEqual(turnedOn.json.oauthEnabled, true);
+    const onChallenge = await request('POST', `http://127.0.0.1:${mcpPort}/mcp`, { jsonrpc: '2.0', id: 10, method: 'initialize', params: {} });
+    assert.ok(String(onChallenge.headers['www-authenticate'] || '').includes('resource_metadata'), 'with OAuth on, a 401 points at discovery again');
+
     const meta = await request('GET', `http://127.0.0.1:${mcpPort}/.well-known/oauth-authorization-server`);
     assert.strictEqual(meta.status, 200);
     assert.ok(meta.json.authorization_endpoint);

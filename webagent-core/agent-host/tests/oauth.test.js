@@ -9,6 +9,7 @@ const express = require('express');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-oauth-'));
 const { config } = require('../src/config');
 config.workspaceRoot = tmp;
+require('../src/mcp/oauth').setOauthEnabled(true); // OAuth pairing is opt-in (2026-09-25); this test exercises it.
 
 const oauth = require('../src/mcp/oauth');
 const mcpRouter = require('../src/mcp/server');
@@ -270,6 +271,71 @@ async function main() {
       });
     }
     assert.strictEqual(lastReg.status, 429);
+
+    // --- OAuth pairing is opt-in (2026-09-25). Turning it off must kill every issued grant, keep the
+    // URL secret working, and a later re-enable must not revive old grants -- including when "off"
+    // was written straight into config.json instead of through setOauthEnabled.
+    const freshTokens = () => {
+      const v = crypto.randomBytes(32).toString('base64url');
+      const reg = oauth.registerClient({ redirect_uris: ['http://127.0.0.1/cb'], client_name: 'toggle' });
+      const loc = new URL(oauth.completeAuthorize({ client_id: reg.client_id, redirect_uri: 'http://127.0.0.1/cb',
+        pairing_code: oauth.issuePairing().code, code_challenge: oauth.s256(v), code_challenge_method: 'S256', state: 's' }));
+      return { clientId: reg.client_id, ...oauth.handleToken({ grant_type: 'authorization_code', code: loc.searchParams.get('code'),
+        client_id: reg.client_id, redirect_uri: 'http://127.0.0.1/cb', code_verifier: v }) };
+    };
+    const t1 = freshTokens();
+    assert.ok(oauth.verifyAccessToken(t1.access_token), 'positive control: a fresh OAuth token authenticates');
+    oauth.setOauthEnabled(false);
+    assert.strictEqual(oauth.verifyAccessToken(t1.access_token), null, 'off: an issued OAuth token stops authenticating');
+    assert.strictEqual(oauth.verifyAccessToken(config.secretKey).kind, 'secret', 'off: the URL secret still works');
+    assert.strictEqual(oauth.issuePairing().code, null, 'off: no pairing code is issued');
+    assert.strictEqual(oauth.snapshotPairing().enabled, false);
+    const offMcp = await request(server, 'POST', '/mcp', {
+      body: { jsonrpc: '2.0', id: 5, method: 'ping', params: {} },
+      headers: { Authorization: `Bearer ${t1.access_token}` }
+    });
+    assert.strictEqual(offMcp.status, 401);
+    assert.ok(!String(offMcp.headers['www-authenticate'] || '').includes('resource_metadata'), 'off: 401 does not advertise OAuth discovery');
+    oauth.setOauthEnabled(true);
+    assert.strictEqual(oauth.verifyAccessToken(t1.access_token), null, 're-enabling must not revive a token revoked by turning off');
+    assert.throws(() => oauth.handleToken({ grant_type: 'refresh_token', refresh_token: t1.refresh_token, client_id: t1.clientId }),
+      're-enabling must not revive the refresh token either');
+    const t2 = freshTokens();
+    assert.ok(oauth.verifyAccessToken(t2.access_token));
+    const store = require('../src/models/store');
+    const cfgFile = path.join(tmp, '.webagent', 'config.json');
+    const editFlag = (on) => {
+      const raw = JSON.parse(fs.readFileSync(cfgFile, 'utf8'));
+      raw.bridge = { ...(raw.bridge || {}), oauthEnabled: on };
+      fs.writeFileSync(cfgFile, JSON.stringify(raw, null, 2));
+    };
+    editFlag(false);
+    assert.strictEqual(store.load().bridge.oauthEnabled, false, 'fixture: the file edit is visible to the store');
+    assert.strictEqual(oauth.verifyAccessToken(t2.access_token), null, 'off by direct config edit: token rejected');
+    editFlag(true);
+    assert.strictEqual(oauth.verifyAccessToken(t2.access_token), null, 'a direct-edit off/on cycle must not revive the token');
+    // A corrupt config.json must not take the URL secret down with it: the OAuth gate sits in front of
+    // every /mcp request, and before the opt-in switch URL-secret auth never read config.json. OAuth
+    // fails closed (treated as off, grants dropped); the URL secret and plain 401s keep working.
+    const t3 = freshTokens();
+    const goodCfg = fs.readFileSync(cfgFile, 'utf8');
+    fs.writeFileSync(cfgFile, '{ not json');
+    assert.throws(() => store.load(), /配置读取/, 'fixture: the store really reports corruption');
+    const corruptSecret = await request(server, 'POST', `/mcp/${config.secretKey}`, { body: { jsonrpc: '2.0', id: 6, method: 'ping', params: {} } });
+    assert.strictEqual(corruptSecret.status, 200, 'corrupt config: the URL secret must still authenticate');
+    assert.deepStrictEqual(corruptSecret.json.result, {}, 'corrupt config: ping still answers');
+    // As before the switch, initialize reports the corruption itself instead of a generic 500.
+    const corruptInit = await request(server, 'POST', `/mcp/${config.secretKey}`, {
+      body: { jsonrpc: '2.0', id: 8, method: 'initialize', params: { clientInfo: { name: 'corrupt-cfg' } } }
+    });
+    assert.strictEqual(corruptInit.status, 200);
+    assert.ok(/配置读取/.test(JSON.stringify(corruptInit.json.error || {})), 'corrupt config: initialize names the config problem');
+    const corruptAnon = await request(server, 'POST', '/mcp', { body: { jsonrpc: '2.0', id: 7, method: 'ping', params: {} } });
+    assert.strictEqual(corruptAnon.status, 401, 'corrupt config: an unauthenticated request is a 401, not a 500');
+    assert.strictEqual(oauth.verifyAccessToken(t3.access_token), null, 'corrupt config: OAuth fails closed');
+    assert.strictEqual((await request(server, 'GET', '/.well-known/oauth-authorization-server')).status, 404, 'corrupt config: OAuth routes are off');
+    fs.writeFileSync(cfgFile, goodCfg);
+    assert.strictEqual(oauth.verifyAccessToken(t3.access_token), null, 'repairing the file must not revive grants dropped while it was corrupt');
 
     oauth.revokeAll();
     const afterRevoke = await request(server, 'POST', '/mcp', {

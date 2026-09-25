@@ -28,6 +28,7 @@ function metadataRequest(server, route, headers, body) {
   oauth.revokeAll();
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-oauth-boundaries-'));
   config.workspaceRoot = tmp; config.host = '127.0.0.1'; config.port = 0; config.workbenchPort = 0;
+  require('../src/mcp/oauth').setOauthEnabled(true); // OAuth pairing is opt-in (2026-09-25); this test exercises it.
   const { uiServer, mcpServer: server } = require('../src/index');
   await Promise.all([uiServer, server].map(s => s.listening ? null : new Promise(resolve => s.once('listening', resolve))));
   const endpoint = `http://127.0.0.1:${server.address().port}/oauth/token`;

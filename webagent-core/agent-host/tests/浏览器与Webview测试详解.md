@@ -115,7 +115,7 @@ workbenchHtml另遍历非隐藏表单控件检查可访问名称，要求欢迎�
 
 F27-02的workbenchRuntime负例先复现null被paintClients显示“无需Plus”，修复后执行真实Bridge模块，断言待核对/未验证徽标以及DeepSeek指引无固定商店ID。DOM/HTTP回归不是真实浏览器安装第三方扩展或兼容验收。
 
-F28-01负例先复现配对码被说成仅ChatGPT需要；workbenchRuntime实际Bridge模块验证通用OAuth文案，以及unsupported卡片空prompt不泄落到全局连接文本。这里不连接真实厂商服务。
+F28-01负例先复现配对码被说成仅ChatGPT需要；workbenchRuntime实际Bridge模块验证通用OAuth文案（2026-09-25起先断言`pairing.enabled:false`时显示“已关闭”、即使快照带code也不显示、按钮为“开启 OAuth 配对”，再断言开启时显示配对码、按钮为“关闭 OAuth 配对”），以及unsupported卡片空prompt不泄落到全局连接文本。这里不连接真实厂商服务。
 
 ## 第33组：审批审阅绑定与结果消费
 

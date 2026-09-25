@@ -234,7 +234,7 @@ async function mcpCorsBrowser(browser, base, mcp) {
       const tools = Array.isArray((await follow.json()).result?.tools);
       if (sid) await fetch(mcp, {method:'DELETE',headers:{'Mcp-Session-Id':sid}});
       const challenge = await fetch(mcp.replace(/\/[^/]+$/, '/invalid'), {method:'POST',headers,body:JSON.stringify({jsonrpc:'2.0',id:3,method:'ping'})});
-      return {status:init.status,initialized,sessionReadable:/^[a-f0-9]{32}$/.test(sid || ''),followStatus:follow.status,tools,challengeStatus:challenge.status,challengeReadable:/resource_metadata=/.test(challenge.headers.get('WWW-Authenticate') || '')};
+      return {status:init.status,initialized,sessionReadable:/^[a-f0-9]{32}$/.test(sid || ''),followStatus:follow.status,tools,challengeStatus:challenge.status,challengeReadable:/^Bearer realm=/.test(challenge.headers.get('WWW-Authenticate') || '')};
     }, mcp);
     assert.deepStrictEqual(result, {status:200,initialized:true,sessionReadable:true,followStatus:200,tools:true,challengeStatus:401,challengeReadable:true});
   } finally { await page.close(); }

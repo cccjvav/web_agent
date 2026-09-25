@@ -471,8 +471,17 @@ if (!process.argv.includes('--vm-child')) {
   assert.ok(clientNodes.get('#browser-page').innerHTML.includes('兼容性未验证'));
   assert.ok(!clientNodes.get('#browser-page').innerHTML.includes('kdmpkkahkhdmdhfkdihkopikgcocbpbf'));
   state.namespace.state.status.bridgeRunning=true;
-  state.namespace.state.status.pairing={code:'FIXTURE',expiresInSec:120};
+  // OAuth pairing is opt-in (2026-09-25): while off, no code is shown even from a stale snapshot and
+  // the button offers to turn it on; while on, the code appears and the button offers to turn it off.
+  state.namespace.state.status.pairing={enabled:false,code:'FIXTURE',expiresInSec:120};
   bridge.namespace.paintClients();
+  assert.ok(clientNodes.get('#pairing-line').textContent.includes('已关闭'));
+  assert.ok(!clientNodes.get('#pairing-line').textContent.includes('FIXTURE'));
+  assert.strictEqual(clientNodes.get('#btn-oauth-toggle').textContent, '开启 OAuth 配对');
+  state.namespace.state.status.pairing={enabled:true,code:'FIXTURE',expiresInSec:120};
+  bridge.namespace.paintClients();
+  assert.ok(clientNodes.get('#pairing-line').textContent.includes('FIXTURE'));
+  assert.strictEqual(clientNodes.get('#btn-oauth-toggle').textContent, '关闭 OAuth 配对');
   assert.ok(clientNodes.get('#pairing-line').textContent.includes('兼容OAuth客户端'));
   assert.ok(!clientNodes.get('#pairing-line').textContent.includes('仅 ChatGPT'));
   state.namespace.state.status.clients=[{id:'chatgpt-free',prompt:'',connectMode:'unsupported-mcp'}];

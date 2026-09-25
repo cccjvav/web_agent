@@ -6,6 +6,11 @@ const vm = require('vm');
 const {createRequire} = require('module');
 const express = require('express');
 async function main() {
+  // OAuth pairing is opt-in (2026-09-25). The vm copy below shares the real store module, so turn it
+  // on inside a throwaway workspace, never the checkout's own .webagent/config.json.
+  const tmp = fs.mkdtempSync(path.join(require('os').tmpdir(), 'webagent-oauth-rl-'));
+  require('../src/config').config.workspaceRoot = tmp;
+  require('../src/models/store').patch({ bridge: { oauthEnabled: true } });
   const file = path.resolve(__dirname, '../src/mcp/oauth.js');
   let clock = 100000;
   const context = {module:{exports:{}}, require:createRequire(file), Date:{now:()=>clock}, Buffer, URL, URLSearchParams};
@@ -45,7 +50,7 @@ async function main() {
     const html=await post('/oauth/authorize');assert.equal(html.status,429);assert.equal(html.headers.get('retry-after'),'60');await html.text();
     clock+=60000;
     const recovered=await post('/oauth/register');assert.equal(recovered.status,400);assert.equal(recovered.headers.get('retry-after'),null);await recovered.text();
-  } finally {await new Promise(resolve=>server.close(resolve));}
+  } finally {await new Promise(resolve=>server.close(resolve)); fs.rmSync(tmp,{recursive:true,force:true});}
   console.log('OAuth rate limit: bounds, recovery, generated schedules, forged forwarding headers and real HTTP passed');
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

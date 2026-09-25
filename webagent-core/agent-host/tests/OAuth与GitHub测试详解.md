@@ -6,6 +6,8 @@
 
 [源码](oauth.test.js)的**request(server,method,urlPath,{body,headers,json=true})**同时支持字符串/对象、JSON/表单Content-Type和字节长度；data收Buffer，end解析（非JSON保留raw、json:null），error reject。**main**在tmp搭Express JSON/urlencoded、oauth.router、MCP，随机本机端口。
 
+OAuth配对自2026-09-25起默认关闭，本文件及mcpBoard、mcpCallerIsolation、mcpCancellation、oauthClientAuth、oauthSpentRefreshBudget在把工作区切到临时目录后调用`setOauthEnabled(true)`；oauthRateLimit的vm副本与测试进程共用真实store模块，因此先把工作区切到自建临时目录再写开关，不再读写检出目录下的`.webagent/config.json`。
+
 | 顺序与fixture | 断言 |
 |---|---|
 | discovery两端点 | authorization URL/S256/resource末尾mcp；源字符串需timingSafeEqual不得直接=== secret，package Node≥18 |
@@ -21,6 +23,7 @@
 | GET流 | **openStream(headers)**对URL-secret路径发GET：非200时读完正文返回，200时等到第一个空行就destroy请求；3秒超时reject，预期ECONNRESET忽略。不带Mcp-Session-Id必须405且`Allow: POST`（旧版HTTP+SSE握手未实现，F70第七批前会开流发endpoint事件，旧客户端永远等不到响应）；先initialize再带会话ID则200，流中没有endpoint事件、也不回显URL secret |
 | 连续21次HTTP register | 最后429，验证IP速率限制 |
 | revokeAll再Bearer ping | 401 |
+| 开关与授权生命周期（2026-09-25） | **freshTokens**直接走registerClient→issuePairing→completeAuthorize→handleToken取一套令牌。开启时令牌有效（正向对照）；setOauthEnabled(false)后该令牌失效、URL密钥仍为kind=secret、issuePairing不给code、snapshotPairing.enabled为false，经MCP的401挑战不含resource_metadata；重新开启后旧access和refresh都不能复活。**editFlag(on)**直接改写临时工作区的config.json（不经store.patch），关闭后新令牌被拒，再开启仍不复活。反向验证：去掉verifyAccessToken里的关闭检查、去掉“观察到关闭即清空”、去掉关闭时的简化挑战，分别在本组对应断言处变红；setOauthEnabled里的立即revokeAll与issuePairing守卫是双保险，单独去掉不会变红（下一次检查会兜底清空）。配置损坏一段：把config.json写成非法JSON（先断言store.load确实报错），URL密钥的ping仍200且result为空对象，initialize仍在JSON-RPC错误里说出“配置读取”问题，匿名请求401，OAuth令牌被拒、发现地址404；修好文件后令牌也不复活。去掉oauthEnabled里的try/catch时本段首条断言变红（首版实现就是如此，交付前复审发现并对照基线确认改前是200） |
 
 “pkceFailed”变量对应的是**不存在授权码同时错误verifier**，不足以单独证明有效code下错误PKCE分支；timingSafeEqual检查也不是计时侧信道实测。finally关闭server/删tmp；异常catch exit1。授权直接调用函数，未点击真实授权HTML页面；内存重启失效是设计约束而非此fixture持久化测试。
 

@@ -163,15 +163,58 @@ export function paintClients() {
     copyRules.classList.toggle('hidden', !(c && c.connectMode === 'extension-http' && c.rulesText));
   }
   const pair = state.status && state.status.pairing;
+  const oauthOn = Boolean(pair && pair.enabled);
   const line = $('#pairing-line');
   if (line) {
-    if (pair && pair.code && state.status.bridgeRunning) {
+    if (!oauthOn) {
+      line.textContent = 'OAuth 配对已关闭（默认）。Arena 等贴 URL 的连接不需要它；只有要求 OAuth 的连接器才需开启。';
+    } else if (pair.code && state.status.bridgeRunning) {
       line.textContent = `OAuth 配对码 ${pair.code}（约 ${pair.expiresInSec}s 有效，供兼容OAuth客户端授权使用）`;
     } else {
-      line.textContent = '配对码会在启动 Bridge 后出现，供兼容OAuth客户端授权使用。';
+      line.textContent = 'OAuth 配对已开启；配对码会在启动 Bridge 后出现，供兼容OAuth客户端授权使用。';
     }
   }
+  const toggle = $('#btn-oauth-toggle');
+  if (toggle) toggle.textContent = oauthOn ? '关闭 OAuth 配对' : '开启 OAuth 配对';
 }
+
+// Turning OAuth off revokes every OAuth client/token on the host; the URL secret is unaffected.
+// Bound to the host instance and workspace that were on screen, like the secret rotation.
+let oauthToggling = false;
+export async function toggleOauth() {
+  if (oauthToggling) return false;
+  const result = $('#oauth-toggle-result');
+  const button = $('#btn-oauth-toggle');
+  const expected = { workspaceRoot: state.status?.workspaceRoot, hostInstanceId: state.status?.identity?.hostInstanceId };
+  if (!expected.workspaceRoot || !expected.hostInstanceId) {
+    if (result) result.textContent = '主机状态未确认，未发送；请刷新页面。';
+    return false;
+  }
+  const enable = !(state.status?.pairing?.enabled);
+  const question = enable
+    ? '开启 OAuth 配对？隧道上会开放 OAuth 注册/授权地址，供要求 OAuth 的连接器配对。Arena 贴 URL 连接不需要它。'
+    : '关闭 OAuth 配对？所有已授权的 OAuth 客户端立即失效，再开启需重新配对；URL 密钥连接不受影响。';
+  if (!window.confirm(question)) {
+    if (result) result.textContent = '已取消，未更改。';
+    return false;
+  }
+  oauthToggling = true;
+  if (button) button.disabled = true;
+  try {
+    const data = await secretRequest('/api/bridge/oauth', { enabled: enable, ...expected });
+    if (!data || data.oauthEnabled !== enable) throw new Error('contract');
+    if (result) result.textContent = enable ? 'OAuth 配对已开启。' : 'OAuth 配对已关闭，已有 OAuth 授权已全部失效。';
+    await ui.refreshStatus();
+    return true;
+  } catch (_) {
+    if (result) result.textContent = '结果未确认；请刷新状态核对后再操作，没有自动重试。';
+    return false;
+  } finally {
+    oauthToggling = false;
+    if (button) button.disabled = false;
+  }
+}
+ui.toggleOauth = toggleOauth;
 
 export function renderBrowser(tab) {
   $('#br-url').value = tab.url || '';

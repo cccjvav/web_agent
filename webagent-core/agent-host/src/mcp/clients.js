@@ -110,8 +110,9 @@ const CLIENTS = [
     supportsMcp: null,
     verification: 'unverified',
     connectMode: 'oauth-connector',
-    summary: '主机提供OAuth连接能力，不专属某厂商。具体客户端版本、账户和订阅是否支持须另验；使用规范/mcp地址而非带密钥URL。',
+    summary: '主机提供OAuth连接能力，不专属某厂商，默认关闭，需先在本机工作台Bridge区开启。具体客户端版本、账户和订阅是否支持须另验；使用规范/mcp地址而非带密钥URL。',
     steps: [
+      'OAuth配对默认关闭：先在本机工作台Bridge区点“开启OAuth配对”；关闭会让已发出的OAuth授权全部失效，URL密钥连接不受影响',
       '先核对实际客户端是否支持主机的Streamable HTTP、OAuth和S256 PKCE，以及客户端注册/认证方式',
       '在经过核对的连接器入口填写可达的规范https://<主机>/mcp地址，不带密钥；不假定旧菜单或/plugins页面仍有效',
       '启动Bridge后在本机查看配对码，只输入主机实际授权页；配对码适用于兼容OAuth客户端，不公开或贴入普通聊天',
@@ -131,7 +132,7 @@ function hydrateClient(client, urls) {
   } else if (client.connectMode === 'oauth-connector') {
     prompt = [
       `MCP 规范地址（给连接器用）：${canonical}`,
-      '认证：OAuth。在本机工作台看配对码，不要把密钥贴到聊天里。'
+      '认证：OAuth（默认关闭，先在本机工作台Bridge区开启）。在本机工作台看配对码，不要把密钥贴到聊天里。'
     ].join('\n');
   } else if (client.connectMode === 'extension-http') {
     prompt = mcpUrl;

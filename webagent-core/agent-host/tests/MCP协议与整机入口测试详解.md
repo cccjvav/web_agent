@@ -54,6 +54,8 @@ finally停止上报定时器、关闭两个服务器并删除临时目录。基�
 
 [源码](httpSmoke.test.js)在两个随机范围端口启动真实src/index.js。**request(method,url,body,extraHeaders)**解析URL、JSON序列化、补Content-Type/长度，data收集、end同时给raw/json（坏JSON为null），error拒。**waitHealth(url,timeoutMs)**内部**tick**每120ms重试HTTP，响应resume释放流，超12秒拒。**stop(proc)**Windows taskkill树、其他SIGTERM；已killed跳过，**并未等待确切exit证明**。
 
+OAuth默认关闭（2026-09-25）一段在真实子进程上断言：oauth.router的全部9个路由（3个发现地址、`/oauth/register`与`/register`、GET/POST `/oauth/authorize`、`/oauth/token`、`/oauth/revoke`）均404；无凭据401的WWW-Authenticate是Bearer且不含resource_metadata，消息写明OAuth已关闭；`/api/status`的pairing为enabled:false、code:null；`POST /api/bridge/oauth`对非布尔enabled、未知字段返回400，对不符的workspaceRoot返回409，这些被拒请求后发现地址仍404；合法开启后返回oauthEnabled:true，401挑战重新指向发现地址，随后原有的元数据与授权断言照常执行。把store默认值改成开启或去掉router闸门时，本段首条断言变红。
+
 **main**spawn process.execPath并传tmp/两port，stdout/stderr的data回调累积log；exit回调目前条件体仅注释，没有检测提前退出，真正失败靠health或请求错误。try内按如下链验证：
 
 1. health 200/ok/Web Agent；F70起工作台首页、两端/health与MCP 401四个响应都须带nosniff、X-Frame-Options DENY、frame-ancestors 'none'、Referrer-Policy no-referrer且无x-powered-by（基线红）。首页包含产品、API、picker、环境/技术栈/技能、连接/统计/授权、隧道、模型/Plan/规则/think等控件与限制说明；禁止旧授权/模式限制文案。app.js/state.js真能HTTP读取，模块入口、WS重连代码与状态ID存在。**均是源字符串，不是点击控件**。

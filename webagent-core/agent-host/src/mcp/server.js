@@ -43,7 +43,9 @@ function rejectUnauthorized(req, res) {
   res.setHeader('WWW-Authenticate', oauth.wwwAuthenticate(origin));
   return res.status(401).json({
     jsonrpc: '2.0',
-    error: { code: -32000, message: 'Unauthorized: provide Bearer token, /mcp/<secret>, or complete OAuth pairing.' },
+    error: { code: -32000, message: oauth.oauthEnabled()
+      ? 'Unauthorized: provide Bearer token, /mcp/<secret>, or complete OAuth pairing.'
+      : 'Unauthorized: use the /mcp/<secret> URL or send the secret as a Bearer token. OAuth pairing is off on this host.' },
     id: rpcId(req.body?.id)
   });
 }
@@ -350,7 +352,7 @@ function hostStatus() {
     // stream) is not implemented — POST answers inline — and advertising it made the official
     // SSEClientTransport wait forever for its initialize response.
     transports: ['streamable-http'],
-    auth: ['url-secret', 'bearer', 'oauth']
+    auth: oauth.oauthEnabled() ? ['url-secret', 'bearer', 'oauth'] : ['url-secret', 'bearer']
   };
 }
 

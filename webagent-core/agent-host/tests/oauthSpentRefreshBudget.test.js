@@ -16,6 +16,7 @@ const crypto = require('crypto');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-oauth-spent-'));
 const { config } = require('../src/config');
 config.workspaceRoot = tmp;
+require('../src/mcp/oauth').setOauthEnabled(true); // OAuth pairing is opt-in (2026-09-25); this test exercises it.
 
 const oauth = require('../src/mcp/oauth');
 

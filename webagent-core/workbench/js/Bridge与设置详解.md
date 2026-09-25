@@ -41,6 +41,8 @@
 
 **sameSecretBinding(snapshot,expected)**对比workspaceRoot和identity.hostInstanceId；**validRotatedSecret(data,oldSecret)**要求success严格true、新24位hex secret与旧值不同、mcpPath匹配、HTTP(S)完整URL无凭据/查询/fragment且canonical URL同源/mcp。它不认证公网可达性。
 
+**toggleOauth()**切换OAuth配对（默认关闭）：页内oauthToggling与禁按钮防并发；捕获页面上的workspaceRoot与hostInstanceId，缺任一则不发送；按当前`status.pairing.enabled`决定开或关，先confirm说明后果（开启会在隧道上开放OAuth注册/授权地址；关闭让已授权的OAuth客户端全部失效，URL密钥不受影响），再POST `/api/bridge/oauth`，返回的oauthEnabled与请求不符按未确认处理，成功后refreshStatus；结果未确认时提示刷新核对，不自动重试。paintClients按`pairing.enabled`显示“已关闭（默认）”或配对码，并把按钮文字切换为“开启/关闭 OAuth 配对”；关闭时即使快照里残留code也不显示。
+
 **resetSecret()**使用页内secretRotating与禁按钮防并发；捕获页面工作区/主机/旧密钥，先GET当前状态验证核心形状及同绑定/同旧密钥。明确confirm告知OAuth撤销但任务/隧道不停止，确认前后复查页面；取消不POST。请求携workspaceRoot/hostInstanceId/expectedSecret，服务端单进程比较后再轮换，旧页面不应直接重发。轮换响应通过完整消费合同才确认；随后只刷新状态，不再POST。刷新失败/被取代/主机或secret不匹配保留“原主机轮换已确认、当前地址未核对”。
 
 请求发出后遇HTTP/业务/JSON/网络/超时/坏合同一律结果未确认，旧显示地址可能过期，先读状态而非再次重置；没有自动重试。发送前失败明确未发送。结果写独立secret-result（aria-live），不沿用无条件成功toast，不自动复制地址；finally释放guard。仅页内互斥，不是跨标签锁或永久幂等；服务端旧空体扩展调用仍兼容，不因此获得新绑定/CAS保证。经典UI的证据不代签原生路径；原生命令随后已有独立F43回归，实机/其它消费者仍单列。启动/停止没有共用此锁，启动在途停止不能被密钥轮换锁挡住；本批经典启停消费见上节，原生扩展的绑定/确认/未知消费见入口与Webview详解及F43回归，不据此宣称所有实机场景已验。

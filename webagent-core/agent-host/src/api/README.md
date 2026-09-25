@@ -66,7 +66,7 @@ Chat、Provider发现和GitHub身份三条网络路由各自显式接入requestS
 
 | 源码 | 定位证据 |
 |---|---|
-| [routes.js](routes.js) | 118 个函数/类节点 |
+| [routes.js](routes.js) | 120 个函数/类节点 |
 <!-- docs-inventory:end -->
 
 第42组经典停止调用携工作区/主机绑定；有任一字段时完整匹配才递增generation或停隧道，只有完全空体的旧请求兼容，未知字段400且零停启。停隧道失败和停止完成后广播失败可能都500但效果不同，不能从HTTP错误猜测回滚。

@@ -48,7 +48,9 @@ function defaults() {
       namedDomain: '',
       namedToken: '',
       namedPort: 48271,
-      quickLinks: []
+      quickLinks: [],
+      // OAuth pairing is opt-in; URL-secret clients (Arena) never need it. See mcp/oauth.js.
+      oauthEnabled: false
     }
   };
 }

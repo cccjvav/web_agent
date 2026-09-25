@@ -499,6 +499,21 @@ router.post('/bridge/reset-secret', (req, res) => {
   res.json({ success: true, ...mcpInfo(req) });
 });
 
+// OAuth pairing is off by default (see mcp/oauth.js). Turning it off revokes every OAuth client and
+// token at once; turning it back on needs a fresh pairing. The URL secret is never affected.
+router.post('/bridge/oauth', (req, res) => {
+  const body = bridgeRequestBody(req, res, ['enabled', 'workspaceRoot', 'hostInstanceId']);
+  if (!body) return;
+  if (typeof body.enabled !== 'boolean' || !validBridgeBindingFields(body)) return rejectBridgeRequest(res);
+  if (['workspaceRoot', 'hostInstanceId'].some(key => Object.hasOwn(body, key))) {
+    try { assertWorkspaceBinding(body, config); }
+    catch (error) { return res.status(409).json({ success: false, error: error.message }); }
+  }
+  const pairing = oauth.setOauthEnabled(body.enabled);
+  eventBus.broadcast('oauth_toggled', { enabled: pairing.enabled });
+  res.json({ success: true, oauthEnabled: pairing.enabled, pairing });
+});
+
 router.post('/bridge/start', async (req, res) => {
   const body = bridgeRequestBody(req, res, BRIDGE_START_FIELDS);
   if (!body) return;

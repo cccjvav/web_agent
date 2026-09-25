@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const express = require('express');
 const { config } = require('../config');
+const store = require('../models/store');
 
 const router = express.Router();
 
@@ -27,6 +28,44 @@ const MAX_CLIENTS = 80;
 const MAX_SPENT_REFRESH = 5000;
 
 let pairing = null;
+
+// OAuth pairing is opt-in (user decision 2026-09-25). URL-secret clients such as Arena never use it,
+// yet its discovery/register/authorize/token/revoke endpoints were reachable on every tunnel. While
+// off: those endpoints 404, issued OAuth tokens stop authenticating, 401s no longer point clients at
+// OAuth discovery, and Bridge start issues no pairing code. The URL secret is unaffected. The flag
+// lives in config.json (bridge.oauthEnabled, default false) and is cached on the store revision
+// like the Bridge permission policy, because verifyAccessToken runs on every MCP request.
+let enabledCache = null;
+function oauthEnabled() {
+  let enabled = false;
+  try {
+    const key = store.revisionKey();
+    if (!enabledCache || enabledCache.key !== key) {
+      enabledCache = { key, enabled: store.load().bridge.oauthEnabled === true };
+    }
+    enabled = enabledCache.enabled;
+  } catch (_) {
+    // A corrupt/unreadable config.json fails closed for OAuth only, and is not cached. This gate sits
+    // in front of every /mcp request; letting it throw turned URL-secret requests (which never read
+    // config.json before the switch) into generic 500s. The store error still surfaces where the
+    // config is actually needed (initialize, permissions, the workbench).
+    enabledCache = null;
+  }
+  // A flag turned off by editing config.json directly must not leave live grants behind that would
+  // revive if it were turned on again: drop in-memory OAuth state the first time "off" is observed.
+  if (!enabled && (clients.size || accessTokens.size || refreshTokens.size || authCodes.size || pairing)) {
+    revokeAll();
+  }
+  return enabled;
+}
+
+function setOauthEnabled(enabled) {
+  const on = enabled === true;
+  store.patch({ bridge: { oauthEnabled: on } });
+  if (!on) revokeAll();
+  else if (config.bridgeRunning) ensurePairing();
+  return snapshotPairing();
+}
 
 function now() {
   return Date.now();
@@ -64,6 +103,7 @@ function requestOrigin(req) {
 }
 
 function issuePairing() {
+  if (!oauthEnabled()) return snapshotPairing();
   pairing = {
     code: randomPairingCode(),
     createdAt: now(),
@@ -74,10 +114,12 @@ function issuePairing() {
 }
 
 function snapshotPairing() {
-  if (!pairing || pairing.expiresAt < now()) {
-    return { code: null, expiresInSec: 0, expired: true };
+  const enabled = oauthEnabled();
+  if (!enabled || !pairing || pairing.expiresAt < now()) {
+    return { enabled, code: null, expiresInSec: 0, expired: true };
   }
   return {
+    enabled,
     code: pairing.code,
     expiresInSec: Math.max(0, Math.round((pairing.expiresAt - now()) / 1000)),
     expired: false
@@ -138,6 +180,7 @@ function protectedResourceMetadata(origin) {
 }
 
 function wwwAuthenticate(origin) {
+  if (!oauthEnabled()) return 'Bearer realm="Web Agent"';
   const trusted = safeOrigin(origin) || `http://127.0.0.1:${config.port}`;
   return `Bearer realm="Web Agent", resource_metadata="${trusted}/.well-known/oauth-protected-resource"`;
 }
@@ -272,6 +315,7 @@ function timingSafeEqualString(a, b) {
 function verifyAccessToken(token) {
   if (!token) return null;
   if (timingSafeEqualString(token, config.secretKey)) return { kind: 'secret', clientId: 'url-secret' };
+  if (!oauthEnabled()) return null;
   pruneExpiredTokens();
   const rec = accessTokens.get(token);
   if (!rec) return null;
@@ -508,6 +552,9 @@ function sendError(res, err) {
   res.status(status).json({ error, error_description: err.message });
 }
 
+// While OAuth is off every route below is skipped, so the request falls through to the app's 404.
+router.use((req, res, next) => (oauthEnabled() ? next() : next('router')));
+
 router.get('/.well-known/oauth-authorization-server', (req, res) => {
   res.json(authorizationServerMetadata(requestOrigin(req)));
 });
@@ -576,6 +623,8 @@ router.post('/oauth/revoke', (req, res) => {
 
 module.exports = {
   router,
+  oauthEnabled,
+  setOauthEnabled,
   requestOrigin,
   authorizationServerMetadata,
   protectedResourceMetadata,

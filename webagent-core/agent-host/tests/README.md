@@ -207,7 +207,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [nativeRequestJson.test.js](nativeRequestJson.test.js) | 28 个函数/类节点 |
 | [nativeRotationCommands.test.js](nativeRotationCommands.test.js) | 58 个函数/类节点 |
 | [networkBudget.test.js](networkBudget.test.js) | 22 个函数/类节点 |
-| [oauth.test.js](oauth.test.js) | 18 个函数/类节点 |
+| [oauth.test.js](oauth.test.js) | 22 个函数/类节点 |
 | [oauthClientAuth.test.js](oauthClientAuth.test.js) | 29 个函数/类节点 |
 | [oauthRateLimit.test.js](oauthRateLimit.test.js) | 15 个函数/类节点 |
 | [oauthSpentRefreshBudget.test.js](oauthSpentRefreshBudget.test.js) | 8 个函数/类节点 |

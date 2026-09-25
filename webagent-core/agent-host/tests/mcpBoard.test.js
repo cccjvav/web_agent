@@ -8,6 +8,7 @@ const { config } = require('../src/config');
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-mcpboard-'));
 config.workspaceRoot = tmp;
+require('../src/mcp/oauth').setOauthEnabled(true); // OAuth pairing is opt-in (2026-09-25); this test exercises it.
 
 const { handleRpc } = require('../src/mcp/server');
 
