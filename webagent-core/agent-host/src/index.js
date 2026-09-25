@@ -1,3 +1,6 @@
+// First statement: take the launch-only variables out of process.env before anything can spawn a
+// child, so the agent's commands never inherit them (see utils/lifeline.js takeLaunchEnv).
+const launchEnv = require('./utils/lifeline').takeLaunchEnv();
 const express = require('express');
 const http = require('http');
 const fs = require('fs');
@@ -172,7 +175,7 @@ function listenOrExit(server, port, label) {
   server.listen(port, config.host);
 }
 
-const skipWorkbench = process.env.WEBAGENT_SKIP_WORKBENCH === '1';
+const skipWorkbench = launchEnv.WEBAGENT_SKIP_WORKBENCH === '1';
 
 if (!skipWorkbench) {
   listenOrExit(uiServer, config.workbenchPort, '工作台 UI');
@@ -228,6 +231,7 @@ async function shutdown() {
 process.once('SIGTERM', shutdown); process.once('SIGINT', shutdown);
 // Only a host started by the VS Code extension sets these (see utils/lifeline.js).
 require('./utils/lifeline').watchLifeline({
+  env: launchEnv,
   onLost(reason) {
     console.log(`[lifeline] ${reason === 'stdin-closed' ? '启动它的 VS Code 插件已断开' : '启动它的 VS Code 进程已退出'}，主机正在关闭（先停命令与隧道）`);
     shutdown();

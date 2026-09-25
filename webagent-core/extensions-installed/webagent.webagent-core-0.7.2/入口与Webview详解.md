@@ -76,7 +76,7 @@ HTML log/flex滚动区域、任务栏、模式菜单、输入框与发送按钮�
 
 ## 6. bridgeHtml内嵌脚本
 
-顶部“主机”卡片：【启动】【停止】【日志】与“启动主机后同时开启 Bridge”复选框，**paintHost(host)**按状态（未启动/启动中/运行中/外部启动/启动失败/手工地址）写文字、禁用按钮（手工地址、启动中、运行中、外部时禁用启动；只有插件自己启动的主机或启动中才能点停止，启动中点停止即取消）并显示错误或来源告警。MCP卡片新增隧道下拉框（Quick/Named/ngrok），未被用户改动时跟随status.tunnelProvider（旧值named视为cloudflare-named）；start发送所选tunnelProvider。保存status对象。stop/reset的onclick仅发固定type；copy.onclick优先status.prompt，否则mcpUrl+连接提示，交宿主剪贴板。**paintTasks(todos)**与Chat同样构建安全DOM，不共享函数作用域。**paintLogs(logs)**取tool_call_end前12，payload检查对象，工具名/数值时长写textContent；无工具显示等待。不是倒序重排后的最新12保证，取决于服务端顺序。
+顶部“主机”卡片：【启动】【停止】【日志】与“启动主机后同时开启 Bridge”复选框，**paintHost(host)**按状态（未启动/启动中/运行中/外部启动/启动失败/手工地址；idle但默认端口有主机回答时提示“可能属于其他文件夹，点【启动】核对”）写文字、禁用按钮（手工地址、启动中、运行中、外部时禁用启动；只有插件自己启动的主机或启动中才能点停止，启动中点停止即取消）并显示错误或来源告警。MCP卡片新增隧道下拉框（Quick/Named/ngrok），未被用户改动时跟随status.tunnelProvider（旧值named视为cloudflare-named）；start发送所选tunnelProvider。保存status对象。stop/reset的onclick仅发固定type；copy.onclick优先status.prompt，否则mcpUrl+连接提示，交宿主剪贴板。**paintTasks(todos)**与Chat同样构建安全DOM，不共享函数作用域。**paintLogs(logs)**取tool_call_end前12，payload检查对象，工具名/数值时长写textContent；无工具显示等待。不是倒序重排后的最新12保证，取决于服务端顺序。
 
 window message只接受status，规范对象后更新URL/状态pill，paintTasks/paintLogs。4秒定时post refresh，加载后立即refresh。这里浏览器脚本不直接fetch本机API，CSP也不授予网络连接。
 
@@ -137,8 +137,8 @@ Bridge任务区域不再因空列表隐藏，限制35vh并滚动/长词换行，
 | snapshot() / currentUrl() / setState(state,extra) | 状态为idle、starting、running、external、error；snapshot的warning合并来源告警与端口说明（离开starting/running时setState清除端口说明）；currentUrl在idle/error时为null，其余返回地址供agentHostUrl使用；setState后回调onChange刷新状态栏与侧栏 |
 | checkSource() | 读host.json并比较主机仓库当前提交，不一致时给出warning（R8偏差c：插件装旧了不再无声） |
 | locate(workspace) | 并行探测48271–48290，找到**工作区相同**的主机才返回；服务其他文件夹的主机记入others，从不接管或关闭。若最终端口不是48271，_start写端口说明：48271被谁占用、本主机用哪个端口，以及token模式Named Tunnel入口写死48271时远程会连到占用者 |
-| attachExisting(workspace) | 只接管、从不启动：激活时若同一文件夹已有主机（例如run-webagent.cmd启动的），状态设为external |
-| start(workspace) / _start(workspace) | 在途启动合并；已running/external且同一文件夹直接返回。先locate，找到就接管；否则checkSource、读host.json、找空闲端口、spawnHost、waitReady。失败时先内部清理（stop的cancel:false），再置error；用户在启动中点停止则置idle并抛cancelled错误，不当失败 |
+| attachExisting(workspace) | 只接管、从不启动：idle或error且没有子进程时，若同一文件夹已有主机（例如run-webagent.cmd启动的），状态设为external并清除错误。激活时调用；refreshBar经默认地址连上同一文件夹的主机而管理器仍是idle/error时也调用（VS Code先开、CMD后开的情况），卡片因此不再误显“未启动” |
+| start(workspace) / _start(workspace) | 在途启动合并；自己的主机仍在为另一个文件夹运行（首个文件夹变了）时拒绝并提示先停止，绝不在旧进程之上再生成一个而让旧的成为孤儿；已running/external且同一文件夹直接返回。先locate，找到就接管；否则checkSource、读host.json、找空闲端口、spawnHost、waitReady。失败时先内部清理（stop的cancel:false），再置error；用户在启动中点停止则置idle并抛cancelled错误，不当失败 |
 | spawnHost(workspace,port) | env加`AGENT_HOST_PORT`、`WEBAGENT_PARENT_PID`（扩展宿主pid）、`WEBAGENT_LIFELINE=stdin`，删`WEBAGENT_AGENT_HOST_URL`；stdio三路管道、windowsHide、shell:false。`pipeLines`把stdout/stderr逐行写入输出面板（单行2000字符截断）；ENOENT提示安装Node或设置webagent.nodePath；exit区分就绪前退出与运行中意外退出 |
 | waitReady(workspace) | 轮询probeStatus直到回答且工作区相同；回答了别的工作区立即报错；子进程退出或超时报错（提示首次需联网装依赖） |
 | stop({quiet,cancel}) | 启动中但进程尚未生成（探测、核对来源、选端口）时只置取消标记，`throwIfCancelled()`在各步与spawn前抛出，保证不再生成进程；之后只停**自己启动**的主机：关闭stdin管道（主机随即执行自己的shutdown，先停命令与隧道），10秒不退出才killTree；接管的外部主机只记录说明、返回external:true，绝不关闭 |

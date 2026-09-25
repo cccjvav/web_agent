@@ -468,6 +468,9 @@ function activate(context) {
         statusBar.tooltip = `请打开主机对应文件夹 ${r.json.workspaceRoot || '（未指定）'}，或为目标项目重新启动主机。`;
         return;
       }
+      // Connected through the default address while the manager knows no host (e.g. run-webagent.cmd
+      // was started after this window opened): attach so the card and stop button tell the truth.
+      if (hostManager && (snap.state === 'idle' || snap.state === 'error')) hostManager.attachExisting(folders[0]).catch(() => {});
       const running = r.json.bridgeRunning;
       statusBar.text = running ? '$(zap) Web Agent Bridge 运行中' : '$(hubot) Web Agent';
       const origin = snap.owned ? '由插件启动' : snap.state === 'external' ? '外部启动（插件不会关闭它）' : '';

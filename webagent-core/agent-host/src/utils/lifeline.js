@@ -12,6 +12,21 @@ function pidAlive(pid) {
   catch (error) { return error && error.code === 'EPERM'; }
 }
 
+// Launch-only variables meant for this host process alone. Read once and remove them from the
+// environment, so commands the agent runs (run_command, start_command, stdio MCP servers, tests
+// that start their own host) never inherit them. Found by running the test suite through an
+// extension-started host: a nested host that inherited WEBAGENT_LIFELINE=stdin shut down as soon
+// as its stdin ended, and one that inherited WEBAGENT_SKIP_WORKBENCH=1 never opened the workbench
+// port its test expected (the code-server launcher had the same leak).
+const LAUNCH_ONLY_ENV = ['WEBAGENT_LIFELINE', 'WEBAGENT_PARENT_PID', 'WEBAGENT_SKIP_WORKBENCH'];
+function takeLaunchEnv(env = process.env) {
+  const taken = {};
+  for (const key of LAUNCH_ONLY_ENV) {
+    if (Object.hasOwn(env, key)) { taken[key] = env[key]; delete env[key]; }
+  }
+  return taken;
+}
+
 function watchLifeline({ env = process.env, stdin = process.stdin, onLost, intervalMs = 5000, isAlive = pidAlive } = {}) {
   if (typeof onLost !== 'function') throw new TypeError('onLost is required');
   const stops = [];
@@ -48,4 +63,4 @@ function watchLifeline({ env = process.env, stdin = process.stdin, onLost, inter
   return { active: stops.length > 0, stop };
 }
 
-module.exports = { watchLifeline, pidAlive };
+module.exports = { watchLifeline, takeLaunchEnv, LAUNCH_ONLY_ENV, pidAlive };

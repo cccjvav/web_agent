@@ -1644,3 +1644,18 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 - code-server副本不写`host.json`，只接管run-webagent-vscode.cmd启动的主机。
 - 手工填过`webagent.agentHostUrl`的用户不会一键启动，需要清空该设置。
 - Windows关闭VS Code后的端口与cloudflared释放只有CI上的进程树测试，需用户实机。
+
+### 第73组第二轮：用户追问后的完整自我复审（2026-09-25）
+
+`5b0be35`提交前的复审只查了预先怀疑的几点，没有逐行读完整改动；用户追问后逐文件重读，并对“主机先停命令与隧道”等文档说法回到源码核对（shutdown确实调用stopTunnel，其中也停ngrok）。新发现并修复：
+
+| 缺陷 | 事实（修前） | 修法 | 验证 |
+|---|---|---|---|
+| **启动变量泄漏给Agent命令（严重）** | `WEBAGENT_LIFELINE=stdin`、`WEBAGENT_PARENT_PID`、`WEBAGENT_SKIP_WORKBENCH=1`留在主机process.env，executor的scrubEnv只删密钥类变量。实测经插件主机的MCP `run_command`看到`L=stdin P=<扩展宿主pid>`。只删前两个后，经插件主机的`run_command`跑skipWorkbench/hostShutdown/httpSmoke仍失败：继承SKIP_WORKBENCH的嵌套主机不开工作台端口（code-server启动器此前就有这一泄漏）。用户的R8式流程（Arena经MCP在仓库跑测试）会因此出错 | index.js第一条语句`takeLaunchEnv()`读出并删除三个变量（`LAUNCH_ONLY_ENV`），用取出的值决定工作台与生命线 | hostLaunch第6节经真实主机MCP断言子命令看不到三者（去掉修复时失败）；**经插件启动的真实主机用start_command跑整套`npm test`：113/113**，去掉修复时那3个文件失败 |
+| 测试失败时挂到超时 | 断言失败后已启动的主机无人停止，测试进程被其管道挂住（反向验证时约200秒才被timeout结束） | TrackedManager登记全部管理器，结束时统一dispose并exit | 反向验证1.4秒报告失败，无残留进程 |
+| 测试假主机成为孤儿 | 用run_command跑整套测试时50秒超时被强杀，hostLaunch来不及清理；故意忽略EOF的hung假主机在POSIX上detached、逃过进程组清理，永久残留（ps发现，存活283秒、父进程1） | hung/stubborn假主机在父进程消失时自行退出 | 在第5–9秒各SIGKILL一次测试，均无残留；修前第8秒复现残留 |
+| 卡片与实际连接不一致 | VS Code先开、run-webagent.cmd后开：状态栏经默认地址显示“Web Agent”，卡片一直“未启动” | refreshBar连上同一文件夹主机而管理器为idle/error时调用attachExisting；attachExisting允许error状态 | 第6节error后接管 |
+| 首个文件夹变化会产生孤儿主机 | 运行中为另一文件夹start会在旧进程之上再spawn，旧进程不再受管 | 拒绝并提示先停止 | 第6节断言拒绝且pid不变 |
+| 验收手册与代码不符 | 第8步写“按下拉框里的隧道类型”，代码用主机记录的上次隧道类型 | 改手册；并补“重载窗口也会停止插件主机”（手册可选项与使用指南） | 文档 |
+
+**仍未解决（与第73组所列相同，另加）：** `webagent.autoStartHost`是resource范围，受信工作区可以自行打开（有意保留：按项目自动启动；主机代码来自host.json而非工作区，也不开Bridge）。

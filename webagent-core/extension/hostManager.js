@@ -184,9 +184,9 @@ class HostManager {
 
   // Attach to a host already serving this folder without ever spawning one (activation, refresh).
   async attachExisting(workspace) {
-    if (this.state !== 'idle' || this.startPromise) return this.snapshot();
+    if ((this.state !== 'idle' && this.state !== 'error') || this.startPromise || this.child) return this.snapshot();
     const found = await this.locate(workspace);
-    if (found && this.state === 'idle' && !this.startPromise) {
+    if (found && (this.state === 'idle' || this.state === 'error') && !this.startPromise && !this.child) {
       this.workspace = workspace; this.url = found.url;
       this.log(`[host] 已连接 ${found.url} 上服务此文件夹的主机（外部启动，插件不会关闭它）`);
       this.setState('external', { error: null });
@@ -196,6 +196,11 @@ class HostManager {
 
   start(workspace) {
     if (this.startPromise) return this.startPromise;
+    // The first folder changed while our host still runs for the old one: never orphan it by
+    // spawning a second process over it; the user stops it first (Bridge may be running there).
+    if (this.child && this.workspace && !this.workspaceMatches(workspace, this.workspace)) {
+      return Promise.reject(new Error(`插件已为 ${this.workspace} 启动了主机，请先停止它，再为当前文件夹启动。`));
+    }
     if ((this.state === 'running' || this.state === 'external') && this.workspace && this.workspaceMatches(workspace, this.workspace)) {
       return Promise.resolve(this.snapshot());
     }

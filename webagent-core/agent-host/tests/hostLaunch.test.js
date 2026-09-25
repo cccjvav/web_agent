@@ -11,7 +11,7 @@ const { EventEmitter } = require('events');
 const { spawn } = require('child_process');
 
 const root = path.resolve(__dirname, '../../..');
-const { watchLifeline } = require('../src/utils/lifeline');
+const { watchLifeline, takeLaunchEnv } = require('../src/utils/lifeline');
 const { ownerLifeline } = require('../../../installer/launch');
 const installer = require('../../scripts/install-desktop-extension');
 const hm = require('../../extension/hostManager');
@@ -19,6 +19,12 @@ const { sameWorkspace } = require('../../extension/workspaceMatch');
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'host-launch-'));
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+// Every manager created here is disposed at the end, pass or fail, so a failed assertion reports
+// promptly instead of leaving a running host that keeps the test process alive until the CI timeout.
+const managers = [];
+class TrackedManager extends hm.HostManager {
+  constructor(options) { super(options); managers.push(this); }
+}
 
 function writeHostJson(dir, data) {
   fs.mkdirSync(dir, { recursive: true });
@@ -53,6 +59,11 @@ async function freePortNear(span) {
   throw new Error('no free port block');
 }
 
+// The two fakes below deliberately ignore stdin EOF (to exercise the tree kill). They still exit
+// when the test process disappears, so a test killed from outside (runner or command timeout)
+// cannot leave them behind: they are spawned detached on POSIX and escape a process-group kill.
+const EXIT_WITH_PARENT = 'const parentPid = process.ppid; setInterval(() => { try { process.kill(parentPid, 0); } catch { process.exit(0); } }, 300);';
+
 const FAKE_STATUS_SERVER = `
 const http = require('http');
 const ws = process.argv[3];
@@ -82,6 +93,10 @@ async function main() {
       assert.strictEqual(watchLifeline({ env: { WEBAGENT_PARENT_PID: bad }, stdin: null, onLost() {} }).active, false, 'invalid pid ' + bad);
     }
     assert.throws(() => watchLifeline({ env: {} }), /onLost/);
+    const env = { WEBAGENT_LIFELINE: 'stdin', WEBAGENT_PARENT_PID: '123', WEBAGENT_SKIP_WORKBENCH: '1', PATH: 'x' };
+    assert.deepStrictEqual(takeLaunchEnv(env), { WEBAGENT_LIFELINE: 'stdin', WEBAGENT_PARENT_PID: '123', WEBAGENT_SKIP_WORKBENCH: '1' });
+    assert.deepStrictEqual(env, { PATH: 'x' }, 'launch-only variables are removed so children cannot inherit them');
+    assert.deepStrictEqual(takeLaunchEnv({}), {});
   }
 
   // --- 2. launch.js ownerLifeline: only host mode with the variable reads stdin ---
@@ -125,10 +140,10 @@ async function main() {
   // --- 5. stale install warning ---
   {
     const ext = writeHostJson(path.join(tmp, 'stale'), { format: 1, root, commit: 'a'.repeat(40) });
-    const m = new hm.HostManager({ extensionDir: ext, repoCommit: async () => 'b'.repeat(40) });
+    const m = new TrackedManager({ extensionDir: ext, repoCommit: async () => 'b'.repeat(40) });
     const info = await m.checkSource();
     assert.match(info.warning, /重新运行 install-vscode-extension\.cmd/);
-    const same = new hm.HostManager({ extensionDir: ext, repoCommit: async () => 'a'.repeat(40) });
+    const same = new TrackedManager({ extensionDir: ext, repoCommit: async () => 'a'.repeat(40) });
     assert.strictEqual((await same.checkSource()).warning, null);
   }
 
@@ -140,7 +155,7 @@ async function main() {
   const logs = [], kills = [];
   const env = { ...process.env, WORKBENCH_PORT: String(workbenchPort) };
   delete env.WEBAGENT_SKIP_WORKBENCH;
-  const first = new hm.HostManager({
+  const first = new TrackedManager({
     extensionDir: ext, portBase: base, portSpan: 4, env, nodePath: () => process.execPath,
     workspaceMatches: sameWorkspace, readyTimeoutMs: 90000, log: (l) => logs.push(l),
     killTreeImpl: async (pid, platform) => { kills.push(pid); return hm.killTree(pid, platform); }
@@ -154,17 +169,33 @@ async function main() {
   assert.strictEqual(first.currentUrl(), snap.url);
   assert.strictEqual((await first.start(ws)).pid, snap.pid, 'second start is a no-op (same process)');
 
-  const second = new hm.HostManager({ extensionDir: path.join(tmp, 'no-host-json'), portBase: base, portSpan: 4, workspaceMatches: sameWorkspace });
+  const second = new TrackedManager({ extensionDir: path.join(tmp, 'no-host-json'), portBase: base, portSpan: 4, workspaceMatches: sameWorkspace });
   const attached = await second.start(ws);
   assert.strictEqual(attached.state, 'external', 'another window attaches instead of spawning');
   assert.strictEqual(attached.url, snap.url);
   assert.deepStrictEqual(await second.stop(), { stopped: false, external: true }, 'never stops a host it did not start');
   assert.ok(await hm.probeStatus(snap.url), 'still running after the attached window stops');
-  const third = new hm.HostManager({ extensionDir: ext, portBase: base, portSpan: 4, workspaceMatches: sameWorkspace });
+  const third = new TrackedManager({ extensionDir: ext, portBase: base, portSpan: 4, workspaceMatches: sameWorkspace });
   assert.strictEqual((await third.attachExisting(ws)).state, 'external', 'activation attaches without spawning');
   const otherWs = fs.mkdtempSync(path.join(tmp, 'other-'));
-  const fourth = new hm.HostManager({ extensionDir: ext, portBase: base, portSpan: 4, workspaceMatches: sameWorkspace });
+  const fourth = new TrackedManager({ extensionDir: ext, portBase: base, portSpan: 4, workspaceMatches: sameWorkspace });
   assert.strictEqual((await fourth.attachExisting(otherWs)).state, 'idle', 'a host for another folder is not attached');
+  await assert.rejects(first.start(otherWs), /请先停止它/, 'changing the first folder never orphans the running host');
+  assert.strictEqual(first.snapshot().pid, snap.pid);
+  const afterError = new TrackedManager({ extensionDir: ext, portBase: base, portSpan: 4, workspaceMatches: sameWorkspace });
+  afterError.setState('error', { error: '上次启动失败' });
+  const recovered = await afterError.attachExisting(ws);
+  assert.strictEqual(recovered.state, 'external', 'after a failed start, a host that appeared for the folder is attached');
+  assert.strictEqual(recovered.error, null);
+
+  // Commands the agent runs under this host must not inherit the owner variables: a nested host
+  // (npm test starting its own agent-host) would otherwise treat its own stdin EOF as "owner gone".
+  const probeCmd = 'node -e "console.log(\'LIFE=\'+(process.env.WEBAGENT_LIFELINE||\'none\')+\' PPID=\'+(process.env.WEBAGENT_PARENT_PID||\'none\')+\' SKIP=\'+(process.env.WEBAGENT_SKIP_WORKBENCH||\'none\'))"';
+  const call = await fetch(status.mcpUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'run_command', arguments: { command: probeCmd } } }) });
+  const callText = await call.text();
+  assert.strictEqual(call.status, 200, callText.slice(0, 500));
+  assert.match(callText, /LIFE=none PPID=none SKIP=none/, 'run_command inherited launch-only variables: ' + callText.slice(0, 800));
 
   const stopped = await first.stop();
   assert.deepStrictEqual(stopped, { stopped: true, external: false });
@@ -194,9 +225,9 @@ async function main() {
   // --- 8. failure paths with fake roots ---
   {
     // Never ready and ignores EOF: start times out, then the tree is killed.
-    const hung = fakeRoot('hung', 'process.stdin.resume(); setInterval(() => {}, 1000);');
+    const hung = fakeRoot('hung', EXIT_WITH_PARENT + ' process.stdin.resume(); setInterval(() => {}, 1000);');
     const kills2 = [];
-    const m = new hm.HostManager({
+    const m = new TrackedManager({
       extensionDir: writeHostJson(path.join(tmp, 'ext-hung'), { format: 1, root: hung }), portBase: await freePortNear(2), portSpan: 2,
       nodePath: () => process.execPath, readyTimeoutMs: 1500, pollMs: 100, stopTimeoutMs: 500,
       killTreeImpl: async (pid, platform) => { kills2.push(pid); return hm.killTree(pid, platform); }
@@ -207,9 +238,9 @@ async function main() {
     assert.strictEqual(m.snapshot().owned, false);
 
     // Ready but ignores EOF: stop falls back to the tree kill.
-    const stubborn = fakeRoot('stubborn', FAKE_STATUS_SERVER + 'process.stdin.resume();');
+    const stubborn = fakeRoot('stubborn', FAKE_STATUS_SERVER + EXIT_WITH_PARENT + ' process.stdin.resume();');
     const kills3 = [];
-    const s = new hm.HostManager({
+    const s = new TrackedManager({
       extensionDir: writeHostJson(path.join(tmp, 'ext-stubborn'), { format: 1, root: stubborn }), portBase: await freePortNear(2), portSpan: 2,
       nodePath: () => process.execPath, pollMs: 100, stopTimeoutMs: 500, workspaceMatches: sameWorkspace,
       killTreeImpl: async (pid, platform) => { kills3.push(pid); return hm.killTree(pid, platform); }
@@ -221,7 +252,7 @@ async function main() {
 
     // Answers for another folder: refused and stopped.
     const wrong = fakeRoot('wrong', FAKE_STATUS_SERVER + "process.stdin.on('end', () => process.exit(0)); process.stdin.resume();");
-    const w = new hm.HostManager({
+    const w = new TrackedManager({
       extensionDir: writeHostJson(path.join(tmp, 'ext-wrong'), { format: 1, root: wrong }), portBase: await freePortNear(2), portSpan: 2,
       nodePath: () => process.execPath, pollMs: 100, workspaceMatches: sameWorkspace, env: { ...process.env, FAKE_WS: path.join(tmp, 'elsewhere') }
     });
@@ -230,7 +261,7 @@ async function main() {
 
     // Stop during start is a cancel, not an error.
     const slow = fakeRoot('slow', "process.stdin.on('end', () => process.exit(0)); process.stdin.resume(); setInterval(() => {}, 1000);");
-    const c = new hm.HostManager({
+    const c = new TrackedManager({
       extensionDir: writeHostJson(path.join(tmp, 'ext-slow'), { format: 1, root: slow }), portBase: await freePortNear(2), portSpan: 2,
       nodePath: () => process.execPath, pollMs: 100, readyTimeoutMs: 20000
     });
@@ -249,7 +280,7 @@ async function main() {
       stdio: ['pipe', 'ignore', 'ignore'], env: { ...process.env, AGENT_HOST_PORT: String(portBase2) } });
     await waitFor(async () => Boolean(await hm.probeStatus('http://127.0.0.1:' + portBase2)), 5000, 'occupant ready');
     const good = fakeRoot('good', FAKE_STATUS_SERVER + "process.stdin.on('end', () => process.exit(0)); process.stdin.resume();");
-    const g = new hm.HostManager({
+    const g = new TrackedManager({
       extensionDir: writeHostJson(path.join(tmp, 'ext-good'), { format: 1, root: good }), portBase: portBase2, portSpan: 3,
       nodePath: () => process.execPath, pollMs: 100, workspaceMatches: sameWorkspace
     });
@@ -266,7 +297,7 @@ async function main() {
 
     // Stop before the process exists (while locating): the start is cancelled and never spawns.
     let spawned = 0;
-    const early = new hm.HostManager({
+    const early = new TrackedManager({
       extensionDir: writeHostJson(path.join(tmp, 'ext-early'), { format: 1, root: slow }), portBase: await freePortNear(2), portSpan: 2,
       nodePath: () => process.execPath, pollMs: 50,
       probe: async () => { await sleep(300); return null; },
@@ -282,9 +313,9 @@ async function main() {
     assert.strictEqual(early.snapshot().state, 'idle');
 
     // Missing node executable and exhausted ports give actionable messages.
-    const n = new hm.HostManager({ extensionDir: ext, portBase: await freePortNear(2), portSpan: 2, nodePath: () => path.join(tmp, 'no-node', 'node'), pollMs: 50 });
+    const n = new TrackedManager({ extensionDir: ext, portBase: await freePortNear(2), portSpan: 2, nodePath: () => path.join(tmp, 'no-node', 'node'), pollMs: 50 });
     await assert.rejects(n.start(tmp), /找不到 Node|webagent\.nodePath/);
-    const full = new hm.HostManager({ extensionDir: ext, portBase: await freePortNear(2), portSpan: 2, isPortFree: async () => false, nodePath: () => process.execPath });
+    const full = new TrackedManager({ extensionDir: ext, portBase: await freePortNear(2), portSpan: 2, isPortFree: async () => false, nodePath: () => process.execPath });
     await assert.rejects(full.start(tmp), /都被占用/);
   }
 
@@ -337,4 +368,8 @@ async function main() {
 }
 
 main().catch((error) => { console.error(error); process.exitCode = 1; })
-  .finally(() => { try { fs.rmSync(tmp, { recursive: true, force: true }); } catch { /* host may still hold files briefly */ } });
+  .finally(async () => {
+    await Promise.race([Promise.allSettled(managers.map((m) => m.dispose())), sleep(20000)]);
+    try { fs.rmSync(tmp, { recursive: true, force: true }); } catch { /* host may still hold files briefly */ }
+    process.exit(process.exitCode || 0);
+  });

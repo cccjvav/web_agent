@@ -187,7 +187,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [githubAuth.test.js](githubAuth.test.js) | 21 个函数/类节点 |
 | [githubNetwork.test.js](githubNetwork.test.js) | 82 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
-| [hostLaunch.test.js](hostLaunch.test.js) | 59 个函数/类节点 |
+| [hostLaunch.test.js](hostLaunch.test.js) | 62 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
 | [hostShutdown.test.js](hostShutdown.test.js) | 13 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
