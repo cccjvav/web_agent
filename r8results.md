@@ -1,0 +1,110 @@
+==== R8 本轮验收（第七批/F71/F72）====
+日期：2026-09-24
+执行环境说明：步骤1–2 在 Arena Linux 沙箱执行（Node v22.22.3、npm 10.9.8、系统 Node /usr/local/bin/node、无 conda）；步骤3–9 由维护者在 Windows 本机执行并回贴结果；第7步在另一个已接入 Bridge 的 Arena 会话执行。本会话固定分支 arena/01a0d300-web-agent，按会话规则未执行 git switch（内容已核对与本轮分支一致）。
+记录文件位置：沙箱仓库内 _r8_evidence/manual-results.txt（已写入 .git/info/exclude 本地排除，不入库）。
+Git提交（第1步输出）：9c36c10a799d80d1b495306bf839a955ae1b227c（HEAD 与实时 fetch 的 arena/01a0d084-web-agent 远端最新提交一致）
+自动测试（第2步）：通过，文件数：112   退出码：0/0/0（npm ci、check-docs、npm test）
+后面每步：编号、实际结果、判定
+---- 步骤0 准备记录 ----
+结果：记录文件已创建。
+判定：通过
+---- 步骤1 停掉旧服务，更新到本轮代码 ----
+1.1 旧服务检查：沙箱内无 run-webagent / agent-host 进程；维护者未报告存在旧服务。
+判定：未执行（无旧服务需停止；主机已在步骤4正常启动，无冲突迹象）
+1.2 环境激活：沙箱无 conda，等效使用系统 Node v22.22.3（/usr/local/bin/node）；工作目录 /home/user/web_agent。
+判定：通过（沙箱等效执行）
+1.3 git status --short：无输出，工作树干净。git branch --show-current：arena/01a0d300-web-agent（会话固定分支）。
+判定：通过
+1.4 更新到本轮分支：未执行 git switch（会话规则禁止切换分支）；等效验证——fetch 后 HEAD 与远端 arena/01a0d084-web-agent 最新均为 9c36c10a799d80d1b495306bf839a955ae1b227c，diff 为空。
+判定：通过（等效验证：HEAD 即本轮分支最新提交 9c36c10）
+---- 步骤2 依赖与自动测试（M3）----
+2a npm ci --include=dev --prefix webagent-core/agent-host：added 76 packages, 0 vulnerabilities。退出码=0。
+判定：通过
+2b node docs-site/check-docs.js：{"files":294,"directories":28,"excluded":111,"updated":0}。退出码=0。
+判定：通过
+2c npm test --prefix webagent-core/agent-host：112 test files passed。退出码=0。
+判定：通过（注：沙箱为 Linux，PTY 退出码测试跑 Linux shell；手册所述“真实 powershell PTY 测试”留待 Windows 侧等效回贴）
+2d 可选浏览器回归（playwright chromium + npm run test:browser）：未下载 Chromium。
+判定：未执行（按手册允许记录“浏览器回归未执行”）
+---- 步骤3 更新VS Code扩展 ----
+安装命令输出（维护者回贴）：已安装 Web Agent 插件: C:\Users\Peter\.vscode\extensions\webagent.webagent-core-0.7.2
+版本核对（沙箱）：webagent-core/extension/package.json 声明 webagent.webagent-core @ 0.7.2，与安装路径一致；安装器从本地 checkout 安装；extensions-installed 副本与 extension 源码 diff 一致。
+确认项 a（维护者回贴）：Windows 侧 git rev-parse HEAD 与 git status --short 输出符合预期（= 本轮提交、工作树干净），即装到的是本轮代码。
+确认项 b（维护者回贴）：Developer: Reload Window 已执行；CMD-A/CMD-B 已重新激活 conda 并进入仓库根。
+判定：通过
+---- 步骤4 启动主机（工作区＝仓库根）----
+维护者回贴：日志 Workspace = 仓库根 ✓；VS Code 右下角状态栏 = Web Agent ✓（非“工作区不一致”/“未连接 48271”）；浏览器访问 http://127.0.0.1:3000 —— 未自动打开，手动打开后页面正常。
+偏差记录：run-webagent.cmd 未自动拉起浏览器，需手动访问；页面与状态栏均正常。是否属预期行为留给维护者确认。
+判定：通过（附偏差：浏览器未自动打开）
+---- 步骤5 设置Bridge权限，准备演练目录 ----
+5.1/5.2 工作台侧栏“工作模式与 Bridge 权限”卡片：维护者点【切换 Bridge】，勾选 Read/Edit/Execute/Capture 四项，点【保存权限】，主机回读“已由主机应用；没有自动取消或重放任务”；工作区=仓库根（与步骤4日志一致）。
+判定：通过
+5.3 演练目录（CMD-B）：if exist 检查无 STOP 输出；mkdir _r8_scratch\victim 成功；echo KEEP-R8> keep.txt；type 输出 KEEP-R8（与预期一致，维护者回贴）。
+判定：通过
+---- 步骤6 启动Bridge，在Arena里接入 ----
+6.1 隧道：设置→Bridge页启动，Quick Tunnel，公网域名 missing-encountered-virtually-planned.trycloudflare.com（记录只到域名）。
+判定：通过
+6.2 Arena 接入：维护者回贴“已经成功链接”。
+安全事件：回贴内容的超链接目标误带完整 /mcp/ 密钥（违反手册“绝不外发”红线；本记录已隐去密钥，仅保留域名）。补救措施：执行 设置→Bridge页→高级设置→【重置 MCP 地址】轮换密钥，使已泄露地址作废（轮换不停隧道），新地址只填 Arena 连接配置、不回贴聊天。
+补救确认（维护者回贴）：重置完成，Arena 已换新地址重连。
+判定：通过（安全事件已补救闭环）
+6.3 隧道域名已记入记录，供第8步 curl 使用。
+判定：通过
+---- 步骤7 在Arena会话里逐项验收 ----
+7.1 Arena 会话回贴：ping 与 workspace_info 均存在并返回——identity.hostInstanceId=bdc2d68b-777e-4a8c-bce0-ea1a864fed6b；identity.workspaceRoot=C:\Users\Peter\web_agent；workspace_info 的 root=C:\Users\Peter\web_agent（=仓库根）。读取类工具未弹确认框（第七批只读注解在 Arena 侧的表现：无逐次确认，记录备查）。补充确认：工作台【核对主机与能力】诊断的 hostInstanceId 与工具返回一致。
+判定：通过
+7.2 read_files：README.md 前20行、manager/CONTEXT.md 前10行原样返回（维护者回贴与预期一致）；未读取 .webagent/config.json。run_command：git rev-parse HEAD → exitCode=0，stdout=9c36c10a799d80d1b495306bf839a955ae1b227c（与第1步一致）；node -p process.execPath → exitCode=0，stdout=C:\Program Files\nodejs\node.exe（系统 Node）。
+判定：通过
+7.2b 受控写入（Arena 会话）：新建 _r8_scratch/r8-write.txt 成功，read_files 读回内容 R8-WRITE-OK，返回 sha256=23f4a9189241aa3d87274f8d52b3a1bfd6597a396dc0e17a4ba4adece03794a3。CMD-B：type 显示 R8-WRITE-OK；git status --short 仅 _r8_scratch/ 变化，无其他文件被改（维护者回贴“输出都与预期一样”）。沙箱独立验算：printf 'R8-WRITE-OK' | sha256sum = 23f4a9189241aa3d87274f8d52b3a1bfd6597a396dc0e17a4ba4adece03794a3，与返回值一致（内容逐字节吻合）。
+判定：通过
+7.3 输出截断（第七批）：run_command 执行 node -e "process.stdout.write('x'.repeat(30000))"，返回 exitCode=0、stdoutChars=30000、stdoutTruncated=true（三字段齐全，维护者回贴原样）。
+判定：通过
+7.4 run_command 50秒上限（第七批）：Agent 调用 arguments 原样贴出为 {"command":"node -e \"setTimeout(()=>{},55000)\"","timeoutSec":120}（即请求 120 秒）；返回 status=timeout、exitCode=1、timeoutSec=50（=主机远程钳制生效值，REMOTE_RUN_MAX_SEC=50）、durationMs=51508（约51.5秒后超时并确实回到 Arena，无客户端60秒超时、无挂起；维护者回贴等待约52秒）。钳制链路完整实锤：请求120 → 生效50 → ~51.5s 超时回传。
+判定：通过
+7.5 start_command 长任务（第七批）：start_command 运行 node -e "setTimeout(()=>console.log('LONG-DONE'),70000)"，timeoutSec=120 → 返回 timeoutSec=120（start_command 上限600，未被钳）；按 suggestedWaitMs 轮询 get_command_output，最后一次 status=done、exitCode=0、stdout=LONG-DONE（约70秒任务存活至结束，修复前会在60秒被杀）。维护者回贴与预期一致。
+判定：通过
+7.6 空闲后仍可用（第七批 ping）：静置≥3分钟后、不重连直接调用 ping → ok=true、alive=true、trace.status=succeeded（source=Bridge-Remote，durationMs=1）；会话 connectedAt=22:15:48 → lastSeen=23:01:17 持续未断，calls=43；hostInstanceId/workspaceRoot/version=0.7.2 均一致。附注：会话 fail=1，对应 7.4 的超时 run_command（timeout 计为 failed，属预期）。
+判定：通过
+7.7 换行不能藏住破坏性命令（F72）：
+- A 对照组：run_command 执行 Remove-Item -Recurse -Force _r8_scratch\victim（单行、无 confirm）→ 返回 E_FORBIDDEN，原文“Destructive commands are blocked on remote MCP…”，detail.retryHint 指向本地 Chat。判定：通过。
+- B 本轮修复：Agent 贴出 arguments = {"command":"echo hi\nRemove-Item -Recurse -Force *r8*scratch\\victim"}（command 含 \n 真换行；附注：Agent 将路径 _r8_scratch 改写为等效通配 *r8*scratch，非手册列举的“合行/分号”类改写）→ 调用返回 E_FORBIDDEN（同 A 原文）；CMD-B type _r8_scratch\victim\keep.txt = KEEP-R8，目录完好。机制核验（沙箱）：dangerousPolicy.js splitStages 按 /\r\n|[\r\n]/ 先切行再切阶段（代码注释标注 F72：修复前 normalizeRaw 把换行变空格、远端 MCP 实测能跑通），检测按 Remove-Item/-Recurse/-Force 词元匹配、与路径无关，通配路径不影响触发且若失灵仍会删除 victim——检验有效。
+判定：通过（F72 换行隐藏修复实锤，victim 完好）
+- C 正常多行不受影响：两行命令（node --version / git --version，真换行）→ exitCode=0，stdout 含 v24.20.0 与 git version 2.43.0.windows.1。
+判定：通过（7.7 整项通过）
+7.8 可选（两个凭据互相看不到，F71）：需另有一个不同凭据客户端（OAuth 配对）；同一 URL 密钥双对话不算。
+判定：未执行（默认跳过，维护者无第二凭据客户端；如有可补）
+---- 步骤8 经隧道发坏请求 ----
+沙箱尝试（记录备查）：Linux 沙箱出口为白名单制（registry.npmjs.org 可达 200，example.com/cloudflare.com/隧道域名 TLS 均 SSL_ERROR_SYSCALL 重置），无法从沙箱发起；按手册原文改由维护者 Windows CMD-B 执行 curl.exe。
+待执行：维护者 CMD-B 贴回响应头与正文。
+实测（维护者回贴）：HTTP/1.1 400 Bad Request；Content-Type: application/json; charset=utf-8；Content-Length: 42；正文恰为 {"error":"Request body is not valid JSON"}；响应头含标准安全头（CSP frame-ancestors 'none'、nosniff、DENY 等）。全文无 HTML、无 C:\ 路径、无 at … 调用栈（第七批“坏JSON不泄露安装路径与调用栈”达成）。
+判定：通过
+---- 步骤9 VS Code扩展（F72） ----
+9.1 主机地址只接受本机：首测与预期不符——设 http://example.com:48271 后显示“Web Agent 未连接 48271”而非“主机地址无效”。诊断：安装目录 findstr LOOPBACK_HOSTS **无输出** = 首装内容为旧代码（未含本轮 F72 扩展校验；与第3步 git 核对 9c36c10 的关系未完全定位，可能安装时点工作区未更新到本轮，已如实记录）。处置：完全退出 VS Code → rmdir 安装目录 → 重跑 install-vscode-extension.cmd（输出正常）→ findstr **命中**（extension.js 含 const LOOPBACK_HOSTS…）→ Reload Window → 重启主机。复测：设 http://example.com:48271 等待一个轮询周期 → 状态栏“Web Agent 主机地址无效”、悬停含 webagent.agentHostUrl ✓；重置设置后恢复“Web Agent” ✓。可选项（localhost:48271 正连）未执行。
+判定：通过（含一次旧代码安装的失败与重装复测闭环；根因指向首次安装时源内容非本轮代码）
+9.2 可选（PTY确认框与退出码，需可用外部模型）：维护者确认 VS Code Web Agent Chat 未配置可用模型；维护者提出可用此前找到的 agnes ai，经权衡采纳建议（可选项、前置条件不满足、临时配模引入新变量）暂不补做。
+判定：未执行（无已配置可用模型；维护者可后续用 agnes ai 排期补验）
+---- 步骤10 收尾 ----
+10.1 Bridge 已随“完全退出 VS Code”而停止（9.1 重装流程后主机重启未再开桥，等效于“停止 Bridge”）；Arena 侧连接已停用（维护者回贴完成）。附观察（维护者）：Arena 内并没有独立的“MCP 连接配置”界面，实际接入是把“复制提示词”（含完整地址）直接发进对话、由内置提示词完成——手册第6步“只填进MCP连接配置、不要贴进聊天”的表述与 Arena 实际交互不符，记为手册修订建议。
+判定：通过（附手册表述观察）
+10.2 CMD-A Ctrl+C → Y：主机已关闭。
+判定：通过
+10.3 演练目录清理：rmdir /s /q _r8_scratch 已执行；首次复核 git status --short 输出“?? .vscode/”（系 9.1 工作区设置工件，第3步核对时仓库无此目录）；type 确认内容如预期（空壳 {}）→ rmdir /s /q .vscode → 再次 git status --short 无输出（维护者回贴）。
+判定：通过
+10.4 权限卡片已按维护者平时需要重新保存。
+判定：通过
+10.5 记录定稿，本节即发送稿主体（每步编号＋判定＋脱敏输出均在本文件）。
+判定：通过
+---- 总判定（2026-09-24，供维护者）----
+总判定：**本轮实机验收通过**。第七批全部项（7.1–7.6 含超时/截断/空闲存活）、F72 危险命令换行检测（7.7）、F72 扩展主机地址校验（9.1）、受控写入 M4（7.2b）、隧道坏请求不泄露路径（8）均实机验证通过；自动测试 112 files passed（0/0/0）。
+未执行项（如实列出，均非失败）：1.1 旧服务停止（无旧服务）；2d 浏览器回归（未下载 Chromium）；7.8 F71 双凭据隔离（无第二凭据客户端）；9.2 PTY 确认框（无已配置外部模型，可用 agnes ai 补验）；9.1 可选 localhost 正连；2 的 Windows 侧 powershell PTY 等效回贴。
+偏差与事件（均已闭环）：a) 步骤4 浏览器未自动打开（手动访问正常）；b) 步骤6 MCP 密钥曾随链接进入本验收对话（违反绝不外发）→ 已重置 MCP 地址轮换，记录仅存隧道域名；c) 9.1 首装扩展为旧代码（findstr 无 LOOPBACK_HOSTS，版本号跨轮复用 0.7.2）→ 重装复测通过，建议维护者核查安装覆盖与版本号策略；d) 手册修订建议：第6步 Arena 实际交互为“提示词发对话”而非“MCP 连接配置”。
+关键证据（脱敏）：HEAD=9c36c10a799d80d1b495306bf839a955ae1b227c；扩展 webagent.webagent-core-0.7.2；root=C:\Users\Peter\web_agent；hostInstanceId=bdc2d68b-777e-4a8c-bce0-ea1a864fed6b（与诊断一致）；7.2b sha256=23f4a918…794a3（沙箱独立验算一致）；7.3 三字段全中；7.4 请求120→生效50、51.5s 回传；7.5 70s 任务 done+LONG-DONE+timeoutSec=120；7.6 静置3分钟直连 ping 成功；7.7 A/B E_FORBIDDEN+B 含\n+victim 完好+C 双版本；8：400+application/json+精确错误正文无泄露；9.1 复测“主机地址无效”＋悬停命中、清空恢复；收尾 git status 干净。
+产品形态返工反馈见文末章节（5条，含更正与实证案例）。
+---- 维护者产品形态反馈（非本轮验收判定项，供返工参考，2026-09-24）----
+1. VS Code 插件启动流程步骤过多（验收时才发现）。
+2. [原始意见]插件相对工作台无增量价值，期望在 VS Code 内提供类似 Chat 的边栏承载 UI 面板与功能。
+   [同日更正]插件实际已提供边栏，此前“没有边栏/功能重叠”判断有误，收回该点；核心意见不变（见第3条）。
+3. 精炼后的设想：安装插件后一切集成、一次运行全部启动——例如插件在侧边栏提供一个“内置启动按钮”，点击即启动主机及相关服务；网页工作台与 run-webagent 唤起的独立网页则不再必要，可去掉。
+4. 结论意见：希望项目返工修改（重点：一体化启动、移除独立网页工作台）。
+5. 验收实证案例（2026-09-24）：维护者在侧栏“Bridge 区域”找不到隧道选择与“启动 Bridge”按钮——实际入口埋在“智能体自定义设置 → 左侧 Bridge 页”（含客户端选择、启动按钮、隧道模式）；侧栏 Bridge 区域只有工作模式切换与权限勾选，职责与启动割裂。这正是第1条“启动流程步骤多”的具体表现，支持第3条“侧边栏一键启动按钮”的返工设想。
+（注：产品形态意见与 R8 手册第7批/F71/F72 功能验收项相互独立，两条线可并行处理；本轮验收继续执行。）
