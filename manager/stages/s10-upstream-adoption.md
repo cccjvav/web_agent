@@ -1659,3 +1659,28 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 | 验收手册与代码不符 | 第8步写“按下拉框里的隧道类型”，代码用主机记录的上次隧道类型 | 改手册；并补“重载窗口也会停止插件主机”（手册可选项与使用指南） | 文档 |
 
 **仍未解决（与第73组所列相同，另加）：** `webagent.autoStartHost`是resource范围，受信工作区可以自行打开（有意保留：按项目自动启动；主机代码来自host.json而非工作区，也不开Bridge）。
+
+### 第74组：远程暴露面与本机API的安全审计（2026-09-25）
+
+用户在第73组后要求：每轮交付前自我复审（已写入[项目约定](../agents.md)），然后按判断检查仓库早期实现中重要的地方。选定范围：经隧道暴露给远程的面（MCP认证、OAuth配对、工具权限门控、文件工具的工作区与敏感文件边界）和浏览器对本机`/api`的防护。
+
+| 发现 | 事实与证据 | 处置 |
+|---|---|---|
+| **Windows 8.3短名绕过敏感文件规则（中）** | 内置规则按名字匹配，JS版realpath保留传入拼写；`read_files WEBAGE~1/config.json`读出`.webagent/config.json`。基线`27511d7`（只加测试）Windows CI三个Node版本均红，断言实际值即夹具秘密；列目录与搜索经短名目录同样可见 | `patchEngine.assertNoShortNameAlias`：仅Windows，含`~`、存在却不在父目录真实条目里的片段按别名拒绝（E_BAD_ARGS，提示用长名）。`f8ffd03`后Windows转绿 |
+| **改名祖先目录解除带目录的规则（中）** | `.webagent`目录名本身不敏感，`rename_file .webagent x`成功后`x/config.json`可读（本地复现：直接读E_FORBIDDEN→改名success→读出内容）；自定义`private/*`同理 | `fileOps.assertNoProtectedDescendants`：源为目录时逐个后代检查“原位置受保护且新位置不受保护”即拒绝；按名字的规则改名后仍命中，含`.env`的目录照常可改；>20000项拒绝。去掉调用后测试重新变红 |
+| 测试本身的方向错误 | 首版用例用同步try/catch/`assert.throws`包`renameFile`/`writeFile`（返回Promise），改名用例“红”是假的；写入断言修后恰好因写锁键同步调用resolveSafePath而正确 | 两个用例改为async并await；已记入经验 |
+
+**严重度的前提：** Bridge默认权限四项全开，开Execute时`type .webagent\config.json`本就能读（代码明示Execute等于任意读写）。两处修复在默认设置下是纵深防御；用户关闭Execute、只给Read/Edit时它们是真实越权。
+
+**审过且未发现问题：** `/api`要求Host为localhost/127.0.0.1/[::1]（挡DNS rebinding）、Origin存在时必须回环、`null`拒绝；MCP三种凭据都经`verifyAccessToken`定时安全比较，空令牌拒绝，会话绑定凭据摘要；URL密钥96位随机；OAuth配对码约40位无模偏、按客户端5次上限、先校验后消费，PKCE仅S256，刷新令牌轮换带重放吊销；工具权限按read/edit/execute/capture默认拒绝，未知工具需全部权限，远程拒绝危险命令与交互PTY；`resolveSafePath`拒绝绝对/UNC/盘符、Windows含`:`（ADS）或以点/空格结尾的片段，按真实祖先判断junction/符号链接，敏感检查对逻辑与真实路径各做一次；`delete_file`只删空目录；规则大小写不敏感。
+
+**记录不修（低）：**
+- 无trust proxy，经隧道的请求`req.ip`都是127.0.0.1，OAuth限流全体远程共享一个额度：知道隧道地址者可让配对暂时429（URL密钥连接不受影响）。按CF-Connecting-IP分桶又可被非Cloudflare隧道伪造，需另行设计。
+- OAuth授权页不显示客户端名与回调主机，用户被诱导在攻击者的授权链接里输入配对码时无从分辨。
+- `/oauth/revoke`无限流（需客户端认证，影响小）。
+- 无Origin且`referrerpolicy=no-referrer`的跨站GET可到达`/api`的GET；其中只有`GET /pty/jobs`有副作用（`noteClient`让clientLive为真，需精确工作区路径），最坏是本机Chat的PTY命令等到超时。
+- Windows设备名（`CON`、`NUL`、`COM1`）未拦截：不越出工作区，可能出现“写进NUL报告成功”。
+- `.webagentignore`本身可被有Edit权限的工具改写，自定义规则对这样的模型只是约定；内置规则不能被取消（既有测试）。
+- 本轮完整测试首跑出现1次失败、未保留输出；其后6轮完整运行113/113（另1轮失败已查明是content.js未重建），未能复现。
+
+**未审范围：** `mcp/session.js`、`api/routes.js`的POST路由逐项、`tools/executor.js`与`dangerous.js`的检测器（F72已知为词法检测）、`patchEngine`补丁应用、`editorUndo`/`fileCheckpoints`恢复路径、`skills.safeSkillFile`、`findFiles`、外部MCP客户端（`externalClient`/`stdioLaunch`）、admin-host、扩展与探针（暂停）。

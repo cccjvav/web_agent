@@ -1360,7 +1360,7 @@
 
 ## webagent-core/agent-host/src/tools/fileOps.js
 
-[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `8da87b88f8cd218a0cd2cfabc4e86d0d64d3d2424db37ff6e724ea43d882a6b8`
+[目录说明](../webagent-core/agent-host/src/tools/README.md) · SHA-256 `11128a3fd5ff1dc722de0d006fdd25c077daa692e90c7e5d8787b1e949dadec3`
 
 - `isUnsafeRegex` — FunctionDeclaration，[L18–L24](../webagent-core/agent-host/src/tools/fileOps.js#L18-L24)
 - `readFiles` — FunctionDeclaration，[L26–L44](../webagent-core/agent-host/src/tools/fileOps.js#L26-L44)
@@ -1372,31 +1372,32 @@
 - `deleteFileBody` — FunctionDeclaration，[L86–L117](../webagent-core/agent-host/src/tools/fileOps.js#L86-L117)
 - `renameFile` — FunctionDeclaration，[L119–L123](../webagent-core/agent-host/src/tools/fileOps.js#L119-L123)
 - `renameFile/anonymous@122:42` — ArrowFunctionExpression，[L122–L122](../webagent-core/agent-host/src/tools/fileOps.js#L122-L122)
-- `renameFileBody` — FunctionDeclaration，[L125–L139](../webagent-core/agent-host/src/tools/fileOps.js#L125-L139)
-- `writeFile` — FunctionDeclaration，[L141–L143](../webagent-core/agent-host/src/tools/fileOps.js#L141-L143)
-- `writeFile/anonymous@142:38` — ArrowFunctionExpression，[L142–L142](../webagent-core/agent-host/src/tools/fileOps.js#L142-L142)
-- `writeFileBody` — FunctionDeclaration，[L145–L198](../webagent-core/agent-host/src/tools/fileOps.js#L145-L198)
-- `listDir` — FunctionDeclaration，[L200–L235](../webagent-core/agent-host/src/tools/fileOps.js#L200-L235)
-- `listDir/scan` — FunctionDeclaration，[L208–L231](../webagent-core/agent-host/src/tools/fileOps.js#L208-L231)
-- `sortItems` — FunctionDeclaration，[L244–L250](../webagent-core/agent-host/src/tools/fileOps.js#L244-L250)
-- `sortItems/anonymous@245:13` — ArrowFunctionExpression，[L245–L247](../webagent-core/agent-host/src/tools/fileOps.js#L245-L247)
-- `grepFile` — FunctionDeclaration，[L252–L277](../webagent-core/agent-host/src/tools/fileOps.js#L252-L277)
-- `scanSearch` — FunctionDeclaration，[L279–L383](../webagent-core/agent-host/src/tools/fileOps.js#L279-L383)
-- `scanSearch/noteSkip` — FunctionDeclaration，[L321–L325](../webagent-core/agent-host/src/tools/fileOps.js#L321-L325)
-- `scanSearch/searchInDir` — FunctionDeclaration，[L327–L356](../webagent-core/agent-host/src/tools/fileOps.js#L327-L356)
-- `grepSearch` — FunctionDeclaration，[L386–L438](../webagent-core/agent-host/src/tools/fileOps.js#L386-L438)
-- `grepSearch/anonymous@392:21` — ArrowFunctionExpression，[L392–L437](../webagent-core/agent-host/src/tools/fileOps.js#L392-L437)
-- `grepSearch/anonymous@392:21/trace` — ArrowFunctionExpression，[L401–L408](../webagent-core/agent-host/src/tools/fileOps.js#L401-L408)
-- `grepSearch/anonymous@392:21/anonymous@410:37` — ArrowFunctionExpression，[L410–L410](../webagent-core/agent-host/src/tools/fileOps.js#L410-L410)
-- `grepSearch/anonymous@392:21/finish` — ArrowFunctionExpression，[L412–L418](../webagent-core/agent-host/src/tools/fileOps.js#L412-L418)
-- `grepSearch/anonymous@392:21/finish/anonymous@416:31` — ArrowFunctionExpression，[L416–L416](../webagent-core/agent-host/src/tools/fileOps.js#L416-L416)
-- `grepSearch/anonymous@392:21/finish/anonymous@416:78` — ArrowFunctionExpression，[L416–L416](../webagent-core/agent-host/src/tools/fileOps.js#L416-L416)
-- `grepSearch/anonymous@392:21/abort` — ArrowFunctionExpression，[L419–L419](../webagent-core/agent-host/src/tools/fileOps.js#L419-L419)
-- `grepSearch/anonymous@392:21/anonymous@420:30` — ArrowFunctionExpression，[L420–L420](../webagent-core/agent-host/src/tools/fileOps.js#L420-L420)
-- `grepSearch/anonymous@392:21/anonymous@422:25` — ArrowFunctionExpression，[L422–L434](../webagent-core/agent-host/src/tools/fileOps.js#L422-L434)
-- `grepSearch/anonymous@392:21/anonymous@422:25/anonymous@426:31` — ArrowFunctionExpression，[L426–L426](../webagent-core/agent-host/src/tools/fileOps.js#L426-L426)
-- `grepSearch/anonymous@392:21/anonymous@435:25` — ArrowFunctionExpression，[L435–L435](../webagent-core/agent-host/src/tools/fileOps.js#L435-L435)
-- `grepSearch/anonymous@392:21/anonymous@436:24` — ArrowFunctionExpression，[L436–L436](../webagent-core/agent-host/src/tools/fileOps.js#L436-L436)
+- `assertNoProtectedDescendants` — FunctionDeclaration，[L133–L153](../webagent-core/agent-host/src/tools/fileOps.js#L133-L153)
+- `renameFileBody` — FunctionDeclaration，[L155–L170](../webagent-core/agent-host/src/tools/fileOps.js#L155-L170)
+- `writeFile` — FunctionDeclaration，[L172–L174](../webagent-core/agent-host/src/tools/fileOps.js#L172-L174)
+- `writeFile/anonymous@173:38` — ArrowFunctionExpression，[L173–L173](../webagent-core/agent-host/src/tools/fileOps.js#L173-L173)
+- `writeFileBody` — FunctionDeclaration，[L176–L229](../webagent-core/agent-host/src/tools/fileOps.js#L176-L229)
+- `listDir` — FunctionDeclaration，[L231–L266](../webagent-core/agent-host/src/tools/fileOps.js#L231-L266)
+- `listDir/scan` — FunctionDeclaration，[L239–L262](../webagent-core/agent-host/src/tools/fileOps.js#L239-L262)
+- `sortItems` — FunctionDeclaration，[L275–L281](../webagent-core/agent-host/src/tools/fileOps.js#L275-L281)
+- `sortItems/anonymous@276:13` — ArrowFunctionExpression，[L276–L278](../webagent-core/agent-host/src/tools/fileOps.js#L276-L278)
+- `grepFile` — FunctionDeclaration，[L283–L308](../webagent-core/agent-host/src/tools/fileOps.js#L283-L308)
+- `scanSearch` — FunctionDeclaration，[L310–L414](../webagent-core/agent-host/src/tools/fileOps.js#L310-L414)
+- `scanSearch/noteSkip` — FunctionDeclaration，[L352–L356](../webagent-core/agent-host/src/tools/fileOps.js#L352-L356)
+- `scanSearch/searchInDir` — FunctionDeclaration，[L358–L387](../webagent-core/agent-host/src/tools/fileOps.js#L358-L387)
+- `grepSearch` — FunctionDeclaration，[L417–L469](../webagent-core/agent-host/src/tools/fileOps.js#L417-L469)
+- `grepSearch/anonymous@423:21` — ArrowFunctionExpression，[L423–L468](../webagent-core/agent-host/src/tools/fileOps.js#L423-L468)
+- `grepSearch/anonymous@423:21/trace` — ArrowFunctionExpression，[L432–L439](../webagent-core/agent-host/src/tools/fileOps.js#L432-L439)
+- `grepSearch/anonymous@423:21/anonymous@441:37` — ArrowFunctionExpression，[L441–L441](../webagent-core/agent-host/src/tools/fileOps.js#L441-L441)
+- `grepSearch/anonymous@423:21/finish` — ArrowFunctionExpression，[L443–L449](../webagent-core/agent-host/src/tools/fileOps.js#L443-L449)
+- `grepSearch/anonymous@423:21/finish/anonymous@447:31` — ArrowFunctionExpression，[L447–L447](../webagent-core/agent-host/src/tools/fileOps.js#L447-L447)
+- `grepSearch/anonymous@423:21/finish/anonymous@447:78` — ArrowFunctionExpression，[L447–L447](../webagent-core/agent-host/src/tools/fileOps.js#L447-L447)
+- `grepSearch/anonymous@423:21/abort` — ArrowFunctionExpression，[L450–L450](../webagent-core/agent-host/src/tools/fileOps.js#L450-L450)
+- `grepSearch/anonymous@423:21/anonymous@451:30` — ArrowFunctionExpression，[L451–L451](../webagent-core/agent-host/src/tools/fileOps.js#L451-L451)
+- `grepSearch/anonymous@423:21/anonymous@453:25` — ArrowFunctionExpression，[L453–L465](../webagent-core/agent-host/src/tools/fileOps.js#L453-L465)
+- `grepSearch/anonymous@423:21/anonymous@453:25/anonymous@457:31` — ArrowFunctionExpression，[L457–L457](../webagent-core/agent-host/src/tools/fileOps.js#L457-L457)
+- `grepSearch/anonymous@423:21/anonymous@466:25` — ArrowFunctionExpression，[L466–L466](../webagent-core/agent-host/src/tools/fileOps.js#L466-L466)
+- `grepSearch/anonymous@423:21/anonymous@467:24` — ArrowFunctionExpression，[L467–L467](../webagent-core/agent-host/src/tools/fileOps.js#L467-L467)
 
 ## webagent-core/agent-host/src/tools/findFiles.js
 
@@ -4693,7 +4694,7 @@
 
 ## webagent-core/agent-host/tests/sensitiveBoundary.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `b00831a054d3ef16736caefa7726d8d3b81929492dcaf044b9f3284ab19d03a7`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `873095cebcbe466c5bd0aac6eb67e938af90cd6fece3c6c9f704992ea75b6562`
 
 - `countIgnoreReads` — FunctionDeclaration，[L21–L40](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L21-L40)
 - `countIgnoreReads/anonymous@26:20` — FunctionExpression，[L26–L29](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L26-L29)
@@ -4702,9 +4703,14 @@
 - `windowsShortNameAliases` — FunctionDeclaration，[L52–L94](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L52-L94)
 - `windowsShortNameAliases/anonymous@71:16` — ArrowFunctionExpression，[L71–L71](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L71-L71)
 - `windowsShortNameAliases/anonymous@82:60` — ArrowFunctionExpression，[L82–L82](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L82-L82)
-- `run` — FunctionDeclaration，[L96–L232](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L96-L232)
-- `run/anonymous@129:33` — ArrowFunctionExpression，[L129–L133](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L129-L133)
-- `run/git` — ArrowFunctionExpression，[L168–L168](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L168-L168)
+- `renameCannotUnprotect` — FunctionDeclaration，[L98–L127](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L98-L127)
+- `renameCannotUnprotect/anonymous@104:16` — ArrowFunctionExpression，[L104–L104](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L104-L104)
+- `renameCannotUnprotect/anonymous@123:16` — ArrowFunctionExpression，[L123–L123](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L123-L123)
+- `run` — FunctionDeclaration，[L129–L262](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L129-L262)
+- `run/anonymous@162:33` — ArrowFunctionExpression，[L162–L166](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L162-L166)
+- `run/git` — ArrowFunctionExpression，[L201–L201](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L201-L201)
+- `anonymous@266:1` — ArrowFunctionExpression，[L266–L275](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L266-L275)
+- `anonymous@275:11` — ArrowFunctionExpression，[L275–L278](../webagent-core/agent-host/tests/sensitiveBoundary.test.js#L275-L278)
 
 ## webagent-core/agent-host/tests/skillsLifecycle.test.js
 

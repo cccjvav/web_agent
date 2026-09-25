@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
 const { resolveSafePath, isInsideWorkspace, computeHash, toPosixRel, withWriteLock, atomicWriteText } = require('./patchEngine');
-const { isHidden } = require('./sensitive');
+const { isHidden, isSensitive } = require('./sensitive');
 const eventBus = require('../utils/eventBus');
 const { ProtocolError, ExecutionError } = require('../mcp/errors');
 const { rememberHash, sessionHash, forgetHash } = require('./readCache');
@@ -122,6 +122,36 @@ function renameFile(opts = {}) {
   return withWriteLock([srcRel, destRel], () => renameFileBody(opts));
 }
 
+// A rename moves everything below `src`. Name-based rules (".env", "*.pem") still match after an
+// ancestor is renamed, but a path-shaped rule (".webagent/config.json", a custom "private/*") does
+// not: renaming ".webagent" to "x" turned a denied read into an allowed "x/config.json". The
+// directory name itself is not sensitive, so each descendant that is protected where it is now must
+// stay protected at its new path; a rename that keeps every protection (a folder holding .env) passes.
+// Symlinks are not followed (they move as links); an oversized tree is refused, not half-checked.
+const MAX_RENAME_SCAN = 20000;
+
+function assertNoProtectedDescendants(src, dst, srcRel) {
+  let seen = 0;
+  const stack = [src];
+  while (stack.length) {
+    const dir = stack.pop();
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (++seen > MAX_RENAME_SCAN) {
+        throw new ProtocolError('E_BAD_ARGS', `Directory "${srcRel}" has more than ${MAX_RENAME_SCAN} entries; rename_file cannot verify it holds no protected files.`);
+      }
+      const full = path.join(dir, entry.name);
+      const rel = toPosixRel(path.relative(config.workspaceRoot, full));
+      const moved = toPosixRel(path.relative(config.workspaceRoot, path.join(dst, path.relative(src, full))));
+      if (isSensitive(rel) && !isSensitive(moved)) {
+        const err = new Error(`ACCESS_DENIED_SENSITIVE_FILE: "${srcRel}" contains ${JSON.stringify(rel)}; renaming it would move that protected file out of its protection rule.`);
+        err.code = 'E_FORBIDDEN';
+        throw err;
+      }
+      if (entry.isDirectory() && !entry.isSymbolicLink()) stack.push(full);
+    }
+  }
+}
+
 function renameFileBody({ from, to, filePath, dest }) {
   const srcRel = from || filePath;
   const destRel = to || dest;
@@ -130,6 +160,7 @@ function renameFileBody({ from, to, filePath, dest }) {
   const dst = resolveSafePath(destRel);
   if (!fs.existsSync(src)) throw new Error(`File not found: "${srcRel}"`);
   if (fs.existsSync(dst)) throw new Error(`Destination already exists: "${destRel}"`);
+  if (fs.lstatSync(src).isDirectory()) assertNoProtectedDescendants(src, dst, srcRel);
   fs.mkdirSync(path.dirname(dst), { recursive: true });
   fs.renameSync(src, dst);
   const fromOut = toPosixRel(path.relative(config.workspaceRoot, src));

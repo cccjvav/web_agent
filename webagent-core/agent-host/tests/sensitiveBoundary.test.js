@@ -49,7 +49,7 @@ function shortNameOf(fullPath) {
   return line ? path.basename(line) : '';
 }
 
-function windowsShortNameAliases() {
+async function windowsShortNameAliases() {
   if (process.platform !== 'win32') {
     console.log('sensitiveBoundary: 8.3 alias cases need Windows; skipped on ' + process.platform);
     return;
@@ -82,7 +82,7 @@ function windowsShortNameAliases() {
   try { listed = fileOps.listDir({ dirPath: sd }).items.map((i) => i.name.toLowerCase()); } catch (_) { /* denied */ }
   assert.ok(!listed.includes('config.json'), `list_dir through 8.3 alias ${sd} must not expose config.json`);
   let wrote = false;
-  try { fileOps.writeFile({ filePath: `${sd}/config.json`, content: 'overwritten\n', confirmOverwrite: true }); wrote = true; } catch (_) { /* denied */ }
+  try { await fileOps.writeFile({ filePath: `${sd}/config.json`, content: 'overwritten\n', confirmOverwrite: true }); wrote = true; } catch (_) { /* denied */ }
   assert.strictEqual(wrote, false, 'write_file through an 8.3 alias must be denied');
   assert.strictEqual(fs.readFileSync(path.join(dir, 'config.json'), 'utf8'), secret + '\n');
   // Ordinary long names inside the workspace keep working.
@@ -91,6 +91,39 @@ function windowsShortNameAliases() {
   fs.rmSync(dir, { recursive: true, force: true });
   fs.rmSync(path.join(tmp, 'credentials.json'), { force: true });
   console.log(`sensitiveBoundary: 8.3 alias cases ran (${sd}, ${sf}, ${sc})`);
+}
+
+// Renaming an ancestor must not move a protected file out from under a path-shaped rule
+// (".webagent/config.json", or a custom "private/*"): the directory name itself is not sensitive.
+async function renameCannotUnprotect() {
+  const dir = path.join(tmp, '.webagent');
+  fs.mkdirSync(dir, { recursive: true });
+  const secret = 'AUDIT_RENAME_FAKE_SECRET';
+  fs.writeFileSync(path.join(dir, 'config.json'), secret + '\n');
+  fs.writeFileSync(path.join(dir, 'instructions.md'), 'notes\n');
+  assert.throws(() => fileOps.readFile({ filePath: '.webagent/config.json' }), 'positive control: long path is protected');
+  await assert.rejects(fileOps.renameFile({ from: '.webagent', to: 'exposed' }), /protected/,
+    'renaming a directory that holds a protected file must be refused');
+  assert.ok(fs.existsSync(path.join(dir, 'config.json')), 'refused rename leaves the file in place');
+  assert.ok(!fs.existsSync(path.join(tmp, 'exposed')), 'refused rename creates no destination');
+  // Same for a nested ancestor and for a custom path-shaped rule.
+  fs.mkdirSync(path.join(tmp, 'outer', 'private'), { recursive: true });
+  fs.writeFileSync(path.join(tmp, 'outer', 'private', 'note.txt'), secret + '\n');
+  fs.writeFileSync(path.join(tmp, '.webagentignore'), 'outer/private/*\n');
+  await assert.rejects(fileOps.renameFile({ from: 'outer', to: 'outer2' }), /protected/);
+  await assert.rejects(fileOps.renameFile({ from: 'outer/private', to: 'outer/public' }), /protected/);
+  fs.rmSync(path.join(tmp, '.webagentignore'), { force: true });
+  // Ordinary directory renames keep working, including ones whose files stay protected by name.
+  fs.mkdirSync(path.join(tmp, 'plain', 'deep'), { recursive: true });
+  fs.writeFileSync(path.join(tmp, 'plain', 'deep', 'a.txt'), 'a\n');
+  fs.writeFileSync(path.join(tmp, 'plain', '.env'), 'X=1\n');
+  const moved = await fileOps.renameFile({ from: 'plain', to: 'plain2' });
+  assert.strictEqual(moved.success, true);
+  assert.ok(fs.existsSync(path.join(tmp, 'plain2', 'deep', 'a.txt')));
+  assert.throws(() => fileOps.readFile({ filePath: 'plain2/.env' }), 'name-based rules still protect after a rename');
+  fs.rmSync(path.join(tmp, 'plain2'), { recursive: true, force: true });
+  fs.rmSync(path.join(tmp, 'outer'), { recursive: true, force: true });
+  fs.rmSync(dir, { recursive: true, force: true });
 }
 
 function run() {
@@ -226,13 +259,20 @@ function run() {
     fs.rmSync(repo, { recursive: true, force: true });
   }
 
-  windowsShortNameAliases();
-
-  console.log('sensitiveBoundary.test.js ok');
 }
 
-try {
-  run();
-} finally {
-  fs.rmSync(tmp, { recursive: true, force: true });
-}
+// renameFile/writeFile go through the async write lock and return promises; a sync try/catch or
+// assert.throws around them passes or fails for the wrong reason, so these cases are awaited.
+(async () => {
+  try {
+    run();
+    await windowsShortNameAliases();
+    await renameCannotUnprotect();
+    console.log('sensitiveBoundary.test.js ok');
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+})().catch((err) => {
+  console.error(err);
+  process.exitCode = 1;
+});
