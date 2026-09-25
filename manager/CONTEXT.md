@@ -5,6 +5,7 @@
 接手先读本索引和[项目约定](agents.md)，再按需读[阶段10的工作包与交接](stages/s10-upstream-adoption.md#当前工作包与交接约束)。不另建路线图或根交接文件。
 
 ## 当前状态
+- **F80（2026-09-26，本会话）：** R6第一期用户Windows实机验收通过（`506cd0a`），记录由根`r6result.md`按R8先例归档到`review/`（未登记曾使`6503ab9`的CI红）。手册三处措辞修订（CMD-A须独立cmd窗口、地址在MCP卡片、重载后看不到`[lifeline]`）。复查4.7：用户看到的是code模式输出，内置循环`npm test`受60秒上限必然超时，插件Chat丢失工具失败原因。待用户决定产品跟进（按钮反馈、失败原因等）后再做第二期第3批。详见[第80组](stages/s10-upstream-adoption.md#第80组r6第一期实机验收通过与手册修订2026-09-26)。
 - **F79（2026-09-25，本会话）：** R6第二期第2批：扩展进程转发层`extension/apiRelay.js`（默认拒绝白名单，按D4不含外部MCP/多模型）与webview端`workbench/js/vscodeRelay.js`（fetch语义），`requestJson`加可选rawBody/timeoutMs/signal；真实主机端到端通过，尚未接入面板。详见[第79组](stages/s10-upstream-adoption.md#第79组r6第二期第2批设置页请求转发层2026-09-25)。
 - **F78（2026-09-25，本会话）：** 用户同意R6第一期验收与第二期并行。第二期第1批：新增`workbench/js/api.js`，工作台六个模块33处`fetch`收拢为`apiFetch`（默认即fetch，行为不变），为插件设置页经扩展进程转发做准备；插件未改动。计划见[方案第9节](../docs/development/插件一体化启动返工方案.md#9-第二期实施记录2026-09-25起)，详见[第78组](stages/s10-upstream-adoption.md#第78组r6第二期第1批网页工作台请求收拢2026-09-25)。
 - **F77（2026-09-25，本会话）：** 审计余下范围完成（延后清单第1行已关闭）：用户自行运行改写Host的代理（`ngrok --host-header=rewrite`等）时公网请求被当成本机控制面、免密钥调用整个`/api`（高影响、条件触发），现以转发头识别；`find_files`的glob在主线程指数回溯（12个`**/`约103秒冻结主机）改为线性动态规划；无会话调用者键退化（低危）已修；其余模块未发现问题。详见[第77组](stages/s10-upstream-adoption.md#第77组审计余下范围find_files回溯本机控制面误判无会话调用者键2026-09-25)。
