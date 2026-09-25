@@ -1684,3 +1684,13 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 - 本轮完整测试首跑出现1次失败、未保留输出；其后6轮完整运行113/113（另1轮失败已查明是content.js未重建），未能复现。
 
 **未审范围：** `mcp/session.js`、`api/routes.js`的POST路由逐项、`tools/executor.js`与`dangerous.js`的检测器（F72已知为词法检测）、`patchEngine`补丁应用、`editorUndo`/`fileCheckpoints`恢复路径、`skills.safeSkillFile`、`findFiles`、外部MCP客户端（`externalClient`/`stdioLaunch`）、admin-host、扩展与探针（暂停）。
+
+### 延后复审清单
+
+用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。
+
+| 登记 | 来源 | 待复审内容 | 状态 |
+|---|---|---|---|
+| 2026-09-25 | 第74组审计未审范围 | `mcp/session.js`；`api/routes.js`的POST路由逐项；`executor.js`/`dangerous.js`检测器；`patchEngine`补丁应用；`editorUndo`/`fileCheckpoints`恢复路径；`skills.safeSkillFile`；`findFiles`；外部MCP客户端（`externalClient`/`stdioLaunch`）；admin-host | 待处理 |
+| 2026-09-25 | 第74组记录不修的低危项 | OAuth限流全体共享（无trust proxy）；授权页不显示客户端/回调主机；`/oauth/revoke`无限流；`GET /pty/jobs`副作用；Windows设备名；`.webagentignore`可被Edit改写 | 等用户对OAuth去留的决定后再定 |
+| 2026-09-25 | 第74组测试 | 完整测试首跑1次失败未保留输出，之后6轮未复现 | 待再观察 |
