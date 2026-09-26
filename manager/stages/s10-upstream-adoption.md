@@ -1860,7 +1860,9 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **核对：** 全量116个文件在守卫下通过；带`WEBAGENT_TEST_GUARD_REPORT=1`逐个运行，81个有被监视的顶层Promise、20个纯同步、其余以`main().then(exit)`收尾。在14个写法不同的真实测试文件结尾注入`await new Promise(() => {})`：12个被守卫拦下，mcpInterop、executionControl因服务器仍在监听挂到超时、判失败；docsHttp无法注入（其文档服务校验源码快照）。testRunner新增7个夹具与一处源码检查，9种变异（runner忽略spawn error、不加守卫；守卫永不失败、监视全部、过早停止监视、改在exit检查、不移除已结算；两个自我重启文件各一）均红在对应夹具。
 
-**剩余风险与未验证：** 顶层只写`main();`、发射后不管的异步回调、中途显式`process.exit`不在守卫范围；Windows上SIGTERM夹具不断言status（信号语义不同），以CI为准。延后清单其余两行（6份指纹、首跑失败）未在本组处理。
+**剩余风险与未验证：** 顶层只写`main();`、发射后不管的异步回调、中途显式`process.exit`不在守卫范围；Windows上SIGTERM夹具不断言status（信号语义不同），以CI为准。“首跑失败”一行仍待观察（本组两次全量均一次通过）。
+
+**延后清单“6份指纹”一行（同组第二次提交）：** 逐份复读并按上表结论修正；GitHub身份详解的旧描述会让读者以为超时是15秒、错误是原始AbortError。其余文档中`githubJson`只出现在第62组记录和交叉验证台账里，属历史记录，保持原样。交互绑定详解对831行源码的核对方式是：4a868ae以来的三次改动逐行对照，文档中的元素ID与函数名和源码双向机械比对，其余行为按分组抽查（btn-save-mm、新建文件的prompt仅在文件区、设置标签页不显示），不等于逐分支重审。
 
 ### 延后复审清单
 
@@ -1872,6 +1874,6 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 | 2026-09-25 | 第74组记录不修的低危项 | OAuth限流全体共享（无trust proxy）；授权页不显示客户端/回调主机；`/oauth/revoke`无限流；`GET /pty/jobs`副作用；Windows设备名；`.webagentignore`可被Edit改写 | 用户选方案B（第75组）：前三项属于OAuth，默认关闭后不再暴露，**只在用户开启OAuth时**仍然成立，留待真要接OAuth客户端时再修；后三项已于第76组处理（跨站GET按Sec-Fetch-Site拒绝、Windows设备名拒绝、规则文件列入内置敏感模式），结论与证据见第76组 |
 | 2026-09-25 | 第74组测试 | 完整测试首跑1次失败未保留输出，之后6轮未复现 | 待再观察 |
 | 2026-09-26 | 第80组开头复审 | 第79组转发层（`apiRelay.js`、`vscodeRelay.js`、`requestJson`选项）：第3批接入设置页时连同调用方、面板关闭时dispose与白名单逐页覆盖一起复审 | 已处理（第82组）：调用方send与rawBody/信号/期限经真实activate验证；面板关闭取消在途与停止回复有单元测试；白名单对四个共享模块可触达的全部请求逐一核对，无漏放行、无误拒；发现第9节措辞缺陷已更正 |
-| 2026-09-26 | 第80组发现 | `FULL_REVIEW_INDEX`6行指纹与现文件不符（名单见第80组），文件自`4a868ae`未改；逐份复读后决定刷新或改状态。第84组：`src/agent/README.md`生成区计数随runChat变化，一度被误刷、已恢复旧指纹 | 待处理 |
+| 2026-09-26 | 第80组发现 | `FULL_REVIEW_INDEX`6行指纹与现文件不符（名单见第80组），文件自`4a868ae`未改；逐份复读后决定刷新或改状态。第84组：`src/agent/README.md`生成区计数随runChat变化，一度被误刷、已恢复旧指纹 | 已处理（第86组）：逐份对照源码复读。GitHub身份详解第1节与第2节首段是旧实现（githubJson、15秒、1MiB、超时为AbortError、缺字段按400），已改为现行githubRequest；用量两份补10秒期限/256KiB/networkBudget并改正自相矛盾的一句；agent/README改正内置循环跑测试条件；交互绑定详解补apiFetch转发、copyText与OAuth开关；缓存与进度详解未见不符。6份均刷新指纹，索引159行指纹现全部与文件一致 |
 | 2026-09-26 | 第80组4.7观察 | 用户侧`search_files`失败原因（沙箱未复现；插件不显示错误原文）；用户那次为何走code模式 | 第81组起Chat显示失败原因；待用户重装插件后复测。第86组：“为何走code模式”——侧栏按下拉框选模式，用户2026-09-26决定保留，不解析开头的`/ask`，此问题了结；`search_files`部分仍待复测 |
 | 2026-09-26 | 第82组发现 | 永不结算的Promise会让Node以退出码0提前结束、测试被误判通过；已给workbenchRuntime、settingsPanel、sidebarFeedback加守卫。其他异步测试文件（尤其靠`main().catch`收尾、不在最后显式退出的）是否有同样隐患，逐个检查或在run-tests.js统一要求结尾标记 | 已处理（第86组）：run-tests.js统一预加载`scripts/testCompletionGuard.js`，测试文件同步执行期间由主文件顶层创建的Promise（即挂在`main()`后的`.catch/.then`）在事件循环耗尽时仍未结算就判失败；全量116个文件中81个有被监视的顶层Promise、20个纯同步，其余以`main().then(exit)`收尾、同样覆盖。在14个真实测试文件结尾注入永久挂起：12个被守卫拦下，2个挂到超时判失败。顺带发现并修复：①runner只看status，接住SIGTERM以0退出的超时测试被记为通过（mcpInterop注入后即如此）；②editorRuntime/workbenchRuntime自我重启的子进程不带守卫。已知不覆盖：顶层只写`main();`、发射后不管的异步回调、中途显式退出 |

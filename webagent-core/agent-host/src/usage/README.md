@@ -11,13 +11,13 @@ record读取当天记录、累计toolCalls/fail、更新lastAt并调度报告。
 
 reportNow仅在配置WEBAGENT_TELEMETRY_URL及WEBAGENT_TELEMETRY_TOKEN且有调用时发送。payload含安装ID、可选GitHub身份、日期、调用计数和产品版本，不发送文件正文、命令或API Key。是否可以关联身份仍应告知用户，不能称完全匿名。
 
-报告返回后重新读取最新当天数据，只更新lastReportAt，不用发出前的旧快照覆盖期间新增计数。定时周期为15分钟，另有调度防抖。
+报告返回后重新读取最新当天数据，只更新lastReportAt，不用发出前的旧快照覆盖期间新增计数。定时周期为15分钟，另有首个事件后4秒的一次性延迟。每次请求有挂钟期限（默认10秒，`WEBAGENT_TELEMETRY_TIMEOUT_MS`可改）和256KiB响应上限，超时或传输失败返回失败结果、不重试；周期与延迟触发的请求之间没有去重。
 
 ## 数据边界与失败
 usage.json顺序写盘，读取异常回空，不是不可丢失的审计日志或数据库事务。网络/上报失败不应被解读为工具失败；业务成功率仍取决于调用入口是否正确传入ok。界面telemetryConfigured只反映部分配置状态，不证明服务器收到报告。
 
 ## 验证
-usageTracker与auditStorage覆盖统计和延迟报告期间计数不回退。没有远端collector可用性、重试持久队列或精确计费验收保证。管理端职责见[admin-host说明](../../../admin-host/README.md)。
+usageTracker与auditStorage覆盖统计和延迟报告期间计数不回退；networkBudget覆盖不应答端点按期限结束。没有远端collector可用性、重试持久队列或精确计费验收保证。管理端职责见[admin-host说明](../../../admin-host/README.md)。
 
 <!-- docs-inventory:start -->
 ## 自动源码导航
