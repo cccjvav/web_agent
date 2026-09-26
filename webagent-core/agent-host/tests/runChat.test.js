@@ -127,7 +127,23 @@ async function main() {
   assert.ok(ran.ok);
   assert.deepStrictEqual(ran.args, { command: 'npm test', timeoutSec: 180 });
   const codeMsg = code.events.find((e) => e.type === 'message');
-  assert.ok(codeMsg && codeMsg.text.includes('已运行 `npm test`（上限180秒）'));
+  assert.ok(codeMsg && codeMsg.text.includes('已运行 `npm test`（上限180秒）。输出摘要：'));
+  assert.ok(codeMsg.text.includes('ok'), 'the summary carries what the tests printed');
+  assert.ok(!codeMsg.text.includes('没有成功'));
+  // A failing run must not read as "已运行": it says so and keeps both the reason and the test output.
+  const testFile = path.join(tmp, 'tests/app.test.js'), passing = fs.readFileSync(testFile, 'utf8');
+  fs.writeFileSync(testFile, 'console.error("FAILING-TEST-EVIDENCE");\nprocess.exit(1);\n');
+  try {
+    const failing = collect();
+    await runChat({ mode: 'code', message: '跑测试' }, failing.emit);
+    const failedRun = failing.events.find((e) => e.type === 'tool' && e.name === 'run_command');
+    assert.ok(failedRun && failedRun.ok === false && failedRun.error, 'the failing run is reported as a failed tool with a reason');
+    const failText = failing.events.find((e) => e.type === 'message').text;
+    assert.ok(failText.includes('运行 `npm test` 没有成功（上限180秒；测试失败、超时、在 VS Code 里被拒绝都会这样）。摘要：'), failText);
+    assert.ok(!failText.includes('已运行'), failText);
+    assert.ok(failText.includes('FAILING-TEST-EVIDENCE'), 'the failure summary keeps what the tests printed');
+    assert.ok(failText.includes(String(failedRun.error).split('\n')[0].slice(0, 40)), 'the failure summary keeps the reason');
+  } finally { fs.writeFileSync(testFile, passing); }
   // R6 phase-1 acceptance follow-up 3: the built-in loop no longer runs the suite on every Code message.
   for (const message of ['看看 src/app.js', '不要跑测试，只看代码', 'skip the tests']) {
     const quiet = collect();

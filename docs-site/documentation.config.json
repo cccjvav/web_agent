@@ -422,6 +422,11 @@
       "group": "使用"
     },
     {
+      "id": "settings-tab-acceptance",
+      "path": "docs/guides/插件设置页实机验收.md",
+      "group": "使用"
+    },
+    {
       "id": "host-diagnostics-trace",
       "path": "webagent-core/agent-host/src/utils/主机诊断与调用追踪详解.md",
       "group": "实现"

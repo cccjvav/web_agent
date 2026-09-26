@@ -11,7 +11,7 @@
 | 空输入branch | 两分支且canMerge，仍未自动合并 |
 | 新回合一支merge | error含至少两个，不伪造总结 |
 | 两支merge | simulated=true、consensusReached=false、agreementRate=null、参与者2，不伪造投票比例；F70：canonical必须包含每个分支答案、总结消息含“### 分支 1/2”（此前分支原文拼好后被丢弃，VS Code里只显示一句模板话；基线红） |
-| Code跑测试 | 消息“跑测试”时真run_command事件存在且ok，参数为`{command:'npm test',timeoutSec:180}`，消息含“已运行 `npm test`（上限180秒）”，实际运行临时项目测试 |
+| Code跑测试 | 消息“跑测试”时真run_command事件存在且ok，参数为`{command:'npm test',timeoutSec:180}`，消息含“已运行 `npm test`（上限180秒）。输出摘要：”与测试打印的ok，实际运行临时项目测试；把临时测试改成打印FAILING-TEST-EVIDENCE并以1退出后再发“跑测试”：工具失败且带原因，消息为逐字的“运行 `npm test` 没有成功……”、不含“已运行”，同时保留原因与测试输出（之后恢复原测试）。5种变异均红：不看成败、失败丢输出、失败丢原因、成功丢输出、不记成败 |
 | Code不要求测试 | “看看 src/app.js”“不要跑测试，只看代码”“skip the tests”都不run_command，消息含逐字的“没有自动运行测试……”提示，最后两次todo为“汇总”“未运行测试（消息未要求）”；wantsTests的15个样例（含latest、contest、别跑测试、without tests、空串）；从extension.js与ptyJobs.js读出Chat期限与批准期限，断言90秒+180秒+15秒+5秒不超过Chat期限。8种变异均红：总是跑、上限改60或300、调用处写死60、去掉否定、去掉单词边界、todo不区分、提示文字改掉 |
 | emit放payload | 和第二参数回调方式均能收到工具和消息 |
 | Code显式写notes.md | 文件实际存在且内容匹配 |

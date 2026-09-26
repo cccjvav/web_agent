@@ -406,7 +406,10 @@ function hostErrorHint(err) {
 // lifeline), and the host's "[lifeline]" line goes to that window's output channel, which a reloaded or new
 // window cannot show. Each start is remembered per folder in globalState; the next window that finds that host
 // gone says so in its own output channel. A record whose host still answers (another window has it) is kept.
+// The check runs a while after activation: on a reload the old window's host may still be shutting down (the host
+// gives itself at most 8 s) and answering /api/status meanwhile.
 const OWNED_HOSTS_KEY = 'webagent.ownedHosts';
+const PREVIOUS_HOST_CHECK_DELAY_MS = 10000;
 const LOCAL_HOST_URL = /^http:\/\/127\.0\.0\.1:\d{2,5}$/;
 function ownedHosts(state) {
   const value = state && typeof state.get === 'function' ? state.get(OWNED_HOSTS_KEY) : null;
@@ -419,24 +422,25 @@ async function rememberOwnedHost(state, snap) {
   await state.update(OWNED_HOSTS_KEY, { ...ownedHosts(state), [normalizePath(snap.workspace)]: record });
   return true;
 }
-async function forgetOwnedHost(state, folder) {
+// With startedAt, only that very record is removed: a host started in the meantime keeps its own record.
+async function forgetOwnedHost(state, folder, startedAt) {
   if (!state || typeof state.update !== 'function' || !folder) return false;
   const hosts = { ...ownedHosts(state) }, key = normalizePath(folder);
   if (!Object.hasOwn(hosts, key)) return false;
+  if (startedAt !== undefined && (hosts[key] || {}).startedAt !== startedAt) return false;
   delete hosts[key];
   await state.update(OWNED_HOSTS_KEY, hosts);
   return true;
 }
 // The notice for this window's output channel, or null. probe(url) returns the host's /api/status JSON or throws.
-async function previousHostNotice(state, folder, probe) {
-  if (!folder) return null;
-  const record = ownedHosts(state)[normalizePath(folder)];
-  if (!record) return null;
-  if (typeof record.url !== 'string' || !LOCAL_HOST_URL.test(record.url)) { await forgetOwnedHost(state, folder); return null; }
+// record defaults to the stored one; activation passes the record it read before any new start could replace it.
+async function previousHostNotice(state, folder, probe, record = folder ? ownedHosts(state)[normalizePath(folder)] : null) {
+  if (!folder || !record || typeof record !== 'object') return null;
+  if (typeof record.url !== 'string' || !LOCAL_HOST_URL.test(record.url)) { await forgetOwnedHost(state, folder, record.startedAt); return null; }
   let alive = false;
   try { const status = await probe(record.url); alive = Boolean(status && sameWorkspace(folder, status.workspaceRoot)); } catch { alive = false; }
   if (alive) return null;
-  await forgetOwnedHost(state, folder);
+  await forgetOwnedHost(state, folder, record.startedAt);
   const pid = Number.isInteger(record.pid) ? record.pid : '未知';
   const started = typeof record.startedAt === 'string' && !Number.isNaN(Date.parse(record.startedAt))
     ? new Date(record.startedAt).toLocaleString() : '未知时间';
@@ -619,7 +623,15 @@ function activate(context) {
       const reply = await requestJson('GET', `${url}/api/status`, undefined, { timeoutMs: 1500 });
       return reply && reply.status === 200 ? reply.json : null;
     };
-    previousHostNotice(context.globalState, folder, probe).then((notice) => { if (notice) hostOutput.appendLine(notice); }).catch(() => {});
+    let previous = null;
+    try { previous = folder ? ownedHosts(context.globalState)[normalizePath(folder)] : null; } catch { previous = null; }
+    if (previous) {
+      const timer = setTimeout(() => {
+        previousHostNotice(context.globalState, folder, probe, previous)
+          .then((notice) => { if (notice) hostOutput.appendLine(notice); }).catch(() => {});
+      }, PREVIOUS_HOST_CHECK_DELAY_MS);
+      context.subscriptions.push({ dispose: () => clearTimeout(timer) });
+    }
   }
   if (canManage && vscode.workspace.getConfiguration('webagent').get('autoStartHost') === true) startHost({ quiet: true });
   else if (canManage) {

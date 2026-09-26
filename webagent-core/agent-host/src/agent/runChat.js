@@ -221,7 +221,7 @@ function summarizeAsk(message, facts) {
     '',
     facts.testCmd ? `探测到的测试命令：\`${facts.testCmd}\`` : '没有探测到标准测试命令。',
     '',
-    '这是只读 Ask：没有改文件。要落地补丁切到 **Web Agent Code**（配置 API Key 后走模型工具循环；内置模式仅在探测到测试命令时运行测试，并可应用你消息里的明确写入/补丁）。'
+    '这是只读 Ask：没有改文件。要落地补丁切到 **Web Agent Code**（配置 API Key 后走模型工具循环；内置模式只在消息要求跑测试且探测到测试命令时运行，并可应用你消息里的明确写入/补丁）。'
   ]
     .filter((line) => line !== '')
     .join('\n');
@@ -307,9 +307,10 @@ async function runBuiltin(payload, emit) {
   const ranTests = Boolean(test) && runTests;
   if (ranTests) {
     const ran = await timedTool(emit, 'code', 'run_command', { command: test.cmd, timeoutSec: BUILTIN_TEST_TIMEOUT_SEC });
-    facts.testOutput = ran.ok
-      ? `${ran.result.stdout || ''}\n${ran.result.stderr || ''}`
-      : ran.error || '';
+    // A failed run keeps the reason (declined, timeout, exit code) and whatever the tests printed.
+    const printed = ran.result ? `${ran.result.stdout || ''}\n${ran.result.stderr || ''}`.trim() : '';
+    facts.testOk = ran.ok;
+    facts.testOutput = ran.ok ? printed : [ran.error, printed].filter(Boolean).join('\n');
   }
 
   await timedTool(emit, 'code', 'set_todos', {
@@ -328,7 +329,10 @@ async function runBuiltin(payload, emit) {
     !test
       ? '没有探测到 package.json / pytest / cargo / go 测试命令。'
       : ranTests
-        ? `已运行 \`${test.cmd}\`（上限${BUILTIN_TEST_TIMEOUT_SEC}秒）。输出摘要：\n\`\`\`\n${clip(facts.testOutput, 1200)}\n\`\`\``
+        ? (facts.testOk
+          ? `已运行 \`${test.cmd}\`（上限${BUILTIN_TEST_TIMEOUT_SEC}秒）。输出摘要：`
+          : `运行 \`${test.cmd}\` 没有成功（上限${BUILTIN_TEST_TIMEOUT_SEC}秒；测试失败、超时、在 VS Code 里被拒绝都会这样）。摘要：`)
+          + `\n\`\`\`\n${clip(facts.testOutput, 1200)}\n\`\`\``
         : `没有自动运行测试。要运行 \`${test.cmd}\`，在消息里写“跑测试”（上限${BUILTIN_TEST_TIMEOUT_SEC}秒；更久的测试请在终端自己运行）。`,
     '',
     '内置循环没有大模型：它会搜、读，按你的要求跑测试，并应用你消息里给出的补丁。',

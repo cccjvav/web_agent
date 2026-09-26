@@ -349,6 +349,9 @@ async function main() {
   assert.equal(await context.previousHostNotice(unit, tmp, probeAlive), null, 'still served (another window has it): no notice');
   assert.deepStrictEqual(probed, [url]); assert.ok(unit.values['webagent.ownedHosts'][key], 'and the record is kept');
   assert.equal(await context.previousHostNotice(unit, '', probeAlive), null);
+  const stored = unit.get('webagent.ownedHosts')[key];
+  assert.equal(await context.forgetOwnedHost(unit, tmp, 'another start'), false, 'forgetting a different start leaves the record');
+  assert.deepStrictEqual(unit.get('webagent.ownedHosts')[key], stored);
   const notice = await context.previousHostNotice(unit, tmp, async () => { throw new Error('ECONNREFUSED'); });
   assert.ok(notice.startsWith(`[host] 上次由插件在此文件夹启动的主机（${url}，pid 42，启动于 `), notice);
   assert.ok(notice.endsWith('已不在运行。插件启动的主机会随启动它的窗口关闭或重载而停止；停止时的[lifeline]记录写在那个窗口的输出面板里，这里看不到。需要时点侧栏【启动】。'), notice);
@@ -390,14 +393,50 @@ async function main() {
     throw new Error('connect ECONNREFUSED');
   };
   vm.runInContext('requestJson = transport;', context);
-  const nextWindow = fakeState({ 'webagent.ownedHosts': { [key]: { url: 'http://127.0.0.1:48279', pid: 99, startedAt: new Date().toISOString() } } });
+  // The check is delayed (on a reload the old host may still be shutting down and answering); the test fires it.
+  assert.equal(vm.runInContext('PREVIOUS_HOST_CHECK_DELAY_MS', context), 10000);
+  const delayed = [], cleared = [];
+  context.setTimeout = (fn, ms, ...args) => {
+    if (ms === 10000) { const handle = { fn }; delayed.push(handle); return handle; }
+    return setTimeout(fn, ms, ...args);
+  };
+  context.clearTimeout = handle => { if (delayed.includes(handle)) cleared.push(handle); else clearTimeout(handle); };
+  const oldRecord = { url: 'http://127.0.0.1:48279', pid: 99, startedAt: '2026-09-26T10:00:00.000Z' };
+  const nextWindow = fakeState({ 'webagent.ownedHosts': { [key]: oldRecord } });
   outputLines.length = 0;
   context.activate({ subscriptions, extensionPath: tmp, globalState: nextWindow });
+  for (let i = 0; i < 5; i++) await new Promise(resolve => setImmediate(resolve));
+  assert.equal(delayed.length, 1, 'one delayed check for the recorded host');
+  assert.deepStrictEqual(probes.filter(line => line.includes(':48279')), [], 'not probed at activation');
+  assert.ok(!outputLines.some(line => line.includes('已不在运行')), 'no notice before the check runs');
+  // Meanwhile this window starts its own host (autoStartHost): the check still reports the old one, keeps the new record.
+  const newRecord = { url: 'http://127.0.0.1:48271', pid: 5, startedAt: '2026-09-26T10:00:05.000Z' };
+  nextWindow.values['webagent.ownedHosts'] = { [key]: newRecord };
+  delayed[0].fn();
   for (let i = 0; i < 100 && !outputLines.some(line => line.includes('已不在运行')); i++) await new Promise(resolve => setTimeout(resolve, 10));
   // (The status bar's own refresh also asks the default address; only the recorded host is probed for the notice.)
   assert.deepStrictEqual(probes.filter(line => line.includes(':48279')), ['GET http://127.0.0.1:48279/api/status']);
   assert.ok(outputLines.some(line => line.startsWith('[host] 上次由插件在此文件夹启动的主机（http://127.0.0.1:48279，pid 99，')), outputLines.join('\n'));
-  assert.deepStrictEqual(nextWindow.values['webagent.ownedHosts'], {});
+  assert.deepStrictEqual(nextWindow.values['webagent.ownedHosts'], { [key]: newRecord }, 'the host started meanwhile keeps its record');
+  // Without a newer record the old one is cleared.
+  const plainWindow = fakeState({ 'webagent.ownedHosts': { [key]: oldRecord } });
+  outputLines.length = 0;
+  context.activate({ subscriptions, extensionPath: tmp, globalState: plainWindow });
+  assert.equal(delayed.length, 2);
+  delayed[1].fn();
+  for (let i = 0; i < 100 && !outputLines.some(line => line.includes('已不在运行')); i++) await new Promise(resolve => setTimeout(resolve, 10));
+  assert.ok(outputLines.some(line => line.includes('pid 99')));
+  assert.deepStrictEqual(plainWindow.values['webagent.ownedHosts'], {});
+  // Closing the window before the check runs cancels it.
+  const closingSubscriptions = [];
+  context.activate({ subscriptions: closingSubscriptions, extensionPath: tmp, globalState: fakeState({ 'webagent.ownedHosts': { [key]: oldRecord } }) });
+  assert.equal(delayed.length, 3);
+  for (const item of closingSubscriptions) try { item.dispose(); } catch { /* fakes */ }
+  assert.deepStrictEqual(cleared, [delayed[2]], 'disposing the window clears the pending check');
+  // No record, no check.
+  context.activate({ subscriptions, extensionPath: tmp, globalState: fakeState() });
+  assert.equal(delayed.length, 3, 'nothing recorded: nothing scheduled');
+  context.setTimeout = setTimeout; context.clearTimeout = clearTimeout;
 
   finished = true;
   console.log('sidebarFeedback: stop outcomes, actionDone for every click, busy/disabled painting, chat failure reasons, settings tab via activate, previous-window host notice passed');

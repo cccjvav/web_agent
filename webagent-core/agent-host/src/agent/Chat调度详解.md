@@ -68,7 +68,7 @@ Plan 直接委托 runPlanRound。普通模式 pickModel；选中非 builtin 但�
 - ask：将任务列表标完成，emit message，返回。
 - 其余模式进入写/补丁/测试段：识别显式写意图后 call write_file，带 confirm_overwrite:true；工具本身的权限仍有效，失败 emit error 后 return。
 - 识别补丁后，从 `file/文件` 后解析目标，否则用 facts.files[0]。先 read_files 取 hash，只有成功且有 hash 才 apply_patch；应用失败停止。没有目标或读取/hash 条件不满足时跳过，但最终仍可能写“已尝试”，不是补丁成功证明。
-- explore之后先算runTests：code模式、探测到测试命令且**wantsTests(message)**为真。只有它为真时，再次detectTestCommand并run_command，timeoutSec为**BUILTIN_TEST_TIMEOUT_SEC**=180；成功保存stdout/stderr，失败保存error，总结“已运行 `命令`（上限180秒）”，**不是测试已通过**。未要求时不运行，todo标“未运行测试（消息未要求）”，总结提示在消息里写“跑测试”（更久的测试在终端自己运行）。R6第一期验收跟进③：此前每条Code消息都跑整套测试且上限60秒（PTY期限75秒），本仓库npm test约80秒，必然超时。180秒由预算决定：插件Chat整个请求的期限300秒（extension.js）要容纳探索、VS Code里批准命令最多90秒（ptyJobs的CONFIRM_TIMEOUT_MS）和PTY的timeoutSec+15秒；runChat测试从两处源码读出这两个数并断言相加不超过期限。
+- explore之后先算runTests：code模式、探测到测试命令且**wantsTests(message)**为真。只有它为真时，再次detectTestCommand并run_command，timeoutSec为**BUILTIN_TEST_TIMEOUT_SEC**=180；成功（退出码0）时总结“已运行 `命令`（上限180秒）。输出摘要：”并附stdout/stderr；失败（测试失败、超时、在VS Code里被拒绝）时总结“运行 `命令` 没有成功（上限180秒；……）。摘要：”，摘要同时保留失败原因与测试打印的内容（此前失败也写“已运行”且只留原因）。未要求时不运行，todo标“未运行测试（消息未要求）”，总结提示在消息里写“跑测试”（更久的测试在终端自己运行）。R6第一期验收跟进③：此前每条Code消息都跑整套测试且上限60秒（PTY期限75秒），本仓库npm test约80秒，必然超时。180秒由预算决定：插件Chat整个请求的期限300秒（extension.js）要容纳探索、VS Code里批准命令最多90秒（ptyJobs的CONFIRM_TIMEOUT_MS）和PTY的timeoutSec+15秒；runChat测试从两处源码读出这两个数并断言相加不超过期限。
 
 所有修改已经发生就不会因后面的测试失败自动回滚。内置引擎只按有限模板搜读与应用用户给出的内容，不是自动分析并生成修复的大模型。
 

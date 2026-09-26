@@ -233,13 +233,13 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [publicHttps.test.js](publicHttps.test.js) | 19 个函数/类节点 |
 | [requestLifecycle.test.js](requestLifecycle.test.js) | 13 个函数/类节点 |
 | [resourceBudget.test.js](resourceBudget.test.js) | 17 个函数/类节点 |
-| [runChat.test.js](runChat.test.js) | 34 个函数/类节点 |
+| [runChat.test.js](runChat.test.js) | 36 个函数/类节点 |
 | [sandbox.test.js](sandbox.test.js) | 3 个函数/类节点 |
 | [searchWorkerLifecycle.test.js](searchWorkerLifecycle.test.js) | 14 个函数/类节点 |
 | [sensitiveBoundary.test.js](sensitiveBoundary.test.js) | 33 个函数/类节点 |
 | [settingsPanel.test.js](settingsPanel.test.js) | 67 个函数/类节点 |
 | [settingsRelay.test.js](settingsRelay.test.js) | 61 个函数/类节点 |
-| [sidebarFeedback.test.js](sidebarFeedback.test.js) | 113 个函数/类节点 |
+| [sidebarFeedback.test.js](sidebarFeedback.test.js) | 121 个函数/类节点 |
 | [skillsLifecycle.test.js](skillsLifecycle.test.js) | 19 个函数/类节点 |
 | [skipWorkbench.test.js](skipWorkbench.test.js) | 16 个函数/类节点 |
 | [stateIntegrity.test.js](stateIntegrity.test.js) | 40 个函数/类节点 |
