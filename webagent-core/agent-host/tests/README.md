@@ -247,7 +247,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [stdioOwnerFixture.js](stdioOwnerFixture.js) | 2 个函数/类节点 |
 | [stdioServerFixture.js](stdioServerFixture.js) | 3 个函数/类节点 |
 | [taskProgress.test.js](taskProgress.test.js) | 9 个函数/类节点 |
-| [testRunner.test.js](testRunner.test.js) | 13 个函数/类节点 |
+| [testRunner.test.js](testRunner.test.js) | 21 个函数/类节点 |
 | [textEncoding.test.js](textEncoding.test.js) | 10 个函数/类节点 |
 | [toolLabel.test.js](toolLabel.test.js) | 0 个函数/类节点 |
 | [traceIntegration.test.js](traceIntegration.test.js) | 4 个函数/类节点 |

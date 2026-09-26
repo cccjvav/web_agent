@@ -50,6 +50,7 @@ try {
 
   fs.mkdirSync(path.join(fixture, 'scripts'));
   fs.copyFileSync(path.join(root, 'scripts/run-tests.js'), path.join(fixture, 'scripts/run-tests.js'));
+  fs.copyFileSync(path.join(root, 'scripts/testCompletionGuard.js'), path.join(fixture, 'scripts/testCompletionGuard.js'));
   for (const installed of [[], ['express']]) {
     for (const name of installed) {
       const folder = path.join(fixture, 'node_modules', name); fs.mkdirSync(folder, { recursive: true });
@@ -71,6 +72,37 @@ try {
     assert.equal(metadata.file,name);assert.equal(metadata.timeoutMs,1000);
     if(name.includes('Timeout')) assert.equal(metadata.errorCode,'ETIMEDOUT');else assert.equal(metadata.status,7);
     assert.ok(result.stdout.includes('::error title='+name+'::'));
+  }
+  // Completion: a test whose top-level promise never settles drains the event loop and would exit 0 half-way; a test
+  // killed at the time limit that exits 0 on SIGTERM (as tests loading the host do) used to count as passed.
+  const guardMessage = 'test ended before its top-level promise settled';
+  for (const [name, body, status, check] of [
+    ['fixtureHang.test.js', "async function main(){ await new Promise(()=>{}); console.log('UNREACHED'); }\nmain().catch(e=>{console.error(e);process.exitCode=1;});", 1,
+      (r) => { assert.ok(r.stderr.includes(guardMessage), r.stderr); assert.ok(!r.stdout.includes('UNREACHED')); }],
+    ['fixtureHangThen.test.js', "async function main(){ await new Promise(()=>{}); }\nmain().then(()=>process.exit(0),()=>process.exit(1));", 1,
+      (r) => assert.ok(r.stderr.includes(guardMessage), r.stderr)],
+    ['fixtureRaceLoser.test.js', "function bounded(work){ return Promise.race([work, new Promise(()=>{})]); }\nasync function main(){ await bounded(Promise.resolve(1)); await new Promise(r=>setTimeout(r,5)); console.log('DONE'); }\nmain().catch(e=>{console.error(e);process.exitCode=1;});", 0,
+      (r) => assert.ok(r.stdout.includes('DONE') && !r.stderr.includes(guardMessage), r.stderr)],
+    ['fixtureExplicitExit.test.js', "async function main(){ await new Promise(r=>setTimeout(r,5)); }\nmain().then(()=>process.exit(0),()=>process.exit(1));", 0, () => {}],
+    ['fixtureBareAsync.test.js', "(async()=>{ await new Promise(r=>setTimeout(r,5)); console.log('BARE'); })();", 0, (r) => assert.ok(r.stdout.includes('BARE'))],
+    ['fixtureFailingAsync.test.js', "async function main(){ await 1; throw new Error('boom'); }\nmain().catch(e=>{console.error(e.message);process.exitCode=3;});", 1,
+      (r) => assert.ok(r.stdout.includes('FAIL fixtureFailingAsync.test.js exit 3') && !r.stderr.includes(guardMessage))],
+    ['fixtureSigtermTimeout.test.js', "process.on('SIGTERM',()=>process.exit(0));setInterval(()=>{},1000);", 1, (r) => {
+      const metadata = JSON.parse(r.stdout.split('\n').find(line => line.startsWith('[test-result] ')).slice('[test-result] '.length));
+      assert.equal(metadata.errorCode, 'ETIMEDOUT');
+      if (process.platform !== 'win32') assert.equal(metadata.status, 0, 'the child really exited 0 on SIGTERM');
+      assert.ok(r.stdout.includes('FAIL fixtureSigtermTimeout.test.js exit 1'), r.stdout);
+    }]]) {
+    fs.writeFileSync(path.join(fixture, 'tests', name), body);
+    const r = spawnSync(process.execPath, ['scripts/run-tests.js', '--filter=' + name], { cwd: fixture, env: { ...process.env, GITHUB_ACTIONS: 'true', WEBAGENT_TEST_TIMEOUT_MS: '1500' }, encoding: 'utf8', timeout: 15000 });
+    assert.equal(r.status, status, name + '\n' + r.stdout + r.stderr);
+    check(r);
+  }
+  // Test files that re-launch themselves must hand the guard (in execArgv) to the child and fail on a child timeout.
+  for (const name of ['editorRuntime.test.js', 'workbenchRuntime.test.js']) {
+    const source = fs.readFileSync(path.join(root, 'tests', name), 'utf8');
+    assert.match(source, /spawnSync\(process\.execPath, \[\.\.\.process\.execArgv, '--experimental-vm-modules', __filename, '--vm-child'\]/, name);
+    assert.match(source, /process\.exit\((r|result)\.error \|\| (r|result)\.status == null \? 1 : (r|result)\.status\)/, name);
   }
   // Stage metadata in the middle must survive the old head/tail-only annotation window.
   const secret = 'DO_NOT_COPY_COMMAND_PATH_TOKEN';

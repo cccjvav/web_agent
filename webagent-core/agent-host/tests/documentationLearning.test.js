@@ -289,7 +289,8 @@ const pairs = [
   ['webagent-core/agent-host/src/utils/requestScope.js', 'webagent-core/agent-host/src/utils/函数详解.md'],
   ['webagent-core/agent-host/src/utils/boundedFile.js', 'webagent-core/agent-host/src/utils/函数详解.md'],
   ['webagent-core/agent-host/src/tunnel/stopProcess.js', 'webagent-core/agent-host/src/tunnel/停止进程详解.md'],
-  ['webagent-core/agent-host/scripts/run-tests.js', 'webagent-core/agent-host/scripts/运行器详解.md']
+  ['webagent-core/agent-host/scripts/run-tests.js', 'webagent-core/agent-host/scripts/运行器详解.md'],
+  ['webagent-core/agent-host/scripts/testCompletionGuard.js', 'webagent-core/agent-host/scripts/运行器详解.md']
 ];
 function namedFunctions(node, result = new Set()) {
   if (!node || typeof node !== 'object') return result;

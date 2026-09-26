@@ -39,6 +39,8 @@ function lifecycleSummary(stderr) {
 
 const root = path.resolve(__dirname, '..');
 const testsDir = path.join(root, 'tests');
+// Fails a test whose top-level promise never settled (Node would otherwise exit 0 half-way); see the module.
+const completionGuard = path.join(__dirname, 'testCompletionGuard.js');
 
 const missingDependencies = ['express', 'acorn'].filter(name => !fs.existsSync(path.join(root, 'node_modules', name, 'package.json')));
 if (missingDependencies.length) {
@@ -125,7 +127,7 @@ for (const f of files) {
   const context = {file:f,node:process.version,platform:process.platform,arch:process.arch,timeoutMs:timeout};
   console.log('[test-context] ' + JSON.stringify(context));
   const started = process.hrtime.bigint();
-  const r = spawnSync(process.execPath, [path.join(testsDir, f)], {
+  const r = spawnSync(process.execPath, ['--require', completionGuard, path.join(testsDir, f)], {
     cwd: root,
     stdio: process.env.GITHUB_ACTIONS === 'true' ? 'pipe' : 'inherit',
     encoding: 'utf8',
@@ -140,7 +142,9 @@ for (const f of files) {
   if (r.stdout) process.stdout.write(r.stdout);
   if (r.stderr) process.stderr.write(r.stderr);
   if (r.error) console.error(`${f}: ${r.error.message}`);
-  const code = r.status == null ? 1 : r.status;
+  // A timeout or spawn failure fails the file even when the child exits 0: tests that load the host catch SIGTERM
+  // and shut down cleanly, so a test killed at the time limit used to report status 0 and count as passed.
+  const code = r.error || r.status == null ? 1 : r.status;
   const ok = code === 0;
   if (!ok) {
     failed += 1;

@@ -6,9 +6,10 @@ const path = require('path');
 const vm = require('vm');
 const { spawnSync } = require('child_process');
 if (!process.argv.includes('--vm-child')) {
-  const result = spawnSync(process.execPath, ['--experimental-vm-modules', __filename, '--vm-child'], { stdio: 'inherit', timeout: 10000 });
+  // execArgv carries the runner's completion guard into the child; a timeout (error) fails whatever the exit code.
+  const result = spawnSync(process.execPath, [...process.execArgv, '--experimental-vm-modules', __filename, '--vm-child'], { stdio: 'inherit', timeout: 10000 });
   if (result.error) console.error(result.error);
-  process.exit(result.status == null ? 1 : result.status);
+  process.exit(result.error || result.status == null ? 1 : result.status);
 }
 // A promise that never settles lets Node exit 0 before the last assertion (e.g. a click that awaits a second,
 // never-answered request). Only reaching the end counts as a pass.

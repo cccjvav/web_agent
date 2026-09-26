@@ -1848,6 +1848,20 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **剩余风险与未验证：** 手册本身只能由用户实机执行；Windows上`tasklist`核对PID、VS Code模态框的按钮文字（取消键由VS Code本地化）以实机为准。已配置模型的用户第11步只能记“未执行”。侧栏Chat不解析`/ask`待用户决定是否修。
 
+### 第86组：测试完成守卫与runner超时判定（延后复审清单“提前退出码0”一行，2026-09-26）
+
+**开头复审（第85组`30f4455`）：** 逐段读runChat与extension.js改动及调用方。runChat失败分支依赖`timedTool`→`isToolFailure`把非零`exitCode`判为失败，成立，失败措辞“测试失败、超时、被拒绝”与源码一致；`rememberOwnedHost`总写入`startedAt`，因此按`startedAt`只删自己那条记录的保护有效，定时器随窗口dispose清除。未发现缺陷。剩余：旧主机退出后10秒内若本窗口在同一地址又启动了新主机，探测看到新主机“还在”而不提示（只少一条说明，不误删记录）。
+
+**用户决定：** 侧栏Chat保留下拉框选模式，不解析开头的`/ask`；已写入使用指南第6节与返工方案第9节。
+
+**交付：** `agent-host/scripts/testCompletionGuard.js`，由run-tests.js以`--require`预加载进每个测试文件：同步执行期间由主文件顶层创建的Promise（挂在`main()`后的`.catch/.then`）在`beforeExit`时仍未结算且退出码为0，就打印原因并改为1。第一版监视同步阶段的全部Promise，全量出现4个误报（辅助函数里`Promise.race`输掉的超时Promise本就永不结算），收窄为只看主文件顶层帧。
+
+**顺带发现并修复：** ①run-tests.js只看`r.status`：加载主机代码的测试接住SIGTERM后正常关闭、以0退出，超时被杀却记为通过（向mcpInterop注入永久挂起后就是如此）；现在`r.error`（超时、无法启动）一律判失败。②editorRuntime、workbenchRuntime带`--vm-child`重启自己，子进程不继承`--require`；改为传`process.execArgv`，子进程超时也以1退出。
+
+**核对：** 全量116个文件在守卫下通过；带`WEBAGENT_TEST_GUARD_REPORT=1`逐个运行，81个有被监视的顶层Promise、20个纯同步、其余以`main().then(exit)`收尾。在14个写法不同的真实测试文件结尾注入`await new Promise(() => {})`：12个被守卫拦下，mcpInterop、executionControl因服务器仍在监听挂到超时、判失败；docsHttp无法注入（其文档服务校验源码快照）。testRunner新增7个夹具与一处源码检查，9种变异（runner忽略spawn error、不加守卫；守卫永不失败、监视全部、过早停止监视、改在exit检查、不移除已结算；两个自我重启文件各一）均红在对应夹具。
+
+**剩余风险与未验证：** 顶层只写`main();`、发射后不管的异步回调、中途显式`process.exit`不在守卫范围；Windows上SIGTERM夹具不断言status（信号语义不同），以CI为准。延后清单其余两行（6份指纹、首跑失败）未在本组处理。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。
@@ -1859,5 +1873,5 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 | 2026-09-25 | 第74组测试 | 完整测试首跑1次失败未保留输出，之后6轮未复现 | 待再观察 |
 | 2026-09-26 | 第80组开头复审 | 第79组转发层（`apiRelay.js`、`vscodeRelay.js`、`requestJson`选项）：第3批接入设置页时连同调用方、面板关闭时dispose与白名单逐页覆盖一起复审 | 已处理（第82组）：调用方send与rawBody/信号/期限经真实activate验证；面板关闭取消在途与停止回复有单元测试；白名单对四个共享模块可触达的全部请求逐一核对，无漏放行、无误拒；发现第9节措辞缺陷已更正 |
 | 2026-09-26 | 第80组发现 | `FULL_REVIEW_INDEX`6行指纹与现文件不符（名单见第80组），文件自`4a868ae`未改；逐份复读后决定刷新或改状态。第84组：`src/agent/README.md`生成区计数随runChat变化，一度被误刷、已恢复旧指纹 | 待处理 |
-| 2026-09-26 | 第80组4.7观察 | 用户侧`search_files`失败原因（沙箱未复现；插件不显示错误原文）；用户那次为何走code模式 | 第81组起Chat显示失败原因；待用户重装插件后复测 |
-| 2026-09-26 | 第82组发现 | 永不结算的Promise会让Node以退出码0提前结束、测试被误判通过；已给workbenchRuntime、settingsPanel、sidebarFeedback加守卫。其他异步测试文件（尤其靠`main().catch`收尾、不在最后显式退出的）是否有同样隐患，逐个检查或在run-tests.js统一要求结尾标记 | 待处理 |
+| 2026-09-26 | 第80组4.7观察 | 用户侧`search_files`失败原因（沙箱未复现；插件不显示错误原文）；用户那次为何走code模式 | 第81组起Chat显示失败原因；待用户重装插件后复测。第86组：“为何走code模式”——侧栏按下拉框选模式，用户2026-09-26决定保留，不解析开头的`/ask`，此问题了结；`search_files`部分仍待复测 |
+| 2026-09-26 | 第82组发现 | 永不结算的Promise会让Node以退出码0提前结束、测试被误判通过；已给workbenchRuntime、settingsPanel、sidebarFeedback加守卫。其他异步测试文件（尤其靠`main().catch`收尾、不在最后显式退出的）是否有同样隐患，逐个检查或在run-tests.js统一要求结尾标记 | 已处理（第86组）：run-tests.js统一预加载`scripts/testCompletionGuard.js`，测试文件同步执行期间由主文件顶层创建的Promise（即挂在`main()`后的`.catch/.then`）在事件循环耗尽时仍未结算就判失败；全量116个文件中81个有被监视的顶层Promise、20个纯同步，其余以`main().then(exit)`收尾、同样覆盖。在14个真实测试文件结尾注入永久挂起：12个被守卫拦下，2个挂到超时判失败。顺带发现并修复：①runner只看status，接住SIGTERM以0退出的超时测试被记为通过（mcpInterop注入后即如此）；②editorRuntime/workbenchRuntime自我重启的子进程不带守卫。已知不覆盖：顶层只写`main();`、发射后不管的异步回调、中途显式退出 |

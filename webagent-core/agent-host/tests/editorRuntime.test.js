@@ -6,9 +6,10 @@ const path = require('path');
 const vm = require('vm');
 const { spawnSync } = require('child_process');
 if (!process.argv.includes('--vm-child')) {
-  const r = spawnSync(process.execPath, ['--experimental-vm-modules', __filename, '--vm-child'], { stdio: 'inherit', timeout: 15000 });
+  // execArgv carries the runner's completion guard into the child; a timeout (r.error) fails whatever the exit code.
+  const r = spawnSync(process.execPath, [...process.execArgv, '--experimental-vm-modules', __filename, '--vm-child'], { stdio: 'inherit', timeout: 15000 });
   if (r.error) console.error(r.error);
-  process.exit(r.status == null ? 1 : r.status);
+  process.exit(r.error || r.status == null ? 1 : r.status);
 }
 (async () => {
   function element() {
