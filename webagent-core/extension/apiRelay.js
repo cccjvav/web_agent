@@ -6,8 +6,10 @@
 // Deny by default. Only the routes the settings pages need are relayed. Deliberately absent:
 //  * /api/chat, /api/tool/call, /api/pty/*, /api/files/*, /api/tasks/reset: chat, terminal and editor are not
 //    settings; tool/call would turn the panel into an arbitrary tool runner.
-//  * /api/external/*, /api/consensus/*: decision D4 keeps external MCP and multi-model in the web workbench
-//    until the end of phase 2.
+//  * /api/consensus/*: decision D4 (confirmed 2026-09-26) keeps multi-model in the web workbench; its branch and
+//    summary controls live in the web chat, which VS Code does not have.
+//  * /api/external/request: a local tool call on a registered server, not a settings action. External MCP
+//    registration itself (HTTP servers, stdio preview/start, removal) is relayed since D4 moved it here.
 //  * /api/probe/*: the probes are paused and owned elsewhere.
 // Requests leave the extension without Origin or Sec-Fetch-* headers and with Host 127.0.0.1, which is exactly
 // the local CLI path the host already accepts; the host's own checks are not widened.
@@ -31,7 +33,9 @@ const RULES = [
   ['POST', '/api/workflows/preview'], ['POST', '/api/workflows/request'],
   ['GET', '/api/checkpoints'], ['POST', '/api/checkpoints'],
   ['POST', `/api/checkpoints/${ID}/preview`], ['POST', `/api/checkpoints/${ID}/restore`], ['POST', `/api/checkpoints/${ID}/remove`],
-  ['POST', '/api/connection-checks'], ['GET', `/api/connection-checks/${ID}`], ['DELETE', '/api/connection-checks']
+  ['POST', '/api/connection-checks'], ['GET', `/api/connection-checks/${ID}`], ['DELETE', '/api/connection-checks'],
+  ['POST', '/api/external/servers'], ['DELETE', `/api/external/servers/${ID}`],
+  ['POST', '/api/external/stdio/preview'], ['POST', '/api/external/stdio/start']
 ].map(([method, pattern, options = {}]) => ({ method, pattern: new RegExp(`^${pattern}$`), query: Boolean(options.query) }));
 
 const MAX_BODY_BYTES = 1024 * 1024;

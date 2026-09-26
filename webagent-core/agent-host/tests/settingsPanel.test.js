@@ -67,7 +67,12 @@ function partA() {
   const css = fs.readFileSync(path.join(workbenchRoot, 'settings-panel.css'), 'utf8');
   assert.ok(/\[data-workbench-only\][^{]*\{ display: none !important; \}/.test(css));
   assert.strictEqual((indexHtml.match(/class="vs-btn open-site" data-workbench-only/g) || []).length, 8);
-  assert.ok(/<div data-workbench-only>\s*<label for="ops-name">/.test(indexHtml), 'external MCP registration (D4)');
+  // D4 (2026-09-26): external MCP registration moved into the tab, so nothing on the operations page is hidden.
+  const opsStart = indexHtml.indexOf('id="page-operations"'), opsEnd = indexHtml.indexOf('id="page-diagnostics"');
+  assert.ok(opsStart > 0 && opsEnd > opsStart, 'operations page found');
+  const operationsPage = indexHtml.slice(opsStart, opsEnd);
+  assert.ok(operationsPage.includes('id="ops-name"') && operationsPage.includes('id="btn-stdio-start"') && operationsPage.includes('id="ops-servers"'));
+  assert.ok(!operationsPage.includes('data-workbench-only'), 'external MCP registration is offered in the tab');
   assert.ok(indexHtml.includes('data-page="multimodel" data-workbench-only'), 'consensus (D4)');
   assert.ok(indexHtml.includes('id="btn-skill-use" class="vs-btn" data-workbench-only'));
   assert.ok(!fs.readFileSync(path.join(workbenchRoot, 'styles.css'), 'utf8').includes('data-workbench-only'), 'the browser workbench shows everything');

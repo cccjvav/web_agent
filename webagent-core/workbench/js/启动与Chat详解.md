@@ -18,7 +18,7 @@ ES imports首先填ui，后执行boot。WS_BACKOFF_MIN/MAX为1/30秒，wsBackoff
 
 浏览器加载app.js；插件的设置标签页（[settingsPanel.js](../../extension/settingsPanel.js)）用同一份index.html，但入口换成本模块，并在styles.css后加载[settings-panel.css](../settings-panel.css)。它导入与app.js相同的state/dom/tabs/chat/bridge/settings/bind/operations模块，所以两边运行同一份设置代码；只有检测到`acquireVsCodeApi`时才执行boot，在浏览器或测试里导入不会有副作用。
 
-- **EXTRA_PAGES**：浏览器里“审批与检查点”（operations）和“诊断”（diagnostics）只能从工具栏/主机卡片按钮进入，这些按钮在标签页里不可见，所以各给一个导航项；refresh是浏览器打开该页时运行的ui加载函数名（refreshOperations、refreshDiagnostics）。
+- **EXTRA_PAGES**：浏览器里“工具接入与审批”（operations，含检查点；第4批起含外部MCP登记，导航名由“审批与检查点”改为与页面标题一致）和“诊断”（diagnostics）只能从工具栏/主机卡片按钮进入，这些按钮在标签页里不可见，所以各给一个导航项；refresh是浏览器打开该页时运行的ui加载函数名（refreshOperations、refreshDiagnostics）。
 - **addExtraPages(doc)**把这两个导航按钮插到“旧版设置”项之前（没有则放末尾），返回按钮；没有`.modal-nav`返回空数组。
 - **vscodeTheme(body)**：VS Code在webview的body上标vscode-light/vscode-dark/vscode-high-contrast(-light)，浅色两种返回light，其余dark。
 - **knownPage(page,doc)**：只有1–32位小写字母且弹层里存在`page-<名字>`的页面才返回原名，否则overview。

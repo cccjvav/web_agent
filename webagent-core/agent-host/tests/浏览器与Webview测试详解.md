@@ -68,7 +68,7 @@ paintTasks带HTML样式文本和null：仅一个li、textContent保留尖括号�
 
 [源码](settingsRelay.test.js)三部分，最后process.exit隔离真实主机。**loadRelayModule()**读取浏览器ES模块vscodeRelay.js，断言恰好导出createRelayTransport与createHostServices（第3批加入后者）后去掉export、在本realm以脚本求值；**loadRelayTransport()**取其中的转发函数工厂（CI含Node 18/20，无法直接import无package.json目录下的ESM），使Response/DOMException为真实全局。**tick()**等一次setImmediate。
 
-**partA()**只测extension/apiRelay.js：假send记录参数，**behaviour**可切换为成功、网络失败、非法状态码、409或挂起；**post**收集回复，**ask(message)**发一条并等两轮。覆盖：放行路径与原样正文（含ID路由、唯一查询路由、PUT/DELETE、/health）；默认拒绝20条（chat、tool/call、files、pty、tasks、external、consensus、probe、logs、错方法、尾斜杠、大小写）和15种路径花招（绝对/协议相对URL、点段及编码点、#、反斜杠、换行、多余查询、编码斜杠ID、超长），均断言send未被调用；正文规则；非法编号不回复、非转发消息不消费；失败不编造状态码、409原样转回；并发16满时重复编号与超限各得确切错误；abort只回一次失败；迟到的有效结果照常回复；dispose后不再发任何消息。
+**partA()**只测extension/apiRelay.js：假send记录参数，**behaviour**可切换为成功、网络失败、非法状态码、409或挂起；**post**收集回复，**ask(message)**发一条并等两轮。覆盖：放行路径与原样正文（含ID路由、唯一查询路由、PUT/DELETE、/health，以及第4批按D4迁入的外部MCP登记四个接口：POST servers、DELETE servers/<UUID>、POST stdio/preview与stdio/start）；默认拒绝23条（chat、tool/call、files、pty、tasks、external/request、consensus、probe、logs、错方法——含GET servers、PUT stdio/start、不带ID的DELETE servers、不存在的stdio/stop、带斜杠的ID——、尾斜杠、大小写）和15种路径花招（绝对/协议相对URL、点段及编码点、#、反斜杠、换行、多余查询、编码斜杠ID、超长），均断言send未被调用；正文规则；非法编号不回复、非转发消息不消费；失败不编造状态码、409原样转回；并发16满时重复编号与超限各得确切错误；abort只回一次失败；迟到的有效结果照常回复；dispose后不再发任何消息。
 
 **partB()**只测vscodeRelay.js：**postMessage**与**onMessage**替身，**answer(index,reply)**按编号回复。只外传method/path/body；409解析为ok=false的Response并可读JSON与content-type；204无正文；拒绝为TypeError；取消得AbortError、发出abort消息、迟到回复被丢弃；已取消信号不发送；缺少ok的回复被拒绝；postMessage抛错被拒绝。
 
@@ -80,7 +80,7 @@ paintTasks带HTML样式文本和null：仅一个li、textContent保留尖括号�
 
 [源码](settingsPanel.test.js)六部分，只用Node与假vscode，不启动主机；页面在真实Chromium里的表现由workbench.browser的settingsPanelBrowser覆盖。**tick()**等一次setImmediate；**resource(rel)**把相对路径映射到假cspSource。末尾`finished`标志配合`process.on('exit')`：永不结算的Promise会让Node以0提前退出，未跑到最后一律置退出码1。
 
-**partA()**对**真实**workbench/index.html调用buildSettingsHtml：CSP全文逐字、charset仍在最前、唯一带nonce的入口脚本、两张样式表紧邻、无favicon与`./`、标题与`data-initial-page`、同一份modal标记；恶意initialPage回退overview，含`$&`的资源地址按字面写入。8种页面改动逐一带原因拒绝（换入口、换样式表名、charset写法、删主题脚本、多一个内联脚本、内联onclick、相对图片、重复入口），4种坏参数为TypeError。共享页面上D4与仅限工作台的标记存在，而styles.css里没有`data-workbench-only`（网页版照常显示）。
+**partA()**对**真实**workbench/index.html调用buildSettingsHtml：CSP全文逐字、charset仍在最前、唯一带nonce的入口脚本、两张样式表紧邻、无favicon与`./`、标题与`data-initial-page`、同一份modal标记；恶意initialPage回退overview，含`$&`的资源地址按字面写入。8种页面改动逐一带原因拒绝（换入口、换样式表名、charset写法、删主题脚本、多一个内联脚本、内联onclick、相对图片、重复入口），4种坏参数为TypeError。共享页面上共识（D4）与仅限工作台的标记存在，而styles.css里没有`data-workbench-only`（网页版照常显示）；第4批起operations页（page-operations到page-diagnostics之间）先断言找到该段且含登记名称、stdio启动按钮与接入列表，再断言其中没有任何`data-workbench-only`（外部MCP登记在标签页里提供）。
 
 **partB()**：findWorkbenchDir在开发布局、code-server布局（以**exists**替身模拟文件存在）、host.json目录优先、host.json目录缺文件时退回、都找不到返回null。
 
@@ -94,7 +94,9 @@ paintTasks带HTML样式文本和null：仅一个li、textContent保留尖括号�
 
 workbenchRuntime同批补充：api.js的confirmAction/copyText/setHostServices默认值、只认字面true、恢复与坏输入TypeError；bridge的OAuth开关取消、确认期间主机实例或配对状态变化不发送（**oauthResult()**读结果行）、对话框挂起期间按钮忙、确认后POST正文逐字；检查点恢复确认期间工作区变化不发送并消费控件。原有approve/restore/create的confirm替身改为经真实api.js的`globalThis.confirm`，点击后等setImmediate再断言POST。
 
-反向验证：30种单元变异全部变红（均为断言失败），涉及settingsPanel.js、vscodeRelay.js、api.js、bridge.js、operations.js和extension.js：CSP去掉connect-src、去掉retainContextWhenHidden或localResourceRoots、确认不看按钮文字、确认文本不校验、关闭时不清转发层、构建失败不关面板、不复用已开标签页、去掉内联事件/单脚本/相对引用检查、替换不按字面量、初始页与open页名不校验、dispose后仍回复、去掉等待上限与重复编号、不做唯一匹配、忽略host.json目录；页面端不判ok/value、发送失败不回失败、复制不判ok；api.js不要求`=== true`、copyText不走宿主服务；OAuth确认后不复核、确认前不置忙；审批确认后不复核代次、检查点恢复与创建确认后不复核；openSettings命令名写错；再次open不发reload。首轮“审批确认后不复核代次”存活，原因是变异让第二次POST永不应答、Node以退出码0提前结束；加上finished守卫后变红。另有9种浏览器变异（见主机诊断与调用追踪详解的settingsPanelBrowser）全部变红。
+第4批（外部MCP迁入标签页）workbenchRuntime末尾加一段：以挂起的setHostServices确认模拟VS Code对话框，原生confirm替换为抛错。辅助函数：**tickAll()**等一轮setImmediate让异步确认送达；**externalResult()**读登记结果行；**stdioReview()**读stdio审阅区；**readPanelPreview()**写入合法配置、读取预览并断言启动按钮可用。公网HTTPS登记——弹框期间按钮忙、第二次点击不再弹框、取消显示“已取消，未发送请求。”且令牌保留、确认期间主机实例变化显示“未发送”、确认后恰好一次POST且带confirmedPublic并清令牌；stdio启动——弹框期间启动与预览都禁用、连点不再弹框、取消后两个按钮恢复、弹框期间编辑配置或换工作区都显示“确认期间配置或绑定已变化；未发送启动，请重新预览。”、确认后恰好一次POST正文逐字。原有两处在点击后立刻读计数/定时器的断言改为先等一轮setImmediate（确认变成异步后请求晚一个微任务发出），并加断言请求确实已发出。18种变异全部变红：stdio置忙移到确认后、弹框期间不禁用启动、确认后不查current、取消不恢复启动或预览、两处改回原生confirm、登记不await、登记确认后不复核绑定、改动提示文字，以及转发层去掉四条规则之一、放行external/request/GET servers/无ID DELETE、index.html重新包上`data-workbench-only`。
+
+反向验证（第3批）：30种单元变异全部变红（均为断言失败），涉及settingsPanel.js、vscodeRelay.js、api.js、bridge.js、operations.js和extension.js：CSP去掉connect-src、去掉retainContextWhenHidden或localResourceRoots、确认不看按钮文字、确认文本不校验、关闭时不清转发层、构建失败不关面板、不复用已开标签页、去掉内联事件/单脚本/相对引用检查、替换不按字面量、初始页与open页名不校验、dispose后仍回复、去掉等待上限与重复编号、不做唯一匹配、忽略host.json目录；页面端不判ok/value、发送失败不回失败、复制不判ok；api.js不要求`=== true`、copyText不走宿主服务；OAuth确认后不复核、确认前不置忙；审批确认后不复核代次、检查点恢复与创建确认后不复核；openSettings命令名写错；再次open不发reload。首轮“审批确认后不复核代次”存活，原因是变异让第二次POST永不应答、Node以退出码0提前结束；加上finished守卫后变红。另有9种浏览器变异（见主机诊断与调用追踪详解的settingsPanelBrowser）全部变红。
 
 ## sidebarFeedback.test.js：侧栏点击反馈与Chat失败原因（R6第一期验收反馈）
 

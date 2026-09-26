@@ -309,7 +309,6 @@
           <h2>工具接入与审批</h2>
           <p class="lead">仅本机操作者登记及批准。支持已启动的回环 HTTP(S)，或经本机预览/确认后启动的 stdio MCP；或显式确认的公网HTTPS MCP；不自动安装程序。公网需DNS/实际连接地址检查、不跟随跳转，登记会发送初始化及可选凭据，后续参数须逐次审批。发现工具不等于授权，每次调用分别审批。</p>
           <p>配置、令牌、审批参数/结果只在本次进程内存保留；请求最多保留15分钟且可能更早淘汰。重启需重新登记/配对；丢失记录绝不是允许重放。外部结果仅为外部自报，不是独立验收。</p>
-          <div data-workbench-only>
           <label for="ops-name">接入名称</label><input id="ops-name" class="ms-input" value="Local MCP" />
           <label><input type="checkbox" id="ops-public-https">明确启用公网HTTPS（默认关闭）</label>
           <label for="ops-url">已启动的 MCP 地址</label><input id="ops-url" class="ms-input" placeholder="http://127.0.0.1:9000/mcp" />
@@ -326,7 +325,6 @@
           <button id="btn-stdio-start" type="button" class="vs-btn" disabled>确认并启动所审阅程序</button>
           <p class="hint">预览2分钟有效且只能用一次。启动后，每次工具调用仍需下方独立审批；取消调用会停止整个stdio进程，不保证撤回已发生的效果。</p>
           <div id="ops-servers"></div>
-          </div>
           <h3>跨文件内容检查点（本机手动恢复）</h3>
           <p>任务前选择1–12个已有UTF-8文件，每行一个工作区路径。原文只存本机内存15分钟，单文件64KiB、合计256KiB，重启丢失。先保存或保留编辑器草稿；不捕获未保存内容。</p>
           <textarea id="checkpoint-paths" class="ms-input" rows="3" aria-label="检查点文件路径，每行一个" placeholder="src/example.js&#10;README.md"></textarea>

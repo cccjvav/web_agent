@@ -15,7 +15,7 @@
 body { font-family: var(--vscode-font-family, var(--font)); }
 #toast { bottom: 14px; }
 
-/* Features that act on the workbench itself (its chat, built-in browser, external MCP and consensus per D4)
-   have no target in VS Code, so the panel does not offer them. Rows the modules render at run time are
-   matched by their data attributes. */
+/* Features that act on the workbench itself (its chat, built-in browser, and consensus per D4, whose branch
+   and summary controls live in the web chat) have no target in VS Code, so the panel does not offer them.
+   Rows the modules render at run time are matched by their data attributes. */
 [data-workbench-only], #prompts-list [data-insert], #ql-list [data-open-url] { display: none !important; }

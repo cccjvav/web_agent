@@ -1581,17 +1581,84 @@ process.on('exit', code => {
   assert.equal(stdioStart.disabled,true);
   context.fetch=immediateStdioFetch;await stdioRead.onclick();
   context.fetch=async url=>url==='/api/external/stdio/start' ? new Promise(resolve=>{stdioStarts++;finishStdio=resolve;}) : immediateStdioFetch(url);
-  const waitingLaunch=stdioStart.onclick(), priorLaunchCount=stdioStarts;
+  const launchesBefore=stdioStarts, waitingLaunch=stdioStart.onclick();
+  await new Promise(resolve=>setImmediate(resolve));const priorLaunchCount=stdioStarts;
+  assert.equal(priorLaunchCount,launchesBefore+1,'the confirmed launch is sent once the (async) confirmation resolves');
   assert.equal(await stdioStart.onclick(),false);assert.equal(await stdioRead.onclick(),false);assert.equal(stdioStarts,priorLaunchCount);
   stdioConfig.value='NEXT DRAFT';stdioConfig.oninput();const editedNotice=opsNodes.get('#ops-stdio-review').textContent;
   finishStdio(opsResponse(stdioRecord));assert.equal(await waitingLaunch,false);
   assert.equal(opsNodes.get('#ops-stdio-review').textContent,editedNotice,'late launch cannot overwrite the newer edit warning');
   assert.equal(stdioRead.disabled,false);assert.equal(stdioStart.disabled,true);
   stdioConfig.value=JSON.stringify({program:'/fixture/node',args:['server.js']});await stdioRead.onclick();
-  const timedLaunch=stdioStart.onclick();[...timers.values()].at(-1)();finishStdio(opsResponse(stdioRecord));assert.equal(await timedLaunch,false);
+  const timedLaunch=stdioStart.onclick();await new Promise(resolve=>setImmediate(resolve));[...timers.values()].at(-1)();finishStdio(opsResponse(stdioRecord));assert.equal(await timedLaunch,false);
   assert.match(opsNodes.get('#ops-stdio-review').textContent,/启动结果未确认/);
   context.fetch=async()=>({ok:true,json:async()=>{throw new Error('SECRET STDIO VALUE');}});
   assert.equal(await stdioRead.onclick(),false);assert.ok(!opsNodes.get('#ops-stdio-review').textContent.includes('SECRET STDIO VALUE'));
+  // D4 (2026-09-26): in the settings tab both external-MCP confirmations are asynchronous VS Code dialogs.
+  // Busy while the dialog is open (no second dialog), nothing sent on cancel, a binding/draft change
+  // during the dialog sends nothing, and a confirmed answer sends exactly one request.
+  {
+    const tickAll = () => new Promise(resolve => setImmediate(resolve));
+    let answer = null, asked = 0;
+    wbApi.namespace.setHostServices({ confirm: () => { asked++; return new Promise(resolve => { answer = resolve; }); } });
+    context.confirm = () => { throw new Error('native confirm must not be used in the tab'); };
+    const panelPosts = [], boundStatus = state.namespace.state.status;
+    const publicRecord = {serverId:'panel-public',name:'Panel',transport:'http',status:'discovered',endpoint:'https://mcp.example.test/mcp',publicHttps:true,tools:[]};
+    context.fetch = async (url, options = {}) => {
+      if (options.method === 'POST' && url === '/api/external/stdio/preview') return opsResponse(launchPreview);
+      if (options.method === 'POST') { panelPosts.push([url, JSON.parse(options.body)]); return opsResponse(url === '/api/external/servers' ? publicRecord : stdioRecord); }
+      if (url === '/api/operations') return opsResponse({servers:[],requests:[]});
+      if (url === '/api/checkpoints') return opsResponse([]);
+      throw new Error(url);
+    };
+    const externalResult = () => opsNodes.get('#ops-external-result').textContent;
+    opsNodes.get('#ops-name').value = 'Panel'; opsNodes.get('#ops-public-https').checked = true;
+    opsNodes.get('#ops-url').value = 'https://mcp.example.test/mcp'; opsNodes.get('#ops-token').value = 'PANEL TOKEN';
+    const cancelled = addExternal.onclick(); await tickAll();
+    assert.equal(asked, 1); assert.equal(addExternal.disabled, true, 'registration is busy while the dialog is open');
+    assert.equal(await addExternal.onclick(), false); assert.equal(asked, 1, 'a second click opens no second dialog');
+    answer(false); assert.equal(await cancelled, false);
+    assert.equal(externalResult(), 'HTTP接入登记：已取消，未发送请求。'); assert.equal(opsNodes.get('#ops-token').value, 'PANEL TOKEN');
+    assert.equal(addExternal.disabled, false);
+    const rebound = addExternal.onclick(); await tickAll();
+    state.namespace.state.status = {...boundStatus, identity:{...boundStatus.identity, hostInstanceId:'panel-other-host'}};
+    answer(true); assert.equal(await rebound, false);
+    assert.equal(externalResult(), 'HTTP接入登记未发送；请核对地址、令牌格式及当前工作区绑定。');
+    state.namespace.state.status = boundStatus;
+    assert.deepStrictEqual(panelPosts, [], 'cancelled or rebound during the dialog: no registration sent');
+    const accepted = addExternal.onclick(); await tickAll(); answer(true); assert.equal(await accepted, true);
+    assert.equal(panelPosts.length, 1); assert.equal(panelPosts[0][0], '/api/external/servers');
+    assert.equal(panelPosts[0][1].confirmedPublic, true); assert.equal(panelPosts[0][1].token, 'PANEL TOKEN');
+    assert.match(externalResult(), /接入 panel-public 已确认登记/); assert.equal(opsNodes.get('#ops-token').value, '');
+    panelPosts.length = 0;
+    const stdioReview = () => opsNodes.get('#ops-stdio-review').textContent;
+    const readPanelPreview = async () => {
+      stdioConfig.value = JSON.stringify({program:'/fixture/node',args:['server.js']});
+      assert.notEqual(await stdioRead.onclick(), false); assert.equal(stdioStart.disabled, false);
+    };
+    await readPanelPreview();
+    const cancelledStart = stdioStart.onclick(); await tickAll();
+    assert.equal(asked, 4); assert.equal(stdioStart.disabled, true); assert.equal(stdioRead.disabled, true);
+    assert.equal(await stdioStart.onclick(), false); assert.equal(await stdioRead.onclick(), false);
+    assert.equal(asked, 4, 'no second launch dialog while the first is open');
+    answer(false); assert.equal(await cancelledStart, false);
+    assert.equal(stdioStart.disabled, false, 'cancel keeps the reviewed preview usable'); assert.equal(stdioRead.disabled, false);
+    const editedStart = stdioStart.onclick(); await tickAll();
+    stdioConfig.value = '{"program":"/other/node"}'; stdioConfig.oninput(); answer(true);
+    assert.equal(await editedStart, false); assert.equal(stdioReview(), '确认期间配置或绑定已变化；未发送启动，请重新预览。');
+    assert.equal(stdioStart.disabled, true); assert.equal(stdioRead.disabled, false);
+    await readPanelPreview();
+    const reboundStart = stdioStart.onclick(); await tickAll();
+    state.namespace.state.status = {...boundStatus, workspaceRoot:'/panel/other'}; answer(true);
+    assert.equal(await reboundStart, false); assert.equal(stdioReview(), '确认期间配置或绑定已变化；未发送启动，请重新预览。');
+    state.namespace.state.status = boundStatus;
+    assert.deepStrictEqual(panelPosts, [], 'cancelled, edited or rebound during the dialog: no launch sent');
+    await readPanelPreview();
+    const acceptedStart = stdioStart.onclick(); await tickAll(); answer(true); assert.equal(await acceptedStart, true);
+    assert.deepStrictEqual(panelPosts, [['/api/external/stdio/start', {previewId:'stdio-preview', confirmed:true}]]);
+    assert.match(stdioReview(), /接入 stdio-server 已确认启动/);
+    wbApi.namespace.setHostServices(null); context.confirm = () => true;
+  }
   finished = true;
   console.log('workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });

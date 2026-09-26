@@ -736,7 +736,7 @@ async function modelStateBrowser(browser, base) {
 // R6 phase 2: the real "Web Agent 设置" page as the extension builds it (settingsPanel.buildSettingsHtml, with its
 // CSP), in Chromium, with the extension's real relay (apiRelay) and service handler behind a fake acquireVsCodeApi.
 // The relay's send reaches the real host; the page itself may reach nothing but its own files.
-async function settingsPanelBrowser(browser, base, status) {
+async function settingsPanelBrowser(browser, base, status, workspace) {
   const { buildSettingsHtml, createHostServiceHandler } = require('../../extension/settingsPanel');
   const { createApiRelay } = require('../../extension/apiRelay');
   const workbenchRoot = path.resolve(__dirname, '../../workbench');
@@ -830,17 +830,52 @@ async function settingsPanelBrowser(browser, base, status) {
     await page.waitForFunction(() => document.querySelector('#oauth-toggle-result').textContent.startsWith('OAuth 配对已关闭'));
     assert.equal((await hostStatus()).pairing.enabled, false);
     await evidence('bridge');
-    // Approvals and checkpoints: its own nav entry; external MCP registration is not offered (D4).
+    // Approvals and checkpoints: its own nav entry, now with external MCP registration (D4, 2026-09-26).
     await page.click('.nav-item[data-page="operations"]');
     await page.locator('#page-operations').waitFor({ state: 'visible' });
-    assert.equal(await page.locator('#ops-name').isVisible(), false);
+    for (const id of ['#ops-name', '#ops-url', '#btn-ops-add', '#ops-stdio-config', '#btn-stdio-preview', '#btn-stdio-start'])
+      assert.equal(await page.locator(id).isVisible(), true, `${id} is offered in the tab`);
     assert.equal(await page.locator('#btn-checkpoint-create').isVisible(), true);
     await page.fill('#checkpoint-paths', 'acceptance.txt');
     await page.click('#btn-checkpoint-create');
     await page.waitForFunction(() => { try { return JSON.parse(document.querySelector('#checkpoint-review').textContent).state === 'ready'; } catch { return false; } });
     assert.ok(confirms.at(-1).text.startsWith('确认创建新的检查点'));
     assert.ok(hostCalls.includes('POST /api/checkpoints') && hostCalls.includes('GET /api/operations'));
+    // stdio against the real host: preview, the extension's modal dialog (dismissed: nothing runs; accepted:
+    // started once), listed, then removed with a relayed DELETE.
+    const until = async (check, label) => {
+      for (const end = Date.now() + 10000; !check();) { if (Date.now() > end) throw new Error('timed out: ' + label); await new Promise(resolve => setTimeout(resolve, 20)); }
+    };
+    const started = path.join(workspace, 'stdio-started.json');
+    fs.rmSync(started, { force: true });
+    const launch = { program: process.execPath, args: [path.join(workspace, 'stdio-ui-server.js'), 'normal'], reviewFiles: ['stdio-ui-server.js'], env: { FIXTURE_TOKEN: 'panel-private-stdio' } };
+    await page.fill('#ops-stdio-config', JSON.stringify(launch));
+    await page.click('#btn-stdio-preview');
+    await page.waitForFunction(() => !document.querySelector('#btn-stdio-start').disabled);
+    assert.ok(hostCalls.includes('POST /api/external/stdio/preview'));
+    assert.ok(!(await page.locator('#ops-stdio-review').textContent()).includes('panel-private-stdio'));
+    let confirmsBefore = confirms.length;
+    confirmAnswer = undefined;
+    await page.click('#btn-stdio-start');
+    await until(() => confirms.length === confirmsBefore + 1, 'launch dialog');
+    await page.waitForFunction(() => !document.querySelector('#btn-stdio-start').disabled && !document.querySelector('#btn-stdio-preview').disabled);
+    assert.equal(confirms.at(-1).modal, true); assert.deepStrictEqual(confirms.at(-1).items, ['确认']);
+    assert.ok(confirms.at(-1).text.startsWith('启动本身会执行所审阅程序'));
+    assert.ok(!hostCalls.includes('POST /api/external/stdio/start')); assert.ok(!fs.existsSync(started), 'dismissed: the program never ran');
+    confirmsBefore = confirms.length; confirmAnswer = '确认';
+    await page.click('#btn-stdio-start');
+    await page.waitForFunction(() => document.querySelector('#ops-stdio-review').textContent.includes('已确认启动'));
+    assert.equal(confirms.length, confirmsBefore + 1);
+    assert.equal(hostCalls.filter(call => call === 'POST /api/external/stdio/start').length, 1);
+    assert.ok(fs.existsSync(started), 'accepted: the reviewed program ran');
+    await page.waitForFunction(() => document.querySelector('#ops-servers').textContent.includes('discovered'));
+    const panelStdio = (await (await fetch(base + '/api/operations')).json()).servers.filter(server => server.transport === 'stdio');
+    assert.equal(panelStdio.length, 1);
     await evidence('operations');
+    await page.locator('#ops-servers button').first().click();
+    await page.waitForFunction(() => !document.querySelector('#ops-servers').textContent);
+    assert.ok(hostCalls.includes(`DELETE /api/external/servers/${panelStdio[0].serverId}`));
+    assert.deepStrictEqual((await (await fetch(base + '/api/operations')).json()).servers, []);
     // Diagnostics: its own nav entry loads the read-only report.
     await page.click('.nav-item[data-page="diagnostics"]');
     await page.waitForFunction(id => document.querySelector('#diagnostic-identity').textContent.includes(id), status.identity.hostInstanceId);
@@ -1280,7 +1315,7 @@ async function main() {
     assert.ok((await page.locator('#bridge-result').textContent()).includes('停止结果未确认'));
     await page.unroute('**/api/bridge/stop');
     assert.deepStrictEqual(errors, []);
-    await settingsPanelBrowser(browser, base, status);
+    await settingsPanelBrowser(browser, base, status, workspace);
     console.log('Browser PASS: VS Code settings tab (CSP, relay, dialogs, pages); admin 3-viewport table/contrast/keyboard, cross-origin MCP headers/session, classic bad-stream cleanup, 16 workbench + 12 docs axe/layout states, keyboard navigation/scrolling; minimal page observation + authenticated connection echo/forged session rejection/clear, help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');
   } finally {
     if (browser) await browser.close();

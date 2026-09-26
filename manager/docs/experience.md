@@ -200,3 +200,10 @@ hash用于版本冲突检测，不是授权、锁或回滚票据。拿到新的c
 - 写“某功能只能在X处用”之前，查服务端是否会保存配置（本批`/bridge/start`在开头就保存域名与Token），否则提示会比实际更保守，用户多走弯路。
 - 沙箱里`npx playwright install chromium`和apt都下不来时，用`@sparticuz/chromium`：npm安装后`executablePath()`解出`/tmp/chromium`，再把`bin/`下al2023、swiftshader、fonts三个`.tar.br`用`zlib.createBrotliDecompress`+`tar-fs`解到目录，`CHROMIUM_PATH=/tmp/chromium LD_LIBRARY_PATH=<lib>:<swiftshader>`运行`npm run test:browser`。没有CJK字体，截图里中文是方框，不影响DOM断言。沙箱重启会清掉/tmp，需要重做。
 - 浏览器回归里，可见性断言会被CSS兜住（`#modal.hidden{display:flex!important}`），而错误调用仍会把`aria-hidden`设为true，读屏器会把整页当作隐藏；对“不可关闭”的弹层同时断言class与aria-hidden。
+
+## 同步确认改异步的时序与“红在别处”的变异（F83）
+- **日期/标签**：2026-09-26，异步确认、变异测试、沙箱环境。
+- 把`confirm()`换成`await confirmAction()`后，原本在点击里同步发出的请求会晚一个微任务：测试里“点完立刻读请求计数/取最新定时器”的写法会失败或读到旧值。改为先`await new Promise(r=>setImmediate(r))`，并补一条“请求确实已发出”的断言，避免把“没发”误当成“已发且被挡住”。
+- 置忙必须放在await**之前**：原来“确认后才置忙”在浏览器里无害（原生框阻塞），换成异步框后连点会弹两个框、各自发一次。迁移每个确认点时逐一检查置忙的位置。
+- 变异“变红”要看红在哪条断言：只插开标签（漏闭合）的HTML变异让整页结构错位，红在前面某处超时，看似抓到了、其实没有测到目标。变异应当语法完整（成对标签、可解析的代码），并核对失败信息指向预期断言。
+- 沙箱中途重启时，除HEAD回退与`/tmp`清空外，`node_modules`可能残缺：测试报`Cannot find module 'express'`不是代码问题，先`npm ci --include=dev`再判断。F82记的Chromium做法需两处更正：新版`@sparticuz/chromium`是ESM默认导出（`import c from '@sparticuz/chromium'; await c.executablePath()`），al2023解出后库在`lib/lib`，`LD_LIBRARY_PATH`要包含该子目录。

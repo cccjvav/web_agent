@@ -18,7 +18,7 @@ import './js/operations.js';
 // Pages the browser opens from workbench-only buttons (toolbar, host card) get their own nav entries here.
 // refresh names the ui loader the browser runs when it opens that page.
 export const EXTRA_PAGES = [
-  { page: 'operations', label: '审批与检查点', refresh: 'refreshOperations' },
+  { page: 'operations', label: '工具接入与审批', refresh: 'refreshOperations' },
   { page: 'diagnostics', label: '诊断', refresh: 'refreshDiagnostics' }
 ];
 

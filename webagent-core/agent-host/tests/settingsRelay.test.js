@@ -40,7 +40,10 @@ async function partA() {
 
   // Allowed routes, including ids, the one query route and a JSON body.
   for (const [method, p, body] of [['post', '/api/operations/0b2e-Id_9/approve', '{"confirm":true}'], ['GET', '/api/skills/load?id=a&cursor=2'],
-    ['PUT', '/api/customizations', '{}'], ['DELETE', '/api/connection-checks'], ['GET', '/health'], ['POST', '/api/checkpoints/x1/restore', '{}']]) {
+    ['PUT', '/api/customizations', '{}'], ['DELETE', '/api/connection-checks'], ['GET', '/health'], ['POST', '/api/checkpoints/x1/restore', '{}'],
+    // D4 (2026-09-26): external MCP registration moved into the settings tab.
+    ['POST', '/api/external/servers', '{"name":"x"}'], ['DELETE', '/api/external/servers/0b2e0c1a-1111-4222-8333-444455556666'],
+    ['POST', '/api/external/stdio/preview', '{}'], ['POST', '/api/external/stdio/start', '{"confirmed":true}']]) {
     const before = sent.length;
     [reply] = await ask({ id: 'ok' + before, method, path: p, body });
     assert.strictEqual(reply.ok, true, `${method} ${p} must be relayed: ${reply.error}`);
@@ -48,10 +51,12 @@ async function partA() {
     assert.strictEqual(sent.at(-1)[2], body === undefined ? null : body, 'the JSON text is forwarded unchanged');
   }
 
-  // Deny by default: not settings (chat/tool/terminal/editor), D4 (external MCP, multi-model), probes, wrong method.
+  // Deny by default: not settings (chat/tool/terminal/editor), a local external tool call, D4 multi-model, probes,
+  // wrong method (external registration GET/PUT, a server id with a slash).
   const denied = [['POST', '/api/tool/call'], ['POST', '/api/chat'], ['GET', '/api/files/tree'], ['PUT', '/api/files/content'],
     ['POST', '/api/files/undo/x'], ['GET', '/api/pty/jobs'], ['POST', '/api/pty/hello'], ['POST', '/api/tasks/reset'],
-    ['POST', '/api/external/servers'], ['POST', '/api/external/stdio/start'], ['POST', '/api/external/request'], ['POST', '/api/consensus/run'],
+    ['POST', '/api/external/request'], ['POST', '/api/consensus/run'], ['GET', '/api/external/servers'], ['PUT', '/api/external/stdio/start'],
+    ['DELETE', '/api/external/servers'], ['DELETE', '/api/external/servers/a/b'], ['POST', '/api/external/stdio/stop'],
     ['POST', '/api/probe/links'], ['GET', '/api/logs'], ['POST', '/api/status'], ['DELETE', '/api/models'], ['PATCH', '/api/models'], ['GET', '/mcp'],
     ['GET', '/api/status/'], ['GET', '/API/status']];
   // Path tricks: absolute or protocol-relative URLs, dot segments (plain or encoded), fragments, backslashes,

@@ -79,7 +79,7 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 | PTY审批、取消、归属、捕获 | ptyLifecycle、ptyJobs、desktopExtension | 部分真实子进程+VS Code事件fixture，含扩展对非2xx回包的拒绝；原生终端效果须另测 |
 | 隧道启停 | tunnel、bridgeTunnel、tunnelLifecycle | 解析、API及进程引用fixture；非真实公网隧道 |
 | 原生扩展命令消费 | nativeRotationCommands、sidebarFeedback | 真实activate+VS Code/HTTP替身（sidebarFeedback另替换HostManager并运行生成的侧栏页面脚本）；非真实IDE或隧道进程退出证明 |
-| 插件设置标签页 | settingsPanel、settingsRelay、workbench.browser（settingsPanelBrowser） | 真实工作台页面改写、假vscode面板与对话框、转发到真实主机；Chromium模拟webview，非真实VS Code窗口 |
+| 插件设置标签页 | settingsPanel、settingsRelay、workbench.browser（settingsPanelBrowser） | 真实工作台页面改写、假vscode面板与对话框、转发到真实主机；外部MCP登记与stdio预览/启动/移除经转发与VS Code确认框（第4批）；Chromium模拟webview，非真实VS Code窗口 |
 | 文件编辑、webview、主题、Monaco、无障碍结构 | editorRuntime、webviewRuntime、workbenchRuntime、monacoLoading、workbenchHtml | 真实源码配DOM/Monaco/宿主fixture及静态语义检查；不等同浏览器E2E、屏幕阅读器或手机实测 |
 | 配置、环境、统计、后台 | stateIntegrity、hostPersist、profile、usageTracker、adminHost | 模块与HTTP边界；不代表所有配置事务一致 |
 | 截图 | chatVision、mcpProtocol | 图片路径/大小/内容契约，不证明模型理解画面 |
@@ -265,9 +265,9 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [tunnelRegistry.test.js](tunnelRegistry.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 324 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 334 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 508 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 520 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 17 个函数/类节点 |

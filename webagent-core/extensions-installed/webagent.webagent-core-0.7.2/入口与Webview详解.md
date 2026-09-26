@@ -159,7 +159,7 @@ extension.js新增：**explicitHostUrl()**用`inspect`区分“用户/工作区�
 
 [apiRelay.js](apiRelay.js)不依赖vscode，可单独测试。设置页webview里的工作台模块经`js/api.js`→`js/vscodeRelay.js`把请求`postMessage`给扩展进程，由这里转发到本窗口启动或接管的主机（第3批起由设置标签页注入send，绑定agentHostUrl()与requestJson，见第14节）。webview自身不访问127.0.0.1，主机的Origin与本机控制面检查不放宽：转发请求不带Origin/Sec-Fetch-*，Host为127.0.0.1，即主机已接受的本机CLI路径。
 
-**checkRequest(message)**：默认拒绝。路径须以单个`/`开头、不超过2048字符、不含反斜杠/控制字符/`#`；用URL解析后若来源变化、pathname与原文不同（点段）或含`%2e`，直接拒绝而不是规范化——白名单正则两端锚定且ID只允许字母数字`_-`，这一层是冗余防线（去掉它测试不红，已记录）。方法+路径须命中RULES：状态/诊断/执行控制、Bridge启停与重置、GitHub登录、模型与Provider探测、自定义配置、画像探测、技能列表/读取/新增、审批列表与批准/取消、工作流预览/请求、检查点、连接自检。**不转发**：chat、tool/call、pty、files、tasks/reset（不属于设置，tool/call会让设置页变成任意工具入口）；external、consensus（决定D4：第二期结束前只在网页工作台）；probe（探针暂停、由他人负责）。只有`/api/skills/load`接受查询串。GET/DELETE不得带正文；正文须为1MiB内的有效JSON文本，原样转发。
+**checkRequest(message)**：默认拒绝。路径须以单个`/`开头、不超过2048字符、不含反斜杠/控制字符/`#`；用URL解析后若来源变化、pathname与原文不同（点段）或含`%2e`，直接拒绝而不是规范化——白名单正则两端锚定且ID只允许字母数字`_-`，这一层是冗余防线（去掉它测试不红，已记录）。方法+路径须命中RULES：状态/诊断/执行控制、Bridge启停与重置、GitHub登录、模型与Provider探测、自定义配置、画像探测、技能列表/读取/新增、审批列表与批准/取消、工作流预览/请求、检查点、连接自检，以及外部MCP登记（第4批按D4迁入：POST `/api/external/servers`、DELETE `/api/external/servers/<ID>`、POST `/api/external/stdio/preview`与`/api/external/stdio/start`）。**不转发**：chat、tool/call、pty、files、tasks/reset（不属于设置，tool/call会让设置页变成任意工具入口）；`/api/external/request`（对已登记接入的本机工具调用，不是设置操作，工作台也不调用）；consensus（决定D4：多模型博弈只在网页工作台）；probe（探针暂停、由他人负责）。只有`/api/skills/load`接受查询串。GET/DELETE不得带正文；正文须为1MiB内的有效JSON文本，原样转发。
 
 **createApiRelay({send,post,maxInFlight=16,timeoutMs=120000})**：返回handle/request/abort/dispose与size。**request(message)**：编号须为1–64位`[A-Za-z0-9_-]`字符串，否则忽略（无处回复）；重复编号、超过并发上限、白名单拒绝都回`ok:false`且不调用send。send结果的状态码须为200–599整数，否则按失败回复；网络失败、期限、取消、重定向都回`ok:false`与原因，从不编造状态码；HTTP 4xx/5xx作为正常回答原样转回（`ok:true,status`）。120秒上限高于工作台各模块自己的计时器，模块超时先以取消消息到达。**abort(message)**取消在途请求，已结束的返回false。**handle(message)**分发`webagent-api`/`webagent-api-abort`，其他消息返回false留给原有处理。**dispose()**在面板关闭时取消全部在途请求；之后经**reply**的任何结果都不再发给已关闭的webview，新请求也不回复。**size**为在途数。
 
@@ -181,7 +181,9 @@ extension.js新增：**explicitHostUrl()**用`inspect`区分“用户/工作区�
 
 extension.js的**openSettings(page)**：失败原因写入“Web Agent 主机”输出面板并弹错误提示。注入的send调用`requestJson(method, agentHostUrl()+path, …, {rawBody, signal, timeoutMs})`，与侧栏其他请求到达同一主机：一键启动/接管的主机，或用户手工设置的`webagent.agentHostUrl`。
 
-**页面端**见[启动与Chat详解](../workbench/js/启动与Chat详解.md)的settings-panel.js与[状态与编辑器详解](../workbench/js/状态与编辑器详解.md)的setHostServices/createHostServices。**隐藏但保留**：只作用于网页工作台本身的功能（内置浏览器站点按钮、把提示词插入网页Chat、Skill“使用”、多模型共识与外部MCP登记——后两者按决定D4第二期结束前只在网页工作台）在共享页面里标`data-workbench-only`，只由settings-panel.css隐藏；网页工作台照常显示。
+**页面端**见[启动与Chat详解](../workbench/js/启动与Chat详解.md)的settings-panel.js与[状态与编辑器详解](../workbench/js/状态与编辑器详解.md)的setHostServices/createHostServices。**隐藏但保留**：只作用于网页工作台本身的功能（内置浏览器站点按钮、把提示词插入网页Chat、Skill“使用”、多模型共识——按决定D4只在网页工作台，其分支/合并/总结在网页Chat里，VS Code的Chat视图只显示共识事件）在共享页面里标`data-workbench-only`，只由settings-panel.css隐藏；网页工作台照常显示。
+
+**外部MCP（第4批）：** operations页的公网HTTPS登记与stdio启动原先用阻塞的`window.confirm`，在webview里会被静默当作取消；现改为`confirmAction`，由上面的服务处理器弹VS Code模态框。stdio启动在弹框**之前**就占busy并禁用预览/启动按钮，快速连点也只弹一次、只发一次；弹框期间改了配置、预览过期或主机绑定变化，确认后不发送并提示重新预览；取消则恢复按钮，预览仍可用。公网登记沿用externalMutation的进行中标记，确认后复核绑定。stdio程序由主机进程启动，只得到主机的PATH、PATHEXT、SYSTEMROOT、TEMP等少数系统变量（agent-host的stdioLaunch.js中BASE_ENV）和配置里写的env；插件启动主机时这些来自VS Code自身的启动环境，不是集成终端里激活的Conda环境，program须写绝对路径。
 
 **限制：** 设置页各模块发出的工作区绑定取自主机自己的`/api/status`，只防“确认期间主机被换掉”，不证明主机服务的就是VS Code当前文件夹——一键启动/接管时HostManager已保证同一文件夹，手工填`agentHostUrl`时由用户负责（与网页工作台相同）。界面文件来自仓库而非插件包，仓库与插件版本不一致时由上面的匹配检查拒绝打开。真实桌面VS Code中的对话框、主题与剪贴板需用户实机验收；沙箱中由settingsPanel单元测试与workbench.browser的Chromium回归验证（见[浏览器与Webview测试详解](../agent-host/tests/浏览器与Webview测试详解.md)）。
 

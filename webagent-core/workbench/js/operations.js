@@ -264,7 +264,7 @@ function addExternalServer() {
       publicHttps:Boolean($('#ops-public-https').checked),...binding};
     const endpoint = externalHttpEndpoint(input.url,input.publicHttps);
     if (input.token.length > 4096 || /[\r\n]/.test(input.token) || (input.publicHttps && !sameCheckpointBinding(binding))) throw new Error('Invalid registration input');
-    if (input.publicHttps && !confirm('登记将连接该公网HTTPS主机并发送初始化信息及可选Bearer凭据。后续批准的工具参数也会离开本机。确认信任该服务？')) return false;
+    if (input.publicHttps && !(await confirmAction('登记将连接该公网HTTPS主机并发送初始化信息及可选Bearer凭据。后续批准的工具参数也会离开本机。确认信任该服务？'))) return false;
     if (input.publicHttps && !sameCheckpointBinding(binding)) throw new Error('Binding changed');
     if ($('#ops-token').value === input.token) $('#ops-token').value = '';
     const record = await send('/external/servers','POST',{...input,confirmedPublic:input.publicHttps});
@@ -387,9 +387,18 @@ async function startStdioLaunch() {
   const current = () => selected && stdioPreview === selected && sameCheckpointBinding(selected.binding)
     && $('#ops-stdio-config').value === selected.draft && selected.record.expiresAt > Date.now();
   if (!current()) { invalidateStdio('启动预览已失效、配置/绑定变化或已过期；未发送启动，请重新预览。'); return false; }
-  if (!confirm('启动本身会执行所审阅程序，拥有当前系统用户权限。不是OS沙箱。确认信任该程序、参数和依赖，并启动一次？')) return false;
-  if (!current()) { invalidateStdio('确认期间配置或绑定已变化；未发送启动，请重新预览。'); return false; }
-  stdioBusy = true; $('#btn-stdio-preview').disabled = true;
+  // Busy before asking: in the VS Code panel the answer arrives asynchronously, and a second click must not
+  // open a second dialog for the same one-time preview.
+  stdioBusy = true; $('#btn-stdio-preview').disabled = true; $('#btn-stdio-start').disabled = true;
+  let confirmed = false;
+  try { confirmed = await confirmAction('启动本身会执行所审阅程序，拥有当前系统用户权限。不是OS沙箱。确认信任该程序、参数和依赖，并启动一次？'); }
+  catch (_) { confirmed = false; }
+  if (!confirmed || !current()) {
+    stdioBusy = false; $('#btn-stdio-preview').disabled = false;
+    if (confirmed) invalidateStdio('确认期间配置或绑定已变化；未发送启动，请重新预览。');
+    else if (current()) $('#btn-stdio-start').disabled = false;
+    return false;
+  }
   const generation = invalidateStdio('启动请求已发送，结果尚未确认。请勿重放；可刷新接入列表并移除正在连接的接入。');
   try {
     const record = await api('/external/stdio/start','POST',{previewId:selected.record.previewId,confirmed:true});
