@@ -7,7 +7,7 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-chat-'));
 const { config } = require('../src/config');
 config.workspaceRoot = tmp;
 
-const { runChat, planRound } = require('../src/agent/runChat');
+const { runChat, planRound, wantsTests, BUILTIN_TEST_TIMEOUT_SEC } = require('../src/agent/runChat');
 
 function collect() {
   const events = [];
@@ -123,10 +123,33 @@ async function main() {
   const code = collect();
   await runChat({ mode: 'code', message: '跑测试' }, code.emit);
   const ran = code.events.find((e) => e.type === 'tool' && e.name === 'run_command');
-  assert.ok(ran, 'Code should run the detected test command');
+  assert.ok(ran, 'Code should run the detected test command when asked');
   assert.ok(ran.ok);
+  assert.deepStrictEqual(ran.args, { command: 'npm test', timeoutSec: 180 });
   const codeMsg = code.events.find((e) => e.type === 'message');
-  assert.ok(codeMsg && /npm test|ok/i.test(codeMsg.text));
+  assert.ok(codeMsg && codeMsg.text.includes('已运行 `npm test`（上限180秒）'));
+  // R6 phase-1 acceptance follow-up 3: the built-in loop no longer runs the suite on every Code message.
+  for (const message of ['看看 src/app.js', '不要跑测试，只看代码', 'skip the tests']) {
+    const quiet = collect();
+    await runChat({ mode: 'code', message }, quiet.emit);
+    assert.ok(!quiet.events.some((e) => e.type === 'tool' && e.name === 'run_command'), `no test run for: ${message}`);
+    const text = quiet.events.find((e) => e.type === 'message').text;
+    assert.ok(text.includes('没有自动运行测试。要运行 `npm test`，在消息里写“跑测试”（上限180秒；更久的测试请在终端自己运行）。'), message);
+    const todos = quiet.events.filter((e) => e.type === 'tool' && e.name === 'set_todos').map((e) => e.args.todos[2].title);
+    assert.deepStrictEqual(todos.slice(-2), ['汇总', '未运行测试（消息未要求）'], message);
+  }
+  for (const [message, expected] of [['跑一下测试', true], ['run the tests', true], ['npm test 看看', true], ['帮我写单测', true],
+    ['testing please', true], ['pytest', true], ['latest changes', false], ['contest', false], ['看代码', false],
+    ['别跑测试', false], ['无需运行测试', false], ['跳过测试', false], ['no tests', false], ['without tests', false], ['', false]]) {
+    assert.strictEqual(wantsTests(message), expected, JSON.stringify(message));
+  }
+  // The cap must fit the VS Code chat deadline together with the approval wait and the PTY's extra 15 s.
+  const chatDeadlineMs = Number(/deadline = setTimeout\(\(\) => finish\(new Error\('Chat请求超时[^']*'\)\), (\d+)\)/
+    .exec(fs.readFileSync(path.join(__dirname, '../../extension/extension.js'), 'utf8'))[1]);
+  const confirmMs = Number(/CONFIRM_TIMEOUT_MS = (\d+)/.exec(fs.readFileSync(path.join(__dirname, '../src/tools/ptyJobs.js'), 'utf8'))[1]);
+  assert.strictEqual(BUILTIN_TEST_TIMEOUT_SEC, 180);
+  assert.ok(confirmMs + BUILTIN_TEST_TIMEOUT_SEC * 1000 + 15000 + 5000 <= chatDeadlineMs,
+    `approval ${confirmMs} + test ${BUILTIN_TEST_TIMEOUT_SEC}s + 15s + exploration must fit the ${chatDeadlineMs} ms chat deadline`);
 
   const viaPayload = collect();
   await runChat({

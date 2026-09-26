@@ -92,6 +92,18 @@ function detectTestCommand() {
   return null;
 }
 
+// The built-in loop (no model) runs the project's tests only when the message asks for them: a whole suite can
+// take minutes, and running it on every Code message made every such chat wait for (or time out on) it.
+// Budget: the VS Code chat request has a 300 s deadline (extension.js) that also covers exploration, up to 90 s
+// for the user to approve the command in VS Code (ptyJobs CONFIRM_TIMEOUT_MS) and the PTY run of timeoutSec
+// plus 15 s, so 180 s is the most that still fits.
+const BUILTIN_TEST_TIMEOUT_SEC = 180;
+function wantsTests(message) {
+  const text = String(message || '');
+  if (/(?:不要|不用|不必|无需|别|跳过)\s*(?:再)?\s*(?:跑|运行|执行)?\s*(?:测试|单测)|\b(?:no|skip|without)\s+(?:the\s+)?tests?\b/i.test(text)) return false;
+  return /测试|单测|\btest(?:s|ing)?\b|pytest|jest|vitest|mocha/i.test(text);
+}
+
 function extractPatch(message) {
   const m = String(message || '').match(/<<<<<<< SEARCH[\s\S]*?>>>>>>> REPLACE/);
   return m ? m[0] : null;
@@ -229,6 +241,7 @@ async function runBuiltin(payload, emit) {
 
   if (emit) emit('status', { text: 'Explored .' });
   const facts = await explore(emit, mode, message);
+  const runTests = mode === 'code' && Boolean(facts.testCmd) && wantsTests(message);
 
   await timedTool(emit, mode, 'set_todos', {
     todos: [
@@ -236,7 +249,7 @@ async function runBuiltin(payload, emit) {
       { id: '2', title: '阅读核心模块', status: 'completed' },
       {
         id: '3',
-        title: mode === 'code' ? `运行 ${facts.testCmd}` : '汇总',
+        title: runTests ? `运行 ${facts.testCmd}` : '汇总',
         status: 'in_progress'
       }
     ]
@@ -291,8 +304,9 @@ async function runBuiltin(payload, emit) {
   }
 
   const test = detectTestCommand();
-  if (test) {
-    const ran = await timedTool(emit, 'code', 'run_command', { command: test.cmd, timeoutSec: 60 });
+  const ranTests = Boolean(test) && runTests;
+  if (ranTests) {
+    const ran = await timedTool(emit, 'code', 'run_command', { command: test.cmd, timeoutSec: BUILTIN_TEST_TIMEOUT_SEC });
     facts.testOutput = ran.ok
       ? `${ran.result.stdout || ''}\n${ran.result.stderr || ''}`
       : ran.error || '';
@@ -302,7 +316,7 @@ async function runBuiltin(payload, emit) {
     todos: [
       { id: '1', title: '扫描项目结构与关键入口', status: 'completed' },
       { id: '2', title: '阅读核心模块', status: 'completed' },
-      { id: '3', title: test ? `运行 ${test.cmd}` : '没有测试命令', status: 'completed' }
+      { id: '3', title: !test ? '没有测试命令' : ranTests ? `运行 ${test.cmd}` : '未运行测试（消息未要求）', status: 'completed' }
     ]
   });
 
@@ -311,11 +325,13 @@ async function runBuiltin(payload, emit) {
     '',
     write ? `已写入 \`${write.filePath}\`。` : '',
     patch ? '已尝试应用消息里的 SEARCH/REPLACE 补丁。' : '',
-    test
-      ? `已运行 \`${test.cmd}\`。输出摘要：\n\`\`\`\n${clip(facts.testOutput, 1200)}\n\`\`\``
-      : '没有探测到 package.json / pytest / cargo / go 测试命令。',
+    !test
+      ? '没有探测到 package.json / pytest / cargo / go 测试命令。'
+      : ranTests
+        ? `已运行 \`${test.cmd}\`（上限${BUILTIN_TEST_TIMEOUT_SEC}秒）。输出摘要：\n\`\`\`\n${clip(facts.testOutput, 1200)}\n\`\`\``
+        : `没有自动运行测试。要运行 \`${test.cmd}\`，在消息里写“跑测试”（上限${BUILTIN_TEST_TIMEOUT_SEC}秒；更久的测试请在终端自己运行）。`,
     '',
-    '内置循环没有大模型：它会搜、读、跑测试，并应用你消息里给出的补丁。',
+    '内置循环没有大模型：它会搜、读，按你的要求跑测试，并应用你消息里给出的补丁。',
     '要让模型自己决定改哪几行，到设置 → API Provider 填 Endpoint 和 Key，再发同一条任务。'
   ].filter(Boolean);
 
@@ -580,4 +596,4 @@ async function runChatBody(payload = {}, emit) {
 function runChat(payload = {}, emit) {
   return require('../utils/executionControl').run('chat', () => withTask({ source: 'Chat' }, () => runChatBody(payload, emit)));
 }
-module.exports = { runChat, planRound };
+module.exports = { runChat, planRound, wantsTests, BUILTIN_TEST_TIMEOUT_SEC };

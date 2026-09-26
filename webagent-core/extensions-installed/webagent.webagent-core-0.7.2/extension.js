@@ -4,7 +4,7 @@ const https = require('https');
 const path = require('path');
 const crypto = require('crypto');
 const { modeFromChatRequest } = require('./modeFromChatRequest');
-const { sameWorkspace } = require('./workspaceMatch');
+const { sameWorkspace, normalizePath } = require('./workspaceMatch');
 const { startPtyHost } = require('./ptyHost');
 const { HostManager, readHostLocation } = require('./hostManager');
 const { createSettingsPanel } = require('./settingsPanel');
@@ -402,6 +402,48 @@ function hostErrorHint(err) {
   return err && err.message ? err.message : String(err);
 }
 
+// R6 phase-1 acceptance follow-up 4. A host this extension starts stops with the window that started it (stdin
+// lifeline), and the host's "[lifeline]" line goes to that window's output channel, which a reloaded or new
+// window cannot show. Each start is remembered per folder in globalState; the next window that finds that host
+// gone says so in its own output channel. A record whose host still answers (another window has it) is kept.
+const OWNED_HOSTS_KEY = 'webagent.ownedHosts';
+const LOCAL_HOST_URL = /^http:\/\/127\.0\.0\.1:\d{2,5}$/;
+function ownedHosts(state) {
+  const value = state && typeof state.get === 'function' ? state.get(OWNED_HOSTS_KEY) : null;
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+}
+async function rememberOwnedHost(state, snap) {
+  if (!state || typeof state.update !== 'function' || !snap || snap.state !== 'running' || !snap.owned
+    || !snap.workspace || typeof snap.url !== 'string' || !LOCAL_HOST_URL.test(snap.url)) return false;
+  const record = { url: snap.url, pid: Number.isInteger(snap.pid) ? snap.pid : null, startedAt: new Date().toISOString() };
+  await state.update(OWNED_HOSTS_KEY, { ...ownedHosts(state), [normalizePath(snap.workspace)]: record });
+  return true;
+}
+async function forgetOwnedHost(state, folder) {
+  if (!state || typeof state.update !== 'function' || !folder) return false;
+  const hosts = { ...ownedHosts(state) }, key = normalizePath(folder);
+  if (!Object.hasOwn(hosts, key)) return false;
+  delete hosts[key];
+  await state.update(OWNED_HOSTS_KEY, hosts);
+  return true;
+}
+// The notice for this window's output channel, or null. probe(url) returns the host's /api/status JSON or throws.
+async function previousHostNotice(state, folder, probe) {
+  if (!folder) return null;
+  const record = ownedHosts(state)[normalizePath(folder)];
+  if (!record) return null;
+  if (typeof record.url !== 'string' || !LOCAL_HOST_URL.test(record.url)) { await forgetOwnedHost(state, folder); return null; }
+  let alive = false;
+  try { const status = await probe(record.url); alive = Boolean(status && sameWorkspace(folder, status.workspaceRoot)); } catch { alive = false; }
+  if (alive) return null;
+  await forgetOwnedHost(state, folder);
+  const pid = Number.isInteger(record.pid) ? record.pid : '未知';
+  const started = typeof record.startedAt === 'string' && !Number.isNaN(Date.parse(record.startedAt))
+    ? new Date(record.startedAt).toLocaleString() : '未知时间';
+  return `[host] 上次由插件在此文件夹启动的主机（${record.url}，pid ${pid}，启动于 ${started}）已不在运行。`
+    + '插件启动的主机会随启动它的窗口关闭或重载而停止；停止时的[lifeline]记录写在那个窗口的输出面板里，这里看不到。需要时点侧栏【启动】。';
+}
+
 function activate(context) {
   require('./editorReview').registerEditorReview(vscode, context);
   const hostOutput = vscode.window.createOutputChannel('Web Agent Host');
@@ -439,6 +481,7 @@ function activate(context) {
       if (explicitHostUrl()) throw new Error('已手工设置 webagent.agentHostUrl（或环境变量 WEBAGENT_AGENT_HOST_URL），插件只连接该地址、不会自己启动主机。清除该设置后即可一键启动。');
       const folder = workspacePaths()[0];
       const snap = await hostManager.start(folder);
+      rememberOwnedHost(context.globalState, snap).catch(() => {});
       if (snap.state === 'external' && !quiet) vscode.window.showInformationMessage('已接管同一文件夹上正在运行的主机（外部启动，插件停止时不会关闭它）。');
       if (context.globalState?.get('webagent.startBridgeWithHost') === true) {
         const status = await requestJson('GET', `${agentHostUrl()}/api/status`);
@@ -472,7 +515,10 @@ function activate(context) {
     }
     const result = await hostManager.stop();
     refreshBar(); bridge.refresh();
-    return result && result.stopped === false && !result.cancelled ? 'unconfirmed' : 'stopped';
+    const outcome = result && result.stopped === false && !result.cancelled ? 'unconfirmed' : 'stopped';
+    // Stopped on purpose: nothing to explain in the next window. An unconfirmed stop keeps the record.
+    if (outcome === 'stopped') await forgetOwnedHost(context.globalState, snap.workspace).catch(() => {});
+    return outcome;
   }
 
   async function refreshBar() {
@@ -566,6 +612,15 @@ function activate(context) {
   }
 
   const canManage = vscode.workspace.isTrusted !== false && !explicitHostUrl() && (vscode.workspace.workspaceFolders || []).length;
+  if (canManage) {
+    let folder = null;
+    try { folder = workspacePaths()[0]; } catch { /* no usable folder yet */ }
+    const probe = async (url) => {
+      const reply = await requestJson('GET', `${url}/api/status`, undefined, { timeoutMs: 1500 });
+      return reply && reply.status === 200 ? reply.json : null;
+    };
+    previousHostNotice(context.globalState, folder, probe).then((notice) => { if (notice) hostOutput.appendLine(notice); }).catch(() => {});
+  }
   if (canManage && vscode.workspace.getConfiguration('webagent').get('autoStartHost') === true) startHost({ quiet: true });
   else if (canManage) {
     try { hostManager.attachExisting(workspacePaths()[0]).catch(() => {}); } catch { /* no usable folder yet */ }

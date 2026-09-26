@@ -55,7 +55,7 @@
 | [computerUse.js](computerUse.js) | 7 个函数/类节点 |
 | [openai.js](openai.js) | 20 个函数/类节点 |
 | [providers.js](providers.js) | 20 个函数/类节点 |
-| [runChat.js](runChat.js) | 44 个函数/类节点 |
+| [runChat.js](runChat.js) | 45 个函数/类节点 |
 | [toolLabel.js](toolLabel.js) | 1 个函数/类节点 |
 <!-- docs-inventory:end -->
 

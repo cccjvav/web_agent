@@ -15,7 +15,7 @@ const subscriptions = [];
 async function main() {
   delete process.env.WEBAGENT_AGENT_HOST_URL;
   const commands = new Map(), providers = new Map();
-  const infos = [], warnings = [], errors = [], settingsPanels = [];
+  const infos = [], warnings = [], errors = [], settingsPanels = [], outputLines = [];
   let confirmAnswer;
   const vscode = {
     workspace: {
@@ -29,7 +29,7 @@ async function main() {
       showWarningMessage: (message, options) => { warnings.push({ message, options }); return Promise.resolve(confirmAnswer); },
       showErrorMessage: (message, options) => { errors.push({ message, options }); return Promise.resolve(); },
       createStatusBarItem: () => ({ show: () => {}, dispose: () => {} }),
-      createOutputChannel: () => ({ appendLine: () => {}, show: () => {}, dispose: () => {} }),
+      createOutputChannel: () => ({ appendLine: line => { outputLines.push(line); }, show: () => {}, dispose: () => {} }),
       registerWebviewViewProvider: (id, provider) => { providers.set(id, provider); return { dispose: () => {} }; },
       // The settings tab (section 6): a minimal WebviewPanel.
       createWebviewPanel: (viewType, title, column, options) => {
@@ -80,7 +80,14 @@ async function main() {
   });
   vm.runInContext(fs.readFileSync(path.join(root, 'webagent-core/extension/extension.js'), 'utf8')
     + '\nmodule.exports.activate = activate;', context);
-  context.activate({ subscriptions, extensionPath: tmp });
+  // globalState as VS Code keeps it: get/update, values stored as copies.
+  const fakeState = (initial = {}) => {
+    const values = JSON.parse(JSON.stringify(initial));
+    return { values, get: key => (key in values ? JSON.parse(JSON.stringify(values[key])) : undefined),
+      update: async (key, value) => { values[key] = JSON.parse(JSON.stringify(value)); } };
+  };
+  const globalState = fakeState();
+  context.activate({ subscriptions, extensionPath: tmp, globalState });
 
   const oldSecret = 'a'.repeat(24), newSecret = 'b'.repeat(24);
   let bridgeRunning = true, secret = oldSecret, rejectPost = false;
@@ -322,8 +329,78 @@ async function main() {
   for (const d of subscriptions) { if (d && d.dispose && String(d.dispose).includes('settings.dispose')) d.dispose(); }
   assert.equal(tab.disposed, true);
 
+  // 7. Follow-up 4: a host this extension started is remembered per folder; the next window that finds it gone
+  //    says so in its own output channel (the "[lifeline]" line went to the closed window's channel).
+  const { normalizePath } = require('../../extension/workspaceMatch');
+  const key = normalizePath(tmp), url = 'http://127.0.0.1:48271';
+  const owned = { state: 'running', owned: true, workspace: tmp, url, pid: 42 };
+  const unit = fakeState();
+  for (const snap of [{ ...owned, owned: false }, { ...owned, state: 'external' }, { ...owned, state: 'starting' }, { ...owned, url: 'http://evil.test:48271' },
+    { ...owned, url: 'http://127.0.0.1:48271/x' }, { ...owned, workspace: '' }, null]) {
+    assert.equal(await context.rememberOwnedHost(unit, snap), false, JSON.stringify(snap));
+  }
+  assert.equal(await context.rememberOwnedHost(null, owned), false, 'no globalState: nothing to remember');
+  assert.deepStrictEqual(unit.values, {});
+  assert.equal(await context.rememberOwnedHost(unit, owned), true);
+  assert.deepStrictEqual(Object.keys(unit.values['webagent.ownedHosts']), [key]);
+  assert.equal(unit.values['webagent.ownedHosts'][key].url, url); assert.equal(unit.values['webagent.ownedHosts'][key].pid, 42);
+  const probed = [];
+  const probeAlive = async u => { probed.push(u); return { workspaceRoot: tmp }; };
+  assert.equal(await context.previousHostNotice(unit, tmp, probeAlive), null, 'still served (another window has it): no notice');
+  assert.deepStrictEqual(probed, [url]); assert.ok(unit.values['webagent.ownedHosts'][key], 'and the record is kept');
+  assert.equal(await context.previousHostNotice(unit, '', probeAlive), null);
+  const notice = await context.previousHostNotice(unit, tmp, async () => { throw new Error('ECONNREFUSED'); });
+  assert.ok(notice.startsWith(`[host] 上次由插件在此文件夹启动的主机（${url}，pid 42，启动于 `), notice);
+  assert.ok(notice.endsWith('已不在运行。插件启动的主机会随启动它的窗口关闭或重载而停止；停止时的[lifeline]记录写在那个窗口的输出面板里，这里看不到。需要时点侧栏【启动】。'), notice);
+  assert.deepStrictEqual(unit.values['webagent.ownedHosts'], {}, 'reported once, then forgotten');
+  assert.equal(await context.previousHostNotice(unit, tmp, async () => null), null);
+  await context.rememberOwnedHost(unit, owned);
+  assert.ok(await context.previousHostNotice(unit, tmp, async () => ({ workspaceRoot: tmp + '-other' })), 'another folder on that port: ours is gone');
+  unit.values['webagent.ownedHosts'] = { [key]: { url: 'http://evil.test:1', pid: 1 } };
+  probed.length = 0;
+  assert.equal(await context.previousHostNotice(unit, tmp, probeAlive), null); assert.deepStrictEqual(probed, [], 'a foreign URL is never probed');
+  assert.deepStrictEqual(unit.values['webagent.ownedHosts'], {});
+  // Through the real commands: start remembers, a confirmed stop forgets, a declined or unconfirmed stop keeps.
+  const ownedRecord = () => (globalState.get('webagent.ownedHosts') || {})[key];
+  context.transport = async (method) => {
+    if (method === 'GET') return { status: 200, json: { status: 'online', workspaceRoot: tmp, bridgeRunning } };
+    return { status: 200, json: { success: true } };
+  };
+  vm.runInContext('requestJson = transport;', context);
+  fake.start = async () => ({ state: 'external', owned: false, workspace: tmp, url });
+  await commands.get('webagent.startHost')();
+  assert.equal(ownedRecord(), undefined, 'an attached (external) host is not ours');
+  fake.start = async () => ({ ...owned, url: 'http://127.0.0.1:48275', pid: 7 });
+  await commands.get('webagent.startHost')(); await new Promise(resolve => setImmediate(resolve));
+  assert.ok(ownedRecord(), 'a host this extension started is remembered');
+  assert.equal(ownedRecord().url, 'http://127.0.0.1:48275'); assert.equal(ownedRecord().pid, 7);
+  clear(); fake.snap = { ...owned }; confirmAnswer = undefined;
+  assert.equal(await stopHost(), 'declined'); assert.ok(ownedRecord());
+  clear(); fake.snap = { ...owned }; bridgeRunning = false; fake.stopResult = { stopped: false, external: false };
+  assert.equal(await stopHost(), 'unconfirmed'); assert.ok(ownedRecord(), 'an unconfirmed stop keeps the record');
+  clear(); fake.snap = { ...owned }; bridgeRunning = false;
+  assert.equal(await stopHost(), 'stopped'); assert.equal(ownedRecord(), undefined, 'stopped on purpose: nothing to explain later');
+  // A new window (second activation) whose recorded host no longer answers properly writes the notice to its output
+  // channel. Something else on that port answering 404 does not count, even with a matching-looking body
+  // (refused connections are covered by the unit cases above).
+  const probes = [];
+  context.transport = async (method, target) => {
+    probes.push(`${method} ${target}`);
+    if (target.includes(':48279')) return { status: 404, json: { workspaceRoot: tmp } };
+    throw new Error('connect ECONNREFUSED');
+  };
+  vm.runInContext('requestJson = transport;', context);
+  const nextWindow = fakeState({ 'webagent.ownedHosts': { [key]: { url: 'http://127.0.0.1:48279', pid: 99, startedAt: new Date().toISOString() } } });
+  outputLines.length = 0;
+  context.activate({ subscriptions, extensionPath: tmp, globalState: nextWindow });
+  for (let i = 0; i < 100 && !outputLines.some(line => line.includes('已不在运行')); i++) await new Promise(resolve => setTimeout(resolve, 10));
+  // (The status bar's own refresh also asks the default address; only the recorded host is probed for the notice.)
+  assert.deepStrictEqual(probes.filter(line => line.includes(':48279')), ['GET http://127.0.0.1:48279/api/status']);
+  assert.ok(outputLines.some(line => line.startsWith('[host] 上次由插件在此文件夹启动的主机（http://127.0.0.1:48279，pid 99，')), outputLines.join('\n'));
+  assert.deepStrictEqual(nextWindow.values['webagent.ownedHosts'], {});
+
   finished = true;
-  console.log('sidebarFeedback: stop outcomes, actionDone for every click, busy/disabled painting, chat failure reasons, settings tab via activate passed');
+  console.log('sidebarFeedback: stop outcomes, actionDone for every click, busy/disabled painting, chat failure reasons, settings tab via activate, previous-window host notice passed');
 }
 
 // A promise that never settles would let Node exit 0 early; only reaching the end counts as a pass.

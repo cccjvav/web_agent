@@ -1818,6 +1818,20 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **剩余风险与未验证：** 标签页关闭时在途的stdio启动结果需在列表中核对；stdio程序的PATH来自VS Code自身启动环境；真实桌面上的VS Code确认框、stdio进程与移除后的释放由第5批手册实机验收。多模型博弈仍需`run-webagent.cmd`打开网页工作台。待用户决定的第一期验收跟进③（内置循环60秒上限）④（新窗口提示）不变。
 
+### 第84组：验收跟进③④——内置循环按要求跑测试与上一窗口主机提示（2026-09-26）
+
+**开头复审（第83组）：** `0aa6328`交付前已逐项自查，CI 36271341787九job全绿；本轮未发现新问题。
+
+**用户决定（经ask_user）：** ④做；③选“按要求跑，且上限放宽到300秒”。用户先问“新窗口”指什么：即第一期验收8c——重载或新开窗口后，旧窗口里插件启动的主机随旧窗口停止，停止记录`[lifeline]`在旧窗口输出面板里看不到。
+
+**③（`agent/runChat.js`）：** 新增`wantsTests(message)`（测试/单测/独立单词test等为真，先排除“不要/别/跳过…测试”与no/skip/without tests）与`BUILTIN_TEST_TIMEOUT_SEC`；内置循环code模式只在探测到命令且消息要求时run_command，否则todo标“未运行测试（消息未要求）”并提示写“跑测试”。**与用户选择的偏差：** 上限取180秒而非300秒——插件Chat整个请求期限300秒（`extension.js`），要容纳探索、VS Code批准命令最多90秒（`ptyJobs`的`CONFIRM_TIMEOUT_MS`）与PTY的timeoutSec+15秒，300秒会让Chat先超时（给选项时没有核对这层预算，是我的疏漏）；runChat测试从两处源码读出期限并断言相加不超过Chat期限，任何一边改动都会变红。
+
+**④（`extension/extension.js`）：** `rememberOwnedHost`在startHost得到本插件启动、running、本机地址的快照时按文件夹写入globalState`webagent.ownedHosts`；stopHost结果`stopped`时`forgetOwnedHost`；activate时`previousHostNotice`探测记录地址（1.5秒，HTTP 200且同一文件夹才算仍在），不在则删记录并在“Web Agent Host”输出面板写一行说明。只写日志不弹窗，失败一律吞掉。不依赖deactivate能否来得及写盘。
+
+**测试：** runChat（要求时参数`{command,timeoutSec:180}`与逐字总结；三种不要求的消息不跑且提示逐字；wantsTests 15例；预算断言）；sidebarFeedback第7块（直接调用三个函数、经真实startHost/stopHost、再activate一次模拟新窗口）。反向验证：③8种、④11种变异全红；其中“探测不看状态码”首轮存活，补“记录端口回404也算不在”后变红；“启动不记”首轮以TypeError变红，补显式断言后红在目标断言。
+
+**交付前自查：** ①调用方：runBuiltin也服务网页工作台Chat，行为同样改变，文档按通用写；Plan/Ask路径与consensusEngine只用testCmd做文字，不受影响；`extension.js`的`./`依赖在其他vm测试中被桩成`{}`，新函数在激活时的调用有catch，全量测试验证。②文档逐条对源码（CONFIRM_TIMEOUT_MS=90000、armTimer的+15000、Chat期限300000）。③残留：记录只含文件夹、地址、pid、时间，存在VS Code本机globalState；主机崩溃或被外部结束也会在下个窗口提示，措辞只说“已不在运行”。开启autoStartHost时新主机若恰好占到同一端口并服务同一文件夹，探测判为仍在、不提示，记录随后被新主机覆盖——此时提示本无意义，记为已知行为。④真实桌面的重载/新窗口由第5批手册实机验收。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。

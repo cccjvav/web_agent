@@ -38,6 +38,7 @@ Plan 直接委托 runPlanRound。普通模式 pickModel；选中非 builtin 但�
 | keywordsFrom(message) | 文本 → 最多 6 个词 | 分隔标点/空白；map trim；filter 长度至少2且不在停用词表；不是分词模型。后面拼 regex 时没有做正则转义 |
 | pickExisting(relPaths) | 固定候选名 → 存在的普通文件名 | 先resolveSafePath校验候选，再exists/stat；将反斜杠转正斜杠，仍不提供外部文件系统一致性锁 |
 | detectTestCommand() | 无 → `{cmd,kind}` 或 null | resolveTechStack 有 testCommand 就标 declared（即使它是启发式探测结果）；否则有 tests 目录就猜包管理器 test；不执行、不确认安装了 pytest/Conda |
+| wantsTests(message) | 文本 → 布尔 | 消息含“测试/单测”或独立单词test/tests/testing、pytest、jest、vitest、mocha为true；先排除“不要/不用/不必/无需/别/跳过（跑/运行/执行）测试”与英文no/skip/without tests。单词边界防止latest、contest误中；只是关键词判断，不理解否定之外的语义 |
 | extractPatch(message) | 文本 → 第一段 SEARCH/REPLACE 或 null | 正则提取首个成对标记，不校验补丁目标或能否应用 |
 | extractWriteIntent(message) | 文本 → `{filePath,content}` 或 null | 同时匹配写入/创建关键词后的简单文件路径和第一个代码围栏；路径字符集有限，不是任意中文/空格文件名解析器 |
 | clip(text,n=1400) | 文本 → 截短预览 | 超 n 字符保留前段加省略号；不是字节/Token 硬预算 |
@@ -67,7 +68,7 @@ Plan 直接委托 runPlanRound。普通模式 pickModel；选中非 builtin 但�
 - ask：将任务列表标完成，emit message，返回。
 - 其余模式进入写/补丁/测试段：识别显式写意图后 call write_file，带 confirm_overwrite:true；工具本身的权限仍有效，失败 emit error 后 return。
 - 识别补丁后，从 `file/文件` 后解析目标，否则用 facts.files[0]。先 read_files 取 hash，只有成功且有 hash 才 apply_patch；应用失败停止。没有目标或读取/hash 条件不满足时跳过，但最终仍可能写“已尝试”，不是补丁成功证明。
-- 再次 detectTestCommand，非空才 run_command，timeoutSec=60；成功保存 stdout/stderr，失败保存 error。之后仍把验证 todos 标 completed，并总结“已运行”，**不是测试已通过**。
+- explore之后先算runTests：code模式、探测到测试命令且**wantsTests(message)**为真。只有它为真时，再次detectTestCommand并run_command，timeoutSec为**BUILTIN_TEST_TIMEOUT_SEC**=180；成功保存stdout/stderr，失败保存error，总结“已运行 `命令`（上限180秒）”，**不是测试已通过**。未要求时不运行，todo标“未运行测试（消息未要求）”，总结提示在消息里写“跑测试”（更久的测试在终端自己运行）。R6第一期验收跟进③：此前每条Code消息都跑整套测试且上限60秒（PTY期限75秒），本仓库npm test约80秒，必然超时。180秒由预算决定：插件Chat整个请求的期限300秒（extension.js）要容纳探索、VS Code里批准命令最多90秒（ptyJobs的CONFIRM_TIMEOUT_MS）和PTY的timeoutSec+15秒；runChat测试从两处源码读出这两个数并断言相加不超过期限。
 
 所有修改已经发生就不会因后面的测试失败自动回滚。内置引擎只按有限模板搜读与应用用户给出的内容，不是自动分析并生成修复的大模型。
 
