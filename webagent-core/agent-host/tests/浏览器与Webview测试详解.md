@@ -66,7 +66,7 @@ paintTasks带HTML样式文本和null：仅一个li、textContent保留尖括号�
 
 ## settingsRelay.test.js：设置页请求转发（R6第二期第2批）
 
-[源码](settingsRelay.test.js)三部分，最后process.exit隔离真实主机。**loadRelayTransport()**读取浏览器ES模块vscodeRelay.js，断言只有一个export后去掉export、在本realm以脚本求值（CI含Node 18/20，无法直接import无package.json目录下的ESM），使Response/DOMException为真实全局。**tick()**等一次setImmediate。
+[源码](settingsRelay.test.js)三部分，最后process.exit隔离真实主机。**loadRelayModule()**读取浏览器ES模块vscodeRelay.js，断言恰好导出createRelayTransport与createHostServices（第3批加入后者）后去掉export、在本realm以脚本求值；**loadRelayTransport()**取其中的转发函数工厂（CI含Node 18/20，无法直接import无package.json目录下的ESM），使Response/DOMException为真实全局。**tick()**等一次setImmediate。
 
 **partA()**只测extension/apiRelay.js：假send记录参数，**behaviour**可切换为成功、网络失败、非法状态码、409或挂起；**post**收集回复，**ask(message)**发一条并等两轮。覆盖：放行路径与原样正文（含ID路由、唯一查询路由、PUT/DELETE、/health）；默认拒绝20条（chat、tool/call、files、pty、tasks、external、consensus、probe、logs、错方法、尾斜杠、大小写）和15种路径花招（绝对/协议相对URL、点段及编码点、#、反斜杠、换行、多余查询、编码斜杠ID、超长），均断言send未被调用；正文规则；非法编号不回复、非转发消息不消费；失败不编造状态码、409原样转回；并发16满时重复编号与超限各得确切错误；abort只回一次失败；迟到的有效结果照常回复；dispose后不再发任何消息。
 
@@ -75,6 +75,26 @@ paintTasks带HTML样式文本和null：仅一个li、textContent保留尖括号�
 **partC()**端到端：进程内启动真实主机（端口0、临时工作区），以VM加载扩展的真实requestJson。先对永不响应的本地服务器验证requestJson新选项：取消与1秒期限都迅速以“未确认”拒绝、已取消信号不发请求、套接字关闭。再以webview转发函数→转发层→requestJson→主机：/api/status为200且工作区一致（主机把转发请求当本机控制面）；无效检查点请求得4xx回答而非异常；带工作区绑定关闭Execute并读回生效（rawBody原样到达）；tool/call在扩展侧被拒且主机请求日志中没有它。
 
 反向验证：去掉白名单、查询规则、GET正文限制、并发上限、重复编号检查、dispose标记、状态码检查、客户端取消消息、客户端ok判断，以及requestJson的信号、预取消检查、timeoutMs、rawBody，均变红。去掉路径规范化检查不红：白名单正则锚定且ID字符受限，属冗余防线。
+
+## settingsPanel.test.js：设置标签页（R6第二期第3批）
+
+[源码](settingsPanel.test.js)六部分，只用Node与假vscode，不启动主机；页面在真实Chromium里的表现由workbench.browser的settingsPanelBrowser覆盖。**tick()**等一次setImmediate；**resource(rel)**把相对路径映射到假cspSource。末尾`finished`标志配合`process.on('exit')`：永不结算的Promise会让Node以0提前退出，未跑到最后一律置退出码1。
+
+**partA()**对**真实**workbench/index.html调用buildSettingsHtml：CSP全文逐字、charset仍在最前、唯一带nonce的入口脚本、两张样式表紧邻、无favicon与`./`、标题与`data-initial-page`、同一份modal标记；恶意initialPage回退overview，含`$&`的资源地址按字面写入。8种页面改动逐一带原因拒绝（换入口、换样式表名、charset写法、删主题脚本、多一个内联脚本、内联onclick、相对图片、重复入口），4种坏参数为TypeError。共享页面上D4与仅限工作台的标记存在，而styles.css里没有`data-workbench-only`（网页版照常显示）。
+
+**partB()**：findWorkbenchDir在开发布局、code-server布局（以**exists**替身模拟文件存在）、host.json目录优先、host.json目录缺文件时退回、都找不到返回null。
+
+**partC()**以**fakeVscode()**（记录模态警告与剪贴板，可设置答案、让复制失败）测createHostServiceHandler，**ask(message)**发一条并等两轮：确认得value:true且对话框为模态、detail与唯一按钮逐字；“取消”、undefined、别的按钮都不是同意；对话框抛错原样回失败；空、纯空白、超长、非字符串文本回`确认内容无效`且不弹窗；复制成功、超长、剪贴板失败；未知服务；非服务消息返回false；无效编号吞掉不回复；4个对话框同时挂起时重复编号与第5个各得确切错误；dispose后迟到的回答不再发出。
+
+**partD()**以**loadHostServices()**加载页面端createHostServices，**answer(index,reply)**按编号回复：只外传type/id/service/text；只有ok:true且value:true为同意（`ok:false,value:true`、`value:'yes'`、缺value都为false）；未知编号与其他协议消息忽略；已结算编号的二次回答无效；编号互不相同；复制成功与带原因失败；postMessage抛错时confirm为false、copyText以`设置页无法联系插件：`拒绝；缺onMessage抛TypeError。
+
+**partE()**以**fakePanelVscode()**（**createWebviewPanel**返回的假面板记录**reveal**、postMessage与**onDidDispose**，**receive**模拟页面发消息）测createSettingsPanel：面板类型/标题/列、选项（localResourceRoots只含界面目录）、HTML带nonce CSP与初始页、入口从界面目录提供、日志写明来源；再次open复用同一标签页、切页并发`webagent-reload`，无效页名只发reload不切页；转发请求带页面的方法/路径/正文到send且只回一次；tool/call在send之前被拒；服务请求由对话框处理器回答；关闭标签页取消在途请求且之后不再发送；重新打开是新面板、新nonce、初始页overview；dispose关闭。扩展被移走、找不到界面目录时不创建标签页；界面页面不匹配时关闭刚建的面板并抛出`（entry）`原因。
+
+**partF()**：package.json的命令（标题、`$(gear)`）与两个视图标题栏菜单逐字；extension.js注册openSettings、send经`requestJson(method, agentHostUrl() + apiPath, …)`；侧栏提示不再说Named/ngrok在网页工作台保存。
+
+workbenchRuntime同批补充：api.js的confirmAction/copyText/setHostServices默认值、只认字面true、恢复与坏输入TypeError；bridge的OAuth开关取消、确认期间主机实例或配对状态变化不发送（**oauthResult()**读结果行）、对话框挂起期间按钮忙、确认后POST正文逐字；检查点恢复确认期间工作区变化不发送并消费控件。原有approve/restore/create的confirm替身改为经真实api.js的`globalThis.confirm`，点击后等setImmediate再断言POST。
+
+反向验证：30种单元变异全部变红（均为断言失败），涉及settingsPanel.js、vscodeRelay.js、api.js、bridge.js、operations.js和extension.js：CSP去掉connect-src、去掉retainContextWhenHidden或localResourceRoots、确认不看按钮文字、确认文本不校验、关闭时不清转发层、构建失败不关面板、不复用已开标签页、去掉内联事件/单脚本/相对引用检查、替换不按字面量、初始页与open页名不校验、dispose后仍回复、去掉等待上限与重复编号、不做唯一匹配、忽略host.json目录；页面端不判ok/value、发送失败不回失败、复制不判ok；api.js不要求`=== true`、copyText不走宿主服务；OAuth确认后不复核、确认前不置忙；审批确认后不复核代次、检查点恢复与创建确认后不复核；openSettings命令名写错；再次open不发reload。首轮“审批确认后不复核代次”存活，原因是变异让第二次POST永不应答、Node以退出码0提前结束；加上finished守卫后变红。另有9种浏览器变异（见主机诊断与调用追踪详解的settingsPanelBrowser）全部变红。
 
 ## sidebarFeedback.test.js：侧栏点击反馈与Chat失败原因（R6第一期验收反馈）
 
@@ -85,6 +105,9 @@ paintTasks带HTML样式文本和null：仅一个li、textContent保留尖括号�
 3. validWebviewMessage的actionId只接受`a`加1–9位数字字符串。
 4. **toolLineMarkdown**/**toolFailureReason**：成功耗时、无原因的Failed、原样原因、恶意Markdown（强调、链接、`<img>`、反引号、下划线）全部转义且折成一行、对象取message或JSON、超长截断为301字符。
 5. **runPage(html)**以**element(id)**（带**toggle**/**remove**/**contains**的classList、**appendChild**、**replaceChildren**、**querySelector**、**querySelectorAll**）和**node**替身运行生成的页面脚本，**status**推送状态、**click**只点未禁用的按钮。主机卡片：点【启动】发hostStart+a1、按钮变“启动中…”并禁用、带busy样式，强行再点不重发；轮询重绘保持禁用；启动中【停止】可点；未知actionId不影响；actionDone后恢复“启动”、按实际状态禁用并有title原因、结果行文字与失败红色，同一actionId第二次到达不覆盖。Bridge按钮随状态禁用，主机离线时【停止】仍可点、启动/重置/复制禁用；点【启动 Bridge】后主机仍报未运行，【停止】保持可点（含其后的轮询重绘）；结果文字截到300；模式按钮“切换中…”后恢复；CSS里有禁用样式与覆盖禁用的busy样式。侧栏Chat的**failedText**折叠换行与多空格（证明模板字符串里的`\\s`没被吞）、截断，失败工具行显示`search_files   Failed：bad regex`。
+6. 设置标签页（R6第二期第3批）：`./settingsPanel`、`./apiRelay`加载真实模块，假hostManager的readHostLocation指向仓库根，假vscode提供最小createWebviewPanel。执行已注册的`webagent.openSettings('bridge')`：无错误提示、只建一个标签页、localResourceRoots为host.json仓库的workbench目录、初始页bridge；页面发一条转发请求后，经requestJson到达`http://127.0.0.1:端口/api/models`，正文作为rawBody原样传递（body参数为undefined，不重新序列化），带取消信号与期限，回复逐字回到标签页；菜单点击传入非字符串参数时复用同一标签页；停用插件（subscriptions）关闭标签页。反向验证：正文改走body、断开host.json目录、不登记关闭均变红；去掉openSettings里的字符串判断不红（open内部已校验页名，属冗余防线）。
+
+末尾同样有`finished`守卫：main未跑到最后一条断言就退出时置退出码1。
 
 反向验证18种变异全部变红（均为断言失败、语法正常）：点击时不重绘其他按钮、【停止】不考虑进行中的启动，以及去掉轮询时的处理中保护、完成后不清处理中、不改按钮文字、删禁用样式、离线时禁用【停止】、不回actionDone、hostStart只看返回值、declined返回undefined、不转义Markdown、模板里写单反斜杠`\s`、去掉actionId校验、原生Chat不带原因、完成后不重绘、unconfirmed当stopped、抛错记为成功、失败不标红。
 

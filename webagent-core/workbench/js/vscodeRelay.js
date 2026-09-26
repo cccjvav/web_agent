@@ -59,3 +59,39 @@ export function createRelayTransport({ postMessage, onMessage, makeResponse = de
     });
   };
 }
+
+// The two browser services the webview lacks (see setHostServices in api.js), answered by the extension:
+// { type: 'webagent-service', id, service: 'confirm' | 'copy', text } -> { type: 'webagent-service-result', id, ok, value?, error? }.
+// confirm resolves true only for an explicit yes and false for "no", a closed dialog or a refused request, so a lost
+// answer can never count as consent; copy rejects when the extension did not confirm the clipboard write.
+export function createHostServices({ postMessage, onMessage }) {
+  if (typeof postMessage !== 'function' || typeof onMessage !== 'function') throw new TypeError('postMessage and onMessage are required');
+  const pending = new Map();
+  const prefix = 's' + Math.random().toString(36).slice(2, 10);
+  let sequence = 0;
+  onMessage(message => {
+    if (!message || message.type !== 'webagent-service-result') return;
+    const entry = pending.get(message.id);
+    if (!entry) return;
+    pending.delete(message.id);
+    entry(message);
+  });
+  function ask(service, text) {
+    const id = `${prefix}-${++sequence}`;
+    return new Promise(resolve => {
+      pending.set(id, resolve);
+      try { postMessage({ type: 'webagent-service', id, service, text: String(text) }); }
+      catch (error) { pending.delete(id); resolve({ ok: false, error: '设置页无法联系插件：' + ((error && error.message) || error) }); }
+    });
+  }
+  return {
+    async confirm(text) {
+      const reply = await ask('confirm', text);
+      return reply.ok === true && reply.value === true;
+    },
+    async copyText(text) {
+      const reply = await ask('copy', text);
+      if (reply.ok !== true) throw new Error(String(reply.error || '复制未确认'));
+    }
+  };
+}

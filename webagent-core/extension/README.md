@@ -14,6 +14,8 @@
 | `package.json` | 扩展元数据、激活条件、命令和配置贡献 |
 | `extension.js` | 激活、HTTP/NDJSON客户端、侧栏webview（含主机卡片与隧道选择）、原生Chat接线和取消 |
 | `hostManager.js` | 一键启动/接管/停止本机agent-host：读host.json、找端口、后台运行`launch.js host`、就绪与工作区核对、stdin生命线，不引用vscode |
+| `settingsPanel.js` | “Web Agent 设置”标签页：读取网页工作台自己的index.html并改写为带CSP、只显示设置弹层的webview；确认框/剪贴板请求用VS Code模态对话框与剪贴板回答 |
+| `apiRelay.js` | 设置标签页的请求转发：默认拒绝的方法+路径白名单，经requestJson转到本窗口的主机，不引用vscode |
 | `ptyHost.js` | 注册随机clientId、轮询/接收任务、审批、终端运行、捕获输出和报告 |
 | `ptyPolicy.js` | 不依赖VS Code的命令判断；决定是否可自动批准或必须重新询问 |
 | `workspaceMatch.js` | 规范路径并比较当前文件夹与host工作区 |
@@ -23,7 +25,7 @@
 | `resources/` | 图标；见该目录说明 |
 
 ## 执行流程
-0. 主机来源：用户点【启动】（或开启`webagent.autoStartHost`）时，hostManager先在48271–48290找同一文件夹的主机并接管，找不到才后台启动`node installer/launch.js host <文件夹>`（不开3000工作台）；关闭VS Code时经stdin生命线让主机自己正常关闭。手工设置`webagent.agentHostUrl`时只连接该地址。
+0. 主机来源：用户点【启动】（或开启`webagent.autoStartHost`）时，hostManager先在48271–48290找同一文件夹的主机并接管，找不到才后台启动`node installer/launch.js host <文件夹>`（不开3000工作台）；关闭VS Code时经stdin生命线让主机自己正常关闭。手工设置`webagent.agentHostUrl`时只连接该地址。侧栏标题栏的齿轮（命令“Web Agent: 打开设置”）打开设置标签页，模型/Provider、Bridge（含Named Tunnel/ngrok凭据）、审批与检查点、诊断、环境与指令、Skill都在这里改，不需要浏览器工作台。
 1. 激活时建立agent-host客户端，注册侧栏及当前VS Code版本支持的Chat能力。HTTP普通请求和NDJSON有各自的超时/取消处理。
 2. 用户消息发到 `/api/chat`；原生取消token和webview停止消息可中止请求。响应中的tool、message、error、done由各界面分别呈现。
 3. 扩展PTY以clientId和workspace标识自己。队列、hello、claim、accepted与运行中check都同时要求HTTP 2xx和预期JSON形状；拒绝或畸形响应保留最近可信队列状态。接到job先验证工作区和cwd真实路径，再claim；批准后重新向host报告accepted并确认仍可执行，不凭一个过期弹窗或HTTP拒绝正文里的真值字段启动。
@@ -60,12 +62,13 @@ F54第七批：requestJson最多接收8MiB响应，15秒总deadline与空闲time
 | [apiRelay.js](apiRelay.js) | 10 个函数/类节点 |
 | [dangerousPolicy.js](dangerousPolicy.js) | 55 个函数/类节点 |
 | [editorReview.js](editorReview.js) | 10 个函数/类节点 |
-| [extension.js](extension.js) | 91 个函数/类节点 |
+| [extension.js](extension.js) | 97 个函数/类节点 |
 | [hostManager.js](hostManager.js) | 61 个函数/类节点 |
 | [modeFromChatRequest.js](modeFromChatRequest.js) | 1 个函数/类节点 |
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
 | [ptyHost.js](ptyHost.js) | 60 个函数/类节点 |
 | [ptyPolicy.js](ptyPolicy.js) | 6 个函数/类节点 |
+| [settingsPanel.js](settingsPanel.js) | 25 个函数/类节点 |
 | [workspaceMatch.js](workspaceMatch.js) | 2 个函数/类节点 |
 <!-- docs-inventory:end -->
 

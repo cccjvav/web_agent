@@ -1,5 +1,5 @@
 import { $, $$, state, SITES, ui } from './state.js';
-import { apiFetch } from './api.js';
+import { apiFetch, confirmAction } from './api.js';
 import { escapeHtml } from './dom.js';
 
 function formatClock(ms) {
@@ -195,13 +195,19 @@ export async function toggleOauth() {
   const question = enable
     ? '开启 OAuth 配对？隧道上会开放 OAuth 注册/授权地址，供要求 OAuth 的连接器配对。Arena 贴 URL 连接不需要它。'
     : '关闭 OAuth 配对？所有已授权的 OAuth 客户端立即失效，再开启需重新配对；URL 密钥连接不受影响。';
-  if (!window.confirm(question)) {
-    if (result) result.textContent = '已取消，未更改。';
-    return false;
-  }
+  // Busy before asking: in the VS Code panel the answer arrives asynchronously.
   oauthToggling = true;
   if (button) button.disabled = true;
   try {
+    if (!(await confirmAction(question))) {
+      if (result) result.textContent = '已取消，未更改。';
+      return false;
+    }
+    if (state.status?.workspaceRoot !== expected.workspaceRoot || state.status?.identity?.hostInstanceId !== expected.hostInstanceId
+      || Boolean(state.status?.pairing?.enabled) === enable) {
+      if (result) result.textContent = '确认期间主机状态已变化，未发送；请核对后重试。';
+      return false;
+    }
     const data = await secretRequest('/api/bridge/oauth', { enabled: enable, ...expected });
     if (!data || data.oauthEnabled !== enable) throw new Error('contract');
     if (result) result.textContent = enable ? 'OAuth 配对已开启。' : 'OAuth 配对已关闭，已有 OAuth 授权已全部失效。';
@@ -405,7 +411,7 @@ export async function resetSecret() {
     const current = await secretRequest('/api/status');
     if (!isStatusSnapshot(current) || !sameSecretBinding(current, expected) || current.secretKey !== expected.expectedSecret
       || !sameSecretBinding(state.status, expected) || state.status.secretKey !== expected.expectedSecret) throw new Error('binding');
-    if (!window.confirm('确认重置 MCP 地址？旧密钥及 OAuth 授权将失效，但不会停止已接受的任务或隧道。结果丢失时不要再次重置，应先读取状态。')) {
+    if (!(await confirmAction('确认重置 MCP 地址？旧密钥及 OAuth 授权将失效，但不会停止已接受的任务或隧道。结果丢失时不要再次重置，应先读取状态。'))) {
       result.textContent = '已取消，未发送密钥轮换。'; return false;
     }
     if (!sameSecretBinding(state.status, expected) || state.status.secretKey !== expected.expectedSecret) throw new Error('binding');

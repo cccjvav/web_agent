@@ -1,6 +1,6 @@
 # 工作台启动、事件流与Chat逐函数讲解
 
-覆盖[app.js](../app.js)与[chat.js](chat.js)。UI是本机消费者，不是外部Arena会话；Chat POST流与后台WebSocket是两条不同通道。
+覆盖[app.js](../app.js)、VS Code设置标签页入口[settings-panel.js](../settings-panel.js)与[chat.js](chat.js)。UI是本机消费者，不是外部Arena会话；Chat POST流与后台WebSocket是两条不同通道。
 
 ## 1. app.js全部函数与初始化
 
@@ -13,6 +13,18 @@ ES imports首先填ui，后执行boot。WS_BACKOFF_MIN/MAX为1/30秒，wsBackoff
 - **boot()**先try initEditorSafety+bind，错误console.error但继续；setAgentMode(code)、paintTabs/paintChat/terminal提示；先connectWs，再立即refreshBridgeActivity并每3秒定时调用（单飞、5秒超时）；即使WS不可用也能从本机受保护API补回统计。随后Promise.allSettled并发status/tree/skills/custom/Monaco；每个load经Promise.then捕获同步异常。部分失败console记录并toast，仍activateTab；事件流不被初次HTTP/CDN失败阻断。
 
 没有本模块级页面卸载socket/timer清理；浏览器关闭页面通常销毁上下文，但不要解释成显式可靠离线协议。
+
+## 1b. settings-panel.js：VS Code“Web Agent 设置”标签页入口（R6第二期第3批）
+
+浏览器加载app.js；插件的设置标签页（[settingsPanel.js](../../extension/settingsPanel.js)）用同一份index.html，但入口换成本模块，并在styles.css后加载[settings-panel.css](../settings-panel.css)。它导入与app.js相同的state/dom/tabs/chat/bridge/settings/bind/operations模块，所以两边运行同一份设置代码；只有检测到`acquireVsCodeApi`时才执行boot，在浏览器或测试里导入不会有副作用。
+
+- **EXTRA_PAGES**：浏览器里“审批与检查点”（operations）和“诊断”（diagnostics）只能从工具栏/主机卡片按钮进入，这些按钮在标签页里不可见，所以各给一个导航项；refresh是浏览器打开该页时运行的ui加载函数名（refreshOperations、refreshDiagnostics）。
+- **addExtraPages(doc)**把这两个导航按钮插到“旧版设置”项之前（没有则放末尾），返回按钮；没有`.modal-nav`返回空数组。
+- **vscodeTheme(body)**：VS Code在webview的body上标vscode-light/vscode-dark/vscode-high-contrast(-light)，浅色两种返回light，其余dark。
+- **knownPage(page,doc)**：只有1–32位小写字母且弹层里存在`page-<名字>`的页面才返回原名，否则overview。
+- **boot()**：①用一个消息通道同时装上请求转发（setApiTransport(createRelayTransport)）与宿主服务（setHostServices(createHostServices)），此后所有模块的请求、确认框和复制都经插件；②加导航项；③`ui.closeModal`改为空操作——标签页就是这个对话框，Esc或模块内的关闭调用都不会把唯一内容隐藏（也不会把它标成aria-hidden）；④运行共享的ui.bind，导航项点击时showPage并调用对应加载函数；⑤**syncTheme**按VS Code主题调用applyTheme，MutationObserver在用户切换主题时跟随；⑥openModal后**show(page)**打开插件要求的初始页（`data-initial-page`），之后插件发`webagent-show-page`也经它切页（额外页走按钮以便加载数据）；⑦**loadAll**并发读取状态、Skill与自定义配置，任何一项失败toast`部分设置未能读取：请确认主机已启动，然后再点一次侧栏的齿轮重新读取。`；插件在已打开的标签页上再次open时发`webagent-reload`，只有上次读取失败才重读（成功后不重读，以免覆盖表单里未保存的输入），在途读取合并为一次；⑧标签页重新可见时刷新状态（主机可能已重启或更换）。
+
+settings-panel.css：隐藏标题栏、工作区切换、主工作区、状态栏和三个菜单（逐个列出，不用`body > :not(...)`，否则模型选择器等运行时挂在body上的弹层也会被藏），弹层全尺寸、不可关闭，`[data-workbench-only]`及运行时渲染的“插入Chat”“打开站点”行隐藏；详见[样式规则详解](../样式规则详解.md)。
 
 ## 2. chat.js全部显示函数
 

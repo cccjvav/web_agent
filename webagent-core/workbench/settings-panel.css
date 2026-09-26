@@ -1,0 +1,21 @@
+/* Loaded only by the VS Code "Web Agent 设置" editor tab (extension/settingsPanel.js), after styles.css.
+   The tab serves the whole workbench page but shows only the settings modal, full size and not closable.
+   The browser workbench never loads this file, so nothing here changes it. */
+
+/* The workbench regions stay in the DOM (the shared modules wire them) but are never shown. Popovers the
+   modules append to <body> at run time (model picker) are not listed and stay visible. */
+#titlebar, #workspace-switcher, #workbench, #statusbar, #file-menu, #manage-menu, #agent-pick-menu { display: none !important; }
+
+#modal, #modal.hidden {
+  display: flex !important; position: static; inset: auto; height: 100%;
+  padding: 0; background: none; align-items: stretch; justify-content: stretch;
+}
+.modal-card { width: 100%; height: 100%; border: 0; border-radius: 0; box-shadow: none; }
+.modal-close { display: none !important; }
+body { font-family: var(--vscode-font-family, var(--font)); }
+#toast { bottom: 14px; }
+
+/* Features that act on the workbench itself (its chat, built-in browser, external MCP and consensus per D4)
+   have no target in VS Code, so the panel does not offer them. Rows the modules render at run time are
+   matched by their data attributes. */
+[data-workbench-only], #prompts-list [data-insert], #ql-list [data-open-url] { display: none !important; }

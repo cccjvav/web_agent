@@ -6,7 +6,8 @@ const crypto = require('crypto');
 const { modeFromChatRequest } = require('./modeFromChatRequest');
 const { sameWorkspace } = require('./workspaceMatch');
 const { startPtyHost } = require('./ptyHost');
-const { HostManager } = require('./hostManager');
+const { HostManager, readHostLocation } = require('./hostManager');
+const { createSettingsPanel } = require('./settingsPanel');
 
 let ptyHost = null;
 let hostManager = null;
@@ -539,8 +540,30 @@ function activate(context) {
     vscode.commands.registerCommand('webagent.resetSecret', () => resetSecretCommand({ refresh: () => bridge.refresh() })),
     vscode.commands.registerCommand('webagent.startHost', () => startHost()),
     vscode.commands.registerCommand('webagent.stopHost', () => stopHost()),
-    vscode.commands.registerCommand('webagent.showHostLog', () => hostOutput.show(true))
+    vscode.commands.registerCommand('webagent.showHostLog', () => hostOutput.show(true)),
+    vscode.commands.registerCommand('webagent.openSettings', (page) => openSettings(page))
   );
+
+  // R6 phase 2: the settings tab relays its requests through requestJson to the same host as everything else.
+  const settings = typeof createSettingsPanel === 'function' ? createSettingsPanel({
+    vscode, extensionDir: context.extensionPath || __dirname,
+    hostRoot: () => (typeof readHostLocation === 'function' ? readHostLocation(context.extensionPath || __dirname).root : null),
+    send: async (method, apiPath, body, { signal, timeoutMs } = {}) => {
+      const result = await requestJson(method, agentHostUrl() + apiPath, undefined, { rawBody: body === null ? undefined : body, signal, timeoutMs });
+      return { status: result.status, contentType: result.contentType, raw: result.raw };
+    },
+    log: (line) => hostOutput.appendLine(line)
+  }) : null;
+  if (settings) context.subscriptions.push({ dispose: () => settings.dispose() });
+  function openSettings(page) {
+    try {
+      if (!settings) throw new Error('设置页模块未加载');
+      settings.open(typeof page === 'string' ? page : undefined);
+    } catch (error) {
+      hostOutput.appendLine('[settings] ' + error.message);
+      vscode.window.showErrorMessage(error.message);
+    }
+  }
 
   const canManage = vscode.workspace.isTrusted !== false && !explicitHostUrl() && (vscode.workspace.workspaceFolders || []).length;
   if (canManage && vscode.workspace.getConfiguration('webagent').get('autoStartHost') === true) startHost({ quiet: true });
@@ -912,7 +935,7 @@ button.busy,button.busy:disabled{background:#3a3d41;color:#fff;border:1px solid 
   <div>MCP 地址</div>
   <div class="url" id="url">—</div>
   <label>隧道 <select id="tunnel"><option value="cloudflare">Cloudflare Quick Tunnel</option><option value="cloudflare-named">Cloudflare Named Tunnel</option><option value="ngrok">ngrok</option></select></label>
-  <p class="hint">Named Tunnel 与 ngrok 的域名/Token 仍在网页工作台的 Bridge 页保存（下一期搬进 VS Code）；Quick Tunnel 无需配置。</p>
+  <p class="hint">Named Tunnel 与 ngrok 要填域名/Token：点本栏标题上的齿轮打开“Web Agent 设置”，在 Bridge 页填写后从那里启动；启动过一次主机就会记住，以后这里也能直接启动。Quick Tunnel 无需配置。</p>
   <button id="start">启动 Bridge</button>
   <button id="stop">停止</button>
   <button id="copy">复制提示词</button>

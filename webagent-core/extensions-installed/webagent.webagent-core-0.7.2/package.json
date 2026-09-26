@@ -117,7 +117,26 @@
       {
         "command": "webagent.showHostLog",
         "title": "Web Agent: 查看主机日志"
+      },
+      {
+        "command": "webagent.openSettings",
+        "title": "Web Agent: 打开设置",
+        "icon": "$(gear)"
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "webagent.openSettings",
+          "when": "view == webagent.bridgeView",
+          "group": "navigation"
+        },
+        {
+          "command": "webagent.openSettings",
+          "when": "view == webagent.chatView",
+          "group": "navigation"
+        }
+      ]
+    }
   }
 }

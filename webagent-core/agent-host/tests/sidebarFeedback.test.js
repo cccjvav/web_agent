@@ -15,7 +15,7 @@ const subscriptions = [];
 async function main() {
   delete process.env.WEBAGENT_AGENT_HOST_URL;
   const commands = new Map(), providers = new Map();
-  const infos = [], warnings = [], errors = [];
+  const infos = [], warnings = [], errors = [], settingsPanels = [];
   let confirmAnswer;
   const vscode = {
     workspace: {
@@ -30,7 +30,19 @@ async function main() {
       showErrorMessage: (message, options) => { errors.push({ message, options }); return Promise.resolve(); },
       createStatusBarItem: () => ({ show: () => {}, dispose: () => {} }),
       createOutputChannel: () => ({ appendLine: () => {}, show: () => {}, dispose: () => {} }),
-      registerWebviewViewProvider: (id, provider) => { providers.set(id, provider); return { dispose: () => {} }; }
+      registerWebviewViewProvider: (id, provider) => { providers.set(id, provider); return { dispose: () => {} }; },
+      // The settings tab (section 6): a minimal WebviewPanel.
+      createWebviewPanel: (viewType, title, column, options) => {
+        const panel = { viewType, title, options, posted: [], revealed: 0, disposed: false, listeners: [], onDispose: [],
+          webview: { cspSource: 'vscode-webview://test', html: '', asWebviewUri: uri => ({ toString: () => 'vscode-webview://test' + uri.fsPath }),
+            postMessage: message => { panel.posted.push(message); return Promise.resolve(true); },
+            onDidReceiveMessage: fn => { panel.listeners.push(fn); return { dispose: () => { panel.listeners = []; } }; } },
+          reveal: () => { panel.revealed++; },
+          onDidDispose: fn => { panel.onDispose.push(fn); },
+          dispose: () => { if (!panel.disposed) { panel.disposed = true; panel.onDispose.forEach(fn => fn()); } } };
+        settingsPanels.push(panel);
+        return panel;
+      }
     },
     commands: {
       registerCommand: (id, fn) => { commands.set(id, fn); return { dispose: () => {} }; },
@@ -39,6 +51,7 @@ async function main() {
     chat: { createChatParticipant: () => ({ dispose: () => {} }) },
     env: { clipboard: { writeText: async () => {} } },
     Uri: { file: fsPath => ({ fsPath }) },
+    ViewColumn: { Active: -1 },
     StatusBarAlignment: { Right: 2 }
   };
   // Controllable stand-in for hostManager.js: tests set the snapshot and what start/stop do.
@@ -57,7 +70,9 @@ async function main() {
     module: { exports: {} }, console, process, URL, Buffer, setTimeout, clearTimeout, setInterval, clearInterval,
     require: name => name === 'vscode' ? vscode
       : name === './workspaceMatch' ? require('../../extension/workspaceMatch')
-      : name === './hostManager' ? { HostManager: FakeHostManager }
+      : name === './hostManager' ? { HostManager: FakeHostManager, readHostLocation: () => ({ root }) }
+      : name === './settingsPanel' ? require('../../extension/settingsPanel')
+      : name === './apiRelay' ? require('../../extension/apiRelay')
       : name === './editorReview' ? { registerEditorReview: () => {} }
       : name === './ptyHost' ? { startPtyHost: () => ({ dispose: () => {} }) }
       : name === './modeFromChatRequest' ? { modeFromChatRequest: () => 'code' }
@@ -275,9 +290,47 @@ async function main() {
   assert.equal(rows[rows.length - 1].textContent, 'search_files   Failed：bad regex');
   assert.equal(rows[rows.length - 1].className, 'tool fail');
 
-  console.log('sidebarFeedback: stop outcomes, actionDone for every click, busy/disabled painting, chat failure reasons passed');
+  // 6. The settings tab through the real activate: the registered command opens it from the host.json checkout,
+  //    and a page request reaches this window's host through requestJson with the relay's options.
+  errors.length = 0;
+  await commands.get('webagent.openSettings')('bridge');
+  assert.deepStrictEqual(errors, [], 'the tab opens');
+  assert.equal(settingsPanels.length, 1);
+  const tab = settingsPanels[0];
+  assert.equal(tab.title, 'Web Agent 设置');
+  assert.deepStrictEqual(tab.options.localResourceRoots, [{ fsPath: path.join(root, 'webagent-core', 'workbench') }], 'served from the host.json checkout');
+  assert.ok(tab.webview.html.includes('data-initial-page="bridge"'));
+  const relayed = [];
+  context.transport = async (method, url, body, options) => {
+    relayed.push({ method, url, body, options });
+    return { status: 200, contentType: 'application/json', raw: '{"status":"online"}', json: { status: 'online' } };
+  };
+  vm.runInContext('requestJson = transport;', context);
+  tab.listeners.forEach(fn => fn({ type: 'webagent-api', id: 'q1', method: 'POST', path: '/api/models', body: '{"activeModelId":"builtin"}' }));
+  await new Promise(resolve => setImmediate(resolve)); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(relayed.length, 1);
+  assert.equal(relayed[0].method, 'POST');
+  assert.ok(/^http:\/\/127\.0\.0\.1:\d+\/api\/models$/.test(relayed[0].url), relayed[0].url);
+  assert.equal(relayed[0].body, undefined, 'the page body goes as rawBody, never re-serialized');
+  assert.equal(relayed[0].options.rawBody, '{"activeModelId":"builtin"}');
+  assert.ok(relayed[0].options.signal && relayed[0].options.timeoutMs > 0, 'cancellable, with the relay deadline');
+  assert.deepStrictEqual(tab.posted.at(-1), { type: 'webagent-api-result', id: 'q1', ok: true, status: 200, contentType: 'application/json', body: '{"status":"online"}' });
+  // A menu click passes no page (or a non-string); reopening reveals the same tab.
+  await commands.get('webagent.openSettings')({ some: 'context' });
+  assert.equal(settingsPanels.length, 1); assert.equal(tab.revealed, 1);
+  // Deactivate closes the tab (subscriptions), cancelling what is still in flight.
+  for (const d of subscriptions) { if (d && d.dispose && String(d.dispose).includes('settings.dispose')) d.dispose(); }
+  assert.equal(tab.disposed, true);
+
+  finished = true;
+  console.log('sidebarFeedback: stop outcomes, actionDone for every click, busy/disabled painting, chat failure reasons, settings tab via activate passed');
 }
 
+// A promise that never settles would let Node exit 0 early; only reaching the end counts as a pass.
+let finished = false;
+process.on('exit', code => {
+  if (!finished && code === 0) { console.error('sidebarFeedback ended before its last assertion (a promise never settled)'); process.exitCode = 1; }
+});
 main().catch(err => { console.error(err); process.exitCode = 1; }).finally(() => {
   // Like VS Code on deactivate: dispose everything activate registered (the 5-second status-bar timer).
   for (const d of subscriptions) { try { d.dispose(); } catch { /* ignore */ } }

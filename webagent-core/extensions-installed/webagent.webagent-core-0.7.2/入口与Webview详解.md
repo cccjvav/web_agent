@@ -91,7 +91,7 @@ window message接受actionDone（文字截到300字符）、controlSaved与statu
 
 ## 8. package.json与SVG（非JS也属于实现）
 
-[package.json](package.json)不是启动命令脚本：name/publisher/version标识扩展，engines.vscode声明兼容最低范围；main指extension.js；activationEvents用`onStartupFinished`在窗口启动完成后激活（状态栏与PTY宿主需要常驻；F70由`*`改来，`*`会在每个窗口启动关键路径上同步激活，VS Code文档明确不建议），onChatParticipant声明原生Chat入口；视图、命令在engines ^1.90下由contributes自动生成激活事件。只在源码上核对，未在真实VS Code/code-server窗口实测激活时序。contributes.configuration给本机host默认地址；chatParticipants id必须与createChatParticipant一致、commands对应模式；viewsContainers activitybar icon对应[resources/icon.svg](resources/icon.svg)；views两个id必须匹配registerWebviewViewProvider；commands五个id须分别匹配extension直接注册的三项和editorReview注册的两项。配置声明不代表VS Code每版本原生Chat API都存在，因此实现有特性检测。
+[package.json](package.json)不是启动命令脚本：name/publisher/version标识扩展，engines.vscode声明兼容最低范围；main指extension.js；activationEvents用`onStartupFinished`在窗口启动完成后激活（状态栏与PTY宿主需要常驻；F70由`*`改来，`*`会在每个窗口启动关键路径上同步激活，VS Code文档明确不建议），onChatParticipant声明原生Chat入口；视图、命令在engines ^1.90下由contributes自动生成激活事件。只在源码上核对，未在真实VS Code/code-server窗口实测激活时序。contributes.configuration给本机host默认地址；chatParticipants id必须与createChatParticipant一致、commands对应模式；viewsContainers activitybar icon对应[resources/icon.svg](resources/icon.svg)；views两个id必须匹配registerWebviewViewProvider；commands九个id须分别匹配extension直接注册的七项（含R6的startHost/stopHost/showHostLog与第二期的openSettings）和editorReview注册的两项；menus的`view/title`把openSettings以`$(gear)`图标放在bridgeView与chatView标题栏。配置声明不代表VS Code每版本原生Chat API都存在，因此实现有特性检测。
 
 SVG根元素指定24×24尺寸和同范围viewBox，fill=none、紫色stroke=#6366f1、宽2、圆端点/拐角；三个path分别画右尖括号、左尖括号和斜线，组合成代码图标。没有script、外链或事件属性。SVG是静态图标，由活动栏和participant引用；不是浏览器应用入口、HTTP鉴权或点击处理器。图形坐标、路径与描边决定图标外观，交互由贡献声明和activate注册负责。要验证资源本身有效，应解析SVG及检查打包包含，而不是用JS函数名覆盖率替代资产检查。
 
@@ -153,17 +153,37 @@ extension.js新增：**explicitHostUrl()**用`inspect`区分“用户/工作区�
 
 **与网页工作台并存：** 网页工作台版不变。已用run-webagent.cmd为同一文件夹启动主机时插件自动接管（显示“外部启动”），VS Code与网页看到同一主机；插件停止或关闭窗口不会结束它。两个VS Code窗口打开同一文件夹时，第二个窗口接管第一个的主机；第一个窗口关闭后主机随之停止，第二个窗口状态栏回到“未启动”，需再点一次启动。
 
-**限制：** 主机代码仍来自仓库或安装目录（host.json），未打包进插件；Named Tunnel/ngrok的域名与Token仍在网页工作台保存（第二期迁移）；token模式Named Tunnel若在Cloudflare后台把入口写死为48271，需让插件主机拿到48271（第一个窗口通常就是）。Windows进程树结束与父进程看护由Windows CI上的hostLaunch测试验证，真实桌面关闭VS Code后的端口/cloudflared释放仍需用户实机验收。
+**限制：** 主机代码仍来自仓库或安装目录（host.json），未打包进插件；Named Tunnel/ngrok的域名与Token在“Web Agent 设置”标签页的Bridge页填写并从那里启动（第二期第3批起，见第14节）；侧栏只发隧道类型，主机在/bridge/start开头就把域名与Token写入工作区配置、缺省时用已存的值，所以启动过一次后侧栏【启动 Bridge】也能用；token模式Named Tunnel若在Cloudflare后台把入口写死为48271，需让插件主机拿到48271（第一个窗口通常就是）。Windows进程树结束与父进程看护由Windows CI上的hostLaunch测试验证，真实桌面关闭VS Code后的端口/cloudflared释放仍需用户实机验收。
 
 ## 13. 设置页请求转发（R6第二期第2批）
 
-[apiRelay.js](apiRelay.js)不依赖vscode，可单独测试。设置页webview里的工作台模块经`js/api.js`→`js/vscodeRelay.js`把请求`postMessage`给扩展进程，由这里转发到本窗口启动或接管的主机（第3批接线时注入的send绑定agentHostUrl()与requestJson）。webview自身不访问127.0.0.1，主机的Origin与本机控制面检查不放宽：转发请求不带Origin/Sec-Fetch-*，Host为127.0.0.1，即主机已接受的本机CLI路径。
+[apiRelay.js](apiRelay.js)不依赖vscode，可单独测试。设置页webview里的工作台模块经`js/api.js`→`js/vscodeRelay.js`把请求`postMessage`给扩展进程，由这里转发到本窗口启动或接管的主机（第3批起由设置标签页注入send，绑定agentHostUrl()与requestJson，见第14节）。webview自身不访问127.0.0.1，主机的Origin与本机控制面检查不放宽：转发请求不带Origin/Sec-Fetch-*，Host为127.0.0.1，即主机已接受的本机CLI路径。
 
 **checkRequest(message)**：默认拒绝。路径须以单个`/`开头、不超过2048字符、不含反斜杠/控制字符/`#`；用URL解析后若来源变化、pathname与原文不同（点段）或含`%2e`，直接拒绝而不是规范化——白名单正则两端锚定且ID只允许字母数字`_-`，这一层是冗余防线（去掉它测试不红，已记录）。方法+路径须命中RULES：状态/诊断/执行控制、Bridge启停与重置、GitHub登录、模型与Provider探测、自定义配置、画像探测、技能列表/读取/新增、审批列表与批准/取消、工作流预览/请求、检查点、连接自检。**不转发**：chat、tool/call、pty、files、tasks/reset（不属于设置，tool/call会让设置页变成任意工具入口）；external、consensus（决定D4：第二期结束前只在网页工作台）；probe（探针暂停、由他人负责）。只有`/api/skills/load`接受查询串。GET/DELETE不得带正文；正文须为1MiB内的有效JSON文本，原样转发。
 
 **createApiRelay({send,post,maxInFlight=16,timeoutMs=120000})**：返回handle/request/abort/dispose与size。**request(message)**：编号须为1–64位`[A-Za-z0-9_-]`字符串，否则忽略（无处回复）；重复编号、超过并发上限、白名单拒绝都回`ok:false`且不调用send。send结果的状态码须为200–599整数，否则按失败回复；网络失败、期限、取消、重定向都回`ok:false`与原因，从不编造状态码；HTTP 4xx/5xx作为正常回答原样转回（`ok:true,status`）。120秒上限高于工作台各模块自己的计时器，模块超时先以取消消息到达。**abort(message)**取消在途请求，已结束的返回false。**handle(message)**分发`webagent-api`/`webagent-api-abort`，其他消息返回false留给原有处理。**dispose()**在面板关闭时取消全部在途请求；之后经**reply**的任何结果都不再发给已关闭的webview，新请求也不回复。**size**为在途数。
 
 验证见[浏览器与Webview测试详解](../agent-host/tests/浏览器与Webview测试详解.md)的settingsRelay：单元、webview端与真实主机端到端。
+
+## 14. 设置标签页“Web Agent 设置”（R6第二期第3批）
+
+侧栏两个视图（Bridge、Chat）标题栏的齿轮与命令面板“Web Agent: 打开设置”执行`webagent.openSettings`，在编辑区打开一个标签页。它**不是另写一套设置界面**：[settingsPanel.js](settingsPanel.js)读取网页工作台自己的`webagent-core/workbench/index.html`，把入口从`app.js`换成`settings-panel.js`、在`styles.css`后加一张`settings-panel.css`，因此标签页和浏览器工作台跑的是同一份设置弹层标记和同一批模块（bind、bridge、settings、operations……），以后改设置页不用改两处。网页工作台不加载这两个文件，行为不变；插件也不访问3000端口（决定D3）。
+
+**findWorkbenchDir({extensionDir,hostRoot,exists})**：按顺序找第一个包含全部**WORKBENCH_FILES**（index.html、styles.css、settings-panel.css、settings-panel.js、js/api.js、js/vscodeRelay.js）的目录：①host.json记录的仓库`<root>/webagent-core/workbench`（桌面VS Code，插件装在用户目录）；②`扩展目录/../../workbench`（code-server从`webagent-core/extensions-installed/<扩展>`加载）；③`扩展目录/../workbench`（开发宿主从`webagent-core/extension`加载）。缺任何一个文件的目录（例如装了新插件、仓库仍是旧版）不算。
+
+**contentSecurityPolicy(nonce,cspSource)**：`default-src 'none'`；脚本只允许带本次nonce的入口和cspSource下的模块；样式允许cspSource与`'unsafe-inline'`（模块运行时设置元素style属性）；图片cspSource与data:；**connect-src 'none'**，页面自己不能发任何网络请求，frame/object/base/form全部禁止。
+
+**buildSettingsHtml({html,nonce,cspSource,resource,initialPage})**：参数缺失或nonce不是16位以上base64时抛TypeError。内部**edit(label,pattern,replacement)**要求每处改写**恰好匹配一次**（html根元素加`data-initial-page`、charset后插CSP、标题改为“Web Agent 设置”、去掉favicon与内联主题脚本、样式表、入口脚本），否则抛`网页工作台页面与设置页不匹配（label），请更新仓库后重新安装插件`，替换按字面量进行（URI里的`$`不被解释）。改写后再做三道检查：只能有一个`<script>`且带本nonce（`无法运行的脚本`）；不得有`on…=`内联事件（`内联事件处理`）；不得残留`./`相对引用（`未提供的本地文件`）。于是将来网页工作台加了CSP会拦下的东西，设置页会带原因拒绝打开，而不是半残地打开。initialPage须为1–32位小写字母，否则用overview。**escapeAttribute(value)**转义写入属性的CSP与资源地址。
+
+**createHostServiceHandler({vscode,post,maxPending=4})**：webview沙箱没有allow-modals，`window.confirm`会被静默忽略并返回false（所有需确认的操作都会像被取消），剪贴板写入也不可靠；这里代答页面发来的`webagent-service`。**handle(message)**：不是服务消息返回false（留给其他处理）；编号须为1–64位`[A-Za-z0-9_-]`，否则吞掉不回复；重复编号回`重复的请求编号`，同时等待超过4个回`设置页同时等待的确认过多`。**run(id,service,text)**：confirm用VS Code**模态**`showWarningMessage`（detail注明来自设置标签页，唯一按钮“确认”），只有选了“确认”才回`value:true`，关闭对话框为false；空文本或超2000字符回`确认内容无效`、不弹窗；copy写`vscode.env.clipboard`，超128000字符回`复制内容无效或过长`；其他服务回`设置页不支持该操作`；异常原因截300字符。确认结果只让页面自己的代码继续，扩展侧不因此放行任何东西，真正的请求仍经apiRelay白名单。**reply**在**dispose()**之后不再发送；**size**为等待数。
+
+**createSettingsPanel({vscode,extensionDir,hostRoot,send,log})**返回`{open,dispose,panel}`。**open(page)**：每个窗口只有一个标签页，已打开时`reveal`、在page有效时发`webagent-show-page`切页，并总是发`webagent-reload`（主机后启动时，再点齿轮就是重试；页面只在上次读取失败时重读）；否则找界面目录（找不到抛`找不到网页工作台文件…请在仓库根重新运行 install-vscode-extension.cmd 并重载窗口`，不创建标签页），创建`webagent.settings`面板（enableScripts、retainContextWhenHidden、localResourceRoots只含界面目录），每次新面板一个新nonce；buildSettingsHtml失败时关闭刚建的面板再抛出原因。页面消息先交apiRelay，未消费的再交服务处理器；**post**吞掉面板关闭时的发送异常。面板关闭时取消全部在途请求、停止回复、释放监听，**panel**回到null，下次open重建。**dispose()**供停用插件时关闭标签页。
+
+extension.js的**openSettings(page)**：失败原因写入“Web Agent 主机”输出面板并弹错误提示。注入的send调用`requestJson(method, agentHostUrl()+path, …, {rawBody, signal, timeoutMs})`，与侧栏其他请求到达同一主机：一键启动/接管的主机，或用户手工设置的`webagent.agentHostUrl`。
+
+**页面端**见[启动与Chat详解](../workbench/js/启动与Chat详解.md)的settings-panel.js与[状态与编辑器详解](../workbench/js/状态与编辑器详解.md)的setHostServices/createHostServices。**隐藏但保留**：只作用于网页工作台本身的功能（内置浏览器站点按钮、把提示词插入网页Chat、Skill“使用”、多模型共识与外部MCP登记——后两者按决定D4第二期结束前只在网页工作台）在共享页面里标`data-workbench-only`，只由settings-panel.css隐藏；网页工作台照常显示。
+
+**限制：** 设置页各模块发出的工作区绑定取自主机自己的`/api/status`，只防“确认期间主机被换掉”，不证明主机服务的就是VS Code当前文件夹——一键启动/接管时HostManager已保证同一文件夹，手工填`agentHostUrl`时由用户负责（与网页工作台相同）。界面文件来自仓库而非插件包，仓库与插件版本不一致时由上面的匹配检查拒绝打开。真实桌面VS Code中的对话框、主题与剪贴板需用户实机验收；沙箱中由settingsPanel单元测试与workbench.browser的Chromium回归验证（见[浏览器与Webview测试详解](../agent-host/tests/浏览器与Webview测试详解.md)）。
 
 ## Bridge所有者控件
 

@@ -210,6 +210,9 @@ const pairs = [
   ["webagent-core/extension/apiRelay.js", "webagent-core/extension/入口与Webview详解.md"],
   ["webagent-core/agent-host/tests/settingsRelay.test.js", "webagent-core/agent-host/tests/浏览器与Webview测试详解.md"],
   ["webagent-core/agent-host/tests/sidebarFeedback.test.js", "webagent-core/agent-host/tests/浏览器与Webview测试详解.md"],
+  ["webagent-core/agent-host/tests/settingsPanel.test.js", "webagent-core/agent-host/tests/浏览器与Webview测试详解.md"],
+  ["webagent-core/extension/settingsPanel.js", "webagent-core/extension/入口与Webview详解.md"],
+  ["webagent-core/workbench/settings-panel.js", "webagent-core/workbench/js/启动与Chat详解.md"],
   ["webagent-core/workbench/js/dom.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
   ["webagent-core/workbench/js/tabs.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
   ["webagent-core/workbench/js/monaco.js", "webagent-core/workbench/js/状态与编辑器详解.md"],
@@ -385,6 +388,10 @@ const artifactPairs = [
   ],
   [
     "webagent-core/workbench/styles.css",
+    "webagent-core/workbench/样式规则详解.md"
+  ],
+  [
+    "webagent-core/workbench/settings-panel.css",
     "webagent-core/workbench/样式规则详解.md"
   ],
   [

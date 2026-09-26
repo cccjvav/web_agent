@@ -10,6 +10,12 @@ if (!process.argv.includes('--vm-child')) {
   if (result.error) console.error(result.error);
   process.exit(result.status == null ? 1 : result.status);
 }
+// A promise that never settles lets Node exit 0 before the last assertion (e.g. a click that awaits a second,
+// never-answered request). Only reaching the end counts as a pass.
+let finished = false;
+process.on('exit', code => {
+  if (!finished && code === 0) { console.error('workbench runtime ended before its last assertion: a pending promise never settled'); process.exitCode = 1; }
+});
 (async () => {
   const button = { setAttribute(name, value) { this[name] = value; } };
   const cssVars = {};
@@ -35,7 +41,7 @@ if (!process.argv.includes('--vm-child')) {
     for (const [name, file] of sources) {
       const text = fs.readFileSync(file, 'utf8');
       assert.ok(!/(?<![\w.$])fetch\(/.test(text), `${name} must request through apiFetch, not bare fetch`);
-      if (/\bapiFetch\(/.test(text)) assert.ok(text.includes("import { apiFetch } from './api.js';"), `${name} imports apiFetch from ./api.js`);
+      if (/\bapiFetch\(/.test(text)) assert.ok(/^import \{ (?:\w+, )*apiFetch(?:, \w+)* \} from '\.\/api\.js';$/m.test(text), `${name} imports apiFetch from ./api.js`);
     }
     assert.ok(sources.filter(([, file]) => /\bapiFetch\(/.test(fs.readFileSync(file, 'utf8'))).length >= 6, 'the six requesting modules were migrated');
     const { apiFetch, setApiTransport } = wbApi.namespace, seen = [];
@@ -52,6 +58,24 @@ if (!process.argv.includes('--vm-child')) {
     assert.strictEqual(await apiFetch('/api/y'), 'replaced-later', 'null restores plain fetch');
     assert.throws(() => setApiTransport('fetch'), err => err.name === 'TypeError' && /function or null/.test(err.message)); // vm realm: not instanceof TypeError
     delete context.fetch;
+    // confirm / clipboard: the browser's own services unless the VS Code panel installs replacements.
+    const { confirmAction, copyText, setHostServices } = wbApi.namespace, copiedTexts = [];
+    context.confirm = message => message === 'yes?';
+    assert.strictEqual(await confirmAction('yes?'), true); assert.strictEqual(await confirmAction('no?'), false);
+    context.navigator = { clipboard: { writeText: async text => { copiedTexts.push('browser:' + text); } } };
+    await copyText('a');
+    setHostServices({ confirm: async () => 'true', copyText: async text => { copiedTexts.push('panel:' + text); } });
+    assert.strictEqual(await confirmAction('q'), false, 'only a literal true is consent');
+    await copyText(5);
+    setHostServices({ confirm: message => message === 'q' });
+    assert.strictEqual(await confirmAction('q'), true); await copyText('b');
+    setHostServices(null);
+    context.confirm = () => false; assert.strictEqual(await confirmAction('q'), false, 'null restores window.confirm');
+    assert.deepStrictEqual(copiedTexts, ['browser:a', 'panel:5', 'browser:b']);
+    for (const bad of ['x', { confirm: 1 }, { copyText: 'no' }]) {
+      assert.throws(() => setHostServices(bad), err => err.name === 'TypeError' && /host services/.test(err.message));
+    }
+    delete context.confirm; delete context.navigator;
   }
   await dom.link(specifier => { assert.strictEqual(specifier, './state.js'); return state; });
   await dom.evaluate(); // F01 used to throw here, before boot's catch could run.
@@ -940,10 +964,35 @@ if (!process.argv.includes('--vm-child')) {
   let rotationPosts = 0;
   const rotationReply = data => ({ok:true,status:200,json:async()=>data});
   context.URL = URL;
-  context.window.confirm = () => true;
+  context.confirm = () => true;
   state.namespace.ui.toast = message => rotationNotices.push(message);
   state.namespace.ui.refreshStatus = async () => true;
   state.namespace.state.status = rotationSnapshot;
+  {
+    // OAuth pairing: busy while the (in the panel asynchronous) dialog is open, and the host is re-checked after it.
+    const oauthButton = context.document.querySelector('#btn-oauth-toggle');
+    const oauthResult = () => context.document.querySelector('#oauth-toggle-result').textContent;
+    const oauthPosts = [];
+    context.fetch = async (url, options) => { oauthPosts.push([url, JSON.parse(options.body)]); return rotationReply({success:true,oauthEnabled:true}); };
+    context.confirm = () => false;
+    assert.equal(await bridge.namespace.toggleOauth(), false); assert.equal(oauthResult(), '已取消，未更改。');
+    for (const changed of [{...rotationSnapshot,identity:{hostInstanceId:'changed'}}, {...rotationSnapshot,pairing:{enabled:true}}]) {
+      context.confirm = () => { state.namespace.state.status = changed; return true; };
+      assert.equal(await bridge.namespace.toggleOauth(), false); assert.equal(oauthResult(), '确认期间主机状态已变化，未发送；请核对后重试。');
+      state.namespace.state.status = rotationSnapshot;
+    }
+    assert.deepStrictEqual(oauthPosts, [], 'cancelled or changed during the dialog: nothing sent');
+    let answer;
+    wbApi.namespace.setHostServices({ confirm: () => new Promise(resolve => { answer = resolve; }) });
+    const firstToggle = bridge.namespace.toggleOauth();
+    assert.equal(oauthButton.disabled, true, 'busy while the dialog is open');
+    assert.equal(await bridge.namespace.toggleOauth(), false, 'a second click while the dialog is open does nothing');
+    answer(true); assert.equal(await firstToggle, true);
+    assert.deepStrictEqual(oauthPosts, [['/api/bridge/oauth', {enabled:true,workspaceRoot:'/rotation',hostInstanceId:'rotation-host'}]]);
+    assert.equal(oauthResult(), 'OAuth 配对已开启。'); assert.equal(oauthButton.disabled, false);
+    wbApi.namespace.setHostServices(null);
+    context.confirm = () => true;
+  }
   context.fetch = async url => url === '/api/status' ? rotationReply(rotationSnapshot) : (++rotationPosts,{ok:false,status:500,json:async()=>({success:false})});
   await rotateButton.onclick();
   assert.equal(rotationPosts,1);
@@ -955,14 +1004,14 @@ if (!process.argv.includes('--vm-child')) {
     assert.ok(rotationResult().includes('未确认'));
     assert.equal(rotateButton.disabled,false);
   }
-  context.window.confirm = () => false;
+  context.confirm = () => false;
   const beforeCancel = rotationPosts;
   assert.equal(await rotateButton.onclick(),false);assert.equal(rotationPosts,beforeCancel);
   assert.ok(rotationResult().includes('未发送'));
-  context.window.confirm = () => { state.namespace.state.status = {...rotationSnapshot,identity:{hostInstanceId:'changed'}}; return true; };
+  context.confirm = () => { state.namespace.state.status = {...rotationSnapshot,identity:{hostInstanceId:'changed'}}; return true; };
   assert.equal(await rotateButton.onclick(),false);assert.equal(rotationPosts,beforeCancel);
   state.namespace.state.status = rotationSnapshot;
-  context.window.confirm = () => true;
+  context.confirm = () => true;
   let finishRotation;
   context.fetch = async (url,options) => {
     if(url === '/api/status') return rotationReply(rotationSnapshot);
@@ -1249,6 +1298,16 @@ if (!process.argv.includes('--vm-child')) {
   state.namespace.state.status.workspaceRoot='/other';await boundRestore.onclick();
   assert.equal(restoreCalls,0,'changed workspace must re-review before dispatch');
   state.namespace.state.status.workspaceRoot='/fixture';
+  // In the VS Code panel the confirmation is asynchronous: a binding change while it is open sends nothing.
+  await state.namespace.ui.refreshOperations();
+  await opsNodes.get('#checkpoint-list').children[0].children[1].onclick();
+  const dialogRestore=opsNodes.get('#checkpoint-controls').children[0];
+  context.confirm=()=>{state.namespace.state.status.workspaceRoot='/other';return true;};
+  assert.equal(await dialogRestore.onclick(),false);
+  assert.equal(restoreCalls,0,'binding changed during confirmation: restore not sent');
+  assert.match(opsNodes.get('#checkpoint-review').textContent,/确认期间差异或工作区绑定已变化/);
+  assert.equal(opsNodes.get('#checkpoint-controls').children.length,0,'the reviewed controls are consumed');
+  context.confirm=()=>true;state.namespace.state.status.workspaceRoot='/fixture';
   for (const result of [null,{id:'wrong',state:'consumed',paths:['a.txt'],result:{success:true,status:'succeeded',files:[{path:'a.txt',status:'restored'}]}},
     {...checkpointRecord,state:'consumed',result:{success:true,status:'succeeded',files:[{path:'a.txt',status:'unknown'}]}}]) {
     restoreValue=result;await state.namespace.ui.refreshOperations();
@@ -1285,6 +1344,8 @@ if (!process.argv.includes('--vm-child')) {
   };
   const createButton=opsNodes.get('#btn-checkpoint-create');
   const pendingCreate=createButton.onclick(), duplicateCreate=createButton.onclick();
+  // confirmAction answers asynchronously (the VS Code panel's dialog), so let the queued work run before counting.
+  await new Promise(resolve=>setImmediate(resolve));
   assert.equal(checkpointCreates,1,'repeated click must not create a second checkpoint while awaiting confirmation');
   createInput.value='new-draft.txt';
   finishCreate(opsResponse(checkpointRecord));await pendingCreate;await duplicateCreate;
@@ -1327,12 +1388,19 @@ if (!process.argv.includes('--vm-child')) {
   state.namespace.state.status.workspaceRoot='';assert.equal(await createButton.onclick(),false);
   assert.equal(checkpointCreates,beforeRejectedCreate);state.namespace.state.status.workspaceRoot='/fixture';
   // A late response may exist, but cannot claim creation in a different current workspace.
+  // A binding change while the (asynchronous) confirmation is open means nothing is sent at all.
+  const beforeConfirmChange=checkpointCreates;
+  context.fetch=async()=>{checkpointCreates++;return opsResponse(checkpointRecord);};
+  context.confirm=()=>{state.namespace.state.status.workspaceRoot='/other';return true;};
+  assert.equal(await createButton.onclick(),false);assert.equal(checkpointCreates,beforeConfirmChange,'binding changed during confirmation: not sent');
+  assert.match(opsNodes.get('#checkpoint-review').textContent,/未发送创建请求：工作区绑定已变化/);
+  context.confirm=()=>true;state.namespace.state.status.workspaceRoot='/fixture';
   context.fetch=async()=>new Promise(resolve=>{finishCreate=resolve;});
-  const changedBindingCreate=createButton.onclick();state.namespace.state.status.workspaceRoot='/other';
+  const changedBindingCreate=createButton.onclick();await new Promise(resolve=>setImmediate(resolve));state.namespace.state.status.workspaceRoot='/other';
   finishCreate(opsResponse(checkpointRecord));assert.equal(await changedBindingCreate,false);
   assert.match(opsNodes.get('#checkpoint-review').textContent,/创建未确认/);
   state.namespace.state.status.workspaceRoot='/fixture';
-  const timedCreate=createButton.onclick();[...timers.values()].at(-1)();
+  const timedCreate=createButton.onclick();await new Promise(resolve=>setImmediate(resolve));[...timers.values()].at(-1)();
   finishCreate(opsResponse(checkpointRecord));assert.equal(await timedCreate,false);
   assert.equal(createButton.disabled,false);assert.match(opsNodes.get('#checkpoint-review').textContent,/创建未确认/);
   context.fetch=async(url,options={})=>{
@@ -1524,5 +1592,6 @@ if (!process.argv.includes('--vm-child')) {
   assert.match(opsNodes.get('#ops-stdio-review').textContent,/启动结果未确认/);
   context.fetch=async()=>({ok:true,json:async()=>{throw new Error('SECRET STDIO VALUE');}});
   assert.equal(await stdioRead.onclick(),false);assert.ok(!opsNodes.get('#ops-stdio-review').textContent.includes('SECRET STDIO VALUE'));
+  finished = true;
   console.log('workbench module/theme runtime regressions passed (DOM fixture, not browser E2E)');
 })().catch(err => { console.error(err); process.exitCode = 1; });

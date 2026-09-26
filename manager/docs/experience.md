@@ -190,3 +190,13 @@ hash用于版本冲突检测，不是授权、锁或回滚票据。拿到新的c
 - 验收手册里给多个窗口起代号时，每个都要在第一次出现前写明“是哪种窗口、怎么打开”；只定义CMD-B为“第二个集成终端”会让读者把CMD-A当成第一个集成终端，依赖“窗口在VS Code退出后存活”的步骤就会误判失败。
 - 审查索引的指纹表示“审查时的内容”：刷新工具只处理本轮改动的文件；全表重算会把别人改过但没人复审的文件悄悄标成已核对。用户直接往仓库放新文件后，先跑文档登记测试再做别的。
 - 写在模板字符串里的页面脚本（chatHtml/bridgeHtml）中，正则的`\s`、`\d`要写成双反斜杠：模板会把未知转义吞掉，`/\s+/`悄悄变成`/s+/`，语法照样通过。改完按字节核对，并用运行生成页面的测试（而不是只测扩展侧函数）锁住。
+
+## webview里的设置页与“挂起即通过”的测试（F82）
+- **日期/标签**：2026-09-26，VS Code webview、异步确认、测试可靠性。
+- VS Code webview的沙箱没有allow-modals：`window.confirm`/`alert`/`prompt`不报错，只是静默返回false/undefined，所有需确认的操作看起来都像用户取消；剪贴板写入也不可靠。把网页界面搬进webview前，先grep这三个函数和`navigator.clipboard`，统一经可替换的服务函数，由扩展用`showWarningMessage({modal:true})`与`vscode.env.clipboard`代答，只有明确选中“确认”才算同意。
+- 确认从同步变成异步后，确认框打开期间页面状态可能变化（轮询刷新、另一窗口操作）：在await之前置忙标志，await之后复核票据/代次/工作区绑定，变了就不发送。浏览器里原生confirm是阻塞的，这些复核在那里不会触发，所以网页版行为不变。
+- **永不结算的Promise会让Node以退出码0静默退出**：事件循环空了，`main().catch(...)`里的`finally`和成功日志都不会执行，但退出码是0，测试运行器就判通过。变异测试里一条“应当变红”的变异因此存活才暴露。守卫：`let finished=false`，最后一条断言后置true，`process.on('exit')`里未完成且code为0就置`process.exitCode=1`；并删掉`finished=true`反向验证守卫本身。
+- 面板“已打开就只reveal”的单例语义要和错误提示对齐：提示用户“重新打开”却只是切到前台，照做无效。要么让再次打开真正重试（本批：发reload消息，只在上次失败时重读，避免覆盖未保存输入），要么改提示。
+- 写“某功能只能在X处用”之前，查服务端是否会保存配置（本批`/bridge/start`在开头就保存域名与Token），否则提示会比实际更保守，用户多走弯路。
+- 沙箱里`npx playwright install chromium`和apt都下不来时，用`@sparticuz/chromium`：npm安装后`executablePath()`解出`/tmp/chromium`，再把`bin/`下al2023、swiftshader、fonts三个`.tar.br`用`zlib.createBrotliDecompress`+`tar-fs`解到目录，`CHROMIUM_PATH=/tmp/chromium LD_LIBRARY_PATH=<lib>:<swiftshader>`运行`npm run test:browser`。没有CJK字体，截图里中文是方框，不影响DOM断言。沙箱重启会清掉/tmp，需要重做。
+- 浏览器回归里，可见性断言会被CSS兜住（`#modal.hidden{display:flex!important}`），而错误调用仍会把`aria-hidden`设为true，读屏器会把整页当作隐藏；对“不可关闭”的弹层同时断言class与aria-hidden。

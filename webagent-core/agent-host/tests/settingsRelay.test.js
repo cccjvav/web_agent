@@ -14,13 +14,16 @@ const { config } = require('../src/config');
 const { createApiRelay, checkRequest, MAX_BODY_BYTES, MAX_IN_FLIGHT, MAX_TIMEOUT_MS } = require('../../extension/apiRelay');
 
 // vscodeRelay.js is a browser ES module (the workbench folder has no package.json and CI runs Node 18/20, which
-// cannot import it directly). Evaluate its one export as a script in this realm, so Response/DOMException are
+// cannot import it directly). Evaluate its two exports as a script in this realm, so Response/DOMException are
 // the real globals.
-function loadRelayTransport() {
+function loadRelayModule() {
   const source = fs.readFileSync(path.resolve(__dirname, '../../workbench/js/vscodeRelay.js'), 'utf8');
-  assert.strictEqual((source.match(/^export /gm) || []).length, 1, 'vscodeRelay.js exports exactly createRelayTransport');
-  return vm.runInThisContext(`(() => {\n${source.replace(/^export /m, '')}\nreturn createRelayTransport;\n})()`);
+  assert.deepStrictEqual((source.match(/^export function (\w+)/gm) || []).map(line => line.split(' ')[2]),
+    ['createRelayTransport', 'createHostServices'], 'vscodeRelay.js exports exactly the transport and the host services');
+  assert.strictEqual((source.match(/^export /gm) || []).length, 2);
+  return vm.runInThisContext(`(() => {\n${source.replace(/^export /gm, '')}\nreturn { createRelayTransport, createHostServices };\n})()`);
 }
+const loadRelayTransport = () => loadRelayModule().createRelayTransport;
 
 const tick = () => new Promise(resolve => setImmediate(resolve));
 

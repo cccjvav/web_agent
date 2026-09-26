@@ -9,7 +9,8 @@
 ## 文件分工
 - operations.js：工具接入、工作流与审批；详情/草稿共用审阅代次，审批按钮绑定已展示ID；审批/检查点列表独立校验发布，检查点恢复须核对完整差异及逐文件结果，创建检查点在途互斥并保留草稿，已确认创建与列表读取失败分开提示，HTTP接入登记与按ID移除各自互斥，独立显示确认/未知/停止未确认，stdio预览/启动另核对完整快照、有效期与进程/发现响应，在途不重发，失去确认不重放。逐函数说明见[受控工具与工作流详解](../../agent-host/src/utils/受控工具与工作流详解.md)。
 - state.js：共享状态、DOM选择器及ui函数注册表。
-- vscodeRelay.js：插件设置页专用的转发函数（经postMessage交扩展进程转发，fetch语义）；网页工作台不加载。
+- vscodeRelay.js：插件设置页专用的转发函数（经postMessage交扩展进程转发，fetch语义）与宿主服务createHostServices（确认框、剪贴板）；网页工作台不加载。
+- api.js另有setHostServices/confirmAction/copyText：需要确认或复制的模块都经这里，浏览器用原生confirm与剪贴板，插件设置页换成VS Code的模态对话框与剪贴板。
 - api.js：统一请求入口apiFetch；默认即fetch，插件设置页可经setApiTransport改为经扩展进程转发（R6第二期）。其他模块不得直接调用fetch。
 - dom.js：主题、文字转义、提示、页签ARIA及设置模态框焦点进入/恢复。
 - bind.js：界面事件与操作函数的接线；认证/画像探测/新建/终端/搜索都先验证HTTP与业务结果，设备轮询带取消和代次。
@@ -37,7 +38,7 @@ F54第六批：dom.setWorkspaceView与bind/tabs联动窄屏展示和抽屉；工
 
 | 源码 | 定位证据 |
 |---|---|
-| [api.js](api.js) | 2 个函数/类节点 |
+| [api.js](api.js) | 7 个函数/类节点 |
 | [bind.js](bind.js) | 125 个函数/类节点 |
 | [bridge.js](bridge.js) | 61 个函数/类节点 |
 | [chat.js](chat.js) | 42 个函数/类节点 |
@@ -48,7 +49,7 @@ F54第六批：dom.setWorkspaceView与bind/tabs联动窄屏展示和抽屉；工
 | [settings.js](settings.js) | 55 个函数/类节点 |
 | [state.js](state.js) | 2 个函数/类节点 |
 | [tabs.js](tabs.js) | 58 个函数/类节点 |
-| [vscodeRelay.js](vscodeRelay.js) | 8 个函数/类节点 |
+| [vscodeRelay.js](vscodeRelay.js) | 14 个函数/类节点 |
 <!-- docs-inventory:end -->
 
 模型表格、多模型保存、聊天选择与显式切回内置共用saveModelSettings：HTTP与success双检查、页内互斥、保存等待10秒；失败不假成功，保存后刷新失败单独提示且不重放。refreshStatus检查HTTP及核心快照形状，10秒读取、序号屏障阻止旧响应覆盖；隐藏select和按钮同用后台确认模型。Provider Test/Add也共用模型guard，捕获本次输入、明确手动模式、仅追加保留旧Key/选择，后端15秒/512KiB/100项和断连取消已回归；其余嵌套状态消费者及安全依赖未全审，详见Bridge与设置详解。

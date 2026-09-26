@@ -1,5 +1,5 @@
 import { $, ui, state } from './state.js';
-import { apiFetch } from './api.js';
+import { apiFetch, confirmAction } from './api.js';
 
 async function api(path, method = 'GET', body, signal) {
   const controller = new AbortController();
@@ -35,7 +35,11 @@ function invalidateReview(message) {
 }
 async function actOnReview(id, ticket, operation) {
   if (ticket !== reviewGeneration) return false;
-  if (operation === 'approve' && !confirm('这会执行所展示的完整请求。外部工具可能有副作用，取消不能撤销。确认批准一次？')) return false;
+  if (operation === 'approve') {
+    if (!(await confirmAction('这会执行所展示的完整请求。外部工具可能有副作用，取消不能撤销。确认批准一次？'))) return false;
+    // The answer can arrive after a refresh replaced the displayed review (VS Code panel dialog).
+    if (ticket !== reviewGeneration) return false;
+  }
   // Consume the displayed review before the POST; detached/double-clicked buttons cannot replay it.
   const actionTicket = invalidateReview(`请求 ${id}：已发送${operation === 'approve' ? '批准' : '停止'}请求，结果尚未确认。可重新读取同一请求；不要重复提交。`);
   try {
@@ -118,7 +122,11 @@ async function reviewCheckpoint(id) {
         ++checkpointGeneration; controls.replaceChildren();
         $('#checkpoint-review').textContent = '工作区绑定已变化；请重新读取差异，未发送恢复。'; return false;
       }
-      if (!confirm('将按上方差异覆盖所选文件。不是原子事务，中途失败会保留部分恢复。已另行保留未保存草稿，确认恢复一次？')) return false;
+      if (!(await confirmAction('将按上方差异覆盖所选文件。不是原子事务，中途失败会保留部分恢复。已另行保留未保存草稿，确认恢复一次？'))) return false;
+      if (generation !== checkpointGeneration || !sameCheckpointBinding(binding)) {
+        ++checkpointGeneration; controls.replaceChildren();
+        $('#checkpoint-review').textContent = '确认期间差异或工作区绑定已变化；请重新读取差异，未发送恢复。'; return false;
+      }
       const restoringGeneration = ++checkpointGeneration; controls.replaceChildren();
       $('#checkpoint-review').textContent = `检查点 ${id}：恢复请求已发送；结果未知时不要重放。刷新列表查看逐文件记录。`;
       try {
@@ -286,7 +294,7 @@ async function createCheckpoint() {
   try {
     if (!sameCheckpointBinding(binding)) throw new Error('请先刷新并确认当前工作区和主机');
     if (!paths.length || paths.length > 12 || paths.some(path => path.length > 2048) || new Set(paths).size !== paths.length) throw new Error('请选择1–12条不重复的已有文件路径，每条不超过2048字符');
-    if (!confirm('确认创建新的检查点，把所选已有文件的当前磁盘原文暂存于本机内存？这不是永久备份，重启/过期会丢失。上次结果未知时请先查询列表，不要当成失败重新创建。')) {
+    if (!(await confirmAction('确认创建新的检查点，把所选已有文件的当前磁盘原文暂存于本机内存？这不是永久备份，重启/过期会丢失。上次结果未知时请先查询列表，不要当成失败重新创建。'))) {
       $('#checkpoint-review').textContent = '已取消创建，未发送请求。'; return false;
     }
     if (!sameCheckpointBinding(binding)) throw new Error('工作区绑定已变化，请重新确认');

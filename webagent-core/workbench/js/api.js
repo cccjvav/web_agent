@@ -17,3 +17,30 @@ export function setApiTransport(fn) {
 export function apiFetch(input, init) {
   return transport ? transport(input, init) : globalThis.fetch(input, init);
 }
+
+// Two browser services the settings modal needs that a VS Code webview does not provide: the webview
+// sandbox has no allow-modals, so window.confirm is silently ignored and returns false (every guarded
+// action would look cancelled), and clipboard writes are not reliable there. The panel entry replaces
+// them with the extension's modal dialog and clipboard; the browser keeps window.confirm and
+// navigator.clipboard, looked up per call like fetch above.
+let services = null;
+
+// next = { confirm?(message) -> boolean|Promise<boolean>, copyText?(text) -> Promise } or null.
+export function setHostServices(next) {
+  if (next !== null && (typeof next !== 'object' || ['confirm', 'copyText'].some(key => next[key] !== undefined && typeof next[key] !== 'function'))) {
+    throw new TypeError('host services must be null or an object of functions');
+  }
+  services = next;
+}
+
+// Resolves true only for an explicit yes. Callers must re-check anything that can change while the
+// dialog is open, because in the panel the answer arrives asynchronously.
+export async function confirmAction(message) {
+  if (services && services.confirm) return (await services.confirm(String(message))) === true;
+  return Boolean(globalThis.confirm(message)); // In the browser globalThis is window.
+}
+
+export function copyText(text) {
+  if (services && services.copyText) return Promise.resolve().then(() => services.copyText(String(text)));
+  return globalThis.navigator.clipboard.writeText(text);
+}

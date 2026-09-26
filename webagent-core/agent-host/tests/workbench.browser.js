@@ -733,6 +733,141 @@ async function modelStateBrowser(browser, base) {
     assert.deepStrictEqual(errors,[]);
   } finally { await fixture.close(); }
 }
+// R6 phase 2: the real "Web Agent 设置" page as the extension builds it (settingsPanel.buildSettingsHtml, with its
+// CSP), in Chromium, with the extension's real relay (apiRelay) and service handler behind a fake acquireVsCodeApi.
+// The relay's send reaches the real host; the page itself may reach nothing but its own files.
+async function settingsPanelBrowser(browser, base, status) {
+  const { buildSettingsHtml, createHostServiceHandler } = require('../../extension/settingsPanel');
+  const { createApiRelay } = require('../../extension/apiRelay');
+  const workbenchRoot = path.resolve(__dirname, '../../workbench');
+  const origin = 'https://webview.test';
+  const html = buildSettingsHtml({ html: fs.readFileSync(path.join(workbenchRoot, 'index.html'), 'utf8'),
+    nonce: require('crypto').randomBytes(18).toString('base64'), cspSource: origin, resource: rel => `${origin}/${rel}`, initialPage: 'api' });
+  const page = await browser.newPage({ viewport: { width: 1100, height: 800 } });
+  const errors = [], hostCalls = [], confirms = [], copies = [];
+  let confirmAnswer = '确认', failSkillsOnce = true;
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => { if (message.type() === 'error') errors.push('console: ' + message.text()); });
+  const types = { '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
+  await page.route('**/*', route => {
+    const url = new URL(route.request().url());
+    if (url.origin !== origin) return route.abort();
+    if (url.pathname === '/settings.html') return route.fulfill({ status: 200, contentType: 'text/html', body: html });
+    const file = path.resolve(workbenchRoot, '.' + decodeURIComponent(url.pathname));
+    if (!file.startsWith(workbenchRoot + path.sep) || !fs.existsSync(file)) return route.fulfill({ status: 404, body: '' });
+    return route.fulfill({ status: 200, contentType: types[path.extname(file)] || 'application/octet-stream', body: fs.readFileSync(file) });
+  });
+  const post = message => page.evaluate(reply => window.postMessage(reply, '*'), message).catch(() => {});
+  const relay = createApiRelay({ post, send: async (method, apiPath, body, { signal }) => {
+    hostCalls.push(`${method} ${apiPath.split('?')[0]}`);
+    // The first Skill read fails as if the host were not up yet, to check the retry from the sidebar gear.
+    if (failSkillsOnce && method === 'GET' && apiPath === '/api/skills') { failSkillsOnce = false; throw new Error('connect ECONNREFUSED'); }
+    const response = await fetch(base + apiPath, { method, signal, redirect: 'manual', ...(body != null ? { body, headers: { 'Content-Type': 'application/json' } } : {}) });
+    return { status: response.status, contentType: response.headers.get('content-type') || '', raw: await response.text() };
+  } });
+  const fakeVscode = { window: { showWarningMessage: async (text, options, ...items) => { confirms.push({ text, modal: options && options.modal, items }); return confirmAnswer; } },
+    env: { clipboard: { writeText: async text => { copies.push(text); } } } };
+  const services = createHostServiceHandler({ vscode: fakeVscode, post });
+  await page.exposeFunction('__webagentToExtension', message => { if (!relay.handle(message)) services.handle(message); });
+  await page.addInitScript(() => {
+    window.__csp = [];
+    document.addEventListener('securitypolicyviolation', event => window.__csp.push(`${event.violatedDirective} ${event.blockedURI}`));
+    window.acquireVsCodeApi = () => ({ postMessage: message => window.__webagentToExtension(message) });
+  });
+  const hostStatus = async () => (await fetch(base + '/api/status')).json();
+  const evidence = async name => {
+    if (!process.env.UI_EVIDENCE_DIR) return;
+    fs.mkdirSync(process.env.UI_EVIDENCE_DIR, { recursive: true });
+    await page.screenshot({ path: path.join(process.env.UI_EVIDENCE_DIR, `settings-tab-${name}.png`) });
+  };
+  try {
+    await page.goto(origin + '/settings.html');
+    await page.locator('#page-api').waitFor({ state: 'visible' }); // the page the extension asked for
+    await page.waitForFunction(() => document.querySelector('#install-id').textContent !== '—'); // status came through the relay
+    assert.ok(hostCalls.includes('GET /api/status') && hostCalls.includes('GET /api/customizations') && hostCalls.includes('GET /api/skills'));
+    // A failed first read says how to retry; opening the tab again (webagent-reload) re-reads, but only after a failure.
+    await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('再点一次侧栏的齿轮重新读取'));
+    const skillReads = () => hostCalls.filter(call => call === 'GET /api/skills').length;
+    assert.equal(skillReads(), 1);
+    await post({ type: 'webagent-reload' });
+    await page.waitForFunction(() => document.querySelectorAll('#skills-list > *').length > 0);
+    assert.equal(skillReads(), 2);
+    await post({ type: 'webagent-reload' });
+    await new Promise(resolve => setTimeout(resolve, 300));
+    assert.equal(skillReads(), 2, 'a good read is not repeated, so unsaved input stays');
+    const expected = errors.filter(line => line.startsWith('console: Some settings failed to load'));
+    assert.equal(expected.length, 1, 'the failed first read is logged once');
+    errors.splice(0, errors.length, ...errors.filter(line => !expected.includes(line)));
+    // Only the settings modal is shown, filling the tab, and it cannot be closed from inside.
+    for (const id of ['#titlebar', '#workbench', '#statusbar']) assert.equal(await page.locator(id).isVisible(), false, `${id} stays hidden`);
+    assert.equal(await page.locator('#modal-close').isVisible(), false);
+    const card = await page.locator('.modal-card').boundingBox();
+    assert.ok(card.width >= 1090 && card.height >= 790, 'the modal fills the tab');
+    await page.keyboard.press('Escape');
+    assert.equal(await page.locator('#page-api').isVisible(), true, 'Escape cannot hide the only content');
+    assert.deepStrictEqual(await page.locator('#modal').evaluate(el => [el.classList.contains('hidden'), el.getAttribute('aria-hidden')]), [false, 'false'],
+      'not even marked hidden for assistive technology');
+    assert.equal(await page.locator('.nav-item[data-page="multimodel"]').isVisible(), false, 'consensus stays in the web workbench (D4)');
+    // Models: a real write through the relay.
+    await page.click('#btn-use-builtin');
+    await page.waitForFunction(() => document.querySelector('#model-status').textContent.includes('内置探索 Agent 选择已保存'));
+    assert.equal((await hostStatus()).activeModelId, 'builtin');
+    await evidence('api');
+    // Bridge: OAuth pairing uses the extension's modal dialog; dismissing it sends nothing.
+    await page.click('.nav-item[data-page="bridge"]');
+    assert.equal(await page.locator('.open-site').first().isVisible(), false, 'built-in browser shortcuts are workbench-only');
+    confirmAnswer = undefined;
+    await page.click('#btn-oauth-toggle');
+    await page.waitForFunction(() => document.querySelector('#oauth-toggle-result').textContent === '已取消，未更改。');
+    assert.equal(confirms.length, 1); assert.equal(confirms[0].modal, true); assert.deepStrictEqual(confirms[0].items, ['确认']);
+    assert.ok(confirms[0].text.startsWith('开启 OAuth 配对？'));
+    assert.equal((await hostStatus()).pairing.enabled, false);
+    confirmAnswer = '确认';
+    await page.click('#btn-oauth-toggle');
+    await page.waitForFunction(() => document.querySelector('#oauth-toggle-result').textContent === 'OAuth 配对已开启。');
+    assert.equal((await hostStatus()).pairing.enabled, true);
+    await page.click('#btn-oauth-toggle');
+    await page.waitForFunction(() => document.querySelector('#oauth-toggle-result').textContent.startsWith('OAuth 配对已关闭'));
+    assert.equal((await hostStatus()).pairing.enabled, false);
+    await evidence('bridge');
+    // Approvals and checkpoints: its own nav entry; external MCP registration is not offered (D4).
+    await page.click('.nav-item[data-page="operations"]');
+    await page.locator('#page-operations').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('#ops-name').isVisible(), false);
+    assert.equal(await page.locator('#btn-checkpoint-create').isVisible(), true);
+    await page.fill('#checkpoint-paths', 'acceptance.txt');
+    await page.click('#btn-checkpoint-create');
+    await page.waitForFunction(() => { try { return JSON.parse(document.querySelector('#checkpoint-review').textContent).state === 'ready'; } catch { return false; } });
+    assert.ok(confirms.at(-1).text.startsWith('确认创建新的检查点'));
+    assert.ok(hostCalls.includes('POST /api/checkpoints') && hostCalls.includes('GET /api/operations'));
+    await evidence('operations');
+    // Diagnostics: its own nav entry loads the read-only report.
+    await page.click('.nav-item[data-page="diagnostics"]');
+    await page.waitForFunction(id => document.querySelector('#diagnostic-identity').textContent.includes(id), status.identity.hostInstanceId);
+    // The extension can switch the page of an open tab; an unknown page falls back to the overview.
+    await post({ type: 'webagent-show-page', page: 'bridge' });
+    await page.locator('#page-bridge').waitFor({ state: 'visible' });
+    await post({ type: 'webagent-show-page', page: 'nope' });
+    await page.locator('#page-overview').waitFor({ state: 'visible' });
+    // Clipboard goes through the extension; a route outside the list never leaves the extension.
+    assert.equal(await page.evaluate(async () => { await (await import('/js/api.js')).copyText('copied through VS Code'); return 'ok'; }), 'ok');
+    assert.deepStrictEqual(copies, ['copied through VS Code']);
+    const refused = await page.evaluate(async () => (await import('/js/api.js')).apiFetch('/api/tool/call', { method: 'POST', body: '{}' }).then(() => 'resolved', error => `${error.name}: ${error.message}`));
+    assert.equal(refused, 'TypeError: 设置页不转发 POST /api/tool/call');
+    assert.ok(!hostCalls.some(call => call.includes('/api/tool/call')));
+    // The page follows the VS Code theme.
+    await page.evaluate(() => document.body.classList.add('vscode-light'));
+    await page.waitForFunction(() => document.documentElement.getAttribute('data-theme') === 'light');
+    assert.deepStrictEqual(errors, []);
+    assert.deepStrictEqual(await page.evaluate(() => window.__csp), [], 'nothing on the page is blocked by its own CSP');
+    // Last, because Chromium logs the refusal: the page cannot reach the host directly.
+    assert.equal(await page.evaluate(url => fetch(url).then(() => 'reached', () => 'blocked'), base + '/api/status'), 'blocked');
+    assert.ok((await page.evaluate(() => window.__csp)).some(line => line.startsWith('connect-src')), 'refused by connect-src, not by the test route');
+  } finally {
+    relay.dispose(); services.dispose();
+    await page.close();
+  }
+}
 async function main() {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-browser-'));
   fs.writeFileSync(path.join(workspace, 'acceptance.txt'), 'REAL-BROWSER-EVIDENCE\n');
@@ -1145,7 +1280,8 @@ async function main() {
     assert.ok((await page.locator('#bridge-result').textContent()).includes('停止结果未确认'));
     await page.unroute('**/api/bridge/stop');
     assert.deepStrictEqual(errors, []);
-    console.log('Browser PASS: admin 3-viewport table/contrast/keyboard, cross-origin MCP headers/session, classic bad-stream cleanup, 16 workbench + 12 docs axe/layout states, keyboard navigation/scrolling; minimal page observation + authenticated connection echo/forged session rejection/clear, help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');
+    await settingsPanelBrowser(browser, base, status);
+    console.log('Browser PASS: VS Code settings tab (CSP, relay, dialogs, pages); admin 3-viewport table/contrast/keyboard, cross-origin MCP headers/session, classic bad-stream cleanup, 16 workbench + 12 docs axe/layout states, keyboard navigation/scrolling; minimal page observation + authenticated connection echo/forged session rejection/clear, help, host match/mismatch, real MCP write verification, trace, WS loss/reload, file save, builtin evidence, themes/popovers, failure/reset, local + authenticated remote workflow approval; Skill paging/resources/draft/no script execution/workflow preview/hash change; approval-time file precondition refuses drift; stdio preview/start/remote request/local approval/removal');
   } finally {
     if (browser) await browser.close();
     if (child.exitCode === null) child.kill();

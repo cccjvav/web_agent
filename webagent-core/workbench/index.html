@@ -294,7 +294,7 @@
         <button type="button" class="nav-item" data-page="prompts">提示</button>
         <button type="button" class="nav-item" data-page="bridge">Bridge</button>
         <button type="button" class="nav-item" data-page="api">API Provider</button>
-        <button type="button" class="nav-item" data-page="multimodel">多模型博弈</button>
+        <button type="button" class="nav-item" data-page="multimodel" data-workbench-only>多模型博弈</button>
         <details class="legacy-settings">
           <summary>兼容资料（不执行）</summary>
           <p class="hint">仅保留旧工作区备注，不会自动执行命令、连接外部MCP或加载插件。</p>
@@ -309,6 +309,7 @@
           <h2>工具接入与审批</h2>
           <p class="lead">仅本机操作者登记及批准。支持已启动的回环 HTTP(S)，或经本机预览/确认后启动的 stdio MCP；或显式确认的公网HTTPS MCP；不自动安装程序。公网需DNS/实际连接地址检查、不跟随跳转，登记会发送初始化及可选凭据，后续参数须逐次审批。发现工具不等于授权，每次调用分别审批。</p>
           <p>配置、令牌、审批参数/结果只在本次进程内存保留；请求最多保留15分钟且可能更早淘汰。重启需重新登记/配对；丢失记录绝不是允许重放。外部结果仅为外部自报，不是独立验收。</p>
+          <div data-workbench-only>
           <label for="ops-name">接入名称</label><input id="ops-name" class="ms-input" value="Local MCP" />
           <label><input type="checkbox" id="ops-public-https">明确启用公网HTTPS（默认关闭）</label>
           <label for="ops-url">已启动的 MCP 地址</label><input id="ops-url" class="ms-input" placeholder="http://127.0.0.1:9000/mcp" />
@@ -325,6 +326,7 @@
           <button id="btn-stdio-start" type="button" class="vs-btn" disabled>确认并启动所审阅程序</button>
           <p class="hint">预览2分钟有效且只能用一次。启动后，每次工具调用仍需下方独立审批；取消调用会停止整个stdio进程，不保证撤回已发生的效果。</p>
           <div id="ops-servers"></div>
+          </div>
           <h3>跨文件内容检查点（本机手动恢复）</h3>
           <p>任务前选择1–12个已有UTF-8文件，每行一个工作区路径。原文只存本机内存15分钟，单文件64KiB、合计256KiB，重启丢失。先保存或保留编辑器草稿；不捕获未保存内容。</p>
           <textarea id="checkpoint-paths" class="ms-input" rows="3" aria-label="检查点文件路径，每行一个" placeholder="src/example.js&#10;README.md"></textarea>
@@ -505,7 +507,7 @@
             <div class="row-btns">
               <button type="button" id="btn-skill-more" class="vs-btn">读取下一页</button>
               <button type="button" id="btn-skill-workflow" class="vs-btn" disabled>转到工作流预览（不执行）</button>
-              <button type="button" id="btn-skill-use" class="vs-btn">填入 Ask 对话（不发送）</button>
+              <button type="button" id="btn-skill-use" class="vs-btn" data-workbench-only>填入 Ask 对话（不发送）</button>
             </div>
             <div id="skill-resources" class="row-btns"></div>
           </section>
@@ -651,14 +653,14 @@
             <button type="button" id="btn-bridge-toggle" class="vs-btn primary">启动 Bridge</button>
             <button type="button" id="btn-copy-prompt" class="vs-btn">复制提示词</button>
             <button type="button" id="btn-copy-rules" class="vs-btn hidden">复制规则</button>
-            <button type="button" class="vs-btn open-site" data-site="chatgpt" title="在 Web Agent 内置浏览器中打开 chatgpt.com">打开 ChatGPT</button>
-            <button type="button" class="vs-btn open-site" data-site="arena" title="在 Web Agent 内置浏览器中打开 arena.ai">打开 Arena</button>
-            <button type="button" class="vs-btn open-site" data-site="deepseek" title="打开第三方候选指引，兼容性未验证">打开 DeepSeek</button>
-            <button type="button" class="vs-btn open-site" data-site="workbuddy" title="在 Web Agent 内置浏览器中打开 workbuddy.cn">打开 WorkBuddy</button>
-            <button type="button" class="vs-btn open-site" data-site="trae" title="在 Web Agent 内置浏览器中打开 work.trae.cn">打开 Trae</button>
-            <button type="button" class="vs-btn open-site" data-site="qwen" title="在 Web Agent 内置浏览器中打开 qwenwork.cn">打开 Qwen</button>
-            <button type="button" class="vs-btn open-site" data-site="manus" title="在 Web Agent 内置浏览器中打开 manus.im">打开 Manus</button>
-            <button type="button" class="vs-btn open-site" data-site="shunova" title="在 Web Agent 内置浏览器中打开 shunova.cc">打开 Shunova</button>
+            <button type="button" class="vs-btn open-site" data-workbench-only data-site="chatgpt" title="在 Web Agent 内置浏览器中打开 chatgpt.com">打开 ChatGPT</button>
+            <button type="button" class="vs-btn open-site" data-workbench-only data-site="arena" title="在 Web Agent 内置浏览器中打开 arena.ai">打开 Arena</button>
+            <button type="button" class="vs-btn open-site" data-workbench-only data-site="deepseek" title="打开第三方候选指引，兼容性未验证">打开 DeepSeek</button>
+            <button type="button" class="vs-btn open-site" data-workbench-only data-site="workbuddy" title="在 Web Agent 内置浏览器中打开 workbuddy.cn">打开 WorkBuddy</button>
+            <button type="button" class="vs-btn open-site" data-workbench-only data-site="trae" title="在 Web Agent 内置浏览器中打开 work.trae.cn">打开 Trae</button>
+            <button type="button" class="vs-btn open-site" data-workbench-only data-site="qwen" title="在 Web Agent 内置浏览器中打开 qwenwork.cn">打开 Qwen</button>
+            <button type="button" class="vs-btn open-site" data-workbench-only data-site="manus" title="在 Web Agent 内置浏览器中打开 manus.im">打开 Manus</button>
+            <button type="button" class="vs-btn open-site" data-workbench-only data-site="shunova" title="在 Web Agent 内置浏览器中打开 shunova.cc">打开 Shunova</button>
           </div>
           <p class="hint" id="prompt-hint">网页 Agent：Quick Tunnel / Named Tunnel 先装 cloudflared；ngrok 先装 ngrok 并填 Authtoken。逐步说明见「docs/guides/隧道使用指南.md」。再按上面选中的客户端复制提示词。本机 Chat 不必走这一步。第三方扩展是否传递initialize.instructions须按版本核对；选中候选后可复制参考规则，不要贴进MCP地址框，也不据此放大权限。OAuth兼容客户端是否使用initialize.instructions仍须核对实际结果。</p>
           <p class="warn-line">⚠ Bridge 等于给网页 AI 一把施工证：可读改工作区、跑非破坏性命令。一次任务可以挂几小时；做完请停 Bridge。请勿公开 MCP 地址。</p>

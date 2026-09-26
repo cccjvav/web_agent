@@ -16,6 +16,7 @@
 | `app.js` | 导入模块、boot初始化、WS连接与退避重连 |
 | `js/` | 编辑器、聊天、Bridge、配置和控件逻辑；详细分工见该目录README |
 | `styles.css` / `favicon.svg` | 布局、主题和静态图标，不包含后端授权 |
+| `settings-panel.js` / `settings-panel.css` | 只供VS Code插件的“Web Agent 设置”标签页：以同一份index.html只显示设置弹层，请求与确认/复制经插件转发；浏览器工作台不加载（见[启动与Chat详解](js/启动与Chat详解.md)与[样式规则详解](样式规则详解.md)） |
 
 API Provider的Test只读列表；Add仅追加，保留旧模型/Key与当前选择，重复模型拒绝。手动ID填写后Add跳过发现，不将发现失败变成隐式回退；兼容性需另验。
 
@@ -62,6 +63,8 @@ F54第六批：窄屏显式切换编辑器/Chat/Bridge展示面（不是切主�
 | [app.js](app.js) | 17 个函数/类节点 |
 | [favicon.svg](favicon.svg) | 文件级登记；未做符号完整性证明 |
 | [index.html](index.html) | 文件级登记；未做符号完整性证明 |
+| [settings-panel.css](settings-panel.css) | 文件级登记；未做符号完整性证明 |
+| [settings-panel.js](settings-panel.js) | 25 个函数/类节点 |
 | [styles.css](styles.css) | 文件级登记；未做符号完整性证明 |
 <!-- docs-inventory:end -->
 
