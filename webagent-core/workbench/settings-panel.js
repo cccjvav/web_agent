@@ -48,6 +48,38 @@ export function knownPage(page, doc = document) {
   return typeof page === 'string' && /^[a-z]{1,32}$/.test(page) && doc.getElementById(`page-${page}`) ? page : 'overview';
 }
 
+// A failed read stays visible at the top of the tab until a read succeeds, with its own retry button. It used
+// to be a toast that vanished after about two seconds and was easy to miss (feedback from the batch-5
+// acceptance). The first read fails whenever the tab is opened before the host is started.
+export const LOAD_FAILED_TEXT = '部分设置未能读取：请确认主机已启动，然后点【重新读取】（或再点一次侧栏的齿轮）。';
+
+// state: 'failed' shows the banner with the retry button, 'loading' keeps a shown banner but disables the
+// button, 'ok' hides it.
+export function createLoadBanner(retry, doc = document) {
+  const box = doc.createElement('div');
+  box.id = 'load-banner';
+  box.setAttribute('role', 'alert');
+  box.hidden = true;
+  const text = doc.createElement('span');
+  text.textContent = LOAD_FAILED_TEXT;
+  const button = doc.createElement('button');
+  button.type = 'button';
+  button.className = 'vs-btn primary';
+  button.textContent = '重新读取';
+  button.onclick = () => retry();
+  box.append(text, button);
+  const main = doc.querySelector('.modal-main');
+  if (main) main.insertBefore(box, main.firstChild); else doc.body.prepend(box);
+  const set = (state) => {
+    if (state === 'ok') { box.hidden = true; return; }
+    if (state === 'loading' && box.hidden) return;
+    box.hidden = false;
+    button.disabled = state === 'loading';
+    button.textContent = state === 'loading' ? '读取中…' : '重新读取';
+  };
+  return { element: box, set };
+}
+
 async function boot() {
   const vscode = acquireVsCodeApi();
   const listeners = new Set();
@@ -76,15 +108,15 @@ async function boot() {
   // First read of the host. When it failed (host not started yet), opening the tab again from the sidebar
   // re-reads; after a good read it does not, so unsaved form input is never overwritten.
   let loadFailed = false, loading = null;
+  const banner = createLoadBanner(() => loadAll());
   const loadAll = () => loading || (loading = (async () => {
+    banner.set('loading');
     const results = await Promise.allSettled([() => ui.refreshStatus(), () => ui.loadSkills(), () => ui.loadCustomizations()]
       .map(load => Promise.resolve().then(load)));
     const failed = results.filter(result => result.status === 'rejected' || result.value === false);
     loadFailed = failed.length > 0;
-    if (loadFailed) {
-      console.error('Some settings failed to load', failed);
-      ui.toast('部分设置未能读取：请确认主机已启动，然后再点一次侧栏的齿轮重新读取。');
-    }
+    if (loadFailed) console.error('Some settings failed to load', failed);
+    banner.set(loadFailed ? 'failed' : 'ok');
   })().finally(() => { loading = null; }));
 
   ui.openModal('overview');

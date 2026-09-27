@@ -745,7 +745,7 @@ async function settingsPanelBrowser(browser, base, status, workspace) {
     nonce: require('crypto').randomBytes(18).toString('base64'), cspSource: origin, resource: rel => `${origin}/${rel}`, initialPage: 'api' });
   const page = await browser.newPage({ viewport: { width: 1100, height: 800 } });
   const errors = [], hostCalls = [], confirms = [], copies = [];
-  let confirmAnswer = '确认', failSkillsOnce = true;
+  let confirmAnswer = '确认', failSkillReads = 2;
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push('console: ' + message.text()); });
   const types = { '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
@@ -760,8 +760,8 @@ async function settingsPanelBrowser(browser, base, status, workspace) {
   const post = message => page.evaluate(reply => window.postMessage(reply, '*'), message).catch(() => {});
   const relay = createApiRelay({ post, send: async (method, apiPath, body, { signal }) => {
     hostCalls.push(`${method} ${apiPath.split('?')[0]}`);
-    // The first Skill read fails as if the host were not up yet, to check the retry from the sidebar gear.
-    if (failSkillsOnce && method === 'GET' && apiPath === '/api/skills') { failSkillsOnce = false; throw new Error('connect ECONNREFUSED'); }
+    // The first two Skill reads fail as if the host were not up yet, to check the banner's retry and the sidebar gear.
+    if (failSkillReads > 0 && method === 'GET' && apiPath === '/api/skills') { failSkillReads -= 1; throw new Error('connect ECONNREFUSED'); }
     const response = await fetch(base + apiPath, { method, signal, redirect: 'manual', ...(body != null ? { body, headers: { 'Content-Type': 'application/json' } } : {}) });
     return { status: response.status, contentType: response.headers.get('content-type') || '', raw: await response.text() };
   } });
@@ -785,18 +785,38 @@ async function settingsPanelBrowser(browser, base, status, workspace) {
     await page.locator('#page-api').waitFor({ state: 'visible' }); // the page the extension asked for
     await page.waitForFunction(() => document.querySelector('#install-id').textContent !== '—'); // status came through the relay
     assert.ok(hostCalls.includes('GET /api/status') && hostCalls.includes('GET /api/customizations') && hostCalls.includes('GET /api/skills'));
-    // A failed first read says how to retry; opening the tab again (webagent-reload) re-reads, but only after a failure.
-    await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('再点一次侧栏的齿轮重新读取'));
+    // A failed read stays on screen as a banner with its own retry (it used to be a two-second toast); opening the
+    // tab again (webagent-reload) also re-reads, but only after a failure.
+    const banner = page.locator('#load-banner');
+    await banner.waitFor({ state: 'visible' });
+    assert.ok((await banner.textContent()).startsWith('部分设置未能读取：请确认主机已启动，然后点【重新读取】'));
+    assert.equal(await banner.getAttribute('role'), 'alert');
+    assert.equal(await page.locator('.modal-main > #load-banner').count(), 1, 'the banner sits in the settings content');
+    // It stays in view on a long page scrolled to the bottom (Bridge), then back to the page the extension asked for.
+    await page.click('.nav-item[data-page="bridge"]');
+    const scrollTop = await page.locator('.modal-main').evaluate(el => { el.scrollTop = el.scrollHeight; return el.scrollTop; });
+    assert.ok(scrollTop > 200, 'the Bridge page scrolls');
+    const [bannerBox, mainBox] = [await banner.boundingBox(), await page.locator('.modal-main').boundingBox()];
+    // Sticky keeps it at the top of the content box (inside the 22px padding) after scrolling past it.
+    assert.ok(bannerBox.y >= mainBox.y && bannerBox.y <= mainBox.y + 30, 'the banner sticks to the top while the page scrolls');
+    await page.locator('.modal-main').evaluate(el => { el.scrollTop = 0; });
+    await page.click('.nav-item[data-page="api"]');
     const skillReads = () => hostCalls.filter(call => call === 'GET /api/skills').length;
     assert.equal(skillReads(), 1);
+    await page.click('#load-banner button');
+    await page.waitForFunction(() => document.querySelector('#load-banner button').textContent === '重新读取'
+      && !document.querySelector('#load-banner button').disabled);
+    assert.equal(skillReads(), 2, 'the banner button re-reads');
+    assert.equal(await banner.isVisible(), true, 'a second failure keeps the banner');
     await post({ type: 'webagent-reload' });
     await page.waitForFunction(() => document.querySelectorAll('#skills-list > *').length > 0);
-    assert.equal(skillReads(), 2);
+    await banner.waitFor({ state: 'hidden' });
+    assert.equal(skillReads(), 3);
     await post({ type: 'webagent-reload' });
     await new Promise(resolve => setTimeout(resolve, 300));
-    assert.equal(skillReads(), 2, 'a good read is not repeated, so unsaved input stays');
+    assert.equal(skillReads(), 3, 'a good read is not repeated, so unsaved input stays');
     const expected = errors.filter(line => line.startsWith('console: Some settings failed to load'));
-    assert.equal(expected.length, 1, 'the failed first read is logged once');
+    assert.equal(expected.length, 2, 'each failed read is logged once');
     errors.splice(0, errors.length, ...errors.filter(line => !expected.includes(line)));
     // Only the settings modal is shown, filling the tab, and it cannot be closed from inside.
     for (const id of ['#titlebar', '#workbench', '#statusbar']) assert.equal(await page.locator(id).isVisible(), false, `${id} stays hidden`);
@@ -815,6 +835,9 @@ async function settingsPanelBrowser(browser, base, status, workspace) {
     await evidence('api');
     // Bridge: OAuth pairing uses the extension's modal dialog; dismissing it sends nothing.
     await page.click('.nav-item[data-page="bridge"]');
+    // A stopped Bridge says so; "正在检查隧道设置…" / "检查中" stayed forever once the status was read.
+    assert.equal(await page.locator('#conn-label').textContent(), 'Bridge 未启动；启动后按下面选中的隧道模式连接。');
+    assert.equal(await page.locator('#conn-pill').textContent(), '未启动');
     assert.equal(await page.locator('.open-site').first().isVisible(), false, 'built-in browser shortcuts are workbench-only');
     confirmAnswer = undefined;
     await page.click('#btn-oauth-toggle');

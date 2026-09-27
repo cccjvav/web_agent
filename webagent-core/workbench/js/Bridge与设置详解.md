@@ -47,7 +47,7 @@
 
 请求发出后遇HTTP/业务/JSON/网络/超时/坏合同一律结果未确认，旧显示地址可能过期，先读状态而非再次重置；没有自动重试。发送前失败明确未发送。结果写独立secret-result（aria-live），不沿用无条件成功toast，不自动复制地址；finally释放guard。仅页内互斥，不是跨标签锁或永久幂等；服务端旧空体扩展调用仍兼容，不因此获得新绑定/CAS保证。经典UI的证据不代签原生路径；原生命令随后已有独立F43回归，实机/其它消费者仍单列。启动/停止没有共用此锁，启动在途停止不能被密钥轮换锁挡住；本批经典启停消费见上节，原生扩展的绑定/确认/未知消费见入口与Webview详解及F43回归，不据此宣称所有实机场景已验。
 
-**paintBridge()**把state.status映射为运行pill/toggle/MCP块/URL/底栏/installId，domain空输入才回填，radio规范named别名；paintClients。按provider/URL判断隧道类型，显示就绪文案；账目信息区GitHub实际身份、演示授权、未授权分开，deviceAvailable控制按钮；usage显示今日工具计数及是否配置上报；mcpSession.alive/latest/空决定Connected/Idle/Waiting/Stopped，最后paintStats。
+**paintBridge()**把state.status映射为运行pill/toggle/MCP块/URL/底栏/installId，domain空输入才回填，radio规范named别名；paintClients。按provider/URL判断隧道类型，运行时显示就绪文案；未运行时，已读到状态就显示“Bridge 未启动；启动后按下面选中的隧道模式连接。”和stop样式的“未启动”，尚未读到状态（state.status为空，如首次读取前点“刷新”）才显示“正在读取主机状态…”/“读取中”——原先未运行时一律写“正在检查隧道设置…”/“检查中”，其实没有任何检查在进行，第5批验收第6步因此失败；账目信息区GitHub实际身份、演示授权、未授权分开，deviceAvailable控制按钮；usage显示今日工具计数及是否配置上报；mcpSession.alive/latest/空决定Connected/Idle/Waiting/Stopped，最后paintStats。
 
 需要区分文案与数据：bridge-sub已将累计完成数标为“外部工具调用”，不再误称活动请求；Bridge运行不代表外部Agent已连接；隧道URL存在也不是全公网端到端健康证明。
 

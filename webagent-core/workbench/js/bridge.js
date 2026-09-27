@@ -506,13 +506,17 @@ export function paintBridge() {
   let kind = 'Cloudflare Quick Tunnel';
   if (tp === 'ngrok' || /\.ngrok/i.test(urlText)) kind = 'ngrok';
   else if (tp === 'cloudflare-named' || tp === 'named' || (urlText && !urlText.includes('trycloudflare.com'))) kind = 'Named Tunnel';
+  // Nothing is being checked while the Bridge is stopped: the label used to say "正在检查隧道设置…" / "检查中"
+  // forever once the status had been read (found in the settings-tab acceptance). Only before the first
+  // status read (btn-refresh-auth can repaint then) is the state still unknown.
+  const known = Boolean(state.status);
   $('#conn-label').textContent = running
     ? (tun.url
       ? `${kind} 已就绪 · ${host}`
       : '未找到隧道程序或隧道未就绪时，MCP 走当前页面源（仅本预览可用）')
-    : '正在检查隧道设置…';
-  $('#conn-pill').textContent = running ? '已就绪' : '检查中';
-  $('#conn-pill').className = 'status-pill ' + (running ? 'ok' : '');
+    : known ? 'Bridge 未启动；启动后按下面选中的隧道模式连接。' : '正在读取主机状态…';
+  $('#conn-pill').textContent = running ? '已就绪' : known ? '未启动' : '读取中';
+  $('#conn-pill').className = 'status-pill ' + (running ? 'ok' : known ? 'stop' : '');
   const acct = s.bridgeAccount || {};
   if (typeof acct.loggedIn === 'boolean') state.loggedIn = acct.loggedIn;
   if (acct.provider === 'github' && acct.username) {

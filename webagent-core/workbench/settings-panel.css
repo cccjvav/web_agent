@@ -19,3 +19,16 @@ body { font-family: var(--vscode-font-family, var(--font)); }
    and summary controls live in the web chat) have no target in VS Code, so the panel does not offer them.
    Rows the modules render at run time are matched by their data attributes. */
 [data-workbench-only], #prompts-list [data-insert], #ql-list [data-open-url] { display: none !important; }
+
+/* Load-failure banner (settings-panel.js createLoadBanner): stays at the top while the page scrolls, until a
+   read succeeds. */
+#load-banner {
+  position: sticky; top: 0; z-index: 2; display: flex; gap: 12px; align-items: center;
+  margin: 0 0 14px; padding: 10px 12px; border-radius: 4px;
+  border: 1px solid var(--vscode-inputValidation-warningBorder, #b89500);
+  background: var(--vscode-inputValidation-warningBackground, #352a05);
+  color: var(--vscode-foreground, inherit);
+}
+#load-banner[hidden] { display: none; }
+#load-banner button { margin-left: auto; flex: none; }
+

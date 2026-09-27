@@ -64,7 +64,7 @@ F54第六批：窄屏显式切换编辑器/Chat/Bridge展示面（不是切主�
 | [favicon.svg](favicon.svg) | 文件级登记；未做符号完整性证明 |
 | [index.html](index.html) | 文件级登记；未做符号完整性证明 |
 | [settings-panel.css](settings-panel.css) | 文件级登记；未做符号完整性证明 |
-| [settings-panel.js](settings-panel.js) | 25 个函数/类节点 |
+| [settings-panel.js](settings-panel.js) | 29 个函数/类节点 |
 | [styles.css](styles.css) | 文件级登记；未做符号完整性证明 |
 <!-- docs-inventory:end -->
 
