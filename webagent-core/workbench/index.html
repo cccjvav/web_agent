@@ -314,7 +314,7 @@
           <label for="ops-url">已启动的 MCP 地址</label><input id="ops-url" class="ms-input" placeholder="http://127.0.0.1:9000/mcp" />
           <label for="ops-token">可选 Bearer Token（不保存）</label><input id="ops-token" class="ms-input" type="password" autocomplete="off" />
           <button id="btn-ops-add" type="button" class="vs-btn">登记并初始化 / 发现工具</button>
-          <pre id="ops-external-result" class="url-box" aria-live="polite">登记会发送初始化及可选凭据；未知结果先查列表，不重复登记。移除记录不证明外部服务或进程已停止。</pre>
+          <pre id="ops-external-result" class="url-box" aria-live="polite">登记会发送初始化及可选凭据；未知结果先查列表，不重复登记。移除接入的结果显示在下方“已登记的接入”处。</pre>
           <h3>stdio MCP（启动本机程序）</h3>
           <p class="hint">启动本身会执行第三方代码，不是只读发现，也不是OS沙箱。只启动你已安装并信任的程序；不会自动下载、安装或重启。程序仍有当前系统用户的文件和网络权限。</p>
           <label for="ops-stdio-config">启动配置 JSON（program填绝对路径；args是数组；cwd限工作区）</label>
@@ -324,14 +324,18 @@
           <pre id="ops-stdio-review" class="url-box" style="max-height:300px;overflow:auto;white-space:pre-wrap"></pre>
           <button id="btn-stdio-start" type="button" class="vs-btn" disabled>确认并启动所审阅程序</button>
           <p class="hint">预览2分钟有效且只能用一次。启动后，每次工具调用仍需下方独立审批；取消调用会停止整个stdio进程，不保证撤回已发生的效果。</p>
+          <h3>已登记的接入</h3>
+          <pre id="ops-servers-result" class="url-box" aria-live="polite">移除接入的结果显示在这里；移除记录不证明外部服务或进程已停止。</pre>
           <div id="ops-servers"></div>
           <h3>跨文件内容检查点（本机手动恢复）</h3>
           <p>任务前选择1–12个已有UTF-8文件，每行一个工作区路径。原文只存本机内存15分钟，单文件64KiB、合计256KiB，重启丢失。先保存或保留编辑器草稿；不捕获未保存内容。</p>
           <textarea id="checkpoint-paths" class="ms-input" rows="3" aria-label="检查点文件路径，每行一个" placeholder="src/example.js&#10;README.md"></textarea>
           <button id="btn-checkpoint-create" class="vs-btn" type="button">确认建立任务前检查点</button>
           <button id="btn-checkpoint-refresh" class="vs-btn" type="button">刷新检查点</button>
+          <p class="hint">检查点列表（以刷新后的内容为准）：</p>
           <div id="checkpoint-list"></div>
-          <pre id="checkpoint-review" class="url-box" style="max-height:400px;overflow:auto;white-space:pre-wrap">任务后先预览，再明确确认恢复。非原子事务；失败保留部分结果，不重放。</pre>
+          <p class="hint">检查点操作结果：</p>
+          <pre id="checkpoint-review" class="url-box" aria-live="polite" style="max-height:400px;overflow:auto;white-space:pre-wrap">任务后先预览，再明确确认恢复。非原子事务；失败保留部分结果，不重放。</pre>
           <div id="checkpoint-controls"></div>
           <p class="hint">只恢复选定已有文件的磁盘内容，不撤销删除/重命名/新文件/命令外部效果。全部预检后逐文件写入，中途漂移仍可能部分完成。关闭未保存编辑器或先另行保留草稿，避免之后保存草稿覆盖恢复结果。</p>
           <h3>固定工作流预览</h3>
@@ -644,7 +648,7 @@
               <div class="url-box" id="mcp-url">—</div>
               <button type="button" id="btn-copy-url" class="vs-btn">复制</button>
             </div>
-            <div id="mcp-banner" class="banner hidden">临时 MCP 地址已复制。每次 Bridge 重启后，请在 ChatGPT 中替换 MCP 地址。</div>
+            <div id="mcp-banner" class="banner hidden">MCP 地址已复制。使用 Quick Tunnel 时，每次启动 Bridge 地址都会变，届时请在所用的 MCP 客户端里换成新地址。</div>
           </div>
           <p id="bridge-result" class="hint" role="status" aria-live="polite"></p>
           <div class="btn-wrap" id="bridge-actions">

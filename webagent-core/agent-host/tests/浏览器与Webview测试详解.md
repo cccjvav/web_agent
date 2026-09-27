@@ -216,3 +216,9 @@ F70（外部复审§5.4-6，真实Chromium复现）：真实主机页面、阻�
 ### narrowWorkspaceBrowser(browser,base)
 
 新开真实主机页面、仅阻断Monaco CDN而使用fallback，不发模型或写盘请求。320/390/640（含640×360）逐editor/chat/bridge断言可用宽度至少viewport−49，另一工作面不可见；聊天草稿往返保留、elementFromPoint确认输入框未被欢迎页遮挡。注入页面内存文件tab检查超长名称仍可关闭、Home/End焦点、dirty确认取消保留/确认关闭与焦点恢复、Delete关闭；这部分不是磁盘保存测试，旧main的真实保存/回退/审批链继续执行。768/1024/1440双栏保留，宽→窄跟随正在输入的工作面。默认加载开发依赖axe-core，AXE_PATH仅作为显式脚本覆盖，不再是跳过axe的开关。逐窄屏工作面执行两条父子角色规则，另对深浅主题×1440/768/390/320×欢迎页/API设置16个状态执行WCAG2/2.1 A/AA标签规则及页面溢出检查；插入仅页面内的长日志，必须能聚焦并用方向键实际滚动。UI_EVIDENCE_DIR可保存窄屏工作面与文档站截图。finally关页、收集pageerror；不代表真实Windows/DPI/读屏器验收。editorRuntime夹具新增querySelectorAll返回空导航集合，使实际dom.setWorkspaceView可运行；原dirty/hash/保存/恢复断言未删。
+
+## F88：检查点与接入操作结果的位置（实机9.2/9.3）
+
+实机9.3里，创建检查点后列表行和结果框各显示一份无标签的同一条记录JSON，被当成同一ID两条；移除成功既无提示也不清结果框，刷新后旧JSON仍在，像是删不掉。此前没有任何测试点过检查点的移除按钮。workbenchRuntime新增（`checkpointRemoveButton`取第一行的第三个子节点即移除按钮，`removeReply`按场景返回移除回包或抛错）：空列表文字“当前没有检查点。”；移除回removed:false与请求异常两种都在checkpoint-review给出精确的“移除未确认”句、按钮禁用且旧按钮再点零请求；成功时结果框由旧创建句换成“检查点 cp-a 已移除（a.txt）。”、列表刷新为空并显示空列表文字、恢复控件为空。创建确认改断言那一句话（含列表刷新失败的变体）。外部接入：移除结果断言在ops-servers-result，完成的登记结果不被移除覆盖；登记在途时移除会把登记框改写为“已被随后的移除操作取代”，迟到的登记成功不改它；新增“移除在途时开始并完成一次登记，移除结果仍写出”，以及下文的迟到移除不覆盖新创建。workbenchHtml核对mcp-banner原文（不点名客户端）与ops-servers-result。真实Chromium部分见[主机诊断与调用追踪详解](../src/utils/主机诊断与调用追踪详解.md)的settingsPanelBrowser与externalRegistrationBrowser。
+
+反向验证：VM 9种变异全部变红——创建结果复原JSON、去掉“已移除”句、去掉空列表文字、去掉removalUsed一次消费、移除结果写回登记框、去掉登记被取代的改写、移除失败改回抛错、两个结果框共用一个代次（首版这个变异写错，只换了读取没换写入，结果保持绿；改正后在新增的“移除在途时登记”断言处变红）；banner改回点名ChatGPT令workbenchHtml变红；浏览器3种（创建结果后追加JSON、移除结果写回登记框、去掉“已移除”句）全部变红。另加“移除在途时新建检查点，迟到的移除成功不覆盖新创建句”，去掉写入前的checkpointGeneration核对即在该断言变红（第9种VM变异）。

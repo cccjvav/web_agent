@@ -541,10 +541,11 @@ async function externalRegistrationBrowser(browser, base) {
     assert.equal(submitted.url,'http://localhost:9000/mcp');assert.equal(submitted.token,'PRIVATE FIXTURE TOKEN');
     assert.equal(await fixture.inputValue('#ops-token'),'NEW TOKEN DRAFT');
     await fixture.locator('#ops-servers button').first().click();
-    await fixture.waitForFunction(()=>document.querySelector('#ops-external-result').textContent.includes('移除未确认'));
+    await fixture.waitForFunction(()=>document.querySelector('#ops-servers-result').textContent.includes('移除未确认'));
     assert.equal(deletes,1);assert.equal(await fixture.locator('#ops-servers button').first().isDisabled(),true);
     stop=true;await fixture.click('#btn-ops-refresh');await fixture.locator('#ops-servers button').first().click();
-    await fixture.waitForFunction(()=>document.querySelector('#ops-external-result').textContent.includes('尚未确认进程退出'));
+    await fixture.waitForFunction(()=>document.querySelector('#ops-servers-result').textContent.includes('尚未确认进程退出'));
+    assert.match(await fixture.textContent('#ops-external-result'),/已确认登记/,'removal results do not replace the registration result');
     assert.equal(deletes,2);assert.deepEqual(errors,[]);
   } finally {if(registrationRoute) await registrationRoute.abort().catch(()=>{});await fixture.close();}
 }
@@ -861,9 +862,32 @@ async function settingsPanelBrowser(browser, base, status, workspace) {
     assert.equal(await page.locator('#btn-checkpoint-create').isVisible(), true);
     await page.fill('#checkpoint-paths', 'acceptance.txt');
     await page.click('#btn-checkpoint-create');
-    await page.waitForFunction(() => { try { return JSON.parse(document.querySelector('#checkpoint-review').textContent).state === 'ready'; } catch { return false; } });
+    await page.waitForFunction(() => document.querySelector('#checkpoint-review').textContent.startsWith('已创建检查点 '));
     assert.ok(confirms.at(-1).text.startsWith('确认创建新的检查点'));
     assert.ok(hostCalls.includes('POST /api/checkpoints') && hostCalls.includes('GET /api/operations'));
+    // Acceptance 9.3 (F88): the record is shown once (its list row); the result box only states the outcome.
+    // The shared host still lists an older consumed checkpoint from the earlier restore test.
+    const checkpointId = (await page.textContent('#checkpoint-review')).match(/^已创建检查点 (\S+)（acceptance\.txt），见上方检查点列表/)[1];
+    const rowsWith = id => page.evaluate(id => [...document.querySelectorAll('#checkpoint-list > div')].filter(row => row.textContent.includes(id)).length, id);
+    await page.waitForFunction(id => document.querySelector('#checkpoint-list').textContent.includes(id), checkpointId);
+    assert.equal(await rowsWith(checkpointId), 1);
+    assert.equal(await page.evaluate(id => [...document.querySelectorAll('#page-operations pre')].filter(node => node.textContent.includes(`"id": "${id}"`)).length, checkpointId), 1,
+      'exactly one record for the new checkpoint on the page (was two: list row + result box)');
+    await page.locator('#checkpoint-list > div', { hasText: checkpointId }).getByRole('button', { name: '移除此检查点' }).click();
+    await page.waitForFunction(id => !document.querySelector('#checkpoint-list').textContent.includes(id) && !document.querySelector('#checkpoint-list').textContent.startsWith('正在'), checkpointId);
+    assert.equal(await page.textContent('#checkpoint-review'), `检查点 ${checkpointId} 已移除（acceptance.txt）。`);
+    assert.ok(hostCalls.includes(`POST /api/checkpoints/${checkpointId}/remove`));
+    assert.ok(!(await (await fetch(base + '/api/checkpoints')).json()).some(entry => entry.id === checkpointId), 'the host no longer holds it');
+    await page.click('#btn-checkpoint-refresh');
+    await page.waitForFunction(() => !document.querySelector('#checkpoint-list').textContent.startsWith('正在'));
+    assert.equal(await page.evaluate(id => [...document.querySelectorAll('#page-operations pre')].filter(node => node.textContent.includes(id) && !node.textContent.includes('已移除')).length, checkpointId), 0,
+      'after refresh nothing on the page still looks like the removed checkpoint');
+    while (await page.locator('#checkpoint-list > div').count()) {
+      const before = await page.locator('#checkpoint-list > div').count();
+      await page.locator('#checkpoint-list > div').first().getByRole('button', { name: '移除此检查点' }).click();
+      await page.waitForFunction(count => document.querySelectorAll('#checkpoint-list > div').length < count, before);
+    }
+    await page.waitForFunction(() => document.querySelector('#checkpoint-list').textContent === '当前没有检查点。');
     // stdio against the real host: preview, the extension's modal dialog (dismissed: nothing runs; accepted:
     // started once), listed, then removed with a relayed DELETE.
     const until = async (check, label) => {
@@ -898,6 +922,10 @@ async function settingsPanelBrowser(browser, base, status, workspace) {
     await page.locator('#ops-servers button').first().click();
     await page.waitForFunction(() => !document.querySelector('#ops-servers').textContent);
     assert.ok(hostCalls.includes(`DELETE /api/external/servers/${panelStdio[0].serverId}`));
+    // Acceptance 9.2 feedback (F88): the removal result sits directly above the list, not at the registration form.
+    await page.waitForFunction(id => document.querySelector('#ops-servers-result').textContent.startsWith(`接入 ${id} 的登记记录已移除`), panelStdio[0].serverId);
+    assert.equal(await page.evaluate(() => document.querySelector('#ops-servers-result').nextElementSibling.id), 'ops-servers');
+    assert.ok(!(await page.textContent('#ops-external-result')).includes('已移除'));
     assert.deepStrictEqual((await (await fetch(base + '/api/operations')).json()).servers, []);
     // Diagnostics: its own nav entry loads the read-only report.
     await page.click('.nav-item[data-page="diagnostics"]');

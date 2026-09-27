@@ -158,15 +158,28 @@ async function refreshCheckpoints() {
       const row = document.createElement('div'), text = document.createElement('pre'); text.className = 'url-box';
       text.textContent = JSON.stringify(entry, null, 2); row.append(text);
       if (entry.state === 'ready') row.append(button('只预览此检查点恢复差异', () => generation === checkpointListGeneration ? reviewCheckpoint(entry.id) : false));
-      if (entry.state !== 'running') row.append(button('移除此检查点', async () => {
-        if (generation !== checkpointListGeneration) return false;
-        ++checkpointGeneration; $('#checkpoint-controls').replaceChildren();
-        const result = await api(`/checkpoints/${encodeURIComponent(entry.id)}/remove`, 'POST', checkpointBinding());
-        if (result?.removed !== true) throw new Error('检查点移除未确认，请刷新列表核对');
-      }));
+      if (entry.state !== 'running') {
+        // The outcome goes to #checkpoint-review (right below this list), replacing any older
+        // create/preview text, so the box never shows a record that no longer exists.
+        let removalUsed = false;
+        const removeButton = button('移除此检查点', async () => {
+          if (generation !== checkpointListGeneration || removalUsed) return false;
+          removalUsed = true; removeButton.disabled = true;
+          const removing = ++checkpointGeneration; $('#checkpoint-controls').replaceChildren();
+          const say = text => { if (removing === checkpointGeneration) $('#checkpoint-review').textContent = text; };
+          say(`正在移除检查点 ${entry.id}…`);
+          let result = null;
+          try { result = await api(`/checkpoints/${encodeURIComponent(entry.id)}/remove`, 'POST', checkpointBinding()); } catch (_) { result = null; }
+          if (result?.removed !== true) { say(`检查点 ${entry.id} 移除未确认；请点【刷新检查点】核对，列表里仍有它时再移除。`); return false; }
+          say(`检查点 ${entry.id} 已移除（${entry.paths.join('、')}）。`);
+        });
+        row.append(removeButton);
+      }
       return row;
     });
-    list.textContent = ''; list.replaceChildren(...rows); return true;
+    list.textContent = ''; list.replaceChildren(...rows);
+    if (!rows.length) list.textContent = '当前没有检查点。';
+    return true;
   } catch (error) {
     if (generation !== checkpointListGeneration) return false;
     list.replaceChildren(); list.textContent = '检查点刷新失败：' + error.message; return false;
@@ -209,7 +222,7 @@ async function refreshOperations() {
   return results.every(Boolean);
 }
 const externalPending = new Set();
-let externalMutationGeneration = 0;
+const externalMutationGeneration = new Map();
 function externalHttpEndpoint(value, publicHttps) {
   if (typeof value !== 'string' || !value || value.length > 2048) throw new Error('Invalid endpoint');
   const url = new URL(value), local = ['127.0.0.1','[::1]','localhost'].includes(url.hostname);
@@ -229,27 +242,37 @@ function validExternalRegistration(record, endpoint, publicHttps) {
     && record.transport === 'http' && record.status === 'discovered' && record.endpoint === endpoint
     && record.publicHttps === publicHttps && validExternalTools(record.tools);
 }
-async function externalMutation(label, callback, key = 'register') {
+// Each result box keeps its own generation, so a newer action in the same box wins. Removal
+// results sit next to the server list (#ops-servers-result), registration results next to its form.
+async function externalMutation(label, callback, key = 'register', selector = '#ops-external-result') {
   if (externalPending.has(key)) { ui.toast('此接入操作进行中，请等待并核对原请求。'); return false; }
   externalPending.add(key); $('#btn-ops-add').disabled = externalPending.has('register');
-  const generation = ++externalMutationGeneration;
-  const target = $('#ops-external-result'); target.textContent = `${label}：准备中，尚未发送。`;
+  const generation = (externalMutationGeneration.get(selector) || 0) + 1;
+  externalMutationGeneration.set(selector, generation);
+  const current = () => generation === externalMutationGeneration.get(selector);
+  const registerBox = '#ops-external-result';
+  if (selector !== registerBox && externalPending.has('register')) {
+    // A removal supersedes an in-flight registration: its late reply must not claim success.
+    externalMutationGeneration.set(registerBox, (externalMutationGeneration.get(registerBox) || 0) + 1);
+    $(registerBox).textContent = '进行中的HTTP接入登记已被随后的移除操作取代，结果未确认；请以下方“已登记的接入”列表为准，不要重复登记。';
+  }
+  const target = $(selector); target.textContent = `${label}：准备中，尚未发送。`;
   let dispatched = false;
   const send = (path, method, body) => {
-    dispatched = true; if (generation === externalMutationGeneration) target.textContent = `${label}：请求已发送，结果尚未确认，请勿重复操作。`;
+    dispatched = true; if (current()) target.textContent = `${label}：请求已发送，结果尚未确认，请勿重复操作。`;
     return api(path, method, body);
   };
   try {
     const message = await callback(send);
-    if (generation !== externalMutationGeneration) return false;
+    if (!current()) return false;
     if (message === false) { target.textContent = `${label}：已取消，未发送请求。`; return false; }
     target.textContent = message;
     const refreshed = await refreshOperationList();
-    if (generation !== externalMutationGeneration) return false;
+    if (!current()) return false;
     if (!refreshed) target.textContent = message + '\n列表刷新失败或被更新的刷新取代；本次确认仍保留，按ID核对，不要重复操作。';
     return true;
   } catch (_) {
-    if (generation !== externalMutationGeneration) return false;
+    if (!current()) return false;
     // Never echo transport/parser errors: an untrusted service may reflect the Bearer value.
     target.textContent = dispatched
       ? `${label}未确认；请求可能已生效。请刷新接入列表并核对原请求，不要重放。HTTP中断不证明外部服务未收到请求或进程已停止。`
@@ -279,7 +302,7 @@ function removeExternalServer(id) {
     return result.stopping === true
       ? `接入 ${id} 的登记记录已移除，已请求停止stdio进程；尚未确认进程退出，不代表副作用已撤回。`
       : `接入 ${id} 的登记记录已移除，已请求中止宿主连接；不代表外部服务已停止或副作用已撤回。`;
-  }, 'remove:' + id);
+  }, 'remove:' + id, '#ops-servers-result');
 }
 let checkpointCreating = false;
 async function createCheckpoint() {
@@ -304,14 +327,16 @@ async function createCheckpoint() {
     if (generation !== checkpointGeneration) return false;
     if (!sameCheckpointBinding(binding) || !validCheckpointRecord(record) || record.state !== 'ready' || record.result !== null || record.paths.length !== paths.length) throw new Error('创建响应无效或工作区绑定已变化');
     // Server paths are canonical: aliases may differ from the submitted spelling.
-    $('#checkpoint-review').textContent = JSON.stringify(record, null, 2);
+    // The record itself is shown once, in the list above; this box only states the outcome.
+    const created = `已创建检查点 ${record.id}（${record.paths.join('、')}），见上方检查点列表，可在那里预览或移除。`;
+    $('#checkpoint-review').textContent = created;
     const refreshed = await refreshCheckpoints();
     if (generation !== checkpointGeneration) return false;
     if (!sameCheckpointBinding(binding)) {
       $('#checkpoint-review').textContent = `检查点 ${record.id} 已获创建确认，但工作区绑定现已变化；请在原工作区核对，不能据此操作当前工作区。`;
       return false;
     }
-    if (!refreshed) $('#checkpoint-review').textContent = JSON.stringify({ ...record, note:'创建已确认，但列表刷新失败或被新刷新取代；按此ID核对，不要重建。' }, null, 2);
+    if (!refreshed) $('#checkpoint-review').textContent = `已创建检查点 ${record.id}（${record.paths.join('、')}）。创建已确认，但列表刷新失败或被新刷新取代；按此ID核对，不要重建。`;
     return true;
   } catch (error) {
     if (generation !== checkpointGeneration) return false;

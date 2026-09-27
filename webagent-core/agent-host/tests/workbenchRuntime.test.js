@@ -1331,6 +1331,43 @@ process.on('exit', code => {
   checkpointBodies[1]([]);await newCheckpoints;
   checkpointBodies[0]([checkpointRecord]);await oldCheckpoints;
   assert.equal(opsNodes.get('#checkpoint-list').children.length,0,'late checkpoint list cannot revive old ready records');
+  assert.equal(opsNodes.get('#checkpoint-list').textContent,'当前没有检查点。','an empty list says so instead of rendering nothing');
+  // Removal reports in the checkpoint result box, replaces stale create/preview text, and is single-use per list.
+  let checkpointRemoves=0, removeReply, checkpointListAfter=[checkpointRecord];
+  context.fetch=async(url,options={})=>{
+    if(url==='/api/checkpoints/cp-a/remove' && options.method==='POST') {checkpointRemoves++;return removeReply();}
+    if(url==='/api/checkpoints' && options.method==='POST') return opsResponse(checkpointRecord);
+    if(url==='/api/checkpoints') return opsResponse(checkpointListAfter);
+    if(url==='/api/operations') return opsResponse({servers:[],requests:opsJobs});
+    throw new Error(url);
+  };
+  const checkpointRemoveButton=()=>opsNodes.get('#checkpoint-list').children[0].children[2];
+  for (const failure of [()=>opsResponse({removed:false}),()=>{throw new Error('fixture remove down');}]) {
+    await state.namespace.ui.refreshOperations();
+    const removeCheckpoint=checkpointRemoveButton();removeReply=failure;
+    assert.equal(await removeCheckpoint.onclick(),false);assert.equal(removeCheckpoint.disabled,true);
+    assert.equal(opsNodes.get('#checkpoint-review').textContent,'检查点 cp-a 移除未确认；请点【刷新检查点】核对，列表里仍有它时再移除。');
+    const removesSoFar=checkpointRemoves;assert.equal(await removeCheckpoint.onclick(),false);
+    assert.equal(checkpointRemoves,removesSoFar,'an unconfirmed removal consumes the old button');
+  }
+  assert.equal(checkpointRemoves,2);
+  await state.namespace.ui.refreshOperations();
+  opsNodes.get('#checkpoint-review').textContent='已创建检查点 cp-a（a.txt），见上方检查点列表，可在那里预览或移除。';
+  removeReply=()=>opsResponse({removed:true});checkpointListAfter=[];
+  assert.equal(await checkpointRemoveButton().onclick(),true);assert.equal(checkpointRemoves,3);
+  assert.equal(opsNodes.get('#checkpoint-review').textContent,'检查点 cp-a 已移除（a.txt）。','removal replaces the stale creation text');
+  assert.equal(opsNodes.get('#checkpoint-list').children.length,0);
+  assert.equal(opsNodes.get('#checkpoint-list').textContent,'当前没有检查点。','confirmed removal refreshes the list');
+  assert.equal(opsNodes.get('#checkpoint-controls').children.length,0);
+  // A creation started while a removal is pending keeps its own text when the removal answers late.
+  checkpointListAfter=[checkpointRecord];await state.namespace.ui.refreshOperations();
+  let finishSlowCheckpointRemoval;removeReply=()=>new Promise(resolve=>{finishSlowCheckpointRemoval=resolve;});
+  const slowCheckpointRemoval=checkpointRemoveButton().onclick();
+  context.document.querySelector('#checkpoint-paths').value='a.txt';
+  assert.equal(await opsNodes.get('#btn-checkpoint-create').onclick(),true);
+  const newerCreation=opsNodes.get('#checkpoint-review').textContent;assert.match(newerCreation,/^已创建检查点 cp-a/);
+  finishSlowCheckpointRemoval(opsResponse({removed:true}));await slowCheckpointRemoval;
+  assert.equal(opsNodes.get('#checkpoint-review').textContent,newerCreation,'a late removal result does not overwrite a newer creation');
   // Checkpoint creation must be a single in-flight snapshot, not one per click.
   const createInput=context.document.querySelector('#checkpoint-paths');createInput.value='a.txt';
   let finishCreate, checkpointCreates=0, checkpointCreateBody;
@@ -1352,7 +1389,7 @@ process.on('exit', code => {
   finishCreate(opsResponse(checkpointRecord));await pendingCreate;await duplicateCreate;
   assert.deepEqual(checkpointCreateBody.paths,['a.txt']);
   assert.equal(createInput.value,'new-draft.txt','new input is not cleared by the earlier response');
-  assert.equal(JSON.parse(opsNodes.get('#checkpoint-review').textContent).id,'cp-a');
+  assert.equal(opsNodes.get('#checkpoint-review').textContent,'已创建检查点 cp-a（a.txt），见上方检查点列表，可在那里预览或移除。','creation states the outcome instead of repeating the listed record');
   assert.equal(createButton.disabled,false);
   for (const reply of [
     {ok:false,json:async()=>({error:'fixture HTTP error'})},
@@ -1375,8 +1412,7 @@ process.on('exit', code => {
   };
   const beforeConfirmedCreate=checkpointCreates;
   assert.equal(await createButton.onclick(),true);
-  const confirmedCreate=JSON.parse(opsNodes.get('#checkpoint-review').textContent);
-  assert.equal(confirmedCreate.id,'cp-a');assert.match(confirmedCreate.note,/创建已确认.*列表刷新失败/);
+  assert.match(opsNodes.get('#checkpoint-review').textContent,/^已创建检查点 cp-a（a\.txt）。创建已确认，但列表刷新失败/);
   assert.equal(checkpointCreates,beforeConfirmedCreate+1);assert.equal(creationLists,1);
   const beforeRejectedCreate=checkpointCreates;
   context.confirm=()=>false;assert.equal(await createButton.onclick(),false);
@@ -1447,7 +1483,7 @@ process.on('exit', code => {
   const removeExternal=opsNodes.get('#ops-servers').children[0].children[1];
   assert.equal(await removeExternal.onclick(),false,'removed:false must not be consumed as confirmed removal');
   await removeExternal.onclick();assert.equal(externalDeletes,1,'failed/unknown removal consumes the old button; refresh before any new decision');
-  assert.match(opsNodes.get('#ops-external-result').textContent,/移除未确认/);
+  assert.match(opsNodes.get('#ops-servers-result').textContent,/移除未确认/);
   opsNodes.get('#ops-url').value='http://127.0.0.1:9000/mcp';
   for (const reply of [
     {ok:false,json:async()=>({error:'private-fixture-token'})},
@@ -1494,9 +1530,10 @@ process.on('exit', code => {
   assert.equal(await opsNodes.get('#ops-servers').children[0].children[1].onclick(),false,'same server cannot be removed twice even via a refreshed list');
   finishRemoval(opsResponse({removed:true,stopping:true}));assert.equal(await pendingRemoval,true);
   assert.equal(externalDeletes,beforeRemoval+1);assert.equal(addExternal.disabled,false);
-  assert.match(opsNodes.get('#ops-external-result').textContent,/登记记录已移除.*尚未确认进程退出/);
+  assert.match(opsNodes.get('#ops-servers-result').textContent,/登记记录已移除.*尚未确认进程退出/,'removal result sits next to the server list');
+  assert.match(opsNodes.get('#ops-external-result').textContent,/已确认登记/,'removal does not overwrite the finished registration result');
   await state.namespace.ui.refreshOperations();
-  assert.match(opsNodes.get('#ops-external-result').textContent,/尚未确认进程退出/,'list refresh does not erase stop uncertainty');
+  assert.match(opsNodes.get('#ops-servers-result').textContent,/尚未确认进程退出/,'list refresh does not erase stop uncertainty');
   context.fetch=async(url,options={})=>{
     if(options.method==='POST') return new Promise(resolve=>{finishExternal=resolve;});
     if(options.method==='DELETE') {externalDeletes++;return opsResponse({removed:true});}
@@ -1507,9 +1544,27 @@ process.on('exit', code => {
   const interruptedRegistration=addExternal.onclick();
   await state.namespace.ui.refreshOperations();
   assert.equal(await opsNodes.get('#ops-servers').children[0].children[1].onclick(),true,'registration guard must not block removing a connecting server');
-  const removalNotice=opsNodes.get('#ops-external-result').textContent;
+  const removalNotice=opsNodes.get('#ops-servers-result').textContent, supersededRegistration=opsNodes.get('#ops-external-result').textContent;
+  assert.match(removalNotice,/登记记录已移除/);
+  assert.equal(supersededRegistration,'进行中的HTTP接入登记已被随后的移除操作取代，结果未确认；请以下方“已登记的接入”列表为准，不要重复登记。');
   finishExternal(opsResponse(externalServer));assert.equal(await interruptedRegistration,false);
-  assert.equal(opsNodes.get('#ops-external-result').textContent,removalNotice,'late registration must not overwrite a newer removal result');
+  assert.equal(opsNodes.get('#ops-external-result').textContent,supersededRegistration,'late registration must not claim success after a newer removal');
+  assert.equal(opsNodes.get('#ops-servers-result').textContent,removalNotice);
+  // A registration started while a removal is pending must not silence that removal's result (per-box generations).
+  let finishLateRemoval;
+  context.fetch=async(url,options={})=>{
+    if(options.method==='DELETE') {externalDeletes++;return new Promise(resolve=>{finishLateRemoval=resolve;});}
+    if(options.method==='POST') {externalPosts++;return opsResponse(externalServer);}
+    if(url==='/api/checkpoints') return opsResponse([]);
+    if(url==='/api/operations') return opsResponse({servers:[externalServer],requests:[]});
+    throw new Error(url);
+  };
+  await state.namespace.ui.refreshOperations();
+  const slowRemoval=opsNodes.get('#ops-servers').children[0].children[1].onclick();
+  opsNodes.get('#ops-url').value='http://127.0.0.1:9000/mcp';
+  assert.equal(await addExternal.onclick(),true);assert.match(opsNodes.get('#ops-external-result').textContent,/已确认登记/);
+  finishLateRemoval(opsResponse({removed:true}));assert.equal(await slowRemoval,true);
+  assert.match(opsNodes.get('#ops-servers-result').textContent,/登记记录已移除/,'a later registration does not silence the pending removal result');
   assert.equal(addExternal.disabled,false);
   const stdioConfig=context.document.querySelector('#ops-stdio-config');
   stdioConfig.value=JSON.stringify({program:'/fixture/node',args:['server.js'],env:{FIXTURE_SECRET:'SECRET STDIO VALUE'}});
