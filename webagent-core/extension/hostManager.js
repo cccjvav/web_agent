@@ -136,13 +136,17 @@ class HostManager {
     this.stopTimeoutMs = options.stopTimeoutMs || 10000;
     this.state = 'idle'; // idle | starting | running | external | error
     this.url = null; this.child = null; this.workspace = null;
+    // child is installer/launch.js, which spawns the real agent-host as its own child. hostPid is the pid the
+    // host reports in /api/status (the one netstat shows on the port); child.pid is only the launcher.
+    this.hostPid = null;
     this.error = null; this.warning = null; this.location = null; this.portNote = null; this.others = [];
     this.startPromise = null; this.stopping = false;
   }
 
   snapshot() {
     return {
-      state: this.state, url: this.url, owned: Boolean(this.child), pid: this.child ? this.child.pid : null,
+      state: this.state, url: this.url, owned: Boolean(this.child), pid: this.child ? this.hostPid : null,
+      launcherPid: this.child ? this.child.pid : null,
       workspace: this.workspace, error: this.error, warning: [this.warning, this.portNote].filter(Boolean).join('\n') || null,
       commit: this.location ? this.location.commit : null, root: this.location ? this.location.root : null
     };
@@ -234,8 +238,9 @@ class HostManager {
       }
       this.throwIfCancelled();
       await this.spawnHost(workspace, port);
-      await this.waitReady(workspace);
-      this.log(`[host] 主机已就绪：${this.url}（工作区 ${workspace}）`);
+      const ready = await this.waitReady(workspace);
+      this.hostPid = Number.isSafeInteger(ready.pid) && ready.pid > 0 ? ready.pid : null;
+      this.log(`[host] 主机已就绪：${this.url}（工作区 ${workspace}，主机 pid ${this.hostPid ?? '未知'}，启动器 pid ${this.child ? this.child.pid : '未知'}）`);
       this.setState('running');
       return this.snapshot();
     } catch (error) {
@@ -264,7 +269,7 @@ class HostManager {
     const child = this.spawnImpl(node, [launch, 'host', workspace], {
       cwd: this.location.root, env, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true, detached: this.platform !== 'win32', shell: false
     });
-    this.child = child;
+    this.child = child; this.hostPid = null;
     this.url = `http://127.0.0.1:${port}`;
     this.spawnError = null;
     const pipeLines = (stream) => {
@@ -288,7 +293,7 @@ class HostManager {
     });
     child.on('exit', (code, signal) => {
       if (this.child !== child) return;
-      this.child = null;
+      this.child = null; this.hostPid = null;
       const how = signal ? `信号 ${signal}` : `退出码 ${code}`;
       this.log(`[host] 主机进程已结束（${how}）`);
       if (this.stopping) return;

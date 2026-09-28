@@ -165,6 +165,13 @@ async function main() {
   assert.strictEqual(snap.owned, true);
   const status = await hm.probeStatus(snap.url);
   assert.ok(sameWorkspace(status.workspaceRoot, ws), 'host serves the VS Code folder');
+  // Acceptance 12.1 (F89): launch.js spawns the real host as its own child. The pid shown and remembered is the
+  // host's (what netstat lists on the port), not the launcher's.
+  assert.ok(Number.isSafeInteger(status.pid) && status.pid > 0, 'the host reports its pid in /api/status');
+  assert.strictEqual(snap.launcherPid, first.child.pid);
+  assert.notStrictEqual(status.pid, first.child.pid, 'the listening host is a separate process from the launcher');
+  assert.strictEqual(snap.pid, status.pid, 'snapshot pid is the listening host, not the launcher');
+  assert.ok(logs.some((l) => l.includes(`主机 pid ${status.pid}，启动器 pid ${first.child.pid}`)), 'the ready line names both pids');
   assert.strictEqual(await hm.portFree(workbenchPort), true, 'host mode opens no workbench port');
   assert.strictEqual(first.currentUrl(), snap.url);
   assert.strictEqual((await first.start(ws)).pid, snap.pid, 'second start is a no-op (same process)');
@@ -247,6 +254,8 @@ async function main() {
     });
     const ready = await s.start(tmp);
     assert.strictEqual(ready.state, 'running');
+    assert.strictEqual(ready.pid, null, 'a host that reports no pid is unknown, never the launcher pid');
+    assert.ok(Number.isSafeInteger(ready.launcherPid));
     assert.strictEqual((await s.stop()).stopped, true);
     assert.strictEqual(kills3.length, 1);
 

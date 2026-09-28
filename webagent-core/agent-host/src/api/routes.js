@@ -433,6 +433,9 @@ router.get('/status', (req, res) => {
   const bridge = publicBridge(cfg.bridge);
   res.json({
     status: 'online',
+    // Local status only (not hostIdentity, which MCP clients also receive): the VS Code extension
+    // starts the host through installer/launch.js, so its child pid is the launcher, not this process.
+    pid: process.pid,
     executionControl: control.snapshot(),
     identity: hostIdentity(),
     version: config.version,
