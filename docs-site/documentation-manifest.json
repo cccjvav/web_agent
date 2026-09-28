@@ -25291,8 +25291,8 @@
     {
       "path": "webagent-core/agent-host/tests/hostLaunch.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "3feae7d516e41154408ccff93df82c85fc131f8eb0a710169b80e6de325dbee7",
-      "lineCount": 385,
+      "sha256": "33811c1a751483d92f0a465ae8f9b533b937f2a1b71b5f4deae44e9307492dcd",
+      "lineCount": 401,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -25383,7 +25383,7 @@
           "name": "main",
           "kind": "FunctionDeclaration",
           "startLine": 75,
-          "endLine": 377,
+          "endLine": 393,
           "parameters": []
         },
         {
@@ -25830,29 +25830,39 @@
           ]
         },
         {
-          "id": "anonymous@379:13",
-          "name": "anonymous@379:13",
+          "id": "main/anonymous@390:56",
+          "name": "anonymous@390:56",
           "kind": "ArrowFunctionExpression",
-          "startLine": 379,
-          "endLine": 379,
+          "startLine": 390,
+          "endLine": 390,
+          "parameters": [
+            "c"
+          ]
+        },
+        {
+          "id": "anonymous@395:13",
+          "name": "anonymous@395:13",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 395,
+          "endLine": 395,
           "parameters": [
             "error"
           ]
         },
         {
-          "id": "anonymous@380:11",
-          "name": "anonymous@380:11",
+          "id": "anonymous@396:11",
+          "name": "anonymous@396:11",
           "kind": "ArrowFunctionExpression",
-          "startLine": 380,
-          "endLine": 384,
+          "startLine": 396,
+          "endLine": 400,
           "parameters": []
         },
         {
-          "id": "anonymous@380:11/anonymous@381:56",
-          "name": "anonymous@381:56",
+          "id": "anonymous@396:11/anonymous@397:56",
+          "name": "anonymous@397:56",
           "kind": "ArrowFunctionExpression",
-          "startLine": 381,
-          "endLine": 381,
+          "startLine": 397,
+          "endLine": 397,
           "parameters": [
             "m"
           ]
@@ -53190,8 +53200,8 @@
     {
       "path": "webagent-core/extension/package.json",
       "doc": "webagent-core/extension/README.md",
-      "sha256": "3dc1f497e96ac12f1b509f3819255e1d41760795c7f47251b9f6529f34c8921a",
-      "lineCount": 143,
+      "sha256": "f4c9ced16c66592c60de217e692a27d9c89f2a293387cec3aa3a3287ce83e803",
+      "lineCount": 142,
       "structure": "file-only",
       "semanticReview": "not-certified",
       "symbols": []

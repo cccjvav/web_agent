@@ -45,7 +45,6 @@
         "name": "webagent",
         "description": "对本机工作区搜、读、打补丁、跑测试（Ask / Plan / Agent）",
         "isSticky": true,
-        "isDefault": true,
         "commands": [
           {
             "name": "ask",

@@ -372,6 +372,22 @@ async function main() {
     assert.strictEqual(props['webagent.autoStartHost'].default, false);
     const ids = pkg.contributes.commands.map((c) => c.command);
     for (const id of ['webagent.startHost', 'webagent.stopHost', 'webagent.showHostLog']) assert.ok(ids.includes(id), id);
+    // R6 phase-2 acceptance step 11 (F90): VS Code's chatParticipants handler skips the whole participant
+    // (collector error + continue) when it uses a proposal-gated field without that proposal enabled —
+    // isDefault/modes need defaultChatParticipant, locations needs chatParticipantAdditions. With
+    // isDefault:true, @webagent never existed in any chat mode. Same checks as the handler, so a
+    // regression fails here instead of silently on the user's machine.
+    const proposals = new Set(pkg.enabledApiProposals || []);
+    const participants = pkg.contributes.chatParticipants;
+    assert.ok(Array.isArray(participants) && participants.length === 1);
+    for (const p of participants) {
+      assert.match(p.name, /^[\w-]+$/); assert.ok(p.id && p.name);
+      if (p.isDefault !== undefined || p.modes !== undefined) assert.ok(proposals.has('defaultChatParticipant'), `${p.id}: isDefault/modes need the defaultChatParticipant proposal`);
+      if (p.locations !== undefined) assert.ok(proposals.has('chatParticipantAdditions'), `${p.id}: locations need the chatParticipantAdditions proposal`);
+    }
+    const extSource = fs.readFileSync(path.join(__dirname, '../../extension/extension.js'), 'utf8');
+    assert.ok(extSource.includes(`vscode.chat.createChatParticipant('${participants[0].id}'`), 'the code registers the declared participant id');
+    assert.deepStrictEqual(participants[0].commands.map((c) => c.name), ['ask', 'plan', 'code']);
   }
   console.log('host launch: lifeline, launch host mode, host.json stamp, real start/attach/graceful stop, parent-exit, failure paths and extension wiring passed');
 }

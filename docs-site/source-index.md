@@ -3334,7 +3334,7 @@
 
 ## webagent-core/agent-host/tests/hostLaunch.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `3feae7d516e41154408ccff93df82c85fc131f8eb0a710169b80e6de325dbee7`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `33811c1a751483d92f0a465ae8f9b533b937f2a1b71b5f4deae44e9307492dcd`
 
 - `sleep` — ArrowFunctionExpression，[L21–L21](../webagent-core/agent-host/tests/hostLaunch.test.js#L21-L21)
 - `sleep/anonymous@21:34` — ArrowFunctionExpression，[L21–L21](../webagent-core/agent-host/tests/hostLaunch.test.js#L21-L21)
@@ -3344,7 +3344,7 @@
 - `fakeRoot` — FunctionDeclaration，[L36–L43](../webagent-core/agent-host/tests/hostLaunch.test.js#L36-L43)
 - `waitFor` — FunctionDeclaration，[L45–L49](../webagent-core/agent-host/tests/hostLaunch.test.js#L45-L49)
 - `freePortNear` — FunctionDeclaration，[L52–L60](../webagent-core/agent-host/tests/hostLaunch.test.js#L52-L60)
-- `main` — FunctionDeclaration，[L75–L377](../webagent-core/agent-host/tests/hostLaunch.test.js#L75-L377)
+- `main` — FunctionDeclaration，[L75–L393](../webagent-core/agent-host/tests/hostLaunch.test.js#L75-L393)
 - `main/anonymous@78:53` — ArrowFunctionExpression，[L78–L78](../webagent-core/agent-host/tests/hostLaunch.test.js#L78-L78)
 - `main/onLost` — ArrowFunctionExpression，[L80–L80](../webagent-core/agent-host/tests/hostLaunch.test.js#L80-L80)
 - `main/onLost@83:83` — ArrowFunctionExpression，[L83–L83](../webagent-core/agent-host/tests/hostLaunch.test.js#L83-L83)
@@ -3396,9 +3396,10 @@
 - `main/anonymous@350:18` — ArrowFunctionExpression，[L350–L350](../webagent-core/agent-host/tests/hostLaunch.test.js#L350-L350)
 - `main/anonymous@354:18` — ArrowFunctionExpression，[L354–L354](../webagent-core/agent-host/tests/hostLaunch.test.js#L354-L354)
 - `main/anonymous@373:45` — ArrowFunctionExpression，[L373–L373](../webagent-core/agent-host/tests/hostLaunch.test.js#L373-L373)
-- `anonymous@379:13` — ArrowFunctionExpression，[L379–L379](../webagent-core/agent-host/tests/hostLaunch.test.js#L379-L379)
-- `anonymous@380:11` — ArrowFunctionExpression，[L380–L384](../webagent-core/agent-host/tests/hostLaunch.test.js#L380-L384)
-- `anonymous@380:11/anonymous@381:56` — ArrowFunctionExpression，[L381–L381](../webagent-core/agent-host/tests/hostLaunch.test.js#L381-L381)
+- `main/anonymous@390:56` — ArrowFunctionExpression，[L390–L390](../webagent-core/agent-host/tests/hostLaunch.test.js#L390-L390)
+- `anonymous@395:13` — ArrowFunctionExpression，[L395–L395](../webagent-core/agent-host/tests/hostLaunch.test.js#L395-L395)
+- `anonymous@396:11` — ArrowFunctionExpression，[L396–L400](../webagent-core/agent-host/tests/hostLaunch.test.js#L396-L400)
+- `anonymous@396:11/anonymous@397:56` — ArrowFunctionExpression，[L397–L397](../webagent-core/agent-host/tests/hostLaunch.test.js#L397-L397)
 
 ## webagent-core/agent-host/tests/hostPersist.test.js
 
@@ -6731,7 +6732,7 @@
 
 ## webagent-core/extension/package.json
 
-[目录说明](../webagent-core/extension/README.md) · SHA-256 `3dc1f497e96ac12f1b509f3819255e1d41760795c7f47251b9f6529f34c8921a`
+[目录说明](../webagent-core/extension/README.md) · SHA-256 `f4c9ced16c66592c60de217e692a27d9c89f2a293387cec3aa3a3287ce83e803`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 

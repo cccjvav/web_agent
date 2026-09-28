@@ -66,7 +66,7 @@ run-webagent-vscode.cmd
 
 侧载的 GitHub Copilot 在 **原生 Chat** 输入框上有 Ask / Edit / **Agent** 下拉：Agent 会自己搜文件、改多文件、跑终端。本仓库不依赖 Copilot 本体，对等能力在两处：
 
-1. **原生 Chat `@webagent`**（插件 `chatParticipants`，`isDefault`）。不写 slash 就是 **Agent / Code**。`/ask`、`/plan`、`/code` 对应 Copilot 的只读 / 方案 / 动手。工具轨迹会写成 Chat 消息；`apply_patch` 后在编辑器打开该文件。
+1. **原生 Chat `@webagent`**（插件 `chatParticipants`，普通参与者，Agent / Ask / Edit 三种 Chat 模式的 `@` 列表里都有）。不写 slash 就是 **Agent / Code**。清单里不能写 `isDefault`：那是 VS Code 的提议 API，第三方扩展写了会被整个跳过，`@webagent` 就不存在（R6 第二期验收第 11 步，F90 修正）。`/ask`、`/plan`、`/code` 对应 Copilot 的只读 / 方案 / 动手。工具轨迹会写成 Chat 消息；`apply_patch` 后在编辑器打开该文件。
 2. **活动栏 Web Agent 侧栏** 输入框下的 **Agent · Web Agent Code ▾**，同一套 Ask / Plan / Code。
 
 两边都打本机 `http://127.0.0.1:48271/api/chat`。填了 API Key 会走模型工具循环；明确选择内置探索 Agent 时可以执行确定性探索；非 builtin 配置不足则停止，不自动换成内置模型。

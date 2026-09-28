@@ -240,3 +240,9 @@ hash用于版本冲突检测，不是授权、锁或回滚票据。拿到新的c
 - 插件spawn的是`installer/launch.js`，它再spawn真正的主机；`child.pid`是启动器，netstat在端口上看到的是主机。凡是要给用户看、要和系统工具对照的pid，由那个进程自己报告（这里是`/api/status`的pid），并把两层都写进日志；强杀仍从启动器的进程树开始。
 - 单层假进程的测试替身测不出“多了一层”：涉及pid、端口、进程树的断言要放在真实启动链的测试里（hostLaunch第6段），并先断言两层pid确实不同，否则等式断言可能空转。
 - 手册里不带引号的陈述（“卡片显示PID”）同样要有出处；按引号扫源码查不到这类句子，要逐条读“预期”里提到的界面元素是否真的显示该内容。
+
+## 插件清单的字段先对VS Code源码核对是否受限；用户上传放在根目录会让CI变红（F90）
+- **日期/标签**：2026-09-28，VS Code扩展清单、验收、文档登记。
+- `chatParticipants`的`isDefault`/`modes`（需`defaultChatParticipant`）与`locations`（需`chatParticipantAdditions`）是提议API。第三方扩展写了而没有许可时，VS Code只在日志里记“CANNOT use API proposal”，然后跳过**整个**参与者；`createChatParticipant`调用没有报错进catch。结果是`@webagent`从未存在，而单元测试全绿。给清单加字段前，先读VS Code扩展点处理器的源码，并在测试里按同一规则检查（hostLaunch第10节）。
+- 排查“功能在用户机上不存在”时，先查注册是否成功，再猜UI模式；第89组猜的是“Agent模式不列扩展参与者”，多走了一轮实机。
+- 用户把报告推到仓库根（`r6result.md`、`manual-results.txt`）时，documentationLinks要求所有被跟踪的文档都在`FULL_REVIEW_INDEX`登记，那个提交的CI必红。归档时`git mv`进`review/`并登记。`FULL_REVIEW_INDEX`的计数行是手工维护的，新增行时要按表重数，F85漏过一次。
