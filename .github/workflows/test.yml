@@ -29,6 +29,9 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: Check documentation inventory
         run: node ../../docs-site/check-docs.js
+      - name: Lint (correctness rules only)
+        if: matrix.os == 'ubuntu-latest' && matrix.node == 22
+        run: npm run lint
       - name: Audit high-severity production dependencies
         run: npm audit --omit=dev --audit-level=high
       - run: npm test

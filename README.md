@@ -86,5 +86,6 @@ code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容�
 
 | 源码 | 定位证据 |
 |---|---|
+| [eslint.config.js](eslint.config.js) | 0 个函数/类节点 |
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
 <!-- docs-inventory:end -->

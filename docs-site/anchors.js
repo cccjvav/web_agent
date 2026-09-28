@@ -1,7 +1,7 @@
 'use strict';
 // Repository heading subset; not a complete GitHub-flavored Markdown parser.
 function slug(text) {
-  return String(text).trim().toLowerCase().replace(/[📄`]/g, '')
+  return String(text).trim().toLowerCase().replace(/[📄`]/gu, '')
     .replace(/[^\w\u4e00-\u9fff./-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
 }
 function githubSlug(text) {

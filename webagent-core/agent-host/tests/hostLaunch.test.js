@@ -5,7 +5,6 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const net = require('net');
 const vm = require('vm');
 const { EventEmitter } = require('events');
 const { spawn } = require('child_process');

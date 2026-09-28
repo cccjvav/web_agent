@@ -210,7 +210,7 @@ F62-13 最值得记的不是缺陷本身而是**为什么自测没抓到**：实
 | R6 / 下一项（用户2026-09-25选定：VS Code插件一体化启动返工，[方案](../../docs/development/插件一体化启动返工方案.md)D1–D4按推荐确认；**第一期已通过用户实机验收**（2026-09-25，[验收手册](../../docs/guides/插件一键启动实机验收.md)，[记录](../../review/R6第一期实机验收记录-2026-09-25.md)）；第二期设置页进行中，第1批请求收拢、第2批扩展转发层、第3批“Web Agent 设置”标签页、第4批外部MCP迁入标签页（D4于2026-09-26确认：外部MCP迁入、多模型博弈留网页工作台）已完成，第5批[验收手册](../../docs/guides/插件设置页实机验收.md)已完成；第一次实机验收第6步失败（第87组已修）；续跑1（`7b833a3`）9.3失败（第88组已修）；续跑2（`7230d65`）第2–10步通过、12.1失败（重载提示的pid是启动器而非主机），第89组已修；**续跑3（`fb3f345`，2026-09-28）通过，第二期已通过用户实机验收**（[记录](../../review/R6第二期实机验收记录-2026-09-28.md)）；第11步原生Chat `@webagent`从未注册（清单`isDefault`需提议API），第90组已修；第91组补上第3、4批两个剩余风险（设置页核对主机文件夹、标签页关闭时取消在途stdio启动）；三项待续跑4补验；第一期验收跟进①–④已完成；网页工作台保留） | 候选设计与分项实现 | 第4.2节、上游26类地图；完成明确缺陷修复优先 | 每项先写最小范围、输入/预算/权限/失败、回归与取舍；有收益且不突破授权边界再落地，不把全部候选统一许诺为必做 |
 | R7 / 本轮完成，后续随代码持续维护 | 用户2026-09-22更正：确认所有项目.md与最新实现/状态一致，不要求全仓源码逐行认证。逐份处理现行说明/README/管理入口；历史、只读、生成、冻结和暂停分别标界。旧逐句统计保留为历史，不作为本任务完成率 | [文档时效清单](../../review/FULL_REVIEW_INDEX.md)、[唯一规范](../docs/documentation.md)、主指南与对应实现/测试；代码只按文档承诺查证 | 每份纳入.md有时效处置和依据；现行陈旧/矛盾已改，未确认或暂停原因明示；站点生成/结构/链接检查通过，不靠改日期或扩大源码认证凑完成 |
 | R8 / 本轮已通过（2026-09-24，9c36c10，见[R8实机验收记录](../../review/R8实机验收记录-2026-09-24.md)）；未执行项待补 | 项目根MCP验收 | 第7节、Windows清单M/W/T/G等；用户接入后核对工具身份 | 逐项有提交、实际环境、动作、退出码/效果与脱敏证据；失败/未执行如实留存，不借CI代签 |
-| R9 / 中，部分完成 | 第45组已交付CI顶层`contents: read`与高危生产依赖硬门禁；F55新增默认axe开发门禁；EOL Node矩阵、最小lint（只报错不改风格）、生成物churn与仓库权重仍为候选；**用户2026-09-28选定最小ESLint（方案B：只开找真错误的规则、排除webagent-repro与生成物、先分批修现有报警再进CI）**，排在R6缺口之后（第91组） | [第45组报告剩余决策](../../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md#6-仍需保留的风险决策)；版本/依赖/发行取舍需项目主人决策 | 每项先写范围与回滚点，不改冻结原型、不做TS重写；CI九项不因新增检查放宽 |
+| R9 / 中，部分完成 | 第45组已交付CI顶层`contents: read`与高危生产依赖硬门禁；F55新增默认axe开发门禁；EOL Node矩阵、最小lint（只报错不改风格）、生成物churn与仓库权重仍为候选；**用户2026-09-28选定最小ESLint（方案B：只开找真错误的规则、排除webagent-repro与生成物、先分批修现有报警再进CI）**，第93组已接入并进CI（ubuntu+Node22一项）；EOL Node矩阵、生成物churn与仓库权重仍为候选 | [第45组报告剩余决策](../../review/FULL_AUDIT_FOLLOWUP_2026-09-18.md#6-仍需保留的风险决策)；版本/依赖/发行取舍需项目主人决策 | 每项先写范围与回滚点，不改冻结原型、不做TS重写；CI九项不因新增检查放宽 |
 | P / 暂停 | 探测整合、迁移与专项复核 | 第8节，另一助手正式交接前不动 | 交接后先锁版本/权限/接口/数据方案并重排范围，不自行恢复施工 |
 
 ##### 4.1 当前路线的证据入口
@@ -1956,6 +1956,20 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **核对：** appWindowLifecycle从28个命名场景增至42：打开后身份变化（复用时不停止、只打开过一次浏览器；冷启动时发stop不发release）、打开后两端消失立即报错（受控时钟<1秒）、打开后第4次读取被拒绝后重试一次再移交、openBrowser拒绝7种非本机地址且不spawn、prepared带末尾分隔符仍通过、后台自行以1退出不报清理未确认而3或信号退出报、停止请求以1/3回应的对应判定、workbenchPort为3000/字符串/越界均不复用；夹具主机的workbenchPort由3000改为编辑器端口51212，复用场景的诊断读取次数由2改为3。codeServerLifecycle：正常启动断言WORKBENCH_PORT，新增受控模式三例（子进程清理未确认→3、准备阶段清理未确认→3、编辑器失败但子进程已确认→保持1）。反向验证13种变异：11种变红；留绿的M1b（端口整数/范围检查）与M7b（confirmed里的signalCode检查，Node在信号退出时exitCode本就为null）是冗余代码，已删除后重跑42/42通过。
 
 **剩余风险与未验证：** code-server自身若以3退出会被当作清理未确认（只偏向多提示）；run-code-oss的main若意外reject（只可能是finally里的编程错误），文件尾仍写1，会被当作已确认；打开后复核发现变化时窗口可能已经打开并显示断开，由报错文字说明。app模式（`launch.js app`）不在用户当前的桌面VS Code+插件流程里，本组没有安排实机验收，只有单元级与夹具验证。该分支至此视为了结，是否删除远端分支由用户决定。
+
+### 第93组：最小ESLint接入（方案B）并进CI（2026-09-28）
+
+**开头复审第92组：** 提交`b3950d6`的CI（run 36456449128）9/9通过。复读打开后复核循环与run-code-oss退出码路径，以及`launch.js app`对appWindow的调用：退出码3只被stopOwned读取；appWindow函数里的`confirmed`常量与stopOwned里的`confirmed()`在不同作用域。没有发现缺陷。本会话开始时沙箱又重启过一次，HEAD回到4a868ae、工作树仍为b3950d6的内容；按惯例`git fetch`+`reset --mixed`恢复，重装依赖并重建两个辅助脚本（新fpf对3个已提交文件算出的指纹与索引一致）。
+
+**做法：** agent-host加devDependencies `eslint ^10.11.0`、`@eslint/js ^10.0.1`、`globals ^17.12.0`（ESLint官方初始化同样装这三个；用户批准的是“eslint只作开发依赖”，另两个是它的规则集与全局变量表，同为开发依赖；生产安装`npm ci --omit=dev`与安装包都不含node_modules开发包）。ESLint 10要求Node 20.19以上，ESLint 9虽支持Node 18但维护期已过，选10；Node18矩阵的`npm ci`只出引擎警告。仓库根新增`eslint.config.js`，用createRequire从agent-host解析这两个包，规则取eslint:recommended并关掉判断风格的8条，以及ESLint 10新增进推荐集的no-useless-assignment与preserve-caught-error（理由写在配置注释与[CI详解](../../docs/development/平台启动与CI详解.md#根eslintconfigjs)）。agent-host加`npm run lint`（`eslint --max-warnings 0 ../..`）；test.yml在agent-host矩阵的ubuntu+Node22一项、文档清单检查之后加`Lint (correctness rules only)`。
+
+**范围：** 排除webagent-repro、生成的content.js、三个探针（arena-model-probe、arena-trace-inspector、webagent-core/probe-extension）、extensions-installed副本、bin与运行数据目录；实际检查240个文件（agent-host 198、extension 10、workbench 14、scripts 4、admin-host 2、installer 4、docs-site脚本5、examples 2、配置本身）。
+
+**基线与处置：** 首跑257处：no-undef 221（202处在workbench.browser.js的page.evaluate回调、18处在probeTransport.test.js自装的global.window/document，均按文件给全局变量；settings-panel.js的acquireVsCodeApi由webview提供）、no-useless-assignment 19（逐处看过，全是“先给默认值、每条路径再覆盖”的防御写法，没有真错误，关掉该规则）、preserve-caught-error 10（关掉）、no-unused-vars 5、no-misleading-character-class 1、未用的disable注释1。代码改动：docs-site/anchors.js的`/[📄\`]/g`加u标志——不带u时字符类按代理对的两半分别匹配；对仓库全部2938个标题与4个导出函数逐一比对新旧结果完全相同，只有人为构造的孤立代理字符串不同（新结果更合理）；tunnelRegistry未用的循环变量改`_entry`；settings-panel.js删未用的`$`导入；index.js的`eslint-disable-next-line no-unused-vars`因参数不查而失效，改为普通注释保留原因；测试里删三处残留（editorRuntime的savedDraft、hostLaunch的net、nativeRotationCommands只累加从不断言的gets）。此前审计记录的4处no-unsafe-finally现已不存在：对全部334个已跟踪JS文件（含探针与repro）单跑该规则为0，本组无需修。
+
+**核对：** 修后240个文件0报告，`npm run lint`在agent-host与仓库根（`--prefix`）均退出0。反向验证：在agent-host源码、workbench、extension、installer、scripts、docs-site/app.js、测试各注入一个“finally里return未定义名”，7处都报no-undef+no-unsafe-finally；workbench注入未用常量报no-unused-vars。文档：CI详解新增根eslint.config.js一节并更新package.json与workflow两节，documentationLearning把eslint.config.js登记到该详解；CONTRIBUTING的测试命令加lint；agent-host README的开发依赖加ESLint。review目录里提到“没有ESLint”的是历史报告，不改写。
+
+**剩余与未验证：** 只开找错规则，风格与复杂度不管；no-undef对按文件给了浏览器全局的两个测试文件放宽（其中Node部分若误用window不会被报）；探针与repro不在检查范围；lint只在一个CI任务里运行。
 
 ### 延后复审清单
 

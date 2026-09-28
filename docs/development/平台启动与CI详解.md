@@ -56,7 +56,7 @@ setlocal EnableExtensions，title设置窗口标题，cd /d `%~dp0`可跨盘。w
 
 [package.json](../../webagent-core/agent-host/package.json)的name/version标识npm包，并非安装器AppVer；main=index.js是模块默认入口声明，实际npm start脚本为node src/index.js，所以不要因main文字而去运行不存在的根入口。scripts.test调用scripts/run-tests.js，负责真实子进程测试发现/退出；engines node>=18是声明范围，不证明当前所有依赖/场景在18均验收过。
 
-dependencies：express HTTP路由、cors来源控制、ws WebSocket、diff差异展示；devDependencies中acorn用于源码AST/文档测试，playwright用于独立真实浏览器回归，当前清单固定1.63.0；scripts.test:browser执行tests/workbench.browser.js，不在npm test的.test.js扫描中。Playwright包与Chromium浏览器程序分开安装，生产启动不需要它，CI浏览器回归需要保留。版本带^是兼容范围，锁文件固定安装解析结果，npm ci与npm install职责不同。keywords/author/description空不产生运行行为；license ISC是包元数据，正式仓库许可仍看LICENSE。
+dependencies：express HTTP路由、cors来源控制、ws WebSocket、diff差异展示；devDependencies中acorn用于源码AST/文档测试，playwright用于独立真实浏览器回归，当前清单固定1.63.0；eslint、@eslint/js、globals只供`scripts.lint`（`eslint --max-warnings 0 ../..`，规则见下文[根eslint.config.js](#根eslintconfigjs)）；ESLint 10要求Node 20.19以上，Node18任务的npm ci只会给出引擎警告，lint只在一个Node22任务里运行，生产安装`npm ci --omit=dev`不带这些包；scripts.test:browser执行tests/workbench.browser.js，不在npm test的.test.js扫描中。Playwright包与Chromium浏览器程序分开安装，生产启动不需要它，CI浏览器回归需要保留。版本带^是兼容范围，锁文件固定安装解析结果，npm ci与npm install职责不同。keywords/author/description空不产生运行行为；license ISC是包元数据，正式仓库许可仍看LICENSE。
 
 ## 5. .github/workflows/test.yml全部job与命令
 
@@ -67,6 +67,8 @@ dependencies：express HTTP路由、cors来源控制、ws WebSocket、diff差异
 fail-fast:false让失败不取消其它矩阵。Ubuntu/Windows各Node20/22/24，include再加Ubuntu18兼容任务。default working-directory是agent-host；checkout@v5取源码，setup-node@v5以Node 24动作运行时选择项目Node，避免GitHub弃用旧动作运行时的告警；npm ci按锁文件安装依赖，check-docs只检查不修漂移，npm test运行测试发现/汇总。
 
 `npm audit --omit=dev --audit-level=high`现在是门禁：高/严重生产依赖公告或审计请求失败会使矩阵失败，不再用continue-on-error吞掉。它不扫描开发依赖、不分析项目源码或证明依赖来源签名，因此绿色CI仍不是“零漏洞”证书。Action自身的Node运行时弃用警告与矩阵node-version不同，不能混报。
+
+`Lint (correctness rules only)`只在ubuntu-latest+Node22这一项里运行`npm run lint`：结果与平台无关，ESLint 10也不支持Node18；有任何报告即失败（规则全部为error，另加`--max-warnings 0`）。
 
 Windows主机任务在全量之后，再用pwsh重复5轮ptyLifecycle、2轮stdioMcp，每轮立即检查LASTEXITCODE，非零直接退出，不重试到绿。Node18任务只是最低声明兼容回归，不建议新装过期版本，也不等于code-server支持所有同版本组合。
 
@@ -82,6 +84,14 @@ Windows主机任务在全量之后，再用pwsh重复5轮ptyLifecycle、2轮stdi
 Ubuntu/Node22，job timeout-minutes=10；npm ci后执行`npx playwright install --with-deps chromium`，安装匹配浏览器及Linux系统依赖，再`npm run test:browser`。它不在每组Node矩阵中重复。
 
 真实Chromium运行工作台HTTP/MCP/磁盘交互；还包含独立探针HUD和文档页面。部分测试用route提供实际静态资源或拦截公网登记请求：真实DOM不等于真实公网服务。经典UI、文档导航通过也不代签桌面VSCode、code-server整个界面、真实手机或厂商账户。
+
+### 根eslint.config.js
+
+[eslint.config.js](../../eslint.config.js)是用户2026-09-28选定的最小接入（方案B）：只开找真错误的规则、全部为error、不开格式/风格规则、不重排现有代码。包装在agent-host的devDependencies里，配置用createRequire从`webagent-core/agent-host/package.json`解析@eslint/js与globals，所以在仓库根或agent-host里运行都能找到。规则取eslint:recommended，关掉判断风格而非对错的几条（no-empty、no-useless-escape、no-control-regex、no-prototype-builtins、no-extra-boolean-cast、no-useless-catch、no-regex-spaces、no-irregular-whitespace），以及ESLint 10新加入推荐集的no-useless-assignment（接入时19处全是“先给默认值、每条路径再覆盖”的防御写法，没有真错误）和preserve-caught-error（要求重抛带cause，属诊断偏好，且有些地方故意不传内部细节）；no-unused-vars不查参数与catch变量、允许`_`开头的变量；未使用的eslint-disable注释也报错。
+
+排除：webagent-repro（其JS不许改）、生成的docs-site/content.js、三个探针（arena-model-probe、arena-trace-inspector、webagent-core/probe-extension，由另一助手负责）、extensions-installed（extension的逐字节副本）、bin与各类运行数据目录。实际检查240个文件：agent-host（含测试）、extension、workbench、scripts、admin-host、installer、docs-site脚本、examples/calculator和配置本身。环境：默认Node CommonJS；workbench是浏览器ES模块，settings-panel.js另有webview提供的acquireVsCodeApi；docs-site/app.js是浏览器普通脚本；tests/workbench.browser.js的page.evaluate回调在浏览器里运行，给浏览器全局；tests/probeTransport.test.js自己在global上装window/document。
+
+接入时的处置（第93组）：此前记录的4处no-unsafe-finally已不存在（对全部334个JS文件单跑该规则为0）；修掉的是docs-site/anchors.js里不带u标志的表情字符类（对仓库全部2938个标题新旧结果逐一相同）、未用的循环变量、未用的导入和测试里的三处残留变量，以及一条因参数不查而失效的eslint-disable注释。本地运行：`cd webagent-core/agent-host && npm run lint`。
 
 ## 6. 本地验证与边界
 

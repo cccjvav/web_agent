@@ -54,9 +54,9 @@ async function main() {
     identity: { hostInstanceId: 'instance' }, secretKey: oldSecret };
   const rotated = { success: true, secretKey: newSecret, mcpPath: '/mcp/' + newSecret,
     mcpUrl: 'https://host.test/mcp/' + newSecret, mcpCanonicalUrl: 'https://host.test/mcp' };
-  let gets = 0, posts = [], statusReply, postReply, rejectPost = false;
+  let posts = [], statusReply, postReply, rejectPost = false;
   context.transport = async (method, url, body) => {
-    if (method === 'GET') { gets++; return statusReply(); }
+    if (method === 'GET') return statusReply();
     posts.push({ url, body });
     if (rejectPost) throw new Error('本机API请求超时');
     return postReply;
@@ -71,7 +71,7 @@ async function main() {
   const reset = () => commands.get('webagent.resetSecret')();
   const notices = () => [...infos, ...warnings.map(w => w.message), ...errors.map(e => e.message)];
   const leaked = () => notices().filter(m => m.includes(oldSecret) || m.includes(newSecret));
-  function clear() { infos.length = 0; warnings.length = 0; errors.length = 0; posts.length = 0; gets = 0; refreshes = 0; confirmAnswer = '重置'; statusReply = () => ({ status: 200, json: statusBody }); postReply = { status: 200, json: rotated }; rejectPost = false; }
+  function clear() { infos.length = 0; warnings.length = 0; errors.length = 0; posts.length = 0; refreshes = 0; confirmAnswer = '重置'; statusReply = () => ({ status: 200, json: statusBody }); postReply = { status: 200, json: rotated }; rejectPost = false; }
 
   // HTTP failure: bound CAS write is reported as unconfirmed, never as a completed rotation.
   clear(); postReply = { status: 500, json: { success: false } };

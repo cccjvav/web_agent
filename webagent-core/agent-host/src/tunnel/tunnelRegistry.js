@@ -95,7 +95,7 @@ function createRegistry({ baseDirectory = os.homedir(), inspect = inspectProcess
   }
   async function hasCapacity(root) {
     let count = 0;
-    for await (const entry of await fsp.opendir(root)) { if (++count >= MAX_RECORDS) return false; }
+    for await (const _entry of await fsp.opendir(root)) { if (++count >= MAX_RECORDS) return false; }
     return true;
   }
   async function scan() {

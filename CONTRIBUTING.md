@@ -14,7 +14,10 @@ Windows 可以执行 `run-tests.cmd`；跨平台可以执行：
 
 ```sh
 npm test --prefix webagent-core/agent-host
+npm run lint --prefix webagent-core/agent-host
 ```
+
+lint只开找真错误的规则（未定义变量、未使用变量、finally里的return等），不管格式；CI在一个任务里运行它，有报告即失败。规则、排除范围与原因见[CI详解](docs/development/平台启动与CI详解.md#根eslintconfigjs)。
 
 产品启动器安装的生产依赖不等于测试环境。浏览器回归、Windows 安装器编译等还有各自前置条件，见[测试说明](docs/development/测试说明.md)及 CI 工作流。必须检查测试真实退出码，不能仅凭日志尾部判定成功。
 

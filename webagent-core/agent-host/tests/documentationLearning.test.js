@@ -351,6 +351,7 @@ const artifactPairs = [
   ["computer-use/win/keys.cs", "computer-use/win/鼠标键盘与剪贴板详解.md"],
 
   [".github/workflows/test.yml", "docs/development/平台启动与CI详解.md"],
+  ["eslint.config.js", "docs/development/平台启动与CI详解.md"],
   ["check-env.cmd", "docs/development/平台启动与CI详解.md"],
   ["docs-site/serve.cmd", "docs/development/平台启动与CI详解.md"],
   ["install-vscode-extension.cmd", "docs/development/平台启动与CI详解.md"],

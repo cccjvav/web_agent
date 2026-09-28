@@ -4,7 +4,7 @@
 // so both front ends run the same page markup and the same modules. Every host request and the two browser
 // services a webview lacks (confirm dialog, clipboard) go through the extension via js/vscodeRelay.js; the page
 // itself has no network access (connect-src 'none').
-import { $, $$, ui } from './js/state.js';
+import { $$, ui } from './js/state.js';
 import { setApiTransport, setHostServices } from './js/api.js';
 import { createRelayTransport, createHostServices } from './js/vscodeRelay.js';
 import './js/dom.js';

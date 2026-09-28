@@ -30,8 +30,8 @@ Markdown：209（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [.webagent/skills/fix-tests/SKILL.md](../.webagent/skills/fix-tests/SKILL.md) | 已核对一致 | bc401dc72aada5ae | 根npm test转发、安装命令、失败定位、hash保护及示例独立入口一致。 依据：package.json; scripts/run-tests.js; tools/patchEngine.js |
 | [.webagent/skills/review/SKILL.md](../.webagent/skills/review/SKILL.md) | 已核对一致 | d30d72094e8aa2e2 | 默认只读、无Git降级及修改授权边界与工具可用性一致；不把本技能当本轮源码逐行要求。 依据：gitOps.js; tools/index.js; F66范围 |
 | [AGENTS.md](../AGENTS.md) | 已核对一致 | 436905c57093ee1a | 管家入口、同级文档/生成命令、固定分支与隐私规则均可定位，详情由F66规范限定。 依据：manager/CONTEXT.md; agents.md; documentation.md |
-| [CONTRIBUTING.md](../CONTRIBUTING.md) | 已核对一致 | 1a54f3466ead86dd | 开发依赖/测试、Conda/CMD、文档闭环及权限边界与现行入口一致。 依据：package.json; run-tests.cmd; CI; SECURITY |
-| [README.md](../README.md) | 已修正 | 4bb3061c3709fa9a | 核对启动入口、默认端口/工作区、0.7.2、现有功能与导航；暂停版本改为既有交付记录，不冒称外部最新版。 依据：package.json; launch.js; extension/package.json; 主机/工作台入口 |
+| [CONTRIBUTING.md](../CONTRIBUTING.md) | 已核对一致 | 0d5aa69e2fd4f911 | 开发依赖/测试、Conda/CMD、文档闭环及权限边界与现行入口一致。 依据：package.json; run-tests.cmd; CI; SECURITY |
+| [README.md](../README.md) | 已修正 | 47e3d6fe2e7c606d | 核对启动入口、默认端口/工作区、0.7.2、现有功能与导航；暂停版本改为既有交付记录，不冒称外部最新版。 依据：package.json; launch.js; extension/package.json; 主机/工作台入口 |
 | [SECURITY.md](../SECURITY.md) | 已修正 | ff2ea1228ce04dcd | 核对控制面、OAuth/peer、Git/文本、审批/stdio、网络/统计/恢复与清理的现行边界；敏感路径措辞补只读Git/搜索，不约束任意Execute。OS竞态/真实桌面等仍保留。 依据：localControl/corsAllow; mcp/session/oauth; tools; F62–65; 安全相关现有回归 |
 | [arena-model-probe/README-PYTHON.md](../arena-model-probe/README-PYTHON.md) | 暂停 | 未读正文 | 沿用用户完全暂停的专项边界，仅登记路径/大小，不读正文、不认证最新。 依据：manager/agents.md暂停约定 |
 | [arena-model-probe/README.md](../arena-model-probe/README.md) | 暂停 | 未读正文 | 沿用用户完全暂停的专项边界，仅登记路径/大小，不读正文、不认证最新。 依据：manager/agents.md暂停约定 |
@@ -44,7 +44,7 @@ Markdown：209（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [computer-use/win/截图标记与OCR详解.md](../computer-use/win/截图标记与OCR详解.md) | 已修正 | 0659f33cbbd7189f | 核对截图/元信息/标记/OCR方法、参数/局限；修CI现已编译capture/mark，但未实际操作GDI/OCR。 依据：六个PS/C#源码与test.yml编译名单 |
 | [computer-use/win/鼠标键盘与剪贴板详解.md](../computer-use/win/鼠标键盘与剪贴板详解.md) | 已核对一致 | 2f5dba67bb07f984 | 参数、窗口唯一性/焦点/坐标、消息提交、Clipboard序号/特殊格式/错误码与源码一致；只读核对未操作桌面。 依据：act/act-bg/type与input/input2/keys源码；既有CI无效句柄检查 |
 | [docs-site/README.md](../docs-site/README.md) | 已核对一致 | 6f1b7ea39ee4d415 | 构建/启动/静态范围、内嵌与未内嵌文档、源码快照/生成守卫及发行预构建边界一致；非全网/全文语义检查。 依据：docs-site build/serve/check-docs; config; docsSite/docsHttp现有回归 |
-| [docs-site/source-index.md](../docs-site/source-index.md) | 生成核验 | f07c62c9b3df4a58 | source-index由check-docs生成核验；扩展Markdown按规范源码与整个发行文件集合逐字节比较，不手改副本。 依据：check-docs updated=0; extensionCopy.test.js通过 |
+| [docs-site/source-index.md](../docs-site/source-index.md) | 生成核验 | e0ad13627623365a | source-index由check-docs生成核验；扩展Markdown按规范源码与整个发行文件集合逐字节比较，不手改副本。 依据：check-docs updated=0; extensionCopy.test.js通过 |
 | [docs-site/样式规则详解.md](../docs-site/样式规则详解.md) | 已核对一致 | e8a5d4704e7cc503 | 核对变量/260px网格/组件选择器/980px断点、局部滚动/焦点和实际渲染配合；不代签全部页面或系统字体。 依据：styles.css; app.js; docsViewerBrowser选定状态 |
 | [docs-site/浏览与服务详解.md](../docs-site/浏览与服务详解.md) | 已核对一致 | 9d6ef43698a5a8d9 | 核对八路页面/搜索/锚点/源码滚动、预构建/开发服务器与静态路径/方法/匿名边界及真实浏览器验证范围。 依据：app.js; serve.js; index.html; 现有docs相关回归 |
 | [docs-site/清单与构建详解.md](../docs-site/清单与构建详解.md) | 已修正 | 798ad5314908b02c | 核对库存/归属/AST、解析/链接重写、快照/排除与输出，原地修CRLF及四主文档独立路径上下文；解析器局限保留。 依据：check-docs.js; build.js; anchors.js; documentationLinks/docsSite |
@@ -53,7 +53,7 @@ Markdown：209（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [docs/development/插件一体化启动返工方案.md](../docs/development/插件一体化启动返工方案.md) | 已核对一致 | d9ccbfed671b9e78 | 01a0d084新增R6方案稿：现状事实按c8c2711源码核对（插件视图/按钮、SKIP_WORKBENCH、工作台独有功能与接口、capabilities未声明）；设计与分期为待确认提案（用户澄清后改为两期、网页工作台保留），不代表已实现。 依据：extension.js/package.json、agent-host config/index/routes、workbench js、installer/launch.js。 |
 | [docs/development/代码复盘指南.md](../docs/development/代码复盘指南.md) | 已修正 | a674449ec578d89d | 核对全部导航目标和学习主题，修旧requestScope导出数量及避免把教学提纲当全源码必写任务；暂停链接仅定位。 依据：源码/详解路径; requestScope.js; F66标准 |
 | [docs/development/借鉴优化说明（新手版）.md](../docs/development/借鉴优化说明（新手版）.md) | 已修正 | 6fb6d72ddef8ea22 | 核对当前已实现能力与候选/延期区别；Windows特定修复不覆盖未解R4，旧59文件/2d42c39留作当时证据并指当前阶段。 依据：src/相关功能; CI矩阵; 阶段10; 上游来源归档边界 |
-| [docs/development/平台启动与CI详解.md](../docs/development/平台启动与CI详解.md) | 已核对一致 | fc444924f4233a4b | 逐组核对CMD/sh参数/cwd/退出、npm入口与依赖、CI九任务/权限/审计/编译和浏览器边界。 依据：根脚本; package.json; .github/workflows/test.yml; installer |
+| [docs/development/平台启动与CI详解.md](../docs/development/平台启动与CI详解.md) | 已核对一致 | 74aee81b61ab0736 | 逐组核对CMD/sh参数/cwd/退出、npm入口与依赖、CI九任务/权限/审计/编译和浏览器边界。 依据：根脚本; package.json; .github/workflows/test.yml; installer |
 | [docs/development/总览.md](../docs/development/总览.md) | 已修正 | 61fca4bc94dff730 | 核对目录/入口/函数导航、执行模式、恢复及端口配置；区分根npm install/test与start自动生产依赖准备。 依据：package.json; launch.js; cfg/index; 对应源码/已有回归 |
 | [docs/development/技术实现.md](../docs/development/技术实现.md) | 已修正 | 9fd6a706772f4e6c | 修搜索10秒启动+2秒扫描、严格UTF-8/差异写前预算及admin与usage存储差异；核对执行/取消/授权/恢复链。 依据：fileOps.searchWorker; boundedFile/diff/patchEngine; admin/app; requestScope; 主机路由 |
 | [docs/development/架构导读.md](../docs/development/架构导读.md) | 已修正 | e2bea5aeabef78d4 | 分层/授权/控制面/文件/恢复/测试边界与现状匹配，更新文档任务口径，不把历史截图当实现或实机。 依据：主线入口及相关说明/实现，F62–65修复与F66更正 |
@@ -79,17 +79,17 @@ Markdown：209（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [installer/README.md](../installer/README.md) | 已修正 | 234979d58a63eecf | 核对载荷白名单、可写runtime与.ready复用、各模式/准备预算、数据保留及回收边界；将只读R5首包改为历史，衔接已交付确认回收。 依据：package.js; launch.js; appWindow.js; webagent.iss; F65 |
 | [installer/函数详解.md](../installer/函数详解.md) | 已修正 | 6a3aed9dfd2a38f9 | 核对manifest/runtime/工作区/三种准备预算、app身份/IPC/回收及打包副作用，修职责漏列appWindow/preparation；平台/全部后代仍未代验。 依据：installer四Node模块/PS/ISS; F60/65真实函数回归; package collect/stage |
 | [installer/安装声明详解.md](../installer/安装声明详解.md) | 已修正 | a11f53ac346c3684 | 核对Inno声明/路径权限/注册表/卸载/事件，修默认版本0.7.2和缺漏的回收开始菜单；Windows实操仍未代验。 依据：webagent.iss; installerPackaging/现有Windows CI |
-| [manager/CONTEXT.md](../manager/CONTEXT.md) | 已修正 | 15dc5f62e95a28aa | 按F67实际进度更新入口/基线和.md分母；旧CI只作对应提交证据，实机/暂停/遗留单列。 依据：本轮清单、Git HEAD、阶段10与用户更正 |
+| [manager/CONTEXT.md](../manager/CONTEXT.md) | 已修正 | 3b092e249e8dc79e | 按F67实际进度更新入口/基线和.md分母；旧CI只作对应提交证据，实机/暂停/遗留单列。 依据：本轮清单、Git HEAD、阶段10与用户更正 |
 | [manager/SKILL.md](../manager/SKILL.md) | 只读保留 | 5c8c93d50e52332b | 规范源/副本逐字节相同，作为既有规则保留，不冒称外部最新版；项目特色与F66澄清在manager/agents和唯一文档规范处理。 依据：cmp source/copy; AGENTS只读约定 |
 | [manager/agents.md](../manager/agents.md) | 已核对一致 | 72974d815aa58d57 | 技术栈/同进程双端口、代码文档和安全/暂停/固定分支约定与当前授权一致。 依据：AGENTS、用户F66澄清、package/CI |
 | [manager/docs/documentation.md](../manager/docs/documentation.md) | 已核对一致 | ac757d0b6f4700c0 | 核对用户新口径、唯一主说明、生成/链接/测试与分类处置；教学标准不膨胀为源码逐行认证。 依据：用户澄清、check-docs/build/tests的实际职责 |
-| [manager/docs/experience.md](../manager/docs/experience.md) | 已核对一致 | ec75e8b48734d9a0 | 仅保留可复用方法，恢复/测试/并发/文档口径/F62–65经验仍适用，不重复维护当前待办。 依据：本轮实际恢复/文档核对及阶段10历史 |
+| [manager/docs/experience.md](../manager/docs/experience.md) | 已核对一致 | 30ba0cc21c07315b | 仅保留可复用方法，恢复/测试/并发/文档口径/F62–65经验仍适用，不重复维护当前待办。 依据：本轮实际恢复/文档核对及阶段10历史 |
 | [manager/stages/audit-2026-09-11.md](../manager/stages/audit-2026-09-11.md) | 已修正 | 3b8de4f6609d2311 | 补历史阶段横幅，旧分支/基线/授权只属当时；原审计事实不重写。 依据：CONTEXT和阶段10现行入口。 |
 | [manager/stages/context-history-through-0.4.md](../manager/stages/context-history-through-0.4.md) | 历史保留 | a4ccaf24eb17241b | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [manager/stages/documentation-2026-09-12.md](../manager/stages/documentation-2026-09-12.md) | 历史保留 | c23c09e4b3615d99 | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [manager/stages/probe-dual-integration-2026-09-15.md](../manager/stages/probe-dual-integration-2026-09-15.md) | 暂停 | 未读正文 | 沿用用户完全暂停的专项边界，仅登记路径/大小，不读正文、不认证最新。 依据：manager/agents.md暂停约定 |
 | [manager/stages/s1-handoff.md](../manager/stages/s1-handoff.md) | 历史保留 | cfc0e427dc08e55c | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
-| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 已核对一致 | 91912040cb716e36 | 当前唯一工作包表/失败/批次与F66–68实际进度一致；历史段按时间保留，R7仍为下一项。 依据：CONTEXT; 本轮200文档清单; 实际提交/测试/CI记录 |
+| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 已核对一致 | c30f14f0d0dc0d0c | 当前唯一工作包表/失败/批次与F66–68实际进度一致；历史段按时间保留，R7仍为下一项。 依据：CONTEXT; 本轮200文档清单; 实际提交/测试/CI记录 |
 | [manager/stages/s2-shell.md](../manager/stages/s2-shell.md) | 历史保留 | 5ac447fe582ce09e | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [manager/stages/s3-bridge-image.md](../manager/stages/s3-bridge-image.md) | 历史保留 | fbe64b3265d3cf1a | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [manager/stages/s4-terminal.md](../manager/stages/s4-terminal.md) | 历史保留 | 1cf1fcca01c51478 | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
@@ -141,7 +141,7 @@ Markdown：209（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [webagent-core/README.md](../webagent-core/README.md) | 已核对一致 | ecfd98d990a19163 | 代码/界面分工、主机与独立admin以及工作区/启动导航一致。 依据：各入口、index.js与scripts |
 | [webagent-core/admin-host/README.md](../webagent-core/admin-host/README.md) | 已核对一致 | 1945b9d05c3c6620 | F63后Bearer/独立端口/坏存储保留/4MiB与10000行、输入/schema/原子发布与窄屏说明均一致。 依据：admin app/index; adminHost/adminIntegrity/浏览器断言 |
 | [webagent-core/admin-host/统计服务详解.md](../webagent-core/admin-host/统计服务详解.md) | 已核对一致 | 2def36105e796a08 | F63输入/存储/URL/HTTP码/先序列化再200/静态表格样式及旧token文件/慢请求局限准确，未混入客户端上报改造。 依据：admin/app/index; adminIntegrity/adminHost/浏览器断言 |
-| [webagent-core/agent-host/README.md](../webagent-core/agent-host/README.md) | 已核对一致 | 50e76b0dd2ea53b4 | npm入口/运行与开发依赖、版本来源、控制面/双端口、测试过滤和预算一致。 依据：host/package.json; extensionVersion.js; src/index.js; scripts/run-tests.js |
+| [webagent-core/agent-host/README.md](../webagent-core/agent-host/README.md) | 已核对一致 | d3ec1b33a3095e8d | npm入口/运行与开发依赖、版本来源、控制面/双端口、测试过滤和预算一致。 依据：host/package.json; extensionVersion.js; src/index.js; scripts/run-tests.js |
 | [webagent-core/agent-host/scripts/README.md](../webagent-core/agent-host/scripts/README.md) | 已核对一致 | 31dddadfbad27d5a | 运行器过滤/错误、诊断及两个独立只读/本机确认回收CLI的职责和权限边界一致。 依据：scripts/run-tests.js; tunnel-residue/tunnel-cleanup.js |
 | [webagent-core/agent-host/scripts/运行器详解.md](../webagent-core/agent-host/scripts/运行器详解.md) | 已修正 | 46ba7d4ef9c854bb | 核对发现/过滤/退出码/120秒/CI注解及两个回收CLI边界；纠正现在已有lifecycleSummary函数，不靠标题猜实现。 依据：run-tests.js; testRunner; tunnel-residue/cleanup; R4限定诊断 |
 | [webagent-core/agent-host/src/README.md](../webagent-core/agent-host/src/README.md) | 已核对一致 | d6eefb9043221b0b | 配置/身份/初始化先根验证、双端口/API/WS/Origin和解析顺序与入口一致。 依据：src/index/config; localControl/corsAllow; httpSmoke/auditControl |

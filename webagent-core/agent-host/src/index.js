@@ -69,7 +69,7 @@ function applyCommon(app, { mcp = false } = {}) {
 // path and a stack trace — on ANY path, before authentication, and through the tunnel (POST
 // /oauth/register '{bad' was enough). Keep the status the parser chose (400/413/415…), never echo
 // err.message or a stack, and answer JSON-RPC-shaped errors on /mcp so MCP clients can parse them.
-// eslint-disable-next-line no-unused-vars -- Express recognises error middleware by its four parameters.
+// Express recognises error middleware by its four parameters, so `next` stays although it is unused.
 function jsonErrors(err, req, res, next) {
   const raw = err && (err.status || err.statusCode);
   const status = Number.isInteger(raw) && raw >= 400 && raw < 600 ? raw : 500;

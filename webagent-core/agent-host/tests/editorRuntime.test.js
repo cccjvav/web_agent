@@ -156,7 +156,6 @@ if (!process.argv.includes('--vm-child')) {
   // Confirmed save supplies a volatile undo handle; restore cannot overwrite later drafts.
   state.status={workspaceRoot:'/fixture',identity:{hostInstanceId:'host-fixture'}};
   responses.push(response({success:true,hash:hash('f'),undo:{id:'undo-fixture'}}));await api.saveActive();
-  const savedDraft=two.content;
   responses.push(response({success:true,path:two.path,expectedHash:two.hash,diff:'undo preview'}));await api.previewUndo();
   assert.ok(state.tabs.find(t=>t.id===state.activeTab).preview.undo);
   let restoredResponse;responses.push(new Promise(resolve=>{restoredResponse=resolve;}));
