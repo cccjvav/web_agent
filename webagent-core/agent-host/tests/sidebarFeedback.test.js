@@ -307,14 +307,26 @@ async function main() {
   assert.equal(tab.title, 'Web Agent 设置');
   assert.deepStrictEqual(tab.options.localResourceRoots, [{ fsPath: path.join(root, 'webagent-core', 'workbench') }], 'served from the host.json checkout');
   assert.ok(tab.webview.html.includes('data-initial-page="bridge"'));
-  const relayed = [];
+  // F91: before each relayed request the extension reads /api/status and checks the folder (checks[]); only a
+  // host serving this window's folder receives the request (relayed[]).
+  const relayed = [], checks = [];
+  let statusRoot = tmp, statusDown = false;
   context.transport = async (method, url, body, options) => {
+    if (method === 'GET' && url.endsWith('/api/status') && options && options.timeoutMs === 5000) {
+      checks.push({ url, options });
+      if (statusDown) throw new Error('connect ECONNREFUSED');
+      return { status: 200, json: { status: 'online', workspaceRoot: statusRoot, identity: { hostInstanceId: 'instance' } } };
+    }
     relayed.push({ method, url, body, options });
     return { status: 200, contentType: 'application/json', raw: '{"status":"online"}', json: { status: 'online' } };
   };
   vm.runInContext('requestJson = transport;', context);
+  const settle = async () => { for (let i = 0; i < 4; i++) await new Promise(resolve => setImmediate(resolve)); };
   tab.listeners.forEach(fn => fn({ type: 'webagent-api', id: 'q1', method: 'POST', path: '/api/models', body: '{"activeModelId":"builtin"}' }));
-  await new Promise(resolve => setImmediate(resolve)); await new Promise(resolve => setImmediate(resolve));
+  await settle();
+  assert.equal(checks.length, 1, 'the folder is checked first');
+  assert.equal(checks[0].url, relayed[0].url.replace('/api/models', '/api/status'), 'the check reads the same host');
+  assert.strictEqual(checks[0].options.signal, relayed[0].options.signal, 'closing the tab also cancels the check');
   assert.equal(relayed.length, 1);
   assert.equal(relayed[0].method, 'POST');
   assert.ok(/^http:\/\/127\.0\.0\.1:\d+\/api\/models$/.test(relayed[0].url), relayed[0].url);
@@ -322,6 +334,30 @@ async function main() {
   assert.equal(relayed[0].options.rawBody, '{"activeModelId":"builtin"}');
   assert.ok(relayed[0].options.signal && relayed[0].options.timeoutMs > 0, 'cancellable, with the relay deadline');
   assert.deepStrictEqual(tab.posted.at(-1), { type: 'webagent-api-result', id: 'q1', ok: true, status: 200, contentType: 'application/json', body: '{"status":"online"}' });
+  assert.ok(!tab.posted.some(m => m.type === 'webagent-host-problem'), 'a matching host raises no problem');
+  // A host serving another folder (e.g. one on 48271 started for a different project) is never changed: the
+  // request is refused before it is sent, and the page is told why first (its banner shows this text).
+  statusRoot = path.join(tmp, 'other-project'); tab.posted.length = 0;
+  tab.listeners.forEach(fn => fn({ type: 'webagent-api', id: 'q2', method: 'POST', path: '/api/models', body: '{"activeModelId":"builtin"}' }));
+  await settle();
+  assert.equal(relayed.length, 1, 'nothing reaches a host that serves another folder');
+  assert.deepStrictEqual(tab.posted.map(m => m.type), ['webagent-host-problem', 'webagent-api-result'], 'the reason arrives before the refusal');
+  assert.ok(tab.posted[0].text.startsWith('设置页已停用：') && tab.posted[0].text.includes(statusRoot) && tab.posted[0].text.includes('【启动】'), tab.posted[0].text);
+  assert.deepStrictEqual(tab.posted[1], { type: 'webagent-api-result', id: 'q2', ok: false, error: tab.posted[0].text });
+  // A host that does not answer is the ordinary "is the host started?" case: refused, but no folder reason.
+  statusRoot = tmp; statusDown = true; tab.posted.length = 0;
+  tab.listeners.forEach(fn => fn({ type: 'webagent-api', id: 'q3', method: 'GET', path: '/api/skills' }));
+  await settle();
+  assert.equal(relayed.length, 1);
+  assert.deepStrictEqual(tab.posted.map(m => [m.type, m.ok]), [['webagent-api-result', false]]);
+  // A workspace that is no longer trusted (or has no folder) is refused with that reason.
+  statusDown = false; vscode.workspace.isTrusted = false; tab.posted.length = 0;
+  tab.listeners.forEach(fn => fn({ type: 'webagent-api', id: 'q4', method: 'GET', path: '/api/skills' }));
+  await settle();
+  vscode.workspace.isTrusted = true;
+  assert.equal(relayed.length, 1);
+  assert.deepStrictEqual(tab.posted.map(m => m.type), ['webagent-host-problem', 'webagent-api-result']);
+  assert.ok(tab.posted[0].text.includes('信任'), tab.posted[0].text);
   // A menu click passes no page (or a non-string); reopening reveals the same tab.
   await commands.get('webagent.openSettings')({ some: 'context' });
   assert.equal(settingsPanels.length, 1); assert.equal(tab.revealed, 1);

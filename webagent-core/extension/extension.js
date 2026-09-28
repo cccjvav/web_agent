@@ -137,6 +137,23 @@ async function workspaceSnapshot() {
   return { status, binding: { workspaceRoot: status.workspaceRoot, hostInstanceId: status.identity.hostInstanceId } };
 }
 async function workspaceBinding() { return (await workspaceSnapshot()).binding; }
+// F91 (R6 phase-2 residual): the settings tab must not change a host that serves another folder. Same rule as
+// workspaceSnapshot (Chat, Bridge), checked before every relayed request because the host behind the URL can
+// change while the tab stays open. Errors marked hostProblem are shown in the tab's banner (settingsPanel.js).
+async function settingsHostCheck({ signal } = {}) {
+  const problem = message => Object.assign(new Error(message), { hostProblem: true });
+  let before, url;
+  try { before = workspacePaths(); url = agentHostUrl(); } catch (error) { throw problem(error.message); }
+  const response = await requestJson('GET', `${url}/api/status`, undefined, { signal, timeoutMs: 5000 });
+  const root = response.status === 200 && response.json ? response.json.workspaceRoot : null;
+  if (typeof root !== 'string' || !root) throw new Error('主机未就绪，请启动对应项目的 agent-host。');
+  let after;
+  try { after = workspacePaths(); } catch (error) { throw problem(error.message); }
+  if (!sameWorkspace(before[0], root) || !sameWorkspace(after[0], root)) {
+    throw problem(`设置页已停用：${url} 上的主机服务的是另一个文件夹（${root}），不是当前 VS Code 打开的文件夹，设置页不会改动它。`
+      + '请在侧栏主机卡片点【启动】为当前文件夹启动主机（会另选空闲端口），然后点【重新读取】。');
+  }
+}
 
 const SECRET_PATTERN = /^[a-f0-9]{24}$/;
 
@@ -602,6 +619,7 @@ function activate(context) {
       const result = await requestJson(method, agentHostUrl() + apiPath, undefined, { rawBody: body === null ? undefined : body, signal, timeoutMs });
       return { status: result.status, contentType: result.contentType, raw: result.raw };
     },
+    verifyHost: settingsHostCheck,
     log: (line) => hostOutput.appendLine(line)
   }) : null;
   if (settings) context.subscriptions.push({ dispose: () => settings.dispose() });

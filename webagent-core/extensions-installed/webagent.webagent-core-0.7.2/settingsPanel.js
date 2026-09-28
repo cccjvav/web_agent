@@ -111,7 +111,10 @@ function createHostServiceHandler({ vscode, post, maxPending = MAX_PENDING_SERVI
 
 // One tab per window: opening again reveals it (and switches page when asked).
 // send(method, path, body, { signal, timeoutMs }) -> { status, contentType, raw } reaches the local host.
-function createSettingsPanel({ vscode, extensionDir, hostRoot = () => null, send, log = () => {} }) {
+// verifyHost({ signal }) runs before every relayed request (F91): extension.js checks that the host serves this
+// window's folder. An error with hostProblem set refuses the request and is also posted to the page as
+// { type: 'webagent-host-problem', text }, so its banner shows that reason instead of "is the host started?".
+function createSettingsPanel({ vscode, extensionDir, hostRoot = () => null, send, verifyHost = null, log = () => {} }) {
   let panel = null;
 
   function open(page) {
@@ -143,11 +146,20 @@ function createSettingsPanel({ vscode, extensionDir, hostRoot = () => null, send
       created.dispose();
       throw error;
     }
-    const post = message => { try { webview.postMessage(message); } catch { /* panel closing */ } };
-    const relay = createApiRelay({ send, post });
+    let closed = false;
+    const post = message => { if (closed) return; try { webview.postMessage(message); } catch { /* panel closing */ } };
+    const guardedSend = typeof verifyHost !== 'function' ? send : async (method, apiPath, body, options = {}) => {
+      try { await verifyHost(options); } catch (error) {
+        if (error && error.hostProblem) post({ type: 'webagent-host-problem', text: String(error.message || error).slice(0, 500) });
+        throw error;
+      }
+      return send(method, apiPath, body, options);
+    };
+    const relay = createApiRelay({ send: guardedSend, post });
     const services = createHostServiceHandler({ vscode, post });
     const listener = webview.onDidReceiveMessage(message => { if (!relay.handle(message)) services.handle(message); });
     created.onDidDispose(() => {
+      closed = true;
       relay.dispose();
       services.dispose();
       if (listener && typeof listener.dispose === 'function') listener.dispose();

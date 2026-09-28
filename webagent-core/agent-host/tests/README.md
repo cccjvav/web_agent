@@ -237,13 +237,13 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [sandbox.test.js](sandbox.test.js) | 3 个函数/类节点 |
 | [searchWorkerLifecycle.test.js](searchWorkerLifecycle.test.js) | 14 个函数/类节点 |
 | [sensitiveBoundary.test.js](sensitiveBoundary.test.js) | 33 个函数/类节点 |
-| [settingsPanel.test.js](settingsPanel.test.js) | 67 个函数/类节点 |
+| [settingsPanel.test.js](settingsPanel.test.js) | 74 个函数/类节点 |
 | [settingsRelay.test.js](settingsRelay.test.js) | 61 个函数/类节点 |
-| [sidebarFeedback.test.js](sidebarFeedback.test.js) | 121 个函数/类节点 |
+| [sidebarFeedback.test.js](sidebarFeedback.test.js) | 128 个函数/类节点 |
 | [skillsLifecycle.test.js](skillsLifecycle.test.js) | 19 个函数/类节点 |
 | [skipWorkbench.test.js](skipWorkbench.test.js) | 16 个函数/类节点 |
 | [stateIntegrity.test.js](stateIntegrity.test.js) | 40 个函数/类节点 |
-| [stdioMcp.test.js](stdioMcp.test.js) | 25 个函数/类节点 |
+| [stdioMcp.test.js](stdioMcp.test.js) | 37 个函数/类节点 |
 | [stdioOwnerFixture.js](stdioOwnerFixture.js) | 2 个函数/类节点 |
 | [stdioServerFixture.js](stdioServerFixture.js) | 3 个函数/类节点 |
 | [taskProgress.test.js](taskProgress.test.js) | 9 个函数/类节点 |

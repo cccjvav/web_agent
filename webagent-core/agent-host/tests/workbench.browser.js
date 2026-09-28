@@ -816,6 +816,15 @@ async function settingsPanelBrowser(browser, base, status, workspace) {
     await post({ type: 'webagent-reload' });
     await new Promise(resolve => setTimeout(resolve, 300));
     assert.equal(skillReads(), 3, 'a good read is not repeated, so unsaved input stays');
+    // F91: the extension's reason for refusing requests (the host serves another folder) replaces the generic
+    // text; it marks the tab failed, so reopening from the sidebar re-reads, and a good read hides it again.
+    await post({ type: 'webagent-host-problem', text: '设置页已停用：测试用原因' });
+    await banner.waitFor({ state: 'visible' });
+    assert.equal(await page.locator('#load-banner > span').textContent(), '设置页已停用：测试用原因');
+    assert.equal(await page.locator('#load-banner button').textContent(), '重新读取');
+    await post({ type: 'webagent-reload' });
+    await banner.waitFor({ state: 'hidden' });
+    assert.equal(skillReads(), 4, 'a host problem counts as a failed read, so reopening re-reads');
     const expected = errors.filter(line => line.startsWith('console: Some settings failed to load'));
     assert.equal(expected.length, 2, 'each failed read is logged once');
     errors.splice(0, errors.length, ...errors.filter(line => !expected.includes(line)));

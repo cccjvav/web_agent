@@ -61,7 +61,7 @@ POST access_token后核对current与HTTP状态；authorization_pending保留，s
 
 ## 5. HTTP接线与验证
 
-本机API的token/device/device-poll由identityRequest创建请求专属AbortController：req.aborted或未完成响应的close取消，finally移除监听，已destroyed响应不再json。它不是Chat五分钟scope。直接模块调用只有进入runWithSignal才有父取消，但每次HTTP仍有自身10秒期限。
+本机API的token/device/device-poll由routes.js的clientScopedRequest（原名identityRequest）创建请求专属AbortController：req.aborted或未完成响应的close取消，finally移除监听，已destroyed响应不再json。它不是Chat五分钟scope。直接模块调用只有进入runWithSignal才有父取消，但每次HTTP仍有自身10秒期限。
 
 ```bat
 npm test -- --filter=githubAuth

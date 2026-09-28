@@ -246,3 +246,9 @@ hash用于版本冲突检测，不是授权、锁或回滚票据。拿到新的c
 - `chatParticipants`的`isDefault`/`modes`（需`defaultChatParticipant`）与`locations`（需`chatParticipantAdditions`）是提议API。第三方扩展写了而没有许可时，VS Code只在日志里记“CANNOT use API proposal”，然后跳过**整个**参与者；`createChatParticipant`调用没有报错进catch。结果是`@webagent`从未存在，而单元测试全绿。给清单加字段前，先读VS Code扩展点处理器的源码，并在测试里按同一规则检查（hostLaunch第10节）。
 - 排查“功能在用户机上不存在”时，先查注册是否成功，再猜UI模式；第89组猜的是“Agent模式不列扩展参与者”，多走了一轮实机。
 - 用户把报告推到仓库根（`r6result.md`、`manual-results.txt`）时，documentationLinks要求所有被跟踪的文档都在`FULL_REVIEW_INDEX`登记，那个提交的CI必红。归档时`git mv`进`review/`并登记。`FULL_REVIEW_INDEX`的计数行是手工维护的，新增行时要按表重数，F85漏过一次。
+
+## 取消请求不等于取消主机上的动作；共享界面换了宿主要重新核对“连的是谁”（F91）
+- **日期/标签**：2026-09-28，请求生命周期、stdio、设置标签页。
+- 转发层关标签页时abort的是HTTP请求；主机路由若不监听断开（`req 'aborted'`/未写完的`res 'close'`），耗时且有副作用的动作（这里是启动第三方stdio程序）会照做完，结果没人看见。凡是会启动进程或改外部状态、又可能耗时的路由，用`clientScopedRequest`把动作绑到请求生命周期，并用“挂起的夹具+真实HTTP断开”测，而不是只在模块层测父信号。
+- 网页工作台搬进VS Code标签页后，请求目标从“本页所在的主机”变成“插件认为的主机”（可能退回默认端口）。共享同一份界面代码时，要把宿主侧原有的前提（Chat路径的文件夹核对）同样加在新入口上，并让页面能显示宿主给出的原因，否则只会看到通用的“请确认主机已启动”。
+- 测试替身若在关闭后直接抛错，“关闭后不再发送”的断言会空转；要让替身继续记录，才能证明是被测代码自己挡住的。

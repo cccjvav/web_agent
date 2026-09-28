@@ -362,7 +362,7 @@ router.post('/external/stdio/start', async (req, res) => {
   if (!apiString(body.previewId, 36, { nonEmpty: true, singleLine: true })
     || !/^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(body.previewId)
     || body.confirmed !== true) return rejectApiRequest(res);
-  try { res.json(await externalClient.startStdio(body)); }
+  try { res.json(await clientScopedRequest(req, res, () => externalClient.startStdio(body))); }
   catch (error) { res.status(400).json({ ok: false, error: error.message }); }
 });
 router.post('/external/servers', async (req, res) => {
@@ -988,12 +988,16 @@ router.post('/bridge/login', (req, res) => {
   res.json({ success: true, demo: true, provider: 'local-demo', username: 'local' });
 });
 
-// Identity calls reach GitHub over the network, so they must inherit the lifetime of the actual
-// HTTP request rather than only the module's publication generation. Without this, a client that
-// navigates away or times out leaves the upstream request running to its own 120s budget with
-// nobody waiting for the answer (verified: the upstream signal never aborted on disconnect).
-// Adopted from the parallel audit on branch 01a0c932, reproduced here before adopting.
-async function identityRequest(req, res, action) {
+// Runs `action` with a signal (requestScope.currentSignal) that aborts when the client goes away
+// before the response is written. Identity calls reach GitHub over the network, so they must inherit
+// the lifetime of the actual HTTP request rather than only the module's publication generation.
+// Without this, a client that navigates away or times out leaves the upstream request running to its
+// own 120s budget with nobody waiting for the answer (verified: the upstream signal never aborted on
+// disconnect). Adopted from the parallel audit on branch 01a0c932, reproduced here before adopting.
+// The stdio start uses it too (F91): a settings tab or browser page closed mid-start used to leave the
+// start running, so the process could come up after nobody was left to see it; now the registration
+// is aborted and externalClient.establish stops the process before rejecting.
+async function clientScopedRequest(req, res, action) {
   const controller = new AbortController();
   const abort = () => controller.abort();
   const disconnected = () => { if (!res.writableEnded) abort(); };
@@ -1013,7 +1017,7 @@ router.post('/bridge/token', async (req, res) => {
   if (!body) return;
   if (!validOptionalString(body, 'token', 4096)) return rejectBridgeRequest(res);
   try {
-    const out = await identityRequest(req, res, () => github.loginWithToken(body.token || ''));
+    const out = await clientScopedRequest(req, res, () => github.loginWithToken(body.token || ''));
     if (!res.destroyed) res.json(out);
   } catch (err) {
     if (!res.destroyed) res.status(err.status || 400).json({ success: false, error: err.message, code: err.code });
@@ -1023,7 +1027,7 @@ router.post('/bridge/token', async (req, res) => {
 router.post('/bridge/device', async (req, res) => {
   if (!bridgeRequestBody(req, res, [])) return;
   try {
-    const out = await identityRequest(req, res, () => github.startDeviceLogin());
+    const out = await clientScopedRequest(req, res, () => github.startDeviceLogin());
     if (!res.destroyed) res.json({ success: true, ...out });
   } catch (err) {
     if (!res.destroyed) res.status(err.status || 400).json({ success: false, error: err.message, code: err.code });
@@ -1033,7 +1037,7 @@ router.post('/bridge/device', async (req, res) => {
 router.post('/bridge/device/poll', async (req, res) => {
   if (!bridgeRequestBody(req, res, [])) return;
   try {
-    const out = await identityRequest(req, res, () => github.pollDeviceLogin());
+    const out = await clientScopedRequest(req, res, () => github.pollDeviceLogin());
     if (!res.destroyed) res.json(out);
   } catch (err) {
     if (!res.destroyed) res.status(err.status || 400).json({ success: false, error: err.message, code: err.code });

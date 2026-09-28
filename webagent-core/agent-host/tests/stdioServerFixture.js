@@ -26,6 +26,7 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
   if (message.id === 'server-request') { fs.writeFileSync('stdio-server-request.json', JSON.stringify(message)); return; }
   if (!message.id) return;
   if (mode === 'exit') process.exit(3);
+  if (mode === 'silent-init' && message.method === 'initialize') return; // keeps a start pending until it is cancelled
   let result;
   if (message.method === 'initialize') result = { protocolVersion: '2025-03-26', capabilities: { tools: {} } };
   if (message.method === 'tools/list') result = { tools: [{ name: 'echo', inputSchema: { type: 'object' }, annotations: { readOnlyHint: true } }] };

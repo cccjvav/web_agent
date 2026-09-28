@@ -107,7 +107,7 @@ F62第5批新增。`spentRefresh`是refresh令牌的重放墓碑集合，条目�
 
 F62第6批新增，从并行分支01a0c932吸收的互补修复配套红测。
 
-超时预算只解决"上游不回话"，不解决"客户端已经走了"。`/api/bridge/token`、`/bridge/device`、`/bridge/device/poll`都要走网络问GitHub；浏览器一旦跳走或socket断掉，这几个请求本应立刻停，而修前会继续跑满自己的预算、算完再把结果丢给一个没人听的响应。修法是`routes.js`里的`identityRequest()`把`AbortController`绑到req的`aborted`与res的`close`，再用`runWithSignal`跑处理器，`requestScope.fetchText`会把这个环境signal传到传输层。
+超时预算只解决"上游不回话"，不解决"客户端已经走了"。`/api/bridge/token`、`/bridge/device`、`/bridge/device/poll`都要走网络问GitHub；浏览器一旦跳走或socket断掉，这几个请求本应立刻停，而修前会继续跑满自己的预算、算完再把结果丢给一个没人听的响应。修法是`routes.js`里的`clientScopedRequest()`（F91前名为`identityRequest()`，现在也包stdio启动）把`AbortController`绑到req的`aborted`与res的`close`，再用`runWithSignal`跑处理器，`requestScope.fetchText`会把这个环境signal传到传输层。
 
 夹具**hangingTransport(state)**接受连接但永不回话（黑洞主机的样子），并记录**谁在什么时刻**abort它；**waitFor(predicate,timeoutMs)**轮询等待条件成立，内部用递归的**tick()**每10ms重试一次直到条件满足或超时。
 

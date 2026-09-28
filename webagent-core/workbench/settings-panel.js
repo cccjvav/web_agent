@@ -54,7 +54,8 @@ export function knownPage(page, doc = document) {
 export const LOAD_FAILED_TEXT = '部分设置未能读取：请确认主机已启动，然后点【重新读取】（或再点一次侧栏的齿轮）。';
 
 // state: 'failed' shows the banner with the retry button, 'loading' keeps a shown banner but disables the
-// button, 'ok' hides it.
+// button, 'ok' hides it. A 'failed' with a reason (the extension's webagent-host-problem, F91: the host serves
+// another folder) shows that reason instead of the generic text.
 export function createLoadBanner(retry, doc = document) {
   const box = doc.createElement('div');
   box.id = 'load-banner';
@@ -70,9 +71,10 @@ export function createLoadBanner(retry, doc = document) {
   box.append(text, button);
   const main = doc.querySelector('.modal-main');
   if (main) main.insertBefore(box, main.firstChild); else doc.body.prepend(box);
-  const set = (state) => {
+  const set = (state, reason = '') => {
     if (state === 'ok') { box.hidden = true; return; }
     if (state === 'loading' && box.hidden) return;
+    if (state === 'failed') text.textContent = reason || LOAD_FAILED_TEXT;
     box.hidden = false;
     button.disabled = state === 'loading';
     button.textContent = state === 'loading' ? '读取中…' : '重新读取';
@@ -107,16 +109,19 @@ async function boot() {
   };
   // First read of the host. When it failed (host not started yet), opening the tab again from the sidebar
   // re-reads; after a good read it does not, so unsaved form input is never overwritten.
-  let loadFailed = false, loading = null;
+  // hostProblem: the extension's reason for refusing requests (webagent-host-problem); cleared before each read
+  // and set again by the refusal if it still applies, since that message arrives before the refused reply.
+  let loadFailed = false, loading = null, hostProblem = '';
   const banner = createLoadBanner(() => loadAll());
   const loadAll = () => loading || (loading = (async () => {
+    hostProblem = '';
     banner.set('loading');
     const results = await Promise.allSettled([() => ui.refreshStatus(), () => ui.loadSkills(), () => ui.loadCustomizations()]
       .map(load => Promise.resolve().then(load)));
     const failed = results.filter(result => result.status === 'rejected' || result.value === false);
     loadFailed = failed.length > 0;
     if (loadFailed) console.error('Some settings failed to load', failed);
-    banner.set(loadFailed ? 'failed' : 'ok');
+    banner.set(loadFailed ? 'failed' : 'ok', hostProblem);
   })().finally(() => { loading = null; }));
 
   ui.openModal('overview');
@@ -124,6 +129,11 @@ async function boot() {
   channel.onMessage(message => {
     if (message && message.type === 'webagent-show-page') show(message.page);
     if (message && message.type === 'webagent-reload' && loadFailed) loadAll();
+    if (message && message.type === 'webagent-host-problem' && typeof message.text === 'string' && message.text) {
+      hostProblem = message.text.slice(0, 500);
+      loadFailed = true; // so reopening from the sidebar re-reads once the host is fixed
+      if (!loading) banner.set('failed', hostProblem);
+    }
   });
 
   await loadAll();

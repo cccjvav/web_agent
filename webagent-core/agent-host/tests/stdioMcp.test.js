@@ -133,6 +133,43 @@ async function main() {
     const pending = Array.from({ length: 8 }, () => runWithSignal(controller.signal, () => direct.request('tools/call', { name: 'echo', arguments: { hang: true } })).catch(() => 'rejected'));
     await assert.rejects(direct.request('tools/list', {}), /eight/);
     controller.abort(); assert.ok((await Promise.all(pending)).every(item => item === 'rejected')); await direct.closed;
+    // F91: closing the settings tab (or the browser page) mid-start drops the HTTP request. The route's client
+    // scope must abort the registration so the process is stopped, not left to come up with nobody watching.
+    // silent-init never answers initialize, so only the disconnect (not the 30s registration timer, which is
+    // beyond until()'s 15s) can end this start.
+    stage = 'http disconnect';
+    {
+      const express = require('express'), http = require('http');
+      const app = express(); app.use(express.json()); app.use('/api', require('../src/api/routes'));
+      const server = http.createServer(app);
+      await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+      const send = (apiPath, body) => {
+        const payload = JSON.stringify(body);
+        const req = http.request({ host: '127.0.0.1', port: server.address().port, path: apiPath, method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) } });
+        const reply = new Promise((resolve, reject) => {
+          req.on('response', res => { let text = ''; res.setEncoding('utf8'); res.on('data', c => { text += c; }); res.on('end', () => resolve({ status: res.statusCode, json: JSON.parse(text) })); });
+          req.on('error', reject);
+        });
+        req.end(payload);
+        return { req, reply };
+      };
+      try {
+        for (const name of ['stdio-started.json', 'stdio-received.txt']) fs.rmSync(path.join(root, name), { force: true });
+        const preview = await send('/api/external/stdio/preview', { program: process.execPath, args: [fixture, 'silent-init'] }).reply;
+        assert.strictEqual(preview.status, 200, JSON.stringify(preview.json));
+        const start = send('/api/external/stdio/start', { previewId: preview.json.previewId, confirmed: true });
+        start.reply.catch(() => { /* the client hangs up on purpose */ });
+        await until(() => fs.existsSync(path.join(root, 'stdio-received.txt'))); // initialize reached the process
+        const pid = JSON.parse(fs.readFileSync(path.join(root, 'stdio-started.json'))).pid;
+        await new Promise(resolve => setTimeout(resolve, 300));
+        assert.ok(alive(pid), 'nothing may stop the start while the client is still waiting');
+        assert.deepStrictEqual(external.list().map(item => item.status), ['connecting']);
+        start.req.destroy(); // the tab closes: the relay aborts its request
+        await until(() => !alive(pid));
+        assert.deepStrictEqual(external.list(), [], 'a start cancelled by disconnect leaves no registration');
+      } finally { await new Promise(resolve => server.close(resolve)); }
+    }
     // Killing only the owner must not leave the server or ordinary descendants alive.
     stage = 'owner death';
     owner = fork(path.join(__dirname, 'stdioOwnerFixture.js'), [], { env: { ...process.env, WORKSPACE_ROOT: root }, stdio: ['ignore', 'ignore', 'pipe', 'ipc'] });
@@ -143,7 +180,7 @@ async function main() {
     assert.ok(alive(childPid) && alive(grandPid));
     stage = 'owner killed';
     owner.kill('SIGKILL'); await until(() => !alive(childPid) && !alive(grandPid));
-    console.log('stdio MCP: preview/hash/confirmation, quoting, minimal env, approval, cancellation, framing budgets and owner-death tree cleanup passed');
+    console.log('stdio MCP: preview/hash/confirmation, quoting, minimal env, approval, cancellation, framing budgets, HTTP-disconnect start cancellation and owner-death tree cleanup passed');
   } finally {
     stage = 'cleanup after ' + stage;
     owner?.kill('SIGKILL'); await external.closeAll(); await transports.closeAll(); config.workspaceRoot = previous;

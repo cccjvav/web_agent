@@ -298,6 +298,40 @@ async function partE() {
   controller.dispose();
   assert.strictEqual(second.disposed, true); assert.strictEqual(controller.panel, null);
 
+  // F91 verifyHost: runs before send with the relay's options; a hostProblem refusal is posted as
+  // webagent-host-problem ahead of the failed result, other failures are not, and a refusal that settles after
+  // the tab closed posts nothing.
+  {
+    const checked = fakePanelVscode();
+    const calls = [];
+    let verdict = null, release;
+    const guarded = createSettingsPanel({ vscode: checked.vscode, extensionDir: extensionRoot, hostRoot: () => { throw new Error('none'); },
+      verifyHost: options => { calls.push(['verify', options]); if (verdict === 'wait') return new Promise((_, reject) => { release = reject; });
+        if (verdict) throw verdict; return Promise.resolve(); },
+      send: async (method, apiPath, body, options) => { calls.push(['send', options]); return { status: 200, contentType: 'application/json', raw: '{}' }; } });
+    const tab = guarded.open();
+    // Unlike the shared fake, keep recording after dispose, so only the panel's own closed flag can keep it quiet.
+    tab.webview.postMessage = message => { tab.posted.push(message); return Promise.resolve(true); };
+    tab.receive({ type: 'webagent-api', id: 'v1', method: 'GET', path: '/api/status' }); await tick(); await tick();
+    assert.deepStrictEqual(calls.map(c => c[0]), ['verify', 'send']);
+    assert.strictEqual(calls[0][1], calls[1][1], 'the check gets the same options (signal, deadline) as the request');
+    calls.length = 0; tab.posted.length = 0;
+    verdict = Object.assign(new Error('主机服务的是另一个文件夹'), { hostProblem: true });
+    tab.receive({ type: 'webagent-api', id: 'v2', method: 'GET', path: '/api/status' }); await tick(); await tick();
+    assert.deepStrictEqual(calls.map(c => c[0]), ['verify'], 'refused before send');
+    assert.deepStrictEqual(tab.posted, [{ type: 'webagent-host-problem', text: '主机服务的是另一个文件夹' },
+      { type: 'webagent-api-result', id: 'v2', ok: false, error: '主机服务的是另一个文件夹' }]);
+    tab.posted.length = 0; verdict = new Error('connect ECONNREFUSED');
+    tab.receive({ type: 'webagent-api', id: 'v3', method: 'GET', path: '/api/status' }); await tick(); await tick();
+    assert.deepStrictEqual(tab.posted, [{ type: 'webagent-api-result', id: 'v3', ok: false, error: 'connect ECONNREFUSED' }], 'no folder reason for an unreachable host');
+    tab.posted.length = 0; verdict = 'wait';
+    tab.receive({ type: 'webagent-api', id: 'v4', method: 'GET', path: '/api/status' }); await tick();
+    const count = tab.posted.length;
+    tab.dispose();
+    release(Object.assign(new Error('late'), { hostProblem: true })); await tick(); await tick();
+    assert.strictEqual(tab.posted.length, count, 'a late refusal is not posted into a closed tab');
+  }
+
   // No workbench next to a moved extension: refused before any tab is created.
   const lonely = fakePanelVscode();
   const nowhere = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-settings-'));
