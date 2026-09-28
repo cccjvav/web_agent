@@ -135,11 +135,21 @@ function attachWss(server) {
   const wss = new WebSocketServer({
     server,
     path: '/ws',
+    // The workbench only listens on this socket and never sends; 4 KiB bounds what a client can make us buffer
+    // (the ws default is 100 MiB). A larger frame closes the connection with 1009.
+    maxPayload: 4096,
     verifyClient({ req }) {
       return isLocalControlPlane(req) && isAllowedApiBrowserOrigin(req.headers.origin);
     }
   });
+  // ws re-emits the HTTP server's own errors (EADDRINUSE…) on the WebSocketServer. Without a listener that throws
+  // before listenOrExit's handler can print the port message (verified: raw "Unhandled 'error' event" stack).
+  // The server's listener stays the one that reports and exits.
+  wss.on('error', () => {});
   wss.on('connection', (ws, req) => {
+    // A malformed or oversized frame (unmasked, invalid UTF-8, over maxPayload) is emitted as 'error' on this
+    // socket; unhandled, one such frame from any local process crashed the whole host (verified). Drop the client.
+    ws.on('error', () => { try { ws.terminate(); } catch (_) {} });
     if (!isLocalControlPlane(req)) {
       try { ws.close(1008, 'local only'); } catch (_) {}
       return;

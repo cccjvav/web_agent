@@ -57,7 +57,7 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 | [corsAllow.js](corsAllow.js) | 14 个函数/类节点 |
 | [diff.js](diff.js) | 2 个函数/类节点 |
 | [editorUndo.js](editorUndo.js) | 6 个函数/类节点 |
-| [eventBus.js](eventBus.js) | 15 个函数/类节点 |
+| [eventBus.js](eventBus.js) | 21 个函数/类节点 |
 | [executionControl.js](executionControl.js) | 22 个函数/类节点 |
 | [fileCheckpoints.js](fileCheckpoints.js) | 15 个函数/类节点 |
 | [hostDiagnostics.js](hostDiagnostics.js) | 4 个函数/类节点 |

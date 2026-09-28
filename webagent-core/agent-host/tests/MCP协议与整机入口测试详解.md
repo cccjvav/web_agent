@@ -72,7 +72,7 @@ OAuth默认关闭（2026-09-25）一段在真实子进程上断言：oauth.route
 
 ## skipWorkbench.test.js
 
-[源码](skipWorkbench.test.js)的**get(url)**收真实HTTP状态/raw；**waitOk(url,ms)**内部**tick**每120ms重试直到200或10秒期限，错误同样重试。**main**spawn Node入口，传临时workspace、随机MCP端口、固定工作台19999和WEBAGENT_SKIP_WORKBENCH=1。
+[源码](skipWorkbench.test.js)的**get(url)**收真实HTTP状态/raw；**waitOk(url,ms)**内部**tick**每120ms重试直到200或10秒期限，错误同样重试。**main**先跑**busyWorkbenchPort()**：自己用net占住一个随机本机端口，再以WEBAGENT_BIND=127.0.0.1（与占位同一地址，避免Windows上通配地址与之共存）、WEBAGENT_SKIP_WORKBENCH为空、WORKBENCH_PORT=该端口、MCP端口0启动真实入口，收集stdout/stderr，15秒内须自行以1退出，输出含“端口 N 已被占用（工作台 UI）”且不含“Unhandled 'error' event”（F94前WebSocketServer转发的EADDRINUSE无监听，先以原始堆栈崩溃）；finally关占位server、删临时目录。随后spawn Node入口，传临时workspace、随机MCP端口、固定工作台19999和WEBAGENT_SKIP_WORKBENCH=1。
 
 等MCP health正常再GET断言200；请求19999只要有HTTP响应就reject，仅连接error才resolve，证明本fixture没有启动UI端口。固定端口若已被其他程序占用会误报失败；连接error也不是严格端口所有权探针。finally Windows taskkill或SIGTERM、等200ms、rm tmp；catch exit1。子进程stdout/stderr虽pipe但未消费，长日志可能影响测试；这里启动日志短。它证明跳过旧工作台，不证明VS Code桌面插件或code-server窗口已可交互。
 

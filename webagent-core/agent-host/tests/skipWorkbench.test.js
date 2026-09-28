@@ -39,7 +39,39 @@ function waitOk(url, ms) {
   });
 }
 
+// F94: the UI server carries the /ws WebSocketServer, which re-emits the server's own errors. Without a listener
+// on it, a busy workbench port crashed with a raw "Unhandled 'error' event" stack before listenOrExit could print
+// the port message. The host must exit 1 with that message.
+async function busyWorkbenchPort() {
+  const net = require('net');
+  const blocker = net.createServer();
+  await new Promise(resolve => blocker.listen(0, '127.0.0.1', resolve));
+  const busy = blocker.address().port;
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-busy-'));
+  try {
+    const child = spawn(process.execPath, ['src/index.js'], {
+      cwd: hostDir,
+      // Same address as the blocker: a wildcard bind could coexist with it on Windows.
+      env: { ...process.env, WEBAGENT_BIND: '127.0.0.1', WORKSPACE_ROOT: workspace, AGENT_HOST_PORT: '0', WORKBENCH_PORT: String(busy), WEBAGENT_SKIP_WORKBENCH: '' },
+      stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true
+    });
+    let output = '';
+    child.stdout.on('data', c => { output += c; }); child.stderr.on('data', c => { output += c; });
+    const code = await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => { child.kill('SIGKILL'); reject(new Error('host did not exit on a busy workbench port')); }, 15000);
+      child.once('exit', c => { clearTimeout(timer); resolve(c); });
+    });
+    assert.strictEqual(code, 1);
+    assert.ok(output.includes(`端口 ${busy} 已被占用（工作台 UI）`), 'the port message is printed:\n' + output.slice(-800));
+    assert.ok(!output.includes("Unhandled 'error' event"), 'no raw unhandled-error crash');
+  } finally {
+    await new Promise(resolve => blocker.close(resolve));
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+}
+
 async function main() {
+  await busyWorkbenchPort();
   const child = spawn(process.execPath, ['src/index.js'], {
     cwd: hostDir,
     env: {

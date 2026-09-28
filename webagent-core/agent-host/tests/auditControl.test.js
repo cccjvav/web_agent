@@ -44,6 +44,102 @@ function controlRequest(port, route, { headers = {}, body, method = body === und
     req.end(body);
   });
 }
+// Opens a real client on the production /ws and resolves once the server's welcome message arrived.
+// Every client opened here is terminated in wsResourceBounds' finally, so a failed assertion reports promptly
+// instead of the host's server.close() waiting on leftover sockets.
+const openedWs = new Set();
+function openWs(port, options = {}) {
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(`ws://127.0.0.1:${port}/ws`, options);
+    openedWs.add(ws);
+    const timer = setTimeout(() => { ws.terminate(); reject(new Error('WS open timed out')); }, 3000);
+    ws.once('message', () => { clearTimeout(timer); resolve(ws); });
+    ws.once('error', err => { clearTimeout(timer); reject(err); });
+  });
+}
+const closed = (ws, ms = 3000) => new Promise((resolve, reject) => {
+  if (ws.readyState === WebSocket.CLOSED) { resolve({ code: 'already' }); return; }
+  const timer = setTimeout(() => reject(new Error('WS was not closed')), ms);
+  ws.once('close', code => { clearTimeout(timer); resolve({ code }); });
+});
+const turn = (ms = 0) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Event-stream resource bounds on the production /ws (F94): a client that stops reading or stops answering pings
+// is dropped instead of making the host buffer events for it and hold one of the 32 slots; a client cannot make
+// the host buffer large inbound frames either.
+async function wsResourceBounds(port) {
+  const eventBus = require('../src/utils/eventBus');
+  const baseline = eventBus.wsClients.size;
+  try {
+    // 1. Inbound frames are capped (the workbench never sends): 5000 bytes closes with 1009.
+    const sender = await openWs(port);
+    const senderClosed = closed(sender);
+    sender.send('x'.repeat(5000));
+    assert.strictEqual((await senderClosed).code, 1009, 'an oversized client frame closes the socket with 1009');
+    for (let i = 0; i < 50 && eventBus.wsClients.size !== baseline; i++) await turn(10);
+    assert.strictEqual(eventBus.wsClients.size, baseline);
+
+    // 1b. A malformed frame (unmasked text frame, as no conforming client sends) closes that socket only; before
+    // F94 the socket's unhandled 'error' crashed the whole host process.
+    await new Promise((resolve, reject) => {
+      const raw = require('net').connect(port, '127.0.0.1', () => raw.write('GET /ws HTTP/1.1\r\nHost: 127.0.0.1\r\n'
+        + 'Upgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n'));
+      const timer = setTimeout(() => { raw.destroy(); reject(new Error('malformed-frame socket was not closed')); }, 3000);
+      let upgraded = false;
+      raw.on('data', data => {
+        if (!upgraded && data.toString('latin1').startsWith('HTTP/1.1 101')) { upgraded = true; raw.write(Buffer.from([0x81, 0x02, 0x68, 0x69])); }
+      });
+      raw.on('error', () => {});
+      raw.on('close', () => { clearTimeout(timer); upgraded ? resolve() : reject(new Error('no upgrade')); });
+    });
+    for (let i = 0; i < 50 && eventBus.wsClients.size !== baseline; i++) await turn(10);
+    assert.strictEqual(eventBus.wsClients.size, baseline, 'the malformed client no longer holds a slot');
+    assert.strictEqual((await controlRequest(port, '/api/status')).status, 200, 'the host is still serving');
+
+    // 2. Heartbeat: a peer that never answers pings is dropped on the second round; a normal client stays.
+    const healthy = await openWs(port);
+    const silent = await openWs(port, { autoPong: false });
+    assert.strictEqual(eventBus.wsClients.size, baseline + 2);
+    const silentClosed = closed(silent);
+    const pinged = new Promise(resolve => healthy.once('ping', resolve));
+    eventBus._heartbeatRound();
+    await pinged; await turn(50); // the automatic pong reaches the host
+    eventBus._heartbeatRound();
+    await silentClosed;
+    assert.strictEqual(healthy.readyState, WebSocket.OPEN, 'a client that answers pings is kept');
+    assert.strictEqual(eventBus.wsClients.size, baseline + 1, 'the unresponsive peer no longer holds a slot');
+
+    // 3. A client that stops reading is dropped once more than WS_MAX_BUFFERED bytes are queued for it, while a
+    // client that keeps reading through the same broadcasts is kept. ~160 KB per event (40 fields x 4000 chars).
+    const stalled = await openWs(port);
+    stalled._socket.pause();
+    const payload = {};
+    for (let i = 0; i < 40; i++) payload['field' + i] = String(i % 10).repeat(4000);
+    let received = 0; healthy.on('message', () => { received++; });
+    let sent = 0;
+    for (; sent < 600 && eventBus.wsClients.size === baseline + 2; sent++) {
+      eventBus.broadcast('fixture_large_event', payload);
+      await turn(); // let the healthy socket drain between events, as real events are spread out
+    }
+    assert.strictEqual(eventBus.wsClients.size, baseline + 1, `stalled reader dropped (after ${sent} events)`);
+    assert.ok(sent > 1, 'not dropped before anything was queued');
+    assert.strictEqual(healthy.readyState, WebSocket.OPEN, 'a reading client is not dropped by the same burst');
+    for (let i = 0; i < 200 && received < sent; i++) await turn(10);
+    assert.strictEqual(received, sent, 'the reading client received every event');
+    const stalledClosed = closed(stalled);
+    stalled._socket.resume();
+    await stalledClosed;
+
+    const healthyClosed = closed(healthy); healthy.close(); await healthyClosed;
+    for (let i = 0; i < 50 && eventBus.wsClients.size !== baseline; i++) await turn(10);
+    assert.strictEqual(eventBus.wsClients.size, baseline);
+    console.log(`ws resource bounds passed (stalled reader dropped after ${sent} events of ~160 KB)`);
+  } finally {
+    for (const ws of openedWs) ws.terminate();
+    openedWs.clear();
+  }
+}
+
 async function main() {
   const req = host => ({ headers: { host }, socket: { remoteAddress: '127.0.0.1' } });
   for (const host of ['untrusted.example', 'localhost.evil', 'localhost:48271,evil', '', 'localhost@evil']) {
@@ -61,6 +157,7 @@ async function main() {
     await connect(port, null, true);
     await connect(port, `http://127.0.0.1:${port}`, false, { Host: 'untrusted.example' });
     await connect(port, null, false, { 'CF-Connecting-IP': '127.0.0.1' });
+    await wsResourceBounds(port);
     const mcpPort = mcpServer.address().port;
     const mcpRoute = `/mcp/${config.secretKey}`;
     // This uses the production mounting order, not a reconstructed Express fixture.

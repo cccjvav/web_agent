@@ -108,6 +108,94 @@ try {
   global.clearTimeout = realClear;
 }
 
+// F94 resource bounds. terminate() only marks the fake: a real socket emits 'close' later, and the slot must be
+// freed at once regardless.
+function boundedWs({ canTerminate = true } = {}) {
+  const handlers = {};
+  const ws = {
+    readyState: 1, bufferedAmount: 0, sent: [], pings: 0, terminated: false, closeCode: null, pingThrows: false,
+    send(msg) { this.sent.push(msg); },
+    ping() { if (this.pingThrows) throw new Error('socket gone'); this.pings++; },
+    close(code) { this.closeCode = code; this.readyState = 2; },
+    on(ev, fn) { handlers[ev] = fn; },
+    emit(ev) { if (handlers[ev]) handlers[ev](); }
+  };
+  if (canTerminate) ws.terminate = function () { this.terminated = true; this.readyState = 3; };
+  return ws;
+}
+const realInterval = setInterval;
+const realClearInterval = clearInterval;
+const intervals = new Map();
+global.setTimeout = () => nextId++;
+global.clearTimeout = () => {};
+global.setInterval = (fn, ms) => { const id = { fn, ms, unref() { this.unrefed = true; } }; intervals.set(id, true); return id; };
+global.clearInterval = (id) => { intervals.delete(id); };
+try {
+  assert.strictEqual(eventBus.wsClients.size, 0);
+  assert.strictEqual(eventBus.heartbeat, null, 'no heartbeat while no client is connected');
+  const a = boundedWs(); const b = boundedWs();
+  eventBus.addWsClient(a); eventBus.addWsClient(b);
+  assert.strictEqual(intervals.size, 1, 'one shared heartbeat interval');
+  const beat = [...intervals.keys()][0];
+  assert.strictEqual(beat.ms, eventBus.WS_HEARTBEAT_MS);
+  assert.strictEqual(beat.ms, 30 * 1000);
+  assert.ok(beat.unrefed, 'the heartbeat does not keep the process alive');
+
+  // Heartbeat: a answers the first ping, b does not; b is dropped on the next round, a is pinged again.
+  beat.fn();
+  assert.deepStrictEqual([a.pings, b.pings], [1, 1]);
+  a.emit('pong');
+  beat.fn();
+  assert.ok(b.terminated && !eventBus.wsClients.has(b), 'a silent peer is terminated and loses its slot');
+  assert.strictEqual(b.pings, 1, 'a dropped peer is not pinged again');
+  assert.ok(!a.terminated && a.pings === 2 && eventBus.wsClients.has(a));
+  b.emit('close'); // the late real 'close' is harmless
+  assert.strictEqual(eventBus.wsClients.size, 1);
+
+  // A closing socket is neither pinged nor dropped (its own 'close' removes it); a throwing ping drops.
+  const closing = boundedWs(); eventBus.addWsClient(closing); closing.readyState = 2;
+  const broken = boundedWs(); eventBus.addWsClient(broken); broken.pingThrows = true;
+  a.emit('pong'); beat.fn();
+  assert.ok(broken.terminated && !eventBus.wsClients.has(broken), 'a failed ping drops in the same round');
+  a.emit('pong'); beat.fn();
+  assert.ok(eventBus.wsClients.has(a), 'a client that keeps answering stays across rounds');
+  assert.ok(eventBus.wsClients.has(closing) && closing.pings === 0 && !closing.terminated);
+  assert.ok(broken.terminated && !eventBus.wsClients.has(broken), 'ping failure drops the client');
+  closing.emit('close');
+
+  // Backpressure: at the cap the event is still sent; above it the client is dropped without sending.
+  const reader = boundedWs(); const stalled = boundedWs(); const legacy = boundedWs({ canTerminate: false });
+  [reader, stalled, legacy].forEach(ws => eventBus.addWsClient(ws));
+  stalled.bufferedAmount = eventBus.WS_MAX_BUFFERED;
+  eventBus.broadcast('tool_call_end', { tool: 'x', success: true });
+  assert.strictEqual(stalled.sent.length, 1, 'exactly at the cap is still sent');
+  assert.strictEqual(eventBus.WS_MAX_BUFFERED, 1024 * 1024);
+  stalled.bufferedAmount = eventBus.WS_MAX_BUFFERED + 1;
+  legacy.bufferedAmount = eventBus.WS_MAX_BUFFERED + 1;
+  eventBus.broadcast('tool_call_end', { tool: 'y', success: true });
+  assert.strictEqual(stalled.sent.length, 1, 'over the cap: nothing more is queued');
+  assert.ok(stalled.terminated && !eventBus.wsClients.has(stalled));
+  assert.strictEqual(legacy.closeCode, 1001, 'without terminate() the socket is closed with 1001');
+  assert.ok(!eventBus.wsClients.has(legacy));
+  assert.strictEqual(reader.sent.length, 2, 'other clients still get the event after a drop in the same loop');
+  assert.strictEqual(a.sent.length, 2);
+
+  // The interval stops when the last client leaves, and a new one starts with the next client.
+  a.emit('close'); reader.emit('close');
+  assert.strictEqual(eventBus.wsClients.size, 0);
+  assert.strictEqual(intervals.size, 0, 'heartbeat cleared once no client remains');
+  assert.strictEqual(eventBus.heartbeat, null);
+  const again = boundedWs(); eventBus.addWsClient(again);
+  assert.strictEqual(intervals.size, 1);
+  again.emit('close');
+  assert.strictEqual(intervals.size, 0);
+} finally {
+  global.setTimeout = realSet;
+  global.clearTimeout = realClear;
+  global.setInterval = realInterval;
+  global.clearInterval = realClearInterval;
+}
+
 console.log('eventBus tests passed');
 
 // Authoritative per-process Bridge activity survives browser reload; local Chat is excluded.

@@ -154,7 +154,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [apiFiles.test.js](apiFiles.test.js) | 59 个函数/类节点 |
 | [appWindowLifecycle.test.js](appWindowLifecycle.test.js) | 101 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
-| [auditControl.test.js](auditControl.test.js) | 20 个函数/类节点 |
+| [auditControl.test.js](auditControl.test.js) | 40 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
 | [board.test.js](board.test.js) | 4 个函数/类节点 |
 | [bridgeTunnel.test.js](bridgeTunnel.test.js) | 34 个函数/类节点 |
@@ -178,7 +178,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [documentationQuality.test.js](documentationQuality.test.js) | 10 个函数/类节点 |
 | [editorReview.test.js](editorReview.test.js) | 29 个函数/类节点 |
 | [editorRuntime.test.js](editorRuntime.test.js) | 39 个函数/类节点 |
-| [eventBus.test.js](eventBus.test.js) | 9 个函数/类节点 |
+| [eventBus.test.js](eventBus.test.js) | 22 个函数/类节点 |
 | [executionControl.test.js](executionControl.test.js) | 41 个函数/类节点 |
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
 | [extensionHostSafety.test.js](extensionHostSafety.test.js) | 26 个函数/类节点 |
@@ -241,7 +241,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [settingsRelay.test.js](settingsRelay.test.js) | 61 个函数/类节点 |
 | [sidebarFeedback.test.js](sidebarFeedback.test.js) | 128 个函数/类节点 |
 | [skillsLifecycle.test.js](skillsLifecycle.test.js) | 19 个函数/类节点 |
-| [skipWorkbench.test.js](skipWorkbench.test.js) | 16 个函数/类节点 |
+| [skipWorkbench.test.js](skipWorkbench.test.js) | 24 个函数/类节点 |
 | [stateIntegrity.test.js](stateIntegrity.test.js) | 40 个函数/类节点 |
 | [stdioMcp.test.js](stdioMcp.test.js) | 37 个函数/类节点 |
 | [stdioOwnerFixture.js](stdioOwnerFixture.js) | 2 个函数/类节点 |

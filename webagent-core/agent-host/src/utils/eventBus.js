@@ -10,6 +10,13 @@ const CLIP_KEYS = /^(diff|patch|content|chunk|stdout|stderr|args|body|command)$/
 const SECRET_KEYS = /^(apiKey|token|password|secret|secretKey|authorization|access_token|refresh_token|pat|oldSecret|newSecret|challenge|namedToken|ngrokToken|authtoken)$/i;
 const MAX_WS = 32;
 const WS_IDLE_MS = 30 * 60 * 1000;
+// A client that stops reading (frozen tab, half-open TCP after sleep or a network change) would otherwise make the
+// host queue every event for it without limit, and keep one of the 32 slots: the idle timer is refreshed by our
+// own sends, so it never fires while events flow. Events are advisory (the workbench re-reads state over HTTP and
+// reconnects on close), so such a client is dropped instead: over WS_MAX_BUFFERED queued bytes at the next
+// broadcast, or no pong for a full heartbeat interval.
+const WS_MAX_BUFFERED = 1024 * 1024;
+const WS_HEARTBEAT_MS = 30 * 1000;
 const SECRET_RE = /(ghp_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9_-]{16,}|Bearer\s+[A-Za-z0-9._\-+=/]{8,})/gi;
 
 function clipStr(s, max = MAX_STR) {
@@ -48,6 +55,8 @@ class BridgeEventBus extends EventEmitter {
     super();
     this.wsClients = new Set();
     this.idleTimers = new WeakMap();
+    this.wsAlive = new WeakMap();
+    this.heartbeat = null;
     this.logs = [];
     this.maxLogs = 500;
     this.bridgeEpoch = config.hostInstanceId;
@@ -97,12 +106,48 @@ class BridgeEventBus extends EventEmitter {
       return false;
     }
     this.wsClients.add(ws);
+    this.wsAlive.set(ws, true);
     this._touchIdle(ws);
+    ws.on('pong', () => { this.wsAlive.set(ws, true); });
     ws.on('close', () => {
       this._clearIdle(ws);
       this.wsClients.delete(ws);
+      this._stopHeartbeatIfEmpty();
     });
+    this._startHeartbeat();
     return true;
+  }
+
+  // Frees the slot at once; terminate() destroys the socket without waiting for a closing handshake the peer may
+  // never answer. The 'close' handler above runs later and is idempotent.
+  _dropWs(ws) {
+    this._clearIdle(ws);
+    this.wsClients.delete(ws);
+    try { if (typeof ws.terminate === 'function') ws.terminate(); else ws.close(1001, 'unresponsive'); } catch (_) {}
+    this._stopHeartbeatIfEmpty();
+  }
+
+  // One round: a client that has not answered the previous ping is dropped, every other open client is pinged.
+  _heartbeatRound() {
+    // Deleting the current entry while iterating a Set is well-defined; later entries are still visited.
+    for (const ws of this.wsClients) {
+      if (ws.readyState !== 1) continue; // closing: its 'close' event removes it
+      if (this.wsAlive.get(ws) === false) { this._dropWs(ws); continue; }
+      this.wsAlive.set(ws, false);
+      try { ws.ping(); } catch (_) { this._dropWs(ws); }
+    }
+  }
+
+  _startHeartbeat() {
+    if (this.heartbeat) return;
+    this.heartbeat = setInterval(() => this._heartbeatRound(), WS_HEARTBEAT_MS);
+    if (this.heartbeat.unref) this.heartbeat.unref();
+  }
+
+  _stopHeartbeatIfEmpty() {
+    if (this.wsClients.size || !this.heartbeat) return;
+    clearInterval(this.heartbeat);
+    this.heartbeat = null;
   }
 
   broadcast(type, payload = {}) {
@@ -137,6 +182,7 @@ class BridgeEventBus extends EventEmitter {
     const message = JSON.stringify(eventObj);
     for (const ws of this.wsClients) {
       if (ws.readyState === 1) {
+        if (ws.bufferedAmount > WS_MAX_BUFFERED) { this._dropWs(ws); continue; }
         try {
           ws.send(message);
           this._touchIdle(ws);
@@ -155,3 +201,5 @@ class BridgeEventBus extends EventEmitter {
 const eventBus = new BridgeEventBus();
 module.exports = eventBus;
 module.exports.sanitizePayload = sanitizePayload;
+module.exports.WS_MAX_BUFFERED = WS_MAX_BUFFERED;
+module.exports.WS_HEARTBEAT_MS = WS_HEARTBEAT_MS;

@@ -203,7 +203,7 @@ F62-13 最值得记的不是缺陷本身而是**为什么自测没抓到**：实
 |---|---|---|---|
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
-| R2 / 高，按缺陷证据推进 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，第四批现补资源caller与目录ACL及错误hash指引，第五批已补原生流确认，第六批补窄屏/页签ARIA，F55又补浏览器会话/挑战响应头可读性，其余UI/实机项待续修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
+| R2 / 高，按缺陷证据推进 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，第四批现补资源caller与目录ACL及错误hash指引，第五批已补原生流确认，第六批补窄屏/页签ARIA，F55又补浏览器会话/挑战响应头可读性，第94组（2026-09-28）补事件流WebSocket畸形帧/端口冲突崩溃与慢客户端/半开连接回收，其余UI/实机项待续修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
 | R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54第三批已补新文件patch显式hash与块校验，第五批补原生postNdjson坏流/终态及失败历史；F55补经典流严格完成/预算/取消清理；F56补可选编辑器编排健康期限与直接子进程收尾；F57补App窗口身份绑定与浏览器失败；F58同步准备的取消缺口已由F59纠偏、F60改异步；F62补Git/UTF-8/diff，F63补统计/入口/UI，F64补身份网络、F65补后端fallback独立准备期限；其它消费链按证据另验，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 根因未定位；已复取历史annotations并补阶段诊断首包，等待可解释复现 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 用户优先 | 已授权安全隧道残留回收；已交付只读检测、Windows保护记录/稳定句柄终端回收及负例/诊断；本机开始菜单入口已接入，面板/桌面与PTY互操作仍待 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
@@ -1970,6 +1970,27 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **核对：** 修后240个文件0报告，`npm run lint`在agent-host与仓库根（`--prefix`）均退出0。反向验证：在agent-host源码、workbench、extension、installer、scripts、docs-site/app.js、测试各注入一个“finally里return未定义名”，7处都报no-undef+no-unsafe-finally；workbench注入未用常量报no-unused-vars。文档：CI详解新增根eslint.config.js一节并更新package.json与workflow两节，documentationLearning把eslint.config.js登记到该详解；CONTRIBUTING的测试命令加lint；agent-host README的开发依赖加ESLint。review目录里提到“没有ESLint”的是历史报告，不改写。
 
 **剩余与未验证：** 只开找错规则，风格与复杂度不管；no-undef对按文件给了浏览器全局的两个测试文件放宽（其中Node部分若误用window不会被报）；探针与repro不在检查范围；lint只在一个CI任务里运行。
+
+### 第94组：事件流WebSocket资源边界与两处宿主崩溃（2026-09-28）
+
+**开头复审第93组：** 提交`53ffb45`的CI（run 36480982643）9/9通过，其中ubuntu+Node22的lint步骤实际运行；本组新增代码同样过`npm run lint`（0报告）。第93组没有发现缺陷。本会话中途沙箱又重启过一次，按惯例恢复到`53ffb45`并重装依赖。
+
+**R2/R3审计范围（本段）：** 外发调用——`apiRelay.js`、`providers.js`的模型探测、tracker与GitHub请求：均有期限与大小限制，无需改动。事件流——`utils/eventBus.js`、`index.js`的`attachWss`、唯一客户端`workbench/app.js`的连接与重连（onclose一律按1秒起、30秒封顶的退避重连，事件仅为提示，状态经HTTP重读）。
+
+**发现与修复：**
+1. **一个畸形帧让整个宿主退出（高，已复现）。** ws库把协议错误（未掩码帧、非法UTF-8、超过maxPayload）作为服务端socket实例的`'error'`发出；connection回调没有注册error监听，Node按未处理error直接退出进程。在HEAD代码上用原始TCP发一个4字节未掩码文本帧，宿主输出“Invalid WebSocket frame: MASK must be set”并以1退出。能连/ws的是任何本机进程（握手检查本机控制面与Origin，无Origin允许）。修复：connection回调第一步`ws.on('error')`并terminate，由eventBus的close回调回收名额。
+2. **工作台端口被占时原始堆栈崩溃（低，已复现）。** `WebSocketServer({server})`会把HTTP server自身的error转发到自己身上；没有`wss.on('error')`时EADDRINUSE先以“Unhandled 'error' event … on WebSocketServer instance”抛出，listenOrExit的“端口 N 已被占用（工作台 UI）”打印不出来（退出码同为1）。只影响经典方式（run-webagent.cmd开3000）；插件启动的主机跳过工作台端口，不受影响。修复：`wss.on('error', () => {})`，报告与退出仍由server上listenOrExit的回调负责。
+3. **停止读取的客户端无限积压（中）。** broadcast对每个OPEN客户端直接send，不看bufferedAmount；30分钟idle计时器在每次成功send后刷新，只要有事件在发就永不触发。冻结的标签页或睡眠后的半开TCP会让宿主为它无限排队。修复：send前bufferedAmount超过`WS_MAX_BUFFERED`（1 MiB，恰好等于仍发送）就`_dropWs`。
+4. **无心跳，半开连接长期占名额（中）。** 上限32个；半开连接直到idle或TCP超时才释放。修复：共享一个30秒、unref的interval，`_heartbeatRound`对上一轮未回pong的客户端`_dropWs`、其余ping（ping抛错即丢）；无客户端时清除interval。浏览器协议层自动回pong，工作台不用改。
+5. **入站不限大小（低）。** ws默认maxPayload 100 MiB；工作台从不发送，改为4096，超出以1009关闭。
+
+`_dropWs`先从Set删除、清idle，再terminate（没有terminate时close(1001)），名额当场释放；稍后的close事件重复删除无害。30分钟idle计时器保持原样。
+
+**测试与反向验证：** auditControl新增`wsResourceBounds`在真实/ws上验证：5000字节帧→1009且名额回收；原始socket发未掩码帧→该socket被关、名额回收、/api/status仍200；`autoPong:false`的静默客户端两轮心跳后被关而正常客户端保持；暂停底层读取的客户端在约40条160 KB广播后被回收，同时正常客户端收到全部事件。测试打开的客户端都在finally里terminate，断言失败时2–3秒内报错（起初失败会卡到170秒超时：server.close在等残留socket）。skipWorkbench新增`busyWorkbenchPort`：占住端口后启动真实入口，须以1退出、输出含端口提示且不含未处理error。eventBus新增假socket段覆盖心跳启停/unref、pong、readyState 2跳过、ping抛错同轮丢弃、1 MiB边界、close(1001)回退、同轮其余客户端仍收到事件。变异：去掉ws error监听→宿主崩溃；去掉wss error监听→skipWorkbench红；去maxPayload、去积压闸门、去心跳丢弃→auditControl红；eventBus上10处（readyState跳过、ping抛错丢弃、pong回调、停止interval、unref、重复启动守卫、`>`改`>=`、close回退、_dropWs删Set、close回调里停interval）全红。另一处变异（遍历前拷贝Set）保持绿：JS Set遍历中删除当前项是明确定义的，拷贝多余，已删。lint 0报告，全量116个测试文件通过。
+
+**文档：** 事件总线详解（新方法四节、常量、删去“没有积压闸门”一句）、入口详解attachWss（maxPayload与两个error监听）、listenOrExit的前提；三份测试详解（本机边界、任务板与事件流、MCP协议与整机入口）。
+
+**剩余与未验证：** 没有在真实浏览器里观察被丢弃后的重连（逻辑是现有onclose退避，未改）；心跳不模拟真实睡眠与网络切换，以“不回pong/不读取”的等价状态代替；1 MiB与30秒是经验值，未按真实负载测过；被丢弃期间的提示性事件（终端行、todos推送）会漏掉，界面靠重连后HTTP重读恢复。R2/R3的下一线索是readCache（读缓存与写入后的一致性），尚未开始。
 
 ### 延后复审清单
 
