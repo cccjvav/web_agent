@@ -152,7 +152,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
 | [adminIntegrity.test.js](adminIntegrity.test.js) | 63 个函数/类节点 |
 | [apiFiles.test.js](apiFiles.test.js) | 59 个函数/类节点 |
-| [appWindowLifecycle.test.js](appWindowLifecycle.test.js) | 79 个函数/类节点 |
+| [appWindowLifecycle.test.js](appWindowLifecycle.test.js) | 101 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 20 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
@@ -161,7 +161,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [chatMode.test.js](chatMode.test.js) | 0 个函数/类节点 |
 | [chatVision.test.js](chatVision.test.js) | 21 个函数/类节点 |
 | [codeServerAuth.test.js](codeServerAuth.test.js) | 0 个函数/类节点 |
-| [codeServerLifecycle.test.js](codeServerLifecycle.test.js) | 118 个函数/类节点 |
+| [codeServerLifecycle.test.js](codeServerLifecycle.test.js) | 130 个函数/类节点 |
 | [codeServerNotRunnable.test.js](codeServerNotRunnable.test.js) | 0 个函数/类节点 |
 | [commandEncoding.test.js](commandEncoding.test.js) | 8 个函数/类节点 |
 | [computerUseScripts.test.js](computerUseScripts.test.js) | 7 个函数/类节点 |

@@ -1940,6 +1940,23 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **剩余风险与未验证：** 核对与真正请求各自调用agentHostUrl，两次之间主机被替换的窗口与Chat路径相同；stdio登记成功之后才断开时程序保留；Windows上stdio由PowerShell辅助进程托管，关标签页过早可能在程序启动前就取消（手册已说明）；真实桌面上的提示条、端口改选与进程停止由续跑4实机确认。
 
+### 第92组：移植01a0c5ba分支缺的要点——app窗口打开后复核与清理退出码（2026-09-28）
+
+**开头复审第91组：** 提交`7f31773`的CI（run 36454113780）9/9通过，其中workbench-browser首次实际运行了第91组新加的提示条断言（沙箱无法下载Chromium，本地只做过语法检查），该项“只由CI验证”的状态就此了结。复读第91组改动的相邻链路：设置页标签页里的【启动】/【停止】/【日志】走createHostServiceHandler的`webagent-host-*`消息、直接调HostManager，不经转发层，因此不受settingsHostCheck影响，这是有意的（启动主机正是为了修复文件夹不一致）；Bridge侧栏与Chat原本就经workspaceSnapshot核对。没有发现新缺陷。
+
+**范围（用户2026-09-28选B）：** 按现代码手工移植`origin/arena/01a0c5ba-web-agent`（33bd177，基于bbe7985）里当前分支没有的要点，不合并其提交。逐文件对照旧分支的`installer/appWindow.js`、`installer/launch.js`、`webagent-core/scripts/run-code-oss.js`、`ensure-code-server.js`：npm准备可取消、单次停止、放弃时unref不冒充退出这几项已由`installer/preparation.js`（runPreparation）另行实现，不再移植；此前分析列出的5点之外，**旧分支还给主机加了`WORKBENCH_PORT: String(codePort)`**，第2点离开它会误伤——app模式下主机以`WEBAGENT_SKIP_WORKBENCH=1`启动且不设WORKBENCH_PORT，自报workbenchPort恒为默认3000，用户一改CODE_SERVER_PORT就会被当作“主机身份不匹配”。此前的5点清单漏看了这一处，本组一并补上。
+
+**移植内容（`installer/appWindow.js`）：**
+1. 打开窗口后、移交后台前再读一次（changed()）：inspectPair抛错（身份/工作区/端口不符、编辑器端口被无关服务占用）即报“主机实例在打开窗口后变化；窗口可能已打开，未移交后台，请重新核对”；单侧拒绝或慢（waiting）在同一120秒期限内每≤500ms重试；ready但身份与打开前不同同样报错。**比旧分支多一条：** 两端都拒绝连接（absent）直接报错——服务已不在，旧分支会一直重试到120秒，最后报一句与实情不符的超时。报错走原catch：复用他人服务时不停止任何东西，冷启动时要求自己的后台停止、不发release。
+2. hostIdentity要求`identity.workbenchPort === expected.codePort`；返回值含mcpPort/workbenchPort/规范化workspaceRoot，前后两次读取的pin覆盖全部比对字段。旧分支另有整数/1–65535检查，与“严格等于已校验的整数端口”重复（变异M1b留绿证实），未保留。`run-code-oss.js`给主机加`WORKBENCH_PORT=codePort`；主机不在该端口监听（skipWorkbench测试已覆盖），只影响身份报告与externalClient“不得把本主机登记为外部MCP”的端口判断（改后把编辑器端口也挡住，无害）。
+3. openBrowser先要求`http:`、`127.0.0.1`、无用户名/口令/hash，否则同步抛“浏览器地址必须是本机编辑器入口”，不spawn。
+4. **有意偏离旧分支。** 旧分支把后台任何观察到的退出都算“清理已确认”，并在10秒SIGTERM、11秒SIGKILL保留句柄。对照现代码：run-code-oss退出0只在协作停止且所有子进程确认退出时出现；非零既可能是“自身失败但已清理”（如code-server起不来），也可能是“子进程清理未确认”（finally里`exitCode||1`、准备阶段cleanupUnconfirmed）。当前代码把前者也报成“后台清理结果未确认…请在本机核对”（误报，这是旧分支要修的），旧分支的改法则会把后者静默吞掉。改为：受控app模式下清理未确认时run-code-oss退出码固定为appWindow导出的**APP_CLEANUP_UNCONFIRMED=3**（覆盖先前失败码；命令行模式仍为1）；stopOwned的confirmed()以“有exitCode且不等于3”为已确认，被信号杀死（exitCode为null）为未确认。不加SIGTERM/SIGKILL：响应正常的编排进程收到IPC停止或断开就会停，SIGTERM不增加什么，Windows上SIGTERM还是硬杀、会落在它9+1秒子进程清理的末尾；对卡死的编排进程SIGKILL只会让code-server/agent-host变孤儿，与既有“不强杀编排进程”的测试约定一致。
+5. supervise的prepared消息按normalizedWorkspace比较工作区（Windows大小写、末尾分隔符不再误判）。
+
+**核对：** appWindowLifecycle从28个命名场景增至42：打开后身份变化（复用时不停止、只打开过一次浏览器；冷启动时发stop不发release）、打开后两端消失立即报错（受控时钟<1秒）、打开后第4次读取被拒绝后重试一次再移交、openBrowser拒绝7种非本机地址且不spawn、prepared带末尾分隔符仍通过、后台自行以1退出不报清理未确认而3或信号退出报、停止请求以1/3回应的对应判定、workbenchPort为3000/字符串/越界均不复用；夹具主机的workbenchPort由3000改为编辑器端口51212，复用场景的诊断读取次数由2改为3。codeServerLifecycle：正常启动断言WORKBENCH_PORT，新增受控模式三例（子进程清理未确认→3、准备阶段清理未确认→3、编辑器失败但子进程已确认→保持1）。反向验证13种变异：11种变红；留绿的M1b（端口整数/范围检查）与M7b（confirmed里的signalCode检查，Node在信号退出时exitCode本就为null）是冗余代码，已删除后重跑42/42通过。
+
+**剩余风险与未验证：** code-server自身若以3退出会被当作清理未确认（只偏向多提示）；run-code-oss的main若意外reject（只可能是finally里的编程错误），文件尾仍写1，会被当作已确认；打开后复核发现变化时窗口可能已经打开并显示断开，由报错文字说明。app模式（`launch.js app`）不在用户当前的桌面VS Code+插件流程里，本组没有安排实机验收，只有单元级与夹具验证。该分支至此视为了结，是否删除远端分支由用户决定。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。

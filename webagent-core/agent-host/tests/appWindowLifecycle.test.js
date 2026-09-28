@@ -66,16 +66,17 @@ function harness(options = {}) {
     res.statusCode = 200; res.headers = { 'content-type': 'application/json' };
     const body = String(url).endsWith('/healthz') ? { status: 'alive', lastHeartbeat: 1 } : {
       identity: { hostInstanceId: hostId, workspaceRoot: options.wrongWorkspace ? home : workspace, mcpPort: 51211,
-        workbenchPort: 3000, version, startedAt: '2026-09-21T00:00:00.000Z' }, capabilities: []
+        workbenchPort: 51212, version, startedAt: '2026-09-21T00:00:00.000Z' }, capabilities: []
     };
     if (body.identity) {
       diagnostics++;
-      if (options.changedInstance && diagnostics > 1) body.identity.hostInstanceId = '87654321-1234-4123-8123-123456789abc';
+      if (options.changedInstance && diagnostics > (options.changeAfter || 1)) body.identity.hostInstanceId = '87654321-1234-4123-8123-123456789abc';
       if (options.badIdentity) options.badIdentity(body.identity);
     }
     if (options.badHealth && !body.identity) Object.assign(body, options.badHealth);
     queueMicrotask(() => {
-      if (!available || options.missingHost && body.identity || options.missingEditor && !body.identity) { req.emit('error', Object.assign(new Error('fixture refused'), {code:'ECONNREFUSED'})); return; }
+      if (!available || options.missingHost && body.identity || options.missingEditor && !body.identity
+        || options.refuseDiagnostics?.includes(diagnostics) && body.identity || options.goneAfter && diagnostics >= options.goneAfter) { req.emit('error', Object.assign(new Error('fixture refused'), {code:'ECONNREFUSED'})); return; }
       callback(res); if (!res.destroyed) { res.emit('data', Buffer.from(JSON.stringify(body))); res.emit('end'); }
     });
     return req;
@@ -111,7 +112,7 @@ function harness(options = {}) {
         child.emit('spawn');
         if (runner && !options.noPrepared) {
           available = true;
-          child.emit('message', options.badPrepared || {type:'webagent-app-prepared',workspaceRoot:workspace,codePort:51212,mcpPort:51211});
+          child.emit('message', options.badPrepared || {type:'webagent-app-prepared',workspaceRoot:options.preparedWorkspace ? options.preparedWorkspace(workspace) : workspace,codePort:51212,mcpPort:51211});
         }
       }
     });
@@ -167,7 +168,7 @@ function harness(options = {}) {
       const url = new URL(h.calls[0].args.at(-1));
       assert.equal(url.origin, 'http://127.0.0.1:51212'); assert.equal(url.searchParams.get('folder'), h.workspace);
       assert.equal(url.hash, ''); assert.equal(h.calls[0].opts.shell, false);
-      assert.equal(h.requests.filter(r => r.url.endsWith('/api/diagnostics')).length, 2);
+      assert.equal(h.requests.filter(r => r.url.endsWith('/api/diagnostics')).length, 3, 'two reads before and one after opening');
       assert.ok(!JSON.stringify(h.requests).includes(h.env.CODE_SERVER_PASSWORD), 'never send credentials to a readiness endpoint');
       assert.equal(h.proc.listenerCount('SIGINT'), 0); assert.equal(h.proc.listenerCount('SIGTERM'), 0);
     } finally { h.close(); }
@@ -180,6 +181,9 @@ function harness(options = {}) {
   for (const [name, options] of [
     ['wrong version', {badIdentity: id => { id.version = '0.0.0'; }}],
     ['wrong MCP port', {badIdentity: id => { id.mcpPort = 1234; }}],
+    ['host for another editor port', {badIdentity: id => { id.workbenchPort = 3000; }}],
+    ['string workbench port', {badIdentity: id => { id.workbenchPort = '51212'; }}],
+    ['out-of-range workbench port', {badIdentity: id => { id.workbenchPort = 70000; }}],
     ['invalid instance', {badIdentity: id => { id.hostInstanceId = {}; }}],
     ['invalid startedAt', {badIdentity: id => { id.startedAt = 'not-a-date'; }}],
     ['remote path', {badIdentity: id => { id.workspaceRoot = '\\untrusted.invalid\share'; }}],
@@ -258,6 +262,89 @@ function harness(options = {}) {
       assert.equal(h.calls.length,1); assert.deepStrictEqual(child.kills,[]); assert.equal(clock.timers.size,0);
     } finally { h.close(); }
   });
+  await test('a host replaced after the browser opened is reported and a reused service is not stopped', async () => {
+    const h = harness({ changedInstance: true, changeAfter: 2 });
+    try {
+      await assert.rejects(bounded(h.api.appWindow(root, h.workspace, h.env, h.home)), /打开窗口后变化；窗口可能已打开/);
+      assert.equal(h.calls.length, 1, 'the browser was opened once and nothing else was started');
+      assert.deepStrictEqual(h.calls[0].child.kills, []);
+    } finally { h.close(); }
+  });
+  await test('services gone after the browser opened are a change, not a 120-second wait', async () => {
+    const clock = fakeClock(), h = harness({ clock, goneAfter: 3 });
+    try {
+      await assert.rejects(drive(h.api.appWindow(root, h.workspace, h.env, h.home), clock), /打开窗口后变化/);
+      assert.ok(clock.now < 1000, 'no retry loop for refused ports'); assert.equal(clock.timers.size, 0);
+    } finally { h.close(); }
+  });
+  await test('a refused host probe after opening is retried, then the owned supervisor is handed off', async () => {
+    const clock = fakeClock(), h = harness({ clock, cold: true, refuseDiagnostics: [4] });
+    try {
+      await drive(h.api.appWindow(root, h.workspace, h.env, h.home), clock);
+      const owned = h.calls[0].child;
+      assert.deepStrictEqual(owned.messages.map(m => m.type), ['webagent-app-release'], 'handed off, not stopped');
+      assert.equal(h.requests.filter(r => r.url.endsWith('/api/diagnostics')).length, 5, 'one retry after the refused read #4');
+      assert.ok(clock.now >= 500, 'waited before retrying'); assert.equal(clock.timers.size, 0);
+    } finally { h.close(); }
+  });
+  await test('an identity change after opening stops the owned supervisor instead of handing it off', async () => {
+    // Cold start reads: #1 refused initial probe, #2 ready (pins), #3 confirmation, #4 after opening (changed).
+    const clock = fakeClock(), h = harness({ clock, cold: true, changedInstance: true, changeAfter: 3 });
+    try {
+      await assert.rejects(drive(h.api.appWindow(root, h.workspace, h.env, h.home), clock), /实例.*变化/);
+      const owned = h.calls[0].child;
+      assert.ok(owned.messages.some(m => m.type === 'webagent-app-stop'));
+      assert.ok(!owned.messages.some(m => m.type === 'webagent-app-release'), 'never hand off after a change');
+      assert.deepStrictEqual(owned.kills, []); assert.equal(clock.timers.size, 0);
+    } finally { h.close(); }
+  });
+  await test('openBrowser accepts only the local editor entry', async () => {
+    const h = harness();
+    try {
+      const openBrowser = vm.runInContext('openBrowser', h.context);
+      const signal = new AbortController().signal;
+      for (const url of ['https://127.0.0.1:51212/', 'http://localhost:51212/', 'http://example.test/', 'http://u:p@127.0.0.1:51212/',
+        'http://127.0.0.1:51212/#x', 'file:///C:/x', 'javascript:alert(1)']) {
+        assert.throws(() => openBrowser(url, {}, signal), /本机编辑器入口/, url);
+      }
+      assert.equal(h.calls.length, 0, 'nothing was spawned for a refused URL');
+    } finally { h.close(); }
+  });
+  await test('prepared message compares the normalised workspace path', async () => {
+    const clock = fakeClock(), h = harness({ clock, cold: true, preparedWorkspace: w => w + path.sep });
+    try {
+      await drive(h.api.appWindow(root, h.workspace, h.env, h.home), clock);
+      assert.deepStrictEqual(h.calls[0].child.messages.map(m => m.type), ['webagent-app-release']);
+    } finally { h.close(); }
+  });
+  for (const [label, exit, unconfirmed] of [['exit 1 after its own cleanup', {code: 1}, false], ['exit 3 (cleanup unconfirmed)', {code: 3}, true],
+    ['killed by a signal', {signal: 'SIGKILL'}, true]]) {
+    await test(`an early supervisor ${label} ${unconfirmed ? 'is' : 'is not'} reported as unconfirmed cleanup`, async () => {
+      const clock = fakeClock(), h = harness({ clock, cold: true, noPrepared: true });
+      try {
+        const pending = h.api.appWindow(root, h.workspace, h.env, h.home); await nextTurn();
+        const child = h.calls[0].child;
+        if (exit.signal) child.signalCode = exit.signal; else child.exitCode = exit.code;
+        child.emit('exit', exit.code ?? null, exit.signal || null);
+        const error = await drive(pending, clock).then(() => null, e => e);
+        assert.match(error.message, /后台.*退出/);
+        assert.equal(/清理结果未确认/.test(error.message), unconfirmed, error.message);
+        assert.equal(h.api.APP_CLEANUP_UNCONFIRMED, 3);
+      } finally { h.close(); }
+    });
+  }
+  for (const [stopExit, unconfirmed] of [[1, false], [3, true]]) {
+    await test(`a requested stop answered by exit ${stopExit} ${unconfirmed ? 'is' : 'is not'} reported as unconfirmed cleanup`, async () => {
+      const clock = fakeClock(), h = harness({ clock, cold: true, noPrepared: true, stopExit });
+      try {
+        const pending = h.api.appWindow(root, h.workspace, h.env, h.home); await nextTurn(); h.proc.emit('SIGTERM');
+        const error = await drive(pending, clock).then(() => null, e => e);
+        assert.match(error.message, /停止/);
+        assert.equal(/清理结果未确认/.test(error.message), unconfirmed, error.message);
+        assert.deepStrictEqual(h.calls[0].child.kills, []);
+      } finally { h.close(); }
+    });
+  }
   await test('missing cleanup confirmation is bounded and reported, never replaced by force-killing a supervisor tree', async () => {
     const clock=fakeClock(),h=harness({clock,cold:true,noPrepared:true,hangStop:true});
     try {

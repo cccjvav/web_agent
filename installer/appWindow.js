@@ -10,6 +10,9 @@ const { TextDecoder } = require('util');
 const APP_START_MS = 120000;
 const PROBE_MS = 1500;
 const BODY_BYTES = 64 * 1024;
+// run-code-oss.js exits with this code, in app-controlled mode only, when it could not confirm that the
+// children it started have exited. Any other observed exit of the supervisor counts as confirmed cleanup.
+const APP_CLEANUP_UNCONFIRMED = 3;
 
 function portValue(env, name, fallback) {
   const value = String(env[name] || fallback);
@@ -92,11 +95,14 @@ function hostIdentity(value, expected) {
   if (!identity || typeof identity !== 'object' || Array.isArray(identity)
     || typeof identity.hostInstanceId !== 'string' || !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(identity.hostInstanceId)
     || identity.version !== expected.version || identity.mcpPort !== expected.mcpPort
+    || identity.workbenchPort !== expected.codePort // codePort is a validated integer, so this also rejects strings
     || typeof identity.startedAt !== 'string' || identity.startedAt.length > 64 || !Number.isFinite(Date.parse(identity.startedAt))
     || normalizedWorkspace(identity.workspaceRoot) !== normalizedWorkspace(expected.workspace)) {
     throw new Error('主机身份或工作区不匹配；未打开窗口，未停止已有服务');
   }
-  return { hostInstanceId: identity.hostInstanceId, startedAt: identity.startedAt, version: identity.version };
+  // Everything compared above is part of the pinned identity, so a change of any of it between reads is caught.
+  return { hostInstanceId: identity.hostInstanceId, startedAt: identity.startedAt, version: identity.version,
+    mcpPort: identity.mcpPort, workbenchPort: identity.workbenchPort, workspaceRoot: normalizedWorkspace(identity.workspaceRoot) };
 }
 async function inspectPair(expected, signal, timeoutMs) {
   const [editor, host] = await Promise.all([
@@ -132,7 +138,8 @@ function supervise(child, expected, controller) {
   child.on('message', message => {
     if (state.transferred || state.stopping) return;
     if (message?.type === 'webagent-app-prepared' && Object.keys(message).length === 4
-      && message.workspaceRoot === expected.workspace && message.codePort === expected.codePort && message.mcpPort === expected.mcpPort) {
+      && normalizedWorkspace(message.workspaceRoot) === normalizedWorkspace(expected.workspace)
+      && message.codePort === expected.codePort && message.mcpPort === expected.mcpPort) {
       state.prepared = true;
     } else if (message?.type === 'webagent-app-released' && Object.keys(message).length === 1 && state.prepared && state.releaseRequested) {
       state.released = true;
@@ -164,11 +171,15 @@ async function stopOwned(state) {
     if (child.connected) { try { child.disconnect(); } catch (_) {} }
     child.unref();
   };
+  // An exit counts as confirmed cleanup unless the supervisor says otherwise (APP_CLEANUP_UNCONFIRMED) or it was
+  // killed by a signal (exitCode stays null; it could not run its own cleanup). A supervisor that failed on its
+  // own and cleaned up exits non-zero; that is not a reason to ask the user to check processes by hand.
+  const confirmed = () => child.exitCode !== null && child.exitCode !== APP_CLEANUP_UNCONFIRMED;
   if (!child.pid) { detach(); return true; }
-  if (child.exitCode !== null || child.signalCode !== null) { detach(); return child.exitCode === 0; }
+  if (child.exitCode !== null || child.signalCode !== null) { detach(); return confirmed(); }
   const observed = await new Promise(resolve => {
     const finish = value => { clearTimeout(timer); child.removeListener('exit', onExit); resolve(value); };
-    const onExit = () => finish(child.exitCode === 0);
+    const onExit = () => finish(confirmed());
     const timer = setTimeout(() => finish(false), 12000); // F56 direct-child cleanup can take up to 10s.
     child.once('exit', onExit);
     try { child.send({ type: 'webagent-app-stop' }, error => { if (error && child.connected) child.disconnect(); }); }
@@ -179,6 +190,11 @@ async function stopOwned(state) {
 }
 function openBrowser(url, env, signal) {
   checkSignal(signal);
+  // The URL goes to a browser (or the shell URL handler), so accept only the local editor entry.
+  const target = new URL(url);
+  if (target.protocol !== 'http:' || target.hostname !== '127.0.0.1' || target.username || target.password || target.hash) {
+    throw new Error('浏览器地址必须是本机编辑器入口');
+  }
   const candidates = [
     path.join(env['ProgramFiles(x86)'] || '', 'Microsoft/Edge/Application/msedge.exe'),
     path.join(env.ProgramFiles || '', 'Microsoft/Edge/Application/msedge.exe'),
@@ -247,6 +263,20 @@ async function appWindow(root, workspace, env, home) {
     }
     const target = new URL(expected.origin); target.searchParams.set('folder', workspace);
     await openBrowser(target.toString(), env, controller.signal); check();
+    // Read again before handing the supervisor off: the host may have been replaced while the browser started.
+    // A refused or slow probe is not a change (retry within the same deadline); a different identity, or a
+    // service that no longer matches, is. The window may be open by now, so say so instead of "not opened".
+    const changed = () => new Error('主机实例在打开窗口后变化；窗口可能已打开，未移交后台，请重新核对');
+    let afterOpen;
+    for (;;) {
+      try { afterOpen = await inspectPair(expected, controller.signal, budget()); }
+      catch (error) { if (controller.signal.aborted) throw error; throw changed(); }
+      check();
+      if (afterOpen.state === 'ready') break;
+      if (afterOpen.state === 'absent') throw changed(); // both ports refuse: the services are gone, not slow
+      await delay(Math.min(500, Math.max(1, expires - performance.now())), controller.signal);
+    }
+    if (JSON.stringify(afterOpen.identity) !== JSON.stringify(confirmed.identity)) throw changed();
     if (owned) {
       await sendControl(owned, 'webagent-app-release', controller.signal); check();
       while (!owned.released) { await delay(Math.min(50, Math.max(1, expires - performance.now())), controller.signal); check(); }
@@ -265,4 +295,4 @@ async function appWindow(root, workspace, env, home) {
     process.removeListener('SIGINT', onSignal); process.removeListener('SIGTERM', onSignal);
   }
 }
-module.exports = { appOrigin, ready, appWindow, probeJson, validHealth, normalizedWorkspace, hostIdentity, isAppControl };
+module.exports = { appOrigin, ready, appWindow, probeJson, validHealth, normalizedWorkspace, hostIdentity, isAppControl, APP_CLEANUP_UNCONFIRMED };

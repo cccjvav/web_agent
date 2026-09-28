@@ -141,6 +141,9 @@ async function main() {
   };
   const appControlled = process.env.WEBAGENT_APP_BOOTSTRAP === '1' && typeof process.send === 'function';
   let appReleased = false, appPrepared = false;
+  // For the app window (installer/appWindow.js stopOwned) a non-zero exit alone is ambiguous: it can be an
+  // ordinary failure after full cleanup. Unconfirmed cleanup gets its own code there; the CLI keeps exit 1.
+  const unconfirmedExit = appControlled ? require('../../installer/appWindow').APP_CLEANUP_UNCONFIRMED : 1;
   const sendApp = message => {
     try { process.send(message, error => { if (error && !appReleased) stop(1, new Error('App启动通道发送失败')); }); }
     catch (_) { if (!appReleased) stop(1, new Error('App启动通道已关闭')); }
@@ -189,6 +192,9 @@ async function main() {
       env: {
         WORKSPACE_ROOT: workspace,
         AGENT_HOST_PORT: String(mcpPort),
+        // The host reports workbenchPort in its identity; the app window checks it against this editor port.
+        // No UI server listens on it (WEBAGENT_SKIP_WORKBENCH).
+        WORKBENCH_PORT: String(codePort),
         WEBAGENT_SKIP_WORKBENCH: '1'
       }
     }, 'agent');
@@ -247,7 +253,7 @@ async function main() {
     await stopped;
   } catch (error) {
     stop(1, error);
-    if (error.cleanupUnconfirmed) { exitCode = 1; failure = error; }
+    if (error.cleanupUnconfirmed) { exitCode = unconfirmedExit; failure = error; }
   }
   finally {
     controller.abort();
@@ -256,7 +262,7 @@ async function main() {
       if (observed[i]) continue;
       console.error('未能确认本次启动的子进程退出；未按名称、端口或PID补杀，请在本机核对。');
       children[i].unref();
-      exitCode = exitCode || 1;
+      exitCode = appControlled ? unconfirmedExit : (exitCode || 1);
     }
     process.removeListener('SIGINT', onSignal); process.removeListener('SIGTERM', onSignal);
     if (appControlled) {

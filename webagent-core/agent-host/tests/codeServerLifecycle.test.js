@@ -263,6 +263,7 @@ async function serverFixture(handler) {
       assert.deepStrictEqual([...host.args], ['src/index.js']);
       assert.equal(host.opts.env.WORKSPACE_ROOT, h.root); assert.equal(host.opts.env.WEBAGENT_SKIP_WORKBENCH, '1');
       assert.equal(host.opts.env.AGENT_HOST_PORT, '51321'); assert.equal(editor.opts.env.PASSWORD, 'fixture-only');
+      assert.equal(host.opts.env.WORKBENCH_PORT, '51322', 'the host identity reports the editor port the app window checks');
       assert.equal(editor.args[editor.args.indexOf('--auth') + 1], 'password');
       assert.equal(editor.args[editor.args.indexOf('--trusted-origins') + 1], 'http://127.0.0.1:51322,http://localhost:51322');
       assert.equal(editor.args[editor.args.indexOf('--bind-addr') + 1], '127.0.0.1:51322');
@@ -378,6 +379,41 @@ async function serverFixture(handler) {
       assert.equal(await bounded(running), 1); assert.equal(agent.unrefs, 1); assert.equal(clock.timers.size, 0);
       assert.deepStrictEqual(agent.signals, ['SIGTERM', 'SIGKILL']); assert.equal(h.calls.length, 2);
       assert.ok(h.logs.some(line => line.includes('未能确认'))); assert.equal(h.proc.listenerCount('SIGINT'), 0);
+    } finally { await h.close(); }
+  });
+  // The app window (installer/appWindow.js) reads exit 3 as "cleanup unconfirmed" and any other exit as confirmed,
+  // so in app-controlled mode an unconfirmed cleanup must not collapse into the ordinary failure code 1.
+  await test('app-controlled unconfirmed child cleanup exits with APP_CLEANUP_UNCONFIRMED, not 1', async () => {
+    const clock = fakeClock(), h = harness({ clock, platform: 'win32', env: { WEBAGENT_APP_BOOTSTRAP: '1' } });
+    h.proc.send = (_message, callback) => callback?.();
+    try {
+      const running = h.api.main(); await nextTurn();
+      const agent = h.children[0];
+      agent.kill = signal => { agent.signals.push(signal); agent.emit('error', new Error('fixture access denied')); return false; };
+      h.children[1].end(1); await nextTurn();
+      clock.advance(10000);
+      assert.equal(await bounded(running), 3); assert.equal(agent.unrefs, 1);
+      assert.ok(h.logs.some(line => line.includes('未能确认')));
+    } finally { await h.close(); }
+  });
+  await test('app-controlled unconfirmed preparation cleanup exits with APP_CLEANUP_UNCONFIRMED', async () => {
+    const h = harness({ env: { WEBAGENT_APP_BOOTSTRAP: '1' }, ensure({ signal }) {
+      return new Promise((resolve, reject) => signal.addEventListener('abort', () => reject(Object.assign(new Error('unconfirmed preparation'), { cleanupUnconfirmed: true })), { once: true }));
+    } });
+    h.proc.send = (_message, callback) => callback?.();
+    try {
+      const running = h.api.main(); h.proc.emit('message', { type: 'webagent-app-stop' });
+      assert.equal(await bounded(running), 3); assert.equal(h.calls.length, 0);
+    } finally { await h.close(); }
+  });
+  await test('app-controlled failure with confirmed cleanup keeps its ordinary non-zero code', async () => {
+    const h = harness({ env: { WEBAGENT_APP_BOOTSTRAP: '1' } });
+    h.proc.send = (_message, callback) => callback?.();
+    try {
+      const running = h.api.main(); await nextTurn();
+      h.children[1].end(1); // editor fails; the agent child exits on SIGTERM (fixture) and is observed
+      assert.equal(await bounded(running), 1);
+      assert.ok(h.children.every(child => child.exitCode !== null || child.signalCode !== null));
     } finally { await h.close(); }
   });
   await test('real child exit is observed without touching an unrelated live process', async () => {
