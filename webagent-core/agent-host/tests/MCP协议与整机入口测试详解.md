@@ -76,9 +76,13 @@ OAuth默认关闭（2026-09-25）一段在真实子进程上断言：oauth.route
 
 等MCP health正常再GET断言200；请求19999只要有HTTP响应就reject，仅连接error才resolve，证明本fixture没有启动UI端口。固定端口若已被其他程序占用会误报失败；连接error也不是严格端口所有权探针。finally Windows taskkill或SIGTERM、等200ms、rm tmp；catch exit1。子进程stdout/stderr虽pipe但未消费，长日志可能影响测试；这里启动日志短。它证明跳过旧工作台，不证明VS Code桌面插件或code-server窗口已可交互。
 
+## configPorts.test.js：端口环境变量校验（F98）
+
+[源码](configPorts.test.js)的**loadConfig(env)**用spawnSync起一个子进程`require("./src/config")`并打印port/workbenchPort，基础环境把AGENT_HOST_PORT/WORKBENCH_PORT置空再叠加用例。断言：未设/空串得48271/3000；`0`与带空白的` 51234 `分别得0（临时端口）与51234；`48271x`、`abc`、`-1`、`70000`、`3000.5`、`0x1F90`六种非法值子进程非零退出，stderr含“<变量名> must be an integer between 0 and 65535”并原样引用该值。修复前`48271x`被parseInt成48271、其余拖到监听时才失败，本测试在基线上红。
+
 ## 验证
 
-分别filter mcpProtocol/httpSmoke/skipWorkbench，或`npm test --prefix webagent-core/agent-host`。Windows/Conda/浏览器/手机人工执行项仍以安装验收清单为准，不能以这些文件命名替代实测。
+分别filter mcpProtocol/httpSmoke/skipWorkbench/configPorts，或`npm test --prefix webagent-core/agent-host`。Windows/Conda/浏览器/手机人工执行项仍以安装验收清单为准，不能以这些文件命名替代实测。
 
 httpSmoke增加真实HTTP早期边界：未认证MCP提交JSON字符串（严格对象解析本会拒绝）仍先401，证明认证先于解析；OAuth注册70KiB字段先413而非入库/一般字段校验。现有合法MCP、OAuth、跨站与本机请求保持回归。
 

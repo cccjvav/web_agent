@@ -597,13 +597,13 @@ router.post('/bridge/start', async (req, res) => {
         ? `Named Tunnel 已就绪：${tunnelUrl}`
         : (ngrokProv ? `ngrok 已就绪：${tunnelUrl}` : `Quick Tunnel 已就绪：${tunnelUrl}`);
     } else if (tunnelError) {
-      note = `${tunnelError} 远程Bridge未就绪；MCP仅可通过本机48271端口访问。`;
+      note = `${tunnelError} 远程Bridge未就绪；MCP仅可通过本机${config.port}端口访问。`;
     } else if (named) {
-      note = '未启动 Named Tunnel。MCP仅可通过本机48271端口访问。';
+      note = `未启动 Named Tunnel。MCP仅可通过本机${config.port}端口访问。`;
     } else if (ngrokProv) {
-      note = '未启动 ngrok。MCP仅可通过本机48271端口访问。';
+      note = `未启动 ngrok。MCP仅可通过本机${config.port}端口访问。`;
     } else {
-      note = '未启动 Quick Tunnel（cloudflare / Named Tunnel / ngrok 才会拉起对应进程）。MCP仅可通过本机48271端口访问。';
+      note = `未启动 Quick Tunnel（cloudflare / Named Tunnel / ngrok 才会拉起对应进程）。MCP仅可通过本机${config.port}端口访问。`;
     }
 
     eventBus.broadcast(config.bridgeRunning ? 'bridge_started' : 'bridge_failed', { provider, tunnelUrl: tunnelUrl || null, tunnelError });

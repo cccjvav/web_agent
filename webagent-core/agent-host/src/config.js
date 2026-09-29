@@ -6,11 +6,25 @@ const workspaceRoot = path.resolve(
   process.env.WORKSPACE_ROOT || path.resolve(__dirname, '../../..')
 );
 
+// F98: a mistyped port (`AGENT_HOST_PORT=48271x`, `-1`, `70000`) used to be parseInt'ed and reach
+// server.listen as a truncated number, NaN or an out-of-range value, failing there with a Node
+// RangeError that never named the variable. Reject it here, by name. 0 stays valid (ephemeral
+// port, used by tests and by WEBAGENT_SKIP_WORKBENCH runs).
+function portFromEnv(name, fallback) {
+  const raw = process.env[name];
+  if (raw === undefined || String(raw).trim() === '') return fallback;
+  const text = String(raw).trim();
+  if (!/^\d{1,5}$/.test(text) || Number(text) > 65535) {
+    throw new Error(`${name} must be an integer between 0 and 65535, got ${JSON.stringify(raw)}`);
+  }
+  return Number(text);
+}
+
 const config = {
   hostInstanceId: crypto.randomUUID(),
   startedAt: new Date().toISOString(),
-  port: parseInt(process.env.AGENT_HOST_PORT || '48271', 10),
-  workbenchPort: parseInt(process.env.WORKBENCH_PORT || '3000', 10),
+  port: portFromEnv('AGENT_HOST_PORT', 48271),
+  workbenchPort: portFromEnv('WORKBENCH_PORT', 3000),
   host: process.env.WEBAGENT_BIND || '127.0.0.1',
   workspaceRoot,
   secretKey: crypto.randomBytes(12).toString('hex'),

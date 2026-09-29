@@ -76,8 +76,9 @@ export function paintCustom({ preserveDrafts = false } = {}) {
     const extras = models.map((m) =>
       `<option value="${escapeHtml(m.id)}">${escapeHtml(m.name || m.modelId || m.id)}</option>`
     ).join('');
-    mergeSel.innerHTML = `<option value="active">用当前对话模型</option><option value="auto">用当前对话模型</option>${extras}`;
-    if (mm.mergeModel) mergeSel.value = mm.mergeModel;
+    // `auto` is the legacy spelling of `active` (runChat maps it); one visible option, not two.
+    mergeSel.innerHTML = `<option value="active">用当前对话模型</option>${extras}`;
+    if (mm.mergeModel) mergeSel.value = mm.mergeModel === 'auto' ? 'active' : mm.mergeModel;
     const disp = $('#mm-merge-display');
     if (disp) disp.value = mm.mergeModel && mm.mergeModel !== 'active' && mm.mergeModel !== 'auto' ? mm.mergeModel : '';
   }

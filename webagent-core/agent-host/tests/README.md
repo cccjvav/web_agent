@@ -18,7 +18,7 @@
 | [本机边界与跨站测试详解](本机边界与跨站测试详解.md) | auditControl、localControl、corsAllow |
 | [OAuth与GitHub测试详解](OAuth与GitHub测试详解.md) | oauth、oauthClientAuth、githubAuth |
 | [补丁与编辑API测试详解](补丁与编辑API测试详解.md) | patchEngine、apiFiles |
-| [MCP协议与整机入口测试详解](MCP协议与整机入口测试详解.md) | mcpProtocol、mcpInterop、mcpCallerIsolation、httpSmoke、skipWorkbench、operatorQueueCapacity |
+| [MCP协议与整机入口测试详解](MCP协议与整机入口测试详解.md) | mcpProtocol、mcpInterop、mcpCallerIsolation、httpSmoke、skipWorkbench、operatorQueueCapacity、configPorts |
 | [统计与文档测试](统计与文档测试详解.md) | adminHost、docsSite、docsHttp |
 | [工作台HTML结构与测试](../../workbench/页面结构详解.md) | workbenchHtml |
 
@@ -165,6 +165,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [codeServerNotRunnable.test.js](codeServerNotRunnable.test.js) | 0 个函数/类节点 |
 | [commandEncoding.test.js](commandEncoding.test.js) | 8 个函数/类节点 |
 | [computerUseScripts.test.js](computerUseScripts.test.js) | 7 个函数/类节点 |
+| [configPorts.test.js](configPorts.test.js) | 1 个函数/类节点 |
 | [connectionCheck.test.js](connectionCheck.test.js) | 18 个函数/类节点 |
 | [corsAllow.test.js](corsAllow.test.js) | 22 个函数/类节点 |
 | [dangerousCommands.test.js](dangerousCommands.test.js) | 12 个函数/类节点 |
@@ -203,7 +204,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [mcpProtocol.test.js](mcpProtocol.test.js) | 53 个函数/类节点 |
 | [memoryRecall.test.js](memoryRecall.test.js) | 8 个函数/类节点 |
 | [modelLifecycle.test.js](modelLifecycle.test.js) | 55 个函数/类节点 |
-| [monacoLoading.test.js](monacoLoading.test.js) | 12 个函数/类节点 |
+| [monacoLoading.test.js](monacoLoading.test.js) | 14 个函数/类节点 |
 | [nativeChatStream.test.js](nativeChatStream.test.js) | 27 个函数/类节点 |
 | [nativeRequestJson.test.js](nativeRequestJson.test.js) | 28 个函数/类节点 |
 | [nativeRotationCommands.test.js](nativeRotationCommands.test.js) | 58 个函数/类节点 |
@@ -267,7 +268,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
 | [workbench.browser.js](workbench.browser.js) | 351 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 529 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 537 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 17 个函数/类节点 |

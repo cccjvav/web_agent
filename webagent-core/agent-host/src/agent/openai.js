@@ -103,7 +103,7 @@ function systemPrompt(mode) {
     `Workspace root: ${config.workspaceRoot}`,
     `Current mode: ${mode.toUpperCase()}. ${lock}`,
     'Loop: search/find → read_files (keep sha256) → apply_patch → run_command or start_command for tests.',
-    'Do not assume any particular file exists (including calculator.js). Inspect THIS workspace.',
+    'Do not assume any particular file exists. Inspect THIS workspace.',
     'Search first, then read only the needed files. Use sha256 from read_files when patching.',
     `${reply} Be concise. After tools, give a short conclusion.`,
     env.shell === 'powershell' || env.os === 'windows'

@@ -96,7 +96,14 @@ async function boot() {
   connectWs();
   if (ui.refreshBridgeActivity) {
     ui.refreshBridgeActivity();
-    setInterval(() => ui.refreshBridgeActivity(), 3000);
+    // Poll only while the tab is visible: a background tab would otherwise hit the host every
+    // 3 s indefinitely. Coming back refreshes at once, so the panel never shows stale numbers;
+    // /ws events still trigger refreshes in between.
+    const hidden = () => typeof document !== 'undefined' && document.hidden === true;
+    setInterval(() => { if (!hidden()) ui.refreshBridgeActivity(); }, 3000);
+    if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+      document.addEventListener('visibilitychange', () => { if (!hidden()) ui.refreshBridgeActivity(); });
+    }
   }
   const results = await Promise.allSettled([
     () => ui.refreshStatus(), () => ui.loadTree(), () => ui.loadSkills(), () => ui.loadCustomizations(), loadMonaco

@@ -80,7 +80,18 @@ process.on('exit', code => {
   }
   await dom.link(specifier => { assert.strictEqual(specifier, './state.js'); return state; });
   await dom.evaluate(); // F01 used to throw here, before boot's catch could run.
-  assert.strictEqual(dom.namespace.initTheme(), 'dark');
+  assert.strictEqual(dom.namespace.initTheme(), 'dark', 'no stored choice and no matchMedia: dark as before');
+  assert.strictEqual(storage.has('webagent-theme'), false, 'the fallback is not stored as if the user had chosen it');
+  // F98: without a stored choice the page follows the OS colour scheme; a stored choice wins.
+  context.matchMedia = query => ({ matches: query === '(prefers-color-scheme: light)' });
+  assert.strictEqual(dom.namespace.initTheme(), 'light', 'a light-mode OS starts light');
+  assert.strictEqual(storage.has('webagent-theme'), false, 'following the OS is not a stored choice either');
+  storage.set('webagent-theme', 'dark');
+  assert.strictEqual(dom.namespace.initTheme(), 'dark', 'an explicit choice beats the OS preference');
+  storage.delete('webagent-theme');
+  context.matchMedia = () => { throw new Error('matchMedia unavailable'); };
+  assert.strictEqual(dom.namespace.initTheme(), 'dark', 'a throwing matchMedia falls back to dark');
+  delete context.matchMedia;
   assert.strictEqual(dom.namespace.applyTheme('light'), 'light');
   assert.strictEqual(context.document.documentElement.dataset.theme, 'light');
   assert.strictEqual(storage.get('webagent-theme'), 'light');
@@ -110,7 +121,16 @@ process.on('exit', code => {
   assert.strictEqual(button.disabled, true, 'the control reports its own limit instead of no-opping');
   for (let i = 0; i < 20; i += 1) scale = stepTextScale(-1);
   assert.strictEqual(scale, TEXT_SCALE_MIN, 'shrinking clamps at the declared minimum');
+  // F98: the Monaco editor sizes text in px, so it follows the same control explicitly.
+  const editorOptions = [];
+  state.namespace.state.editor = { updateOptions: options => editorOptions.push(options) };
   assert.strictEqual(applyTextScale(1.2), 1.2);
+  assert.strictEqual(editorOptions.at(-1) && editorOptions.at(-1).fontSize, 16, '13px × 1.2 rounds to 16px in the editor'); // cross-realm object: compare the field
+  assert.strictEqual(dom.namespace.editorFontSize(1), 13, 'the default scale keeps the historical 13px');
+  assert.strictEqual(dom.namespace.editorFontSize(1.6), 21);
+  state.namespace.state.editor = { updateOptions: () => { throw new Error('disposed'); } };
+  assert.doesNotThrow(() => applyTextScale(1.2), 'a disposed editor must not break the text control');
+  state.namespace.state.editor = null;
   assert.strictEqual(currentTextScale(), 1.2);
   assert.strictEqual(storage.get('webagent-text-scale'), '1.2', 'the choice is persisted');
   assert.strictEqual(initTextScale(), 1.2, 'and restored on the next load');
@@ -265,8 +285,14 @@ process.on('exit', code => {
   bootUi.loadTree = () => { throw new Error('fixture initial request failure'); };
   bootUi.activateTab = () => { activated++; };
   bootUi.toast = () => { warnings++; };
+  // F98: the 3 s activity poll pauses while the tab is hidden and refreshes once on return.
+  let activityRefreshes = 0, pollTick = null;
+  const docListeners = {};
+  const bootDocument = { hidden: false, addEventListener: (name, fn) => { docListeners[name] = fn; } };
+  bootUi.refreshBridgeActivity = () => { activityRefreshes++; };
   const bootContext = vm.createContext({ console: { error() {} }, location: { protocol: 'http:', host: 'localhost:3000' },
-    WebSocket: function () { sockets++; this.readyState = 1; } });
+    WebSocket: function () { sockets++; this.readyState = 1; }, document: bootDocument,
+    setInterval: (fn, ms) => { assert.strictEqual(ms, 3000); pollTick = fn; return 1; } });
   const stateStub = new vm.SyntheticModule(['$', 'state', 'ui'], function () {
     this.setExport('$', () => null); this.setExport('state', { activeTab: 'welcome' }); this.setExport('ui', bootUi);
   }, { context: bootContext });
@@ -281,6 +307,13 @@ process.on('exit', code => {
   assert.strictEqual(sockets, 1, 'initial request failure must not prevent websocket startup');
   assert.strictEqual(activated, 1, 'initial tab must still activate');
   assert.strictEqual(warnings, 1, 'partial initialization failure must be visible');
+  assert.strictEqual(activityRefreshes, 1, 'boot refreshes the activity panel once');
+  pollTick(); assert.strictEqual(activityRefreshes, 2, 'a visible tab polls');
+  bootDocument.hidden = true; pollTick(); pollTick();
+  assert.strictEqual(activityRefreshes, 2, 'a hidden tab does not poll the host');
+  docListeners.visibilitychange(); assert.strictEqual(activityRefreshes, 2, 'still hidden: no refresh');
+  bootDocument.hidden = false; docListeners.visibilitychange();
+  assert.strictEqual(activityRefreshes, 3, 'returning to the tab refreshes at once');
   // R42: real start/stop functions; well-formed preflight and write contracts.
   const actionNodes = new Map();
   let starts = 0, stops = 0, copied = 0, lit = 0, removed = 0, refreshed = 0;

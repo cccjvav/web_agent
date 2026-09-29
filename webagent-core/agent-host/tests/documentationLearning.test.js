@@ -108,6 +108,7 @@ const pairs = [
   ["webagent-core/agent-host/tests/mcpCallerIsolation.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
   ["webagent-core/agent-host/tests/httpSmoke.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
   ["webagent-core/agent-host/tests/skipWorkbench.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
+  ["webagent-core/agent-host/tests/configPorts.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
   ["webagent-core/agent-host/tests/operatorQueueCapacity.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
 
   ["webagent-core/agent-host/tests/patchEngine.test.js", "webagent-core/agent-host/tests/补丁与编辑API测试详解.md"],

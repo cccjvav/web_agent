@@ -1,4 +1,5 @@
 import { $, state, ui } from './state.js';
+import { EDITOR_BASE_FONT_PX, editorFontSize } from './dom.js';
 
 export function loadMonaco() {
   const status = $('#sb-editor');
@@ -23,7 +24,8 @@ export function loadMonaco() {
             state.editor = window.monaco.editor.create($('#editor'), {
               model: null,
               theme: document.documentElement.dataset.theme === 'light' ? 'vs' : 'vs-dark',
-              automaticLayout: true, minimap: { enabled: false }, fontSize: 13, scrollBeyondLastLine: false
+              automaticLayout: true, minimap: { enabled: false }, scrollBeyondLastLine: false,
+              fontSize: ui.currentTextScale ? editorFontSize(ui.currentTextScale()) : EDITOR_BASE_FONT_PX
             });
             ui.activateTab(state.activeTab);
             finish(true);

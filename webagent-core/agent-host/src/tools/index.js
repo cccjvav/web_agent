@@ -462,7 +462,7 @@ const TOOLS = [
   tool({
     name: 'report_progress',
     aliases: [],
-    description: '把当前阶段和完成度同步到编辑器。',
+    description: 'Report the current step and completion percentage to the editor/workbench progress display.',
     mode: ['plan', 'code'],
     inputSchema: {
       type: 'object',
@@ -478,7 +478,7 @@ const TOOLS = [
   tool({
     name: 'set_todos',
     aliases: [],
-    description: '上报任务计划（每次替换该会话计划，最多50项）；Bridge按远程会话显示，不从工具调用自动推断任务或验证完成。',
+    description: 'Report your task plan (replaces this session\'s plan each call; at most 50 items). The Bridge shows it per remote session; it never infers tasks from tool calls or verifies completion.',
     mode: ['ask', 'plan', 'code'],
     inputSchema: {
       type: 'object',

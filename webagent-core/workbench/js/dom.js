@@ -1,9 +1,11 @@
-import { $, $$, ui } from './state.js';
+import { $, $$, ui, state } from './state.js';
 
-export function applyTheme(theme) {
+export function applyTheme(theme, { persist = true } = {}) {
   const selected = theme === 'light' ? 'light' : 'dark';
   document.documentElement.dataset.theme = selected;
-  try { localStorage.setItem('webagent-theme', selected); } catch (_) { /* private/storage-disabled browser */ }
+  if (persist) {
+    try { localStorage.setItem('webagent-theme', selected); } catch (_) { /* private/storage-disabled browser */ }
+  }
   const button = $('#btn-theme');
   if (button) {
     button.textContent = selected === 'light' ? '深色' : '浅色';
@@ -13,20 +15,32 @@ export function applyTheme(theme) {
   return selected;
 }
 
+// Without a stored choice the page follows the operating system (prefers-color-scheme) on every
+// load; only the theme button stores a choice, which then wins. Storing the fallback here would
+// freeze the first visit's answer forever. Browsers without matchMedia get dark as before.
 export function initTheme() {
-  let saved = 'dark';
-  try { saved = localStorage.getItem('webagent-theme') || 'dark'; } catch (_) {}
-  return applyTheme(saved);
+  let saved = null;
+  try { saved = localStorage.getItem('webagent-theme'); } catch (_) {}
+  if (saved === 'light' || saved === 'dark') return applyTheme(saved, { persist: false });
+  let prefersLight = false;
+  try { prefersLight = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: light)').matches === true; } catch (_) {}
+  return applyTheme(prefersLight ? 'light' : 'dark', { persist: false });
 }
 
 
 // Text size. The stylesheet expresses every font size in rem, so scaling the root font size
 // scales the whole workbench together instead of leaving hardcoded 11px labels unreadable.
-// This only affects this page's rendering; it never touches file contents, the Monaco editor's
-// own font setting, or anything on the host.
+// The Monaco editor sizes its own text in px, so it follows the same scale explicitly
+// (EDITOR_BASE_FONT_PX × scale, like VS Code's window zoom). This only affects this page's
+// rendering; it never touches file contents or anything on the host.
 export const TEXT_SCALE_MIN = 0.85;
 export const TEXT_SCALE_MAX = 1.6;
 export const TEXT_SCALE_STEP = 0.1;
+export const EDITOR_BASE_FONT_PX = 13;
+
+export function editorFontSize(scale) {
+  return Math.round(EDITOR_BASE_FONT_PX * clampScale(scale));
+}
 
 // Authoritative value lives here rather than being re-read from computed styles: the element may
 // not have been laid out yet at boot, and reading back a percentage would re-introduce rounding.
@@ -47,6 +61,9 @@ export function applyTextScale(scale) {
     root.style.setProperty('--text-scale', String(value));
   }
   try { localStorage.setItem('webagent-text-scale', String(value)); } catch (_) { /* private/storage-disabled browser */ }
+  if (state.editor && typeof state.editor.updateOptions === 'function') {
+    try { state.editor.updateOptions({ fontSize: editorFontSize(value) }); } catch (_) { /* editor disposed mid-step */ }
+  }
   const percent = Math.round(value * 100);
   for (const [selector, label, atLimit] of [
     ['#btn-text-smaller', '缩小', value <= TEXT_SCALE_MIN],

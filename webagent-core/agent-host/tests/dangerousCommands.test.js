@@ -139,13 +139,54 @@ const ORDINARY = [
   'for f in *.js; do node --check "$f"; done', 'git commit -m "feat: add (optional) flag"', 'npm test \\\n  -- --filter=x'
 ];
 
-for (const cmd of ORDINARY) {
+// F98 (2026-09-29 review, P2-1): commands the F72 detector let through, measured with the same
+// probe. `git checkout <pathspec>` discards edits like `checkout --` but had no rule; container /
+// cluster / infrastructure / cloud-storage deletions, rsync --delete, cp /dev/null, quiet wildcard
+// `del /q *`, database-client DROP/TRUNCATE TABLE and the fork bomb were all unflagged.
+const MUST_FLAG_F98 = [
+  'git checkout .', 'git checkout app.js', 'git checkout src/', 'git checkout HEAD app.js',
+  'git checkout main README.md', 'git checkout ./x', 'git checkout *.js', 'git checkout ../x',
+  'git switch --discard-changes main', 'git switch -f main', 'git switch -C main', 'git switch --force-create x',
+  'rsync -av --delete src/ dst/', 'rsync --del a b', 'rsync -a --delete-after a b', 'cp /dev/null f',
+  ':(){ :|:& };:', 'bomb(){ bomb|bomb& };bomb', 'fork() { fork | fork & }; fork', 'sudo docker system prune -a',
+  'docker system prune -af', 'docker volume rm data', 'docker volume prune', 'docker container prune -f',
+  'docker compose down -v', 'docker-compose down --volumes', 'podman system prune', 'bash -c "kubectl delete ns prod"',
+  'kubectl delete deployment web', 'kubectl delete -f k8s/', 'oc delete pod x', 'helm uninstall app',
+  'helm delete app', 'terraform destroy -auto-approve', 'terraform apply -destroy', 'tofu destroy',
+  'pulumi destroy', 'cdk destroy', 'aws s3 rm s3://b/p --recursive', 'aws s3 rb s3://b --force',
+  'aws s3 sync . s3://b --delete', 'gsutil -m rm -r gs://b/p', 'gsutil rb gs://b', 'az group delete -n rg',
+  'gcloud projects delete p', 'del /f /q *', 'del /q *.*', 'erase /q .',
+  'cmd /c del /q *', 'sqlite3 app.db "DROP TABLE users"', 'psql -c "truncate table t"', 'mysql -e "DROP TABLE t"',
+  'mongosh --eval "db.dropDatabase()"', 'redis-cli flushall', 'redis-cli FLUSHDB'
+];
+
+// The everyday counterparts: branch/tag switching, dry runs, listing, non-recursive deletes,
+// and the same phrases in grep/commit messages.
+const ORDINARY_F98 = [
+  'git checkout main', 'git checkout -b feat', 'git checkout -b feat.x', 'git checkout v1.2.3',
+  'git checkout release/1.0', 'git checkout origin/main', 'git checkout -t origin/x', 'git checkout --detach HEAD~1',
+  'git checkout -B main origin/main', 'git checkout -', 'git switch main', 'git switch -c feat',
+  'git switch -', 'rsync -av src/ dst/', 'rsync -n --delete a b', 'rsync --delete --dry-run a b',
+  'cp a /dev/null', 'cp -r a b', 'docker ps', 'docker compose up -d',
+  'docker compose down', 'docker rm -f web', 'docker rmi img', 'docker image prune',
+  'docker volume ls', 'podman ps', 'kubectl get pods', 'kubectl apply -f x',
+  'kubectl delete pod x --dry-run=client', 'helm install app ./chart', 'helm list', 'terraform plan',
+  'terraform apply', 'pulumi up', 'aws s3 ls', 'aws s3 rm s3://b/file',
+  'aws s3 sync . s3://b', 'aws s3 cp a s3://b/', 'gsutil ls', 'gsutil rm gs://b/file',
+  'az group list', 'gcloud projects list', 'del file.txt', 'del /q file.txt',
+  'dir /s', 'del /f old.log', 'grep -r "drop table" migrations/', 'git commit -m "drop table users migration"',
+  'sqlite3 app.db ".tables"', 'psql -c "select 1"', 'redis-cli ping', 'redis-cli get k',
+  'echo "fork() { echo no; }"', 'make clean', 'npm run clean', 'cargo clean'
+];
+
+for (const cmd of [...ORDINARY, ...ORDINARY_F98]) {
   assert.strictEqual(isDangerousCommand(cmd), false, `must not flag ordinary command: ${cmd}`);
 }
-for (const cmd of MUST_FLAG) {
+for (const cmd of [...MUST_FLAG, ...MUST_FLAG_F98]) {
   assert.strictEqual(isDangerousCommand(cmd), true, `detector must flag: ${cmd}`);
 }
 assert.ok(ORDINARY.length >= MUST_FLAG.length, 'the false-positive list must stay at least as long as the coverage list');
+assert.ok(ORDINARY_F98.length >= MUST_FLAG_F98.length, 'the F98 false-positive list must stay at least as long as its coverage list');
 
 // Documented out-of-scope cases stay out of scope. Anything that needs EVALUATION to know the
 // real command — eval, command substitution, variables, interpreter bodies — is not covered, and

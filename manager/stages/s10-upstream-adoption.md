@@ -2020,7 +2020,6 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **文档：** 缓存与进度详解（readCache表新增readerOf/sessionKey/rememberSession，改rememberHash/sessionHash/forgetHash与状态说明）、文件与搜索详解、补丁与路径详解、工具入口与命令策略详解、路由逐项详解（GET/PUT/POST /skills）、编辑回退详解、tools README覆盖口径、admin-host统计服务详解，以及补丁与编辑API、存储完整性与预算、统计与文档三份测试详解；审查索引三行补F95说明。用户向指南没有涉及覆盖条件的表述，无需改。
 
 **剩余与未验证：** 读者取MCP调用者键：已初始化会话各自独立；未带Mcp-Session-Id的远程调用按来源地址（和initialize时的客户端名）归并，经隧道时来源通常都是127.0.0.1，这类调用共用一个读者（客户端名已去控制字符，读者键不会与路径拼接冲突）；本机Chat与插件Chat的工具转发仍是同一个local读者；落盘记录仍不分调用者；人的撤销若恰好恢复成模型读过的那个版本，模型可免确认覆盖（它确实见过这些字节）。没有在真实浏览器里走一遍“工作台保存后模型被拒”的界面提示；悬空Promise扫描是启发式。R2/R3余下线索：外部MCP注册与stdio启动的调用者归属、执行控制权限在workflows之外的入口，尚未开始。
-
 ### 第96组：人提交的工作流与直接工具调用不算本机Chat读过（2026-09-29）
 
 **开头复审第95组：** 提交`049d6a6`的CI（run 36589139475）9/9通过。逐个核对readCache的调用点（rememberHash/sessionHash/recalledHash/forgetHash只在fileOps与patchEngine）以及全仓callTool调用点：本机Chat（openai、runChat）不带选项记为local；GET /files/tree、GET /skills/load不记录；PUT保存、POST /skills、editorUndo、fileCheckpoints带operator；MCP带remote与callerKey；workflows沿用提交者选项。rename_file不清源路径的记录，但记录是内容hash，同内容文件模型确实见过，不构成盲写。**第95组漏掉两个入口**：`/api/tool/call`与`/api/workflows/request`，见下。另更正第95组会话记录里的一处口径：`routes.js`的`/tool/call`调用方是工作台终端与搜索框（人），不是插件Chat转发；插件Chat走`/api/chat`，与本机Chat同为local读者，第95组文档里“本机Chat和插件Chat共用local”的说法本身无误。
@@ -2042,6 +2041,45 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **文档：** 受控工具与工作流详解（operatorQueue记录的options、execute传operator）、路由逐项详解（/tool/call与工作流请求）、缓存与进度详解readerOf行、tools README覆盖口径、补丁与编辑API测试详解续段。
 
 **剩余与未验证：** 审批列表与详情不显示请求来自谁（远程会话、本机Chat还是人自己），操作者只能凭内容判断——列为候选，未改（涉及对外字段）。`/api/tool/call`仍是任意工具入口，本机进程都能调，归为人的操作；若将来有本机模型改走它，要重新考虑归属。第95组的剩余项不变。探针的`/probe/actions`按约定未审（探针专项暂停）。没有在真实浏览器里操作审批面板。
+
+### 第97组：全量只读复审与优化建议报告（会话01a0e8e7，2026-09-29）
+
+**接手与基线：** 用户要求先同步到`01a0d084`再对全部实现做全面审查并出可下载的报告。`arena/01a0e8e7-web-agent`从`ce495ed`（F90）快进到`83ce419`（=01a0d084，含F91–F94）。基线实测：`npm run lint`退出0、`npm test`116个文件全部通过、`node docs-site/check-docs.js`无漂移、`npm audit`（含开发依赖）0漏洞、`npm outdated`仅ws补丁级；扩展副本仅README.md不在副本内（测试有意排除）；0.7.2三处一致。
+
+**产物：** [review/FULL_REVIEW_2026-09-29.md](../../review/FULL_REVIEW_2026-09-29.md)（已登记进`FULL_REVIEW_INDEX`，计数210、历史保留42）。本组**未改产品代码**，只新增报告与登记。
+
+**主要发现（详见报告第3节）：** P1-1工作台经jsDelivr加载Monaco（`workbench/js/monaco.js:15,19`）无SRI、无script-src CSP，而该页面拥有本机全部API能力（含`run_command`），是控制面模型里唯一把外部内容当可执行代码引入特权页面的路径；P2-1对`extension/dangerousPolicy.isDangerousCommand`实测约75条命令，`git checkout .`/`git switch --discard-changes`/`rsync --delete`/`cp /dev/null f`/fork bomb/`docker system prune -af`/`kubectl delete`/`terraform destroy`/`aws s3 rm --recursive`/`del /f /q *`/`sqlite3 "DROP TABLE"`/`sed -i`/`history -c`未命中（远程会直接执行、本机不需confirm_dangerous）；P2-2模型调用非流式（`openai.js:218-233`），最长120秒无任何文字；P2-3历史只按12条裁剪、无token估算；P2-4执行环境注入`CI=true`与静默剥离`*TOKEN*`变量无提示；P2-5 `/bin/bash`与48271多处硬编码；P2-6 `index.html:743`“随Web Agent启动Bridge…startupTimeoutMs”描述了不存在的功能；P2-7 `settings.js:79`总结模型下拉两个同名“用当前对话模型”；P2-8 `app.js:99`Bridge活动3秒无门控轮询；P3共15条。
+
+**UI/排版（报告4.1）：** `styles.css`106处font-size中69处为12px（`--fs-xs`与`--fs-sm`同为0.75rem），建议`--fs-sm`提到13px；三栏固定像素无拖拽，700–980px区间编辑器可压到<100px，建议加~1200px断点与分隔条；`lang="zh-CN"`页面内Bridge面板/菜单十余处英文；扩展Webview硬编码深色与10–12px字号、不用`--vscode-*`变量；Monaco `fontSize:13`不跟随A-/A+；无`prefers-color-scheme`默认；字体栈缺Linux中文回退。
+
+**文档一致性（报告第5节）：** 路由65个、错误码60/52、环境变量37/39、工具数40（对外39）、反引号路径52个未命中项逐一判读——现行文档与代码无实质冲突；剩余问题在UI内嵌文案（不在Markdown体系、逃过现有检查），建议纳入R7范围。
+
+**暂停探针（报告第6节）：** 按用户要求读了代码并跑静态检查（py_compile全过；pyflakes 9条含`active_probe.py:68`死函数缺`import re`；同规则ESLint仅5处未用变量），不认证功能与合规；`probeBridge.js:8-9`与`installer/package.js:9-10`对`probe-extension/{referenceInput,traceInput}.js`的运行时耦合建议迁入agent-host。
+
+**工程（报告4.3）：** `docs-site/content.js`5.3 MiB、manifest 1.6 MiB、source-index 0.9 MiB生成物入库，浅克隆5个提交已15个blob/39 MB未压缩；`review/shuncode-ui/`13 MB截图；CI仍含EOL的Node 18。
+
+**未覆盖：** 未实机运行Windows/桌面VS Code/隧道；`mcp/oauth.js`、`tools/fileOps.js`、`tunnel/*`、`hostManager/ptyHost`、`computer-use/win`只读片段或未读；109份Markdown以主干通读+自动比对为主。后续建议顺序：P1-1→P2-2→P2-1→字号与三栏→文案。
+
+### 第98组：复审修复第1批——危险命令补漏、端口校验与工作台文案/主题/字号（会话01a0e8e7，2026-09-29）
+
+**接手与基线：** 用户在第97组报告后要求“分批、按重要性继续审查并修复可能的错误”。会话沙箱期间重建过一次：`.git`回到`ce495ed`而工作树仍是全部改动，按“备份工作树→`reset --hard 83ce419`→原样铺回→重新提交报告”恢复，再变基到已前进的上游`049d6a6`（=01a0d084 F95，读取缓存归属）；上游也用了F95编号，故报告组改记为第97组、本批为第98组，CONTEXT/日志/索引同步改名。变基后`npm ci`、lint、docs-check、116测试全绿。
+
+**范围（报告编号）：** 只做“证据确凿、改动小、可测”的项，一次改代码即同步文档与测试：P2-1、P2-5（部分）、P2-6、P2-7、P2-8、P3-1、P3-5、P3-7、P3-12，以及4.1里的两项UI改进（Monaco字号随A-/A+、主题跟随系统）。P1-1（Monaco自托管）、P2-2（流式）、P2-3/P2-4、字号token与三栏布局、探针模块留后续批次。
+
+**实施：**
+1. **危险命令补漏（P2-1，`extension/dangerousPolicy.js`，副本同步）。** 用报告的探针实测F72检测器放行的55条破坏性命令，逐类补规则：`git checkout <路径规格>`（looksLikePathspec按形状：`.`、`./x`、`../x`、末尾`/`、通配符、字母开头扩展名；两个及以上位置参数即路径；`-b/-B/--orphan/--detach`不算）与`git switch --discard-changes/-f/-C/--force-create`；rsync `--delete`各拼写（`-n`/`--dry-run`除外）；`cp /dev/null file`；fork炸弹（切分前整段匹配，因splitStages会把`:(){ :|:& };:`切成无害单词）；新函数infraDangerous（docker/podman/nerdctl `system prune`/`volume rm|prune`/`container prune`/`compose down -v`、kubectl/oc `delete`非dry-run、helm uninstall、terraform/tofu destroy与`apply -destroy`、pulumi/cdk destroy、`aws s3 rm --recursive`/`rb`/`sync --delete`、`gsutil rm -r`/`rb`、`az group delete`、`gcloud projects delete`）与databaseDangerous（仅数据库客户端程序的DROP/TRUNCATE TABLE、dropDatabase，redis FLUSHALL/FLUSHDB——限定程序名是为了让grep与提交信息里的同一短语照常放行）；Windows `del/erase /q`且操作数含通配符或`.`。有意不拦：`sed -i`/`perl -i`（等同写文件、git可回退，拦了会逼用户关掉整个保护）、`history -c`、`docker rm -f`/`rmi`。已知过近似：`echo ":(){ :|:& };:"`、`git checkout feature/foo.bar`会误报（代价是一次确认）。
+2. **端口校验（P3-1，`config.js`）。** `portFromEnv`只接受0–65535十进制整数（0保留给临时端口），其余按变量名抛错并引用原值；此前`48271x`被parseInt成48271、`70000`/`abc`拖到监听时才以RangeError失败且不提变量名。
+3. **工作台文案（P2-5/P2-6/P2-7/P3-12）。** 高级设置提示改为说明重置MCP地址的后果（旧文案提到从未存在的“随启动Bridge/startupTimeoutMs”）；隧道两处提示不再把48271写死；`routes.js`四处启动说明改用`config.port`；合并主模型下拉去掉与`active`同义的重复项`auto`（runChat把auto映射为active，读取旧值时同样归一）；“本地 的智能体”两处错字。
+4. **系统提示与工具说明（P3-5/P3-7，`openai.js`、`tools/index.js`）。** 系统提示删去示例项目残留的“including calculator.js”；`report_progress`/`set_todos`两条中文description改为英文，与其余38条一致（模型看到的是这段文字）。
+5. **主题跟随系统（4.1）。** `initTheme`与head内嵌脚本：没有存过选择时按`prefers-color-scheme`决定，只有主题按钮才写localStorage——原先initTheme会把回退值写入存储，跟随系统永远只在第一次生效；无matchMedia/抛错/存储失败仍是深色。
+6. **Monaco字号随A-/A+（4.1）。** `editorFontSize(scale)=round(13×scale)`，applyTextScale对`state.editor.updateOptions`同步，创建编辑器时按当前档取值；默认档仍13px。原注释把“不改Monaco字号”写成范围声明，但对用户而言放大按钮不放大代码是缺陷而非边界。
+7. **后台标签页停轮询（P2-8，`app.js`）。** 3秒活动轮询在`document.hidden`时跳过，`visibilitychange`切回时立即刷新一次；/ws事件仍照常触发刷新。
+
+**测试与反向验证：** dangerousCommands新增MUST_FLAG_F98（55）/ORDINARY_F98（56，长度不得少于前者），修复前55条全为false（用`git show HEAD:`的旧检测器实测）、修复后全部通过且原135+90条矩阵不变；新增configPorts测试（子进程加载config，默认/0/空白容忍/六种非法值），基线上红；workbenchRuntime加主题（无存储+无matchMedia→dark且不落盘、light系统→light、存储优先、matchMedia抛错→dark）、编辑器字号（1.2→16px、销毁的editor不抛）与轮询可见性（隐藏两次tick不请求、切回立即一次）断言，基线上“light系统→light”处红；extensionCopy、settingsPanel（内嵌主题脚本仍以`<script>try {`开头，设置页照常剥除）、workbenchHtml通过。lint 0，全量测试见下方复盘。
+
+**文档：** 工具入口与命令策略详解（looksLikePathspec/infraDangerous/databaseDangerous/forkBomb行、F98覆盖段）、工作区与命令安全测试详解、SECURITY.md远程拒绝示例、运行配置详解（portFromEnv）、工作台页面结构详解/样式规则详解/README、js的状态与编辑器详解/交互绑定详解/启动与Chat详解；报告`FULL_REVIEW_2026-09-29.md`末尾加“修复进度”表并更新索引指纹。
+
+**剩余与未验证：** 未在真实浏览器里看主题跟随与Monaco字号（Playwright作业只在CI）；danger规则仍是词法判断，`git checkout`单词分支/文件二义只按形状；`kubectl delete`不区分命名空间/资源类型（`kubectl delete pod x`也拦）。下一批（按重要性）：深审`fileOps/patchEngine/sensitive/hostManager/ptyHost`，然后`oauth/session/tunnel`、工作台其余模块与字号/三栏、Monaco自托管与流式输出、逐篇文档。
 
 ### 延后复审清单
 

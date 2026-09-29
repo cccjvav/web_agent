@@ -9,7 +9,8 @@
   <script>
     try {
       var t = localStorage.getItem('webagent-theme');
-      if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+      if (t !== 'light' && t !== 'dark') t = (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', t);
     } catch (e) {}
   </script>
 </head>
@@ -283,7 +284,7 @@
   <div id="modal" class="hidden" role="dialog" aria-modal="true" aria-label="Web Agent 设置" aria-hidden="true">
     <div class="modal-card">
       <aside class="modal-nav">
-        <div class="modal-nav-title">本地 的智能体自定义设置</div>
+        <div class="modal-nav-title">本地的智能体自定义设置</div>
         <button type="button" class="nav-item on" data-page="overview">概述</button>
         <button type="button" class="nav-item" data-page="help">使用帮助</button>
         <button type="button" class="nav-item" data-page="env">环境偏好</button>
@@ -397,7 +398,7 @@
           <p class="lead">完整 IDE、交互式终端与调试请使用桌面 VS Code 扩展。经典工作台不提供附件上传、网站代登录或插件市场。</p>
         </div>
         <div class="page" id="page-overview">
-          <h2>本地 的智能体自定义设置</h2>
+          <h2>本地的智能体自定义设置</h2>
           <p class="lead">定制智能体在项目中的工作方式。设置保存在当前工作区，不会自动跨项目同步。</p>
           <section class="block" id="two-paths">
             <div class="block-h">两条路：本机 Chat 与 Bridge</div>
@@ -604,7 +605,6 @@
           <label class="field-label" for="mm-merge">合并主模型</label>
           <select id="mm-merge" class="ms-input hidden">
             <option value="active">用当前对话模型</option>
-            <option value="auto">用当前对话模型</option>
           </select>
           <div class="mm-pick-row">
             <input id="mm-merge-display" aria-label="合并主模型" class="ms-input" readonly placeholder="留空表示合并时使用当前对话选中的模型" />
@@ -712,7 +712,7 @@
               <input type="radio" name="tunnel" value="cloudflare-named" />
               <div>
                 <div class="t-name">Cloudflare Named Tunnel</div>
-                <p class="hint">在 Cloudflare Zero Trust 建隧道，Public Hostname 指到 http://127.0.0.1:48271。填主机名和 Tunnel Token 后启动 Bridge，会跑 cloudflared tunnel run --token。</p>
+                <p class="hint">在 Cloudflare Zero Trust 建隧道，Public Hostname 指到本机 Web Agent 端口（默认 http://127.0.0.1:48271，改过 AGENT_HOST_PORT 时以状态区显示的 MCP 地址端口为准）。填主机名和 Tunnel Token 后启动 Bridge，会跑 cloudflared tunnel run --token。</p>
                 <input id="named-domain" aria-label="Cloudflare Named Tunnel 主机名" class="ms-input" placeholder="mcp.example.com" />
                 <input id="named-token" aria-label="Cloudflare Tunnel Token" class="ms-input" type="password" placeholder="Tunnel Token" autocomplete="off" />
               </div>
@@ -721,7 +721,7 @@
               <input type="radio" name="tunnel" value="ngrok" />
               <div>
                 <div class="t-name">ngrok</div>
-                <p class="hint">启动后会跑 ngrok http 127.0.0.1:48271。Authtoken 必填（也可事先设 NGROK_AUTHTOKEN）。域名可留空用随机地址，或填预留主机名（如 mcp.ngrok-free.app）。</p>
+                <p class="hint">启动后会跑 ngrok http 127.0.0.1:&lt;本机端口&gt;（默认 48271）。Authtoken 必填（也可事先设 NGROK_AUTHTOKEN）。域名可留空用随机地址，或填预留主机名（如 mcp.ngrok-free.app）。</p>
                 <input id="ngrok-domain" aria-label="ngrok 预留主机名" class="ms-input" placeholder="可选：mcp.ngrok-free.app" />
                 <input id="ngrok-token" aria-label="ngrok Authtoken" class="ms-input" type="password" placeholder="ngrok Authtoken" autocomplete="off" />
               </div>
@@ -740,7 +740,7 @@
           </details>
           <details class="block">
             <summary>高级设置</summary>
-            <p class="hint">随 Web Agent 启动 Bridge、重置 MCP 地址、startupTimeoutMs。</p>
+            <p class="hint">重置会生成新的 MCP 地址密钥：旧地址立即失效，已配对的 OAuth 令牌一并作废，需要在 Arena 等客户端重新填写新地址。</p>
             <button type="button" id="btn-reset-secret" class="vs-btn">重置 MCP 地址</button>
             <p id="secret-result" role="status" aria-live="polite"></p>
           </details>

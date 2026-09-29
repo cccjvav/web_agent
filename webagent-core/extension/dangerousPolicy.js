@@ -157,6 +157,18 @@ function gitVerbAndArgs(tokens) {
   return { verb: (tokens[i] || '').toLowerCase(), args: tokens.slice(i + 1) };
 }
 
+// `git checkout <pathspec>` discards uncommitted edits exactly like `git checkout -- <pathspec>`
+// (flagged since the first version). Branch names and pathspecs share the same argument slot and a
+// lexical check has no repository state, so pathspecs are recognised by shape: `.`, `*`/globs,
+// `./x`, `../x`, `dir/`, and names with a file-extension suffix (`app.js`, `README.md`; a numeric
+// suffix such as the tag `v1.2.3` is not one). A second positional operand is always a pathspec
+// (`git checkout HEAD app.js`). -b/-B/--orphan/--detach create or detach and take names, not paths.
+function looksLikePathspec(tok) {
+  const t = String(tok || '');
+  return t === '.' || /^\.{1,2}\//.test(t) || t.endsWith('/') || /[*?]/.test(t)
+    || /\.[A-Za-z][A-Za-z0-9]{0,9}$/.test(t);
+}
+
 function gitDangerous(tokens) {
   if (cmdName(tokens[0]) !== 'git') return false;
   const { verb, args } = gitVerbAndArgs(tokens);
@@ -165,7 +177,16 @@ function gitDangerous(tokens) {
     // Publishing is flagged; a dry run publishes nothing.
     case 'push': return !(hasLong(args, '--dry-run') || hasShortExact(args, 'n'));
     case 'reset': return hasLong(args, '--hard');
-    case 'checkout': return args.includes('--') || hasShortExact(args, 'f') || hasLong(args, '--force');
+    case 'checkout': {
+      if (args.includes('--') || hasShortExact(args, 'f') || hasLong(args, '--force')) return true;
+      if (hasShortExact(args, 'b') || hasShortExact(args, 'B') || hasLong(args, '--orphan') || hasLong(args, '--detach')) return false;
+      const positional = args.filter((t) => !t.startsWith('-'));
+      return positional.length >= 2 || positional.some(looksLikePathspec);
+    }
+    // switch never takes pathspecs; its destructive spellings are explicit flags.
+    case 'switch':
+      return hasLong(args, '--discard-changes') || hasShortExact(args, 'f') || hasLong(args, '--force')
+        || hasShortExact(args, 'C') || hasLong(args, '--force-create');
     case 'clean': return hasShort(args, 'f') || hasLong(args, '--force');
     // Deleting an UNMERGED branch; plain -d refuses to. (-M/-C renames are everyday: not flagged.)
     case 'branch':
@@ -208,6 +229,62 @@ function killAllDangerous(tokens) {
   return rest.slice(i).some((t) => t === '-1');
 }
 
+// Container, cluster, infrastructure and cloud-storage tools whose verbs delete data that no git
+// checkout brings back (F98, from the F97 review's measured miss list, 2026-09-29). Dry runs are not
+// flagged where the tool has one. `docker rm -f <container>` and `docker rmi` stay everyday work.
+function infraDangerous(tokens) {
+  const name = cmdName(tokens[0]);
+  const rest = tokens.slice(1);
+  const words = rest.filter((t) => !t.startsWith('-')).map((t) => t.toLowerCase());
+  const [a, b] = words;
+  if (name === 'docker' || name === 'podman' || name === 'nerdctl') {
+    if (a === 'system' && b === 'prune') return true;
+    if (a === 'volume' && (b === 'rm' || b === 'remove' || b === 'prune')) return true;
+    if (a === 'container' && b === 'prune') return true;
+    if (a === 'compose' && b === 'down' && (hasShortExact(rest, 'v') || hasLong(rest, '--volumes'))) return true;
+    return false;
+  }
+  if (name === 'docker-compose' || name === 'podman-compose') {
+    return a === 'down' && (hasShortExact(rest, 'v') || hasLong(rest, '--volumes'));
+  }
+  if (name === 'kubectl' || name === 'oc') {
+    return a === 'delete' && !rest.some((t) => /^--dry-run(?:=|$)/i.test(t));
+  }
+  if (name === 'helm') return a === 'uninstall' || a === 'delete' || a === 'del' || a === 'un';
+  if (name === 'terraform' || name === 'tofu') {
+    return a === 'destroy' || (a === 'apply' && (hasLong(rest, '-destroy') || hasLong(rest, '--destroy')));
+  }
+  if (name === 'pulumi' || name === 'cdk') return a === 'destroy';
+  if (name === 'aws') {
+    if (a === 's3' && b === 'rm') return hasLong(rest, '--recursive');
+    if (a === 's3' && b === 'rb') return true;
+    if (a === 's3' && b === 'sync') return hasLong(rest, '--delete');
+    return false;
+  }
+  if (name === 'gsutil') {
+    // `gsutil -m rm -r gs://bucket/prefix`: -m is a global option before the verb.
+    return (a === 'rm' && (hasShortExact(rest, 'r') || hasShortExact(rest, 'R') || hasShortExact(rest, 'a'))) || a === 'rb';
+  }
+  if (name === 'az') return a === 'group' && b === 'delete';
+  if (name === 'gcloud') return a === 'projects' && b === 'delete';
+  return false;
+}
+
+// Database clients: dropping or truncating a table through the CLI is not recoverable from git.
+// Only real client programs are judged so that `grep -r "drop table" migrations/` and commit
+// messages stay ordinary; the generic DROP DATABASE/SCHEMA phrase check in stageDangerous is older
+// and unchanged.
+const DB_CLIENTS = new Set(['sqlite3', 'psql', 'mysql', 'mariadb', 'sqlcmd', 'mongosh', 'mongo', 'clickhouse-client', 'cockroach', 'duckdb']);
+
+function databaseDangerous(tokens) {
+  const name = cmdName(tokens[0]);
+  const rest = tokens.slice(1);
+  if (name === 'redis-cli' || name === 'valkey-cli') return rest.some((t) => /^flush(?:all|db)$/i.test(t));
+  if (!DB_CLIENTS.has(name)) return false;
+  const joined = rest.map((t) => t.toLowerCase()).join(' ');
+  return /\b(?:drop|truncate)\s+table\b/.test(joined) || /\bdrop\s*database\b|\.dropdatabase\s*\(/.test(joined);
+}
+
 function unixSystemDangerous(tokens) {
   const name = cmdName(tokens[0]);
   const rest = tokens.slice(1);
@@ -217,6 +294,12 @@ function unixSystemDangerous(tokens) {
   if (name === 'crontab' && hasShortExact(rest, 'r')) return true;
   if (killAllDangerous(tokens)) return true;
   if (name === 'mv' && rest.includes('/dev/null')) return true;
+  // `cp /dev/null file` truncates like `truncate -s 0 file` (always flagged).
+  if (name === 'cp' && rest[0] === '/dev/null') return true;
+  // rsync --delete (any spelling: --del, --delete-before/-during/-delay/-after/-excluded) removes
+  // whatever the destination has that the source lacks; -n/--dry-run removes nothing.
+  if (name === 'rsync' && rest.some((t) => /^--del(?:ete(?:-[a-z-]+)?)?$/i.test(t))
+    && !(hasLong(rest, '--dry-run') || hasShortExact(rest, 'n'))) return true;
   if (name === 'wipefs' && (hasShortExact(rest, 'a') || hasLong(rest, '--all'))) return true;
   if (name === 'systemctl' && /^(?:poweroff|reboot|halt|kexec)$/i.test(rest[0] || '')) return true;
   // `: > file` / `true > file` truncate a file exactly like `truncate -s 0 file` (always flagged).
@@ -279,6 +362,10 @@ function windowsDangerous(tokens) {
   const name = cmdName(tokens[0]);
   const verb = (tokens[1] || '').toLowerCase();
   if ((name === 'del' || name === 'erase') && hasWinSwitch(tokens, 's')) return true;
+  // `del /f /q *` (no /s): quiet wildcard deletion of a whole directory's files. `del file.txt`
+  // and `del /q file.txt` stay everyday work.
+  if ((name === 'del' || name === 'erase') && hasWinSwitch(tokens, 'q')
+    && tokens.slice(1).some((t) => !t.startsWith('/') && (/[*?]/.test(t) || t === '.'))) return true;
   if ((name === 'rd' || name === 'rmdir') && hasWinSwitch(tokens, 's')) return true;
   if (name === 'format' || name === 'diskpart') return true;
   if (name === 'shutdown' || name === 'reboot' || name === 'halt' || name === 'poweroff') return true;
@@ -409,6 +496,8 @@ function stageDangerous(tokens, depth) {
   if (gitDangerous(tokens)) return true;
   if (packageManagerDangerous(tokens)) return true;
   if (unixSystemDangerous(tokens)) return true;
+  if (infraDangerous(tokens)) return true;
+  if (databaseDangerous(tokens)) return true;
   if (powershellDangerous(tokens)) return true;
   if (windowsDangerous(tokens)) return true;
   const script = depth < MAX_SCRIPT_DEPTH ? interpreterScript(tokens) : null;
@@ -443,11 +532,18 @@ function redirectDangerous(raw) {
   return false;
 }
 
+// A shell function that pipes into itself and backgrounds the pipe (`:(){ :|:& };:`, or any
+// name in place of `:`) is a fork bomb. splitStages cuts it into harmless one-word stages, so
+// it is matched on the whole text before splitting.
+function forkBomb(raw) {
+  return /([^\s(){};&|]+)\s*\(\s*\)\s*\{\s*\1\s*\|\s*\1\s*&\s*\}/.test(normalizeRaw(raw));
+}
+
 function commandDangerous(command, depth) {
   const raw = String(command || '');
   if (!raw.trim()) return false;
   return readings(raw).some((text) => {
-    if (redirectDangerous(text)) return true;
+    if (redirectDangerous(text) || forkBomb(text)) return true;
     const stages = splitStages(text);
     if (pipelineDangerous(stages)) return true;
     return stages.some((st) => stageDangerous(tokenize(st), depth));
