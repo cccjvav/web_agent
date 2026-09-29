@@ -83,6 +83,7 @@ F62第2批新增。全程不发真实网络请求：所有传输都是进程内�
 - `loginWithToken`、`startDeviceLogin`、`fetchGitHubUser`、`pollDeviceLogin`打到黑洞端点时都必须在各自deadline附近以`AbortError`结束，而不是永远挂着；并且每次调用**只发一个请求**，模块自身不重试。基线是裸fetch，这些调用会一直挂到进程退出。
 - 正常响应仍照旧成功；超过1MiB的响应正文抛`E_RESPONSE_TOO_LARGE`。
 - F102 `limits.onChunk`：局部**streamed(parts,lifecycle)**用真实ReadableStream（`pull`每次出一块、`cancel`计次）逐块回放；`fetchText`对流式body把每个解码片段连同response交给onChunk（`['ab','c','海']`顺序不变、全文仍返回）；只有`text()`的旧替身让onChunk收到整份一次；onChunk抛错即整个读取以该错误失败并且body被cancel恰一次；带onChunk时1MiB以外的自定义`maxBytes`照样触发`E_RESPONSE_TOO_LARGE`、`responseTooLarge(5).maxBytes===5`；onChunk不是函数抛TypeError；Node `Readable.from`的body也逐块回调。
+- F103 `limits.idleMs`：局部**paced(parts,lifecycle)**的`pull`把字符串入队、数字当作毫秒停顿、`'stall'`永不再出字节，`cancel`计次；**timing(promise)**记录结果与耗时；局部`sleep`。每40ms一字节、idleMs=100的滴流完整读到`abcde`（活着的流不算空闲）；首块后静默、idleMs=120、总期限5秒→`E_TIMEOUT`且`reason==='idle'`、文案“1 秒内没有收到新数据”、2秒内结束、body被cancel恰一次（靠fetchText传给读取器的signal，不靠传输层配合）；黑洞传输（无响应头）同样按idle结束；总期限80ms短于idleMs时仍是`reason:'deadline'`与“超过截止时间”；不传idleMs时160ms停顿照常成功（默认行为未变）；onChunk与idle并存时片段一个不少；父信号在空闲等待中abort→`E_CANCELLED`而非超时；idleMs为0/-1/1.5/'100'/NaN→TypeError。
 - 遥测上报超时返回`{ok:false}`而不是抛出——它跑在debounce与周期定时器里，故障不能冒泡出回调；成功路径仍记录`lastReportAt`。
 - readCache：同一文件重复记录同一hash只落盘一次（基线是400次读写400次整表）；删除不存在的key不落盘；真正变化仍立即落盘；落盘走临时文件+rename且不留残留。重载后取值、最近使用顺序与旧行为一致。
 

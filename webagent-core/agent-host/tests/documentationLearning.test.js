@@ -164,6 +164,7 @@ const pairs = [
   ["webagent-core/agent-host/tests/modelLifecycle.test.js", "webagent-core/agent-host/tests/Chat模型与图像测试详解.md"],
   ["webagent-core/agent-host/tests/modelStreaming.test.js", "webagent-core/agent-host/tests/Chat模型与图像测试详解.md"],
   ["webagent-core/agent-host/tests/completionStream.test.js", "webagent-core/agent-host/tests/Chat模型与图像测试详解.md"],
+  ["webagent-core/agent-host/tests/modelDiagnostics.test.js", "webagent-core/agent-host/tests/Chat模型与图像测试详解.md"],
   ["webagent-core/agent-host/tests/chatVision.test.js", "webagent-core/agent-host/tests/Chat模型与图像测试详解.md"],
   ["webagent-core/agent-host/tests/computerUseScripts.test.js", "webagent-core/agent-host/tests/Chat模型与图像测试详解.md"],
 
@@ -270,6 +271,7 @@ const pairs = [
   ["webagent-core/agent-host/src/agent/runChat.js", "webagent-core/agent-host/src/agent/Chat调度详解.md"],
   ["webagent-core/agent-host/src/agent/openai.js", "webagent-core/agent-host/src/agent/模型调用详解.md"],
   ["webagent-core/agent-host/src/agent/completionStream.js", "webagent-core/agent-host/src/agent/模型调用详解.md"],
+  ["webagent-core/agent-host/src/agent/modelDiagnostics.js", "webagent-core/agent-host/src/agent/模型调用详解.md"],
   ["webagent-core/agent-host/src/agent/providers.js", "webagent-core/agent-host/src/agent/模型调用详解.md"],
   ["webagent-core/agent-host/src/agent/computerUse.js", "webagent-core/agent-host/src/agent/模型调用详解.md"],
   ["webagent-core/agent-host/src/agent/toolLabel.js", "webagent-core/agent-host/src/agent/模型调用详解.md"],

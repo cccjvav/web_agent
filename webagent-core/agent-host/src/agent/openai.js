@@ -9,12 +9,18 @@ const { collectShot } = require('./computerUse');
 const { fetchText, checkCancelled, responseTooLarge } = require('../utils/requestScope');
 const { isToolFailure } = require('../utils/toolTrace');
 const { isEventStream, createCompletionAssembler } = require('./completionStream');
+const { modelFailure, estimateTokens, parseContextSize } = require('./modelDiagnostics');
 
 const MODEL_REQUEST_MAX_BYTES = 12 * 1024 * 1024;
 const MODEL_RESPONSE_MAX_BYTES = 1024 * 1024;
 // A streamed reply wraps every token in its own JSON chunk (~150-250 bytes per token), so the
 // transport cap for text/event-stream bodies is wider; a buffered JSON body keeps the 1 MiB cap.
 const MODEL_STREAM_RESPONSE_MAX_BYTES = 16 * 1024 * 1024;
+// F103 (review D-28): one model turn may run for 5 minutes in total, but must show signs of life
+// (headers, then bytes) at least every 2 minutes. Before, 120 s was the *total* budget, which cut
+// long streamed answers mid-sentence while a silent provider was still waited on just as long.
+const MODEL_TIMEOUT_MS = 300000;
+const MODEL_IDLE_TIMEOUT_MS = 120000;
 // Deltas are forwarded to the UI in pieces of at least this many characters or after this many
 // milliseconds, whichever comes first -- one NDJSON line per token would only cost CPU on both ends.
 const DELTA_FLUSH_CHARS = 48;
@@ -237,7 +243,8 @@ async function runOpenAI({
   // Visible assistant text is forwarded as `delta` events while the provider is still generating
   // (F102); the turn's full text still follows as one `message` event, so a consumer that ignores
   // deltas sees exactly what it saw before, and one that renders them can finalize in place.
-  let pendingDelta = '', lastFlush = 0;
+  let pendingDelta = '', lastFlush = 0, contextWarned = false;
+  const contextLimit = parseContextSize(model.contextSize);
   const flushDelta = () => {
     if (pendingDelta) send('delta', { text: pendingDelta });
     pendingDelta = '';
@@ -255,6 +262,15 @@ async function runOpenAI({
       checkCancelled();
       const streaming = !STREAM_UNSUPPORTED.has(streamKey);
       const requestBody = encodeModelRequest({ ...bodyBase, messages, ...(streaming ? { stream: true } : {}) });
+      if (contextLimit && !contextWarned) {
+        // Advisory only (review P2-3): the catalogue's contextSize is display text and the count is
+        // an estimate, so nothing is truncated here; the model's own 400 stays the authority.
+        const estimate = estimateTokens(requestBody);
+        if (estimate > contextLimit) {
+          contextWarned = true;
+          send('status', { text: `本次请求约 ${estimate} tokens（估算），超过该模型声明的上下文 ${String(model.contextSize).trim()}；若失败请清空历史或缩短消息` });
+        }
+      }
       const assembler = createCompletionAssembler({ onContent });
       let eventStream = null, bufferedBytes = 0;
       const onChunk = (piece, response) => {
@@ -265,25 +281,35 @@ async function runOpenAI({
         if (bufferedBytes > MODEL_RESPONSE_MAX_BYTES) throw responseTooLarge(MODEL_RESPONSE_MAX_BYTES);
       };
       pendingDelta = ''; lastFlush = Date.now();
-      const { response: resp, text: raw } = await fetchText(`${base}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${model.apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: requestBody,
-        redirect: 'error'
-      }, 120000, { maxBytes: streaming ? MODEL_STREAM_RESPONSE_MAX_BYTES : MODEL_RESPONSE_MAX_BYTES, onChunk });
+      let resp, raw;
+      try {
+        ({ response: resp, text: raw } = await fetchText(`${base}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${model.apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: requestBody,
+          redirect: 'error'
+        }, MODEL_TIMEOUT_MS, { maxBytes: streaming ? MODEL_STREAM_RESPONSE_MAX_BYTES : MODEL_RESPONSE_MAX_BYTES, onChunk, idleMs: MODEL_IDLE_TIMEOUT_MS }));
+      } catch (error) {
+        // An in-band `{error}` event on a 200 stream: classify it like an HTTP failure (fixed text).
+        if (error && error.code === 'E_MODEL_STREAM' && error.upstream !== undefined) {
+          throw modelFailure({ status: 200, body: error.upstream, requestBody, prefix: '模型在流式响应中报告错误' });
+        }
+        throw error;
+      }
       if (!resp.ok) {
         // Some OpenAI-compatible gateways reject `stream` (or stream + tools) with 400; retry the
-        // same step once without it and remember. Other statuses are not shape problems.
-        if (streaming && resp.status === 400 && attempt === 0) {
+        // same step once without it and remember. The body is classified first (F103) so a context
+        // overflow, a dead key or a missing model is reported as such instead of being retried.
+        const failure = modelFailure({ status: resp.status, body: raw, requestBody });
+        if (streaming && attempt === 0 && (failure.category === 'stream' || (failure.category === 'bad_request' && resp.status === 400))) {
           STREAM_UNSUPPORTED.add(streamKey);
           send('status', { text: '该模型不接受流式请求，改为整体返回后显示' });
           continue;
         }
-        const status = Number.isInteger(resp.status) ? ` ${resp.status}` : '';
-        throw new Error(`模型 HTTP${status} 请求失败`);
+        throw failure;
       }
       if (eventStream) {
         data = assembler.end().data;
@@ -292,6 +318,10 @@ async function runOpenAI({
           data = JSON.parse(raw);
         } catch {
           throw new Error('模型返回不是 JSON');
+        }
+        // A 200 whose body is an error envelope (some gateways do this) is a failure, not a message.
+        if (isResponseRecord(data) && data.error !== undefined && data.error !== null && !Array.isArray(data.choices)) {
+          throw modelFailure({ status: resp.status, body: data, requestBody });
         }
       }
       break;
@@ -388,6 +418,8 @@ module.exports = {
   MODEL_REQUEST_MAX_BYTES,
   MODEL_RESPONSE_MAX_BYTES,
   MODEL_STREAM_RESPONSE_MAX_BYTES,
+  MODEL_TIMEOUT_MS,
+  MODEL_IDLE_TIMEOUT_MS,
   MODEL_TOOL_CALL_MAX,
   DELTA_FLUSH_CHARS,
   DELTA_FLUSH_MS,

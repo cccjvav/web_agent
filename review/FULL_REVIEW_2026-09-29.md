@@ -18,7 +18,7 @@
 | 文档 | 抽样与自动比对（路由、错误码、环境变量、工具数、路径引用）未发现现行文档与代码的实质冲突；仅发现工作台 UI 内一段陈旧提示文案（P2-6）与两处错别字。文档体系（`check-docs.js` + 目录 README + 详解）维护得比大多数同规模项目好。 |
 | 仓库/工程 | 生成物 `docs-site/content.js`（5.3 MiB）、`documentation-manifest.json`（1.6 MiB）、`source-index.md`（0.9 MiB）入库，每次源码改动都会重写，历史膨胀明显；`review/shuncode-ui/` 26 张截图 13 MB。 |
 
-**建议优先处理顺序：** P1-1（Monaco 自托管/SRI）→ P2-2（流式输出）→ P2-1（危险命令补充规则）→ UI 字号与三栏布局（4.1）→ 文案一致性（P2-6、4.1.3）。（进度见第 8 节：截至第 5 批，P1-1、P2-1、P2-2、P2-6、P2-7、P2-8 已修。）
+**建议优先处理顺序：** P1-1（Monaco 自托管/SRI）→ P2-2（流式输出）→ P2-1（危险命令补充规则）→ UI 字号与三栏布局（4.1）→ 文案一致性（P2-6、4.1.3）。（进度见第 8 节：截至第 6 批，P1-1、P2-1、P2-2、P2-3、P2-6、P2-7、P2-8 已修。）
 
 ---
 
@@ -111,6 +111,7 @@
 - **现象：** 没有 token 估算；超出模型上下文时上游返回 400，本项目有意不回显上游错误正文，用户只看到"模型 HTTP 400 请求失败"。
 - **建议：** 按 `contextSize`（模型目录已有该字段）做粗略 token 估算（字符/3.5 或 `tiktoken`），超限时在发送前提示并截断；对上游错误至少回显**受控的**错误类别（`context_length_exceeded`、`invalid_api_key`、`model_not_found`），不回显原文。
 - **证据类型：** 静态阅读。
+- **处置（第 6 批 / 第 103 组）：** 受控错误类别与发送前估算提示已修（见第 8 节、第 9.6 节）；“超限时截断”有意不做——目录的 `contextSize` 是用户可编辑的展示文本，估算又是粗略的，自动截断会在错误的地方丢上下文，所以只提示、由模型的 400 做最终裁决；按 token 裁剪历史（替代 `slice(-12)`）也未做，同样理由。
 
 #### P2-4 危险命令与执行环境的两个未文档化行为
 - **位置：** `tools/executor.js:228`（`CI: 'true'` 注入环境）；`executor.js` 的 `scrubEnv` 会静默剥离名称含 `token/secret/key/password` 等的环境变量。
@@ -313,7 +314,10 @@
 | D-21 浏览器测试 6 处重复的 CDN 阻断路由 | 已修 | 第 4 批 / 第 101 组 | 合并为 `withoutEditor(page)`（阻断 `**/vendor/monaco/**`），语义不变；`narrowWorkspaceBrowser` 因 axe 以内联脚本注入而改用 `bypassCSP: true`（只放行测试注入，不放行产品） |
 | D-22…D-24（报告即处置） | 记录 | 第 4 批 / 第 101 组 | 见第 9.4 节：工作台 `style-src` 仍需 `'unsafe-inline'`、`connect-src` 取自请求 Host、VS Code 设置页 webview 不在此策略内 |
 | P2-2 模型输出非流式 | 已修 | 第 5 批 / 第 102 组 | `openai.js` 每轮请求带 `stream:true`，新模块 `agent/completionStream.js` 逐行解析 SSE（`data:` 行、注释/keep-alive、`[DONE]`、usage 尾块、`delta.content` 与按 `index` 拼接的 `delta.tool_calls`，缺 `index` 的 Mistral 式分片并入最后一槽），`end()` 产出与整份 JSON 同形的 choices 后仍走原来的 `normalizeAssistantMessage`——工具白名单/64 项/256 KiB 等门禁一处未少。可见文本经 `requestScope.fetchText` 新增的 `limits.onChunk` 边收边发 NDJSON `delta{text}`（≥48 字符或 ≥80 ms 合并一次），每轮末尾仍发 `message{text}`（权威全文，与分片拼接逐字相同；带工具调用的叙述文本也先流后收口、再发工具事件）。三个客户端：工作台 `chat.js` `streamDelta/closeStream`（进行中气泡带 `▍` 光标，`prefers-reduced-motion` 不闪），VS Code Webview 同法，原生 Chat 参与者逐片 `stream.markdown` 且 `message` 只补写余量、两段之间空一行；三者历史都只收 `message`。Plan 分支/合并的 `capturingEmit` 吞掉 `delta`，分支答案仍由 `emitRound` 带分支号发一次。预算：SSE 传输层上限 `MODEL_STREAM_RESPONSE_MAX_BYTES=16 MiB`（token 被包成 150–250 B 的 JSON 块），Provider 忽略 `stream` 回整份 JSON 时仍是 1 MiB；流内 `{error}`、畸形 SSE、序号有洞都以固定文案 `E_MODEL_STREAM` 失败并取消 body，不回显。回退：流式请求得 400 ⇒ 同轮不带 `stream` 重试一次、status 提示、进程内 `STREAM_UNSUPPORTED` 记住该 `baseUrl+modelId`；401/403/429/5xx 不重试。测试：新 `tests/modelStreaming.test.js`（10 组，真实 WHATWG Response）、`tests/completionStream.test.js`（分帧与 18 种畸形输入）、`networkBudget`（`onChunk` 合同）、`workbenchRuntime`/`webviewRuntime`/`nativeChatStream`（三个客户端）、`workbench.browser.js classicChatStreamBrowser`（真实 DOM 快照，CI 跑）。文档：模型调用详解新增“流式响应”与 1b 节、函数详解、路由详解、Chat 详解、样式详解、入口与 Webview 详解、技术实现、使用指南 |
-| P2-3、P2-4、其余 P3、4.1 字号 token/三栏（分栏拖拽）、4.3 工程项、第 6 节探针 | 待后续批次 | — | 4.1 字号 token 与三栏分隔条评估后延后，因为它牵涉 `styles.css` 106 处 font-size 与 Playwright 断言，需要能跑浏览器的环境逐视口核对；P2-3 建议与 P2-2 的 400 回退合并考虑（上游 `context_length_exceeded` 也是 400，现在两者都只显示“模型 HTTP 400 请求失败”，见 D-26） |
+| P2-3 上游错误只显示“HTTP 400 请求失败”/无上下文估算 | 已修（截断除外） | 第 6 批 / 第 103 组 | 新模块 `agent/modelDiagnostics.js`：按上游 `error.code`/`type`/`param`、状态码兜底与少数消息形状把失败归入固定类别（context/stream/auth/forbidden/not_found/quota/rate_limit/overloaded/upstream/bad_request/http），文案写死在本机（如“模型 HTTP 400 请求失败：对话超出模型上下文长度（本次请求约 N tokens，估算值），请清空历史、缩短消息或换上下文更大的模型”），正文只匹配、截 2000 字符、永不拼接；认证类只看码/状态不看文本（“token”会撞 max_tokens）。200 正文 `{error}` 信封与 SSE 流内 `{error}` 同样归类。`parseContextSize` 解析目录展示文本（128K/1M/32768/200k tokens），`estimateTokens`（CJK≈1、其余≈3.5 字符/token）在发送前对整份序列化请求估算，超过声明上下文只发一条 status、不截断。测试：新 `tests/modelDiagnostics.test.js`（31 组分类矩阵、措辞、敌意正文、估算、20 组尺寸解析）、`modelStreaming` ⑪⑫；文档：模型调用详解“错误分类与上下文估算”+1c 节、agent/README、技术实现、SECURITY、使用指南故障排除 |
+| D-26 流式 400 回退与上下文超限同码 | 已修 | 第 6 批 / 第 103 组 | 流式尝试的 400 先分类：只有 `stream` 类（param 为 stream/stream_options 或消息含 stream(ing)）或无法归类的 `bad_request` 才去掉 `stream` 重试并记入 `STREAM_UNSUPPORTED`；context/auth/not_found/quota 等直接以分类文案失败，不再多发一次请求（`modelStreaming` ⑪：context_length_exceeded 恰一次请求且不进入 STREAM_UNSUPPORTED） |
+| D-28 120 s 总期限切断长回答 | 已修 | 第 6 批 / 第 103 组 | `requestScope.fetchText` 新增 `limits.idleMs` 空闲预算（第二个 racer：响应头与每个片段之间静默超过 idleMs ⇒ `E_TIMEOUT reason:'idle'`，文案“HTTP 请求 N 秒内没有收到新数据”；先触发的预算拥有错误，总期限更短时仍报 deadline），并把自己的 signal 传给读取器（`limits.signal`），使不理会请求信号的传输也会在超时时取消 body。模型调用改为 `MODEL_TIMEOUT_MS=300 s` 总 + `MODEL_IDLE_TIMEOUT_MS=120 s` 空闲：逐字输出的长回答可跑满 5 分钟，静默 Provider 仍 2 分钟放弃；其余调用方（GitHub 10 s、遥测）合同不变。测试：`networkBudget`（滴流/静默/无头/短总期限/默认不变/onChunk 并存/父取消/非法值）、`modelStreaming` 常量与源码守卫 |
+| P2-4、P2-5、其余 P3、D-27、4.1 字号 token/三栏（分栏拖拽）、4.3 工程项、第 6 节探针 | 待后续批次 | — | 4.1 字号 token 与三栏分隔条评估后延后，因为它牵涉 `styles.css` 106 处 font-size 与 Playwright 断言，需要能跑浏览器的环境逐视口核对；下一批候选：P2-4/P2-5（执行器 `CI=true` 透明化、`/bin/bash` 回退）与 D-27 |
 
 ## 9. 深审新发现（报告成文后，按批次追加）
 
@@ -379,13 +383,27 @@
 | 编号 | 位置 | 说明与处置 |
 |---|---|---|
 | D-25 | `runChat.js capturingEmit` | 只吞 `message`、转发其余事件。若照常转发 `delta`，Plan 分支正在生成的分片会被客户端画进一个没有分支信息的气泡，merge 的分片还会和分支分片混在一个气泡里，随后 `emitRound` 再发一次全文 ⇒ 双份。已修：`capturingEmit` 也吞 `delta`；Plan 因此不逐字显示（有意，文档已写明）。 |
-| D-26 | `openai.js` 对 400 的解释 | 流式回退把“Provider 不接受 stream”与“上下文超限/参数非法”这两类 400 混在一起：第一次 400 都会触发一次非流式重试。代价是多一次请求（上游按 token 计费的请求在 400 时通常不计费），收益是不需要按模型配置开关。更细的分类需要读取上游错误正文的 `error.code`（本项目有意不回显正文，但**受控读取**并映射到固定文案是可行的），这与 P2-3 的建议是同一件事，留待一并处理。 |
+| D-26（第 6 批已修） | `openai.js` 对 400 的解释 | 流式回退把“Provider 不接受 stream”与“上下文超限/参数非法”这两类 400 混在一起：第一次 400 都会触发一次非流式重试。代价是多一次请求（上游按 token 计费的请求在 400 时通常不计费），收益是不需要按模型配置开关。更细的分类需要读取上游错误正文的 `error.code`（本项目有意不回显正文，但**受控读取**并映射到固定文案是可行的），这与 P2-3 的建议是同一件事，留待一并处理。 |
 | D-27 | `routes.js /chat` | 服务端对并发 Chat 没有上限（P2-2 建议③）。流式并不改变这一点；工作台没有登录态、只有 Host 门禁，“同一 owner”需要先定义（按 client 字段？按连接？），本批不做。 |
-| D-28 | `fetchText` 120 s 期限 | 是**总期限**不是空闲超时：现在长回答能看到文字了，但超过 120 s 的单轮仍会被切断（`E_TIMEOUT`，已显示的半截不入历史）。改为“首字节 N 秒 + 空闲 M 秒”需要同时改 `requestScope`、GitHub/遥测调用方的合同与 networkBudget 测试，超出本批范围；记录为后续项。 |
+| D-28（第 6 批已修） | `fetchText` 120 s 期限 | 是**总期限**不是空闲超时：现在长回答能看到文字了，但超过 120 s 的单轮仍会被切断（`E_TIMEOUT`，已显示的半截不入历史）。改为“首字节 N 秒 + 空闲 M 秒”需要同时改 `requestScope`、GitHub/遥测调用方的合同与 networkBudget 测试，超出本批范围；记录为后续项。 |
 | D-29 | VS Code 原生 Chat 参与者 | 原生 `stream.markdown` 是追加式的，最终 `message` 若照旧整段写会出现两遍；且连续两段 assistant 文本（工具轮之间）之前没有分隔。已修：只补写余量、段间一个空行；`nativeChatStream` 用 `written.join('')` 精确断言。 |
 | D-30 | `completionStream.js` 的 `Array.prototype.some` | 稀疏数组（工具 `index` 有洞）上 `some` 会跳过空洞，序号检查形同虚设；写测试时发现，改为下标循环。列出来是提醒：所有“按远端给的 index 写数组”的代码都要用循环而不是高阶函数做完整性检查。 |
 
 本批复核无问题（不列为发现）：`routes.js` 的 `emit` 每事件一行 JSON、不缓冲，`X-Accel-Buffering: no` 与 `flushHeaders()` 已在，所以 `delta` 无需改路由；三个客户端的 NDJSON 解析器都是“未知 type 忽略”，旧客户端对新事件天然兼容；`chat.js` 的 5 分钟总期限、单行 1 MiB/总 16 MiB 预算对分片同样适用（分片 ≤ 数百字节）。未验证：没有真实 Provider（OpenAI/DeepSeek/兼容网关）上的 SSE 实测，`reasoning_content` 等非标准字段被丢弃而不是显示；Windows 上 VS Code 原生 Chat 的渲染节奏未看。
+
+### 9.6 第 6 批（第 103 组，2026-09-29）：上游错误归类、上下文估算、空闲期限
+
+本批处理 P2-3、D-26、D-28。三者都在 `openai.js`/`requestScope.js` 这一层，一起改一起测。实现中新增或坐实的发现：
+
+| 编号 | 位置 | 说明与处置 |
+|---|---|---|
+| D-31 | `requestScope.readWebStream/readNodeStream` | 期限与空闲计时器只 `controller.abort()`，body 的取消完全依赖传输层把请求信号连到响应流。真实 `fetch` 会这么做，但任何不理会信号的传输（测试替身、polyfill）会让 `reader.read()` 永远挂起、reader 锁不释放。已修：fetchText 把自己的 signal 交给读取器（`limits.signal`），abort 时直接 `reader.cancel()`/`body.destroy()`；这也是“预算由本机强制、不靠对端配合”原则的收尾。 |
+| D-32 | `openai.js` 对 200 响应的解释 | 部分兼容网关用 HTTP 200 承载 `{"error":{…}}`，旧代码走到 `normalizeAssistantMessage` 报“模型没有 message”，用户无从判断。已修：200 且正文含 `error`、无 `choices` 数组 ⇒ 按信封归类（“模型返回了错误：……”）。 |
+| D-33 | 模型目录 `contextSize` | 是 ≤64 字符的展示文本（`providers.probeContext` 产出 128K/1M/数字，用户也可手填），不是数值字段；估算提示只能在能解析时给出，解析不出就沉默。若将来要做按 token 裁剪，应先给目录加数值字段而不是解析展示文本。记录，不改。 |
+| D-34 | `routes.js /chat` 5 分钟总上限 vs 每轮 300 s | 一轮模型请求现在可达 5 分钟，与整次 Chat 的 5 分钟路由上限、工作台/插件各自的 5 分钟客户端期限相等：多轮工具循环加上一次长回答会以 `E_CANCELLED`/“结果未确认”收场而不是模型层超时。三处期限现在有耦合关系但没有单一来源；调大任何一处都要同时看另外两处。记录，不改。 |
+| D-35 | 归类规则的覆盖面 | 只认 OpenAI/Anthropic 风格的字符串错误码与少数英文/中文消息形状；数字错误码（智谱、百度等）一律按 HTTP 状态兜底，因此 200+数字码的信封只能显示“模型返回了错误”。不打算维护各家私有码表；记录。 |
+
+本批复核无问题（不列为发现）：`runChat` 对模型异常只转发 `err.message`（现在是固定文案），Bridge/MCP 路径不经过 `runOpenAI`，不受影响；`providers.js` 的 15 s/512 KiB 目录发现调用没有传 `idleMs`，其响应是一次性 JSON，无需空闲预算；`STREAM_UNSUPPORTED` 记忆仍是进程内的。未验证：真实 Provider 的错误信封形状按公开文档（OpenAI、Anthropic 兼容层、vLLM 422）编写；Windows 上未跑。
 
 ## 附录 A：本轮使用的命令
 
@@ -399,4 +417,4 @@ diff -rq webagent-core/extension webagent-core/extensions-installed/webagent.web
 ```
 
 ## 附录 B：发现编号速查
-P1-1 Monaco CDN 无 SRI · P2-1 危险命令漏检矩阵 · P2-2 非流式 · P2-3 上下文无 token 估算 · P2-4 CI=true/环境剥离不透明 · P2-5 硬编码 shell/端口 · P2-6 陈旧提示文案 · P2-7 同名下拉项 · P2-8 无门控轮询 · P3-1…P3-15 见第 3 节表 · D-1 敏感规则缺口 · D-2 自定义规则大小写 · D-3 终端弹窗截断 · D-4 list_dir 整体失败 · D-5 读取缓存键 · D-6…D-10 见第 9.3 节。 · D-11 cloudflared Token 走 argv · D-12 revoke 无限流 · D-13 调用者表非 LRU 驱逐 · D-14 PKCE 失败不作废 code · D-15 单 IP 占满注册槽 · D-16 状态页跨调用者可见 · D-17 resources/list 不查开关 · D-18 publicHttps 不跟随重定向（有意） · D-19 安装器白名单漏 .ttf · D-20 OAuth 配对页无自有 CSP · D-21 浏览器测试重复 CDN 路由 · D-22 style-src 仍 unsafe-inline · D-23 connect-src 取自 Host · D-24 webview 策略独立 · D-25 Plan 捕获需吞 delta · D-26 400 回退与上下文超限同码 · D-27 Chat 无并发上限 · D-28 120 s 总期限非空闲超时 · D-29 原生 Chat 追加式写入 · D-30 稀疏数组 some 跳洞
+P1-1 Monaco CDN 无 SRI · P2-1 危险命令漏检矩阵 · P2-2 非流式 · P2-3 上下文无 token 估算 · P2-4 CI=true/环境剥离不透明 · P2-5 硬编码 shell/端口 · P2-6 陈旧提示文案 · P2-7 同名下拉项 · P2-8 无门控轮询 · P3-1…P3-15 见第 3 节表 · D-1 敏感规则缺口 · D-2 自定义规则大小写 · D-3 终端弹窗截断 · D-4 list_dir 整体失败 · D-5 读取缓存键 · D-6…D-10 见第 9.3 节。 · D-11 cloudflared Token 走 argv · D-12 revoke 无限流 · D-13 调用者表非 LRU 驱逐 · D-14 PKCE 失败不作废 code · D-15 单 IP 占满注册槽 · D-16 状态页跨调用者可见 · D-17 resources/list 不查开关 · D-18 publicHttps 不跟随重定向（有意） · D-19 安装器白名单漏 .ttf · D-20 OAuth 配对页无自有 CSP · D-21 浏览器测试重复 CDN 路由 · D-22 style-src 仍 unsafe-inline · D-23 connect-src 取自 Host · D-24 webview 策略独立 · D-25 Plan 捕获需吞 delta · D-26 400 回退与上下文超限同码 · D-27 Chat 无并发上限 · D-28 120 s 总期限非空闲超时 · D-29 原生 Chat 追加式写入 · D-30 稀疏数组 some 跳洞 · D-31 超时不取消不配合的 body · D-32 200 承载错误信封 · D-33 contextSize 是展示文本 · D-34 三处 5 分钟期限耦合 · D-35 私有数字错误码不识别

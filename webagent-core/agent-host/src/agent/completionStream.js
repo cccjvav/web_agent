@@ -30,9 +30,12 @@ function isEventStream(response) {
   return /^\s*text\/event-stream\s*(?:;|$)/i.test(headerValue(response, 'content-type'));
 }
 
-function streamError(message) {
+function streamError(message, upstream) {
   const error = new Error(message);
   error.code = 'E_MODEL_STREAM';
+  // The provider's in-band error object rides along for *classification only* (F103,
+  // modelDiagnostics.js); it is never part of the message a user sees.
+  if (upstream !== undefined) error.upstream = upstream;
   return error;
 }
 
@@ -77,7 +80,7 @@ function createCompletionAssembler({ onContent } = {}) {
   function mergeChunk(chunk) {
     if (!isResponseRecord(chunk)) throw streamError('模型流式响应块不是对象');
     // Provider-side failures arrive as an in-band event; never reflect the body (see runOpenAI).
-    if (chunk.error !== undefined && chunk.error !== null) throw streamError('模型在流式响应中报告错误');
+    if (chunk.error !== undefined && chunk.error !== null) throw streamError('模型在流式响应中报告错误', chunk);
     if (chunk.choices === undefined || chunk.choices === null) return; // usage-only trailer
     if (!Array.isArray(chunk.choices)) throw streamError('模型流式响应块 choices 类型无效');
     if (!chunk.choices.length) return;

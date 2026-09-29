@@ -2159,6 +2159,24 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **剩余与未验证：** D-27 `/chat`无并发上限（P2-2建议③，需先定义“同一owner”）；D-28 120秒是总期限不是空闲超时，超长单轮仍会被切断（改法牵涉GitHub/遥测调用方合同）；未在真实Provider上实测SSE（`reasoning_content`等非标准字段被丢弃）；Windows上VS Code原生Chat渲染节奏未看。4.1字号token/三栏与P2-3、P2-4、P3项仍待后续批次。
 
+### 第103组：复审修复第6批——上游错误归类、上下文估算、空闲期限（会话01a0e8e7，2026-09-29）
+
+**接手与基线：** 沙箱第六次重建，恢复同上（`9fc8adf`）。上游01a0d084仍在`c20c413`，F103未被占用。
+
+**范围：** 报告P2-3（上游失败一律“模型 HTTP 400 请求失败”、无上下文估算）、D-26（流式400回退与上下文超限同码）、D-28（120秒总期限切断逐字输出的长回答）。三项都在模型请求这一层，一起改。
+
+**实施：**
+1. **`agent/modelDiagnostics.js`（新）：** `describeModelFailure/modelFailure`按上游`error.code`/`type`/`param`、状态码兜底（401/403/404/413/429/503/529/5xx/400/422）与少数消息正则（上下文、stream、模型不存在、配额、限流、繁忙）归入11个固定类别，文案写死（`CATEGORIES`冻结导出）；正文只匹配、每字段截2000字符、永不拼接；认证类只看码/状态（“token”会撞max_tokens）；`retryWithoutStream`只对stream类或400的bad_request为真。`estimateTokens`（CJK≈1、其余≈3.5字符/token）与`parseContextSize`（128K/1M/32768/200k tokens；`unknown`/`12345abc`/`0.5`→null）。
+2. **`agent/openai.js`：** 非2xx先分类再决定是否去掉`stream`重试（D-26）；200正文`{error}`信封与SSE流内`{error}`（completionStream把原始块挂在`error.upstream`上，仅供归类）同样归类；发送前若估算超过目录声明的上下文，每次runOpenAI最多发一条status，不截断；期限改为`MODEL_TIMEOUT_MS=300000`总+`MODEL_IDLE_TIMEOUT_MS=120000`空闲。
+3. **`utils/requestScope.js`：** `limits.idleMs`空闲预算（第二个racer，`armIdle`在发请求前/响应头后/每片段后重置；`expired`让先触发的预算拥有错误，`reason`为idle或deadline）；`limits.signal`（内部）让读取器在abort时直接`reader.cancel()`/`body.destroy()`（D-31：不再依赖传输层把信号连到body）。
+4. 文档与报告同步（见下）。
+
+**测试与反向验证：** 新`modelDiagnostics.test.js`（31组状态/码/消息矩阵、措辞逐字、敌意正文1.5秒内、估算与20组尺寸解析）；`modelStreaming`⑪（context_length_exceeded恰一次请求且不进STREAM_UNSUPPORTED、param:'stream'仍回退、401/429/404/502文案、200信封、流内错误归类、常量与源码守卫）与⑫（`1K`上下文恰一条提示、消息原样发出、`128K`/`unknown`不提示）；`networkBudget`空闲预算八组（滴流不算空闲、静默按idle结束且body被cancel、无响应头同样、总期限更短仍报deadline、默认不变、onChunk并存、父取消仍E_CANCELLED、非法值TypeError）。反向：去掉`limits.signal`⇒“silent body is cancelled”红（实测先红后修）；去掉分类直接重试⇒⑪的attempts断言红；`parseContextSize`接受小数⇒`0.5`用例红。
+
+**文档：** 模型调用详解（请求循环期限、解析、400回退改写，新“错误分类与上下文估算”与1c节）、utils函数详解（idleBudget/bodyAbort/armIdle/observe/racers/expired）、agent与utils README、SECURITY.md期限句、技术实现§7、使用指南§10新增“模型 HTTP 4xx/5xx 请求失败”条目、两份测试详解与tests/README、报告§0/§3/§8/§9.5标记/§9.6/附录B、索引指纹。
+
+**剩余与未验证：** 按token裁剪历史与超限自动截断有意不做（D-33：contextSize是展示文本）；D-34三处5分钟期限耦合无单一来源；D-35私有数字错误码不识别；D-27 Chat并发上限未做；未在真实Provider/Windows上跑。下一批候选：P2-4/P2-5执行器项。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。

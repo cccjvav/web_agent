@@ -45,10 +45,30 @@ function chunkObserver(limits) {
   if (typeof onChunk !== 'function') throw new TypeError('onChunk 必须是函数');
   return onChunk;
 }
-async function readWebStream(body, maxBytes, onChunk, response) {
+// `limits.idleMs` (F103, review D-28) is an inactivity budget that complements the total deadline:
+// the response head, and then every decoded piece of the body, must arrive within idleMs of the
+// previous one. A streamed answer can therefore run up to timeoutMs while a provider that goes
+// silent is still given up on after idleMs. Undefined disables it.
+function idleBudget(limits) {
+  const idleMs = limits && limits.idleMs;
+  if (idleMs === undefined || idleMs === null) return 0;
+  if (!Number.isSafeInteger(idleMs) || idleMs <= 0) throw new TypeError('idleMs 必须是正安全整数');
+  return idleMs;
+}
+// `limits.signal` (internal, set by fetchText) lets the deadline/idle timers cancel the body even
+// through a transport that does not honour the request signal; the pending read then settles and
+// the stream's cancel() runs instead of leaking a reader that waits forever.
+function bodyAbort(limits) {
+  const signal = limits && limits.signal;
+  if (signal === undefined || signal === null) return null;
+  if (!signal || typeof signal.addEventListener !== 'function') throw new TypeError('signal 必须是 AbortSignal');
+  return signal;
+}
+async function readWebStream(body, maxBytes, onChunk, response, signal) {
   const reader = body.getReader();
   const decoder = new TextDecoder('utf-8');
   const cancel = () => { try { Promise.resolve(reader.cancel()).catch(() => {}); } catch (_) { /* retain the caller-facing error */ } };
+  if (signal) { if (signal.aborted) cancel(); else signal.addEventListener('abort', cancel, { once: true }); }
   let bytes = 0, text = '';
   try {
     while (true) {
@@ -70,35 +90,41 @@ async function readWebStream(body, maxBytes, onChunk, response) {
     if (onChunk && tail) onChunk(tail, response);
     return text + tail;
   } finally {
+    if (signal) signal.removeEventListener('abort', cancel);
     try { reader.releaseLock(); } catch (_) { /* already released/cancelled */ }
   }
 }
-async function readNodeStream(body, maxBytes, onChunk, response) {
+async function readNodeStream(body, maxBytes, onChunk, response, signal) {
   const decoder = new TextDecoder('utf-8');
   const destroy = () => { if (typeof body.destroy === 'function') body.destroy(); };
+  if (signal) { if (signal.aborted) destroy(); else signal.addEventListener('abort', destroy, { once: true }); }
   let bytes = 0, text = '';
-  for await (const value of body) {
-    const chunk = chunkBytes(value);
-    bytes += chunk.byteLength;
-    if (bytes > maxBytes) {
-      destroy();
-      throw responseTooLarge(maxBytes);
+  try {
+    for await (const value of body) {
+      const chunk = chunkBytes(value);
+      bytes += chunk.byteLength;
+      if (bytes > maxBytes) {
+        destroy();
+        throw responseTooLarge(maxBytes);
+      }
+      const piece = decoder.decode(chunk, { stream: true });
+      text += piece;
+      if (onChunk && piece) {
+        try { onChunk(piece, response); } catch (error) { destroy(); throw error; }
+      }
     }
-    const piece = decoder.decode(chunk, { stream: true });
-    text += piece;
-    if (onChunk && piece) {
-      try { onChunk(piece, response); } catch (error) { destroy(); throw error; }
-    }
+    const tail = decoder.decode();
+    if (onChunk && tail) onChunk(tail, response);
+    return text + tail;
+  } finally {
+    if (signal) signal.removeEventListener('abort', destroy);
   }
-  const tail = decoder.decode();
-  if (onChunk && tail) onChunk(tail, response);
-  return text + tail;
 }
 async function readResponseText(response, limits) {
-  const maxBytes = responseBudget(limits), onChunk = chunkObserver(limits);
+  const maxBytes = responseBudget(limits), onChunk = chunkObserver(limits), signal = bodyAbort(limits);
   const body = response && response.body;
-  if (body && typeof body.getReader === 'function') return readWebStream(body, maxBytes, onChunk, response);
-  if (body && typeof body[Symbol.asyncIterator] === 'function') return readNodeStream(body, maxBytes, onChunk, response);
+  if (body && typeof body.getReader === 'function') return readWebStream(body, maxBytes, onChunk, response, signal);
+  if (body && typeof body[Symbol.asyncIterator] === 'function') return readNodeStream(body, maxBytes, onChunk, response, signal);
   // Test doubles and legacy fetch implementations may expose text() only. Production's
   // WHATWG Response takes the streaming branch above, so remote bytes are bounded pre-buffer.
   if (!response || typeof response.text !== 'function') throw new TypeError('无效的 HTTP 响应');
@@ -124,14 +150,21 @@ async function fetchText(url, options, timeoutMs = DEFAULT_TIMEOUT_MS, limits, f
     : typeof fetchFn === 'function' ? fetchFn
       : (typeof fetch === 'function' ? fetch : null);
   if (!send) throw new TypeError('没有可用的 fetch 实现');
-  const maxBytes = responseBudget(limits), onChunk = chunkObserver(limits), expires = performance.now() + timeoutMs;
+  const maxBytes = responseBudget(limits), onChunk = chunkObserver(limits), idleMs = idleBudget(limits);
+  const expires = performance.now() + timeoutMs;
   const parent = currentSignal(), controller = new AbortController();
   const cancel = () => controller.abort();
+  // Whichever budget fires first owns the error; later checks must not rewrite an idle timeout
+  // into a generic deadline just because the abort it caused is now visible on the signal.
+  let failure = null;
+  const expired = (message, reason) => {
+    cancel();
+    if (!failure) { failure = new Error(message); failure.code = 'E_TIMEOUT'; failure.reason = reason; }
+    return failure;
+  };
   const checkDeadline = () => {
-    if (controller.signal.aborted || performance.now() >= expires) {
-      cancel();
-      const error = new Error('HTTP 请求超过截止时间'); error.code = 'E_TIMEOUT'; throw error;
-    }
+    if (failure) throw failure;
+    if (controller.signal.aborted || performance.now() >= expires) throw expired('HTTP 请求超过截止时间', 'deadline');
   };
   if (parent) parent.addEventListener('abort', cancel, { once: true });
   // Aborting the signal is a REQUEST to stop; it is not a guarantee that the transport honours it.
@@ -140,22 +173,33 @@ async function fetchText(url, options, timeoutMs = DEFAULT_TIMEOUT_MS, limits, f
   // send against a timer that actually settles, so the budget is enforced by us, not by the peer.
   let expire;
   const timedOut = new Promise((_resolve, reject) => {
-    expire = setTimeout(() => {
-      cancel();
-      const error = new Error('HTTP 请求超过截止时间');
-      error.code = 'E_TIMEOUT';
-      reject(error);
-    }, timeoutMs);
+    expire = setTimeout(() => reject(expired('HTTP 请求超过截止时间', 'deadline')), timeoutMs);
     if (expire.unref) expire.unref();
   });
   const timer = expire;
+  // The idle budget is a second racer, re-armed on every sign of life (response head, each piece).
+  let idleTimer = null, idleReject = null;
+  const idle = idleMs ? new Promise((_resolve, reject) => { idleReject = reject; }) : null;
+  if (idle) idle.catch(() => {});
+  const armIdle = () => {
+    if (!idle) return;
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => idleReject(expired(`HTTP 请求 ${Math.ceil(idleMs / 1000)} 秒内没有收到新数据`, 'idle')), idleMs);
+    if (idleTimer.unref) idleTimer.unref();
+  };
+  const observe = idle
+    ? (piece, response) => { armIdle(); if (onChunk) onChunk(piece, response); }
+    : onChunk;
+  const racers = promise => (idle ? [promise, timedOut, idle] : [promise, timedOut]);
   try {
     if (parent && parent.aborted) cancel();
-    const response = await Promise.race([send(url, { ...init, signal: controller.signal }), timedOut]);
+    armIdle();
+    const response = await Promise.race(racers(send(url, { ...init, signal: controller.signal })));
     // Check the deadline after the response head AND after the body: a slow trickle can keep a
     // stream technically alive long past the budget without ever aborting. From branch 01a0c932.
     checkCancelled(); checkDeadline();
-    const text = await Promise.race([readResponseText(response, { maxBytes, onChunk }), timedOut]);
+    armIdle();
+    const text = await Promise.race(racers(readResponseText(response, { maxBytes, onChunk: observe, signal: controller.signal })));
     checkCancelled(); checkDeadline();
     return { response, text };
   } catch (error) {
@@ -164,7 +208,7 @@ async function fetchText(url, options, timeoutMs = DEFAULT_TIMEOUT_MS, limits, f
     checkCancelled(); checkDeadline();
     throw error;
   } finally {
-    clearTimeout(timer); if (parent) parent.removeEventListener('abort', cancel);
+    clearTimeout(timer); clearTimeout(idleTimer); if (parent) parent.removeEventListener('abort', cancel);
   }
 }
 module.exports = {

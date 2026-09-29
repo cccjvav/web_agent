@@ -243,7 +243,81 @@ const texts = (events, type) => events.filter(event => event.type === type).map(
     assert.deepStrictEqual(texts(events, 'message'), ['直接回答']);
   }
 
-  console.log('modelStreaming: streamed deltas/final message, streamed tool calls, 400 fallback, mid-stream errors, budgets, cancellation and Plan capture passed');
+  // 11. F103 (review P2-3 / D-26): upstream failures are explained with fixed text, never with the
+  //     body, and a classified 400 (context overflow) is not wasted on a stream-less retry.
+  {
+    const { MODEL_TIMEOUT_MS, MODEL_IDLE_TIMEOUT_MS } = require('../src/agent/openai');
+    assert.strictEqual(MODEL_TIMEOUT_MS, 300000, 'one turn may stream for up to 5 minutes');
+    assert.strictEqual(MODEL_IDLE_TIMEOUT_MS, 120000, 'but must show life every 2 minutes (the old total)');
+    const source = fs.readFileSync(path.join(__dirname, '../src/agent/openai.js'), 'utf8');
+    assert.match(source, /idleMs: MODEL_IDLE_TIMEOUT_MS/, 'the model request passes the idle budget to fetchText');
+    assert.match(source, /\}, MODEL_TIMEOUT_MS, \{/, 'and the total budget');
+    const failWith = (status, body) => { let attempts = 0; global.fetch = async () => { attempts++; return new Response(typeof body === 'string' ? body : JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } }); }; return () => attempts; };
+    const expectFailure = async (label, pattern, category) => {
+      const events = collect();
+      const error = await runOpenAI({ mode: 'ask', message: label, history: [], model, emit: events.emit, allowTools: false }).then(() => null, e => e);
+      assert.ok(error, label + ' must fail');
+      assert.match(error.message, pattern, label);
+      assert.ok(!error.message.includes(SECRET), label + ': body text is not reflected');
+      assert.strictEqual(error.code, 'E_MODEL_HTTP', label);
+      assert.strictEqual(error.category, category, label);
+      assert.deepStrictEqual(texts(events, 'message'), [], label + ': no message is fabricated');
+      return error;
+    };
+    STREAM_UNSUPPORTED.clear();
+    let attempts = failWith(400, { error: { message: `This model's maximum context length is 8192 tokens. ${SECRET}`, type: 'invalid_request_error', code: 'context_length_exceeded' } });
+    const overflow = await expectFailure('context', /^模型 HTTP 400 请求失败：对话超出模型上下文长度（本次请求约 \d+ tokens，估算值），请清空历史/, 'context');
+    assert.strictEqual(attempts(), 1, 'a context overflow is not retried without stream');
+    assert.ok(Number.isInteger(overflow.estimate) && overflow.estimate > 0);
+    assert.strictEqual(STREAM_UNSUPPORTED.size, 0, 'and does not mark the model as stream-incapable');
+    attempts = failWith(400, { error: { message: `stream is not supported for this model ${SECRET}`, param: 'stream' } });
+    global.fetch = (fetchImpl => async (url, init) => (JSON.parse(init.body).stream ? fetchImpl(url, init) : jsonReply({ role: 'assistant', content: 'buffered' })))(global.fetch);
+    assert.strictEqual((await runOpenAI({ mode: 'ask', message: 'stream param', history: [], model, allowTools: false })).text, 'buffered');
+    assert.strictEqual(attempts(), 1, 'the stream complaint was answered by one buffered retry');
+    STREAM_UNSUPPORTED.clear();
+    attempts = failWith(401, { error: { message: `Incorrect API key provided: sk-${SECRET}`, type: 'invalid_request_error', code: 'invalid_api_key' } });
+    await expectFailure('auth', /^模型 HTTP 401 请求失败：API Key 无效或已失效/, 'auth');
+    assert.strictEqual(attempts(), 1);
+    attempts = failWith(429, { error: { message: SECRET, type: 'insufficient_quota', code: 'insufficient_quota' } });
+    await expectFailure('quota', /^模型 HTTP 429 请求失败：配额或余额不足/, 'quota');
+    attempts = failWith(429, `<html>${SECRET}</html>`);
+    await expectFailure('rate limit html', /^模型 HTTP 429 请求失败：触发限流/, 'rate_limit');
+    attempts = failWith(404, { error: { message: `The model \`${SECRET}\` does not exist`, code: 'model_not_found' } });
+    await expectFailure('not found', /^模型 HTTP 404 请求失败：模型不存在/, 'not_found');
+    attempts = failWith(502, SECRET);
+    await expectFailure('bad gateway', /^模型 HTTP 502 请求失败：模型服务端错误/, 'upstream');
+    assert.strictEqual(attempts(), 1, '5xx is not retried by the model layer');
+    // A 200 whose body is an error envelope is a failure, not "模型没有 message".
+    attempts = failWith(200, { error: { code: 'model_not_found', message: SECRET } });
+    await expectFailure('200 envelope', /^模型返回了错误：模型不存在/, 'not_found');
+    // An in-band error on the stream is classified the same way, keeping the F102 prefix.
+    global.fetch = async () => sseResponse([frame(delta({ content: 'partial ' })), frame({ error: { message: SECRET, code: 'rate_limit_exceeded' } })]);
+    await expectFailure('stream envelope', /^模型在流式响应中报告错误：触发限流/, 'rate_limit');
+    STREAM_UNSUPPORTED.clear();
+  }
+
+  // 12. F103 (review P2-3): a request that is clearly larger than the catalogue's declared context
+  //     gets one advisory status before it is sent; nothing is truncated and the model still answers.
+  {
+    const small = { ...model, id: 'small', contextSize: '1K' };
+    const bodies = [];
+    global.fetch = async (_, init) => { bodies.push(JSON.parse(init.body)); return jsonReply({ role: 'assistant', content: 'still answered' }); };
+    const events = collect();
+    const long = 'word '.repeat(2000);
+    assert.strictEqual((await runOpenAI({ mode: 'ask', message: long, history: [], model: small, emit: events.emit, allowTools: false })).text, 'still answered');
+    const advisories = texts(events, 'status').filter(text => /超过该模型声明的上下文 1K/.test(text));
+    assert.strictEqual(advisories.length, 1, 'exactly one advisory: ' + JSON.stringify(texts(events, 'status')));
+    assert.match(advisories[0], /^本次请求约 \d+ tokens（估算）/);
+    assert.ok(bodies[0].messages.at(-1).content === long, 'the message is sent untouched');
+    const roomy = collect();
+    await runOpenAI({ mode: 'ask', message: long, history: [], model: { ...model, contextSize: '128K' }, emit: roomy.emit, allowTools: false });
+    assert.ok(!texts(roomy, 'status').some(text => /声明的上下文/.test(text)), 'no advisory when the request fits');
+    const unknown = collect();
+    await runOpenAI({ mode: 'ask', message: long, history: [], model: { ...model, contextSize: 'unknown' }, emit: unknown.emit, allowTools: false });
+    assert.ok(!texts(unknown, 'status').some(text => /声明的上下文/.test(text)), 'no advisory when the catalogue size is not a number');
+  }
+
+  console.log('modelStreaming: streamed deltas/final message, streamed tool calls, 400 fallback, mid-stream errors, budgets, cancellation, Plan capture, failure classification and context advisory passed');
 })().catch(err => { console.error(err); process.exitCode = 1; }).finally(() => {
   config.workspaceRoot = priorWorkspace; global.fetch = priorFetch; planRound.reset(); STREAM_UNSUPPORTED.clear();
   fs.rmSync(tmp, { recursive: true, force: true });

@@ -11,6 +11,7 @@
 |---|---|
 | `runChat.js` | `runChat` 选择普通 Chat 或 Plan；`runBuiltin` 做有限的规则式探索；`runPlanRound` 管理分支和总结 |
 | `openai.js` | `runOpenAI` 请求 OpenAI 兼容端点（F102 起带 `stream:true`，可见文本以 `delta` 事件先行下发，每轮仍以 `message` 给出权威全文；400 时同轮回退非流式），循环处理工具结果；`systemPrompt` 组合模式、画像和自定义指令 |
+| `modelDiagnostics.js` | F103：把上游失败归入固定类别与固定文案（上下文超限/Key无效/无权/模型不存在/配额/限流/繁忙/服务端/参数被拒），正文只匹配不回显；`estimateTokens`/`parseContextSize` 供发送前的上下文估算提示 |
 | `completionStream.js` | SSE `chat.completions` 分片拼装器：`isEventStream` 判定回包类型，`createCompletionAssembler` 逐行解析 `data:`、合并 `delta.content`/`tool_calls`，`end()` 产出与整份 JSON 同形的 choices；只解析文本，不管传输、期限与字节预算 |
 | `providers.js` | Provider模型列表发现（15秒/512KiB/最多100项、禁止跳转）及仅追加配置登记；addProvider包装和目录项均为固定schema并拒绝未知字段，不靠名字猜能力，不涉及身份探针 |
 | `computerUse.js` | 从命令和stdout识别截图路径，校验真实路径及图片大小，供Chat和MCP分别附图 |
@@ -55,6 +56,7 @@
 |---|---|
 | [completionStream.js](completionStream.js) | 16 个函数/类节点 |
 | [computerUse.js](computerUse.js) | 7 个函数/类节点 |
+| [modelDiagnostics.js](modelDiagnostics.js) | 10 个函数/类节点 |
 | [openai.js](openai.js) | 23 个函数/类节点 |
 | [providers.js](providers.js) | 20 个函数/类节点 |
 | [runChat.js](runChat.js) | 45 个函数/类节点 |

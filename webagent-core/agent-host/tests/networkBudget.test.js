@@ -18,7 +18,7 @@ config.workspaceRoot = tmp;
 const github = require('../src/auth/github');
 const tracker = require('../src/usage/tracker');
 const readCache = require('../src/tools/readCache');
-const { fetchText } = require('../src/utils/requestScope');
+const { fetchText, runWithSignal } = require('../src/utils/requestScope');
 
 function jsonResp(status, body) {
   return {
@@ -106,6 +106,73 @@ async function run() {
     const { Readable } = require('stream');
     assert.strictEqual(await readResponseText({ body: Readable.from([Buffer.from('no'), Buffer.from('de')]) }, { maxBytes: 64, onChunk: piece => { nodeSeen += piece; } }), 'node');
     assert.strictEqual(nodeSeen, 'node', 'Node stream bodies are observed too');
+  }
+
+  // --- F103 (review D-28): limits.idleMs gives up on a silent peer without shortening a live stream. ---
+  {
+    const encoder = new TextEncoder();
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+    // parts: strings are enqueued, numbers are pauses (ms), 'stall' never produces another byte.
+    const paced = (parts, lifecycle = {}) => new Response(new ReadableStream({
+      async pull(controller) {
+        while (parts.length) {
+          const part = parts.shift();
+          if (part === 'stall') return new Promise(() => {});
+          if (typeof part === 'number') { await sleep(part); continue; }
+          controller.enqueue(encoder.encode(part)); return;
+        }
+        controller.close();
+      },
+      cancel() { lifecycle.cancelled = (lifecycle.cancelled || 0) + 1; }
+    }), { headers: { 'content-type': 'text/event-stream' } });
+    const timing = async promise => { const started = Date.now(); const outcome = await promise.then(value => ({ value }), error => ({ error })); return { ...outcome, elapsed: Date.now() - started }; };
+
+    // A stream that keeps trickling is allowed to outlive idleMs many times over.
+    const trickle = await timing(fetchText('https://example.invalid/trickle', { fetchImpl: async () => paced(['a', 40, 'b', 40, 'c', 40, 'd', 40, 'e']) }, 5000, { maxBytes: 64, idleMs: 100 }));
+    assert.strictEqual(trickle.error, undefined, 'a live stream is not an idle stream: ' + (trickle.error && trickle.error.message));
+    assert.strictEqual(trickle.value.text, 'abcde');
+    assert.ok(trickle.elapsed >= 150, 'the body really was paced (' + trickle.elapsed + 'ms)');
+
+    // Silence after the first byte ends the request at idleMs, long before the total deadline.
+    const lifecycle = {};
+    const stalled = await timing(fetchText('https://example.invalid/stall', { fetchImpl: async () => paced(['head', 'stall'], lifecycle) }, 5000, { maxBytes: 64, idleMs: 120 }));
+    assert.strictEqual(stalled.error && stalled.error.code, 'E_TIMEOUT');
+    assert.strictEqual(stalled.error.reason, 'idle');
+    assert.match(stalled.error.message, /1 秒内没有收到新数据/);
+    assert.ok(stalled.elapsed < 2000, 'idle fired, not the 5 s deadline (' + stalled.elapsed + 'ms)');
+    assert.strictEqual(lifecycle.cancelled, 1, 'the silent body is cancelled');
+
+    // Silence before the response head counts too (a transport that ignores the signal included).
+    const seen = [];
+    const headless = await timing(fetchText('https://example.invalid/headless', { fetchImpl: blackHole(seen) }, 5000, { maxBytes: 64, idleMs: 100 }));
+    assert.strictEqual(headless.error && headless.error.reason, 'idle');
+    assert.ok(headless.elapsed < 2000);
+
+    // The total deadline still wins when it is the shorter budget, and keeps its own wording.
+    const capped = await timing(fetchText('https://example.invalid/capped', { fetchImpl: async () => paced(['head', 'stall']) }, 80, { maxBytes: 64, idleMs: 1000 }));
+    assert.strictEqual(capped.error && capped.error.code, 'E_TIMEOUT');
+    assert.strictEqual(capped.error.reason, 'deadline');
+    assert.match(capped.error.message, /超过截止时间/);
+
+    // Without idleMs nothing changes: a pause longer than any idle budget is fine within the deadline.
+    const relaxed = await fetchText('https://example.invalid/relaxed', { fetchImpl: async () => paced(['x', 160, 'y']) }, 2000, { maxBytes: 64 });
+    assert.strictEqual(relaxed.text, 'xy');
+
+    // The observer and the idle budget compose: onChunk still sees every piece.
+    const pieces = [];
+    await fetchText('https://example.invalid/observe', { fetchImpl: async () => paced(['p', 30, 'q']) }, 2000, { maxBytes: 64, idleMs: 200, onChunk: piece => pieces.push(piece) });
+    assert.deepStrictEqual(pieces, ['p', 'q']);
+
+    // Parent cancellation during an idle wait is still reported as cancellation, not as a timeout.
+    const parent = new AbortController();
+    setTimeout(() => parent.abort(), 30);
+    const cancelled = await timing(runWithSignal(parent.signal, () => fetchText('https://example.invalid/parent', { fetchImpl: async () => paced(['head', 'stall']) }, 5000, { maxBytes: 64, idleMs: 500 })));
+    assert.strictEqual(cancelled.error && cancelled.error.code, 'E_CANCELLED', String(cancelled.error && cancelled.error.message));
+    assert.ok(cancelled.elapsed < 400, 'the parent abort ended the wait (' + cancelled.elapsed + 'ms)');
+
+    for (const bad of [0, -1, 1.5, '100', NaN]) {
+      await assert.rejects(fetchText('https://example.invalid/bad-idle', { fetchImpl: async () => paced(['x']) }, 1000, { maxBytes: 64, idleMs: bad }), TypeError, `idleMs=${bad}`);
+    }
   }
 
   // --- The declared budgets exist and are sane. ---
