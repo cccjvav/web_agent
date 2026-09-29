@@ -34,6 +34,8 @@ async function main() {
     const success = await checkpoints.restore(record.id, { ...binding, previewId: preview.previewId, confirmed: true });
     assert.equal(success.result.status, 'succeeded'); assert.deepEqual(success.result.files.map(item => item.status), ['restored', 'restored']);
     assert.equal(fs.readFileSync(file('a.txt'), 'utf8'), 'original A'); assert.equal(fs.readFileSync(file('b.txt'), 'utf8'), 'original B');
+    // F95: a restore the person confirmed is not a model read; it must not unlock a blind overwrite.
+    await assert.rejects(tools.callTool('write_file', { filePath: 'a.txt', content: 'model' }, 'code'), /confirm_overwrite/);
     await assert.rejects(checkpoints.restore(record.id, { ...binding, previewId: preview.previewId, confirmed: true }));
     assert.throws(() => checkpoints.preview(record.id, binding), /重放/);
     checkpoints.remove(record.id, binding);

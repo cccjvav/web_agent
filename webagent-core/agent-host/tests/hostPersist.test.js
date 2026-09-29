@@ -72,6 +72,38 @@ function main() {
   assert.strictEqual(rc2.recalledHash('src/app.js'), 'abc123def');
   assert.strictEqual(rc2.sessionHash('src/app.js'), null, 'session hashes must not survive a process restart');
 
+  // F95: session reads are per reader; the operator (a person at the workbench) records nothing.
+  assert.strictEqual(rc2.readerOf({ operator: true }), null);
+  assert.strictEqual(rc2.readerOf({ operator: true, remote: true, callerKey: 'k' }), null, 'operator wins over remote');
+  assert.strictEqual(rc2.readerOf({ remote: true, callerKey: 'k' }), 'remote:k');
+  assert.strictEqual(rc2.readerOf({ remote: true }), 'remote:');
+  assert.strictEqual(rc2.readerOf({}), 'local');
+  assert.strictEqual(rc2.readerOf(undefined), 'local');
+  rc2.rememberHash('src/op.js', 'operator-hash', null);
+  assert.strictEqual(rc2.recalledHash('src/op.js'), null, 'operator reads are not remembered on disk either');
+  assert.strictEqual(rc2.sessionHash('src/op.js', null), null);
+  rc2.rememberHash('src/two.js', 'h-remote', 'remote:k');
+  assert.strictEqual(rc2.sessionHash('src/two.js', 'remote:k'), 'h-remote');
+  assert.strictEqual(rc2.sessionHash('src/two.js'), null, 'local does not see a remote read');
+  assert.strictEqual(rc2.sessionHash('src/two.js', 'remote:other'), null);
+  assert.strictEqual(rc2.recalledHash('src/two.js'), 'h-remote', 'the on-disk record stays shared (apply_patch still checks content)');
+  rc2.rememberHash('src/two.js', 'h-remote', 'local'); // same hash, already newest on disk: session still recorded
+  assert.strictEqual(rc2.sessionHash('src/two.js'), 'h-remote');
+  rc2.forgetHash('src/two.js');
+  assert.strictEqual(rc2.sessionHash('src/two.js', 'remote:k'), null, 'forget drops every reader');
+  assert.strictEqual(rc2.sessionHash('src/two.js'), null);
+  // The session map is capped at 4000 entries, oldest first; re-reading refreshes an entry's age.
+  rc2.rememberHash('cap/keep.js', 'keep', 'remote:cap');
+  for (let i = 0; i < 4000; i += 1) { // with cap/keep.js: 4001 entries, one over the cap
+    rc2.rememberHash(`cap/${i}.js`, 'h' + i, 'remote:cap');
+    if (i === 3000) rc2.rememberHash('cap/keep.js', 'keep', 'remote:cap');
+  }
+  assert.strictEqual(rc2.sessionHash('cap/0.js', 'remote:cap'), null, 'oldest read evicted');
+  assert.strictEqual(rc2.sessionHash('cap/1.js', 'remote:cap'), 'h1');
+  assert.strictEqual(rc2.sessionHash('cap/keep.js', 'remote:cap'), 'keep', 're-read entry is refreshed, not evicted');
+  assert.strictEqual(rc2.sessionHash('cap/3999.js', 'remote:cap'), 'h3999');
+  rc2.resetHashes();
+
   const nested = path.join(tmp, '.webagent', '.gitignore');
   assert.ok(fs.existsSync(nested));
   const nestedText = fs.readFileSync(nested, 'utf8');

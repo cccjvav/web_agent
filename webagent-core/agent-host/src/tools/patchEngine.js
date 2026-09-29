@@ -8,7 +8,7 @@ const eventBus = require('../utils/eventBus');
 const { createUnifiedDiff } = require('../utils/diff');
 const { assertNotSensitive } = require('./sensitive');
 const { ProtocolError, ExecutionError } = require('../mcp/errors');
-const { rememberHash, recalledHash } = require('./readCache');
+const { rememberHash, recalledHash, readerOf } = require('./readCache');
 
 function computeHash(content) {
   return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
@@ -424,11 +424,11 @@ function applySearchBlocks(currentContent, blocks, { filePath, occurrence } = {}
   return applyEol(patchedLf, eol);
 }
 
-async function applyPatch(opts = {}) {
-  return withWriteLock(opts.filePath, () => applyPatchBody(opts));
+async function applyPatch(opts = {}, context = {}) {
+  return withWriteLock(opts.filePath, () => applyPatchBody(opts, readerOf(context)));
 }
 
-async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = false, occurrence } = {}) {
+async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = false, occurrence } = {}, reader = 'local') {
   if (typeof patch === 'string' && Buffer.byteLength(patch, 'utf8') > MAX_TEXT_BYTES) throw new ProtocolError('E_BAD_ARGS', 'Patch exceeds text budget');
   if (typeof patch !== 'string') throw new ProtocolError('E_BAD_ARGS', 'patch must be a string.');
   const fullPath = resolveSafePath(filePath);
@@ -485,7 +485,7 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
     });
 
     const newHash = computeHash(newContent);
-    rememberHash(filePath, newHash);
+    rememberHash(filePath, newHash, reader);
     return {
       success: true,
       isNewFile: true,
@@ -585,7 +585,7 @@ async function applyPatchBody({ filePath, patch, expectedHash = null, dryRun = f
   atomicWriteText(fullPath, patchedContent);
 
   const newHash = computeHash(patchedContent);
-  rememberHash(filePath, newHash);
+  rememberHash(filePath, newHash, reader);
 
   eventBus.broadcast('file_patched', {
     filePath,

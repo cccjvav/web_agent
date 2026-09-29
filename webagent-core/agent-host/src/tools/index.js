@@ -323,7 +323,7 @@ const TOOLS = [
   tool({
     name: 'write_file',
     aliases: [],
-    description: 'Create a file. Overwrite is allowed with confirm_overwrite=true, or when expectedHash / a read_files hash from this process still matches. A hash left on disk from a previous run is not enough. Prefer apply_patch for existing files. Code mode only.',
+    description: 'Create a file. Overwrite is allowed with confirm_overwrite=true, or when expectedHash / a read_files hash this caller got in this process still matches. A hash left on disk from a previous run is not enough. Prefer apply_patch for existing files. Code mode only.',
     mode: ['code'],
     inputSchema: {
       type: 'object',
@@ -336,10 +336,10 @@ const TOOLS = [
       },
       required: ['filePath', 'content']
     },
-    handler: (args) => writeFile({
+    handler: (args, opts) => writeFile({
       ...args,
       confirmOverwrite: args.confirmOverwrite || args.confirm_overwrite
-    })
+    }, opts)
   }),
   tool({
     name: 'delete_file',

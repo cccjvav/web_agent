@@ -49,7 +49,7 @@ async function restore(id, input) {
   if (input.expectedHash !== entry.afterHash) throw Error('回退版本与预览不一致');
   // Once dispatched, including an uncertain failure, do not permit replay of this record.
   records.delete(id);
-  const result = await require('../tools').callTool('write_file', {filePath:entry.path,content:entry.before,expectedHash:entry.afterHash,confirm_overwrite:true}, 'code');
+  const result = await require('../tools').callTool('write_file', {filePath:entry.path,content:entry.before,expectedHash:entry.afterHash,confirm_overwrite:true}, 'code', { operator: true });
   if (result.success !== true || result.verification?.state !== 'verified') throw Error('回退结果未被确认；请检查磁盘，不要重放');
   return { success:true,path:entry.path,content:entry.before,hash:result.hash,verification:result.verification };
 }

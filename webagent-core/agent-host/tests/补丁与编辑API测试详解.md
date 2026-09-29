@@ -50,6 +50,8 @@ finally关server、rm tmp；catch exit1。这里直挂router，不是完整index
 
 apiFiles新增POST /files/preview真实HTTP夹具：成功返回diff和基线hash且磁盘不变；缺hash、越界/敏感路径拒绝；旧hash409；文本64KiB/2000行预算拒绝。预览后模拟另一个写入者，再PUT旧hash必须409且保留别人内容。临时夹具恢复基线后继续原测试；不是自动产品回滚。
 
+F95读取归属段（真实HTTP加真实callTool；**disk(name)**读临时文件正文，**refused(label,args,opts)**断言write_file以要求confirm_overwrite的提示被拒）：模型读v1，人在编辑器打开并保存v2，模型不确认的write_file被拒且磁盘仍是v2，不带hash的apply_patch以E_STALE_FILE拒绝；模型重新读取后可免确认覆盖，自己的写入也算读过。人只打开、人用PUT新建、人撤销保存、POST /skills新建的文件，模型都不能免确认覆盖。远程peer-a读过的文件，peer-b与本机Chat都不能免确认覆盖，peer-a可以；peer-a的补丁（含新建）只记在peer-a名下；peer-b读过后文件被删除、再以同内容建出，peer-b仍被拒。在修复前的代码上，本段在第一条“编辑器保存”断言处失败。
+
 apiFiles还验证本机保存undo句柄、预览无写入、错绑定/非布尔确认拒绝、磁盘变化拒绝覆盖、成功恢复原hash、同记录不重复回退。直接模块夹具检查64KiB/无变化/敏感路径不登记、16项容量和15分钟TTL；恢复测试文件是测试布置，不是产品自动回滚。
 
 apiFiles以真实本地HTTP测试Skill新建：规范化后重名返回400且保留原文；两个同名并发请求只有一个200、另一400，磁盘保留成功请求正文。另用一次性file_written监听在写入与中央read-back之间移除目标，真实callTool正常return但verification为unknown；路由必须返回409/success:false/E_VERIFY_UNKNOWN并保留核验状态，不能宣称Skill已创建。这是确定性进程内竞争fixture，不代表已穷尽杀毒软件或外部OS写进程。

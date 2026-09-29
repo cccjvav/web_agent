@@ -40,5 +40,5 @@ adminHost保留本地HTTP鉴权/排名/body边界；adminIntegrity覆盖真实�
 | 源码 | 定位证据 |
 |---|---|
 | [app.js](app.js) | 38 个函数/类节点 |
-| [index.js](index.js) | 1 个函数/类节点 |
+| [index.js](index.js) | 2 个函数/类节点 |
 <!-- docs-inventory:end -->

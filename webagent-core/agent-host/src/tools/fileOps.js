@@ -6,7 +6,7 @@ const { resolveSafePath, isInsideWorkspace, computeHash, toPosixRel, withWriteLo
 const { isHidden, isSensitive } = require('./sensitive');
 const eventBus = require('../utils/eventBus');
 const { ProtocolError, ExecutionError } = require('../mcp/errors');
-const { rememberHash, sessionHash, forgetHash } = require('./readCache');
+const { rememberHash, sessionHash, forgetHash, readerOf } = require('./readCache');
 
 const MAX_GREP_QUERY = 200;
 const MAX_GREP_REGEX = 120;
@@ -23,7 +23,8 @@ function isUnsafeRegex(src) {
   return false;
 }
 
-function readFiles({ filePath, paths, offset = 1, limit = 400 } = {}) {
+function readFiles({ filePath, paths, offset = 1, limit = 400 } = {}, context = {}) {
+  const reader = readerOf(context);
   const list = [];
   if (Array.isArray(paths) && paths.length) list.push(...paths);
   if (filePath) list.push(filePath);
@@ -31,11 +32,11 @@ function readFiles({ filePath, paths, offset = 1, limit = 400 } = {}) {
     throw new Error('read_files requires filePath or paths[]');
   }
   if (list.length > 20) throw new ProtocolError('E_BAD_ARGS', 'read_files supports at most 20 paths per call');
-  if (list.length === 1) return readFile({ filePath: list[0], offset, limit });
+  if (list.length === 1) return readFile({ filePath: list[0], offset, limit }, reader);
   return {
     files: list.map((p) => {
       try {
-        return readFile({ filePath: p, offset, limit });
+        return readFile({ filePath: p, offset, limit }, reader);
       } catch (err) {
         return { filePath: p, error: err.message };
       }
@@ -43,7 +44,7 @@ function readFiles({ filePath, paths, offset = 1, limit = 400 } = {}) {
   };
 }
 
-function readFile({ filePath, offset = 1, limit = 400 }) {
+function readFile({ filePath, offset = 1, limit = 400 }, reader = 'local') {
   const fullPath = resolveSafePath(filePath);
   if (!fs.existsSync(fullPath)) {
     throw new Error(`File not found: "${filePath}"`);
@@ -67,7 +68,7 @@ function readFile({ filePath, offset = 1, limit = 400 }) {
     .join('\n');
 
   eventBus.broadcast('file_read', { filePath, totalLines: allLines.length, offset, limit, hash });
-  rememberHash(filePath, hash);
+  rememberHash(filePath, hash, reader);
 
   return {
     filePath,
@@ -169,11 +170,12 @@ function renameFileBody({ from, to, filePath, dest }) {
   return { success: true, from: fromOut, to: toOut };
 }
 
-function writeFile(opts = {}) {
-  return withWriteLock(opts.filePath, () => writeFileBody(opts));
+// context: the server-built call options; readerOf decides whose earlier read may authorize an overwrite.
+function writeFile(opts = {}, context = {}) {
+  return withWriteLock(opts.filePath, () => writeFileBody(opts, readerOf(context)));
 }
 
-function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = false, confirm_overwrite = false, createOnly = false }) {
+function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = false, confirm_overwrite = false, createOnly = false }, reader = 'local') {
   const fullPath = resolveSafePath(filePath);
   if (typeof content !== 'string' || Buffer.byteLength(content, 'utf8') > MAX_TEXT_BYTES) throw new ProtocolError('E_BAD_ARGS', 'write_file content exceeds text budget');
   const exists = fs.existsSync(fullPath);
@@ -184,7 +186,7 @@ function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = fal
   if (exists) {
     const current = readBoundedText(fullPath);
     currentHash = computeHash(current);
-    const seenThisSession = sessionHash(filePath);
+    const seenThisSession = sessionHash(filePath, reader);
     if (!overwriteOk && expectedHash && expectedHash === currentHash) overwriteOk = true;
     if (!overwriteOk && seenThisSession && seenThisSession === currentHash) overwriteOk = true;
     if (!overwriteOk) {
@@ -218,7 +220,7 @@ function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = fal
   const hash = computeHash(content);
 
   eventBus.broadcast('file_written', { filePath, hash, size: content.length });
-  rememberHash(filePath, hash);
+  rememberHash(filePath, hash, reader);
 
   return {
     success: true,

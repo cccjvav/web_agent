@@ -136,7 +136,36 @@ async function run() {
     await new Promise((resolve) => server.close(resolve));
     fs.rmSync(dataDir, { recursive: true, force: true });
   }
+  await busyPort();
   console.log('adminHost.test.js ok');
+}
+
+// The real entry on a busy port exits 1 with a readable message instead of an unhandled-error stack.
+async function busyPort() {
+  const net = require('net');
+  const { spawn } = require('child_process');
+  const blocker = net.createServer();
+  await new Promise(resolve => blocker.listen(0, '127.0.0.1', resolve));
+  const busy = blocker.address().port;
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-admin-busy-'));
+  try {
+    const child = spawn(process.execPath, [path.resolve(__dirname, '../../admin-host/index.js')], {
+      env: { ...process.env, WEBAGENT_ADMIN_PORT: String(busy), WEBAGENT_ADMIN_BIND: '127.0.0.1', WEBAGENT_ADMIN_DATA: dataDir, WEBAGENT_ADMIN_TOKEN: 'busy-port-fixture' },
+      stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true
+    });
+    let output = '';
+    child.stdout.on('data', c => { output += c; }); child.stderr.on('data', c => { output += c; });
+    const code = await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => { child.kill('SIGKILL'); reject(new Error('admin host did not exit on a busy port')); }, 10000);
+      child.once('exit', c => { clearTimeout(timer); resolve(c); });
+    });
+    assert.strictEqual(code, 1);
+    assert.ok(output.includes(`端口 ${busy} 已被占用`), output.slice(-600));
+    assert.ok(!output.includes("Unhandled 'error' event"));
+  } finally {
+    await new Promise(resolve => blocker.close(resolve));
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  }
 }
 
 run().catch((err) => {

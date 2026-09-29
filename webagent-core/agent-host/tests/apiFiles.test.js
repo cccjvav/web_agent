@@ -443,6 +443,72 @@ async function main() {
     assert.match(stale.json.detail.retryHint, /Stop this write/);
     assert.ok(!stale.json.detail.retryHint.includes('then retry'));
     assert.ok(/STALE_FILE/.test(String(stale.json && stale.json.error)));
+
+    // F95: what a person does in the workbench is not a model read. Before, opening a file recorded its
+    // hash and an editor save recorded the saved hash, so a model could overwrite the person's edit with
+    // write_file and no confirmation; one caller's read also authorized every other caller.
+    {
+      const { callTool } = require('../src/tools');
+      const { resetHashes } = require('../src/tools/readCache');
+      const disk = name => fs.readFileSync(path.join(tmp, name), 'utf8');
+      const refused = (label, args, opts) => assert.rejects(callTool('write_file', args, 'code', opts),
+        err => /confirm_overwrite/.test(err.message), label);
+      resetHashes();
+
+      fs.writeFileSync(path.join(tmp, 'shared.txt'), 'model saw v1\n');
+      await callTool('read_files', { paths: ['shared.txt'] }, 'code');
+      const opened = await request(server, 'GET', '/api/files/content?path=shared.txt');
+      const personSave = await request(server, 'PUT', '/api/files/content', { path: 'shared.txt', content: 'person edit v2\n', expectedHash: opened.json.hash });
+      assert.strictEqual(personSave.status, 200);
+      await refused('an editor save does not refresh what the model has read', { filePath: 'shared.txt', content: 'model rewrite\n' });
+      assert.strictEqual(disk('shared.txt'), 'person edit v2\n');
+      await assert.rejects(callTool('apply_patch', { filePath: 'shared.txt', patch: '<<<<<<< SEARCH\nperson edit v2\n=======\nmodel\n>>>>>>> REPLACE\n' }, 'code'),
+        err => err.code === 'E_STALE_FILE', 'a hashless patch is checked against the version the model read');
+      await callTool('read_files', { paths: ['shared.txt'] }, 'code');
+      assert.strictEqual((await callTool('write_file', { filePath: 'shared.txt', content: 'model v3\n' }, 'code')).success, true, 'after its own read the model may overwrite');
+      assert.strictEqual((await callTool('write_file', { filePath: 'shared.txt', content: 'model v4\n' }, 'code')).success, true, 'its own write counts as seen');
+
+      fs.writeFileSync(path.join(tmp, 'viewed.txt'), 'only viewed\n');
+      await request(server, 'GET', '/api/files/content?path=viewed.txt');
+      await refused('opening a file in the editor is not a model read', { filePath: 'viewed.txt', content: 'clobber\n' });
+      assert.strictEqual((await request(server, 'PUT', '/api/files/content', { path: 'person-new.txt', content: 'person\n', createOnly: true })).status, 200);
+      await refused('a file the person created is not a model read', { filePath: 'person-new.txt', content: 'clobber\n' });
+
+      fs.writeFileSync(path.join(tmp, 'undone.txt'), 'before\n');
+      const beforeHash = (await request(server, 'GET', '/api/files/content?path=undone.txt')).json.hash;
+      const undoable = await request(server, 'PUT', '/api/files/content', { path: 'undone.txt', content: 'after\n', expectedHash: beforeHash });
+      const undone = await request(server, 'POST', '/api/files/undo/' + undoable.json.undo.id,
+        { confirmed: true, expectedHash: undoable.json.hash, workspaceRoot: tmp, hostInstanceId: config.hostInstanceId });
+      assert.strictEqual(undone.status, 200); assert.strictEqual(disk('undone.txt'), 'before\n');
+      await refused('an editor undo is not a model read', { filePath: 'undone.txt', content: 'clobber\n' });
+
+      fs.writeFileSync(path.join(tmp, 'peer.txt'), 'peer\n');
+      await callTool('read_files', { paths: ['peer.txt'] }, 'code', { remote: true, callerKey: 'peer-a' });
+      await refused('another remote caller does not inherit the read', { filePath: 'peer.txt', content: 'x\n' }, { remote: true, callerKey: 'peer-b' });
+      await refused('local Chat does not inherit a remote read', { filePath: 'peer.txt', content: 'x\n' });
+      assert.strictEqual((await callTool('write_file', { filePath: 'peer.txt', content: 'by a\n' }, 'code', { remote: true, callerKey: 'peer-a' })).success, true);
+      assert.strictEqual(disk('peer.txt'), 'by a\n');
+      const peerA = { remote: true, callerKey: 'peer-a' };
+      const hashA = (await callTool('read_files', { paths: ['peer.txt'] }, 'code', peerA)).hash;
+      await callTool('apply_patch', { filePath: 'peer.txt', expectedHash: hashA, patch: '<<<<<<< SEARCH\nby a\n=======\npatched by a\n>>>>>>> REPLACE\n' }, 'code', peerA);
+      await refused('a remote patch is attributed to its caller only', { filePath: 'peer.txt', content: 'x\n' });
+      assert.strictEqual((await callTool('write_file', { filePath: 'peer.txt', content: 'a again\n' }, 'code', peerA)).success, true, 'its own patch counts as seen');
+
+      await callTool('apply_patch', { filePath: 'peer-new.txt', patch: 'created by a\n' }, 'code', peerA);
+      await refused('a file another caller created by patch is not seen by local Chat', { filePath: 'peer-new.txt', content: 'x\n' });
+      assert.strictEqual((await callTool('write_file', { filePath: 'peer-new.txt', content: 'a rewrites\n' }, 'code', peerA)).success, true);
+
+      // Deleting a file drops every caller's read of it: a same-content file created later is not "already read".
+      await callTool('read_files', { paths: ['peer.txt'] }, 'code', { remote: true, callerKey: 'peer-b' });
+      await callTool('delete_file', { filePath: 'peer.txt', confirm: true }, 'code');
+      fs.writeFileSync(path.join(tmp, 'peer.txt'), 'a again\n');
+      await refused('stale reads are dropped on delete for all callers', { filePath: 'peer.txt', content: 'x\n' }, { remote: true, callerKey: 'peer-b' });
+
+      const skill = await request(server, 'POST', '/api/skills', { name: 'f95-person-skill' });
+      assert.strictEqual(skill.status, 200);
+      await refused('a skill the person created is not a model read', { filePath: '.webagent/skills/f95-person-skill/SKILL.md', content: 'x\n' });
+      resetHashes();
+    }
     assert.strictEqual(fs.readFileSync(path.join(tmp, 'notes.md'), 'utf8'), 'hello from editor');
 
     const customSaved = await request(server,'PUT','/api/customizations',{environment:{shell:'powershell',notes:'first'}});

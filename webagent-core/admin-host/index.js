@@ -4,6 +4,16 @@ const port = Number(process.env.WEBAGENT_ADMIN_PORT || 4174);
 const host = process.env.WEBAGENT_ADMIN_BIND || '127.0.0.1';
 const { server, dataDir, token } = createServer();
 
+// Without a listener a busy port ended in a raw "Unhandled 'error' event" stack.
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`[webagent-admin] 端口 ${port} 已被占用。关掉占用该端口的程序，或设置 WEBAGENT_ADMIN_PORT 换一个端口后重试。`);
+  } else {
+    console.error(`[webagent-admin] 启动失败：${error.message}`);
+  }
+  process.exit(1);
+});
+
 server.listen(port, host, () => {
   const shown = (host === '0.0.0.0' || host === '::') ? '127.0.0.1' : host;
   console.log(`[webagent-admin] bind ${host}:${port}`);

@@ -100,7 +100,7 @@ async function restore(id, input) {
         const output = await require('../tools').callTool('write_file', {
           filePath: record.files[index].path, content: record.files[index].content,
           expectedHash: ticket.files[index].expectedHash, confirm_overwrite: true
-        }, 'code');
+        }, 'code', { operator: true });
         if (output.success !== true || output.verification?.state !== 'verified' || output.hash !== record.files[index].hash) throw Error('恢复结果未确认');
         results[index].status = 'restored';
       } catch (_) {

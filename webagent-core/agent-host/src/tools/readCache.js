@@ -4,9 +4,26 @@ const crypto = require('crypto');
 const { config } = require('../config');
 
 const MAX_ENTRIES = 400;
+const MAX_SESSION = 4000;
 let hashes = new Map();
+// Keyed by reader + '\n' + path: a read by one caller must not authorize another caller's overwrite.
 let session = new Map();
 let loadedRoot = null;
+
+// Who a tool call is attributed to, from the server-built call options (never from tool arguments).
+// The person at the workbench is nobody: opening a file in the editor, saving it, undoing a save or
+// restoring a checkpoint must not count as "the model has seen this version". Before this, an
+// editor save recorded its own hash, and a model that had read the older version could then
+// overwrite the person's edit with write_file and no confirmation (F95).
+function readerOf(opts) {
+  if (opts && opts.operator) return null;
+  if (opts && opts.remote) return 'remote:' + String(opts.callerKey || '');
+  return 'local';
+}
+
+function sessionKey(reader, key) {
+  return reader + '\n' + key;
+}
 
 function norm(filePath) {
   return String(filePath || '').replace(/\\/g, '/').replace(/^\.\//, '');
@@ -52,22 +69,30 @@ function persist() {
   }
 }
 
-function rememberHash(filePath, hash) {
+function rememberSession(reader, key, value) {
+  const skey = sessionKey(reader, key);
+  if (session.has(skey)) session.delete(skey);
+  session.set(skey, value);
+  while (session.size > MAX_SESSION) session.delete(session.keys().next().value);
+}
+
+// reader: from readerOf(); null (the operator) records nothing.
+function rememberHash(filePath, hash, reader = 'local') {
   ensureLoaded();
   const key = norm(filePath);
-  if (!key || !hash) return;
+  if (!key || !hash || reader === null) return;
   const value = String(hash);
   // Same file, same hash, already the most recent entry: the on-disk bytes would be identical,
   // so there is nothing to publish. Recency order is unchanged because it is already newest.
   const keys = hashes.size ? [...hashes.keys()] : [];
   const alreadyNewest = keys.length && keys[keys.length - 1] === key && hashes.get(key) === value;
   if (alreadyNewest) {
-    session.set(key, value);
+    rememberSession(reader, key, value);
     return;
   }
   if (hashes.has(key)) hashes.delete(key);
   hashes.set(key, value);
-  session.set(key, value);
+  rememberSession(reader, key, value);
   while (hashes.size > MAX_ENTRIES) {
     const oldest = hashes.keys().next().value;
     hashes.delete(oldest);
@@ -80,16 +105,17 @@ function recalledHash(filePath) {
   return hashes.get(norm(filePath)) || null;
 }
 
-function sessionHash(filePath) {
+function sessionHash(filePath, reader = 'local') {
   ensureLoaded();
-  return session.get(norm(filePath)) || null;
+  return session.get(sessionKey(reader, norm(filePath))) || null;
 }
 
 function forgetHash(filePath) {
   ensureLoaded();
   const key = norm(filePath);
   const had = hashes.delete(key);
-  session.delete(key);
+  const suffix = '\n' + key;
+  for (const skey of session.keys()) if (skey.endsWith(suffix)) session.delete(skey);
   // Forgetting something that was never recorded changes no bytes.
   if (had) persist();
 }
@@ -106,6 +132,7 @@ function resetHashes() {
 }
 
 module.exports = {
+  readerOf,
   rememberHash,
   recalledHash,
   sessionHash,

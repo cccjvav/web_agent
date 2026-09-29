@@ -149,9 +149,9 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 
 | 源码 | 定位证据 |
 |---|---|
-| [adminHost.test.js](adminHost.test.js) | 9 个函数/类节点 |
+| [adminHost.test.js](adminHost.test.js) | 17 个函数/类节点 |
 | [adminIntegrity.test.js](adminIntegrity.test.js) | 63 个函数/类节点 |
-| [apiFiles.test.js](apiFiles.test.js) | 59 个函数/类节点 |
+| [apiFiles.test.js](apiFiles.test.js) | 63 个函数/类节点 |
 | [appWindowLifecycle.test.js](appWindowLifecycle.test.js) | 101 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 40 个函数/类节点 |

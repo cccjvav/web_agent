@@ -25,7 +25,7 @@ const { detectEnvironment, detectTechStack } = require('../models/profile');
 const { listSkills, discoverSkills } = require('../tools/skills');
 const eventBus = require('../utils/eventBus');
 const { snapshot: mcpSnapshot, reset: mcpReset } = require('../mcp/session');
-const { resetHashes, rememberHash } = require('../tools/readCache');
+const { resetHashes } = require('../tools/readCache');
 const { getBootstrapPrompt } = require('../mcp/instructions');
 const { listClients } = require('../mcp/clients');
 const oauth = require('../mcp/oauth');
@@ -779,8 +779,8 @@ router.get('/files/content', (req, res) => {
       return res.status(404).json({ error: 'not found' });
     }
     const content = readBoundedText(full);
+    // A person viewing the file is not a model read: it must not authorize a later overwrite (F95).
     const hash = computeHash(content);
-    rememberHash(filePath, hash);
     res.json({
       path: filePath,
       content,
@@ -845,7 +845,7 @@ router.put('/files/content', async (req, res) => {
       createOnly,
       confirm_overwrite: !createOnly,
       expectedHash: body.expectedHash
-    }, 'code');
+    }, 'code', { operator: true });
     if (result.success === false) return res.status(409).json({ error: result.error, code: result.code, verification: result.verification });
     let undo = null;
     try { if (result.verification?.state === 'verified') undo = editorUndo.remember(undoSnapshot, result.hash); } catch (_) { /* Saved file remains successful even if optional undo allocation fails. */ }
@@ -970,7 +970,7 @@ router.post('/skills', async (req, res) => {
   const content = body.content || `# Skill: ${name}\n\n把路径告诉模型就会用。\n`;
   const filePath = `.webagent/skills/${name}/SKILL.md`;
   try {
-    const result = await callTool('write_file', { filePath, content, createOnly: true }, 'code');
+    const result = await callTool('write_file', { filePath, content, createOnly: true }, 'code', { operator: true });
     if (result?.success !== true || result.verification?.state !== 'verified') {
       return res.status(409).json({ success: false,
         error: result?.error || 'Skill write completion could not be verified; inspect the target before retrying',

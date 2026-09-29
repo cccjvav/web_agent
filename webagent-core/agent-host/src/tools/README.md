@@ -46,7 +46,7 @@ read_files返回带行号的content和hash；offset从1开始，不是字节位�
 
 ### 写入/补丁步骤
 1. 对规范真实路径取得进程内写锁，锁获得后再检查取消。
-2. 读取当前正文计算完整SHA-256，与显式或该操作允许的缓存hash比较。短前缀不当作相等；write_file可由显式覆盖确认、匹配的expectedHash或匹配的本进程读取hash满足覆盖条件；明示旧hash即使已确认仍拒绝，持久缓存不等于本进程确认。
+2. 读取当前正文计算完整SHA-256，与显式或该操作允许的缓存hash比较。短前缀不当作相等；write_file可由显式覆盖确认、匹配的expectedHash或**同一调用者**在本进程读取（或自己写入）的匹配hash满足覆盖条件（F95：本机Chat算一个调用者，每个远程MCP会话各算一个；人在工作台打开、保存、撤销、新建Skill、恢复检查点都不算任何模型读过）；明示旧hash即使已确认仍拒绝，持久缓存不等于本进程确认。
 3. apply_patch对已有文件只接受单文件unified diff或SEARCH/REPLACE；既无标记也不是diff的正文在hash门前就E_BAD_ARGS拒绝，不再当成整文件内容写回（F70，外部复审P1-1；整文件替换走write_file）。标记须独占整行、分隔行与开头标记同长，空REPLACE整行删除；多处匹配需要正确occurrence。新文件不能把unified diff头当正文，应使用正文或空SEARCH。
 4. dryRun只检查并返回结果，不发布写入。实际发布先写独占临时文件、保留已有普通权限，再rename；新建补丁与write_file的显式createOnly都用排他发布，期间目标被创建则以EEXIST/E_FILE_EXISTS失败而不覆盖。
 5. 成功更新hash缓存并广播变更。取消或失败不是回滚已完成写入；进程内锁也不锁住外部编辑器。符号链接写入跟随已校验目标，不用新文件替掉链接本身。
@@ -79,7 +79,7 @@ board从调用上下文获取当前peer，不相信参数任意指定owner；先
 
 readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略（落盘已改为临时文件+rename，避免半截JSON被当成"没有任何hash"），但仍不具备models/store那样的损坏拒绝策略；不要把缓存当完整事务日志。
 
-**两个覆盖路径的hash口径不同，这是有意的，不要"统一"掉。** `apply_patch`在没给expectedHash时会回退到`recalledHash()`，即**可跨进程重启**的落盘记录——补丁本身自带SEARCH/REPLACE或unified diff的上下文，内容对不上会先失败，落盘hash只是省掉一次重读。`write_file`用整块新内容覆盖，没有任何内容级校验，所以它只认`sessionHash()`——**本进程内确实读过**才允许免确认覆盖，重启后一律要求显式`confirm_overwrite`。把write_file也改成认落盘hash，等于让新进程凭上一次运行留下的记录盲覆盖文件。
+**两个覆盖路径的hash口径不同，这是有意的，不要"统一"掉。** `apply_patch`在没给expectedHash时会回退到`recalledHash()`，即**可跨进程重启**的落盘记录——补丁本身自带SEARCH/REPLACE或unified diff的上下文，内容对不上会先失败，落盘hash只是省掉一次重读。`write_file`用整块新内容覆盖，没有任何内容级校验，所以它只认`sessionHash()`——**同一调用者在本进程内确实读过**才允许免确认覆盖，重启后一律要求显式`confirm_overwrite`。把write_file也改成认落盘hash，等于让新进程凭上一次运行留下的记录盲覆盖文件。F95之前，人在工作台保存文件会把保存后的hash记成“已读”，读过旧版的模型随后可以不确认就用write_file覆盖人刚保存的修改；另一个远程会话读过的文件，本会话也能免确认覆盖。现在人的操作以`{operator:true}`调用、不记录，读取按调用者分开记。落盘记录仍是所有调用者共用的，apply_patch可凭它省掉重读（内容对不上照样失败）。
 
 ## 验证与定位
 `patchEngine`、`workspaceTools`、`auditStorage`、`resourceBudget`覆盖文件与预算；`ptyLifecycle`覆盖审批、所属客户端及捕获；`mcpBoard`/`board`覆盖协作；`modelLifecycle`/`planRound`覆盖轮次。缺省的模块/进程fixture不能代替VS Code和Windows交互验收。
@@ -111,7 +111,7 @@ R4：executor/fileOps复用WEBAGENT_DEBUG_PROCESS=1输出有界生命周期元�
 | [planRound.js](planRound.js) | 10 个函数/类节点 |
 | [progressTracker.js](progressTracker.js) | 12 个函数/类节点 |
 | [ptyJobs.js](ptyJobs.js) | 23 个函数/类节点 |
-| [readCache.js](readCache.js) | 10 个函数/类节点 |
+| [readCache.js](readCache.js) | 13 个函数/类节点 |
 | [searchWorker.js](searchWorker.js) | 1 个函数/类节点 |
 | [sensitive.js](sensitive.js) | 18 个函数/类节点 |
 | [skills.js](skills.js) | 20 个函数/类节点 |

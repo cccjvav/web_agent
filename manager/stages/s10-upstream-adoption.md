@@ -203,7 +203,7 @@ F62-13 最值得记的不是缺陷本身而是**为什么自测没抓到**：实
 |---|---|---|---|
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
-| R2 / 高，按缺陷证据推进 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，第四批现补资源caller与目录ACL及错误hash指引，第五批已补原生流确认，第六批补窄屏/页签ARIA，F55又补浏览器会话/挑战响应头可读性，第94组（2026-09-28）补事件流WebSocket畸形帧/端口冲突崩溃与慢客户端/半开连接回收，其余UI/实机项待续修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
+| R2 / 高，按缺陷证据推进 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，第四批现补资源caller与目录ACL及错误hash指引，第五批已补原生流确认，第六批补窄屏/页签ARIA，F55又补浏览器会话/挑战响应头可读性，第94组（2026-09-28）补事件流WebSocket畸形帧/端口冲突崩溃与慢客户端/半开连接回收，第95组（2026-09-29）补读取缓存按调用者归属、人的查看/保存不算模型读过，其余UI/实机项待续修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
 | R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54第三批已补新文件patch显式hash与块校验，第五批补原生postNdjson坏流/终态及失败历史；F55补经典流严格完成/预算/取消清理；F56补可选编辑器编排健康期限与直接子进程收尾；F57补App窗口身份绑定与浏览器失败；F58同步准备的取消缺口已由F59纠偏、F60改异步；F62补Git/UTF-8/diff，F63补统计/入口/UI，F64补身份网络、F65补后端fallback独立准备期限；其它消费链按证据另验，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 根因未定位；已复取历史annotations并补阶段诊断首包，等待可解释复现 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 用户优先 | 已授权安全隧道残留回收；已交付只读检测、Windows保护记录/稳定句柄终端回收及负例/诊断；本机开始菜单入口已接入，面板/桌面与PTY互操作仍待 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
@@ -1991,6 +1991,35 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **文档：** 事件总线详解（新方法四节、常量、删去“没有积压闸门”一句）、入口详解attachWss（maxPayload与两个error监听）、listenOrExit的前提；三份测试详解（本机边界、任务板与事件流、MCP协议与整机入口）。
 
 **剩余与未验证：** 没有在真实浏览器里观察被丢弃后的重连（逻辑是现有onclose退避，未改）；心跳不模拟真实睡眠与网络切换，以“不回pong/不读取”的等价状态代替；1 MiB与30秒是经验值，未按真实负载测过；被丢弃期间的提示性事件（终端行、todos推送）会漏掉，界面靠重连后HTTP重读恢复。R2/R3的下一线索是readCache（读缓存与写入后的一致性），尚未开始。
+
+### 第95组：读取缓存按调用者归属与人的操作不算读过（2026-09-29）
+
+**开头复审第94组：** 提交`83ce419`的CI（run 36490973366）9/9通过。复读第94组的文档改动时发现两处漏改：审查索引里事件总线详解一行仍写“不保证慢客户端总内存有界”（第94组已加积压闸门），入口详解一行没提新的两个error监听；已补。复查代码：全仓只有index.js一处创建WebSocketServer，没有同类漏网。本会话开始时沙箱又重启过一次，按惯例恢复到`83ce419`、重装依赖；审查索引指纹脚本按“文件sha256前16位”重建，对已提交文件算出0处变化。
+
+**R2/R3审计范围（本段）：**
+1. **全仓error监听与悬空Promise扫描**（第94组的教训外推）。子进程、HTTP请求、服务器、流共41处创建点逐个看：隧道、执行器、stdio MCP、tunnelCleanup、installer、插件都有error监听，execFile回调式由回调接错误；唯一缺口是admin-host的`server.listen`，端口被占时原始堆栈崩溃（退出码同为1），已修。Express为5.2.1，异步路由的拒绝交给错误中间件；用acorn扫描“调用本文件async函数却不await/不catch”的语句与回调，主机侧只有`shutdown`（内部全捕获），插件侧几处均有try/catch。扫描只认得标了async的函数，返回Promise的普通函数认不出，这是方法局限。
+2. **readCache与写入前置条件的调用链**：readCache、fileOps的read/write/delete、patchEngine、routes的文件路由、editorUndo、fileCheckpoints、tools/index的write_file入口、workflows（沿用提交者的调用选项）、本机Chat（runChat先读再补丁）。
+
+**发现：读取缓存把“人看过/人保存过”和“别的调用者读过”都当成“这个模型读过”（中高，已复现）。** write_file免确认覆盖的条件之一是“本进程读过且hash仍匹配”，工具说明写的是“a read_files hash from this process”，设计本意是防止模型覆盖它没见过的内容。但：
+- `GET /api/files/content`（工作台打开文件）调用rememberHash；
+- `PUT /api/files/content`（编辑器保存）经write_file记下保存后的hash；
+- session只按路径记，不分调用者。
+
+用真实工具和路由复现：①模型读v1，人在工作台保存v2，模型不带确认、不带hash的write_file**成功**，磁盘变成模型的整文件内容，人的修改丢失；②人只打开文件、模型从未读过，write_file成功（对照：没人打开时被拒）；③远程会话A读过，会话B写入成功。
+
+**修复：**
+- readCache新增`readerOf(opts)`：operator→null（不记录），remote→`remote:`+callerKey，其余→local。session键改为“读者+换行+路径”，上限4000条、按最久未读淘汰（此前session无上限）；forgetHash删所有读者的记录。落盘记录（recalledHash）仍共用：apply_patch凭它省掉重读，补丁上下文对不上照样失败，这是既有的有意设计。
+- fileOps的readFiles/readFile/writeFile、patchEngine的applyPatch接收服务端构造的调用选项（write_file handler现在把opts传入）；调用选项不来自工具参数，模型无法伪造operator。
+- GET /files/content删去rememberHash；PUT保存、POST /skills、editorUndo撤销、fileCheckpoints恢复都以`{operator:true}`调用write_file。
+- write_file工具说明改为“a read_files hash this caller got in this process”。
+
+效果：人保存后，模型不确认的write_file被拒（“Overwrite blocked…read the file”），不带hash的apply_patch得到E_STALE_FILE，模型重新读取后照常工作。本机Chat和插件Chat共用local读者，与之前相同。
+
+**测试与反向验证：** apiFiles新增读取归属段（真实HTTP+真实callTool）：保存/打开/新建/撤销/新建Skill后模型被拒、重新读取后可写、自己的写入算读过；远程peer之间与本机互不继承，远程补丁（含新建）只记在自己名下，删除后重建的同内容文件不算读过。fileCheckpoints在恢复后断言模型被拒。hostPersist加readerOf、null读者不记、按读者查、forget删全部、4001条淘汰与刷新年龄。adminHost加busyPort（真实入口、占端口）。变异：operator标记在4处调用点各去一次、GET重新记录、remote不分callerKey、remote并入local、operator不优先、session不分读者、null读者照记、handler不传opts、readFiles不传读者、write检查与记录不传读者、patch两处记录不传读者、forget只删local、去容量、去刷新年龄、去admin-host监听，共20处全红；sessionHash里对null读者的判断变异后仍绿（从不以null记录，判断多余），已删。修复前代码上apiFiles在“an editor save does not refresh what the model has read”处失败。lint 0，全量116个测试文件通过。
+
+**文档：** 缓存与进度详解（readCache表新增readerOf/sessionKey/rememberSession，改rememberHash/sessionHash/forgetHash与状态说明）、文件与搜索详解、补丁与路径详解、工具入口与命令策略详解、路由逐项详解（GET/PUT/POST /skills）、编辑回退详解、tools README覆盖口径、admin-host统计服务详解，以及补丁与编辑API、存储完整性与预算、统计与文档三份测试详解；审查索引三行补F95说明。用户向指南没有涉及覆盖条件的表述，无需改。
+
+**剩余与未验证：** 读者取MCP调用者键：已初始化会话各自独立；未带Mcp-Session-Id的远程调用按来源地址（和initialize时的客户端名）归并，经隧道时来源通常都是127.0.0.1，这类调用共用一个读者（客户端名已去控制字符，读者键不会与路径拼接冲突）；本机Chat与插件Chat的工具转发仍是同一个local读者；落盘记录仍不分调用者；人的撤销若恰好恢复成模型读过的那个版本，模型可免确认覆盖（它确实见过这些字节）。没有在真实浏览器里走一遍“工作台保存后模型被拒”的界面提示；悬空Promise扫描是启发式。R2/R3余下线索：外部MCP注册与stdio启动的调用者归属、执行控制权限在workflows之外的入口，尚未开始。
 
 ### 延后复审清单
 
