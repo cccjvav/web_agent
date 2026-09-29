@@ -2117,6 +2117,27 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **剩余与未验证：** 未在真实cloudflared上跑Named（环境变量方式来自官方文档与Docker实践，替身测试只锁spawn参数）；D-14…D-18只记录（PKCE失败不作废授权码、单IP可占满80个注册槽、`GET /mcp`快照向任何持凭据调用者展示其他调用者的key/clientInfo/工作区路径、`resources/list`不查`read_files`开关、`publicHttps`不跟随重定向属有意）。下一批：工作台其余模块（operations/picker/tabs/bind/vscodeRelay）与三栏布局/字号token、Monaco自托管（P1-1）、流式输出（P2-2）、逐篇文档核对。
 
+### 第101组：复审修复第4批——Monaco随仓库分发、工作台完整CSP、OAuth配对页CSP（会话01a0e8e7，2026-09-29）
+
+**接手与基线：** 沙箱第四次重建，恢复同上（`git fetch origin arena/01a0e8e7-web-agent && git reset FETCH_HEAD`+`npm ci`，与`0e9d5bc`一致）。上游01a0d084仍在`c20c413`，F101未被占用。沙箱里`cdn.jsdelivr.net`不可达、装不了Chromium，正好复现旧实现“断网7秒后退化纯文本”的路径，但真实浏览器里策略下的行为只能交给CI的workbench-browser任务。
+
+**范围：** 报告P1-1（工作台从公网CDN加载Monaco，无SRI、无`script-src`，而该页面拥有本机全部API权限）。顺带复核相邻三处：`installer/package.js`白名单、`mcp/oauth.js`配对页响应头、`tests/workbench.browser.js`夹具。
+
+**方案取舍：** 三选一——(a) `monaco-editor`作agent-host依赖：首次启动`npm ci`只有120秒硬预算（`installer/preparation.js:61`）、扩展就绪180秒（`hostManager.js:134`），多1467个文件/18 MB会吃掉预算，已装机器仍要CDN回退→动态CSP；(b) postinstall下载：网络成本没消失只是换时机；(c) 把`min/vs`树提交进仓库：多12 MiB第三方压缩产物。选(c)，并记入报告§4.3第7条。裁剪`min/vs`不可行（去tsWorker会让.js/.ts语言模式加载失败）。
+
+**实施：**
+1. **`webagent-core/scripts/vendor-monaco.js`（新）：** `npm pack monaco-editor@0.52.2`到临时目录，核对tarball sha512（写死`INTEGRITY`），解出`min/vs`、LICENSE.txt、ThirdPartyNotices.txt到`workbench/vendor/monaco/`，只保留`nls.messages.zh-cn.js`一份文案，写`VERSION.json`（版本、integrity、逐文件sha256、fileCount、license）；`--check`按清单逐文件核对。97个文件+清单，约12 MiB。`.gitattributes`标`linguist-vendored`/`-diff`，`eslint.config.js`与`docs-site/documentation.config.json`排除该前缀。
+2. **`workbench/js/monaco.js`重写：** 导出`MONACO_VERSION`/`MONACO_BASE='/vendor/monaco/vs'`，只插入同源`loader.js`，`require.config({paths:{vs}})`后先`vs/nls.messages.zh-cn`再`vs/editor/editor.main`（文案失败仍装编辑器），7秒纯文本回退保留，源码里不再有任何`https://`/`cdn.`。
+3. **`src/utils/contentSecurity.js`（新）+`src/index.js`：** `sourceHash`/`inlineScriptHashes`/`inlineStyleHashes`/`workbenchPolicy`/`authorizePolicy`。`mountWorkbench`启动时对`index.html`唯一内联脚本（主题引导）算sha256，每个响应按`req.headers.host`生成策略：`default-src 'self'; script-src 'self' 'sha256-…'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' ws://Host wss://Host; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`（Host不合法只留'self'）；`/vendor/monaco`用`express.static`（`index:false`、`fallthrough:false`、no-cache+ETag）。CSP放响应头而非`<meta>`，因为`extension/settingsPanel.js`对`index.html`头部做逐字符串替换，任何偏差抛错。`mcpApp`保持基线安全头。
+4. **`mcp/oauth.js`配对页：** `sendAuthorizeHtml`统一下发`default-src 'none'; style-src 'sha256-<模板样式块>'; base-uri 'none'; frame-ancestors 'none'`，GET与错误重渲染同策略；有意不设form-action（Chrome会把它套到302跳回redirect_uri上）。
+5. **`installer/package.js`：** `extensions`加`.ttf`，否则codicon字体被静默丢弃（D-19）。
+
+**测试与反向验证：** `httpSmoke`——首页CSP以`default-src 'self'; script-src 'self' 'sha256-<实际哈希>'`开头、无unsafe-inline脚本、不含cdn./https://、connect-src点名ws/wss、worker blob:，`/vendor/monaco/vs/loader.js`/`nls.messages.zh-cn.js`/`codicon.ttf`均200且loader为no-cache+ETag，`..%2f`穿越403/404，缺文件404，页面不含jsdelivr（旧代码：无script-src红）。`monacoLoading`——script.src是vendored路径、源码无https://、require顺序nls→editor.main、`paths.vs`正确、nls失败仍true（旧代码：CDN地址红）。`oauth`——配对页三处响应带固定CSP。`installerPackaging`——九个vendored文件+`vendor-monaco.js`入包（去掉`.ttf`则codicon红）。新`contentSecurity.test.js`——哈希函数、真实index.html恰好一个内联脚本、策略字符串、合法/非法Host矩阵、authorizePolicy固定串、`vendor-monaco.js check()`全清单、`MONACO_VERSION`与脚本一致。`workbench.browser.js`——6处jsDelivr路由合并为`withoutEditor`（阻断`**/vendor/monaco/**`），`narrowWorkspaceBrowser`改`bypassCSP:true`（axe经addScriptTag是内联脚本），新增`contentSecurityBrowser`（真实策略下等“高级编辑器就绪”、`_VSCODE_NLS_LANGUAGE==='zh-cn'`、JS模型出现TypeScript诊断标记证明blob worker可跑、零`securitypolicyviolation`/零Refused/零外源请求）；本地只能acorn解析与lint，跑不了。全套`npm test` 118文件通过，lint 0，check-docs 0。
+
+**文档：** SECURITY.md（CSP段与vendored条目）、入口详解、控制面与Origin详解（新3b节）、utils/README、OAuth授权详解、workbench/README与js/README、状态与编辑器详解§4、页面结构详解§5、scripts/README、installer/函数详解、Windows新手逐步验收§14步骤5（阻断改`*/vendor/monaco/*`）、使用指南软件表、技术实现、四份测试详解与tests/README、主机诊断与调用追踪详解（浏览器夹具）、报告§0/§4.3/§8/§9.4/附录B、索引指纹。
+
+**剩余与未验证：** D-22 工作台`style-src`仍`'unsafe-inline'`（Monaco与页面写内联样式；脚本段已无）；D-23 `connect-src`取自Host（先经Host门禁再经正则，只会收紧不会放宽）；D-24 VS Code设置页webview自有nonce策略，不经此模块。4.1字号token与三栏分隔条评估后延后：牵涉`styles.css`106处font-size与多处Playwright视口断言，需要能跑浏览器的环境；P2-2流式输出排第5批（F102）。真实浏览器/Windows安装包未在本沙箱验证。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。

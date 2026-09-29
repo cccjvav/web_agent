@@ -62,5 +62,5 @@ httpSmoke、skipWorkbench和auditControl验证双端口及HTTP/WS边界，hostPe
 |---|---|
 | [config.js](config.js) | 3 个函数/类节点 |
 | [extensionVersion.js](extensionVersion.js) | 1 个函数/类节点 |
-| [index.js](index.js) | 26 个函数/类节点 |
+| [index.js](index.js) | 28 个函数/类节点 |
 <!-- docs-inventory:end -->

@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const contentSecurity = require('../utils/contentSecurity');
 const express = require('express');
 const { config } = require('../config');
 const store = require('../models/store');
@@ -576,12 +577,20 @@ function registerHandler(req, res) {
 router.post('/oauth/register', registerHandler);
 router.post('/register', registerHandler);
 
+// F101: the pairing page is the one HTML this port serves to the public internet. It has no scripts
+// and one fixed <style> block, so the policy admits exactly that block (hashed from the template).
+const authorizeCsp = contentSecurity.authorizePolicy({ styleHashes: contentSecurity.inlineStyleHashes(authorizeHtml({}, '')) });
+function sendAuthorizeHtml(res, html) {
+  res.setHeader('Content-Security-Policy', authorizeCsp);
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(html);
+}
+
 router.get('/oauth/authorize', (req, res) => {
   try {
     rateLimit(`auth:${clientIp(req)}`, 30, 60 * 1000);
     validateAuthorize(req.query);
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(authorizeHtml(req.query, snapshotPairing().expired ? '请先在本机工作台生成配对码' : ''));
+    sendAuthorizeHtml(res, authorizeHtml(req.query, snapshotPairing().expired ? '请先在本机工作台生成配对码' : ''));
   } catch (err) { sendError(res, err); }
 });
 
@@ -593,8 +602,7 @@ router.post('/oauth/authorize', (req, res) => {
   } catch (err) {
     retryHeader(res, err);
     res.status(err.status || 400);
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(authorizeHtml(req.body, err.message));
+    sendAuthorizeHtml(res, authorizeHtml(req.body, err.message));
   }
 });
 

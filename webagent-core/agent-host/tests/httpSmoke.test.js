@@ -130,6 +130,36 @@ async function main() {
       assert.strictEqual(response.headers['referrer-policy'], 'no-referrer', label + ': Referrer-Policy');
       assert.strictEqual(response.headers['x-powered-by'], undefined, label + ': no framework banner');
     }
+    // F101 (review P1-1): the workbench runs under a full policy that only names this host, the
+    // inline theme script is admitted by the hash of its exact text, and the editor is served from
+    // /vendor/monaco instead of a CDN (so the page also works with no internet at all).
+    {
+      const csp = String(page.headers['content-security-policy'] || '');
+      const crypto = require('crypto');
+      const inline = page.raw.match(/<script>([\s\S]*?)<\/script>/)[1];
+      const hash = crypto.createHash('sha256').update(inline, 'utf8').digest('base64');
+      assert.ok(csp.includes(`script-src 'self' 'sha256-${hash}'`), 'workbench script-src: self + the theme bootstrap hash: ' + csp);
+      assert.ok(!/unsafe-inline'[^;]*;/.test(csp.split('script-src')[1].split(';')[0]), 'no unsafe-inline scripts');
+      assert.ok(!csp.includes('cdn.') && !csp.includes('https://'), 'no third-party origin in the workbench policy');
+      assert.ok(csp.includes(`connect-src 'self' ws://127.0.0.1:${workbenchPort} wss://127.0.0.1:${workbenchPort}`), 'own host for the /ws socket');
+      assert.ok(csp.includes("worker-src 'self' blob:"), 'Monaco boots workers from a blob bootstrap');
+      assert.ok(csp.includes("default-src 'self'") && csp.includes("object-src 'none'") && csp.includes("base-uri 'self'"));
+      const loader = await request('GET', `http://127.0.0.1:${workbenchPort}/vendor/monaco/vs/loader.js`);
+      assert.strictEqual(loader.status, 200, 'vendored Monaco loader is served');
+      assert.ok(/javascript/.test(loader.headers['content-type']));
+      assert.strictEqual(loader.headers['cache-control'], 'no-cache', 'editor files revalidate instead of re-downloading 12 MiB per load');
+      assert.ok(loader.headers.etag, 'and carry an ETag to revalidate with');
+      const nls = await request('GET', `http://127.0.0.1:${workbenchPort}/vendor/monaco/vs/nls.messages.zh-cn.js`);
+      assert.strictEqual(nls.status, 200, 'the zh-cn UI strings ship with the editor');
+      const font = await request('GET', `http://127.0.0.1:${workbenchPort}/vendor/monaco/vs/base/browser/ui/codicons/codicon/codicon.ttf`);
+      assert.strictEqual(font.status, 200, 'codicon font (find widget / context menu icons)');
+      const escape = await request('GET', `http://127.0.0.1:${workbenchPort}/vendor/monaco/..%2f..%2fpackage.json`);
+      assert.ok(escape.status === 403 || escape.status === 404, 'no traversal out of the vendor directory: ' + escape.status);
+      const missing = await request('GET', `http://127.0.0.1:${workbenchPort}/vendor/monaco/vs/none.js`);
+      assert.strictEqual(missing.status, 404);
+      assert.ok(!page.raw.includes('jsdelivr'), 'the page does not reference the CDN');
+      assert.strictEqual(health.headers['cache-control'], 'no-store', 'everything else stays no-store');
+    }
     assert.ok(page.raw.includes('编辑进化') || page.raw.includes('CHAT'));
     assert.ok(page.raw.includes('Add API'));
     assert.ok(page.raw.includes('btn-agent-pick'));

@@ -40,6 +40,10 @@
       "reason": "第三方运行时"
     },
     {
+      "prefix": "webagent-core/workbench/vendor/",
+      "reason": "第三方运行时（Monaco Editor min 构建，由 webagent-core/scripts/vendor-monaco.js 从 npm 原包按固定 sha512 复制，附 LICENSE 与 ThirdPartyNotices）；来源与版本见 vendor/monaco/VERSION.json"
+    },
+    {
       "prefix": "examples/calculator/",
       "reason": "可选计算器示例（非默认工作区）；不计产品代码覆盖"
     },

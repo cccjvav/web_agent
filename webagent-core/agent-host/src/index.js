@@ -28,9 +28,9 @@ tracker.startReporter();
 // breaks: nosniff stops content-type guessing on user-controlled text; frame-ancestors/X-Frame-
 // Options stop other sites from framing the local control plane (clickjacking the approval
 // buttons) — nothing in this product frames the workbench, the VS Code extension renders its own
-// webview HTML; no-referrer keeps the secret-bearing MCP URL out of Referer headers. A full
-// script-src CSP is NOT set: the workbench loads Monaco from jsDelivr and uses one inline theme
-// script, so it would need a reviewed allow-list and its own browser test first.
+// webview HTML; no-referrer keeps the secret-bearing MCP URL out of Referer headers. The workbench
+// pages get a full policy in mountWorkbench (F101: Monaco is served from this host, no CDN), and
+// the OAuth pairing page sets its own in mcp/oauth.js.
 function securityHeaders(req, res, next) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
@@ -98,9 +98,25 @@ function mountHealth(app) {
 }
 
 const workbenchDir = path.resolve(__dirname, '../../workbench');
+const contentSecurity = require('./utils/contentSecurity');
+// F101 (review P1-1): the editor ships with the workbench (webagent-core/workbench/vendor/monaco,
+// refreshed by scripts/vendor-monaco.js) instead of being fetched from a CDN by every page load, and
+// the whole workbench runs under a Content-Security-Policy that only allows this host. The inline
+// theme script is admitted by the hash of its text as it is on disk at start-up.
+const workbenchScriptHashes = contentSecurity.inlineScriptHashes(fs.readFileSync(path.join(workbenchDir, 'index.html'), 'utf8'));
+const monacoDir = path.join(workbenchDir, 'vendor/monaco');
 
 function mountWorkbench(app) {
-  app.use(express.static(workbenchDir));
+  app.use((req, res, next) => {
+    res.setHeader('Content-Security-Policy', contentSecurity.workbenchPolicy({ scriptHashes: workbenchScriptHashes, host: req.headers.host }));
+    next();
+  });
+  // The editor bundle is ~12 MiB across ~100 files and never changes between restarts: let the
+  // browser revalidate (ETag) instead of re-downloading it on every page load like the rest of
+  // the workbench (which stays no-store).
+  app.use('/vendor/monaco', express.static(monacoDir, { index: false, dotfiles: 'ignore', fallthrough: false,
+    setHeaders(res) { res.setHeader('Cache-Control', 'no-cache'); } }));
+  app.use(express.static(workbenchDir, { index: 'index.html', dotfiles: 'ignore' }));
   app.use((req, res, next) => {
     if (req.method !== 'GET') return next();
     if (

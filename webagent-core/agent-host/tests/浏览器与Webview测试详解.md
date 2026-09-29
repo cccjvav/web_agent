@@ -6,7 +6,7 @@
 
 [源码](monacoLoading.test.js)读真实monaco.js，分别构造LF/CRLF两种source，去单个import和export后vm执行；import正则显式支持\r?\n，Windows不再遗漏声明。**$**指状态节点，**captureActiveFile/activateTab**计数；**createElement/appendChild**捕获script；**setTimeout**保存deadline不等真实7秒，**clearTimeout**空实现。
 
-loadMonaco状态先加载中；手动script.onerror→Promise false/纯文本提示；再次加载手动deadline→false；随后注入require（成功回调）、require.config和editor.create，调用迟到onload，必须先捕获缓冲、激活一次并状态就绪；删除require后onload须false而非崩溃。异步IIFE.catch设置exitCode1。没有下载CDN或创建实际Monaco worker。
+loadMonaco状态先加载中；F101起先断言script.src是`/vendor/monaco/vs/loader.js`且源码不含任何`https://`或`cdn.`（去export改用逐行正则，因为monaco.js多了两个导出常量）；手动script.onerror→Promise false/纯文本提示；再次加载手动deadline→false；随后的require替身记录依赖名与config：必须先`vs/nls.messages.zh-cn`后`vs/editor/editor.main`，`paths.vs`为vendored路径（跨realm对象按JSON比较）；另一轮nls故意失败仍要装出编辑器（true）；随后注入require（成功回调）、require.config和editor.create，调用迟到onload，必须先捕获缓冲、激活一次并状态就绪；删除require后onload须false而非崩溃。异步IIFE.catch设置exitCode1。没有下载CDN或创建实际Monaco worker。
 
 ## workbenchRuntime.test.js
 
@@ -213,11 +213,15 @@ start/stop各自单飞，启动中停止可达并携绑定，停止中不得再�
 
 ### textScaleChromeBrowser(browser,base)
 
-F70（外部复审§5.4-6，真实Chromium复现）：真实主机页面、阻断Monaco CDN。1440×900与390/360/320×844四种视口下（360/320用宽度本身强制菜单超出可用宽度，不依赖机器字体——首版只测390，CI的较宽回退字体让菜单折行而本地未复现），经dom.applyTextScale依次设0.85/1/1.6，等一帧后逐个检查标题栏、状态栏、编辑器页签条/页签、面板头、右栏头、窄屏工作区切换条：每个含文字的可见子元素上下边都必须在所属栏框内（容差1px），不可滚动的栏不得scrollHeight>clientHeight；整页不得横向/纵向溢出；状态栏底边必须贴住窗口底部；标题栏右侧控件右边界不得超出窗口。基线（px结构高度）在1.6档红——标题栏按钮0..36落在30px栏内、状态栏文字越界。结束恢复缩放1并断言无pageerror。不代签Windows系统字体、真实DPI或操作系统放大。
+F70（外部复审§5.4-6，真实Chromium复现）：真实主机页面、经withoutEditor阻断`**/vendor/monaco/**`使用纯文本回退（F101前阻断的是CDN）。1440×900与390/360/320×844四种视口下（360/320用宽度本身强制菜单超出可用宽度，不依赖机器字体——首版只测390，CI的较宽回退字体让菜单折行而本地未复现），经dom.applyTextScale依次设0.85/1/1.6，等一帧后逐个检查标题栏、状态栏、编辑器页签条/页签、面板头、右栏头、窄屏工作区切换条：每个含文字的可见子元素上下边都必须在所属栏框内（容差1px），不可滚动的栏不得scrollHeight>clientHeight；整页不得横向/纵向溢出；状态栏底边必须贴住窗口底部；标题栏右侧控件右边界不得超出窗口。基线（px结构高度）在1.6档红——标题栏按钮0..36落在30px栏内、状态栏文字越界。结束恢复缩放1并断言无pageerror。不代签Windows系统字体、真实DPI或操作系统放大。
+
+### contentSecurityBrowser(browser,base)（F101）
+
+真实策略、不阻断任何请求、不bypassCSP：addInitScript先在document上收集`securitypolicyviolation`事件；goto后断言响应头CSP以`default-src 'self'; script-src 'self' 'sha256-`开头；等状态栏“高级编辑器就绪”（最长20秒），`window.monaco`与`#editor .monaco-editor`存在，`globalThis._VSCODE_NLS_LANGUAGE`为zh-cn，主题dataset已由哈希放行的内联脚本写入；创建一个含语法错误的javascript模型交给编辑器，等`getModelMarkers`出现——诊断只能来自TypeScript worker，证明blob引导+同源importScripts在策略下能跑；最后断言违规事件、控制台“Refused/Content Security Policy”消息、非本机origin的请求三者皆空，且无pageerror。
 
 ### narrowWorkspaceBrowser(browser,base)
 
-新开真实主机页面、仅阻断Monaco CDN而使用fallback，不发模型或写盘请求。320/390/640（含640×360）逐editor/chat/bridge断言可用宽度至少viewport−49，另一工作面不可见；聊天草稿往返保留、elementFromPoint确认输入框未被欢迎页遮挡。注入页面内存文件tab检查超长名称仍可关闭、Home/End焦点、dirty确认取消保留/确认关闭与焦点恢复、Delete关闭；这部分不是磁盘保存测试，旧main的真实保存/回退/审批链继续执行。768/1024/1440双栏保留，宽→窄跟随正在输入的工作面。默认加载开发依赖axe-core，AXE_PATH仅作为显式脚本覆盖，不再是跳过axe的开关。逐窄屏工作面执行两条父子角色规则，另对深浅主题×1440/768/390/320×欢迎页/API设置16个状态执行WCAG2/2.1 A/AA标签规则及页面溢出检查；插入仅页面内的长日志，必须能聚焦并用方向键实际滚动。UI_EVIDENCE_DIR可保存窄屏工作面与文档站截图。finally关页、收集pageerror；不代表真实Windows/DPI/读屏器验收。editorRuntime夹具新增querySelectorAll返回空导航集合，使实际dom.setWorkspaceView可运行；原dirty/hash/保存/恢复断言未删。
+新开真实主机页面（`bypassCSP: true`，因为addScriptTag把axe当内联脚本注入，工作台CSP会拒绝——真实策略下的行为由contentSecurityBrowser单测）、经withoutEditor阻断vendored Monaco而使用fallback，不发模型或写盘请求。320/390/640（含640×360）逐editor/chat/bridge断言可用宽度至少viewport−49，另一工作面不可见；聊天草稿往返保留、elementFromPoint确认输入框未被欢迎页遮挡。注入页面内存文件tab检查超长名称仍可关闭、Home/End焦点、dirty确认取消保留/确认关闭与焦点恢复、Delete关闭；这部分不是磁盘保存测试，旧main的真实保存/回退/审批链继续执行。768/1024/1440双栏保留，宽→窄跟随正在输入的工作面。默认加载开发依赖axe-core，AXE_PATH仅作为显式脚本覆盖，不再是跳过axe的开关。逐窄屏工作面执行两条父子角色规则，另对深浅主题×1440/768/390/320×欢迎页/API设置16个状态执行WCAG2/2.1 A/AA标签规则及页面溢出检查；插入仅页面内的长日志，必须能聚焦并用方向键实际滚动。UI_EVIDENCE_DIR可保存窄屏工作面与文档站截图。finally关页、收集pageerror；不代表真实Windows/DPI/读屏器验收。editorRuntime夹具新增querySelectorAll返回空导航集合，使实际dom.setWorkspaceView可运行；原dirty/hash/保存/恢复断言未删。
 
 ## F88：检查点与接入操作结果的位置（实机9.2/9.3）
 

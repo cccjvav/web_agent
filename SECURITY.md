@@ -17,7 +17,7 @@
 
 文件路径检查同时验证逻辑路径和真实链接目标；内置敏感规则不区分大小写并覆盖嵌套目录。记忆day仅接收有效日历日期；用户Skill必须实际位于工作区内，产品固定bundled目录例外保留。这是应用层保护，不是OS沙箱，不承诺抵抗有本机文件系统写权限进程的所有竞态或硬链接操作。
 
-两个监听端口的所有响应带`X-Content-Type-Options: nosniff`、`X-Frame-Options: DENY`、`Content-Security-Policy: frame-ancestors 'none'`与`Referrer-Policy: no-referrer`（F70）：外站不能把本机工作台装进iframe诱导点击审批按钮，用户可控文本不会被按类型嗅探执行，带密钥的MCP地址不会经Referer外泄。工作台仍从jsDelivr加载Monaco并含一段内联主题脚本，因此**没有**设置限制script-src的完整CSP；那需要单独审定白名单并加浏览器测试。
+两个监听端口的所有响应带`X-Content-Type-Options: nosniff`、`X-Frame-Options: DENY`、`Content-Security-Policy: frame-ancestors 'none'`与`Referrer-Policy: no-referrer`（F70）：外站不能把本机工作台装进iframe诱导点击审批按钮，用户可控文本不会被按类型嗅探执行，带密钥的MCP地址不会经Referer外泄。F101起工作台页面另带完整CSP：`default-src 'self'`、`script-src 'self' 'sha256-<内联主题脚本哈希>'`（哈希在启动时按index.html实际内容计算）、`worker-src 'self' blob:`（Monaco用blob引导语言worker）、`style-src 'self' 'unsafe-inline'`（Monaco渲染时写内联样式）、`connect-src 'self' ws://<本机Host> wss://<本机Host>`、`object-src 'none'`、`base-uri 'self'`、`form-action 'self'`——页面不再允许任何第三方来源的脚本，注入到聊天/Markdown渲染里的内联脚本或事件处理也会被浏览器拒绝。公网可达的OAuth配对页是`default-src 'none'; style-src 'sha256-<样式块哈希>'`，不设form-action（Chrome会把它套到提交后跳转客户端redirect_uri的302上）。
 
 MCP认证凭据可以放在`Authorization: Bearer`、URL路径`/mcp/<密钥>`、`X-MCP-Secret`请求头或`?secret=`查询参数中任一处（按此顺序取第一个）。查询参数与路径形式会进入代理/服务器访问日志和浏览器历史，优先用Bearer或请求头；四种形式都是同一把密钥，轮换一次全部失效。
 
@@ -83,7 +83,7 @@ Chat断开/停止会传递取消信号；每请求5分钟总期限，模型响�
 
 可选GitHub身份的三个固定端点每次头/体合计10秒、响应64KiB、拒跳转；本机REST断开传递AbortSignal，身份generation继续防旧成功结果覆盖。预先取消不清健康设备流；错误不反射上游正文，设备授权URL固定官方路径。一次poll可能有两段请求；取消不能撤回GitHub已处理的授权/签发，也不代表统计上报等其它网络链已经同样有界。
 
-- 经典工作台从jsDelivr加载Monaco可执行脚本，同页能访问本机状态，因此存在第三方CDN供应链信任面。加载失败提供纯文本回退；当前尚未vendor Monaco，不把离线回退当供应链隔离。
+- 经典工作台的Monaco编辑器自F101起随仓库分发（`webagent-core/workbench/vendor/monaco`，由`webagent-core/scripts/vendor-monaco.js`按固定版本与sha512从npm原包复制，`VERSION.json`记录每个文件的sha256，`--check`可核对），由本机主机在`/vendor/monaco`提供，页面不再从jsDelivr等CDN加载任何脚本，断网也能用高级编辑器。供应链信任面因此从“每次打开页面信任CDN”收窄为“入库时核对一次npm原包”；升级须改脚本里的版本与integrity并重跑。加载失败仍有纯文本回退。
 - 配置WEBAGENT_TELEMETRY_URL与WEBAGENT_TELEMETRY_TOKEN两者后才可能外发统计，默认未配置不发送。payload包含installId、可选githubUser/githubId/provider、日期、调用数、失败数、成功率、lastAt、产品与版本，不包含模型key、MCP secret或命令正文，但不是匿名数据。
 - 可选admin统计后台仍只以共享Bearer授权且默认回环，不证明上报者身份。报告坏存储拒绝而不清空；健康账本到4MiB/10000行时整日轮出最旧日期（F70，此前会让之后所有上报永久500），被轮出的数据不自动归档；同目录临时文件原子发布不是跨进程锁或断电备份。管理员应先备份再显式修复；令牌创建/权限和公网限流另有边界，见[统计实现](webagent-core/admin-host/统计服务详解.md)。
 - 关闭上报：停止产品，删除启动环境中的上述两项配置，再从清理后的新进程启动；本地usage.json仍可能记录统计，关闭上报不等于删除本地记录。不公开遥测令牌。

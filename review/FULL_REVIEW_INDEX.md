@@ -114,7 +114,7 @@ Markdown：210（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [review/R8实机验收记录-2026-09-24.md](R8实机验收记录-2026-09-24.md) | 历史保留 | 21bfceb44e30af41 | 用户上传的R8本机验收记录（HEAD 9c36c10，总判定通过），作验收证据原样保留；仅按用户同意把Windows用户名换成{{用户名}}并移入review/。未执行项、偏差与产品形态反馈以记录原文为准，后续处置见阶段10第72组之后。 依据：用户2026-09-25确认归档方案。 |
 | [review/R6第一期实机验收记录-2026-09-25.md](R6第一期实机验收记录-2026-09-25.md) | 历史保留 | be0936a95fa39e14 | 用户上传的R6第一期（插件一键启动）本机验收记录（506cd0a，总判定通过），原为仓库根 r6result.md；仅把 Windows 用户名替换为 {{用户名}}，其余原样保留作验收证据；手册偏差与产品反馈的处置见返工方案 §8 与 s10 第80组 |
 | [review/R6第二期实机验收记录-2026-09-28.md](R6第二期实机验收记录-2026-09-28.md) | 历史保留 | 7f1c7a97759081cb | 用户上传的R6第二期（插件设置页）本机验收记录（de9ec3e→7b833a3→7230d65→fb3f345四次续跑，总判定通过@fb3f345），原为仓库根 manual-results.txt（27375b5）；内容无用户名/路径/密钥，原样保留作验收证据；第11步“@webagent未接管”的根因与修正见 s10 第90组 |
-| [review/FULL_REVIEW_2026-09-29.md](FULL_REVIEW_2026-09-29.md) | 历史保留 | c22df481ab2eaec5 | 会话01a0e8e7在83ce419（=01a0d084 F94）上的只读全量复审与优化建议（第98组起在文末第8节追加修复进度，第99组起在第9节追加深审新发现）：基线lint/116测试/docs-check/audit全绿；新提P1-1工作台Monaco经CDN无SRI、P2-1危险命令实测漏检矩阵、P2-2非流式输出、UI字号65%为12px与三栏固定宽、陈旧提示文案（index.html:743）等；路由/错误码/环境变量/工具数/路径的文档比对未见实质冲突。作输入证据保留，处置进阶段10第97组起，不把正文待办当当前计划。 依据：本报告第1–7节所列文件:行号；/tmp测试日志不入库 |
+| [review/FULL_REVIEW_2026-09-29.md](FULL_REVIEW_2026-09-29.md) | 历史保留 | d4afbb609bfae563 | 会话01a0e8e7在83ce419（=01a0d084 F94）上的只读全量复审与优化建议（第98组起在文末第8节追加修复进度，第99组起在第9节追加深审新发现）：基线lint/116测试/docs-check/audit全绿；新提P1-1工作台Monaco经CDN无SRI、P2-1危险命令实测漏检矩阵、P2-2非流式输出、UI字号65%为12px与三栏固定宽、陈旧提示文案（index.html:743）等；路由/错误码/环境变量/工具数/路径的文档比对未见实质冲突。作输入证据保留，处置进阶段10第97组起，不把正文待办当当前计划。 依据：本报告第1–7节所列文件:行号；/tmp测试日志不入库 |
 | [review/UPSTREAM_ADOPTION_MAP_2026-09-15.md](UPSTREAM_ADOPTION_MAP_2026-09-15.md) | 已修正 | d7fd4319833b70d6 | 明确固定上游SHA和2026-09-15/16深度、旧测试/下一步不是当前队列；26类来源与已/候选/延期边界保留，现行取舍转阶段10。 依据：固定外部审阅来源; 阶段10 R2–R9/P |
 | [review/archive/01a08d85-web-agent-audit.md](archive/01a08d85-web-agent-audit.md) | 历史保留 | 95fc2e2b61e4c58c | 归档入口已明确仅历史基线/授权/证据；核对文件位置存在，不按当前实现重写原稿，不把旧PASS/待办当本次结论。专项原稿正文未接手。 依据：review/archive/README.md; Git路径元数据 |
 | [review/archive/ARENA_PROBE_INTEGRATION_2026-09-15.md](archive/ARENA_PROBE_INTEGRATION_2026-09-15.md) | 历史保留 | 不读取正文 | 归档入口已明确仅历史基线/授权/证据；核对文件位置存在，不按当前实现重写原稿，不把旧PASS/待办当本次结论。专项原稿正文未接手。 依据：review/archive/README.md; Git路径元数据 |
@@ -238,6 +238,8 @@ Markdown：210（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [LICENSE](../LICENSE) | 待逐句核对 | 5aff5a5a5928fe3e | 不继承旧批次整篇通过；逐句比对来源/失败/权限/平台 |
 | `review/step5-tests.txt` | 原始证据，受限 | 不读取正文 | 不读取/改写个人路径和原始失败，核查归属与保留 |
 | [review/archive/web_agent提示词-修正版-纯净.txt](archive/web_agent提示词-修正版-纯净.txt) | 原始证据，受限 | 799bc9a80abb23a5 | F54逐句读取为用户任务/边界证据，不改写，不把其中对照断言直接当审查结论 |
+| [webagent-core/workbench/vendor/monaco/LICENSE.txt](../webagent-core/workbench/vendor/monaco/LICENSE.txt) | 第三方原文，只登记 | 33e4ff1a06ef62ba | F101随仓库分发的monaco-editor 0.52.2 MIT许可证原文，由`scripts/vendor-monaco.js`从npm tarball解出并按VERSION.json逐文件sha256核对；不改写、不翻译 |
+| [webagent-core/workbench/vendor/monaco/ThirdPartyNotices.txt](../webagent-core/workbench/vendor/monaco/ThirdPartyNotices.txt) | 第三方原文，只登记 | 790537262fc78a76 | 同上，Monaco自身的第三方声明；升级Monaco时由脚本整体替换 |
 | [webagent-core/probe-extension/LICENSE](../webagent-core/probe-extension/LICENSE) | 暂停，只登记路径 | 不读取正文 | P：外部正式交接前不审实现或能力 |
 
 ## 既有批次证据（历史，不作当前待办）

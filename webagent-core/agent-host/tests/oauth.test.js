@@ -107,6 +107,25 @@ async function main() {
     const pairing = oauth.issuePairing();
     assert.ok(pairing.code);
 
+    // F101: the pairing page (the one HTML the public port serves) runs under default-src 'none';
+    // its single <style> block is admitted by hash, no script source at all, and no form-action
+    // (Chrome would apply it to the 302 to the client's redirect_uri).
+    {
+      const query = `client_id=${registered.client_id}&redirect_uri=${encodeURIComponent('http://127.0.0.1/cb')}&code_challenge=${challenge}&code_challenge_method=S256&response_type=code&state=s1`;
+      const page = await request(server, 'GET', `/oauth/authorize?${query}`);
+      assert.strictEqual(page.status, 200);
+      const csp = String(page.headers['content-security-policy'] || '');
+      const style = page.raw.match(/<style>([\s\S]*?)<\/style>/)[1];
+      const hash = crypto.createHash('sha256').update(style, 'utf8').digest('base64');
+      assert.ok(csp.startsWith("default-src 'none'; style-src 'sha256-" + hash + "'"), 'pairing page policy: ' + csp);
+      assert.ok(csp.includes("frame-ancestors 'none'") && csp.includes("base-uri 'none'"));
+      assert.ok(!csp.includes('script-src') && !csp.includes('form-action'), 'default-src none covers scripts; form-action deliberately absent');
+      assert.ok(!/<script/i.test(page.raw) && !/\son[a-z]+=/i.test(page.raw), 'the page has no script or inline handler to admit');
+      const failed = await request(server, 'POST', '/oauth/authorize', { body: { client_id: registered.client_id, redirect_uri: 'http://127.0.0.1/cb', pairing_code: 'WRONG', code_challenge: challenge, response_type: 'code' } });
+      assert.strictEqual(failed.status, 400);
+      assert.strictEqual(failed.headers['content-security-policy'], csp, 'the error re-render carries the same policy');
+    }
+
     const redirect = oauth.completeAuthorize({
       client_id: registered.client_id,
       redirect_uri: 'http://127.0.0.1/cb',

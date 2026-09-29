@@ -140,8 +140,8 @@ issueAccess生成access/refresh，创建含两个截止的共享记录，同时�
 |---|---|---|
 | 三个well-known GET回调 | requestOrigin后返回授权/资源metadata；含资源/mcp别名 | 不要求Bearer，便于发现 |
 | registerHandler / POST oauth/register、register | IP每分钟20次，registerClient，201 | catch sendError |
-| GET oauth/authorize | 每IP授权限流30/分钟、validateAuthorize后返回HTML | 不生成或更新配对码；过期提示去本机工作台生成，不公开码；失败sendError |
-| POST oauth/authorize | 共用授权30/分钟限流、completeAuthorize，302 | catch按status或400重新渲染错误HTML，不任意跳到失败输入地址 |
+| GET oauth/authorize | 每IP授权限流30/分钟、validateAuthorize后经sendAuthorizeHtml返回HTML | 不生成或更新配对码；过期提示去本机工作台生成，不公开码；失败sendError。F101：sendAuthorizeHtml带`Content-Security-Policy: default-src 'none'; style-src 'sha256-<样式块哈希>'; base-uri 'none'; frame-ancestors 'none'`（authorizeCsp在模块加载时对模板算一次；页面无脚本；不设form-action，Chrome会把它套到提交后302跳转redirect_uri上） |
+| POST oauth/authorize | 共用授权30/分钟限流、completeAuthorize，302 | catch按status或400经sendAuthorizeHtml重新渲染错误HTML（同一CSP），不任意跳到失败输入地址 |
 | POST oauth/token | IP每分钟60次，handleToken后json | catch sendError |
 | POST oauth/revoke | IP每分钟60次（F100补齐：此前是唯一没有限流的OAuth端点，却与token一样校验client_secret，可被无限次试探）；token/access_token中取目标，查两张Map，authenticateClient；匹配所属client才删这一对 | 认证通过后，即使未知token或不属该client也200 revoked:true；认证失败仍sendError（401），不是匿名统一200；超限429带Retry-After |
 

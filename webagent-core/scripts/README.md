@@ -1,6 +1,6 @@
 # 网页VS Code与桌面扩展启动编排
 
-四个JS实现的全部函数、认证与进程回调：[编辑器编排详解](编辑器编排详解.md)。
+四个JS实现的全部函数、认证与进程回调，以及与code-server无关的`vendor-monaco.js`（F101，第4b节）：[编辑器编排详解](编辑器编排详解.md)。
 
 
 ## 职责与文件
@@ -12,6 +12,7 @@
 | `run-code-oss.js` | 校验工作区、准备后端依赖、启动agent-host和code-server、协调退出 |
 | `codeServerAuth.js` | 决定网页VS Code密码模式、生成/复用密码以及本机trusted origins |
 | `install-desktop-extension.js` | 将规范扩展复制到桌面VS Code/Insiders扩展目录并清理旧版副本 |
+| `vendor-monaco.js` | 把monaco-editor固定版本的`min/vs`（AMD构建，只留zh-cn界面文案）连同LICENSE.txt/ThirdPartyNotices.txt复制到`webagent-core/workbench/vendor/monaco`：`npm pack`取原包、核对脚本里固定的sha512、`tar`解出、写`VERSION.json`（每文件sha256）；`--check`只核对已入库目录与清单一致（不联网，contentSecurity测试调用）。升级同时改VERSION/INTEGRITY与`workbench/js/monaco.js`的MONACO_VERSION。它不改页面、不装依赖、不跑浏览器 |
 
 ## 执行流程
 1. run-code-oss从参数/WORKSPACE_ROOT/默认目录选工作区，不存在则拒绝；安装器在其外层还负责用户runtime和工作区解析。
@@ -44,4 +45,5 @@ codeServerAuth、codeServerNotRunnable、skipWorkbench、desktopExtension、exte
 | [ensure-code-server.js](ensure-code-server.js) | 15 个函数/类节点 |
 | [install-desktop-extension.js](install-desktop-extension.js) | 11 个函数/类节点 |
 | [run-code-oss.js](run-code-oss.js) | 37 个函数/类节点 |
+| [vendor-monaco.js](vendor-monaco.js) | 10 个函数/类节点 |
 <!-- docs-inventory:end -->

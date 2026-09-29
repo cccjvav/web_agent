@@ -125,6 +125,7 @@ const pairs = [
   ["webagent-core/agent-host/tests/auditControl.test.js", "webagent-core/agent-host/tests/本机边界与跨站测试详解.md"],
   ["webagent-core/agent-host/tests/localControl.test.js", "webagent-core/agent-host/tests/本机边界与跨站测试详解.md"],
   ["webagent-core/agent-host/tests/corsAllow.test.js", "webagent-core/agent-host/tests/本机边界与跨站测试详解.md"],
+  ["webagent-core/agent-host/tests/contentSecurity.test.js", "webagent-core/agent-host/tests/本机边界与跨站测试详解.md"],
 
   ["webagent-core/agent-host/tests/dangerousCommands.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
   ["webagent-core/agent-host/tests/commandEncoding.test.js", "webagent-core/agent-host/tests/工作区与命令安全测试详解.md"],
@@ -201,6 +202,7 @@ const pairs = [
   ["webagent-core/scripts/codeServerAuth.js", "webagent-core/scripts/编辑器编排详解.md"],
   ["webagent-core/scripts/run-code-oss.js", "webagent-core/scripts/编辑器编排详解.md"],
   ["webagent-core/scripts/install-desktop-extension.js", "webagent-core/scripts/编辑器编排详解.md"],
+  ["webagent-core/scripts/vendor-monaco.js", "webagent-core/scripts/编辑器编排详解.md"],
 
   ["webagent-core/agent-host/src/tunnel/cloudflared.js", "webagent-core/agent-host/src/tunnel/隧道生命周期详解.md"],
   ["webagent-core/agent-host/src/tunnel/ngrok.js", "webagent-core/agent-host/src/tunnel/隧道生命周期详解.md"],
@@ -260,6 +262,7 @@ const pairs = [
   ["webagent-core/agent-host/src/mcp/oauth.js", "webagent-core/agent-host/src/mcp/OAuth授权详解.md"],
   ["webagent-core/agent-host/src/utils/localControl.js", "webagent-core/agent-host/src/utils/控制面与Origin详解.md"],
   ["webagent-core/agent-host/src/utils/corsAllow.js", "webagent-core/agent-host/src/utils/控制面与Origin详解.md"],
+  ["webagent-core/agent-host/src/utils/contentSecurity.js", "webagent-core/agent-host/src/utils/控制面与Origin详解.md"],
   ["webagent-core/agent-host/src/utils/eventBus.js", "webagent-core/agent-host/src/utils/事件总线详解.md"],
 
   ["webagent-core/agent-host/src/agent/runChat.js", "webagent-core/agent-host/src/agent/Chat调度详解.md"],

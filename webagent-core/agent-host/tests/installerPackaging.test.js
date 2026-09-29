@@ -36,6 +36,12 @@ try {
   for (const file of ['stdioBridge.cs', 'stdioBridge.ps1', 'stdioSupervisor.js', 'stdioTransport.js', 'stdioLaunch.js', 'publicHttps.js']) assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/src/mcp/' + file));
   for (const file of ['src/tunnel/helperDiagnostics.js', 'scripts/tunnel-cleanup.js', 'src/tunnel/tunnelCleanup.js', 'src/tunnel/tunnelCleanup.ps1', 'src/tunnel/tunnelCleanup.cs', 'scripts/tunnel-residue.js', 'src/tunnel/tunnelRegistry.js', 'src/tunnel/processIdentity.js', 'src/tunnel/receiptProtection.js', 'src/tunnel/receiptProtection.ps1']) assert.ok(manifest.files.some(f => f.path === 'webagent-core/agent-host/' + file));
   assert.ok(manifest.files.some(f => f.path === 'computer-use/win/input.cs'));
+  // F101: the vendored editor ships in the installer payload, font included (.ttf is not a code extension).
+  for (const file of ['vs/loader.js', 'vs/editor/editor.main.js', 'vs/editor/editor.main.css', 'vs/nls.messages.zh-cn.js', 'vs/base/worker/workerMain.js',
+    'vs/base/browser/ui/codicons/codicon/codicon.ttf', 'LICENSE.txt', 'ThirdPartyNotices.txt', 'VERSION.json']) {
+    assert.ok(manifest.files.some(f => f.path === 'webagent-core/workbench/vendor/monaco/' + file), 'packaged: ' + file);
+  }
+  assert.ok(manifest.files.some(f => f.path === 'webagent-core/scripts/vendor-monaco.js'));
   for (const f of manifest.files) assert.ok(!fs.readFileSync(path.join(output, f.path), 'utf8').includes('PRIVATE_FIXTURE_DO_NOT_PACKAGE'));
   assert.ok(!manifest.files.some(f => f.path.startsWith('webagent-repro/')));
   assert.throws(() => stage(source, tmp), /Invalid staging/);

@@ -3,3 +3,4 @@
 *.bat text eol=crlf
 *.sh text eol=lf
 docs-site/content.js text eol=lf
+webagent-core/workbench/vendor/** -text

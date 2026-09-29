@@ -19,6 +19,7 @@
 |---|---|---|
 | `localControl.js` | 校验回环socket、显式本机Host及隧道特征 | 回环socket本身不足以证明本机来源；不是用户登录系统 |
 | `corsAllow.js` | 本机API浏览器Origin与MCP Origin规则 | MCP入口在正文解析前硬拒绝不允许Origin；CORS不是认证，无Origin仍需相应入口认证 |
+| `contentSecurity.js` | 工作台页面与OAuth配对页的Content-Security-Policy字符串及内联脚本/样式哈希（F101） | 只约束浏览器加载/执行来源，不是认证；Monaco随仓库分发后工作台策略里没有任何第三方来源 |
 | `requestScope.js` | AsyncLocalStorage传递AbortSignal；fetchText包装请求/body deadline与逐块字节预算 | 标准Response预缓冲限8MiB，调用方可收紧；text-only兼容替身只能事后计字节；只有显式runWithSignal的调用链才拥有请求上下文 |
 | `boundedFile.js` | 普通文件、严格UTF-8（保留BOM/CRLF）与8MiB默认读取预算 | 是有界同步读取，不是所有IO异步化或OS沙箱 |
 | `eventBus.js` | 进程内事件、脱敏日志和WS广播 | 内部订阅者仍收到原始payload；脱敏不适用于所有数据通道 |
@@ -54,6 +55,7 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 |---|---|
 | [boundedFile.js](boundedFile.js) | 7 个函数/类节点 |
 | [connectionCheck.js](connectionCheck.js) | 9 个函数/类节点 |
+| [contentSecurity.js](contentSecurity.js) | 7 个函数/类节点 |
 | [corsAllow.js](corsAllow.js) | 14 个函数/类节点 |
 | [diff.js](diff.js) | 2 个函数/类节点 |
 | [editorUndo.js](editorUndo.js) | 6 个函数/类节点 |

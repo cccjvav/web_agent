@@ -19,7 +19,7 @@
 - bridge.js：Bridge状态、统计、诊断、执行控制与连接/认证相关界面操作。
 - settings.js：模型、自定义配置及Skill目录/分页候选验证界面。
 - picker.js：选择器相关交互。
-- monaco.js：加载高级编辑器；失败/超时保留纯文本编辑，迟到成功先捕获缓冲区再升级。
+- monaco.js：从本机`/vendor/monaco`加载高级编辑器（F101，不再经CDN），先载zh-cn界面文案再载editor.main；失败/超时保留纯文本编辑，迟到成功先捕获缓冲区再升级。
 
 ## 执行流程与边界
 app.js初始化绑定并并行拉取状态、目录和配置。模块经ui注册表调用，HTTP使用相对地址；后端校验不能用隐藏按钮替代。文件编辑按tab保留模型，保存携带磁盘hash，冲突或失败保持编辑内容；取消请求不保证已完成的磁盘操作可回滚。
@@ -43,7 +43,7 @@ F54第六批：dom.setWorkspaceView与bind/tabs联动窄屏展示和抽屉；工
 | [bridge.js](bridge.js) | 61 个函数/类节点 |
 | [chat.js](chat.js) | 42 个函数/类节点 |
 | [dom.js](dom.js) | 23 个函数/类节点 |
-| [monaco.js](monaco.js) | 9 个函数/类节点 |
+| [monaco.js](monaco.js) | 10 个函数/类节点 |
 | [operations.js](operations.js) | 81 个函数/类节点 |
 | [picker.js](picker.js) | 16 个函数/类节点 |
 | [settings.js](settings.js) | 55 个函数/类节点 |

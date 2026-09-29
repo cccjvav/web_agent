@@ -52,12 +52,25 @@ EXTENSION_PROTOCOLS列chrome/moz/safari扩展协议，PAGE_ORIGINS列当前维�
 
 API有Origin优先，不用Referer覆盖它；无Origin才检查可解析Referer。两者缺失或Referer无法解析时仍允许本机请求，这是兼容CLI的既有策略，不是完整CSRF登录机制。不同本机HTTP(S)端口也被允许，不是严格同源隔离。`parseOrigin`用通用URL解析，可接受带路径/凭据等非规范Origin文本；本轮没有改为严格序列化Origin校验。浏览器生成Origin、非浏览器可伪造头，不能把人工构造文本被接受直接称为浏览器越权。
 
+## 3b. contentSecurity.js：两张HTML页面的CSP（F101，复审P1-1）
+
+| 函数 | 输入→输出 | 边界 |
+|---|---|---|
+| sourceHash(text) | 文本→`'sha256-<base64>'` | 对元素**原文**（含首尾换行与缩进）做sha256，与浏览器校验内联脚本/样式的方式一致 |
+| inlineScriptHashes(html) | 页面HTML→哈希数组 | 只取没有src=的`<script>`；工作台index.html里只有主题引导一段，contentSecurity测试锁“恰好一个” |
+| inlineStyleHashes(html) | 页面HTML→哈希数组 | 取每个`<style>`块；OAuth配对页只有一个固定样式块 |
+| workbenchPolicy({scriptHashes, host}) | 哈希与请求Host→策略串 | `default-src 'self'`；`script-src 'self'`+哈希；`worker-src 'self' blob:`（Monaco 0.52总是用blob引导worker再importScripts同源workerMain.js）；`style-src 'self' 'unsafe-inline'`（Monaco渲染写内联样式，页面也有style=）；`font-src 'self' data:`；`img-src 'self' data: blob:`；`connect-src 'self' ws://Host wss://Host`（Host须匹配主机名/IPv6字面量+可选端口的HOST正则，否则只留'self'——部分浏览器不把同主机ws:算'self'）；`object-src 'none'`、`base-uri 'self'`、`form-action 'self'`、`frame-ancestors 'none'`。策略里不出现任何http/https来源 |
+| authorizePolicy({styleHashes}) | 样式哈希→策略串 | `default-src 'none'; style-src <哈希>; base-uri 'none'; frame-ancestors 'none'`。有意不设form-action：Chrome会把它套到POST后302跳转客户端redirect_uri上，OAuth流程会断 |
+
+index.js的mountWorkbench在启动时算一次工作台哈希并对每个响应按req.headers.host生成策略；oauth.js对`authorizeHtml({}, '')`模板算一次样式哈希，GET与错误重渲染都带。VS Code设置页webview有自己的nonce策略（extension/settingsPanel.js），不用这里。CSP只约束浏览器加载/执行什么，不是认证，也不替代`escapeHtml`。
+
 ## 4. 验证与部署边界
 
 ```bat
 npm test --prefix webagent-core/agent-host -- --filter=localControl
 npm test --prefix webagent-core/agent-host -- --filter=corsAllow
 npm test --prefix webagent-core/agent-host -- --filter=auditControl
+npm test --prefix webagent-core/agent-host -- --filter=contentSecurity
 ```
 
 localControl覆盖回环、严格Host、远程socket优先于伪造ip/转发头及缺失地址；corsAllow验证额外MCP来源不放开API。auditControl直接加载真实入口，在两端口验证恶意Host/隧道头/外站Origin与Referer的404早于正文解析，验证WS握手拒绝、MCP恶意来源403早于解析、允许预检204、缺密钥401及合法初始化。这些HTTP/WS用例不是浏览器攻击复现；独立`mcpCorsBrowser`还在真实Chromium跨端口读取会话头、续用会话列工具及读取401挑战。没有证明工具执行越权、全面代理识别或网络层抗DoS，真实代理配置仍需按部署路径验收。练习：逐层解释为什么手机可经认证MCP读测试文件，却不能因此访问本机/api；以及为什么不把WEBAGENT_CORS_ORIGINS设为任意站点来解决所有连接问题。

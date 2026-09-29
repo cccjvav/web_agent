@@ -373,7 +373,7 @@ run-webagent.cmd "%USERPROFILE%\WebAgent 中文 验收"
 2. 内置Plan：切Plan、发“只制定读取本目录的计划，不执行修改”；添加一个分支，再明确点击合并。记录一分支、两分支、合并时的徽标与结果，内置模拟不算真实多模型一致率。
 3. 外部模型可选：只有自己有API服务时才在本机配置页填写服务地址/模型/key，选择该模型发“你好”。不要将key交给Agent。要测试失败，用独立验收配置中的临时模型项制造缺配置，不修改日常模型；记录明确失败且未自动换模型重放。没有账号或不想承担费用就记未执行。
 4. GitHub授权可选：在本机实际授权界面自行完成，再重启核对身份；它与模型key/MCP授权分别记录。不要让Agent代填token。
-5. Chromium浏览器中按F12，命令菜单（DevTools内Ctrl+Shift+P）搜索 `Show Network request blocking`。面板可用时添加 `*cdn.jsdelivr.net/*` 阻断规则并启用，Network勾选Disable cache，重载页面，等待Monaco失败回退，按第7步验证文本编辑和磁盘保存。若当前源码的Monaco网络请求使用其他地址，以Network中实际请求为准。
+5. Chromium浏览器中按F12，命令菜单（DevTools内Ctrl+Shift+P）搜索 `Show Network request blocking`。面板可用时添加 `*/vendor/monaco/*` 阻断规则并启用（F101起编辑器由本机主机在该路径提供，不再访问jsDelivr；Network里不应出现任何非127.0.0.1的请求，出现即记录），Network勾选Disable cache，重载页面，等待Monaco失败回退，按第7步验证文本编辑和磁盘保存。若当前源码的Monaco请求使用其他地址，以Network中实际请求为准。
 6. 解除阻断，在Network选择Slow 3G并重载，趁编辑器未就绪输入唯一测试文字；Monaco迟到后文字不能被旧内容覆盖，保存并读回。加载太快未形成迟到条件记未执行，不硬判通过。
 7. **恢复现场：** 删除本次阻断规则、关闭请求阻断和Disable cache，把网络改回No throttling，再重载。界面版本没有这些菜单时记录阻塞，请维护者看截图，不随机改网络设置。
 

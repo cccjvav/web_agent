@@ -18,7 +18,7 @@
 | 文档 | 抽样与自动比对（路由、错误码、环境变量、工具数、路径引用）未发现现行文档与代码的实质冲突；仅发现工作台 UI 内一段陈旧提示文案（P2-6）与两处错别字。文档体系（`check-docs.js` + 目录 README + 详解）维护得比大多数同规模项目好。 |
 | 仓库/工程 | 生成物 `docs-site/content.js`（5.3 MiB）、`documentation-manifest.json`（1.6 MiB）、`source-index.md`（0.9 MiB）入库，每次源码改动都会重写，历史膨胀明显；`review/shuncode-ui/` 26 张截图 13 MB。 |
 
-**建议优先处理顺序：** P1-1（Monaco 自托管/SRI）→ P2-2（流式输出）→ P2-1（危险命令补充规则）→ UI 字号与三栏布局（4.1）→ 文案一致性（P2-6、4.1.3）。
+**建议优先处理顺序：** P1-1（Monaco 自托管/SRI）→ P2-2（流式输出）→ P2-1（危险命令补充规则）→ UI 字号与三栏布局（4.1）→ 文案一致性（P2-6、4.1.3）。（进度见第 8 节：截至第 4 批，P1-1、P2-1、P2-6、P2-7、P2-8 已修；P2-2 排在第 5 批。）
 
 ---
 
@@ -224,6 +224,7 @@
 4. **ESLint 覆盖：** 三个探针目录被排除。本轮用同规则临时跑过：除全局名/模块类型噪音外仅 5 处未使用变量，说明可以低成本纳入（配置里给 `chrome`、`ArenaTraceView`、`ArenaHudLayout`、`ArenaConversationRename` 声明只读全局）。
 5. **前端测试：** 工作台交互仅由 Playwright 浏览器任务覆盖且沙箱不可运行；`renderMd`、`settings.js` 的下拉构建、`app.js` 轮询门控这类纯函数可以抽到可在 Node 内跑的单元测试（`workbenchRuntime.test.js` 已有 VM 方式，可复用）。
 6. **代码风格：** 主仓库未启用格式化器（用户决策方案 B），因此 `probeBridge.js` 这类压缩风格与其他文件并存；若接受，建议至少对"新增文件"要求 Prettier 默认格式。
+7. **第三方编辑器入库（第 4 批决策记录）：** 修 P1-1 时在三种方案里选了“把 `monaco-editor@0.52.2` 的 `min/vs` 树（97 个文件、约 12 MiB）提交到 `webagent-core/workbench/vendor/monaco/`”。放弃 npm 依赖的原因：首次启动的 `npm ci` 有 120 秒硬预算（`installer/preparation.js:61`）、扩展就绪 180 秒（`hostManager.js:134`），多装 1467 个文件/18 MB 会直接吃掉这个预算，且已装机器仍要 CDN 回退→动态 CSP；放弃 postinstall 下载的原因相同（网络成本没有消失，只是换了时机）；放弃裁剪 `min/vs` 的原因是去掉 tsWorker 会让 .js/.ts 语言模式加载失败。代价是仓库多 12 MiB 的第三方压缩产物（`.gitattributes` 标 `linguist-vendored`/`-diff`，ESLint 与文档清单排除），升级时用 `scripts/vendor-monaco.js` 按 tarball integrity 重新落盘并由 `contentSecurity` 测试核对逐文件 sha256；若将来仓库体积成为问题，可改为 Release 附件 + 安装器预置。
 
 ---
 
@@ -305,7 +306,12 @@
 | D-12 `/oauth/revoke` 无限流 | 已修 | 第 3 批 / 第 100 组 | 与 `/oauth/token` 同为每 IP 60 次/分钟，超限 429 带 `Retry-After`；`oauth` 测试连发 61 次 |
 | D-13 调用者表按插入顺序驱逐 | 已修 | 第 3 批 / 第 100 组 | `session.touch` 先 delete 再 set，Map 保持最近使用顺序，满 200 时删最久未见者；`stateIntegrity` 新增 veteran 用例 |
 | D-14…D-18（报告即处置） | 记录 | 第 3 批 / 第 100 组 | 见第 9.3 节：PKCE 失败不作废授权码、单 IP 可占满 80 个注册槽、`GET /mcp` 快照向任何持凭据调用者展示其他调用者、`resources/list` 不查 `read_files` 开关、`publicHttps` 不跟随重定向属有意设计 |
-| P1-1、P2-2、P2-3、P2-4、其余 P3、4.1 字号 token/三栏、4.3 工程项、第 6 节探针 | 待后续批次 | — | 按重要性：工作台其余模块与布局 → Monaco 自托管/流式 → 逐篇文档 |
+| P1-1 Monaco 走公网 CDN、无 SRI/CSP | 已修 | 第 4 批 / 第 101 组 | Monaco 0.52.2 随仓库分发（`workbench/vendor/monaco`，`scripts/vendor-monaco.js` 按 tarball sha512 落盘并写逐文件清单），主机 `/vendor/monaco` 静态提供（no-cache+ETag）；`monaco.js` 只加载同源 loader，先装 zh-cn 文案再装编辑器，7 秒纯文本回退保留；工作台全部响应带完整 CSP（`script-src 'self'` + 主题内联脚本 sha256、`worker-src blob:`、`connect-src` 只点名本机 ws/wss、无任何第三方来源），OAuth 配对页另有 `default-src 'none'` 策略；`httpSmoke`/`monacoLoading`/`installerPackaging`/新 `contentSecurity` 测试与 CI 的 `contentSecurityBrowser` 覆盖；SECURITY.md、验收指南、各详解同步 |
+| D-19 安装器扩展名白名单漏 `.ttf` | 已修 | 第 4 批 / 第 101 组 | `installer/package.js` 的 `extensions` 没有字体类型，vendored 的 codicon 图标字体会被静默丢弃（编辑器图标变方块）；已加 `.ttf` 并在 `installerPackaging` 断言九个 vendored 文件入包 |
+| D-20 OAuth 配对页无自有 CSP | 已修 | 第 4 批 / 第 101 组 | 该页面在公网隧道上暴露，只有基线安全头（无 `script-src`）；现按模板 `<style>` 哈希下发 `default-src 'none'; style-src 'sha256-…'; base-uri 'none'; frame-ancestors 'none'`，GET 与错误重渲染同策略；有意不设 `form-action`（Chrome 会把它套到 302 跳回客户端上） |
+| D-21 浏览器测试 6 处重复的 CDN 阻断路由 | 已修 | 第 4 批 / 第 101 组 | 合并为 `withoutEditor(page)`（阻断 `**/vendor/monaco/**`），语义不变；`narrowWorkspaceBrowser` 因 axe 以内联脚本注入而改用 `bypassCSP: true`（只放行测试注入，不放行产品） |
+| D-22…D-24（报告即处置） | 记录 | 第 4 批 / 第 101 组 | 见第 9.4 节：工作台 `style-src` 仍需 `'unsafe-inline'`、`connect-src` 取自请求 Host、VS Code 设置页 webview 不在此策略内 |
+| P2-2、P2-3、P2-4、其余 P3、4.1 字号 token/三栏（分栏拖拽）、4.3 工程项、第 6 节探针 | 待后续批次 | — | 第 5 批（第 102 组）先做 P2-2 流式输出；4.1 字号 token 与三栏分隔条本批评估后延后，因为它牵涉 `styles.css` 106 处 font-size 与 Playwright 断言，需要能跑浏览器的环境逐视口核对 |
 
 ## 9. 深审新发现（报告成文后，按批次追加）
 
@@ -352,6 +358,18 @@
 
 第 2 批复核无问题（不列为发现）：`resolveSafePath` 对 UNC/盘符/Windows 保留名/8.3 短名/`..`/realpath 逃逸的拒绝，`atomicWriteText` 的临时文件+rename，`applyPatchBody` 对新文件/哈希/统一 diff 的门控，`apiRelay` 的白名单与路径规范化拒绝，`hostManager` 的端口探测/就绪等待/仅停止自己启动的主机，`fileCheckpoints`/`editorUndo` 的预检-执行-不可重放约束。
 
+### 9.4 第 4 批（第 101 组，2026-09-29）：Monaco 分发、工作台 CSP、安装器载荷
+
+本批只围绕 P1-1 展开，但顺带复核了与它相邻的三处：安装器白名单、OAuth 配对页响应头、浏览器测试夹具。新增发现与处置见第 8 节 D-19…D-21；以下三项只记录：
+
+| 编号 | 位置 | 说明 |
+|---|---|---|
+| D-22 | `contentSecurity.workbenchPolicy` `style-src 'self' 'unsafe-inline'` | Monaco 0.52 运行时向 `<head>` 写内联样式、给节点设 `style=`，`index.html`/`app.js` 也有若干 `style=` 与 `.style.x=`；哈希只覆盖 `<style>` 元素，不覆盖属性，所以样式段暂时保留 `'unsafe-inline'`。风险面：CSS 注入只能改外观/做有限的信息外泄（例如背景图请求），而 `img-src`/`font-src`/`connect-src` 已把外泄目的地限制在同源与 `data:`/`blob:`，实际可利用性低。脚本段已无 `'unsafe-inline'`，这才是 P1-1 的核心 |
+| D-23 | `workbenchPolicy` 的 `connect-src` 取自 `req.headers.host` | `ws:`/`wss:` 在部分浏览器不被 `'self'` 覆盖，只能点名；Host 已先经本机控制面的 Host 门禁（非本机 Host 的工作台请求本就 404），再经 `HOST` 正则（主机名或 IPv6 字面量 + 可选端口）校验，不合法就退回只有 `'self'`（只会让 WS 连不上，不会放宽）。因此不是注入点，但意味着经反向代理改写 Host 的部署要保证浏览器看到的 host 与后端收到的一致 |
+| D-24 | `extension/settingsPanel.js` webview | VS Code 设置页有自己的 nonce CSP（`connect-src 'none'`），不经过 `contentSecurity.js`，且它对 `index.html` 的头部做逐字符串替换（html 标签、charset、title、favicon、主题脚本、样式链接、`app.js` 入口），任何偏差都会抛错——这就是本批把 CSP 放在响应头而不是 `<meta>` 的原因。两套策略各自独立，改一处不会同步另一处，文档已分别写明 |
+
+第 4 批复核无问题（不列为发现）：`vendor-monaco.js` 用 `npm pack` 的 tarball sha512（写死在脚本与 VERSION.json）而不是信任 registry 元数据；`express.static` 对 `..%2f` 的拒绝（实测 403/404）；`/vendor/monaco` 缺文件走 `fallthrough:false` 的 404 而不是落到 SPA 回退把 `index.html` 当 JS 返回；`monaco.js` 在 nls 文案加载失败时仍装出编辑器（英文界面）而不是整体退回纯文本；主题内联脚本哈希在模块加载时算一次，改脚本后必须重启主机（已写入页面结构详解与入口详解）；沙箱里 `cdn.jsdelivr.net` 恰好不可达，正好复现了旧实现 7 秒后退化的路径，新实现在同一沙箱用 curl 拿到 loader/nls/字体均 200。未验证：真实浏览器里策略下的 Monaco 行为——沙箱装不了 Chromium，只能由 CI 的 `contentSecurityBrowser`（等 JS 模型出现 TypeScript 诊断标记，证明 blob 引导的 worker 能跑）给出结论。
+
 ## 附录 A：本轮使用的命令
 
 ```
@@ -364,4 +382,4 @@ diff -rq webagent-core/extension webagent-core/extensions-installed/webagent.web
 ```
 
 ## 附录 B：发现编号速查
-P1-1 Monaco CDN 无 SRI · P2-1 危险命令漏检矩阵 · P2-2 非流式 · P2-3 上下文无 token 估算 · P2-4 CI=true/环境剥离不透明 · P2-5 硬编码 shell/端口 · P2-6 陈旧提示文案 · P2-7 同名下拉项 · P2-8 无门控轮询 · P3-1…P3-15 见第 3 节表 · D-1 敏感规则缺口 · D-2 自定义规则大小写 · D-3 终端弹窗截断 · D-4 list_dir 整体失败 · D-5 读取缓存键 · D-6…D-10 见第 9.3 节。 · D-11 cloudflared Token 走 argv · D-12 revoke 无限流 · D-13 调用者表非 LRU 驱逐 · D-14 PKCE 失败不作废 code · D-15 单 IP 占满注册槽 · D-16 状态页跨调用者可见 · D-17 resources/list 不查开关 · D-18 publicHttps 不跟随重定向（有意）
+P1-1 Monaco CDN 无 SRI · P2-1 危险命令漏检矩阵 · P2-2 非流式 · P2-3 上下文无 token 估算 · P2-4 CI=true/环境剥离不透明 · P2-5 硬编码 shell/端口 · P2-6 陈旧提示文案 · P2-7 同名下拉项 · P2-8 无门控轮询 · P3-1…P3-15 见第 3 节表 · D-1 敏感规则缺口 · D-2 自定义规则大小写 · D-3 终端弹窗截断 · D-4 list_dir 整体失败 · D-5 读取缓存键 · D-6…D-10 见第 9.3 节。 · D-11 cloudflared Token 走 argv · D-12 revoke 无限流 · D-13 调用者表非 LRU 驱逐 · D-14 PKCE 失败不作废 code · D-15 单 IP 占满注册槽 · D-16 状态页跨调用者可见 · D-17 resources/list 不查开关 · D-18 publicHttps 不跟随重定向（有意） · D-19 安装器白名单漏 .ttf · D-20 OAuth 配对页无自有 CSP · D-21 浏览器测试重复 CDN 路由 · D-22 style-src 仍 unsafe-inline · D-23 connect-src 取自 Host · D-24 webview 策略独立

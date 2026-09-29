@@ -8,10 +8,15 @@ const net = require('net');
 const { spawn } = require('child_process');
 const { chromium } = require('playwright');
 const AXE_SCRIPT = process.env.AXE_PATH || require.resolve('axe-core/axe.min.js');
+// F101: Monaco is served by the host itself (/vendor/monaco), so these flows, written against the
+// plain <textarea> fallback (#editor-fallback), block the vendored loader instead of the old CDN.
+const withoutEditor = page => page.route('**/vendor/monaco/**', route => route.abort());
 async function narrowWorkspaceBrowser(browser, base) {
-  const page = await browser.newPage(), errors = [];
+  // bypassCSP: addScriptTag injects axe inline, which the workbench policy (F101) rightly refuses;
+  // contentSecurityBrowser below exercises the page under its real policy.
+  const page = await browser.newPage({ bypassCSP: true }), errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.route('https://cdn.jsdelivr.net/**', route => route.abort());
+  await withoutEditor(page);
   try {
     await page.goto(base);
     await page.waitForFunction(() => document.querySelector('#tabs .tab-label'));
@@ -129,7 +134,7 @@ async function narrowWorkspaceBrowser(browser, base) {
 async function textScaleChromeBrowser(browser, base) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } }), errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.route('https://cdn.jsdelivr.net/**', route => route.abort());
+  await withoutEditor(page);
   try {
     await page.goto(base);
     await page.waitForFunction(() => document.querySelector('#tabs .tab-label'));
@@ -172,6 +177,41 @@ async function textScaleChromeBrowser(browser, base) {
       }
     }
     await page.evaluate(async () => (await import('/js/dom.js')).applyTextScale(1));
+    assert.deepStrictEqual(errors, []);
+  } finally { await page.close(); }
+}
+// F101 (review P1-1): under the real Content-Security-Policy, with nothing blocked, the vendored
+// Monaco loads from this host (no CDN, works offline), speaks zh-cn, and its language worker boots
+// through the blob: bootstrap without a single policy violation.
+async function contentSecurityBrowser(browser, base) {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } }), errors = [], console_ = [], remote = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => { if (/Content Security Policy|Refused to/i.test(message.text())) console_.push(message.text()); });
+  page.on('request', request => { const url = request.url(); if (!url.startsWith(base) && !url.startsWith('blob:') && !url.startsWith('data:')) remote.push(url); });
+  await page.addInitScript(() => {
+    window.__cspViolations = [];
+    document.addEventListener('securitypolicyviolation', event => window.__cspViolations.push(`${event.violatedDirective} ${event.blockedURI}`));
+  });
+  try {
+    const response = await page.goto(base);
+    const policy = response.headers()['content-security-policy'] || '';
+    assert.ok(policy.startsWith("default-src 'self'; script-src 'self' 'sha256-"), 'workbench policy header: ' + policy);
+    await page.waitForFunction(() => document.querySelector('#sb-editor')?.textContent === '高级编辑器就绪', null, { timeout: 20000 });
+    assert.equal(await page.evaluate(() => Boolean(window.monaco && document.querySelector('#editor .monaco-editor'))), true, 'Monaco mounted from /vendor/monaco');
+    assert.equal(await page.evaluate(() => globalThis._VSCODE_NLS_LANGUAGE), 'zh-cn', 'editor UI strings are Chinese');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme === 'light' || document.documentElement.dataset.theme === 'dark'), true, 'inline theme bootstrap ran under its hash');
+    // A JavaScript model makes Monaco start the TypeScript worker (blob bootstrap + same-origin
+    // importScripts); diagnostics arriving proves the worker ran under the policy.
+    await page.evaluate(async () => {
+      const { state } = await import('/js/state.js');
+      const model = window.monaco.editor.createModel('const = ;\n', 'javascript');
+      state.editor.setModel(model);
+    });
+    await page.waitForFunction(() => window.monaco.editor.getModelMarkers({}).length > 0, null, { timeout: 20000 });
+    await page.evaluate(async () => { const { state } = await import('/js/state.js'); const model = state.editor.getModel(); state.editor.setModel(null); model?.dispose(); });
+    assert.deepStrictEqual(await page.evaluate(() => window.__cspViolations), [], 'no Content-Security-Policy violation while loading and running the editor');
+    assert.deepStrictEqual(console_, [], 'no policy refusals in the console');
+    assert.deepStrictEqual(remote, [], 'the workbench made no request to any other origin');
     assert.deepStrictEqual(errors, []);
   } finally { await page.close(); }
 }
@@ -221,7 +261,7 @@ async function freePort() {
 }
 async function mcpCorsBrowser(browser, base, mcp) {
   const page = await browser.newPage();
-  await page.route('https://cdn.jsdelivr.net/**', route => route.abort());
+  await withoutEditor(page);
   try {
     await page.goto(base);
     const result = await page.evaluate(async mcp => {
@@ -241,7 +281,7 @@ async function mcpCorsBrowser(browser, base, mcp) {
 }
 async function classicChatStreamBrowser(browser, base) {
   const page = await browser.newPage();
-  await page.route('https://cdn.jsdelivr.net/**', route => route.abort());
+  await withoutEditor(page);
   try {
     await page.goto(base);
     await page.waitForFunction(() => document.querySelector('#tabs .tab-label'));
@@ -674,7 +714,7 @@ async function modelStateBrowser(browser, base) {
   let statusCode = 200, writes = 0, providerRequests = 0, capturedProvider;
   let modelReply = {status:409,contentType:'application/json',body:JSON.stringify({success:false,error:'fixture model rejected'})};
   try {
-    await fixture.route('https://cdn.jsdelivr.net/**', route => route.abort());
+    await withoutEditor(fixture);
     await fixture.route('**/api/status', route => route.fulfill({status:statusCode,contentType:'application/json',body:JSON.stringify(snapshot)}));
     await fixture.route('**/api/models', route => {
       writes++; capturedProvider=route.request().postDataJSON();
@@ -1009,6 +1049,7 @@ async function main() {
     await classicChatStreamBrowser(browser, base);
     await narrowWorkspaceBrowser(browser, base);
     await textScaleChromeBrowser(browser, base);
+    await contentSecurityBrowser(browser, base);
     await probeHudBrowser(browser);
     await docsViewerBrowser(browser);
     await modelStateBrowser(browser, base);
@@ -1021,7 +1062,7 @@ async function main() {
     await bridgeLifecycleBrowser(browser, base);
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
-    await page.route('https://cdn.jsdelivr.net/**', route => route.abort());
+    await withoutEditor(page);
     await page.routeWebSocket('**/ws', ws => ws.close()); // Polling must work without WS.
     await page.goto(base);
     await page.waitForFunction(() => document.querySelector('#stat-calls').textContent === '1');

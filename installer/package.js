@@ -22,7 +22,7 @@ const files = [
 ];
 const trees = ['webagent-core/agent-host/src', 'webagent-core/workbench', 'webagent-core/scripts',
   'webagent-core/extension', 'computer-use', 'project-manager', 'multi-agent-board'];
-const extensions = new Set(['.js', '.json', '.md', '.html', '.css', '.svg', '.ps1', '.cs', '.txt']);
+const extensions = new Set(['.js', '.json', '.md', '.html', '.css', '.svg', '.ps1', '.cs', '.txt', '.ttf']); // .ttf: Monaco codicon font (workbench/vendor)
 const forbidden = new Set(['node_modules', '.git', '.webagent', 'data', 'output', 'cache', '.cache', '.local']);
 function digest(data) { return crypto.createHash('sha256').update(data).digest('hex'); }
 function collect(source = root) {

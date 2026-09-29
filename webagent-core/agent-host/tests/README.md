@@ -15,7 +15,7 @@
 | [PTY与隧道测试详解](PTY与隧道测试详解.md) | ptyJobs、ptyLifecycle、extensionHostSafety、tunnel、tunnelLifecycle、bridgeTunnel |
 | [任务板与事件流测试详解](任务板与事件流测试详解.md) | board、mcpBoard、eventBus |
 | [工作区与命令安全测试详解](工作区与命令安全测试详解.md) | dangerousCommands、sandbox、workspaceTools |
-| [本机边界与跨站测试详解](本机边界与跨站测试详解.md) | auditControl、localControl、corsAllow |
+| [本机边界与跨站测试详解](本机边界与跨站测试详解.md) | auditControl、localControl、corsAllow、contentSecurity |
 | [OAuth与GitHub测试详解](OAuth与GitHub测试详解.md) | oauth、oauthClientAuth、githubAuth |
 | [补丁与编辑API测试详解](补丁与编辑API测试详解.md) | patchEngine、apiFiles |
 | [MCP协议与整机入口测试详解](MCP协议与整机入口测试详解.md) | mcpProtocol、mcpInterop、mcpCallerIsolation、httpSmoke、skipWorkbench、operatorQueueCapacity、configPorts |
@@ -75,7 +75,7 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 | 路径、写入、hash、补丁、Skill | patchEngine、workspaceTools、sandbox、auditStorage、apiFiles | 临时文件系统与HTTP，含createOnly并发一胜一409；不是外部OS写进程隔离证明 |
 | 模型失败、工具结果、Plan | modelLifecycle、runChat、chatMode、planRound、toolLabel | 实际调度模块+模拟模型响应，含返回式终态失败；不是提供商实测 |
 | MCP、OAuth、GitHub身份、会话/board | mcpProtocol、oauth、oauthClientAuth、githubAuth、mcpBoard、board | 真实index验证OAuth issuer/撤销、公开peer不可冒用及跨主体会话；GitHub设备流以HTTP替身验证代次/单飞，非第三方实机验收 |
-| 本机控制面、WS、Origin | auditControl、localControl、corsAllow、httpSmoke | 真实入口双端口API门禁、MCP Origin/认证先于解析、预检与WS；代理/跨站浏览器须另测 |
+| 本机控制面、WS、Origin | auditControl、localControl、corsAllow、contentSecurity、httpSmoke | 真实入口双端口API门禁、MCP Origin/认证先于解析、预检与WS；工作台CSP字符串与vendored Monaco清单（contentSecurity）、真实响应头与/vendor/monaco静态服务（httpSmoke）；策略下的真实浏览器行为只在CI的workbench.browser（contentSecurityBrowser）验证 |
 | PTY审批、取消、归属、捕获 | ptyLifecycle、ptyJobs、desktopExtension | 部分真实子进程+VS Code事件fixture，含扩展对非2xx回包的拒绝；原生终端效果须另测 |
 | 隧道启停 | tunnel、bridgeTunnel、tunnelLifecycle | 解析、API及进程引用fixture；非真实公网隧道 |
 | 原生扩展命令消费 | nativeRotationCommands、sidebarFeedback | 真实activate+VS Code/HTTP替身（sidebarFeedback另替换HostManager并运行生成的侧栏页面脚本）；非真实IDE或隧道进程退出证明 |
@@ -167,6 +167,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [computerUseScripts.test.js](computerUseScripts.test.js) | 7 个函数/类节点 |
 | [configPorts.test.js](configPorts.test.js) | 1 个函数/类节点 |
 | [connectionCheck.test.js](connectionCheck.test.js) | 18 个函数/类节点 |
+| [contentSecurity.test.js](contentSecurity.test.js) | 0 个函数/类节点 |
 | [corsAllow.test.js](corsAllow.test.js) | 22 个函数/类节点 |
 | [dangerousCommands.test.js](dangerousCommands.test.js) | 12 个函数/类节点 |
 | [desktopExtension.test.js](desktopExtension.test.js) | 0 个函数/类节点 |
@@ -194,7 +195,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [hostShutdown.test.js](hostShutdown.test.js) | 13 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
 | [identityRequestLifetime.test.js](identityRequestLifetime.test.js) | 16 个函数/类节点 |
-| [installerPackaging.test.js](installerPackaging.test.js) | 26 个函数/类节点 |
+| [installerPackaging.test.js](installerPackaging.test.js) | 28 个函数/类节点 |
 | [installerPreparation.test.js](installerPreparation.test.js) | 61 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 19 个函数/类节点 |
@@ -204,7 +205,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [mcpProtocol.test.js](mcpProtocol.test.js) | 53 个函数/类节点 |
 | [memoryRecall.test.js](memoryRecall.test.js) | 8 个函数/类节点 |
 | [modelLifecycle.test.js](modelLifecycle.test.js) | 55 个函数/类节点 |
-| [monacoLoading.test.js](monacoLoading.test.js) | 14 个函数/类节点 |
+| [monacoLoading.test.js](monacoLoading.test.js) | 16 个函数/类节点 |
 | [nativeChatStream.test.js](nativeChatStream.test.js) | 27 个函数/类节点 |
 | [nativeRequestJson.test.js](nativeRequestJson.test.js) | 28 个函数/类节点 |
 | [nativeRotationCommands.test.js](nativeRotationCommands.test.js) | 58 个函数/类节点 |
@@ -266,7 +267,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [tunnelRegistry.test.js](tunnelRegistry.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 351 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 361 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 537 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |

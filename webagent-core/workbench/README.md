@@ -32,7 +32,9 @@ openFile取content和完整hash，为每个tab保留content、savedContent和dir
 保存针对发出时的文本/hash；保存过程中继续输入不能被旧响应标记为全部已保存。失败或409保留缓冲区；关闭dirty tab会询问，saving时拒绝关闭；beforeunload尝试提示。**这些是内存保护和浏览器提示，不是断电/崩溃后自动恢复草稿。**
 
 ### 编辑器加载
-Monaco加载逻辑在 `js/monaco.js`，不是app.js里的旧函数。状态栏显示加载中、纯文本降级或就绪。网络/AMD/初始化失败或7秒等待到期仍可使用纯文本；迟到成功先捕获当前缓冲区再升级。7秒不是固定加载耗时。
+Monaco加载逻辑在 `js/monaco.js`，不是app.js里的旧函数。状态栏显示加载中、纯文本降级或就绪。AMD/初始化失败或7秒等待到期仍可使用纯文本；迟到成功先捕获当前缓冲区再升级。7秒不是固定加载耗时。
+
+F101起编辑器随仓库分发：`vendor/monaco/`是monaco-editor 0.52.2的`min/vs`（AMD构建，只保留zh-cn一份界面文案；含LICENSE.txt与ThirdPartyNotices.txt），由`webagent-core/scripts/vendor-monaco.js`按固定版本与sha512从npm原包复制，`VERSION.json`记录每个文件的sha256（`--check`核对；contentSecurity测试每次都跑）。主机在`/vendor/monaco`提供它并给页面完整CSP，页面不再访问任何CDN，断网可用。升级：改脚本里的VERSION/INTEGRITY和`js/monaco.js`的MONACO_VERSION，重跑脚本。该目录被ESLint与文档清单排除，安装包会打进去（含.ttf字体）。
 
 ### Chat与Bridge
 Chat发送期间按钮变为停止，用本轮AbortController取消请求；前端拒重定向，要求HTTP成功、NDJSON媒体类型、合法UTF-8/消息正文、唯一done后正常EOF且无error才写助手历史。单行1MiB、总量16MiB、错误正文64KiB及5分钟deadline；断流、done后数据、坏JSON/error后done都不假成功，失败取消reader并释放锁。done不证明此前每个工具业务目标已完成。文件保存与Chat停止是独立操作，停止聊天不丢弃编辑器缓冲区。
