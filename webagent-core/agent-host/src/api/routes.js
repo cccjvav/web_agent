@@ -394,7 +394,8 @@ router.post('/workflows/preview', async (req, res) => {
 router.post('/workflows/request', async (req, res) => {
   const body = apiRequestBody(req, res, ['definition', 'requestKey']);
   if (!body) return;
-  try { res.json(await workflows.request(body, { callerKey: 'local' })); }
+  // The person composed and submits this workflow: its reads/writes are not local Chat's reads (F96).
+  try { res.json(await workflows.request(body, { callerKey: 'local', operator: true })); }
   catch (error) { res.status(error.status || 400).json({ ok: false, error: error.message, code: error.code || 'E_BAD_ARGS' }); }
 });
 
@@ -664,7 +665,9 @@ router.post('/tool/call', async (req, res) => {
   const mode = body.mode || 'code';
   try {
     eventBus.broadcast('tool_call_start', { tool: name, args: toolArgs, source: `Chat-${mode}` });
-    const result = await control.run('chat', () => callTool(name, toolArgs, mode));
+    // Direct calls come from the person (workbench terminal/search), not the Chat model loop: a read here
+    // must not let local Chat overwrite the file without reading it itself (F96).
+    const result = await control.run('chat', () => callTool(name, toolArgs, mode, { operator: true }));
     const success = !isToolFailure(result);
     eventBus.broadcast('tool_call_end', { tool: name, success, result });
     res.json({ success, result });

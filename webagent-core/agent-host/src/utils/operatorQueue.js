@@ -50,7 +50,7 @@ function submit(kind, input, options, requestKey) {
   }
   if ([...jobs.values()].filter(job => ['waiting-approval', 'running'].includes(job.status)).length >= 20) throw new Error('Too many outstanding approvals');
   if (jobs.size >= MAX_JOBS) throw new Error('Approval history capacity is full; wait for retained results to expire instead of resubmitting');
-  const job = { id: randomUUID(), kind, workMode, owner: caller, options: { remote: Boolean(options.remote), callerKey: caller },
+  const job = { id: randomUUID(), kind, workMode, owner: caller, options: { remote: Boolean(options.remote), callerKey: caller, ...(options.operator ? { operator: true } : {}) },
     taskId: options.taskId || randomUUID(), input: JSON.parse(encoded), digest, requestKey,
     status: 'waiting-approval', createdAt: Date.now(), result: null };
   jobs.set(job.id, job);

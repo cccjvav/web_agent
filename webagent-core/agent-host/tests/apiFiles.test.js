@@ -507,6 +507,41 @@ async function main() {
       const skill = await request(server, 'POST', '/api/skills', { name: 'f95-person-skill' });
       assert.strictEqual(skill.status, 200);
       await refused('a skill the person created is not a model read', { filePath: '.webagent/skills/f95-person-skill/SKILL.md', content: 'x\n' });
+
+      // F96: a workflow the person submits from the operations panel, and a direct /api/tool/call from the
+      // workbench terminal/search, are the person's actions too. Before, both ran as the local Chat reader.
+      const approveOp = async (job) => {
+        const done = await request(server, 'POST', `/api/operations/${job.requestId}/approve`, { confirm: true });
+        assert.strictEqual(done.json.status, 'succeeded', JSON.stringify(done.json));
+      };
+      const workflowOf = (key, steps) => ({ definition: { steps }, requestKey: key });
+      await approveOp((await request(server, 'POST', '/api/workflows/request',
+        workflowOf('f96-person-write', [{ id: 'w', tool: 'write_file', arguments: { filePath: 'wf-person.txt', content: 'person workflow\n' } }]))).json);
+      assert.strictEqual(disk('wf-person.txt'), 'person workflow\n');
+      await refused('a file the person wrote by workflow is not a model read', { filePath: 'wf-person.txt', content: 'x\n' });
+      fs.writeFileSync(path.join(tmp, 'wf-read.txt'), 'read by the person\n');
+      await approveOp((await request(server, 'POST', '/api/workflows/request',
+        workflowOf('f96-person-read', [{ id: 'r', tool: 'read_files', arguments: { paths: ['wf-read.txt'] } }]))).json);
+      await refused('a read in a person workflow is not a model read', { filePath: 'wf-read.txt', content: 'x\n' });
+      await approveOp((await request(server, 'POST', '/api/workflows/request', workflowOf('f96-person-hash', [
+        { id: 'r', tool: 'read_files', arguments: { paths: ['wf-read.txt'] } },
+        { id: 'w', tool: 'write_file', arguments: { filePath: 'wf-read.txt', content: 'person rewrite\n', expectedHash: '$steps.r.hash' } }]))).json);
+      assert.strictEqual(disk('wf-read.txt'), 'person rewrite\n', 'a person workflow still overwrites through an explicit step hash');
+      fs.writeFileSync(path.join(tmp, 'tool-call.txt'), 'read in the workbench\n');
+      assert.strictEqual((await request(server, 'POST', '/api/tool/call', { name: 'read_files', arguments: { paths: ['tool-call.txt'] }, mode: 'ask' })).status, 200);
+      await refused('a direct /api/tool/call read is not a model read', { filePath: 'tool-call.txt', content: 'x\n' });
+      // The model's own workflow keeps its attribution: local Chat's, or the remote session's.
+      await approveOp(await callTool('workflow_request',
+        workflowOf('f96-model-write', [{ id: 'w', tool: 'write_file', arguments: { filePath: 'wf-model.txt', content: 'model workflow\n' } }]), 'code'));
+      assert.strictEqual((await callTool('write_file', { filePath: 'wf-model.txt', content: 'model again\n' }, 'code')).success, true, 'local Chat saw what its own workflow wrote');
+      const peerW = { remote: true, callerKey: 'peer:f96' };
+      const execControl = require('../src/utils/executionControl');
+      execControl.selectMode('bridge');
+      await approveOp(await callTool('workflow_request',
+        workflowOf('f96-peer-write', [{ id: 'w', tool: 'write_file', arguments: { filePath: 'wf-peer.txt', content: 'peer workflow\n' } }]), 'code', peerW));
+      await refused('local Chat does not inherit a remote workflow write', { filePath: 'wf-peer.txt', content: 'x\n' });
+      assert.strictEqual((await callTool('write_file', { filePath: 'wf-peer.txt', content: 'peer again\n' }, 'code', peerW)).success, true, 'the remote session saw what its own workflow wrote');
+      execControl.selectMode('chat');
       resetHashes();
     }
     assert.strictEqual(fs.readFileSync(path.join(tmp, 'notes.md'), 'utf8'), 'hello from editor');

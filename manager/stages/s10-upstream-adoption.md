@@ -203,7 +203,7 @@ F62-13 最值得记的不是缺陷本身而是**为什么自测没抓到**：实
 |---|---|---|---|
 | R0 / 持续 | 交接、证据与范围同步 | 本页、CONTEXT、语义台账、阶段10 | 新助手不翻聊天也能知道下一项、精确基线、失败和阻塞；每批改对应状态 |
 | R1 / 本包完成 | 第24组三模块复核与确认缺陷修复已交付，范围/验证见阶段10 | [画像与记忆详解](../../webagent-core/agent-host/src/models/画像与记忆详解.md)，profile.js/customizations.js/memory.js；不依赖探测或用户本机 | 整篇对照实际函数/磁盘路径/预算/坏文件/中文召回/并发；核对假阳性后修代码，profile/memoryRecall及全量回归通过，明确未审的依赖 |
-| R2 / 高，按缺陷证据推进 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，第四批现补资源caller与目录ACL及错误hash指引，第五批已补原生流确认，第六批补窄屏/页签ARIA，F55又补浏览器会话/挑战响应头可读性，第94组（2026-09-28）补事件流WebSocket畸形帧/端口冲突崩溃与慢客户端/半开连接回收，第95组（2026-09-29）补读取缓存按调用者归属、人的查看/保存不算模型读过，其余UI/实机项待续修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
+| R2 / 高，按缺陷证据推进 | F54第一批会话pin/全忙拒绝/SID校验已交付；第二批RPC准入/版本/整批ID预检已实施并定向验证，第四批现补资源caller与目录ACL及错误hash指引，第五批已补原生流确认，第六批补窄屏/页签ARIA，F55又补浏览器会话/挑战响应头可读性，第94组（2026-09-28）补事件流WebSocket畸形帧/端口冲突崩溃与慢客户端/半开连接回收，第95组（2026-09-29）补读取缓存按调用者归属、人的查看/保存不算模型读过，第96组（2026-09-29）补人提交的工作流与直接/api/tool/call也不算本机Chat读过、核对执行控制各入口，其余UI/实机项待续修。参考包只借鉴busy pin/整批预检思路，不整体换栈 | [F54报告](../../review/INDEPENDENT_AUDIT_2026-09-20.md)、[SECURITY](../../SECURITY.md)，mcp/server/session/requestLifecycle/resources、OAuth与执行控制；ShunCode不安装/执行，探针专项仍暂停 | 先保证异常准入零副作用、取消/终态归属和现有权限/unknown/不重放；全忙拒绝新会话、pin单次释放；明确版本/预算，保留原文件/审批架构；有真实负载证据才考虑自适应队列 |
 | R3 / 高，继续 | 第25/27/31–37与41–43/45–53组持续修复消费链。第53组已补齐所有当前非Probe路由的query门禁、external/workflow显式固定接线、status/diagnostics与定制/会话投影；F54第三批已补新文件patch显式hash与块校验，第五批补原生postNdjson坏流/终态及失败历史；F55补经典流严格完成/预算/取消清理；F56补可选编辑器编排健康期限与直接子进程收尾；F57补App窗口身份绑定与浏览器失败；F58同步准备的取消缺口已由F59纠偏、F60改异步；F62补Git/UTF-8/diff，F63补统计/入口/UI，F64补身份网络、F65补后端fallback独立准备期限；其它消费链按证据另验，不重做已交付链 | [API逐项详解](../../webagent-core/agent-host/src/api/路由逐项详解.md)、routes、apiFiles及已登记消费者；明确排除探针专项 | 每路由核对HTTP与业务结果、请求/响应预算、审批前后复查、deep copy/幂等/取消/unknown；失败不自动重放，不扩大任意命令权限，脱敏凭据不能转绑新连接 |
 | R4 / 高，独立追查 | 根因未定位；已复取历史annotations并补阶段诊断首包，等待可解释复现 | 第5节确切失败记录；executor/commandJob/patchEngine/searchWorker与Windows CI | 保留原失败，获得可解释复现或足够诊断证据；有证据才改根因并验证，不以加时限/重复到绿结案 |
 | R5 / 用户优先 | 已授权安全隧道残留回收；已交付只读检测、Windows保护记录/稳定句柄终端回收及负例/诊断；本机开始菜单入口已接入，面板/桌面与PTY互操作仍待 | executor/ptyJobs、核心扩展ptyHost/ptyPolicy、computer-use既有实现；不进入暂停的探测整合 | 核对所有者、可观察退出、审批过期、取消、路径/脚本/编译分支；代码与说明修好，实机项继续单列 |
@@ -2020,6 +2020,28 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **文档：** 缓存与进度详解（readCache表新增readerOf/sessionKey/rememberSession，改rememberHash/sessionHash/forgetHash与状态说明）、文件与搜索详解、补丁与路径详解、工具入口与命令策略详解、路由逐项详解（GET/PUT/POST /skills）、编辑回退详解、tools README覆盖口径、admin-host统计服务详解，以及补丁与编辑API、存储完整性与预算、统计与文档三份测试详解；审查索引三行补F95说明。用户向指南没有涉及覆盖条件的表述，无需改。
 
 **剩余与未验证：** 读者取MCP调用者键：已初始化会话各自独立；未带Mcp-Session-Id的远程调用按来源地址（和initialize时的客户端名）归并，经隧道时来源通常都是127.0.0.1，这类调用共用一个读者（客户端名已去控制字符，读者键不会与路径拼接冲突）；本机Chat与插件Chat的工具转发仍是同一个local读者；落盘记录仍不分调用者；人的撤销若恰好恢复成模型读过的那个版本，模型可免确认覆盖（它确实见过这些字节）。没有在真实浏览器里走一遍“工作台保存后模型被拒”的界面提示；悬空Promise扫描是启发式。R2/R3余下线索：外部MCP注册与stdio启动的调用者归属、执行控制权限在workflows之外的入口，尚未开始。
+
+### 第96组：人提交的工作流与直接工具调用不算本机Chat读过（2026-09-29）
+
+**开头复审第95组：** 提交`049d6a6`的CI（run 36589139475）9/9通过。逐个核对readCache的调用点（rememberHash/sessionHash/recalledHash/forgetHash只在fileOps与patchEngine）以及全仓callTool调用点：本机Chat（openai、runChat）不带选项记为local；GET /files/tree、GET /skills/load不记录；PUT保存、POST /skills、editorUndo、fileCheckpoints带operator；MCP带remote与callerKey；workflows沿用提交者选项。rename_file不清源路径的记录，但记录是内容hash，同内容文件模型确实见过，不构成盲写。**第95组漏掉两个入口**：`/api/tool/call`与`/api/workflows/request`，见下。另更正第95组会话记录里的一处口径：`routes.js`的`/tool/call`调用方是工作台终端与搜索框（人），不是插件Chat转发；插件Chat走`/api/chat`，与本机Chat同为local读者，第95组文档里“本机Chat和插件Chat共用local”的说法本身无误。
+
+**R2/R3审计范围（本段）：**
+1. **外部MCP登记与stdio启动的调用者归属**：登记（`/external/servers`）、stdio预览/启动（`/external/stdio/*`，第91组起经clientScopedRequest）、移除都只在`/api`，受本机控制面与跨站检查保护，远程无入口；远程只能经external_servers看到工具目录（不含endpoint、token、启动参数），经external_request提交审批。审批队列owner：远程必须是`peer:`会话（未初始化会话在server.js与owner()两处都被拒），结果只给owner读；本机路由与本机Chat同为local。
+2. **执行控制权限在workflows之外的入口**：tools/list按权限过滤、tools/call在dispatchTool里assertAllowed、resources/read与prompts/list/get查read、initialize在read被禁时不给指令、run_command截图另查capture；approve对远程任务按类别复查（workflow_request只需read，每一步再按工具查；external与probe请求需要全部四项）。逐个工具核对类别：未列入READ/EDIT/CONTROL的只有probe_request、external_request、run_command、start_command、send_command_input，按全部权限要求（有意的失败即关闭）。本机Chat、工作台编辑器不受Bridge权限约束，这是既有设计。
+
+**发现：人提交的工作流、直接/api/tool/call仍按本机Chat记读取（中，已复现）。** 第95组让人的编辑器操作不再算模型读过，但漏了两个人用的入口：
+- 操作面板（网页工作台与设置页转发都放行）的`/api/workflows/request`以`{callerKey:'local'}`提交，批准后各步callTool沿用这组选项，读写都记在local名下；
+- `/api/tool/call`（工作台终端跑命令、搜索框搜文件）不带选项调用callTool，也是local。
+
+复现（真实路由加真实callTool）：人的工作流写出wf.txt、另一个工作流只读wfr.txt、`/api/tool/call`读tc.txt，之后本机Chat不确认、不带hash的write_file三次都**成功**，整体覆盖。后果与第95组相同，但只在人使用操作面板的工作流、或脚本直接调`/api/tool/call`读文件时触发（工作台界面本身只经它跑run_command与search_files，不记录读取），所以定为中。
+
+**修复：** 两条路由带`operator:true`；operatorQueue.submit把operator存进任务options，approve执行时传给handler，workflows.execute再传给每一步callTool，readerOf对它返回null。owner不受影响（人和本机Chat的请求都属于local）。本机Chat自己用workflow_request提交时没有operator，仍记在local名下；远程会话的工作流记在它自己的peer名下。人的工作流要覆盖已有文件，仍可用`$steps.<读取步>.hash`作expectedHash（工作流预览本来就建议写入带hash）。
+
+**测试与反向验证：** apiFiles在第95组段后加续段（approveOp、workflowOf两个辅助）：人提交的工作流写出、读过的文件本机Chat都被拒；人的工作流用步骤hash仍能覆盖；`/api/tool/call`读过的文件被拒；对照本机Chat自己的工作流写入后可免确认再写，远程peer:f96（临时切bridge模式）的工作流写入本机Chat被拒、它自己可以。变异：两条路由各去operator、队列不存operator、队列一律operator、队列把remote写成false、workflows不传选项、workflows一律operator，共7处全红，失败点均对应预期断言；起初写的“remote时不存operator”判断变异后仍绿（readerOf本来就让operator优先，且远程选项由服务端构造、不会带operator），已删。修复前代码上apiFiles在“a file the person wrote by workflow is not a model read”处失败。
+
+**文档：** 受控工具与工作流详解（operatorQueue记录的options、execute传operator）、路由逐项详解（/tool/call与工作流请求）、缓存与进度详解readerOf行、tools README覆盖口径、补丁与编辑API测试详解续段。
+
+**剩余与未验证：** 审批列表与详情不显示请求来自谁（远程会话、本机Chat还是人自己），操作者只能凭内容判断——列为候选，未改（涉及对外字段）。`/api/tool/call`仍是任意工具入口，本机进程都能调，归为人的操作；若将来有本机模型改走它，要重新考虑归属。第95组的剩余项不变。探针的`/probe/actions`按约定未审（探针专项暂停）。没有在真实浏览器里操作审批面板。
 
 ### 延后复审清单
 
