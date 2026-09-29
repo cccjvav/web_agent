@@ -23,7 +23,7 @@
 | toolLineMarkdown(ev) | tool事件→Markdown一行 | 成功`- **名称** · N ms`；失败`Failed：原因`（经上两个函数），没有原因时仍是`Failed`。名称沿用主机的label/name |
 | chatHtml()/bridgeHtml() | 无→完整HTML字符串 | 各生成随机nonce，默认资源禁用，script仅nonce，允许内联style，禁止base/form；事件内容不作HTML注入 |
 
-**registerChatParticipant的handler(request,chatContext,stream,token)**：AbortController关联取消订阅并处理预取消；modeFromChatRequest取模式，去首个slash命令。空正文输出帮助、dispose返回；非空progress→postNdjson。事件回调先忽略已取消，再PTY分派；status为进度，tool经**toolLineMarkdown(ev)**显示耗时或失败原因、补丁打开与reference，message Markdown，error错误，consensus区分模拟汇总。正常完成返回metadata.webagentCompleted=true，失败/预取消返回false；catch提示结果未完成、核对已发生操作、不自动重试，主动取消不弹错误模态框；finally dispose取消订阅。
+**registerChatParticipant的handler(request,chatContext,stream,token)**：AbortController关联取消订阅并处理预取消；modeFromChatRequest取模式，去首个slash命令。空正文输出帮助、dispose返回；非空progress→postNdjson。事件回调先忽略已取消，再PTY分派；status为进度，tool经**toolLineMarkdown(ev)**显示耗时或失败原因、补丁打开与reference，message Markdown，error错误，consensus区分模拟汇总。F102起delta也写`stream.markdown`（原生Chat面板本身就是追加式，逐片写就是逐字显示）：闭包记住本轮已流出的文本`streamed`，随后的message只补写“全文减去已流出前缀”的余量（前缀不符则整段重写），因此完整回答不会出现两遍；内部**paragraph()**在连续两段assistant文本之间只补一个空行（`wroteText`记住上一段是否是文本），工具行自带换行不需要它。正常完成返回metadata.webagentCompleted=true，失败/预取消返回false；catch提示结果未完成、核对已发生操作、不自动重试，主动取消不弹错误模态框；finally dispose取消订阅。
 
 ## 2. activate内部回调
 
@@ -56,7 +56,7 @@ extension.js直接注册三个registerCommand，另由editorReview登记两个�
 
 1. validWebviewMessage门禁；openNative分派命令；cancel abort当前controller。
 2. send只允许没有controller时开始（单视图串行），建立AbortController，回user消息，取历史末12然后把本轮用户加入本地history。
-3. postNdjson事件回调转发PTY和webview event，message累积assistantText，apply_patch结果揭示文件。postNdjson确认done+正常end后才将助手文本存历史；失败的用户条目仍保留。
+3. postNdjson事件回调转发PTY和webview event（delta原样转发，不累计），message累积assistantText，apply_patch结果揭示文件。postNdjson确认done+正常end后才将助手文本存历史；失败的用户条目仍保留。
 4. catch回error，finally controller=null并发finished，使按钮复原。history内存数组没有总长度裁剪，只是每次发送取尾部；重载扩展不持久化聊天。
 
 ## 4. BridgeView全部方法与回调
@@ -73,7 +73,7 @@ Webview通过acquireVsCodeApi取得postMessage；mode初始code，sending=false�
 - **add(cls,text)**移除empty提示，createElement+textContent安全显示，append并滚动；不渲染HTML/Markdown。
 - **paintTasks(todos)**只对象数组前500项，filter统计completed，控制容器显示，replaceChildren，forEach建立li/textContent；符号区分completed/in_progress/其他。
 - go.onclick：sending时仅发cancel，否则trim输入，清输入，切停止图标，post send。q.onkeydown Enter且无Shift阻止默认并click；open-native.onclick只发openNative。
-- window message回调校验对象；finished恢复按钮，user用add，event按status/tool/message/error/consensus渲染；tool失败色，文字经**failedText(error)**附上原因（与扩展侧toolFailureReason同一规则；它在模板字符串里，正则写成`\\s`，否则模板会把`\s`吞成`s`），并从set_todos结果paintTasks。未知事件忽略，不直接执行来自服务端的脚本。
+- window message回调校验对象；finished恢复按钮并**closeStream()**，user用add，event先处理delta：**streamDelta(text)**首片add一个`msg bot streaming`节点、之后只累加同一节点的textContent，delta以外的任何事件先closeStream（去掉streaming类）；message有开着的节点时以全文覆盖它而不新增；其余按status/tool/message/error/consensus渲染；tool失败色，文字经**failedText(error)**附上原因（与扩展侧toolFailureReason同一规则；它在模板字符串里，正则写成`\\s`，否则模板会把`\s`吞成`s`），并从set_todos结果paintTasks。未知事件忽略，不直接执行来自服务端的脚本。
 
 HTML log/flex滚动区域、任务栏、模式菜单、输入框与发送按钮由id绑定；CSS控制深色布局/状态，不承载授权规则。maxLength是交互限制，宿主validWebviewMessage才是额外输入边界。
 

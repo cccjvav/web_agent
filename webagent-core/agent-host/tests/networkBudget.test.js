@@ -76,6 +76,38 @@ async function run() {
     assert.deepStrictEqual(seen, ['https://example.invalid/slow'], 'the injected transport is used');
   }
 
+  // --- F102: limits.onChunk observes the body as it streams, under the same budget. ---
+  {
+    const { readResponseText, responseTooLarge } = require('../src/utils/requestScope');
+    const encoder = new TextEncoder();
+    const streamed = (parts, lifecycle = {}) => new Response(new ReadableStream({
+      pull(controller) { if (!parts.length) return controller.close(); controller.enqueue(encoder.encode(parts.shift())); },
+      cancel() { lifecycle.cancelled = (lifecycle.cancelled || 0) + 1; }
+    }), { headers: { 'content-type': 'text/event-stream' } });
+    const seen = [];
+    const response = streamed(['ab', 'c', '海']);
+    const text = await fetchText('https://example.invalid/stream', { fetchImpl: async () => response }, 1000,
+      { maxBytes: 64, onChunk: (piece, res) => seen.push([piece, res === response]) });
+    assert.strictEqual(text.text, 'abc海', 'the full text is still returned');
+    assert.deepStrictEqual(seen, [['ab', true], ['c', true], ['海', true]], 'every decoded piece is observed, with the response');
+    const legacy = [];
+    await fetchText('https://example.invalid/legacy', { fetchImpl: async () => ({ ok: true, text: async () => 'whole' }) }, 1000, { maxBytes: 64, onChunk: piece => legacy.push(piece) });
+    assert.deepStrictEqual(legacy, ['whole'], 'text()-only doubles deliver the body once');
+    const lifecycle = {};
+    const err = await rejects(fetchText('https://example.invalid/bad', { fetchImpl: async () => streamed(['ok', 'stop', 'never'], lifecycle) }, 1000,
+      { maxBytes: 64, onChunk: piece => { if (piece === 'stop') throw Object.assign(new Error('consumer refused'), { code: 'E_TEST' }); } }), 'onChunk failure');
+    assert.strictEqual(err.code, 'E_TEST', 'the consumer error is the failure');
+    assert.strictEqual(lifecycle.cancelled, 1, 'the body is cancelled as soon as the consumer refuses');
+    const over = await rejects(readResponseText(streamed(['x'.repeat(40), 'y'.repeat(40)]), { maxBytes: 64, onChunk: () => {} }), 'budget with observer');
+    assert.strictEqual(over.code, 'E_RESPONSE_TOO_LARGE');
+    assert.strictEqual(responseTooLarge(5).maxBytes, 5);
+    await assert.rejects(readResponseText(streamed(['x']), { maxBytes: 64, onChunk: 'nope' }), TypeError);
+    let nodeSeen = '';
+    const { Readable } = require('stream');
+    assert.strictEqual(await readResponseText({ body: Readable.from([Buffer.from('no'), Buffer.from('de')]) }, { maxBytes: 64, onChunk: piece => { nodeSeen += piece; } }), 'node');
+    assert.strictEqual(nodeSeen, 'node', 'Node stream bodies are observed too');
+  }
+
   // --- The declared budgets exist and are sane. ---
   for (const [label, value] of [
     ['github timeout', github.GITHUB_TIMEOUT_MS],

@@ -56,7 +56,7 @@ element.classList.toggle为空回调；beforeunload传入的preventDefault只置
 
 ## webviewRuntime.test.js
 
-[源码](webviewRuntime.test.js)VM运行完整extension.js，定制**require(name)**：vscode返回commands.executeCommand/clipboard.writeText记录器，showInformationMessage/showErrorMessage空；相对依赖给空对象，不启动PTY。追加测试导出拿到ChatView/BridgeView/html/validator。
+[源码](webviewRuntime.test.js)VM运行完整extension.js，F102在chat页夹具上追加：三条delta（含一个非字符串被忽略）只占一个`msg bot streaming`节点且文本累加，message原地收口而不新增节点，无分片的message自成一条，delta后status把开着的气泡先收口，`finished`收口后下一条delta开新气泡。定制**require(name)**：vscode返回commands.executeCommand/clipboard.writeText记录器，showInformationMessage/showErrorMessage空；相对依赖给空对象，不启动PTY。追加测试导出拿到ChatView/BridgeView/html/validator。
 
 validator负例包括null/数组/字符串/未知type/非法mode/正文对象，正例三mode；纯空白/超128000拒；Bridge非法copy拒，refresh/start/stop/reset允许。伪webview.**onDidReceiveMessage(fn)**存receiver，Chat接null/非法输入不能调command，openNative只能调openAgentChat；Bridge.refresh替换计数，初始化一次、未知不增、refresh再增，copy对象不能写剪贴板、合法字符串能写。
 
@@ -161,7 +161,7 @@ R3定制设置回归：workbenchRuntime加载真实settings模块，先用400负
 
 workbenchRuntime在真实bind/bridge/settings/tabs/chat模块上执行确认合同。认证按钮覆盖HTTP拒绝、业务假成功、坏JSON、令牌草稿保留、设备轮询代次/Abort及单飞；画像探测覆盖畸形候选、环境与技术栈共享请求、等待期间草稿变化；新建文件发送createOnly且失败不打开，终端/搜索拒绝失败或坏形状。Skill第一页读取断言不发送空的可选expectedHash，续页仍由可信hash绑定。Bridge清轮、health、diagnostics与Execution Control必须同时满足HTTP/业务/核心形状，写确认后的读失败与写未确认分开。
 
-Skill目录和正文先验证完整候选再发布，失败保留可信列表/正文；真实浏览器对创建400同时要求保留服务端错误、明确“状态未知”且磁盘零创建，不再把旧版纯错误串当唯一文案。文件树坏候选不替换旧树；apply_patch重读只在合法hash/正文后协调，干净标签同步、脏草稿保留。局部**streamResponse(chunks,status=200,type)**构造含Content-Type的NDJSON响应，body的**getReader()**逐块返回Buffer，并记录read/cancel/releaseLock。除旧HTTP/尾事件/坏JSON/断流/error→done用例，还覆盖done后数据/重复done、对象message、媒体类型与坏UTF-8、单行1MiB/总16MiB/错误正文64KiB、多字节分片/合并短行、停止后缓冲done及模拟5分钟deadline；失败必须abort、cancel、释放锁且不提交助手历史。这是VM替身，不模拟真实TCP背压；真实浏览器流另由classicChatStreamBrowser执行。
+Skill目录和正文先验证完整候选再发布，失败保留可信列表/正文；真实浏览器对创建400同时要求保留服务端错误、明确“状态未知”且磁盘零创建，不再把旧版纯错误串当唯一文案。文件树坏候选不替换旧树；apply_patch重读只在合法hash/正文后协调，干净标签同步、脏草稿保留。局部**streamResponse(chunks,status=200,type)**构造含Content-Type的NDJSON响应，body的**getReader()**逐块返回Buffer，并记录read/cancel/releaseLock。除旧HTTP/尾事件/坏JSON/断流/error→done用例，还覆盖done后数据/重复done、对象message、媒体类型与坏UTF-8、单行1MiB/总16MiB/错误正文64KiB、多字节分片/合并短行、停止后缓冲done及模拟5分钟deadline；失败必须abort、cancel、释放锁且不提交助手历史。F102加入流式用例：跨块切开的两条delta+message+done只产生一条assistant消息（text为最终全文、无streaming标记）且历史只收全文一次；delta后error——历史只留用户提示、被打断的气泡以已见文本收口而非留在“输入中”；直接调handleEvent：两条delta累加到同一条并带`streaming:true`，随后的status先把它收口，空delta不开新气泡，无分片的message照旧独立成条；invalidStreams增加“delta.text非字符串”。这是VM替身，不模拟真实TCP背压；真实浏览器流另由classicChatStreamBrowser执行（含F102的真实DOM流式气泡）。
 
 workbenchHtml另遍历非隐藏表单控件检查可访问名称，要求欢迎卡/动态源码语义及输入focus-visible、窄屏抽屉规则。workbenchRuntime局部**classSet(initial)**用Set实现add/remove/toggle/contains的最小classList替身，不做CSS布局；再执行宽度从1000跨到640的真实绑定闭包，要求自动收起遮挡抽屉、aria-pressed归false且隐藏焦点恢复到活动按钮。真实workbench.browser检查模态打开聚焦、Escape恢复触发点和390px无水平溢出；本机缺Chromium时只由CI或有浏览器环境执行，不能把静态/VM PASS冒充这三项真实DOM布局已运行。
 

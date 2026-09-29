@@ -94,6 +94,25 @@ const vm = require('vm');
   }
   const first = runPage(chatHtml());
   assert.notStrictEqual(first.nonce, runPage(chatHtml()).nonce, 'fresh nonce per generated page');
+  // F102: delta pieces fill one bubble that the final message closes; other events start new nodes.
+  {
+    const log = first.node('log'), event = ev => first.listeners.message({ data: { type: 'event', ev } });
+    const before = log.children.length;
+    event({ type: 'delta', text: 'He' }); event({ type: 'delta', text: 'llo' }); event({ type: 'delta', text: 7 });
+    assert.strictEqual(log.children.length, before + 1, 'pieces share one bubble');
+    assert.strictEqual(log.children.at(-1).textContent, 'Hello');
+    assert.strictEqual(log.children.at(-1).className, 'msg bot streaming');
+    event({ type: 'message', text: 'Hello!' });
+    assert.strictEqual(log.children.length, before + 1, 'the final message closes the bubble instead of adding one');
+    assert.strictEqual(log.children.at(-1).textContent, 'Hello!');
+    event({ type: 'message', text: 'plain' });
+    assert.strictEqual(log.children.length, before + 2, 'a message without pieces is its own bubble');
+    event({ type: 'delta', text: 'cut' }); event({ type: 'status', text: 'tool' });
+    assert.strictEqual(log.children.length, before + 4);
+    assert.strictEqual(log.children.at(-2).textContent, 'cut');
+    event({ type: 'delta', text: 'late' }); first.listeners.message({ data: { type: 'finished' } }); event({ type: 'delta', text: 'next' });
+    assert.strictEqual(log.children.length, before + 6, 'the end of a request closes the open bubble; the next piece opens a new one');
+  }
   const { context, node, listeners } = runPage(bridgeHtml());
   const ctl={mode:'bridge',active:{chat:0,bridge:0},revision:'a'.repeat(64),permissions:{read:true,edit:true,execute:true,capture:true}};
   listeners.message({data:{type:'status',status:{executionControl:ctl}}});

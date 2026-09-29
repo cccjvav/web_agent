@@ -314,6 +314,45 @@ async function classicChatStreamBrowser(browser, base) {
       return findings;
     });
     for (const result of findings) assert.deepStrictEqual(result, {name:result.name,accepted:false,assistant:0,aborted:true,redirect:'error',locked:false,cancelled:true});
+    // F102: delta pieces paint one bubble in the real DOM (caret while open), the final message
+    // replaces it in place, and only the final text reaches the history.
+    const streamed = await page.evaluate(async () => {
+      const {state,ui} = await import('/js/state.js'), {sendChat} = await import('/js/chat.js');
+      const original = window.fetch, savedRefresh = ui.refreshStatus, savedTree = ui.loadTree;
+      ui.refreshStatus = async () => {}; ui.loadTree = async () => {};
+      const box = document.querySelector('#chat-stream');
+      const snapshots = [];
+      try {
+        state.history = [];
+        window.fetch = async (url,input) => {
+          if (url !== '/api/chat') return original(url,input);
+          const encoder = new TextEncoder();
+          return new Response(new ReadableStream({async start(controller) {
+            for (const line of ['{"type":"delta","text":"第一"}\n','{"type":"delta","text":"段 **粗体**"}\n']) {
+              controller.enqueue(encoder.encode(line));
+              await new Promise(resolve => setTimeout(resolve, 30));
+              const node = box.querySelector('.msg.assistant.streaming');
+              snapshots.push(node ? {text:node.textContent, caret:getComputedStyle(node.firstElementChild,'::after').content, bubbles:box.querySelectorAll('.msg.assistant').length} : null);
+            }
+            controller.enqueue(encoder.encode('{"type":"message","text":"第一段 **粗体**"}\n{"type":"done"}\n'));
+            controller.close();
+          }}), {headers:{'Content-Type':'application/x-ndjson'}});
+        };
+        const accepted = await sendChat('streamed');
+        const bubbles = [...box.querySelectorAll('.msg.assistant')];
+        return {accepted, snapshots, bubbles: bubbles.length, open: box.querySelectorAll('.msg.assistant.streaming').length,
+          html: bubbles.at(-1).firstElementChild.innerHTML, history: state.history.filter(m => m.role === 'assistant').map(m => m.content)};
+      } finally { window.fetch = original; ui.refreshStatus = savedRefresh; ui.loadTree = savedTree; }
+    });
+    assert.strictEqual(streamed.accepted, true);
+    assert.strictEqual(streamed.snapshots.length, 2);
+    assert.strictEqual(streamed.snapshots[0].text, '第一', 'the first piece is on screen before the second arrives');
+    assert.strictEqual(streamed.snapshots[1].text, '第一段 粗体');
+    assert.ok(streamed.snapshots.every(s => s && s.bubbles === 1 && s.caret.includes('▍')), 'one open bubble with a caret while streaming: ' + JSON.stringify(streamed.snapshots));
+    assert.strictEqual(streamed.bubbles, 1, 'the final message replaces the streaming bubble instead of adding another');
+    assert.strictEqual(streamed.open, 0);
+    assert.ok(/<strong>粗体<\/strong>/.test(streamed.html), streamed.html);
+    assert.deepStrictEqual(streamed.history, ['第一段 **粗体**']);
   } finally { await page.close(); }
 }
 async function docsViewerBrowser(browser) {

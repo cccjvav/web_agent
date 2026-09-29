@@ -9,7 +9,7 @@
 | [模式画像与Plan测试详解](模式画像与Plan测试详解.md) | chatMode、toolLabel、providers、profile、planRound |
 | [安装与运行器测试详解](安装与运行器测试详解.md) | testRunner、codeServerAuth、extensionCopy、desktopExtension、codeServerNotRunnable、installerPackaging |
 | [文档守卫测试详解](文档守卫测试详解.md) | documentationPolicy、documentationQuality、documentationLearning |
-| [Chat模型与图像测试详解](Chat模型与图像测试详解.md) | runChat、modelLifecycle、chatVision、computerUseScripts |
+| [Chat模型与图像测试详解](Chat模型与图像测试详解.md) | runChat、modelLifecycle、modelStreaming、completionStream、chatVision、computerUseScripts |
 | [浏览器与Webview测试详解](浏览器与Webview测试详解.md) | monacoLoading、workbenchRuntime、editorRuntime、webviewRuntime、settingsRelay、settingsPanel、sidebarFeedback |
 | [存储完整性与预算测试详解](存储完整性与预算测试详解.md) | stateIntegrity、resourceBudget、auditStorage、hostPersist、usageTracker |
 | [PTY与隧道测试详解](PTY与隧道测试详解.md) | ptyJobs、ptyLifecycle、extensionHostSafety、tunnel、tunnelLifecycle、bridgeTunnel |
@@ -164,6 +164,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [codeServerLifecycle.test.js](codeServerLifecycle.test.js) | 130 个函数/类节点 |
 | [codeServerNotRunnable.test.js](codeServerNotRunnable.test.js) | 0 个函数/类节点 |
 | [commandEncoding.test.js](commandEncoding.test.js) | 8 个函数/类节点 |
+| [completionStream.test.js](completionStream.test.js) | 12 个函数/类节点 |
 | [computerUseScripts.test.js](computerUseScripts.test.js) | 7 个函数/类节点 |
 | [configPorts.test.js](configPorts.test.js) | 1 个函数/类节点 |
 | [connectionCheck.test.js](connectionCheck.test.js) | 18 个函数/类节点 |
@@ -205,11 +206,12 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [mcpProtocol.test.js](mcpProtocol.test.js) | 53 个函数/类节点 |
 | [memoryRecall.test.js](memoryRecall.test.js) | 8 个函数/类节点 |
 | [modelLifecycle.test.js](modelLifecycle.test.js) | 55 个函数/类节点 |
+| [modelStreaming.test.js](modelStreaming.test.js) | 54 个函数/类节点 |
 | [monacoLoading.test.js](monacoLoading.test.js) | 16 个函数/类节点 |
-| [nativeChatStream.test.js](nativeChatStream.test.js) | 27 个函数/类节点 |
+| [nativeChatStream.test.js](nativeChatStream.test.js) | 32 个函数/类节点 |
 | [nativeRequestJson.test.js](nativeRequestJson.test.js) | 28 个函数/类节点 |
 | [nativeRotationCommands.test.js](nativeRotationCommands.test.js) | 58 个函数/类节点 |
-| [networkBudget.test.js](networkBudget.test.js) | 22 个函数/类节点 |
+| [networkBudget.test.js](networkBudget.test.js) | 34 个函数/类节点 |
 | [oauth.test.js](oauth.test.js) | 24 个函数/类节点 |
 | [oauthClientAuth.test.js](oauthClientAuth.test.js) | 29 个函数/类节点 |
 | [oauthRateLimit.test.js](oauthRateLimit.test.js) | 15 个函数/类节点 |
@@ -266,10 +268,10 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [tunnelRecoveryLauncher.test.js](tunnelRecoveryLauncher.test.js) | 11 个函数/类节点 |
 | [tunnelRegistry.test.js](tunnelRegistry.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
-| [webviewRuntime.test.js](webviewRuntime.test.js) | 27 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 361 个函数/类节点 |
+| [webviewRuntime.test.js](webviewRuntime.test.js) | 28 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 370 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 537 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 542 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 21 个函数/类节点 |

@@ -236,6 +236,10 @@ u { text-decoration: none; }
 .msg.assistant { background: var(--bg2); border: 1px solid var(--border); padding: 10px; border-radius: 8px; }
 .msg.assistant code { font-family: var(--mono); font-size: var(--fs-sm); color: #ce9178; }
 .msg.assistant pre { background: var(--bg0); padding: 8px; overflow: auto; font-family: var(--mono); font-size: var(--fs-xs); }
+/* F102: a bubble still receiving `delta` pieces shows a caret; it disappears when the final message closes the bubble. */
+.msg.assistant.streaming > div::after { content: '▍'; margin-left: 1px; color: var(--link); animation: stream-caret 1s steps(2, start) infinite; }
+@keyframes stream-caret { to { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .msg.assistant.streaming > div::after { animation: none; } }
 .status-line { font-size: var(--fs-sm); color: var(--link); margin-bottom: 6px; }
 .tool-card { background: var(--bg0); border: 1px solid #333; border-radius: 6px; margin-bottom: 8px; font-size: var(--fs-sm); }
 .tool-card header, .tool-card-toggle { display: flex; justify-content: space-between; width: 100%; padding: 6px 8px; color: var(--link); }

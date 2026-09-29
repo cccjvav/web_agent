@@ -928,6 +928,32 @@ process.on('exit', code => {
   context.fetch=async()=>streamResponse(['{"type":"message","text":"confirmed answer"}\n{"type":"done"}']);
   assert.equal(await chat.namespace.sendChat('valid stream'),true);
   assert.equal(state.namespace.state.history.at(-1).content,'confirmed answer');
+  // F102: delta pieces paint one open bubble that the turn's final message closes in place; only the
+  // final text reaches the history; an error or the end of the request closes a still-open bubble.
+  context.fetch=async()=>streamResponse(['{"type":"delta","text":"流式"}\n{"type":"del','ta","text":"回答"}\n{"type":"message","text":"流式回答"}\n','{"type":"done"}\n']);
+  const beforeStreamed=state.namespace.state.messages.length;
+  assert.equal(await chat.namespace.sendChat('streamed answer'),true);
+  const streamedBubbles=state.namespace.state.messages.slice(beforeStreamed).filter(m=>m.kind==='assistant');
+  assert.equal(streamedBubbles.length,1,'pieces and the final message share one bubble');
+  assert.equal(streamedBubbles[0].text,'流式回答');
+  assert.equal(streamedBubbles[0].streaming,undefined,'the final message closes the bubble');
+  assert.equal(state.namespace.state.history.at(-1).content,'流式回答');
+  assert.equal(state.namespace.state.history.filter(turn=>turn.content==='流式回答').length,1,'pieces are not added to the history');
+  context.fetch=async()=>streamResponse(['{"type":"delta","text":"partial"}\n{"type":"error","message":"failed"}\n']);
+  const historyBeforePartial=state.namespace.state.history.length, messagesBeforePartial=state.namespace.state.messages.length;
+  assert.equal(await chat.namespace.sendChat('delta then error'),false);
+  assert.equal(state.namespace.state.history.length,historyBeforePartial+1,'a streamed fragment is never persisted');
+  const partialBubble=state.namespace.state.messages.slice(messagesBeforePartial).find(m=>m.kind==='assistant'&&m.text==='partial');
+  assert.ok(partialBubble&&partialBubble.streaming===undefined,'the interrupted bubble is closed with the text seen, not left typing');
+  chat.namespace.handleEvent({type:'delta',text:'a'});chat.namespace.handleEvent({type:'delta',text:'b'});
+  assert.equal(state.namespace.state.messages.at(-1).text,'ab');assert.equal(state.namespace.state.messages.at(-1).streaming,true);
+  chat.namespace.handleEvent({type:'status',text:'calling a tool'});
+  assert.equal(state.namespace.state.messages.at(-2).streaming,undefined,'any other event closes the open bubble first');
+  assert.equal(state.namespace.state.messages.at(-1).kind,'status');
+  chat.namespace.handleEvent({type:'delta',text:''});
+  assert.equal(state.namespace.state.messages.at(-1).kind,'status','an empty piece opens nothing');
+  chat.namespace.handleEvent({type:'message',text:'plain'});
+  assert.equal(state.namespace.state.messages.at(-1).text,'plain');assert.equal(state.namespace.state.messages.at(-1).streaming,undefined);
   const historyBeforeError = state.namespace.state.history.length;
   context.fetch=async()=>streamResponse(['{"type":"message","text":"must not persist"}\n{"type":"error","message":"failed"}\n{"type":"done"}']);
   assert.equal(await chat.namespace.sendChat('error then done'),false);
@@ -944,6 +970,7 @@ process.on('exit', code => {
     ['late chunk after done', ['{"type":"done"}\n','{"type":"status","text":"late"}\n']],
     ['duplicate done', ['{"type":"done"}\n{"type":"done"}\n']],
     ['invalid message', ['{"type":"message","text":{"bad":true}}\n{"type":"done"}\n']],
+    ['invalid delta', ['{"type":"delta","text":5}\n{"type":"message","text":"x"}\n{"type":"done"}\n']],
     ['empty type', ['{"type":""}\n{"type":"done"}\n']],
     ['wrong media type', ['{"type":"done"}\n'], 200, 'text/html'],
     ['byte-sized frame budget', [JSON.stringify({type:'status',text:'海'.repeat(400000)})+'\n{"type":"done"}\n']],

@@ -13,12 +13,12 @@
 |---|---|
 | 基线健康度 | `npm run lint` 通过；`npm test` 116 个测试文件全部通过（退出码 0）；`node docs-site/check-docs.js` 无漂移；`npm audit`（生产与开发依赖）0 漏洞；`npm outdated` 仅 `ws` 8.21.3→8.22.0 补丁级。 |
 | 安全 | 未发现可被远程（隧道侧）利用的新缺陷；控制面（loopback + Host + Origin）、MCP 会话/OAuth、补丁路径、PTY 策略、危险命令策略、exec 环境清洗都经过了多轮审计并且实现质量高。本轮新提出的安全事项集中在**本机供应链面**（工作台从 jsDelivr 无 SRI 加载 Monaco，见 P1-1）和**危险命令词法检测的剩余绕过**（P2-1）。 |
-| 功能 | 主链路（Chat/Code/Plan、工具、Bridge、审批队列、检查点/回退）实现完整、边界严格。最大的体验缺口是**模型输出不是流式**（P2-2）：一次 chat/completions 最长等 120 秒才看到第一段文字。 |
+| 功能 | 主链路（Chat/Code/Plan、工具、Bridge、审批队列、检查点/回退）实现完整、边界严格。成文时最大的体验缺口是**模型输出不是流式**（P2-2）：一次 chat/completions 最长等 120 秒才看到第一段文字——第 5 批（第 102 组）已修：`stream:true` + NDJSON `delta` 事件，三个客户端逐字显示，`message` 仍是每轮权威全文（见第 8 节、第 9.5 节）。 |
 | UI/排版 | 工作台 106 处 `font-size` 声明中 69 处落在 12px（`--fs-xs` 与 `--fs-sm` 都是 0.75rem），中文正文偏小；三栏为固定像素宽、无拖拽分隔条、700–980px 区间编辑器可压到 <100px；`lang="zh-CN"` 页面里 Bridge 面板/菜单仍有十余处英文；VS Code 扩展 Webview 硬编码深色配色与 10–12px 字号、不跟随 VS Code 主题与字号。 |
 | 文档 | 抽样与自动比对（路由、错误码、环境变量、工具数、路径引用）未发现现行文档与代码的实质冲突；仅发现工作台 UI 内一段陈旧提示文案（P2-6）与两处错别字。文档体系（`check-docs.js` + 目录 README + 详解）维护得比大多数同规模项目好。 |
 | 仓库/工程 | 生成物 `docs-site/content.js`（5.3 MiB）、`documentation-manifest.json`（1.6 MiB）、`source-index.md`（0.9 MiB）入库，每次源码改动都会重写，历史膨胀明显；`review/shuncode-ui/` 26 张截图 13 MB。 |
 
-**建议优先处理顺序：** P1-1（Monaco 自托管/SRI）→ P2-2（流式输出）→ P2-1（危险命令补充规则）→ UI 字号与三栏布局（4.1）→ 文案一致性（P2-6、4.1.3）。（进度见第 8 节：截至第 4 批，P1-1、P2-1、P2-6、P2-7、P2-8 已修；P2-2 排在第 5 批。）
+**建议优先处理顺序：** P1-1（Monaco 自托管/SRI）→ P2-2（流式输出）→ P2-1（危险命令补充规则）→ UI 字号与三栏布局（4.1）→ 文案一致性（P2-6、4.1.3）。（进度见第 8 节：截至第 5 批，P1-1、P2-1、P2-2、P2-6、P2-7、P2-8 已修。）
 
 ---
 
@@ -104,6 +104,7 @@
 - **影响：** 体验落后于所有主流编码助手；用户会误以为卡死。同一工作台标签页内再次点击会变成"停止"（`chat.js:141`，已处理），但多标签页、插件与网页同时发送时服务端 `/chat` 没有并发上限，会真的并行跑多条模型+工具链。
 - **建议：** ① `stream: true` + 解析 SSE `delta`，新增 `delta` 事件，前端在 `chat.js` 增量追加（NDJSON 通道与预算逻辑可以复用）；② 工具调用的 `tool_calls` 增量拼接；③ 服务端对同一 owner 的 Chat 加并发上限（1–2），超出返回 409。
 - **证据类型：** 静态阅读。
+- **处置（第 5 批 / 第 102 组）：** ①② 已修，见第 8 节与第 9.5 节；③ 并发上限未做（它不是流式的一部分，且要先决定“同一 owner”的定义——工作台没有登录态，只有 Host 门禁），留在 9.5 的 D-27。
 
 #### P2-3 Chat 上下文管理粗糙：只按条数裁剪、不估算 token
 - **位置：** `openai.js:206`（`history.slice(-12)`）；`routes.js` 允许单条消息 1 MiB、历史 12 条/合计 1 MiB。
@@ -311,7 +312,8 @@
 | D-20 OAuth 配对页无自有 CSP | 已修 | 第 4 批 / 第 101 组 | 该页面在公网隧道上暴露，只有基线安全头（无 `script-src`）；现按模板 `<style>` 哈希下发 `default-src 'none'; style-src 'sha256-…'; base-uri 'none'; frame-ancestors 'none'`，GET 与错误重渲染同策略；有意不设 `form-action`（Chrome 会把它套到 302 跳回客户端上） |
 | D-21 浏览器测试 6 处重复的 CDN 阻断路由 | 已修 | 第 4 批 / 第 101 组 | 合并为 `withoutEditor(page)`（阻断 `**/vendor/monaco/**`），语义不变；`narrowWorkspaceBrowser` 因 axe 以内联脚本注入而改用 `bypassCSP: true`（只放行测试注入，不放行产品） |
 | D-22…D-24（报告即处置） | 记录 | 第 4 批 / 第 101 组 | 见第 9.4 节：工作台 `style-src` 仍需 `'unsafe-inline'`、`connect-src` 取自请求 Host、VS Code 设置页 webview 不在此策略内 |
-| P2-2、P2-3、P2-4、其余 P3、4.1 字号 token/三栏（分栏拖拽）、4.3 工程项、第 6 节探针 | 待后续批次 | — | 第 5 批（第 102 组）先做 P2-2 流式输出；4.1 字号 token 与三栏分隔条本批评估后延后，因为它牵涉 `styles.css` 106 处 font-size 与 Playwright 断言，需要能跑浏览器的环境逐视口核对 |
+| P2-2 模型输出非流式 | 已修 | 第 5 批 / 第 102 组 | `openai.js` 每轮请求带 `stream:true`，新模块 `agent/completionStream.js` 逐行解析 SSE（`data:` 行、注释/keep-alive、`[DONE]`、usage 尾块、`delta.content` 与按 `index` 拼接的 `delta.tool_calls`，缺 `index` 的 Mistral 式分片并入最后一槽），`end()` 产出与整份 JSON 同形的 choices 后仍走原来的 `normalizeAssistantMessage`——工具白名单/64 项/256 KiB 等门禁一处未少。可见文本经 `requestScope.fetchText` 新增的 `limits.onChunk` 边收边发 NDJSON `delta{text}`（≥48 字符或 ≥80 ms 合并一次），每轮末尾仍发 `message{text}`（权威全文，与分片拼接逐字相同；带工具调用的叙述文本也先流后收口、再发工具事件）。三个客户端：工作台 `chat.js` `streamDelta/closeStream`（进行中气泡带 `▍` 光标，`prefers-reduced-motion` 不闪），VS Code Webview 同法，原生 Chat 参与者逐片 `stream.markdown` 且 `message` 只补写余量、两段之间空一行；三者历史都只收 `message`。Plan 分支/合并的 `capturingEmit` 吞掉 `delta`，分支答案仍由 `emitRound` 带分支号发一次。预算：SSE 传输层上限 `MODEL_STREAM_RESPONSE_MAX_BYTES=16 MiB`（token 被包成 150–250 B 的 JSON 块），Provider 忽略 `stream` 回整份 JSON 时仍是 1 MiB；流内 `{error}`、畸形 SSE、序号有洞都以固定文案 `E_MODEL_STREAM` 失败并取消 body，不回显。回退：流式请求得 400 ⇒ 同轮不带 `stream` 重试一次、status 提示、进程内 `STREAM_UNSUPPORTED` 记住该 `baseUrl+modelId`；401/403/429/5xx 不重试。测试：新 `tests/modelStreaming.test.js`（10 组，真实 WHATWG Response）、`tests/completionStream.test.js`（分帧与 18 种畸形输入）、`networkBudget`（`onChunk` 合同）、`workbenchRuntime`/`webviewRuntime`/`nativeChatStream`（三个客户端）、`workbench.browser.js classicChatStreamBrowser`（真实 DOM 快照，CI 跑）。文档：模型调用详解新增“流式响应”与 1b 节、函数详解、路由详解、Chat 详解、样式详解、入口与 Webview 详解、技术实现、使用指南 |
+| P2-3、P2-4、其余 P3、4.1 字号 token/三栏（分栏拖拽）、4.3 工程项、第 6 节探针 | 待后续批次 | — | 4.1 字号 token 与三栏分隔条评估后延后，因为它牵涉 `styles.css` 106 处 font-size 与 Playwright 断言，需要能跑浏览器的环境逐视口核对；P2-3 建议与 P2-2 的 400 回退合并考虑（上游 `context_length_exceeded` 也是 400，现在两者都只显示“模型 HTTP 400 请求失败”，见 D-26） |
 
 ## 9. 深审新发现（报告成文后，按批次追加）
 
@@ -370,6 +372,21 @@
 
 第 4 批复核无问题（不列为发现）：`vendor-monaco.js` 用 `npm pack` 的 tarball sha512（写死在脚本与 VERSION.json）而不是信任 registry 元数据；`express.static` 对 `..%2f` 的拒绝（实测 403/404）；`/vendor/monaco` 缺文件走 `fallthrough:false` 的 404 而不是落到 SPA 回退把 `index.html` 当 JS 返回；`monaco.js` 在 nls 文案加载失败时仍装出编辑器（英文界面）而不是整体退回纯文本；主题内联脚本哈希在模块加载时算一次，改脚本后必须重启主机（已写入页面结构详解与入口详解）；沙箱里 `cdn.jsdelivr.net` 恰好不可达，正好复现了旧实现 7 秒后退化的路径，新实现在同一沙箱用 curl 拿到 loader/nls/字体均 200。未验证：真实浏览器里策略下的 Monaco 行为——沙箱装不了 Chromium，只能由 CI 的 `contentSecurityBrowser`（等 JS 模型出现 TypeScript 诊断标记，证明 blob 引导的 worker 能跑）给出结论。
 
+### 9.5 第 5 批（第 102 组，2026-09-29）：流式输出
+
+本批围绕 P2-2 展开。做之前先读了 `openai.js`/`requestScope.js`/`routes.js`/`runChat.js` 与三个客户端的事件消费，下面是实现时发现、且若不处理会让“加一个 delta 事件”出错的点，以及有意不做的项：
+
+| 编号 | 位置 | 说明与处置 |
+|---|---|---|
+| D-25 | `runChat.js capturingEmit` | 只吞 `message`、转发其余事件。若照常转发 `delta`，Plan 分支正在生成的分片会被客户端画进一个没有分支信息的气泡，merge 的分片还会和分支分片混在一个气泡里，随后 `emitRound` 再发一次全文 ⇒ 双份。已修：`capturingEmit` 也吞 `delta`；Plan 因此不逐字显示（有意，文档已写明）。 |
+| D-26 | `openai.js` 对 400 的解释 | 流式回退把“Provider 不接受 stream”与“上下文超限/参数非法”这两类 400 混在一起：第一次 400 都会触发一次非流式重试。代价是多一次请求（上游按 token 计费的请求在 400 时通常不计费），收益是不需要按模型配置开关。更细的分类需要读取上游错误正文的 `error.code`（本项目有意不回显正文，但**受控读取**并映射到固定文案是可行的），这与 P2-3 的建议是同一件事，留待一并处理。 |
+| D-27 | `routes.js /chat` | 服务端对并发 Chat 没有上限（P2-2 建议③）。流式并不改变这一点；工作台没有登录态、只有 Host 门禁，“同一 owner”需要先定义（按 client 字段？按连接？），本批不做。 |
+| D-28 | `fetchText` 120 s 期限 | 是**总期限**不是空闲超时：现在长回答能看到文字了，但超过 120 s 的单轮仍会被切断（`E_TIMEOUT`，已显示的半截不入历史）。改为“首字节 N 秒 + 空闲 M 秒”需要同时改 `requestScope`、GitHub/遥测调用方的合同与 networkBudget 测试，超出本批范围；记录为后续项。 |
+| D-29 | VS Code 原生 Chat 参与者 | 原生 `stream.markdown` 是追加式的，最终 `message` 若照旧整段写会出现两遍；且连续两段 assistant 文本（工具轮之间）之前没有分隔。已修：只补写余量、段间一个空行；`nativeChatStream` 用 `written.join('')` 精确断言。 |
+| D-30 | `completionStream.js` 的 `Array.prototype.some` | 稀疏数组（工具 `index` 有洞）上 `some` 会跳过空洞，序号检查形同虚设；写测试时发现，改为下标循环。列出来是提醒：所有“按远端给的 index 写数组”的代码都要用循环而不是高阶函数做完整性检查。 |
+
+本批复核无问题（不列为发现）：`routes.js` 的 `emit` 每事件一行 JSON、不缓冲，`X-Accel-Buffering: no` 与 `flushHeaders()` 已在，所以 `delta` 无需改路由；三个客户端的 NDJSON 解析器都是“未知 type 忽略”，旧客户端对新事件天然兼容；`chat.js` 的 5 分钟总期限、单行 1 MiB/总 16 MiB 预算对分片同样适用（分片 ≤ 数百字节）。未验证：没有真实 Provider（OpenAI/DeepSeek/兼容网关）上的 SSE 实测，`reasoning_content` 等非标准字段被丢弃而不是显示；Windows 上 VS Code 原生 Chat 的渲染节奏未看。
+
 ## 附录 A：本轮使用的命令
 
 ```
@@ -382,4 +399,4 @@ diff -rq webagent-core/extension webagent-core/extensions-installed/webagent.web
 ```
 
 ## 附录 B：发现编号速查
-P1-1 Monaco CDN 无 SRI · P2-1 危险命令漏检矩阵 · P2-2 非流式 · P2-3 上下文无 token 估算 · P2-4 CI=true/环境剥离不透明 · P2-5 硬编码 shell/端口 · P2-6 陈旧提示文案 · P2-7 同名下拉项 · P2-8 无门控轮询 · P3-1…P3-15 见第 3 节表 · D-1 敏感规则缺口 · D-2 自定义规则大小写 · D-3 终端弹窗截断 · D-4 list_dir 整体失败 · D-5 读取缓存键 · D-6…D-10 见第 9.3 节。 · D-11 cloudflared Token 走 argv · D-12 revoke 无限流 · D-13 调用者表非 LRU 驱逐 · D-14 PKCE 失败不作废 code · D-15 单 IP 占满注册槽 · D-16 状态页跨调用者可见 · D-17 resources/list 不查开关 · D-18 publicHttps 不跟随重定向（有意） · D-19 安装器白名单漏 .ttf · D-20 OAuth 配对页无自有 CSP · D-21 浏览器测试重复 CDN 路由 · D-22 style-src 仍 unsafe-inline · D-23 connect-src 取自 Host · D-24 webview 策略独立
+P1-1 Monaco CDN 无 SRI · P2-1 危险命令漏检矩阵 · P2-2 非流式 · P2-3 上下文无 token 估算 · P2-4 CI=true/环境剥离不透明 · P2-5 硬编码 shell/端口 · P2-6 陈旧提示文案 · P2-7 同名下拉项 · P2-8 无门控轮询 · P3-1…P3-15 见第 3 节表 · D-1 敏感规则缺口 · D-2 自定义规则大小写 · D-3 终端弹窗截断 · D-4 list_dir 整体失败 · D-5 读取缓存键 · D-6…D-10 见第 9.3 节。 · D-11 cloudflared Token 走 argv · D-12 revoke 无限流 · D-13 调用者表非 LRU 驱逐 · D-14 PKCE 失败不作废 code · D-15 单 IP 占满注册槽 · D-16 状态页跨调用者可见 · D-17 resources/list 不查开关 · D-18 publicHttps 不跟随重定向（有意） · D-19 安装器白名单漏 .ttf · D-20 OAuth 配对页无自有 CSP · D-21 浏览器测试重复 CDN 路由 · D-22 style-src 仍 unsafe-inline · D-23 connect-src 取自 Host · D-24 webview 策略独立 · D-25 Plan 捕获需吞 delta · D-26 400 回退与上下文超限同码 · D-27 Chat 无并发上限 · D-28 120 s 总期限非空闲超时 · D-29 原生 Chat 追加式写入 · D-30 稀疏数组 some 跳洞

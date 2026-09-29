@@ -342,16 +342,26 @@ async function runBuiltin(payload, emit) {
   if (emit) emit('message', { text: lines.join('\n') });
 }
 
+// Plan branches and the merge run deliver their answer through planRound/consensus events, so the
+// model's own text must not reach the client twice: `message` is captured, and the `delta` pieces
+// that precede it (F102) are swallowed as well -- they would otherwise paint a streaming bubble
+// that no final message ever closes. captured() prefers the last full message and falls back to
+// the concatenated deltas if the run failed before it.
 function capturingEmit(emit) {
-  let text = '';
+  let text = '', streamed = '';
   const wrap = (type, data = {}) => {
+    if (type === 'delta') {
+      streamed += typeof data.text === 'string' ? data.text : '';
+      return;
+    }
     if (type === 'message') {
       text = data.text || '';
+      streamed = '';
       return;
     }
     if (typeof emit === 'function') emit(type, data);
   };
-  wrap.captured = () => text;
+  wrap.captured = () => text || streamed;
   return wrap;
 }
 

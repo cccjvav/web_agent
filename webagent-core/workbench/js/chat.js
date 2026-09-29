@@ -96,7 +96,7 @@ export function renderMsg(m) {
     };
     return wrap;
   }
-  wrap.className = 'msg assistant';
+  wrap.className = 'msg assistant' + (m.streaming ? ' streaming' : '');
   wrap.innerHTML = `<div>${renderMd(m.text || '')}</div>`;
   if (m.branch) {
     const b = m.branch;
@@ -115,6 +115,42 @@ export function pushMsg(m) {
     box.appendChild(renderMsg(m));
     box.scrollTop = box.scrollHeight;
   });
+}
+
+// F102: assistant text arrives as `delta` pieces while the model is still generating. They are
+// painted into one open bubble (state.messages entry with streaming:true) that the turn's final
+// `message` closes in place with the authoritative full text. At most one bubble is open; any other
+// event, an error or the end of the request closes it with the text seen so far, so the transcript
+// never keeps a bubble "typing". Only the final `message` reaches the history, never the pieces.
+let openStream = null;
+function streamBoxes() { return [$('#chat-stream'), $('#agent-stream')].filter(Boolean); }
+export function streamDelta(text) {
+  if (typeof text !== 'string' || !text) return;
+  if (!openStream) {
+    openStream = { kind: 'assistant', text: '', streaming: true };
+    pushMsg(openStream);
+  }
+  openStream.text += text;
+  streamBoxes().forEach((box) => {
+    const node = box.querySelector('.msg.assistant.streaming');
+    if (!node || !node.firstElementChild) return;
+    node.firstElementChild.innerHTML = renderMd(openStream.text);
+    box.scrollTop = box.scrollHeight;
+  });
+}
+export function closeStream(text, branch) {
+  if (!openStream) return false;
+  const m = openStream;
+  openStream = null;
+  if (typeof text === 'string') m.text = text;
+  if (branch) m.branch = branch;
+  delete m.streaming;
+  streamBoxes().forEach((box) => {
+    const node = box.querySelector('.msg.assistant.streaming');
+    if (node) node.replaceWith(renderMsg(m));
+    box.scrollTop = box.scrollHeight;
+  });
+  return true;
 }
 
 export function paintPlanComposer() {
@@ -229,7 +265,7 @@ export async function sendChat(text, opts = {}) {
       let event;
       try { event = JSON.parse(line); } catch (_) { throw new Error('对话事件流包含无效 JSON'); }
       if (!event || typeof event !== 'object' || Array.isArray(event) || typeof event.type !== 'string' || !event.type
-        || event.type === 'message' && typeof event.text !== 'string') {
+        || (event.type === 'message' || event.type === 'delta') && typeof event.text !== 'string') {
         throw new Error('对话事件格式无效');
       }
       handleEvent(event);
@@ -269,6 +305,7 @@ export async function sendChat(text, opts = {}) {
     return false;
   } finally {
     clearTimeout(deadline);
+    closeStream();
     if (!confirmed) {
       controller.abort();
       // Do not wait indefinitely for an underlying source's cancellation promise.
@@ -286,6 +323,8 @@ export async function sendChat(text, opts = {}) {
 }
 
 export function handleEvent(ev) {
+  if (ev.type === 'delta') { streamDelta(ev.text); return; }
+  if (ev.type !== 'message') closeStream();
   if (ev.type === 'pty_request' || ev.type === 'done') return;
   if (ev.type === 'status') pushMsg({ kind: 'status', text: ev.text });
   else if (ev.type === 'tool') {
@@ -332,7 +371,7 @@ export function handleEvent(ev) {
     state.planRound = ev.round;
     paintPlanComposer();
   } else if (ev.type === 'message') {
-    pushMsg({ kind: 'assistant', text: ev.text || '', branch: ev.branch || null });
+    if (!closeStream(ev.text || '', ev.branch || null)) pushMsg({ kind: 'assistant', text: ev.text || '', branch: ev.branch || null });
   } else if (ev.type === 'error') pushMsg({ kind: 'assistant', text: '错误：' + ev.message });
 }
 
@@ -390,6 +429,8 @@ ui.paintChat = paintChat;
 ui.summarizeTool = summarizeTool;
 ui.renderMsg = renderMsg;
 ui.pushMsg = pushMsg;
+ui.streamDelta = streamDelta;
+ui.closeStream = closeStream;
 ui.sendChat = sendChat;
 ui.paintPlanComposer = paintPlanComposer;
 ui.handleEvent = handleEvent;

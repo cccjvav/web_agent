@@ -276,7 +276,7 @@ function postNdjson(url, body, onEvent, signal) {
         let event;
         try { event = JSON.parse(line); } catch { throw new Error('对话事件流包含无效JSON'); }
         if (!event || typeof event !== 'object' || Array.isArray(event) || typeof event.type !== 'string' || !event.type
-          || event.type === 'message' && typeof event.text !== 'string') throw new Error('对话事件格式无效');
+          || (event.type === 'message' || event.type === 'delta') && typeof event.text !== 'string') throw new Error('对话事件格式无效');
         onEvent(event); // Consumer failure must propagate, not become a successful response.
         if (signal?.aborted) throw new Error('请求已停止，结果未确认；未自动重试');
         if (event.type === 'error') throw new Error('主机报告任务失败，结果未确认；未自动重试');
@@ -365,12 +365,32 @@ function registerChatParticipant(context) {
     try {
       const binding = await workspaceBinding();
       if (token.isCancellationRequested) return { metadata: { webagentCompleted: false } };
+      // F102: `delta` pieces are written as they arrive; the turn's final `message` carries the same
+      // text again and is only written for the part (if any) the pieces did not already cover.
+      // Consecutive assistant texts (narration before a tool, then the answer) get a paragraph break.
+      let streamed = '', wroteText = false;
+      const paragraph = () => { if (wroteText) stream.markdown('\n\n'); };
       await postNdjson(
         `${agentHostUrl()}/api/chat`,
         { mode, message, history: historyFromChatContext(chatContext), client: 'vscode-extension', ...binding },
         (ev) => {
           if (token.isCancellationRequested) return;
           dispatchPty(ev);
+          if (ev.type === 'delta') {
+            if (!ev.text) return;
+            if (!streamed) paragraph();
+            streamed += ev.text; stream.markdown(ev.text); wroteText = true;
+            return;
+          }
+          if (ev.type === 'message') {
+            const text = ev.text || '';
+            const shown = streamed; streamed = '';
+            if (!shown) { if (text) { paragraph(); stream.markdown(text); wroteText = true; } }
+            else if (text.startsWith(shown)) { if (text.length > shown.length) stream.markdown(text.slice(shown.length)); }
+            else stream.markdown(`\n\n${text}`);
+            return;
+          }
+          streamed = '';
           if (ev.type === 'status' && ev.text) stream.progress(ev.text);
           else if (ev.type === 'tool') {
             stream.markdown(toolLineMarkdown(ev));
@@ -381,8 +401,7 @@ function registerChatParticipant(context) {
                 try { stream.reference(vscode.Uri.joinPath(folder.uri, ev.result.filePath)); } catch (_) {}
               }
             }
-          } else if (ev.type === 'message' && ev.text) stream.markdown(ev.text);
-          else if (ev.type === 'error') stream.markdown(`错误：${ev.message}`);
+          } else if (ev.type === 'error') stream.markdown(`错误：${ev.message}`);
           else if (ev.type === 'consensus' && ev.result) {
             stream.markdown(`\n\n**多模型总结**${ev.result.simulated === false ? '' : '（本机拼接，未调合并主模型）'}\n\n${ev.result.canonical || ev.result.summary || ''}\n`);
           }
@@ -865,6 +884,9 @@ body{margin:0;font:12px/1.45 system-ui;background:#1e1e1e;color:#ccc;height:100v
 .msg{margin:0 0 8px;padding:8px 10px;border-radius:8px;white-space:pre-wrap}
 .user{background:#2a2a2a;margin-left:8%}
 .bot{background:#222;border:1px solid #333}
+.bot.streaming::after{content:'▍';color:#3794ff;animation:caret 1s steps(2,start) infinite}
+@keyframes caret{to{visibility:hidden}}
+@media (prefers-reduced-motion:reduce){.bot.streaming::after{animation:none}}
 .tool{font-family:ui-monospace,monospace;font-size:11px;color:#9cdcfe;border:1px solid #333;padding:6px 8px;border-radius:6px;margin:0 0 8px;display:flex;justify-content:space-between}
 .tool.fail{color:#f14c4c;border-color:#5a2d2d;overflow-wrap:anywhere}
 #tasks{display:none;border-top:1px solid #333;padding:8px 10px;background:#1a1a1a}
@@ -941,6 +963,21 @@ function add(cls, text){
   const empty = log.querySelector('.empty');
   if (empty) empty.remove();
   const d=document.createElement('div'); d.className=cls; d.textContent=text; log.appendChild(d); log.scrollTop=log.scrollHeight;
+  return d;
+}
+// F102: delta pieces fill one open bubble; the final message (or anything else) closes it.
+let streaming = null;
+function streamDelta(text){
+  if (!text) return;
+  if (!streaming) streaming = add('msg bot streaming', '');
+  streaming.textContent += text; log.scrollTop = log.scrollHeight;
+}
+function closeStream(text){
+  if (!streaming) return false;
+  const node = streaming; streaming = null;
+  if (typeof text === 'string') node.textContent = text;
+  node.classList.remove('streaming'); log.scrollTop = log.scrollHeight;
+  return true;
 }
 function paintTasks(todos){
   const list = Array.isArray(todos) ? todos.filter(t => t && typeof t === 'object').slice(0, 500) : [];
@@ -970,15 +1007,18 @@ window.addEventListener('message', e => {
   if (!m || typeof m !== 'object' || Array.isArray(m)) return;
   if (m.type === 'finished') { sending = false; document.getElementById('go').textContent = '↑'; }
   if (m.type==='user') add('msg user', m.text);
+  if (m.type==='finished') closeStream();
   if (m.type==='event') {
     const ev = m.ev || {};
+    if (ev.type==='delta') { streamDelta(typeof ev.text === 'string' ? ev.text : ''); return; }
+    if (ev.type!=='message') closeStream();
     if (ev.type==='status') add('msg bot', ev.text || '');
     else if (ev.type==='tool') {
       const ok = ev.ok !== false && !ev.error;
       add('tool' + (ok ? '' : ' fail'), (ev.label || ev.name || 'tool') + '   ' + (ok ? ((ev.durationMs||0) + ' ms') : failedText(ev.error)));
       if (ev.name === 'set_todos' && ev.result && ev.result.todos) paintTasks(ev.result.todos);
     }
-    else if (ev.type==='message') add('msg bot', ev.text || '');
+    else if (ev.type==='message') { if (!closeStream(ev.text || '')) add('msg bot', ev.text || ''); }
     else if (ev.type==='error') add('msg bot', '错误: ' + (ev.message||''));
     else if (ev.type==='consensus') add('msg bot', (ev.result && (ev.result.summary||ev.result.canonical)) || '多模型总结');
   }

@@ -36,6 +36,8 @@ settings-panel.css：隐藏标题栏、工作区切换、主工作区、状态�
 | summarizeTool(result) | 结果→原值或浅副本 | 只裁顶层content800/stdout1000字符；不是全JSON体积预算/脱敏器 |
 | renderMsg(m) | 消息→DOM节点 | 按user/status/tool/consensus/assistant分支，细节下述 |
 | pushMsg(m) | 消息→undefined | push共享messages，filter已有两个stream，移空提示，分别renderMsg追加；没有消息数组上限 |
+| streamDelta(text) | 分片→undefined | F102：分片累加到本轮“进行中”的assistant消息（模块级`streamBoxes`记住它在两个Chat区域里的节点与累计文本）；首片时先push带`streaming:true`的空消息再原地renderMd重画，之后每片只替换这两个节点的内容，不新增气泡；非字符串或空串忽略 |
+| closeStream(finalText) | 可选全文→undefined | 无进行中气泡即返回；给了字符串就以它覆盖累计文本（服务端message是权威全文）并去掉`streaming`标记重画，否则只收口。message、其他任何事件与请求结束（finally）都会调用它，被error打断的气泡不会停留在“输入中” |
 | paintPlanComposer() | 无→undefined | mode/planRound控制分支n/max badge、canMerge按钮和输入placeholder，不改后端Plan状态 |
 | paintTodos(todos) | todos→undefined | 只绘chat-tasks、最多50项，统计completed并转义状态/标题；Bridge由paintBridgeTasks独立按远程分组绘制，不能混入本地计划 |
 | agentLabel(mode) | 模式→标签 | ask/code明确，其余按Plan显示，不是权限验证 |
@@ -50,14 +52,14 @@ settings-panel.css：隐藏标题栏、工作区切换、主工作区、状态�
 3. 空正文：merge可继续；Plan满足显式branch或canBranch转branch；无任务Plan提示，其余返回。分支显示占位用户消息，但不把空消息塞历史。
 4. sending=true/新AbortController，按钮切停止；stayOnBridge来自opts，不要求转Chat时保留Bridge。取旧历史尾12，本轮非空用户才push历史；merge仅status。
 5. 从选择框/status取modelId、thinkLevel，POST `/api/chat`，请求含mode/message/history/modelId/thinkLevel/planAction，不把所有UI事件都发送。捕获本轮controller，拒绝重定向；5分钟总deadline中断请求。内部**checkStopped()**在headers/read完成及事件消费前后检查本轮signal，不让已停止请求因缓冲中仍有done而假成功。
-6. 要求HTTP 2xx、可读body及`application/x-ndjson`媒体类型；非2xx逐块限制64KiB错误正文，再优先取JSON error并限制展示长度，不调用无界text。成功流按原始UTF-8字节限制单行1MiB、总量16MiB；同一网络块包含多条短行仍允许。TextDecoder用fatal模式，允许合法Unicode跨块，不将坏UTF-8静默替换。内部**consumeLine(line)**要求非空行是带非空字符串type的对象，message.text必须是字符串；坏JSON/形状立即失败。结束flush并消费无换行尾事件。
+6. 要求HTTP 2xx、可读body及`application/x-ndjson`媒体类型；非2xx逐块限制64KiB错误正文，再优先取JSON error并限制展示长度，不调用无界text。成功流按原始UTF-8字节限制单行1MiB、总量16MiB；同一网络块包含多条短行仍允许。TextDecoder用fatal模式，允许合法Unicode跨块，不将坏UTF-8静默替换。内部**consumeLine(line)**要求非空行是带非空字符串type的对象，message.text与delta.text必须是字符串；坏JSON/形状立即失败。结束flush并消费无换行尾事件。
 7. 必须出现唯一done并到达正常EOF，且无error、无done后的非空事件、未取消，才返回true并写助手历史。空白尾行可忽略；error即使后面还有done也不能发布助手历史。断流明确结果未确认；catch区分5分钟超时、用户停止和普通失败。finally清deadline，未确认则abort并尝试reader.cancel，取消Promise即使不结束也不阻塞收尾；释放reader锁、清sending/controller/恢复按钮。refreshStatus/loadTree的同步抛错或Promise拒绝单独提示，不重放对话。
 
 **具体限制**：事件流形状检查只约束对象/type及message正文类型，不穷举未来事件的全部字段；显示过的部分工具副作用/消息不能事务回滚。失败前已执行的工具不会因abort自动回滚；前端没有自动选别的模型重放任务。
 
 ## 4. handleEvent(ev)全部分支
 
-pty_request/done直接忽略，浏览器并不是VS Code PTY宿主；status→状态消息；tool→完整展示记录，stayOnBridge时另记Bridge日志，set_todos重画，run/execute命令输出写terminal。只有apply_patch事件ok严格为true且带filePath才处理：有已开标签时重读同一路径，要求HTTP成功、路径若返回则一致，再交给tabs.reconcilePatchedFile；有diff仍openDiff。
+pty_request/done直接忽略，浏览器并不是VS Code PTY宿主；delta→streamDelta（F102，进行中气泡右侧有CSS光标`▍`）；delta以外的任何事件先closeStream再处理，因此工具事件不会插在半截回答里；message有开着的气泡时原地收口而不是再追加一条，历史仍只写message.text；status→状态消息；tool→完整展示记录，stayOnBridge时另记Bridge日志，set_todos重画，run/execute命令输出写terminal。只有apply_patch事件ok严格为true且带filePath才处理：有已开标签时重读同一路径，要求HTTP成功、路径若返回则一致，再交给tabs.reconcilePatchedFile；有diff仍openDiff。
 
 补丁协调按候选验证后发布：干净标签同步content/savedContent/hash及Monaco/textarea；脏草稿与新磁盘正文不同则原样保留草稿和旧hash，提示后续保存会由版本检查拒绝，要求人工核对；重读失败保留可信标签并提示。它不是三方自动合并、补丁事务回滚或跨客户端编辑锁。
 

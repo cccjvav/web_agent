@@ -14,7 +14,7 @@ runChat先取得Chat模式租约并通过withTask建立本次任务上下文，�
 
 第二参数是函数时优先作为 send，否则取 payload.emit。同步 `store.load()` 在模型 try/catch 之前，坏配置会直接使 async 函数拒绝。mode缺省ask，只限制普通项目文件写入/命令，特定元数据工具仍允许；未知mode发送error并返回ok:false，不静默降级为空工具集。HTTP/扩展的模式处理另看调用方。
 
-Plan 直接委托 runPlanRound。普通模式 pickModel；选中非 builtin 但字段不齐时 emit error、返回失败，不执行内置写入；字段齐则 await runOpenAI，异常转换为 error 事件及失败对象。其他情况走 runBuiltin。
+Plan 直接委托 runPlanRound。普通模式 pickModel；选中非 builtin 但字段不齐时 emit error、返回失败，不执行内置写入；字段齐则 await runOpenAI（F102 起它会在最终 message 前透传 `delta` 分片，runChat 不做任何缓冲或改写），异常转换为 error 事件及失败对象。其他情况走 runBuiltin（内置探索没有分片，只有 message）。
 
 ### pickModel(cfg, id)
 
@@ -76,7 +76,7 @@ Plan 直接委托 runPlanRound。普通模式 pickModel；选中非 builtin 但�
 
 ### capturingEmit(emit)
 
-返回内部 wrap(type,data={})；遇到 message 只保存最后一条 text，不向外发；其他事件转发。给 wrap 挂 captured() 闭包读取当前文本。这样分支的最终答案由上层统一带分支信息输出，不重复发普通消息；它不是多段文本拼接器。
+返回内部 wrap(type,data={})；遇到 message 只保存最后一条 text，不向外发；F102起 delta 也被吞掉（分支正在生成的分片若转发给客户端，会被画进一个没有分支信息的气泡，且 merge 的分片会和分支分片混在一起），status/tool 等其他事件转发。给 wrap 挂 captured() 闭包读取当前文本。这样分支的最终答案由 emitRound 统一带分支信息输出一次，不重复发普通消息；它不是多段文本拼接器。Plan 模式因此看不到逐字输出，这是有意为之。
 
 ### resolvePlanAction(payload, mm)
 

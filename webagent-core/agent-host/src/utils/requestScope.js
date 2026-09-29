@@ -34,9 +34,21 @@ function chunkBytes(value) {
   if (ArrayBuffer.isView(value)) return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
   return Buffer.from(String(value));
 }
-async function readWebStream(body, maxBytes) {
+// `onChunk(text, response)` (F102) sees each decoded piece as it arrives so a caller can act on a
+// streaming body (SSE deltas) before the whole response is in, or apply a tighter budget of its
+// own once it has seen the response headers; it must be synchronous, and an exception it throws
+// cancels the body and fails the request. The full text is still returned, still bounded by
+// maxBytes, so callers that only need the buffered body behave exactly as before.
+function chunkObserver(limits) {
+  const onChunk = limits && limits.onChunk;
+  if (onChunk === undefined || onChunk === null) return null;
+  if (typeof onChunk !== 'function') throw new TypeError('onChunk 必须是函数');
+  return onChunk;
+}
+async function readWebStream(body, maxBytes, onChunk, response) {
   const reader = body.getReader();
   const decoder = new TextDecoder('utf-8');
+  const cancel = () => { try { Promise.resolve(reader.cancel()).catch(() => {}); } catch (_) { /* retain the caller-facing error */ } };
   let bytes = 0, text = '';
   try {
     while (true) {
@@ -45,40 +57,54 @@ async function readWebStream(body, maxBytes) {
       const chunk = chunkBytes(part.value);
       bytes += chunk.byteLength;
       if (bytes > maxBytes) {
-        try { Promise.resolve(reader.cancel()).catch(() => {}); } catch (_) { /* retain the stable budget error */ }
+        cancel();
         throw responseTooLarge(maxBytes);
       }
-      text += decoder.decode(chunk, { stream: true });
+      const piece = decoder.decode(chunk, { stream: true });
+      text += piece;
+      if (onChunk && piece) {
+        try { onChunk(piece, response); } catch (error) { cancel(); throw error; }
+      }
     }
-    return text + decoder.decode();
+    const tail = decoder.decode();
+    if (onChunk && tail) onChunk(tail, response);
+    return text + tail;
   } finally {
     try { reader.releaseLock(); } catch (_) { /* already released/cancelled */ }
   }
 }
-async function readNodeStream(body, maxBytes) {
+async function readNodeStream(body, maxBytes, onChunk, response) {
   const decoder = new TextDecoder('utf-8');
+  const destroy = () => { if (typeof body.destroy === 'function') body.destroy(); };
   let bytes = 0, text = '';
   for await (const value of body) {
     const chunk = chunkBytes(value);
     bytes += chunk.byteLength;
     if (bytes > maxBytes) {
-      if (typeof body.destroy === 'function') body.destroy();
+      destroy();
       throw responseTooLarge(maxBytes);
     }
-    text += decoder.decode(chunk, { stream: true });
+    const piece = decoder.decode(chunk, { stream: true });
+    text += piece;
+    if (onChunk && piece) {
+      try { onChunk(piece, response); } catch (error) { destroy(); throw error; }
+    }
   }
-  return text + decoder.decode();
+  const tail = decoder.decode();
+  if (onChunk && tail) onChunk(tail, response);
+  return text + tail;
 }
 async function readResponseText(response, limits) {
-  const maxBytes = responseBudget(limits);
+  const maxBytes = responseBudget(limits), onChunk = chunkObserver(limits);
   const body = response && response.body;
-  if (body && typeof body.getReader === 'function') return readWebStream(body, maxBytes);
-  if (body && typeof body[Symbol.asyncIterator] === 'function') return readNodeStream(body, maxBytes);
+  if (body && typeof body.getReader === 'function') return readWebStream(body, maxBytes, onChunk, response);
+  if (body && typeof body[Symbol.asyncIterator] === 'function') return readNodeStream(body, maxBytes, onChunk, response);
   // Test doubles and legacy fetch implementations may expose text() only. Production's
   // WHATWG Response takes the streaming branch above, so remote bytes are bounded pre-buffer.
   if (!response || typeof response.text !== 'function') throw new TypeError('无效的 HTTP 响应');
   const text = String(await response.text());
   if (Buffer.byteLength(text, 'utf8') > maxBytes) throw responseTooLarge(maxBytes);
+  if (onChunk && text) onChunk(text, response);
   return text;
 }
 // `options.fetchImpl` lets a caller that already accepts an injected fetch (tests, or a module
@@ -98,7 +124,7 @@ async function fetchText(url, options, timeoutMs = DEFAULT_TIMEOUT_MS, limits, f
     : typeof fetchFn === 'function' ? fetchFn
       : (typeof fetch === 'function' ? fetch : null);
   if (!send) throw new TypeError('没有可用的 fetch 实现');
-  const maxBytes = responseBudget(limits), expires = performance.now() + timeoutMs;
+  const maxBytes = responseBudget(limits), onChunk = chunkObserver(limits), expires = performance.now() + timeoutMs;
   const parent = currentSignal(), controller = new AbortController();
   const cancel = () => controller.abort();
   const checkDeadline = () => {
@@ -129,7 +155,7 @@ async function fetchText(url, options, timeoutMs = DEFAULT_TIMEOUT_MS, limits, f
     // Check the deadline after the response head AND after the body: a slow trickle can keep a
     // stream technically alive long past the budget without ever aborting. From branch 01a0c932.
     checkCancelled(); checkDeadline();
-    const text = await Promise.race([readResponseText(response, { maxBytes }), timedOut]);
+    const text = await Promise.race([readResponseText(response, { maxBytes, onChunk }), timedOut]);
     checkCancelled(); checkDeadline();
     return { response, text };
   } catch (error) {
@@ -148,5 +174,6 @@ module.exports = {
   currentSignal,
   checkCancelled,
   readResponseText,
+  responseTooLarge,
   fetchText
 };

@@ -14,6 +14,8 @@ async function main() {
     const frames = {
       mime: '{}', total: (JSON.stringify({type:'status',text:'x'.repeat(1000000)})+'\n').repeat(17),
       ok: '{"type":"message","text":"完整回答"}\n{"type":"done"}',
+      streamed: '{"type":"delta","text":"完整"}\n{"type":"delta","text":"回答"}\n{"type":"message","text":"完整回答"}\n{"type":"status","text":"tool"}\n{"type":"delta","text":"再来"}\n{"type":"message","text":"再来一段"}\n{"type":"done"}\n',
+      baddelta: '{"type":"delta","text":5}\n{"type":"message","text":"x"}\n{"type":"done"}\n',
       partial: '{"type":"message","text":"partial"}\n',
       bad: '{bad}\n', shape: '[]\n', text: '{"type":"message","text":{}}\n',
       error: '{"type":"message","text":"partial"}\n{"type":"error","message":"failed"}\n',
@@ -45,7 +47,7 @@ async function main() {
     '\nworkspaceBinding = async () => ({workspaceRoot:"fixture",hostInstanceId:"fixture"});', context);
   const api = context.module.exports;
   try {
-    for (const name of ['redirect','mime','partial','bad','shape','text','error','after','duplicate','oversized','total','disconnect','deadline']) {
+    for (const name of ['redirect','mime','partial','bad','shape','text','baddelta','error','after','duplicate','oversized','total','disconnect','deadline']) {
       scenario = name; const before = calls;
       await assert.rejects(api.postNdjson(url, {}, () => {}), undefined, name);
       assert.equal(calls, before + 1, 'failure must not replay or follow redirects');
@@ -67,6 +69,11 @@ async function main() {
     assert.equal(view.history.filter(turn => turn.role === 'assistant').length, 1);
     assert.equal(view.history.at(-1).content, '完整回答');
     assert.equal(messages.filter(m => m.type === 'finished').length, 3);
+    // F102: delta pieces are relayed to the webview as events; only the final messages enter history.
+    scenario = 'streamed'; messages.length = 0; await receiver({type:'send',mode:'code',text:'stream'});
+    assert.deepEqual(messages.filter(m => m.type === 'event' && m.ev.type === 'delta').map(m => m.ev.text), ['完整','回答','再来']);
+    assert.equal(view.history.at(-1).content, '完整回答再来一段');
+    assert.ok(!view.history.some(turn => ['完整','回答','再来'].includes(turn.content)), 'pieces never enter the history on their own');
     api.registerChatParticipant({subscriptions:[],extensionPath:__dirname});
     const token = {isCancellationRequested:false,onCancellationRequested: () => ({dispose(){}})};
     const stream = {progress(){},markdown(){}};
@@ -78,6 +85,12 @@ async function main() {
       const history = api.historyFromChatContext({history:[{response:[{value:'partial'}],result}]});
       assert.equal(history.length, name === 'ok' ? 1 : 0);
     }
+    // F102: the participant writes pieces as they arrive and must not write the final text a second time.
+    scenario = 'streamed'; const written = [];
+    const result = await handler({prompt:'hello'}, {history:[]}, {progress(){}, markdown(text){ written.push(text); }}, token);
+    assert.equal(result.metadata.webagentCompleted, true);
+    assert.equal(written.join(''), '完整回答\n\n再来一段', JSON.stringify(written));
+    assert.deepEqual(written.slice(0, 2), ['完整','回答']);
   } finally {
     server.closeAllConnections(); await new Promise(resolve => server.close(resolve));
   }

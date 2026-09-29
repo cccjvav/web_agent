@@ -6,11 +6,22 @@ const { formatWorkspaceContext, resolveEnvironment } = require('../models/profil
 const { listSkills } = require('../tools/skills');
 const { toolLabel } = require('./toolLabel');
 const { collectShot } = require('./computerUse');
-const { fetchText, checkCancelled } = require('../utils/requestScope');
+const { fetchText, checkCancelled, responseTooLarge } = require('../utils/requestScope');
 const { isToolFailure } = require('../utils/toolTrace');
+const { isEventStream, createCompletionAssembler } = require('./completionStream');
 
 const MODEL_REQUEST_MAX_BYTES = 12 * 1024 * 1024;
 const MODEL_RESPONSE_MAX_BYTES = 1024 * 1024;
+// A streamed reply wraps every token in its own JSON chunk (~150-250 bytes per token), so the
+// transport cap for text/event-stream bodies is wider; a buffered JSON body keeps the 1 MiB cap.
+const MODEL_STREAM_RESPONSE_MAX_BYTES = 16 * 1024 * 1024;
+// Deltas are forwarded to the UI in pieces of at least this many characters or after this many
+// milliseconds, whichever comes first -- one NDJSON line per token would only cost CPU on both ends.
+const DELTA_FLUSH_CHARS = 48;
+const DELTA_FLUSH_MS = 80;
+// `${baseUrl}\n${modelId}` pairs that answered a `stream: true` request with HTTP 400; they are
+// retried once without it and never asked to stream again for the life of this process.
+const STREAM_UNSUPPORTED = new Set();
 const MODEL_TOOL_CALL_MAX = 64;
 const MODEL_TOOL_EXECUTION_MAX = 8;
 const MODEL_TOOL_ARGUMENT_MAX_BYTES = 256 * 1024;
@@ -222,28 +233,68 @@ async function runOpenAI({
     bodyBase.tool_choice = 'auto';
   }
 
+  const streamKey = `${base}\n${model.modelId}`;
+  // Visible assistant text is forwarded as `delta` events while the provider is still generating
+  // (F102); the turn's full text still follows as one `message` event, so a consumer that ignores
+  // deltas sees exactly what it saw before, and one that renders them can finalize in place.
+  let pendingDelta = '', lastFlush = 0;
+  const flushDelta = () => {
+    if (pendingDelta) send('delta', { text: pendingDelta });
+    pendingDelta = '';
+    lastFlush = Date.now();
+  };
+  const onContent = piece => {
+    pendingDelta += piece;
+    if (pendingDelta.length >= DELTA_FLUSH_CHARS || Date.now() - lastFlush >= DELTA_FLUSH_MS) flushDelta();
+  };
+
   for (let step = 0; step < 10; step++) {
     send('status', { text: step === 0 ? `请求 ${model.modelId || 'model'}…${effortNote}` : '模型继续调用工具…' });
-    checkCancelled();
-    const requestBody = encodeModelRequest({ ...bodyBase, messages });
-    const { response: resp, text: raw } = await fetchText(`${base}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${model.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: requestBody,
-      redirect: 'error'
-    }, 120000, { maxBytes: MODEL_RESPONSE_MAX_BYTES });
-    if (!resp.ok) {
-      const status = Number.isInteger(resp.status) ? ` ${resp.status}` : '';
-      throw new Error(`模型 HTTP${status} 请求失败`);
-    }
     let data;
-    try {
-      data = JSON.parse(raw);
-    } catch {
-      throw new Error('模型返回不是 JSON');
+    for (let attempt = 0; ; attempt++) {
+      checkCancelled();
+      const streaming = !STREAM_UNSUPPORTED.has(streamKey);
+      const requestBody = encodeModelRequest({ ...bodyBase, messages, ...(streaming ? { stream: true } : {}) });
+      const assembler = createCompletionAssembler({ onContent });
+      let eventStream = null, bufferedBytes = 0;
+      const onChunk = (piece, response) => {
+        if (eventStream === null) eventStream = streaming && isEventStream(response);
+        if (eventStream) { assembler.push(piece); return; }
+        // The provider answered with a plain JSON body: the buffered budget applies to it.
+        bufferedBytes += Buffer.byteLength(piece, 'utf8');
+        if (bufferedBytes > MODEL_RESPONSE_MAX_BYTES) throw responseTooLarge(MODEL_RESPONSE_MAX_BYTES);
+      };
+      pendingDelta = ''; lastFlush = Date.now();
+      const { response: resp, text: raw } = await fetchText(`${base}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${model.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: requestBody,
+        redirect: 'error'
+      }, 120000, { maxBytes: streaming ? MODEL_STREAM_RESPONSE_MAX_BYTES : MODEL_RESPONSE_MAX_BYTES, onChunk });
+      if (!resp.ok) {
+        // Some OpenAI-compatible gateways reject `stream` (or stream + tools) with 400; retry the
+        // same step once without it and remember. Other statuses are not shape problems.
+        if (streaming && resp.status === 400 && attempt === 0) {
+          STREAM_UNSUPPORTED.add(streamKey);
+          send('status', { text: '该模型不接受流式请求，改为整体返回后显示' });
+          continue;
+        }
+        const status = Number.isInteger(resp.status) ? ` ${resp.status}` : '';
+        throw new Error(`模型 HTTP${status} 请求失败`);
+      }
+      if (eventStream) {
+        data = assembler.end().data;
+      } else {
+        try {
+          data = JSON.parse(raw);
+        } catch {
+          throw new Error('模型返回不是 JSON');
+        }
+      }
+      break;
     }
     const normalized = normalizeAssistantMessage(data);
     if (normalized.calls.some(call => !advertisedToolNames.has(call.name))) {
@@ -253,6 +304,10 @@ async function runOpenAI({
     messages.push(msg);
 
     if (normalized.calls.length) {
+      // Text the model wrote alongside its tool calls ("let me look at X") was streamed as deltas;
+      // close that bubble before the tool events so the transcript keeps the model's order.
+      flushDelta();
+      if (msg.content) send('message', { text: msg.content });
       for (const [index, tc] of normalized.calls.entries()) {
         if (index >= MODEL_TOOL_EXECUTION_MAX) {
           messages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify({ ok: false, error: '本轮工具执行上限为8，请在后续轮次重新请求' }) });
@@ -319,6 +374,7 @@ async function runOpenAI({
       continue;
     }
 
+    flushDelta();
     const text = msg.content || '（无文本输出）';
     send('message', { text });
     return { text };
@@ -331,7 +387,11 @@ async function runOpenAI({
 module.exports = {
   MODEL_REQUEST_MAX_BYTES,
   MODEL_RESPONSE_MAX_BYTES,
+  MODEL_STREAM_RESPONSE_MAX_BYTES,
   MODEL_TOOL_CALL_MAX,
+  DELTA_FLUSH_CHARS,
+  DELTA_FLUSH_MS,
+  STREAM_UNSUPPORTED,
   runOpenAI,
   systemPrompt,
   temperatureFor,

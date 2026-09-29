@@ -16,7 +16,7 @@
 | `/bridge/reset-secret`、`/bridge/reset-round` | POST | 重置连接身份（新UI携绑定/旧密钥比较，只有完全空的旧请求兼容），或清MCP会话/读取hash缓存；未知字段不触发副作用，不是同一个操作 |
 | `/bridge/login`、`/bridge/token` | POST | 本机演示授权，或验证用户提供的GitHub身份；空体/令牌包装严格，令牌在触网前限长且拒绝换行 |
 | `/bridge/device`、`/bridge/device/poll`、`/bridge/github/clear` | POST | GitHub设备流及清理；无参操作只接受空体，不等同MCP OAuth配对 |
-| `/chat` | POST | 本机Chat的NDJSON事件流；只接受固定顶层字段、枚举及有界user/assistant历史，错误包装在发流式响应头/模型或工具副作用前400 |
+| `/chat` | POST | 本机Chat的NDJSON事件流（status/delta/message/tool/consensus/planRound/pty_request/done/error；F102起delta是模型生成中的文本分片，message仍是每轮权威全文）；只接受固定顶层字段、枚举及有界user/assistant历史，错误包装在发流式响应头/模型或工具副作用前400 |
 | `/tool/call`、`/consensus/run`、`/tasks/reset` | POST | 固定包装下直接调用工具、本机共识流程或清任务状态；未知字段不调度/不重置，统一`E_BAD_API_REQUEST` |
 | `/pty/hello`、`/pty/jobs`、`/pty/jobs/:jobId` | POST / GET / POST | PTY客户端存活、取任务、报告状态；固定身份/query/body及逐状态字段/type/预算，错误包装不刷新存活或认领/推进/结束任务 |
 | `/files/tree`、`/files/content` | GET | 文件导航与内容/hash读取；tree只收空query，content只收有界path，未知query不读取 |

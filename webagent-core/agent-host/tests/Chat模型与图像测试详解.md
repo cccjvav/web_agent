@@ -34,6 +34,14 @@ F70先用九个modelId核对真实请求体的采样字段：gpt-5/o3/o4-mini/`o
 
 后两组用Promise保存**finish**延迟响应：旧Plan开始后新start替换回合，旧回答不得插新回合；新回合两支启动merge后再加第三支，迟到merge不得标已合并。finally恢复workspace/fetch、reset回合、rm临时目录；catch exitCode1。不是实时服务端网络race测试，而是可控延迟的确定性状态竞争fixture。
 
+## modelStreaming.test.js（F102）
+
+[源码](modelStreaming.test.js)与modelLifecycle同样保留workspace/fetch、临时store保存外部模型，但全部用标准WHATWG Response：局部**frame(chunk)**把对象包成一帧`data: …\n\n`；**sseResponse(parts,{status,signal,lifecycle})**以ReadableStream的`pull`逐块回放字符串/Buffer（允许在多字节字符中间切开）或“等待函数”（收到取消前挂起，取消时由内部`stop`以AbortError拒绝），`cancel()`计数；**jsonReply**造`application/json`整份回包；**collect()**收集emit事件、**texts()**按类型取文本。十组：①200个单字符块+被切开的“海风”——请求体`stream:true`，delta数少于块数（已合并）且拼接与唯一message、返回text三者逐字相同，delta在message之前；②流式工具调用——叙述delta→中间message→`tool:list_directory`顺序、arguments分片重组为`{"dirPath":"."}`并真实列出临时工作区、第二轮请求里assistant消息形状与整份JSON路径一致；③Provider忽略stream回JSON——无delta、一条message；④流式400——同轮不带stream重试一次并进入`STREAM_UNSUPPORTED`，status含“不接受流式”，不回显400正文，再次调用直接不发stream；两次400抛“模型 HTTP 400 请求失败”且恰两次请求；401一次即止；⑤流中`{"error":…}`——拒绝且无message、不回显；⑥畸形SSE——`E_MODEL_STREAM`、body被cancel一次、无tool/message；⑦17MiB注释流→`E_RESPONSE_TOO_LARGE`并cancel；`application/json`流每块64KiB→在约17次读取内以1MiB预算失败（证明流式16MiB上限不放宽JSON回包）；⑧首个delta后`AbortController.abort()`——`E_CANCELLED`、无message；⑨Plan分支——客户端收不到任何delta，唯一message来自emitRound（带branch.index）且分支answer等于流式全文；⑩普通ask经runChat——delta拼接与message一致。finally清空`STREAM_UNSUPPORTED`并rm临时目录。它不证明真实Provider的SSE细节，也不覆盖路由层NDJSON写入（见httpSmoke/workbenchRuntime）。
+
+## completionStream.test.js（F102）
+
+[源码](completionStream.test.js)纯函数（局部**frame(chunk)**同样把对象包成一帧）：`isEventStream`对Headers对象、普通对象、带charset、伪前缀、无头/空对象/null的判定；文本分片按7字符切、CRLF、注释、usage尾块、`[DONE]`后忽略一切；末尾无空行也能收口；非data字段忽略而JSON跨两行data会被判不是JSON；按index合并两个并行工具调用（重复id/name片段不追加）；无index的Mistral式分片；十八种畸形输入各自的固定文案、`E_MODEL_STREAM`码且不回显`PROVIDER_SECRET_DETAIL`；序号有洞、空流、仅注释、仅usage、仅`[DONE]`分别拒绝。
+
 ## chatVision.test.js
 
 [源码](chatVision.test.js)假1px PNG、两个临时目录，不依赖显示器。前半静态/函数断言：findShotCandidates识别反斜杠-Out、引号空格路径、mark JSON out，无关命令不误报；resolveShotPath允许工作区相对/绝对，拒外部与非图片。symlink创建仅Windows EPERM/EACCES明确跳过，链接成功后的逃逸断言在catch外，不能吞失败。
@@ -53,6 +61,8 @@ collectShot须返回PNG data URL、bytes/rel；MAX_BYTES断言等于6MiB，**未
 Windows上**windowsRuns()**经**powershell(file,args)**（`powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File`，120秒上限）真实执行：mark.ps1以绝对路径输入输出，末行必须能JSON.parse、out等于给定路径、文件非空，且collectShot能把这份标记图作为附件找到；snap.ps1以含`[`与`*`的不存在标题运行须exit2并输出ERR_WINDOW_MISSING_OR_AMBIGUOUS、不生成文件；snap.ps1全屏写到带空格子目录的绝对路径：成功时文件非空且META.file等于该路径，runner无可截桌面时容许exit3，但输出不得是路径格式错误（修前正是“given path's format is not supported”）。其他平台打印SKIP。结构断言在修前即红；Windows实跑的红/绿以Windows CI为准，截图能力取决于runner桌面，不代表真实桌面验收。
 
 ## 验证
+
+F102新增：`npm test --prefix webagent-core/agent-host -- --filter=modelStreaming` 与 `--filter=completionStream`。
 
 `npm test --prefix webagent-core/agent-host -- --filter=runChat`，另分别filter=modelLifecycle、chatVision。涉及命令仅操作临时工作区，真实模型账户/图像理解、Windows桌面与手机MCP仍需单列实测。
 

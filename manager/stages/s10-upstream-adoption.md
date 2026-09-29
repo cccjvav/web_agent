@@ -2138,6 +2138,27 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **剩余与未验证：** D-22 工作台`style-src`仍`'unsafe-inline'`（Monaco与页面写内联样式；脚本段已无）；D-23 `connect-src`取自Host（先经Host门禁再经正则，只会收紧不会放宽）；D-24 VS Code设置页webview自有nonce策略，不经此模块。4.1字号token与三栏分隔条评估后延后：牵涉`styles.css`106处font-size与多处Playwright视口断言，需要能跑浏览器的环境；P2-2流式输出排第5批（F102）。真实浏览器/Windows安装包未在本沙箱验证。
 
+### 第102组：复审修复第5批——模型流式输出（会话01a0e8e7，2026-09-29）
+
+**接手与基线：** 沙箱第五次重建，恢复同上（`65611df`）。上游01a0d084仍在`c20c413`，F102未被占用。
+
+**范围：** 报告P2-2（`openai.js`一次性读完chat/completions，用户最长120秒看不到文字）。目标是三个客户端都逐字显示，同时不放松任何既有门禁，并让忽略新事件的旧客户端行为完全不变。
+
+**协议决定：** NDJSON新增`delta{text}`（模型生成中的可见文本分片，≥48字符或≥80毫秒合并一次），每轮末尾仍发`message{text}`（权威全文，与本轮分片拼接逐字相同）；带工具调用的叙述文本也先流再以message收口、然后才发工具事件（以前这段文本用户看不到）。消费者规则：分片只用于显示，`message`、任何其他事件或请求结束都把开着的气泡收口；历史只收`message`。Plan分支/合并不透传分片（D-25：`capturingEmit`吞`delta`，否则分支分片会画进无分支信息的气泡且与`emitRound`的全文双份）。没有按模型的`stream`开关字段（modelSettings白名单不扩）。
+
+**实施：**
+1. **`utils/requestScope.js`：** `limits.onChunk(piece,response)`——`readWebStream`/`readNodeStream`每块解码后先回调，回调抛错等同越界（先cancel/destroy再抛，不吞）；`text()`替身整份一次；导出`responseTooLarge`。
+2. **`agent/completionStream.js`（新）：** `isEventStream`按Content-Type判定；`createCompletionAssembler({onContent})`逐行解析`data:`（多行data按规范拼接、注释/keep-alive忽略、`[DONE]`后忽略一切、usage尾块跳过、流内`{error}`固定文案）、合并`delta.content`/`delta.tool_calls`（按`index`0…63，缺index并入最后一槽；id/name取首个非空、arguments累加），`end()`产出与整份JSON同形的choices，再走原`normalizeAssistantMessage`。稀疏数组的序号检查用下标循环（D-30：`Array.some`跳过空洞）。
+3. **`agent/openai.js`：** 请求带`stream:true`（除非`STREAM_UNSUPPORTED`已记住该`baseUrl+modelId`）；`onChunk`首块判SSE则交assembler、否则按整份JSON累计并保持1MiB预算（传输层上限放宽为`MODEL_STREAM_RESPONSE_MAX_BYTES=16MiB`只对SSE生效）；`onContent`累进`pendingDelta`，`flushDelta`按48字符/80毫秒、工具循环前与最终message前必刷；流式400⇒同轮不带`stream`重试一次、status“该模型不接受流式请求，改为整体返回后显示”并记忆（D-26：与上下文超限同为400，和P2-3一并处理）；401/403/429/5xx不重试。
+4. **`agent/runChat.js`：** `capturingEmit`吞`delta`。
+5. **客户端：** `workbench/js/chat.js` `streamDelta/closeStream`（模块级`streamBoxes`，`.msg.assistant.streaming`加`▍`光标，`prefers-reduced-motion`不闪；`consumeLine`要求`delta.text`字符串）；`extension.js` Webview同法、原生Chat参与者逐片`stream.markdown`且`message`只补写余量、段间`paragraph()`一个空行（D-29）；installed副本同步（含入口与Webview详解.md）。
+
+**测试与反向验证：** 新`modelStreaming.test.js`（真实WHATWG Response：200个单字符块+跨块切开的CJK、流式工具调用重组并真实列目录、JSON回包不变、400回退/记忆/401不重试、流内error、畸形SSE取消body、17MiB SSE与64KiB×17的JSON两种预算、Abort⇒`E_CANCELLED`、Plan分支无delta且唯一message带branch.index、runChat转发）；新`completionStream.test.js`（分帧、CRLF、注释、usage、`[DONE]`、并行工具合并、Mistral式分片、18种畸形输入固定文案不回显）；`networkBudget`加`onChunk`合同；`workbenchRuntime`/`webviewRuntime`/`nativeChatStream`加三个客户端的分片/收口/历史断言；`workbench.browser.js classicChatStreamBrowser`加真实DOM快照（分片先于message上屏、单气泡、光标伪元素、strong渲染、历史一条）。反向：去掉`capturingEmit`的delta过滤⇒Plan用例红；去掉participant余量逻辑⇒`written.join`红；`some`换回⇒序号有洞用例红。
+
+**文档：** 模型调用详解（请求循环段改写、新“流式响应”节与1b节）、Chat调度详解、utils函数详解、路由逐项详解与api/README（事件类型表）、启动与Chat详解、样式规则详解、入口与Webview详解、agent/README、技术实现§7、使用指南§6、四份测试详解与tests/README、报告§0/§3/§8/§9.5/附录B、索引指纹。
+
+**剩余与未验证：** D-27 `/chat`无并发上限（P2-2建议③，需先定义“同一owner”）；D-28 120秒是总期限不是空闲超时，超长单轮仍会被切断（改法牵涉GitHub/遥测调用方合同）；未在真实Provider上实测SSE（`reasoning_content`等非标准字段被丢弃）；Windows上VS Code原生Chat渲染节奏未看。4.1字号token/三栏与P2-3、P2-4、P3项仍待后续批次。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。
