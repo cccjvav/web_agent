@@ -143,13 +143,17 @@ async function startNamedTunnel({ hostname, token, port = config.port, timeoutMs
   }
   const target = `http://127.0.0.1:${port}`;
   return new Promise((resolve, reject) => {
-    const args = ['tunnel', '--no-autoupdate', 'run', '--token', tok];
+    // F100: the token travels in the environment (cloudflared reads TUNNEL_TOKEN), not in argv —
+    // `--token <tok>` was visible to every local user in ps / tasklist / Task Manager and went
+    // through cmd.exe parsing for .cmd/.bat wrappers. ngrok already used NGROK_AUTHTOKEN this way.
+    const args = ['tunnel', '--no-autoupdate', 'run'];
     const isWin = process.platform === 'win32';
     const needShell = isWin && /\.(cmd|bat)$/i.test(bin);
     const proc = spawn(bin, args, {
       windowsHide: true,
       stdio: ['ignore', 'pipe', 'pipe'],
-      shell: needShell
+      shell: needShell,
+      env: { ...process.env, TUNNEL_TOKEN: tok }
     });
     child = proc;
     observeTunnel(proc, 'cloudflare-named', bin);

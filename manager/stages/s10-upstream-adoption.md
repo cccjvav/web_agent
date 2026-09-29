@@ -2100,6 +2100,23 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **剩余与未验证：** 未在真实Windows/macOS上跑自定义规则大小写（测试用ignoreCase显式覆盖两条分支）；D-6…D-10只记录（`write_file`目录目标无错误码、`applySearchBlocks`的trim回退、`workspaceMatch`在macOS区分大小写、`.git/hooks`可写、`kubectl delete`不看资源类型）。下一批：`mcp/oauth.js`、`mcp/session.js`、tunnel/publicHttps。
 
+### 第100组：复审修复第3批——cloudflared Token改走环境变量、revoke限流、调用者表LRU驱逐（会话01a0e8e7，2026-09-29）
+
+**接手与基线：** 沙箱第三次重建（`.git`回到`ce495ed`，工作树完整）。这次分支已推到origin，恢复只需`git fetch origin arena/01a0e8e7-web-agent && git reset FETCH_HEAD`（工作树与`43e6804`逐字节一致，status为空）+`npm ci`。上游01a0d084仍在`c20c413`，F100未被占用。
+
+**范围：** 深审第三组——`mcp/oauth.js`（全文）、`mcp/session.js`、`mcp/server.js`（全文）、`mcp/publicHttps.js`、`mcp/externalClient.js`、`mcp/stdioLaunch.js`、`mcp/resources.js`、`tunnel/cloudflared.js`、`tunnel/ngrok.js`、`tunnel/processIdentity.js`、`tunnel/stopProcess.js`、`tunnel/tunnelRegistry.js`（读取/校验部分）、`tunnel/tunnelCleanup.js`（前半）。新发现D-11…D-18记入报告第9.2/9.3节，处置状态见第8节。
+
+**实施：**
+1. **cloudflared Named Tunnel的Token不再上命令行（D-11，`tunnel/cloudflared.js`）。** 此前`spawn(bin, ['tunnel','--no-autoupdate','run','--token',tok])`：同机任何用户`ps -ef`/`tasklist /v`/任务管理器可见，`.cmd`/`.bat`包装时还经cmd.exe解析；ngrok一直用`NGROK_AUTHTOKEN`环境变量。现在args固定`tunnel --no-autoupdate run`，`env: {...process.env, TUNNEL_TOKEN: tok}`（cloudflared官方支持该变量）。日志遮盖器、代次/票据启停、`processIdentity`（不读命令行）都不受影响。工作台Named提示、`docs/guides/隧道使用指南.md`（命令与“Token仍在命令行参数中”一句）、`src/tunnel/隧道生命周期详解.md`同步；`httpSmoke`/`workbenchHtml`原来断言页面含`cloudflared tunnel run --token`，改为断言新提示。
+2. **`/oauth/revoke`补限流（D-12，`mcp/oauth.js`）。** register 20/分、authorize 30/分、token 60/分都有`rateLimit`，唯独revoke没有，而它同样校验`client_secret`。现在`rev:<ip>`每分钟60次，超限429带Retry-After。
+3. **调用者表驱逐顺序（D-13，`mcp/session.js`）。** `touch`满200条时删`keys().next()`即最早插入者，`Map.set`不改变已有键顺序：从启动就在线、每次都touch的调用者反而最先丢计数，短命调用者留到TTL。现在先delete再set保持最近使用顺序；`snapshot`/`allSessions`本就按lastSeen排序，不依赖插入顺序。
+
+**测试与反向验证：** tunnelLifecycle的spawn替身改为记录cmd/args/options，对Named与ngrok都断言Token不在args且在对应环境变量里（旧代码`named: token must not be an argv item`红）；oauth连发61次revoke最后429（旧代码全200）；stateIntegrity新增veteran用例（旧代码删veteran，`the caller seen most recently survives`红，用`git show HEAD:`的旧session.js实测）。lint、`check-docs`、全量`npm test`见提交。
+
+**文档：** OAuth授权详解（revoke行）、会话与结果详解（touch行）、隧道生命周期详解、隧道使用指南、工作台index.html提示、三份测试详解（OAuth与GitHub、存储完整性与预算、PTY与隧道）、报告第8/9节与附录B、索引指纹。
+
+**剩余与未验证：** 未在真实cloudflared上跑Named（环境变量方式来自官方文档与Docker实践，替身测试只锁spawn参数）；D-14…D-18只记录（PKCE失败不作废授权码、单IP可占满80个注册槽、`GET /mcp`快照向任何持凭据调用者展示其他调用者的key/clientInfo/工作区路径、`resources/list`不查`read_files`开关、`publicHttps`不跟随重定向属有意）。下一批：工作台其余模块（operations/picker/tabs/bind/vscodeRelay）与三栏布局/字号token、Monaco自托管（P1-1）、流式输出（P2-2）、逐篇文档核对。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。

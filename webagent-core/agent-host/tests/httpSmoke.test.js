@@ -157,7 +157,7 @@ async function main() {
     assert.ok(page.raw.includes('都不会'));
     assert.ok(!page.raw.includes('Chat 模式才能外接 MCP'));
     assert.ok(page.raw.includes('Named Tunnel'));
-    assert.ok(page.raw.includes('cloudflared tunnel run --token'));
+    assert.ok(page.raw.includes('cloudflared tunnel run（Token 经环境变量 TUNNEL_TOKEN'));
     assert.ok(page.raw.includes('ngrok http'));
     assert.ok(page.raw.includes('id="ngrok-token"'));
     assert.ok(!page.raw.includes('不会被使用'));

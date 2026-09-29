@@ -48,6 +48,21 @@ config.workspaceRoot = tmp;
     session.reset();
   }
 
+  // F100: the presence table evicts the least recently seen caller, not the earliest registered one.
+  {
+    session.reset();
+    session.touch({}, { key: 'veteran', incCall: true });
+    for (let i = 0; i < 199; i++) session.touch({}, { key: `caller-${i}` });
+    session.touch({}, { key: 'veteran', incCall: true }); // still active: touched again after the others
+    session.touch({}, { key: 'newcomer' }); // 201st distinct key: someone has to go
+    const keys = session.allSessions().map(s => s.key);
+    assert.ok(keys.includes('veteran'), 'the caller seen most recently survives');
+    assert.ok(!keys.includes('caller-0'), 'the least recently seen caller is evicted');
+    assert.strictEqual(session.allSessions().find(s => s.key === 'veteran').calls, 2, 'its counters are kept');
+    assert.strictEqual(keys.length, 200);
+    session.reset();
+  }
+
   // All-busy is refusal, never a license to destroy another owner's active session.
   {
     session.reset();

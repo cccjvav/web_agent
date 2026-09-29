@@ -712,7 +712,7 @@
               <input type="radio" name="tunnel" value="cloudflare-named" />
               <div>
                 <div class="t-name">Cloudflare Named Tunnel</div>
-                <p class="hint">在 Cloudflare Zero Trust 建隧道，Public Hostname 指到本机 Web Agent 端口（默认 http://127.0.0.1:48271，改过 AGENT_HOST_PORT 时以状态区显示的 MCP 地址端口为准）。填主机名和 Tunnel Token 后启动 Bridge，会跑 cloudflared tunnel run --token。</p>
+                <p class="hint">在 Cloudflare Zero Trust 建隧道，Public Hostname 指到本机 Web Agent 端口（默认 http://127.0.0.1:48271，改过 AGENT_HOST_PORT 时以状态区显示的 MCP 地址端口为准）。填主机名和 Tunnel Token 后启动 Bridge，会跑 cloudflared tunnel run（Token 经环境变量 TUNNEL_TOKEN 传给它，不出现在命令行）。</p>
                 <input id="named-domain" aria-label="Cloudflare Named Tunnel 主机名" class="ms-input" placeholder="mcp.example.com" />
                 <input id="named-token" aria-label="Cloudflare Tunnel Token" class="ms-input" type="password" placeholder="Tunnel Token" autocomplete="off" />
               </div>

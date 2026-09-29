@@ -300,8 +300,12 @@
 | D-3 终端确认弹窗静默截断 | 已修 | 第 2 批 / 第 99 组 | `ptyHost.confirm` 超 400 字符时写明总长度并把完整命令写入输出面板；命中破坏性规则时在预览上方点名；`shouldAutoAllow` 返回 `reason` |
 | D-4 list_dir 遇不可读子目录整体失败 | 已修 | 第 2 批 / 第 99 组 | 子目录 EACCES/EPERM/ENOENT/ENOTDIR 就地标 `unreadable`，其余照常返回；文件 stat 竞态不再抛 |
 | D-5 读取缓存键不归一 | 已修 | 第 2 批 / 第 99 组 | `readCache.norm` 经 `path.posix.normalize`，`src//a.js`/`./src/./a.js` 与 `src/a.js` 同键（仅摩擦，非授权漏洞） |
-| D-6…D-10（报告即处置） | 记录 | 第 2 批 / 第 99 组 | 见第 9.2 节：`write_file` 目录目标报错无错误码、`applySearchBlocks` 的 trim 回退同时 trim REPLACE、`workspaceMatch` 在 macOS 上区分大小写、`.git/hooks` 可被模型写、`kubectl delete` 规则不看资源类型 |
-| P1-1、P2-2、P2-3、P2-4、其余 P3、4.1 字号 token/三栏、4.3 工程项、第 6 节探针 | 待后续批次 | — | 按重要性：oauth/session/tunnel → 工作台其余模块与布局 → Monaco 自托管/流式 → 逐篇文档 |
+| D-6…D-10（报告即处置） | 记录 | 第 2 批 / 第 99 组 | 见第 9.3 节：`write_file` 目录目标报错无错误码、`applySearchBlocks` 的 trim 回退同时 trim REPLACE、`workspaceMatch` 在 macOS 上区分大小写、`.git/hooks` 可被模型写、`kubectl delete` 规则不看资源类型 |
+| D-11 cloudflared Token 走命令行 | 已修 | 第 3 批 / 第 100 组 | Named Tunnel 改为 `env.TUNNEL_TOKEN` 传 Token，argv 固定 `tunnel --no-autoupdate run`；工作台提示、隧道指南、生命周期详解同步；`tunnelLifecycle` 测试断言两种隧道的 Token 都不在 args 里 |
+| D-12 `/oauth/revoke` 无限流 | 已修 | 第 3 批 / 第 100 组 | 与 `/oauth/token` 同为每 IP 60 次/分钟，超限 429 带 `Retry-After`；`oauth` 测试连发 61 次 |
+| D-13 调用者表按插入顺序驱逐 | 已修 | 第 3 批 / 第 100 组 | `session.touch` 先 delete 再 set，Map 保持最近使用顺序，满 200 时删最久未见者；`stateIntegrity` 新增 veteran 用例 |
+| D-14…D-18（报告即处置） | 记录 | 第 3 批 / 第 100 组 | 见第 9.3 节：PKCE 失败不作废授权码、单 IP 可占满 80 个注册槽、`GET /mcp` 快照向任何持凭据调用者展示其他调用者、`resources/list` 不查 `read_files` 开关、`publicHttps` 不跟随重定向属有意设计 |
+| P1-1、P2-2、P2-3、P2-4、其余 P3、4.1 字号 token/三栏、4.3 工程项、第 6 节探针 | 待后续批次 | — | 按重要性：工作台其余模块与布局 → Monaco 自托管/流式 → 逐篇文档 |
 
 ## 9. 深审新发现（报告成文后，按批次追加）
 
@@ -319,7 +323,17 @@
 | D-4 | 低 | `src/tools/fileOps.js` `listDir.scan` | 递归时子目录 `opendirSync` 抛 EACCES/ENOENT 直接冒泡，一个 chmod 000 的目录让整个 `list_directory` 失败；文件 `statSync` 在 readdir 之后消失同样整体失败 | 实测：tmp 工作区含一个 000 子目录，`listDir({recursive:true})` 抛 `EACCES: permission denied, opendir` |
 | D-5 | 低 | `src/tools/readCache.js` `norm` | 只去反斜杠和首个 `./`，`src//a.js`、`src/./a.js` 与 `src/a.js` 是三个键；读过 `src/a.js` 后用 `src//a.js` 写会被当成没读过而要求 `confirm_overwrite`。写侧始终比对当前内容哈希，所以不是授权漏洞 | 实测：读 `src/a.js` 后 `writeFile({filePath:'src//a.js'})` → `E_BAD_ARGS Overwrite blocked` |
 
-### 9.2 只记录、暂不改（理由见各行）
+### 9.2 第 3 批（第 100 组，2026-09-29）：MCP OAuth / 会话 / 公网出站 / 隧道
+
+通读：`mcp/oauth.js`（全文 648 行）、`mcp/session.js`、`mcp/server.js`（全文）、`mcp/publicHttps.js`、`mcp/externalClient.js`、`mcp/stdioLaunch.js`、`mcp/resources.js`（资源分支）、`tunnel/cloudflared.js`、`tunnel/ngrok.js`、`tunnel/processIdentity.js`、`tunnel/stopProcess.js`、`tunnel/tunnelRegistry.js`（读取/校验部分）、`tunnel/tunnelCleanup.js`（前半）。
+
+| 编号 | 严重度 | 位置 | 问题 | 证据（修复前） |
+|---|---|---|---|---|
+| D-11 | 中低 | `src/tunnel/cloudflared.js` `startNamedTunnel` | Named Tunnel 以 `['tunnel','--no-autoupdate','run','--token', tok]` 启动，Tunnel Token 出现在命令行：同机任何用户 `ps -ef`/`tasklist /v`/任务管理器命令行列可见，崩溃转储与部分 EDR 日志也会记录；`.cmd`/`.bat` 包装时还经 cmd.exe 解析。ngrok 一直用 `NGROK_AUTHTOKEN` 环境变量，两条隧道的做法不一致，隧道指南也如实写着“Token 仍在命令行参数中” | 代码阅读；新断言在旧代码上红：`named: token must not be an argv item`。cloudflared 官方支持 `TUNNEL_TOKEN` 环境变量（Docker 文档与社区实践一致），日志遮盖器与 `processIdentity`（不看命令行）都不受影响 |
+| D-12 | 低 | `src/mcp/oauth.js` `router.post('/oauth/revoke')` | register 20/分、authorize 30/分、token 60/分都有 `rateLimit`，唯独 revoke 没有；它与 token 一样调用 `authenticateClient` 校验 `client_secret`，所以是唯一可以无限次试探 secret 的端点（虽然 secret 是 32 字节随机值，不可能猜中，但与其余端点的策略不一致，也没有 429 观测点） | 新测试连发 61 次在旧代码上全部 200 |
+| D-13 | 低 | `src/mcp/session.js` `touch` | 满 200 条时 `sessions.delete(sessions.keys().next().value)` 删的是**最早插入**而不是最久未见的记录，`Map.set` 对已有键不改变顺序：从启动就在线、每次都 touch 的调用者反而最先被删，calls/fail 计数归零，`GET /mcp`/任务板看到的“在线客户端”闪断；而 199 个来过一次的短命调用者仍留着直到 TTL | 新用例：veteran 先 touch，199 个调用者，veteran 再 touch，第 201 个进入 → 旧代码删 veteran（`the caller seen most recently survives` 红） |
+
+### 9.3 只记录、暂不改（理由见各行）
 
 | 编号 | 位置 | 说明 |
 |---|---|---|
@@ -328,8 +342,15 @@
 | D-8 | `extension/workspaceMatch.js` | 只在 win32 或盘符路径上小写比较，macOS（默认不区分大小写）上 `/Users/Me/x` 与 `/users/me/x` 判不同。两端路径都来自 `path.resolve`，实际拼写一致，仅在用户手填 URL 时可能触发；记录 |
 | D-9 | `.git/hooks` | `.git` 只是噪声目录（隐藏不列出），模型可按路径 `write_file ".git/hooks/pre-commit"`；不过能写文件的模型本来就能用 `run_command` 做同样的事，不构成权限提升。F99 起 `.git/config` 归敏感 |
 | D-10 | `extension/dangerousPolicy.js` `infraDangerous` | `kubectl delete` 不看资源类型/命名空间，`kubectl delete pod x -n dev` 与 `kubectl delete ns prod` 同级；只是保守，不是漏检 |
+| D-14 | `oauth.js` `handleToken` 授权码分支 | `code_verifier` 不匹配时只抛 `invalid_grant`，授权码保留到 10 分钟过期；RFC 6749 §4.1.2 建议同一 code 被二次使用时作废。PKCE 用 S256、verifier 43–128 字符，离线猜不中，且 token 端点 60/分限流，实际风险极低；改为“失败即作废”会让手抖填错的客户端必须重新配对，先记录 |
+| D-15 | `oauth.js` `pruneClients` | 注册槽 80 个、单 IP 20 次/分：同一来源 4 分钟即可用无授权码的空注册占满，其他客户端在 5 分钟空闲回收前得到 503。OAuth 默认关闭、只在公网隧道场景开启，且本机操作者可 `revokeAll`；建议后续按 IP 限制空闲注册数（例如 ≤10） |
+| D-16 | `server.js` `GET /mcp`（hostStatus） | 任何通过认证的调用者（包括 OAuth 配对的外部客户端）都能看到其他调用者的 key（含 IP）、clientInfo、调用计数和 `workspaceRoot` 绝对路径。单操作者产品里这是“本机状态页”，但公网 OAuth 场景下属于跨调用者信息暴露；建议远程 principal 只回自己的记录 |
+| D-17 | `server.js` `resources/list` | 不像 `resources/read` 那样 `assertAllowed('read_files')`；返回的只是 8 个固定 `webagent://` URI 与说明，不含内容，故无实际泄露 |
+| D-18 | `mcp/publicHttps.js` | 用 `https.request` 且不跟随 3xx：注册的公网 MCP 服务器若返回 301/302 会直接失败。这是 SSRF 防线（重定向可指向内网）的一部分，属有意设计，只需在“公网出站详解”里保持说明 |
 
-复核无问题（不列为发现）：`resolveSafePath` 对 UNC/盘符/Windows 保留名/8.3 短名/`..`/realpath 逃逸的拒绝，`atomicWriteText` 的临时文件+rename，`applyPatchBody` 对新文件/哈希/统一 diff 的门控，`apiRelay` 的白名单与路径规范化拒绝，`hostManager` 的端口探测/就绪等待/仅停止自己启动的主机，`fileCheckpoints`/`editorUndo` 的预检-执行-不可重放约束。
+第 3 批复核无问题（不列为发现）：PKCE 只接受 S256、refresh 轮换 + 重放墓碑整族作废、跨 client refresh 拒绝且不消耗、`requestOrigin` 仅回环才信 Host、`redirect_uri` 只允许 https 或回环、授权页 HTML 全部转义、`rateLimit` 有 1000 键上限与最早过期回收、`verifyAccessToken` 定长比较；`publicHttps` 的 IPv4/IPv6 黑名单（含 v4-mapped v6）+ 固定解析结果 + 无凭据/查询串；`server.js` 的信封/批量 ≤64/协议头校验、SSE 上限 32 与 10 分钟空闲、会话销毁绑定 principal、`initialize` 前先 `bindHttpSession`（`handleRpc` 里的 `incomingSessionId` 回退只在测试直接调用时可达）；`externalClient` 仅回环或显式确认的公网 HTTPS、`redirect:'error'`、工具清单 100 条/10 页/256 KiB 上限、每次调用都进审批队列；`stdioLaunch` 绝对路径 + 哈希绑定 + 拒绝 shell/包管理器；cloudflared/ngrok 的代次/票据启停逻辑与跨 chunk Token 遮盖；`tunnelRegistry` 的目录/文件权限与 inode 校验。
+
+第 2 批复核无问题（不列为发现）：`resolveSafePath` 对 UNC/盘符/Windows 保留名/8.3 短名/`..`/realpath 逃逸的拒绝，`atomicWriteText` 的临时文件+rename，`applyPatchBody` 对新文件/哈希/统一 diff 的门控，`apiRelay` 的白名单与路径规范化拒绝，`hostManager` 的端口探测/就绪等待/仅停止自己启动的主机，`fileCheckpoints`/`editorUndo` 的预检-执行-不可重放约束。
 
 ## 附录 A：本轮使用的命令
 
@@ -343,4 +364,4 @@ diff -rq webagent-core/extension webagent-core/extensions-installed/webagent.web
 ```
 
 ## 附录 B：发现编号速查
-P1-1 Monaco CDN 无 SRI · P2-1 危险命令漏检矩阵 · P2-2 非流式 · P2-3 上下文无 token 估算 · P2-4 CI=true/环境剥离不透明 · P2-5 硬编码 shell/端口 · P2-6 陈旧提示文案 · P2-7 同名下拉项 · P2-8 无门控轮询 · P3-1…P3-15 见第 3 节表 · D-1 敏感规则缺口 · D-2 自定义规则大小写 · D-3 终端弹窗截断 · D-4 list_dir 整体失败 · D-5 读取缓存键 · D-6…D-10 见第 9.2 节。
+P1-1 Monaco CDN 无 SRI · P2-1 危险命令漏检矩阵 · P2-2 非流式 · P2-3 上下文无 token 估算 · P2-4 CI=true/环境剥离不透明 · P2-5 硬编码 shell/端口 · P2-6 陈旧提示文案 · P2-7 同名下拉项 · P2-8 无门控轮询 · P3-1…P3-15 见第 3 节表 · D-1 敏感规则缺口 · D-2 自定义规则大小写 · D-3 终端弹窗截断 · D-4 list_dir 整体失败 · D-5 读取缓存键 · D-6…D-10 见第 9.3 节。 · D-11 cloudflared Token 走 argv · D-12 revoke 无限流 · D-13 调用者表非 LRU 驱逐 · D-14 PKCE 失败不作废 code · D-15 单 IP 占满注册槽 · D-16 状态页跨调用者可见 · D-17 resources/list 不查开关 · D-18 publicHttps 不跟随重定向（有意）

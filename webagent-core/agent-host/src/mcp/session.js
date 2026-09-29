@@ -59,7 +59,12 @@ function touch(req, extra = {}) {
     fail: prev.fail + (extra.incFail ? 1 : 0),
     busy: Boolean(extra.busy)
   };
-  if (!sessions.has(key) && sessions.size >= MAX_HTTP_SESSIONS) sessions.delete(sessions.keys().next().value);
+  // F100: evict the least recently *seen* row, not the first ever inserted. A Map keeps insertion
+  // order and set() on an existing key does not move it, so a client active since start-up was the
+  // first to lose its call counters when 200 short-lived callers came and went. Re-inserting on
+  // every touch keeps the map in last-seen order (snapshot()/allSessions() sort by lastSeen anyway).
+  if (sessions.has(key)) sessions.delete(key);
+  else if (sessions.size >= MAX_HTTP_SESSIONS) sessions.delete(sessions.keys().next().value);
   sessions.set(key, next);
   return next;
 }

@@ -609,6 +609,8 @@ router.post('/oauth/token', (req, res) => {
 
 router.post('/oauth/revoke', (req, res) => {
   try {
+    // F100: the one OAuth endpoint without a limiter; it authenticates client secrets like /oauth/token.
+    rateLimit(`rev:${clientIp(req)}`, 60, 60 * 1000);
     const body = req.body || {};
     const token = body.token || body.access_token || '';
     const rec = accessTokens.get(token) || refreshTokens.get(token);

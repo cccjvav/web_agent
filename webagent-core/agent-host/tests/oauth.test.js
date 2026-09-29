@@ -271,6 +271,14 @@ async function main() {
       });
     }
     assert.strictEqual(lastReg.status, 429);
+    // F100: /oauth/revoke is limited like /oauth/token (60/min per address); it used to be the one
+    // OAuth endpoint a caller could hammer with client-secret guesses without ever seeing a 429.
+    let lastRevoke = null;
+    for (let i = 0; i < 61; i++) {
+      lastRevoke = await request(server, 'POST', '/oauth/revoke', { body: { client_id: 'nobody', token: 'x' } });
+    }
+    assert.strictEqual(lastRevoke.status, 429, 'revoke is rate limited');
+    assert.ok(lastRevoke.headers['retry-after'], 'and tells the client when to retry');
 
     // --- OAuth pairing is opt-in (2026-09-25). Turning it off must kill every issued grant, keep the
     // URL secret working, and a later re-enable must not revive old grants -- including when "off"

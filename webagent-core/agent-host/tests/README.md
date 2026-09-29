@@ -243,7 +243,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [sidebarFeedback.test.js](sidebarFeedback.test.js) | 128 个函数/类节点 |
 | [skillsLifecycle.test.js](skillsLifecycle.test.js) | 19 个函数/类节点 |
 | [skipWorkbench.test.js](skipWorkbench.test.js) | 24 个函数/类节点 |
-| [stateIntegrity.test.js](stateIntegrity.test.js) | 40 个函数/类节点 |
+| [stateIntegrity.test.js](stateIntegrity.test.js) | 42 个函数/类节点 |
 | [stdioMcp.test.js](stdioMcp.test.js) | 37 个函数/类节点 |
 | [stdioOwnerFixture.js](stdioOwnerFixture.js) | 2 个函数/类节点 |
 | [stdioServerFixture.js](stdioServerFixture.js) | 3 个函数/类节点 |

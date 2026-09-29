@@ -44,7 +44,7 @@ AbortController取消enqueue返回cancelled；预取消runWithSignal中的write_
 
 [源码](tunnelLifecycle.test.js)的**fake()**返回EventEmitter子进程及stdout/stderr，kill只记signals，不真终止；**tick**用setImmediate让异步启动推进。stopProcess测试顽固进程SIGTERM后需SIGKILL才发exit，killed标志不能充当退出证明；kill抛错的进程最终应did not exit拒绝。keep定时器避免unref超时让进程提前退出。
 
-tmp假cloudflared文件，CLOUDFLARED_PATH指它；cp.spawn返回fake并记录，spawnSync返回查找失败。第一启动用stdout发first URL完成；第二启动必须等旧exit才spawn新进程，旧stale URL不得发布；新second ready后旧exit不能清新URL。新进程exit1清URL和bridgeRunning；第三启动未ready就stop，启动Promise应cancelled。finally恢复spawn/spawnSync/env并删tmp。模拟事件顺序不是实际SIGKILL或公网探测。
+tmp假cloudflared文件，CLOUDFLARED_PATH指它；cp.spawn返回fake并记录（F100起同时记录cmd/args/options：Named与ngrok的Token都不得出现在args里，必须分别在options.env的TUNNEL_TOKEN/NGROK_AUTHTOKEN，Named的args固定为`tunnel --no-autoupdate run`），spawnSync返回查找失败。第一启动用stdout发first URL完成；第二启动必须等旧exit才spawn新进程，旧stale URL不得发布；新second ready后旧exit不能清新URL。新进程exit1清URL和bridgeRunning；第三启动未ready就stop，启动Promise应cancelled。finally恢复spawn/spawnSync/env并删tmp。模拟事件顺序不是实际SIGKILL或公网探测。
 
 ## bridgeTunnel.test.js
 
