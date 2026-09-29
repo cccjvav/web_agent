@@ -251,11 +251,22 @@ function listDir({ dirPath = '.', recursive = false, maxDepth = 3 }) {
         if (isHidden(relPath)) continue;
         if (entry.isDirectory()) {
           const item = { name: entry.name, path: relPath, type: 'directory' };
-          if (recursive && currentDepth < maxDepth) item.children = scan(itemFullPath, currentDepth + 1);
+          if (recursive && currentDepth < maxDepth) {
+            // F99: one unreadable subdirectory (chmod 000, a foreign owner's folder) or one that
+            // vanished after readdir used to abort the whole listing with a raw EACCES/ENOENT.
+            // The entry stays in the list, marked, and the rest of the tree is still returned.
+            try { item.children = scan(itemFullPath, currentDepth + 1); }
+            catch (err) {
+              if (!err || !['EACCES', 'EPERM', 'ENOENT', 'ENOTDIR'].includes(err.code)) throw err;
+              item.children = []; item.unreadable = err.code;
+            }
+          }
           results.push(item);
         } else if (entry.isFile()) {
-          const stat = fs.statSync(itemFullPath);
-          results.push({ name: entry.name, path: relPath, type: 'file', size: stat.size, mtime: stat.mtime });
+          let stat = null;
+          try { stat = fs.statSync(itemFullPath); } catch (_) { /* removed between readdir and stat */ }
+          results.push(stat ? { name: entry.name, path: relPath, type: 'file', size: stat.size, mtime: stat.mtime }
+            : { name: entry.name, path: relPath, type: 'file' });
         }
         if (truncated) break;
       }

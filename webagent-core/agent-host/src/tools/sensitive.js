@@ -31,10 +31,53 @@ const SENSITIVE_PATTERNS = [
   '.webagent/config.json',
   // The operator's custom rule file is itself protected: a model with Edit could otherwise rewrite or
   // delete it and switch the custom rules off. Built-in patterns cannot be negated by "!" rules.
-  '.webagentignore'
+  '.webagentignore',
+  // F99 (2026-09-29 review): credential stores that the list above left readable. Each names a file
+  // that holds secrets by definition, never an ordinary source or config file: env files with any
+  // prefix (`prod.env`), PuTTY/Apple private keys, Terraform state (plaintext secrets), kubeconfig,
+  // Docker/Azure/gcloud/HashiCorp/PyPI/Postgres/MySQL/htpasswd/gem credential files, shell and
+  // REPL histories (a home directory opened as workspace), and `.git/config` (tokens in remote URLs).
+  '*.env',
+  '*.ppk',
+  '*.p8',
+  '*.keytab',
+  '*.kdbx',
+  '*.tfstate',
+  '*.tfstate.backup',
+  'credentials.tfrc.json',
+  '.kube/',
+  'kubeconfig',
+  'kubeconfig.*',
+  '*.kubeconfig',
+  '.docker/config.json',
+  '.azure/',
+  '.config/gcloud/',
+  '.vault-token',
+  '.pypirc',
+  '.pgpass',
+  '.my.cnf',
+  '.htpasswd',
+  '.s3cfg',
+  '.boto',
+  '.gem/credentials',
+  '.bash_history',
+  '.zsh_history',
+  '.psql_history',
+  '.mysql_history',
+  '.python_history',
+  '.node_repl_history',
+  '.git/config'
 ];
 
-const SENSITIVE_EXCEPTIONS = ['.env.example', '.env.sample', '.env.template'];
+// Sample/template files are documentation, not secrets: `.env.example` (for `.env` / `.env.*`) and
+// `example.env` (for `*.env`).
+const SENSITIVE_EXCEPTIONS = ['.env.example', '.env.sample', '.env.template', 'example.env', 'sample.env', 'template.env'];
+const ENV_PATTERNS = new Set(['.env', '.env.*', '*.env']);
+
+// Custom rules are compared case-insensitively where the filesystem is: on Windows and macOS a
+// rule `private/*` used to be bypassed by `PRIVATE/x` (the JS realpath keeps the spelling it was
+// given, so neither the logical nor the real path matched). Built-in rules were always lowercased.
+const CASE_INSENSITIVE_FS = process.platform === 'win32' || process.platform === 'darwin';
 
 const NOISE_NAMES = new Set([
   'node_modules',
@@ -175,22 +218,24 @@ function resetCustomPatternCache() {
   customCache = { root: null, identity: null, patterns: [], truncated: false };
 }
 
-function isSensitive(relPath) {
+function isSensitive(relPath, { ignoreCase = CASE_INSENSITIVE_FS } = {}) {
   const rel = toPosix(relPath);
   // Built-in protections are case-insensitive and apply at every directory depth.
   const parts = rel.toLowerCase().split('/');
   const suffixes = parts.map((_, i) => parts.slice(i).join('/'));
   const base = parts[parts.length - 1];
   for (const pat of SENSITIVE_PATTERNS) {
-    if (SENSITIVE_EXCEPTIONS.includes(base) && (pat === '.env' || pat === '.env.*')) continue;
+    if (SENSITIVE_EXCEPTIONS.includes(base) && ENV_PATTERNS.has(pat)) continue;
     if (suffixes.some((suffix) => globMatch(pat, suffix))) return true;
   }
-  for (const pat of loadCustomPatterns()) {
+  const customRel = ignoreCase ? rel.toLowerCase() : rel;
+  for (const raw of loadCustomPatterns()) {
+    const pat = ignoreCase ? raw.toLowerCase() : raw;
     if (pat.startsWith('!')) {
-      if (globMatch(pat.slice(1), rel)) return false;
+      if (globMatch(pat.slice(1), customRel)) return false;
       continue;
     }
-    if (globMatch(pat, rel)) return true;
+    if (globMatch(pat, customRel)) return true;
   }
   return false;
 }
@@ -216,6 +261,7 @@ function assertNotSensitive(relPath) {
 
 module.exports = {
   SENSITIVE_PATTERNS,
+  CASE_INSENSITIVE_FS,
   MAX_CUSTOM_PATTERNS,
   MAX_CUSTOM_BYTES,
   isSensitive,

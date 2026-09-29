@@ -327,11 +327,46 @@ function run() {
 
 }
 
+// F99 (2026-09-29 review): built-in rules that were missing, and custom rules on case-insensitive
+// filesystems. Before, `prod.env`, `terraform.tfstate`, `.kube/config`, `.pypirc`, `.git/config`
+// (tokens in remote URLs) and shell histories were all readable, and on Windows/macOS a custom rule
+// `private/*` was bypassed by spelling the path `PRIVATE/x` (the JS realpath keeps the given case).
+function builtinAdditionsAndCustomCase() {
+  for (const rel of ['prod.env', 'docker/db.env', 'PROD.ENV', 'k.ppk', 'AuthKey_ABC.p8', 'svc.keytab', 'vault.kdbx',
+    'terraform.tfstate', 'infra/terraform.tfstate.backup', '.terraform.d/credentials.tfrc.json', '.kube/config', 'kubeconfig',
+    'kubeconfig.yaml', 'prod.kubeconfig', '.docker/config.json', '.azure/accessTokens.json', '.config/gcloud/credentials.db',
+    '.vault-token', '.pypirc', '.pgpass', '.my.cnf', '.htpasswd', '.s3cfg', '.boto', '.gem/credentials', '.bash_history',
+    '.zsh_history', '.psql_history', '.node_repl_history', '.git/config', 'vendor/pkg/.git/config']) {
+    assert.strictEqual(sensitive.isSensitive(rel), true, `${rel} is a credential store and must be protected`);
+  }
+  for (const rel of ['example.env', 'sample.env', 'template.env', '.env.example', 'env.md', 'environment.js', 'docker/config.json',
+    'app/config.json', 'history.md', 'git/config.js', '.gitconfig', 'src/.git/HEAD', 'tfstate.md', 'readme.env.txt', 'envelope']) {
+    assert.strictEqual(sensitive.isSensitive(rel), false, `${rel} is ordinary and must stay readable`);
+  }
+  const rules = path.join(tmp, '.webagentignore');
+  fs.writeFileSync(rules, '!Private/public.txt\nPrivate/*\nnotes-secret.txt\n');
+  sensitive.resetCustomPatternCache();
+  try {
+    for (const rel of ['Private/x.txt', 'PRIVATE/x.txt', 'private/X.TXT', 'NOTES-SECRET.txt', 'sub/Notes-Secret.TXT']) {
+      assert.strictEqual(sensitive.isSensitive(rel, { ignoreCase: true }), true, `case-insensitive filesystem: ${rel} matches the custom rule`);
+    }
+    assert.strictEqual(sensitive.isSensitive('PRIVATE/PUBLIC.txt', { ignoreCase: true }), false, 'a "!" rule (first match wins) is compared the same way');
+    assert.strictEqual(sensitive.isSensitive('Private/x.txt', { ignoreCase: false }), true, 'exact spelling matches on a case-sensitive filesystem');
+    assert.strictEqual(sensitive.isSensitive('PRIVATE/x.txt', { ignoreCase: false }), false, 'case-sensitive filesystems keep exact matching (documented)');
+    assert.strictEqual(sensitive.isSensitive('PRIVATE/x.txt'), sensitive.CASE_INSENSITIVE_FS, 'the default follows the platform');
+    assert.strictEqual(sensitive.CASE_INSENSITIVE_FS, process.platform === 'win32' || process.platform === 'darwin');
+  } finally {
+    fs.rmSync(rules, { force: true });
+    sensitive.resetCustomPatternCache();
+  }
+}
+
 // renameFile/writeFile go through the async write lock and return promises; a sync try/catch or
 // assert.throws around them passes or fails for the wrong reason, so these cases are awaited.
 (async () => {
   try {
     run();
+    builtinAdditionsAndCustomCase();
     await windowsShortNameAliases();
     await windowsReservedNames();
     await ruleFileIsProtected();

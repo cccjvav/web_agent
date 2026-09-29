@@ -2,7 +2,7 @@
 
 **基线：** 会话分支 `arena/01a0e8e7-web-agent`，已快进同步到 `origin/arena/01a0d084-web-agent` 的 `83ce419`（含 F91–F94），工作树干净。
 **审查者：** Arena.ai Agent Mode（本会话）。
-**性质：** 只读复审 + 优化建议。报告成文时未改动任何产品代码；随后的修复按批次记录在文末第 8 节“修复进度”与阶段日志（第 97 组起）。上游在报告成文后前进到 `049d6a6`（F95，读取缓存按调用者归属），该改动不在本报告的审查范围内。
+**性质：** 只读复审 + 优化建议。报告成文时未改动任何产品代码；随后的修复按批次记录在文末第 8 节“修复进度”与阶段日志（报告本身登记为第 97 组，修复从第 98 组起），成文后的深审新发现追加在第 9 节。上游在报告成文后前进到 `049d6a6`（F95，读取缓存按调用者归属）与 `c20c413`（F96，人提交的工作流/直接工具调用不算本机 Chat 读过），这两项改动不在本报告的审查范围内。
 **读法：** 第 3 节是按严重度排列的缺陷（P1 > P2 > P3），第 4 节是优化建议（UI/排版、功能、工程），第 5 节是文档与代码一致性核对，第 6 节是暂停模块的结果，第 7 节是覆盖清单与未覆盖边界。每条都写了文件:行号，便于直接跳转核对。
 
 ---
@@ -284,18 +284,52 @@
 
 | 编号 | 处置 | 批次 / 组 | 说明 |
 |---|---|---|---|
-| P2-1 危险命令漏检 | 已修 | 第 1 批 / 第 97 组 | 55 条实测漏网全部入规则并有矩阵测试；`sed -i`、`history -c`、`docker rm -f` 有意不拦（理由见工具入口与命令策略详解） |
-| P2-5 硬编码 48271 | 部分 | 第 1 批 / 第 97 组 | `routes.js` 启动说明改用 `config.port`，工作台两处隧道提示改为“默认 48271”；扩展/安装器里的默认值属于另一进程的合法缺省，保留。`/bin/bash` 未动 |
-| P2-6 陈旧提示 | 已修 | 第 1 批 / 第 97 组 | 高级设置提示改为说明重置 MCP 地址的后果 |
-| P2-7 重复选项 | 已修 | 第 1 批 / 第 97 组 | 去掉 `auto` 重复项，旧值读取时归一为 `active` |
-| P2-8 后台轮询 | 已修 | 第 1 批 / 第 97 组 | `document.hidden` 时跳过，切回立即刷新 |
-| P3-1 端口未校验 | 已修 | 第 1 批 / 第 97 组 | `portFromEnv` 严格校验并按变量名报错；新增 `configPorts` 测试 |
-| P3-5 calculator.js | 已修 | 第 1 批 / 第 97 组 | 系统提示删除示例残留 |
-| P3-7 中文工具说明 | 已修 | 第 1 批 / 第 97 组 | `report_progress`/`set_todos` 改英文 |
-| P3-12 错字 | 已修 | 第 1 批 / 第 97 组 | 两处“本地 的智能体” |
-| 4.1 Monaco 字号不随 A-/A+ | 已修 | 第 1 批 / 第 97 组 | `editorFontSize = round(13 × scale)` |
-| 4.1 主题不跟随系统 | 已修 | 第 1 批 / 第 97 组 | 无存储选择时按 `prefers-color-scheme`，且不落盘 |
-| P1-1、P2-2、P2-3、P2-4、其余 P3、4.1 字号 token/三栏、4.3 工程项、第 6 节探针 | 待后续批次 | — | 按重要性：深审 fileOps/patchEngine/sensitive/hostManager/ptyHost → oauth/session/tunnel → 工作台其余模块与布局 → Monaco 自托管/流式 → 逐篇文档 |
+| P2-1 危险命令漏检 | 已修 | 第 1 批 / 第 98 组 | 55 条实测漏网全部入规则并有矩阵测试；`sed -i`、`history -c`、`docker rm -f` 有意不拦（理由见工具入口与命令策略详解） |
+| P2-5 硬编码 48271 | 部分 | 第 1 批 / 第 98 组 | `routes.js` 启动说明改用 `config.port`，工作台两处隧道提示改为“默认 48271”；扩展/安装器里的默认值属于另一进程的合法缺省，保留。`/bin/bash` 未动 |
+| P2-6 陈旧提示 | 已修 | 第 1 批 / 第 98 组 | 高级设置提示改为说明重置 MCP 地址的后果 |
+| P2-7 重复选项 | 已修 | 第 1 批 / 第 98 组 | 去掉 `auto` 重复项，旧值读取时归一为 `active` |
+| P2-8 后台轮询 | 已修 | 第 1 批 / 第 98 组 | `document.hidden` 时跳过，切回立即刷新 |
+| P3-1 端口未校验 | 已修 | 第 1 批 / 第 98 组 | `portFromEnv` 严格校验并按变量名报错；新增 `configPorts` 测试 |
+| P3-5 calculator.js | 已修 | 第 1 批 / 第 98 组 | 系统提示删除示例残留 |
+| P3-7 中文工具说明 | 已修 | 第 1 批 / 第 98 组 | `report_progress`/`set_todos` 改英文 |
+| P3-12 错字 | 已修 | 第 1 批 / 第 98 组 | 两处“本地 的智能体” |
+| 4.1 Monaco 字号不随 A-/A+ | 已修 | 第 1 批 / 第 98 组 | `editorFontSize = round(13 × scale)` |
+| 4.1 主题不跟随系统 | 已修 | 第 1 批 / 第 98 组 | 无存储选择时按 `prefers-color-scheme`，且不落盘 |
+| D-1 敏感文件内置规则缺口 | 已修 | 第 2 批 / 第 99 组 | `sensitive.js` 补 30 条凭据存储模式（27→57）（`*.env`、kubeconfig、`*.tfstate`、`.docker/config.json`、`.pypirc`/`.pgpass`、shell 历史、`.git/config` 等），样例例外扩到 `example.env`；`sensitiveBoundary` 正反 46 例 |
+| D-2 自定义规则大小写绕过 | 已修 | 第 2 批 / 第 99 组 | Windows/macOS 上自定义 `.webagentignore` 规则改为不区分大小写（`isSensitive(rel, {ignoreCase})`，默认 `CASE_INSENSITIVE_FS`）；Linux 保持逐字 |
+| D-3 终端确认弹窗静默截断 | 已修 | 第 2 批 / 第 99 组 | `ptyHost.confirm` 超 400 字符时写明总长度并把完整命令写入输出面板；命中破坏性规则时在预览上方点名；`shouldAutoAllow` 返回 `reason` |
+| D-4 list_dir 遇不可读子目录整体失败 | 已修 | 第 2 批 / 第 99 组 | 子目录 EACCES/EPERM/ENOENT/ENOTDIR 就地标 `unreadable`，其余照常返回；文件 stat 竞态不再抛 |
+| D-5 读取缓存键不归一 | 已修 | 第 2 批 / 第 99 组 | `readCache.norm` 经 `path.posix.normalize`，`src//a.js`/`./src/./a.js` 与 `src/a.js` 同键（仅摩擦，非授权漏洞） |
+| D-6…D-10（报告即处置） | 记录 | 第 2 批 / 第 99 组 | 见第 9.2 节：`write_file` 目录目标报错无错误码、`applySearchBlocks` 的 trim 回退同时 trim REPLACE、`workspaceMatch` 在 macOS 上区分大小写、`.git/hooks` 可被模型写、`kubectl delete` 规则不看资源类型 |
+| P1-1、P2-2、P2-3、P2-4、其余 P3、4.1 字号 token/三栏、4.3 工程项、第 6 节探针 | 待后续批次 | — | 按重要性：oauth/session/tunnel → 工作台其余模块与布局 → Monaco 自托管/流式 → 逐篇文档 |
+
+## 9. 深审新发现（报告成文后，按批次追加）
+
+第 3 节是报告成文时的只读发现；这一节记录后续逐文件深审时新发现的问题，编号 D-n，处置状态以第 8 节为准。每条都先在修复前的代码上复现（`git show HEAD:<file>` 取旧实现实测），再修。
+
+### 9.1 第 2 批（第 99 组，2026-09-29）：文件工具、敏感规则、扩展主机/终端
+
+通读：`tools/fileOps.js`（全文）、`tools/patchEngine.js`（全文，含 `resolveSafePath`/`atomicWriteText`/`applyPatchBody`）、`tools/readCache.js`、`tools/sensitive.js`、`utils/boundedFile.js`、`utils/fileCheckpoints.js`、`utils/editorUndo.js`、`extension/hostManager.js`、`extension/ptyHost.js`、`extension/ptyPolicy.js`、`extension/apiRelay.js`、`extension/workspaceMatch.js`。
+
+| 编号 | 严重度 | 位置 | 问题 | 证据（修复前） |
+|---|---|---|---|---|
+| D-1 | 中 | `src/tools/sensitive.js` `SENSITIVE_PATTERNS` | 内置名单只盖 `.env`/`.env.*`、私钥、`.ssh/`、`.aws/` 等，`prod.env`、`terraform.tfstate`、`.kube/config`、`.docker/config.json`、`.pypirc`、`.pgpass`、`.bash_history`、`.git/config`（远程 URL 里的令牌）都能被 `read_files`/`search_files` 读出，且远程 MCP 会话同样适用 | 旧模块实测：新测试的 31 个正例（`prod.env`、`.kube/config`、`.git/config` …）全部 false |
+| D-2 | 中 | `src/tools/sensitive.js` `isSensitive` 自定义规则分支 | 内置规则按小写比对，自定义规则按原拼写比对；Node 的 `realpathSync` 在 Windows/macOS 上保留调用者给的大小写，逻辑路径与真实路径都不命中，`private/*` 规则被 `read_files "PRIVATE/x"` 绕过。详解文档原话“自定义规则不是统一小写匹配”把它当成了既定行为 | 旧模块 `isSensitive('PRIVATE/x')` 在规则 `private/*` 下为 false（任何平台） |
+| D-3 | 中低 | `extension/ptyHost.js` `confirm` | 模态只显示 `command.slice(0, 400)`，无省略标记、无总长度；复合/危险命令总会询问，但 `echo <390 个字符> && rm -rf ~` 在弹窗里就是一条 echo。命中破坏性规则也没有任何提示 | 代码阅读 + 新测试 `confirmPreviewContract` 在旧代码上失败 |
+| D-4 | 低 | `src/tools/fileOps.js` `listDir.scan` | 递归时子目录 `opendirSync` 抛 EACCES/ENOENT 直接冒泡，一个 chmod 000 的目录让整个 `list_directory` 失败；文件 `statSync` 在 readdir 之后消失同样整体失败 | 实测：tmp 工作区含一个 000 子目录，`listDir({recursive:true})` 抛 `EACCES: permission denied, opendir` |
+| D-5 | 低 | `src/tools/readCache.js` `norm` | 只去反斜杠和首个 `./`，`src//a.js`、`src/./a.js` 与 `src/a.js` 是三个键；读过 `src/a.js` 后用 `src//a.js` 写会被当成没读过而要求 `confirm_overwrite`。写侧始终比对当前内容哈希，所以不是授权漏洞 | 实测：读 `src/a.js` 后 `writeFile({filePath:'src//a.js'})` → `E_BAD_ARGS Overwrite blocked` |
+
+### 9.2 只记录、暂不改（理由见各行）
+
+| 编号 | 位置 | 说明 |
+|---|---|---|
+| D-6 | `fileOps.js` `writeFile` 目标是已有目录 | `readBoundedText` 抛通用 `Error('Expected a regular text file')`，没有 `E_*` 错误码，模型只能靠文案理解。建议改成 `E_BAD_ARGS` + “是目录”。改动小但牵涉 `readBoundedText` 的多处调用方，放到下一批与 `E_*` 码整理一起做 |
+| D-7 | `patchEngine.js` `applySearchBlocks` | 精确匹配失败后的 trim 回退同时 trim 了 REPLACE 段，前后空白行会丢。文档已把它写成启发式；改行为会影响现有补丁语义，需要单独一组带矩阵测试 |
+| D-8 | `extension/workspaceMatch.js` | 只在 win32 或盘符路径上小写比较，macOS（默认不区分大小写）上 `/Users/Me/x` 与 `/users/me/x` 判不同。两端路径都来自 `path.resolve`，实际拼写一致，仅在用户手填 URL 时可能触发；记录 |
+| D-9 | `.git/hooks` | `.git` 只是噪声目录（隐藏不列出），模型可按路径 `write_file ".git/hooks/pre-commit"`；不过能写文件的模型本来就能用 `run_command` 做同样的事，不构成权限提升。F99 起 `.git/config` 归敏感 |
+| D-10 | `extension/dangerousPolicy.js` `infraDangerous` | `kubectl delete` 不看资源类型/命名空间，`kubectl delete pod x -n dev` 与 `kubectl delete ns prod` 同级；只是保守，不是漏检 |
+
+复核无问题（不列为发现）：`resolveSafePath` 对 UNC/盘符/Windows 保留名/8.3 短名/`..`/realpath 逃逸的拒绝，`atomicWriteText` 的临时文件+rename，`applyPatchBody` 对新文件/哈希/统一 diff 的门控，`apiRelay` 的白名单与路径规范化拒绝，`hostManager` 的端口探测/就绪等待/仅停止自己启动的主机，`fileCheckpoints`/`editorUndo` 的预检-执行-不可重放约束。
 
 ## 附录 A：本轮使用的命令
 
@@ -309,4 +343,4 @@ diff -rq webagent-core/extension webagent-core/extensions-installed/webagent.web
 ```
 
 ## 附录 B：发现编号速查
-P1-1 Monaco CDN 无 SRI · P2-1 危险命令漏检矩阵 · P2-2 非流式 · P2-3 上下文无 token 估算 · P2-4 CI=true/环境剥离不透明 · P2-5 硬编码 shell/端口 · P2-6 陈旧提示文案 · P2-7 同名下拉项 · P2-8 无门控轮询 · P3-1…P3-15 见第 3 节表。
+P1-1 Monaco CDN 无 SRI · P2-1 危险命令漏检矩阵 · P2-2 非流式 · P2-3 上下文无 token 估算 · P2-4 CI=true/环境剥离不透明 · P2-5 硬编码 shell/端口 · P2-6 陈旧提示文案 · P2-7 同名下拉项 · P2-8 无门控轮询 · P3-1…P3-15 见第 3 节表 · D-1 敏感规则缺口 · D-2 自定义规则大小写 · D-3 终端弹窗截断 · D-4 list_dir 整体失败 · D-5 读取缓存键 · D-6…D-10 见第 9.2 节。

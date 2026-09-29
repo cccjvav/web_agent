@@ -25,8 +25,16 @@ function sessionKey(reader, key) {
   return reader + '\n' + key;
 }
 
+// One key per file: backslashes, `./`, doubled and inner `.` segments all collapse (F99 — a read of
+// `src/a.js` followed by write_file `src//a.js` or `./src/./a.js` used to look like an unread file
+// and demand confirm_overwrite; the write-side checks always compare against the current content,
+// so the loose key was friction, never an authorisation). `..` is resolved too: the file tools
+// only ever pass paths that stay inside the workspace.
 function norm(filePath) {
-  return String(filePath || '').replace(/\\/g, '/').replace(/^\.\//, '');
+  const posix = String(filePath || '').replace(/\\/g, '/');
+  if (!posix) return '';
+  const normalized = path.posix.normalize(posix);
+  return normalized === '.' || normalized === './' ? '' : normalized.replace(/^\.\//, '');
 }
 
 function hashFile() {

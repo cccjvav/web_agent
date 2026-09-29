@@ -255,6 +255,21 @@ async function main() {
   assert.deepStrictEqual(ordered.items.map(i => i.name), ['alpha', 'Zeta', 'A.txt', 'b.txt', 'File2.txt', 'file10.txt']);
   assert.deepStrictEqual(ordered.items[0].children.map(i => i.name), ['a.js', 'z.js']);
 
+  // F99: an unreadable subdirectory is reported in place instead of aborting the whole listing.
+  // chmod 000 has no effect for root or on Windows, so the case only runs where it can fail.
+  if (process.platform !== 'win32' && typeof process.getuid === 'function' && process.getuid() !== 0) {
+    const locked = path.join(orderRoot, 'locked');
+    fs.mkdirSync(locked); fs.writeFileSync(path.join(locked, 'hidden.txt'), 'x'); fs.chmodSync(locked, 0o000);
+    try {
+      const partial = await callTool('list_directory', { dirPath: 'order-fixture', recursive: true }, 'ask');
+      const entry = partial.items.find(i => i.name === 'locked');
+      assert.ok(entry && entry.type === 'directory' && entry.unreadable === 'EACCES', 'the locked directory is listed and marked');
+      assert.deepStrictEqual(entry.children, []);
+      assert.deepStrictEqual(partial.items.filter(i => i.type === 'file').map(i => i.name), ['A.txt', 'b.txt', 'File2.txt', 'file10.txt'], 'siblings are still returned');
+      await assert.rejects(async () => callTool('list_directory', { dirPath: 'order-fixture/locked' }, 'ask'), /EACCES/, 'listing the locked directory itself still fails');
+    } finally { fs.chmodSync(locked, 0o755); }
+  }
+
   const info = await callTool('workspace_info', {}, 'ask');
   assert.ok(info.root === tmp);
   assert.ok(Array.isArray(info.topLevel));

@@ -2081,6 +2081,25 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **剩余与未验证：** 未在真实浏览器里看主题跟随与Monaco字号（Playwright作业只在CI）；danger规则仍是词法判断，`git checkout`单词分支/文件二义只按形状；`kubectl delete`不区分命名空间/资源类型（`kubectl delete pod x`也拦）。下一批（按重要性）：深审`fileOps/patchEngine/sensitive/hostManager/ptyHost`，然后`oauth/session/tunnel`、工作台其余模块与字号/三栏、Monaco自托管与流式输出、逐篇文档。
 
+### 第99组：复审修复第2批——敏感规则缺口与大小写、终端确认弹窗、list_dir与读取缓存键（会话01a0e8e7，2026-09-29）
+
+**接手与基线：** 沙箱又重建过一次（`.git`回到`ce495ed`、工作树完整），同时上游01a0d084前进到`c20c413`并占用了F96编号。恢复顺序：备份工作树→`reset --hard 049d6a6`→铺回→本会话的报告组与第1批改编号为第97/98组（原96/97）→合并提交→变基到`c20c413`（冲突只在CONTEXT.md、阶段日志顺序与三份生成文件，生成文件按上游版本重生成）。变基后apiFiles（上游F96新增段）、dangerousCommands、configPorts、documentationQuality全绿。
+
+**范围：** 深审第二组文件——`tools/fileOps.js`、`tools/patchEngine.js`、`tools/readCache.js`、`tools/sensitive.js`、`utils/boundedFile.js`、`utils/fileCheckpoints.js`、`utils/editorUndo.js`、`extension/hostManager.js`、`extension/ptyHost.js`、`extension/ptyPolicy.js`、`extension/apiRelay.js`、`extension/workspaceMatch.js`。新发现编号D-1…D-10记入报告第9节，处置进第8节。
+
+**实施：**
+1. **敏感规则缺口（D-1，`sensitive.js`）。** 内置名单27条→57条：`*.env`（任意前缀）、`*.ppk`/`*.p8`/`*.keytab`/`*.kdbx`、`*.tfstate`/`*.tfstate.backup`/`credentials.tfrc.json`、`.kube/`与kubeconfig三种拼法、`.docker/config.json`、`.azure/`、`.config/gcloud/`、`.vault-token`、`.pypirc`/`.pgpass`/`.my.cnf`/`.htpasswd`/`.s3cfg`/`.boto`/`.gem/credentials`、六种shell/REPL历史、`.git/config`。刻意不加会误伤普通配置的名字（`secrets.yaml`、`wp-config.php`、`terraform.tfvars`、`auth.json`、`settings.xml`、裸`credentials`）。样例例外扩到`example.env`/`sample.env`/`template.env`，只豁免三条env规则。
+2. **自定义规则大小写（D-2，`sensitive.js`）。** `isSensitive(rel,{ignoreCase})`，默认`CASE_INSENSITIVE_FS`（win32/darwin）：规则与路径都转小写再比；Linux逐字。此前Node的realpath保留调用者拼写，`private/*`被`PRIVATE/x`绕过——详解文档原话“自定义规则不是统一小写匹配”把漏洞写成了行为，已改。
+3. **终端确认弹窗（D-3，`extension/ptyHost.js`+`ptyPolicy.js`+`extension.js`，副本同步）。** `confirm`超过PREVIEW_CHARS=400时写明“命令共N字符，只显示前400字符”，完整命令经新增的构造参数`log`写进“输出 → Web Agent Host”；`shouldAutoAllow`带`reason`（dangerous优先于content-read/compound），reason为dangerous时在预览上方加一行点名。决策本身不变。
+4. **list_dir局部失败（D-4，`fileOps.js`）。** 递归子目录EACCES/EPERM/ENOENT/ENOTDIR就地标`unreadable:<code>`、children为空，兄弟照常返回；文件在readdir后消失则条目不带size/mtime。直接列不可读目录本身仍抛错。
+5. **读取缓存键（D-5，`readCache.js`）。** `norm`经`path.posix.normalize`，`src//a.js`/`./src/./a.js`/`lib/../src/a.js`与`src/a.js`同键；空串/`.`/`./`不记录。写侧始终比对当前内容哈希，此前只是要求多余的confirm_overwrite，不是授权漏洞。
+
+**测试与反向验证：** sensitiveBoundary新增builtinAdditionsAndCustomCase（31正例修复前全部不命中、15反例、自定义规则两种大小写分支与默认值），extensionHostSafety新增confirmPreviewContract（旧代码弹窗无总长度/无破坏性提示，新测试红），workspaceTools加chmod 000子目录段（非root类Unix；旧实现整体抛EACCES实测），hostPersist加键归一段（旧实现`src//a.js`读不到`src/a.js`的hash实测）。lint 0；全量117个测试文件通过。
+
+**文档：** 技能与隐藏规则详解（名单、SENSITIVE_EXCEPTIONS/ENV_PATTERNS/CASE_INSENSITIVE_FS、isSensitive行与大小写段）、缓存与进度详解（norm行）、文件与搜索详解（listDir失败语义）、PTY扩展详解（constructor/confirm/shouldAutoAllow）、SECURITY.md与使用指南的敏感路径示例、三份测试详解、报告第8/9节与索引指纹。
+
+**剩余与未验证：** 未在真实Windows/macOS上跑自定义规则大小写（测试用ignoreCase显式覆盖两条分支）；D-6…D-10只记录（`write_file`目录目标无错误码、`applySearchBlocks`的trim回退、`workspaceMatch`在macOS区分大小写、`.git/hooks`可写、`kubectl delete`不看资源类型）。下一批：`mcp/oauth.js`、`mcp/session.js`、tunnel/publicHttps。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。

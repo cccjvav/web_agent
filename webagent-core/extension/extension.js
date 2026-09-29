@@ -469,7 +469,7 @@ function activate(context) {
   require('./editorReview').registerEditorReview(vscode, context);
   const hostOutput = vscode.window.createOutputChannel('Web Agent Host');
   context.subscriptions.push(hostOutput);
-  ptyHost = startPtyHost(context, { agentHostUrl, requestJson });
+  ptyHost = startPtyHost(context, { agentHostUrl, requestJson, log: (line) => hostOutput.appendLine(line) });
   const chat = new ChatView();
   const bridge = new BridgeView(context);
   hostManager = new HostManager({

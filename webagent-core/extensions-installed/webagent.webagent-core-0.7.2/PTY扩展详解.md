@@ -21,7 +21,7 @@ spawnSpec的临时脚本不是凭据文件，仍要注意命令正文可能敏�
 
 ## 2. PtyHost构造与生命周期方法
 
-**constructor({agentHostUrl,requestJson})**保存两个依赖，初始审批allowSession=false/allowedFamilies空，sessions/seen容器、polling/disposed标志、序号、随机clientId、pendingHint与流新鲜期。状态只在本扩展实例，不持久化跨重启授权。
+**constructor({agentHostUrl,requestJson,log})**保存两个依赖与可选的log（非函数时为空操作，F99：只用于把超长待确认命令写进输出面板），初始审批allowSession=false/allowedFamilies空，sessions/seen容器、polling/disposed标志、序号、随机clientId、pendingHint与流新鲜期。状态只在本扩展实例，不持久化跨重启授权。
 
 | 方法 | 参数/返回 | 语义 |
 |---|---|---|
@@ -38,7 +38,7 @@ spawnSpec的临时脚本不是凭据文件，仍要注意命令正文可能敏�
 
 ## 3. 审批与目录检查
 
-**confirm(command)**调用shouldAutoAllow；允许直接true，否则最多400字符预览，危险/复合只给运行/拒绝，普通还给会话允许，且**只有**命令有family（首词是裸程序名）时才给同类允许（F71）。showWarningMessage取消视拒绝；会话允许改实例布尔，同类允许仅在该按钮确实展示过时把family加入Set。
+**confirm(command)**调用shouldAutoAllow；允许直接true，否则弹模态：最多PREVIEW_CHARS=400字符预览，超长时明说“命令共N字符，只显示前400字符”并把完整命令写进“输出 → Web Agent Host”（构造参数log，extension.js传hostOutput.appendLine），reason为dangerous时在预览上方加一行“命中破坏性命令规则”（F99：此前只是静默切400字符，`echo <填充> && rm -rf ~`看起来像echo）；危险/复合只给运行/拒绝，普通还给会话允许，且**只有**命令有family（首词是裸程序名）时才给同类允许（F71）。showWarningMessage取消视拒绝；会话允许改实例布尔，同类允许仅在该按钮确实展示过时把family加入Set。
 
 **cwdFor(job)**要求当前首工作区与job.workspaceRoot sameWorkspace，resolve cwd并realpath根和目标，relative不能离开根；目标不存在也抛错，不自行建cwd。
 
@@ -79,7 +79,7 @@ READISH仅自动许可有限元数据/目录/简单echo，不自动许可cat/typ
 - **isReadishCommand(command)**trim后白名单匹配，不证明命令读取绝无敏感信息。
 - **looksDangerousCommand(command)**共享词法检测加附加正则，非完整shell解析。
 - **commandFamily(command)**去前导`&`调用符后取完整首词（可带一对双/单引号），只有首词是裸程序名（字母数字下划线开头，仅含字母数字`_.+-`）时返回其小写，否则空串。F71前取首个`[A-Za-z0-9_.+-]+`片段：`"C:\…\node.exe"`得到`c`、`./a.sh`得到`.`，一次同类允许即自动放行所有C:\程序或所有./脚本（实测含`C:\Windows\System32\format.com D:`）。现在路径形式的程序没有family，只能逐条或经“本会话都允许”批准。
-- **shouldAutoAllow(command,state={})**先CONTENT_READ正文读取、复合/危险→allow:false、alwaysAsk:true；然后只读→允许；再allowSession、allowedFamilies；其余需要询问但可提供持久到本会话的选项。危险/复合不会因会话允许就跳过询问。
+- **shouldAutoAllow(command,state={})**先危险、再CONTENT_READ正文读取、再复合→allow:false、alwaysAsk:true，并带reason（dangerous/content-read/compound，F99；判定顺序保证破坏性优先于复合）；然后只读→允许（reason readish）；再allowSession、allowedFamilies；其余需要询问但可提供持久到本会话的选项。危险/复合不会因会话允许就跳过询问。
 
 扩展审批不绕过后端Code模式或远程拒绝策略。自动放行不是撤销操作系统权限，用户仍要在独立测试工作区验收。
 

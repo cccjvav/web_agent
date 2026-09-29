@@ -142,6 +142,38 @@ async function confirmButtons() {
   assert.ok(shown[1].includes('同类都允许'));
   assert.ok(host.allowedFamilies.has('npm'));
   host.dispose();
+  await confirmPreviewContract();
+}
+
+// F99: the dialog used to show a bare 400-character slice, so `echo <padding> && rm -rf ~` read as an
+// echo; the cut is now announced with the full length, the whole command is logged, and a destructive
+// hit is named. shouldAutoAllow reports why it always asks.
+async function confirmPreviewContract() {
+  const messages = [], logged = [];
+  const fakeVscode = { workspace: { workspaceFolders: [] }, env: {},
+    window: { showWarningMessage: async (message) => { messages.push(message); return '拒绝'; } } };
+  const { PtyHost } = loadPty(fakeVscode);
+  const host = new PtyHost({ agentHostUrl: () => 'http://127.0.0.1:1', requestJson: async () => ({}), log: (line) => logged.push(line) });
+  const padded = `echo ${'a'.repeat(420)} && rm -rf ~`;
+  assert.strictEqual(await host.confirm(padded), false);
+  assert.ok(messages[0].includes(`命令共 ${padded.length} 字符`), 'the cut is announced with the full length');
+  assert.ok(messages[0].includes('只显示前 400 字符'), 'the visible slice is named');
+  assert.ok(messages[0].includes('破坏性命令规则'), 'a destructive hit is called out (rm -rf ~ is beyond the visible slice)');
+  assert.ok(!messages[0].includes('rm -rf ~'), 'the modal itself still shows only the head of the command');
+  assert.ok(logged.some((line) => line.includes(padded)), 'the complete command went to the output channel');
+  assert.strictEqual(await host.confirm('npm test'), false);
+  assert.ok(!messages[1].includes('字符') && !messages[1].includes('破坏性'), 'a short ordinary command shows no notes');
+  assert.strictEqual(logged.length, 1, 'short commands are not logged');
+  assert.strictEqual(await host.confirm('cat .env'), false);
+  assert.ok(!messages[2].includes('破坏性'), 'content reads always ask but are not called destructive');
+  host.dispose();
+  const policy = require(path.join(EXT, 'ptyPolicy'));
+  assert.strictEqual(policy.shouldAutoAllow('rm -rf build').reason, 'dangerous');
+  assert.strictEqual(policy.shouldAutoAllow('echo a && rm -rf build').reason, 'dangerous', 'destructive wins over compound');
+  assert.strictEqual(policy.shouldAutoAllow('cat .env').reason, 'content-read');
+  assert.strictEqual(policy.shouldAutoAllow('echo a && echo b').reason, 'compound');
+  assert.strictEqual(policy.shouldAutoAllow('npm test').reason, undefined);
+  assert.strictEqual(policy.shouldAutoAllow('pwd').reason, 'readish');
 }
 
 function windowsExitContract() {

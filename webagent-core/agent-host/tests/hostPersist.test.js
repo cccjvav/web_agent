@@ -102,6 +102,20 @@ function main() {
   assert.strictEqual(rc2.sessionHash('cap/1.js', 'remote:cap'), 'h1');
   assert.strictEqual(rc2.sessionHash('cap/keep.js', 'remote:cap'), 'keep', 're-read entry is refreshed, not evicted');
   assert.strictEqual(rc2.sessionHash('cap/3999.js', 'remote:cap'), 'h3999');
+  // F99: spelling variants of one path share one key (they name one file inside the workspace).
+  rc2.rememberHash('src/one.js', 'h-one', 'local');
+  for (const variant of ['src//one.js', './src/one.js', 'src/./one.js', 'src\\one.js', 'lib/../src/one.js', './src//./one.js']) {
+    assert.strictEqual(rc2.sessionHash(variant), 'h-one', `${variant} is the same file as src/one.js`);
+    assert.strictEqual(rc2.recalledHash(variant), 'h-one');
+  }
+  assert.strictEqual(rc2.sessionHash('src/one.js/'), null, 'a trailing slash names a directory, not the file');
+  assert.strictEqual(rc2.sessionHash('src/One.js'), null, 'letter case is kept (case-insensitive filesystems still see one file per read)');
+  rc2.rememberHash('', 'ignored', 'local');
+  rc2.rememberHash('.', 'ignored', 'local');
+  rc2.rememberHash('./', 'ignored', 'local');
+  assert.strictEqual(rc2.recalledHash('.'), null, 'the workspace root is never a file key');
+  rc2.forgetHash('./src//one.js');
+  assert.strictEqual(rc2.sessionHash('src/one.js'), null, 'forget accepts any spelling too');
   rc2.resetHashes();
 
   const nested = path.join(tmp, '.webagent', '.gitignore');

@@ -51,11 +51,15 @@ function commandFamily(command) {
   return /^[A-Za-z0-9_][A-Za-z0-9_.+-]*$/.test(word) ? word.toLowerCase() : '';
 }
 
+// alwaysAsk carries why (F99): 'dangerous' (destructive command rules), 'content-read' (file/Git content),
+// 'compound' (shell operators). The confirm dialog names a destructive hit so a long or padded command
+// cannot pass as routine; the decision itself is unchanged.
 function shouldAutoAllow(command, state = {}) {
   const family = commandFamily(command);
-  if (CONTENT_READ.test(String(command || '').trim()) || COMPOUND.test(String(command || '')) || looksDangerousCommand(command)) {
-    return { allow: false, alwaysAsk: true, family };
-  }
+  const text = String(command || '');
+  if (looksDangerousCommand(command)) return { allow: false, alwaysAsk: true, family, reason: 'dangerous' };
+  if (CONTENT_READ.test(text.trim())) return { allow: false, alwaysAsk: true, family, reason: 'content-read' };
+  if (COMPOUND.test(text)) return { allow: false, alwaysAsk: true, family, reason: 'compound' };
   if (isReadishCommand(command)) {
     return { allow: true, reason: 'readish', family };
   }

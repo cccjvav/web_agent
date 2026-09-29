@@ -182,7 +182,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [eventBus.test.js](eventBus.test.js) | 22 个函数/类节点 |
 | [executionControl.test.js](executionControl.test.js) | 41 个函数/类节点 |
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
-| [extensionHostSafety.test.js](extensionHostSafety.test.js) | 26 个函数/类节点 |
+| [extensionHostSafety.test.js](extensionHostSafety.test.js) | 32 个函数/类节点 |
 | [externalDiscovery.test.js](externalDiscovery.test.js) | 13 个函数/类节点 |
 | [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
 | [fileReadSafety.test.js](fileReadSafety.test.js) | 21 个函数/类节点 |
@@ -237,7 +237,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [runChat.test.js](runChat.test.js) | 36 个函数/类节点 |
 | [sandbox.test.js](sandbox.test.js) | 3 个函数/类节点 |
 | [searchWorkerLifecycle.test.js](searchWorkerLifecycle.test.js) | 14 个函数/类节点 |
-| [sensitiveBoundary.test.js](sensitiveBoundary.test.js) | 33 个函数/类节点 |
+| [sensitiveBoundary.test.js](sensitiveBoundary.test.js) | 34 个函数/类节点 |
 | [settingsPanel.test.js](settingsPanel.test.js) | 74 个函数/类节点 |
 | [settingsRelay.test.js](settingsRelay.test.js) | 61 个函数/类节点 |
 | [sidebarFeedback.test.js](sidebarFeedback.test.js) | 128 个函数/类节点 |
@@ -271,7 +271,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 537 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
-| [workspaceTools.test.js](workspaceTools.test.js) | 17 个函数/类节点 |
+| [workspaceTools.test.js](workspaceTools.test.js) | 21 个函数/类节点 |
 <!-- docs-inventory:end -->
 
 ## 真实浏览器回归（不是DOM fixture）

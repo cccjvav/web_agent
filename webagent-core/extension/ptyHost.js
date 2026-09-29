@@ -92,10 +92,14 @@ function waitForShellIntegration(terminal, ms = 2500) {
   });
 }
 
+// The confirm dialog shows at most this many characters of the command (VS Code modals are small).
+const PREVIEW_CHARS = 400;
+
 class PtyHost {
-  constructor({ agentHostUrl, requestJson }) {
+  constructor({ agentHostUrl, requestJson, log }) {
     this.agentHostUrl = agentHostUrl;
     this.requestJson = requestJson;
+    this.log = typeof log === 'function' ? log : () => {};
     this.allowSession = false;
     this.allowedFamilies = new Set();
     this.sessions = new Map();
@@ -192,16 +196,24 @@ class PtyHost {
       allowedFamilies: this.allowedFamilies
     });
     if (decision.allow) return true;
-    const preview = String(command || '').slice(0, 400);
+    const raw = String(command || '');
+    // F99: the dialog used to show a bare 400-character slice. A command padded past that point hid
+    // its tail (`echo <390 chars> && rm -rf ~` looked like an echo), and a destructive hit was not
+    // named. The cut is now announced with the full length, the whole command goes to the output
+    // channel, and a destructive-rule hit is called out above the preview.
+    const truncated = raw.length > PREVIEW_CHARS;
+    const lines = [`Web Agent 要在集成终端「Web Agent · 1」运行：`];
+    if (decision.reason === 'dangerous') lines.unshift('⚠ 该命令命中破坏性命令规则（删除/覆盖/不可回退操作），请逐字核对后再决定。');
+    lines.push(truncated ? raw.slice(0, PREVIEW_CHARS) : raw);
+    if (truncated) {
+      lines.push(`…（命令共 ${raw.length} 字符，这里只显示前 ${PREVIEW_CHARS} 字符；完整命令已写入“输出 → Web Agent Host”）`);
+      try { this.log(`[pty] 待确认的完整命令（${raw.length} 字符）：\n${raw}`); } catch (_) { /* logging is best effort */ }
+    }
     // 同类都允许 only exists for a bare program name; a path-like program has no family to remember.
     const buttons = decision.alwaysAsk
       ? ['运行', '拒绝']
       : ['运行', '本会话都允许', ...(decision.family ? ['同类都允许'] : []), '拒绝'];
-    const pick = await vscode.window.showWarningMessage(
-      `Web Agent 要在集成终端「Web Agent · 1」运行：\n${preview}`,
-      { modal: true },
-      ...buttons
-    );
+    const pick = await vscode.window.showWarningMessage(lines.join('\n'), { modal: true }, ...buttons);
     if (pick === '本会话都允许') {
       this.allowSession = true;
       return true;
