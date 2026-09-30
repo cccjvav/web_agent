@@ -30,7 +30,7 @@ function request(port, pathname) {
   const exited = new Promise(resolve => child.once('exit', resolve));
   try {
     const port = await new Promise((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error(`docs server not ready: ${stderr}`)), 5000);
+      const timer = setTimeout(() => reject(new Error(`docs server not ready: ${stderr}`)), 15000);
       let text = '';
       child.stdout.on('data', d => {
         text += d;

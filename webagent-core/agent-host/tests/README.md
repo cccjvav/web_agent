@@ -158,7 +158,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
 | [board.test.js](board.test.js) | 4 个函数/类节点 |
 | [bridgeTunnel.test.js](bridgeTunnel.test.js) | 33 个函数/类节点 |
-| [chatConcurrency.test.js](chatConcurrency.test.js) | 11 个函数/类节点 |
+| [chatConcurrency.test.js](chatConcurrency.test.js) | 13 个函数/类节点 |
 | [chatMode.test.js](chatMode.test.js) | 0 个函数/类节点 |
 | [chatVision.test.js](chatVision.test.js) | 21 个函数/类节点 |
 | [codeServerAuth.test.js](codeServerAuth.test.js) | 0 个函数/类节点 |

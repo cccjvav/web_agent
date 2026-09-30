@@ -2682,19 +2682,21 @@
 
 ## webagent-core/agent-host/tests/chatConcurrency.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `828b22545008bffc1191c0e9f93b614729d66779b25dbb5bb61ee2806c06f828`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `8bc87193333d13560702c5c04632b11192f192c5e437e7721d0645015bc0ebfb`
 
 - `anonymous@17:24` — ArrowFunctionExpression，[L17–L25](../webagent-core/agent-host/tests/chatConcurrency.test.js#L17-L25)
 - `anonymous@17:24/anonymous@20:20` — ArrowFunctionExpression，[L20–L22](../webagent-core/agent-host/tests/chatConcurrency.test.js#L20-L22)
-- `main` — FunctionDeclaration，[L33–L98](../webagent-core/agent-host/tests/chatConcurrency.test.js#L33-L98)
+- `main` — FunctionDeclaration，[L33–L104](../webagent-core/agent-host/tests/chatConcurrency.test.js#L33-L104)
 - `main/anonymous@34:20` — ArrowFunctionExpression，[L34–L34](../webagent-core/agent-host/tests/chatConcurrency.test.js#L34-L34)
-- `main/postChat` — FunctionDeclaration，[L37–L43](../webagent-core/agent-host/tests/chatConcurrency.test.js#L37-L43)
-- `main/anonymous@48:22` — ArrowFunctionExpression，[L48–L48](../webagent-core/agent-host/tests/chatConcurrency.test.js#L48-L48)
-- `main/anonymous@53:22` — ArrowFunctionExpression，[L53–L53](../webagent-core/agent-host/tests/chatConcurrency.test.js#L53-L53)
-- `main/anonymous@77:22` — ArrowFunctionExpression，[L77–L77](../webagent-core/agent-host/tests/chatConcurrency.test.js#L77-L77)
-- `main/anonymous@82:22` — ArrowFunctionExpression，[L82–L82](../webagent-core/agent-host/tests/chatConcurrency.test.js#L82-L82)
-- `main/anonymous@95:22` — ArrowFunctionExpression，[L95–L95](../webagent-core/agent-host/tests/chatConcurrency.test.js#L95-L95)
-- `anonymous@100:13` — ArrowFunctionExpression，[L100–L103](../webagent-core/agent-host/tests/chatConcurrency.test.js#L100-L103)
+- `main/until` — FunctionDeclaration，[L39–L45](../webagent-core/agent-host/tests/chatConcurrency.test.js#L39-L45)
+- `main/until/anonymous@43:24` — ArrowFunctionExpression，[L43–L43](../webagent-core/agent-host/tests/chatConcurrency.test.js#L43-L43)
+- `main/postChat` — FunctionDeclaration，[L47–L53](../webagent-core/agent-host/tests/chatConcurrency.test.js#L47-L53)
+- `main/anonymous@58:16` — ArrowFunctionExpression，[L58–L58](../webagent-core/agent-host/tests/chatConcurrency.test.js#L58-L58)
+- `main/anonymous@62:16` — ArrowFunctionExpression，[L62–L62](../webagent-core/agent-host/tests/chatConcurrency.test.js#L62-L62)
+- `main/anonymous@85:16` — ArrowFunctionExpression，[L85–L85](../webagent-core/agent-host/tests/chatConcurrency.test.js#L85-L85)
+- `main/anonymous@89:16` — ArrowFunctionExpression，[L89–L89](../webagent-core/agent-host/tests/chatConcurrency.test.js#L89-L89)
+- `main/anonymous@101:22` — ArrowFunctionExpression，[L101–L101](../webagent-core/agent-host/tests/chatConcurrency.test.js#L101-L101)
+- `anonymous@106:13` — ArrowFunctionExpression，[L106–L109](../webagent-core/agent-host/tests/chatConcurrency.test.js#L106-L109)
 
 ## webagent-core/agent-host/tests/chatMode.test.js
 
@@ -3028,7 +3030,7 @@
 
 ## webagent-core/agent-host/tests/docsHttp.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `9fcdadae2ac0cb025dcb96703f042626a2b5869d225ec08a0da99fb602a3a23f`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `44f5e57aa5691b432d3ea2d38b5c8311e76464fa5b8820c04e749b4fba9790cf`
 
 - `request` — FunctionDeclaration，[L9–L17](../webagent-core/agent-host/tests/docsHttp.test.js#L9-L17)
 - `request/anonymous@10:21` — ArrowFunctionExpression，[L10–L16](../webagent-core/agent-host/tests/docsHttp.test.js#L10-L16)

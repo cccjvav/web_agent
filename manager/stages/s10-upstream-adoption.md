@@ -2281,6 +2281,7 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 | 6 | `run-code-oss.waitHealth`复查 | F56遗留 | 按原计划复查 |
 | 7 | R9无负责人候选 | 路线 | 按原计划 |
 | 8 | R4偶发失败再次出现 | 本组提交`8854622`的CI（run 36747638904） | 只改文档的提交上，windows-latest+Node 20的`tunnelCleanupWindows.test.js`第55行失败（`unavailable`≠`recorded`）：DPAPI保护助手（PowerShell）运行8.2秒被8秒执行期限以SIGTERM结束，同一代码在`1fceb86`上通过。按路线R4“再出现时处理”：先判断是冷启动慢还是期限过紧，再决定放宽期限或在测试里区分“助手超时”；重跑按钮本会话无权限，下一次推送会重新触发 |
+| — | 另两处计时偶发失败（已处理） | 追加提交的CI（run 36748708956，ubuntu+Node 20） | `chatConcurrency.test.js`（第104组新增）固定等50毫秒就断言在途数，负载高时请求还没进入runChat，以0≠1失败；改为每10毫秒轮询、5秒期限。`docsHttp.test.js`等文档服务启动行的期限5秒不够，放宽到15秒。两处只改测试 |
 | 9 | `ptyHost`里node-pty运行中的错误 | 第95组扫描 | 启动失败已被try/catch接住；运行中node-pty是否会发出无人监听的error事件未核实 |
 
 **按设计保留、不需要做：** 本机Chat与插件Chat同为local读者（都是本机Chat循环；按请求拆开会让“上一轮读、下一轮写”也要确认。第104组起两路Chat可并发，但由同一个人驱动）；落盘的读取记录不分调用者（只有apply_patch用它省一次重读，补丁内容对不上照样失败）；人撤销后恰好恢复成模型读过的版本时模型可免确认覆盖（模型确实见过这些字节）；`/api/tool/call`统一算人的操作（若将来有本机模型改走它再重新考虑）；`readCache.clearSession`生产代码不调用，但workspaceTools测试用它模拟进程重启，保留。

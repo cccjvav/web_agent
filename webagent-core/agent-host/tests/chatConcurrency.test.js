@@ -34,6 +34,16 @@ async function main() {
   await new Promise(resolve => server.once('listening', resolve));
   const base = 'http://127.0.0.1:' + server.address().port;
 
+  // Poll instead of a fixed 50 ms sleep: on a loaded CI runner the request can take longer to reach
+  // runChat (a fixed sleep failed with 0 !== 1 on ubuntu Node 20, run 36748708956).
+  async function until(check, label) {
+    const end = Date.now() + 5000;
+    while (!check()) {
+      if (Date.now() > end) throw new Error('timed out waiting for ' + label);
+      await new Promise(r => setTimeout(r, 10));
+    }
+  }
+
   async function postChat(msg) {
     return fetch(base + '/api/chat', {
       method: 'POST',
@@ -45,13 +55,11 @@ async function main() {
   try {
     // 1. Send first request (will hang on unblockers)
     const p1 = postChat('first');
-    await new Promise(r => setTimeout(r, 50));
-    assert.strictEqual(activeCalls, 1);
+    await until(() => activeCalls === 1, 'activeCalls === 1');
 
     // 2. Send second request (will also hang)
     const p2 = postChat('second');
-    await new Promise(r => setTimeout(r, 50));
-    assert.strictEqual(activeCalls, 2);
+    await until(() => activeCalls === 2, 'activeCalls === 2');
 
     // 3. Send third request (exceeds MAX_ACTIVE_CHAT = 2, must get HTTP 429)
     const res3 = await postChat('third');
@@ -74,13 +82,11 @@ async function main() {
     await res1.text();
     await res2.text();
 
-    await new Promise(r => setTimeout(r, 50));
-    assert.strictEqual(activeCalls, 0);
+    await until(() => activeCalls === 0, 'activeCalls === 0');
 
     // 5. After draining, a new chat request succeeds
     const p4 = postChat('fourth');
-    await new Promise(r => setTimeout(r, 50));
-    assert.strictEqual(activeCalls, 1);
+    await until(() => activeCalls === 1, 'activeCalls === 1');
     while (unblockers.length > 0) {
       const fn = unblockers.shift();
       fn();
