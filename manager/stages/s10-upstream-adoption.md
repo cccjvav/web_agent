@@ -2256,7 +2256,8 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 1. **CI workbench-browser**：`mcpCorsBrowser`原先借工作台页面发跨域请求，被第101组加的CSP（`connect-src 'self'`）拦下，F101起该任务一直红。改为在测试里起一个不带CSP的回环页面作为另一个源。以后每批以对应SHA上CI 9/9全绿为准再报“通过”。
 2. **按用户决定撤回探针改动**：第105组P3-14（`active_probe.py`补`import re`）与第107组第2–4项（`probeBridge.js`按需加载与格式重排、`probeBridge.test.js`源码守卫、`probe-extension/实现详解.md`、探针10个文件的未用代码清理）未获用户授权，全部恢复到改动前；探针仍按约定暂停。第105、107组原文保留，报告第6节与对应行已注明。
-3. **Monaco**：用户决定保持现状（随仓库分发`vendor/monaco`），不改npm依赖、不瘦身，只在有安全修复时用`vendor-monaco.js`升级。
+3. **CI修好后暴露的另外三处**（此前都排在失败的CORS测试之后，从未在CI跑到）：①classicChatStreamBrowser按发送前的气泡数计数、光标从最后一个块元素读取（第108组渲染器）；②contentSecurityBrowser：未开文件时Monaco不建视图DOM，改为先断言编辑器对象、挂上模型后再断言DOM；③**产品缺陷**：`monaco.js`把`paths.vs`配成根相对路径，blob:语言worker里importScripts判为无效URL，F101起JS/TS诊断等语言功能都不工作；改为绝对URL，`monacoLoading`同步。本地用npm包`@sparticuz/chromium`（沙箱无法下载Playwright浏览器）跑完整浏览器套件通过。
+4. **Monaco**：用户决定保持现状（随仓库分发`vendor/monaco`），不改npm依赖、不瘦身，只在有安全修复时用`vendor-monaco.js`升级。
 
 ### 延后复审清单
 

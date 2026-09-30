@@ -215,9 +215,13 @@ start/stop各自单飞，启动中停止可达并携绑定，停止中不得再�
 
 F70（外部复审§5.4-6，真实Chromium复现）：真实主机页面、经withoutEditor阻断`**/vendor/monaco/**`使用纯文本回退（F101前阻断的是CDN）。1440×900与390/360/320×844四种视口下（360/320用宽度本身强制菜单超出可用宽度，不依赖机器字体——首版只测390，CI的较宽回退字体让菜单折行而本地未复现），经dom.applyTextScale依次设0.85/1/1.6，等一帧后逐个检查标题栏、状态栏、编辑器页签条/页签、面板头、右栏头、窄屏工作区切换条：每个含文字的可见子元素上下边都必须在所属栏框内（容差1px），不可滚动的栏不得scrollHeight>clientHeight；整页不得横向/纵向溢出；状态栏底边必须贴住窗口底部；标题栏右侧控件右边界不得超出窗口。基线（px结构高度）在1.6档红——标题栏按钮0..36落在30px栏内、状态栏文字越界。结束恢复缩放1并断言无pageerror。不代签Windows系统字体、真实DPI或操作系统放大。
 
+### mcpCorsBrowser(browser,base,mcp)（第109组）
+
+起一个不带CSP的回环页面作为另一个源，从它向MCP端点发initialize、带会话头的tools/list、DELETE和错误密钥的请求，断言跨域可读会话头与`WWW-Authenticate`。原先借用工作台页面，被第101组的`connect-src 'self'`拦下。classicChatStreamBrowser的流式段按发送前已有的气泡数计数，光标从最后一个块元素读取（第108组渲染器改动）。
+
 ### contentSecurityBrowser(browser,base)（F101）
 
-真实策略、不阻断任何请求、不bypassCSP：addInitScript先在document上收集`securitypolicyviolation`事件；goto后断言响应头CSP以`default-src 'self'; script-src 'self' 'sha256-`开头；等状态栏“高级编辑器就绪”（最长20秒），`window.monaco`与`#editor .monaco-editor`存在，`globalThis._VSCODE_NLS_LANGUAGE`为zh-cn，主题dataset已由哈希放行的内联脚本写入；创建一个含语法错误的javascript模型交给编辑器，等`getModelMarkers`出现——诊断只能来自TypeScript worker，证明blob引导+同源importScripts在策略下能跑；最后断言违规事件、控制台“Refused/Content Security Policy”消息、非本机origin的请求三者皆空，且无pageerror。
+真实策略、不阻断任何请求、不bypassCSP：addInitScript先在document上收集`securitypolicyviolation`事件；goto后断言响应头CSP以`default-src 'self'; script-src 'self' 'sha256-`开头；等状态栏“高级编辑器就绪”（最长20秒），`window.monaco`与`state.editor`存在（第109组：未打开文件时编辑器model为null，Monaco不建视图DOM，原先断言`#editor .monaco-editor`必然失败；该测试此前从未在CI跑到，因为排在前面的mcpCorsBrowser先失败），`globalThis._VSCODE_NLS_LANGUAGE`为zh-cn，主题dataset已由哈希放行的内联脚本写入；创建一个含语法错误的javascript模型交给编辑器，等`getModelMarker（第109组：拿到诊断后再断言`#editor .monaco-editor`已挂载）s`出现——诊断只能来自TypeScript worker，证明blob引导+同源importScripts在策略下能跑；最后断言违规事件、控制台“Refused/Content Security Policy”消息、非本机origin的请求三者皆空，且无pageerror。
 
 ### narrowWorkspaceBrowser(browser,base)
 

@@ -24,7 +24,10 @@ export function loadMonaco() {
     script.onerror = () => finish(false);
     script.onload = () => {
       try {
-        window.require.config({ paths: { vs: MONACO_BASE } });
+        // Absolute URL: Monaco boots its language workers from a blob: URL and importScripts()s the
+        // worker code from this path; inside a blob worker a root-relative path is an invalid URL, so
+        // the TypeScript/JSON/CSS/HTML workers never started while the path was '/vendor/…'.
+        window.require.config({ paths: { vs: new URL(MONACO_BASE, location.href).href } });
         const mount = () => window.require(['vs/editor/editor.main'], () => {
           try {
             ui.captureActiveFile();

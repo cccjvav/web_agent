@@ -198,7 +198,9 @@ async function contentSecurityBrowser(browser, base) {
     const policy = response.headers()['content-security-policy'] || '';
     assert.ok(policy.startsWith("default-src 'self'; script-src 'self' 'sha256-"), 'workbench policy header: ' + policy);
     await page.waitForFunction(() => document.querySelector('#sb-editor')?.textContent === '高级编辑器就绪', null, { timeout: 20000 });
-    assert.equal(await page.evaluate(() => Boolean(window.monaco && document.querySelector('#editor .monaco-editor'))), true, 'Monaco mounted from /vendor/monaco');
+    // With no tab open the editor has model:null, and Monaco builds no view DOM until a model is set,
+    // so here only the editor object is checked; the DOM is checked after a model is attached below.
+    assert.equal(await page.evaluate(async () => { const { state } = await import('/js/state.js'); return Boolean(window.monaco && state.editor); }), true, 'Monaco loaded from /vendor/monaco and the editor was created');
     assert.equal(await page.evaluate(() => globalThis._VSCODE_NLS_LANGUAGE), 'zh-cn', 'editor UI strings are Chinese');
     assert.equal(await page.evaluate(() => document.documentElement.dataset.theme === 'light' || document.documentElement.dataset.theme === 'dark'), true, 'inline theme bootstrap ran under its hash');
     // A JavaScript model makes Monaco start the TypeScript worker (blob bootstrap + same-origin
@@ -209,6 +211,7 @@ async function contentSecurityBrowser(browser, base) {
       state.editor.setModel(model);
     });
     await page.waitForFunction(() => window.monaco.editor.getModelMarkers({}).length > 0, null, { timeout: 20000 });
+    assert.equal(await page.evaluate(() => Boolean(document.querySelector('#editor .monaco-editor'))), true, 'Monaco view mounted in #editor once a model is attached');
     await page.evaluate(async () => { const { state } = await import('/js/state.js'); const model = state.editor.getModel(); state.editor.setModel(null); model?.dispose(); });
     assert.deepStrictEqual(await page.evaluate(() => window.__cspViolations), [], 'no Content-Security-Policy violation while loading and running the editor');
     assert.deepStrictEqual(console_, [], 'no policy refusals in the console');

@@ -16,7 +16,8 @@ const rawSource = fs.readFileSync(path.join(__dirname, '../../workbench/js/monac
     EDITOR_BASE_FONT_PX: 13, editorFontSize: scale => Math.round(13 * scale),
     ui: { captureActiveFile() { captured++; }, activateTab() { activated++; }, currentTextScale: () => 1.2 },
     document: { createElement: () => ({}), documentElement: { dataset: {} }, head: { appendChild(s) { script = s; } } },
-    setTimeout(fn) { deadline = fn; return 1; }, clearTimeout() {}
+    setTimeout(fn) { deadline = fn; return 1; }, clearTimeout() {},
+    URL, location: { href: 'http://127.0.0.1:3000/index.html' }
   });
   vm.runInContext(source, context);
   const failed = context.loadMonaco(); assert.ok(status.textContent.includes('加载中'));
@@ -29,7 +30,7 @@ const rawSource = fs.readFileSync(path.join(__dirname, '../../workbench/js/monac
   window.require = (deps, ok) => { required.push(deps.join()); ok(); }; window.require.config = cfg => configs.push(cfg);
   window.monaco = { editor: { create: (_el, options) => { createOptions.push(options); return {}; } } };
   script.onload(); assert.strictEqual(captured, 1); assert.strictEqual(activated, 1);
-  assert.strictEqual(JSON.stringify(configs), JSON.stringify([{ paths: { vs: '/vendor/monaco/vs' } }]), 'AMD base path is the vendored tree (cross-realm: compare by value)');
+  assert.strictEqual(JSON.stringify(configs), JSON.stringify([{ paths: { vs: 'http://127.0.0.1:3000/vendor/monaco/vs' } }]), 'AMD base path is the vendored tree as an absolute URL, so blob: workers can importScripts it (cross-realm: compare by value)');
   assert.deepStrictEqual(required, ['vs/nls.messages.zh-cn', 'vs/editor/editor.main'], 'zh-cn UI strings are loaded before the editor');
   assert.strictEqual(createOptions[0].fontSize, 16, 'F98: the editor is created at the current text scale (13px × 1.2)');
   assert.ok(status.textContent.includes('就绪'), 'late load preserves buffer and upgrades status');
