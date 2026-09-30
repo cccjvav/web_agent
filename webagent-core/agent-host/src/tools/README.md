@@ -25,7 +25,7 @@ MCP、本机Chat和部分REST操作复用 `index.js` 的callTool。它做工具�
 | `findFiles.js` | 简化glob文件定位；不是完整shell glob实现 |
 | `searchWorker.js` | 在worker中执行fileOps.scanSearch，隔离主线程与可终止搜索 |
 | `gitOps.js` | 有预算的git status/diff；字面路径、NUL状态，限定工作区子树，默认diff与显式diff用同一套逐路径敏感规则，禁外部diff/textconv/fsmonitor和已发现的自定义filter |
-| `executor.js` | 普通子进程和PTY转发的run/start/output/cancel/input行为，POSIX Shell动态探测与执行环境净化注入摘要（F104） |
+| `executor.js` | 普通子进程和PTY转发的run/start/output/cancel/input行为 |
 | `ptyJobs.js` | 本机扩展任务队列、所有权、审批/执行期限与报告状态 |
 | `dangerous.js` | 常见危险命令的词法判断；不是操作系统命令沙箱 |
 | `progressTracker.js` | 按本机Chat/Bridge初始化会话隔离任务快照，不是多用户事务库 |
@@ -101,7 +101,7 @@ R4：executor/fileOps复用WEBAGENT_DEBUG_PROCESS=1输出有界生命周期元�
 | [commandJob.cs](commandJob.cs) | 文件级登记；未做符号完整性证明 |
 | [consensusEngine.js](consensusEngine.js) | 8 个函数/类节点 |
 | [dangerous.js](dangerous.js) | 1 个函数/类节点 |
-| [executor.js](executor.js) | 42 个函数/类节点 |
+| [executor.js](executor.js) | 39 个函数/类节点 |
 | [fileOps.js](fileOps.js) | 36 个函数/类节点 |
 | [findFiles.js](findFiles.js) | 6 个函数/类节点 |
 | [gitOps.js](gitOps.js) | 13 个函数/类节点 |

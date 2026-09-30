@@ -73,10 +73,10 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 | 风险/模块 | 主要测试 | 证据类型与限制 |
 |---|---|---|
 | 路径、写入、hash、补丁、Skill | patchEngine、workspaceTools、sandbox、auditStorage、apiFiles | 临时文件系统与HTTP，含createOnly并发一胜一409；不是外部OS写进程隔离证明 |
-| 模型失败、工具结果、Plan | modelLifecycle、runChat、chatMode、planRound、toolLabel、chatConcurrency | 实际调度模块+模拟模型响应，含返回式终态失败与/api/chat并发上限拦截；不是提供商实测 |
+| 模型失败、工具结果、Plan | modelLifecycle、runChat、chatMode、planRound、toolLabel | 实际调度模块+模拟模型响应，含返回式终态失败；不是提供商实测 |
 | MCP、OAuth、GitHub身份、会话/board | mcpProtocol、oauth、oauthClientAuth、githubAuth、mcpBoard、board | 真实index验证OAuth issuer/撤销、公开peer不可冒用及跨主体会话；GitHub设备流以HTTP替身验证代次/单飞，非第三方实机验收 |
 | 本机控制面、WS、Origin | auditControl、localControl、corsAllow、contentSecurity、httpSmoke | 真实入口双端口API门禁、MCP Origin/认证先于解析、预检与WS；工作台CSP字符串与vendored Monaco清单（contentSecurity）、真实响应头与/vendor/monaco静态服务（httpSmoke）；策略下的真实浏览器行为只在CI的workbench.browser（contentSecurityBrowser）验证 |
-| PTY审批、取消、归属、捕获 | ptyLifecycle、ptyJobs、desktopExtension、executorEnv | 部分真实子进程+VS Code事件fixture，含扩展对非2xx回包的拒绝；POSIX Shell探测与执行环境净化注入摘要；原生终端效果须另测 |
+| PTY审批、取消、归属、捕获 | ptyLifecycle、ptyJobs、desktopExtension | 部分真实子进程+VS Code事件fixture，含扩展对非2xx回包的拒绝；原生终端效果须另测 |
 | 隧道启停 | tunnel、bridgeTunnel、tunnelLifecycle | 解析、API及进程引用fixture；非真实公网隧道 |
 | 原生扩展命令消费 | nativeRotationCommands、sidebarFeedback | 真实activate+VS Code/HTTP替身（sidebarFeedback另替换HostManager并运行生成的侧栏页面脚本）；非真实IDE或隧道进程退出证明 |
 | 插件设置标签页 | settingsPanel、settingsRelay、workbench.browser（settingsPanelBrowser） | 真实工作台页面改写、假vscode面板与对话框、转发到真实主机；外部MCP登记与stdio预览/启动/移除经转发与VS Code确认框（第4批）；Chromium模拟webview，非真实VS Code窗口 |
@@ -158,7 +158,6 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
 | [board.test.js](board.test.js) | 4 个函数/类节点 |
 | [bridgeTunnel.test.js](bridgeTunnel.test.js) | 34 个函数/类节点 |
-| [chatConcurrency.test.js](chatConcurrency.test.js) | 11 个函数/类节点 |
 | [chatMode.test.js](chatMode.test.js) | 0 个函数/类节点 |
 | [chatVision.test.js](chatVision.test.js) | 21 个函数/类节点 |
 | [codeServerAuth.test.js](codeServerAuth.test.js) | 0 个函数/类节点 |
@@ -184,7 +183,6 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [editorRuntime.test.js](editorRuntime.test.js) | 39 个函数/类节点 |
 | [eventBus.test.js](eventBus.test.js) | 22 个函数/类节点 |
 | [executionControl.test.js](executionControl.test.js) | 41 个函数/类节点 |
-| [executorEnv.test.js](executorEnv.test.js) | 5 个函数/类节点 |
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
 | [extensionHostSafety.test.js](extensionHostSafety.test.js) | 32 个函数/类节点 |
 | [externalDiscovery.test.js](externalDiscovery.test.js) | 13 个函数/类节点 |

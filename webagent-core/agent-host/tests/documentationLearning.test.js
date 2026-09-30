@@ -107,7 +107,6 @@ const pairs = [
   ["webagent-core/agent-host/tests/mcpInterop.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
   ["webagent-core/agent-host/tests/mcpCallerIsolation.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
   ["webagent-core/agent-host/tests/httpSmoke.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
-  ["webagent-core/agent-host/tests/chatConcurrency.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
   ["webagent-core/agent-host/tests/skipWorkbench.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
   ["webagent-core/agent-host/tests/configPorts.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
   ["webagent-core/agent-host/tests/operatorQueueCapacity.test.js", "webagent-core/agent-host/tests/MCP协议与整机入口测试详解.md"],
@@ -143,7 +142,6 @@ const pairs = [
 
   ["webagent-core/agent-host/tests/ptyJobs.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
   ["webagent-core/agent-host/tests/ptyLifecycle.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
-  ["webagent-core/agent-host/tests/executorEnv.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
   ["webagent-core/agent-host/tests/extensionHostSafety.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
   ["webagent-core/agent-host/tests/tunnel.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
   ["webagent-core/agent-host/tests/tunnelLifecycle.test.js", "webagent-core/agent-host/tests/PTY与隧道测试详解.md"],
