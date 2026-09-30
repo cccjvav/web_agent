@@ -5,7 +5,7 @@ const { formatWorkspaceContext } = require('../models/profile');
 const { listSkills } = require('../tools/skills');
 const { getTaskState } = require('../tools/progressTracker');
 const { recall } = require('../models/memory');
-const { snapshot } = require('./session');
+const { sessionView } = require('./session');
 const eventBus = require('../utils/eventBus');
 const { getInstructions } = require('./instructions');
 const { listClients } = require('./clients');
@@ -71,7 +71,7 @@ function readResource(uri, options = {}) {
       };
     }
     case 'webagent://config': {
-      const sess = snapshot();
+      const sess = sessionView(options);
       return {
         uri,
         mimeType: 'text/plain',

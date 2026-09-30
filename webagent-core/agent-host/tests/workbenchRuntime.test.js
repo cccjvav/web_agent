@@ -80,6 +80,21 @@ process.on('exit', code => {
   }
   await dom.link(specifier => { assert.strictEqual(specifier, './state.js'); return state; });
   await dom.evaluate(); // F01 used to throw here, before boot's catch could run.
+  {
+    // Review P3-8: renderMd handles lists, tables, fences and links while keeping every byte escaped.
+    const { renderMd } = dom.namespace;
+    const html = renderMd('# T\n\npara **b** *i* `x<y`\nline2\n\n1. one\n2. two\n\n- a\n- b\n\n| h1 | h2 |\n|---|---|\n| c | d |\n\n> q\n\n```js\nif (a<b) {\n\n}\n```\n[ok](https://e.x/?a=1&b=2) [bad](javascript:alert(1)) <img src=x onerror=1>');
+    assert.ok(html.includes('<h3>T</h3>'), html);
+    assert.ok(html.includes('<p>para <strong>b</strong> <em>i</em> <code>x&lt;y</code><br>line2</p>'), html);
+    assert.ok(html.includes('<ol><li>one</li><li>two</li></ol><ul><li>a</li><li>b</li></ul>'), html);
+    assert.ok(html.includes('<table><thead><tr><th>h1</th><th>h2</th></tr></thead><tbody><tr><td>c</td><td>d</td></tr></tbody></table>'), html);
+    assert.ok(html.includes('<blockquote><p>q</p></blockquote>'), html);
+    assert.ok(html.includes('<pre><code class="lang-js">if (a&lt;b) {\n\n}</code></pre>'), 'fence keeps blank lines and escapes: ' + html);
+    assert.ok(html.includes('<a href="https://e.x/?a=1&amp;b=2" target="_blank" rel="noopener noreferrer">ok</a>'), html);
+    assert.ok(!/href="javascript/i.test(html) && !html.includes('<img'), 'no executable link or raw tag: ' + html);
+    assert.strictEqual(renderMd('```\npartial'), '<pre><code>partial</code></pre>', 'an unclosed stream fence renders as code');
+    assert.strictEqual(renderMd(''), '');
+  }
   // P3-9: short toasts keep 2.2 s, long text grows ~15 chars/s and caps at 6 s.
   assert.strictEqual(dom.namespace.toastDuration('已保存'), 2200);
   assert.strictEqual(dom.namespace.toastDuration('x'.repeat(60)), 4000);

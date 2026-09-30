@@ -76,7 +76,9 @@
 
 先pruneExpiredTokens；注册表不足80直接返回。满时遍历授权码/access/refresh建立protectedIds；只移除注册超过5分钟且无上述有效记录的客户端，腾出一位即返回；没有可移除项抛503 temporarily_unavailable。不会为新注册踢掉活跃/正在授权客户端。未配对注册仍能占满短期容量，这是有界拒绝服务风险，不宣称消灭注册滥用。
 
-### registerClient(body={})
+### registerClient(body={},source=null)
+
+D-15（第108组）：`source`是HTTP注册的来源IP（registerHandler传`clientIp(req)`），记入客户端记录。同一source已有`MAX_IDLE_CLIENTS_PER_SOURCE=10`个空闲注册（`idleRegistrationsFrom`：无授权码/access/refresh记录）时抛429 temporarily_unavailable；进程内调用（source为null）不计数。隧道后所有外部客户端都显示为回环IP，因此公网场景下这是全体共享的10个空闲名额，单用户场景可接受。
 
 认证方式缺省none，只允许none/client_secret_post/client_secret_basic。redirect_uris必须1–16项；逐项调用validateRedirectUri。client_name可缺省或不超过256字符的字符串。全部检查完成后才pruneClients，避免错误请求修改注册表。
 
@@ -120,7 +122,7 @@ issueAccess生成access/refresh，创建含两个截止的共享记录，同时�
 
 ### authorization_code 分支
 
-查code存在/未过期 → clientId一致 → redirectUri一致 → verifier为43–128位RFC7636未保留字符字符串且s256等于challenge，全部通过才delete授权码、issueAccess、tokenResponse。前面的认证/PKCE失败不提前消耗授权码；成功后不能二次兑换。错误多为status400，路由sendError默认映射invalid_request，而非每个分支精细区分invalid_grant。
+查code存在/未过期 → clientId一致 → redirectUri一致 → verifier为43–128位RFC7636未保留字符字符串且s256等于challenge，全部通过才delete授权码、issueAccess、tokenResponse。客户端认证失败或verifier格式不合法不消耗授权码；**D-14（第108组）：verifier格式合法但S256与challenge不符时立即删除授权码**（RFC 6749 §4.1.2精神，客户端须重新配对），格式不合法仍保留授权码以便客户端修正；成功后不能二次兑换。错误多为status400，路由sendError默认映射invalid_request，而非每个分支精细区分invalid_grant。
 
 ### refresh_token 分支
 

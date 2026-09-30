@@ -27,8 +27,21 @@ function sessionKey(req) {
   const client = (typeof rawClient === 'string' ? rawClient.replace(/[\x00-\x1f\x7f]/g, '').slice(0, 64) : '') || 'mcp';
   const principal = req && typeof req.mcpPrincipal === 'string' && req.mcpPrincipal ? req.mcpPrincipal : '';
   if (!principal) return `${client}@${ip}`;
-  const tag = crypto.createHmac('sha256', CALLER_TAG_SALT).update(principal).digest('hex').slice(0, 24);
-  return `${client}@${ip}~${tag}`;
+  return `${client}@${ip}~${callerTag(principal)}`;
+}
+
+function callerTag(principal) {
+  return crypto.createHmac('sha256', CALLER_TAG_SALT).update(String(principal)).digest('hex').slice(0, 24);
+}
+
+// Review D-16: an OAuth-paired external client sees only its own caller records, not other callers'
+// keys (which embed IPs), client names or call counts.
+function snapshotFor(principal) {
+  const full = snapshot();
+  const suffix = '~' + callerTag(principal);
+  const own = full.sessions.filter(s => s.key.endsWith(suffix));
+  const ageMs = own[0] ? Date.now() - Date.parse(own[0].lastSeen) : null;
+  return { clients: own.length, staleAfterMs: full.staleAfterMs, alive: ageMs != null && ageMs < full.staleAfterMs, ageMs, latest: own[0] || null, sessions: own };
 }
 
 function pruneSessions() {
@@ -217,8 +230,15 @@ function reset() {
   return snapshot();
 }
 
+// Session view for a tool/resource call: OAuth-paired callers get only their own records (D-16).
+function sessionView(options = {}) {
+  return options && options.oauthPrincipal ? snapshotFor(options.oauthPrincipal) : snapshot();
+}
+
 module.exports = {
   touch,
+  snapshotFor,
+  sessionView,
   snapshot,
   sessionKey,
   keyForReq,

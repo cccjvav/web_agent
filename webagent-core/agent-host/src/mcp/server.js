@@ -14,7 +14,7 @@ const { listResources, readResource } = require('./resources');
 const { clipJson } = require('./budget');
 const { resolveToolName } = require('../tools/normalize');
 const { ProtocolError, publicError } = require('./errors');
-const { touch, snapshot, sessionKey, createHttpSession, touchHttpSession, getHttpSession, destroyHttpSession, keyForReq, setHttpSessionKey, beginHttpSessionWork } = require('./session');
+const { touch, snapshot, snapshotFor, sessionKey, createHttpSession, touchHttpSession, getHttpSession, destroyHttpSession, keyForReq, setHttpSessionKey, beginHttpSessionWork } = require('./session');
 const oauth = require('./oauth');
 const tracker = require('../usage/tracker');
 // 第三阶段（用户 2026-09-07 书面同意）：run_command 截图以 MCP image 内容回给网页 Agent。
@@ -56,6 +56,7 @@ function requireAuth(req, res, next) {
   if (!identity) return rejectUnauthorized(req, res);
   // OAuth refresh retains the registered client identity. A URL-secret rotation
   // changes identity; neither the raw credential nor this digest is a public peer key.
+  req.mcpAuthKind = identity.kind;
   req.mcpPrincipal = crypto.createHash('sha256')
     .update(JSON.stringify([identity.kind, identity.kind === 'oauth' ? identity.clientId : token])).digest('hex');
   next();
@@ -245,7 +246,7 @@ async function handleRpc(req) {
       const callerKey = initializedKey || sessionKey(req);
       const sess0 = touch(req, { key: callerKey });
       try {
-        const result = await callTool(name, toolArgs || {}, remoteToolMode(params), { remote: true, initializedSession: Boolean(initializedKey), callerKey: sess0.key, taskId: params?._meta?.['webagent/taskId'] });
+        const result = await callTool(name, toolArgs || {}, remoteToolMode(params), { remote: true, initializedSession: Boolean(initializedKey), callerKey: sess0.key, taskId: params?._meta?.['webagent/taskId'], oauthPrincipal: oauthPrincipalOf(req) });
         const failed = isToolFailure(result);
         const clipped = clipJson(result);
         const durationMs = Date.now() - started;
@@ -296,7 +297,7 @@ async function handleRpc(req) {
     case 'resources/read': {
       control.assertAllowed('read_files');
       const uri = params && params.uri;
-      const doc = readResource(uri, { remote: true, callerKey: keyForReq(req) });
+      const doc = readResource(uri, { remote: true, callerKey: keyForReq(req), oauthPrincipal: oauthPrincipalOf(req) });
       if (!doc) throw new ProtocolError('E_NOT_FOUND', `Unknown resource ${uri}`);
       return { contents: [doc] };
     }
@@ -338,16 +339,23 @@ async function handleRpc(req) {
   }
 }
 
-function hostStatus() {
+function oauthPrincipalOf(req) {
+  return req && req.mcpAuthKind === 'oauth' ? req.mcpPrincipal : null;
+}
+
+function hostStatus(req) {
+  // Review D-16: the URL-secret holder is the operator; an OAuth-paired client gets a reduced view
+  // (own caller records only, workspace folder name instead of the absolute path).
+  const oauthPeer = Boolean(req && req.mcpAuthKind === 'oauth');
   return {
     status: 'online',
     server: config.serverName,
     version: config.version,
-    workspace: config.workspaceRoot,
+    workspace: oauthPeer ? require('path').basename(config.workspaceRoot) : config.workspaceRoot,
     tools: getToolList(null, { remote: true }).map((t) => t.name),
     resources: listResources().map((r) => r.uri),
     instructions: control.permissions().read ? getInstructions() : 'Bridge文件读取已被本机操作者禁止。' ,
-    session: snapshot(),
+    session: oauthPeer ? snapshotFor(req.mcpPrincipal) : snapshot(),
     // Only Streamable HTTP. The legacy 2024-11-05 HTTP+SSE transport (responses delivered on the GET
     // stream) is not implemented — POST answers inline — and advertising it made the official
     // SSEClientTransport wait forever for its initialize response.
@@ -541,7 +549,7 @@ function handleGet(req, res) {
     return;
   }
   if (req.mcpSessionId) res.setHeader('Mcp-Session-Id', req.mcpSessionId);
-  res.json(hostStatus());
+  res.json(hostStatus(req));
 }
 
 function handleDelete(req, res) {

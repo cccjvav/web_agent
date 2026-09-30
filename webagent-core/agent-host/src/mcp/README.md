@@ -97,12 +97,12 @@ R2/R3会话提交时序：HTTP/SSE响应SID先校验但不立即保存，RPC响�
 | [errors.js](errors.js) | 6 个函数/类节点 |
 | [externalClient.js](externalClient.js) | 24 个函数/类节点 |
 | [instructions.js](instructions.js) | 3 个函数/类节点 |
-| [oauth.js](oauth.js) | 53 个函数/类节点 |
+| [oauth.js](oauth.js) | 54 个函数/类节点 |
 | [publicHttps.js](publicHttps.js) | 17 个函数/类节点 |
 | [requestLifecycle.js](requestLifecycle.js) | 8 个函数/类节点 |
 | [resources.js](resources.js) | 5 个函数/类节点 |
-| [server.js](server.js) | 39 个函数/类节点 |
-| [session.js](session.js) | 21 个函数/类节点 |
+| [server.js](server.js) | 40 个函数/类节点 |
+| [session.js](session.js) | 25 个函数/类节点 |
 | [stdioBridge.cs](stdioBridge.cs) | 文件级登记；未做符号完整性证明 |
 | [stdioBridge.ps1](stdioBridge.ps1) | 文件级登记；未做符号完整性证明 |
 | [stdioLaunch.js](stdioLaunch.js) | 11 个函数/类节点 |

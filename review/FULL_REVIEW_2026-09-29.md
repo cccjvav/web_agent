@@ -150,12 +150,12 @@
 |---|---|---|---|
 | P3-1 | `config.js:12-13` | `parseInt(AGENT_HOST_PORT/WORKBENCH_PORT)` 无 NaN/范围校验，`AGENT_HOST_PORT=abc` 会把 NaN 传给 `listen` | 校验 1–65535，非法即退出并提示 |
 | P3-2 | `index.js` | `/api` 的两个守卫中间件挂载了两次（无害但多余） | 合并 |
-| P3-3 | `routes.js` `/api/probe/*` | 直接把 `req.body` 交给 probeBridge，未经 `apiRequestBody` 顶层白名单；本轮阅读 `probeBridge.validateAction` 确认其自行做了键白名单与类型校验，因此**不是漏洞**，但与其余路由风格不一致 | 统一走 `apiRequestBody` |
-| P3-4 | `routes.js` `POST /models`、`PUT /customizations`、`POST /providers/probe` | 未经 `apiRequestBody`（各自有严格 schema，安全上无差，风格不一致） | 同上 |
+| P3-3 | `routes.js` `/api/probe/*` | 直接把 `req.body` 交给 probeBridge，未经 `apiRequestBody` 顶层白名单；本轮阅读 `probeBridge.validateAction` 确认其自行做了键白名单与类型校验，因此**不是漏洞**，但与其余路由风格不一致 | 统一走 `apiRequestBody` | **核对后不改（第108组）**：probeBridge的validateAction已做键白名单与类型校验，改走apiRequestBody只会多一层重复检查 |
+| P3-4 | `routes.js` `POST /models`、`PUT /customizations`、`POST /providers/probe` | 未经 `apiRequestBody`（各自有严格 schema，安全上无差，风格不一致） | 同上 | **核对后不改（第108组）**：三条路由各自的schema比顶层白名单更严，且返回客户端依赖的专用错误码（`E_BAD_PROVIDER`、`E_BAD_MODEL_SET`、`E_BAD_ARGS`），统一会改变对外行为而无安全收益 |
 | P3-5 | `openai.js:106` | 系统提示里写死 `(including calculator.js)`——示例项目的名字进入了所有用户的提示词 | 删除 |
 | P3-6 | `openai.js:99` | 系统提示称"Editor is Code-OSS"，经典工作台模式下编辑器是 Monaco 页面 | 按入口注入 |
 | P3-7 | `tools/index.js` | `report_progress`/`set_todos` 的 description 为中文，其余 37 个为英文；同一 tools/list 语言混杂会影响模型工具选择一致性 | 统一英文（或双语） |
-| P3-8 | `dom.js:108-118 renderMd` | 先 `escapeHtml` 再替换（XSS 安全），但：围栏代码的语言标记（```js）成为代码块首行；`<li>` 没有外层 `<ul>`；不支持有序列表/链接/斜体/表格 | 用 ~3 KB 的小型渲染器（或 `marked` + DOMPurify 自托管） |
+| P3-8 | `dom.js:108-118 renderMd` | 先 `escapeHtml` 再替换（XSS 安全），但：围栏代码的语言标记（```js）成为代码块首行；`<li>` 没有外层 `<ul>`；不支持有序列表/链接/斜体/表格 | 用 ~3 KB 的小型渲染器（或 `marked` + DOMPurify 自托管） | **已修（第108组）**：dom.js内置小型块级渲染器，见状态与编辑器详解 |
 | P3-9 | `dom.js:99` | toast 固定 2.2 秒，长错误文本读不完 | 按文本长度 2.2–6 秒，错误类可点击关闭 |
 | P3-10 | `chat.js paintTodos` | 只迭代 `['chat']`，是多面板时代的残留 | 清理 |
 | P3-11 | `styles.css` | 末尾追加式覆盖：两个 `:root`（1、545）、`.composer-tools` 两次（279、578）、`@media 980` 两次（462、605）、`@media 700` 两次（579、629）、空规则 `.tree-dir .tree-kids { }`（437） | 一次性合并 |
@@ -372,9 +372,9 @@
 | D-8 | `extension/workspaceMatch.js` | 只在 win32 或盘符路径上小写比较，macOS（默认不区分大小写）上 `/Users/Me/x` 与 `/users/me/x` 判不同。两端路径都来自 `path.resolve`，实际拼写一致，仅在用户手填 URL 时可能触发；记录 |
 | D-9 | `.git/hooks` | `.git` 只是噪声目录（隐藏不列出），模型可按路径 `write_file ".git/hooks/pre-commit"`；不过能写文件的模型本来就能用 `run_command` 做同样的事，不构成权限提升。F99 起 `.git/config` 归敏感 |
 | D-10 | `extension/dangerousPolicy.js` `infraDangerous` | `kubectl delete` 不看资源类型/命名空间，`kubectl delete pod x -n dev` 与 `kubectl delete ns prod` 同级；只是保守，不是漏检 |
-| D-14 | `oauth.js` `handleToken` 授权码分支 | `code_verifier` 不匹配时只抛 `invalid_grant`，授权码保留到 10 分钟过期；RFC 6749 §4.1.2 建议同一 code 被二次使用时作废。PKCE 用 S256、verifier 43–128 字符，离线猜不中，且 token 端点 60/分限流，实际风险极低；改为“失败即作废”会让手抖填错的客户端必须重新配对，先记录 |
-| D-15 | `oauth.js` `pruneClients` | 注册槽 80 个、单 IP 20 次/分：同一来源 4 分钟即可用无授权码的空注册占满，其他客户端在 5 分钟空闲回收前得到 503。OAuth 默认关闭、只在公网隧道场景开启，且本机操作者可 `revokeAll`；建议后续按 IP 限制空闲注册数（例如 ≤10） |
-| D-16 | `server.js` `GET /mcp`（hostStatus） | 任何通过认证的调用者（包括 OAuth 配对的外部客户端）都能看到其他调用者的 key（含 IP）、clientInfo、调用计数和 `workspaceRoot` 绝对路径。单操作者产品里这是“本机状态页”，但公网 OAuth 场景下属于跨调用者信息暴露；建议远程 principal 只回自己的记录 |
+| D-14 | `oauth.js` `handleToken` 授权码分支 | `code_verifier` 不匹配时只抛 `invalid_grant`，授权码保留到 10 分钟过期；RFC 6749 §4.1.2 建议同一 code 被二次使用时作废。PKCE 用 S256、verifier 43–128 字符，离线猜不中，且 token 端点 60/分限流，实际风险极低；改为“失败即作废”会让手抖填错的客户端必须重新配对，先记录 | **已修（第108组）**：格式合法的错误verifier作废授权码 |
+| D-15 | `oauth.js` `pruneClients` | 注册槽 80 个、单 IP 20 次/分：同一来源 4 分钟即可用无授权码的空注册占满，其他客户端在 5 分钟空闲回收前得到 503。OAuth 默认关闭、只在公网隧道场景开启，且本机操作者可 `revokeAll`；建议后续按 IP 限制空闲注册数（例如 ≤10） | **已修（第108组）**：每来源最多10个空闲注册，超出429 |
+| D-16 | `server.js` `GET /mcp`（hostStatus） | 任何通过认证的调用者（包括 OAuth 配对的外部客户端）都能看到其他调用者的 key（含 IP）、clientInfo、调用计数和 `workspaceRoot` 绝对路径。单操作者产品里这是“本机状态页”，但公网 OAuth 场景下属于跨调用者信息暴露；建议远程 principal 只回自己的记录 | **已修（第108组）**：OAuth调用者的GET /mcp、ping、get_capabilities、webagent://config只含自己的记录，工作区只给目录名 |
 | D-17 | `server.js` `resources/list` | 不像 `resources/read` 那样 `assertAllowed('read_files')`；返回的只是 8 个固定 `webagent://` URI 与说明，不含内容，故无实际泄露 |
 | D-18 | `mcp/publicHttps.js` | 用 `https.request` 且不跟随 3xx：注册的公网 MCP 服务器若返回 301/302 会直接失败。这是 SSRF 防线（重定向可指向内网）的一部分，属有意设计，只需在“公网出站详解”里保持说明 |
 

@@ -382,6 +382,12 @@ async function main() {
       headers: { Authorization: `Bearer ${tokens.access_token}` }
     });
     assert.strictEqual(afterRevoke.status, 401);
+
+    // Review D-15: one network source may hold at most 10 unused registrations; others are unaffected.
+    for (let i = 0; i < 10; i++) oauth.registerClient({ redirect_uris: ['http://127.0.0.1/cb'] }, '203.0.113.9');
+    assert.throws(() => oauth.registerClient({ redirect_uris: ['http://127.0.0.1/cb'] }, '203.0.113.9'), err => err.status === 429);
+    assert.ok(oauth.registerClient({ redirect_uris: ['http://127.0.0.1/cb'] }, '198.51.100.7').client_id);
+    assert.ok(oauth.registerClient({ redirect_uris: ['http://127.0.0.1/cb'] }).client_id, 'in-process registration is not capped');
   } finally {
     await new Promise((r) => server.close(r));
     fs.rmSync(tmp, { recursive: true, force: true });

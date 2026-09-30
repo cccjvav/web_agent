@@ -17,6 +17,9 @@ const CODE_TTL_MS = 5 * 60 * 1000;
 const ACCESS_TTL_MS = 60 * 60 * 1000;
 const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_CLIENTS = 80;
+// Review D-15: one source may hold at most this many registrations that have not yet obtained a code
+// or token, so it cannot fill all MAX_CLIENTS slots with empty registrations.
+const MAX_IDLE_CLIENTS_PER_SOURCE = 10;
 // spentRefresh is the replay-detection tombstone set. Entries only expire after REFRESH_TTL_MS,
 // so a paired client that keeps rotating its refresh token adds one permanent-ish entry per call
 // with nothing to evict it: at the /oauth/token rate limit of 60/min sustained over the 7 day TTL
@@ -251,7 +254,18 @@ function validateRedirectUri(value) {
   return url;
 }
 
-function registerClient(body = {}) {
+function idleRegistrationsFrom(source) {
+  const active = new Set();
+  for (const records of [authCodes, accessTokens, refreshTokens]) {
+    for (const rec of records.values()) active.add(rec.clientId);
+  }
+  let n = 0;
+  for (const [id, rec] of clients) if (rec.source === source && !active.has(id)) n++;
+  return n;
+}
+
+// `source` is the HTTP caller address (registerHandler); in-process callers pass none and are not capped.
+function registerClient(body = {}, source = null) {
   const method = body.token_endpoint_auth_method || 'none';
   if (!['none', 'client_secret_post', 'client_secret_basic'].includes(method)) {
     const err = new Error('unsupported token_endpoint_auth_method'); err.status = 400; throw err;
@@ -266,6 +280,12 @@ function registerClient(body = {}) {
   }
   // No registry mutation until the entire request is validated.
   pruneClients();
+  if (source != null && idleRegistrationsFrom(source) >= MAX_IDLE_CLIENTS_PER_SOURCE) {
+    const err = new Error('too many unused client registrations from this source; complete or wait for earlier pairings');
+    err.status = 429;
+    err.oauthError = 'temporarily_unavailable';
+    throw err;
+  }
   const clientId = randomToken('sccid_', 12);
   const clientSecret = randomToken('sccsec_', 16);
   const rec = {
@@ -274,6 +294,7 @@ function registerClient(body = {}) {
     redirect_uris: redirectUris,
     client_name: body.client_name || 'mcp-client',
     token_endpoint_auth_method: method,
+    source,
     createdAt: now()
   };
   clients.set(clientId, rec);
@@ -460,7 +481,11 @@ function handleToken(body = {}, authorization = '') {
       err.status = 400;
       throw err;
     }
-    if (typeof body.code_verifier !== 'string' || !/^[A-Za-z0-9._~-]{43,128}$/.test(body.code_verifier) || s256(body.code_verifier) !== rec.challenge) {
+    const wellFormed = typeof body.code_verifier === 'string' && /^[A-Za-z0-9._~-]{43,128}$/.test(body.code_verifier);
+    if (!wellFormed || s256(body.code_verifier) !== rec.challenge) {
+      // Review D-14 (RFC 6749 §4.1.2 / §10.5): a well-formed but wrong verifier is a guess, so the code
+      // is spent. A malformed verifier is a broken request and leaves the code usable.
+      if (wellFormed) authCodes.delete(body.code);
       const err = new Error('PKCE verification failed');
       err.status = 400;
       throw err;
@@ -569,7 +594,7 @@ router.get('/.well-known/oauth-protected-resource/mcp', (req, res) => {
 function registerHandler(req, res) {
   try {
     rateLimit(`reg:${clientIp(req)}`, 20, 60 * 1000);
-    res.status(201).json(registerClient(req.body || {}));
+    res.status(201).json(registerClient(req.body || {}, clientIp(req)));
   } catch (err) {
     sendError(res, err);
   }

@@ -7,7 +7,7 @@ const { reportProgress, setTodos, getTaskState } = require('./progressTracker');
 const { runMultiModelConsensus } = require('./consensusEngine');
 const eventBus = require('../utils/eventBus');
 const { remember, recall } = require('../models/memory');
-const { snapshot } = require('../mcp/session');
+const { sessionView } = require('../mcp/session');
 const { ProtocolError } = require('../mcp/errors');
 const { clipJson } = require('../mcp/budget');
 const { gitStatus, gitDiff } = require('./gitOps');
@@ -27,8 +27,8 @@ function tool(def) {
   return def;
 }
 
-function pingHost() {
-  return { ok: true, ts: Date.now(), identity: hostIdentity(), ...snapshot() };
+function pingHost(_args, options = {}) {
+  return { ok: true, ts: Date.now(), identity: hostIdentity(), ...sessionView(options) };
 }
 
 const LOG_KEEP = new Set(['tool', 'success', 'durationMs', 'execId', 'status', 'truncated', 'callId', 'taskId', 'sessionId', 'hostInstanceId', 'verification']);
@@ -53,7 +53,7 @@ function getLogs({ maxLines = 50 } = {}, options = {}) {
 function getCapabilities(_args, options = {}) {
   return {
     tools: getToolList(null, options.remote ? { remote: true } : {}).map((t) => ({ name: t.name, description: t.description, modes: toolRegistry.get(t.name).mode.slice() })),
-    session: snapshot(),
+    session: sessionView(options),
     ...diagnostics()
   };
 }

@@ -131,16 +131,86 @@ export function escapeHtml(s) {
   ));
 }
 
-export function renderMd(src) {
-  let t = escapeHtml(src || '');
-  t = t.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-  t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+// Review P3-8: a small block/inline Markdown renderer for model output. Every piece of source text is
+// HTML-escaped before any tag is added, links only get http(s)/mailto targets, and nothing produces
+// inline styles or scripts (the workbench CSP forbids both). Unclosed code fences (a stream still in
+// progress) render as code up to the end.
+function mdInline(text) {
+  const codes = [];
+  let t = escapeHtml(text).replace(/`([^`]+)`/g, (_, c) => { codes.push(c); return `\u0000${codes.length - 1}\u0000`; });
+  t = t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, label, url) => {
+    const raw = url.replace(/&amp;/g, '&');
+    if (!/^(https?:\/\/|mailto:)/i.test(raw)) return m;
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+  });
   t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  t = t.replace(/^### (.*)$/gm, '<h4>$1</h4>');
-  t = t.replace(/^## (.*)$/gm, '<h3>$1</h3>');
-  t = t.replace(/^- (.*)$/gm, '<li>$1</li>');
-  t = t.replace(/\n/g, '<br>');
-  return t;
+  t = t.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+  t = t.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+  t = t.replace(/(^|[^\w*])\*([^*\s][^*]*?)\*(?!\w)/g, '$1<em>$2</em>');
+  t = t.replace(/(^|[^\w])_([^_\s][^_]*?)_(?!\w)/g, '$1<em>$2</em>');
+  return t.replace(/\u0000(\d+)\u0000/g, (_, n) => `<code>${codes[Number(n)]}</code>`);
+}
+
+function mdTableRow(line) {
+  return line.trim().replace(/^\||\|$/g, '').split('|').map(cell => cell.trim());
+}
+
+export function renderMd(src) {
+  const lines = String(src || '').replace(/\r\n?/g, '\n').split('\n');
+  const out = [];
+  let para = [];
+  const flush = () => { if (para.length) { out.push(`<p>${para.map(mdInline).join('<br>')}</p>`); para = []; } };
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const fence = /^\s*```\s*([\w+#.-]*)\s*$/.exec(line);
+    if (fence) {
+      flush();
+      const body = [];
+      while (++i < lines.length && !/^\s*```\s*$/.test(lines[i])) body.push(lines[i]);
+      const lang = fence[1] ? ` class="lang-${escapeHtml(fence[1])}"` : '';
+      out.push(`<pre><code${lang}>${escapeHtml(body.join('\n'))}</code></pre>`);
+      continue;
+    }
+    const heading = /^(#{1,6})\s+(.*)$/.exec(line);
+    if (heading) { flush(); const level = Math.min(6, heading[1].length + 2); out.push(`<h${level}>${mdInline(heading[2])}</h${level}>`); continue; }
+    if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(line)) { flush(); out.push('<hr>'); continue; }
+    if (/^\s*>/.test(line)) {
+      flush();
+      const quote = [];
+      for (; i < lines.length && /^\s*>/.test(lines[i]); i++) quote.push(lines[i].replace(/^\s*>\s?/, ''));
+      i--;
+      out.push(`<blockquote>${renderMd(quote.join('\n'))}</blockquote>`);
+      continue;
+    }
+    const listMatch = /^\s*([-*+]|\d+[.)])\s+/.exec(line);
+    if (listMatch) {
+      flush();
+      const ordered = /\d/.test(listMatch[1]);
+      const items = [];
+      for (; i < lines.length; i++) {
+        const m = /^\s*([-*+]|\d+[.)])\s+(.*)$/.exec(lines[i]);
+        if (!m || /\d/.test(m[1]) !== ordered) break;
+        items.push(`<li>${mdInline(m[2])}</li>`);
+      }
+      i--;
+      out.push(ordered ? `<ol>${items.join('')}</ol>` : `<ul>${items.join('')}</ul>`);
+      continue;
+    }
+    if (/^\s*\|.*\|\s*$/.test(line) && i + 1 < lines.length && /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/.test(lines[i + 1])) {
+      flush();
+      const head = mdTableRow(line);
+      const rows = [];
+      for (i += 2; i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i]); i++) rows.push(mdTableRow(lines[i]));
+      i--;
+      out.push(`<table><thead><tr>${head.map(c => `<th>${mdInline(c)}</th>`).join('')}</tr></thead><tbody>${
+        rows.map(r => `<tr>${r.map(c => `<td>${mdInline(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`);
+      continue;
+    }
+    if (!line.trim()) { flush(); continue; }
+    para.push(line);
+  }
+  flush();
+  return out.join('');
 }
 
 export function termLine(text, cls = '') {

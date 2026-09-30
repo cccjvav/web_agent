@@ -57,6 +57,14 @@ function metadataRequest(server, route, headers, body) {
       }
       const exchanged = await post(authenticated, authorization);
       assert.strictEqual(exchanged.status, 200, 'bad credentials must not consume authorization code');
+      if (method === 'none') {
+        // Review D-14: a well-formed wrong verifier spends the code; the right verifier then fails too.
+        const redirect2 = oauth.completeAuthorize({ client_id: client.client_id, redirect_uri: client.redirect_uris[0],
+          pairing_code: oauth.issuePairing().code, code_challenge: oauth.s256(verifier), code_challenge_method: 'S256' });
+        const body2 = { ...body, code: new URL(redirect2).searchParams.get('code') };
+        assert.strictEqual((await post({ ...body2, code_verifier: 'w'.repeat(43) })).status, 400);
+        assert.strictEqual((await post(body2)).status, 400, 'code is spent after a wrong well-formed verifier');
+      }
       const tokens = await exchanged.json();
       assert.ok(oauth.verifyAccessToken(tokens.access_token));
       const refresh = { grant_type: 'refresh_token', refresh_token: tokens.refresh_token, client_id: client.client_id };

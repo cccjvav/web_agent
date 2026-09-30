@@ -2240,6 +2240,14 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 3. **P3-13** 同文件 Prettier（单引号、110 列）重排；acorn AST（去位置信息）与原文件逐字一致。
 4. **P3-15** 暂停探针：pyflakes 8 处（未用 import/变量）与 `tools/e2e.mjs`、`tools/selftest.mjs` 6 处未用变量清理；`selftest.mjs` 69/69 通过。`selftest` 里删掉的 `need` 数组比实际检查的 `miss` 列表多一个 `chaincmpl`，按“不改行为”只删未用变量，是否应检查 `chaincmpl` 留待探针恢复时确认。
 
+### 第108组：复审修复第10批——OAuth三项与Chat Markdown渲染（会话01a0e8ea，2026-09-30）
+
+1. **D-14** `oauth.js handleToken`：格式合法但与challenge不符的`code_verifier`立即删除授权码；格式不合法（长度/字符集不对）仍保留授权码，保住既有“修正后可兑换”测试。`oauthClientAuth`新增错误verifier后正确verifier也换不到token的断言。
+2. **D-15** `oauth.js registerClient(body, source)`：同一来源IP最多10个空闲注册，第11个429；进程内调用不计数。隧道后全部来源都是回环IP，等于全体共享10个空闲名额（单用户可接受）。`oauth.test.js`覆盖10个成功、第11个429、另一来源与进程内调用不受影响。
+3. **D-16** `session.js`新增`callerTag`/`snapshotFor`/`sessionView`；`server.js`对OAuth调用者的`GET /mcp`只回自己的会话记录、工作区只给目录名；ping、get_capabilities与`webagent://config`同样过滤。URL密钥（本机操作者）视图不变。`workspace_info`工具仍返回绝对路径——它是模型定位文件所必需的。`mcpCallerIsolation`第7段验证。
+4. **P3-8** `workbench/js/dom.js renderMd`：换成逐行块级渲染器（围栏语言标记、ol/ul、表格、引用、链接、斜体），仍先转义；链接仅http(s)/mailto。流式光标改挂在最后一个块元素上。`workbenchRuntime`新增渲染与XSS断言。
+5. **P3-3/P3-4** 核对后不改：理由见报告对应行。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。

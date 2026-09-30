@@ -236,8 +236,18 @@ u { text-decoration: none; }
 .msg.assistant { background: var(--bg2); border: 1px solid var(--border); padding: 10px; border-radius: 8px; }
 .msg.assistant code { font-family: var(--mono); font-size: var(--fs-sm); color: #ce9178; }
 .msg.assistant pre { background: var(--bg0); padding: 8px; overflow: auto; font-family: var(--mono); font-size: var(--fs-xs); }
+/* P3-8: block elements produced by renderMd. */
+.msg.assistant p, .msg.assistant ul, .msg.assistant ol, .msg.assistant pre, .msg.assistant blockquote, .msg.assistant table { margin: 0 0 6px; }
+.msg.assistant > div > :last-child { margin-bottom: 0; }
+.msg.assistant ul, .msg.assistant ol { padding-left: 20px; }
+.msg.assistant pre code { color: inherit; font-size: inherit; }
+.msg.assistant blockquote { border-left: 3px solid var(--border); padding-left: 8px; color: var(--muted, inherit); }
+.msg.assistant table { border-collapse: collapse; display: block; overflow-x: auto; }
+.msg.assistant th, .msg.assistant td { border: 1px solid var(--border); padding: 2px 6px; text-align: left; }
+.msg.assistant h3, .msg.assistant h4, .msg.assistant h5, .msg.assistant h6 { margin: 8px 0 4px; }
+.msg.assistant a { color: var(--link); }
 /* F102: a bubble still receiving `delta` pieces shows a caret; it disappears when the final message closes the bubble. */
-.msg.assistant.streaming > div::after { content: '▍'; margin-left: 1px; color: var(--link); animation: stream-caret 1s steps(2, start) infinite; }
+.msg.assistant.streaming > div:empty::after, .msg.assistant.streaming > div > :last-child::after { content: '▍'; margin-left: 1px; color: var(--link); animation: stream-caret 1s steps(2, start) infinite; }
 @keyframes stream-caret { to { visibility: hidden; } }
 @media (prefers-reduced-motion: reduce) { .msg.assistant.streaming > div::after { animation: none; } }
 .status-line { font-size: var(--fs-sm); color: var(--link); margin-bottom: 6px; }

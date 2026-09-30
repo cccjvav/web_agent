@@ -124,6 +124,19 @@ async function main() {
       assert.ok(!publicText.includes(secret), 'public caller labels must not contain a credential');
       assert.ok(!publicText.includes(secret.slice(0, 16)), 'public caller labels must not contain a credential/digest prefix');
     }
+    // 7. Review D-16: an OAuth-paired caller's status view and ping show only its own caller rows and
+    //    no absolute workspace path; the URL-secret operator still sees everyone.
+    const [cView, aView] = await Promise.all([C, A].map(async target => (await fetch(target.url, { headers: { ...target.headers, Accept: 'application/json' } })).json()));
+    const allKeys = sessions.allSessions().map(s => s.key);
+    const cKeys = cView.session.sessions.map(s => s.key);
+    assert.ok(cKeys.length >= 1 && cKeys.length < allKeys.length, 'OAuth caller sees a strict subset: ' + JSON.stringify(cKeys));
+    assert.strictEqual(new Set(cKeys.map(k => k.split('~')[1])).size, 1, 'all rows belong to one credential');
+    assert.strictEqual(cView.workspace, path.basename(config.workspaceRoot));
+    assert.strictEqual(aView.workspace, config.workspaceRoot);
+    assert.ok(aView.session.sessions.length >= Math.min(8, allKeys.length));
+    const cPing = await call(C, 'ping', {});
+    assert.ok(cPing.sessions.every(s => cKeys.includes(s.key)), 'ping tool is filtered the same way');
+
     const keys = sessions.allSessions().map(s => s.key);
     assert.ok(keys.length >= 3, `three credentials must be three caller rows, got ${JSON.stringify(keys)}`);
     assert.ok(keys.every(k => !k.startsWith('peer:')), 'sessionless callers never look like initialized peers');
