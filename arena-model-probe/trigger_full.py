@@ -21,7 +21,6 @@ trigger_full.py — 用授予的 token 抓取 run 的【完整】payload 与 tra
 import json
 import re
 import sys
-import time
 import urllib.error
 import urllib.request
 from pathlib import Path

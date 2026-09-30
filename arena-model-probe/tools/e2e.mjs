@@ -7,11 +7,6 @@
  * 装上 interceptor 钩子，模拟 arena 风格的 SSE 响应，断言证据链端到端跑通。
  */
 
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __dir = dirname(fileURLToPath(import.meta.url));
-
 /* ------------------------------------------------------------------ *
  * 0. 浏览器环境 shim（只补 interceptor 真正用到的 API）
  * ------------------------------------------------------------------ */
@@ -94,7 +89,7 @@ define('fetch', async function (input, init) {
 /* ------------------------------------------------------------------ *
  * 2. 载入探针（走打包产物，等于验证最终交付物）
  * ------------------------------------------------------------------ */
-const { BUS, installFetchHook, installXHRHook, installSocketHook } = await import('../src/interceptor.js');
+const { BUS, installFetchHook } = await import('../src/interceptor.js');
 
 /* ------------------------------------------------------------------ *
  * 3. 测试框架

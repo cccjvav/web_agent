@@ -531,10 +531,13 @@ router.post('/bridge/start', async (req, res) => {
     const ngrokDomain = (Object.hasOwn(body, 'ngrokDomain') ? body.ngrokDomain : storedNgrokDomain).trim();
     const bodyNgrokTok = (Object.hasOwn(body, 'ngrokToken') ? body.ngrokToken : '').trim();
     const ngrokToken = bodyNgrokTok || storedNgrokToken.trim();
-    const bridgePatch = { tunnelProvider: provider, namedDomain, ngrokDomain };
-    if (bodyToken) bridgePatch.namedToken = bodyToken;
-    if (bodyNgrokTok) bridgePatch.ngrokToken = bodyNgrokTok;
-    store.patch({ bridge: bridgePatch });
+    // Review F-11: a newly typed tunnel token is only written to config.json once that tunnel is
+    // actually up. A mistyped or rejected token used to be persisted first and then silently
+    // reused by every later start.
+    store.patch({ bridge: { tunnelProvider: provider, namedDomain, ngrokDomain } });
+    const tokenPatch = {};
+    if (bodyToken && named) tokenPatch.namedToken = bodyToken;
+    if (bodyNgrokTok && ngrokProv) tokenPatch.ngrokToken = bodyNgrokTok;
     config.bridgeRunning = false;
     config.publicTunnelUrl = null;
     config.tunnelProvider = provider;
@@ -575,6 +578,7 @@ router.post('/bridge/start', async (req, res) => {
     const info = mcpInfo(req);
     const tunnelUrl = !tunnelError && config.publicTunnelUrl;
     config.bridgeRunning = Boolean(tunnelUrl);
+    if (tunnelUrl && Object.keys(tokenPatch).length) store.patch({ bridge: tokenPatch });
     let note;
     if (tunnelUrl) {
       note = named

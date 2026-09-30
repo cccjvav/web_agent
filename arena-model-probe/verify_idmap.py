@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from arena_probe import (CDP, cdp_alive, get_page, evaluate, page_ready,
+from arena_probe import (CDP, cdp_alive, evaluate, page_ready,
                          inject_fresh, kill_modals, submit_question, PROBE_VERSION, log)
 
 OUT = Path(__file__).resolve().parent / "recon"

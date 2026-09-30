@@ -171,9 +171,9 @@ def main():
         q = "什么是并查集？一句话。"
         RESULTS["question"] = q
         try:
-            before = evaluate(cdp, "window.__MODEL_PROBE__.bus.observations.length", timeout=15)
+            evaluate(cdp, "window.__MODEL_PROBE__.bus.observations.length", timeout=15)
         except Exception:
-            before = 0
+            pass
         t0 = time.time()
         ok, detail = submit_question(cdp, q)
         step("提交问题", ok, detail)

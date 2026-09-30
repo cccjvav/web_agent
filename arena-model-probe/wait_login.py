@@ -17,7 +17,7 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from arena_probe import (CDP, cdp_alive, get_page, evaluate, diagnose_auth, run_ask, log)
+from arena_probe import (CDP, cdp_alive, get_page, diagnose_auth, run_ask, log)
 
 
 def close_internal_dialogs(targets):

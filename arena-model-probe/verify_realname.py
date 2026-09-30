@@ -86,7 +86,7 @@ def main():
             if d.get("ver"):
                 score += 1
                 note.append("v" + str(d["ver"]))
-        except Exception as e:
+        except Exception:
             note.append("读取失败")
         scored.append((score, t, " ".join(note)))
 

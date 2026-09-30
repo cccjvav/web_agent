@@ -20,7 +20,7 @@ extract_model_labels.py — 从 run trace 提取模型标识标签
 import json
 import re
 import sys
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parent / "recon"

@@ -203,6 +203,18 @@ async function main() {
     assert.ok(/主机名|Token|Named/.test(String(namedMissing.json.tunnelError)));
     assert.ok(!String(namedMissing.json.mcpUrl).includes('trycloudflare.com'));
 
+    // Review F-11: a token whose tunnel fails to come up is not persisted.
+    namedCalls = 0;
+    tunnel.startNamedTunnel = async () => { namedCalls += 1; throw new Error('fixture: tunnel rejected token'); };
+    const beforeFailedToken = store.load().bridge.namedToken;
+    const namedFail = await request(server, 'POST', '/api/bridge/start', {
+      tunnelProvider: 'cloudflare-named', namedDomain: 'mcp.example.com', namedToken: 'eyJwrong-token-not-saved'
+    });
+    assert.strictEqual(namedFail.status, 200);
+    assert.strictEqual(namedFail.json.running, false);
+    assert.strictEqual(namedCalls, 1);
+    assert.strictEqual(store.load().bridge.namedToken, beforeFailedToken, 'failed tunnel must not persist the new token');
+
     namedCalls = 0;
     lastNamed = null;
     tunnel.startNamedTunnel = async (opts) => {
@@ -224,6 +236,7 @@ async function main() {
     assert.ok(String(namedOk.json.note).includes('Named Tunnel 已就绪'));
     assert.ok(!String(JSON.stringify(namedOk.json)).includes('eyJtest-token-not-for-logs'));
     assert.strictEqual(namedOk.json.tunnelError, null);
+    assert.strictEqual(store.load().bridge.namedToken, 'eyJtest-token-not-for-logs', 'token persisted after the tunnel is up');
     const namedStatus = await request(server, 'GET', '/api/status');
     assert.strictEqual(namedStatus.json.namedDomain, 'mcp.example.com');
     assert.ok(!JSON.stringify(namedStatus.json).includes('eyJtest-token-not-for-logs'));
@@ -261,6 +274,7 @@ async function main() {
     assert.ok(String(ngrokOk.json.note).includes('ngrok 已就绪'));
     assert.ok(!String(JSON.stringify(ngrokOk.json)).includes('ngrok_test_token_must_hide'));
     assert.strictEqual(ngrokOk.json.tunnelError, null);
+    assert.strictEqual(store.load().bridge.ngrokToken, 'ngrok_test_token_must_hide');
     const ngrokStatus = await request(server, 'GET', '/api/status');
     assert.strictEqual(ngrokStatus.json.ngrokDomain, 'mcp.ngrok-free.app');
     assert.ok(!JSON.stringify(ngrokStatus.json).includes('ngrok_test_token_must_hide'));

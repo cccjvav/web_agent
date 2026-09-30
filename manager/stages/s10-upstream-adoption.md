@@ -2233,6 +2233,13 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **文档：** SECURITY、使用指南、隧道/Windows 指南、架构/组件/总览/代码复盘、api/models/usage/admin-host README、路由/配置存储/交互绑定/页面结构/Bridge与设置详解、测试详解；历史审计报告里指向已删文件的链接改为纯文本并注明“已于F106移除”；FULL_REVIEW_INDEX 删两行。
 
+### 第107组：复审修复第9批——隧道令牌落盘时机、探针解耦与代码卫生（会话01a0e8ea，2026-09-30）
+
+1. **F-11** `routes.js /bridge/start`：provider/域名照旧先写；本次新填的 `namedToken`/`ngrokToken` 只在对应隧道成功就绪且 ticket 未过期后 `store.patch`。`bridgeTunnel` 新增“Named 启动失败不保存新 Token”，并断言成功后 Named/ngrok Token 均已保存。
+2. **第6节** `utils/probeBridge.js`：`referenceInput`/`traceInput` 改为首次使用时 `require`，缺失时抛“Probe validator unavailable”，主机可在无 `probe-extension/` 时启动。未搬迁文件：探针扩展的 analysis/history/liveCommands 也用它们且 `package_vsix.py` 将其打入 VSIX，搬到主机会反转依赖方向。`probeBridge.test.js` 加源码守卫。
+3. **P3-13** 同文件 Prettier（单引号、110 列）重排；acorn AST（去位置信息）与原文件逐字一致。
+4. **P3-15** 暂停探针：pyflakes 8 处（未用 import/变量）与 `tools/e2e.mjs`、`tools/selftest.mjs` 6 处未用变量清理；`selftest.mjs` 69/69 通过。`selftest` 里删掉的 `need` 数组比实际检查的 `miss` 列表多一个 `chaincmpl`，按“不改行为”只删未用变量，是否应检查 `chaincmpl` 留待探针恢复时确认。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。

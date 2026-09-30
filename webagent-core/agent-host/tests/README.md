@@ -157,7 +157,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [auditControl.test.js](auditControl.test.js) | 40 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
 | [board.test.js](board.test.js) | 4 个函数/类节点 |
-| [bridgeTunnel.test.js](bridgeTunnel.test.js) | 32 个函数/类节点 |
+| [bridgeTunnel.test.js](bridgeTunnel.test.js) | 33 个函数/类节点 |
 | [chatConcurrency.test.js](chatConcurrency.test.js) | 11 个函数/类节点 |
 | [chatMode.test.js](chatMode.test.js) | 0 个函数/类节点 |
 | [chatVision.test.js](chatVision.test.js) | 21 个函数/类节点 |
@@ -220,7 +220,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [patchEngine.test.js](patchEngine.test.js) | 20 个函数/类节点 |
 | [planRound.test.js](planRound.test.js) | 6 个函数/类节点 |
 | [probeAnalysis.test.js](probeAnalysis.test.js) | 6 个函数/类节点 |
-| [probeBridge.test.js](probeBridge.test.js) | 11 个函数/类节点 |
+| [probeBridge.test.js](probeBridge.test.js) | 13 个函数/类节点 |
 | [probeCaptureLifecycle.test.js](probeCaptureLifecycle.test.js) | 30 个函数/类节点 |
 | [probeCompanion.test.js](probeCompanion.test.js) | 39 个函数/类节点 |
 | [probeHistory.test.js](probeHistory.test.js) | 7 个函数/类节点 |
