@@ -7,17 +7,17 @@ on:
 permissions:
   contents: read
 
-# ubuntu-24.04 is pinned on purpose (F112): ubuntu-latest moves to Ubuntu 26 on 2026-10-19; move the
-# pin deliberately after a trial run there (Playwright system deps and the Node 18 job are the likely breakers).
+# ubuntu-26.04 is pinned on purpose (F112/F113): chosen after a full trial run of these Linux jobs on
+# ubuntu-26.04 (run 36772982049, all green). Keep an explicit version; move it deliberately after a trial.
 jobs:
   agent-host:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-latest]
+        os: [ubuntu-26.04, windows-latest]
         node: [20, 22, 24]
         include:
-          - os: ubuntu-24.04
+          - os: ubuntu-26.04
             node: 18
     runs-on: ${{ matrix.os }}
     defaults:
@@ -32,7 +32,7 @@ jobs:
       - name: Check documentation inventory
         run: node ../../docs-site/check-docs.js
       - name: Lint (correctness rules only)
-        if: matrix.os == 'ubuntu-24.04' && matrix.node == 22
+        if: matrix.os == 'ubuntu-26.04' && matrix.node == 22
         run: npm run lint
       - name: Audit high-severity production dependencies
         run: npm audit --omit=dev --audit-level=high
@@ -108,7 +108,7 @@ jobs:
           exit $result
 
   workbench-browser:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     defaults:
       run:

@@ -2310,7 +2310,9 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 ### 第113组：交接第2项改为方案B——Ubuntu 26试跑（会话01a0e8ea，2026-09-30）
 
-用户在第112组之后选方案B（先在Ubuntu 26上试跑再决定）。第112组把test.yml固定到`ubuntu-24.04`的改动保留：它保证10月19日`ubuntu-latest`切换时主CI不被动变化。新增临时工作流`.github/workflows/ubuntu26-trial.yml`，在`ubuntu-26.04`上跑agent-host（Node 18/20/22/24，含文档清单、Node22 lint、npm test）与workbench-browser，独立于test.yml的九个任务。结论与后续动作见本组下文“试跑结果”。CI README、平台启动与CI详解第5b节、documentationLearning登记同步。
+用户在第112组之后选方案B（先在Ubuntu 26上试跑再决定）。第112组把test.yml固定到`ubuntu-24.04`的改动保留：它保证10月19日`ubuntu-latest`切换时主CI不被动变化。新增临时工作流`.github/workflows/ubuntu26-trial.yml`，在`ubuntu-26.04`上跑agent-host（Node 18/20/22/24，含文档清单、Node22 lint、npm test）与workbench-browser，独立于test.yml的九个任务。CI README、平台启动与CI详解第5b节、documentationLearning登记同步（`c0cb8cc`，同一提交test.yml 9/9）。
+
+**试跑结果：** run 36772982049五项全绿（agent-host Node 18/20/22/24、workbench-browser），任务标签确为`ubuntu-26.04`、无告警注解；详细日志（含镜像版本号）沙箱无法下载，未逐行核对。按预定规则：test.yml的Ubuntu任务由`ubuntu-24.04`改为`ubuntu-26.04`（仍是显式版本，不用`ubuntu-latest`），删除`ubuntu26-trial.yml`及其documentationLearning登记，CI README与平台启动与CI详解第5b节改为切换记录。
 
 ### 延后复审清单
 
