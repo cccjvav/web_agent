@@ -38,6 +38,24 @@ const server = http.createServer(async (req, res) => {
 });
 (async () => {
   try {
+    // F114: the operator sees who submitted; callers (submit / operation_result) never see it.
+    queue.register('submitter-fixture', async () => ({ ok: true }));
+    const peerA = 'peer:' + 'a'.repeat(32), peerB = 'peer:' + 'b'.repeat(32);
+    const fromRemote = queue.submit('submitter-fixture', {}, { remote: true, callerKey: peerA, clientName: 'Claude\u0007 Desktop' }, 'submitter-remote');
+    const fromOperator = queue.submit('submitter-fixture', {}, { callerKey: 'local', operator: true }, 'submitter-operator');
+    const fromChat = queue.submit('submitter-fixture', {}, {}, 'submitter-chat');
+    const fromBare = queue.submit('submitter-fixture', {}, { remote: true, callerKey: peerB }, 'submitter-bare');
+    for (const job of [fromRemote, fromOperator, fromChat, fromBare]) assert.equal(job.submitter, undefined, 'submit() returns nothing about submitters');
+    assert.equal(queue.result(fromRemote.requestId, { remote: true, callerKey: peerA }).submitter, undefined, 'operation_result does not echo submitter');
+    assert.throws(() => queue.result(fromRemote.requestId, { remote: true, callerKey: peerB }), /Unknown operation for this caller/);
+    assert.deepEqual(queue.inspect(fromRemote.requestId).submitter, { type: 'remote', label: '远程会话（Claude Desktop，aaaaaa）' });
+    assert.deepEqual(queue.inspect(fromOperator.requestId).submitter, { type: 'operator', label: '你自己' });
+    assert.deepEqual(queue.inspect(fromChat.requestId).submitter, { type: 'local-chat', label: '本机Chat' });
+    assert.equal(queue.inspect(fromBare.requestId).submitter.label, '远程会话（未报客户端名，bbbbbb）');
+    assert.ok(queue.list(true).every(job => job.submitter && job.submitter.label), 'operator list carries submitter');
+    assert.ok(queue.list().every(job => !('submitter' in job)), 'internal list() stays submitter-free');
+    assert.equal(queue.cancel(fromChat.requestId).submitter.type, 'local-chat');
+    for (const job of [fromRemote, fromOperator, fromBare]) queue.cancel(job.requestId);
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     for (const url of ['https://example.com/mcp', 'file:///tmp/x', 'http://127.0.0.1/a?token=x']) assert.throws(() => external.endpoint(url));
     const registered = await external.add({ url: `http://127.0.0.1:${server.address().port}/mcp`, token: 'private-token' });

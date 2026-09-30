@@ -7,7 +7,7 @@
 这些ES模块由上一级app.js加载，在浏览器内维护工作台。整体布局和启动流程见[工作台说明](../README.md)，这里负责模块分工；不承担后端授权。
 
 ## 文件分工
-- operations.js：工具接入、工作流与审批；详情/草稿共用审阅代次，审批按钮绑定已展示ID；审批/检查点列表独立校验发布，检查点恢复须核对完整差异及逐文件结果，创建检查点在途互斥并保留草稿，已确认创建与列表读取失败分开提示，HTTP接入登记与按ID移除各自互斥，独立显示确认/未知/停止未确认，stdio预览/启动另核对完整快照、有效期与进程/发现响应，在途不重发，失去确认不重放。逐函数说明见[受控工具与工作流详解](../../agent-host/src/utils/受控工具与工作流详解.md)。
+- operations.js：工具接入、工作流与审批；详情/草稿共用审阅代次，审批按钮绑定已展示ID，列表与详情显示提交者（第114组）；审批/检查点列表独立校验发布，检查点恢复须核对完整差异及逐文件结果，创建检查点在途互斥并保留草稿，已确认创建与列表读取失败分开提示，HTTP接入登记与按ID移除各自互斥，独立显示确认/未知/停止未确认，stdio预览/启动另核对完整快照、有效期与进程/发现响应，在途不重发，失去确认不重放。逐函数说明见[受控工具与工作流详解](../../agent-host/src/utils/受控工具与工作流详解.md)。
 - state.js：共享状态、DOM选择器及ui函数注册表。
 - vscodeRelay.js：插件设置页专用的转发函数（经postMessage交扩展进程转发，fetch语义）与宿主服务createHostServices（确认框、剪贴板）；网页工作台不加载。
 - api.js另有setHostServices/confirmAction/copyText：需要确认或复制的模块都经这里，浏览器用原生confirm与剪贴板，插件设置页换成VS Code的模态对话框与剪贴板。
@@ -44,7 +44,7 @@ F54第六批：dom.setWorkspaceView与bind/tabs联动窄屏展示和抽屉；工
 | [chat.js](chat.js) | 46 个函数/类节点 |
 | [dom.js](dom.js) | 35 个函数/类节点 |
 | [monaco.js](monaco.js) | 10 个函数/类节点 |
-| [operations.js](operations.js) | 81 个函数/类节点 |
+| [operations.js](operations.js) | 82 个函数/类节点 |
 | [picker.js](picker.js) | 16 个函数/类节点 |
 | [settings.js](settings.js) | 55 个函数/类节点 |
 | [state.js](state.js) | 2 个函数/类节点 |

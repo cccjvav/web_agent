@@ -321,7 +321,7 @@ router.post('/checkpoints/:id/remove', (req, res) => {
 });
 router.get('/operations', (req, res) => {
   if (!apiRequestQuery(req, res, [])) return;
-  res.json({ requests: operatorQueue.list(), servers: externalClient.list(true) });
+  res.json({ requests: operatorQueue.list(true), servers: externalClient.list(true) });
 });
 router.get('/operations/:id', async (req, res) => {
   if (!apiRequestQuery(req, res, [])) return;
@@ -373,7 +373,7 @@ router.delete('/external/servers/:id', (req, res) => {
 router.post('/external/request', async (req, res) => {
   const body = apiRequestBody(req, res, ['serverId', 'tool', 'arguments', 'requestKey']);
   if (!body) return;
-  try { res.json(await externalClient.request(body, { callerKey: 'local' })); }
+  try { res.json(await externalClient.request(body, { callerKey: 'local', operator: true })); }
   catch (error) { res.status(error.status || 400).json({ ok: false, error: error.message, code: error.code || 'E_BAD_ARGS' }); }
 });
 router.post('/workflows/preview', async (req, res) => {

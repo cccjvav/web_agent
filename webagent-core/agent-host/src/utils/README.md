@@ -65,7 +65,7 @@ broadcast把原payload交给进程内EventEmitter订阅者，脱敏副本用于�
 | [hostDiagnostics.js](hostDiagnostics.js) | 4 个函数/类节点 |
 | [lifeline.js](lifeline.js) | 10 个函数/类节点 |
 | [localControl.js](localControl.js) | 8 个函数/类节点 |
-| [operatorQueue.js](operatorQueue.js) | 19 个函数/类节点 |
+| [operatorQueue.js](operatorQueue.js) | 20 个函数/类节点 |
 | [probeBridge.js](probeBridge.js) | 23 个函数/类节点 |
 | [requestScope.js](requestScope.js) | 27 个函数/类节点 |
 | [toolTrace.js](toolTrace.js) | 12 个函数/类节点 |

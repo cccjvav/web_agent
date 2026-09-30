@@ -246,7 +246,7 @@ async function handleRpc(req) {
       const callerKey = initializedKey || sessionKey(req);
       const sess0 = touch(req, { key: callerKey });
       try {
-        const result = await callTool(name, toolArgs || {}, remoteToolMode(params), { remote: true, initializedSession: Boolean(initializedKey), callerKey: sess0.key, taskId: params?._meta?.['webagent/taskId'], oauthPrincipal: oauthPrincipalOf(req) });
+        const result = await callTool(name, toolArgs || {}, remoteToolMode(params), { remote: true, initializedSession: Boolean(initializedKey), callerKey: sess0.key, clientName: sess0.clientInfo?.title || sess0.clientInfo?.name, taskId: params?._meta?.['webagent/taskId'], oauthPrincipal: oauthPrincipalOf(req) });
         const failed = isToolFailure(result);
         const clipped = clipJson(result);
         const durationMs = Date.now() - started;

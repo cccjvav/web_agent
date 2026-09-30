@@ -2328,3 +2328,17 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 | 2026-09-26 | 第80组4.7观察 | 用户侧`search_files`失败原因（沙箱未复现；插件不显示错误原文）；用户那次为何走code模式 | 第81组起Chat显示失败原因；待用户重装插件后复测。第86组：“为何走code模式”——侧栏按下拉框选模式，用户2026-09-26决定保留，不解析开头的`/ask`，此问题了结；`search_files`部分仍待复测 |
 | 2026-09-26 | 第82组发现 | 永不结算的Promise会让Node以退出码0提前结束、测试被误判通过；已给workbenchRuntime、settingsPanel、sidebarFeedback加守卫。其他异步测试文件（尤其靠`main().catch`收尾、不在最后显式退出的）是否有同样隐患，逐个检查或在run-tests.js统一要求结尾标记 | 已处理（第86组）：run-tests.js统一预加载`scripts/testCompletionGuard.js`，测试文件同步执行期间由主文件顶层创建的Promise（即挂在`main()`后的`.catch/.then`）在事件循环耗尽时仍未结算就判失败；全量116个文件中81个有被监视的顶层Promise、20个纯同步，其余以`main().then(exit)`收尾、同样覆盖。在14个真实测试文件结尾注入永久挂起：12个被守卫拦下，2个挂到超时判失败。顺带发现并修复：①runner只看status，接住SIGTERM以0退出的超时测试被记为通过（mcpInterop注入后即如此）；②editorRuntime/workbenchRuntime自我重启的子进程不带守卫。已知不覆盖：顶层只写`main();`、发射后不管的异步回调、中途显式退出 |
 | 2026-09-28 | 第89组第11步 | VS Code Chat把`@webagent`交给默认模型（gpt5.6）：可能是Agent模式不列扩展参与者，或`chatParticipants`的`isDefault: true`需提案API而被忽略；沙箱无法验证 | 已处理（第90组）：续跑3在Ask模式同样失败，否定“Agent模式不列”；VS Code源码确认`isDefault`缺提议API时整个参与者被跳过，已删去并加清单测试；待用户续跑4实测 |
+
+### 第114组：交接第4项——审批显示提交者（会话01a0e8ea，2026-09-30）
+
+**问题：** 审批列表和详情只有kind/status/requestId，操作者不知道请求是自己在审批页提交的、本机Chat发起的，还是某个远程会话发来的，没法按来源判断该不该批。
+
+**做法：** `operatorQueue.submit`按来源记`submitter`（`submitterOf`）：远程为“远程会话（客户端名，peer键末6位）”，客户端名取MCP会话初始化时报的clientInfo.title或name（`server.js`在callTool选项里多传`clientName`，去控制字符、限80字，未报写“未报客户端名”）；`browser:`键为“浏览器探针”；带`operator`为“你自己”；其余为“本机Chat”。`POST /api/external/request`补上`operator:true`，与`/api/workflows/request`一致（外部工具请求不读写文件，这个标记只影响显示）。
+
+**不外泄：** `publicJob`加第三个参数`operatorView`，只有本机操作路由用的`list(true)`、`inspect`、`approve`、`cancel`输出`submitter`；`submit`与`operation_result`返回给调用者的对象不带，远程会话看不到本机还排着哪些其他客户端或会话。`list()`无参（executionControl、eventBus只计数）也不带。peer键末6位只出现在本机界面，peer键本身是公开标签而非会话凭据。
+
+**界面：** 工作台审批列表按钮以提交者开头（`提交者 · kind · status · requestId`），详情仍是完整JSON（含`submitter`字段），缺字段时列表写“提交者未知”（`submitterLabel`）。
+
+**测试：** approvedOperations开头新增一段：四种来源的label、客户端名去控制字符、未报名、submit/operation_result不带submitter、另一peer查不到、`list()`不带而`list(true)`带；apiFiles经真实HTTP核对`GET /api/operations`与详情带submitter。探针代码未改（probe-browser任务经同一队列，只是多显示“浏览器探针”）。
+
+**限制：** 客户端名是远程客户端自报的，可以冒充别的名字；末6位用来区分同名的不同会话。

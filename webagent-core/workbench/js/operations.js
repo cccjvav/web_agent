@@ -24,6 +24,7 @@ function button(label, callback, refresh = true) {
   const node = document.createElement('button'); node.type = 'button'; node.className = 'vs-btn'; node.textContent = label;
   node.onclick = () => refresh ? action(callback) : callback(); return node;
 }
+const submitterLabel = job => typeof job.submitter?.label === 'string' && job.submitter.label ? job.submitter.label : '提交者未知';
 let reviewGeneration = 0, reviewController = null, workflowSubmitting = false;
 function invalidateReview(message) {
   const ticket = ++reviewGeneration;
@@ -208,7 +209,8 @@ async function refreshOperationList() {
         return removeExternalServer(server.serverId);
       }, false); row.append(text, removeButton); return row;
     });
-    const buttons = data.requests.map(job => button(`${job.kind} · ${job.status} · ${job.requestId}`, () => generation === operationsListGeneration ? review(job.requestId) : false));
+    // F114: the operator judges by who submitted; the host only sends submitter on these local routes.
+    const buttons = data.requests.map(job => button(`${submitterLabel(job)} · ${job.kind} · ${job.status} · ${job.requestId}`, () => generation === operationsListGeneration ? review(job.requestId) : false));
     servers.replaceChildren(...rows); requests.replaceChildren(...buttons);
     $('#ops-status').textContent = `${data.servers.length} 个接入；${data.requests.length} 条进程内请求。waiting-approval 不代表执行成功。`;
     return true;

@@ -282,6 +282,10 @@ async function main() {
     let wrapperOperationRuns = 0;
     queue.register('api-wrapper-fixture', async () => { wrapperOperationRuns++; return { ok: true }; });
     const wrapperOperation = queue.submit('api-wrapper-fixture', {}, {}, 'api-wrapper-request');
+    // F114: the operator routes carry who submitted (here: no operator flag, so local Chat).
+    const opsListed = await request(server, 'GET', '/api/operations');
+    assert.equal(opsListed.json.requests.find(job => job.requestId === wrapperOperation.requestId).submitter.label, '本机Chat');
+    assert.equal((await request(server, 'GET', `/api/operations/${wrapperOperation.requestId}`)).json.submitter.type, 'local-chat');
     const invalidApprovalWrapper = await request(server, 'POST', `/api/operations/${wrapperOperation.requestId}/approve`, { confirm: true, unexpected: true });
     assert.equal(invalidApprovalWrapper.status, 400);
     assert.equal(wrapperOperationRuns, 0);

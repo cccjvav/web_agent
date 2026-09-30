@@ -151,9 +151,9 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 17 个函数/类节点 |
 | [adminIntegrity.test.js](adminIntegrity.test.js) | 63 个函数/类节点 |
-| [apiFiles.test.js](apiFiles.test.js) | 67 个函数/类节点 |
+| [apiFiles.test.js](apiFiles.test.js) | 68 个函数/类节点 |
 | [appWindowLifecycle.test.js](appWindowLifecycle.test.js) | 101 个函数/类节点 |
-| [approvedOperations.test.js](approvedOperations.test.js) | 17 个函数/类节点 |
+| [approvedOperations.test.js](approvedOperations.test.js) | 21 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 40 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
 | [board.test.js](board.test.js) | 4 个函数/类节点 |
@@ -293,5 +293,7 @@ requestLifecycle.test.js：按会话/凭据和带类型RPC ID隔离取消；重�
 第42组：经典Bridge页内启停独立互斥/代次/写后读失败由VM验证；真实bind浏览器合成响应另证；bridgeTunnel以HTTP验证停止绑定、启动在途可停止及错误的前后副作用。不是公网/用户进程退出验收。
 
 第43组补原生命令消费：nativeRotationCommands先复现HTTP500仍提示“已重置”，再覆盖绑定/CAS、确认、坏合同、409拒绝、写后读分离与停止严格判定；后端绑定合同仍由bridgeTunnel证明。
+
+第114组：approvedOperations开头验证审批提交者（四种来源、客户端名清洗、调用者返回与另一peer均不含），apiFiles经HTTP核对操作路由带submitter。
 
 nativeChatStream.test.js：真实回环HTTP与VM原生扩展，验证NDJSON失败/终态/预算/取消和两个消费者的历史；入口及helper main详见工作区与命令安全测试详解。

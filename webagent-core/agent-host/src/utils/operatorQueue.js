@@ -25,8 +25,20 @@ function owner(options) {
   if (options.remote && !String(options.callerKey || '').startsWith('peer:')) throw new Error('E_SESSION_REQUIRED: initialize and retain Mcp-Session-Id');
   return options.callerKey || 'local';
 }
-function publicJob(job, details = false) {
+// F114: who submitted, for the local operator only. Callers (submit/operation_result) never get it:
+// a remote session must not learn which other clients or sessions are queued on this host.
+function submitterOf(options, caller) {
+  if (options.remote) {
+    const client = typeof options.clientName === 'string' ? options.clientName.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 80) : '';
+    return { type: 'remote', label: `远程会话（${client || '未报客户端名'}，${caller.slice(-6)}）` };
+  }
+  if (caller.startsWith('browser:')) return { type: 'browser', label: '浏览器探针' };
+  if (options.operator) return { type: 'operator', label: '你自己' };
+  return { type: 'local-chat', label: '本机Chat' };
+}
+function publicJob(job, details = false, operatorView = false) {
   return { requestId: job.id, kind: job.kind, status: job.status, taskId: job.taskId,
+    ...(operatorView ? { submitter: { ...job.submitter } } : {}),
     createdAt: job.createdAt, ...(job.startedAt != null ? { startedAt: job.startedAt } : {}), ...(job.finishedAt != null ? { finishedAt: job.finishedAt } : {}),
     expiresAt: (job.finishedAt ?? job.startedAt ?? job.createdAt) + KEEP_MS,
     nextAction: job.status === 'waiting-approval' ? 'Stop and wait for local operator approval; query operation_result, do not resubmit.' : 'Inspect result. Retention is bounded and process-local; an unknown/expired ID is never permission to replay.',
@@ -50,7 +62,7 @@ function submit(kind, input, options, requestKey) {
   }
   if ([...jobs.values()].filter(job => ['waiting-approval', 'running'].includes(job.status)).length >= 20) throw new Error('Too many outstanding approvals');
   if (jobs.size >= MAX_JOBS) throw new Error('Approval history capacity is full; wait for retained results to expire instead of resubmitting');
-  const job = { id: randomUUID(), kind, workMode, owner: caller, options: { remote: Boolean(options.remote), callerKey: caller,
+  const job = { id: randomUUID(), kind, workMode, owner: caller, submitter: submitterOf(options, caller), options: { remote: Boolean(options.remote), callerKey: caller,
     // F112: owner() above only admits remote submitters with an initialized session (peer: keys),
     // so the approved run keeps that fact; readCache.readerOf gives sessionless remote calls no reader.
     ...(options.remote ? { initializedSession: true } : {}), ...(options.operator ? { operator: true } : {}) },
@@ -69,13 +81,13 @@ function resultRequest(input = {}, options = {}) {
     || typeof input.requestId !== 'string') throw new Error('Invalid operation result request');
   return result(input.requestId, options);
 }
-function list() { prune(); return [...jobs.values()].reverse().map(job => publicJob(job)); }
-function inspect(id) { prune(); const job = jobs.get(id); if (!job) throw new Error('Unknown operation'); return publicJob(job, true); }
+function list(operatorView = false) { prune(); return [...jobs.values()].reverse().map(job => publicJob(job, false, operatorView)); }
+function inspect(id) { prune(); const job = jobs.get(id); if (!job) throw new Error('Unknown operation'); return publicJob(job, true, true); }
 async function approve(id, confirmed) {
   prune(); const job = jobs.get(id);
   if (confirmed !== true) throw new Error('Explicit operator confirmation required');
   if (!job) throw new Error('Unknown operation');
-  if (job.status !== 'waiting-approval') return publicJob(job); // Never execute twice, even after failure.
+  if (job.status !== 'waiting-approval') return publicJob(job, false, true); // Never execute twice, even after failure.
   if ([...jobs.values()].filter(item => item.status === 'running').length >= 4) throw new Error('Too many running operations');
   const control = require('./executionControl');
   const releaseMode = control.enter(job.workMode);
@@ -110,13 +122,13 @@ async function approve(id, confirmed) {
     try { if (execution) finishCall(execution, { ...job.result, status: job.status, requestId: job.id }); }
     finally { clearTimeout(timer); job.cancelRequested = Boolean(job.controller?.signal.aborted); job.controller = null; releaseMode(); }
   }
-  return publicJob(job);
+  return publicJob(job, false, true);
 }
 function cancel(id) {
   prune();
   const job = jobs.get(id); if (!job) throw new Error('Unknown operation');
   if (job.status === 'waiting-approval') { job.status = 'denied'; job.finishedAt = Date.now(); }
   else if (job.status === 'running') job.controller.abort();
-  return publicJob(job);
+  return publicJob(job, false, true);
 }
 module.exports = { register, submit, result, resultRequest, list, inspect, approve, cancel };
