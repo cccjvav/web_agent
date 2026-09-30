@@ -16,7 +16,7 @@
 | [任务板与事件流测试详解](任务板与事件流测试详解.md) | board、mcpBoard、eventBus |
 | [工作区与命令安全测试详解](工作区与命令安全测试详解.md) | dangerousCommands、sandbox、workspaceTools |
 | [本机边界与跨站测试详解](本机边界与跨站测试详解.md) | auditControl、localControl、corsAllow、contentSecurity |
-| [OAuth与GitHub测试详解](OAuth与GitHub测试详解.md) | oauth、oauthClientAuth、githubAuth |
+| [OAuth与GitHub测试详解](OAuth与GitHub测试详解.md) | oauth、oauthClientAuth |
 | [补丁与编辑API测试详解](补丁与编辑API测试详解.md) | patchEngine、apiFiles |
 | [MCP协议与整机入口测试详解](MCP协议与整机入口测试详解.md) | mcpProtocol、mcpInterop、mcpCallerIsolation、httpSmoke、skipWorkbench、operatorQueueCapacity、configPorts |
 | [统计与文档测试](统计与文档测试详解.md) | adminHost、docsSite、docsHttp |
@@ -51,7 +51,7 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 
 第37组补stdio页面合同：workbenchRuntime先复现不完整预览/空启动响应，再覆盖草稿/绑定/过期/在途与未知消费；stdioMcp验证失败令牌不重用、原输入args/env不可改已审快照。stdioLifecycleBrowser另测真实页面合成响应，不替代既有真实进程测试。
 
-第45组补齐优化报告中的结果消费者并扩大可靠性/可访问性回归：workbenchRuntime覆盖登录、清除身份、新建文件、终端、搜索、补丁后读、Bridge统计布尔结果及Chat严格流终态；apiFiles以并发HTTP证明createOnly只能一方创建；githubAuth覆盖设备流程代次与poll单飞；ptyLifecycle拒绝非2xx伪成功；workbenchHtml检查标签、ARIA、原生按钮和390px样式源码。独立workbench.browser.js增加帮助模态焦点恢复与390×844边界断言；workbenchRuntime还执行1000→640px断点跨越，防止已展开侧栏遮挡Agent菜单并核对焦点/ARIA恢复；本地没有Chromium时不得把其源码登记写成浏览器执行通过。
+第45组补齐优化报告中的结果消费者并扩大可靠性/可访问性回归：workbenchRuntime覆盖新建文件、终端、搜索、补丁后读、Bridge统计布尔结果及Chat严格流终态；apiFiles以并发HTTP证明createOnly只能一方创建；githubAuth覆盖设备流程代次与poll单飞；ptyLifecycle拒绝非2xx伪成功；workbenchHtml检查标签、ARIA、原生按钮和390px样式源码。独立workbench.browser.js增加帮助模态焦点恢复与390×844边界断言；workbenchRuntime还执行1000→640px断点跨越，防止已展开侧栏遮挡Agent菜单并核对焦点/ARIA恢复；本地没有Chromium时不得把其源码登记写成浏览器执行通过。
 
 第46组只续审非探针R3审批/工作流与相邻结果消费者：approvedOperations拒绝external_request/operation_result未知包装字段，并用可控Date.now证明临近审批期限完成后仍从finishedAt保留完整15分钟、expired可见且迟到cancel不改写为denied；workflowPreconditions拒绝definition及preview/request包装的顶层未知字段、exists:false与contains/sha256矛盾合同，以及完整输出自/前向引用和危险/空路径段；正文中间的同名文字保持字面量；executionControl证明tools/list/get_capabilities使用相同远程ACL，并证明命令显式ID、缺省最近记录、取消及get_logs执行记录均绑定远程peer；taskProgress证明get_task_status只返回本机/当前peer计划，不再向远程回传Local计划，未知peer纯读取也不占16个报告槽。没有修改或专项审查探针项目。
 
@@ -74,7 +74,7 @@ Provider追加另由apiFiles真实HTTP校验旧Key/当前选择保留与冲突�
 |---|---|---|
 | 路径、写入、hash、补丁、Skill | patchEngine、workspaceTools、sandbox、auditStorage、apiFiles | 临时文件系统与HTTP，含createOnly并发一胜一409；不是外部OS写进程隔离证明 |
 | 模型失败、工具结果、Plan | modelLifecycle、runChat、chatMode、planRound、toolLabel、chatConcurrency | 实际调度模块+模拟模型响应，含返回式终态失败与/api/chat并发上限拦截；不是提供商实测 |
-| MCP、OAuth、GitHub身份、会话/board | mcpProtocol、oauth、oauthClientAuth、githubAuth、mcpBoard、board | 真实index验证OAuth issuer/撤销、公开peer不可冒用及跨主体会话；GitHub设备流以HTTP替身验证代次/单飞，非第三方实机验收 |
+| MCP、OAuth、会话/board | mcpProtocol、oauth、oauthClientAuth、mcpBoard、board | 真实index验证OAuth issuer/撤销、公开peer不可冒用及跨主体会话；非第三方实机验收 |
 | 本机控制面、WS、Origin | auditControl、localControl、corsAllow、contentSecurity、httpSmoke | 真实入口双端口API门禁、MCP Origin/认证先于解析、预检与WS；工作台CSP字符串与vendored Monaco清单（contentSecurity）、真实响应头与/vendor/monaco静态服务（httpSmoke）；策略下的真实浏览器行为只在CI的workbench.browser（contentSecurityBrowser）验证 |
 | PTY审批、取消、归属、捕获 | ptyLifecycle、ptyJobs、desktopExtension、executorEnv | 部分真实子进程+VS Code事件fixture，含扩展对非2xx回包的拒绝；POSIX Shell探测与执行环境净化注入摘要；原生终端效果须另测 |
 | 隧道启停 | tunnel、bridgeTunnel、tunnelLifecycle | 解析、API及进程引用fixture；非真实公网隧道 |
@@ -137,7 +137,7 @@ F62独立复审新增三个回归，均在自建临时工作区里跑，不碰�
 - `sensitiveBoundary.test.js`：`.webagentignore`在一次列目录里只被stat而不是被每个候选路径重读；编辑或删除规则文件后下一次检查即刻生效；超过512条模式或64KiB的规则文件按上限截断并标记`truncated`，不静默半截生效。它测的是规则**加载**的代价与上限，不证明匹配语义覆盖了所有秘密文件名。另测规则文件自身不能被文件工具读写删改名，以及Windows保留设备名（Windows分支只在CI真跑）。
 - `textEncoding.test.js`：合法UTF-8（含CJK、emoji、CRLF、BOM，以及正好跨64KiB读块边界的多字节字符）内容与hash不变；非法字节（孤立代理、截断序列、overlong、`F5`）一律`E_ENCODING`且不发hash，覆盖写入时原字节保持不变。它锁定的是"被接受的读取里hash与磁盘字节一一对应"，不是编码探测或转码能力。
 - `commandEncoding.test.js`：命令输出跨管道分块边界必须还原成原文；基线下逐字节输出的中文会变成一串U+FFFD并被模型当作真实结果。同时钉住尾窗口按字符截断、stdout/stderr各自独立解码。
-- `networkBudget.test.js`：GitHub身份与遥测上报的外发请求必须带deadline，打到"永不回话"的端点时以`AbortError`结束且不自行重试；注入传输照样受预算约束；readCache重复记录同一hash不再重写整张表。用进程内传输替身，不发真实网络请求；它证明单次请求一定会结束，不证明端点可达或上报送达。
+- `networkBudget.test.js`：遥测上报的外发请求必须带deadline，打到"永不回话"的端点时以`AbortError`结束且不自行重试；注入传输照样受预算约束；readCache重复记录同一hash不再重写整张表。用进程内传输替身，不发真实网络请求；它证明单次请求一定会结束，不证明端点可达或上报送达。
 - `diffBudget.test.js`：差异计算有显式时间/编辑距离预算，超限抛`E_DIFF_BUDGET`而不是长期占住事件循环；被拒的补丁（含dryRun）让目标文件逐字节不变。同一文件还覆盖admin-host统计库：损坏的`reports.json`读取和写入都fail-closed并保留原字节，零字节文件仍算合法空库，发布走临时文件+rename且不留残留。预算数值可由`WEBAGENT_DIFF_TIMEOUT_MS`/`WEBAGENT_DIFF_MAX_EDIT`覆盖；测试不断言某个具体行数一定能算完。
 
 F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给Windows子进程投递真实Ctrl+C，且commandJob已把命令绑到关闭即杀的OS作业）：启动真实主机、经本机API的start_command起一个带唯一参数的sleep，向主机发SIGINT后要求8秒内以0退出、且该命令不再存活。基线26a167e红——命令在独立进程组里收不到Ctrl+C，shutdown只关外部MCP，命令成了孤儿。详解见[工作区与命令安全测试](工作区与命令安全测试详解.md)。
@@ -157,7 +157,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [auditControl.test.js](auditControl.test.js) | 40 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
 | [board.test.js](board.test.js) | 4 个函数/类节点 |
-| [bridgeTunnel.test.js](bridgeTunnel.test.js) | 34 个函数/类节点 |
+| [bridgeTunnel.test.js](bridgeTunnel.test.js) | 32 个函数/类节点 |
 | [chatConcurrency.test.js](chatConcurrency.test.js) | 11 个函数/类节点 |
 | [chatMode.test.js](chatMode.test.js) | 0 个函数/类节点 |
 | [chatVision.test.js](chatVision.test.js) | 21 个函数/类节点 |
@@ -190,14 +190,11 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [externalDiscovery.test.js](externalDiscovery.test.js) | 13 个函数/类节点 |
 | [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
 | [fileReadSafety.test.js](fileReadSafety.test.js) | 22 个函数/类节点 |
-| [githubAuth.test.js](githubAuth.test.js) | 21 个函数/类节点 |
-| [githubNetwork.test.js](githubNetwork.test.js) | 82 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
 | [hostLaunch.test.js](hostLaunch.test.js) | 64 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
 | [hostShutdown.test.js](hostShutdown.test.js) | 13 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
-| [identityRequestLifetime.test.js](identityRequestLifetime.test.js) | 16 个函数/类节点 |
 | [installerPackaging.test.js](installerPackaging.test.js) | 28 个函数/类节点 |
 | [installerPreparation.test.js](installerPreparation.test.js) | 61 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
@@ -214,7 +211,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [nativeChatStream.test.js](nativeChatStream.test.js) | 32 个函数/类节点 |
 | [nativeRequestJson.test.js](nativeRequestJson.test.js) | 28 个函数/类节点 |
 | [nativeRotationCommands.test.js](nativeRotationCommands.test.js) | 58 个函数/类节点 |
-| [networkBudget.test.js](networkBudget.test.js) | 53 个函数/类节点 |
+| [networkBudget.test.js](networkBudget.test.js) | 46 个函数/类节点 |
 | [oauth.test.js](oauth.test.js) | 24 个函数/类节点 |
 | [oauthClientAuth.test.js](oauthClientAuth.test.js) | 29 个函数/类节点 |
 | [oauthRateLimit.test.js](oauthRateLimit.test.js) | 15 个函数/类节点 |
@@ -274,7 +271,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 28 个函数/类节点 |
 | [workbench.browser.js](workbench.browser.js) | 370 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 542 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 528 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 21 个函数/类节点 |

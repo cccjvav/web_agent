@@ -21,7 +21,6 @@ const FILE_DOCS = [
   { id: 'agent', path: 'webagent-core/agent-host/src/agent/README.md', group: '进程' },
   { id: 'models', path: 'webagent-core/agent-host/src/models/README.md', group: '进程' },
   { id: 'api', path: 'webagent-core/agent-host/src/api/README.md', group: '进程' },
-  { id: 'auth', path: 'webagent-core/agent-host/src/auth/README.md', group: '进程' },
   { id: 'usage', path: 'webagent-core/agent-host/src/usage/README.md', group: '进程' },
   { id: 'admin-host', path: 'webagent-core/admin-host/README.md', group: '进程' },
   { id: 'tunnel', path: 'webagent-core/agent-host/src/tunnel/README.md', group: '进程' },

@@ -160,7 +160,6 @@ async function main() {
   const tunnel=require('../src/tunnel/cloudflared'), originalStop=tunnel.stopTunnel;
   let tunnelStarted, tunnelFinish;const tunnelBegan=new Promise(r=>{tunnelStarted=r;});
   tunnel.stopTunnel=()=>{tunnelStarted();return new Promise(r=>{tunnelFinish=r;});};
-  require('../src/models/store').patch({bridge:{loggedIn:true,deviceAuthorized:true}});
   const starting=post('/api/bridge/start',{...binding,tunnelProvider:'local'});await tunnelBegan;
   assert.equal(control.snapshot().mode,'bridge');assert.equal((await post('/api/execution-control',{...binding,workMode:'chat'})).status,409);
   tunnelFinish();await starting;tunnel.stopTunnel=originalStop;control.selectMode('chat');

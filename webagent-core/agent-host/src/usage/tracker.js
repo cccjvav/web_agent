@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const { config } = require('../config');
-const store = require('../models/store');
 const { fetchText } = require('../utils/requestScope');
 
 const INTERVAL_MS = 15 * 60 * 1000;
@@ -79,14 +78,7 @@ function record({ ok = true } = {}) {
 }
 
 function identity() {
-  const cfg = store.load();
-  const github = cfg.bridge && cfg.bridge.provider === 'github' && cfg.bridge.username;
-  return {
-    installId: config.installId,
-    githubUser: github ? String(cfg.bridge.username).replace(/^@/, '') : null,
-    githubId: github ? String(cfg.bridge.githubId || '') : '',
-    provider: (cfg.bridge && cfg.bridge.provider) || 'local-demo'
-  };
+  return { installId: config.installId };
 }
 
 function payload() {
@@ -94,9 +86,6 @@ function payload() {
   const who = identity();
   return {
     installId: who.installId,
-    githubUser: who.githubUser,
-    githubId: who.githubId,
-    provider: who.provider,
     day: rec.day,
     toolCalls: rec.toolCalls,
     fail: rec.fail,

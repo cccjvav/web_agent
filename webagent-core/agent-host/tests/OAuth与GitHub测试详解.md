@@ -1,6 +1,6 @@
-# OAuth令牌轮换、客户端认证与GitHub登录fixture
+# OAuth令牌轮换、客户端认证与网络预算fixture
 
-令牌和用户均为测试数据。OAuth是在本机测试服务上真跑协议；GitHub响应是注入的替身，未请求真实账号。
+令牌和用户均为测试数据。OAuth是在本机测试服务上真跑协议。文件名保留历史名；githubAuth/githubNetwork/identityRequestLifetime三份测试随F106移除GitHub身份功能一并删除。
 
 ## oauth.test.js
 
@@ -44,18 +44,6 @@ refresh同样检查机密客户端缺认证401，再正确认证200，旧access�
 
 真实form授权负例：错误redirect返回400、无Location、配对码仍可用，HTML中的state转义且不回显配对码。正确POST以redirect:manual接收302，只检查callback origin/path/state/code，不访问外站。随后**exchange()**用urlencoded换码200，再兑换同code为400且不撤销原access。没有浏览器点击、TLS、第三方认证或全面会话身份隔离证明；本轮产品认证实现未改。
 
-## githubAuth.test.js
-
-[源码](githubAuth.test.js)导入前设临时WORKSPACE_ROOT。**jsonResp(status,body)**给ok/status和异步**text()/json()**两种响应接口。异步**run**resetPending/store，patch本机demo初态；空白token必须status400。
-
-**fakeFetch(url,opts)**只接受/user，断言Bearer ghp_前缀，返回octocat/id1；loginWithToken结果与store应github身份、loggedIn真。clearGithubKeepDemo应恢复local-demo/local/空githubId。
-
-删除WEBAGENT_GITHUB_CLIENT_ID后deviceAvailable false，startDeviceLogin E_NO_GITHUB_APP。设测试Client ID后真；**deviceFetch**按URL分支：device/code断言表单client_id并回code/user_code/900秒/5秒；access_token断言设备grant type编码并回authorization_pending。start返回ABCD-1234，poll返回pending。
-
-**doneFetch**对token端点回假access token、/user回hubber/id99，其余URLthrow，下一poll应done/hubber并保存99。局部**startAttempt(deviceCode)**用不同假device_code快速创建后续并发夹具：旧poll已拿token、等待/user时执行clear，迟到用户不得覆盖local-demo；旧poll等待token时启动新设备码，旧token不得继续查用户，新poll必须携新device_code；同一attempt首个poll挂起时第二个poll直接pending，GitHub token请求计数仍为1。三组均检查E_SUPERSEDED或当前请求内容，而不是只看最终文案。
-
-成功resetPending/clear demo/删env/reset store/rm tmp；catch exit1，无finally，原env没有恢复，依赖子进程隔离。未测真实等待间隔、真实GitHub限流/拒绝/过期全部分支、跨进程共享或浏览器多窗口，不声称账号已授权。
-
 ## 验证
 
 分别filter oauth/oauthClientAuth/githubAuth或完整`npm test --prefix webagent-core/agent-host`。实际用户配对与手机Arena连接仍需按Windows验收清单执行。
@@ -80,14 +68,13 @@ F62第2批新增。全程不发真实网络请求：所有传输都是进程内�
 覆盖的合同：
 
 - `fetchText`接受`options.fetchImpl`指定传输，注入传输**照样**受超时约束；注入不是绕过预算的后门。
-- `loginWithToken`、`startDeviceLogin`、`fetchGitHubUser`、`pollDeviceLogin`打到黑洞端点时都必须在各自deadline附近以`AbortError`结束，而不是永远挂着；并且每次调用**只发一个请求**，模块自身不重试。基线是裸fetch，这些调用会一直挂到进程退出。
 - 正常响应仍照旧成功；超过1MiB的响应正文抛`E_RESPONSE_TOO_LARGE`。
 - F102 `limits.onChunk`：局部**streamed(parts,lifecycle)**用真实ReadableStream（`pull`每次出一块、`cancel`计次）逐块回放；`fetchText`对流式body把每个解码片段连同response交给onChunk（`['ab','c','海']`顺序不变、全文仍返回）；只有`text()`的旧替身让onChunk收到整份一次；onChunk抛错即整个读取以该错误失败并且body被cancel恰一次；带onChunk时1MiB以外的自定义`maxBytes`照样触发`E_RESPONSE_TOO_LARGE`、`responseTooLarge(5).maxBytes===5`；onChunk不是函数抛TypeError；Node `Readable.from`的body也逐块回调。
 - F103 `limits.idleMs`：局部**paced(parts,lifecycle)**的`pull`把字符串入队、数字当作毫秒停顿、`'stall'`永不再出字节，`cancel`计次；**timing(promise)**记录结果与耗时；局部`sleep`。每40ms一字节、idleMs=100的滴流完整读到`abcde`（活着的流不算空闲）；首块后静默、idleMs=120、总期限5秒→`E_TIMEOUT`且`reason==='idle'`、文案“1 秒内没有收到新数据”、2秒内结束、body被cancel恰一次（靠fetchText传给读取器的signal，不靠传输层配合）；黑洞传输（无响应头）同样按idle结束；总期限80ms短于idleMs时仍是`reason:'deadline'`与“超过截止时间”；不传idleMs时160ms停顿照常成功（默认行为未变）；onChunk与idle并存时片段一个不少；父信号在空闲等待中abort→`E_CANCELLED`而非超时；idleMs为0/-1/1.5/'100'/NaN→TypeError。
 - 遥测上报超时返回`{ok:false}`而不是抛出——它跑在debounce与周期定时器里，故障不能冒泡出回调；成功路径仍记录`lastReportAt`。
 - readCache：同一文件重复记录同一hash只落盘一次（基线是400次读写400次整表）；删除不存在的key不落盘；真正变化仍立即落盘；落盘走临时文件+rename且不留残留。重载后取值、最近使用顺序与旧行为一致。
 
-它证明的是**单次请求一定会结束**，不证明GitHub或遥测端点可达、上报送达、或者不存在在途请求重叠（周期与debounce仍可重叠，这一点没有改变）。
+它证明的是**单次请求一定会结束**，不证明遥测端点可达、上报送达、或者不存在在途请求重叠（周期与debounce仍可重叠，这一点没有改变）。
 
 ## oauthSpentRefreshBudget.test.js
 
@@ -106,31 +93,3 @@ F62第5批新增。`spentRefresh`是refresh令牌的重放墓碑集合，条目�
 
 `spentRefreshSize()`与`MAX_SPENT_REFRESH`是为此测试导出的只读视图，只暴露**条数**不暴露令牌本身。
 
-## identityRequestLifetime.test.js
-
-F62第6批新增，从并行分支01a0c932吸收的互补修复配套红测。
-
-超时预算只解决"上游不回话"，不解决"客户端已经走了"。`/api/bridge/token`、`/bridge/device`、`/bridge/device/poll`都要走网络问GitHub；浏览器一旦跳走或socket断掉，这几个请求本应立刻停，而修前会继续跑满自己的预算、算完再把结果丢给一个没人听的响应。修法是`routes.js`里的`clientScopedRequest()`（F91前名为`identityRequest()`，现在也包stdio启动）把`AbortController`绑到req的`aborted`与res的`close`，再用`runWithSignal`跑处理器，`requestScope.fetchText`会把这个环境signal传到传输层。
-
-夹具**hangingTransport(state)**接受连接但永不回话（黑洞主机的样子），并记录**谁在什么时刻**abort它；**waitFor(predicate,timeoutMs)**轮询等待条件成立，内部用递归的**tick()**每10ms重试一次直到条件满足或超时。
-
-断言按"排除法"设计，避免为错误的原因变绿：
-
-- 路由必须真的走到上游调用（否则后面的断言没有意义）。
-- 客户端**仍连着**时多等500ms，上游**不得**被取消。这条排除掉"其实是别的机制在取消"。
-- 客户端断开后上游必须被abort。
-- abort时刻必须**晚于**断开时刻且间隔小于1秒，把abort与断开绑定，而不是撞上了某个巧合的定时器。
-
-**为什么单独一个文件**：`github.js`有模块级身份状态（`identityGeneration`/`pendingDevice`）并会主动作废在途尝试，同进程里早先的身份测试会在约150ms把本测试的上游调用abort掉，使断言**因错误原因**通过。实测过这个陷阱——在`networkBudget.test.js`里合写时，基线代码也能变绿。独立进程才能让"是谁取消的"没有歧义。
-
-全程不发真实网络请求。
-
-## githubNetwork.test.js
-
-来自并行分支01a0c932，随合并纳入本分支回归集。覆盖身份出站请求的网络边界：预算、取消、重定向与响应形状。
-
-夹具与辅助：**bounded(promise)**给等待加上限，避免夹具自身把测试挂死；**check(name,fn)**逐项执行并收集失败名而不是首个失败即中断，末尾一次性比对；**resetServer()**在场景间重建隔离HTTP服务与请求记录；**fetchProxy**是受控传输，按`mode`切换正常/超大/挂起/重定向等行为并记录每次出站；**cancel()**触发夹具侧取消；**entered**/**received**记录传输被进入与收到响应的次数，用来区分"根本没发出"与"发了但被取消"；**response(...)**构造受控响应体。
-
-钉住的合同：三个身份端点（token登录、设备码开始、设备码轮询）都必须带超时（10秒）与响应字节上限（64KiB）；父signal已取消时**出站请求数必须为0**，不能先发再取消；已取消的尝试不得顶掉一个健康的在途尝试；**重定向不跟随**——这些请求在Authorization头里带着GitHub令牌，跟随重定向会把令牌重放给重定向指向的任意主机；上游返回的错误文本不得被当作身份信息或原样反射给调用方。
-
-其中"延迟计时器下的迟到响应不能赢过已过期的期限"一项用`vm`在受控时钟里重跑`requestScope`源码，验证即便定时器回调被推迟，超过期限的完成也不被接受。本分支合并时据此发现并修复了一个真实缺陷：`fetchText`原先只在超时时`abort()`信号，如果传输实现**不尊重**signal（测试替身或行为不良的polyfill），Promise会永远挂起、期限形同虚设；现在超时侧自己`reject`并与传输`Promise.race`，期限由本机强制而不依赖对端配合。

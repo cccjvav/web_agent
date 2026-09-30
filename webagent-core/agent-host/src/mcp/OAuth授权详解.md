@@ -2,7 +2,7 @@
 
 ## 职责、状态与总流程
 
-[oauth.js](oauth.js) 是MCP的内存授权服务，独立于GitHub身份和模型API Key。导入建立router、clients/authCodes/accessTokens/refreshTokens/spentRefresh五张Map、pairing以及限流Map；不自动持久化。
+[oauth.js](oauth.js) 是MCP的内存授权服务，独立于模型API Key。导入建立router、clients/authCodes/accessTokens/refreshTokens/spentRefresh五张Map、pairing以及限流Map；不自动持久化。
 
 ```text
 发现metadata → registerClient → 本机取得配对码

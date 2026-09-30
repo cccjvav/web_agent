@@ -16,7 +16,6 @@ const required = [
   'btn-agent-pick',
   'btn-send',
   'btn-plan-merge',
-  'btn-gh-login',
   'btn-copy-prompt',
   'btn-copy-rules',
   'chat-input',
@@ -27,7 +26,7 @@ const required = [
 for (const id of required) {
   assert.ok(html.includes(`id="${id}"`), `workbench HTML missing #${id}`);
 }
-assert.ok(html.includes('本机演示授权'));
+assert.ok(html.includes('启动 Bridge 不需要任何登录或授权'));assert.ok(!html.includes('本机演示授权'));
 // Acceptance 8.2 (F88): the copy banner names no particular client and says when the address changes.
 assert.ok(html.includes('<div id="mcp-banner" class="banner hidden">MCP 地址已复制。使用 Quick Tunnel 时，每次启动 Bridge 地址都会变，届时请在所用的 MCP 客户端里换成新地址。</div>'));
 assert.ok(html.includes('id="named-domain"'));

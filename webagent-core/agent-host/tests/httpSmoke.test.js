@@ -177,10 +177,8 @@ async function main() {
     assert.ok(page.raw.includes('id="btn-detect-env"'));
     assert.ok(page.raw.includes('id="page-stack"'));
     assert.ok(page.raw.includes('id="btn-detect-stack"'));
-    assert.ok(page.raw.includes('本机演示授权'));
-    assert.ok(page.raw.includes('不是 GitHub'));
-    assert.ok(page.raw.includes('GitHub 验证'));
-    assert.ok(page.raw.includes('验证令牌'));
+    assert.ok(page.raw.includes('启动 Bridge 不需要任何登录或授权'));
+    assert.ok(!page.raw.includes('GitHub 验证') && !page.raw.includes('验证令牌'), 'F106: sign-in UI removed');
     assert.ok(page.raw.includes('没有接 OpenAI Codex'));
     assert.ok(page.raw.includes('不会自动执行'));
     assert.ok(page.raw.includes('没有插件市场'));
@@ -225,9 +223,7 @@ async function main() {
     assert.ok(status.json.clients.some((c) => c.id === 'chatgpt-free' && c.connectMode === 'unsupported-mcp' && !c.supportsMcp));
     assert.ok(status.json.clients.some((c) => c.id === 'chatgpt-plus' && c.connectMode === 'oauth-connector' && c.needsPlus === null && c.supportsMcp === null && c.verification === 'unverified'));
     assert.ok(status.json.mcpCanonicalUrl && status.json.mcpCanonicalUrl.endsWith('/mcp'));
-    assert.strictEqual(status.json.bridgeAccount.loggedIn, true);
-    assert.strictEqual(status.json.bridgeAccount.provider, 'local-demo');
-    assert.strictEqual(status.json.bridgeAccount.license, 'local-demo');
+    assert.strictEqual(status.json.bridgeAccount, undefined, 'F106: no sign-in state is projected');
     assert.ok(status.json.planRound && status.json.planRound.active === false);
     assert.ok(status.json.multiModel);
     assert.strictEqual(status.json.multiModel.maxBranches, 4);
@@ -421,8 +417,8 @@ async function main() {
     const usageBefore = JSON.parse(fs.readFileSync(usagePath, 'utf8'));
     assert.ok(usageBefore.toolCalls >= 1);
 
-    const badToken = await request('POST', `http://127.0.0.1:${mcpPort}/api/bridge/token`, { token: '' });
-    assert.strictEqual(badToken.status, 400);
+    const goneToken = await request('POST', `http://127.0.0.1:${mcpPort}/api/bridge/token`, { token: '' });
+    assert.strictEqual(goneToken.status, 404, 'F106: GitHub sign-in route removed');
 
     const resetRound = await request('POST', `http://127.0.0.1:${mcpPort}/api/bridge/reset-round`, {});
     assert.strictEqual(resetRound.status, 200);

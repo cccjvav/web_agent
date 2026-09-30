@@ -517,26 +517,6 @@ export function paintBridge() {
     : known ? 'Bridge 未启动；启动后按下面选中的隧道模式连接。' : '正在读取主机状态…';
   $('#conn-pill').textContent = running ? '已就绪' : known ? '未启动' : '读取中';
   $('#conn-pill').className = 'status-pill ' + (running ? 'ok' : known ? 'stop' : '');
-  const acct = s.bridgeAccount || {};
-  if (typeof acct.loggedIn === 'boolean') state.loggedIn = acct.loggedIn;
-  if (acct.provider === 'github' && acct.username) {
-    $('#acct-label').textContent = 'GitHub @' + String(acct.username).replace(/^@/, '');
-    $('#acct-pill').textContent = 'GitHub';
-    $('#acct-pill').className = 'status-pill ok';
-  } else if (state.loggedIn) {
-    $('#acct-label').textContent = '本机演示授权（不是 GitHub 登录）';
-    $('#acct-pill').textContent = '演示';
-    $('#acct-pill').className = 'status-pill ok';
-  } else {
-    $('#acct-label').textContent = '尚未完成本机演示授权';
-    $('#acct-pill').textContent = '未授权';
-    $('#acct-pill').className = 'status-pill stop';
-  }
-  const gh = s.githubAuth || {};
-  if ($('#btn-gh-device')) $('#btn-gh-device').disabled = !gh.deviceAvailable;
-  if ($('#gh-device-hint') && !gh.deviceAvailable) {
-    $('#gh-device-hint').textContent = '未设置 WEBAGENT_GITHUB_CLIENT_ID 时设备码不可用，请用令牌。';
-  }
   if ($('#usage-line') && s.usage) {
     const u = s.usage;
     const rate = u.successRate == null ? '—' : (u.successRate + '%');

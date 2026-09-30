@@ -156,11 +156,6 @@
       "group": "源码复盘"
     },
     {
-      "id": "learning-core-5",
-      "path": "webagent-core/agent-host/src/auth/GitHub身份详解.md",
-      "group": "源码复盘"
-    },
-    {
       "id": "learning-core-6",
       "path": "webagent-core/agent-host/src/usage/用量上报详解.md",
       "group": "源码复盘"

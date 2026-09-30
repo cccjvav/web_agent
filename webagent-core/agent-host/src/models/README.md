@@ -26,10 +26,10 @@
 |---|---|
 | 模型 | activeModelId、models中的id/protocol/baseUrl/apiKey/modelId；默认有builtin探索模型 |
 | 多模型 | enabled、mergeModel、thinkLevel、maxBranches（2–8）、mergeAllowsRead |
-| Bridge | loggedIn/deviceAuthorized、provider/username/githubId、tunnelProvider及提供商域名/Token |
+| Bridge | tunnelProvider及提供商域名/Token、权限与OAuth开关（F106移除的loggedIn/provider/username/githubId/license/deviceAuthorized在读取时丢弃） |
 | 主机身份 | secretKey、installId由config.persistIdentity补充，非每次随机生成的新配置 |
 
-GitHub身份验证后保存身份字段，不保存该流程的PAT。模型API Key和隧道Token则可能存在config.json中；不能笼统说“没有凭据落盘”。
+模型API Key和隧道Token则可能存在config.json中；不能笼统说“没有凭据落盘”。
 
 ### 自定义配置：保证不同
 `loadCustom`通过有界读取把历史文件投影为defaults声明的固定顶层：environment/techStack/codex按已知字段补默认，六类列表最多100项且各自只保留固定字符串字段；未知顶层、嵌套或列表项属性不经GET发布，已知槽位错类型仍抛E_CUSTOM_CORRUPT并保留原文件。仅ENOENT回默认。saveCustom先严格校验输入并读取旧配置，拒绝未知/错类型输入或覆盖损坏配置；所有目标走真实路径检查，提前渲染并逐输出检查8MiB预算，再通过独占临时文件和rename顺序写JSON及三份Markdown；不是四文件事务。
@@ -57,5 +57,5 @@ memory的day必须为有效日历日期；路径和真实链接目标经过工�
 | [memory.js](memory.js) | 9 个函数/类节点 |
 | [modelSettings.js](modelSettings.js) | 21 个函数/类节点 |
 | [profile.js](profile.js) | 15 个函数/类节点 |
-| [store.js](store.js) | 31 个函数/类节点 |
+| [store.js](store.js) | 30 个函数/类节点 |
 <!-- docs-inventory:end -->

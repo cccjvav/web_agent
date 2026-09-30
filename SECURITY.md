@@ -81,7 +81,7 @@ Chat断开/停止会传递取消信号；每请求5分钟总期限，模型每�
 
 ## 外部网络依赖与用量上报
 
-可选GitHub身份的三个固定端点每次头/体合计10秒、响应64KiB、拒跳转；本机REST断开传递AbortSignal，身份generation继续防旧成功结果覆盖。预先取消不清健康设备流；错误不反射上游正文，设备授权URL固定官方路径。一次poll可能有两段请求；取消不能撤回GitHub已处理的授权/签发，也不代表统计上报等其它网络链已经同样有界。
+Bridge 不再有登录/GitHub身份流程（F106 移除），因此不再向 api.github.com 发起身份请求。
 
 - 经典工作台的Monaco编辑器自F101起随仓库分发（`webagent-core/workbench/vendor/monaco`，由`webagent-core/scripts/vendor-monaco.js`按固定版本与sha512从npm原包复制，`VERSION.json`记录每个文件的sha256，`--check`可核对），由本机主机在`/vendor/monaco`提供，页面不再从jsDelivr等CDN加载任何脚本，断网也能用高级编辑器。供应链信任面因此从“每次打开页面信任CDN”收窄为“入库时核对一次npm原包”；升级须改脚本里的版本与integrity并重跑。加载失败仍有纯文本回退。
 - 配置WEBAGENT_TELEMETRY_URL与WEBAGENT_TELEMETRY_TOKEN两者后才可能外发统计，默认未配置不发送。payload包含installId、可选githubUser/githubId/provider、日期、调用数、失败数、成功率、lastAt、产品与版本，不包含模型key、MCP secret或命令正文，但不是匿名数据。

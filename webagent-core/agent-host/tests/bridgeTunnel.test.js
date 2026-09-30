@@ -86,8 +86,6 @@ async function main() {
   });
 
   try {
-    store.patch({ bridge: { loggedIn: true, deviceAuthorized: true } });
-
     const beforeBinding = JSON.stringify(store.load());
     for(const body of [{},{workspaceRoot:tmp,hostInstanceId:'stale'},{workspaceRoot:os.tmpdir(),hostInstanceId:config.hostInstanceId},{workspaceRoot:'.',hostInstanceId:config.hostInstanceId}]) {
       const rejected=await request(server,'POST','/api/bridge/start',body,false);
@@ -96,7 +94,7 @@ async function main() {
     const chatRejected=await request(server,'POST','/api/chat',{client:'vscode-extension',mode:'code',message:'must not execute'});
     assert.equal(chatRejected.status,409);
     assert.equal(startCalls+namedCalls+ngrokCalls+stopCalls,0,'binding rejection must not start or stop tunnels');
-    assert.equal(JSON.stringify(store.load()),beforeBinding,'binding rejection must not mutate authorization/config');
+    assert.equal(JSON.stringify(store.load()),beforeBinding,'binding rejection must not mutate config');
 
     const beforeInvalidStart = JSON.stringify(store.load());
     const privateMarker = 'private-bridge-input-must-not-leak';
@@ -116,7 +114,7 @@ async function main() {
     assert.equal(startCalls+namedCalls+ngrokCalls+stopCalls,0,'invalid Bridge input must not start or stop tunnels');
     assert.equal(JSON.stringify(store.load()),beforeInvalidStart,'invalid Bridge input must not mutate config');
     const beforeInvalidLifecycle = JSON.stringify(store.load()), beforeInvalidLifecycleStops = stopCalls;
-    for (const route of ['/api/bridge/reset-round','/api/bridge/login','/api/bridge/device/poll','/api/bridge/github/clear','/api/bridge/logout']) {
+    for (const route of ['/api/bridge/reset-round']) {
       const rejected = await request(server,'POST',route,{unexpected:privateMarker});
       assert.equal(rejected.status,400,route + ' must reject unknown wrapper fields');
       assert.equal(rejected.json.success,false);
@@ -124,30 +122,12 @@ async function main() {
       assert.ok(!JSON.stringify(rejected.json).includes(privateMarker));
     }
     assert.equal(stopCalls,beforeInvalidLifecycleStops,'invalid lifecycle wrappers must not stop tunnels');
-    assert.equal(JSON.stringify(store.load()),beforeInvalidLifecycle,'invalid lifecycle wrappers must not mutate identity/config');
-    const github = require('../src/auth/github');
-    const originalDeviceLogin = github.startDeviceLogin, originalTokenLogin = github.loginWithToken;
-    let deviceStarts = 0, tokenLogins = 0;
-    try {
-      github.startDeviceLogin = async () => { deviceStarts++; return {userCode:'FIXTURE',verificationUri:'https://github.com/login/device'}; };
-      github.loginWithToken = async () => { tokenLogins++; return {success:true,provider:'github',username:'fixture'}; };
-      for (const [route, body] of [
-        ['/api/bridge/device',{unexpected:privateMarker}],
-        ['/api/bridge/token',{token:privateMarker,unexpected:'field'}],
-        ['/api/bridge/token',{token:'x'.repeat(4097)}],
-        ['/api/bridge/token',{token:privateMarker + '\n'}]
-      ]) {
-        const rejected = await request(server,'POST',route,body);
-        assert.equal(rejected.status,400,route + ' must reject unknown fields before outbound authentication');
-        assert.equal(rejected.json.success,false);
-        assert.equal(rejected.json.code,'E_BAD_BRIDGE_REQUEST');
-        assert.ok(!JSON.stringify(rejected.json).includes(privateMarker));
-      }
-    } finally {
-      github.startDeviceLogin = originalDeviceLogin;
-      github.loginWithToken = originalTokenLogin;
+    assert.equal(JSON.stringify(store.load()),beforeInvalidLifecycle,'invalid lifecycle wrappers must not mutate config');
+    // F106: the sign-in routes are gone; the relay/router no longer knows them.
+    for (const route of ['/api/bridge/login','/api/bridge/token','/api/bridge/device','/api/bridge/device/poll','/api/bridge/github/clear','/api/bridge/logout']) {
+      const gone = await request(server,'POST',route,{});
+      assert.equal(gone.status,404,route + ' was removed with the sign-in gate');
     }
-    assert.equal(deviceStarts,0); assert.equal(tokenLogins,0);
 
     const historicalBridge = store.load().bridge;
     store.patch({bridge:{
@@ -161,14 +141,11 @@ async function main() {
     assert.equal(typeof projectedStatus.json.tunnelProvider,'string');
     assert.equal(typeof projectedStatus.json.namedDomain,'string');
     assert.equal(typeof projectedStatus.json.ngrokDomain,'string');
-    assert.equal(typeof projectedStatus.json.bridgeAccount.loggedIn,'boolean');
-    assert.equal(typeof projectedStatus.json.bridgeAccount.deviceAuthorized,'boolean');
-    for (const key of ['provider','username','githubId','license']) assert.equal(typeof projectedStatus.json.bridgeAccount[key],'string');
-    const beforeMalformedAuthCalls = startCalls + namedCalls + ngrokCalls + stopCalls;
-    const deniedMalformedAuth = await request(server,'POST','/api/bridge/start',{tunnelProvider:'cloudflare'});
-    assert.equal(deniedMalformedAuth.status,403,'truthy legacy objects must not satisfy Bridge authorization booleans');
-    assert.ok(!JSON.stringify(deniedMalformedAuth.json).includes(privateMarker));
-    assert.equal(startCalls + namedCalls + ngrokCalls + stopCalls,beforeMalformedAuthCalls);
+    assert.equal(projectedStatus.json.bridgeAccount,undefined,'no account projection after F106');
+    assert.equal(projectedStatus.json.githubAuth,undefined);
+    for (const key of ['loggedIn','provider','username','githubId','license','deviceAuthorized']) {
+      assert.ok(!Object.hasOwn(store.load().bridge,key),'retired Bridge key is dropped on load: ' + key);
+    }
     store.patch({bridge:historicalBridge});
 
     const beforeInvalidStoredBridge = store.load().bridge;
@@ -348,16 +325,13 @@ async function main() {
     tunnel.startQuickTunnel = () => new Promise(resolve => { finishStart = resolve; readyStart(); });
     const pendingStart = request(server, 'POST', '/api/bridge/start', { tunnelProvider: 'cloudflare' });
     await entered;
-    const loggedOut = await request(server, 'POST', '/api/bridge/logout', {});
-    assert.strictEqual(loggedOut.status, 200);
+    const supersedingStop = await request(server, 'POST', '/api/bridge/stop', {});
+    assert.strictEqual(supersedingStop.status, 200);
     finishStart({ url: 'https://obsolete.trycloudflare.com' });
     const staleStart = await pendingStart;
-    assert.strictEqual(staleStart.status, 409, 'logout supersedes pending start');
+    assert.strictEqual(staleStart.status, 409, 'stop supersedes pending start');
     assert.strictEqual(config.bridgeRunning, false);
 
-    store.patch({ bridge: { loggedIn: false, deviceAuthorized: false } });
-    const denied = await request(server, 'POST', '/api/bridge/start', { tunnelProvider: 'cloudflare' });
-    assert.strictEqual(denied.status, 403);
     const oauth = require('../src/mcp/oauth');
     const originalSecret = config.secretKey;
     const pairing = oauth.issuePairing();

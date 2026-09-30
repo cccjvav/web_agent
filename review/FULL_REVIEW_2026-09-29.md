@@ -329,8 +329,8 @@
 | 4.1.5 Linux 中文字体回退 | 已修 | 第 8 批 / 第 105 组 | `--font` 补 Noto Sans CJK SC / Noto Sans SC / WenQuanYi Micro Hei |
 | D-6 write_file 目录目标无错误码 | 已修 | 第 8 批 / 第 105 组 | `writeFileBody` 先判目录，抛 `E_BAD_ARGS` |
 | P3-2 守卫挂载两次 | 已不存在 | 第 8 批核对 | 现为单行挂载 |
-| F-13 `/bridge/logout` 无绑定 | 待决 | 第 8 批核对 | GitHub 登录族路由均为空体无绑定，logout 与之一致；报告原述不准，改动需同步三端合同 |
-| 4.1.3 英文标签 | 待决 | 第 8 批核对 | 按 ShunCode 截图有意复刻，是否汉化待用户决定 |
+| F-13 `/bridge/logout` 无绑定 | 不再适用 | 第 106 组 | 用户决定单人使用无需登录：GitHub 登录族 6 条路由、`auth/github.js` 与 Bridge 授权门槛整体移除 |
+| 4.1.3 英文标签 | 暂不改 | 第 106 组（用户决定） | 按 ShunCode 截图有意复刻，用户确认暂不汉化 |
 | 其余 P3、4.1 字号 token/三栏（分栏拖拽）、4.3 工程项、第 6 节探针 | 待后续批次 | — | 4.1 字号 token 与三栏分隔条评估后延后，因为它牵涉 `styles.css` 106 处 font-size 与 Playwright 断言，需要能跑浏览器的环境逐视口核对；后续候选：UI 细化、工程产物治理 |
 
 ## 9. 深审新发现（报告成文后，按批次追加）

@@ -2218,6 +2218,21 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **测试：** `workbenchRuntime` 增 toastDuration 断言；`fileReadSafety` 增目录目标 `E_BAD_ARGS` 断言。
 
+### 第106组：移除Bridge登录/授权门槛（会话01a0e8ea，2026-09-30）
+
+**用户决定：** 软件只有用户本人使用，不再需要“先登录/授权才能启动 Bridge”。（同时答复：界面英文标签暂不汉化；执行记录保留被剔除敏感变量的名字。）
+
+**移除：**
+1. 主机：`src/auth/github.js`（含两份说明）整目录；路由 `/bridge/login`、`/bridge/token`、`/bridge/device`、`/bridge/device/poll`、`/bridge/github/clear`、`/bridge/logout`；`/bridge/start` 的 403 授权门槛；`/api/status` 的 `bridgeAccount` 与 `githubAuth`。`clientScopedRequest` 保留（stdio 启动仍用）。
+2. 配置：`store.defaults().bridge` 去掉 loggedIn/provider/username/githubId/license/deviceAuthorized；`normalizeBridge` 读取时丢弃这些退役键（旧 config.json 不再展示也不回写）；删 `isFakeGithub`。
+3. 遥测：`tracker.identity/payload` 不再带 githubUser/githubId/provider；admin-host 仍兼容旧客户端上报这些可选字段，未改。
+4. 工作台：设置页“本机授权 + GitHub 验证”块换成“Bridge 使用统计”（安装 ID、今日调用、刷新按钮）；删 bind.js 的演示/PAT/设备码/清除处理与轮询闭包、bridge.js 的账户绘制、`state.loggedIn`。
+5. 扩展：`apiRelay` 白名单去掉 6 条路由，code-server 副本同步。
+
+**测试：** 删 `githubAuth`、`githubNetwork`、`identityRequestLifetime`（运行器与文档登记同步）；`bridgeTunnel` 改为断言 6 条旧路由 404、退役键被丢弃、无 bridgeAccount，“pending start 被取代”改用 `/bridge/stop`；`hostPersist`、`usageTracker`、`httpSmoke`、`workbenchHtml`、`workbenchRuntime`、`networkBudget`、`executionControl`、`documentationQuality` 相应改写。
+
+**文档：** SECURITY、使用指南、隧道/Windows 指南、架构/组件/总览/代码复盘、api/models/usage/admin-host README、路由/配置存储/交互绑定/页面结构/Bridge与设置详解、测试详解；历史审计报告里指向已删文件的链接改为纯文本并注明“已于F106移除”；FULL_REVIEW_INDEX 删两行。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。

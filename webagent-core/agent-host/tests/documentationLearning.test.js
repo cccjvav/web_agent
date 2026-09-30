@@ -118,10 +118,7 @@ const pairs = [
 
   ["webagent-core/agent-host/tests/oauth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
   ["webagent-core/agent-host/tests/oauthClientAuth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
-  ["webagent-core/agent-host/tests/githubNetwork.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
-  ["webagent-core/agent-host/tests/githubAuth.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
   ["webagent-core/agent-host/tests/networkBudget.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
-  ["webagent-core/agent-host/tests/identityRequestLifetime.test.js", "webagent-core/agent-host/tests/OAuth与GitHub测试详解.md"],
 
   ["webagent-core/agent-host/tests/auditControl.test.js", "webagent-core/agent-host/tests/本机边界与跨站测试详解.md"],
   ["webagent-core/agent-host/tests/localControl.test.js", "webagent-core/agent-host/tests/本机边界与跨站测试详解.md"],
@@ -284,7 +281,6 @@ const pairs = [
   ["webagent-core/agent-host/src/models/customizations.js", "webagent-core/agent-host/src/models/画像与记忆详解.md"],
   ["webagent-core/agent-host/src/models/profile.js", "webagent-core/agent-host/src/models/画像与记忆详解.md"],
   ["webagent-core/agent-host/src/models/memory.js", "webagent-core/agent-host/src/models/画像与记忆详解.md"],
-  ["webagent-core/agent-host/src/auth/github.js", "webagent-core/agent-host/src/auth/GitHub身份详解.md"],
   ["webagent-core/agent-host/src/usage/tracker.js", "webagent-core/agent-host/src/usage/用量上报详解.md"],
   ["webagent-core/agent-host/src/config.js", "webagent-core/agent-host/src/运行配置详解.md"],
   ["webagent-core/agent-host/src/extensionVersion.js", "webagent-core/agent-host/src/运行配置详解.md"],

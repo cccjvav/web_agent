@@ -9,7 +9,7 @@
 ## 执行流程
 record读取当天记录、累计toolCalls/fail、更新lastAt并调度报告。today使用UTC日期；跨天或读取/解析失败时返回当天空记录。successRate在零调用时为null，否则由计数计算百分比。
 
-reportNow仅在配置WEBAGENT_TELEMETRY_URL及WEBAGENT_TELEMETRY_TOKEN且有调用时发送。payload含安装ID、可选GitHub身份、日期、调用计数和产品版本，不发送文件正文、命令或API Key。是否可以关联身份仍应告知用户，不能称完全匿名。
+reportNow仅在配置WEBAGENT_TELEMETRY_URL及WEBAGENT_TELEMETRY_TOKEN且有调用时发送。payload含安装ID、日期、调用计数和产品版本，不发送文件正文、命令或API Key。是否可以关联身份仍应告知用户，不能称完全匿名。
 
 报告返回后重新读取最新当天数据，只更新lastReportAt，不用发出前的旧快照覆盖期间新增计数。定时周期为15分钟，另有首个事件后4秒的一次性延迟。每次请求有挂钟期限（默认10秒，`WEBAGENT_TELEMETRY_TIMEOUT_MS`可改）和256KiB响应上限，超时或传输失败返回失败结果、不重试；周期与延迟触发的请求之间没有去重。
 

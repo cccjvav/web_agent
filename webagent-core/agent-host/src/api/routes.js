@@ -31,7 +31,6 @@ const { listClients } = require('../mcp/clients');
 const oauth = require('../mcp/oauth');
 const tunnel = require('../tunnel/cloudflared');
 const ngrok = require('../tunnel/ngrok');
-const github = require('../auth/github');
 const tracker = require('../usage/tracker');
 const ptyJobs = require('../tools/ptyJobs');
 const { runWithSignal } = require('../utils/requestScope');
@@ -268,15 +267,7 @@ function publicBridge(bridge = {}) {
   return {
     tunnelProvider: BRIDGE_PROVIDERS.has(bridge.tunnelProvider) ? bridge.tunnelProvider : 'cloudflare',
     namedDomain: publicText(bridge.namedDomain, 512),
-    ngrokDomain: publicText(bridge.ngrokDomain, 512),
-    account: {
-      loggedIn: bridge.loggedIn === true,
-      provider: publicText(bridge.provider, 64),
-      username: publicText(bridge.username, 256),
-      githubId: publicText(bridge.githubId, 256),
-      license: publicText(bridge.license, 64),
-      deviceAuthorized: bridge.deviceAuthorized === true
-    }
+    ngrokDomain: publicText(bridge.ngrokDomain, 512)
   };
 }
 router.get('/execution-control', (req, res) => {
@@ -476,10 +467,6 @@ router.get('/status', (req, res) => {
     activeModelId: cfg.activeModelId,
     multiModel: publicMultiModel(cfg.multiModel),
     planRound: planRound.snapshot(),
-    bridgeAccount: bridge.account,
-    githubAuth: {
-      deviceAvailable: github.deviceAvailable()
-    },
     usage: tracker.snapshot(),
     mcpSession: mcpSnapshot()
   });
@@ -527,9 +514,6 @@ router.post('/bridge/start', async (req, res) => {
   const cfg = store.load();
   const provider = validateBridgeStart(body, cfg);
   if (!provider) return rejectBridgeRequest(res);
-  if (cfg.bridge.loggedIn !== true || cfg.bridge.deviceAuthorized !== true) {
-    return res.status(403).json({ success: false, error: '需要先点本机演示授权或完成 GitHub 验证。Chat 不受影响。' });
-  }
   try { control.assertIdle(); control.selectMode('bridge'); }
   catch(error) { return res.status(409).json({success:false,error:error.message}); }
   const releaseMode = control.enter('bridge');
@@ -1003,19 +987,9 @@ router.post('/skills', async (req, res) => {
   }
 });
 
-router.post('/bridge/login', (req, res) => {
-  if (!bridgeRequestBody(req, res, [])) return;
-  github.clearGithubKeepDemo();
-  res.json({ success: true, demo: true, provider: 'local-demo', username: 'local' });
-});
-
 // Runs `action` with a signal (requestScope.currentSignal) that aborts when the client goes away
-// before the response is written. Identity calls reach GitHub over the network, so they must inherit
-// the lifetime of the actual HTTP request rather than only the module's publication generation.
-// Without this, a client that navigates away or times out leaves the upstream request running to its
-// own 120s budget with nobody waiting for the answer (verified: the upstream signal never aborted on
-// disconnect). Adopted from the parallel audit on branch 01a0c932, reproduced here before adopting.
-// The stdio start uses it too (F91): a settings tab or browser page closed mid-start used to leave the
+// before the response is written (originally for the removed GitHub identity calls, F106).
+// The stdio start uses it (F91): a settings tab or browser page closed mid-start used to leave the
 // start running, so the process could come up after nobody was left to see it; now the registration
 // is aborted and externalClient.establish stops the process before rejecting.
 async function clientScopedRequest(req, res, action) {
@@ -1033,60 +1007,5 @@ async function clientScopedRequest(req, res, action) {
   }
 }
 
-router.post('/bridge/token', async (req, res) => {
-  const body = bridgeRequestBody(req, res, ['token']);
-  if (!body) return;
-  if (!validOptionalString(body, 'token', 4096)) return rejectBridgeRequest(res);
-  try {
-    const out = await clientScopedRequest(req, res, () => github.loginWithToken(body.token || ''));
-    if (!res.destroyed) res.json(out);
-  } catch (err) {
-    if (!res.destroyed) res.status(err.status || 400).json({ success: false, error: err.message, code: err.code });
-  }
-});
-
-router.post('/bridge/device', async (req, res) => {
-  if (!bridgeRequestBody(req, res, [])) return;
-  try {
-    const out = await clientScopedRequest(req, res, () => github.startDeviceLogin());
-    if (!res.destroyed) res.json({ success: true, ...out });
-  } catch (err) {
-    if (!res.destroyed) res.status(err.status || 400).json({ success: false, error: err.message, code: err.code });
-  }
-});
-
-router.post('/bridge/device/poll', async (req, res) => {
-  if (!bridgeRequestBody(req, res, [])) return;
-  try {
-    const out = await clientScopedRequest(req, res, () => github.pollDeviceLogin());
-    if (!res.destroyed) res.json(out);
-  } catch (err) {
-    if (!res.destroyed) res.status(err.status || 400).json({ success: false, error: err.message, code: err.code });
-  }
-});
-
-router.post('/bridge/github/clear', (req, res) => {
-  if (!bridgeRequestBody(req, res, [])) return;
-  github.clearGithubKeepDemo();
-  res.json({ success: true, provider: 'local-demo', username: 'local' });
-});
-
-router.post('/bridge/logout', async (req, res) => {
-  if (!bridgeRequestBody(req, res, [])) return;
-  bridgeGeneration++;
-  github.resetPending();
-  store.patch({
-    bridge: {
-      loggedIn: false,
-      username: '',
-      githubId: '',
-      deviceAuthorized: false,
-      provider: 'local-demo'
-    }
-  });
-  await tunnel.stopTunnel();
-  config.bridgeRunning = false;
-  res.json({ success: true });
-});
 
 module.exports = router;

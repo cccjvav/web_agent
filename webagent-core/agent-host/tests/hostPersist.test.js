@@ -15,24 +15,19 @@ function main() {
   const extPkg = require('../../extension/package.json');
   assert.strictEqual(config.version, extPkg.version);
 
-  assert.strictEqual(store.defaults().bridge.license, 'local-demo');
-  assert.strictEqual(store.defaults().bridge.provider, 'local-demo');
+  // F106: the sign-in gate is gone; defaults carry no account keys and legacy ones are dropped on load.
+  for (const key of ['loggedIn', 'provider', 'username', 'githubId', 'license', 'deviceAuthorized']) {
+    assert.ok(!Object.hasOwn(store.defaults().bridge, key), 'default has no ' + key);
+  }
   store.save({
     ...store.defaults(),
-    bridge: { ...store.defaults().bridge, license: '永久顺', provider: 'github', username: 'demo' }
+    bridge: { ...store.defaults().bridge, license: '永久顺', provider: 'github', username: 'octocat', githubId: '1', loggedIn: false, deviceAuthorized: false }
   });
   const migrated = store.load();
-  assert.strictEqual(migrated.bridge.license, 'local-demo');
-  assert.strictEqual(migrated.bridge.provider, 'local-demo');
-
-  store.save({
-    ...store.defaults(),
-    bridge: { ...store.defaults().bridge, provider: 'github', username: 'octocat', githubId: '1' }
-  });
-  const realGh = store.load();
-  assert.strictEqual(realGh.bridge.provider, 'github');
-  assert.strictEqual(realGh.bridge.username, 'octocat');
-  assert.strictEqual(realGh.bridge.githubId, '1');
+  for (const key of ['loggedIn', 'provider', 'username', 'githubId', 'license', 'deviceAuthorized']) {
+    assert.ok(!Object.hasOwn(migrated.bridge, key), 'legacy key dropped: ' + key);
+  }
+  assert.strictEqual(migrated.bridge.tunnelProvider, 'cloudflare');
 
   const first = generateNewSecret();
   const disk = store.load();

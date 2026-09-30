@@ -46,7 +46,6 @@ applyCommon关闭x-powered-by、设置no-store；/api先做本机与跨站检查
 | 模型与Plan | [agent](agent/README.md) |
 | 文件、命令和PTY | [tools](tools/README.md) |
 | 配置与记忆 | [models](models/README.md) |
-| GitHub可选身份 | [auth](auth/README.md) |
 | 隧道和公网就绪 | [tunnel](tunnel/README.md) |
 | 统计与公共辅助 | [usage](usage/README.md)、[utils](utils/README.md) |
 

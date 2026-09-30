@@ -12,10 +12,8 @@
 | 路径 | 方法 | 用途及关键结果 |
 |---|---|---|
 | `/status`、`/logs` | GET | 空query后读取状态/日志；status的模型/多模型、Bridge及MCP peer会话使用固定类型投影，远端clientInfo只留有界name/title/version，未知嵌套不原样发布；但status仍包含本机连接secret和路径，不应当成可公开接口 |
-| `/bridge/start`、`/bridge/stop`、`/bridge/logout` | POST | 启停隧道或注销；启动只接受固定提供商及其专属域名/凭据字段和预算，未知包装在写配置/停启进程前拒绝；代次控制拒绝迟到启动 |
+| `/bridge/start`、`/bridge/stop` | POST | 启停隧道（F106起无登录门槛，`/bridge/logout`已移除）；启动只接受固定提供商及其专属域名/凭据字段和预算，未知包装在写配置/停启进程前拒绝；代次控制拒绝迟到启动 |
 | `/bridge/reset-secret`、`/bridge/reset-round` | POST | 重置连接身份（新UI携绑定/旧密钥比较，只有完全空的旧请求兼容），或清MCP会话/读取hash缓存；未知字段不触发副作用，不是同一个操作 |
-| `/bridge/login`、`/bridge/token` | POST | 本机演示授权，或验证用户提供的GitHub身份；空体/令牌包装严格，令牌在触网前限长且拒绝换行 |
-| `/bridge/device`、`/bridge/device/poll`、`/bridge/github/clear` | POST | GitHub设备流及清理；无参操作只接受空体，不等同MCP OAuth配对 |
 | `/chat` | POST | 本机Chat的NDJSON事件流（status/delta/message/tool/consensus/planRound/pty_request/done/error；F102起delta是模型生成中的文本分片，message仍是每轮权威全文）；只接受固定顶层字段、枚举及有界user/assistant历史，错误包装在发流式响应头/模型或工具副作用前400 |
 | `/tool/call`、`/consensus/run`、`/tasks/reset` | POST | 固定包装下直接调用工具、本机共识流程或清任务状态；未知字段不调度/不重置，统一`E_BAD_API_REQUEST` |
 | `/pty/hello`、`/pty/jobs`、`/pty/jobs/:jobId` | POST / GET / POST | PTY客户端存活、取任务、报告状态；固定身份/query/body及逐状态字段/type/预算，错误包装不刷新存活或认领/推进/结束任务 |
@@ -55,7 +53,7 @@ GET tree拒绝任意query；GET content只接受单个有界path，再经安全�
 hello、取任务和报告都只接受clientId/workspace身份字段：clientId须为8–80位ASCII字母/数字/下划线/连字符，workspace为非空单行且不超过4096字节；POST还要求空query。未知/缺失/错类型固定400/E_BAD_API_REQUEST，发生在noteClient前，因此不会刷新客户端存活。结构合法但workspace不匹配409。jobId严格为16位小写十六进制；报告顶层只接受身份及state/status/message/stdout/stderr/ok/exitCode/outputCaptured，并按check/claimed/accepted/progress/终态限制字段。progress必须显式给stdout或stderr且每项≤1MiB；终态状态为done/denied/error/timeout/cancelled，可带有界结果，非done状态不能通过矛盾status/ok重标成功。结构通过后才登记身份，路由只把投影后的报告交PTY模块；模块继续核对所有权和状态，终态不能通过迟到accepted复活。真正终端运行在扩展端。
 
 ## 边界与验证
-Chat、Provider发现和GitHub身份三条网络路由各自显式接入requestScope，预算与取消接线按各自实现，**不代表所有REST请求自动拥有同样的断连取消机制**。除明确由另一专项负责的`/probe/*`外，当前非Probe路由均在业务调用前固定query；`apiRequestBody`还会先要求空query再固定顶层body，Bridge使用对应固定错误，models/provider/customizations的嵌套合同由各自严格服务校验。它们仍不是router全局JSON Schema，也不替代路径检查、工作区绑定、审批、取消或效果核验语义。
+Chat和Provider发现两条网络路由（GitHub身份路由已于F106移除）各自显式接入requestScope，预算与取消接线按各自实现，**不代表所有REST请求自动拥有同样的断连取消机制**。除明确由另一专项负责的`/probe/*`外，当前非Probe路由均在业务调用前固定query；`apiRequestBody`还会先要求空query再固定顶层body，Bridge使用对应固定错误，models/provider/customizations的嵌套合同由各自严格服务校验。它们仍不是router全局JSON Schema，也不替代路径检查、工作区绑定、审批、取消或效果核验语义。
 
 `httpSmoke`、`apiFiles`、`bridgeTunnel`、`auditControl`、`ptyLifecycle`覆盖实际HTTP和模块边界；不是手机OAuth、真实终端或浏览器全部操作的验收。
 
@@ -66,7 +64,7 @@ Chat、Provider发现和GitHub身份三条网络路由各自显式接入requestS
 
 | 源码 | 定位证据 |
 |---|---|
-| [routes.js](routes.js) | 122 个函数/类节点 |
+| [routes.js](routes.js) | 113 个函数/类节点 |
 <!-- docs-inventory:end -->
 
 第42组经典停止调用携工作区/主机绑定；有任一字段时完整匹配才递增generation或停隧道，只有完全空体的旧请求兼容，未知字段400且零停启。停隧道失败和停止完成后广播失败可能都500但效果不同，不能从HTTP错误猜测回滚。

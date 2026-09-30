@@ -1,7 +1,7 @@
-// F62 batch 2: outbound HTTP on the identity/telemetry paths must have a deadline, and the
+// F62 batch 2: outbound HTTP on the telemetry path must have a deadline, and the
 // read-hash store must not rewrite itself when nothing changed.
-// Baseline (c7acac4): auth/github.js and usage/tracker.js called fetch with no signal, no timeout
-// and no response budget, so a black-holed host hung login forever and stacked telemetry sockets;
+// Baseline (c7acac4): usage/tracker.js (and the GitHub identity module removed in F106) called fetch
+// with no signal, no timeout and no response budget, so a black-holed host stacked telemetry sockets;
 // readCache.rememberHash rewrote the whole store on every call, including no-op re-reads.
 // Everything below runs against self-created temporary directories and in-process doubles; no
 // real network request is made.
@@ -15,7 +15,6 @@ process.env.WORKSPACE_ROOT = tmp;
 const { config } = require('../src/config');
 config.workspaceRoot = tmp;
 
-const github = require('../src/auth/github');
 const tracker = require('../src/usage/tracker');
 const readCache = require('../src/tools/readCache');
 const { fetchText, runWithSignal } = require('../src/utils/requestScope');
@@ -177,66 +176,10 @@ async function run() {
 
   // --- The declared budgets exist and are sane. ---
   for (const [label, value] of [
-    ['github timeout', github.GITHUB_TIMEOUT_MS],
-    ['github max bytes', github.GITHUB_MAX_BYTES],
     ['telemetry timeout', tracker.REPORT_TIMEOUT_MS],
     ['telemetry max bytes', tracker.REPORT_MAX_BYTES]
   ]) {
     assert.ok(Number.isFinite(value) && value > 0, label + ' must be a positive number');
-  }
-
-  // --- F62-08: every GitHub identity call must time out instead of hanging forever. ---
-  process.env.WEBAGENT_GITHUB_CLIENT_ID = 'Iv1.test';
-  process.env.WEBAGENT_GITHUB_TIMEOUT_MS = '150';
-  delete require.cache[require.resolve('../src/auth/github')];
-  const gh = require('../src/auth/github');
-  assert.strictEqual(gh.GITHUB_TIMEOUT_MS, 150, 'the timeout must be configurable');
-
-  for (const [label, invoke] of [
-    ['loginWithToken', (fn) => gh.loginWithToken('ghp_test', fn)],
-    ['startDeviceLogin', (fn) => gh.startDeviceLogin(fn)],
-    ['fetchGitHubUser', (fn) => gh.fetchGitHubUser('ghp_test', fn)]
-  ]) {
-    const seen = [];
-    const started = Date.now();
-    const err = await rejects(invoke(blackHole(seen)), label);
-    const elapsed = Date.now() - started;
-    // The merged fetchText enforces its own deadline (E_TIMEOUT) instead of depending on the
-    // transport to honour the abort signal, so assert the code rather than AbortError.
-    assert.strictEqual(err.code, 'E_TIMEOUT', label + ' must abort rather than hang');
-    assert.ok(elapsed < 5000, `${label} must end near its deadline; took ${elapsed}ms`);
-    assert.strictEqual(seen.length, 1, label + ' must not retry on its own');
-  }
-
-  // The device-code poller reports the failure instead of leaving the attempt wedged.
-  {
-    const deviceFetch = async (url) => {
-      if (String(url).includes('/login/device/code')) {
-        return jsonResp(200, { device_code: 'dev', user_code: 'ABCD-1234', expires_in: 900, interval: 5 });
-      }
-      throw new Error('unexpected ' + url);
-    };
-    const start = await gh.startDeviceLogin(deviceFetch);
-    assert.strictEqual(start.userCode, 'ABCD-1234');
-    const seen = [];
-    const started = Date.now();
-    const err = await rejects(gh.pollDeviceLogin(blackHole(seen)), 'pollDeviceLogin');
-    assert.strictEqual(err.code, 'E_TIMEOUT', 'polling classifies its own deadline');
-    assert.ok(Date.now() - started < 5000, 'polling must not hang on a dead endpoint');
-    gh.resetPending();
-  }
-
-  // A healthy response still works end to end, and an oversized body is refused.
-  {
-    const ok = await gh.loginWithToken('ghp_test', async () => jsonResp(200, { login: 'octocat', id: 7, name: 'O' }));
-    assert.strictEqual(ok.username, 'octocat');
-    const huge = 'x'.repeat(gh.GITHUB_MAX_BYTES + 1024);
-    const err = await rejects(
-      gh.fetchGitHubUser('ghp_test', async () => ({ ok: true, status: 200, async text() { return huge; } })),
-      'oversized GitHub body'
-    );
-    assert.strictEqual(err.code, 'E_RESPONSE_TOO_LARGE');
-    gh.clearGithubKeepDemo();
   }
 
   // --- F62-09: telemetry must not stack sockets against a dead endpoint. ---

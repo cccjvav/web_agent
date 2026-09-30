@@ -35,12 +35,6 @@ function defaults() {
       mergeAllowsRead: true
     },
     bridge: {
-      loggedIn: true,
-      provider: 'local-demo',
-      username: 'local',
-      githubId: '',
-      license: 'local-demo',
-      deviceAuthorized: true,
       tunnelProvider: 'cloudflare',
       persistentMode: false,
       ngrokDomain: '',
@@ -71,26 +65,14 @@ function normalizeMultiModel(mm) {
   return next;
 }
 
-function isFakeGithub(b) {
-  if (String(b.provider || '') !== 'github') return false;
-  if (String(b.githubId || '').trim()) return false;
-  const u = String(b.username || '').trim().toLowerCase();
-  return !u || u === 'demo' || u === 'local';
-}
+// F106: the Bridge sign-in gate (local demo authorisation / optional GitHub identity) was removed
+// for this single-user product. Older config.json files still carry those keys; drop them on load
+// so they are neither shown nor written back.
+const RETIRED_BRIDGE_KEYS = ['loggedIn', 'provider', 'username', 'githubId', 'license', 'deviceAuthorized'];
 
 function normalizeBridge(bridge) {
   const b = { ...defaults().bridge, ...(bridge || {}) };
-  if (b.license === '永久顺') b.license = 'local-demo';
-  if (isFakeGithub(b)) {
-    b.provider = 'local-demo';
-    if (!b.username || b.username === 'demo') b.username = 'local';
-    b.githubId = '';
-  }
-  if (b.username === 'demo' && b.provider === 'local-demo') b.username = 'local';
-  if (b.provider === 'github') {
-    b.loggedIn = true;
-    b.deviceAuthorized = true;
-  }
+  for (const key of RETIRED_BRIDGE_KEYS) delete b[key];
   return b;
 }
 
@@ -333,6 +315,5 @@ module.exports = {
   protectWorkspaceSecrets,
   trackedSecretFiles,
   warnTrackedSecrets,
-  reset,
-  isFakeGithub
+  reset
 };

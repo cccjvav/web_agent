@@ -22,8 +22,6 @@ const RULES = [
   ['GET', '/api/bridge/activity'],
   ['POST', '/api/bridge/start'], ['POST', '/api/bridge/stop'], ['POST', '/api/bridge/reset-secret'],
   ['POST', '/api/bridge/reset-round'], ['POST', '/api/bridge/oauth'],
-  ['POST', '/api/bridge/login'], ['POST', '/api/bridge/token'], ['POST', '/api/bridge/logout'],
-  ['POST', '/api/bridge/device'], ['POST', '/api/bridge/device/poll'], ['POST', '/api/bridge/github/clear'],
   ['GET', '/api/models'], ['POST', '/api/models'], ['POST', '/api/providers/probe'],
   ['GET', '/api/customizations'], ['PUT', '/api/customizations'],
   ['GET', '/api/profile/detect'],

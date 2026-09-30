@@ -7,7 +7,7 @@ const vm = require('vm');
 const root = path.resolve(__dirname, '../../..');
 const docs = [
   'webagent-core/README.md', 'webagent-core/agent-host/README.md', 'webagent-core/agent-host/src/README.md',
-  ...['agent', 'api', 'auth', 'mcp', 'models', 'tools', 'tunnel', 'usage', 'utils'].map(name => 'webagent-core/agent-host/src/' + name + '/README.md'),
+  ...['agent', 'api', 'mcp', 'models', 'tools', 'tunnel', 'usage', 'utils'].map(name => 'webagent-core/agent-host/src/' + name + '/README.md'),
   'webagent-core/agent-host/tests/README.md', 'webagent-core/extension/README.md', 'webagent-core/workbench/README.md',
   'webagent-core/scripts/README.md', 'webagent-core/admin-host/README.md', 'installer/README.md', 'docs-site/README.md', '启动脚本说明.md'
 ];

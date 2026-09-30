@@ -77,7 +77,7 @@
 
 ### F61-03 · P2 · GitHub身份网络链缺少应用层取消/响应预算【真实回环HTTP＋替身复现】
 
-- 位置：[github.js](../webagent-core/agent-host/src/auth/github.js) `fetchGitHubUser/startDeviceLogin/pollDeviceLogin`。
+- 位置：github.js（已于F106移除） `fetchGitHubUser/startDeviceLogin/pollDeviceLogin`。
 - 真实HTTP夹具发送响应头后暂停正文；取消requestScope的父signal后80ms调用仍未结算，补完正文后仍返回用户。请求未传signal。另一个假fetch接受了超过1MiB的JSON，源码text/json没有预缓冲字节上限；1MiB不是现有文档承诺的阈值，只是本轮夹具大小。
 - 影响：断开/取消不停止网络读取，慢响应可占用资源。不能把Node底层网络超时当整个身份操作的总期限；也没有证据宣称已经泄露真实GitHub token。
 - 已有generation发布屏障仍能防旧登录结果覆盖新身份，不应推翻这部分实现；身份详解已诚实记录没有timeout，不属于“文档撒谎”。

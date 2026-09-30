@@ -31,8 +31,9 @@ async function run() {
     bridge: { provider: 'github', username: 'octocat', githubId: '1', loggedIn: true }
   });
   const body = tracker.payload();
-  assert.strictEqual(body.githubUser, 'octocat');
-  assert.strictEqual(body.githubId, '1');
+  // F106: legacy identity keys in config.json are neither kept nor reported.
+  for (const key of ['githubUser', 'githubId', 'provider']) assert.ok(!Object.hasOwn(body, key), 'payload has no ' + key);
+  assert.ok(body.installId);
   assert.strictEqual(body.toolCalls, 2);
 
   process.env.WEBAGENT_TELEMETRY_URL = 'https://example.test/api/report';
@@ -47,7 +48,7 @@ async function run() {
   assert.strictEqual(posted.url, 'https://example.test/api/report');
   assert.ok(String(posted.opts.headers.Authorization).includes('secret'));
   const sent = JSON.parse(posted.opts.body);
-  assert.strictEqual(sent.githubUser, 'octocat');
+  assert.ok(!Object.hasOwn(sent, 'githubUser'));
   assert.strictEqual(sent.toolCalls, 2);
 
   delete process.env.WEBAGENT_TELEMETRY_URL;

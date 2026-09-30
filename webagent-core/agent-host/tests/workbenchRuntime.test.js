@@ -711,45 +711,10 @@ process.on('exit', code => {
   // R3 result consumers: an HTTP response is not success until its body confirms the action.
   const consumerNotices = [];
   state.namespace.ui.toast = message => consumerNotices.push(message);
-  let consumerRefreshes = 0, treeLoads = 0, openedFiles = 0;
-  state.namespace.ui.refreshStatus = async () => { consumerRefreshes++; return true; };
+  let treeLoads = 0, openedFiles = 0;
+  state.namespace.ui.refreshStatus = async () => true;
   state.namespace.ui.loadTree = async () => { treeLoads++; };
   state.namespace.ui.openFile = async () => { openedFiles++; };
-  state.namespace.state.loggedIn = false;
-  context.fetch = async () => ({ok:false,status:500,json:async()=>({success:true})});
-  assert.equal(await statusNodes.get('#btn-gh-login').onclick(),false);
-  assert.equal(state.namespace.state.loggedIn,false,'failed demo login cannot publish a local success');
-  assert.equal(consumerRefreshes,0);assert.ok(!consumerNotices.at(-1).includes('已打开'));
-  context.fetch = async () => ({ok:true,status:200,json:async()=>({success:false,error:'clear rejected'})});
-  assert.equal(await statusNodes.get('#btn-gh-clear').onclick(),false);
-  assert.equal(consumerRefreshes,0);assert.ok(!consumerNotices.at(-1).includes('已清除'));
-
-  let deviceStarts=0,devicePolls=0;
-  context.fetch=async url=>{
-    if(url==='/api/bridge/device') return {ok:true,status:200,json:async()=>({success:true,userCode:'OLD-CODE',verificationUri:'https://github.com/login/device',interval:5})};
-    if(url==='/api/bridge/github/clear') return {ok:true,status:200,json:async()=>({success:true,provider:'local-demo',username:'local'})};
-    devicePolls++;return {ok:true,status:200,json:async()=>({pending:true,done:false,interval:5})};
-  };
-  const timersBeforeDevice=new Set(timers.keys());
-  assert.equal(await statusNodes.get('#btn-gh-device').onclick(),true);
-  const cancelledPoll=[...timers.keys()].find(id=>!timersBeforeDevice.has(id));
-  assert.ok(cancelledPoll);assert.equal(await statusNodes.get('#btn-gh-clear').onclick(),true);
-  assert.ok(!timers.has(cancelledPoll),'clearing identity cancels the scheduled device poll');assert.equal(devicePolls,0);
-  context.fetch=async url=>{
-    if(url==='/api/bridge/device') {
-      deviceStarts++;return {ok:true,status:200,json:async()=>({success:true,userCode:'CODE-'+deviceStarts,verificationUri:'https://github.com/login/device',interval:5})};
-    }
-    devicePolls++;return {ok:true,status:200,json:async()=>({pending:false,done:true,success:true,username:'latest-user'})};
-  };
-  const replacementTimers=new Set(timers.keys());
-  assert.equal(await statusNodes.get('#btn-gh-device').onclick(),true);
-  const oldPoll=[...timers.keys()].find(id=>!replacementTimers.has(id));
-  assert.equal(await statusNodes.get('#btn-gh-device').onclick(),true);
-  assert.ok(!timers.has(oldPoll),'a newer device attempt cancels the older generation');
-  const latestPoll=[...timers.keys()].find(id=>!replacementTimers.has(id));
-  const latestTick=timers.get(latestPoll);timers.delete(latestPoll);await latestTick();
-  assert.equal(devicePolls,1);assert.ok(consumerNotices.at(-1).includes('latest-user'));
-
   context.prompt = () => '../blocked.txt';
   context.fetch = async () => ({ok:true,status:200,json:async()=>({success:false,error:'create rejected'})});
   assert.equal(await statusNodes.get('#lnk-new-file').onclick(),false);

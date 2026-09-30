@@ -244,7 +244,7 @@ winget install --id Cloudflare.cloudflared --exact
 **位置：本机浏览器工作台。**
 
 1. 左下角齿轮 → 智能体自定义设置 → Bridge。
-2. 确认本机演示授权状态；它不是 GitHub 登录。此路线不要求你提交 GitHub token 或模型 API Key。
+2. Bridge 不需要任何登录或授权（F106 起已移除该门槛）。此路线不要求你提交 GitHub token 或模型 API Key。
 3. 隧道选择 **Cloudflare Quick Tunnel**，点击 **启动 Bridge**，等待结果。
 4. 成功应出现 HTTPS 公网域名；若仍是 `127.0.0.1` 或显示错误，停止并记录，不能拿本机地址给手机使用。
 5. 还没有客户端时“等待连接”是合理状态，不等于已经完成任务。
