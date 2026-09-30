@@ -5,6 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const net = require('net');
+const http = require('http');
 const { spawn } = require('child_process');
 const { chromium } = require('playwright');
 const AXE_SCRIPT = process.env.AXE_PATH || require.resolve('axe-core/axe.min.js');
@@ -260,10 +261,14 @@ async function freePort() {
   return port;
 }
 async function mcpCorsBrowser(browser, base, mcp) {
+  // The workbench page now carries connect-src 'self' (F101), which rightly blocks cross-origin fetches,
+  // so the CORS check runs from a bare loopback page with no CSP: a separate origin, like a browser client.
+  void base;
+  const origin = http.createServer((req, res) => { res.writeHead(200, {'Content-Type':'text/html'}); res.end('<!doctype html><title>cors origin</title>'); });
+  await new Promise(resolve => origin.listen(0, '127.0.0.1', resolve));
   const page = await browser.newPage();
-  await withoutEditor(page);
   try {
-    await page.goto(base);
+    await page.goto(`http://127.0.0.1:${origin.address().port}/`);
     const result = await page.evaluate(async mcp => {
       const headers = {'Content-Type':'application/json', Accept:'application/json'};
       const init = await fetch(mcp, {method:'POST',headers,body:JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2025-06-18',clientInfo:{name:'browser-cors-fixture'}}})});
@@ -277,7 +282,7 @@ async function mcpCorsBrowser(browser, base, mcp) {
       return {status:init.status,initialized,sessionReadable:/^[a-f0-9]{32}$/.test(sid || ''),followStatus:follow.status,tools,challengeStatus:challenge.status,challengeReadable:/^Bearer realm=/.test(challenge.headers.get('WWW-Authenticate') || '')};
     }, mcp);
     assert.deepStrictEqual(result, {status:200,initialized:true,sessionReadable:true,followStatus:200,tools:true,challengeStatus:401,challengeReadable:true});
-  } finally { await page.close(); }
+  } finally { await page.close(); await new Promise(resolve => origin.close(resolve)); }
 }
 async function classicChatStreamBrowser(browser, base) {
   const page = await browser.newPage();
