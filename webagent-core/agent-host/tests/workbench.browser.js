@@ -327,6 +327,8 @@ async function classicChatStreamBrowser(browser, base) {
       ui.refreshStatus = async () => {}; ui.loadTree = async () => {};
       const box = document.querySelector('#chat-stream');
       const snapshots = [];
+      // Earlier cases in this page leave their bubbles on screen; count relative to them.
+      const before = box.querySelectorAll('.msg.assistant').length;
       try {
         state.history = [];
         window.fetch = async (url,input) => {
@@ -337,7 +339,7 @@ async function classicChatStreamBrowser(browser, base) {
               controller.enqueue(encoder.encode(line));
               await new Promise(resolve => setTimeout(resolve, 30));
               const node = box.querySelector('.msg.assistant.streaming');
-              snapshots.push(node ? {text:node.textContent, caret:getComputedStyle(node.firstElementChild,'::after').content, bubbles:box.querySelectorAll('.msg.assistant').length} : null);
+              snapshots.push(node ? {text:node.textContent, caret:getComputedStyle(node.firstElementChild.lastElementChild || node.firstElementChild,'::after').content, bubbles:box.querySelectorAll('.msg.assistant').length - before} : null);
             }
             controller.enqueue(encoder.encode('{"type":"message","text":"第一段 **粗体**"}\n{"type":"done"}\n'));
             controller.close();
@@ -345,7 +347,7 @@ async function classicChatStreamBrowser(browser, base) {
         };
         const accepted = await sendChat('streamed');
         const bubbles = [...box.querySelectorAll('.msg.assistant')];
-        return {accepted, snapshots, bubbles: bubbles.length, open: box.querySelectorAll('.msg.assistant.streaming').length,
+        return {accepted, snapshots, bubbles: bubbles.length - before, open: box.querySelectorAll('.msg.assistant.streaming').length,
           html: bubbles.at(-1).firstElementChild.innerHTML, history: state.history.filter(m => m.role === 'assistant').map(m => m.content)};
       } finally { window.fetch = original; ui.refreshStatus = savedRefresh; ui.loadTree = savedTree; }
     });
