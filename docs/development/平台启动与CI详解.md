@@ -64,7 +64,7 @@ dependencies：express HTTP路由、cors来源控制、ws WebSocket、diff差异
 
 ### agent-host
 
-fail-fast:false让失败不取消其它矩阵。Ubuntu固定`ubuntu-24.04`（F112，避免2026-10-19起`ubuntu-latest`静默换成Ubuntu 26）。Ubuntu/Windows各Node20/22/24，include再加Ubuntu18兼容任务。default working-directory是agent-host；checkout@v5取源码，setup-node@v5以Node 24动作运行时选择项目Node，避免GitHub弃用旧动作运行时的告警；npm ci按锁文件安装依赖，check-docs只检查不修漂移，npm test运行测试发现/汇总。
+fail-fast:false让失败不取消其它矩阵。Ubuntu固定`ubuntu-24.04`（F112，避免2026-10-19起`ubuntu-latest`静默换成Ubuntu 26）；F113另有临时的`ubuntu26-trial.yml`在`ubuntu-26.04`上试跑同样的Linux任务，用来决定何时切换，决定后删除。Ubuntu/Windows各Node20/22/24，include再加Ubuntu18兼容任务。default working-directory是agent-host；checkout@v5取源码，setup-node@v5以Node 24动作运行时选择项目Node，避免GitHub弃用旧动作运行时的告警；npm ci按锁文件安装依赖，check-docs只检查不修漂移，npm test运行测试发现/汇总。
 
 `npm audit --omit=dev --audit-level=high`现在是门禁：高/严重生产依赖公告或审计请求失败会使矩阵失败，不再用continue-on-error吞掉。它不扫描开发依赖、不分析项目源码或证明依赖来源签名，因此绿色CI仍不是“零漏洞”证书。Action自身的Node运行时弃用警告与矩阵node-version不同，不能混报。
 
@@ -92,6 +92,15 @@ Ubuntu/Node22，job timeout-minutes=10；npm ci后执行`npx playwright install 
 排除：webagent-repro（其JS不许改）、生成的docs-site/content.js、三个探针（arena-model-probe、arena-trace-inspector、webagent-core/probe-extension，由另一助手负责）、extensions-installed（extension的逐字节副本）、bin与各类运行数据目录。实际检查240个文件：agent-host（含测试）、extension、workbench、scripts、admin-host、installer、docs-site脚本、examples/calculator和配置本身。环境：默认Node CommonJS；workbench是浏览器ES模块，settings-panel.js另有webview提供的acquireVsCodeApi；docs-site/app.js是浏览器普通脚本；tests/workbench.browser.js的page.evaluate回调在浏览器里运行，给浏览器全局；tests/probeTransport.test.js自己在global上装window/document。
 
 接入时的处置（第93组）：此前记录的4处no-unsafe-finally已不存在（对全部334个JS文件单跑该规则为0）；修掉的是docs-site/anchors.js里不带u标志的表情字符类（对仓库全部2938个标题新旧结果逐一相同）、未用的循环变量、未用的导入和测试里的三处残留变量，以及一条因参数不查而失效的eslint-disable注释。本地运行：`cd webagent-core/agent-host && npm run lint`。
+
+## 5b. .github/workflows/ubuntu26-trial.yml（F113，临时）
+
+[workflow](../../.github/workflows/ubuntu26-trial.yml)在push与workflow_dispatch触发，顶层permissions仅contents:read。用户选方案B：test.yml固定`ubuntu-24.04`不动，这里在`ubuntu-26.04`上跑同样的Linux任务，给“何时把test.yml换到Ubuntu 26”提供证据。
+
+- **agent-host**：fail-fast:false，Node 18/20/22/24四项；npm ci、`check-docs.js`文档清单、Node22时`npm run lint`、`npm test`。不含test.yml里的生产依赖audit与Windows重复步骤（与操作系统版本无关或只在Windows）。
+- **workbench-browser**：Node22、10分钟限时；npm ci、`npx playwright install --with-deps chromium`、`npm run test:browser`。Playwright的系统依赖包名随发行版变化，这是换版最可能出问题的地方。
+
+它是独立的一次运行，不计入test.yml的九个任务，也不是合并门禁。结果全绿则把test.yml的`ubuntu-24.04`改为`ubuntu-26.04`（或`ubuntu-latest`）并删除本文件；有失败则先修或继续固定24.04，同样删除本文件。
 
 ## 6. 本地验证与边界
 

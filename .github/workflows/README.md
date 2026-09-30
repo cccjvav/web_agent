@@ -11,6 +11,8 @@
 
 F112：Ubuntu任务固定为`ubuntu-24.04`，不再用`ubuntu-latest`（后者2026-10-19起指向Ubuntu 26）。换版本要先在新镜像上试跑，Playwright系统依赖与Node 18任务最可能出问题；Windows仍用windows-latest。
 
+F113（用户选方案B）：临时工作流`ubuntu26-trial.yml`在`ubuntu-26.04`上跑同样的Linux任务（agent-host Node 18/20/22/24含文档清单与lint、workbench-browser），每次推送独立运行，不改变test.yml的九个任务。根据它的结果决定test.yml是否换到Ubuntu 26；决定后删除该文件。
+
 ## 验证
 推送/PR触发GitHub Actions。工作流修改应检查三个job定义（矩阵展开九个任务）和退出码，保留失败日志；禁止仅修改断言来掩盖失败。
 
@@ -24,6 +26,7 @@ R4：仅Windows矩阵的主npm test步骤开启WEBAGENT_DEBUG_PROCESS=1，保留
 | 源码 | 定位证据 |
 |---|---|
 | [test.yml](test.yml) | 文件级登记；未做符号完整性证明 |
+| [ubuntu26-trial.yml](ubuntu26-trial.yml) | 文件级登记；未做符号完整性证明 |
 <!-- docs-inventory:end -->
 
 新增workbench-browser：Ubuntu/Node22，独立10分钟限时；npm ci、Playwright Chromium及系统库安装、npm run test:browser。它实际操作浏览器和认证MCP，不代替Windows桌面输入或用户手机验收。

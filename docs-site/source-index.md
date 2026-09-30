@@ -8,6 +8,12 @@
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
+## .github/workflows/ubuntu26-trial.yml
+
+[目录说明](../.github/workflows/README.md) · SHA-256 `dbe68606e2214912ee10690993bf947d87ec14470a787d6fa7750c8b096ebab1`
+
+- 文件级登记；没有可报告的JS函数/类节点。
+
 ## .webagent/skills/evidence-check/workflow.json
 
 [目录说明](../.webagent/skills/evidence-check/README.md) · SHA-256 `02d8f75eb2c0261e4ebad5e048b758ad3a8c90901513fb5871febb7b26b1251d`
@@ -3064,15 +3070,15 @@
 
 ## webagent-core/agent-host/tests/documentationLearning.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `2172d42f8150d14ab8877108ed73a61c85bb24af79e2227972410a15f78eb81b`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `97fc0d7f81d8651cb2a0bc65e20669cae4c8f413f93d456d73396f50a72eb7c0`
 
 - `read` — ArrowFunctionExpression，[L8–L8](../webagent-core/agent-host/tests/documentationLearning.test.js#L8-L8)
 - `anonymous@10:48` — ArrowFunctionExpression，[L10–L10](../webagent-core/agent-host/tests/documentationLearning.test.js#L10-L10)
 - `namedFunctions` — FunctionDeclaration，[L302–L317](../webagent-core/agent-host/tests/documentationLearning.test.js#L302-L317)
 - `namedFunctions/anonymous@313:44` — ArrowFunctionExpression，[L313–L313](../webagent-core/agent-host/tests/documentationLearning.test.js#L313-L313)
-- `anonymous@421:66` — ArrowFunctionExpression，[L421–L421](../webagent-core/agent-host/tests/documentationLearning.test.js#L421-L421)
-- `anonymous@426:43` — ArrowFunctionExpression，[L426–L426](../webagent-core/agent-host/tests/documentationLearning.test.js#L426-L426)
-- `anonymous@426:68` — ArrowFunctionExpression，[L426–L426](../webagent-core/agent-host/tests/documentationLearning.test.js#L426-L426)
+- `anonymous@422:66` — ArrowFunctionExpression，[L422–L422](../webagent-core/agent-host/tests/documentationLearning.test.js#L422-L422)
+- `anonymous@427:43` — ArrowFunctionExpression，[L427–L427](../webagent-core/agent-host/tests/documentationLearning.test.js#L427-L427)
+- `anonymous@427:68` — ArrowFunctionExpression，[L427–L427](../webagent-core/agent-host/tests/documentationLearning.test.js#L427-L427)
 
 ## webagent-core/agent-host/tests/documentationLinks.test.js
 

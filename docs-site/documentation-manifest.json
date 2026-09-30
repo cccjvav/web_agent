@@ -12,6 +12,15 @@
       "symbols": []
     },
     {
+      "path": ".github/workflows/ubuntu26-trial.yml",
+      "doc": ".github/workflows/README.md",
+      "sha256": "dbe68606e2214912ee10690993bf947d87ec14470a787d6fa7750c8b096ebab1",
+      "lineCount": 52,
+      "structure": "file-only",
+      "semanticReview": "not-certified",
+      "symbols": []
+    },
+    {
       "path": ".webagent/skills/evidence-check/workflow.json",
       "doc": ".webagent/skills/evidence-check/README.md",
       "sha256": "02d8f75eb2c0261e4ebad5e048b758ad3a8c90901513fb5871febb7b26b1251d",
@@ -23187,8 +23196,8 @@
     {
       "path": "webagent-core/agent-host/tests/documentationLearning.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "2172d42f8150d14ab8877108ed73a61c85bb24af79e2227972410a15f78eb81b",
-      "lineCount": 459,
+      "sha256": "97fc0d7f81d8651cb2a0bc65e20669cae4c8f413f93d456d73396f50a72eb7c0",
+      "lineCount": 460,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -23234,31 +23243,31 @@
           ]
         },
         {
-          "id": "anonymous@421:66",
-          "name": "anonymous@421:66",
+          "id": "anonymous@422:66",
+          "name": "anonymous@422:66",
           "kind": "ArrowFunctionExpression",
-          "startLine": 421,
-          "endLine": 421,
+          "startLine": 422,
+          "endLine": 422,
           "parameters": [
             "pair"
           ]
         },
         {
-          "id": "anonymous@426:43",
-          "name": "anonymous@426:43",
+          "id": "anonymous@427:43",
+          "name": "anonymous@427:43",
           "kind": "ArrowFunctionExpression",
-          "startLine": 426,
-          "endLine": 426,
+          "startLine": 427,
+          "endLine": 427,
           "parameters": [
             "p"
           ]
         },
         {
-          "id": "anonymous@426:68",
-          "name": "anonymous@426:68",
+          "id": "anonymous@427:68",
+          "name": "anonymous@427:68",
           "kind": "ArrowFunctionExpression",
-          "startLine": 426,
-          "endLine": 426,
+          "startLine": 427,
+          "endLine": 427,
           "parameters": [
             "p"
           ]
