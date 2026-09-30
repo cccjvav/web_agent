@@ -10,6 +10,15 @@
 
 后半静态检查extension/ptyHost/routes包含客户端标识、事件名、node-pty/shellIntegration/输入/确认/注册路径等；不能证明这些代码真正执行。真实调用ptyPolicy：git status只读自动允许、rm危险即使allowSession仍alwaysAsk、npm family允许。同类命令授权不等于任意组合命令许可。成功reset；catch直接exit1。没有启动真实VS Code终端。
 
+## executorEnv.test.js（F104）
+
+验证复审 P2-4（执行环境净化与注入透明化）与 P2-5（动态探测 POSIX shell）：
+
+- **testDetectPosixShell**：覆盖有效且已存在的自定义 `SHELL` 绝对路径命中、不存在的路径降级为 bash/sh、空/未设置时降级检测、以及显式 `/bin/sh`；
+- **testPrepareCommandEnv**：核对常规变量保留、敏感凭据（GITHUB_TOKEN、AZURE_STORAGE_KEY、MY_API_KEY）从 `env` 中剥离并记录在 `stripped`、默认注入 `CI=true`、`TERM=xterm-256color`、`FORCE_COLOR=1`（Windows 补 `PYTHONIOENCODING=utf-8`）并记录在 `injected`；用户显式传入 `CI: 'false'` 等值时尊重用户设定、不重复注入；
+- **testExecuteCommandEnvSummary**：执行真实命令时，返回记录包含 `envSummary` 对象，内部包含 `stripped` 与 `injected` 数组；
+- 入口 **main** 串行运行全部异步/同步断言。
+
 ## ptyLifecycle.test.js
 
 [源码](ptyLifecycle.test.js)临时workspace中异步IIFE：policy拒git branch -D、分号串联、管道自动许可；noteClient拒错误workspace，接受两client。A claim任务后B不能accepted；finish timeout后A迟到accepted/progress只回already，原Promise失败。循环四种不可靠结果（exit2、未捕获、cancelled、缺退出码）都ok:false；500000字符progress最后stdout≤200KiB。

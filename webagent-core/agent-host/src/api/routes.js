@@ -677,6 +677,9 @@ router.post('/tool/call', async (req, res) => {
   }
 });
 
+let activeChatCount = 0;
+const MAX_ACTIVE_CHAT = 2;
+
 router.post('/chat', async (req, res) => {
   const body = apiRequestBody(req, res, CHAT_FIELDS);
   if (!body) return;
@@ -685,6 +688,20 @@ router.post('/chat', async (req, res) => {
     try { assertWorkspaceBinding(body, config); }
     catch(error){ return res.status(409).json({success:false,error:error.message}); }
   }
+  if (activeChatCount >= MAX_ACTIVE_CHAT) {
+    return res.status(429).json({
+      success: false,
+      error: `当前已有 ${activeChatCount} 个对话在处理中，达到并发上限（最多 ${MAX_ACTIVE_CHAT} 个）；请等待完成或取消后再试`
+    });
+  }
+  activeChatCount++;
+  let chatReleased = false;
+  const releaseChat = () => {
+    if (!chatReleased) {
+      chatReleased = true;
+      activeChatCount = Math.max(0, activeChatCount - 1);
+    }
+  };
   const controller = new AbortController();
   const abort = () => controller.abort();
   const timeout = setTimeout(abort, 5 * 60 * 1000);
@@ -721,6 +738,7 @@ router.post('/chat', async (req, res) => {
   clearTimeout(timeout);
   req.off('aborted', abort);
   res.off('close', disconnected);
+  releaseChat();
   if (!res.destroyed) res.end();
 });
 

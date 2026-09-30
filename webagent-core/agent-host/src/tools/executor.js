@@ -1,5 +1,6 @@
 const { scrubEnv, sliceTextTail } = require('../../../extension/ptyPolicy');
 const { spawn, spawnSync } = require('child_process');
+const fs = require('fs');
 const { StringDecoder } = require('string_decoder');
 const crypto = require('crypto');
 const path = require('path');
@@ -118,6 +119,7 @@ function publicRecord(rec, tail) {
     execution: rec.execution,
     outputCaptured: rec.outputCaptured,
     message: rec.message,
+    envSummary: rec.envSummary,
     ok: rec.ok
   };
 }
@@ -140,6 +142,46 @@ function storePtyResult(result, owner) {
   };
   commandStore.set(String(result.execId), rec);
   return rec;
+}
+
+function detectPosixShell(env = process.env) {
+  const candidate = env && typeof env.SHELL === 'string' ? env.SHELL.trim() : '';
+  if (candidate && (candidate.startsWith('/') || candidate.startsWith('.'))) {
+    try { if (fs.existsSync(candidate)) return candidate; } catch (_) {}
+  }
+  if (fs.existsSync('/bin/bash')) return '/bin/bash';
+  if (fs.existsSync('/usr/bin/bash')) return '/usr/bin/bash';
+  if (fs.existsSync('/bin/sh')) return '/bin/sh';
+  if (fs.existsSync('/usr/bin/sh')) return '/usr/bin/sh';
+  return candidate || '/bin/sh';
+}
+
+function prepareCommandEnv(baseEnv = process.env, isWin = process.platform === 'win32') {
+  const clean = scrubEnv(baseEnv);
+  const stripped = [];
+  for (const key of Object.keys(baseEnv || {})) {
+    if (!Object.hasOwn(clean, key)) stripped.push(key);
+  }
+  stripped.sort();
+
+  const ciVal = Object.hasOwn(baseEnv, 'CI') ? String(baseEnv.CI) : 'true';
+  const termVal = Object.hasOwn(baseEnv, 'TERM') ? String(baseEnv.TERM) : 'xterm-256color';
+  const forceColorVal = Object.hasOwn(baseEnv, 'FORCE_COLOR') ? String(baseEnv.FORCE_COLOR) : '1';
+  const merged = {
+    ...clean,
+    CI: ciVal,
+    TERM: termVal,
+    FORCE_COLOR: forceColorVal,
+    ...(isWin && !baseEnv.PYTHONIOENCODING ? { PYTHONIOENCODING: 'utf-8' } : {})
+  };
+
+  const injected = [];
+  if (!Object.hasOwn(baseEnv, 'CI')) injected.push('CI=true');
+  if (!Object.hasOwn(baseEnv, 'TERM')) injected.push(`TERM=${termVal}`);
+  if (!Object.hasOwn(baseEnv, 'FORCE_COLOR')) injected.push(`FORCE_COLOR=${forceColorVal}`);
+  if (isWin && !baseEnv.PYTHONIOENCODING) injected.push('PYTHONIOENCODING=utf-8');
+
+  return { env: merged, stripped, injected };
 }
 
 function startProcess({ command, cwd = '.', timeoutSec = 30 }, owner) {
@@ -175,7 +217,9 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }, owner) {
   });
 
   const win = process.platform === 'win32';
-  const shell = win ? 'powershell.exe' : '/bin/bash';
+  const shell = win ? 'powershell.exe' : detectPosixShell(process.env);
+  const { env: childEnv, stripped: strippedEnv, injected: injectedEnv } = prepareCommandEnv(process.env, win);
+  rec.envSummary = { stripped: strippedEnv, injected: injectedEnv };
   const jobSource = path.join(__dirname, 'commandJob.cs').replace(/'/g, "''");
   // Attach before user code may spawn descendants. If the host is killed while
   // taskkill is enumerating the tree, the OS job still terminates late children.
@@ -225,8 +269,7 @@ exit 0`;
     // Windows Python encodes redirected stdio in the ANSI code page (cp936/cp1252), which the
     // UTF-8 decoder above turns into replacement characters. Ask for UTF-8 unless the user has
     // chosen something else. Other platforms already default to UTF-8 locales.
-    env: { ...scrubEnv(process.env), CI: 'true', TERM: 'xterm-256color', FORCE_COLOR: '1',
-      ...(win && !process.env.PYTHONIOENCODING ? { PYTHONIOENCODING: 'utf-8' } : {}) }
+    env: childEnv
   });
   children.set(String(execId), child);
   let spawned = false, exited = false, stdoutBytes = 0, stderrBytes = 0;
@@ -526,5 +569,7 @@ module.exports = {
   cancelCommand,
   sendCommandInput,
   wait,
-  scrubEnv
+  scrubEnv,
+  detectPosixShell,
+  prepareCommandEnv
 };

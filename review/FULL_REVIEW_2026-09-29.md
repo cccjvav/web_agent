@@ -18,7 +18,7 @@
 | 文档 | 抽样与自动比对（路由、错误码、环境变量、工具数、路径引用）未发现现行文档与代码的实质冲突；仅发现工作台 UI 内一段陈旧提示文案（P2-6）与两处错别字。文档体系（`check-docs.js` + 目录 README + 详解）维护得比大多数同规模项目好。 |
 | 仓库/工程 | 生成物 `docs-site/content.js`（5.3 MiB）、`documentation-manifest.json`（1.6 MiB）、`source-index.md`（0.9 MiB）入库，每次源码改动都会重写，历史膨胀明显；`review/shuncode-ui/` 26 张截图 13 MB。 |
 
-**建议优先处理顺序：** P1-1（Monaco 自托管/SRI）→ P2-2（流式输出）→ P2-1（危险命令补充规则）→ UI 字号与三栏布局（4.1）→ 文案一致性（P2-6、4.1.3）。（进度见第 8 节：截至第 6 批，P1-1、P2-1、P2-2、P2-3、P2-6、P2-7、P2-8 已修。）
+**建议优先处理顺序：** P1-1（Monaco 自托管/SRI）→ P2-2（流式输出）→ P2-1（危险命令补充规则）→ UI 字号与三栏布局（4.1）→ 文案一致性（P2-6、4.1.3）。（进度见第 8 节：截至第 7 批，P1-1、P2-1、P2-2、P2-3、P2-4、P2-5、P2-6、P2-7、P2-8 已修。）
 
 ---
 
@@ -118,11 +118,13 @@
 - **现象：** ① `CI=true` 会让 Create React App / Vite 部分工具把警告当错误、让 `npm ci` 行为变化、让一些测试框架关闭交互和彩色输出——用户在工作台跑 `npm run build` 失败但本地终端成功时无法理解；② 需要 `GITHUB_TOKEN`/`NPM_TOKEN` 的命令（`gh`、私有源 `npm install`）会在无提示的情况下失败。
 - **建议：** 在命令结果里附一行"已注入 CI=true；已剥离环境变量 N 个（GITHUB_TOKEN, …）"，并在 `工具入口与命令策略详解.md` 写明；`CI=true` 可改为可配置。
 - **证据类型：** 静态阅读。
+- **处置（第 7 批 / 第 104 组）：** 已修。`prepareCommandEnv` 在执行命令前计算环境净化与注入摘要，用户显式指定 `CI` 时尊重其值，结果记录中新增结构化 `envSummary: { stripped: [...], injected: [...] }` 字段透明化所有变更；测试见 `executorEnv.test.js`。
 
 #### P2-5 硬编码 `/bin/bash` 与端口 48271 的多处硬编码
 - **位置：** `executor.js:178`（非 Windows 一律 `/bin/bash`，Alpine/NixOS/部分容器无此路径）；`routes.js:599-605` 四条提示写死"本机48271端口"（应为 `config.port`）；`models/store.js:50`、`extension.js:38`、`hostManager.js:17`、`installer/appWindow.js:225`、`index.html:715,724` 亦写死。
 - **建议：** shell 用 `process.env.SHELL || (fs.existsSync('/bin/bash') ? '/bin/bash' : '/bin/sh')`；提示文案改用运行时端口；扩展/安装器统一从一处常量导出。
 - **证据类型：** 静态阅读 + grep。
+- **处置（第 7 批 / 第 104 组）：** `/bin/bash` 已修。`detectPosixShell` 按顺序探测：存在且可执行的 `process.env.SHELL` → `/bin/bash` → `/usr/bin/bash` → `/bin/sh` → `/usr/bin/sh` → `/bin/sh` 兜底；端口 48271 在第 1 批已部分修复（运行时文案采用 `config.port`），跨进程独立默认值保留。
 
 #### P2-6 工作台"高级设置"提示文案描述了不存在的功能
 - **位置：** `workbench/index.html:743`：`随 Web Agent 启动 Bridge、重置 MCP 地址、startupTimeoutMs。` 而该区块只有一个"重置 MCP 地址"按钮；全仓 grep `autoStartBridge|startupTimeoutMs` 在工作台/主机代码中无实现（扩展侧的"启动主机后同时开启 Bridge"是另一功能）。
@@ -317,7 +319,10 @@
 | P2-3 上游错误只显示“HTTP 400 请求失败”/无上下文估算 | 已修（截断除外） | 第 6 批 / 第 103 组 | 新模块 `agent/modelDiagnostics.js`：按上游 `error.code`/`type`/`param`、状态码兜底与少数消息形状把失败归入固定类别（context/stream/auth/forbidden/not_found/quota/rate_limit/overloaded/upstream/bad_request/http），文案写死在本机（如“模型 HTTP 400 请求失败：对话超出模型上下文长度（本次请求约 N tokens，估算值），请清空历史、缩短消息或换上下文更大的模型”），正文只匹配、截 2000 字符、永不拼接；认证类只看码/状态不看文本（“token”会撞 max_tokens）。200 正文 `{error}` 信封与 SSE 流内 `{error}` 同样归类。`parseContextSize` 解析目录展示文本（128K/1M/32768/200k tokens），`estimateTokens`（CJK≈1、其余≈3.5 字符/token）在发送前对整份序列化请求估算，超过声明上下文只发一条 status、不截断。测试：新 `tests/modelDiagnostics.test.js`（31 组分类矩阵、措辞、敌意正文、估算、20 组尺寸解析）、`modelStreaming` ⑪⑫；文档：模型调用详解“错误分类与上下文估算”+1c 节、agent/README、技术实现、SECURITY、使用指南故障排除 |
 | D-26 流式 400 回退与上下文超限同码 | 已修 | 第 6 批 / 第 103 组 | 流式尝试的 400 先分类：只有 `stream` 类（param 为 stream/stream_options 或消息含 stream(ing)）或无法归类的 `bad_request` 才去掉 `stream` 重试并记入 `STREAM_UNSUPPORTED`；context/auth/not_found/quota 等直接以分类文案失败，不再多发一次请求（`modelStreaming` ⑪：context_length_exceeded 恰一次请求且不进入 STREAM_UNSUPPORTED） |
 | D-28 120 s 总期限切断长回答 | 已修 | 第 6 批 / 第 103 组 | `requestScope.fetchText` 新增 `limits.idleMs` 空闲预算（第二个 racer：响应头与每个片段之间静默超过 idleMs ⇒ `E_TIMEOUT reason:'idle'`，文案“HTTP 请求 N 秒内没有收到新数据”；先触发的预算拥有错误，总期限更短时仍报 deadline），并把自己的 signal 传给读取器（`limits.signal`），使不理会请求信号的传输也会在超时时取消 body。模型调用改为 `MODEL_TIMEOUT_MS=300 s` 总 + `MODEL_IDLE_TIMEOUT_MS=120 s` 空闲：逐字输出的长回答可跑满 5 分钟，静默 Provider 仍 2 分钟放弃；其余调用方（GitHub 10 s、遥测）合同不变。测试：`networkBudget`（滴流/静默/无头/短总期限/默认不变/onChunk 并存/父取消/非法值）、`modelStreaming` 常量与源码守卫 |
-| P2-4、P2-5、其余 P3、D-27、4.1 字号 token/三栏（分栏拖拽）、4.3 工程项、第 6 节探针 | 待后续批次 | — | 4.1 字号 token 与三栏分隔条评估后延后，因为它牵涉 `styles.css` 106 处 font-size 与 Playwright 断言，需要能跑浏览器的环境逐视口核对；下一批候选：P2-4/P2-5（执行器 `CI=true` 透明化、`/bin/bash` 回退）与 D-27 |
+| P2-4 执行环境注入与凭据剥离透明化 | 已修 | 第 7 批 / 第 104 组 | `tools/executor.js` `prepareCommandEnv` 汇总环境净化，敏感凭据从子进程剥离并记入 `stripped`，注入环境变量记入 `injected`（允许用户显式覆盖 `CI` 等值）；命令执行返回记录中带结构化 `envSummary`；测试见 `executorEnv.test.js` |
+| P2-5 POSIX Shell 动态探测与降级 | 已修 | 第 7 批 / 第 104 组 | `tools/executor.js` `detectPosixShell` 按顺序探测已有 SHELL、`/bin/bash`、`/usr/bin/bash`、`/bin/sh`、`/usr/bin/sh`，Alpine/容器环境不再崩溃；测试见 `executorEnv.test.js` |
+| D-27 Chat 并发上限保护 | 已修 | 第 7 批 / 第 104 组 | `routes.js` 为 `/api/chat` 增加在途计数保护 `activeChatCount` 与 `MAX_ACTIVE_CHAT = 2` 上限，超出时以 HTTP 429 拦截并提示稍后重试，退出时必定释放；测试见 `chatConcurrency.test.js` |
+| 其余 P3、4.1 字号 token/三栏（分栏拖拽）、4.3 工程项、第 6 节探针 | 待后续批次 | — | 4.1 字号 token 与三栏分隔条评估后延后，因为它牵涉 `styles.css` 106 处 font-size 与 Playwright 断言，需要能跑浏览器的环境逐视口核对；后续候选：UI 细化、工程产物治理 |
 
 ## 9. 深审新发现（报告成文后，按批次追加）
 
@@ -384,7 +389,7 @@
 |---|---|---|
 | D-25 | `runChat.js capturingEmit` | 只吞 `message`、转发其余事件。若照常转发 `delta`，Plan 分支正在生成的分片会被客户端画进一个没有分支信息的气泡，merge 的分片还会和分支分片混在一个气泡里，随后 `emitRound` 再发一次全文 ⇒ 双份。已修：`capturingEmit` 也吞 `delta`；Plan 因此不逐字显示（有意，文档已写明）。 |
 | D-26（第 6 批已修） | `openai.js` 对 400 的解释 | 流式回退把“Provider 不接受 stream”与“上下文超限/参数非法”这两类 400 混在一起：第一次 400 都会触发一次非流式重试。代价是多一次请求（上游按 token 计费的请求在 400 时通常不计费），收益是不需要按模型配置开关。更细的分类需要读取上游错误正文的 `error.code`（本项目有意不回显正文，但**受控读取**并映射到固定文案是可行的），这与 P2-3 的建议是同一件事，留待一并处理。 |
-| D-27 | `routes.js /chat` | 服务端对并发 Chat 没有上限（P2-2 建议③）。流式并不改变这一点；工作台没有登录态、只有 Host 门禁，“同一 owner”需要先定义（按 client 字段？按连接？），本批不做。 |
+| D-27（第 7 批已修） | `routes.js /chat` | 服务端对并发 Chat 增加在途计数门禁（`activeChatCount >= MAX_ACTIVE_CHAT = 2`），超出返回 HTTP 429，防止工作台连击或脚本并发耗尽主机资源与模型上下文。 |
 | D-28（第 6 批已修） | `fetchText` 120 s 期限 | 是**总期限**不是空闲超时：现在长回答能看到文字了，但超过 120 s 的单轮仍会被切断（`E_TIMEOUT`，已显示的半截不入历史）。改为“首字节 N 秒 + 空闲 M 秒”需要同时改 `requestScope`、GitHub/遥测调用方的合同与 networkBudget 测试，超出本批范围；记录为后续项。 |
 | D-29 | VS Code 原生 Chat 参与者 | 原生 `stream.markdown` 是追加式的，最终 `message` 若照旧整段写会出现两遍；且连续两段 assistant 文本（工具轮之间）之前没有分隔。已修：只补写余量、段间一个空行；`nativeChatStream` 用 `written.join('')` 精确断言。 |
 | D-30 | `completionStream.js` 的 `Array.prototype.some` | 稀疏数组（工具 `index` 有洞）上 `some` 会跳过空洞，序号检查形同虚设；写测试时发现，改为下标循环。列出来是提醒：所有“按远端给的 index 写数组”的代码都要用循环而不是高阶函数做完整性检查。 |
@@ -405,6 +410,17 @@
 
 本批复核无问题（不列为发现）：`runChat` 对模型异常只转发 `err.message`（现在是固定文案），Bridge/MCP 路径不经过 `runOpenAI`，不受影响；`providers.js` 的 15 s/512 KiB 目录发现调用没有传 `idleMs`，其响应是一次性 JSON，无需空闲预算；`STREAM_UNSUPPORTED` 记忆仍是进程内的。未验证：真实 Provider 的错误信封形状按公开文档（OpenAI、Anthropic 兼容层、vLLM 422）编写；Windows 上未跑。
 
+### 9.7 第 7 批（第 104 组，2026-09-30）：执行环境透明化、Shell 探测与 Chat 并发上限
+
+通读与深审范围：`tools/executor.js` 执行环境构造与子进程生成、`api/routes.js /chat` 在途并发控制与端点保护。
+
+| 编号 | 位置 | 现象与复现 | 影响与处置 |
+|---|---|---|---|
+| D-36 | `executor.js prepareCommandEnv` | 用户若在启动环境或调用时显式指定了 `CI=false`，原先无条件 `{ ...scrubEnv, CI: 'true' }` 会把用户的设定粗暴覆盖。 | **已修**。`prepareCommandEnv` 仅在用户未显式设置 `CI` 时默认注入 `CI: 'true'`，尊重调用方的明确要求。 |
+| D-37 | `executor.js startProcess` | 命令执行虽然剥离了凭据并注入了 `CI`/`TERM`/`FORCE_COLOR`，但调用方和上层只拿到 stdout/stderr，完全无法知晓哪些环境变量被删去、哪些被注入。 | **已修**。执行记录 `rec` 及公开投影 `publicRecord` 中新增 `envSummary: { stripped: [...], injected: [...] }` 结构化对象，透明化所有环境变动。 |
+| D-38 | `executor.js detectPosixShell` | 非 Windows 平台写死 `/bin/bash`，在最小化容器或 Alpine 镜像（仅有 `/bin/sh`）下 `spawn` 抛出 `ENOENT`。 | **已修**。引入 `detectPosixShell`，依次探测 `process.env.SHELL`、`/bin/bash`、`/usr/bin/bash`、`/bin/sh`、`/usr/bin/sh`，确保任何 POSIX 容器环境均能平稳降级执行。 |
+| D-39 | `routes.js /chat` | `/api/chat` 无在途计数限制，同一客户端或多个客户端若并发发起多次长会话或模型调用，会造成宿主进程及后端上下文严重拥堵。 | **已修**。增加 `activeChatCount` 门禁，`MAX_ACTIVE_CHAT = 2`；超过上限时直接返回 HTTP 429 与友好文案，请求结束或异常中止时必定调用 `releaseChat` 归还槽位。 |
+
 ## 附录 A：本轮使用的命令
 
 ```
@@ -417,4 +433,4 @@ diff -rq webagent-core/extension webagent-core/extensions-installed/webagent.web
 ```
 
 ## 附录 B：发现编号速查
-P1-1 Monaco CDN 无 SRI · P2-1 危险命令漏检矩阵 · P2-2 非流式 · P2-3 上下文无 token 估算 · P2-4 CI=true/环境剥离不透明 · P2-5 硬编码 shell/端口 · P2-6 陈旧提示文案 · P2-7 同名下拉项 · P2-8 无门控轮询 · P3-1…P3-15 见第 3 节表 · D-1 敏感规则缺口 · D-2 自定义规则大小写 · D-3 终端弹窗截断 · D-4 list_dir 整体失败 · D-5 读取缓存键 · D-6…D-10 见第 9.3 节。 · D-11 cloudflared Token 走 argv · D-12 revoke 无限流 · D-13 调用者表非 LRU 驱逐 · D-14 PKCE 失败不作废 code · D-15 单 IP 占满注册槽 · D-16 状态页跨调用者可见 · D-17 resources/list 不查开关 · D-18 publicHttps 不跟随重定向（有意） · D-19 安装器白名单漏 .ttf · D-20 OAuth 配对页无自有 CSP · D-21 浏览器测试重复 CDN 路由 · D-22 style-src 仍 unsafe-inline · D-23 connect-src 取自 Host · D-24 webview 策略独立 · D-25 Plan 捕获需吞 delta · D-26 400 回退与上下文超限同码 · D-27 Chat 无并发上限 · D-28 120 s 总期限非空闲超时 · D-29 原生 Chat 追加式写入 · D-30 稀疏数组 some 跳洞 · D-31 超时不取消不配合的 body · D-32 200 承载错误信封 · D-33 contextSize 是展示文本 · D-34 三处 5 分钟期限耦合 · D-35 私有数字错误码不识别
+P1-1 Monaco CDN 无 SRI · P2-1 危险命令漏检矩阵 · P2-2 非流式 · P2-3 上下文无 token 估算 · P2-4 CI=true/环境剥离不透明 · P2-5 硬编码 shell/端口 · P2-6 陈旧提示文案 · P2-7 同名下拉项 · P2-8 无门控轮询 · P3-1…P3-15 见第 3 节表 · D-1 敏感规则缺口 · D-2 自定义规则大小写 · D-3 终端弹窗截断 · D-4 list_dir 整体失败 · D-5 读取缓存键 · D-6…D-10 见第 9.3 节。 · D-11 cloudflared Token 走 argv · D-12 revoke 无限流 · D-13 调用者表非 LRU 驱逐 · D-14 PKCE 失败不作废 code · D-15 单 IP 占满注册槽 · D-16 状态页跨调用者可见 · D-17 resources/list 不查开关 · D-18 publicHttps 不跟随重定向（有意） · D-19 安装器白名单漏 .ttf · D-20 OAuth 配对页无自有 CSP · D-21 浏览器测试重复 CDN 路由 · D-22 style-src 仍 unsafe-inline · D-23 connect-src 取自 Host · D-24 webview 策略独立 · D-25 Plan 捕获需吞 delta · D-26 400 回退与上下文超限同码 · D-27 Chat 无并发上限 · D-28 120 s 总期限非空闲超时 · D-29 原生 Chat 追加式写入 · D-30 稀疏数组 some 跳洞 · D-31 超时不取消不配合的 body · D-32 200 承载错误信封 · D-33 contextSize 是展示文本 · D-34 三处 5 分钟期限耦合 · D-35 私有数字错误码不识别 · D-36 CI用户设定被覆盖 · D-37 执行环境变动不透明 · D-38 POSIX无bash时ENOENT · D-39 Chat并发无门禁
