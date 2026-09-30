@@ -15,8 +15,14 @@ let loadedRoot = null;
 // restoring a checkpoint must not count as "the model has seen this version". Before this, an
 // editor save recorded its own hash, and a model that had read the older version could then
 // overwrite the person's edit with write_file and no confirmation (F95).
+// Handoff item 3 (F112): a remote call without an initialized MCP session is keyed only by
+// "client name@source address", and behind a tunnel every source is 127.0.0.1 — two such clients
+// would share one read record and could satisfy each other's write_file "read it first" condition.
+// Those calls get no reader (like the operator): their reads are not remembered and their
+// overwrites need expectedHash (read_files returns it) or confirm_overwrite.
 function readerOf(opts) {
   if (opts && opts.operator) return null;
+  if (opts && opts.remote && opts.initializedSession !== true) return null;
   if (opts && opts.remote) return 'remote:' + String(opts.callerKey || '');
   return 'local';
 }

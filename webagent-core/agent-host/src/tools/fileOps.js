@@ -172,7 +172,16 @@ function renameFileBody({ from, to, filePath, dest }) {
 
 // context: the server-built call options; readerOf decides whose earlier read may authorize an overwrite.
 function writeFile(opts = {}, context = {}) {
-  return withWriteLock(opts.filePath, () => writeFileBody(opts, readerOf(context)));
+  const sessionless = Boolean(context && context.remote && context.initializedSession !== true);
+  return withWriteLock(opts.filePath, () => writeFileBody(opts, readerOf(context))).catch(err => {
+    // Say why an earlier read did not count, so the client sends expectedHash instead of guessing.
+    if (sessionless && err && err.detail && err.detail.currentHash && !err.detail.sessionless) {
+      err.detail.sessionless = true;
+      err.detail.retryHint = 'This call has no initialized MCP session (no Mcp-Session-Id), so earlier reads are not remembered for it. '
+        + 'Pass expectedHash from your read_files result, or initialize a session first. ' + err.detail.retryHint;
+    }
+    throw err;
+  });
 }
 
 function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = false, confirm_overwrite = false, createOnly = false }, reader = 'local') {

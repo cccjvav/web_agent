@@ -2303,6 +2303,11 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 其余55份的改动逐条核对与源码一致（如F98危险命令矩阵55/56条、modelDiagnostics 31组用例已实际数过；admin-host仍兼容旧客户端的GitHub字段属实）。62行指纹全部刷新，每行“对照依据”末尾追加“第111组复核”一句写明核对了什么；正文有改动且原为“已核对一致”的4份改为“已修正”，计数行相应改为已核对一致83、已修正64。
 
+### 第112组：第110组交接第2、3项——CI固定Ubuntu版本、无会话远程调用不再共用读取记录（会话01a0e8ea，2026-09-30）
+
+1. **第2项**：用户交由本会话决定。选可随时撤回的一种：`.github/workflows/test.yml`的Ubuntu任务由`ubuntu-latest`固定为`ubuntu-24.04`（4处），工作流顶部注释说明原因与换版前先试跑；CI README与平台启动与CI详解同步。Windows仍为windows-latest。换Ubuntu 26留作以后有意识地做。
+2. **第3项**：`readCache.readerOf`对`remote`但`initializedSession !== true`的调用返回null，与人一样不记录、不能靠“读过”免确认；write_file被拒时错误detail加`sessionless:true`并在retryHint里说明原因与做法（带read_files返回的expectedHash，或先初始化会话）。**同时发现并修复**：`operatorQueue`保存任务选项时丢掉了“远程提交者有会话”这一事实，改动后远程会话提交的工作流批准执行时会被当成无会话调用、它写的文件不再算见过（apiFiles的F96段因此红过）；现在远程任务保存`initializedSession: true`（owner()本就只接受peer:会话）。`publicJob`不输出options，不外泄。apiFiles新增无会话被拒/expectedHash可写/已初始化照常三条，hostPersist补readerOf断言。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。

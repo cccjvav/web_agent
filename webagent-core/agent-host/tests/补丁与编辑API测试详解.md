@@ -52,6 +52,8 @@ apiFiles新增POST /files/preview真实HTTP夹具：成功返回diff和基线has
 
 F95读取归属段（真实HTTP加真实callTool；**disk(name)**读临时文件正文，**refused(label,args,opts)**断言write_file以要求confirm_overwrite的提示被拒）：模型读v1，人在编辑器打开并保存v2，模型不确认的write_file被拒且磁盘仍是v2，不带hash的apply_patch以E_STALE_FILE拒绝；模型重新读取后可免确认覆盖，自己的写入也算读过。人只打开、人用PUT新建、人撤销保存、POST /skills新建的文件，模型都不能免确认覆盖。远程peer-a读过的文件，peer-b与本机Chat都不能免确认覆盖，peer-a可以；peer-a的补丁（含新建）只记在peer-a名下；peer-b读过后文件被删除、再以同内容建出，peer-b仍被拒。在修复前的代码上，本段在第一条“编辑器保存”断言处失败。
 
+F112段：模拟远程调用的上下文统一带`initializedSession: true`；新增无会话远程调用（callerKey为`mcp@127.0.0.1`）读过后write_file仍被拒、错误detail带sessionless与说明、带expectedHash可写、已初始化会话照常读后写。hostPersist同步断言readerOf对无会话远程调用及`initializedSession`非true时返回null。
+
 F96续段（**approveOp(job)**经真实`/api/operations/:id/approve`批准并断言终态succeeded；**workflowOf(key,steps)**拼出definition加requestKey）：人从`/api/workflows/request`提交的工作流写出的文件、只读过的文件，本机Chat都不能免确认覆盖；人的工作流用`$steps.r.hash`作expectedHash仍能覆盖。直接`/api/tool/call`读过的文件同样被拒。对照：本机Chat自己用workflow_request写的文件，本机Chat可以免确认再写；远程peer:f96（临时切到bridge模式）的工作流写入只记在它名下，本机Chat被拒、它自己可以。在修复前的代码上，本段在第一条“工作流写出的文件”断言处失败。
 
 apiFiles还验证本机保存undo句柄、预览无写入、错绑定/非布尔确认拒绝、磁盘变化拒绝覆盖、成功恢复原hash、同记录不重复回退。直接模块夹具检查64KiB/无变化/敏感路径不登记、16项容量和15分钟TTL；恢复测试文件是测试布置，不是产品自动回滚。

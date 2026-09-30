@@ -70,8 +70,10 @@ function main() {
   // F95: session reads are per reader; the operator (a person at the workbench) records nothing.
   assert.strictEqual(rc2.readerOf({ operator: true }), null);
   assert.strictEqual(rc2.readerOf({ operator: true, remote: true, callerKey: 'k' }), null, 'operator wins over remote');
-  assert.strictEqual(rc2.readerOf({ remote: true, callerKey: 'k' }), 'remote:k');
-  assert.strictEqual(rc2.readerOf({ remote: true }), 'remote:');
+  assert.strictEqual(rc2.readerOf({ remote: true, initializedSession: true, callerKey: 'k' }), 'remote:k');
+  assert.strictEqual(rc2.readerOf({ remote: true, initializedSession: true }), 'remote:');
+  assert.strictEqual(rc2.readerOf({ remote: true, callerKey: 'k' }), null, 'F112: a sessionless remote call has no reader');
+  assert.strictEqual(rc2.readerOf({ remote: true, initializedSession: 'yes', callerKey: 'k' }), null, 'only a real true counts');
   assert.strictEqual(rc2.readerOf({}), 'local');
   assert.strictEqual(rc2.readerOf(undefined), 'local');
   rc2.rememberHash('src/op.js', 'operator-hash', null);

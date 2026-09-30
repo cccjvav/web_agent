@@ -483,12 +483,12 @@ async function main() {
       await refused('an editor undo is not a model read', { filePath: 'undone.txt', content: 'clobber\n' });
 
       fs.writeFileSync(path.join(tmp, 'peer.txt'), 'peer\n');
-      await callTool('read_files', { paths: ['peer.txt'] }, 'code', { remote: true, callerKey: 'peer-a' });
-      await refused('another remote caller does not inherit the read', { filePath: 'peer.txt', content: 'x\n' }, { remote: true, callerKey: 'peer-b' });
+      await callTool('read_files', { paths: ['peer.txt'] }, 'code', { remote: true, initializedSession: true, callerKey: 'peer-a' });
+      await refused('another remote caller does not inherit the read', { filePath: 'peer.txt', content: 'x\n' }, { remote: true, initializedSession: true, callerKey: 'peer-b' });
       await refused('local Chat does not inherit a remote read', { filePath: 'peer.txt', content: 'x\n' });
-      assert.strictEqual((await callTool('write_file', { filePath: 'peer.txt', content: 'by a\n' }, 'code', { remote: true, callerKey: 'peer-a' })).success, true);
+      assert.strictEqual((await callTool('write_file', { filePath: 'peer.txt', content: 'by a\n' }, 'code', { remote: true, initializedSession: true, callerKey: 'peer-a' })).success, true);
       assert.strictEqual(disk('peer.txt'), 'by a\n');
-      const peerA = { remote: true, callerKey: 'peer-a' };
+      const peerA = { remote: true, initializedSession: true, callerKey: 'peer-a' };
       const hashA = (await callTool('read_files', { paths: ['peer.txt'] }, 'code', peerA)).hash;
       await callTool('apply_patch', { filePath: 'peer.txt', expectedHash: hashA, patch: '<<<<<<< SEARCH\nby a\n=======\npatched by a\n>>>>>>> REPLACE\n' }, 'code', peerA);
       await refused('a remote patch is attributed to its caller only', { filePath: 'peer.txt', content: 'x\n' });
@@ -499,10 +499,25 @@ async function main() {
       assert.strictEqual((await callTool('write_file', { filePath: 'peer-new.txt', content: 'a rewrites\n' }, 'code', peerA)).success, true);
 
       // Deleting a file drops every caller's read of it: a same-content file created later is not "already read".
-      await callTool('read_files', { paths: ['peer.txt'] }, 'code', { remote: true, callerKey: 'peer-b' });
+      await callTool('read_files', { paths: ['peer.txt'] }, 'code', { remote: true, initializedSession: true, callerKey: 'peer-b' });
       await callTool('delete_file', { filePath: 'peer.txt', confirm: true }, 'code');
       fs.writeFileSync(path.join(tmp, 'peer.txt'), 'a again\n');
-      await refused('stale reads are dropped on delete for all callers', { filePath: 'peer.txt', content: 'x\n' }, { remote: true, callerKey: 'peer-b' });
+      await refused('stale reads are dropped on delete for all callers', { filePath: 'peer.txt', content: 'x\n' }, { remote: true, initializedSession: true, callerKey: 'peer-b' });
+
+      // Handoff item 3 (F112): sessionless remote calls share "client@address" (behind a tunnel every
+      // address is 127.0.0.1), so their reads must not stand in for write consent — not even their own.
+      const sessionless = { remote: true, callerKey: 'mcp@127.0.0.1' };
+      fs.writeFileSync(path.join(tmp, 'shared.txt'), 'shared\n');
+      const sharedHash = (await callTool('read_files', { paths: ['shared.txt'] }, 'code', sessionless)).hash;
+      const blocked = await callTool('write_file', { filePath: 'shared.txt', content: 'x\n' }, 'code', sessionless).then(() => null, err => err);
+      assert.ok(blocked && blocked.detail && blocked.detail.sessionless === true && /no initialized MCP session/.test(blocked.detail.retryHint),
+        'a sessionless read does not authorize an overwrite, and the refusal says why: ' + (blocked && JSON.stringify(blocked.detail)));
+      assert.strictEqual(disk('shared.txt'), 'shared\n');
+      assert.strictEqual((await callTool('write_file', { filePath: 'shared.txt', content: 'with hash\n', expectedHash: sharedHash }, 'code', sessionless)).success, true,
+        'expectedHash from read_files still works without a session');
+      await callTool('read_files', { paths: ['shared.txt'] }, 'code', { remote: true, initializedSession: true, callerKey: 'peer-a' });
+      assert.strictEqual((await callTool('write_file', { filePath: 'shared.txt', content: 'by session\n' }, 'code', { remote: true, initializedSession: true, callerKey: 'peer-a' })).success, true,
+        'an initialized session keeps read-then-write');
 
       const skill = await request(server, 'POST', '/api/skills', { name: 'f95-person-skill' });
       assert.strictEqual(skill.status, 200);
@@ -534,7 +549,7 @@ async function main() {
       await approveOp(await callTool('workflow_request',
         workflowOf('f96-model-write', [{ id: 'w', tool: 'write_file', arguments: { filePath: 'wf-model.txt', content: 'model workflow\n' } }]), 'code'));
       assert.strictEqual((await callTool('write_file', { filePath: 'wf-model.txt', content: 'model again\n' }, 'code')).success, true, 'local Chat saw what its own workflow wrote');
-      const peerW = { remote: true, callerKey: 'peer:f96' };
+      const peerW = { remote: true, initializedSession: true, callerKey: 'peer:f96' };
       const execControl = require('../src/utils/executionControl');
       execControl.selectMode('bridge');
       await approveOp(await callTool('workflow_request',
