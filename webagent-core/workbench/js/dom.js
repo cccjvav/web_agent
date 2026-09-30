@@ -108,12 +108,21 @@ export function positionPopover(box, anchor) {
   box.style.top = `${Math.max(margin, Math.min(up ? r.top - gap - bounds.height : r.bottom + gap, height - bounds.height - margin))}px`;
 }
 
+// Short notes vanish after 2.2 s; longer text stays up to 6 s (≈15 characters per second of
+// reading). Clicking the toast dismisses it at once.
+export function toastDuration(text) {
+  const len = String(text == null ? '' : text).length;
+  return Math.min(6000, Math.max(2200, Math.round(len / 15 * 1000)));
+}
+
 export function toast(text) {
   const el = $('#toast');
   el.hidden = false;
   el.textContent = text;
+  el.title = '点击关闭';
+  el.onclick = () => { clearTimeout(toast._t); el.hidden = true; };
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => { el.hidden = true; }, 2200);
+  toast._t = setTimeout(() => { el.hidden = true; }, toastDuration(text));
 }
 
 export function escapeHtml(s) {

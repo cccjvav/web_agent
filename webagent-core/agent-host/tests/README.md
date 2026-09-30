@@ -189,7 +189,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [extensionHostSafety.test.js](extensionHostSafety.test.js) | 32 个函数/类节点 |
 | [externalDiscovery.test.js](externalDiscovery.test.js) | 13 个函数/类节点 |
 | [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
-| [fileReadSafety.test.js](fileReadSafety.test.js) | 21 个函数/类节点 |
+| [fileReadSafety.test.js](fileReadSafety.test.js) | 22 个函数/类节点 |
 | [githubAuth.test.js](githubAuth.test.js) | 21 个函数/类节点 |
 | [githubNetwork.test.js](githubNetwork.test.js) | 82 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |

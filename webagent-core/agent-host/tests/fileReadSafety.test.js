@@ -56,6 +56,9 @@ async function run() {
       assert.strictEqual(fs.readFileSync(path.join(root, 'bom.txt'),'utf8'), '\ufeff修改\r\n');
       await assert.rejects(writeFile({filePath:'bom.txt',content:'stale',expectedHash:hash}), error => error.code === 'E_STALE_FILE');
       assert.strictEqual(computeHash('\ufeff修改\r\n'), readFile({filePath:'bom.txt'}).hash);
+      // D-6: a directory target is a coded argument error, not a generic Error.
+      fs.mkdirSync(path.join(root, 'a-dir'), { recursive: true });
+      await assert.rejects(writeFile({filePath:'a-dir',content:'x',confirmOverwrite:true}), error => error.code === 'E_BAD_ARGS' && /is a directory/.test(error.message));
     });
 
     git(['init']); git(['config','user.name','Audit fixture']); git(['config','user.email','fixture@example.invalid']);

@@ -378,20 +378,18 @@ export function handleEvent(ev) {
 export function paintTodos(todos) {
   const list = Array.isArray(todos) ? todos.filter(t => t && typeof t === 'object').slice(0, 50) : [];
   const done = list.filter((t) => t.status === 'completed').length;
-  ['chat'].forEach((prefix) => {
-    const box = $(`#${prefix}-tasks`);
-    if (!box) return;
-    box.classList.toggle('hidden', !list.length);
-    const count = $(`#${prefix}-task-count`);
-    if (count) count.textContent = `${done}/${list.length}`;
-    const ul = $(`#${prefix}-todo-list`);
-    if (ul) {
-      ul.innerHTML = list.map((t) => {
-        const mark = t.status === 'completed' ? '☑' : t.status === 'in_progress' ? '▶' : '☐';
-        return `<li class="${escapeHtml(t.status || '')}"><span class="box">${mark}</span>${escapeHtml(t.title)}</li>`;
-      }).join('');
-    }
-  });
+  const box = $('#chat-tasks');
+  if (!box) return;
+  box.classList.toggle('hidden', !list.length);
+  const count = $('#chat-task-count');
+  if (count) count.textContent = `${done}/${list.length}`;
+  const ul = $('#chat-todo-list');
+  if (ul) {
+    ul.innerHTML = list.map((t) => {
+      const mark = t.status === 'completed' ? '☑' : t.status === 'in_progress' ? '▶' : '☐';
+      return `<li class="${escapeHtml(t.status || '')}"><span class="box">${mark}</span>${escapeHtml(t.title)}</li>`;
+    }).join('');
+  }
 }
 
 export function paintBridgeTasks(groups, unavailable = false) {

@@ -184,6 +184,9 @@ function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = fal
   let overwriteOk = Boolean(confirmOverwrite || confirm_overwrite);
   let currentHash = null;
   if (exists) {
+    if (fs.statSync(fullPath).isDirectory()) {
+      throw new ProtocolError('E_BAD_ARGS', `Path "${filePath}" is a directory; write_file needs a file path inside it.`);
+    }
     const current = readBoundedText(fullPath);
     currentHash = computeHash(current);
     const seenThisSession = sessionHash(filePath, reader);

@@ -80,6 +80,11 @@ process.on('exit', code => {
   }
   await dom.link(specifier => { assert.strictEqual(specifier, './state.js'); return state; });
   await dom.evaluate(); // F01 used to throw here, before boot's catch could run.
+  // P3-9: short toasts keep 2.2 s, long text grows ~15 chars/s and caps at 6 s.
+  assert.strictEqual(dom.namespace.toastDuration('已保存'), 2200);
+  assert.strictEqual(dom.namespace.toastDuration('x'.repeat(60)), 4000);
+  assert.strictEqual(dom.namespace.toastDuration('x'.repeat(500)), 6000);
+  assert.strictEqual(dom.namespace.toastDuration(undefined), 2200);
   assert.strictEqual(dom.namespace.initTheme(), 'dark', 'no stored choice and no matchMedia: dark as before');
   assert.strictEqual(storage.has('webagent-theme'), false, 'the fallback is not stored as if the user had chosen it');
   // F98: without a stored choice the page follows the OS colour scheme; a stored choice wins.

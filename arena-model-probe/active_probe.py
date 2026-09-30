@@ -16,6 +16,7 @@ active_probe.py — 真正发送 canary 探针问题，用行为指纹推断模�
   - 与网络层协议指纹合并后由 classify() 融合
 """
 import json
+import re
 import sys
 import time
 from collections import defaultdict

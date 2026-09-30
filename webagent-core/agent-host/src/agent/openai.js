@@ -116,7 +116,7 @@ function systemPrompt(mode) {
         ? 'Reply in English.'
         : '用中文回复。';
   return [
-    'You are Web Agent, a local coding agent. Editor is Code-OSS; you run in agent-host, not the VS Code kernel.',
+    'You are Web Agent, a local coding agent. The user may be in the VS Code / Code-OSS extension or the classic Monaco workbench; you run in agent-host, not inside the editor.',
     `Workspace root: ${config.workspaceRoot}`,
     `Current mode: ${mode.toUpperCase()}. ${lock}`,
     'Loop: search/find → read_files (keep sha256) → apply_patch → run_command or start_command for tests.',

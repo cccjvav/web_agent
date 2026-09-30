@@ -322,6 +322,15 @@
 | P2-4 执行环境注入与凭据剥离透明化 | 已修 | 第 7 批 / 第 104 组 | `tools/executor.js` `prepareCommandEnv` 汇总环境净化，敏感凭据从子进程剥离并记入 `stripped`，注入环境变量记入 `injected`（允许用户显式覆盖 `CI` 等值）；命令执行返回记录中带结构化 `envSummary`；测试见 `executorEnv.test.js` |
 | P2-5 POSIX Shell 动态探测与降级 | 已修 | 第 7 批 / 第 104 组 | `tools/executor.js` `detectPosixShell` 按顺序探测 `/bin/bash` → `/usr/bin/bash` → 绝对路径且名为 bash/sh/dash/ash 的 `SHELL` → `/bin/sh` → `/usr/bin/sh`（fish/zsh/nu/csh 等交互 Shell 不用于 `-c`），Alpine/容器环境不再崩溃；测试见 `executorEnv.test.js` |
 | D-27 Chat 并发上限保护 | 已修 | 第 7 批 / 第 104 组 | `routes.js` 为 `/api/chat` 增加在途计数保护 `activeChatCount` 与 `MAX_ACTIVE_CHAT = 2` 上限，超出时以 HTTP 429 拦截并提示稍后重试，退出时必定释放；测试见 `chatConcurrency.test.js` |
+| P3-6 系统提示写死 Code-OSS | 已修 | 第 8 批 / 第 105 组 | 改为说明用户可能在 VS Code/Code-OSS 扩展或经典 Monaco 工作台 |
+| P3-9 toast 固定 2.2 秒 | 已修 | 第 8 批 / 第 105 组 | `toastDuration` 约 15 字符/秒、2.2–6 秒，点击关闭 |
+| P3-10 paintTodos 残留循环 | 已修 | 第 8 批 / 第 105 组 | 去掉 `['chat'].forEach` |
+| P3-14 active_probe.py 缺 import re | 已修 | 第 8 批 / 第 105 组 | 补 import |
+| 4.1.5 Linux 中文字体回退 | 已修 | 第 8 批 / 第 105 组 | `--font` 补 Noto Sans CJK SC / Noto Sans SC / WenQuanYi Micro Hei |
+| D-6 write_file 目录目标无错误码 | 已修 | 第 8 批 / 第 105 组 | `writeFileBody` 先判目录，抛 `E_BAD_ARGS` |
+| P3-2 守卫挂载两次 | 已不存在 | 第 8 批核对 | 现为单行挂载 |
+| F-13 `/bridge/logout` 无绑定 | 待决 | 第 8 批核对 | GitHub 登录族路由均为空体无绑定，logout 与之一致；报告原述不准，改动需同步三端合同 |
+| 4.1.3 英文标签 | 待决 | 第 8 批核对 | 按 ShunCode 截图有意复刻，是否汉化待用户决定 |
 | 其余 P3、4.1 字号 token/三栏（分栏拖拽）、4.3 工程项、第 6 节探针 | 待后续批次 | — | 4.1 字号 token 与三栏分隔条评估后延后，因为它牵涉 `styles.css` 106 处 font-size 与 Playwright 断言，需要能跑浏览器的环境逐视口核对；后续候选：UI 细化、工程产物治理 |
 
 ## 9. 深审新发现（报告成文后，按批次追加）
@@ -354,7 +363,7 @@
 
 | 编号 | 位置 | 说明 |
 |---|---|---|
-| D-6 | `fileOps.js` `writeFile` 目标是已有目录 | `readBoundedText` 抛通用 `Error('Expected a regular text file')`，没有 `E_*` 错误码，模型只能靠文案理解。建议改成 `E_BAD_ARGS` + “是目录”。改动小但牵涉 `readBoundedText` 的多处调用方，放到下一批与 `E_*` 码整理一起做 |
+| D-6 | `fileOps.js` `writeFile` 目标是已有目录（**第 8 批已修**） | `readBoundedText` 抛通用 `Error('Expected a regular text file')`，没有 `E_*` 错误码，模型只能靠文案理解。建议改成 `E_BAD_ARGS` + “是目录”。改动小但牵涉 `readBoundedText` 的多处调用方，放到下一批与 `E_*` 码整理一起做 |
 | D-7 | `patchEngine.js` `applySearchBlocks` | 精确匹配失败后的 trim 回退同时 trim 了 REPLACE 段，前后空白行会丢。文档已把它写成启发式；改行为会影响现有补丁语义，需要单独一组带矩阵测试 |
 | D-8 | `extension/workspaceMatch.js` | 只在 win32 或盘符路径上小写比较，macOS（默认不区分大小写）上 `/Users/Me/x` 与 `/users/me/x` 判不同。两端路径都来自 `path.resolve`，实际拼写一致，仅在用户手填 URL 时可能触发；记录 |
 | D-9 | `.git/hooks` | `.git` 只是噪声目录（隐藏不列出），模型可按路径 `write_file ".git/hooks/pre-commit"`；不过能写文件的模型本来就能用 `run_command` 做同样的事，不构成权限提升。F99 起 `.git/config` 归敏感 |

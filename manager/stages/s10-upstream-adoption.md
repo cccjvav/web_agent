@@ -2202,6 +2202,22 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
    - 报告 §0/§3（P2-4、P2-5处置段）/§8修复进度表/§9.5（D-27已修）/§9.7（D-36…D-39）/附录B；
    - 更新 `FULL_REVIEW_INDEX.md` 指纹。
 
+### 第105组：复审修复第8批——提示/Toast/字体栈/目录写入错误码与小项清理（会话01a0e8ea，2026-09-30）
+
+**基线：** 第104组（重做）`148de67`。
+
+**范围与处置：**
+1. **P3-6** `agent/openai.js` 系统提示不再断言“Editor is Code-OSS”，改为说明用户可能在 VS Code/Code-OSS 扩展或经典 Monaco 工作台中。
+2. **P3-9** `workbench/js/dom.js` 新增 `toastDuration`（约15字符/秒，2.2–6秒），toast 可点击关闭；`#toast` 加 `cursor:pointer` 与最大宽度。
+3. **P3-10** `workbench/js/chat.js` `paintTodos` 去掉只含 `'chat'` 的前缀循环，行为不变。
+4. **P3-14** `arena-model-probe/active_probe.py` 补 `import re`（暂停模块，仅修 NameError）。
+5. **4.1.5** 工作台 `--font` 补 Linux 中文回退 `Noto Sans CJK SC`/`Noto Sans SC`/`WenQuanYi Micro Hei`。
+6. **D-6** `fileOps.writeFileBody` 目标为已有目录时抛 `E_BAD_ARGS`（“is a directory”），不再落到 `readBoundedText` 的无码 Error。
+
+**核对后不改：** P3-2 已在此前合并为单行 `app.use('/api', rejectUnlessLocalControl, rejectCrossSiteApi)`；F-13 报告称“其余 Bridge 写操作都要求绑定”不准确——GitHub 登录族（`/bridge/login`、`/token`、`/poll`、`/logout` 等）全部为空体/无绑定，logout 与其一致，改动需同步三端客户端合同，列入待决。4.1.3 英文标签（Stop Bridge、Clear log、MCP session 等）是按 ShunCode 截图（s4 阶段）有意复刻，是否汉化待用户决定。
+
+**测试：** `workbenchRuntime` 增 toastDuration 断言；`fileReadSafety` 增目录目标 `E_BAD_ARGS` 断言。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。

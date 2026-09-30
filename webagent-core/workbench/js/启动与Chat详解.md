@@ -39,7 +39,7 @@ settings-panel.css：隐藏标题栏、工作区切换、主工作区、状态�
 | streamDelta(text) | 分片→undefined | F102：分片累加到本轮“进行中”的assistant消息（模块级`streamBoxes`记住它在两个Chat区域里的节点与累计文本）；首片时先push带`streaming:true`的空消息再原地renderMd重画，之后每片只替换这两个节点的内容，不新增气泡；非字符串或空串忽略 |
 | closeStream(finalText) | 可选全文→undefined | 无进行中气泡即返回；给了字符串就以它覆盖累计文本（服务端message是权威全文）并去掉`streaming`标记重画，否则只收口。message、其他任何事件与请求结束（finally）都会调用它，被error打断的气泡不会停留在“输入中” |
 | paintPlanComposer() | 无→undefined | mode/planRound控制分支n/max badge、canMerge按钮和输入placeholder，不改后端Plan状态 |
-| paintTodos(todos) | todos→undefined | 只绘chat-tasks、最多50项，统计completed并转义状态/标题；Bridge由paintBridgeTasks独立按远程分组绘制，不能混入本地计划 |
+| paintTodos(todos) | todos→undefined | 只绘chat-tasks（F105去掉多面板时代的单元素前缀循环）、最多50项，统计completed并转义状态/标题；Bridge由paintBridgeTasks独立按远程分组绘制，不能混入本地计划 |
 | agentLabel(mode) | 模式→标签 | ask/code明确，其余按Plan显示，不是权限验证 |
 | setAgentMode(mode) | 模式→undefined | 改state.mode、两select、Agent标签再paintPlanComposer；真正工具模式锁在服务端 |
 
