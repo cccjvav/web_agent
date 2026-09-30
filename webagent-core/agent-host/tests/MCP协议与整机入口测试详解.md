@@ -70,6 +70,15 @@ OAuth默认关闭（2026-09-25）一段在真实子进程上断言：oauth.route
 
 成功log加finished；catch先打印server log再throw；finally stop、等300ms、rm tmp，最外catch exit1。随机范围端口可能碰撞；没有完整HTTP请求deadline（health循环有总时间但单个挂起请求未单设超时），也没有把每个NDJSON非法行当失败。不能外推页面视觉正确/真实模型/隧道连通。
 
+## chatConcurrency.test.js：对话并发上限（F104，复审D-27）
+
+真实 HTTP 测试验证服务端对 `/api/chat` 的并发保护：
+
+- **main** 与 **postChat**：拉起隔离 Express 测试实例并模拟 `runChat` 处理中状态；
+- 发送前两个并发请求正常进入执行并处于在途状态；
+- 第三个并发请求超出 `MAX_ACTIVE_CHAT = 2` 上限，立即返回 HTTP 429 与友好错误提示（`当前已有 2 个对话在处理中，达到并发上限（最多 2 个）；请等待完成或取消后再试`）；
+- 在途请求逐一释放并正常读取完流后，后续新建对话请求再次成功进入。
+
 ## skipWorkbench.test.js
 
 [源码](skipWorkbench.test.js)的**get(url)**收真实HTTP状态/raw；**waitOk(url,ms)**内部**tick**每120ms重试直到200或10秒期限，错误同样重试。**main**先跑**busyWorkbenchPort()**：自己用net占住一个随机本机端口，再以WEBAGENT_BIND=127.0.0.1（与占位同一地址，避免Windows上通配地址与之共存）、WEBAGENT_SKIP_WORKBENCH为空、WORKBENCH_PORT=该端口、MCP端口0启动真实入口，收集stdout/stderr，15秒内须自行以1退出，输出含“端口 N 已被占用（工作台 UI）”且不含“Unhandled 'error' event”（F94前WebSocketServer转发的EADDRINUSE无监听，先以原始堆栈崩溃）；finally关占位server、删临时目录。随后spawn Node入口，传临时workspace、随机MCP端口、固定工作台19999和WEBAGENT_SKIP_WORKBENCH=1。

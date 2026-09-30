@@ -1,5 +1,6 @@
 const { scrubEnv, sliceTextTail } = require('../../../extension/ptyPolicy');
 const { spawn, spawnSync } = require('child_process');
+const fs = require('fs');
 const { StringDecoder } = require('string_decoder');
 const crypto = require('crypto');
 const path = require('path');
@@ -118,6 +119,7 @@ function publicRecord(rec, tail) {
     execution: rec.execution,
     outputCaptured: rec.outputCaptured,
     message: rec.message,
+    envSummary: rec.envSummary,
     ok: rec.ok
   };
 }
@@ -140,6 +142,49 @@ function storePtyResult(result, owner) {
   };
   commandStore.set(String(result.execId), rec);
   return rec;
+}
+
+// Commands are written for POSIX sh/bash. $SHELL is the user's *interactive* shell and may be
+// fish/nushell/csh/zsh, which do not share bash semantics, so it is only honoured when it is an
+// absolute path to a bash-compatible shell. bash stays preferred (the pre-F104 behaviour).
+const POSIX_SHELL_NAMES = new Set(['bash', 'sh', 'dash', 'ash']);
+function detectPosixShell(env = process.env, exists = fs.existsSync) {
+  const has = (p) => { try { return exists(p); } catch (_) { return false; } };
+  for (const p of ['/bin/bash', '/usr/bin/bash']) if (has(p)) return p;
+  const candidate = env && typeof env.SHELL === 'string' ? env.SHELL.trim() : '';
+  if (candidate && path.isAbsolute(candidate) && POSIX_SHELL_NAMES.has(path.basename(candidate)) && has(candidate)) {
+    return candidate;
+  }
+  for (const p of ['/bin/sh', '/usr/bin/sh']) if (has(p)) return p;
+  return '/bin/sh';
+}
+
+function prepareCommandEnv(baseEnv = process.env, isWin = process.platform === 'win32') {
+  const clean = scrubEnv(baseEnv);
+  const stripped = [];
+  for (const key of Object.keys(baseEnv || {})) {
+    if (!Object.hasOwn(clean, key)) stripped.push(key);
+  }
+  stripped.sort();
+
+  const ciVal = Object.hasOwn(baseEnv, 'CI') ? String(baseEnv.CI) : 'true';
+  const termVal = Object.hasOwn(baseEnv, 'TERM') ? String(baseEnv.TERM) : 'xterm-256color';
+  const forceColorVal = Object.hasOwn(baseEnv, 'FORCE_COLOR') ? String(baseEnv.FORCE_COLOR) : '1';
+  const merged = {
+    ...clean,
+    CI: ciVal,
+    TERM: termVal,
+    FORCE_COLOR: forceColorVal,
+    ...(isWin && !baseEnv.PYTHONIOENCODING ? { PYTHONIOENCODING: 'utf-8' } : {})
+  };
+
+  const injected = [];
+  if (!Object.hasOwn(baseEnv, 'CI')) injected.push('CI=true');
+  if (!Object.hasOwn(baseEnv, 'TERM')) injected.push(`TERM=${termVal}`);
+  if (!Object.hasOwn(baseEnv, 'FORCE_COLOR')) injected.push(`FORCE_COLOR=${forceColorVal}`);
+  if (isWin && !baseEnv.PYTHONIOENCODING) injected.push('PYTHONIOENCODING=utf-8');
+
+  return { env: merged, stripped, injected };
 }
 
 function startProcess({ command, cwd = '.', timeoutSec = 30 }, owner) {
@@ -175,7 +220,9 @@ function startProcess({ command, cwd = '.', timeoutSec = 30 }, owner) {
   });
 
   const win = process.platform === 'win32';
-  const shell = win ? 'powershell.exe' : '/bin/bash';
+  const shell = win ? 'powershell.exe' : detectPosixShell(process.env);
+  const { env: childEnv, stripped: strippedEnv, injected: injectedEnv } = prepareCommandEnv(process.env, win);
+  rec.envSummary = { stripped: strippedEnv, injected: injectedEnv };
   const jobSource = path.join(__dirname, 'commandJob.cs').replace(/'/g, "''");
   // Attach before user code may spawn descendants. If the host is killed while
   // taskkill is enumerating the tree, the OS job still terminates late children.
@@ -225,8 +272,7 @@ exit 0`;
     // Windows Python encodes redirected stdio in the ANSI code page (cp936/cp1252), which the
     // UTF-8 decoder above turns into replacement characters. Ask for UTF-8 unless the user has
     // chosen something else. Other platforms already default to UTF-8 locales.
-    env: { ...scrubEnv(process.env), CI: 'true', TERM: 'xterm-256color', FORCE_COLOR: '1',
-      ...(win && !process.env.PYTHONIOENCODING ? { PYTHONIOENCODING: 'utf-8' } : {}) }
+    env: childEnv
   });
   children.set(String(execId), child);
   let spawned = false, exited = false, stdoutBytes = 0, stderrBytes = 0;
@@ -526,5 +572,7 @@ module.exports = {
   cancelCommand,
   sendCommandInput,
   wait,
-  scrubEnv
+  scrubEnv,
+  detectPosixShell,
+  prepareCommandEnv
 };

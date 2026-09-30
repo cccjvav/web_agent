@@ -2177,6 +2177,31 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 **剩余与未验证：** 按token裁剪历史与超限自动截断有意不做（D-33：contextSize是展示文本）；D-34三处5分钟期限耦合无单一来源；D-35私有数字错误码不识别；D-27 Chat并发上限未做；未在真实Provider/Windows上跑。下一批候选：P2-4/P2-5执行器项。
 
+### 第104组：复审修复第7批——执行环境透明化、Shell动态探测、Chat并发上限（会话01a0e8ea，2026-09-30；重做）
+
+**接手与基线：** 基线为第103组提交 `b32ceb8`。会话01a0e8e7首版45e576f已撤回：它优先用 `$SHELL` 执行 `-c`（fish/zsh/nu/csh 语义不同、相对路径按主机cwd解析），并发计数只在函数末尾归还（设头/flush抛错会永久泄漏名额），且声称全部测试通过而文档清单漂移致4个失败。本组据此重做。上游仍在 `c20c413`。
+
+**范围：** 报告P2-4（执行环境净化及CI=true未文档化）、P2-5（POSIX平台硬编码/bin/bash）、D-27（Chat并发无门禁）。
+
+**实施：**
+1. **`tools/executor.js`：**
+   - 引入 `detectPosixShell`：优先 `/bin/bash`、`/usr/bin/bash`（保持原行为），其次仅接受绝对路径且名为 bash/sh/dash/ash 的 `SHELL`，再 `/bin/sh`、`/usr/bin/sh`；fish/zsh/nu/csh 与相对路径一律不用；Alpine/容器环境不再报ENOENT；可注入存在性判断便于测试；
+   - 引入 `prepareCommandEnv`：统一处理凭据剥离与系统变量注入，记录剥离名单 `stripped` 与注入名单 `injected`；用户显式传入 `CI: 'false'` 等值时尊重用户设定；
+   - 执行记录 `rec` 与公开投影 `publicRecord` 增加 `envSummary: { stripped, injected }`，透明化所有环境变动；
+   - 导出 `detectPosixShell` 与 `prepareCommandEnv`。
+2. **`api/routes.js`：**
+   - 为 `/api/chat` 引入在途计数 `activeChatCount` 与并发上限 `MAX_ACTIVE_CHAT = 2`；
+   - 超过上限时返回 HTTP 429 与友好错误提示，在流头和AbortController之前拦截；
+   - 无论正常完成、客户端取消还是异常抛错，均由外层 `try/finally` 归还计数；流处理移入 `handleChatStream`。
+3. **测试：**
+   - 新增 `tests/executorEnv.test.js`：以注入的存在性判断测试 `detectPosixShell`（bash优先、POSIX名SHELL、拒绝fish/zsh/nu/csh与相对路径、仅/bin/sh）、`prepareCommandEnv` 敏感凭据剥离与注入记录、`executeCommand` 真实返回 `envSummary`；
+   - 新增 `tests/chatConcurrency.test.js`：真实 HTTP 模拟两个并发在途请求、第三个请求触发 429 拦截、在途释放后后续请求正常进入；
+   - 注册到 `tests/documentationLearning.test.js`。
+4. **文档与报告同步：**
+   - 更新 `命令与PTY详解.md`、`路由逐项详解.md`、`PTY与隧道测试详解.md`、`MCP协议与整机入口测试详解.md`、`tests/README.md`、`tools/README.md`；
+   - 报告 §0/§3（P2-4、P2-5处置段）/§8修复进度表/§9.5（D-27已修）/§9.7（D-36…D-39）/附录B；
+   - 更新 `FULL_REVIEW_INDEX.md` 指纹。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。
