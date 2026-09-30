@@ -14,7 +14,7 @@
 
 验证复审 P2-4（执行环境净化与注入透明化）与 P2-5（动态探测 POSIX shell）：
 
-- **testDetectPosixShell**：覆盖有效且已存在的自定义 `SHELL` 绝对路径命中、不存在的路径降级为 bash/sh、空/未设置时降级检测、以及显式 `/bin/sh`；
+- **testDetectPosixShell**：以注入的存在性判断覆盖：有 bash 时优先 bash（即使 `SHELL` 指向别处）；无 bash 时接受绝对路径且名为 dash 等 POSIX 名的 `SHELL`；fish/zsh/nu/csh 与相对路径 `SHELL` 一律忽略、降级 `/bin/sh` 或 `/usr/bin/sh`；类 Alpine 仅有 `/bin/sh`；另在真实系统上核对未设置 `SHELL` 时的结果（F105 复核修正）；
 - **testPrepareCommandEnv**：核对常规变量保留、敏感凭据（GITHUB_TOKEN、AZURE_STORAGE_KEY、MY_API_KEY）从 `env` 中剥离并记录在 `stripped`、默认注入 `CI=true`、`TERM=xterm-256color`、`FORCE_COLOR=1`（Windows 补 `PYTHONIOENCODING=utf-8`）并记录在 `injected`；用户显式传入 `CI: 'false'` 等值时尊重用户设定、不重复注入；
 - **testExecuteCommandEnvSummary**：执行真实命令时，返回记录包含 `envSummary` 对象，内部包含 `stripped` 与 `injected` 数组；
 - 入口 **main** 串行运行全部异步/同步断言。

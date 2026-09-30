@@ -695,13 +695,14 @@ router.post('/chat', async (req, res) => {
     });
   }
   activeChatCount++;
-  let chatReleased = false;
-  const releaseChat = () => {
-    if (!chatReleased) {
-      chatReleased = true;
-      activeChatCount = Math.max(0, activeChatCount - 1);
-    }
-  };
+  try {
+    await handleChatStream(req, res, body);
+  } finally {
+    activeChatCount = Math.max(0, activeChatCount - 1);
+  }
+});
+
+async function handleChatStream(req, res, body) {
   const controller = new AbortController();
   const abort = () => controller.abort();
   const timeout = setTimeout(abort, 5 * 60 * 1000);
@@ -738,9 +739,8 @@ router.post('/chat', async (req, res) => {
   clearTimeout(timeout);
   req.off('aborted', abort);
   res.off('close', disconnected);
-  releaseChat();
   if (!res.destroyed) res.end();
-});
+}
 
 router.post('/pty/hello', (req, res) => {
   if (!apiRequestQuery(req, res, [])) return;

@@ -144,16 +144,19 @@ function storePtyResult(result, owner) {
   return rec;
 }
 
-function detectPosixShell(env = process.env) {
+// Commands are written for POSIX sh/bash. $SHELL is the user's *interactive* shell and may be
+// fish/nushell/csh/zsh, which do not share bash semantics, so it is only honoured when it is an
+// absolute path to a bash-compatible shell. bash stays preferred (the pre-F104 behaviour).
+const POSIX_SHELL_NAMES = new Set(['bash', 'sh', 'dash', 'ash']);
+function detectPosixShell(env = process.env, exists = fs.existsSync) {
+  const has = (p) => { try { return exists(p); } catch (_) { return false; } };
+  for (const p of ['/bin/bash', '/usr/bin/bash']) if (has(p)) return p;
   const candidate = env && typeof env.SHELL === 'string' ? env.SHELL.trim() : '';
-  if (candidate && (candidate.startsWith('/') || candidate.startsWith('.'))) {
-    try { if (fs.existsSync(candidate)) return candidate; } catch (_) {}
+  if (candidate && path.isAbsolute(candidate) && POSIX_SHELL_NAMES.has(path.basename(candidate)) && has(candidate)) {
+    return candidate;
   }
-  if (fs.existsSync('/bin/bash')) return '/bin/bash';
-  if (fs.existsSync('/usr/bin/bash')) return '/usr/bin/bash';
-  if (fs.existsSync('/bin/sh')) return '/bin/sh';
-  if (fs.existsSync('/usr/bin/sh')) return '/usr/bin/sh';
-  return candidate || '/bin/sh';
+  for (const p of ['/bin/sh', '/usr/bin/sh']) if (has(p)) return p;
+  return '/bin/sh';
 }
 
 function prepareCommandEnv(baseEnv = process.env, isWin = process.platform === 'win32') {

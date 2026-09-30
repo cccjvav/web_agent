@@ -124,7 +124,7 @@
 - **位置：** `executor.js:178`（非 Windows 一律 `/bin/bash`，Alpine/NixOS/部分容器无此路径）；`routes.js:599-605` 四条提示写死"本机48271端口"（应为 `config.port`）；`models/store.js:50`、`extension.js:38`、`hostManager.js:17`、`installer/appWindow.js:225`、`index.html:715,724` 亦写死。
 - **建议：** shell 用 `process.env.SHELL || (fs.existsSync('/bin/bash') ? '/bin/bash' : '/bin/sh')`；提示文案改用运行时端口；扩展/安装器统一从一处常量导出。
 - **证据类型：** 静态阅读 + grep。
-- **处置（第 7 批 / 第 104 组）：** `/bin/bash` 已修。`detectPosixShell` 按顺序探测：存在且可执行的 `process.env.SHELL` → `/bin/bash` → `/usr/bin/bash` → `/bin/sh` → `/usr/bin/sh` → `/bin/sh` 兜底；端口 48271 在第 1 批已部分修复（运行时文案采用 `config.port`），跨进程独立默认值保留。
+- **处置（第 7 批 / 第 104 组）：** `/bin/bash` 已修。`detectPosixShell` 按顺序探测：`/bin/bash` → `/usr/bin/bash` → 绝对路径且名为 bash/sh/dash/ash 的 `SHELL` → `/bin/sh` → `/usr/bin/sh`（fish/zsh/nu/csh 等交互 Shell 不用于 `-c`，F105 复核修正） → `/bin/sh` 兜底；端口 48271 在第 1 批已部分修复（运行时文案采用 `config.port`），跨进程独立默认值保留。
 
 #### P2-6 工作台"高级设置"提示文案描述了不存在的功能
 - **位置：** `workbench/index.html:743`：`随 Web Agent 启动 Bridge、重置 MCP 地址、startupTimeoutMs。` 而该区块只有一个"重置 MCP 地址"按钮；全仓 grep `autoStartBridge|startupTimeoutMs` 在工作台/主机代码中无实现（扩展侧的"启动主机后同时开启 Bridge"是另一功能）。
@@ -320,7 +320,7 @@
 | D-26 流式 400 回退与上下文超限同码 | 已修 | 第 6 批 / 第 103 组 | 流式尝试的 400 先分类：只有 `stream` 类（param 为 stream/stream_options 或消息含 stream(ing)）或无法归类的 `bad_request` 才去掉 `stream` 重试并记入 `STREAM_UNSUPPORTED`；context/auth/not_found/quota 等直接以分类文案失败，不再多发一次请求（`modelStreaming` ⑪：context_length_exceeded 恰一次请求且不进入 STREAM_UNSUPPORTED） |
 | D-28 120 s 总期限切断长回答 | 已修 | 第 6 批 / 第 103 组 | `requestScope.fetchText` 新增 `limits.idleMs` 空闲预算（第二个 racer：响应头与每个片段之间静默超过 idleMs ⇒ `E_TIMEOUT reason:'idle'`，文案“HTTP 请求 N 秒内没有收到新数据”；先触发的预算拥有错误，总期限更短时仍报 deadline），并把自己的 signal 传给读取器（`limits.signal`），使不理会请求信号的传输也会在超时时取消 body。模型调用改为 `MODEL_TIMEOUT_MS=300 s` 总 + `MODEL_IDLE_TIMEOUT_MS=120 s` 空闲：逐字输出的长回答可跑满 5 分钟，静默 Provider 仍 2 分钟放弃；其余调用方（GitHub 10 s、遥测）合同不变。测试：`networkBudget`（滴流/静默/无头/短总期限/默认不变/onChunk 并存/父取消/非法值）、`modelStreaming` 常量与源码守卫 |
 | P2-4 执行环境注入与凭据剥离透明化 | 已修 | 第 7 批 / 第 104 组 | `tools/executor.js` `prepareCommandEnv` 汇总环境净化，敏感凭据从子进程剥离并记入 `stripped`，注入环境变量记入 `injected`（允许用户显式覆盖 `CI` 等值）；命令执行返回记录中带结构化 `envSummary`；测试见 `executorEnv.test.js` |
-| P2-5 POSIX Shell 动态探测与降级 | 已修 | 第 7 批 / 第 104 组 | `tools/executor.js` `detectPosixShell` 按顺序探测已有 SHELL、`/bin/bash`、`/usr/bin/bash`、`/bin/sh`、`/usr/bin/sh`，Alpine/容器环境不再崩溃；测试见 `executorEnv.test.js` |
+| P2-5 POSIX Shell 动态探测与降级 | 已修 | 第 7 批 / 第 104 组 | `tools/executor.js` `detectPosixShell` 按顺序探测 `/bin/bash` → `/usr/bin/bash` → 绝对路径且名为 bash/sh/dash/ash 的 `SHELL` → `/bin/sh` → `/usr/bin/sh`（fish/zsh/nu/csh 等交互 Shell 不用于 `-c`，F105 复核修正），Alpine/容器环境不再崩溃；测试见 `executorEnv.test.js` |
 | D-27 Chat 并发上限保护 | 已修 | 第 7 批 / 第 104 组 | `routes.js` 为 `/api/chat` 增加在途计数保护 `activeChatCount` 与 `MAX_ACTIVE_CHAT = 2` 上限，超出时以 HTTP 429 拦截并提示稍后重试，退出时必定释放；测试见 `chatConcurrency.test.js` |
 | 其余 P3、4.1 字号 token/三栏（分栏拖拽）、4.3 工程项、第 6 节探针 | 待后续批次 | — | 4.1 字号 token 与三栏分隔条评估后延后，因为它牵涉 `styles.css` 106 处 font-size 与 Playwright 断言，需要能跑浏览器的环境逐视口核对；后续候选：UI 细化、工程产物治理 |
 
@@ -418,7 +418,7 @@
 |---|---|---|---|
 | D-36 | `executor.js prepareCommandEnv` | 用户若在启动环境或调用时显式指定了 `CI=false`，原先无条件 `{ ...scrubEnv, CI: 'true' }` 会把用户的设定粗暴覆盖。 | **已修**。`prepareCommandEnv` 仅在用户未显式设置 `CI` 时默认注入 `CI: 'true'`，尊重调用方的明确要求。 |
 | D-37 | `executor.js startProcess` | 命令执行虽然剥离了凭据并注入了 `CI`/`TERM`/`FORCE_COLOR`，但调用方和上层只拿到 stdout/stderr，完全无法知晓哪些环境变量被删去、哪些被注入。 | **已修**。执行记录 `rec` 及公开投影 `publicRecord` 中新增 `envSummary: { stripped: [...], injected: [...] }` 结构化对象，透明化所有环境变动。 |
-| D-38 | `executor.js detectPosixShell` | 非 Windows 平台写死 `/bin/bash`，在最小化容器或 Alpine 镜像（仅有 `/bin/sh`）下 `spawn` 抛出 `ENOENT`。 | **已修**。引入 `detectPosixShell`，依次探测 `process.env.SHELL`、`/bin/bash`、`/usr/bin/bash`、`/bin/sh`、`/usr/bin/sh`，确保任何 POSIX 容器环境均能平稳降级执行。 |
+| D-38 | `executor.js detectPosixShell` | 非 Windows 平台写死 `/bin/bash`，在最小化容器或 Alpine 镜像（仅有 `/bin/sh`）下 `spawn` 抛出 `ENOENT`。 | **已修**。引入 `detectPosixShell`，依次探测 `/bin/bash` → `/usr/bin/bash` → 绝对路径且名为 bash/sh/dash/ash 的 `SHELL` → `/bin/sh` → `/usr/bin/sh`（fish/zsh/nu/csh 等交互 Shell 不用于 `-c`，F105 复核修正），确保任何 POSIX 容器环境均能平稳降级执行。 |
 | D-39 | `routes.js /chat` | `/api/chat` 无在途计数限制，同一客户端或多个客户端若并发发起多次长会话或模型调用，会造成宿主进程及后端上下文严重拥堵。 | **已修**。增加 `activeChatCount` 门禁，`MAX_ACTIVE_CHAT = 2`；超过上限时直接返回 HTTP 429 与友好文案，请求结束或异常中止时必定调用 `releaseChat` 归还槽位。 |
 
 ## 附录 A：本轮使用的命令

@@ -15,7 +15,7 @@
 | stopAll() | 无→已处理数 | F70（外部复审P2-6）主机shutdown调用：遍历children，把仍running的记录标cancelled/ok=false/message“Host shut down”，再killChild(child,true)。POSIX子进程在独立进程组里收不到终端Ctrl+C，此前主机退出后成为孤儿（真实主机复现）；Windows已由commandJob的关闭即杀作业与taskkill /t覆盖。同步执行，只保证信号已发出，不等待退出证明 |
 | killChild(child,force=false) | 子进程→undefined | Windows同步taskkill PID树（3秒期限，失败记录退出状态/错误；WEBAGENT_DEBUG_PROCESS=1额外记录成功结果）；其他先杀进程组再回退child.kill，TERM/KILL按force。吞发送错误，不等待退出证明 |
 | workingDirFrom(cwd) | 目录→安全绝对路径 | resolveSafePath，任何异常统一改成outside workspace提示，原失败原因可能被泛化 |
-| detectPosixShell(env) | 环境→shell路径 | POSIX平台动态探测可用shell：优先有效SHELL环境变量，降级检测/bin/bash、/usr/bin/bash、/bin/sh、/usr/bin/sh，兜底/bin/sh（F104，复审P2-5） |
+| detectPosixShell(env,exists) | 环境→shell路径 | POSIX平台探测可用shell：优先/bin/bash、/usr/bin/bash（保持F104前行为），其次仅接受绝对路径且名为bash/sh/dash/ash的SHELL，再/bin/sh、/usr/bin/sh，兜底/bin/sh；fish/zsh/nu/csh等不用于-c（F104，F105复核修正） |
 | prepareCommandEnv(baseEnv,isWin) | 环境/平台→{env,stripped,injected} | 执行命令环境净化与注入汇总：剥离敏感凭据，注入CI/TERM/FORCE_COLOR与Windows下PYTHONIOENCODING，并返回stripped和injected摘要（F104，复审P2-4） |
 | scrubEnv(base)，导入extension/ptyPolicy | 环境对象→副本 | 删除名称匹配凭据模式的字段；不是值扫描；保留PATH/一般Conda变量，不自动conda activate |
 | streamChars(rec,field) | 记录/流名→字符数 | F70第七批：取逐块累计计数（startProcess与PTY onChunk维护，不受200Ki环形裁剪影响）与当前文本长度的较大者；PTY结果/晚到错误直接写文本时也不少算 |
@@ -24,7 +24,7 @@
 
 ## 2. startProcess({command,cwd='.',timeoutSec=30},owner)
 
-running≥8拒绝，prune，生成execId与带内部owner的运行记录；验证cwd，算至少1秒timeout，广播started。Windows用powershell.exe NoProfile/NonInteractive，其他由detectPosixShell检测可用shell（优先SHELL，降级/bin/bash与/bin/sh）并加-c；非Windows detached便于进程组停止。env经prepareCommandEnv净化并注入CI/TERM/FORCE_COLOR（Windows补PYTHONIOENCODING），结果记录保存envSummary。
+running≥8拒绝，prune，生成execId与带内部owner的运行记录；验证cwd，算至少1秒timeout，广播started。Windows用powershell.exe NoProfile/NonInteractive，其他由detectPosixShell检测可用shell（优先bash，其次POSIX名的SHELL，降级/bin/sh）并加-c；非Windows detached便于进程组停止。env经prepareCommandEnv净化并注入CI/TERM/FORCE_COLOR（Windows补PYTHONIOENCODING），结果记录保存envSummary。
 
 保存child后接入当前请求signal。内部 **abort()**先标cancelled/ok=false，killChild，再2秒force回调；deadline回调设isTimeout、发送停止并2秒升级。计时器支持unref。
 

@@ -12,21 +12,24 @@ async function testDetectPosixShell() {
     const fakeShell = path.join(tmp, 'my-custom-sh');
     fs.writeFileSync(fakeShell, '#!/bin/sh\nexit 0', { mode: 0o755 });
 
-    // 1. Explicit SHELL pointing to existing absolute path wins
-    assert.strictEqual(detectPosixShell({ SHELL: fakeShell }), fakeShell);
-
-    // 2. Explicit SHELL pointing to non-existent path falls back to bash/sh
-    const fallback = detectPosixShell({ SHELL: '/path/does/not/exist/zsh' });
-    assert.ok(fallback === '/bin/bash' || fallback === '/usr/bin/bash' || fallback === '/bin/sh');
-
-    // 3. Empty or missing SHELL falls back
-    const emptyFallback = detectPosixShell({});
-    assert.ok(emptyFallback === '/bin/bash' || emptyFallback === '/usr/bin/bash' || emptyFallback === '/bin/sh');
-
-    // 4. Specific /bin/sh if it exists
-    if (fs.existsSync('/bin/sh')) {
-      assert.strictEqual(detectPosixShell({ SHELL: '/bin/sh' }), '/bin/sh');
+    // 1. bash is preferred over $SHELL (pre-F104 behaviour)
+    assert.strictEqual(detectPosixShell({ SHELL: fakeShell }, ['/bin/bash', fakeShell].includes.bind(['/bin/bash', fakeShell])), '/bin/bash');
+    // 2. No bash: an absolute POSIX-named SHELL is honoured
+    const dash = path.join(tmp, 'dash');
+    assert.strictEqual(detectPosixShell({ SHELL: dash }, [dash, '/bin/sh'].includes.bind([dash, '/bin/sh'])), dash);
+    // 3. Non-POSIX interactive shells (fish/zsh/nu/csh) are never used for -c
+    for (const name of ['fish', 'zsh', 'nu', 'csh']) {
+      const p = path.join(tmp, name);
+      assert.strictEqual(detectPosixShell({ SHELL: p }, [p, '/bin/sh'].includes.bind([p, '/bin/sh'])), '/bin/sh');
     }
+    // 4. Relative SHELL is ignored
+    assert.strictEqual(detectPosixShell({ SHELL: './sh' }, ['./sh', '/usr/bin/sh'].includes.bind(['./sh', '/usr/bin/sh'])), '/usr/bin/sh');
+    // 5. Alpine-like: only /bin/sh
+    assert.strictEqual(detectPosixShell({}, ['/bin/sh'].includes.bind(['/bin/sh'])), '/bin/sh');
+    // 6. Missing SHELL falls back on the real system
+    const real = detectPosixShell({});
+    assert.ok(['/bin/bash', '/usr/bin/bash', '/bin/sh', '/usr/bin/sh'].includes(real));
+    void fakeShell;
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
