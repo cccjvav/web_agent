@@ -6,7 +6,7 @@
 
 [源码](monacoLoading.test.js)读真实monaco.js，分别构造LF/CRLF两种source，去单个import和export后vm执行；import正则显式支持\r?\n，Windows不再遗漏声明。**$**指状态节点，**captureActiveFile/activateTab**计数；**createElement/appendChild**捕获script；**setTimeout**保存deadline不等真实7秒，**clearTimeout**空实现。
 
-loadMonaco状态先加载中；F101起先断言script.src是`/vendor/monaco/vs/loader.js`且源码不含任何`https://`或`cdn.`（去export改用逐行正则，因为monaco.js多了两个导出常量）；手动script.onerror→Promise false/纯文本提示；再次加载手动deadline→false；随后的require替身记录依赖名与config：必须先`vs/nls.messages.zh-cn`后`vs/editor/editor.main`，`paths.vs`为vendored路径（跨realm对象按JSON比较）；另一轮nls故意失败仍要装出编辑器（true）；随后注入require（成功回调）、require.config和editor.create，调用迟到onload，必须先捕获缓冲、激活一次并状态就绪；删除require后onload须false而非崩溃。异步IIFE.catch设置exitCode1。没有下载CDN或创建实际Monaco worker。
+loadMonaco状态先加载中；F101起先断言script.src是`/vendor/monaco/vs/loader.js`且源码不含任何`https://`或`cdn.`（去export改用逐行正则，因为monaco.js多了两个导出常量）；手动script.onerror→Promise false/纯文本提示；再次加载手动deadline→false；随后的require替身记录依赖名与config：必须先`vs/nls.messages.zh-cn`后`vs/editor/editor.main`，`paths.vs`为vendored路径的绝对URL（第109组：夹具给出location，期望`http://127.0.0.1:3000/vendor/monaco/vs`；跨realm对象按JSON比较）；另一轮nls故意失败仍要装出编辑器（true）；随后注入require（成功回调）、require.config和editor.create，调用迟到onload，必须先捕获缓冲、激活一次并状态就绪；删除require后onload须false而非崩溃。异步IIFE.catch设置exitCode1。没有下载CDN或创建实际Monaco worker。
 
 ## workbenchRuntime.test.js
 

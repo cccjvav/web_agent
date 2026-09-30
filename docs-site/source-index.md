@@ -8219,6 +8219,6 @@
 
 ## webagent-core/workbench/styles.css
 
-[目录说明](../webagent-core/workbench/README.md) · SHA-256 `1d644573774a4f963af72b643ae00a7963d89a82d10b7bcf8a98898587347f18`
+[目录说明](../webagent-core/workbench/README.md) · SHA-256 `af2e613d76fd63112cb2e2d038c6db57e3e7257ec248ed9e4b1efb9fe6a370e7`
 
 - 文件级登记；没有可报告的JS函数/类节点。

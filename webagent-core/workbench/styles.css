@@ -249,7 +249,7 @@ u { text-decoration: none; }
 /* F102: a bubble still receiving `delta` pieces shows a caret; it disappears when the final message closes the bubble. */
 .msg.assistant.streaming > div:empty::after, .msg.assistant.streaming > div > :last-child::after { content: '▍'; margin-left: 1px; color: var(--link); animation: stream-caret 1s steps(2, start) infinite; }
 @keyframes stream-caret { to { visibility: hidden; } }
-@media (prefers-reduced-motion: reduce) { .msg.assistant.streaming > div::after { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .msg.assistant.streaming > div:empty::after, .msg.assistant.streaming > div > :last-child::after { animation: none; } }
 .status-line { font-size: var(--fs-sm); color: var(--link); margin-bottom: 6px; }
 .tool-card { background: var(--bg0); border: 1px solid #333; border-radius: 6px; margin-bottom: 8px; font-size: var(--fs-sm); }
 .tool-card header, .tool-card-toggle { display: flex; justify-content: space-between; width: 100%; padding: 6px 8px; color: var(--link); }
