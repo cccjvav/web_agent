@@ -25,6 +25,7 @@ def read_json(name):
 def main():
     cat = read_json("catalog-by-family.json") or {}
     probe = read_json("final-probe5.json")
+    modelid = read_json("modelid-probe.json")
 
     total_models = sum(len(v) for v in cat.values())
 

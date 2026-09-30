@@ -32,6 +32,7 @@ let bundleCheck = 'skipped';
 try {
   const bundle = readFileSync(resolve(ROOT, 'dist', 'arena-model-probe.inject.js'), 'utf8');
   new Function(bundle);            // 语法可解析
+  const need = ['chaincmpl', '__mods', 'MODEL_PATTERNS', 'usageMetadata', 'message_start'];
   const miss = ['__mods', 'MODEL_PATTERNS', 'usageMetadata', 'message_start'].filter(s => !bundle.includes(s));
   if (miss.length) throw new Error(`产物缺少关键内容: ${miss.join(', ')}`);
   if (/\bimport\s*\{/.test(bundle)) throw new Error('产物仍残留 import 语句');
@@ -52,6 +53,7 @@ function t(name, fn) {
 }
 function eq(a, b, msg) { if (a !== b) throw new Error(`${msg || 'eq'}: 期望 ${JSON.stringify(b)}，实际 ${JSON.stringify(a)}`); }
 function ok(v, msg) { if (!v) throw new Error(msg || '断言失败'); }
+function near(a, b, tol, msg) { if (Math.abs(a - b) > tol) throw new Error(`${msg || 'near'}: ${a} 与 ${b} 差超 ${tol}`); }
 
 /* ================================================================== *
  * 1. 已知模型 id 精确识别（重点覆盖新出的模型）

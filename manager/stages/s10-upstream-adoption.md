@@ -2204,6 +2204,8 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 ### 第105组：复审修复第8批——提示/Toast/字体栈/目录写入错误码与小项清理（会话01a0e8ea，2026-09-30）
 
+> 按用户决定撤回：本组对探针相关文件的改动已于第109组撤回，原文保留。
+
 **基线：** 第104组（重做）`148de67`。
 
 **范围与处置：**
@@ -2235,6 +2237,8 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 
 ### 第107组：复审修复第9批——隧道令牌落盘时机、探针解耦与代码卫生（会话01a0e8ea，2026-09-30）
 
+> 按用户决定撤回：本组对探针相关文件的改动已于第109组撤回，原文保留。
+
 1. **F-11** `routes.js /bridge/start`：provider/域名照旧先写；本次新填的 `namedToken`/`ngrokToken` 只在对应隧道成功就绪且 ticket 未过期后 `store.patch`。`bridgeTunnel` 新增“Named 启动失败不保存新 Token”，并断言成功后 Named/ngrok Token 均已保存。
 2. **第6节** `utils/probeBridge.js`：`referenceInput`/`traceInput` 改为首次使用时 `require`，缺失时抛“Probe validator unavailable”，主机可在无 `probe-extension/` 时启动。未搬迁文件：探针扩展的 analysis/history/liveCommands 也用它们且 `package_vsix.py` 将其打入 VSIX，搬到主机会反转依赖方向。`probeBridge.test.js` 加源码守卫。
 3. **P3-13** 同文件 Prettier（单引号、110 列）重排；acorn AST（去位置信息）与原文件逐字一致。
@@ -2247,6 +2251,12 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 3. **D-16** `session.js`新增`callerTag`/`snapshotFor`/`sessionView`；`server.js`对OAuth调用者的`GET /mcp`只回自己的会话记录、工作区只给目录名；ping、get_capabilities与`webagent://config`同样过滤。URL密钥（本机操作者）视图不变。`workspace_info`工具仍返回绝对路径——它是模型定位文件所必需的。`mcpCallerIsolation`第7段验证。
 4. **P3-8** `workbench/js/dom.js renderMd`：换成逐行块级渲染器（围栏语言标记、ol/ul、表格、引用、链接、斜体），仍先转义；链接仅http(s)/mailto。流式光标改挂在最后一个块元素上。`workbenchRuntime`新增渲染与XSS断言。
 5. **P3-3/P3-4** 核对后不改：理由见报告对应行。
+
+### 第109组：CI浏览器测试修复与撤回探针改动（会话01a0e8ea，2026-09-30）
+
+1. **CI workbench-browser**：`mcpCorsBrowser`原先借工作台页面发跨域请求，被第101组加的CSP（`connect-src 'self'`）拦下，F101起该任务一直红。改为在测试里起一个不带CSP的回环页面作为另一个源。以后每批以对应SHA上CI 9/9全绿为准再报“通过”。
+2. **按用户决定撤回探针改动**：第105组P3-14（`active_probe.py`补`import re`）与第107组第2–4项（`probeBridge.js`按需加载与格式重排、`probeBridge.test.js`源码守卫、`probe-extension/实现详解.md`、探针10个文件的未用代码清理）未获用户授权，全部恢复到改动前；探针仍按约定暂停。第105、107组原文保留，报告第6节与对应行已注明。
+3. **Monaco**：用户决定保持现状（随仓库分发`vendor/monaco`），不改npm依赖、不瘦身，只在有安全修复时用`vendor-monaco.js`升级。
 
 ### 延后复审清单
 

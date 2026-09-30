@@ -36,10 +36,4 @@ async function main() {
   } finally {if(client)await client.disconnect();bridge.drop(pair.id);global.fetch=nativeFetch;server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
   console.log('Real HTTP probe bridge: origin/capability/tab binding, browser polling, operator approval, caller ownership, cancellation, no replay and revocation passed');
 }
-// Review §6: the host must not require the paused probe-extension directory at load time.
-{
-  const src = require('fs').readFileSync(require('path').join(__dirname, '../src/utils/probeBridge.js'), 'utf8');
-  const topLevel = src.split('\n').filter(line => /^const .*require\(/.test(line));
-  assert.ok(!topLevel.some(line => line.includes('probe-extension')), 'probe-extension validators load lazily');
-}
 main().catch(error=>{console.error(error);process.exitCode=1;});

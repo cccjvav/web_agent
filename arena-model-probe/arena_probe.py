@@ -27,6 +27,7 @@ arena_probe.py — arena.ai 模型探针独立驱动器
 """
 
 import argparse
+import base64
 import json
 import os
 import re

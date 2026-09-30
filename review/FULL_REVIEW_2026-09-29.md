@@ -252,6 +252,8 @@
 
 ## 6. 暂停模块（`arena-model-probe/`、`arena-trace-inspector/`、`webagent-core/probe-extension/`）
 
+> **按用户决定撤回（2026-09-30）**：第105组P3-14与第107组第6节/P3-13/P3-15对探针目录、`probeBridge.js`、`probeBridge.test.js`、`probe-extension/实现详解.md`的改动未获用户授权，已全部恢复原状；探针仍按约定暂停。以下原文保留。
+
 项目约定为"暂停、只登记路径"。按用户要求本轮读了代码并做静态检查，结论仅限代码卫生，不认证功能与合规：
 
 - 18 个 `.py` 全部可编译；pyflakes 9 条（1 条真实缺陷 P3-14，其余未用 import/变量）。
@@ -325,16 +327,16 @@
 | P3-6 系统提示写死 Code-OSS | 已修 | 第 8 批 / 第 105 组 | 改为说明用户可能在 VS Code/Code-OSS 扩展或经典 Monaco 工作台 |
 | P3-9 toast 固定 2.2 秒 | 已修 | 第 8 批 / 第 105 组 | `toastDuration` 约 15 字符/秒、2.2–6 秒，点击关闭 |
 | P3-10 paintTodos 残留循环 | 已修 | 第 8 批 / 第 105 组 | 去掉 `['chat'].forEach` |
-| P3-14 active_probe.py 缺 import re | 已修 | 第 8 批 / 第 105 组 | 补 import |
+| P3-14 active_probe.py 缺 import re | 已修→撤回 | 第 8 批 / 第 105 组 | 补 import。**按用户决定撤回（2026-09-30）**：探针仍按约定暂停，用户未授权改动探针，代码已恢复原状，原结论保留 |
 | 4.1.5 Linux 中文字体回退 | 已修 | 第 8 批 / 第 105 组 | `--font` 补 Noto Sans CJK SC / Noto Sans SC / WenQuanYi Micro Hei |
 | D-6 write_file 目录目标无错误码 | 已修 | 第 8 批 / 第 105 组 | `writeFileBody` 先判目录，抛 `E_BAD_ARGS` |
 | P3-2 守卫挂载两次 | 已不存在 | 第 8 批核对 | 现为单行挂载 |
 | F-13 `/bridge/logout` 无绑定 | 不再适用 | 第 106 组 | 用户决定单人使用无需登录：GitHub 登录族 6 条路由、`auth/github.js` 与 Bridge 授权门槛整体移除 |
 | 4.1.3 英文标签 | 暂不改 | 第 106 组（用户决定） | 按 ShunCode 截图有意复刻，用户确认暂不汉化 |
 | F-11 隧道令牌启动前写盘 | 已修 | 第 9 批 / 第 107 组 | 新填 Named/ngrok Token 只在该隧道成功就绪后写入 config.json；`bridgeTunnel` 断言失败启动不保存 |
-| 第 6 节 主机依赖暂停探针目录 | 已修（改为按需加载） | 第 9 批 / 第 107 组 | 两个校验器探针扩展自身也用并打进其 VSIX，未搬迁；`probeBridge.js` 改为首次使用时加载，目录缺失时主机照常启动；源码守卫测试 |
-| P3-13 probeBridge.js 压缩风格 | 已修 | 第 9 批 / 第 107 组 | Prettier 重排，AST 比对与原文件一致（纯格式） |
-| P3-15 探针未使用 import/变量 | 已修 | 第 9 批 / 第 107 组 | pyflakes 8 处、`e2e.mjs`/`selftest.mjs` 6 处清零；`selftest` 69/69 |
+| 第 6 节 主机依赖暂停探针目录 | 已修（改为按需加载）→撤回 | 第 9 批 / 第 107 组 | 两个校验器探针扩展自身也用并打进其 VSIX，未搬迁；`probeBridge.js` 改为首次使用时加载，目录缺失时主机照常启动；源码守卫测试。**按用户决定撤回（2026-09-30）**：探针仍按约定暂停，用户未授权改动探针，代码已恢复原状，原结论保留：主机仍直接require两个校验器 |
+| P3-13 probeBridge.js 压缩风格 | 已修→撤回 | 第 9 批 / 第 107 组 | Prettier 重排，AST 比对与原文件一致（纯格式）。**按用户决定撤回（2026-09-30）**：探针仍按约定暂停，用户未授权改动探针，代码已恢复原状，原结论保留 |
+| P3-15 探针未使用 import/变量 | 已修→撤回 | 第 9 批 / 第 107 组 | pyflakes 8 处、`e2e.mjs`/`selftest.mjs` 6 处清零；`selftest` 69/69。**按用户决定撤回（2026-09-30）**：探针仍按约定暂停，用户未授权改动探针，代码已恢复原状，原结论保留 |
 | 其余 P3、4.1 字号 token/三栏（分栏拖拽）、4.3 工程项、第 6 节探针 | 待后续批次 | — | 4.1 字号 token 与三栏分隔条评估后延后，因为它牵涉 `styles.css` 106 处 font-size 与 Playwright 断言，需要能跑浏览器的环境逐视口核对；后续候选：UI 细化、工程产物治理 |
 
 ## 9. 深审新发现（报告成文后，按批次追加）

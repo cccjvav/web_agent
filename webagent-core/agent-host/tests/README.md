@@ -220,7 +220,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [patchEngine.test.js](patchEngine.test.js) | 20 个函数/类节点 |
 | [planRound.test.js](planRound.test.js) | 6 个函数/类节点 |
 | [probeAnalysis.test.js](probeAnalysis.test.js) | 6 个函数/类节点 |
-| [probeBridge.test.js](probeBridge.test.js) | 13 个函数/类节点 |
+| [probeBridge.test.js](probeBridge.test.js) | 11 个函数/类节点 |
 | [probeCaptureLifecycle.test.js](probeCaptureLifecycle.test.js) | 30 个函数/类节点 |
 | [probeCompanion.test.js](probeCompanion.test.js) | 39 个函数/类节点 |
 | [probeHistory.test.js](probeHistory.test.js) | 7 个函数/类节点 |
@@ -269,7 +269,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [tunnelRegistry.test.js](tunnelRegistry.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 28 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 370 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 373 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 528 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
