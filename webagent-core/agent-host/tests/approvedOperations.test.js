@@ -45,6 +45,9 @@ const server = http.createServer(async (req, res) => {
     const fromOperator = queue.submit('submitter-fixture', {}, { callerKey: 'local', operator: true }, 'submitter-operator');
     const fromChat = queue.submit('submitter-fixture', {}, {}, 'submitter-chat');
     const fromBare = queue.submit('submitter-fixture', {}, { remote: true, callerKey: peerB }, 'submitter-bare');
+    const longName = queue.submit('submitter-fixture', {}, { remote: true, callerKey: peerB, clientName: 'a'.repeat(79) + '\u{1F600}x' }, 'submitter-long');
+    assert.equal(queue.inspect(longName.requestId).submitter.label, `远程会话（${'a'.repeat(79)}\u{1F600}，bbbbbb）`, 'cut on whole code points (F120)');
+    queue.cancel(longName.requestId);
     for (const job of [fromRemote, fromOperator, fromChat, fromBare]) assert.equal(job.submitter, undefined, 'submit() returns nothing about submitters');
     assert.equal(queue.result(fromRemote.requestId, { remote: true, callerKey: peerA }).submitter, undefined, 'operation_result does not echo submitter');
     assert.throws(() => queue.result(fromRemote.requestId, { remote: true, callerKey: peerB }), /Unknown operation for this caller/);

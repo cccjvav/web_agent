@@ -29,8 +29,10 @@ function owner(options) {
 // a remote session must not learn which other clients or sessions are queued on this host.
 function submitterOf(options, caller) {
   if (options.remote) {
-    const client = typeof options.clientName === 'string' ? options.clientName.replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g, '').trim().slice(0, 80) : '';
-    return { type: 'remote', label: `远程会话（${client || '未报客户端名'}，${caller.slice(-6)}）` };
+    const client = typeof options.clientName === 'string' ? options.clientName.replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g, '').trim() : '';
+    // F120: cut on whole code points; slice() on UTF-16 units could leave half an emoji (a lone surrogate).
+    const shown = Array.from(client).slice(0, 80).join('');
+    return { type: 'remote', label: `远程会话（${shown || '未报客户端名'}，${caller.slice(-6)}）` };
   }
   if (caller.startsWith('browser:')) return { type: 'browser', label: '浏览器探针' };
   if (options.operator) return { type: 'operator', label: '你自己' };

@@ -304,4 +304,6 @@ requestLifecycle.test.js：按会话/凭据和带类型RPC ID隔离取消；重�
 
 第119组（复审F114–F118）：hostLaunch断言takeLaunchEnv也取走WEBAGENT_LAUNCH_ID；approvedOperations的客户端名加入U+202E/U+200B须被去掉；codeServerLifecycle补“响应体中途断开立即重试”回归（现有error处理已覆盖，非修复）。
 
+第120组：approvedOperations加79个a+emoji的客户端名，标签须保留完整emoji（旧代码切出孤立代理项）。
+
 nativeChatStream.test.js：真实回环HTTP与VM原生扩展，验证NDJSON失败/终态/预算/取消和两个消费者的历史；入口及helper main详见工作区与命令安全测试详解。

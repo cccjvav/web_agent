@@ -2399,3 +2399,13 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **怀疑但查证不成立：** waitHealth在200响应体中途断开时会不会干等到期限——写了真实HTTP测试，修复前代码同样立即重试：Node对中途断开的响应会发出`error`（aborted），F116已有的`res.on('error')`就会重试。撤回了为此加的代码，只保留测试作为回归。
 
 **其余复核无问题：** submitter只在本机操作路由输出（submit去重分支、operation_result、eventBus/executionControl的list()都不带）；F115调序只影响“带了不一致expectedHash”的分支，PUT保存的409映射不变；F117在Windows未就绪前注册的监听挂在agent.outSocket上，同样生效；F118没有新增依赖Node 22的代码，低版本只提示。
+
+### 第120组：再审第119组（会话01a0e8ea，2026-10-01）
+
+用户要求再审一遍。第119组源码改动只有三处（lifeline列表、/health读launchEnv、客户端名清洗），逐行复读并扩查同类显示点。
+
+**发现并修复：** 客户端名清洗后用`slice(0, 80)`截断，按UTF-16单元切，第80个位置若是emoji会留下孤立的高位代理项，标签显示为乱码。复现：79个a加一个emoji，标签里出现`\ud83d`。改为`Array.from(client).slice(0, 80)`按码点截；approvedOperations加这条（旧代码失败、新代码通过）。
+
+**扩查不成立：** 第119组只修了审批标签的双向/零宽字符，查了其他显示远程自报名称的地方：工作台与扩展不显示MCP的clientInfo；OAuth注册的client_name只存储并回给注册它的客户端，不显示给用户，没有同类问题。
+
+**经验：** 在[experience](../docs/experience.md)补一条“新增一项时回头看同类已有的规矩”，记F116漏登记启动变量、外部文本清洗分三次才补齐、复审先跑红再修。
