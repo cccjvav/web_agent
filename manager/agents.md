@@ -4,7 +4,7 @@
 
 ## 技术环境
 - **语言**：JavaScript（禁止 TypeScript 重写）
-- **运行**：Node >=18（主机CI：Ubuntu 18/20/22/24，Windows 20/22/24；不代表code-server兼容性）；同一进程双端口，不拆前后端仓
+- **运行**：Node >=22（主机CI：Ubuntu/Windows各22/24；18/20已停止维护，F118移出；低于22启动时只打印升级提示；不代表code-server兼容性）；同一进程双端口，不拆前后端仓
 - **测试**：`cd webagent-core/agent-host && npm test` 或根目录 `run-tests.cmd`
 
 ## 编码规范

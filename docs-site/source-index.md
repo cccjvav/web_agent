@@ -4,7 +4,7 @@
 
 ## .github/workflows/test.yml
 
-[目录说明](../.github/workflows/README.md) · SHA-256 `393199e5850172bc8d14acfbc8ec951d3b67704d078372348f2dd34539b95cdf`
+[目录说明](../.github/workflows/README.md) · SHA-256 `a4c585d5ce8125113b0ae92d3fce45600504be3a29d315d82638474613ecf288`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -505,7 +505,7 @@
 
 ## webagent-core/agent-host/package.json
 
-[目录说明](../webagent-core/agent-host/README.md) · SHA-256 `9b84bffed11cac272f707b2505d81cd13569316f326e2563a58499903b3713fc`
+[目录说明](../webagent-core/agent-host/README.md) · SHA-256 `12e276887a8631d2e9397216a1483618087bf83beeb4b3c3c7f4093d8a11060a`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 
@@ -843,36 +843,36 @@
 
 ## webagent-core/agent-host/src/index.js
 
-[目录说明](../webagent-core/agent-host/src/README.md) · SHA-256 `ca404c7decf815326823342fbd63ab23b128de5f16bb74c1f7ba82120f9cec9a`
+[目录说明](../webagent-core/agent-host/src/README.md) · SHA-256 `6e3bb758614369d51dc50b237c5abc65b53299387693906695bd8e06c0817212`
 
-- `securityHeaders` — FunctionDeclaration，[L34–L40](../webagent-core/agent-host/src/index.js#L34-L40)
-- `applyCommon` — FunctionDeclaration，[L42–L65](../webagent-core/agent-host/src/index.js#L42-L65)
-- `applyCommon/anonymous@44:10` — ArrowFunctionExpression，[L44–L47](../webagent-core/agent-host/src/index.js#L44-L47)
-- `applyCommon/anonymous@56:38` — ArrowFunctionExpression，[L56–L59](../webagent-core/agent-host/src/index.js#L56-L59)
-- `applyCommon/anonymous@63:10` — ArrowFunctionExpression，[L63–L63](../webagent-core/agent-host/src/index.js#L63-L63)
-- `jsonErrors` — FunctionDeclaration，[L73–L92](../webagent-core/agent-host/src/index.js#L73-L92)
-- `mountHealth` — FunctionDeclaration，[L94–L101](../webagent-core/agent-host/src/index.js#L94-L101)
-- `mountHealth/anonymous@95:21` — ArrowFunctionExpression，[L95–L100](../webagent-core/agent-host/src/index.js#L95-L100)
-- `mountWorkbench` — FunctionDeclaration，[L112–L136](../webagent-core/agent-host/src/index.js#L112-L136)
-- `mountWorkbench/anonymous@113:10` — ArrowFunctionExpression，[L113–L116](../webagent-core/agent-host/src/index.js#L113-L116)
-- `mountWorkbench/setHeaders` — FunctionExpression，[L121–L121](../webagent-core/agent-host/src/index.js#L121-L121)
-- `mountWorkbench/anonymous@123:10` — ArrowFunctionExpression，[L123–L135](../webagent-core/agent-host/src/index.js#L123-L135)
-- `attachWss` — FunctionDeclaration，[L153–L189](../webagent-core/agent-host/src/index.js#L153-L189)
-- `attachWss/verifyClient` — FunctionExpression，[L160–L162](../webagent-core/agent-host/src/index.js#L160-L162)
-- `attachWss/anonymous@167:18` — ArrowFunctionExpression，[L167–L167](../webagent-core/agent-host/src/index.js#L167-L167)
-- `attachWss/anonymous@168:23` — ArrowFunctionExpression，[L168–L187](../webagent-core/agent-host/src/index.js#L168-L187)
-- `attachWss/anonymous@168:23/anonymous@171:19` — ArrowFunctionExpression，[L171–L171](../webagent-core/agent-host/src/index.js#L171-L171)
-- `listenOrExit` — FunctionDeclaration，[L195–L205](../webagent-core/agent-host/src/index.js#L195-L205)
-- `listenOrExit/anonymous@196:21` — ArrowFunctionExpression，[L196–L203](../webagent-core/agent-host/src/index.js#L196-L203)
-- `anonymous@211:27` — ArrowFunctionExpression，[L211–L221](../webagent-core/agent-host/src/index.js#L211-L221)
-- `anonymous@232:26` — ArrowFunctionExpression，[L232–L234](../webagent-core/agent-host/src/index.js#L232-L234)
-- `shutdown` — FunctionDeclaration，[L243–L259](../webagent-core/agent-host/src/index.js#L243-L259)
-- `shutdown/anonymous@246:30` — ArrowFunctionExpression，[L246–L246](../webagent-core/agent-host/src/index.js#L246-L246)
-- `shutdown/anonymous@250:21` — ArrowFunctionExpression，[L250–L250](../webagent-core/agent-host/src/index.js#L250-L250)
-- `shutdown/anonymous@251:15` — ArrowFunctionExpression，[L251–L251](../webagent-core/agent-host/src/index.js#L251-L251)
-- `shutdown/anonymous@253:53` — ArrowFunctionExpression，[L253–L253](../webagent-core/agent-host/src/index.js#L253-L253)
-- `shutdown/anonymous@254:18` — ArrowFunctionExpression，[L254–L256](../webagent-core/agent-host/src/index.js#L254-L256)
-- `onLost` — FunctionExpression，[L264–L267](../webagent-core/agent-host/src/index.js#L264-L267)
+- `securityHeaders` — FunctionDeclaration，[L39–L45](../webagent-core/agent-host/src/index.js#L39-L45)
+- `applyCommon` — FunctionDeclaration，[L47–L70](../webagent-core/agent-host/src/index.js#L47-L70)
+- `applyCommon/anonymous@49:10` — ArrowFunctionExpression，[L49–L52](../webagent-core/agent-host/src/index.js#L49-L52)
+- `applyCommon/anonymous@61:38` — ArrowFunctionExpression，[L61–L64](../webagent-core/agent-host/src/index.js#L61-L64)
+- `applyCommon/anonymous@68:10` — ArrowFunctionExpression，[L68–L68](../webagent-core/agent-host/src/index.js#L68-L68)
+- `jsonErrors` — FunctionDeclaration，[L78–L97](../webagent-core/agent-host/src/index.js#L78-L97)
+- `mountHealth` — FunctionDeclaration，[L99–L106](../webagent-core/agent-host/src/index.js#L99-L106)
+- `mountHealth/anonymous@100:21` — ArrowFunctionExpression，[L100–L105](../webagent-core/agent-host/src/index.js#L100-L105)
+- `mountWorkbench` — FunctionDeclaration，[L117–L141](../webagent-core/agent-host/src/index.js#L117-L141)
+- `mountWorkbench/anonymous@118:10` — ArrowFunctionExpression，[L118–L121](../webagent-core/agent-host/src/index.js#L118-L121)
+- `mountWorkbench/setHeaders` — FunctionExpression，[L126–L126](../webagent-core/agent-host/src/index.js#L126-L126)
+- `mountWorkbench/anonymous@128:10` — ArrowFunctionExpression，[L128–L140](../webagent-core/agent-host/src/index.js#L128-L140)
+- `attachWss` — FunctionDeclaration，[L158–L194](../webagent-core/agent-host/src/index.js#L158-L194)
+- `attachWss/verifyClient` — FunctionExpression，[L165–L167](../webagent-core/agent-host/src/index.js#L165-L167)
+- `attachWss/anonymous@172:18` — ArrowFunctionExpression，[L172–L172](../webagent-core/agent-host/src/index.js#L172-L172)
+- `attachWss/anonymous@173:23` — ArrowFunctionExpression，[L173–L192](../webagent-core/agent-host/src/index.js#L173-L192)
+- `attachWss/anonymous@173:23/anonymous@176:19` — ArrowFunctionExpression，[L176–L176](../webagent-core/agent-host/src/index.js#L176-L176)
+- `listenOrExit` — FunctionDeclaration，[L200–L210](../webagent-core/agent-host/src/index.js#L200-L210)
+- `listenOrExit/anonymous@201:21` — ArrowFunctionExpression，[L201–L208](../webagent-core/agent-host/src/index.js#L201-L208)
+- `anonymous@216:27` — ArrowFunctionExpression，[L216–L226](../webagent-core/agent-host/src/index.js#L216-L226)
+- `anonymous@237:26` — ArrowFunctionExpression，[L237–L239](../webagent-core/agent-host/src/index.js#L237-L239)
+- `shutdown` — FunctionDeclaration，[L248–L264](../webagent-core/agent-host/src/index.js#L248-L264)
+- `shutdown/anonymous@251:30` — ArrowFunctionExpression，[L251–L251](../webagent-core/agent-host/src/index.js#L251-L251)
+- `shutdown/anonymous@255:21` — ArrowFunctionExpression，[L255–L255](../webagent-core/agent-host/src/index.js#L255-L255)
+- `shutdown/anonymous@256:15` — ArrowFunctionExpression，[L256–L256](../webagent-core/agent-host/src/index.js#L256-L256)
+- `shutdown/anonymous@258:53` — ArrowFunctionExpression，[L258–L258](../webagent-core/agent-host/src/index.js#L258-L258)
+- `shutdown/anonymous@259:18` — ArrowFunctionExpression，[L259–L261](../webagent-core/agent-host/src/index.js#L259-L261)
+- `onLost` — FunctionExpression，[L269–L272](../webagent-core/agent-host/src/index.js#L269-L272)
 
 ## webagent-core/agent-host/src/mcp/budget.js
 
@@ -4217,7 +4217,7 @@
 
 ## webagent-core/agent-host/tests/oauth.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `5c1210c89c81baa508af4140903e533e494e86ea05b6e12812d2987859718420`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `adfd18c2988ea2b8509db38e176133ae09f05ba1629a56775e8da90bfb78ef67`
 
 - `request` — FunctionDeclaration，[L17–L48](../webagent-core/agent-host/tests/oauth.test.js#L17-L48)
 - `request/anonymous@18:21` — ArrowFunctionExpression，[L18–L47](../webagent-core/agent-host/tests/oauth.test.js#L18-L47)
@@ -5080,7 +5080,7 @@
 
 ## webagent-core/agent-host/tests/settingsRelay.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `f2021505df444fc9ca1d77dab14ed7b6d365ead2d565e7b9c4cba06ee23d10d6`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `3c308f71b92037fe4af886b3b9ec414c74c1757124e168f60e0c89f0bda60994`
 
 - `loadRelayModule` — FunctionDeclaration，[L19–L25](../webagent-core/agent-host/tests/settingsRelay.test.js#L19-L25)
 - `loadRelayModule/anonymous@21:78` — ArrowFunctionExpression，[L21–L21](../webagent-core/agent-host/tests/settingsRelay.test.js#L21-L21)

@@ -13,8 +13,8 @@ const vm = require('vm');
 const { config } = require('../src/config');
 const { createApiRelay, checkRequest, MAX_BODY_BYTES, MAX_IN_FLIGHT, MAX_TIMEOUT_MS } = require('../../extension/apiRelay');
 
-// vscodeRelay.js is a browser ES module (the workbench folder has no package.json and CI runs Node 18/20, which
-// cannot import it directly). Evaluate its two exports as a script in this realm, so Response/DOMException are
+// vscodeRelay.js is a browser ES module (the workbench folder has no package.json and Node versions before 22 —
+// tested in CI until F118 — cannot import it directly). Evaluate its two exports as a script in this realm, so Response/DOMException are
 // the real globals.
 function loadRelayModule() {
   const source = fs.readFileSync(path.resolve(__dirname, '../../workbench/js/vscodeRelay.js'), 'utf8');

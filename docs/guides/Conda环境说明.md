@@ -120,7 +120,7 @@ node --version
 npm --version
 ```
 
-当前全量CI配置覆盖Ubuntu/Windows的Node20/22/24矩阵、额外Ubuntu Node18兼容任务，另有Node22的Windows安装器与Ubuntu Chromium任务；这不是“所有 Node 版本均已验收”。本轮沙箱没有 Conda，也没有 Windows 桌面；以上 Conda 路径仍需要按第 7 节在本机实测。
+当前全量CI配置覆盖Ubuntu/Windows的Node22/24矩阵（Node18/20已停止维护，F118起不再测试；主机在低于22时打印升级提示），另有Node22的Windows安装器与Ubuntu Chromium任务；这不是“所有 Node 版本均已验收”。本轮沙箱没有 Conda，也没有 Windows 桌面；以上 Conda 路径仍需要按第 7 节在本机实测。
 
 ## 3. 从源码运行
 

@@ -15,10 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-26.04, windows-latest]
-        node: [20, 22, 24]
-        include:
-          - os: ubuntu-26.04
-            node: 18
+        # R9 (F118): only maintained Node lines. 18 (EOL 2025-04) and 20 (EOL 2026-04) were dropped.
+        node: [22, 24]
     runs-on: ${{ matrix.os }}
     defaults:
       run:

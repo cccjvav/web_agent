@@ -11,6 +11,11 @@ if (!fs.existsSync(config.workspaceRoot) || !fs.statSync(config.workspaceRoot).i
   console.error('WORKSPACE_ROOT 必须是已存在的文件夹，请重新选择工作区。');
   process.exit(1);
 }
+// R9 (F118): package.json declares node >=22; 18 and 20 are past end-of-life and no longer tested in CI.
+// Warn instead of refusing, so an existing Node 20 setup still starts and the person knows to upgrade.
+if (Number(process.versions.node.split('.')[0]) < 22) {
+  console.warn(`当前 Node.js ${process.versions.node} 已停止维护且不再测试；Web Agent 需要 Node.js 22 或更高版本，请升级（推荐 22 LTS 或 24 LTS）。`);
+}
 const mcpRouter = require('./mcp/server');
 const oauth = require('./mcp/oauth');
 const apiRouter = require('./api/routes');

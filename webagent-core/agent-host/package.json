@@ -14,7 +14,7 @@
   "license": "ISC",
   "description": "Web Agent local host: workbench server, MCP bridge and workspace tools (not published to npm)",
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "dependencies": {
     "cors": "^2.8.6",

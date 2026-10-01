@@ -60,17 +60,17 @@ dependencies：express HTTP路由、cors来源控制、ws WebSocket、diff差异
 
 ## 5. .github/workflows/test.yml全部job与命令
 
-[workflow](../../.github/workflows/test.yml)在push/pull_request触发；顶层permissions仅给contents:read。三个job定义实际展开为九项任务（七组主机矩阵、安装器、浏览器），不是“两项”或只有主机单测，也没有仓库写入/发布权限。
+[workflow](../../.github/workflows/test.yml)在push/pull_request触发；顶层permissions仅给contents:read。三个job定义实际展开为六项任务（四组主机矩阵、安装器、浏览器；F118前为九项），不是“两项”或只有主机单测，也没有仓库写入/发布权限。
 
 ### agent-host
 
-fail-fast:false让失败不取消其它矩阵。Ubuntu固定显式版本`ubuntu-26.04`（F112先固定24.04避免`ubuntu-latest`静默切换；F113试跑全绿后切到26.04，见下文5b）。Ubuntu/Windows各Node20/22/24，include再加Ubuntu18兼容任务。default working-directory是agent-host；checkout@v5取源码，setup-node@v5以Node 24动作运行时选择项目Node，避免GitHub弃用旧动作运行时的告警；npm ci按锁文件安装依赖，check-docs只检查不修漂移，npm test运行测试发现/汇总。
+fail-fast:false让失败不取消其它矩阵。Ubuntu固定显式版本`ubuntu-26.04`（F112先固定24.04避免`ubuntu-latest`静默切换；F113试跑全绿后切到26.04，见下文5b）。Ubuntu/Windows各Node22/24（R9/F118起；此前还有Node20和Ubuntu Node18兼容任务，二者已停止维护，与package.json的engines同时提到>=22）。default working-directory是agent-host；checkout@v5取源码，setup-node@v5以Node 24动作运行时选择项目Node，避免GitHub弃用旧动作运行时的告警；npm ci按锁文件安装依赖，check-docs只检查不修漂移，npm test运行测试发现/汇总。
 
 `npm audit --omit=dev --audit-level=high`现在是门禁：高/严重生产依赖公告或审计请求失败会使矩阵失败，不再用continue-on-error吞掉。它不扫描开发依赖、不分析项目源码或证明依赖来源签名，因此绿色CI仍不是“零漏洞”证书。Action自身的Node运行时弃用警告与矩阵node-version不同，不能混报。
 
-`Lint (correctness rules only)`只在ubuntu-26.04+Node22这一项里运行`npm run lint`：结果与平台无关，ESLint 10也不支持Node18；有任何报告即失败（规则全部为error，另加`--max-warnings 0`）。
+`Lint (correctness rules only)`只在ubuntu-26.04+Node22这一项里运行`npm run lint`：结果与平台无关，ESLint 10也不支持早于Node 20的版本；有任何报告即失败（规则全部为error，另加`--max-warnings 0`）。
 
-Windows主机任务在全量之后，再用pwsh重复5轮ptyLifecycle、2轮stdioMcp，每轮立即检查LASTEXITCODE，非零直接退出，不重试到绿。Node18任务只是最低声明兼容回归，不建议新装过期版本，也不等于code-server支持所有同版本组合。
+Windows主机任务在全量之后，再用pwsh重复5轮ptyLifecycle、2轮stdioMcp，每轮立即检查LASTEXITCODE，非零直接退出，不重试到绿。Node22是最低声明版本；主机在更低版本上启动时打印升级提示但不拒绝启动（F118），这也不等于code-server支持所有同版本组合。
 
 ### windows-installer
 

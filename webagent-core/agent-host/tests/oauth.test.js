@@ -71,7 +71,7 @@ async function main() {
     assert.ok(oauthSrc.includes('crypto.timingSafeEqual'), 'URL secret compare must be timing-safe');
     assert.ok(!oauthSrc.includes('token === config.secretKey'), 'must not compare secretKey with ===');
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
-    assert.strictEqual(pkg.engines && pkg.engines.node, '>=18');
+    assert.strictEqual(pkg.engines && pkg.engines.node, '>=22');
 
     const denied = await request(server, 'POST', '/mcp', {
       body: { jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }
