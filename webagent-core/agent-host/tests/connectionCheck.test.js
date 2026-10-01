@@ -37,7 +37,7 @@ const { callTool } = require('../src/tools');
     const context = { location: { origin: 'https://arena.ai', pathname: '/agent/private-thread', search: '?token=must-not-export', hash: '#secret' },
       crypto: webcrypto, TextEncoder, Uint8Array, document: { getElementById: () => null, createElement: node, body: { append() {} } },
       fetch() { throw new Error('Exporter must not fetch'); } };
-    vm.runInNewContext(fs.readFileSync(path.resolve(__dirname, '../../../arena-model-probe/webagent-connection.user.js'), 'utf8'), context);
+    vm.runInNewContext(fs.readFileSync(path.resolve(__dirname, '../../userscripts/webagent-connection.user.js'), 'utf8'), context);
     const textarea = nodes.find(n => n.tag === 'textarea');
     assert.strictEqual(textarea.value, undefined, 'no automatic capture');
     await nodes.find(n => n.tag === 'button').onclick();

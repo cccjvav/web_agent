@@ -3,7 +3,6 @@ const fileCheckpoints = require('../utils/fileCheckpoints');
 const control = require('../utils/executionControl');
 const { isToolFailure } = require('../utils/toolTrace');
 const {assertWorkspaceBinding} = require('../utils/workspaceBinding');
-const probeBridge = require('../utils/probeBridge');
 const operatorQueue = require('../utils/operatorQueue');
 const externalClient = require('../mcp/externalClient');
 const workflows = require('../tools/workflows');
@@ -73,13 +72,6 @@ function mcpInfo(req) {
     clients: listClients(urls),
     pairing: oauth.snapshotPairing(),
     tunnel: tunnel.snapshot()
-  };
-}
-
-function operationApi(handler) {
-  return async (req, res) => {
-    try { res.json(await handler(req)); }
-    catch (error) { res.status(400).json({ ok: false, error: error.message }); }
   };
 }
 
@@ -285,11 +277,6 @@ router.post('/execution-control', (req, res) => {
     res.json({success:true, ...result});
   } catch(error) { res.status(error.status || 409).json({success:false,error:error.message,code:error.code}); }
 });
-router.post('/probe/links', operationApi(req => probeBridge.pair(req.body)));
-router.get('/probe/links', operationApi(() => probeBridge.list()));
-router.get('/probe/links/:id/reports/:tabId', operationApi(req => probeBridge.report(req.params.id, req.params.tabId)));
-router.delete('/probe/links/:id', operationApi(req => { probeBridge.drop(req.params.id); return {ok: true}; }));
-router.post('/probe/actions', operationApi(req => probeBridge.request(req.body)));
 router.get('/checkpoints', (req, res) => {
   if (!apiRequestQuery(req, res, [])) return;
   try { res.json(fileCheckpoints.list()); }

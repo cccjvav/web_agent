@@ -16,7 +16,7 @@ try {
     fs.copyFileSync(path.join(root, rel), dest);
   }
   const forbidden = ['webagent-core/agent-host/tests/tunnelCleanupAclFixture.cs', 'webagent-core/agent-host/tests/tunnelCleanupAclFixture.ps1', 'webagent-core/agent-host/tests/tunnelCleanupAcl.test.js', 'webagent-core/admin-host/data/admin-token.txt', 'webagent-core/agent-host/node_modules/private.json',
-    'arena-model-probe/recon/raw.json', 'arena-model-probe/src/main.js', 'arena-model-probe/arena_probe.py',
+    'arena-model-probe/recon/raw.json', 'webagent-core/probe-extension/extension.js',
     'webagent-core/agent-host/src/.webagent/tunnel-processes-v1/receipt.json',
     'workspace/.webagent/config.json', 'webagent-repro/server.js', '.config/code-server/config.yaml', 'manager/privacy.md'];
   for (const rel of forbidden) {
@@ -26,9 +26,11 @@ try {
   const output = path.join(tmp, 'payload');
   const manifest = stage(source, output);
   assert.ok(manifest.files.length > 50);
-  for (const guide of ['docs/README.md', 'docs/guides/README.md', 'docs/development/README.md', 'docs/development/架构导读.md', 'docs/guides/Bridge权限与工作模式.md', '探针入口与实际可用范围.md', '使用指南.md']) assert.ok(manifest.files.some(f => f.path === guide));
+  for (const guide of ['docs/README.md', 'docs/guides/README.md', 'docs/development/README.md', 'docs/development/架构导读.md', 'docs/guides/Bridge权限与工作模式.md', '使用指南.md']) assert.ok(manifest.files.some(f => f.path === guide));
   assert.ok(!manifest.files.some(f => f.path === '双向连接核对使用指南.md' || f.path.startsWith('review/archive/')));
-  assert.deepStrictEqual(manifest.files.filter(f => f.path.startsWith('arena-model-probe/')).map(f => f.path), ['arena-model-probe/webagent-connection.user.js']);
+  // Probes were removed from the project (F122); a stray leftover directory must never be packaged.
+  assert.ok(!manifest.files.some(f => /^(arena-model-probe|arena-trace-inspector|webagent-core\/probe-extension)\//.test(f.path)));
+  assert.ok(manifest.files.some(f => f.path === 'webagent-core/userscripts/webagent-connection.user.js'));
   assert.ok(manifest.files.some(f => f.path === 'installer/launch.js'));
   assert.ok(manifest.files.some(f => f.path === 'installer/appWindow.js', 'installer/preparation.js')), 'app bootstrap helper ships with the launcher';
   assert.ok(manifest.files.some(f => f.path === 'installer/tunnel-recovery.ps1'));

@@ -10,7 +10,7 @@
 
 - 用户持续要求完成此前待办、及时推送、逐句对照并整理/更新/退役文档。
 - 用户要求交接彻底并入原项目管理，不新增独立路线文件或平行交接入口。
-- 探测专项保持暂停，等待外部正式交接；原有失败、授权和用户验收边界不变，见[阶段8](s8-probe-integration.md)。
+- 探测专项保持暂停，等待外部正式交接；原有失败、授权和用户验收边界不变，见阶段8（F122已删除）。
 
 ## 设计
 
@@ -320,7 +320,7 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 
 外部来源：[phuang6666/arena-ai-probe，arena/01a0ab8a-arena-ai-probe分支](https://github.com/phuang6666/arena-ai-probe/tree/arena/01a0ab8a-arena-ai-probe)。用户报告其整合版面向工作台/code-server外接与VSCode配套插件；**本项目未拉取、审查、运行或验收该整合项目。**
 
-暂停新增入口、采集/分析/插件改造、迁移整合和探测专项复核；保留当前实现及既有回归，不删功能、不跳测试。交接后要求固定SHA/版本、构建与失败证据、来源许可、三宿主矩阵、扩展ID/命令/端口、认证/工作区绑定、采集所有权、审批/取消/幂等、数据迁移/并存/卸载方案。详细门槛见[阶段8](s8-probe-integration.md)。
+暂停新增入口、采集/分析/插件改造、迁移整合和探测专项复核；保留当前实现及既有回归，不删功能、不跳测试。交接后要求固定SHA/版本、构建与失败证据、来源许可、三宿主矩阵、扩展ID/命令/端口、认证/工作区绑定、采集所有权、审批/取消/幂等、数据迁移/并存/卸载方案。详细门槛见阶段8（F122已删除）。
 
 探测只作参考，持久登录与Chat API确切后台身份验证按约定后置。外部项目声称“完成”不自动改变本仓库权限和验收结果。
 
@@ -2419,3 +2419,15 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
    - `review/COMPREHENSIVE_AUDIT_2026-09-22.md`（指纹对应bd0d060）：之后只有F106改了一行，把指向已删除`auth/github.js`的链接换成“github.js（已于F106移除）”，修死链，发现内容本身未动。
    - `review/FULL_REVIEW_2026-09-29.md`（指纹对应45e576f，即后来撤回的那次提交）：之后F104重做至F109在处置列和第8节追加进度。逐条对照现行源码：detectPosixShell顺序（/bin/bash→/usr/bin/bash→合格SHELL→/bin/sh→/usr/bin/sh）、`activeChatCount`/`MAX_ACTIVE_CHAT = 2`/429与handleChatStream、envSummary、D-14格式合法的错误verifier作废授权码、D-15每来源10个空闲注册超出429、D-16 OAuth调用者只见自己的记录且工作区只给目录名、Monaco 0.52.2随仓库分发、探针撤回后主机仍直接require两个校验器——均与源码一致。
    两行索引补说明后刷新指纹。指纹脚本改为列失配时也报历史保留行（单独标注），不再漏看。
+
+### 第122组：按用户决定整体删除探针（会话01a0e8ea，2026-10-01）
+
+用户决定：探针已经探测不出后台模型、没有效果，从项目里全部删除（此前“探针暂停、未经授权不得改动”的约定随之结束，原阶段8结束）。
+
+**删除：** `arena-model-probe/`、`arena-trace-inspector/`、`webagent-core/probe-extension/`三个目录；主机端`utils/probeBridge.js`、`/api/probe/*`五条路由、`/probe-link`传输入口、`probe_links`/`probe_report`/`probe_request`三个MCP工具（对外工具39→36，含隐藏的send_command_input 40→37）及其权限/效果表项；operatorQueue里`probe-browser`任务与“浏览器探针”提交者分支；随之不再使用的`operationApi`包装；11个专项测试（probe*×10、traceIntegration）、workbench.browser里的探针HUD用例、CI windows-installer的两个Python打包步骤、ESLint排除与probeTransport专用配置、安装白名单中的探针文件；探针专项文档6份（根目录3份、阶段8、双探针时间线、早期接入归档）。
+
+**保留：** “连接核对”（`/api/connection-checks`、`confirm_connection`、工作台面板、扩展转发）是独立功能，不是探针；它的用户脚本从探针目录迁到`webagent-core/userscripts/webagent-connection.user.js`（内容未改），新建目录README，ESLint按浏览器脚本处理。`.gitignore`里对旧探针原始抓包的忽略规则保留，防止老checkout里的残留（可能含凭据）被误提交。`/providers/probe`（模型发现）和扩展`probeStatus`（主机健康检查）只是同名，与探针无关。
+
+**文档：** 现行说明（README、使用指南、docs/development与docs/guides相关页、CONTEXT、路由/受控工具/诊断/浏览器测试详解、扩展详解及其副本）改为现状；历史记录里提到探针的文字按历史保留，指向已删文件的链接改为“（F122已删除）”。审查索引删去对应15行（14份md+1份LICENSE）、新增用户脚本README一行；合计行原写210，按表格实际行数重算为208（之前删除的文档没从合计减掉），本组后为195。被改文档逐份复读改动处后刷新指纹，失配0。
+
+**验证：** 本地109/109测试文件通过（删去11个），lint通过；安装白名单测试改为断言探针目录不进安装包、用户脚本进安装包。

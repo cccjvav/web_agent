@@ -5,7 +5,7 @@ const store = require('../models/store');
 const { ProtocolError } = require('../mcp/errors');
 const state = { mode: 'idle', active: { chat: 0, bridge: 0 } };
 const keys = ['read', 'edit', 'execute', 'capture'];
-const READ = new Set(['workspace_info','get_capabilities','get_logs','get_task_status','recall','list_directory','find_files','search_files','read_files','git_status','git_diff','peers_list','board_list','load_skill','get_command_output','probe_links','probe_report','external_servers','operation_result','workflow_request']);
+const READ = new Set(['workspace_info','get_capabilities','get_logs','get_task_status','recall','list_directory','find_files','search_files','read_files','git_status','git_diff','peers_list','board_list','load_skill','get_command_output','external_servers','operation_result','workflow_request']);
 const EDIT = new Set(['remember','board_create','board_claim','board_update','apply_patch','write_file','delete_file','rename_file']);
 const CONTROL = new Set(['ping','confirm_connection','wait','report_progress','set_todos','cancel_command','workflow_preview']);
 function fail(code, message) { const error = new ProtocolError(code, message); error.status = 409; throw error; }

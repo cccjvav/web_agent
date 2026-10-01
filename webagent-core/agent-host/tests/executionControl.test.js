@@ -86,7 +86,7 @@ async function main() {
   assert.deepStrictEqual(resourceNames,names,'resource catalog must exactly match tools/list under the current ACL');
 
   assert.ok(capabilityNames.includes('read_files')); assert.ok(!capabilityNames.includes('write_file')); assert.ok(!capabilityNames.includes('run_command'),'get_capabilities must match the remote ACL-filtered catalog');
-  for(const name of ['write_file','move_file','execute_command','bash','external_request','probe_request']) {
+  for(const name of ['write_file','move_file','execute_command','bash','external_request']) {
     const r = await rpc('tools/call',{name,arguments:{filePath:'forbidden.txt',content:'no',command:'echo nope'},_meta:{mode:'code',permissions:full,remote:false}});
     assert.equal(r.body.result.isError,true,name); assert.match(r.body.result.content[0].text,/E_FORBIDDEN/,name);
   }

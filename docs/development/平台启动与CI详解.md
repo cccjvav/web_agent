@@ -75,21 +75,20 @@ Windows主机任务在全量之后，再用pwsh重复5轮ptyLifecycle、2轮stdi
 ### windows-installer
 
 1. Windows/Node22，npm ci --prefix安装开发依赖，check-docs检查Windows换行；运行installerPackaging与installer/package.js暂存载荷。
-2. 用runner Python执行probe-extension/package_vsix.py --verify、package_browser.py --verify，构建并检查独立Companion/Inspector包。含解包/hash/合成样本验证，不安装到用户VSCode、不连接真实账户。
-3. shell:powershell，ErrorActionPreference=Stop；Add-Type编译commandJob.cs与stdioBridge.cs，ParseFile检查stdioBridge.ps1。capture.cs/mark.cs引用System.Drawing编译；input.cs/input2.cs/keys.cs另编译；逐个ParseFile检查computer-use/win/*.ps1。零窗口输入必须返回ERR_*。这是编译/无效输入检查，不是真实截图、鼠标、键盘或DPI验收。
-4. shell:pwsh，寻找ProgramFiles(x86)的ISCC，不存在则choco安装Inno并检查退出。ErrorActionPreference=Continue让原生编译stderr可收集；ISCC /Qp后Tee-Object记录输出，立即保存LASTEXITCODE，失败取末12行生成annotation并退出失败。没有上传Release或实际交互安装/升级/卸载步骤。
+2. shell:powershell，ErrorActionPreference=Stop；Add-Type编译commandJob.cs与stdioBridge.cs，ParseFile检查stdioBridge.ps1。capture.cs/mark.cs引用System.Drawing编译；input.cs/input2.cs/keys.cs另编译；逐个ParseFile检查computer-use/win/*.ps1。零窗口输入必须返回ERR_*。这是编译/无效输入检查，不是真实截图、鼠标、键盘或DPI验收。
+3. shell:pwsh，寻找ProgramFiles(x86)的ISCC，不存在则choco安装Inno并检查退出。ErrorActionPreference=Continue让原生编译stderr可收集；ISCC /Qp后Tee-Object记录输出，立即保存LASTEXITCODE，失败取末12行生成annotation并退出失败。没有上传Release或实际交互安装/升级/卸载步骤。
 
 ### workbench-browser
 
 Ubuntu/Node22，job timeout-minutes=10；npm ci后执行`npx playwright install --with-deps chromium`，安装匹配浏览器及Linux系统依赖，再`npm run test:browser`。它不在每组Node矩阵中重复。
 
-真实Chromium运行工作台HTTP/MCP/磁盘交互；还包含独立探针HUD和文档页面。部分测试用route提供实际静态资源或拦截公网登记请求：真实DOM不等于真实公网服务。经典UI、文档导航通过也不代签桌面VSCode、code-server整个界面、真实手机或厂商账户。
+真实Chromium运行工作台HTTP/MCP/磁盘交互；还包含文档页面。部分测试用route提供实际静态资源或拦截公网登记请求：真实DOM不等于真实公网服务。经典UI、文档导航通过也不代签桌面VSCode、code-server整个界面、真实手机或厂商账户。
 
 ### 根eslint.config.js
 
 [eslint.config.js](../../eslint.config.js)是用户2026-09-28选定的最小接入（方案B）：只开找真错误的规则、全部为error、不开格式/风格规则、不重排现有代码。包装在agent-host的devDependencies里，配置用createRequire从`webagent-core/agent-host/package.json`解析@eslint/js与globals，所以在仓库根或agent-host里运行都能找到。规则取eslint:recommended，关掉判断风格而非对错的几条（no-empty、no-useless-escape、no-control-regex、no-prototype-builtins、no-extra-boolean-cast、no-useless-catch、no-regex-spaces、no-irregular-whitespace），以及ESLint 10新加入推荐集的no-useless-assignment（接入时19处全是“先给默认值、每条路径再覆盖”的防御写法，没有真错误）和preserve-caught-error（要求重抛带cause，属诊断偏好，且有些地方故意不传内部细节）；no-unused-vars不查参数与catch变量、允许`_`开头的变量；未使用的eslint-disable注释也报错。
 
-排除：webagent-repro（其JS不许改）、生成的docs-site/content.js、三个探针（arena-model-probe、arena-trace-inspector、webagent-core/probe-extension，由另一助手负责）、extensions-installed（extension的逐字节副本）、bin与各类运行数据目录。实际检查240个文件：agent-host（含测试）、extension、workbench、scripts、admin-host、installer、docs-site脚本、examples/calculator和配置本身。环境：默认Node CommonJS；workbench是浏览器ES模块，settings-panel.js另有webview提供的acquireVsCodeApi；docs-site/app.js是浏览器普通脚本；tests/workbench.browser.js的page.evaluate回调在浏览器里运行，给浏览器全局；tests/probeTransport.test.js自己在global上装window/document。
+排除：webagent-repro（其JS不许改）、生成的docs-site/content.js、extensions-installed（extension的逐字节副本）、bin与各类运行数据目录。实际检查240个文件：agent-host（含测试）、extension、workbench、scripts、admin-host、installer、docs-site脚本、examples/calculator和配置本身。环境：默认Node CommonJS；workbench是浏览器ES模块，settings-panel.js另有webview提供的acquireVsCodeApi；docs-site/app.js是浏览器普通脚本；tests/workbench.browser.js的page.evaluate回调在浏览器里运行，给浏览器全局；tests/probeTransport.test.js自己在global上装window/document。
 
 接入时的处置（第93组）：此前记录的4处no-unsafe-finally已不存在（对全部334个JS文件单跑该规则为0）；修掉的是docs-site/anchors.js里不带u标志的表情字符类（对仓库全部2938个标题新旧结果逐一相同）、未用的循环变量、未用的导入和测试里的三处残留变量，以及一条因参数不查而失效的eslint-disable注释。本地运行：`cd webagent-core/agent-host && npm run lint`。
 

@@ -10,7 +10,6 @@
 //    summary controls live in the web chat, which VS Code does not have.
 //  * /api/external/request: a local tool call on a registered server, not a settings action. External MCP
 //    registration itself (HTTP servers, stdio preview/start, removal) is relayed since D4 moved it here.
-//  * /api/probe/*: the probes are paused and owned elsewhere.
 // Requests leave the extension without Origin or Sec-Fetch-* headers and with Host 127.0.0.1, which is exactly
 // the local CLI path the host already accepts; the host's own checks are not widened.
 const ID = '[A-Za-z0-9_-]{1,128}';

@@ -219,16 +219,6 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [operatorQueueCapacity.test.js](operatorQueueCapacity.test.js) | 5 个函数/类节点 |
 | [patchEngine.test.js](patchEngine.test.js) | 20 个函数/类节点 |
 | [planRound.test.js](planRound.test.js) | 6 个函数/类节点 |
-| [probeAnalysis.test.js](probeAnalysis.test.js) | 6 个函数/类节点 |
-| [probeBridge.test.js](probeBridge.test.js) | 11 个函数/类节点 |
-| [probeCaptureLifecycle.test.js](probeCaptureLifecycle.test.js) | 30 个函数/类节点 |
-| [probeCompanion.test.js](probeCompanion.test.js) | 39 个函数/类节点 |
-| [probeHistory.test.js](probeHistory.test.js) | 7 个函数/类节点 |
-| [probeIntegration.test.js](probeIntegration.test.js) | 29 个函数/类节点 |
-| [probeLegacyImport.test.js](probeLegacyImport.test.js) | 4 个函数/类节点 |
-| [probePairLifecycle.test.js](probePairLifecycle.test.js) | 15 个函数/类节点 |
-| [probeQuestionGuard.test.js](probeQuestionGuard.test.js) | 31 个函数/类节点 |
-| [probeTransport.test.js](probeTransport.test.js) | 59 个函数/类节点 |
 | [processDiagnostics.test.js](processDiagnostics.test.js) | 35 个函数/类节点 |
 | [profile.test.js](profile.test.js) | 8 个函数/类节点 |
 | [providers.test.js](providers.test.js) | 30 个函数/类节点 |
@@ -254,7 +244,6 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [testRunner.test.js](testRunner.test.js) | 21 个函数/类节点 |
 | [textEncoding.test.js](textEncoding.test.js) | 10 个函数/类节点 |
 | [toolLabel.test.js](toolLabel.test.js) | 0 个函数/类节点 |
-| [traceIntegration.test.js](traceIntegration.test.js) | 4 个函数/类节点 |
 | [tunnel.test.js](tunnel.test.js) | 14 个函数/类节点 |
 | [tunnelCleanup.test.js](tunnelCleanup.test.js) | 30 个函数/类节点 |
 | [tunnelCleanupAcl.test.js](tunnelCleanupAcl.test.js) | 1 个函数/类节点 |
@@ -269,7 +258,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [tunnelRegistry.test.js](tunnelRegistry.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 28 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 375 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 370 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 528 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |

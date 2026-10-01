@@ -34,11 +34,11 @@ code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容�
 
 - 主机模式与所有者权限：[Bridge权限与工作模式](docs/guides/Bridge权限与工作模式.md)。Chat/Bridge互斥，同类型可并行；远端Read/Edit/Execute/Capture由本机保存，Execute不是OS沙箱。
 
-- 核心版本为 **0.7.2**。暂停专项的既有交付记录为Companion／统一浏览器 Inspector **0.5.2**；本次不重新核对外部整合项目或宣称其最新版已接入，以对应交付/包清单为准。
+- 核心版本为 **0.7.2**。
 - Bridge 统计和 Tasks 来自主机快照，刷新页面不清零。Tasks 是 Agent 显式上报的待办，不是工具日志，也不是完成质量证明。见[任务栏说明](docs/guides/Bridge任务栏说明.md)及[统计排查](docs/guides/Bridge统计与刷新排查.md)。
 - 文件补丁有 dryRun/hash 保护，经典工作台有草稿diff及单次保存回退，原生扩展有草稿diff/恢复；现增加任务前手动建立的跨文件内容检查点，任务后预览/确认恢复。都是有界、版本保护的文本恢复，不是全项目原子回滚或shell副作用撤销。见[使用指南](使用指南.md#跨文件内容检查点任务前备份任务后恢复)。
 - 出站外部 MCP 支持本机 HTTP、显式批准的 stdio，以及显式确认的公网 HTTPS（每次DNS/连接地址检查、拒绝跳转、工具逐次审批；真实供应商兼容性须另验）。这与公网客户端通过认证 Bridge **入站**连接本机是两回事。
-- 探测相关施工暂停，等待另一助手的外部整合项目正式交接；既有桌面探针保留，不提前宣称新工作台/code-server/VSCode整合已验收。见[暂停范围与交接门槛](manager/stages/s8-probe-integration.md)、[存量入口矩阵](探针入口与实际可用范围.md)。探针结果仍是参考，不鉴定真实后台模型。
+- 探针（arena-model-probe、Trace Inspector、Probe Companion）已于F122按用户决定从项目中整体删除：它们已无法探测出后台模型，没有实际效果。保留的“连接核对”只回传一次性挑战，不鉴定模型。
 - 第三方 Chat Plus／DeepSeek 扩展只是候选接入，不能保证当前版本、站点、认证或订阅条件；分别见[Chat Plus](docs/guides/网页ChatPlus使用指南.md)、[DeepSeek](docs/guides/网页DeepSeek使用指南.md)。不要把聊天栏里的一条 URL 当作已经建立 MCP 连接。
 
 剩余施工、候选设计与人工验收分开记录在[阶段 10](manager/stages/s10-upstream-adoption.md)和[上游采用队列](review/UPSTREAM_ADOPTION_MAP_2026-09-15.md)。本轮已完成项目200份.md与当前实现/状态的逐份时效处置，范围和结论见[文档时效清单](review/FULL_REVIEW_INDEX.md)，历史证据见[核对台账](review/SEMANTIC_REVIEW_2026-09-16.md)。不要求全仓源码逐行认证，也不把索引生成或CI绿灯当作全部文档已核对。
@@ -74,7 +74,6 @@ code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容�
 | [manager/](manager/CONTEXT.md) | 当前状态→项目约定→阶段计划；批次证据留在阶段，不在索引反复堆积 |
 | [review/](review/README.md) | 现行审查、人工验收与证据；[archive/](review/archive/README.md)存历史报告和上传参考原件，不能当当前指令 |
 | `examples/calculator/`、`webagent-repro/` | 可选示例、冻结原型；均非默认启动目标，不因整理删改 |
-| `arena-model-probe/`、`arena-trace-inspector/`、`webagent-core/probe-extension/` | 暂停专项，路径和原分工保留，不借整理搬迁或恢复施工 |
 | `node_modules/`、`bin/code-server-runtime/`、`installer/output/`及本地状态 | 依赖/下载运行时/产物/用户数据依现有忽略规则管理；本轮不清理、不读取秘密正文 |
 
 新增材料优先进入已有职责目录；历史归档不等于删除授权或故障。需清理磁盘空间时另行确认具体产物，不使用全仓`git clean`或删除用户状态。

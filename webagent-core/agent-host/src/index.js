@@ -51,7 +51,6 @@ function applyCommon(app, { mcp = false } = {}) {
     next();
   });
   app.use(securityHeaders);
-  app.use('/probe-link', require('./utils/probeBridge').transport());
   // Reject nonlocal/cross-site API and disallowed-origin/unauthenticated MCP before body parsing.
   app.use('/api', rejectUnlessLocalControl, rejectCrossSiteApi);
   if (mcp) {

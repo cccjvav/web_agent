@@ -34,7 +34,6 @@ function submitterOf(options, caller) {
     const shown = Array.from(client).slice(0, 80).join('');
     return { type: 'remote', label: `远程会话（${shown || '未报客户端名'}，${caller.slice(-6)}）` };
   }
-  if (caller.startsWith('browser:')) return { type: 'browser', label: '浏览器探针' };
   if (options.operator) return { type: 'operator', label: '你自己' };
   return { type: 'local-chat', label: '本机Chat' };
 }
@@ -97,9 +96,9 @@ async function approve(id, confirmed) {
   const timer = setTimeout(() => job.controller.abort(), 60000);
   let execution, handlerDispatched = false;
   try {
-    execution = beginCall(job.kind === 'workflow' ? 'approved_workflow' : job.kind === 'probe-browser' ? 'approved_browser_operation' : 'approved_external_call', { ...job.options, taskId: job.taskId });
+    execution = beginCall(job.kind === 'workflow' ? 'approved_workflow' : 'approved_external_call', { ...job.options, taskId: job.taskId });
     execution.operationId = job.id;
-    const output = await runWithSignal(job.controller.signal, () => withTask({ source: job.kind === 'probe-browser' ? 'BrowserProbe' : 'Workflow', taskId: job.taskId }, () => {
+    const output = await runWithSignal(job.controller.signal, () => withTask({ source: 'Workflow', taskId: job.taskId }, () => {
       checkCancelled();
       if (job.options.remote) control.assertAllowed(job.kind === 'workflow' ? 'workflow_request' : 'external_request');
       handlerDispatched = true;

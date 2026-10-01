@@ -93,11 +93,10 @@ assert.ok(main.innerHTML.includes('#/files/fixture/' + encodeURIComponent(id)));
 assert.ok(scrolled, 'Encoded Chinese anchor resolves to the real section');
 console.log('documentation editorial contracts, table/fence checks and local TOC fixture passed');
 
-// User-directed pause is a management contract, not external project certification.
-const probeStage = read('manager/stages/s8-probe-integration.md');
-assert.ok(probeStage.includes('当前状态：暂停') && probeStage.includes('phuang6666/arena-ai-probe/tree/arena/01a0ab8a-arena-ai-probe'));
-for (const doc of ['manager/CONTEXT.md', 'README.md', 'review/SEMANTIC_REVIEW_2026-09-16.md']) {
-  assert.ok(read(doc).includes('暂停') && read(doc).includes('交接'), doc + ': probe handoff pause remains explicit');
+// F122: the user removed the probes. Current entry docs must say so, not keep promising a paused handoff.
+for (const doc of ['manager/CONTEXT.md', 'README.md']) {
+  assert.ok(read(doc).includes('F122') && read(doc).includes('删除'), doc + ': probe removal is stated');
+  assert.ok(!/探测相关施工暂停|探针原分工继续暂停/.test(read(doc)), doc + ': stale probe pause wording removed');
 }
 const usageGuide = read('使用指南.md');
 for (const obsolete of ['MCP 走当前页面源', 'MCP 仍走当前页面源', '没 Key 时是本机草案/拼接', '为什么 GitHub 根上没有', 'C:\\Windows\\System32', '浏览器界��']) {
