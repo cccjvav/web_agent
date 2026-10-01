@@ -395,7 +395,7 @@
 
 ## installer/webagent.iss
 
-[目录说明](../installer/README.md) · SHA-256 `ad693f0f7174a1f87458f4cd2deb5f57dae12cb54672f58617ffc67c9d99a472`
+[目录说明](../installer/README.md) · SHA-256 `47c3c4102301b1f99187f55ddf4f1b1653a41c98fea8c0c153d4ba5a00b0d623`
 
 - 文件级登记；没有可报告的JS函数/类节点。
 

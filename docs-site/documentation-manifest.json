@@ -2334,7 +2334,7 @@
     {
       "path": "installer/webagent.iss",
       "doc": "installer/README.md",
-      "sha256": "ad693f0f7174a1f87458f4cd2deb5f57dae12cb54672f58617ffc67c9d99a472",
+      "sha256": "47c3c4102301b1f99187f55ddf4f1b1653a41c98fea8c0c153d4ba5a00b0d623",
       "lineCount": 160,
       "structure": "file-only",
       "semanticReview": "not-certified",

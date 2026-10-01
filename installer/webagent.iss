@@ -107,7 +107,7 @@ function InitializeSetup(): Boolean;
 begin
   Result := True;
   if not NodePresent() then
-    MsgBox('未检测到 Node.js（>=18）。安装会继续，但首次启动前请先装 Node LTS，或运行安装目录里的 check-env.cmd。', mbInformation, MB_OK);
+    MsgBox('未检测到 Node.js（>=22）。安装会继续，但首次启动前请先装 Node.js 22 或更高版本的 LTS，或运行安装目录里的 check-env.cmd。', mbInformation, MB_OK);
 end;
 
 // PATH 幂等：覆盖安装前先把本目录的旧条目摘掉，避免 {olddata};{app} 叠加出重复段
