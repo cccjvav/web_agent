@@ -2366,3 +2366,13 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **测试：** codeServerLifecycle新增真实回环HTTP场景（旧主机只回`{ok:true}`→ETIMEDOUT；别的ID/无ID重试到正确ID才就绪），假传输自动回包改为回显spawn拿到的launchId；httpSmoke核对`/health`回显。
 
 **限制：** launchId不是凭据，本机其他进程读到环境变量也能回显；它只解决“残留主机误当就绪”，不做身份认证。
+
+### 第117组：交接第9项——ptyHost运行中node-pty错误（会话01a0e8ea，2026-10-01）
+
+**核实：** 读了node-pty上游`src/unixTerminal.ts`与`src/windowsTerminal.ts`：两者都给内部socket挂error处理，EAGAIN/EIO静默，其余错误在`this.listeners('error').length < 2`时`throw err`。ptyHost的spawnNodePty只注册了onData/onExit，没有error监听，所以运行中出现非EIO的读错误（如ENXIO、EBADF）会在socket事件里抛出，成为扩展宿主的未捕获异常；该任务也只能等超时。写路径（CustomWriteStream）出错只console.error，不抛；ptyHost所有kill都不带信号（Windows带信号会在延迟执行里抛），resize未用。
+
+**修复：** spawn后注册error监听：记第一条原因、kill一次；onExit最终回报status:'error'、ok:false、outputCaptured:false，原因写在`message`。最初写成`error`字段，核对主机路由时发现PTY回报按PTY_REPORT_FIELDS白名单校验，多字段会让整条最终回报被400拒绝，已改用白名单内的message。扩展副本同步。
+
+**测试：** ptyLifecycle用EventEmitter复刻node-pty的重抛语义，连发两次ENXIO：不抛、只kill一次、最终回报如上。用修复前的ptyHost运行该段失败（“read ENXIO”）。
+
+**限制：** 没有在真实VS Code里制造pty读错误；依据是上游源码与复刻语义的单元测试。

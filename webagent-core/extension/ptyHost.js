@@ -301,6 +301,15 @@ class PtyHost {
       env: { ...scrubEnv(process.env), TERM: 'xterm-256color', FORCE_COLOR: '1', CI: 'true' }
     });
     } catch (err) { cleanup(); writeEmitter.dispose(); closeEmitter.dispose(); throw err; }
+    // F117: node-pty re-throws pty read errors other than EAGAIN/EIO unless a second 'error' listener exists
+    // (unixTerminal/windowsTerminal: `if (this.listeners('error').length < 2) throw err`). That throw happens
+    // inside a socket event, uncaught in the extension host. Record it, stop the process, report failure.
+    let ptyError = null;
+    if (typeof proc.on === 'function') proc.on('error', (err) => {
+      if (ptyError) return;
+      ptyError = String((err && (err.code || err.message)) || err || 'pty error').slice(0, 200);
+      try { proc.kill(); } catch (_) {}
+    });
     proc.onData((d) => {
       if (ended) return;
       const chunk = String(d);
@@ -339,11 +348,13 @@ class PtyHost {
       writeEmitter.dispose(); closeEmitter.dispose();
       this.postJob(job.jobId, {
         state: 'done',
-        status: timedOut ? 'timeout' : (exitCode === 0 ? 'done' : 'error'),
-        ok: !timedOut && exitCode === 0,
+        status: timedOut ? 'timeout' : (exitCode === 0 && !ptyError ? 'done' : 'error'),
+        ok: !timedOut && !ptyError && exitCode === 0,
         exitCode,
         stdout: stripAnsi(buf),
-        outputCaptured: true
+        // After a pty read error the tail may be incomplete; say so instead of presenting it as whole.
+        outputCaptured: !ptyError,
+        ...(ptyError ? { message: `终端读取出错（${ptyError}），已结束进程；输出可能不完整` } : {})
       }).catch(() => {});
     });
   }

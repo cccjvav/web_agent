@@ -177,6 +177,27 @@ config.workspaceRoot = tmp;
   streamHost.dispose();
   if (scriptPath) assert.ok(!fs.existsSync(path.dirname(scriptPath)), 'dispose cleans up without an onExit callback');
 
+  // F117: mimic node-pty's socket error handler: non-EAGAIN/EIO errors are re-thrown unless a second
+  // 'error' listener exists. Without ptyHost's listener this emit throws (uncaught in the extension host).
+  const { EventEmitter } = require('events');
+  let errExit, errKills = 0; posted.length = 0;
+  const errPty = { spawn() {
+    const socket = new EventEmitter();
+    socket.on('error', err => { if (/EAGAIN|EIO/.test(err.code || '')) return; if (socket.listeners('error').length < 2) throw err; });
+    return { onData() {}, onExit(fn) { errExit = fn; }, on: (event, fn) => socket.on(event, fn), kill() { errKills++; }, write() {}, socket };
+  } };
+  streamHost.spawnNodePty(errPty, { jobId: 'pty-error', execId: 'pty-error', command: 'x' }, tmp);
+  const errSession = streamHost.sessions.get('pty-error');
+  assert.doesNotThrow(() => errSession.proc.socket.emit('error', Object.assign(new Error('read ENXIO'), { code: 'ENXIO' })));
+  assert.doesNotThrow(() => errSession.proc.socket.emit('error', Object.assign(new Error('again'), { code: 'ENXIO' })));
+  assert.strictEqual(errKills, 1, 'a pty read error stops the process once');
+  await errExit({ exitCode: 0 });
+  const errDone = posted.at(-1);
+  assert.strictEqual(errDone.state, 'done');
+  assert.strictEqual(errDone.status, 'error'); assert.strictEqual(errDone.ok, false); assert.strictEqual(errDone.outputCaptured, false);
+  assert.ok(errDone.message.includes('ENXIO') && !('error' in errDone), 'reason travels in the accepted message field');
+  streamHost.dispose();
+
   process.env.WEBAGENT_DEBUG_PROCESS = '1';
   console.log('PTY fixture: approval and shell-integration checks completed');
   // Real subprocess cancellation is connected to the request scope.

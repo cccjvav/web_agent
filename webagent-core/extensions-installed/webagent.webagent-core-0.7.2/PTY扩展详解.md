@@ -54,6 +54,8 @@ spawnSpec，创建写/关VS Code EventEmitter，序号命名终端，nodePty.spa
 
 timeout回调设timedOut并kill；onExit通过cleanup清timer/临时目录，发关闭事件、删session，等待在途progress并释放emitter，再报告真实exitCode、完整尾部输出、outputCaptured=true。超时不因code0变成功。stdout是PTY合并输出，不承诺独立stderr；事件发送/网络回报失败不会恢复已结束进程。
 
+**运行中的pty错误（第117组）**：node-pty在Unix与Windows上都给内部socket挂了error处理，EAGAIN/EIO（子进程正常关闭时的读错误）静默，其余错误在`listeners('error').length < 2`时重新抛出——这发生在socket事件里，扩展宿主中无人能接，会成为未捕获异常。spawnNodePty因此在spawn后（proc有on方法时）注册一个error监听：只记第一条（错误码或消息，限200字符），kill一次进程；onExit照常走，但最终报告status:'error'、ok:false、outputCaptured:false，并在`message`里写“终端读取出错（码），已结束进程；输出可能不完整”。用message而不是error字段，是因为主机的PTY回报路由按PTY_REPORT_FIELDS白名单校验，多一个字段整条回报会被400拒绝。node-pty写错误只console.error不抛，kill均不带信号（Windows带信号会在延迟执行里抛出），resize未使用。
+
 ### runShellIntegration(si,job,terminal)
 
 缺onDidEndTerminalShellExecution就拒绝且不执行。ended Promise注册退出事件，只接受同一个execution；timer超时dispose终端并resolve undefined。try内executeCommand，异步reading要求execution.read并for-await累计输出/await progress回报。

@@ -109,3 +109,5 @@ bridgeTunnel通过真实HTTP检验stop部分/错主机/错目录绑定409，stop
 bridgeTunnel先以真实HTTP重现start接受未知字段、对象provider、跨提供商Token和超预算Token后仍写配置/停启；另重现stop、reset-secret及无参身份路由把未知包装当合法操作。修后这些请求统一在副作用前400/E_BAD_BRIDGE_REQUEST，固定错误不含fixture私密标记；配置JSON、停启计数及GitHub触网替身计数保持不变。Named/ngrok只接受各自domain/Token，Token与绑定字段有字节预算，完全空体的旧stop/reset-secret仍单独保留兼容。
 
 同一夹具向历史Bridge已知槽位注入带authorization标记的对象/数组：GET status只能返回固定字符串/布尔投影且不含标记，这些退役账户键（F106）在读取时被丢弃、status不再有bridgeAccount；登录/身份6条旧路由应404；再把当前Named provider保存Token置为超预算字符串，要求空start在配置改写或停启前400，证明旧配置不能绕过生效字段预算。随后恢复原Bridge快照再跑全部既有Quick/Named/ngrok、代次、CAS与写前/后失败断言，避免负例污染成功链。这里证明路由次序、响应投影和零调用替身，不证明真实GitHub、隧道厂商或磁盘被同进程外篡改时的完整恢复。
+
+第117组：ptyLifecycle用EventEmitter仿node-pty的socket错误处理（非EAGAIN/EIO且error监听不足2个就重新抛出），对spawnNodePty的会话连发两次ENXIO：不得抛出、只kill一次；随后onExit(0)的最终回报须为status:'error'、ok:false、outputCaptured:false，原因在message字段（不得出现error字段）。用修复前的ptyHost运行该段会因“read ENXIO”未捕获而失败。

@@ -36682,8 +36682,8 @@
     {
       "path": "webagent-core/agent-host/tests/ptyLifecycle.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "91b663664ae70721b777df209cdddcbe54a6330c339dacadc9c3ccc9ed285485",
-      "lineCount": 235,
+      "sha256": "59286e25671487c0de88204cf96d7badbd557e45558fb4cea3111c0d9896261a",
+      "lineCount": 256,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -36692,7 +36692,7 @@
           "name": "anonymous@15:1",
           "kind": "ArrowFunctionExpression",
           "startLine": 15,
-          "endLine": 232,
+          "endLine": 253,
           "parameters": []
         },
         {
@@ -37199,103 +37199,182 @@
           ]
         },
         {
+          "id": "anonymous@15:1/spawn@184:24",
+          "name": "spawn",
+          "kind": "FunctionExpression",
+          "startLine": 184,
+          "endLine": 188,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@15:1/spawn/anonymous@186:23",
+          "name": "anonymous@186:23",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 186,
+          "endLine": 186,
+          "parameters": [
+            "err"
+          ]
+        },
+        {
+          "id": "anonymous@15:1/spawn/onData@187:19",
+          "name": "onData",
+          "kind": "FunctionExpression",
+          "startLine": 187,
+          "endLine": 187,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@15:1/spawn/onExit@187:32",
+          "name": "onExit",
+          "kind": "FunctionExpression",
+          "startLine": 187,
+          "endLine": 187,
+          "parameters": [
+            "fn"
+          ]
+        },
+        {
+          "id": "anonymous@15:1/spawn/on",
+          "name": "on",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 187,
+          "endLine": 187,
+          "parameters": [
+            "event",
+            "fn"
+          ]
+        },
+        {
+          "id": "anonymous@15:1/spawn/kill@187:101",
+          "name": "kill",
+          "kind": "FunctionExpression",
+          "startLine": 187,
+          "endLine": 187,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@15:1/spawn/write@187:126",
+          "name": "write",
+          "kind": "FunctionExpression",
+          "startLine": 187,
+          "endLine": 187,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@15:1/anonymous@191:22",
+          "name": "anonymous@191:22",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 191,
+          "endLine": 191,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@15:1/anonymous@192:22",
+          "name": "anonymous@192:22",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 192,
+          "endLine": 192,
+          "parameters": []
+        },
+        {
           "id": "anonymous@15:1/onOutput",
           "name": "onOutput",
           "kind": "ArrowFunctionExpression",
-          "startLine": 188,
-          "endLine": 193,
+          "startLine": 209,
+          "endLine": 214,
           "parameters": [
             "event"
           ]
         },
         {
-          "id": "anonymous@15:1/anonymous@195:55",
-          "name": "anonymous@195:55",
+          "id": "anonymous@15:1/anonymous@216:55",
+          "name": "anonymous@216:55",
           "kind": "ArrowFunctionExpression",
-          "startLine": 195,
-          "endLine": 195,
+          "startLine": 216,
+          "endLine": 216,
           "parameters": []
         },
         {
-          "id": "anonymous@15:1/anonymous@196:29",
-          "name": "anonymous@196:29",
+          "id": "anonymous@15:1/anonymous@217:29",
+          "name": "anonymous@217:29",
           "kind": "ArrowFunctionExpression",
-          "startLine": 196,
-          "endLine": 196,
+          "startLine": 217,
+          "endLine": 217,
           "parameters": []
         },
         {
-          "id": "anonymous@15:1/anonymous@218:19",
-          "name": "anonymous@218:19",
+          "id": "anonymous@15:1/anonymous@239:19",
+          "name": "anonymous@239:19",
           "kind": "ArrowFunctionExpression",
-          "startLine": 218,
-          "endLine": 221,
+          "startLine": 239,
+          "endLine": 242,
           "parameters": [
             "_",
             "options"
           ]
         },
         {
-          "id": "anonymous@15:1/anonymous@218:19/anonymous@218:47",
-          "name": "anonymous@218:47",
+          "id": "anonymous@15:1/anonymous@239:19/anonymous@239:47",
+          "name": "anonymous@239:47",
           "kind": "ArrowFunctionExpression",
-          "startLine": 218,
-          "endLine": 221,
+          "startLine": 239,
+          "endLine": 242,
           "parameters": [
             "resolve",
             "reject"
           ]
         },
         {
-          "id": "anonymous@15:1/anonymous@218:19/anonymous@218:47/anonymous@220:47",
-          "name": "anonymous@220:47",
+          "id": "anonymous@15:1/anonymous@239:19/anonymous@239:47/anonymous@241:47",
+          "name": "anonymous@241:47",
           "kind": "ArrowFunctionExpression",
-          "startLine": 220,
-          "endLine": 220,
+          "startLine": 241,
+          "endLine": 241,
           "parameters": []
         },
         {
-          "id": "anonymous@15:1/anonymous@223:28",
-          "name": "anonymous@223:28",
+          "id": "anonymous@15:1/anonymous@244:28",
+          "name": "anonymous@244:28",
           "kind": "ArrowFunctionExpression",
-          "startLine": 223,
-          "endLine": 223,
+          "startLine": 244,
+          "endLine": 244,
           "parameters": []
         },
         {
-          "id": "anonymous@15:1/anonymous@225:27",
-          "name": "anonymous@225:27",
+          "id": "anonymous@15:1/anonymous@246:27",
+          "name": "anonymous@246:27",
           "kind": "ArrowFunctionExpression",
-          "startLine": 225,
-          "endLine": 225,
+          "startLine": 246,
+          "endLine": 246,
           "parameters": []
         },
         {
-          "id": "anonymous@15:1/anonymous@225:77",
-          "name": "anonymous@225:77",
+          "id": "anonymous@15:1/anonymous@246:77",
+          "name": "anonymous@246:77",
           "kind": "ArrowFunctionExpression",
-          "startLine": 225,
-          "endLine": 225,
+          "startLine": 246,
+          "endLine": 246,
           "parameters": [
             "error"
           ]
         },
         {
-          "id": "anonymous@232:11",
-          "name": "anonymous@232:11",
+          "id": "anonymous@253:11",
+          "name": "anonymous@253:11",
           "kind": "ArrowFunctionExpression",
-          "startLine": 232,
-          "endLine": 232,
+          "startLine": 253,
+          "endLine": 253,
           "parameters": [
             "err"
           ]
         },
         {
-          "id": "anonymous@232:73",
-          "name": "anonymous@232:73",
+          "id": "anonymous@253:73",
+          "name": "anonymous@253:73",
           "kind": "ArrowFunctionExpression",
-          "startLine": 232,
-          "endLine": 234,
+          "startLine": 253,
+          "endLine": 255,
           "parameters": []
         }
       ]
@@ -55802,8 +55881,8 @@
     {
       "path": "webagent-core/extension/ptyHost.js",
       "doc": "webagent-core/extension/README.md",
-      "sha256": "d62d4e788bbf1adf784e42e19ec1f271ba1220f20f03ae455c19113688831cee",
-      "lineCount": 466,
+      "sha256": "1ed080b3b8be9a28e9c8aaa51d86212f881904904d040d0728e3b15ce1cf8917",
+      "lineCount": 477,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -55909,7 +55988,7 @@
           "name": "PtyHost",
           "kind": "ClassDeclaration",
           "startLine": 98,
-          "endLine": 452,
+          "endLine": 463,
           "parameters": []
         },
         {
@@ -56113,7 +56192,7 @@
           "name": "spawnNodePty",
           "kind": "FunctionExpression",
           "startLine": 275,
-          "endLine": 349,
+          "endLine": 360,
           "parameters": [
             "nodePty",
             "job",
@@ -56153,11 +56232,21 @@
           "parameters": []
         },
         {
-          "id": "PtyHost/spawnNodePty/anonymous@304:16",
-          "name": "anonymous@304:16",
+          "id": "PtyHost/spawnNodePty/anonymous@308:56",
+          "name": "anonymous@308:56",
           "kind": "ArrowFunctionExpression",
-          "startLine": 304,
-          "endLine": 311,
+          "startLine": 308,
+          "endLine": 312,
+          "parameters": [
+            "err"
+          ]
+        },
+        {
+          "id": "PtyHost/spawnNodePty/anonymous@313:16",
+          "name": "anonymous@313:16",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 313,
+          "endLine": 320,
           "parameters": [
             "d"
           ]
@@ -56166,24 +56255,24 @@
           "id": "PtyHost/spawnNodePty/open",
           "name": "open",
           "kind": "ArrowFunctionExpression",
-          "startLine": 315,
-          "endLine": 315,
+          "startLine": 324,
+          "endLine": 324,
           "parameters": []
         },
         {
           "id": "PtyHost/spawnNodePty/close",
           "name": "close",
           "kind": "ArrowFunctionExpression",
-          "startLine": 316,
-          "endLine": 318,
+          "startLine": 325,
+          "endLine": 327,
           "parameters": []
         },
         {
           "id": "PtyHost/spawnNodePty/handleInput",
           "name": "handleInput",
           "kind": "ArrowFunctionExpression",
-          "startLine": 319,
-          "endLine": 321,
+          "startLine": 328,
+          "endLine": 330,
           "parameters": [
             "data"
           ]
@@ -56192,42 +56281,42 @@
           "id": "PtyHost/spawnNodePty/buf",
           "name": "buf",
           "kind": "ArrowFunctionExpression",
-          "startLine": 326,
-          "endLine": 326,
+          "startLine": 335,
+          "endLine": 335,
           "parameters": []
         },
         {
-          "id": "PtyHost/spawnNodePty/anonymous@330:24",
-          "name": "anonymous@330:24",
+          "id": "PtyHost/spawnNodePty/anonymous@339:24",
+          "name": "anonymous@339:24",
           "kind": "ArrowFunctionExpression",
-          "startLine": 330,
-          "endLine": 333,
+          "startLine": 339,
+          "endLine": 342,
           "parameters": []
         },
         {
-          "id": "PtyHost/spawnNodePty/anonymous@334:16",
-          "name": "anonymous@334:16",
+          "id": "PtyHost/spawnNodePty/anonymous@343:16",
+          "name": "anonymous@343:16",
           "kind": "ArrowFunctionExpression",
-          "startLine": 334,
-          "endLine": 348,
+          "startLine": 343,
+          "endLine": 359,
           "parameters": [
             "{ exitCode }"
           ]
         },
         {
-          "id": "PtyHost/spawnNodePty/anonymous@334:16/anonymous@347:15",
-          "name": "anonymous@347:15",
+          "id": "PtyHost/spawnNodePty/anonymous@343:16/anonymous@358:15",
+          "name": "anonymous@358:15",
           "kind": "ArrowFunctionExpression",
-          "startLine": 347,
-          "endLine": 347,
+          "startLine": 358,
+          "endLine": 358,
           "parameters": []
         },
         {
           "id": "PtyHost/runShellIntegration",
           "name": "runShellIntegration",
           "kind": "FunctionExpression",
-          "startLine": 351,
-          "endLine": 377,
+          "startLine": 362,
+          "endLine": 388,
           "parameters": [
             "si",
             "job",
@@ -56235,65 +56324,65 @@
           ]
         },
         {
-          "id": "PtyHost/runShellIntegration/anonymous@354:30",
-          "name": "anonymous@354:30",
+          "id": "PtyHost/runShellIntegration/anonymous@365:30",
+          "name": "anonymous@365:30",
           "kind": "ArrowFunctionExpression",
-          "startLine": 354,
-          "endLine": 359,
+          "startLine": 365,
+          "endLine": 370,
           "parameters": [
             "resolve"
           ]
         },
         {
-          "id": "PtyHost/runShellIntegration/anonymous@354:30/anonymous@355:62",
-          "name": "anonymous@355:62",
+          "id": "PtyHost/runShellIntegration/anonymous@365:30/anonymous@366:62",
+          "name": "anonymous@366:62",
           "kind": "ArrowFunctionExpression",
-          "startLine": 355,
-          "endLine": 357,
+          "startLine": 366,
+          "endLine": 368,
           "parameters": [
             "event"
           ]
         },
         {
-          "id": "PtyHost/runShellIntegration/anonymous@354:30/anonymous@358:25",
-          "name": "anonymous@358:25",
+          "id": "PtyHost/runShellIntegration/anonymous@365:30/anonymous@369:25",
+          "name": "anonymous@369:25",
           "kind": "ArrowFunctionExpression",
-          "startLine": 358,
-          "endLine": 358,
+          "startLine": 369,
+          "endLine": 369,
           "parameters": []
         },
         {
-          "id": "PtyHost/runShellIntegration/anonymous@362:23",
-          "name": "anonymous@362:23",
+          "id": "PtyHost/runShellIntegration/anonymous@373:23",
+          "name": "anonymous@373:23",
           "kind": "ArrowFunctionExpression",
-          "startLine": 362,
-          "endLine": 368,
+          "startLine": 373,
+          "endLine": 379,
           "parameters": []
         },
         {
-          "id": "PtyHost/runShellIntegration/anonymous@371:41",
-          "name": "anonymous@371:41",
+          "id": "PtyHost/runShellIntegration/anonymous@382:41",
+          "name": "anonymous@382:41",
           "kind": "ArrowFunctionExpression",
-          "startLine": 371,
-          "endLine": 371,
+          "startLine": 382,
+          "endLine": 382,
           "parameters": []
         },
         {
-          "id": "PtyHost/runShellIntegration/anonymous@371:79",
-          "name": "anonymous@371:79",
+          "id": "PtyHost/runShellIntegration/anonymous@382:79",
+          "name": "anonymous@382:79",
           "kind": "ArrowFunctionExpression",
-          "startLine": 371,
-          "endLine": 371,
+          "startLine": 382,
+          "endLine": 382,
           "parameters": [
             "err"
           ]
         },
         {
-          "id": "PtyHost/runShellIntegration/anonymous@373:53",
-          "name": "anonymous@373:53",
+          "id": "PtyHost/runShellIntegration/anonymous@384:53",
+          "name": "anonymous@384:53",
           "kind": "ArrowFunctionExpression",
-          "startLine": 373,
-          "endLine": 373,
+          "startLine": 384,
+          "endLine": 384,
           "parameters": [
             "resolve"
           ]
@@ -56302,8 +56391,8 @@
           "id": "PtyHost/spawnFallback",
           "name": "spawnFallback",
           "kind": "FunctionExpression",
-          "startLine": 379,
-          "endLine": 392,
+          "startLine": 390,
+          "endLine": 403,
           "parameters": [
             "job",
             "cwd"
@@ -56313,16 +56402,16 @@
           "id": "PtyHost/spawnFallback/kill",
           "name": "kill",
           "kind": "ArrowFunctionExpression",
-          "startLine": 382,
-          "endLine": 382,
+          "startLine": 393,
+          "endLine": 393,
           "parameters": []
         },
         {
           "id": "PtyHost/handleInput",
           "name": "handleInput",
           "kind": "FunctionExpression",
-          "startLine": 394,
-          "endLine": 419,
+          "startLine": 405,
+          "endLine": 430,
           "parameters": [
             "job"
           ]
@@ -56331,26 +56420,26 @@
           "id": "PtyHost/handleIncoming",
           "name": "handleIncoming",
           "kind": "FunctionExpression",
-          "startLine": 421,
-          "endLine": 439,
+          "startLine": 432,
+          "endLine": 450,
           "parameters": [
             "job"
           ]
         },
         {
-          "id": "PtyHost/handleIncoming/anonymous@438:30",
-          "name": "anonymous@438:30",
+          "id": "PtyHost/handleIncoming/anonymous@449:30",
+          "name": "anonymous@449:30",
           "kind": "ArrowFunctionExpression",
-          "startLine": 438,
-          "endLine": 438,
+          "startLine": 449,
+          "endLine": 449,
           "parameters": []
         },
         {
           "id": "PtyHost/handleCancel",
           "name": "handleCancel",
           "kind": "FunctionExpression",
-          "startLine": 441,
-          "endLine": 451,
+          "startLine": 452,
+          "endLine": 462,
           "parameters": [
             "job"
           ]
@@ -56359,8 +56448,8 @@
           "id": "startPtyHost",
           "name": "startPtyHost",
           "kind": "FunctionDeclaration",
-          "startLine": 454,
-          "endLine": 463,
+          "startLine": 465,
+          "endLine": 474,
           "parameters": [
             "context",
             "deps"

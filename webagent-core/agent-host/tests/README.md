@@ -233,7 +233,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [profile.test.js](profile.test.js) | 8 个函数/类节点 |
 | [providers.test.js](providers.test.js) | 30 个函数/类节点 |
 | [ptyJobs.test.js](ptyJobs.test.js) | 12 个函数/类节点 |
-| [ptyLifecycle.test.js](ptyLifecycle.test.js) | 69 个函数/类节点 |
+| [ptyLifecycle.test.js](ptyLifecycle.test.js) | 78 个函数/类节点 |
 | [publicHttps.test.js](publicHttps.test.js) | 19 个函数/类节点 |
 | [requestLifecycle.test.js](requestLifecycle.test.js) | 13 个函数/类节点 |
 | [resourceBudget.test.js](resourceBudget.test.js) | 17 个函数/类节点 |
@@ -299,5 +299,7 @@ requestLifecycle.test.js：按会话/凭据和带类型RPC ID隔离取消；重�
 第115组：workbench.browser补“人保存后模型带旧hash写入被拒”且Bridge日志显示中文原因；apiFiles锁定旧expectedHash优先报E_STALE_FILE。
 
 第116组：codeServerLifecycle加“端口上的旧主机回200但不带本次launchId不算就绪”真实HTTP场景；httpSmoke核对/health回显launchId。
+
+第117组：ptyLifecycle仿node-pty错误重抛语义，验证运行中pty读错误被接住、进程结束并如实报告输出不完整。
 
 nativeChatStream.test.js：真实回环HTTP与VM原生扩展，验证NDJSON失败/终态/预算/取消和两个消费者的历史；入口及helper main详见工作区与命令安全测试详解。

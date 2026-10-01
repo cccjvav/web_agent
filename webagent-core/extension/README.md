@@ -66,7 +66,7 @@ F54第七批：requestJson最多接收8MiB响应，15秒总deadline与空闲time
 | [hostManager.js](hostManager.js) | 61 个函数/类节点 |
 | [modeFromChatRequest.js](modeFromChatRequest.js) | 1 个函数/类节点 |
 | [package.json](package.json) | 文件级登记；未做符号完整性证明 |
-| [ptyHost.js](ptyHost.js) | 61 个函数/类节点 |
+| [ptyHost.js](ptyHost.js) | 62 个函数/类节点 |
 | [ptyPolicy.js](ptyPolicy.js) | 6 个函数/类节点 |
 | [settingsPanel.js](settingsPanel.js) | 26 个函数/类节点 |
 | [workspaceMatch.js](workspaceMatch.js) | 2 个函数/类节点 |
