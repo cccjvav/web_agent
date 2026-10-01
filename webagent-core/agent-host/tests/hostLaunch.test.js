@@ -92,8 +92,8 @@ async function main() {
       assert.strictEqual(watchLifeline({ env: { WEBAGENT_PARENT_PID: bad }, stdin: null, onLost() {} }).active, false, 'invalid pid ' + bad);
     }
     assert.throws(() => watchLifeline({ env: {} }), /onLost/);
-    const env = { WEBAGENT_LIFELINE: 'stdin', WEBAGENT_PARENT_PID: '123', WEBAGENT_SKIP_WORKBENCH: '1', PATH: 'x' };
-    assert.deepStrictEqual(takeLaunchEnv(env), { WEBAGENT_LIFELINE: 'stdin', WEBAGENT_PARENT_PID: '123', WEBAGENT_SKIP_WORKBENCH: '1' });
+    const env = { WEBAGENT_LIFELINE: 'stdin', WEBAGENT_PARENT_PID: '123', WEBAGENT_SKIP_WORKBENCH: '1', WEBAGENT_LAUNCH_ID: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', PATH: 'x' };
+    assert.deepStrictEqual(takeLaunchEnv(env), { WEBAGENT_LIFELINE: 'stdin', WEBAGENT_PARENT_PID: '123', WEBAGENT_SKIP_WORKBENCH: '1', WEBAGENT_LAUNCH_ID: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' });
     assert.deepStrictEqual(env, { PATH: 'x' }, 'launch-only variables are removed so children cannot inherit them');
     assert.deepStrictEqual(takeLaunchEnv({}), {});
   }

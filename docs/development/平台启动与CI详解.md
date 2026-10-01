@@ -54,7 +54,7 @@ setlocal EnableExtensions，title设置窗口标题，cd /d `%~dp0`可跨盘。w
 
 ## 4. agent-host/package.json每组字段
 
-[package.json](../../webagent-core/agent-host/package.json)的name/version标识npm包，并非安装器AppVer；main=index.js是模块默认入口声明，实际npm start脚本为node src/index.js，所以不要因main文字而去运行不存在的根入口。scripts.test调用scripts/run-tests.js，负责真实子进程测试发现/退出；engines node>=18是声明范围，不证明当前所有依赖/场景在18均验收过。
+[package.json](../../webagent-core/agent-host/package.json)的name/version标识npm包，并非安装器AppVer；main=index.js是模块默认入口声明，实际npm start脚本为node src/index.js，所以不要因main文字而去运行不存在的根入口。scripts.test调用scripts/run-tests.js，负责真实子进程测试发现/退出；engines node>=22是声明范围（F118前为>=18），不证明当前所有依赖/场景在22上均验收过。
 
 dependencies：express HTTP路由、cors来源控制、ws WebSocket、diff差异展示；devDependencies中acorn用于源码AST/文档测试，playwright用于独立真实浏览器回归，当前清单固定1.63.0；eslint、@eslint/js、globals只供`scripts.lint`（`eslint --max-warnings 0 ../..`，规则见下文[根eslint.config.js](#根eslintconfigjs)）；ESLint 10要求Node 20.19以上，Node18任务的npm ci只会给出引擎警告，lint只在一个Node22任务里运行，生产安装`npm ci --omit=dev`不带这些包；scripts.test:browser执行tests/workbench.browser.js，不在npm test的.test.js扫描中。Playwright包与Chromium浏览器程序分开安装，生产启动不需要它，CI浏览器回归需要保留。版本带^是兼容范围，锁文件固定安装解析结果，npm ci与npm install职责不同。keywords/author/description空不产生运行行为；license ISC是包元数据，正式仓库许可仍看LICENSE。
 

@@ -224,6 +224,22 @@ async function serverFixture(handler) {
       assert.equal(attempts, 4, 'other/missing IDs retried until the matching reply');
     } finally { await server.close(); await stale.close(); await h.close(); }
   });
+  // F119 review: Node emits 'error' (aborted) on a response cut off mid-body, so the existing res error
+  // handler already retries; this locks that in rather than fixing a bug.
+  await test('a health body cut off before its end is retried at once, not waited out', async () => {
+    const ours = 'd'.repeat(32); let attempts = 0;
+    const server = await serverFixture((req, res) => {
+      attempts++;
+      if (attempts === 1) { res.writeHead(200, { 'Content-Type': 'application/json' }); res.write('{"ok":tr'); setTimeout(() => req.socket.destroy(), 20); return; }
+      res.writeHead(200); res.end(JSON.stringify({ ok: true, launchId: ours }));
+    });
+    const h = harness({ http });
+    try {
+      const started = Date.now();
+      await bounded(h.api.waitHealth(server.url, 5000, { launchId: ours }), 1500);
+      assert.equal(attempts, 2); assert.ok(Date.now() - started < 1500, 'retried after the cut, far inside the 5s deadline');
+    } finally { await server.close(); await h.close(); }
+  });
   await test('abort during a real HTTP request closes the connection', async () => {
     const controller = new AbortController(); let requests = 0, onClose;
     const closed = new Promise(resolve => { onClose = resolve; });

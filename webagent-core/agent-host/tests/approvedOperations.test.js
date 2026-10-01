@@ -41,7 +41,7 @@ const server = http.createServer(async (req, res) => {
     // F114: the operator sees who submitted; callers (submit / operation_result) never see it.
     queue.register('submitter-fixture', async () => ({ ok: true }));
     const peerA = 'peer:' + 'a'.repeat(32), peerB = 'peer:' + 'b'.repeat(32);
-    const fromRemote = queue.submit('submitter-fixture', {}, { remote: true, callerKey: peerA, clientName: 'Claude\u0007 Desktop' }, 'submitter-remote');
+    const fromRemote = queue.submit('submitter-fixture', {}, { remote: true, callerKey: peerA, clientName: 'Claude\u0007 \u202eDesk\u200btop' }, 'submitter-remote');
     const fromOperator = queue.submit('submitter-fixture', {}, { callerKey: 'local', operator: true }, 'submitter-operator');
     const fromChat = queue.submit('submitter-fixture', {}, {}, 'submitter-chat');
     const fromBare = queue.submit('submitter-fixture', {}, { remote: true, callerKey: peerB }, 'submitter-bare');

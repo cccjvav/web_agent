@@ -29,7 +29,7 @@ function owner(options) {
 // a remote session must not learn which other clients or sessions are queued on this host.
 function submitterOf(options, caller) {
   if (options.remote) {
-    const client = typeof options.clientName === 'string' ? options.clientName.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 80) : '';
+    const client = typeof options.clientName === 'string' ? options.clientName.replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g, '').trim().slice(0, 80) : '';
     return { type: 'remote', label: `远程会话（${client || '未报客户端名'}，${caller.slice(-6)}）` };
   }
   if (caller.startsWith('browser:')) return { type: 'browser', label: '浏览器探针' };

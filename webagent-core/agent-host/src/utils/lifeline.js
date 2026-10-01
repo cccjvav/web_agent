@@ -18,7 +18,7 @@ function pidAlive(pid) {
 // extension-started host: a nested host that inherited WEBAGENT_LIFELINE=stdin shut down as soon
 // as its stdin ended, and one that inherited WEBAGENT_SKIP_WORKBENCH=1 never opened the workbench
 // port its test expected (the code-server launcher had the same leak).
-const LAUNCH_ONLY_ENV = ['WEBAGENT_LIFELINE', 'WEBAGENT_PARENT_PID', 'WEBAGENT_SKIP_WORKBENCH'];
+const LAUNCH_ONLY_ENV = ['WEBAGENT_LIFELINE', 'WEBAGENT_PARENT_PID', 'WEBAGENT_SKIP_WORKBENCH', 'WEBAGENT_LAUNCH_ID'];
 function takeLaunchEnv(env = process.env) {
   const taken = {};
   for (const key of LAUNCH_ONLY_ENV) {

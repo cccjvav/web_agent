@@ -109,7 +109,7 @@ conda activate webagent-dev
 
 Node 有两种选择，**选一种作为主要来源**：
 
-- 按你的现有配置优先复用系统安装的 Node.js（含 npm），Conda 只管理 Python，不因 PATH 问题重复安装。若需要新装，推荐 Node.js 22。Node 22 与当前 Windows CI 配置一致；包声明的 `>=18` 是最低约束，不代表建议安装过旧版本。
+- 按你的现有配置优先复用系统安装的 Node.js（含 npm），Conda 只管理 Python，不因 PATH 问题重复安装。若需要新装，推荐 Node.js 22。Node 22 与当前 Windows CI 配置一致；包声明的最低版本是 `>=22`（F118起；18和20已停止维护，主机在更低版本上启动只打印升级提示）。
 - 希望连 Node 也隔离：在当前环境执行下面命令。渠道需要联网；若渠道不可达或包解算失败，先修复 Conda 配置，不要随意叠加不明渠道。
 
 ```bat

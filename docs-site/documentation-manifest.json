@@ -5656,8 +5656,8 @@
     {
       "path": "webagent-core/agent-host/src/index.js",
       "doc": "webagent-core/agent-host/src/README.md",
-      "sha256": "6e3bb758614369d51dc50b237c5abc65b53299387693906695bd8e06c0817212",
-      "lineCount": 276,
+      "sha256": "8f7c5a61b7d13a7dbc59c9b55fdd4231a9120275bf50b8ec0ff0a84d207e92e8",
+      "lineCount": 277,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -5738,7 +5738,7 @@
           "name": "mountHealth",
           "kind": "FunctionDeclaration",
           "startLine": 99,
-          "endLine": 106,
+          "endLine": 107,
           "parameters": [
             "app"
           ]
@@ -5748,7 +5748,7 @@
           "name": "anonymous@100:21",
           "kind": "ArrowFunctionExpression",
           "startLine": 100,
-          "endLine": 105,
+          "endLine": 106,
           "parameters": [
             "req",
             "res"
@@ -5758,18 +5758,18 @@
           "id": "mountWorkbench",
           "name": "mountWorkbench",
           "kind": "FunctionDeclaration",
-          "startLine": 117,
-          "endLine": 141,
+          "startLine": 118,
+          "endLine": 142,
           "parameters": [
             "app"
           ]
         },
         {
-          "id": "mountWorkbench/anonymous@118:10",
-          "name": "anonymous@118:10",
+          "id": "mountWorkbench/anonymous@119:10",
+          "name": "anonymous@119:10",
           "kind": "ArrowFunctionExpression",
-          "startLine": 118,
-          "endLine": 121,
+          "startLine": 119,
+          "endLine": 122,
           "parameters": [
             "req",
             "res",
@@ -5780,18 +5780,18 @@
           "id": "mountWorkbench/setHeaders",
           "name": "setHeaders",
           "kind": "FunctionExpression",
-          "startLine": 126,
-          "endLine": 126,
+          "startLine": 127,
+          "endLine": 127,
           "parameters": [
             "res"
           ]
         },
         {
-          "id": "mountWorkbench/anonymous@128:10",
-          "name": "anonymous@128:10",
+          "id": "mountWorkbench/anonymous@129:10",
+          "name": "anonymous@129:10",
           "kind": "ArrowFunctionExpression",
-          "startLine": 128,
-          "endLine": 140,
+          "startLine": 129,
+          "endLine": 141,
           "parameters": [
             "req",
             "res",
@@ -5802,8 +5802,8 @@
           "id": "attachWss",
           "name": "attachWss",
           "kind": "FunctionDeclaration",
-          "startLine": 158,
-          "endLine": 194,
+          "startLine": 159,
+          "endLine": 195,
           "parameters": [
             "server"
           ]
@@ -5812,45 +5812,45 @@
           "id": "attachWss/verifyClient",
           "name": "verifyClient",
           "kind": "FunctionExpression",
-          "startLine": 165,
-          "endLine": 167,
+          "startLine": 166,
+          "endLine": 168,
           "parameters": [
             "{ req }"
           ]
         },
         {
-          "id": "attachWss/anonymous@172:18",
-          "name": "anonymous@172:18",
+          "id": "attachWss/anonymous@173:18",
+          "name": "anonymous@173:18",
           "kind": "ArrowFunctionExpression",
-          "startLine": 172,
-          "endLine": 172,
+          "startLine": 173,
+          "endLine": 173,
           "parameters": []
         },
         {
-          "id": "attachWss/anonymous@173:23",
-          "name": "anonymous@173:23",
+          "id": "attachWss/anonymous@174:23",
+          "name": "anonymous@174:23",
           "kind": "ArrowFunctionExpression",
-          "startLine": 173,
-          "endLine": 192,
+          "startLine": 174,
+          "endLine": 193,
           "parameters": [
             "ws",
             "req"
           ]
         },
         {
-          "id": "attachWss/anonymous@173:23/anonymous@176:19",
-          "name": "anonymous@176:19",
+          "id": "attachWss/anonymous@174:23/anonymous@177:19",
+          "name": "anonymous@177:19",
           "kind": "ArrowFunctionExpression",
-          "startLine": 176,
-          "endLine": 176,
+          "startLine": 177,
+          "endLine": 177,
           "parameters": []
         },
         {
           "id": "listenOrExit",
           "name": "listenOrExit",
           "kind": "FunctionDeclaration",
-          "startLine": 200,
-          "endLine": 210,
+          "startLine": 201,
+          "endLine": 211,
           "parameters": [
             "server",
             "port",
@@ -5858,79 +5858,79 @@
           ]
         },
         {
-          "id": "listenOrExit/anonymous@201:21",
-          "name": "anonymous@201:21",
+          "id": "listenOrExit/anonymous@202:21",
+          "name": "anonymous@202:21",
           "kind": "ArrowFunctionExpression",
-          "startLine": 201,
-          "endLine": 208,
+          "startLine": 202,
+          "endLine": 209,
           "parameters": [
             "err"
           ]
         },
         {
-          "id": "anonymous@216:27",
-          "name": "anonymous@216:27",
+          "id": "anonymous@217:27",
+          "name": "anonymous@217:27",
           "kind": "ArrowFunctionExpression",
-          "startLine": 216,
-          "endLine": 226,
+          "startLine": 217,
+          "endLine": 227,
           "parameters": []
         },
         {
-          "id": "anonymous@237:26",
-          "name": "anonymous@237:26",
+          "id": "anonymous@238:26",
+          "name": "anonymous@238:26",
           "kind": "ArrowFunctionExpression",
-          "startLine": 237,
-          "endLine": 239,
+          "startLine": 238,
+          "endLine": 240,
           "parameters": []
         },
         {
           "id": "shutdown",
           "name": "shutdown",
           "kind": "FunctionDeclaration",
-          "startLine": 248,
-          "endLine": 264,
+          "startLine": 249,
+          "endLine": 265,
           "parameters": []
         },
         {
-          "id": "shutdown/anonymous@251:30",
-          "name": "anonymous@251:30",
+          "id": "shutdown/anonymous@252:30",
+          "name": "anonymous@252:30",
           "kind": "ArrowFunctionExpression",
-          "startLine": 251,
-          "endLine": 251,
+          "startLine": 252,
+          "endLine": 252,
           "parameters": []
         },
         {
-          "id": "shutdown/anonymous@255:21",
-          "name": "anonymous@255:21",
-          "kind": "ArrowFunctionExpression",
-          "startLine": 255,
-          "endLine": 255,
-          "parameters": []
-        },
-        {
-          "id": "shutdown/anonymous@256:15",
-          "name": "anonymous@256:15",
+          "id": "shutdown/anonymous@256:21",
+          "name": "anonymous@256:21",
           "kind": "ArrowFunctionExpression",
           "startLine": 256,
           "endLine": 256,
           "parameters": []
         },
         {
-          "id": "shutdown/anonymous@258:53",
-          "name": "anonymous@258:53",
+          "id": "shutdown/anonymous@257:15",
+          "name": "anonymous@257:15",
           "kind": "ArrowFunctionExpression",
-          "startLine": 258,
-          "endLine": 258,
+          "startLine": 257,
+          "endLine": 257,
+          "parameters": []
+        },
+        {
+          "id": "shutdown/anonymous@259:53",
+          "name": "anonymous@259:53",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 259,
+          "endLine": 259,
           "parameters": [
             "[, run]"
           ]
         },
         {
-          "id": "shutdown/anonymous@259:18",
-          "name": "anonymous@259:18",
+          "id": "shutdown/anonymous@260:18",
+          "name": "anonymous@260:18",
           "kind": "ArrowFunctionExpression",
-          "startLine": 259,
-          "endLine": 261,
+          "startLine": 260,
+          "endLine": 262,
           "parameters": [
             "result",
             "i"
@@ -5940,8 +5940,8 @@
           "id": "onLost",
           "name": "onLost",
           "kind": "FunctionExpression",
-          "startLine": 269,
-          "endLine": 272,
+          "startLine": 270,
+          "endLine": 273,
           "parameters": [
             "reason"
           ]
@@ -15812,7 +15812,7 @@
     {
       "path": "webagent-core/agent-host/src/utils/lifeline.js",
       "doc": "webagent-core/agent-host/src/utils/README.md",
-      "sha256": "a050445a507ec70ea9591eb443c7eab0dea22d30640a454b2e486e5f1d004aa9",
+      "sha256": "f2259636fe881cd3eaeba0b29b0d96393b6d6d58184e041c1722a17a5af87c2f",
       "lineCount": 67,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -16000,7 +16000,7 @@
     {
       "path": "webagent-core/agent-host/src/utils/operatorQueue.js",
       "doc": "webagent-core/agent-host/src/utils/README.md",
-      "sha256": "1d35cfd15eb1ef5c45dbe94516182bd0fd3ff01e50428b083fea798081cd96a7",
+      "sha256": "f26878846d570a31eb7082be56968cbbe5542f026a665cf547fea9facd76c8d7",
       "lineCount": 135,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -19297,7 +19297,7 @@
     {
       "path": "webagent-core/agent-host/tests/approvedOperations.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "df3e0d94113aecfefb5f3857de9784e735c823c18008b582961e94f8da618fec",
+      "sha256": "d9239ee9968bf2567a877d8a3066e67050e24c9a455c40cdf7170d83c4079c22",
       "lineCount": 175,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
@@ -20801,8 +20801,8 @@
     {
       "path": "webagent-core/agent-host/tests/codeServerLifecycle.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "eeaf9fe986f91163eccb1205e76a32ae9ee74cd4bb4a8bc95a78be82c6a5d853",
-      "lineCount": 570,
+      "sha256": "b9f1cf3a2306c28dac0a6c5ed6a5c94193bb60a4848831b36ec0d5859369e5b4",
+      "lineCount": 586,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
       "symbols": [
@@ -21261,7 +21261,7 @@
           "name": "anonymous@151:1",
           "kind": "ArrowFunctionExpression",
           "startLine": 151,
-          "endLine": 569,
+          "endLine": 585,
           "parameters": []
         },
         {
@@ -21473,141 +21473,168 @@
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@227:71",
-          "name": "anonymous@227:71",
+          "id": "anonymous@151:1/anonymous@229:88",
+          "name": "anonymous@229:88",
           "kind": "ArrowFunctionExpression",
-          "startLine": 227,
-          "endLine": 238,
+          "startLine": 229,
+          "endLine": 242,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@227:71/anonymous@229:31",
-          "name": "anonymous@229:31",
+          "id": "anonymous@151:1/anonymous@229:88/anonymous@231:39",
+          "name": "anonymous@231:39",
           "kind": "ArrowFunctionExpression",
-          "startLine": 229,
-          "endLine": 229,
+          "startLine": 231,
+          "endLine": 235,
+          "parameters": [
+            "req",
+            "res"
+          ]
+        },
+        {
+          "id": "anonymous@151:1/anonymous@229:88/anonymous@231:39/anonymous@233:122",
+          "name": "anonymous@233:122",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 233,
+          "endLine": 233,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@151:1/anonymous@243:71",
+          "name": "anonymous@243:71",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 243,
+          "endLine": 254,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@151:1/anonymous@243:71/anonymous@245:31",
+          "name": "anonymous@245:31",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 245,
+          "endLine": 245,
           "parameters": [
             "resolve"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@227:71/anonymous@230:39",
-          "name": "anonymous@230:39",
+          "id": "anonymous@151:1/anonymous@243:71/anonymous@246:39",
+          "name": "anonymous@246:39",
           "kind": "ArrowFunctionExpression",
-          "startLine": 230,
-          "endLine": 232,
+          "startLine": 246,
+          "endLine": 248,
           "parameters": [
             "req"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@239:85",
-          "name": "anonymous@239:85",
-          "kind": "ArrowFunctionExpression",
-          "startLine": 239,
-          "endLine": 254,
-          "parameters": []
-        },
-        {
-          "id": "anonymous@151:1/anonymous@255:80",
-          "name": "anonymous@255:80",
+          "id": "anonymous@151:1/anonymous@255:85",
+          "name": "anonymous@255:85",
           "kind": "ArrowFunctionExpression",
           "startLine": 255,
-          "endLine": 265,
+          "endLine": 270,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@266:88",
-          "name": "anonymous@266:88",
+          "id": "anonymous@151:1/anonymous@271:80",
+          "name": "anonymous@271:80",
           "kind": "ArrowFunctionExpression",
-          "startLine": 266,
-          "endLine": 277,
+          "startLine": 271,
+          "endLine": 281,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@278:95",
-          "name": "anonymous@278:95",
-          "kind": "ArrowFunctionExpression",
-          "startLine": 278,
-          "endLine": 300,
-          "parameters": []
-        },
-        {
-          "id": "anonymous@151:1/anonymous@278:95/anonymous@282:40",
-          "name": "anonymous@282:40",
+          "id": "anonymous@151:1/anonymous@282:88",
+          "name": "anonymous@282:88",
           "kind": "ArrowFunctionExpression",
           "startLine": 282,
-          "endLine": 282,
+          "endLine": 293,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@151:1/anonymous@294:95",
+          "name": "anonymous@294:95",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 294,
+          "endLine": 316,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@151:1/anonymous@294:95/anonymous@298:40",
+          "name": "anonymous@298:40",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 298,
+          "endLine": 298,
           "parameters": [
             "code"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@301:93",
-          "name": "anonymous@301:93",
+          "id": "anonymous@151:1/anonymous@317:93",
+          "name": "anonymous@317:93",
           "kind": "ArrowFunctionExpression",
-          "startLine": 301,
-          "endLine": 312,
+          "startLine": 317,
+          "endLine": 328,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@301:93/anonymous@306:48",
-          "name": "anonymous@306:48",
+          "id": "anonymous@151:1/anonymous@317:93/anonymous@322:48",
+          "name": "anonymous@322:48",
           "kind": "ArrowFunctionExpression",
-          "startLine": 306,
-          "endLine": 306,
+          "startLine": 322,
+          "endLine": 322,
           "parameters": [
             "t"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@313:68",
-          "name": "anonymous@313:68",
+          "id": "anonymous@151:1/anonymous@329:68",
+          "name": "anonymous@329:68",
           "kind": "ArrowFunctionExpression",
-          "startLine": 313,
-          "endLine": 322,
+          "startLine": 329,
+          "endLine": 338,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@313:68/anonymous@320:28",
-          "name": "anonymous@320:28",
+          "id": "anonymous@151:1/anonymous@329:68/anonymous@336:28",
+          "name": "anonymous@336:28",
           "kind": "ArrowFunctionExpression",
-          "startLine": 320,
-          "endLine": 320,
+          "startLine": 336,
+          "endLine": 336,
           "parameters": [
             "line"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@323:85",
-          "name": "anonymous@323:85",
+          "id": "anonymous@151:1/anonymous@339:85",
+          "name": "anonymous@339:85",
           "kind": "ArrowFunctionExpression",
-          "startLine": 323,
-          "endLine": 332,
+          "startLine": 339,
+          "endLine": 348,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@334:95",
-          "name": "anonymous@334:95",
+          "id": "anonymous@151:1/anonymous@350:95",
+          "name": "anonymous@350:95",
           "kind": "ArrowFunctionExpression",
-          "startLine": 334,
-          "endLine": 342,
+          "startLine": 350,
+          "endLine": 358,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@345:71",
-          "name": "anonymous@345:71",
+          "id": "anonymous@151:1/anonymous@361:71",
+          "name": "anonymous@361:71",
           "kind": "ArrowFunctionExpression",
-          "startLine": 345,
-          "endLine": 363,
+          "startLine": 361,
+          "endLine": 379,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@345:71/spawn",
+          "id": "anonymous@151:1/anonymous@361:71/spawn",
           "name": "spawn",
           "kind": "FunctionExpression",
-          "startLine": 347,
-          "endLine": 355,
+          "startLine": 363,
+          "endLine": 371,
           "parameters": [
             "_command",
             "_args",
@@ -21616,424 +21643,424 @@
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@345:71/spawn/anonymous@350:52",
-          "name": "anonymous@350:52",
+          "id": "anonymous@151:1/anonymous@361:71/spawn/anonymous@366:52",
+          "name": "anonymous@366:52",
           "kind": "ArrowFunctionExpression",
-          "startLine": 350,
-          "endLine": 353,
+          "startLine": 366,
+          "endLine": 369,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@345:71/anonymous@360:30",
-          "name": "anonymous@360:30",
+          "id": "anonymous@151:1/anonymous@361:71/anonymous@376:30",
+          "name": "anonymous@376:30",
           "kind": "ArrowFunctionExpression",
-          "startLine": 360,
-          "endLine": 360,
+          "startLine": 376,
+          "endLine": 376,
           "parameters": [
             "line"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@366:85",
-          "name": "anonymous@366:85",
+          "id": "anonymous@151:1/anonymous@382:85",
+          "name": "anonymous@382:85",
           "kind": "ArrowFunctionExpression",
-          "startLine": 366,
-          "endLine": 378,
+          "startLine": 382,
+          "endLine": 394,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@366:85/anonymous@376:32",
-          "name": "anonymous@376:32",
+          "id": "anonymous@151:1/anonymous@382:85/anonymous@392:32",
+          "name": "anonymous@392:32",
           "kind": "ArrowFunctionExpression",
-          "startLine": 376,
-          "endLine": 376,
+          "startLine": 392,
+          "endLine": 392,
           "parameters": [
             "call"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@380:89",
-          "name": "anonymous@380:89",
+          "id": "anonymous@151:1/anonymous@396:89",
+          "name": "anonymous@396:89",
           "kind": "ArrowFunctionExpression",
-          "startLine": 380,
-          "endLine": 391,
+          "startLine": 396,
+          "endLine": 407,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@380:89/anonymous@383:17",
-          "name": "anonymous@383:17",
-          "kind": "ArrowFunctionExpression",
-          "startLine": 383,
-          "endLine": 383,
-          "parameters": [
-            "signal"
-          ]
-        },
-        {
-          "id": "anonymous@151:1/anonymous@392:89",
-          "name": "anonymous@392:89",
-          "kind": "ArrowFunctionExpression",
-          "startLine": 392,
-          "endLine": 405,
-          "parameters": []
-        },
-        {
-          "id": "anonymous@151:1/anonymous@392:89/anonymous@397:19",
-          "name": "anonymous@397:19",
-          "kind": "ArrowFunctionExpression",
-          "startLine": 397,
-          "endLine": 397,
-          "parameters": [
-            "signal"
-          ]
-        },
-        {
-          "id": "anonymous@151:1/anonymous@392:89/anonymous@399:48",
-          "name": "anonymous@399:48",
+          "id": "anonymous@151:1/anonymous@396:89/anonymous@399:17",
+          "name": "anonymous@399:17",
           "kind": "ArrowFunctionExpression",
           "startLine": 399,
           "endLine": 399,
+          "parameters": [
+            "signal"
+          ]
+        },
+        {
+          "id": "anonymous@151:1/anonymous@408:89",
+          "name": "anonymous@408:89",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 408,
+          "endLine": 421,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@151:1/anonymous@408:89/anonymous@413:19",
+          "name": "anonymous@413:19",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 413,
+          "endLine": 413,
+          "parameters": [
+            "signal"
+          ]
+        },
+        {
+          "id": "anonymous@151:1/anonymous@408:89/anonymous@415:48",
+          "name": "anonymous@415:48",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 415,
+          "endLine": 415,
           "parameters": [
             "t"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@392:89/anonymous@403:28",
-          "name": "anonymous@403:28",
+          "id": "anonymous@151:1/anonymous@408:89/anonymous@419:28",
+          "name": "anonymous@419:28",
           "kind": "ArrowFunctionExpression",
-          "startLine": 403,
-          "endLine": 403,
+          "startLine": 419,
+          "endLine": 419,
           "parameters": [
             "line"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@408:99",
-          "name": "anonymous@408:99",
+          "id": "anonymous@151:1/anonymous@424:99",
+          "name": "anonymous@424:99",
           "kind": "ArrowFunctionExpression",
-          "startLine": 408,
-          "endLine": 420,
+          "startLine": 424,
+          "endLine": 436,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@408:99/anonymous@410:18",
-          "name": "anonymous@410:18",
+          "id": "anonymous@151:1/anonymous@424:99/anonymous@426:18",
+          "name": "anonymous@426:18",
           "kind": "ArrowFunctionExpression",
-          "startLine": 410,
-          "endLine": 410,
+          "startLine": 426,
+          "endLine": 426,
           "parameters": [
             "_message",
             "callback"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@408:99/anonymous@414:19",
-          "name": "anonymous@414:19",
+          "id": "anonymous@151:1/anonymous@424:99/anonymous@430:19",
+          "name": "anonymous@430:19",
           "kind": "ArrowFunctionExpression",
-          "startLine": 414,
-          "endLine": 414,
+          "startLine": 430,
+          "endLine": 430,
           "parameters": [
             "signal"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@408:99/anonymous@418:28",
-          "name": "anonymous@418:28",
+          "id": "anonymous@151:1/anonymous@424:99/anonymous@434:28",
+          "name": "anonymous@434:28",
           "kind": "ArrowFunctionExpression",
-          "startLine": 418,
-          "endLine": 418,
+          "startLine": 434,
+          "endLine": 434,
           "parameters": [
             "line"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@421:98",
-          "name": "anonymous@421:98",
+          "id": "anonymous@151:1/anonymous@437:98",
+          "name": "anonymous@437:98",
           "kind": "ArrowFunctionExpression",
-          "startLine": 421,
-          "endLine": 430,
+          "startLine": 437,
+          "endLine": 446,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@421:98/ensure",
+          "id": "anonymous@151:1/anonymous@437:98/ensure",
           "name": "ensure",
           "kind": "FunctionExpression",
-          "startLine": 422,
-          "endLine": 424,
+          "startLine": 438,
+          "endLine": 440,
           "parameters": [
             "{ signal }"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@421:98/ensure/anonymous@423:25",
-          "name": "anonymous@423:25",
+          "id": "anonymous@151:1/anonymous@437:98/ensure/anonymous@439:25",
+          "name": "anonymous@439:25",
           "kind": "ArrowFunctionExpression",
-          "startLine": 423,
-          "endLine": 423,
+          "startLine": 439,
+          "endLine": 439,
           "parameters": [
             "resolve",
             "reject"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@421:98/ensure/anonymous@423:25/anonymous@423:79",
-          "name": "anonymous@423:79",
+          "id": "anonymous@151:1/anonymous@437:98/ensure/anonymous@439:25/anonymous@439:79",
+          "name": "anonymous@439:79",
           "kind": "ArrowFunctionExpression",
-          "startLine": 423,
-          "endLine": 423,
+          "startLine": 439,
+          "endLine": 439,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@421:98/anonymous@425:18",
-          "name": "anonymous@425:18",
+          "id": "anonymous@151:1/anonymous@437:98/anonymous@441:18",
+          "name": "anonymous@441:18",
           "kind": "ArrowFunctionExpression",
-          "startLine": 425,
-          "endLine": 425,
+          "startLine": 441,
+          "endLine": 441,
           "parameters": [
             "_message",
             "callback"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@431:95",
-          "name": "anonymous@431:95",
+          "id": "anonymous@151:1/anonymous@447:95",
+          "name": "anonymous@447:95",
           "kind": "ArrowFunctionExpression",
-          "startLine": 431,
-          "endLine": 440,
+          "startLine": 447,
+          "endLine": 456,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@431:95/anonymous@433:18",
-          "name": "anonymous@433:18",
+          "id": "anonymous@151:1/anonymous@447:95/anonymous@449:18",
+          "name": "anonymous@449:18",
           "kind": "ArrowFunctionExpression",
-          "startLine": 433,
-          "endLine": 433,
+          "startLine": 449,
+          "endLine": 449,
           "parameters": [
             "_message",
             "callback"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@431:95/anonymous@438:33",
-          "name": "anonymous@438:33",
+          "id": "anonymous@151:1/anonymous@447:95/anonymous@454:33",
+          "name": "anonymous@454:33",
           "kind": "ArrowFunctionExpression",
-          "startLine": 438,
-          "endLine": 438,
+          "startLine": 454,
+          "endLine": 454,
           "parameters": [
             "child"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@441:87",
-          "name": "anonymous@441:87",
+          "id": "anonymous@151:1/anonymous@457:87",
+          "name": "anonymous@457:87",
           "kind": "ArrowFunctionExpression",
-          "startLine": 441,
-          "endLine": 454,
+          "startLine": 457,
+          "endLine": 470,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@441:87/anonymous@448:32",
-          "name": "anonymous@448:32",
+          "id": "anonymous@151:1/anonymous@457:87/anonymous@464:32",
+          "name": "anonymous@464:32",
           "kind": "ArrowFunctionExpression",
-          "startLine": 448,
-          "endLine": 448,
+          "startLine": 464,
+          "endLine": 464,
           "parameters": [
             "resolve",
             "reject"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@456:79",
-          "name": "anonymous@456:79",
+          "id": "anonymous@151:1/anonymous@472:79",
+          "name": "anonymous@472:79",
           "kind": "ArrowFunctionExpression",
-          "startLine": 456,
-          "endLine": 469,
+          "startLine": 472,
+          "endLine": 485,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@456:79/ensure",
+          "id": "anonymous@151:1/anonymous@472:79/ensure",
           "name": "ensure",
           "kind": "FunctionExpression",
-          "startLine": 458,
-          "endLine": 461,
+          "startLine": 474,
+          "endLine": 477,
           "parameters": [
             "{ signal }"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@456:79/ensure/anonymous@460:27",
-          "name": "anonymous@460:27",
+          "id": "anonymous@151:1/anonymous@472:79/ensure/anonymous@476:27",
+          "name": "anonymous@476:27",
           "kind": "ArrowFunctionExpression",
-          "startLine": 460,
-          "endLine": 460,
+          "startLine": 476,
+          "endLine": 476,
           "parameters": [
             "resolve",
             "reject"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@456:79/ensure/anonymous@460:27/anonymous@460:81",
-          "name": "anonymous@460:81",
+          "id": "anonymous@151:1/anonymous@472:79/ensure/anonymous@476:27/anonymous@476:81",
+          "name": "anonymous@476:81",
           "kind": "ArrowFunctionExpression",
-          "startLine": 460,
-          "endLine": 460,
+          "startLine": 476,
+          "endLine": 476,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@456:79/anonymous@462:20",
-          "name": "anonymous@462:20",
+          "id": "anonymous@151:1/anonymous@472:79/anonymous@478:20",
+          "name": "anonymous@478:20",
           "kind": "ArrowFunctionExpression",
-          "startLine": 462,
-          "endLine": 462,
+          "startLine": 478,
+          "endLine": 478,
           "parameters": [
             "_message",
             "callback"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@471:79",
-          "name": "anonymous@471:79",
+          "id": "anonymous@151:1/anonymous@487:79",
+          "name": "anonymous@487:79",
           "kind": "ArrowFunctionExpression",
-          "startLine": 471,
-          "endLine": 480,
+          "startLine": 487,
+          "endLine": 496,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@471:79/ensure",
+          "id": "anonymous@151:1/anonymous@487:79/ensure",
           "name": "ensure",
           "kind": "FunctionExpression",
-          "startLine": 472,
-          "endLine": 474,
+          "startLine": 488,
+          "endLine": 490,
           "parameters": [
             "{ signal }"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@471:79/ensure/anonymous@473:25",
-          "name": "anonymous@473:25",
+          "id": "anonymous@151:1/anonymous@487:79/ensure/anonymous@489:25",
+          "name": "anonymous@489:25",
           "kind": "ArrowFunctionExpression",
-          "startLine": 473,
-          "endLine": 473,
+          "startLine": 489,
+          "endLine": 489,
           "parameters": [
             "resolve",
             "reject"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@471:79/ensure/anonymous@473:25/anonymous@473:79",
-          "name": "anonymous@473:79",
+          "id": "anonymous@151:1/anonymous@487:79/ensure/anonymous@489:25/anonymous@489:79",
+          "name": "anonymous@489:79",
           "kind": "ArrowFunctionExpression",
-          "startLine": 473,
-          "endLine": 473,
+          "startLine": 489,
+          "endLine": 489,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@471:79/anonymous@478:28",
-          "name": "anonymous@478:28",
+          "id": "anonymous@151:1/anonymous@487:79/anonymous@494:28",
+          "name": "anonymous@494:28",
           "kind": "ArrowFunctionExpression",
-          "startLine": 478,
-          "endLine": 478,
+          "startLine": 494,
+          "endLine": 494,
           "parameters": [
             "line"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@484:101",
-          "name": "anonymous@484:101",
+          "id": "anonymous@151:1/anonymous@500:101",
+          "name": "anonymous@500:101",
           "kind": "ArrowFunctionExpression",
-          "startLine": 484,
-          "endLine": 499,
+          "startLine": 500,
+          "endLine": 515,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@484:101/anonymous@491:48",
-          "name": "anonymous@491:48",
+          "id": "anonymous@151:1/anonymous@500:101/anonymous@507:48",
+          "name": "anonymous@507:48",
           "kind": "ArrowFunctionExpression",
-          "startLine": 491,
-          "endLine": 491,
+          "startLine": 507,
+          "endLine": 507,
           "parameters": [
             "t"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@484:101/anonymous@496:28",
-          "name": "anonymous@496:28",
+          "id": "anonymous@151:1/anonymous@500:101/anonymous@512:28",
+          "name": "anonymous@512:28",
           "kind": "ArrowFunctionExpression",
-          "startLine": 496,
-          "endLine": 496,
+          "startLine": 512,
+          "endLine": 512,
           "parameters": [
             "line"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@500:83",
-          "name": "anonymous@500:83",
+          "id": "anonymous@151:1/anonymous@516:83",
+          "name": "anonymous@516:83",
           "kind": "ArrowFunctionExpression",
-          "startLine": 500,
-          "endLine": 510,
-          "parameters": []
-        },
-        {
-          "id": "anonymous@151:1/anonymous@511:91",
-          "name": "anonymous@511:91",
-          "kind": "ArrowFunctionExpression",
-          "startLine": 511,
+          "startLine": 516,
           "endLine": 526,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@511:91/anonymous@516:19",
-          "name": "anonymous@516:19",
+          "id": "anonymous@151:1/anonymous@527:91",
+          "name": "anonymous@527:91",
           "kind": "ArrowFunctionExpression",
-          "startLine": 516,
-          "endLine": 516,
+          "startLine": 527,
+          "endLine": 542,
+          "parameters": []
+        },
+        {
+          "id": "anonymous@151:1/anonymous@527:91/anonymous@532:19",
+          "name": "anonymous@532:19",
+          "kind": "ArrowFunctionExpression",
+          "startLine": 532,
+          "endLine": 532,
           "parameters": [
             "signal"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@511:91/anonymous@523:28",
-          "name": "anonymous@523:28",
+          "id": "anonymous@151:1/anonymous@527:91/anonymous@539:28",
+          "name": "anonymous@539:28",
           "kind": "ArrowFunctionExpression",
-          "startLine": 523,
-          "endLine": 523,
+          "startLine": 539,
+          "endLine": 539,
           "parameters": [
             "line"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@528:99",
-          "name": "anonymous@528:99",
+          "id": "anonymous@151:1/anonymous@544:99",
+          "name": "anonymous@544:99",
           "kind": "ArrowFunctionExpression",
-          "startLine": 528,
-          "endLine": 541,
+          "startLine": 544,
+          "endLine": 557,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@528:99/anonymous@530:20",
-          "name": "anonymous@530:20",
+          "id": "anonymous@151:1/anonymous@544:99/anonymous@546:20",
+          "name": "anonymous@546:20",
           "kind": "ArrowFunctionExpression",
-          "startLine": 530,
-          "endLine": 530,
+          "startLine": 546,
+          "endLine": 546,
           "parameters": [
             "_message",
             "callback"
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@543:85",
-          "name": "anonymous@543:85",
+          "id": "anonymous@151:1/anonymous@559:85",
+          "name": "anonymous@559:85",
           "kind": "ArrowFunctionExpression",
-          "startLine": 543,
-          "endLine": 555,
+          "startLine": 559,
+          "endLine": 571,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@543:85/spawn",
+          "id": "anonymous@151:1/anonymous@559:85/spawn",
           "name": "spawn",
           "kind": "FunctionExpression",
-          "startLine": 544,
-          "endLine": 548,
+          "startLine": 560,
+          "endLine": 564,
           "parameters": [
             "_command",
             "_args",
@@ -22041,45 +22068,45 @@
           ]
         },
         {
-          "id": "anonymous@151:1/anonymous@543:85/spawn/anonymous@546:26",
-          "name": "anonymous@546:26",
+          "id": "anonymous@151:1/anonymous@559:85/spawn/anonymous@562:26",
+          "name": "anonymous@562:26",
           "kind": "ArrowFunctionExpression",
-          "startLine": 546,
-          "endLine": 546,
+          "startLine": 562,
+          "endLine": 562,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@556:84",
-          "name": "anonymous@556:84",
+          "id": "anonymous@151:1/anonymous@572:84",
+          "name": "anonymous@572:84",
           "kind": "ArrowFunctionExpression",
-          "startLine": 556,
-          "endLine": 566,
+          "startLine": 572,
+          "endLine": 582,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@556:84/main",
+          "id": "anonymous@151:1/anonymous@572:84/main",
           "name": "main",
           "kind": "ArrowFunctionExpression",
-          "startLine": 560,
-          "endLine": 560,
+          "startLine": 576,
+          "endLine": 576,
           "parameters": []
         },
         {
-          "id": "anonymous@151:1/anonymous@556:84/error",
+          "id": "anonymous@151:1/anonymous@572:84/error",
           "name": "error",
           "kind": "FunctionExpression",
-          "startLine": 561,
-          "endLine": 561,
+          "startLine": 577,
+          "endLine": 577,
           "parameters": [
             "error"
           ]
         },
         {
-          "id": "anonymous@569:11",
-          "name": "anonymous@569:11",
+          "id": "anonymous@585:11",
+          "name": "anonymous@585:11",
           "kind": "ArrowFunctionExpression",
-          "startLine": 569,
-          "endLine": 569,
+          "startLine": 585,
+          "endLine": 585,
           "parameters": [
             "error"
           ]
@@ -26163,7 +26190,7 @@
     {
       "path": "webagent-core/agent-host/tests/hostLaunch.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "5d8dfbab726273b37a6b39e4d20f6a181ce209bbbf6c15d53b0fcd3e48ed06ff",
+      "sha256": "69cf94bc5de9596b4c0af846bc70371a959ad46f9a6ae500969a5d36c649beec",
       "lineCount": 400,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",

@@ -2386,3 +2386,16 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **生成物churn与仓库权重：** `docs-site/content.js`（约5.7MB）、manifest、source-index每次改文档都重新生成并提交，仓库持续变大，CI也常因忘记重新生成而全红。改为安装/启动时生成需要改安装器payload、主机文档路由和CI检查，回归面大，而眼下没有使用者被它卡住，**暂维持现状**。若以后要做：①安装器打包前与`run-code-oss`启动前调用build.js生成；②CI改为生成后比对而非要求提交；③从Git移除三份生成物并在.gitignore登记；④文档站路由在文件缺失时给出提示。仓库权重的大头还有已随仓库分发的Monaco（用户要求保持现状）。
 
 **文档：** workflows README、平台启动与CI详解（任务数、矩阵、lint说明）、测试说明、Conda环境说明、agents.md、入口详解同步。
+
+### 第119组：复审第114–118组（会话01a0e8ea，2026-10-01）
+
+用户要求再审一遍。逐个读了F114–F118的源码与测试改动（20d1f71~4..e29b19a），对每个怀疑点先写测试、再用修复前代码确认是否真失败。
+
+**确认并修复：**
+1. **F116的`WEBAGENT_LAUNCH_ID`漏进命令环境**：lifeline.js明确规定只给本主机用的启动变量要在启动时取出，避免agent运行的命令（run_command、start_command、stdio MCP、测试里再起的主机）继承——这条规则正是此前真实泄漏后定的。F116没把新变量加进`LAUNCH_ONLY_ENV`。已加入，`/health`改从launchEnv读；hostLaunch断言更新（旧代码下失败）。
+2. **F114客户端名清洗不全**：只去了C0控制字符，U+202E等双向控制与零宽字符仍保留，远程客户端可用它在审批列表里打乱自己标签的显示（“远程会话（”前缀仍在最前，无法冒充成“你自己”，但可混淆后面的kind/status）。补去C1、U+200B–U+200F、U+202A–U+202E、U+2060–U+2069、U+FEFF；approvedOperations加入这些字符（旧代码下失败）。
+3. **F118漏改两句**：Conda环境说明第112行仍写“包声明的`>=18`”，平台启动与CI详解第57行仍写“engines node>=18”。已改。
+
+**怀疑但查证不成立：** waitHealth在200响应体中途断开时会不会干等到期限——写了真实HTTP测试，修复前代码同样立即重试：Node对中途断开的响应会发出`error`（aborted），F116已有的`res.on('error')`就会重试。撤回了为此加的代码，只保留测试作为回归。
+
+**其余复核无问题：** submitter只在本机操作路由输出（submit去重分支、operation_result、eventBus/executionControl的list()都不带）；F115调序只影响“带了不一致expectedHash”的分支，PUT保存的409映射不变；F117在Windows未就绪前注册的监听挂在agent.outSocket上，同样生效；F118没有新增依赖Node 22的代码，低版本只提示。
