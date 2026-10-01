@@ -198,6 +198,15 @@ function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = fal
     }
     const current = readBoundedText(fullPath);
     currentHash = computeHash(current);
+    // F115: a caller that sent expectedHash is told the file changed since its read (e.g. the person
+    // saved), not to add confirm_overwrite — that hint would invite forcing over the person's edit.
+    if (expectedHash && expectedHash !== currentHash) {
+      throw new ExecutionError(
+        'E_STALE_FILE',
+        `STALE_FILE ${filePath}: expectedHash ${expectedHash} does not match. Re-read the file.`,
+        { filePath, currentHash, retryHint: 'Stop this write; re-read and coordinate the changed content with the operator. Do not replay or blindly use currentHash.' }
+      );
+    }
     const seenThisSession = sessionHash(filePath, reader);
     if (!overwriteOk && expectedHash && expectedHash === currentHash) overwriteOk = true;
     if (!overwriteOk && seenThisSession && seenThisSession === currentHash) overwriteOk = true;
@@ -210,13 +219,6 @@ function writeFileBody({ filePath, content, expectedHash, confirmOverwrite = fal
           currentHash,
           retryHint: 'Stop; read the file and review the intended change before explicitly authorizing a new write. Do not blindly reuse an error hash.'
         }
-      );
-    }
-    if (expectedHash && expectedHash !== currentHash) {
-      throw new ExecutionError(
-        'E_STALE_FILE',
-        `STALE_FILE ${filePath}: expectedHash ${expectedHash} does not match. Re-read the file.`,
-        { filePath, currentHash, retryHint: 'Stop this write; re-read and coordinate the changed content with the operator. Do not replay or blindly use currentHash.' }
       );
     }
   }

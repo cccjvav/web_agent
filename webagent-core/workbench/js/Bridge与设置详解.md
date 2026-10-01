@@ -8,7 +8,7 @@
 |---|---|---|
 | formatClock(ms) | 时间→本地时钟文本 | 空值空字符串；内部pad(n)补两位；本地时区不是UTC |
 | logBridgeTool() | 无→Promise | 兼容事件入口，仅委托refreshBridgeActivity，不在浏览器累加，以免重复或混入本地Chat |
-| paintBridgeActivity(snapshot) | 服务端快照→undefined | 校验stats/logs及身份，先绘远程Tasks；epoch:revision未变仅跳过日志重绘。覆盖state.stats、paintStats，按追踪/摘要重建有界日志，计数不等于当前仍连接 |
+| paintBridgeActivity(snapshot) | 服务端快照→undefined | 校验stats/logs及身份，先绘远程Tasks；epoch:revision未变仅跳过日志重绘。覆盖state.stats、paintStats，按追踪/摘要重建有界日志，计数不等于当前仍连接；失败卡片带errorCode时追加“错误 代码：中文说明”（F115，ERROR_HINTS覆盖E_STALE_FILE/E_BAD_ARGS/E_SESSION_REQUIRED/E_FORBIDDEN/E_CANCELLED，其余只显示代码） |
 | refreshBridgeActivity() | 无→Promise<boolean> | 单飞GET本机/api/bridge/activity，5秒AbortController超时；成功完整paint后true，HTTP/解析/快照失败显示同步错误并false，允许下一次相同版本快照恢复；finally清timer与pending |
 | paintStats() | 无→undefined | 显示调用/失败/成功率/平均秒；healthLine优先；会话数取httpSessions/alive/clients或调用记录启发式，最后工具附formatClock |
 | resetRound() | 无→Promise<boolean> | resetRoundPending拒绝页内重复；POST后要求HTTP成功、JSON对象且success严格true才确认写入，再分别刷新status和活动快照。写确认但读取失败仍返回true并提示手动核对；写未确认false且不假装本地清零、不自动重试 |
@@ -118,3 +118,5 @@ startBridge工作区校验（0.7.1）：记录页面state.status，再fetch实�
 **paintExecutionControl()**从status.executionControl画主机模式/请求数；没有新主机字段显示未知，存在未保存草稿则不覆盖勾选和revision。**initExecutionControl()**绑定两模式按钮、四项复选框、保存与重新读取。内部**change(value)**用controlChangePending单飞及10秒AbortController POST `/api/execution-control`，带当前workspaceRoot、identity.hostInstanceId，权限附草稿revision；只有HTTP成功且success严格true才清dirty并确认主机写入。后续状态刷新成功才显示已应用；写确认但刷新失败单独提示手动核对，写未确认固定提示且不自动重试。Read关会在草稿关Edit；缺Read/Edit/Capture会关Execute并提示，不自动扩大权限。保存才实际生效。refreshStatus调用paintExecutionControl，bind经ui.initExecutionControl接线。验证见executionControl.test与浏览器回归，不能视为真实Windows控件验收。
 
 promptText对已选卡片直接返回其prompt或空字符串；不支持普通粘贴/本机Chat的空prompt不能回退成全局带密钥连接提示。仅没有卡片时保留旧全局回退；复制按钮遇空文本提示无配置并退出，不假报已复制。
+
+**ERROR_HINTS（F115）**：模块常量，把主机执行记录里的稳定错误码翻成一句中文，只用于Bridge日志卡片。errorCode由toolTrace.finishCall在工具抛错时写入且限定为大写字母/数字/下划线，渲染仍经escapeHtml。

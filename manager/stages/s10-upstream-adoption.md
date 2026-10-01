@@ -2342,3 +2342,15 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **测试：** approvedOperations开头新增一段：四种来源的label、客户端名去控制字符、未报名、submit/operation_result不带submitter、另一peer查不到、`list()`不带而`list(true)`带；apiFiles经真实HTTP核对`GET /api/operations`与详情带submitter。探针代码未改（probe-browser任务经同一队列，只是多显示“浏览器探针”）。
 
 **限制：** 客户端名是远程客户端自报的，可以冒充别的名字；末6位用来区分同名的不同会话。
+
+### 第115组：交接第5项——人保存后模型写入被拒的浏览器测试（会话01a0e8ea，2026-10-01）
+
+**测试：** workbench.browser在真实Chromium里走完：MCP先read_files记下acceptance.txt的hash → 人在工作台编辑并Ctrl+S保存 → MCP用旧hash调用write_file → 断言被拒、磁盘保留人的保存、Bridge日志出现可读原因。
+
+**写测试时发现的问题：** 模型带了expectedHash（只是已过时），得到的却是E_BAD_ARGS“Overwrite blocked…pass confirm_overwrite=true”。这句提示不说文件已被人改过，反而引导模型加确认强行覆盖。fileOps.writeFileBody把“显式expectedHash不一致→E_STALE_FILE”挪到覆盖确认检查之前；带confirm_overwrite时本来就是这个结果，只是没带时顺序反了。apiFiles新增一段锁定该顺序（用旧代码运行确认会失败）。
+
+**界面：** Bridge日志失败卡片原来只写“failed”。toolTrace早已在工具抛错时记录errorCode，现在卡片追加“错误 代码：中文说明”（bridge.js的ERROR_HINTS，覆盖E_STALE_FILE、E_BAD_ARGS、E_SESSION_REQUIRED、E_FORBIDDEN、E_CANCELLED，其余只显示代码）。
+
+**验证：** 本地@sparticuz/chromium跑workbench.browser全程通过；npm test、lint；CI见提交。
+
+**范围：** 本机Chat的写入失败显示在Chat流里，不在本条测试内。

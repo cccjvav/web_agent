@@ -35,7 +35,7 @@ export function paintBridgeActivity(snapshot) {
   if (log) log.innerHTML = entries.slice().reverse().map(record =>
     `<div class="tool-card${record.status === 'failed' || record.success === false ? ' fail' : ''}"><header><span>${escapeHtml(record.tool)}</span>`
     + `<span class="dur">${escapeHtml(record.status || (record.success ? 'succeeded' : 'failed'))} · ${escapeHtml(String(record.durationMs ?? '—'))} ms</span></header>`
-    + `<div class="tiny trace-detail">${escapeHtml(record.callId || '')}<br>任务 ${escapeHtml(record.taskId || '—')} · 会话 ${escapeHtml(record.sessionId || '—')}<br>核验 ${escapeHtml(record.verification || 'not-applicable')}${record.execId ? ` · 命令 ${escapeHtml(record.execId)}` : ''}</div></div>`
+    + `<div class="tiny trace-detail">${escapeHtml(record.callId || '')}<br>任务 ${escapeHtml(record.taskId || '—')} · 会话 ${escapeHtml(record.sessionId || '—')}<br>核验 ${escapeHtml(record.verification || 'not-applicable')}${record.execId ? ` · 命令 ${escapeHtml(record.execId)}` : ''}${record.errorCode ? `<br>错误 ${escapeHtml(record.errorCode)}${ERROR_HINTS[record.errorCode] ? '：' + ERROR_HINTS[record.errorCode] : ''}` : ''}</div></div>`
   ).join('');
   if (log) log.scrollTop = log.scrollHeight;
   const wait = $('#bridge-wait');
@@ -44,6 +44,15 @@ export function paintBridgeActivity(snapshot) {
   if (note) note.textContent = `本轮已完成 ${snapshot.stats.calls} 次 MCP 工具调用；显示最近 ${snapshot.logs.length} 条。刷新页面不清零；重启主机或清除本轮会重置。不是实时连接证明。`;
   activityVersion = version; // Only mark rendered after all UI updates succeed.
 }
+
+// F115: the host records a stable errorCode on thrown tool errors; say in words what the common ones mean.
+const ERROR_HINTS = {
+  E_STALE_FILE: '文件在模型读取后已被改动（例如你刚保存过），写入被拒；模型需重新读取',
+  E_BAD_ARGS: '参数不合规或缺少确认（如覆盖已有文件未带expectedHash/confirm_overwrite），未执行',
+  E_SESSION_REQUIRED: '调用方未建立MCP会话，此操作被拒',
+  E_FORBIDDEN: '当前权限或模式不允许，未执行',
+  E_CANCELLED: '已取消'
+};
 
 export function refreshBridgeActivity() {
   if (activityPending) return activityPending;

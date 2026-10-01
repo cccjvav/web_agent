@@ -1173,12 +1173,25 @@ async function main() {
     assert.strictEqual(activityAfter.stats.calls, 3);
     assert.ok((await page.locator('#bridge-log').textContent()).includes(write._meta.trace.callId));
     await page.reload(); await page.waitForFunction(() => document.querySelector('#stat-calls').textContent === '3');
+    const modelRead = JSON.parse((await rpc('read_files', { filePath: 'acceptance.txt' })).content[0].text);
+    const modelReadHash = modelRead.hash || modelRead.files?.[0]?.hash;
+    assert.match(String(modelReadHash), /^[a-f0-9]{64}$/, JSON.stringify(modelRead).slice(0, 300));
     await page.click('[data-left="explorer"]'); await page.click('.tree-item[data-path="acceptance.txt"]');
     await page.locator('#editor-fallback').waitFor({ state: 'visible' });
     await page.fill('#editor-fallback', 'REAL-BROWSER-EVIDENCE\nSAVED-FROM-BROWSER\n');
     const saved = page.waitForResponse(response => response.url().includes('/api/files/content') && response.request().method() === 'PUT');
     await page.keyboard.press('Control+s'); assert.strictEqual((await saved).status(), 200);
     assert.ok(fs.readFileSync(path.join(workspace, 'acceptance.txt'), 'utf8').includes('SAVED-FROM-BROWSER'));
+    // F115: the model read acceptance.txt before the person saved it. Its write with that old hash is
+    // refused, the person's save stays on disk, and the Bridge log says why in words.
+    const modelWrite = await rpc('write_file', { filePath: 'acceptance.txt', content: 'MODEL-OVERWRITE\n', expectedHash: modelReadHash });
+    assert.strictEqual(modelWrite.isError, true, 'stale model write must fail');
+    assert.ok(modelWrite.content[0].text.includes('E_STALE_FILE'), modelWrite.content[0].text);
+    assert.ok(fs.readFileSync(path.join(workspace, 'acceptance.txt'), 'utf8').includes('SAVED-FROM-BROWSER'), 'person save survives');
+    await page.click('#rb-bridge-tab'); await page.click('#btn-refresh-activity');
+    await page.waitForFunction(() => document.querySelector('#bridge-log').textContent.includes('错误 E_STALE_FILE：文件在模型读取后已被改动'));
+    await page.locator('#bridge-log .tool-card.fail').filter({ hasText: 'E_STALE_FILE' }).first().waitFor({ state: 'visible' });
+    await page.click('#rb-chat-tab'); await page.click('[data-left="explorer"]');
     await page.click('#rb-bridge-tab'); await page.click('#execution-chat');
     await page.waitForFunction(()=>document.querySelector('#execution-mode').textContent.includes('主机模式：chat'));
     await page.click('#rb-chat-tab');

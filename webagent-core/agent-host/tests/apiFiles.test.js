@@ -508,6 +508,15 @@ async function main() {
       fs.writeFileSync(path.join(tmp, 'peer.txt'), 'a again\n');
       await refused('stale reads are dropped on delete for all callers', { filePath: 'peer.txt', content: 'x\n' }, { remote: true, initializedSession: true, callerKey: 'peer-b' });
 
+      // F115: an outdated expectedHash (the person saved after the model read) is reported as stale,
+      // not as "add confirm_overwrite", and nothing is written.
+      fs.writeFileSync(path.join(tmp, 'drift.txt'), 'model saw this\n');
+      const driftHash = (await callTool('read_files', { paths: ['drift.txt'] }, 'code', { remote: true, initializedSession: true, callerKey: 'peer-a' })).hash;
+      fs.writeFileSync(path.join(tmp, 'drift.txt'), 'person saved this\n');
+      const drift = await callTool('write_file', { filePath: 'drift.txt', content: 'model\n', expectedHash: driftHash }, 'code', { remote: true, callerKey: 'mcp@127.0.0.1' }).then(() => null, err => err);
+      assert.ok(drift && drift.code === 'E_STALE_FILE' && /re-read/i.test(drift.detail.retryHint), drift && drift.message);
+      assert.strictEqual(fs.readFileSync(path.join(tmp, 'drift.txt'), 'utf8'), 'person saved this\n');
+
       // Handoff item 3 (F112): sessionless remote calls share "client@address" (behind a tunnel every
       // address is 127.0.0.1), so their reads must not stand in for write consent — not even their own.
       const sessionless = { remote: true, callerKey: 'mcp@127.0.0.1' };

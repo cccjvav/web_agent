@@ -151,7 +151,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 17 个函数/类节点 |
 | [adminIntegrity.test.js](adminIntegrity.test.js) | 63 个函数/类节点 |
-| [apiFiles.test.js](apiFiles.test.js) | 68 个函数/类节点 |
+| [apiFiles.test.js](apiFiles.test.js) | 70 个函数/类节点 |
 | [appWindowLifecycle.test.js](appWindowLifecycle.test.js) | 101 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 21 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 40 个函数/类节点 |
@@ -269,7 +269,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [tunnelRegistry.test.js](tunnelRegistry.test.js) | 14 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 28 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 374 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 375 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
 | [workbenchRuntime.test.js](workbenchRuntime.test.js) | 528 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
@@ -295,5 +295,7 @@ requestLifecycle.test.js：按会话/凭据和带类型RPC ID隔离取消；重�
 第43组补原生命令消费：nativeRotationCommands先复现HTTP500仍提示“已重置”，再覆盖绑定/CAS、确认、坏合同、409拒绝、写后读分离与停止严格判定；后端绑定合同仍由bridgeTunnel证明。
 
 第114组：approvedOperations开头验证审批提交者（四种来源、客户端名清洗、调用者返回与另一peer均不含），apiFiles经HTTP核对操作路由带submitter。
+
+第115组：workbench.browser补“人保存后模型带旧hash写入被拒”且Bridge日志显示中文原因；apiFiles锁定旧expectedHash优先报E_STALE_FILE。
 
 nativeChatStream.test.js：真实回环HTTP与VM原生扩展，验证NDJSON失败/终态/预算/取消和两个消费者的历史；入口及helper main详见工作区与命令安全测试详解。
