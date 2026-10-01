@@ -2354,3 +2354,15 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 **验证：** 本地@sparticuz/chromium跑workbench.browser全程通过；npm test、lint；CI见提交。
 
 **范围：** 本机Chat的写入失败显示在Chat流里，不在本条测试内。
+
+### 第116组：交接第6项——waitHealth复查与启动配对（会话01a0e8ea，2026-10-01）
+
+**复查原计划两点（F56遗留）：** 独立审计2026-09-20第289行提出的“接受连接但不回包”和“启动失败时子进程收尾”，第56组已经改写并有真实HTTP/真实子进程测试（`health deadline closes an accepted silent HTTP connection`、`startup authentication failure reaps the real child before returning`等）。逐条读了现行`waitHealth`与`main`，这两点成立，未发现回退。
+
+**新发现：** waitHealth只看HTTP 200。若MCP端口上还留着别的Web Agent主机（上次没关干净、或另一个工作区的主机），它会立刻回200，launcher就当作就绪，接着启动code-server；随后自己的子进程才因EADDRINUSE退出，用户看到的是含糊的“agent-host 已退出”，期间编辑器可能连到错误的主机/工作区。
+
+**修复：** run-code-oss每次启动生成随机`launchId`，经环境变量`WEBAGENT_LAUNCH_ID`交给agent-host；`/health`在该变量为32位小写十六进制时原样回显；waitHealth带launchId时读完响应体（≤4096字符）并核对，不一致按未就绪重试。旧主机因此不能冒充，自己的子进程退出后由已有的exit处理以真实原因停止启动。不传launchId时行为不变（其他调用方与旧测试）。
+
+**测试：** codeServerLifecycle新增真实回环HTTP场景（旧主机只回`{ok:true}`→ETIMEDOUT；别的ID/无ID重试到正确ID才就绪），假传输自动回包改为回显spawn拿到的launchId；httpSmoke核对`/health`回显。
+
+**限制：** launchId不是凭据，本机其他进程读到环境变量也能回显；它只解决“残留主机误当就绪”，不做身份认证。

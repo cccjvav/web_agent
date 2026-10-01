@@ -162,7 +162,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [chatMode.test.js](chatMode.test.js) | 0 个函数/类节点 |
 | [chatVision.test.js](chatVision.test.js) | 21 个函数/类节点 |
 | [codeServerAuth.test.js](codeServerAuth.test.js) | 0 个函数/类节点 |
-| [codeServerLifecycle.test.js](codeServerLifecycle.test.js) | 130 个函数/类节点 |
+| [codeServerLifecycle.test.js](codeServerLifecycle.test.js) | 137 个函数/类节点 |
 | [codeServerNotRunnable.test.js](codeServerNotRunnable.test.js) | 0 个函数/类节点 |
 | [commandEncoding.test.js](commandEncoding.test.js) | 8 个函数/类节点 |
 | [completionStream.test.js](completionStream.test.js) | 12 个函数/类节点 |
@@ -297,5 +297,7 @@ requestLifecycle.test.js：按会话/凭据和带类型RPC ID隔离取消；重�
 第114组：approvedOperations开头验证审批提交者（四种来源、客户端名清洗、调用者返回与另一peer均不含），apiFiles经HTTP核对操作路由带submitter。
 
 第115组：workbench.browser补“人保存后模型带旧hash写入被拒”且Bridge日志显示中文原因；apiFiles锁定旧expectedHash优先报E_STALE_FILE。
+
+第116组：codeServerLifecycle加“端口上的旧主机回200但不带本次launchId不算就绪”真实HTTP场景；httpSmoke核对/health回显launchId。
 
 nativeChatStream.test.js：真实回环HTTP与VM原生扩展，验证NDJSON失败/终态/预算/取消和两个消费者的历史；入口及helper main详见工作区与命令安全测试详解。

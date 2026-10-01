@@ -93,7 +93,10 @@ function jsonErrors(err, req, res, next) {
 
 function mountHealth(app) {
   app.get('/health', (req, res) => {
-    res.json({ ok: true, product: config.productName, version: config.version });
+    // F116: run-code-oss passes a random launch ID and only accepts a health reply echoing it, so a stale
+    // host still holding the port cannot pass for the child it just started. Not a secret: a pairing tag.
+    const launchId = /^[a-f0-9]{32}$/.test(process.env.WEBAGENT_LAUNCH_ID || '') ? process.env.WEBAGENT_LAUNCH_ID : undefined;
+    res.json({ ok: true, product: config.productName, version: config.version, ...(launchId ? { launchId } : {}) });
   });
 }
 

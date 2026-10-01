@@ -43,16 +43,21 @@ function fixtureChild(pid) {
 
 function healthyHttp({ automatic = true } = {}) {
   const requests = [];
-  return { requests, get(...args) {
+  const transport = { requests, launchId: undefined, get(...args) {
     const callback = args.at(-1), request = new EventEmitter(), response = new EventEmitter();
     request.destroy = () => { request.destroyed = true; };
     response.destroy = () => { response.destroyed = true; };
-    response.resume = () => {};
+    response.resume = () => {}; response.setEncoding = () => {};
     response.statusCode = 200;
     requests.push({ request, response, callback });
-    if (automatic) queueMicrotask(() => callback(response));
+    // F116: an automatic healthy host echoes the launch ID its spawn received (transport.launchId).
+    if (automatic) queueMicrotask(() => {
+      callback(response);
+      queueMicrotask(() => { response.emit('data', JSON.stringify({ ok: true, launchId: transport.launchId })); response.emit('end'); });
+    });
     return request;
   } };
+  return transport;
 }
 
 function harness(options = {}) {
@@ -75,6 +80,7 @@ function harness(options = {}) {
     } },
     child_process: { spawn(command, args, opts) {
       calls.push({ command, args, opts });
+      if (opts?.env?.WEBAGENT_LAUNCH_ID && bindings.http && 'launchId' in bindings.http) bindings.http.launchId = opts.env.WEBAGENT_LAUNCH_ID;
       const child = options.spawn ? options.spawn(command, args, opts, children) : fixtureChild(10000 + children.length);
       children.push(child); return child;
     } },
@@ -201,6 +207,22 @@ async function serverFixture(handler) {
       assert.equal(attempts, 2); assert.equal(peak, 1, 'do not accumulate draining/pending responses');
       assert.equal(server.sockets.size, 0);
     } finally { await server.close(); await h.close(); }
+  });
+  await test('a stale host answering 200 without our launch ID does not pass health', async () => {
+    const ours = 'a'.repeat(32); let attempts = 0;
+    const server = await serverFixture((_req, res) => {
+      attempts++;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(attempts <= 2 ? { ok: true, product: 'Web Agent', launchId: 'b'.repeat(32) } : attempts === 3 ? { ok: true } : { ok: true, launchId: ours }));
+    });
+    const stale = await serverFixture((_req, res) => { res.writeHead(200); res.end('{"ok":true}'); });
+    const h = harness({ http });
+    try {
+      const failure = await bounded(h.api.waitHealth(stale.url, 500, { launchId: ours })).then(() => null, error => error);
+      assert.equal(failure?.code, 'ETIMEDOUT', 'a 200 that does not echo the launch ID is not our child');
+      await bounded(h.api.waitHealth(server.url, 2000, { launchId: ours }), 2500);
+      assert.equal(attempts, 4, 'other/missing IDs retried until the matching reply');
+    } finally { await server.close(); await stale.close(); await h.close(); }
   });
   await test('abort during a real HTTP request closes the connection', async () => {
     const controller = new AbortController(); let requests = 0, onClose;

@@ -18,7 +18,7 @@ if (!fs.existsSync(workspace) || !fs.statSync(workspace).isDirectory()) {
   process.exit(1);
 }
 
-function waitHealth(url, timeoutMs, { signal } = {}) {
+function waitHealth(url, timeoutMs, { signal, launchId } = {}) {
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) return Promise.reject(new Error('健康检查期限必须为正数'));
   return new Promise((resolve, reject) => {
     const expires = performance.now() + timeoutMs;
@@ -56,7 +56,19 @@ function waitHealth(url, timeoutMs, { signal } = {}) {
           if (settled || request !== active) { res.destroy(); return; }
           response = res;
           if (performance.now() >= expires) return finish(timeoutError);
-          if (res.statusCode === 200) finish(); else retry();
+          if (res.statusCode !== 200) return retry();
+          if (!launchId) return finish();
+          // F116: a 200 from someone else (stale host on the port) is not our child: keep waiting; our child's
+          // EADDRINUSE exit then stops startup with the real reason instead of continuing with the wrong host.
+          let body = '';
+          res.setEncoding('utf8');
+          res.on('data', chunk => { body += chunk; if (body.length > 4096) { res.destroy(); if (request === active) retry(); } });
+          res.on('end', () => {
+            if (settled || request !== active) return;
+            let echoed;
+            try { echoed = JSON.parse(body).launchId; } catch (_) { echoed = undefined; }
+            if (echoed === launchId) finish(); else retry();
+          });
         });
         request = active;
         active.on('error', () => { if (request === active) retry(); });
@@ -187,6 +199,7 @@ async function main() {
       checkRunning();
     }
 
+    const launchId = require('crypto').randomBytes(16).toString('hex');
     launch(process.execPath, ['src/index.js'], {
       cwd: agentHostDir,
       env: {
@@ -195,11 +208,12 @@ async function main() {
         // The host reports workbenchPort in its identity; the app window checks it against this editor port.
         // No UI server listens on it (WEBAGENT_SKIP_WORKBENCH).
         WORKBENCH_PORT: String(codePort),
-        WEBAGENT_SKIP_WORKBENCH: '1'
+        WEBAGENT_SKIP_WORKBENCH: '1',
+        WEBAGENT_LAUNCH_ID: launchId
       }
     }, 'agent');
 
-    await waitHealth(`http://127.0.0.1:${mcpPort}/health`, 15000, { signal: controller.signal });
+    await waitHealth(`http://127.0.0.1:${mcpPort}/health`, 15000, { signal: controller.signal, launchId });
     checkRunning();
 
     const userData = process.env.WEBAGENT_USER_DATA_DIR || path.join(repoRoot, '.local/share/code-server');

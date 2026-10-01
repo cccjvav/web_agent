@@ -85,7 +85,8 @@ async function main() {
       ...process.env,
       WORKSPACE_ROOT: tmp,
       WORKBENCH_PORT: String(workbenchPort),
-      AGENT_HOST_PORT: String(mcpPort)
+      AGENT_HOST_PORT: String(mcpPort),
+      WEBAGENT_LAUNCH_ID: 'c'.repeat(32) // F116: echoed by /health for run-code-oss
     },
     stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true
@@ -123,6 +124,7 @@ async function main() {
     // (clickjacking approval buttons) and MIME sniffing are refused; the secret-bearing MCP URL
     // never leaks through Referer.
     const mcpHealth = await request('GET', `http://127.0.0.1:${mcpPort}/health`);
+    assert.strictEqual(mcpHealth.json.launchId, 'c'.repeat(32), 'health echoes the launcher pairing ID');
     for (const [label, response] of [['workbench page', page], ['workbench health', health], ['MCP health', mcpHealth], ['MCP 401', unauthBody]]) {
       assert.strictEqual(response.headers['x-content-type-options'], 'nosniff', label + ': nosniff');
       assert.strictEqual(response.headers['x-frame-options'], 'DENY', label + ': X-Frame-Options');
