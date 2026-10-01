@@ -63,6 +63,7 @@ R5第六包：Windows安装器增加本机“隧道残留回收（需确认）�
 | [processIdentity.js](processIdentity.js) | 15 个函数/类节点 |
 | [receiptProtection.js](receiptProtection.js) | 14 个函数/类节点 |
 | [receiptProtection.ps1](receiptProtection.ps1) | 文件级登记；未做符号完整性证明 |
+| [residueNotice.js](residueNotice.js) | 11 个函数/类节点 |
 | [stopProcess.js](stopProcess.js) | 8 个函数/类节点 |
 | [tunnelCleanup.cs](tunnelCleanup.cs) | 文件级登记；未做符号完整性证明 |
 | [tunnelCleanup.js](tunnelCleanup.js) | 28 个函数/类节点 |

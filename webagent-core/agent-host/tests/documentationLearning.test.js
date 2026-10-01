@@ -22,6 +22,8 @@ const pairs = [
   ["webagent-core/agent-host/src/tunnel/processIdentity.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
   ["webagent-core/agent-host/src/tunnel/tunnelRegistry.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
   ["webagent-core/agent-host/tests/tunnelRegistry.test.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
+  ["webagent-core/agent-host/src/tunnel/residueNotice.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
+  ["webagent-core/agent-host/tests/tunnelResidueNotice.test.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
   ["webagent-core/agent-host/tests/tunnelOwnerFixture.js", "webagent-core/agent-host/src/tunnel/停止进程详解.md"],
   ["webagent-core/agent-host/scripts/tunnel-residue.js", "webagent-core/agent-host/scripts/运行器详解.md"],
   ["webagent-core/agent-host/tests/processDiagnostics.test.js", "webagent-core/agent-host/tests/存储完整性与预算测试详解.md"],

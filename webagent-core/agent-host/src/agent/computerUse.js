@@ -23,15 +23,19 @@ function stripQuotes(s) {
   return String(s || '').replace(/^["']|["']$/g, '');
 }
 
-// 从命令行与 stdout 里找候选图片路径：
+// 从命令行与 stdout 里找候选图片路径（F123收紧：只认截图脚本明确产出的那张图）：
+// - 命令必须调用 snap / mark（可带 .ps1、可带路径或引号）；其他命令一律不附图，
+//   不再从任意 stdout 里捡裸的 *.png / *.jpg 路径（此前 `echo x.png` 或日志里的图片名都可能触发读取）
 // - snap.ps1 / mark.ps1 的 `-Out <路径>`（带引号或不带）
 // - mark.ps1 stdout JSON 的 "out":"<路径>"
-// - stdout 里裸的 *.png / *.jpg / *.jpeg token
+// - snap.ps1 stdout `META {...}` 里的 "file":"<路径>"（未给 -Out 时用默认路径）
+const SHOT_SCRIPT = /(?:^|[\\/\s'"&(])(?:snap|mark)(?:\.ps1)?(?=$|[\s'";|)])/i;
 function findShotCandidates({ command = '', stdout = '' } = {}) {
   const out = [];
   const cmd = String(command || '');
   const text = String(stdout || '');
   let m;
+  if (!SHOT_SCRIPT.test(cmd)) return out;
   const reOut = /-Out\s+("[^"]+"|'[^']+'|[^\s;|&"']+)/gi;
   while ((m = reOut.exec(cmd)) !== null) out.push(stripQuotes(m[1]));
   const reJsonOut = /"out"\s*:\s*"([^"]+\.(?:png|jpe?g))"/gi;
@@ -44,8 +48,12 @@ function findShotCandidates({ command = '', stdout = '' } = {}) {
     if (typeof decoded === 'string' && decoded !== m[1] && !/[\u0000-\u001f]/.test(decoded)) out.push(decoded);
     out.push(m[1]);
   }
-  const reBare = /[^\s"'=<>|]+\.(?:png|jpe?g)\b/gi;
-  while ((m = reBare.exec(text)) !== null) out.push(m[0]);
+  const reMetaFile = /^META\s+\{.*?"file"\s*:\s*"([^"]+\.(?:png|jpe?g))"/gim;
+  while ((m = reMetaFile.exec(text)) !== null) {
+    let decoded = null;
+    try { decoded = JSON.parse(`"${m[1]}"`); } catch (_) { decoded = null; }
+    out.push(typeof decoded === 'string' && !/[\u0000-\u001f]/.test(decoded) ? decoded : m[1]);
+  }
   return out.filter(Boolean);
 }
 

@@ -491,12 +491,21 @@ function activate(context) {
   ptyHost = startPtyHost(context, { agentHostUrl, requestJson, log: (line) => hostOutput.appendLine(line) });
   const chat = new ChatView();
   const bridge = new BridgeView(context);
+  const residueChecked = new Set();
   hostManager = new HostManager({
     extensionDir: context.extensionPath || __dirname,
     log: (line) => hostOutput.appendLine(line),
     workspaceMatches: sameWorkspace,
     nodePath: nodePathSetting,
-    onChange: () => { refreshBar(); bridge.refresh(); }
+    onChange: (snap) => {
+      refreshBar(); bridge.refresh();
+      const instance = snap && (snap.state === 'running' || snap.state === 'external') ? snap.url : null; // once per host URL in this window
+      if (instance && !residueChecked.has(instance)) {
+        residueChecked.add(instance);
+        watchTunnelResidue(async () => (await requestJson('GET', `${agentHostUrl()}/api/status`, undefined, { timeoutMs: 3000 })).json,
+          (message) => { hostOutput.appendLine('[host] ' + message); vscode.window.showWarningMessage(message); }).catch(() => {});
+      }
+    }
   });
   hostManager.checkSource().then((info) => {
     if (info.error) hostOutput.appendLine('[host] ' + info.error);
@@ -674,6 +683,28 @@ function activate(context) {
   else if (canManage) {
     try { hostManager.attachExisting(workspacePaths()[0]).catch(() => {}); } catch { /* no usable folder yet */ }
   }
+}
+
+// R5 (F123): the host's read-only startup look for tunnels an earlier, killed host left running. Warn once per
+// host instance; the fix is the confirmed start-menu cleanup, so the extension offers no stop button.
+const RESIDUE_RETRY_MS = 5000, RESIDUE_RETRIES = 6;
+function residueWarning(status) {
+  const residue = status && status.tunnelResidue;
+  if (!residue || residue.pending || !Number.isInteger(residue.orphanCount) || residue.orphanCount < 1) return null;
+  return `Web Agent：遗留隧道 ${residue.orphanCount} 个。${typeof residue.hint === 'string' ? residue.hint : ''}`;
+}
+async function watchTunnelResidue(fetchStatus, show, wait = ms => new Promise(r => setTimeout(r, ms))) {
+  for (let attempt = 0; attempt <= RESIDUE_RETRIES; attempt++) {
+    let status = null;
+    try { status = await fetchStatus(); } catch { return null; }
+    if (!status || !status.tunnelResidue || !status.tunnelResidue.pending) {
+      const message = residueWarning(status);
+      if (message) show(message);
+      return message;
+    }
+    await wait(RESIDUE_RETRY_MS);
+  }
+  return null;
 }
 
 // Webview messages are untrusted input, even with a restrictive page CSP.
@@ -1254,4 +1285,4 @@ vscode.postMessage({ type:'refresh' });
 // VS Code awaits this promise briefly on window close; the stdin lifeline covers the rest.
 function deactivate() { return hostManager ? hostManager.dispose() : undefined; }
 
-module.exports = { activate, deactivate, modeFromChatRequest };
+module.exports = { activate, deactivate, modeFromChatRequest, residueWarning, watchTunnelResidue };

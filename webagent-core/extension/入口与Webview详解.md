@@ -221,3 +221,10 @@ BridgeView的control消息只接受chat/bridge，或含64字符revision与四个
 F54原生流回归：nativeChatStream用真实回环HTTP与VM中的真实postNdjson/ChatView/注册handler，替换VS Code及workspaceBinding；覆盖302/格式/坏帧/提前结束/断流/取消（含done回调时取消）、回调异常、单行/总预算、控制时钟的deadline、跨UTF8字节/无尾换行正例，以及失败不进助手历史。不是实际VS Code窗口验收；该第五批当时未修requestJson；第七批现补其响应预算/总时限/断流清理及重定向拒绝，实际IDE验收仍单列。
 
 F54第七批：requestJson失败不表示变更未发生。resetSecretCommand与Bridge停止消费方继续显示未确认、不自动重放；有界完整409仍进入既有“主机拒绝”分支。PTY的hello/poll及claimed/accepted仍由successfulResponse和各自JSON字段复查，本次不改变终端执行授权。请求正文预算、跨请求并发总量与真实Windows窗口/网络环境不由本次响应字节上限认证。
+
+## 遗留隧道提醒（F123，R5只读）
+
+- **residueWarning(status)**：读取 `/api/status` 的 `tunnelResidue` 字段。只有 `orphanCount` 为正整数时才返回（hint 不是字符串时该部分为空）“Web Agent：遗留隧道 N 个。<hint>”；null、`{pending:true}` 或形状不对时返回 null。
+- **watchTunnelResidue(getStatus, show, wait)**：主机还在扫描（pending）时每 5 秒重试，最多 6 次，之后放弃；最终有提示文字就调用一次 `show` 并返回该文字。读取出错时静默返回 null。
+- 接线：HostManager 的 `onChange` 在拿到主机快照后，按 `snap.url` 去重（`residueChecked` 集合），同一宿主只提醒一次，并用 `showWarningMessage` 展示。提醒不带回收按钮，回收仍走开始菜单“隧道残留回收（需确认）”。
+- 回归：`agent-host/tests/tunnelResidueNotice.test.js`。

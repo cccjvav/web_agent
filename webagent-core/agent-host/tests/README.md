@@ -202,7 +202,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [mcpCallerIsolation.test.js](mcpCallerIsolation.test.js) | 25 个函数/类节点 |
 | [mcpCancellation.test.js](mcpCancellation.test.js) | 24 个函数/类节点 |
 | [mcpInterop.test.js](mcpInterop.test.js) | 12 个函数/类节点 |
-| [mcpProtocol.test.js](mcpProtocol.test.js) | 53 个函数/类节点 |
+| [mcpProtocol.test.js](mcpProtocol.test.js) | 54 个函数/类节点 |
 | [memoryRecall.test.js](memoryRecall.test.js) | 8 个函数/类节点 |
 | [modelDiagnostics.test.js](modelDiagnostics.test.js) | 3 个函数/类节点 |
 | [modelLifecycle.test.js](modelLifecycle.test.js) | 55 个函数/类节点 |
@@ -256,6 +256,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [tunnelReceiptProtection.test.js](tunnelReceiptProtection.test.js) | 17 个函数/类节点 |
 | [tunnelRecoveryLauncher.test.js](tunnelRecoveryLauncher.test.js) | 11 个函数/类节点 |
 | [tunnelRegistry.test.js](tunnelRegistry.test.js) | 14 个函数/类节点 |
+| [tunnelResidueNotice.test.js](tunnelResidueNotice.test.js) | 21 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 28 个函数/类节点 |
 | [workbench.browser.js](workbench.browser.js) | 370 个函数/类节点 |

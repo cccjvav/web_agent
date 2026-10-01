@@ -429,6 +429,7 @@ router.get('/status', (req, res) => {
     bridgeTaskStates: getBridgeTaskStates(),
     recentLogs: recentToolLogs(12),
     bridgeRunning: config.bridgeRunning,
+    tunnelResidue: require('../tunnel/residueNotice').notice(),
     tunnelProvider: bridge.tunnelProvider,
     namedDomain: bridge.namedDomain,
     ngrokDomain: bridge.ngrokDomain,

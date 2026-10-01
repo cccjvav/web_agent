@@ -40,7 +40,7 @@ F54第六批：dom.setWorkspaceView与bind/tabs联动窄屏展示和抽屉；工
 |---|---|
 | [api.js](api.js) | 7 个函数/类节点 |
 | [bind.js](bind.js) | 118 个函数/类节点 |
-| [bridge.js](bridge.js) | 61 个函数/类节点 |
+| [bridge.js](bridge.js) | 62 个函数/类节点 |
 | [chat.js](chat.js) | 46 个函数/类节点 |
 | [dom.js](dom.js) | 35 个函数/类节点 |
 | [monaco.js](monaco.js) | 10 个函数/类节点 |

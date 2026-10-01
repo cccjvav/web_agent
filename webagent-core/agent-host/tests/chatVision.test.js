@@ -23,7 +23,7 @@ const { loadSkill } = require('../src/tools/skills');
 const PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 const noCu = path.join(tmp, 'no-cu-dir');
 
-// --- 解析：-Out 参数与 stdout JSON / 裸路径
+// --- 解析：-Out 参数与 stdout JSON（F123：只认 snap/mark 脚本，不再捡裸路径）
 {
   const cands = findShotCandidates({
     command: `& 'C:\\repo\\computer-use\\win\\snap.ps1' -WindowTitle 记事本 -Out shots\\cur.png`,
@@ -32,9 +32,15 @@ const noCu = path.join(tmp, 'no-cu-dir');
   assert.ok(cands.some((c) => c === 'shots\\cur.png'), '-Out 反斜杠路径应被认出');
   const quoted = findShotCandidates({ command: 'snap.ps1 -Out "shots/my shot.png"', stdout: '' });
   assert.ok(quoted.includes('shots/my shot.png'), '带引号 -Out 应去引号');
-  const fromStdout = findShotCandidates({ command: 'x', stdout: '{"in":"a.png","out":"a-marked.png","ok":true}' });
+  const fromStdout = findShotCandidates({ command: 'mark.ps1 -Path a.png -Pts 1:1', stdout: '{"in":"a.png","out":"a-marked.png","ok":true}' });
   assert.ok(fromStdout.includes('a-marked.png'), 'mark.ps1 JSON out 应被认出');
   assert.ok(findShotCandidates({ command: 'npm test', stdout: 'all pass' }).length === 0, '无图命令不应误报');
+  // F123: a non-screenshot command never attaches, even when its output names an image or mimics script output.
+  assert.deepStrictEqual(findShotCandidates({ command: 'echo shots/cur.png', stdout: 'shots/cur.png' }), [], '普通命令输出里的图片路径不附图');
+  assert.deepStrictEqual(findShotCandidates({ command: 'cat log.txt', stdout: '{"out":"a-marked.png"}\nMETA {"file":"shots/cur.png"}' }), [], '非截图脚本伪造的JSON不附图');
+  assert.deepStrictEqual(findShotCandidates({ command: 'snapshot-tool -Out x.png', stdout: '' }), [], '名字只是包含snap的命令不算');
+  const metaOnly = findShotCandidates({ command: "& 'C:\\repo\\computer-use\\win\\snap.ps1' -WindowTitle 记事本", stdout: 'META {"file":"skills/computer-use/state/screen.png","bytes":10,"window":"记事本","rect":null}' });
+  assert.ok(metaOnly.includes('skills/computer-use/state/screen.png'), '未给 -Out 时从 snap META 的 file 认出默认路径');
 }
 
 // --- 白名单：工作区内收、外面拒
@@ -119,8 +125,9 @@ const toolCallResp = (cmd) => ({
 });
 const finalResp = (text) => ({ choices: [{ message: { role: 'assistant', content: text } }] });
 
-// Quote the complete path: PowerShell echo is Write-Output; bare -Out is parsed as a parameter.
-const cmd = `echo "${path.join(tmp, 'shots', 'cur.png')}"`;
+// Quote the whole text: PowerShell echo is Write-Output and a bare -Out would be parsed as its parameter.
+// F123: only a snap/mark invocation attaches an image, so the stand-in command names the script and its -Out.
+const cmd = `echo "snap -Out ${path.join(tmp, 'shots', 'cur.png')}"`;
 
 async function main() {
   await withProvider([toolCallResp(cmd), finalResp('我看到截图了')], async (baseUrl, bodies) => {

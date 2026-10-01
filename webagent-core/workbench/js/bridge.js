@@ -573,6 +573,16 @@ function isStatusSnapshot(value) {
   });
 }
 
+// R5 (F123): read-only notice about tunnels a killed host left behind. Text only (textContent, no HTML); the
+// fix is the confirmed start-menu cleanup, so this page offers no button that could stop processes.
+function paintTunnelResidue(residue) {
+  const banner = $('#tunnel-residue-banner');
+  if (!banner) return;
+  const count = residue && Number.isInteger(residue.orphanCount) && residue.orphanCount > 0 ? residue.orphanCount : 0;
+  banner.classList.toggle('hidden', !count);
+  banner.textContent = count ? `遗留隧道 ${count} 个：${typeof residue.hint === 'string' ? residue.hint : ''}` : '';
+}
+
 export async function refreshStatus() {
   const ticket = ++statusRequest;
   if (statusController) statusController.abort();
@@ -592,6 +602,7 @@ export async function refreshStatus() {
     published = true;
     paintExecutionControl();
     ui.paintBridge();
+    paintTunnelResidue(snapshot.tunnelResidue);
     const sel = $('#model-select');
     sel.innerHTML = snapshot.models.map((m) =>
       `<option value="${escapeHtml(m.id)}">${escapeHtml(m.name || m.id)}</option>`

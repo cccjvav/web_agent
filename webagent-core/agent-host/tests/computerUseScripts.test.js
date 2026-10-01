@@ -43,7 +43,7 @@ function hostParsesEscapedJson() {
   const stdout = '{"in":"C:\\\\repo\\\\shots\\\\cur.png","out":"C:\\\\repo\\\\shots\\\\cur-marked.png","pts":"1:1","ok":true}';
   const cands = findShotCandidates({ command: 'mark.ps1 -Path x -Pts 1:1', stdout });
   assert.ok(cands.includes('C:\\repo\\shots\\cur-marked.png'), `decoded JSON out path is a candidate: ${JSON.stringify(cands)}`);
-  const legacy = findShotCandidates({ command: 'x', stdout: '{"in":"C:\\temp\\new.png","out":"C:\\temp\\new-marked.png","ok":true}' });
+  const legacy = findShotCandidates({ command: 'mark.ps1 -Path x -Pts 1:1', stdout: '{"in":"C:\\temp\\new.png","out":"C:\\temp\\new-marked.png","ok":true}' });
   assert.ok(legacy.includes('C:\\temp\\new-marked.png'), `legacy unescaped out path still a candidate: ${JSON.stringify(legacy)}`);
 }
 

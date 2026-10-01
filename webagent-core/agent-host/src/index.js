@@ -237,6 +237,12 @@ listenOrExit(mcpServer, config.port, 'MCP');
 mcpServer.on('listening', () => {
   console.log(`agent-host MCP listening on ${config.host}:${config.port}`);
 });
+// R5 (F123): one read-only look for tunnels an earlier, killed host left running. Never cleans up.
+const residueNotice = require('./tunnel/residueNotice');
+residueNotice.check().then(found => {
+  if (found) console.warn(`  遗留隧道  ${found.orphanCount} 个（${found.providers.join('/')}）。${found.hint}`);
+  else if (!residueNotice.scanComplete()) console.warn('  遗留隧道  启动检查未完成（登记不可读或过多）；需要时从开始菜单运行“隧道残留回收（需确认）”查看。');
+}).catch(() => {});
 
 // The ONE shutdown path. It used to race a second, independent SIGINT/SIGTERM handler in
 // tunnel/cloudflared.js — whichever called process.exit first won, so the other cleanup could be

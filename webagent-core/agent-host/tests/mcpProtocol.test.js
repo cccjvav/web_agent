@@ -282,7 +282,7 @@ async function main() {
   fs.writeFileSync(shotPng, Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex'));
   const shotCall = await handleRpc(req('tools/call', {
     name: 'run_command',
-    arguments: { command: `echo ${shotPng}` }
+    arguments: { command: `echo "snap -Out ${shotPng}"` }
   }));
   // Preserve the assertion; expose only this synthetic echo fixture's bounded result.
   const shotDetail = String(shotCall.content?.[0]?.text || '').slice(0, 1600)
@@ -298,6 +298,12 @@ async function main() {
     arguments: { command: 'echo plain-text-no-image' }
   }));
   assert.ok(!noShot.content.some((c) => c.type === 'image'), '无截图路径不附图');
+  // F123: a bare image path printed by an arbitrary command is no longer read back as a screenshot.
+  const bareShot = await handleRpc(req('tools/call', {
+    name: 'run_command',
+    arguments: { command: `echo ${shotPng}` }
+  }));
+  assert.ok(!bareShot.content.some((c) => c.type === 'image'), '非snap/mark命令的裸路径不附图');
 
   const remotePing = await handleRpc(req('tools/call', { name: 'ping', arguments: {} }));
   assert.strictEqual(remotePing.isError, false);

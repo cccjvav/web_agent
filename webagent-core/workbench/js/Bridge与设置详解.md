@@ -57,6 +57,8 @@
 
 **refreshStatus()**只读GET `/api/status`，no-store、10秒AbortController；statusRequest递增并中止上次读取，在响应头和JSON解析后都检查ticket。只有最新请求HTTP成功且核心形状有效才发布state.status；被取代的请求返回false，即使新请求失败，也不接受旧请求迟到成功作为回退。超时/网络/解析/HTTP/核心形状失败保留最近快照，状态栏明确“状态同步失败”，并reject；成功显示完成返回true。finally清timer，仅最新请求清controller。取消仅是优化，序号才是发布屏障；没有自动重试或写入。
 
+**paintTunnelResidue(residue)**（F123）由refreshStatus传入`snapshot.tunnelResidue`：只有`orphanCount`为正整数时才显示`#tunnel-residue-banner`，文字为“遗留隧道 N 个：”加主机给的hint（hint不是字符串时为空），只写textContent；null、`{pending:true}`或形状不对时隐藏横幅。横幅只做提醒，不提供回收按钮（用户的R5决定），回收走开始菜单“隧道残留回收（需确认）”。
+
 发布后paintExecutionControl/paintBridge，重建模型options，隐藏select与按钮都按同一activeModelId设置，不再恢复旧select；不存在的ID令select空并显示模型不可用，后续Chat仍带原配置ID让后端明确拒绝，不回退内置。name空则用id。有planRound才更新并paintPlanComposer；think仅未touched才取后台设置；再画Provider与todos。渲染异常单独标“状态显示失败”并reject，已经发布的新快照/部分DOM不承诺事务回滚；此处不认证全部嵌套消费者。
 
 ## 3. settings.js全部函数
