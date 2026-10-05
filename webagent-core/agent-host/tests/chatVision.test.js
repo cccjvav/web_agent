@@ -16,7 +16,17 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-vision-'));
 const { config } = require('../src/config');
 config.workspaceRoot = tmp;
 
-const { collectShot, findShotCandidates, resolveShotPath, MAX_BYTES } = require('../src/agent/computerUse');
+const { collectShot, findShotCandidates, resolveShotPath, inside, MAX_BYTES } = require('../src/agent/computerUse');
+
+// F124: Windows drive letters/paths compare case-insensitively (VS Code passes c:\\, snap writes C:\\).
+assert.ok(inside('C:\\Users\\Peter\\web_agent\\.shots\\a.png', 'c:\\Users\\Peter\\web_agent', 'win32'), 'drive-letter case must not matter on Windows');
+assert.ok(inside('C:\\USERS\\peter\\Web_Agent', 'c:\\Users\\Peter\\web_agent', 'win32'), 'the root itself, any case');
+assert.ok(inside('C:\\a.png', 'C:\\', 'win32'), 'drive root parent');
+assert.ok(!inside('C:\\Users\\Peter\\web_agent2\\a.png', 'c:\\Users\\Peter\\web_agent', 'win32'), 'sibling prefix is not inside');
+assert.ok(!inside('D:\\web_agent\\a.png', 'c:\\web_agent', 'win32'), 'other drive');
+assert.ok(!inside('/Work/a.png', '/work', 'linux'), 'POSIX stays case-sensitive');
+assert.ok(inside('/work/a.png', '/work', 'linux'));
+
 const { runOpenAI, modelSeesImages } = require('../src/agent/openai');
 const { loadSkill } = require('../src/tools/skills');
 

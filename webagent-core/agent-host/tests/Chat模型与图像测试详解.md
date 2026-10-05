@@ -48,7 +48,7 @@ F70先用九个modelId核对真实请求体的采样字段：gpt-5/o3/o4-mini/`o
 
 ## chatVision.test.js
 
-[源码](chatVision.test.js)假1px PNG、两个临时目录，不依赖显示器。前半静态/函数断言：findShotCandidates识别反斜杠-Out、引号空格路径、mark JSON out，无关命令不误报；resolveShotPath允许工作区相对/绝对，拒外部与非图片。symlink创建仅Windows EPERM/EACCES明确跳过，链接成功后的逃逸断言在catch外，不能吞失败。
+[源码](chatVision.test.js)假1px PNG、两个临时目录，不依赖显示器。前半静态/函数断言：findShotCandidates识别反斜杠-Out、引号空格路径、mark JSON out，无关命令不误报；resolveShotPath允许工作区相对/绝对，拒外部与非图片。F124起另有inside在win32下的大小写断言：盘符/目录大小写不同仍算工作区内，同名前缀的兄弟目录、其他盘不算，POSIX保持区分大小写。symlink创建仅Windows EPERM/EACCES明确跳过，链接成功后的逃逸断言在catch外，不能吞失败。
 
 collectShot须返回PNG data URL、bytes/rel；MAX_BYTES断言等于6MiB，**未实际构造超限文件验证tooBig分支**。modelSeesImages检查vision布尔/caps/capabilities三来源，以及无声明/null反例。loadSkill computer-use须给绝对目录、脚本目录与snap提示/Bridge回图说明；未知Skill found=false。
 

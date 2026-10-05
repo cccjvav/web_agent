@@ -65,8 +65,15 @@ function realOrSelf(p) {
   }
 }
 
-function inside(child, parent) {
-  return child === parent || child.startsWith(parent + path.sep);
+// F124: Windows paths are case-insensitive, and realpathSync keeps whatever drive-letter case it was given.
+// VS Code hands the workspace over as `c:\...` while snap/path.resolve produce `C:\...`, so a case-sensitive
+// compare rejected every legitimate in-workspace screenshot on Windows (found in the F123 MCP acceptance).
+function inside(child, parent, platform = process.platform) {
+  const win = platform === 'win32';
+  const sep = win ? '\\' : path.sep;
+  const c = win ? String(child).toLowerCase() : String(child);
+  const p = win ? String(parent).toLowerCase() : String(parent);
+  return c === p || c.startsWith(p.endsWith(sep) ? p : p + sep);
 }
 
 // 解析 + 白名单：相对路径按工作区解析；realpath 后必须落在工作区或 computer-use/ 内。
@@ -120,6 +127,7 @@ module.exports = {
   collectShot,
   findShotCandidates,
   resolveShotPath,
+  inside,
   readShotAsDataUrl,
   MAX_BYTES,
   COMPUTER_USE_DIR

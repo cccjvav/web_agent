@@ -2442,3 +2442,11 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 - **优化①。** `computerUse.findShotCandidates`以前会把任意命令stdout里出现的图片路径当作截图读取并回传给模型。现在只认snap/mark命令（可带`.ps1`），读取其`-Out`参数或snap输出的`META {"file":...}`。chatVision增加反例测试：用旧代码运行时，这些反例确实失败。
 - 优化②（URL里的密钥）等验收时确认客户端支持情况后再定；③为可选项；④⑤暂不做。
 
+### 第124组：MCP实机验收与Windows截图路径大小写修复（会话01a0e8ea，2026-10-05）
+
+用户提供本机Quick Tunnel MCP地址做验收。沙箱出网按域名拦截（trycloudflare、example.com均在TLS握手被重置，只有GitHub可达），GET只能读到状态。用户在仓库添加`MCP_URL` Secret后，用临时工作流`mcp-acceptance-temp.yml`在GitHub Actions上中转运行验收脚本，结果以annotation取回（日志下载在沙箱被拦）。前两次因托管runner未分配而没跑起来，改用ubuntu-26.04标签后正常执行。临时工作流已在本组删除。
+
+- **结果：** 21项通过20项。初始化与会话、说明8204字、工具36个且无probe、资源8个、ping、workspace_info（`c:\Users\Peter\web_agent`）、createOnly、外部改动后盲写被拒、read_files带hash、run_command（Node v24.20.0）、裸图片路径不附图（证明本机已运行F123）、远程危险命令被拒、工作区外路径被拒、ASK锁写、错误密钥401、`/api/status`经隧道404、清理，都正常。
+- **失败项：** `snap -Out <工作区内路径>`没有附图。原因是computerUse的`inside()`区分大小写，而VS Code传入的工作区盘符是小写`c:`，snap与path.resolve得到的是大写`C:`，Windows上工作区内的截图全部被拒。这是F90之前就存在的问题，文档里也写过“不单独做大小写归一”，但此前没有在真实Windows上验证过。F124改为win32下大小写不敏感，并补充了chatVision断言。
+- **待办：** 用户更新并重启主机后，重跑验收中的截图一项。
+
