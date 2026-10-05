@@ -126,4 +126,7 @@ jobs:
           console.log(`\n${results.length - failed}/${results.length} passed`);
           process.exitCode = failed ? 1 : 0;
           SCRIPT
-          node a.mjs "$MCP_URL"
+          set +e
+          node a.mjs "$MCP_URL" > out.txt 2>&1; rc=$?
+          echo "::notice title=acceptance rc=$rc::$(sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g' out.txt)"
+          exit $rc
