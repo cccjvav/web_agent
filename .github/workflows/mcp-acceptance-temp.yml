@@ -29,7 +29,7 @@ jobs:
           }
           await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'arena-version-check', version: '1' } });
           const out = [];
-          for (const command of ['git log -1 --format=%h%x20%s', 'git status -sb']) {
+          for (const command of ['git log -1 --format=%h', 'node -e \"const m=require('./webagent-core/agent-host/src/agent/computerUse.js');const ws='c:\\\\Users\\\\Peter\\\\web_agent';const f=require('fs'),p=require('path');const d=p.resolve('.webagent-acceptance');f.mkdirSync(d,{recursive:true});const png=p.join(d,'v.png');f.writeFileSync(png,Buffer.from('89504e470d0a1a0a','hex'));const r={inWs:m.resolveShotPath(png,{workspaceRoot:ws}),outside:m.resolveShotPath('C:\\\\Windows\\\\win.ini.png',{workspaceRoot:ws}),candidates:m.findShotCandidates({command:'snap -Out '+png})};f.rmSync(d,{recursive:true,force:true});console.log(JSON.stringify(r))\"']) {
             const r = await rpc('tools/call', { name: 'run_command', arguments: { command } });
             const t = (r.result?.content || []).map(c => c.text || '').join(''); let so = t; try { so = JSON.parse(t).stdout; } catch {}
             out.push(command + ' => ' + String(so).trim().slice(0, 300));
