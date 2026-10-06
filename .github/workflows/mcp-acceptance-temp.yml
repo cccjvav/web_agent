@@ -20,111 +20,23 @@ jobs:
         run: |
           test -n "$MCP_URL" || { echo "MCP_URL secret missing"; exit 1; }
           cat > a.mjs <<'SCRIPT'
-          // Web Agent MCP acceptance (F123). Usage: node mcp-acceptance.mjs "<MCP URL>"
-          // Writes only inside <workspace>/.webagent-acceptance/ and removes it. Output redacts the secret.
-          const url = process.argv[2];
-          if (!/^https?:\/\/.+\/mcp\/[A-Za-z0-9]+/.test(url || '')) { console.error('usage: node mcp-acceptance.mjs <MCP URL>'); process.exit(2); }
-          const secret = url.split('/mcp/')[1].split(/[/?#]/)[0];
-          const red = s => String(s).split(secret).join('<secret>');
+          const url = process.argv[2]; const secret = url.split('/mcp/')[1].split(/[/?#]/)[0];
           let session = null, id = 0;
-          const results = [];
-          
-          async function rpc(method, params, { notify = false } = {}) {
-            const body = notify ? { jsonrpc: '2.0', method, params } : { jsonrpc: '2.0', id: ++id, method, params };
-            const res = await fetch(url, {
-              method: 'POST',
-              headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream',
-                ...(session ? { 'mcp-session-id': session } : {}) },
-              body: JSON.stringify(body)
-            });
-            const sid = res.headers.get('mcp-session-id'); if (sid && !session) session = sid;
-            const text = await res.text();
-            if (!text) return { status: res.status };
-            const json = text.startsWith('{') ? JSON.parse(text)
-              : JSON.parse(text.split('\n').filter(l => l.startsWith('data:')).map(l => l.slice(5)).pop());
-            return { status: res.status, ...json };
+          async function rpc(method, params) {
+            const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream', ...(session ? { 'mcp-session-id': session } : {}) }, body: JSON.stringify({ jsonrpc: '2.0', id: ++id, method, params }) });
+            session = session || r.headers.get('mcp-session-id'); const t = await r.text();
+            return t.startsWith('{') ? JSON.parse(t) : JSON.parse(t.split('\n').filter(l => l.startsWith('data:')).map(l => l.slice(5)).pop());
           }
-          const call = (name, args = {}, meta) => rpc('tools/call', { name, arguments: args, ...(meta ? { _meta: meta } : {}) });
-          const textOf = r => (r.result?.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n');
-          const stdoutOf = r => { try { return String(JSON.parse(textOf(r)).stdout || '').trim(); } catch { return ''; } };
-          function check(name, ok, detail = '') {
-            results.push({ name, ok: !!ok });
-            console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  — ' + red(String(detail).replace(/\s+/g, ' ').slice(0, 220)) : ''}`);
+          await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'arena-version-check', version: '1' } });
+          const out = [];
+          for (const command of ['git log -1 --format=%h%x20%s', 'git status -sb']) {
+            const r = await rpc('tools/call', { name: 'run_command', arguments: { command } });
+            const t = (r.result?.content || []).map(c => c.text || '').join(''); let so = t; try { so = JSON.parse(t).stdout; } catch {}
+            out.push(command + ' => ' + String(so).trim().slice(0, 300));
           }
-          const step = async (name, fn) => { try { await fn(); } catch (e) { check(name, false, 'exception: ' + e.message); } };
-          
-          const dir = '.webagent-acceptance';
-          const stamp = Date.now();
-          await step('initialize', async () => {
-            const r = await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'arena-acceptance', version: '1' } });
-            check('initialize', r.result?.serverInfo, `${r.result?.serverInfo?.name} ${r.result?.serverInfo?.version} proto=${r.result?.protocolVersion} session=${session ? 'yes' : 'no'}`);
-            check('instructions present', (r.result?.instructions || '').length > 0, `${(r.result?.instructions || '').length} chars`);
-            await rpc('notifications/initialized', {}, { notify: true });
-          });
-          await step('tools/list', async () => {
-            const names = ((await rpc('tools/list', {})).result?.tools || []).map(t => t.name);
-            check('tools/list count = 36', names.length === 36, String(names.length));
-            check('no probe_* tools (F122)', !names.some(n => n.startsWith('probe')));
-          });
-          await step('resources/list', async () => {
-            const r = await rpc('resources/list', {});
-            check('resources/list', (r.result?.resources || []).length >= 8, String((r.result?.resources || []).length));
-          });
-          await step('ping', async () => check('ping', !(await call('ping')).result?.isError));
-          await step('workspace_info', async () => { const r = await call('workspace_info'); check('workspace_info', !r.result?.isError, textOf(r).slice(0, 160)); });
-          await step('write/read', async () => {
-            const f = `${dir}/hello-${stamp}.txt`;
-            const w = await call('write_file', { filePath: f, content: `acceptance ${stamp}\n`, createOnly: true });
-            check('write_file (createOnly)', !w.result?.isError, textOf(w).slice(0, 120));
-            const dup = await call('write_file', { filePath: f, content: 'x', createOnly: true });
-            check('createOnly on existing file is rejected', dup.result?.isError, textOf(dup).slice(0, 120));
-            // Someone else edits the file after our write: a blind overwrite must be blocked.
-            await call('run_command', { command: `node -e "require('fs').appendFileSync('${f}','edited by someone else')"` });
-            const again = await call('write_file', { filePath: f, content: 'overwrite without hash' });
-            check('overwrite of externally changed file is rejected', again.result?.isError, textOf(again).slice(0, 120));
-            const r = await call('read_files', { filePath: f });
-            check('read_files returns content + hash', textOf(r).includes('edited by someone else') && /[a-f0-9]{64}/.test(textOf(r)));
-          });
-          await step('run_command', async () => {
-            const r = await call('run_command', { command: 'node -v' });
-            check('run_command node -v', !r.result?.isError && /v\d+/.test(stdoutOf(r)), stdoutOf(r));
-          });
-          await step('screenshot readback (F123)', async () => {
-            const png = `${dir}/shot-${stamp}.png`;
-            const b64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
-            const mk = await call('run_command', { command: `node -e "require('fs').writeFileSync('${png}', Buffer.from('${b64}','base64')); console.log(require('path').resolve('${png}'))"` });
-            const absPath = stdoutOf(mk);
-            check('create test png', !mk.result?.isError && /\.png$/.test(absPath), absPath || textOf(mk).slice(0, 160));
-            if (!absPath) return;
-            const bare = await call('run_command', { command: `echo ${absPath}` });
-            check('bare image path in stdout does NOT attach image', !(bare.result?.content || []).some(c => c.type === 'image'));
-            const snap = await call('run_command', { command: `echo "snap -Out ${absPath}"` });
-            const img = (snap.result?.content || []).find(c => c.type === 'image');
-            check('snap -Out attaches image', img && img.mimeType === 'image/png', img ? img.mimeType : textOf(snap).slice(0, 160));
-          });
-          await step('remote guards', async () => {
-            const d = await call('run_command', { command: 'rm -rf / --no-preserve-root', confirm_dangerous: true });
-            check('dangerous command rejected remotely even with confirm', d.result?.isError, textOf(d).slice(0, 140));
-            const esc = await call('read_files', { filePath: '../../../../Windows/win.ini' });
-            check('path outside workspace rejected', esc.result?.isError, textOf(esc).slice(0, 140));
-            const ask = await call('write_file', { filePath: `${dir}/ask.txt`, content: 'x' }, { mode: 'ask' });
-            check('ASK mode blocks writes', ask.result?.isError, textOf(ask).slice(0, 140));
-          });
-          await step('auth', async () => {
-            const bad = await fetch(url.replace(secret, 'wrongsecret000000000000'), { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream' }, body: '{"jsonrpc":"2.0","id":1,"method":"ping"}' });
-            check('wrong secret rejected', [401, 403, 404].includes(bad.status), `HTTP ${bad.status}`);
-            if (/^https:/.test(url)) {
-              const api = await fetch(new URL('/api/status', url));
-              check('/api/status not reachable via tunnel', api.status !== 200, `HTTP ${api.status}`);
-            }
-          });
-          await step('cleanup', async () => {
-            const r = await call('run_command', { command: `node -e "require('fs').rmSync('${dir}',{recursive:true,force:true})"` });
-            check('cleanup acceptance dir', !r.result?.isError);
-          });
-          const failed = results.filter(r => !r.ok).length;
-          console.log(`\n${results.length - failed}/${results.length} passed`);
-          process.exitCode = failed ? 1 : 0;
+          const w = await rpc('tools/call', { name: 'workspace_info', arguments: {} });
+          out.push('host => ' + ((w.result?.content || [])[0]?.text || '').match(/"startedAt":"[^"]+"/)?.[0]);
+          console.log(out.join('\n').split(secret).join('<secret>'));
           SCRIPT
           set +e
           node a.mjs "$MCP_URL" > out.txt 2>&1; rc=$?
