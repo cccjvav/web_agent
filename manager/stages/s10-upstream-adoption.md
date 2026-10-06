@@ -2451,4 +2451,5 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 - **待办：** 用户更新并重启主机后，重跑验收中的截图一项。
 - **F124b更正：** a8c449e在Windows CI上chatVision失败。原因是非Windows分支用了`path.sep`：测试本身跑在Windows上时它是`\`，导致POSIX断言`inside('/work/a.png','/work','linux')`失败。本地Linux发现不了这个问题。现改为非Windows固定使用`/`，并在本地模拟`path.sep='\'`验证通过。同一次CI的其余job是托管runner未分配而取消，并非测试失败。
 - **F124c复验（2026-10-06）：** 用户更新Secret后重跑验收，仍是20/21，但workspace_info显示主机仍是同一实例（startedAt 2026-10-05T19:37:00Z，与上次相同）：本机checkout已是a4141a1，主机进程没有重启，仍在运行旧代码。于是经MCP在用户的真实Windows上单独加载磁盘上的新computerUse.js：工作区传小写`c:\Users\Peter\web_agent`，截图在`C:\...\.webagent-acceptance\v.png`。`resolveShotPath`接收了该截图，工作区外的`C:\Windows\x.png`返回null，findShotCandidates从`snap -Out`识别出该路径，临时文件已自清理。修复逻辑已在真机确认；“主机返回image”这一端到端项仍需在主机重启后补跑。临时工作流已删除。
+- **F124d：** 695189c的CI中4个agent-host job在`npm audit --omit=dev --audit-level=high`失败，原因是新公布的proxy-addr严重漏洞（GHSA-jqcg-44mw-7w3h，IPv4映射IPv6的trust子网判断可被伪造）。主机没有开启trust proxy（见OAuth/会话文档），不受实际影响，但仍按审计门禁把锁文件中的proxy-addr从2.0.7升到2.0.8，锁文件里只有这一项变化。
 
