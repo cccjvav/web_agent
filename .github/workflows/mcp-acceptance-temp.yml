@@ -29,11 +29,19 @@ jobs:
           }
           await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'arena-version-check', version: '1' } });
           const out = [];
-          for (const command of ['git log -1 --format=%h', 'node -e \"const m=require('./webagent-core/agent-host/src/agent/computerUse.js');const ws='c:\\\\Users\\\\Peter\\\\web_agent';const f=require('fs'),p=require('path');const d=p.resolve('.webagent-acceptance');f.mkdirSync(d,{recursive:true});const png=p.join(d,'v.png');f.writeFileSync(png,Buffer.from('89504e470d0a1a0a','hex'));const r={inWs:m.resolveShotPath(png,{workspaceRoot:ws}),outside:m.resolveShotPath('C:\\\\Windows\\\\win.ini.png',{workspaceRoot:ws}),candidates:m.findShotCandidates({command:'snap -Out '+png})};f.rmSync(d,{recursive:true,force:true});console.log(JSON.stringify(r))\"']) {
-            const r = await rpc('tools/call', { name: 'run_command', arguments: { command } });
-            const t = (r.result?.content || []).map(c => c.text || '').join(''); let so = t; try { so = JSON.parse(t).stdout; } catch {}
-            out.push(command + ' => ' + String(so).trim().slice(0, 300));
-          }
+          const call = async (name, args) => { const r = await rpc('tools/call', { name, arguments: args }); const t = (r.result?.content || []).map(c => c.text || '').join(''); try { return JSON.parse(t).stdout ?? t; } catch { return t; } };
+          const verify = [
+            "const path = require('path'), fs = require('fs');",
+            "const m = require(path.resolve('webagent-core/agent-host/src/agent/computerUse.js'));",
+            "const ws = 'c:' + path.resolve('.').slice(2);  // lower-case drive letter, as VS Code passes it",
+            "const png = path.resolve('.webagent-acceptance', 'v.png');",
+            "fs.writeFileSync(png, Buffer.from('89504e470d0a1a0a', 'hex'));",
+            "console.log(JSON.stringify({ ws, png, inWorkspace: m.resolveShotPath(png, { workspaceRoot: ws }), outside: m.resolveShotPath('C:\\\\Windows\\\\x.png', { workspaceRoot: ws }), candidates: m.findShotCandidates({ command: 'snap -Out ' + png }) }));",
+            "fs.rmSync(path.resolve('.webagent-acceptance'), { recursive: true, force: true });"
+          ].join('\n');
+          out.push('write => ' + String(await call('write_file', { filePath: '.webagent-acceptance/verify-f124.js', content: verify, createOnly: true })).slice(0, 80));
+          out.push('git => ' + String(await call('run_command', { command: 'git log -1 --format=%h' })).trim());
+          out.push('verify => ' + String(await call('run_command', { command: 'node .webagent-acceptance/verify-f124.js' })).trim());
           const w = await rpc('tools/call', { name: 'workspace_info', arguments: {} });
           out.push('host => ' + ((w.result?.content || [])[0]?.text || '').match(/"startedAt":"[^"]+"/)?.[0]);
           console.log(out.join('\n').split(secret).join('<secret>'));
