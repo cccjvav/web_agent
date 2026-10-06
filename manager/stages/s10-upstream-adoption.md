@@ -2450,4 +2450,5 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 - **失败项：** `snap -Out <工作区内路径>`没有附图。原因是computerUse的`inside()`区分大小写，而VS Code传入的工作区盘符是小写`c:`，snap与path.resolve得到的是大写`C:`，Windows上工作区内的截图全部被拒。这是F90之前就存在的问题，文档里也写过“不单独做大小写归一”，但此前没有在真实Windows上验证过。F124改为win32下大小写不敏感，并补充了chatVision断言。
 - **待办：** 用户更新并重启主机后，重跑验收中的截图一项。
 - **F124b更正：** a8c449e在Windows CI上chatVision失败。原因是非Windows分支用了`path.sep`：测试本身跑在Windows上时它是`\`，导致POSIX断言`inside('/work/a.png','/work','linux')`失败。本地Linux发现不了这个问题。现改为非Windows固定使用`/`，并在本地模拟`path.sep='\'`验证通过。同一次CI的其余job是托管runner未分配而取消，并非测试失败。
+- **F124c复验（2026-10-06）：** 用户更新Secret后重跑验收，仍是20/21，但workspace_info显示主机仍是同一实例（startedAt 2026-10-05T19:37:00Z，与上次相同）：本机checkout已是a4141a1，主机进程没有重启，仍在运行旧代码。于是经MCP在用户的真实Windows上单独加载磁盘上的新computerUse.js：工作区传小写`c:\Users\Peter\web_agent`，截图在`C:\...\.webagent-acceptance\v.png`。`resolveShotPath`接收了该截图，工作区外的`C:\Windows\x.png`返回null，findShotCandidates从`snap -Out`识别出该路径，临时文件已自清理。修复逻辑已在真机确认；“主机返回image”这一端到端项仍需在主机重启后补跑。临时工作流已删除。
 
