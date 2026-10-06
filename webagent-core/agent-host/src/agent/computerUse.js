@@ -70,7 +70,7 @@ function realOrSelf(p) {
 // compare rejected every legitimate in-workspace screenshot on Windows (found in the F123 MCP acceptance).
 function inside(child, parent, platform = process.platform) {
   const win = platform === 'win32';
-  const sep = win ? '\\' : path.sep;
+  const sep = win ? '\\' : '/';
   const c = win ? String(child).toLowerCase() : String(child);
   const p = win ? String(parent).toLowerCase() : String(parent);
   return c === p || c.startsWith(p.endsWith(sep) ? p : p + sep);

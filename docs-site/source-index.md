@@ -575,7 +575,7 @@
 
 ## webagent-core/agent-host/src/agent/computerUse.js
 
-[目录说明](../webagent-core/agent-host/src/agent/README.md) · SHA-256 `82751c44c748b9f71a727549967be7d2265074167aefa74cb00406b82b79a3b0`
+[目录说明](../webagent-core/agent-host/src/agent/README.md) · SHA-256 `90fea2b2e389a0d1f7e0dd419ba0932f28d0ea7490abe15b0f0f9ce1e893020d`
 
 - `stripQuotes` — FunctionDeclaration，[L22–L24](../webagent-core/agent-host/src/agent/computerUse.js#L22-L24)
 - `findShotCandidates` — FunctionDeclaration，[L33–L58](../webagent-core/agent-host/src/agent/computerUse.js#L33-L58)

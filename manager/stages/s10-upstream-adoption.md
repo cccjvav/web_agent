@@ -2449,4 +2449,5 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 - **结果：** 21项通过20项。初始化与会话、说明8204字、工具36个且无probe、资源8个、ping、workspace_info（`c:\Users\Peter\web_agent`）、createOnly、外部改动后盲写被拒、read_files带hash、run_command（Node v24.20.0）、裸图片路径不附图（证明本机已运行F123）、远程危险命令被拒、工作区外路径被拒、ASK锁写、错误密钥401、`/api/status`经隧道404、清理，都正常。
 - **失败项：** `snap -Out <工作区内路径>`没有附图。原因是computerUse的`inside()`区分大小写，而VS Code传入的工作区盘符是小写`c:`，snap与path.resolve得到的是大写`C:`，Windows上工作区内的截图全部被拒。这是F90之前就存在的问题，文档里也写过“不单独做大小写归一”，但此前没有在真实Windows上验证过。F124改为win32下大小写不敏感，并补充了chatVision断言。
 - **待办：** 用户更新并重启主机后，重跑验收中的截图一项。
+- **F124b更正：** a8c449e在Windows CI上chatVision失败。原因是非Windows分支用了`path.sep`：测试本身跑在Windows上时它是`\`，导致POSIX断言`inside('/work/a.png','/work','linux')`失败。本地Linux发现不了这个问题。现改为非Windows固定使用`/`，并在本地模拟`path.sep='\'`验证通过。同一次CI的其余job是托管runner未分配而取消，并非测试失败。
 

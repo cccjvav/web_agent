@@ -3273,7 +3273,7 @@
     {
       "path": "webagent-core/agent-host/src/agent/computerUse.js",
       "doc": "webagent-core/agent-host/src/agent/README.md",
-      "sha256": "82751c44c748b9f71a727549967be7d2265074167aefa74cb00406b82b79a3b0",
+      "sha256": "90fea2b2e389a0d1f7e0dd419ba0932f28d0ea7490abe15b0f0f9ce1e893020d",
       "lineCount": 135,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",
