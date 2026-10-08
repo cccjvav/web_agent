@@ -13,7 +13,7 @@
 ## 本轮进度
 
 <!-- review-status-counts:start -->
-Markdown：195（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a167e上传的第三方复审报告1 + 01a0d084新增R8本轮验收手册1 + 用户上传R8实机验收记录1 + 01a0d084新增一体化启动返工方案1 + 01a0d084新增插件一键启动验收手册1 + 用户上传R6第一期实机验收记录1 + 01a0d084新增插件设置页验收手册1 + 用户上传R6第二期实机验收记录1 + 01a0e8e7新增全量复审报告1；第122组按表格实际行数重算：原写210，实际表中208行——此前删除的文档没有从合计里减掉；F122再减探针相关14、加用户脚本说明1）；已核对一致 83、已修正 63、待证据确认 2、历史保留 41、只读保留 2、生成核验 4。分类处置不是全仓安全认证；逐项依据见表。
+Markdown：195（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a167e上传的第三方复审报告1 + 01a0d084新增R8本轮验收手册1 + 用户上传R8实机验收记录1 + 01a0d084新增一体化启动返工方案1 + 01a0d084新增插件一键启动验收手册1 + 用户上传R6第一期实机验收记录1 + 01a0d084新增插件设置页验收手册1 + 用户上传R6第二期实机验收记录1 + 01a0e8e7新增全量复审报告1；第122组按表格实际行数重算：原写210，实际表中208行——此前删除的文档没有从合计里减掉；F122再减探针相关14、加用户脚本说明1；F125删除webagent-repro减1；第126组新增阶段10九月归档加1）；已核对一致 83、已修正 63、待证据确认 2、历史保留 41、只读保留 2、生成核验 4。分类处置不是全仓安全认证；逐项依据见表。
 <!-- review-status-counts:end -->
 
 ## 逐文件状态
@@ -83,7 +83,8 @@ Markdown：195（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [manager/stages/context-history-through-0.4.md](../manager/stages/context-history-through-0.4.md) | 历史保留 | a4ccaf24eb17241b | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [manager/stages/documentation-2026-09-12.md](../manager/stages/documentation-2026-09-12.md) | 历史保留 | c23c09e4b3615d99 | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [manager/stages/s1-handoff.md](../manager/stages/s1-handoff.md) | 历史保留 | cfc0e427dc08e55c | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
-| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 已核对一致 | 4692b53536ea7a79 | 当前唯一工作包表/失败/批次与F66–68实际进度一致；历史段按时间保留，R7仍为下一项。 依据：CONTEXT; 本轮200文档清单; 实际提交/测试/CI记录 F122：随探针删除复读改动处（链接/范围/计数），其余未变。 |
+| [manager/stages/s10-upstream-adoption.md](../manager/stages/s10-upstream-adoption.md) | 已核对一致 | 00c0eb0bc72ffa71 | 第126组按月归档后复读：保留目标/需求/设计、当前工作包与交接约束（R0–R8路线表唯一一份）、复盘、待更新文档和10月批次（第115组起）；9月批次逐字移入归档，脚本核对旧文件1419个非空行无丢失，指向已搬走章节的锚点已改指归档。 |
+| [manager/stages/archive/s10-2026-09.md](../manager/stages/archive/s10-2026-09.md) | 历史保留 | 33a1f5f1e75d056f | 第126组从阶段10主文件逐字搬出的2026年9月批次记录（第14组至第114组），未改写；只作历史证据，当前状态以主文件为准。 |
 | [manager/stages/s2-shell.md](../manager/stages/s2-shell.md) | 历史保留 | 5ac447fe582ce09e | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [manager/stages/s3-bridge-image.md](../manager/stages/s3-bridge-image.md) | 历史保留 | fbe64b3265d3cf1a | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
 | [manager/stages/s4-terminal.md](../manager/stages/s4-terminal.md) | 历史保留 | 1cf1fcca01c51478 | 保留当时阶段/基线/失败/取舍；现行入口已由CONTEXT、阶段10或报告顶部指向后续处置，不把正文中的当前/待办/测试数继承到今天。 依据：manager/CONTEXT阶段导航; review/archive/README或报告顶部追踪; Git历史。 |
@@ -212,7 +213,6 @@ Markdown：195（对方本轮分母200 + 01a0c925新增交叉验证台账1 + 26a
 | [webagent-core/workbench/js/状态与编辑器详解.md](../webagent-core/workbench/js/状态与编辑器详解.md) | 已核对一致 | 3a660420dbd05eb6 | 对照标签/模型/草稿/预览回退、7秒0.52.2Monaco迟到升级、picker/DOM模式与预算；真实卸载/IME/DPI不代验。 依据：state/dom/tabs/monaco/picker.js; editorRuntime等 第111组复核（F97–F109改动逐段对照源码）：F98主题/字号、F105 toastDuration、F108 renderMd、F101/第109组Monaco加载与dom.js/monaco.js一致。 |
 | [webagent-core/workbench/样式规则详解.md](../webagent-core/workbench/样式规则详解.md) | 已修正 | 6596019751a13b82 | 核对变量/选择器/700与980断点/焦点/本地滚动及主题；去过期的可选axe说法，默认开发门禁真实存在。 依据：styles.css; DOM/HTML; workbench.browser/HTML 第111组复核（F97–F109改动逐段对照源码）：F102光标规则改为F108后的选择器并补块级样式行；顺带修复reduced-motion规则仍指向旧选择器的样式缺陷。 |
 | [webagent-core/workbench/页面结构详解.md](../webagent-core/workbench/页面结构详解.md) | 已修正 | 42702a5c28e3ed68 | 核对页面/表单/ARIA/脚本/控件入口，修未同步统计应为—、文件菜单动作；未实施全读屏/桌面验收。 依据：index.html; app/bind/tabs; workbenchHtml/Runtime 第111组复核（F97–F109改动逐段对照源码）：F98主题跟随系统与重置提示文案、F106统计block、F101 vendor目录与index.html/index.js一致。 |
-| webagent-repro/README.md（F125已删除） | 历史保留 | 64dae4453a269b66 | 首部明确冻结/不要运行、主线入口及旧说明适用范围；未执行或改JS，不把旧端口/工具清单套到现产品。 依据：README冻结声明; 主线启动路径 |
 | [使用指南.md](../使用指南.md) | 已修正 | 2c0d97124dc340f7 | 核对入口/安装/模型/Bridge/工具/恢复/审批主要流程；修Clear log/hash、本机Chat与远端ACL、Ask/Plan元数据、地址重核及已交付原生重置。诊断专项段只保留既有边界，不接手暂停源码；实机不代签。 依据：launcher/appWindow; tools/index/readCache; api/routes; executionControl; F62–65实现与测试 第111组复核（F97–F109改动逐段对照源码）：F101本机Monaco、F102流式与回退提示、F99敏感名单与大小写、F103错误归类文案逐条在openai.js/modelDiagnostics.js/requestScope.js中找到。 F122：随探针删除复读改动处（链接/范围/计数），其余未变。 |
 | [启动脚本说明.md](../启动脚本说明.md) | 已修正 | b7a0740059d0f6f3 | 核对CMD模式/相对路径/端口；补可配置app端口、主机身份/工作区/IPC核对，不只看healthz。 依据：root CMD/sh; installer/launch.js; appWindow.js |
 
