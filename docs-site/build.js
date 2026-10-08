@@ -32,7 +32,6 @@ const FILE_DOCS = [
   { id: 'scripts', path: 'webagent-core/scripts/README.md', group: '界面' },
   { id: 'workspace', path: 'examples/calculator/README.md', group: '工作区' },
   { id: 'bin', path: 'bin/README.md', group: '运行时' },
-  { id: 'repro', path: 'webagent-repro/README.md', group: '冻结' },
   { id: 'code-server-cfg', path: '.config/code-server/README.md', group: '运行时' },
   { id: 'launchers', path: '启动脚本说明.md', group: '入口' }
 ];

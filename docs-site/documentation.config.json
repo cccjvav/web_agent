@@ -24,10 +24,6 @@
   ],
   "exclusions": [
     {
-      "prefix": "webagent-repro/",
-      "reason": "冻结原型，由现有README说明，不计当前产品覆盖率"
-    },
-    {
       "prefix": "webagent-core/extensions-installed/",
       "reason": "发行副本；以extension源码为准，现有副本一致性测试负责校验"
     },

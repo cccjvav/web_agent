@@ -73,7 +73,7 @@ code-server 不等于微软桌面 VS Code；Windows 集成终端和扩展兼容�
 | [docs-site/](docs-site/README.md) | 文档站程序及生成展示物；改Markdown源后运行生成器，不手改content/清单/自动导航 |
 | [manager/](manager/CONTEXT.md) | 当前状态→项目约定→阶段计划；批次证据留在阶段，不在索引反复堆积 |
 | [review/](review/README.md) | 现行审查、人工验收与证据；[archive/](review/archive/README.md)存历史报告和上传参考原件，不能当当前指令 |
-| `examples/calculator/`、`webagent-repro/` | 可选示例、冻结原型；均非默认启动目标，不因整理删改 |
+| `examples/calculator/` | 可选示例，非默认启动目标，不因整理删改（冻结原型`webagent-repro/`已于F125删除） |
 | `node_modules/`、`bin/code-server-runtime/`、`installer/output/`及本地状态 | 依赖/下载运行时/产物/用户数据依现有忽略规则管理；本轮不清理、不读取秘密正文 |
 
 新增材料优先进入已有职责目录；历史归档不等于删除授权或故障。需清理磁盘空间时另行确认具体产物，不使用全仓`git clean`或删除用户状态。

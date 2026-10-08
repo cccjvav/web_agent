@@ -125,6 +125,13 @@ async function main() {
     // never leaks through Referer.
     const mcpHealth = await request('GET', `http://127.0.0.1:${mcpPort}/health`);
     assert.strictEqual(mcpHealth.json.launchId, 'c'.repeat(32), 'health echoes the launcher pairing ID');
+    // F125: through a tunnel /health still answers, but only with product/version; the launch pairing tag stays local.
+    const tunnelHealth = await request('GET', `http://127.0.0.1:${mcpPort}/health`, undefined, { 'cf-connecting-ip': '203.0.113.9', 'cf-ray': 'test' });
+    assert.strictEqual(tunnelHealth.status, 200);
+    assert.strictEqual(tunnelHealth.json.ok, true);
+    assert.strictEqual(tunnelHealth.json.launchId, undefined, 'launchId never goes out through the tunnel');
+    const forwardedHealth = await request('GET', `http://127.0.0.1:${mcpPort}/health`, undefined, { 'x-forwarded-for': '203.0.113.9' });
+    assert.strictEqual(forwardedHealth.json.launchId, undefined, 'nor through any forwarding proxy');
     for (const [label, response] of [['workbench page', page], ['workbench health', health], ['MCP health', mcpHealth], ['MCP 401', unauthBody]]) {
       assert.strictEqual(response.headers['x-content-type-options'], 'nosniff', label + ': nosniff');
       assert.strictEqual(response.headers['x-frame-options'], 'DENY', label + ': X-Frame-Options');

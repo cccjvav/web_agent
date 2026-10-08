@@ -39,7 +39,7 @@ npm test --prefix webagent-core/agent-host
 ## 保持的边界
 
 - 只在当前 Arena 固定分支工作并及时推送经过验证的批次；不覆盖未核实的本地修改。
-- 不为绿灯改冻结的 `webagent-repro/`，不另复制根 `tests/`。
+- 不另复制根 `tests/`。（冻结原型 `webagent-repro/` 已于F125按用户决定删除。）
 - 不把内置探索器、演示授权、探针参考或 Plan 拼接包装成真实大模型、GitHub 登录、模型身份证明或投票共识。
 - 模型故障明确停止；不得自动切模型、扩大权限或重放可能已有副作用的操作。
 - 本机 `/api/status` 返回连接所需秘密，不能因此开放远程控制面。权限与网络边界见 [SECURITY](SECURITY.md)。

@@ -2454,3 +2454,10 @@ computer-use仅阅读PS/C#与既有CI边界，不操作桌面：修info/META实�
 - **F124d：** 695189c的CI中4个agent-host job在`npm audit --omit=dev --audit-level=high`失败，原因是新公布的proxy-addr严重漏洞（GHSA-jqcg-44mw-7w3h，IPv4映射IPv6的trust子网判断可被伪造）。主机没有开启trust proxy（见OAuth/会话文档），不受实际影响，但仍按审计门禁把锁文件中的proxy-addr从2.0.7升到2.0.8，锁文件里只有这一项变化。
 - **F124e验收完成（2026-10-08）：** 用户重启主机（新实例1f6f5ee4，startedAt 2026-10-08T13:32:37Z，本机代码2eb7396）并更新Secret后重跑全套验收，结果21/21通过，其中`snap -Out`端到端返回image/png。临时工作流已删除。用户收尾事项：停隧道、重置Bridge Secret、删除仓库的MCP_URL Secret。
 
+### 第125组：删除webagent-repro、/health公网口径、收尾遗留（会话01a0e8ea，2026-10-08）
+
+- **删除`webagent-repro/`（用户决定）。** 它是第一代Bridge原型，已冻结，README注明“不要运行”，现行产品不引用它，CI也不跑它。目录整体删除；eslint忽略项、文档清单排除项、docs-site导航条目和安装包测试里针对它的断言一并移除。现行文档中的说明行已删除或改写，指向它的链接改为“（F125已删除）”。review/与阶段记录里的历史文字照旧保留。删除后，它锁文件里有漏洞的proxy-addr也随之消失。
+- **`/health`公网口径。** 验收时发现`/health`经隧道可访问，与启动横幅“公网只收/mcp”不符。决定保留`/health`对公网开放：它只返回产品名和版本，可以在不带密钥的情况下确认隧道是否通。但启动配对ID`launchId`只对本机控制面（`isLocalControlPlane`）返回，经隧道或任何带转发头的请求一律不带。启动横幅、SECURITY、入口详解同步改为“公网只收/mcp与/health”。httpSmoke新增断言，旧代码运行时该断言失败。
+- **遗留文字。** 路由详解里operations提交者类型还列着“浏览器探针”，代码中早已只剩三类，已更正。
+- **优化②（密钥在URL里）的结论：保持现状。** 实机验收证实用户所用的Arena客户端只能填一个URL，路径密钥是它唯一可用的方式。已有的防护（timingSafeEqual、错误密钥401、带转发头的请求拒绝访问本机控制面、轮换入口）继续有效。改为只用请求头会让这个客户端连不上，因此不改；安全文档原有“URL当密码保管、用后停隧道并轮换”的说法保留。
+

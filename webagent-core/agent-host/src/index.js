@@ -100,7 +100,9 @@ function mountHealth(app) {
     // F116: run-code-oss passes a random launch ID and only accepts a health reply echoing it, so a stale
     // host still holding the port cannot pass for the child it just started. Not a secret: a pairing tag.
     // F119: launch-only (taken out of process.env at start), so the agent's commands never inherit it.
-    const launchId = /^[a-f0-9]{32}$/.test(launchEnv.WEBAGENT_LAUNCH_ID || '') ? launchEnv.WEBAGENT_LAUNCH_ID : undefined;
+    // F125: /health stays reachable through the tunnel (product/version only, handy for checking a tunnel without
+    // the secret), but the launch pairing tag is for the local launcher alone and is never sent to the public side.
+    const launchId = isLocalControlPlane(req) && /^[a-f0-9]{32}$/.test(launchEnv.WEBAGENT_LAUNCH_ID || '') ? launchEnv.WEBAGENT_LAUNCH_ID : undefined;
     res.json({ ok: true, product: config.productName, version: config.version, ...(launchId ? { launchId } : {}) });
   });
 }
@@ -220,7 +222,7 @@ if (!skipWorkbench) {
     console.log(`  MCP       http://127.0.0.1:${config.port}/mcp/${config.secretKey}`);
     console.log(`  Bind      ${config.host}（默认只听本机；WEBAGENT_BIND=0.0.0.0 才听所有网卡）`);
     console.log('  Bridge    工作台可选 Quick Tunnel / Named Tunnel / ngrok；任务做完请停');
-    console.log('            公网只收 /mcp（OAuth配对默认关闭，开启后另收OAuth发现/授权）；/api 与 /ws 仅本机回环');
+    console.log('            公网只收 /mcp 与 /health（仅产品名/版本；OAuth配对默认关闭，开启后另收OAuth发现/授权）；/api 与 /ws 仅本机回环');
     console.log(`  Workspace ${config.workspaceRoot}`);
     console.log('===========================================================');
   });

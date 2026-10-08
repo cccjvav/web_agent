@@ -43,6 +43,8 @@ Read控制工具/资源/提示词读取；Edit控制文件、记忆和任务板�
 - 在Edit/Execute等权限允许时打补丁、执行命令（**不保证非破坏性**）（Windows 上是 PowerShell；`rm -rf` / `rm -r -f` / `find -delete` / `git push` / `git checkout <路径>` / `curl | sh` / `docker system prune` / `kubectl delete` / `terraform destroy` 一类即使带 `confirm_dangerous` 也会被远程拒绝，只能在本机 Chat 确认。这是常见写法拦截，不是操作系统沙箱）
 - 在你这台电脑上执行 Code 模式允许的其它工具
 
+隧道公网侧只收 `/mcp` 与 `/health`；`/health` 不需要密钥，只返回产品名和版本（F125起不再经隧道回显本机启动配对ID），可用来确认隧道通不通，但它会暴露“这里跑着Web Agent及其版本”。
+
 **不要**把 `trycloudflare.com/mcp/...`、ngrok 地址或 Named 的 `https://你的域名/mcp/...` 发到群、Issue、截图网盘。Quick Tunnel或ngrok地址可能变化，重启后始终核对当前地址；不要把停隧道等同密钥轮换或保证旧域名永不复用。当次有效地址等同施工证。Named Token 与 ngrok Authtoken 不要贴进聊天或日志。
 
 公网请求打 `/api` 会404；UI端口的`/ws`在upgrade拒绝不满足本机/Origin条件的握手（当前ws返回403），不是统一404；本机 Chat 走 3000，不经过隧道。CORS 白名单**不是**门卡，URL 里的密钥仍要保管。

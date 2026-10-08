@@ -134,4 +134,4 @@ F54第四批：httpSmoke的`resourceRpc(method,params,headers)`复用真实src/i
 
 F54交叉复审：main检查initialize.instructions与getToolList的apply_patch描述明确existing file only，并提示保留expectedHash/未给hash的缺失目标走创建合同。旧文案先红测，修复仅收窄机器说明，不将字符串断言当作跨进程删除保护；实际缺失目标行为仍由patchEngine/httpSmoke回归证明。
 
-第116组：httpSmoke启动主机时带`WEBAGENT_LAUNCH_ID`（32个c），断言MCP端口`/health`原样回显该launchId。
+第116组：httpSmoke启动主机时带`WEBAGENT_LAUNCH_ID`（32个c），断言MCP端口`/health`原样回显该launchId。F125：同一端口带`cf-connecting-ip`/`cf-ray`或`x-forwarded-for`访问`/health`仍返回200和ok，但不带launchId（启动配对ID不经隧道外泄）；旧代码运行时该断言失败。

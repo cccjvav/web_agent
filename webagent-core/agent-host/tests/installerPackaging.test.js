@@ -45,7 +45,6 @@ try {
   }
   assert.ok(manifest.files.some(f => f.path === 'webagent-core/scripts/vendor-monaco.js'));
   for (const f of manifest.files) assert.ok(!fs.readFileSync(path.join(output, f.path), 'utf8').includes('PRIVATE_FIXTURE_DO_NOT_PACKAGE'));
-  assert.ok(!manifest.files.some(f => f.path.startsWith('webagent-repro/')));
   assert.throws(() => stage(source, tmp), /Invalid staging/);
   const sourceDocs = path.join(source, 'docs-site/content.js');
   const savedDocs = fs.readFileSync(sourceDocs);

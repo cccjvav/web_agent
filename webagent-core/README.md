@@ -1,7 +1,7 @@
 # 产品源码导航
 
 ## 职责与入口
-webagent-core是现行产品代码根；历史webagent-repro不是运行依赖。本层start-webagent.sh只定位仓库根并exec根run-webagent.sh，把参数原样转发，不另建一套后端。
+webagent-core是现行产品代码根。本层start-webagent.sh只定位仓库根并exec根run-webagent.sh，把参数原样转发，不另建一套后端。
 
 ## 模块分工
 | 模块 | 作用 | 说明 |

@@ -195,7 +195,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
 | [hostShutdown.test.js](hostShutdown.test.js) | 13 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
-| [installerPackaging.test.js](installerPackaging.test.js) | 28 个函数/类节点 |
+| [installerPackaging.test.js](installerPackaging.test.js) | 27 个函数/类节点 |
 | [installerPreparation.test.js](installerPreparation.test.js) | 61 个函数/类节点 |
 | [localControl.test.js](localControl.test.js) | 1 个函数/类节点 |
 | [mcpBoard.test.js](mcpBoard.test.js) | 19 个函数/类节点 |
