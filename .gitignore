@@ -35,6 +35,9 @@ webagent-core/extensions-installed/extensions.json
 
 # Local screenshot dumps (never part of the product)
 image-search/
+# computer-use snap/mark output (F127: 244 test screenshots removed; scripts recreate this at run time)
+computer-use/shots/
+**/shots/cur.png
 
 # project-manager privacy map (real secrets / PII)
 manager/privacy.md
