@@ -4,7 +4,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { config } = require('../src/config');
-const { loadSkill, listSkills, discoverSkills } = require('../src/tools/skills');
+const { loadSkill, listSkills, discoverSkills, SKILL_LOAD_REASONS } = require('../src/tools/skills');
 const { clipJson } = require('../src/mcp/budget');
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-skills-'));
 const before = config.workspaceRoot;
@@ -36,6 +36,9 @@ try {
   assert.strictEqual(local.description, 'Use for safe review and evidence collection.');
   assert.strictEqual(local.executable, false);
   assert.strictEqual(catalog.skills.find(s => s.id === 'shared:review').shadowed, true);
+  assert.strictEqual(catalog.skills.find(s => s.id === 'shared:review').shadowedBy, 'workspace:review', 'shadowed entry names the winner');
+  assert.ok(catalog.skills.find(s => s.id === 'shared:review').shadowFix.includes('完整 ID'));
+  assert.strictEqual(local.shadowedBy, undefined);
   assert.strictEqual(loadSkill({ name: 'review' }).id, 'workspace:review');
   assert.strictEqual(loadSkill({ name: 'shared:review' }).content, '# Shared\nDifferent source.');
   assert.strictEqual(loadSkill({ name: 'check' }).found, false, 'no ambiguous recursive basename guessing');
@@ -70,8 +73,27 @@ try {
   const second = loadSkill({ pageSize: 2, cursor: first.nextCursor });
   assert.strictEqual(new Set([...first.skills, ...second.skills].map(s => s.id)).size, 4);
   put('.webagent/skills/huge/SKILL.md', 'a'.repeat(129 * 1024));
-  assert.strictEqual(listSkills().find(s => s.id === 'workspace:huge').ready, false);
-  assert.throws(() => loadSkill({ name: 'workspace:huge' }), /128 KiB/);
+  const huge = listSkills().find(s => s.id === 'workspace:huge');
+  assert.strictEqual(huge.ready, false); assert.strictEqual(huge.reason, 'too-large'); assert.strictEqual(huge.fix, SKILL_LOAD_REASONS['too-large']);
+  assert.throws(() => loadSkill({ name: 'workspace:huge' }), error => error.code === 'E_NOT_READY' && /too-large/.test(error.message) && /128 KiB/.test(error.message) && error.message.includes(SKILL_LOAD_REASONS['too-large']));
+  // Every load failure of SKILL.md gets a stable reason code with a fix.
+  const reasonCases = { binary: Buffer.from([35, 0, 65]), 'not-utf8': Buffer.from([0xff, 0xfe, 0x41]), empty: ' \r\n\t' };
+  for (const [reason, bytes] of Object.entries(reasonCases)) {
+    put(`.webagent/skills/r-${reason}/SKILL.md`, bytes);
+    const entry = listSkills().find(s => s.id === `workspace:r-${reason}`);
+    assert.strictEqual(entry.ready, false, reason); assert.strictEqual(entry.reason, reason); assert.ok(entry.fix, reason);
+  }
+  put('.webagent/skills/r-bom/SKILL.md', '\uFEFF# BOM is fine');
+  assert.strictEqual(listSkills().find(s => s.id === 'workspace:r-bom').ready, true, 'a UTF-8 BOM alone does not make SKILL.md unusable');
+  assert.strictEqual(listSkills().find(s => s.id === 'workspace:r-bom').reason, undefined);
+  if (process.platform !== 'win32') {
+    put('.webagent/skills/r-symlink/real.md', '# Real');
+    fs.symlinkSync('real.md', path.join(config.workspaceRoot, '.webagent/skills/r-symlink/SKILL.md'));
+    const linked = listSkills().find(s => s.id === 'workspace:r-symlink');
+    assert.strictEqual(linked, undefined, 'a symbolic SKILL.md is not discovered as a skill at all');
+    fs.rmSync(path.join(config.workspaceRoot, '.webagent/skills/r-symlink'), { recursive: true });
+  }
+  for (const reason of Object.keys(reasonCases).concat('r-bom')) fs.rmSync(path.join(config.workspaceRoot, `.webagent/skills/${reason.startsWith('r-') ? reason : 'r-' + reason}`), { recursive: true });
   // No mtime cache: direct edits must be visible immediately.
   put('skills/review/SKILL.md', '# Changed\nImmediately visible.');
   assert.ok(loadSkill({ name: 'shared:review' }).content.includes('Immediately visible'));

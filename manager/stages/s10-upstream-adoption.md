@@ -508,6 +508,29 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 
 **验证：** 全量测试与lint通过，`check-docs --write`后重建docs-site；改过的文档与上面29份逐份复读后刷新指纹。
 
+### 第129组：按ShunCode参考包落地第一批改进（2026-10-10，会话01a0d084）
+
+用户同意按01a0d084的建议做第一批（参考包编号14/15、2、9、8、21、23，核实19），18/5视情况，1、20、22等用户决定，4、16、10–13不做。都按本项目自己的代码实现，没有复制参考包里的源码。
+
+1. **Quick Tunnel的`--config`与`--protocol auto`（14/15，`tunnel/cloudflared.js`）。** cloudflared不带`--config`时会读用户`~/.cloudflared/config.yml`，里面给别的服务写的ingress会接管地址，表现为隧道显示成功、请求全是404；Quick Tunnel不带`--protocol`时cloudflared固定走QUIC，UDP被挡时不回退。现在每次启动写`<home>/.webagent/cloudflared-quick-tunnel.yml`（目录0700、文件0600，只含`no-autoupdate: true`；先写临时文件再rename，预先放好的符号链接被替换而不被跟随），参数为`tunnel --config <文件> --no-autoupdate --protocol auto --url <目标>`。写不了时照常启动并在Bridge日志提示一行。经`.cmd/.bat`包装启动时路径只在只含普通字符时加引号传入，含`&`、`%`、`^`、`!`时不传。Named Tunnel不变：它的协议缺省本来就是auto，ingress由控制台远程下发。
+2. **stdio MCP继承用户目录类变量（2，`mcp/stdioLaunch.js`）。** 原来只继承PATH、系统目录、TEMP和语言，npx/uvx/pip找不到APPDATA/LOCALAPPDATA/HOME下的缓存，服务启动前就失败。新增USER_ENV名单（HOME、USERPROFILE、HOMEDRIVE、HOMEPATH、APPDATA、LOCALAPPDATA、PROGRAMDATA、PROGRAMFILES、PROGRAMFILES(X86)、USER、USERNAME、LOGNAME、SHELL、PROCESSOR_ARCHITECTURE）。与基础名单不同，用户在env里写同名变量（不分大小写）可以替换继承值，所以没有“用户无法覆盖”的代价；同一份env里home与HOME同时出现仍拒为重复。COMSPEC等保护正则不变。
+3. **出站MCP的initialize提议`2025-06-18`（9，`mcp/externalClient.js`）。** 服务器可回三个支持版本之一，之后每个请求的`MCP-Protocol-Version`头用服务器选定的版本（这个头原来就会发）。测试同时覆盖服务器降到2025-03-26和接受2025-06-18两种情况。
+4. **Skill加载失败原因码（8，`tools/skills.js`）。** `SKILL_LOAD_REASONS`八个稳定码（too-large、binary、not-utf8、empty、symlink、not-regular-file、blocked-path、unreadable）各带中文修复建议；目录项失败时带reason/fix，被同名遮住的项带shadowedBy/shadowFix；只有空白的SKILL.md现在也算失败（empty）。load_skill读一个已知坏掉的SKILL.md时直接回`E_NOT_READY`，消息含原因码和建议，不再让模型反复读；模型说明里加了一句“ready:false的Skill不要重试，把原因和办法告诉用户”，提示词里的Skill目录对坏项只写`[unavailable: 原因码; do not load]`。工作台Skill卡片显示遮住它的完整ID，以及“不可用（原因码）：建议”。
+5. **给模型的shell契约（21，`tools/executor.js`的`commandShellContract`，经`models/profile.js`的Command shell段进入本机Chat系统提示和MCP instructions）。** Windows写明是Windows PowerShell 5.1（powershell.exe -NoProfile），不是CMD、bash或pwsh 7；不要再套一层powershell -Command、cmd /c或bash -lc；5.1没有`&&`和“或”运算符；`$env:NAME`；带空格路径用`&`调用。POSIX写明`<实际shell> -c`，sh时提醒没有bash语法，并说明桌面PTY用登录shell。它以执行器的真实方式为准，优先于用户偏好里写的Shell；原来`openai.js`里按偏好写的“Prefer PowerShell/Shell is …”一行删除。
+6. **模型Base URL归一（23，`agent/providers.js`的`normalizeBase`，运行时`openai.js`也用它）。** 去掉末尾误带的`/chat/completions`、`/responses`、`/models`，连续多个`/v1`合成一个。**不自动补`/v1`**：参考包对根路径会补，但有的网关就在根路径服务，猜错了反而连不上；改为模型发现在无路径或`/api`地址上遇到404时提示“可能少了版本路径”。Chat遇到没有模型错误码的裸404时，文案从“模型不存在”改为新类别endpoint“端点地址不存在，请核对Base URL……和模型ID”；带model_not_found的404仍是原文案。
+7. **核实19：ngrok原来不认`ERR_NGROK_334`。** 这类错误要么等满25秒报“没有公网地址”，要么进程退出后显示安装提示，都指错了方向。新增`NGROK_FAILURES`（334地址被占用、108会话数满、105 Authtoken格式不对、4018需验证账号），日志里一出现就停掉ngrok并给出中文办法；其它`ERR_NGROK_<n>`在超时或退出时给官方说明页链接。只匹配错误码，不把日志原文（可能带Token）拼进消息。错误码含义以ngrok官方错误页为准。
+
+**自我复审（交付前）：**
+- 读完整diff与调用方：Quick Tunnel配置在每次启动都写，Bridge路由的错误文字原样到工作台；provider的404提示走E_BAD_PROVIDER，路由会原样返回；E_NOT_READY按instructions归在执行类错误。
+- 发现并修正：①测试起初只在第一次Quick Tunnel前后改HOME，之后几次启动写进了沙箱真实用户目录（已删除该文件，HOME改为整份测试期间都指向临时目录）；②launchEnv第一版用`Object.hasOwn(extra, old)`判断是否已显式写过，结果显式写HOME也会报重复，改为单独记录显式键；③表格里写了`||`把表格拆坏，改写措辞；④参数引号判断里多余的括号检查已删。
+- 逆向验证：15处变异（去掉`--protocol auto`、写不了配置时不广播提示、不继承USER_ENV、不替换继承值、协议版本改回、去掉empty判定、去掉E_NOT_READY、去掉Command shell段、去掉坏Skill标记、去掉/v1合并、运行时不归一、404改回not_found、去掉ngrok即时拒绝、退出时不认错误码、契约去掉&&说明）全部让对应测试变红。
+- 未在沙箱验证：真实cloudflared读这份配置文件并在QUIC被挡时回退HTTP/2；真实ngrok输出334时的完整格式（只匹配码）；工作台Skill卡片的新显示行只有浏览器CI会渲染，没有专门断言；桌面PTY路径的shell契约只按ptyHost.js源码核对。这些都留给用户最终实机验收。
+- 未做：18/5（稳定的隧道与网络错误码）本组只做了ngrok这一小块，其余视需要再定；1、20、22等用户决定；4、16、10–13按约定不做。
+
+**验证：** 全量测试（110个文件）与lint通过，`check-docs --write`后重建docs-site，改过的文档逐份复读后刷新审查索引指纹。
+
+**参考包处理。** 本组完成后按用户决定从仓库删除`shuncode-0.8.1-webagent.zip`（`git rm`，不改写历史；`cfe5166`里仍可取回）。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。

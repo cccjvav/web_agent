@@ -13,6 +13,7 @@ const CATEGORIES = Object.freeze({
   auth: 'API Key 无效或已失效，请在设置里重新填写',
   forbidden: '该 Key 无权使用此模型或端点',
   not_found: '模型不存在或该端点不提供此模型 ID，请核对设置里的模型 ID',
+  endpoint: '端点地址不存在，请核对 Base URL（多数服务以 /v1 这类版本路径结尾，不要带 /chat/completions）和模型 ID',
   quota: '配额或余额不足，请到 Provider 控制台核对',
   rate_limit: '触发限流，请稍后重试',
   overloaded: '模型服务繁忙，请稍后重试',
@@ -40,7 +41,7 @@ const RULES = [
     pattern: /overloaded|server is busy|at capacity|服务繁忙|系统繁忙/i }
 ];
 
-const STATUS_DEFAULTS = [[401, 'auth'], [403, 'forbidden'], [404, 'not_found'], [413, 'context'], [429, 'rate_limit'], [503, 'overloaded'], [529, 'overloaded']];
+const STATUS_DEFAULTS = [[401, 'auth'], [403, 'forbidden'], [404, 'endpoint'], [413, 'context'], [429, 'rate_limit'], [503, 'overloaded'], [529, 'overloaded']];
 
 function isRecord(value) { return Boolean(value) && typeof value === 'object' && !Array.isArray(value); }
 

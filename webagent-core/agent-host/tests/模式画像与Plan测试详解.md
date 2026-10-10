@@ -12,7 +12,7 @@
 
 ## providers.test.js
 
-[源码](providers.test.js)的**run()**先验证能力只依赖声明、上下文数字格式。保存global.fetch，替换为真实Response/ReadableStream形状的两模型fixture，检查未声明者caps/context空、有声明者vision/128K；finally恢复fetch。
+[源码](providers.test.js)的**run()**先验证能力只依赖声明、上下文数字格式。第129组起逐项核对normalizeBase：带`/chat/completions`（含大写和尾斜杠）、`/responses`、`/models`的地址回到`…/v1`，`/v1/v1`和三连`/v1`合成一个，`api.deepseek.com`与无路径地址不补`/v1`，`/openai/v1`、`/v10`、`/x/v1x`不动；missingVersionHint只对无路径和`/api`给提示，`/v1`与非URL为空串。用局部fetch记录地址并回404：无路径地址的错误含`https://主机/v1`提示，带`/v1/chat/completions`的不含，两次实际请求是`https://model.test/models`和`https://model.test/v1/models`，证明只请求归一后的地址、不偷偷补`/v1`。保存global.fetch，替换为真实Response/ReadableStream形状的两模型fixture，检查未声明者caps/context空、有声明者vision/128K；finally恢复fetch。
 
 负例：null/空/坏项/重复ID/数字ID/101项、非JSON、HTTP401不回显含Key错误正文、URL凭据/query/非HTTP/脱敏Key在fetch前拒绝。流fixture用**start(controller)**一次发512KiB+1，**cancel()**记取消；必须拒绝并取消而不是继续读。fetch替身检查redirect:error；另用信号监听和20ms期限验证headers等待中止，keepAlive维持事件循环并清理。
 
@@ -26,7 +26,7 @@
 2. 写package.json（express及test脚本），识别JavaScript/Express/npm，测试入口归一为npm test而非脚本正文；jsconfig不猜TS、tsconfig才加入；数组/坏JSON/超过256KiB忽略；Python标记无pytest.ini不猜pytest。
 3. saveCustom写环境、技术栈、偏好、指令；断言两份Markdown实际存在及格式包含PowerShell/npm test。
 4. 局部patch只改notes仍保留shell/testCommand；数组/错误文本类型/8MiB输出超限均拒且四文件字节不变；坏environment旧JSON保留；临时工作区.webagent链接（Windows用junction）指向外部时拒绝保存且外部为空。
-5. 写review/SKILL.md；formatWorkspaceContext(loadCustom,技能元数据)需含环境/技术栈/语言/Skill；getInstructions也须包含环境、Skills、review；readResource(webagent://profile)含技术栈。
+5. 写review/SKILL.md；formatWorkspaceContext(loadCustom,技能元数据)需含环境/技术栈/语言/Skill；第129组起还须在Environment preference之后含`## Command shell`加commandShellContract()原文（保存的偏好写powershell、宿主在Linux时也照实写bash/sh），ready:false的技能显示为`[unavailable: 原因码; do not load]`而不把英文错误当简介；getInstructions也须包含环境、Skills、review和同一段shell契约；readResource(webagent://profile)含技术栈。
 
 外层finally恢复原config.workspaceRoot并rm临时目录；外部链接夹具有自己的finally，断言失败也清理，不改真实工作区。此链证明文件→上下文→MCP资源的连接，不证明模型遵循指令或真正运行声明的测试命令。
 

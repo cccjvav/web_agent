@@ -16,6 +16,7 @@
 | killChild(child,force=false) | 子进程→undefined | Windows同步taskkill PID树（3秒期限，失败记录退出状态/错误；WEBAGENT_DEBUG_PROCESS=1额外记录成功结果）；其他先杀进程组再回退child.kill，TERM/KILL按force。吞发送错误，不等待退出证明 |
 | workingDirFrom(cwd) | 目录→安全绝对路径 | resolveSafePath，任何异常统一改成outside workspace提示，原失败原因可能被泛化 |
 | detectPosixShell(env,exists) | 环境→shell路径 | POSIX平台探测可用shell：优先/bin/bash、/usr/bin/bash（保持F104前行为），其次仅接受绝对路径且名为bash/sh/dash/ash的SHELL，再/bin/sh、/usr/bin/sh，兜底/bin/sh；fish/zsh/nu/csh等不用于-c（F104，复审P2-5） |
+| commandShellContract(platform,env,exists) | 平台→一段英文 | 第129组：给模型的shell契约，进formatWorkspaceContext的Command shell段（本机Chat与MCP instructions共用）。win32写明是Windows PowerShell 5.1（powershell.exe -NoProfile，不加载profile），不是CMD/bash/pwsh 7；不要再套powershell -Command、cmd /c或bash -lc（引号和$变量会被解析两次），只有单个CMD内置命令可以用cmd /d /c；5.1没有&&和“或”运算符（两个竖线），用;和if ($?)；环境变量$env:NAME；带空格路径用&调用；失败判定与guardedCommand一致。POSIX用detectPosixShell的结果写`<shell> -c`，sh时提醒没有bash数组/[[ ]]/<(...)，并说明桌面PTY实际用登录shell `$SHELL -lc`（extension/ptyHost.js）。写的是真实执行方式，优先于用户在偏好里写的Shell |
 | prepareCommandEnv(baseEnv,isWin) | 环境/平台→{env,stripped,injected} | 执行命令环境净化与注入汇总：剥离敏感凭据，注入CI/TERM/FORCE_COLOR与Windows下PYTHONIOENCODING，并返回stripped和injected摘要（F104，复审P2-4） |
 | scrubEnv(base)，导入extension/ptyPolicy | 环境对象→副本 | 删除名称匹配凭据模式的字段；不是值扫描；保留PATH/一般Conda变量，不自动conda activate |
 | streamChars(rec,field) | 记录/流名→字符数 | F70第七批：取逐块累计计数（startProcess与PTY onChunk维护，不受200Ki环形裁剪影响）与当前文本长度的较大者；PTY结果/晚到错误直接写文本时也不少算 |

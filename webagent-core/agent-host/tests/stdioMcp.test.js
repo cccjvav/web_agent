@@ -39,6 +39,21 @@ async function main() {
     assert.throws(() => prepared('normal', { cwd: '../' }));
     assert.throws(() => prepared('normal', { env: { NODE_OPTIONS: '--eval bad' } }), /protected/);
     assert.throws(() => prepared('normal', { env: { PATH: '/untrusted' } }), /protected/);
+    {
+      // Per-user locations are inherited (npx/uvx need APPDATA/LOCALAPPDATA/HOME) and an explicit entry replaces them.
+      const { launchEnv } = require('../src/mcp/stdioLaunch');
+      const saved = { HOME: process.env.HOME, APPDATA: process.env.APPDATA, LOCALAPPDATA: process.env.LOCALAPPDATA };
+      process.env.HOME = '/inherited-home'; process.env.APPDATA = '/inherited-appdata'; process.env.LOCALAPPDATA = '/inherited-local';
+      try {
+        const base = launchEnv({});
+        assert.strictEqual(base.HOME, '/inherited-home'); assert.strictEqual(base.APPDATA, '/inherited-appdata'); assert.strictEqual(base.LOCALAPPDATA, '/inherited-local');
+        assert.strictEqual(base.GH_TOKEN, undefined, 'secrets are still not inherited');
+        assert.strictEqual(launchEnv({ HOME: '/explicit' }).HOME, '/explicit');
+        const lower = launchEnv({ home: '/lower' });
+        assert.strictEqual(lower.home, '/lower'); assert.ok(!Object.hasOwn(lower, 'HOME'), 'a case-variant entry replaces the inherited one');
+        assert.throws(() => launchEnv({ home: '/a', HOME: '/b' }), /Duplicate/);
+      } finally { for (const [key, value] of Object.entries(saved)) if (value === undefined) delete process.env[key]; else process.env[key] = value; }
+    }
     const reviewed = path.join(root, 'entry.js'); fs.writeFileSync(reviewed, 'old');
     const stale = prepared('normal', { reviewFiles: ['entry.js'] }); fs.writeFileSync(reviewed, 'new');
     await assert.rejects(external.startStdio({ previewId: stale.previewId, confirmed: true }), /changed/);

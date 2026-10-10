@@ -298,7 +298,8 @@ export function paintSkills() {
   const query = ($('#skill-search').value || '').toLowerCase();
   const rows = skillCatalog.filter(skill => `${skill.id} ${skill.description || ''}`.toLowerCase().includes(query));
   $('#skills-list').innerHTML = rows.map(skill => `<article class="block"><h4>${escapeHtml(skill.name)}</h4>`
-    + `<p class="hint">${escapeHtml(skill.id)} · 说明型 · 不自动执行${skill.shadowed ? ' · 存在同名项，请使用完整ID' : ''}</p>`
+    + `<p class="hint">${escapeHtml(skill.id)} · 说明型 · 不自动执行${skill.shadowed ? ` · 被同名的 ${escapeHtml(typeof skill.shadowedBy === 'string' ? skill.shadowedBy : '')} 遮住，请使用完整ID` : ''}</p>`
+    + (skill.ready === false ? `<p class="hint">不可用（${escapeHtml(typeof skill.reason === 'string' ? skill.reason : 'unknown')}）：${escapeHtml(typeof skill.fix === 'string' ? skill.fix : '')}</p>` : '')
     + `<p>${escapeHtml(skill.description || skill.preview)}</p>`
     + `<button type="button" class="vs-btn" data-skill-id="${escapeHtml(skill.id)}">查看正文与资源</button></article>`).join('') || '<p class="hint">没有匹配的 Skill。</p>';
 }

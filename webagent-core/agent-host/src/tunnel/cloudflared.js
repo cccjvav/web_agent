@@ -3,6 +3,7 @@ const { spawn, spawnSync } = require('child_process');
 const { cachedLookup } = require('./binaryLookup');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { config } = require('../config');
 const eventBus = require('../utils/eventBus');
 const { stopProcess } = require('./stopProcess');
@@ -212,6 +213,50 @@ async function startNamedTunnel({ hostname, token, port = config.port, timeoutMs
   });
 }
 
+// Quick Tunnel isolation (ShunCode 0.8.1 reference, user-approved first batch):
+// - Without --config, cloudflared also reads ~/.cloudflared/config.yml; ingress rules or a tunnel ID written there
+//   for another service then take over the Bridge address and every request answers 404. We pass our own file.
+// - Without --protocol, cloudflared pins quick tunnels to QUIC (UDP 7844) and never falls back (quick_tunnel.go sets
+//   protocol=quic when the flag is unset). `auto` starts with QUIC and falls back to HTTP/2 over TCP.
+const QUICK_TUNNEL_CONFIG_NAME = 'cloudflared-quick-tunnel.yml';
+const QUICK_TUNNEL_CONFIG_TEXT = [
+  '# Written by Web Agent for its Quick Tunnel. cloudflared is started with --config pointing here, so',
+  '# ~/.cloudflared/config.yml (ingress rules, tunnel IDs, protocol) does not apply to the Bridge address.',
+  'no-autoupdate: true',
+  ''
+].join('\n');
+
+// Writes the file under <home>/.webagent (0700) through a temp file + rename, so a planted symlink is replaced,
+// never followed. Returns the path, or null with a reason when it cannot be written (caller starts without it).
+function writeQuickTunnelConfig(baseDirectory = os.homedir()) {
+  try {
+    const dir = path.join(fs.realpathSync(baseDirectory), '.webagent');
+    fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+    const stat = fs.lstatSync(dir);
+    if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error('unsafe directory');
+    const file = path.join(dir, QUICK_TUNNEL_CONFIG_NAME);
+    const scratch = `${file}.${process.pid}.${Date.now()}.tmp`;
+    fs.writeFileSync(scratch, QUICK_TUNNEL_CONFIG_TEXT, { mode: 0o600, flag: 'wx' });
+    try { fs.renameSync(scratch, file); } catch (err) { try { fs.unlinkSync(scratch); } catch (_) {} throw err; }
+    return { file };
+  } catch (err) {
+    return { file: null, reason: String((err && (err.code || err.message)) || err).slice(0, 120) };
+  }
+}
+
+// needShell: a .cmd/.bat wrapper runs through cmd.exe, which does not quote argv for us. A path made only of plain
+// characters (letters, digits, _-.:\/ space and parentheses) is passed quoted; anything else (&, ^, %, !...) is not
+// passed at all, and the start goes on without --config.
+function quickTunnelArgs(target, configFile, { needShell = false } = {}) {
+  const args = ['tunnel'];
+  if (configFile) {
+    if (!needShell) args.push('--config', configFile);
+    else if (/^[A-Za-z0-9_\-.:\\/ ()]+$/.test(configFile)) args.push('--config', `"${configFile}"`);
+  }
+  args.push('--no-autoupdate', '--protocol', 'auto', '--url', target);
+  return args;
+}
+
 async function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) {
   const stopped = stopTunnel();
   const ticket = generation;
@@ -225,9 +270,13 @@ async function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) 
   }
   const target = `http://127.0.0.1:${port}`;
   return new Promise((resolve, reject) => {
-    const args = ['tunnel', '--url', target, '--no-autoupdate'];
     const isWin = process.platform === 'win32';
     const needShell = isWin && /\.(cmd|bat)$/i.test(bin);
+    const own = writeQuickTunnelConfig();
+    const args = quickTunnelArgs(target, own.file, { needShell });
+    if (!args.includes('--config')) {
+      eventBus.broadcast('tunnel_log', { chunk: `未能为 Quick Tunnel 使用独立配置（${own.reason || '路径含 cmd 特殊字符'}），本次照常启动；若地址全部 404，请检查 ~/.cloudflared/config.yml。\n` });
+    }
     const proc = spawn(bin, args, {
       windowsHide: true,
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -312,6 +361,9 @@ module.exports = {
   findCloudflared,
   installHint,
   startQuickTunnel,
+  quickTunnelArgs,
+  writeQuickTunnelConfig,
+  QUICK_TUNNEL_CONFIG_TEXT,
   startNamedTunnel,
   stopTunnel,
   snapshot

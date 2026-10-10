@@ -2,11 +2,22 @@ const { currentSignal, checkCancelled } = require('../utils/requestScope');
 const { createHash } = require('crypto');
 const store = require('../models/store');
 
+// A pasted endpoint is not a prefix: strip a trailing /chat/completions, /responses or /models and collapse a
+// repeated /v1, so the request goes to exactly one `${base}/chat/completions` (or `/models`). A version path is
+// never added: some gateways serve at the root, so a missing /v1 is explained on 404 instead of guessed.
 function normalizeBase(url) {
   return String(url || '')
     .trim()
     .replace(/\/+$/, '')
-    .replace(/\/chat\/completions$/i, '');
+    .replace(/\/(?:chat\/completions|responses|models)$/i, '')
+    .replace(/\/+$/, '')
+    .replace(/(?:\/v1)+$/i, match => match.slice(0, 3));
+}
+
+// HTTP 404 on a base without any path usually means the version segment is missing.
+function missingVersionHint(base) {
+  try { return ['', '/', '/api'].includes(new URL(base).pathname.replace(/\/+$/, '')) ? '；地址可能少了版本路径，多数OpenAI兼容服务填 https://主机/v1（OpenRouter 为 /api/v1）' : ''; }
+  catch (_) { return ''; }
 }
 
 function probeCaps(m) {
@@ -112,7 +123,7 @@ async function fetchProviderText(base, key, timeoutMs) {
       headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'}
     });
     reader = response.body?.getReader();
-    if (!response.ok) throw providerError(`模型发现失败 HTTP ${response.status}`);
+    if (!response.ok) throw providerError(`模型发现失败 HTTP ${response.status}${response.status === 404 ? missingVersionHint(base) : ''}`);
     if (!reader) throw providerError('模型列表响应正文缺失');
     const chunks = []; let size = 0;
     while (true) {
@@ -148,4 +159,4 @@ async function listRemoteModels(baseUrl, apiKey, { timeoutMs = 15000 } = {}) {
   })));
 }
 
-module.exports = { listRemoteModels, normalizeBase, probeCaps, probeContext, addProvider };
+module.exports = { listRemoteModels, normalizeBase, missingVersionHint, probeCaps, probeContext, addProvider };

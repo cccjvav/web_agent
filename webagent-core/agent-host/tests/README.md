@@ -184,10 +184,10 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [editorRuntime.test.js](editorRuntime.test.js) | 39 个函数/类节点 |
 | [eventBus.test.js](eventBus.test.js) | 22 个函数/类节点 |
 | [executionControl.test.js](executionControl.test.js) | 41 个函数/类节点 |
-| [executorEnv.test.js](executorEnv.test.js) | 5 个函数/类节点 |
+| [executorEnv.test.js](executorEnv.test.js) | 7 个函数/类节点 |
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
 | [extensionHostSafety.test.js](extensionHostSafety.test.js) | 32 个函数/类节点 |
-| [externalDiscovery.test.js](externalDiscovery.test.js) | 13 个函数/类节点 |
+| [externalDiscovery.test.js](externalDiscovery.test.js) | 15 个函数/类节点 |
 | [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
 | [fileReadSafety.test.js](fileReadSafety.test.js) | 22 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
@@ -206,7 +206,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [memoryRecall.test.js](memoryRecall.test.js) | 8 个函数/类节点 |
 | [modelDiagnostics.test.js](modelDiagnostics.test.js) | 3 个函数/类节点 |
 | [modelLifecycle.test.js](modelLifecycle.test.js) | 55 个函数/类节点 |
-| [modelStreaming.test.js](modelStreaming.test.js) | 67 个函数/类节点 |
+| [modelStreaming.test.js](modelStreaming.test.js) | 69 个函数/类节点 |
 | [monacoLoading.test.js](monacoLoading.test.js) | 16 个函数/类节点 |
 | [nativeChatStream.test.js](nativeChatStream.test.js) | 32 个函数/类节点 |
 | [nativeRequestJson.test.js](nativeRequestJson.test.js) | 28 个函数/类节点 |
@@ -221,7 +221,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [planRound.test.js](planRound.test.js) | 6 个函数/类节点 |
 | [processDiagnostics.test.js](processDiagnostics.test.js) | 35 个函数/类节点 |
 | [profile.test.js](profile.test.js) | 8 个函数/类节点 |
-| [providers.test.js](providers.test.js) | 30 个函数/类节点 |
+| [providers.test.js](providers.test.js) | 35 个函数/类节点 |
 | [ptyJobs.test.js](ptyJobs.test.js) | 12 个函数/类节点 |
 | [ptyLifecycle.test.js](ptyLifecycle.test.js) | 78 个函数/类节点 |
 | [publicHttps.test.js](publicHttps.test.js) | 19 个函数/类节点 |
@@ -234,10 +234,10 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [settingsPanel.test.js](settingsPanel.test.js) | 74 个函数/类节点 |
 | [settingsRelay.test.js](settingsRelay.test.js) | 61 个函数/类节点 |
 | [sidebarFeedback.test.js](sidebarFeedback.test.js) | 128 个函数/类节点 |
-| [skillsLifecycle.test.js](skillsLifecycle.test.js) | 19 个函数/类节点 |
+| [skillsLifecycle.test.js](skillsLifecycle.test.js) | 26 个函数/类节点 |
 | [skipWorkbench.test.js](skipWorkbench.test.js) | 24 个函数/类节点 |
 | [stateIntegrity.test.js](stateIntegrity.test.js) | 42 个函数/类节点 |
-| [stdioMcp.test.js](stdioMcp.test.js) | 37 个函数/类节点 |
+| [stdioMcp.test.js](stdioMcp.test.js) | 38 个函数/类节点 |
 | [stdioOwnerFixture.js](stdioOwnerFixture.js) | 2 个函数/类节点 |
 | [stdioServerFixture.js](stdioServerFixture.js) | 3 个函数/类节点 |
 | [taskProgress.test.js](taskProgress.test.js) | 9 个函数/类节点 |
@@ -251,7 +251,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [tunnelCleanupAclFixture.ps1](tunnelCleanupAclFixture.ps1) | 文件级登记；未做符号完整性证明 |
 | [tunnelCleanupWindows.test.js](tunnelCleanupWindows.test.js) | 17 个函数/类节点 |
 | [tunnelHelperDiagnostics.test.js](tunnelHelperDiagnostics.test.js) | 20 个函数/类节点 |
-| [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 17 个函数/类节点 |
+| [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 23 个函数/类节点 |
 | [tunnelOwnerFixture.js](tunnelOwnerFixture.js) | 4 个函数/类节点 |
 | [tunnelReceiptProtection.test.js](tunnelReceiptProtection.test.js) | 17 个函数/类节点 |
 | [tunnelRecoveryLauncher.test.js](tunnelRecoveryLauncher.test.js) | 11 个函数/类节点 |

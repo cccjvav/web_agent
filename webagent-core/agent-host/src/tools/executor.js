@@ -159,6 +159,28 @@ function detectPosixShell(env = process.env, exists = fs.existsSync) {
   return '/bin/sh';
 }
 
+// What the model must know about how run_command/start_command text is actually executed. Models otherwise
+// wrap commands in another `bash -lc` / `powershell -Command` layer, and the quotes and $variables get parsed
+// twice. This states the executor's real shell (above, and extension/ptyHost.js for desktop PTY runs), so it
+// overrides any shell *preference* the user wrote into the environment settings.
+function commandShellContract(platform = process.platform, env = process.env, exists = fs.existsSync) {
+  if (platform === 'win32') {
+    return [
+      'run_command/start_command text runs as a Windows PowerShell 5.1 script (powershell.exe -NoProfile, so profile aliases and functions are absent), not CMD, bash or pwsh 7. This is how the host really runs commands and overrides the Shell preference.',
+      'Write PowerShell directly. Do not wrap it in another powershell -Command, cmd /c or bash -lc layer: quotes and $variables would be parsed twice. Use cmd /d /c only for a single CMD built-in with no PowerShell equivalent.',
+      'PowerShell 5.1 has no && or ||: chain with ; and check with if ($?) { ... } or if ($LASTEXITCODE -eq 0) { ... }. Environment variables are $env:NAME. Run a program whose path has spaces with & "C:\\path with spaces\\tool.exe" args.',
+      'The run fails when the last native program exits non-zero or a cmdlet fails.'
+    ].join(' ');
+  }
+  const shell = detectPosixShell(env, exists);
+  const bash = path.basename(shell) === 'bash';
+  return [
+    `run_command/start_command text runs with ${shell} -c (non-interactive; ${bash ? 'bash syntax is available' : 'plain POSIX sh: no bash arrays, [[ ]] or <(...)'}). This is how the host really runs commands and overrides the Shell preference.`,
+    'Write the command directly. Do not wrap it in another bash -lc or sh -c layer: quotes and $variables would be parsed twice.',
+    'The exit status of the command string decides success. Local VS Code Chat with the interactive terminal enabled runs it in the login shell ($SHELL -lc) instead.'
+  ].join(' ');
+}
+
 function prepareCommandEnv(baseEnv = process.env, isWin = process.platform === 'win32') {
   const clean = scrubEnv(baseEnv);
   const stripped = [];
@@ -574,5 +596,6 @@ module.exports = {
   wait,
   scrubEnv,
   detectPosixShell,
+  commandShellContract,
   prepareCommandEnv
 };

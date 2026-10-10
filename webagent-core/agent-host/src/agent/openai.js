@@ -10,6 +10,7 @@ const { fetchText, checkCancelled, responseTooLarge } = require('../utils/reques
 const { isToolFailure } = require('../utils/toolTrace');
 const { isEventStream, createCompletionAssembler } = require('./completionStream');
 const { modelFailure, estimateTokens, parseContextSize } = require('./modelDiagnostics');
+const { normalizeBase } = require('./providers');
 
 const MODEL_REQUEST_MAX_BYTES = 12 * 1024 * 1024;
 const MODEL_RESPONSE_MAX_BYTES = 1024 * 1024;
@@ -123,9 +124,6 @@ function systemPrompt(mode) {
     'Do not assume any particular file exists. Inspect THIS workspace.',
     'Search first, then read only the needed files. Use sha256 from read_files when patching.',
     `${reply} Be concise. After tools, give a short conclusion.`,
-    env.shell === 'powershell' || env.os === 'windows'
-      ? 'This machine is Windows. Prefer PowerShell; do not assume bash.'
-      : `Shell is ${env.shell}.`,
     mode === 'plan'
       ? 'Plan mode: produce a concrete plan. Do not modify the repo. Mention that Code mode is required to apply changes.'
       : '',
@@ -198,7 +196,8 @@ async function runOpenAI({
 } = {}) {
   const send = typeof emit === 'function' ? emit : () => {};
   if (!model || typeof model !== 'object' || Array.isArray(model)) throw new Error('模型配置无效');
-  const base = String(model.baseUrl || '').replace(/\/$/, '');
+  // Saved records may predate normalisation or come from a hand-edited models.json.
+  const base = normalizeBase(model.baseUrl);
   if (!base) throw new Error('baseUrl 为空');
   if (message !== undefined && message !== null && typeof message !== 'string') throw new Error('模型消息必须是字符串');
   if (extraSystem !== undefined && extraSystem !== null && typeof extraSystem !== 'string') throw new Error('模型系统提示必须是字符串');

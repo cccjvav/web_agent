@@ -11,6 +11,33 @@ const { canonicalNamedUrl, createTokenRedactor } = require('./cloudflared');
 const NGROK_URL_RE = /https:\/\/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+/i;
 const NGROK_READY_RE = /started tunnel|Forwarding\s+https:\/\//i;
 
+// ngrok failures that retrying cannot fix. The agent prints the code and keeps running or exits; either way
+// the user needs to act, so the start is rejected at once with what to do instead of a 25-second wait or an
+// install hint. Only the code is matched; the surrounding output (which may echo the token) is never copied.
+const NGROK_FAILURES = Object.freeze({
+  ERR_NGROK_334: '这个 ngrok 地址已经有别的会话在用（ERR_NGROK_334）。通常是上一次的 ngrok 还没退出，或另一台机器、另一个工作区用了同一个预留域名。先关掉占用它的 ngrok（任务管理器里的 ngrok.exe，或 ngrok 控制台的 Endpoints 页），刚停掉的地址可能要等几十秒才释放；不要为互不相干的工作区开启 pooling。',
+  ERR_NGROK_108: 'ngrok 账号的同时在线会话数已满（ERR_NGROK_108），免费账号只能开 1 个。关掉其它正在运行的 ngrok（ngrok 控制台的 Agents 页能看到）再重试。',
+  ERR_NGROK_105: 'Authtoken 格式不对（ERR_NGROK_105）。到 dashboard.ngrok.com 的 Your Authtoken 页重新复制完整的 Token。',
+  ERR_NGROK_4018: 'ngrok 要求已验证的账号和 Authtoken（ERR_NGROK_4018）。注册并验证邮箱后，从 dashboard.ngrok.com 复制 Authtoken。'
+});
+
+// -> { code, message, known } for the first ERR_NGROK_<n> in the output, or null.
+function ngrokFailure(output) {
+  const text = String(output || '');
+  const busy = /\bendpoint\b[^\r\n]{0,2048}\bis already online\b/i.test(text);
+  const match = text.match(/ERR_NGROK_\d{1,6}\b/i);
+  const code = match ? match[0].toUpperCase() : (busy ? 'ERR_NGROK_334' : null);
+  if (!code) return null;
+  if (NGROK_FAILURES[code]) return { code, message: NGROK_FAILURES[code], known: true };
+  return { code, message: `ngrok 报告 ${code}，说明见 https://ngrok.com/docs/errors/${code.toLowerCase()}`, known: false };
+}
+
+function failureError(failure) {
+  const err = new Error(failure.message);
+  err.code = failure.code; err.retryable = false;
+  return err;
+}
+
 let child = null;
 let generation = 0, cancelPending = null;
 let stopping = Promise.resolve();
@@ -134,7 +161,8 @@ async function startNgrokTunnel({ hostname, token, port = config.port, timeoutMs
       if (settled) return;
       settled = true;
       if (child === proc && ticket === generation) stopNgrok().catch(() => {});
-      reject(new Error('ngrok 已启动但 25 秒内没有给出公网地址。请确认 Authtoken、预留域名（若填了）以及本机网络。'));
+      const failure = ngrokFailure(buf);
+      reject(failure ? failureError(failure) : new Error('ngrok 已启动但 25 秒内没有给出公网地址。请确认 Authtoken、预留域名（若填了）以及本机网络。'));
     }, timeoutMs);
 
     const finish = (url) => {
@@ -153,6 +181,12 @@ async function startNgrokTunnel({ hostname, token, port = config.port, timeoutMs
       buf = (buf + text).slice(-65536);
       const safe = redactLogs.get(stream)(chunk);
       if (safe) eventBus.broadcast('tunnel_log', { chunk: safe.slice(0, 400) });
+      const failure = ngrokFailure(buf);
+      if (failure && failure.known && !settled) {
+        settled = true; clearTimeout(timer);
+        if (child === proc && ticket === generation) stopNgrok().catch(() => {});
+        return reject(failureError(failure));
+      }
       const parsed = parseNgrokUrl(buf);
       if (named && NGROK_READY_RE.test(buf)) return finish(named);
       if (parsed) return finish(parsed);
@@ -181,7 +215,9 @@ async function startNgrokTunnel({ hostname, token, port = config.port, timeoutMs
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      reject(new Error(`ngrok 退出（code ${code}）。${installHint()}`));
+      // A process that ran and printed an ngrok error code is not an installation problem.
+      const failure = ngrokFailure(buf);
+      reject(failure ? failureError(failure) : new Error(`ngrok 退出（code ${code}）。${installHint()}`));
     });
   });
 }
@@ -195,6 +231,8 @@ function snapshot() {
 }
 
 module.exports = {
+  NGROK_FAILURES,
+  ngrokFailure,
   parseNgrokUrl,
   findNgrok,
   installHint,

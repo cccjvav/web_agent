@@ -12,17 +12,19 @@ function fragmentedResponse(text) {
   } }), { headers: { 'content-type': 'Text/Event-Stream; charset=utf-8' } });
 }
 async function main() {
-  let mode = 'paged', lists = 0, calls = 0, waiting, lastSessionSeen;
+  let mode = 'paged', lists = 0, calls = 0, waiting, lastSessionSeen, askedVersion, versionHeaders = [];
   const server = http.createServer(async (req, res) => {
     let body = ''; for await (const chunk of req) body += chunk;
     const message = JSON.parse(body);
     assert.strictEqual(req.headers.authorization, 'Bearer fixture-private');
     lastSessionSeen = req.headers['mcp-session-id'];
+    if (message.method === 'initialize') { askedVersion = message.params.protocolVersion; versionHeaders = []; }
+    else versionHeaders.push(req.headers['mcp-protocol-version']);
     if (message.method === 'notifications/initialized') {
       if (mode === 'notification-session') res.setHeader('Mcp-Session-Id', 'notification-session-token');
       res.writeHead(202); res.end(); return;
     }
-    let result = { protocolVersion: '2025-03-26', capabilities: {} };
+    let result = { protocolVersion: mode === 'echo-version' ? askedVersion : '2025-03-26', capabilities: {} };
     if (message.method === 'tools/call') { calls++; result = { content: [] }; }
     if (message.method === 'tools/list') {
       lists++;
@@ -78,7 +80,13 @@ async function main() {
     added.tools[0].inputSchema.properties.x.type = 'number';
     assert.strictEqual(external.list()[0].tools[0].inputSchema.properties.x.type, 'string');
     assert.ok(!JSON.stringify(external.list()).includes('fixture-private'));
+    // Outbound initialize offers 2025-06-18; later requests carry whatever the server chose.
+    assert.strictEqual(askedVersion, '2025-06-18');
+    assert.ok(versionHeaders.length >= 3 && versionHeaders.every(value => value === '2025-03-26'), 'a server answering 2025-03-26 gets that version back');
     external.remove(added.serverId);
+    mode = 'echo-version'; const echoed = await external.add(options);
+    assert.ok(versionHeaders.length >= 3 && versionHeaders.every(value => value === '2025-06-18'), 'a server accepting the offer gets 2025-06-18 on every later request');
+    external.remove(echoed.serverId); mode = 'paged'; lists = 0;
     for (const scenario of ['error-null', 'error-false', 'error-zero', 'sse-error-null', 'sse-error-false', 'sse-error-zero', 'repeat', 'duplicate', 'pages', 'bytes', 'result-array', 'schema', 'null-schema', 'cursor', 'count', 'session-merged', 'session-space', 'session-empty']) {
       mode = scenario; lists = 0;
       await assert.rejects(external.add(options));

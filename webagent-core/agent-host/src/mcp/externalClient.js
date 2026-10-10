@@ -161,7 +161,7 @@ async function establish(client) {
   const timer = setTimeout(abort, 30000);
   try {
     return await runWithSignal(registration.signal, async () => {
-      const initialized = await rpc(client, 'initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'WebAgent-approved-client', version: config.version } });
+      const initialized = await rpc(client, 'initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'WebAgent-approved-client', version: config.version } });
       if (!['2024-11-05', '2025-03-26', '2025-06-18'].includes(initialized.protocolVersion)) throw new Error('Unsupported MCP protocol');
       client.protocol = initialized.protocolVersion;
       await rpc(client, 'notifications/initialized', {}, true);

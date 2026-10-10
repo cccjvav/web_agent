@@ -14,7 +14,7 @@
 
 验证复审 P2-4（执行环境净化与注入透明化）与 P2-5（动态探测 POSIX shell）：
 
-- **testDetectPosixShell**：以注入的存在性判断覆盖：有 bash 时优先 bash（即使 `SHELL` 指向别处）；无 bash 时接受绝对路径且名为 dash 等 POSIX 名的 `SHELL`；fish/zsh/nu/csh 与相对路径 `SHELL` 一律忽略、降级 `/bin/sh` 或 `/usr/bin/sh`；类 Alpine 仅有 `/bin/sh`；另在真实系统上核对未设置 `SHELL` 时的结果；
+- **testDetectPosixShell**：第129组起先查commandShellContract：win32文本须含Windows PowerShell 5.1、powershell.exe -NoProfile、不是CMD/bash/pwsh 7、没有&&和||、$env:NAME、不要再套一层、优先于Shell偏好；Linux有bash时写/bin/bash -c并提到桌面PTY用$SHELL -lc；只有/bin/sh且SHELL是fish时写/bin/sh -c和plain POSIX sh，不把fish当-c的shell。然后以注入的存在性判断覆盖：有 bash 时优先 bash（即使 `SHELL` 指向别处）；无 bash 时接受绝对路径且名为 dash 等 POSIX 名的 `SHELL`；fish/zsh/nu/csh 与相对路径 `SHELL` 一律忽略、降级 `/bin/sh` 或 `/usr/bin/sh`；类 Alpine 仅有 `/bin/sh`；另在真实系统上核对未设置 `SHELL` 时的结果；
 - **testPrepareCommandEnv**：核对常规变量保留、敏感凭据（GITHUB_TOKEN、AZURE_STORAGE_KEY、MY_API_KEY）从 `env` 中剥离并记录在 `stripped`、默认注入 `CI=true`、`TERM=xterm-256color`、`FORCE_COLOR=1`（Windows 补 `PYTHONIOENCODING=utf-8`）并记录在 `injected`；用户显式传入 `CI: 'false'` 等值时尊重用户设定、不重复注入；
 - **testExecuteCommandEnvSummary**：执行真实命令时，返回记录包含 `envSummary` 对象，内部包含 `stripped` 与 `injected` 数组；
 - 入口 **main** 串行运行全部异步/同步断言。
@@ -53,7 +53,7 @@ AbortController取消enqueue返回cancelled；预取消runWithSignal中的write_
 
 [源码](tunnelLifecycle.test.js)的**fake()**返回EventEmitter子进程及stdout/stderr，kill只记signals，不真终止；**tick**用setImmediate让异步启动推进。stopProcess测试顽固进程SIGTERM后需SIGKILL才发exit，killed标志不能充当退出证明；kill抛错的进程最终应did not exit拒绝。keep定时器避免unref超时让进程提前退出。
 
-tmp假cloudflared文件，CLOUDFLARED_PATH指它；cp.spawn返回fake并记录（F100起同时记录cmd/args/options：Named与ngrok的Token都不得出现在args里，必须分别在options.env的TUNNEL_TOKEN/NGROK_AUTHTOKEN，Named的args固定为`tunnel --no-autoupdate run`），spawnSync返回查找失败。第一启动用stdout发first URL完成；第二启动必须等旧exit才spawn新进程，旧stale URL不得发布；新second ready后旧exit不能清新URL。新进程exit1清URL和bridgeRunning；第三启动未ready就stop，启动Promise应cancelled。finally恢复spawn/spawnSync/env并删tmp。模拟事件顺序不是实际SIGKILL或公网探测。
+tmp假cloudflared文件，CLOUDFLARED_PATH指它。第129组起，首次Quick Tunnel前把HOME/USERPROFILE指到临时目录，断言argv恰为`tunnel --config <临时home>/.webagent/cloudflared-quick-tunnel.yml --no-autoupdate --protocol auto --url …`，配置内容只有no-autoupdate、POSIX下权限0600、不留.tmp；预先放好的符号链接被替换、目标文件不变；home是普通文件时返回原因而不抛出；quickTunnelArgs在needShell下给带空格的路径加引号，含`&`、`%`、`^`、`!`时不传`--config`；ngrok循环之后另起两次ngrok：stderr出现含Token和ERR_NGROK_334的一行，拒绝的错误code为ERR_NGROK_334、retryable:false、message恰为NGROK_FAILURES里的文字且不含Token，假进程已收到停止信号；表外的ERR_NGROK_8012在exit时给官方说明链接而不是安装提示；纯函数另查“endpoint … is already online”文字形式识别为334、小写err_ngrok_108能识别、正常的started tunnel返回null；最后把HOME/USERPROFILE临时指向一个普通文件再启动Quick Tunnel：argv不含`--config`、末尾仍是`--no-autoupdate --protocol auto --url …`，tunnel_log里有提到Quick Tunnel和`~/.cloudflared/config.yml`的提示；除这一段外整个文件期间HOME/USERPROFILE都指向临时目录，finally才恢复，所以任何一次Quick Tunnel都不会写进真实用户目录；cp.spawn返回fake并记录（F100起同时记录cmd/args/options：Named与ngrok的Token都不得出现在args里，必须分别在options.env的TUNNEL_TOKEN/NGROK_AUTHTOKEN，Named的args固定为`tunnel --no-autoupdate run`），spawnSync返回查找失败。第一启动用stdout发first URL完成；第二启动必须等旧exit才spawn新进程，旧stale URL不得发布；新second ready后旧exit不能清新URL。新进程exit1清URL和bridgeRunning；第三启动未ready就stop，启动Promise应cancelled。finally恢复spawn/spawnSync/env并删tmp。模拟事件顺序不是实际SIGKILL或公网探测。
 
 ## bridgeTunnel.test.js
 

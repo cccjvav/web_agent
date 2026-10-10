@@ -124,6 +124,13 @@ const texts = (events, type) => events.filter(event => event.type === type).map(
     assert.strictEqual((await runOpenAI({ mode: 'ask', message: 'json', history: [], model, emit: events.emit, allowTools: false })).text, 'buffered');
     assert.deepStrictEqual(texts(events, 'delta'), []);
     assert.deepStrictEqual(texts(events, 'message'), ['buffered']);
+    // A saved base that still carries the pasted endpoint or a doubled /v1 is normalised at request time (F129).
+    const urls = [];
+    global.fetch = async url => { urls.push(url); return jsonReply({ role: 'assistant', content: 'ok' }); };
+    for (const baseUrl of ['https://stream.invalid/v1/chat/completions/', 'https://stream.invalid/v1/v1']) {
+      await runOpenAI({ mode: 'ask', message: 'n', history: [], model: { ...model, id: 'n-' + urls.length, baseUrl }, emit: () => {}, allowTools: false });
+    }
+    assert.deepStrictEqual(urls, ['https://stream.invalid/v1/chat/completions', 'https://stream.invalid/v1/chat/completions']);
   }
 
   // 4. HTTP 400 on the streamed attempt: retried once without `stream`, remembered per model,

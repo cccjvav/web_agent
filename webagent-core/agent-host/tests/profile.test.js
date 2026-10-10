@@ -102,8 +102,16 @@ function main() {
   assert.ok(ctx.includes('Tech stack'));
   assert.ok(ctx.includes('JavaScript'));
   assert.ok(ctx.includes('review'));
+  // The real executor shell is stated even when the saved preference names another shell.
+  const { commandShellContract } = require('../src/tools/executor');
+  assert.ok(ctx.includes('## Command shell\n' + commandShellContract()), 'command shell contract in the workspace context');
+  assert.ok(ctx.indexOf('## Environment preference') >= 0 && ctx.indexOf('## Environment preference') < ctx.indexOf('## Command shell'));
+  const broken = formatWorkspaceContext(loadCustom(), [{ id: 'workspace:huge', source: 'workspace', ready: false, reason: 'too-large', preview: 'Skill text must be...' }]);
+  assert.ok(broken.includes('- workspace:huge (workspace) [unavailable: too-large; do not load]'));
+  assert.ok(!broken.includes('Skill text must be'), 'an error message is not shown as a skill description');
 
   const instr = getInstructions();
+  assert.ok(instr.includes(commandShellContract()), 'remote MCP clients get the same contract');
   assert.ok(instr.includes('Environment preference'));
   assert.ok(instr.includes('Skills'));
   assert.ok(instr.includes('review'));

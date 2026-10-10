@@ -1,6 +1,6 @@
 const assert = require('assert');
 const http = require('http');
-const { listRemoteModels, probeCaps, probeContext } = require('../src/agent/providers');
+const { listRemoteModels, normalizeBase, missingVersionHint, probeCaps, probeContext } = require('../src/agent/providers');
 
 async function run() {
   assert.deepStrictEqual(probeCaps({ id: 'gpt-4o' }), []);
@@ -8,6 +8,17 @@ async function run() {
   assert.strictEqual(probeContext({ id: 'gpt-4o' }), '');
   assert.strictEqual(probeContext({ context_window: 128000 }), '128K');
   assert.strictEqual(probeContext({ context_length: 1000000 }), '1M');
+  // F129: a pasted endpoint or doubled /v1 is reduced to one base; a version path is never invented.
+  for (const [input, expected] of [
+    ['https://a.test/v1/chat/completions', 'https://a.test/v1'], [' https://a.test/v1/CHAT/COMPLETIONS/ ', 'https://a.test/v1'],
+    ['https://a.test/v1/responses', 'https://a.test/v1'], ['https://a.test/v1/models', 'https://a.test/v1'],
+    ['https://a.test/v1/v1', 'https://a.test/v1'], ['https://a.test/v1/v1/v1/chat/completions', 'https://a.test/v1'],
+    ['https://api.deepseek.com', 'https://api.deepseek.com'], ['https://a.test', 'https://a.test'],
+    ['https://a.test/openai/v1', 'https://a.test/openai/v1'], ['https://a.test/v10', 'https://a.test/v10'], ['https://a.test/x/v1x', 'https://a.test/x/v1x']
+  ]) assert.strictEqual(normalizeBase(input), expected, input);
+  assert.ok(missingVersionHint('https://a.test').includes('/v1') && missingVersionHint('https://openrouter.ai/api').includes('/api/v1'));
+  assert.strictEqual(missingVersionHint('https://a.test/v1'), '');
+  assert.strictEqual(missingVersionHint('not a url'), '');
 
   const orig = global.fetch;
   global.fetch = async () => new Response(JSON.stringify({data:[
@@ -29,6 +40,11 @@ async function run() {
     }
     global.fetch = async () => new Response('reflected-SECRET',{status:401});
     await assert.rejects(()=>listRemoteModels('https://model.test/v1','SECRET'),error=>error.message.includes('401') && !error.message.includes('SECRET'));
+    const asked = [];
+    global.fetch = async url => { asked.push(url); return new Response('Not Found', { status: 404 }); };
+    await assert.rejects(() => listRemoteModels('https://model.test', 'test'), error => error.message.includes('404') && error.message.includes('https://主机/v1'));
+    await assert.rejects(() => listRemoteModels('https://model.test/v1/chat/completions', 'test'), error => error.message.includes('404') && !error.message.includes('版本路径'));
+    assert.deepStrictEqual(asked, ['https://model.test/models', 'https://model.test/v1/models'], 'discovery asks the normalised base, never a guessed /v1');
     global.fetch = async () => new Response('not JSON');
     await assert.rejects(()=>listRemoteModels('https://model.test/v1','test'),/JSON/);
     let cancelled=false;

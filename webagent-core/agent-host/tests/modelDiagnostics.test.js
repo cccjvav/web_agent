@@ -11,7 +11,7 @@ const describe = (status, body, extra) => clean(describeModelFailure({ status, b
 const openai = (code, message, extra = {}) => ({ error: { message: `${message} ${SECRET}`, type: 'invalid_request_error', code, ...extra } });
 
 // --- Categories by code, by status default and by message shape. ---
-assert.deepStrictEqual(Object.keys(CATEGORIES), ['context', 'stream', 'auth', 'forbidden', 'not_found', 'quota', 'rate_limit', 'overloaded', 'upstream', 'bad_request', 'http']);
+assert.deepStrictEqual(Object.keys(CATEGORIES), ['context', 'stream', 'auth', 'forbidden', 'not_found', 'endpoint', 'quota', 'rate_limit', 'overloaded', 'upstream', 'bad_request', 'http']);
 assert.ok(Object.isFrozen(CATEGORIES));
 
 for (const [label, status, body, category, retry] of [
@@ -45,7 +45,10 @@ for (const [label, status, body, category, retry] of [
   ['no status', undefined, SECRET, 'http', false],
   ['non-JSON body', 400, `not json ${SECRET}`, 'bad_request', true],
   ['array body', 400, [SECRET], 'bad_request', true],
-  ['string error field', 404, { error: `Model not found: ${SECRET}` }, 'not_found', false]
+  ['string error field', 404, { error: `Model not found: ${SECRET}` }, 'not_found', false],
+  // A bare 404 is far more often a wrong Base URL (missing /v1, pasted /chat/completions) than a missing model.
+  ['404 without a model code', 404, `<html>Cannot POST /chat/completions ${SECRET}</html>`, 'endpoint', false],
+  ['404 empty', 404, '', 'endpoint', false]
 ]) {
   const verdict = describe(status, body);
   assert.strictEqual(verdict.category, category, label);
@@ -56,6 +59,7 @@ for (const [label, status, body, category, retry] of [
 // --- Wording: fixed head + fixed hint; estimate appended only for context overflows. ---
 assert.strictEqual(describe(401, '').message, '模型 HTTP 401 请求失败：API Key 无效或已失效，请在设置里重新填写');
 assert.strictEqual(describe(418, '').message, '模型 HTTP 418 请求失败');
+assert.strictEqual(describe(404, '').message, '模型 HTTP 404 请求失败：端点地址不存在，请核对 Base URL（多数服务以 /v1 这类版本路径结尾，不要带 /chat/completions）和模型 ID');
 assert.strictEqual(describe(200, { error: { code: 'model_not_found' } }).message, '模型返回了错误：模型不存在或该端点不提供此模型 ID，请核对设置里的模型 ID');
 assert.strictEqual(describe(200, { error: { code: 'rate_limit_exceeded' } }, { prefix: '模型在流式响应中报告错误' }).message, '模型在流式响应中报告错误：触发限流，请稍后重试');
 {

@@ -8,16 +8,22 @@ const { resolveSafePath } = require('../tools/patchEngine');
 const previews = new Map();
 const KEEP_MS = 2 * 60 * 1000;
 const BASE_ENV = new Set(['PATH', 'PATHEXT', 'SYSTEMROOT', 'SYSTEMDRIVE', 'WINDIR', 'TEMP', 'TMP', 'TMPDIR', 'LANG', 'LC_ALL', 'LC_CTYPE']);
+// Inherited because npx/uvx/pip and most Windows programs look up caches and per-user config through them (without
+// APPDATA/LOCALAPPDATA, npx fails before the server starts). Unlike BASE_ENV, an explicit entry may replace them.
+const USER_ENV = new Set(['HOME', 'USERPROFILE', 'HOMEDRIVE', 'HOMEPATH', 'APPDATA', 'LOCALAPPDATA', 'PROGRAMDATA',
+  'PROGRAMFILES', 'PROGRAMFILES(X86)', 'USER', 'USERNAME', 'LOGNAME', 'SHELL', 'PROCESSOR_ARCHITECTURE']);
 function launchEnv(extra = {}) {
   if (!extra || typeof extra !== 'object' || Array.isArray(extra)) throw new Error('env must be an object');
   const env = Object.create(null);
-  for (const [key, value] of Object.entries(process.env)) if (BASE_ENV.has(key.toUpperCase())) env[key] = value;
+  for (const [key, value] of Object.entries(process.env)) if (BASE_ENV.has(key.toUpperCase()) || USER_ENV.has(key.toUpperCase())) env[key] = value;
   if (Object.keys(extra).length > 32 || Buffer.byteLength(JSON.stringify(extra)) > 8192) throw new Error('At most 32 environment entries / 8 KiB');
+  const explicit = new Set();
   for (const [key, value] of Object.entries(extra)) {
     if (!/^[A-Za-z_][A-Za-z0-9_]{0,79}$/.test(key) || typeof value !== 'string' || /[\0\r\n]/.test(value)
       || BASE_ENV.has(key.toUpperCase()) || /^(WEBAGENT_|NODE_|PYTHONPATH$|PYTHONHOME$|LD_|DYLD_|BASH_ENV$|ENV$|COMSPEC$|PSMODULEPATH$)/i.test(key)) throw new Error('Invalid or protected environment key: ' + key);
+    if (USER_ENV.has(key.toUpperCase())) for (const old of Object.keys(env)) if (old.toUpperCase() === key.toUpperCase() && !explicit.has(old)) delete env[old];
     if (Object.keys(env).some(old => old.toUpperCase() === key.toUpperCase())) throw new Error('Duplicate environment key');
-    env[key] = value;
+    env[key] = value; explicit.add(key);
   }
   return env;
 }

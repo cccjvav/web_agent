@@ -3,7 +3,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { detectPosixShell, prepareCommandEnv, executeCommand } = require('../src/tools/executor');
+const { detectPosixShell, commandShellContract, prepareCommandEnv, executeCommand } = require('../src/tools/executor');
 const { config } = require('../src/config');
 
 async function testDetectPosixShell() {
@@ -12,6 +12,13 @@ async function testDetectPosixShell() {
     const fakeShell = path.join(tmp, 'my-custom-sh');
     fs.writeFileSync(fakeShell, '#!/bin/sh\nexit 0', { mode: 0o755 });
 
+    // 0. The model-facing contract names the shell the executor really uses (F129).
+    const windows = commandShellContract('win32');
+    for (const fact of ['Windows PowerShell 5.1', 'powershell.exe -NoProfile', 'not CMD, bash or pwsh 7', 'no && or ||', '$env:NAME', 'Do not wrap it in another powershell -Command, cmd /c or bash -lc layer', 'overrides the Shell preference']) assert.ok(windows.includes(fact), fact);
+    const bashLine = commandShellContract('linux', {}, p => p === '/bin/bash');
+    assert.ok(bashLine.includes('/bin/bash -c') && bashLine.includes('bash syntax is available') && bashLine.includes('$SHELL -lc'));
+    const shLine = commandShellContract('linux', { SHELL: '/usr/bin/fish' }, p => p === '/bin/sh' || p === '/usr/bin/fish');
+    assert.ok(shLine.includes('/bin/sh -c') && shLine.includes('plain POSIX sh'), 'a non-POSIX login shell is never named as the -c shell');
     // 1. bash is preferred over $SHELL (pre-F104 behaviour)
     assert.strictEqual(detectPosixShell({ SHELL: fakeShell }, ['/bin/bash', fakeShell].includes.bind(['/bin/bash', fakeShell])), '/bin/bash');
     // 2. No bash: an absolute POSIX-named SHELL is honoured
