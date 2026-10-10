@@ -13,7 +13,8 @@ function open(launch, onStopped = () => {}) {
     : [path.join(__dirname, 'stdioSupervisor.js')];
   const helperEnv = { ...launch.env, WEBAGENT_STDIO_LAUNCH: spec };
   if (win) {
-    // Runtime/cache locations belong to the product bootstrap, not to the target.
+    // The bootstrap needs the per-user locations for .NET compilation. Since F129 launchEnv already inherits them (and
+    // they reach the target through envKeys), so this only fills gaps; PSModulePath stays bootstrap-only.
     for (const [key, value] of Object.entries(process.env)) {
       if (/^(USERPROFILE|APPDATA|LOCALAPPDATA|HOMEDRIVE|HOMEPATH)$/i.test(key) && !Object.keys(helperEnv).some(existing => existing.toUpperCase() === key.toUpperCase())) helperEnv[key] = value;
     }

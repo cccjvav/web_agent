@@ -34,7 +34,7 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
     fs.appendFileSync('stdio-calls.txt', 'call\n');
     if (message.params.arguments.hang) return;
     result = { content: [{ type: 'text', text: JSON.stringify({ echo: message.params.arguments.text, unicode: '中文🙂', args: process.argv.slice(3),
-      hostProfile: Boolean(process.env.USERPROFILE || process.env.APPDATA || process.env.LOCALAPPDATA || process.env.PSModulePath), hostSecret: Boolean(process.env.WEBAGENT_STDIO_TEST_SECRET || process.env.GH_TOKEN || process.env.NODE_OPTIONS), explicitKey: Boolean(process.env.FIXTURE_TOKEN), launchSpec: Boolean(process.env.WEBAGENT_STDIO_LAUNCH) }) }] };
+      psModulePath: Boolean(process.env.PSModulePath), appData: process.env.APPDATA || null, hostSecret: Boolean(process.env.WEBAGENT_STDIO_TEST_SECRET || process.env.GH_TOKEN || process.env.NODE_OPTIONS), explicitKey: Boolean(process.env.FIXTURE_TOKEN), launchSpec: Boolean(process.env.WEBAGENT_STDIO_LAUNCH) }) }] };
   }
   const envelope = { jsonrpc: '2.0', id: message.id, result };
   const errors = { 'error-null': null, 'error-false': false, 'error-zero': 0 };

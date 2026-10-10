@@ -300,4 +300,4 @@ hash用于版本冲突检测，不是授权、锁或回滚票据。拿到新的c
 - **日期/标签**：2026-10-10，测试隔离、用户目录。
 - 第129组让Quick Tunnel每次启动都写`<home>/.webagent/cloudflared-quick-tunnel.yml`。测试起初只在第一次启动前后临时改HOME，后面几次启动照样写进了沙箱真实的用户目录；跑完全量才发现多了这个文件。凡是被测代码会写`os.homedir()`的，HOME/USERPROFILE要在require之前就指向临时目录，到最外层finally才恢复，再看一眼真实目录是否干净。
 - 给模型写“shell契约”这类说明时，以执行器真实调用的方式为准（executor.js与extension/ptyHost.js各一处），不要照搬用户偏好里写的shell；两条路径不同时都要写出来。
-
+- 有意改变一个行为（例如stdio子进程从“收不到用户目录变量”改成“继承”）时，先`git grep`旧行为的断言，包括夹具里报告的字段。第129组漏了stdioServerFixture的hostProfile断言：Linux沙箱没有USERPROFILE/APPDATA，旧断言照样通过，只有Windows CI红了。这类平台相关变量要在测试里主动设一个值，让Linux也走到同一条断言。

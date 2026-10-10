@@ -13,9 +13,11 @@ const { runWithSignal } = require('../src/utils/requestScope');
 const { callTool } = require('../src/tools');
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'stdio-mcp-')), previous = config.workspaceRoot;
 const fixture = path.join(__dirname, 'stdioServerFixture.js');
-const envBefore = { token: process.env.GH_TOKEN, secret: process.env.WEBAGENT_STDIO_TEST_SECRET };
+const envBefore = { token: process.env.GH_TOKEN, secret: process.env.WEBAGENT_STDIO_TEST_SECRET, appData: process.env.APPDATA, psModulePath: process.env.PSModulePath };
 config.workspaceRoot = root;
 process.env.GH_TOKEN = 'must-not-inherit'; process.env.WEBAGENT_STDIO_TEST_SECRET = 'must-not-inherit';
+// F129: per-user locations reach the real child (npx/uvx need them); PowerShell's module path still does not.
+process.env.APPDATA = path.join(root, 'fixture-appdata'); process.env.PSModulePath = 'must-not-inherit';
 function alive(pid) {
   try {
     process.kill(pid, 0);
@@ -90,7 +92,7 @@ async function main() {
     assert.ok(!fs.existsSync(path.join(root, 'stdio-calls.txt')));
     await queue.approve(waiting.requestId, true);
     const output = JSON.parse(queue.inspect(waiting.requestId).result.content[0].text);
-    assert.deepStrictEqual(output.args, special); assert.strictEqual(output.hostSecret, false); assert.strictEqual(output.hostProfile, false); assert.strictEqual(output.launchSpec, false); assert.strictEqual(output.explicitKey, true);
+    assert.deepStrictEqual(output.args, special); assert.strictEqual(output.hostSecret, false); assert.strictEqual(output.psModulePath, false); assert.strictEqual(output.appData, path.join(root, 'fixture-appdata')); assert.strictEqual(output.launchSpec, false); assert.strictEqual(output.explicitKey, true);
     await queue.approve(waiting.requestId, true);
     assert.strictEqual(fs.readFileSync(path.join(root, 'stdio-calls.txt'), 'utf8'), 'call\n');
     stage = 'malformed call outcome';
@@ -201,6 +203,8 @@ async function main() {
     owner?.kill('SIGKILL'); await external.closeAll(); await transports.closeAll(); config.workspaceRoot = previous;
     if (envBefore.token == null) delete process.env.GH_TOKEN; else process.env.GH_TOKEN = envBefore.token;
     if (envBefore.secret == null) delete process.env.WEBAGENT_STDIO_TEST_SECRET; else process.env.WEBAGENT_STDIO_TEST_SECRET = envBefore.secret;
+    if (envBefore.appData == null) delete process.env.APPDATA; else process.env.APPDATA = envBefore.appData;
+    if (envBefore.psModulePath == null) delete process.env.PSModulePath; else process.env.PSModulePath = envBefore.psModulePath;
     fs.rmSync(root, { recursive: true, force: true }); clearInterval(progress);
   }
 }

@@ -529,6 +529,8 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 
 **验证：** 全量测试（110个文件）与lint通过，`check-docs --write`后重建docs-site，改过的文档逐份复读后刷新审查索引指纹。
 
+**CI返工（`5694054`）：** 两个Windows任务的stdioMcp失败：夹具原来就断言子进程收不到USERPROFILE/APPDATA/LOCALAPPDATA/PSModulePath（Linux上这些变量本来不存在，所以沙箱跑不出来）。这正是本组有意改变的行为，自我复审时没有搜到这条旧断言。改为：测试给主机设一个APPDATA和PSModulePath，真实子进程必须收到前者、收不到后者，Linux上也能验证。
+
 **参考包处理。** 本组完成后按用户决定从仓库删除`shuncode-0.8.1-webagent.zip`（`git rm`，不改写历史；`cfe5166`里仍可取回）。
 
 ### 延后复审清单
