@@ -10,7 +10,7 @@
 
 - 用户持续要求完成此前待办、及时推送、逐句对照并整理/更新/退役文档。
 - 用户要求交接彻底并入原项目管理，不新增独立路线文件或平行交接入口。
-- 探测专项保持暂停，等待外部正式交接；原有失败、授权和用户验收边界不变，见阶段8（F122已删除）。
+- 探测专项已于第122组按用户决定整体删除（此前为暂停状态，等待外部交接），阶段8随之结束；见[第122组](#第122组按用户决定整体删除探针会话01a0e8ea2026-10-01)。
 
 ## 设计
 
@@ -447,11 +447,11 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 
 用户提供本机Quick Tunnel MCP地址做验收。沙箱出网按域名拦截（trycloudflare、example.com均在TLS握手被重置，只有GitHub可达），GET只能读到状态。用户在仓库添加`MCP_URL` Secret后，用临时工作流`mcp-acceptance-temp.yml`在GitHub Actions上中转运行验收脚本，结果以annotation取回（日志下载在沙箱被拦）。前两次因托管runner未分配而没跑起来，改用ubuntu-26.04标签后正常执行。临时工作流已在本组删除。
 
-- **结果：** 21项通过20项。初始化与会话、说明8204字、工具36个且无probe、资源8个、ping、workspace_info（`c:\Users\Peter\web_agent`）、createOnly、外部改动后盲写被拒、read_files带hash、run_command（Node v24.20.0）、裸图片路径不附图（证明本机已运行F123）、远程危险命令被拒、工作区外路径被拒、ASK锁写、错误密钥401、`/api/status`经隧道404、清理，都正常。
+- **结果：** 21项通过20项。初始化与会话、说明8204字、工具36个且无probe、资源8个、ping、workspace_info（`c:\Users\{{用户名}}\web_agent`）、createOnly、外部改动后盲写被拒、read_files带hash、run_command（Node v24.20.0）、裸图片路径不附图（证明本机已运行F123）、远程危险命令被拒、工作区外路径被拒、ASK锁写、错误密钥401、`/api/status`经隧道404、清理，都正常。
 - **失败项：** `snap -Out <工作区内路径>`没有附图。原因是computerUse的`inside()`区分大小写，而VS Code传入的工作区盘符是小写`c:`，snap与path.resolve得到的是大写`C:`，Windows上工作区内的截图全部被拒。这是F90之前就存在的问题，文档里也写过“不单独做大小写归一”，但此前没有在真实Windows上验证过。F124改为win32下大小写不敏感，并补充了chatVision断言。
 - **待办：** 用户更新并重启主机后，重跑验收中的截图一项。
 - **F124b更正：** a8c449e在Windows CI上chatVision失败。原因是非Windows分支用了`path.sep`：测试本身跑在Windows上时它是`\`，导致POSIX断言`inside('/work/a.png','/work','linux')`失败。本地Linux发现不了这个问题。现改为非Windows固定使用`/`，并在本地模拟`path.sep='\'`验证通过。同一次CI的其余job是托管runner未分配而取消，并非测试失败。
-- **F124c复验（2026-10-06）：** 用户更新Secret后重跑验收，仍是20/21，但workspace_info显示主机仍是同一实例（startedAt 2026-10-05T19:37:00Z，与上次相同）：本机checkout已是a4141a1，主机进程没有重启，仍在运行旧代码。于是经MCP在用户的真实Windows上单独加载磁盘上的新computerUse.js：工作区传小写`c:\Users\Peter\web_agent`，截图在`C:\...\.webagent-acceptance\v.png`。`resolveShotPath`接收了该截图，工作区外的`C:\Windows\x.png`返回null，findShotCandidates从`snap -Out`识别出该路径，临时文件已自清理。修复逻辑已在真机确认；“主机返回image”这一端到端项仍需在主机重启后补跑。临时工作流已删除。
+- **F124c复验（2026-10-06）：** 用户更新Secret后重跑验收，仍是20/21，但workspace_info显示主机仍是同一实例（startedAt 2026-10-05T19:37:00Z，与上次相同）：本机checkout已是a4141a1，主机进程没有重启，仍在运行旧代码。于是经MCP在用户的真实Windows上单独加载磁盘上的新computerUse.js：工作区传小写`c:\Users\{{用户名}}\web_agent`，截图在`C:\...\.webagent-acceptance\v.png`。`resolveShotPath`接收了该截图，工作区外的`C:\Windows\x.png`返回null，findShotCandidates从`snap -Out`识别出该路径，临时文件已自清理。修复逻辑已在真机确认；“主机返回image”这一端到端项仍需在主机重启后补跑。临时工作流已删除。
 - **F124d：** 695189c的CI中4个agent-host job在`npm audit --omit=dev --audit-level=high`失败，原因是新公布的proxy-addr严重漏洞（GHSA-jqcg-44mw-7w3h，IPv4映射IPv6的trust子网判断可被伪造）。主机没有开启trust proxy（见OAuth/会话文档），不受实际影响，但仍按审计门禁把锁文件中的proxy-addr从2.0.7升到2.0.8，锁文件里只有这一项变化。
 - **F124e验收完成（2026-10-08）：** 用户重启主机（新实例1f6f5ee4，startedAt 2026-10-08T13:32:37Z，本机代码2eb7396）并更新Secret后重跑全套验收，结果21/21通过，其中`snap -Out`端到端返回image/png。临时工作流已删除。用户收尾事项：停隧道、重置Bridge Secret、删除仓库的MCP_URL Secret。
 
@@ -488,3 +488,37 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 - **用户选择：** 删除这244张截图，把`computer-use/shots/`加入.gitignore；content.js维持现状，不改写git历史。截图脚本在运行时会重新生成输出目录（capture.cs/mark.cs会自己建目录），代码和文档都不引用具体的截图文件。新克隆的工作区小约31MB，但`.git`历史里仍保留这些截图，体积不会立即下降。
 - **⑤ 发布签名与自带Node：** 用户决定暂不做，等需要分发给别人时再说。签名需要用户以本人或公司身份购买代码签名证书，助手无法代办。
 
+### 第128组：审查第120–127组并修复审查发现（2026-10-10，会话01a0d084）
+
+**审查与合并。** 用户让01a0d084审查01a0e8ea的第120–127组（23个提交，含临时验收工作流）后合并。逐提交核对CI：中间的失败都已由后续提交修复，或来自临时验收工作流本身；`cf313c1`全绿。读了源码改动与调用链，对新代码做10处变异：9处都有测试变红；剩下1处（扩展`residueWarning`里的pending判断）是等价变异，调用方`watchTunnelResidue`已先挡掉pending。第126组归档按非空行逐行比对，没有丢失内容。本分支快进到`cf313c1`，同SHA的CI（run 37803304353）6/6通过。
+
+**用户让01a0d084自行修复审查发现（不转交）：**
+1. **审查索引29行指纹失配。** 第122组记为失配0，此后第123–127组改了这些文档却没有复核。逐份在git历史中找到与索引指纹相同的版本，只复读之后的改动，并到源码核对。多数改动是删探针、删`webagent-repro`后的措辞、生成的计数，以及指向归档的锚点，核对一致。更正4处：
+   - 平台启动与CI详解：lint实际检查238个文件（按`--format json`重数），不是240；文件列表补上userscripts；`tests/probeTransport.test.js`的专用配置已随F122删除。
+   - 停止进程详解：`residueNotice.check()`是入口在发起MCP监听后、在模块顶层直接调用的，不是“端口开始监听后”。
+   - 模型调用详解：findShotCandidates一行仍写“裸图片token”。F123起要求命令先调用snap/mark，另认snap输出的`META`行里的file，已不再捡裸路径。
+   - Chat模型与图像测试详解：补上F123的反例与META断言。
+2. **Windows用户名进了仓库。** 本文件第124组的两处工作区路径改成`{{用户名}}`占位，`chatVision.test.js`的大小写断言改用通用名字（断言含义不变）。`review/step5-tests.txt`里也有，但它是索引登记的“原始证据，受限、不改写正文”，按约定不动。
+3. **本文件需求一节仍写“探测专项保持暂停，等待外部正式交接”**，与第122组矛盾，已改为已删除。
+4. **延后复审清单被第126组搬进了9月归档**，但清单仍在使用，其中还有“待再观察”的条目。已整节移回本文件末尾，归档处只留指向这里的一句；agents与CONTEXT的链接同步改回。
+
+**说明（未改）：** 第122组删去了`s8-probe-integration.md`与`probe-dual-integration-2026-09-15.md`两份阶段记录，git历史里仍可找回，随探针一并删除也说得通，这里只做记录。
+
+**用户上传的参考包（`cfe5166`，仓库根`shuncode-0.8.1-webagent.zip`）。** 包里是另一个助手对ShunCode 0.8.1外部MCP、Skills、隧道与代理的整理文档，以及ShunCode的原始TypeScript与从打包产物切出的代码。本组只审阅、不动手，结论见当轮对话。需要用户决定的一点：本仓库是公开仓库，项目约定不vendor ShunCode，这个压缩包是否留在仓库里。
+
+**验证：** 全量测试与lint通过，`check-docs --write`后重建docs-site；改过的文档与上面29份逐份复读后刷新指纹。
+
+### 延后复审清单
+
+用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。
+
+| 登记 | 来源 | 待复审内容 | 状态 |
+|---|---|---|---|
+| 2026-09-25 | 第74组审计未审范围 | `mcp/session.js`；`api/routes.js`的POST路由逐项；`executor.js`/`dangerous.js`检测器；`patchEngine`补丁应用；`editorUndo`/`fileCheckpoints`恢复路径；`skills.safeSkillFile`；`findFiles`；外部MCP客户端（`externalClient`/`stdioLaunch`）；admin-host | 已处理（第77组）：find_files回溯（中危）、本机控制面被改写Host的代理绕过（高影响、条件触发）、无会话调用者键退化（低危）已修；其余模块未发现问题，routes逐项处理函数与危险命令检测器按理由不再复审 |
+| 2026-09-25 | 第74组记录不修的低危项 | OAuth限流全体共享（无trust proxy）；授权页不显示客户端/回调主机；`/oauth/revoke`无限流；`GET /pty/jobs`副作用；Windows设备名；`.webagentignore`可被Edit改写 | 用户选方案B（第75组）：前三项属于OAuth，默认关闭后不再暴露，**只在用户开启OAuth时**仍然成立，留待真要接OAuth客户端时再修；后三项已于第76组处理（跨站GET按Sec-Fetch-Site拒绝、Windows设备名拒绝、规则文件列入内置敏感模式），结论与证据见第76组 |
+| 2026-09-25 | 第74组测试 | 完整测试首跑1次失败未保留输出，之后6轮未复现 | 待再观察 |
+| 2026-09-26 | 第80组开头复审 | 第79组转发层（`apiRelay.js`、`vscodeRelay.js`、`requestJson`选项）：第3批接入设置页时连同调用方、面板关闭时dispose与白名单逐页覆盖一起复审 | 已处理（第82组）：调用方send与rawBody/信号/期限经真实activate验证；面板关闭取消在途与停止回复有单元测试；白名单对四个共享模块可触达的全部请求逐一核对，无漏放行、无误拒；发现第9节措辞缺陷已更正 |
+| 2026-09-26 | 第80组发现 | `FULL_REVIEW_INDEX`6行指纹与现文件不符（名单见第80组），文件自`4a868ae`未改；逐份复读后决定刷新或改状态。第84组：`src/agent/README.md`生成区计数随runChat变化，一度被误刷、已恢复旧指纹 | 已处理（第86组）：逐份对照源码复读。GitHub身份详解第1节与第2节首段是旧实现（githubJson、15秒、1MiB、超时为AbortError、缺字段按400），已改为现行githubRequest；用量两份补10秒期限/256KiB/networkBudget并改正自相矛盾的一句；agent/README改正内置循环跑测试条件；交互绑定详解补apiFetch转发、copyText与OAuth开关；缓存与进度详解未见不符。6份均刷新指纹，索引159行指纹现全部与文件一致 |
+| 2026-09-26 | 第80组4.7观察 | 用户侧`search_files`失败原因（沙箱未复现；插件不显示错误原文）；用户那次为何走code模式 | 第81组起Chat显示失败原因；待用户重装插件后复测。第86组：“为何走code模式”——侧栏按下拉框选模式，用户2026-09-26决定保留，不解析开头的`/ask`，此问题了结；`search_files`部分仍待复测 |
+| 2026-09-26 | 第82组发现 | 永不结算的Promise会让Node以退出码0提前结束、测试被误判通过；已给workbenchRuntime、settingsPanel、sidebarFeedback加守卫。其他异步测试文件（尤其靠`main().catch`收尾、不在最后显式退出的）是否有同样隐患，逐个检查或在run-tests.js统一要求结尾标记 | 已处理（第86组）：run-tests.js统一预加载`scripts/testCompletionGuard.js`，测试文件同步执行期间由主文件顶层创建的Promise（即挂在`main()`后的`.catch/.then`）在事件循环耗尽时仍未结算就判失败；全量116个文件中81个有被监视的顶层Promise、20个纯同步，其余以`main().then(exit)`收尾、同样覆盖。在14个真实测试文件结尾注入永久挂起：12个被守卫拦下，2个挂到超时判失败。顺带发现并修复：①runner只看status，接住SIGTERM以0退出的超时测试被记为通过（mcpInterop注入后即如此）；②editorRuntime/workbenchRuntime自我重启的子进程不带守卫。已知不覆盖：顶层只写`main();`、发射后不管的异步回调、中途显式退出 |
+| 2026-09-28 | 第89组第11步 | VS Code Chat把`@webagent`交给默认模型（gpt5.6）：可能是Agent模式不列扩展参与者，或`chatParticipants`的`isDefault: true`需提案API而被忽略；沙箱无法验证 | 已处理（第90组）：续跑3在Ask模式同样失败，否定“Agent模式不列”；VS Code源码确认`isDefault`缺提议API时整个参与者被跳过，已删去并加清单测试；待用户续跑4实测 |

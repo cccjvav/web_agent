@@ -20373,7 +20373,7 @@
     {
       "path": "webagent-core/agent-host/tests/chatVision.test.js",
       "doc": "webagent-core/agent-host/tests/README.md",
-      "sha256": "eed85ff3c4c41f2db65fa847df2b1f7fc8d4ef3e280a1c8196cbc3908e571772",
+      "sha256": "286996d3d2fed780c2c94118cd2ce4fb7d920ae345dd74dbf9d569f521131345",
       "lineCount": 212,
       "structure": "javascript-ast",
       "semanticReview": "not-certified",

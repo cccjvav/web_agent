@@ -2698,7 +2698,7 @@
 
 ## webagent-core/agent-host/tests/chatVision.test.js
 
-[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `eed85ff3c4c41f2db65fa847df2b1f7fc8d4ef3e280a1c8196cbc3908e571772`
+[目录说明](../webagent-core/agent-host/tests/README.md) · SHA-256 `286996d3d2fed780c2c94118cd2ce4fb7d920ae345dd74dbf9d569f521131345`
 
 - `anonymous@42:23` — ArrowFunctionExpression，[L42–L42](../webagent-core/agent-host/tests/chatVision.test.js#L42-L42)
 - `withProvider` — FunctionDeclaration，[L105–L125](../webagent-core/agent-host/tests/chatVision.test.js#L105-L125)
