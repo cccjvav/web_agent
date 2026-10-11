@@ -154,7 +154,44 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
       assert.ok(!spawnCalls.at(-1).args.includes('--config'), 'no --config when the file could not be written');
       assert.deepStrictEqual(spawnCalls.at(-1).args.slice(-5), ['--no-autoupdate', '--protocol', 'auto', '--url', `http://127.0.0.1:${config.port}`]);
       assert.ok(logs.slice(beforeWarn).some(chunk => chunk.includes('Quick Tunnel') && chunk.includes('~/.cloudflared/config.yml')), 'the fallback is announced in the tunnel log');
-      const stopped = tunnel.stopTunnel(); spawned.at(-1).emit('exit', 0); await stopped; await outcome;
+      spawned.at(-1).stdout.emit('data', Buffer.from('https://warned.trycloudflare.com'));
+      const resolved = await outcome;
+      assert.strictEqual(resolved.warning && resolved.warning.code, 'W_QUICK_TUNNEL_CONFIG', 'the warning also reaches the caller (no page shows tunnel_log)');
+      assert.ok(resolved.warning.message.includes('~/.cloudflared/config.yml'));
+      const stopped = tunnel.stopTunnel(); spawned.at(-1).emit('exit', 0); await stopped;
+    }
+    // F130: every start rejection carries a stable code from startFailure.js.
+    {
+      const { startFailureCode, tunnelFailure, TUNNEL_START_CODES } = require('../src/tunnel/startFailure');
+      const codeOf = promise => promise.then(() => 'resolved', error => error.code);
+      const superseded = tunnel.startQuickTunnel(); const supersededStop = tunnel.stopTunnel();
+      assert.strictEqual(await codeOf(superseded), 'E_TUNNEL_SUPERSEDED'); await supersededStop;
+      const cancelled = codeOf(tunnel.startQuickTunnel()); await tick();
+      const cancelStop = tunnel.stopTunnel(); spawned.at(-1).emit('exit', 0); await cancelStop;
+      assert.strictEqual(await cancelled, 'E_TUNNEL_CANCELLED');
+      const exited = tunnel.startQuickTunnel().catch(error => error); await tick(); spawned.at(-1).emit('exit', 1);
+      const exitError = await exited;
+      assert.strictEqual(exitError.code, 'E_TUNNEL_EXITED'); assert.ok(!exitError.message.includes('未找到'), 'a binary that ran is not "not installed"');
+      for (const shellMissing of [9009, 127]) {
+        const missing = codeOf(tunnel.startQuickTunnel()); await tick(); spawned.at(-1).emit('exit', shellMissing);
+        assert.strictEqual(await missing, 'E_NO_CLOUDFLARED', 'the shell could not find the program: ' + shellMissing);
+      }
+      const spawnFailed = codeOf(tunnel.startQuickTunnel()); await tick(); spawned.at(-1).emit('error', new Error('EACCES fixture'));
+      assert.strictEqual(await spawnFailed, 'E_TUNNEL_SPAWN');
+      const ngrokExit = codeOf(ngrok.startNgrokTunnel({ token: 'fixture-token' })); await tick(); spawned.at(-1).emit('exit', 1);
+      assert.strictEqual(await ngrokExit, 'E_TUNNEL_EXITED', 'ngrok exit without an ERR_NGROK code');
+      assert.strictEqual(await codeOf(tunnel.startNamedTunnel({ hostname: '', token: 'x' })), 'E_NAMED_HOSTNAME');
+      assert.strictEqual(await codeOf(tunnel.startNamedTunnel({ hostname: 'mcp.example.test', token: ' ' })), 'E_NAMED_TOKEN');
+      assert.strictEqual(await codeOf(ngrok.startNgrokTunnel({ token: 'x', hostname: 'bad host!' })), 'E_NGROK_HOSTNAME');
+      const timedOut = codeOf(tunnel.startQuickTunnel({ timeoutMs: 20 })); await tick();
+      const lingering = spawned.at(-1);
+      assert.strictEqual(await timedOut, 'E_TUNNEL_TIMEOUT'); lingering.emit('exit', 0); await tunnel.stopTunnel();
+      assert.deepStrictEqual([new Error('x'), { code: 'E_EVIL' }, { code: 'ERR_NGROK_334' }, { code: 'ERR_NGROK_123456' }, null].map(startFailureCode),
+        ['E_TUNNEL_UNKNOWN', 'E_TUNNEL_UNKNOWN', 'ERR_NGROK_334', 'E_TUNNEL_UNKNOWN', 'E_TUNNEL_UNKNOWN']);
+      assert.throws(() => tunnelFailure('E_NOT_REGISTERED', 'x'), /Unregistered/);
+      assert.ok(Object.isFrozen(TUNNEL_START_CODES));
+      const stubbornChild = fake(), keepAlive = setTimeout(() => {}, 1000); // stopProcess timers are unref'd
+      assert.strictEqual(await stopProcess(stubbornChild, 5).then(() => 'resolved', error => error.code), 'E_TUNNEL_PREVIOUS'); clearTimeout(keepAlive);
     }
   } finally { bus.removeListener('tunnel_log', collect); }
   assert(observed.some(item => item.provider === 'cloudflare-named'));

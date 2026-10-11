@@ -376,6 +376,29 @@ process.on('exit', code => {
   }
   assert.equal(refreshed,8,'failed sent requests still try one read, never another write');
   assert.equal(copied,0);assert.equal(lit,0);
+  // F130: a host-confirmed failure with a known code says what failed, from the page's fixed text only.
+  for(const [code,needle] of [['E_NO_CLOUDFLARED','winget install --id Cloudflare.cloudflared'],['ERR_NGROK_334','已被另一个会话占用'],['ERR_NGROK_9999','https://ngrok.com/docs/errors/err_ngrok_9999']]) {
+    context.fetch = async url => url === '/api/status' ? actionReply(boundStatus) : actionReply({success:false,running:false,provider:'cloudflare',tunnelError:'TOKEN-MUST-NOT-ECHO',tunnelErrorCode:code});
+    assert.equal(await bridge.namespace.startBridge(),false);
+    assert.ok(actionResult().includes(`启动失败（${code}）`) && actionResult().includes(needle),actionResult());
+    assert.ok(!actionResult().includes('TOKEN-MUST-NOT-ECHO') && !actionResult().includes('未确认'));
+  }
+  for(const reply of [{success:false,running:false,provider:'cloudflare',tunnelErrorCode:'E_<img>'},{success:false,running:false,provider:'ngrok',tunnelErrorCode:'E_NO_NGROK'},
+    {success:false,running:true,provider:'cloudflare',tunnelErrorCode:'E_TUNNEL_TIMEOUT'}]) {
+    context.fetch = async url => url === '/api/status' ? actionReply(boundStatus) : actionReply(reply);
+    assert.equal(await bridge.namespace.startBridge(),false);assert.ok(actionResult().includes('未确认'),'unknown code or mismatched reply stays unconfirmed');
+  }
+  assert.deepStrictEqual(Object.keys(bridge.namespace.TUNNEL_FAILURE_TEXT).sort(),[...require('../src/tunnel/startFailure').TUNNEL_START_CODES].sort(),
+    'every host tunnel failure code has page text');
+  {
+    const originalRefresh = state.namespace.ui.refreshStatus;
+    state.namespace.ui.refreshStatus = async () => {state.namespace.state.status = {...boundStatus,bridgeRunning:true,mcpUrl:startAck.mcpUrl};return true;};
+    context.fetch = async url => url === '/api/status' ? actionReply(boundStatus) : actionReply({...startAck,warnings:[{code:'W_QUICK_TUNNEL_CONFIG',message:'TOKEN-MUST-NOT-ECHO'}]});
+    assert.equal(await bridge.namespace.startBridge(),true);
+    assert.ok(actionResult().includes('启动已确认') && actionResult().includes('cloudflared\\config.yml'),actionResult());
+    assert.ok(!actionResult().includes('TOKEN-MUST-NOT-ECHO'));
+    state.namespace.ui.refreshStatus = originalRefresh; state.namespace.state.status = boundStatus; lit = 0;
+  }
   context.fetch = async url => url === '/api/status' ? actionReply(boundStatus) : actionReply(startAck,false);
   assert.equal(await bridge.namespace.startBridge(),false,'HTTP failure overrides success body');
   context.fetch = async()=>{throw new Error('offline');};
@@ -1541,6 +1564,18 @@ process.on('exit', code => {
     assert.match(opsNodes.get('#ops-external-result').textContent,/登记未确认/);
     assert.ok(!opsNodes.get('#ops-external-result').textContent.includes('private-fixture-token'),'registration errors cannot reflect the Bearer value');
     assert.equal(addExternal.disabled,false);
+  }
+  // F130: the host's 400 with a whitelisted category is a confirmed "not registered"; the page shows only its fixed hint.
+  assert.deepStrictEqual({...operations.namespace.EXTERNAL_FAILURE_HINTS},{...require('../src/mcp/externalClient').EXTERNAL_FAILURE_HINTS},'page and host hints are the same text');
+  for (const [reply,confirmed] of [[{ok:false,status:400,json:async()=>({ok:false,error:'private-fixture-token',category:'oauth-required'})},true],
+    [{ok:false,status:400,json:async()=>({ok:false,error:'private-fixture-token',category:'toString'})},false],
+    [{ok:false,status:500,json:async()=>({ok:false,error:'private-fixture-token',category:'dns'})},false]]) {
+    context.fetch=async()=>{externalPosts++;return reply;};opsNodes.get('#ops-token').value='private-fixture-token';
+    assert.equal(await addExternal.onclick(),false);
+    const text=opsNodes.get('#ops-external-result').textContent;
+    assert.ok(!text.includes('private-fixture-token'));
+    if (confirmed) assert.ok(text.includes('失败') && text.includes(operations.namespace.EXTERNAL_FAILURE_HINTS['oauth-required']) && text.includes('主机已确认没有登记'),text);
+    else assert.match(text,/登记未确认/);
   }
   const beforeDisclosure=externalPosts;
   opsNodes.get('#ops-public-https').checked=true;opsNodes.get('#ops-url').value='https://mcp.example.test/mcp';

@@ -181,6 +181,14 @@ async function main() {
         workspaceRoot: tmp, hostInstanceId: config.hostInstanceId
       })).status, 200);
       assert.equal(externalAdds, 1);
+      // F130: a classified failure passes only its whitelisted category word; unknown categories are dropped.
+      for (const [category, expected] of [['connect', 'connect'], ['made-up', undefined], [undefined, undefined]]) {
+        externalClient.add = async () => { throw Object.assign(new Error('External MCP network failure: fixture'), { category }); };
+        const failedAdd = await request(server, 'POST', '/api/external/servers', {
+          name: 'fixture', url: 'http://127.0.0.1:9/mcp', token: '', publicHttps: false, confirmedPublic: false });
+        assert.equal(failedAdd.status, 400); assert.equal(failedAdd.json.category, expected, String(category));
+      }
+      externalClient.add = async () => { externalAdds++; return { serverId: 'fixture-http', status: 'discovered', tools: [] }; };
       const previewId = '11111111-1111-4111-8111-111111111111';
       const invalidStdioStart = await request(server, 'POST', '/api/external/stdio/start', {
         previewId, confirmed: true, unexpected: true

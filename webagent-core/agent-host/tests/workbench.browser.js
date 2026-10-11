@@ -1434,6 +1434,14 @@ async function main() {
     assert.equal(await page.evaluate(async () => (await import('/js/bridge.js')).startBridge()), false);
     assert.ok((await page.locator('#bridge-result').textContent()).includes('启动结果未确认'));
     await page.unroute('**/api/bridge/start');
+    // F130: the same failure with the matching provider and a known code is shown as a failure, from the page's own text.
+    const checkedProvider = await page.evaluate(() => document.querySelector('input[name="tunnel"]:checked')?.value || 'cloudflare');
+    await page.route('**/api/bridge/start', route => route.fulfill({ status: 200, contentType: 'application/json',
+      body: JSON.stringify({success:false,running:false,provider:checkedProvider,tunnelError:'fixture cloudflared unavailable',tunnelErrorCode:'E_TUNNEL_TIMEOUT'}) }));
+    assert.equal(await page.evaluate(async () => (await import('/js/bridge.js')).startBridge()), false);
+    const coded = await page.locator('#bridge-result').textContent();
+    assert.ok(coded.includes('启动失败（E_TUNNEL_TIMEOUT）') && !coded.includes('fixture cloudflared unavailable'), coded);
+    await page.unroute('**/api/bridge/start');
     await page.route('**/api/bridge/stop', route => route.fulfill({ status: 500, contentType: 'application/json',
       body: JSON.stringify({success:false,error:'fixture stop not confirmed'}) }));
     assert.equal(await page.evaluate(async () => (await import('/js/bridge.js')).stopBridge()), false);

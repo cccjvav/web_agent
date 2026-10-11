@@ -53,7 +53,7 @@ AbortController取消enqueue返回cancelled；预取消runWithSignal中的write_
 
 [源码](tunnelLifecycle.test.js)的**fake()**返回EventEmitter子进程及stdout/stderr，kill只记signals，不真终止；**tick**用setImmediate让异步启动推进。stopProcess测试顽固进程SIGTERM后需SIGKILL才发exit，killed标志不能充当退出证明；kill抛错的进程最终应did not exit拒绝。keep定时器避免unref超时让进程提前退出。
 
-tmp假cloudflared文件，CLOUDFLARED_PATH指它。第129组起，首次Quick Tunnel前把HOME/USERPROFILE指到临时目录，断言argv恰为`tunnel --config <临时home>/.webagent/cloudflared-quick-tunnel.yml --no-autoupdate --protocol auto --url …`，配置内容只有no-autoupdate、POSIX下权限0600、不留.tmp；预先放好的符号链接被替换、目标文件不变；home是普通文件时返回原因而不抛出；quickTunnelArgs在needShell下给带空格的路径加引号，含`&`、`%`、`^`、`!`时不传`--config`；ngrok循环之后另起两次ngrok：stderr出现含Token和ERR_NGROK_334的一行，拒绝的错误code为ERR_NGROK_334、retryable:false、message恰为NGROK_FAILURES里的文字且不含Token，假进程已收到停止信号；表外的ERR_NGROK_8012在exit时给官方说明链接而不是安装提示；纯函数另查“endpoint … is already online”文字形式识别为334、小写err_ngrok_108能识别、正常的started tunnel返回null；最后把HOME/USERPROFILE临时指向一个普通文件再启动Quick Tunnel：argv不含`--config`、末尾仍是`--no-autoupdate --protocol auto --url …`，tunnel_log里有提到Quick Tunnel和`~/.cloudflared/config.yml`的提示；除这一段外整个文件期间HOME/USERPROFILE都指向临时目录，finally才恢复，所以任何一次Quick Tunnel都不会写进真实用户目录；cp.spawn返回fake并记录（F100起同时记录cmd/args/options：Named与ngrok的Token都不得出现在args里，必须分别在options.env的TUNNEL_TOKEN/NGROK_AUTHTOKEN，Named的args固定为`tunnel --no-autoupdate run`），spawnSync返回查找失败。第一启动用stdout发first URL完成；第二启动必须等旧exit才spawn新进程，旧stale URL不得发布；新second ready后旧exit不能清新URL。新进程exit1清URL和bridgeRunning；第三启动未ready就stop，启动Promise应cancelled。finally恢复spawn/spawnSync/env并删tmp。模拟事件顺序不是实际SIGKILL或公网探测。
+tmp假cloudflared文件，CLOUDFLARED_PATH指它。第129组起，首次Quick Tunnel前把HOME/USERPROFILE指到临时目录，断言argv恰为`tunnel --config <临时home>/.webagent/cloudflared-quick-tunnel.yml --no-autoupdate --protocol auto --url …`，配置内容只有no-autoupdate、POSIX下权限0600、不留.tmp；预先放好的符号链接被替换、目标文件不变；home是普通文件时返回原因而不抛出；quickTunnelArgs在needShell下给带空格的路径加引号，含`&`、`%`、`^`、`!`时不传`--config`；ngrok循环之后另起两次ngrok：stderr出现含Token和ERR_NGROK_334的一行，拒绝的错误code为ERR_NGROK_334、retryable:false、message恰为NGROK_FAILURES里的文字且不含Token，假进程已收到停止信号；表外的ERR_NGROK_8012在exit时给官方说明链接而不是安装提示；纯函数另查“endpoint … is already online”文字形式识别为334、小写err_ngrok_108能识别、正常的started tunnel返回null；最后把HOME/USERPROFILE临时指向一个普通文件再启动Quick Tunnel：argv不含`--config`、末尾仍是`--no-autoupdate --protocol auto --url …`，tunnel_log里有提到Quick Tunnel和`~/.cloudflared/config.yml`的提示；这次再让假进程给出地址，resolve的结果带warning，code为W_QUICK_TUNNEL_CONFIG（第130组：没有页面显示tunnel_log，提示要随结果返回）；第130组另起一段核对每条拒绝的稳定码，局部**codeOf(promise)**把Promise变成“resolved”或错误的code：启动后立即stopTunnel为E_TUNNEL_SUPERSEDED，等待中停止为E_TUNNEL_CANCELLED，退出码1为E_TUNNEL_EXITED且文字不含“未找到”，9009与127为E_NO_CLOUDFLARED，spawn报错为E_TUNNEL_SPAWN，ngrok退出且无ERR_NGROK码为E_TUNNEL_EXITED，Named缺主机名或Token、ngrok域名无效各为对应码，20毫秒超时为E_TUNNEL_TIMEOUT；startFailureCode对普通错误、别的码、超长ERR_NGROK码和null都给E_TUNNEL_UNKNOWN，tunnelFailure拒绝未登记的码，TUNNEL_START_CODES已冻结；最后用永不退出的假进程调stopProcess得到E_TUNNEL_PREVIOUS（stopProcess的计时器是unref的，这里另开一个keepAlive计时器，否则事件循环提前清空）；除临时指向普通文件那一段外整个文件期间HOME/USERPROFILE都指向临时目录，finally才恢复，所以任何一次Quick Tunnel都不会写进真实用户目录；cp.spawn返回fake并记录（F100起同时记录cmd/args/options：Named与ngrok的Token都不得出现在args里，必须分别在options.env的TUNNEL_TOKEN/NGROK_AUTHTOKEN，Named的args固定为`tunnel --no-autoupdate run`），spawnSync返回查找失败。第一启动用stdout发first URL完成；第二启动必须等旧exit才spawn新进程，旧stale URL不得发布；新second ready后旧exit不能清新URL。新进程exit1清URL和bridgeRunning；第三启动未ready就stop，启动Promise应cancelled。finally恢复spawn/spawnSync/env并删tmp。模拟事件顺序不是实际SIGKILL或公网探测。
 
 ## bridgeTunnel.test.js
 
@@ -61,14 +61,15 @@ tmp假cloudflared文件，CLOUDFLARED_PATH指它。第129组起，首次Quick Tu
 
 | HTTP序列 | 断言 |
 |---|---|
-| store直接patch已登录已授权；Quick start/status/stop | success、URL、note、无error、running；stop被调用且URL空 |
+| store直接patch已登录已授权；Quick start/status/stop | success、URL、note、无error、running，tunnelErrorCode为null、warnings为空数组（第130组）；stop被调用且URL空 |
 | start未知/错类型/未知provider/跨provider Token/4097字节Token | 统一400/E_BAD_BRIDGE_REQUEST，响应不含私密标记，配置字节和全部停启计数不变 |
 | reset-round/login/device/poll/clear/logout未知包装及Token未知/超长/换行 | 触网、身份写入、停止前400；GitHub函数替身计数保持0，finally恢复 |
 | 历史Bridge展示/授权槽位注入对象/数组秘密，当前provider保存Token超预算 | status固定为字符串/布尔且不含标记；truthy对象及非法保存凭据不能通过start，停启计数不变 |
-| Quick抛E_NO_CLOUDFLARED | HTTP200但success/running false，显示本机MCP与错误，不挂旧公网址 |
-| Named缺参 | 不调用Quick、有Named参数错误、不回Quick地址 |
+| Quick抛E_NO_CLOUDFLARED | HTTP200但success/running false，显示本机MCP与错误，tunnelErrorCode为E_NO_CLOUDFLARED，不挂旧公网址 |
+| Quick抛未登记的码；Quick成功并带W_QUICK_TUNNEL_CONFIG提示（第130组） | 前者tunnelErrorCode为E_TUNNEL_UNKNOWN；后者success，warnings恰为那一条，note含提示文字 |
+| Named缺参 | 不调用Quick、有Named参数错误、码为E_NAMED_HOSTNAME或E_NAMED_TOKEN、不回Quick地址 |
 | stub Named成功并传假domain/token | opts准确、返回域名与ready；start/status JSON均不泄token |
-| ngrok缺参/成功 | 不调用Quick/Named；成功opts/域名正确，两响应隐藏token |
+| ngrok缺参/成功 | 不调用Quick/Named；缺参的码以E_N开头；成功opts/域名正确，两响应隐藏token |
 | Quick启动Promise待决，logout先完成再finishStart | 旧start回409，bridgeRunning仍false |
 | 未登录未授权start | 403 |
 

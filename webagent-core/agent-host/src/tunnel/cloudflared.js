@@ -7,6 +7,7 @@ const os = require('os');
 const { config } = require('../config');
 const eventBus = require('../utils/eventBus');
 const { stopProcess } = require('./stopProcess');
+const { tunnelFailure } = require('./startFailure');
 const { observeTunnel } = require('./tunnelRegistry');
 
 const URL_RE = /https:\/\/[a-z0-9-]+\.trycloudflare\.com/i;
@@ -86,6 +87,13 @@ function findCloudflared({ fresh = false } = {}) {
   return cloudflaredLookup({ fresh });
 }
 
+// F130: a process that started and then exited was found; saying "not installed" sent users the wrong way. Only the
+// shell's own "command not found" exit (cmd.exe 9009, sh 127, seen with .cmd/.bat wrappers) keeps the install hint.
+function exitFailure(name, code, hint) {
+  if (code === 9009 || code === 127) return tunnelFailure(name === 'ngrok' ? 'E_NO_NGROK' : 'E_NO_CLOUDFLARED', hint);
+  return tunnelFailure('E_TUNNEL_EXITED', `${name} 启动后退出（code ${code}），没有给出公网地址。多半是 Token 或域名被拒、版本过旧，或被安全软件拦截；可在终端手动运行 ${name} --version 确认能运行，再重试。`);
+}
+
 function installHint() {
   if (process.platform === 'win32') {
     return '未找到 cloudflared。在 Windows 终端执行：winget install --id Cloudflare.cloudflared   装完后完全退出并重开 VS Code，再新建集成 CMD 运行 run-webagent.cmd（独立 CMD 请重新打开），然后点「启动 Bridge」。也可从 https://github.com/cloudflare/cloudflared/releases 下载 cloudflared-windows-amd64.exe，改名为 cloudflared.exe 并加入 PATH。';
@@ -122,25 +130,19 @@ const NAMED_READY_RE = /Registered tunnel connection|\bconnIndex=/i;
 async function startNamedTunnel({ hostname, token, port = config.port, timeoutMs = 25000 } = {}) {
   const url = canonicalNamedUrl(hostname);
   if (!url) {
-    const err = new Error('Named Tunnel 需要主机名，例如 mcp.example.com。');
-    err.code = 'E_NAMED_HOSTNAME';
-    return Promise.reject(err);
+    return Promise.reject(tunnelFailure('E_NAMED_HOSTNAME', 'Named Tunnel 需要主机名，例如 mcp.example.com。'));
   }
   const tok = String(token || '').trim();
   if (!tok) {
-    const err = new Error('Named Tunnel 需要 Tunnel Token（Cloudflare Zero Trust 控制台复制）。');
-    err.code = 'E_NAMED_TOKEN';
-    return Promise.reject(err);
+    return Promise.reject(tunnelFailure('E_NAMED_TOKEN', 'Named Tunnel 需要 Tunnel Token（Cloudflare Zero Trust 控制台复制）。'));
   }
   const stopped = stopTunnel();
   const ticket = generation;
   await stopped;
-  if (ticket !== generation) throw new Error('Tunnel start superseded');
+  if (ticket !== generation) throw tunnelFailure('E_TUNNEL_SUPERSEDED', 'Tunnel start superseded');
   const bin = findCloudflared({ fresh: true });
   if (!bin) {
-    const err = new Error(installHint());
-    err.code = 'E_NO_CLOUDFLARED';
-    return Promise.reject(err);
+    return Promise.reject(tunnelFailure('E_NO_CLOUDFLARED', installHint()));
   }
   const target = `http://127.0.0.1:${port}`;
   return new Promise((resolve, reject) => {
@@ -166,7 +168,7 @@ async function startNamedTunnel({ hostname, token, port = config.port, timeoutMs
       if (settled) return;
       settled = true;
       if (child === proc && ticket === generation) stopTunnel().catch(() => {});
-      reject(new Error('cloudflared Named Tunnel 已启动但 25 秒内没有连上 Cloudflare。请确认 Token、Public Hostname 指到 ' + target + '，以及本机网络。'));
+      reject(tunnelFailure('E_TUNNEL_TIMEOUT', 'cloudflared Named Tunnel 已启动但 25 秒内没有连上 Cloudflare。请确认 Token、Public Hostname 指到 ' + target + '，以及本机网络。'));
     }, timeoutMs);
 
     const onData = (chunk, stream) => {
@@ -186,7 +188,7 @@ async function startNamedTunnel({ hostname, token, port = config.port, timeoutMs
     };
 
     cancelPending = () => {
-      if (settled) return; settled = true; clearTimeout(timer); reject(new Error('Tunnel start cancelled'));
+      if (settled) return; settled = true; clearTimeout(timer); reject(tunnelFailure('E_TUNNEL_CANCELLED', 'Tunnel start cancelled'));
     };
     const clearActive = () => {
       if (child !== proc || ticket !== generation) return;
@@ -201,14 +203,14 @@ async function startNamedTunnel({ hostname, token, port = config.port, timeoutMs
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      reject(new Error(`无法启动 cloudflared: ${err.message}`));
+      reject(tunnelFailure('E_TUNNEL_SPAWN', `无法启动 cloudflared: ${err.message}`));
     });
     proc.on('exit', (code) => {
       clearActive();
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      reject(new Error(`cloudflared 退出（code ${code}）。${installHint()}`));
+      reject(exitFailure('cloudflared', code, installHint()));
     });
   });
 }
@@ -261,12 +263,10 @@ async function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) 
   const stopped = stopTunnel();
   const ticket = generation;
   await stopped;
-  if (ticket !== generation) throw new Error('Tunnel start superseded');
+  if (ticket !== generation) throw tunnelFailure('E_TUNNEL_SUPERSEDED', 'Tunnel start superseded');
   const bin = findCloudflared({ fresh: true });
   if (!bin) {
-    const err = new Error(installHint());
-    err.code = 'E_NO_CLOUDFLARED';
-    return Promise.reject(err);
+    return Promise.reject(tunnelFailure('E_NO_CLOUDFLARED', installHint()));
   }
   const target = `http://127.0.0.1:${port}`;
   return new Promise((resolve, reject) => {
@@ -274,9 +274,10 @@ async function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) 
     const needShell = isWin && /\.(cmd|bat)$/i.test(bin);
     const own = writeQuickTunnelConfig();
     const args = quickTunnelArgs(target, own.file, { needShell });
-    if (!args.includes('--config')) {
-      eventBus.broadcast('tunnel_log', { chunk: `未能为 Quick Tunnel 使用独立配置（${own.reason || '路径含 cmd 特殊字符'}），本次照常启动；若地址全部 404，请检查 ~/.cloudflared/config.yml。\n` });
-    }
+    // F130: the warning also travels in the resolved value, because no page shows tunnel_log events.
+    const warning = args.includes('--config') ? null : { code: 'W_QUICK_TUNNEL_CONFIG',
+      message: `未能为 Quick Tunnel 使用独立配置（${own.reason || '路径含 cmd 特殊字符'}），本次照常启动；若地址全部 404，请检查 ~/.cloudflared/config.yml。` };
+    if (warning) eventBus.broadcast('tunnel_log', { chunk: warning.message + '\n' });
     const proc = spawn(bin, args, {
       windowsHide: true,
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -291,7 +292,7 @@ async function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) 
       if (settled) return;
       settled = true;
       if (child === proc && ticket === generation) stopTunnel().catch(() => {});
-      reject(new Error('cloudflared 已启动但 25 秒内没有给出 trycloudflare.com 地址。请检查网络，或把 CLOUDFLARED_PATH 指到 cloudflared.exe。'));
+      reject(tunnelFailure('E_TUNNEL_TIMEOUT', 'cloudflared 已启动但 25 秒内没有给出 trycloudflare.com 地址。请检查网络，或把 CLOUDFLARED_PATH 指到 cloudflared.exe。'));
     }, timeoutMs);
 
     const onData = (chunk) => {
@@ -306,12 +307,12 @@ async function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) 
         quickUrl = url;
         config.publicTunnelUrl = url;
         eventBus.broadcast('tunnel_ready', { url, target });
-        resolve({ url, binary: bin, target });
+        resolve({ url, binary: bin, target, ...(warning ? { warning } : {}) });
       }
     };
 
     cancelPending = () => {
-      if (settled) return; settled = true; clearTimeout(timer); reject(new Error('Tunnel start cancelled'));
+      if (settled) return; settled = true; clearTimeout(timer); reject(tunnelFailure('E_TUNNEL_CANCELLED', 'Tunnel start cancelled'));
     };
     const clearActive = () => {
       if (child !== proc || ticket !== generation) return;
@@ -326,14 +327,14 @@ async function startQuickTunnel({ port = config.port, timeoutMs = 25000 } = {}) 
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      reject(new Error(`无法启动 cloudflared: ${err.message}`));
+      reject(tunnelFailure('E_TUNNEL_SPAWN', `无法启动 cloudflared: ${err.message}`));
     });
     proc.on('exit', (code) => {
       clearActive();
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      reject(new Error(`cloudflared 退出（code ${code}）。${installHint()}`));
+      reject(exitFailure('cloudflared', code, installHint()));
     });
   });
 }
@@ -355,6 +356,7 @@ function snapshot() {
 process.on('exit', () => { stopTunnel().catch(() => {}); });
 
 module.exports = {
+  exitFailure,
   createTokenRedactor,
   parseTunnelUrl,
   canonicalNamedUrl,

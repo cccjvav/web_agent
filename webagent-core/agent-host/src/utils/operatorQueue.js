@@ -118,6 +118,8 @@ async function approve(id, confirmed) {
     job.status = 'unknown';
     job.result = { ok: false, status: 'unknown', error: 'Execution interrupted, failed or exceeded a budget. Effects may already exist; inspect before submitting anything again.' };
     if (!handlerDispatched && error.code === 'E_FORBIDDEN') { job.status = 'failed'; job.result = {ok:false,status:'failed',error:error.message}; }
+    // F130: a classified external transport failure adds its fixed hint; the outcome stays unknown (the request may have arrived).
+    else if (typeof error.category === 'string' && typeof error.hint === 'string') job.result.diagnosis = { category: error.category, hint: error.hint };
   } finally {
     if (!['waiting-approval', 'running'].includes(job.status) && job.finishedAt == null) job.finishedAt = Date.now();
     try { if (execution) finishCall(execution, { ...job.result, status: job.status, requestId: job.id }); }

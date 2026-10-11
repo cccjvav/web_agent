@@ -34,6 +34,23 @@ async function main(){
   folders=[{uri:{scheme:'file',fsPath:tmp}}];await receiver({type:'start'});assert.equal(posts,1);
   trusted=false;await receiver({type:'start'});assert.equal(posts,1);trusted=true;
   let release;pending=new Promise(resolve=>{release=resolve;});const racing=receiver({type:'start'});folders=[];release();await racing;assert.equal(posts,1,'Closing folder during status lookup must prevent start');
+  // F130: a tunnel failure shows the host's own text and stable code instead of "Bridge 启动被拒绝"; warnings follow a success.
+  const posted=[];let receiver2;
+  const view2=new context.module.exports.BridgeView();view2.refresh=async()=>{};
+  view2.resolveWebviewView({webview:{onDidReceiveMessage:fn=>{receiver2=fn;},postMessage:message=>{posted.push(message);return Promise.resolve(true);}}});
+  folders=[{uri:{scheme:'file',fsPath:tmp}}];pending=null;
+  let startReply={status:200,json:{success:false,running:false,tunnelError:'没找到 cloudflared：fixture',tunnelErrorCode:'E_NO_CLOUDFLARED'}};
+  context.transport=async method=>method==='GET'?{status:200,json:{workspaceRoot:tmp,identity:{hostInstanceId:'instance'}}}:startReply;
+  vm.runInContext('requestJson=transport;',context);
+  await receiver2({type:'start',actionId:'a1'});
+  assert.equal(posted.at(-1).ok,false);assert.equal(posted.at(-1).text,'失败：没找到 cloudflared：fixture（E_NO_CLOUDFLARED）');
+  startReply={status:200,json:{success:false,running:false,tunnelError:'ngrok fixture',tunnelErrorCode:'ERR_NGROK_334'}};
+  await receiver2({type:'start',actionId:'a11'});assert.equal(posted.at(-1).text,'失败：ngrok fixture（ERR_NGROK_334）','an ngrok code is shown');
+  startReply={status:200,json:{success:false,running:false,tunnelError:'odd',tunnelErrorCode:'<b>x</b>'}};
+  await receiver2({type:'start',actionId:'a2'});assert.equal(posted.at(-1).text,'失败：odd','an invalid code is not shown');
+  startReply={status:200,json:{success:true,warnings:[{code:'W_QUICK_TUNNEL_CONFIG',message:'未能为 Quick Tunnel 使用独立配置（fixture）'}]}};
+  await receiver2({type:'start',actionId:'a3'});
+  assert.equal(posted.at(-1).ok,true);assert.equal(posted.at(-1).text,'Bridge 已启动；未能为 Quick Tunnel 使用独立配置（fixture）');
   console.log('Workspace entry: source launch defaults, invalid/stale binding, empty IDE, mismatch, trust and folder-close race passed');
 }
 main().catch(error=>{console.error(error);process.exitCode=1;}).finally(()=>fs.rmSync(tmp,{recursive:true,force:true}));

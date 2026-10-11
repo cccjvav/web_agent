@@ -9,6 +9,37 @@ function formatClock(ms) {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
+// F130: fixed text for agent-host src/tunnel/startFailure.js TUNNEL_START_CODES (a test keeps the code sets equal).
+// The page renders only this text for a whitelisted code, never the host's tunnelError string.
+export const TUNNEL_FAILURE_TEXT = Object.freeze({
+  E_NO_CLOUDFLARED: '没找到 cloudflared：Windows 在终端执行 winget install --id Cloudflare.cloudflared，装完重开 VS Code 再启动；或把 CLOUDFLARED_PATH 指到 cloudflared.exe。',
+  E_NO_NGROK: '没找到 ngrok：Windows 在终端执行 winget install Ngrok.Ngrok，装完重开 VS Code 再启动；或设 NGROK_PATH。',
+  E_NAMED_HOSTNAME: 'Named Tunnel 需要主机名，例如 mcp.example.com。',
+  E_NAMED_TOKEN: 'Named Tunnel 需要 Tunnel Token（Cloudflare Zero Trust 控制台复制）。',
+  E_NGROK_TOKEN: 'ngrok 需要 Authtoken（dashboard.ngrok.com 复制，或设环境变量 NGROK_AUTHTOKEN）。',
+  E_NGROK_HOSTNAME: 'ngrok 域名无效：可留空用随机地址，或填 mcp.ngrok-free.app 这类主机名。',
+  E_TUNNEL_SPAWN: '隧道程序无法启动：文件不可执行或被安全软件拦截。',
+  E_TUNNEL_EXITED: '隧道程序启动后立即退出：多半是 Token 或域名被拒、版本过旧，或被安全软件拦截。',
+  E_TUNNEL_TIMEOUT: '隧道程序 25 秒内没有给出公网地址：检查本机网络、Token 和域名。',
+  E_TUNNEL_PREVIOUS: '上一次的隧道进程没有退出：在任务管理器结束 cloudflared / ngrok 后再启动。',
+  E_TUNNEL_CANCELLED: '启动已被取消（点了停止）。',
+  E_TUNNEL_SUPERSEDED: '这次启动被随后的另一次启动或停止取代。',
+  E_TUNNEL_UNKNOWN: '隧道启动失败，原因未归类；详情见 VS Code 侧栏的 Bridge 提示。'
+});
+const NGROK_FAILURE_TEXT = Object.freeze({
+  ERR_NGROK_334: '这个 ngrok 地址已被另一个会话占用：结束旧的 ngrok 进程，或在 ngrok 控制台停掉该地址，稍等片刻再启动。',
+  ERR_NGROK_108: 'ngrok 账号同时在线的会话数已满：关掉其它正在运行的 ngrok 再启动。',
+  ERR_NGROK_105: 'ngrok Authtoken 格式不对：到 dashboard.ngrok.com 重新复制。',
+  ERR_NGROK_4018: 'ngrok 需要已验证的账号和 Authtoken：先在 dashboard.ngrok.com 完成注册验证。'
+});
+export function tunnelFailureText(code) {
+  if (typeof code !== 'string') return '';
+  if (Object.hasOwn(TUNNEL_FAILURE_TEXT, code)) return TUNNEL_FAILURE_TEXT[code];
+  if (Object.hasOwn(NGROK_FAILURE_TEXT, code)) return NGROK_FAILURE_TEXT[code];
+  return /^ERR_NGROK_\d{1,5}$/.test(code) ? `ngrok 报 ${code}：按 https://ngrok.com/docs/errors/${code.toLowerCase()} 的说明处理，重试同样会失败。` : '';
+}
+const QUICK_CONFIG_WARNING = '注意：这次没能使用独立的 cloudflared 配置；若地址全部 404，请检查 %USERPROFILE%\\.cloudflared\\config.yml。';
+
 let activityPending = null;
 let activityVersion = '';
 let activityInfo = null;
@@ -344,6 +375,15 @@ export async function startBridge() {
     bridgeOutcome('启动请求已发送，等待主机确认；停止仍可用。');
     const {response, data} = await bridgeRequest('/api/bridge/start', body, 45000);
     if (ticket !== bridgeAction) return false;
+    // A host-confirmed failure with a known code is not "unconfirmed": say what failed, from fixed text only.
+    const failureText = response.ok && data?.success === false && data.running === false && data.provider === provider
+      ? tunnelFailureText(data.tunnelErrorCode) : '';
+    if (failureText) {
+      bridgeOutcome(`启动失败（${data.tunnelErrorCode}）：${failureText}远程 Bridge 没有运行，也没有自动重试。`);
+      try { await ui.refreshStatus(); } catch (_) {}
+      return false;
+    }
+    const warned = Array.isArray(data?.warnings) && data.warnings.some(item => item?.code === 'W_QUICK_TUNNEL_CONFIG') ? QUICK_CONFIG_WARNING : '';
     if (!response.ok || data?.success !== true || data.running !== true || data.provider !== provider
       || !validRotatedSecret(data, '')) throw new Error('unconfirmed');
     state.stats.healthLine = '';
@@ -356,7 +396,7 @@ export async function startBridge() {
         || state.status.mcpUrl !== data.mcpUrl || state.status.secretKey !== data.secretKey) throw new Error('read');
       $('#sess-dot').classList.add('on');
       ui.setRight('bridge');
-      bridgeOutcome('启动已确认，当前地址已核对；请按需手动复制。隧道开启不代表第三方已连接。');
+      bridgeOutcome('启动已确认，当前地址已核对；请按需手动复制。隧道开启不代表第三方已连接。' + warned);
     } catch (_) {
       if (ticket === bridgeAction) bridgeOutcome('原主机启动已确认，但当前状态或地址未核对；请重新读取状态，不要再次启动。');
     }

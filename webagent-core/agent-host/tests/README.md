@@ -151,13 +151,13 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 17 个函数/类节点 |
 | [adminIntegrity.test.js](adminIntegrity.test.js) | 63 个函数/类节点 |
-| [apiFiles.test.js](apiFiles.test.js) | 70 个函数/类节点 |
+| [apiFiles.test.js](apiFiles.test.js) | 72 个函数/类节点 |
 | [appWindowLifecycle.test.js](appWindowLifecycle.test.js) | 101 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 21 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 40 个函数/类节点 |
 | [auditStorage.test.js](auditStorage.test.js) | 19 个函数/类节点 |
 | [board.test.js](board.test.js) | 4 个函数/类节点 |
-| [bridgeTunnel.test.js](bridgeTunnel.test.js) | 33 个函数/类节点 |
+| [bridgeTunnel.test.js](bridgeTunnel.test.js) | 35 个函数/类节点 |
 | [chatConcurrency.test.js](chatConcurrency.test.js) | 13 个函数/类节点 |
 | [chatMode.test.js](chatMode.test.js) | 0 个函数/类节点 |
 | [chatVision.test.js](chatVision.test.js) | 21 个函数/类节点 |
@@ -187,7 +187,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [executorEnv.test.js](executorEnv.test.js) | 7 个函数/类节点 |
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
 | [extensionHostSafety.test.js](extensionHostSafety.test.js) | 32 个函数/类节点 |
-| [externalDiscovery.test.js](externalDiscovery.test.js) | 15 个函数/类节点 |
+| [externalDiscovery.test.js](externalDiscovery.test.js) | 26 个函数/类节点 |
 | [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
 | [fileReadSafety.test.js](fileReadSafety.test.js) | 22 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
@@ -251,7 +251,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [tunnelCleanupAclFixture.ps1](tunnelCleanupAclFixture.ps1) | 文件级登记；未做符号完整性证明 |
 | [tunnelCleanupWindows.test.js](tunnelCleanupWindows.test.js) | 17 个函数/类节点 |
 | [tunnelHelperDiagnostics.test.js](tunnelHelperDiagnostics.test.js) | 20 个函数/类节点 |
-| [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 23 个函数/类节点 |
+| [tunnelLifecycle.test.js](tunnelLifecycle.test.js) | 31 个函数/类节点 |
 | [tunnelOwnerFixture.js](tunnelOwnerFixture.js) | 4 个函数/类节点 |
 | [tunnelReceiptProtection.test.js](tunnelReceiptProtection.test.js) | 17 个函数/类节点 |
 | [tunnelRecoveryLauncher.test.js](tunnelRecoveryLauncher.test.js) | 11 个函数/类节点 |
@@ -259,11 +259,11 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [tunnelResidueNotice.test.js](tunnelResidueNotice.test.js) | 21 个函数/类节点 |
 | [usageTracker.test.js](usageTracker.test.js) | 4 个函数/类节点 |
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 28 个函数/类节点 |
-| [workbench.browser.js](workbench.browser.js) | 370 个函数/类节点 |
+| [workbench.browser.js](workbench.browser.js) | 373 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 528 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 536 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
-| [workspaceEntry.test.js](workspaceEntry.test.js) | 20 个函数/类节点 |
+| [workspaceEntry.test.js](workspaceEntry.test.js) | 24 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 21 个函数/类节点 |
 <!-- docs-inventory:end -->
 

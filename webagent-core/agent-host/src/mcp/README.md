@@ -95,7 +95,7 @@ R2/R3会话提交时序：HTTP/SSE响应SID先校验但不立即保存，RPC响�
 | [budget.js](budget.js) | 6 个函数/类节点 |
 | [clients.js](clients.js) | 5 个函数/类节点 |
 | [errors.js](errors.js) | 6 个函数/类节点 |
-| [externalClient.js](externalClient.js) | 24 个函数/类节点 |
+| [externalClient.js](externalClient.js) | 28 个函数/类节点 |
 | [instructions.js](instructions.js) | 3 个函数/类节点 |
 | [oauth.js](oauth.js) | 54 个函数/类节点 |
 | [publicHttps.js](publicHttps.js) | 17 个函数/类节点 |

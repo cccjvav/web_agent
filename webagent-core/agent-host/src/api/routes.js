@@ -30,6 +30,7 @@ const { listClients } = require('../mcp/clients');
 const oauth = require('../mcp/oauth');
 const tunnel = require('../tunnel/cloudflared');
 const ngrok = require('../tunnel/ngrok');
+const { startFailureCode } = require('../tunnel/startFailure');
 const tracker = require('../usage/tracker');
 const ptyJobs = require('../tools/ptyJobs');
 const { runWithSignal } = require('../utils/requestScope');
@@ -349,7 +350,8 @@ router.post('/external/servers', async (req, res) => {
   if (!body) return;
   if (!validExternalRegistration(body)) return rejectApiRequest(res);
   try { res.json(await externalClient.add(body)); }
-  catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+  // category (F130) is a fixed word from EXTERNAL_FAILURE_HINTS, so the page can explain the failure without echoing it.
+  catch (error) { res.status(400).json({ ok: false, error: error.message, ...(Object.hasOwn(externalClient.EXTERNAL_FAILURE_HINTS, error.category || '') ? { category: error.category } : {}) }); }
 });
 router.delete('/external/servers/:id', (req, res) => {
   if (!apiRequestQuery(req, res, []) || !apiRequestBody(req, res, [])) return;
@@ -531,15 +533,17 @@ router.post('/bridge/start', async (req, res) => {
     config.tunnelProvider = provider;
     oauth.ensurePairing();
 
-    let tunnelError = null;
-    try { await tunnel.stopTunnel(); } catch (err) { tunnelError = err.message; }
+    let tunnelError = null, tunnelErrorCode = null;
+    const warnings = [];
+    // F130: every failure also carries a stable code (startFailure.js) that the browser page renders from its own text.
+    const failed = err => { tunnelError = err && err.message ? err.message : String(err); tunnelErrorCode = startFailureCode(err); };
+    try { await tunnel.stopTunnel(); } catch (err) { failed(err); }
     if (bridgeTicket !== bridgeGeneration) return res.status(409).json({ success: false, running: false, error: 'Bridge start superseded' });
     if (!tunnelError && provider === 'cloudflare') {
       try {
-        await tunnel.startQuickTunnel({ port: config.port });
-      } catch (err) {
-        tunnelError = err && err.message ? err.message : String(err);
-      }
+        const started = await tunnel.startQuickTunnel({ port: config.port });
+        if (started && started.warning) warnings.push({ code: started.warning.code, message: started.warning.message });
+      } catch (err) { failed(err); }
     } else if (!tunnelError && named) {
       try {
         await tunnel.startNamedTunnel({
@@ -547,9 +551,7 @@ router.post('/bridge/start', async (req, res) => {
           token: namedToken,
           port: config.port
         });
-      } catch (err) {
-        tunnelError = err && err.message ? err.message : String(err);
-      }
+      } catch (err) { failed(err); }
     } else if (!tunnelError && ngrokProv) {
       try {
         await ngrok.startNgrokTunnel({
@@ -557,9 +559,7 @@ router.post('/bridge/start', async (req, res) => {
           token: ngrokToken,
           port: config.port
         });
-      } catch (err) {
-        tunnelError = err && err.message ? err.message : String(err);
-      }
+      } catch (err) { failed(err); }
     }
 
     if (bridgeTicket !== bridgeGeneration) return res.status(409).json({ success: false, running: false, error: 'Bridge start superseded by a newer request' });
@@ -572,6 +572,7 @@ router.post('/bridge/start', async (req, res) => {
       note = named
         ? `Named Tunnel 已就绪：${tunnelUrl}`
         : (ngrokProv ? `ngrok 已就绪：${tunnelUrl}` : `Quick Tunnel 已就绪：${tunnelUrl}`);
+      for (const warning of warnings) note += ` ${warning.message}`;
     } else if (tunnelError) {
       note = `${tunnelError} 远程Bridge未就绪；MCP仅可通过本机${config.port}端口访问。`;
     } else if (named) {
@@ -582,12 +583,14 @@ router.post('/bridge/start', async (req, res) => {
       note = `未启动 Quick Tunnel（cloudflare / Named Tunnel / ngrok 才会拉起对应进程）。MCP仅可通过本机${config.port}端口访问。`;
     }
 
-    eventBus.broadcast(config.bridgeRunning ? 'bridge_started' : 'bridge_failed', { provider, tunnelUrl: tunnelUrl || null, tunnelError });
+    eventBus.broadcast(config.bridgeRunning ? 'bridge_started' : 'bridge_failed', { provider, tunnelUrl: tunnelUrl || null, tunnelError, tunnelErrorCode });
     res.json({
       success: config.bridgeRunning,
       running: config.bridgeRunning,
       provider,
       tunnelError,
+      tunnelErrorCode,
+      warnings: tunnelUrl ? warnings : [],
       note,
       ...info
     });

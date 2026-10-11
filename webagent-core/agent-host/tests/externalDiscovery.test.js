@@ -158,6 +158,52 @@ async function main() {
       assert.strictEqual((await external.responseMessage(response, 'wanted')).result.content, '中文🙂');
     }
     await assert.rejects(external.responseMessage(new Response(Uint8Array.from([0xff, 0xfe])), 'bad'));
+    // F130: failures name their layer with fixed text and never repeat the server's body or headers.
+    assert.strictEqual(external.networkCategory({ message: 'fetch failed', cause: { cause: { code: 'ENOTFOUND' } } }), 'dns');
+    assert.strictEqual(external.networkCategory({ cause: { code: 'CERT_HAS_EXPIRED' } }), 'certificate');
+    assert.strictEqual(external.networkCategory({ code: 'UND_ERR_CONNECT_TIMEOUT' }), 'timeout');
+    assert.strictEqual(external.networkCategory({ c: 1, cause: { cause: { cause: { cause: { cause: { code: 'ECONNREFUSED' } } } } } }), null, 'the cause chain is walked at most five levels');
+    assert.strictEqual(external.networkCategory(new Error('Invalid session header')), null, 'our own errors are not network failures');
+    assert.deepStrictEqual([[401, 'Bearer resource_metadata="https://a/.well-known/oauth-protected-resource"', true], [401, 'Bearer realm="x"', true],
+      [403, '', true], [403, '', false], [404, '', true], [405, '', false], [500, '', true]].map(([status, header, token]) => external.httpCategory(status, header, token)),
+    ['oauth-required', 'auth', 'forbidden', 'auth', 'not-found', 'not-found', 'http']);
+    let failMode = '';
+    const failing = http.createServer(async (req, res) => {
+      for await (const _ of req) { /* drain */ }
+      if (failMode === 'oauth') { res.writeHead(401, { 'WWW-Authenticate': 'Bearer resource_metadata="https://secret-meta.example/.well-known/oauth-protected-resource"' }); return res.end('SECRET-BODY'); }
+      if (failMode === 'html') { res.writeHead(200, { 'Content-Type': 'text/html' }); return res.end('<html>SECRET-BODY</html>'); }
+      res.writeHead({ forbidden: 403, missing: 404, broken: 500 }[failMode]); res.end('SECRET-BODY');
+    });
+    await new Promise(resolve => failing.listen(0, '127.0.0.1', resolve));
+    try {
+      const failingUrl = `http://127.0.0.1:${failing.address().port}/mcp`;
+      for (const [mode, category, code] of [['oauth', 'oauth-required', 'E_EXTERNAL_OAUTH_REQUIRED'], ['forbidden', 'forbidden', 'E_EXTERNAL_FORBIDDEN'],
+        ['missing', 'not-found', 'E_EXTERNAL_NOT_FOUND'], ['broken', 'http', 'E_EXTERNAL_HTTP'], ['html', 'not-mcp', 'E_EXTERNAL_NOT_MCP']]) {
+        failMode = mode;
+        const failure = await external.add({ url: failingUrl, token: 'fixture-private' }).then(() => null, error => error);
+        assert.ok(failure, mode + ' must reject');
+        assert.strictEqual(failure.category, category); assert.strictEqual(failure.code, code);
+        assert.ok(failure.message.endsWith(external.EXTERNAL_FAILURE_HINTS[category]), failure.message);
+        assert.ok(!/SECRET|secret-meta|fixture-private/.test(failure.message), 'no body, header or token in ' + failure.message);
+        assert.deepStrictEqual(external.list(), [], 'a failed registration leaves nothing registered');
+      }
+    } finally { failing.closeAllConnections(); await new Promise(resolve => failing.close(resolve)); }
+    const closed = http.createServer(); await new Promise(resolve => closed.listen(0, '127.0.0.1', resolve));
+    const closedPort = closed.address().port; await new Promise(resolve => closed.close(resolve));
+    const refused = await external.add({ url: `http://127.0.0.1:${closedPort}/mcp` }).then(() => null, error => error);
+    assert.strictEqual(refused && refused.category, 'connect', String(refused && refused.message));
+    assert.strictEqual(refused.code, 'E_EXTERNAL_CONNECT'); assert.ok(refused.cause, 'the original error stays as cause');
+    // A classified failure after approval keeps the unknown outcome and adds only the fixed hint.
+    mode = 'paged'; const vanishing = await external.add(options);
+    const realFetch = global.fetch;
+    global.fetch = async () => { throw new TypeError('fetch failed', { cause: Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' }) }); };
+    try {
+      const pending = external.request({ serverId: vanishing.serverId, tool: 'first', arguments: {}, requestKey: 'diagnosis-connect' }, { callerKey: 'local' });
+      await queue.approve(pending.requestId, true);
+      const job = queue.inspect(pending.requestId);
+      assert.strictEqual(job.status, 'unknown', 'a transport failure after dispatch is still unknown');
+      assert.deepStrictEqual(job.result.diagnosis, { category: 'connect', hint: external.EXTERNAL_FAILURE_HINTS.connect });
+    } finally { global.fetch = realFetch; external.remove(vanishing.serverId); }
     console.log('external discovery: bounded pagination, invalid catalogs, cancellation, immutable metadata and fragmented SSE passed');
   } finally {
     for (const client of external.list()) external.remove(client.serverId);

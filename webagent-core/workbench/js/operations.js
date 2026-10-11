@@ -1,6 +1,21 @@
 import { $, ui, state } from './state.js';
 import { apiFetch, confirmAction } from './api.js';
 
+// F130: same words and text as agent-host externalClient EXTERNAL_FAILURE_HINTS (a test keeps them equal). The page shows
+// only this fixed text for a whitelisted category, never the server's error string (it may reflect the Bearer value).
+export const EXTERNAL_FAILURE_HINTS = Object.freeze({
+  dns: '无法解析服务器地址：核对域名拼写和本机网络。',
+  connect: '连不上服务器：确认服务已经启动、端口正确，本机能访问该地址。',
+  timeout: '服务器30秒内没有响应：确认服务在运行、没有卡住，稍后重试。',
+  certificate: 'HTTPS证书校验失败：证书过期、域名不符或是自签证书；本产品不跳过证书校验。',
+  'oauth-required': '这个服务要求OAuth登录；目前只支持粘贴静态Token。服务若提供个人访问令牌，生成后填入Token再登记，否则暂时无法接入。',
+  auth: '服务拒绝了凭据：Token缺失、填错或已过期，重新生成后再登记。',
+  forbidden: '凭据被识别但没有权限：检查Token的权限范围。',
+  'not-found': '地址能连上，但这个路径不是MCP端点：核对URL路径（常见为/mcp）。',
+  'not-mcp': '地址能连上，但返回的不是MCP响应（例如网页）：核对URL是否指向MCP服务。',
+  http: '服务返回了错误状态：稍后重试，或查看该服务自己的日志。'
+});
+
 async function api(path, method = 'GET', body, signal) {
   const controller = new AbortController();
   const onAbort = () => controller.abort();
@@ -12,7 +27,13 @@ async function api(path, method = 'GET', body, signal) {
     const response = await apiFetch(`/api${path}`, {method,signal:controller.signal,headers:{'Content-Type':'application/json'},...(body ? {body:JSON.stringify(body)} : {})});
     const result = await response.json();
     if (controller.signal.aborted) throw new Error('请求中断，结果未确认；请查询原请求，不要重放。');
-    if (!response.ok || result?.ok === false || result?.success === false) throw new Error(result?.error || '请求失败');
+    if (!response.ok || result?.ok === false || result?.success === false) {
+      const error = new Error(result?.error || '请求失败');
+      // Only the registration route's 400 with a known category is a host-confirmed "not registered".
+      if (response.status === 400 && path === '/external/servers' && method === 'POST'
+        && typeof result?.category === 'string' && Object.hasOwn(EXTERNAL_FAILURE_HINTS, result.category)) error.externalCategory = result.category;
+      throw error;
+    }
     return result;
   } finally {clearTimeout(timer);signal?.removeEventListener('abort',onAbort);}
 }
@@ -273,8 +294,12 @@ async function externalMutation(label, callback, key = 'register', selector = '#
     if (!current()) return false;
     if (!refreshed) target.textContent = message + '\n列表刷新失败或被更新的刷新取代；本次确认仍保留，按ID核对，不要重复操作。';
     return true;
-  } catch (_) {
+  } catch (error) {
     if (!current()) return false;
+    if (dispatched && error?.externalCategory) {
+      target.textContent = `${label}失败：${EXTERNAL_FAILURE_HINTS[error.externalCategory]}主机已确认没有登记这个接入，修正后可重新登记。`;
+      return false;
+    }
     // Never echo transport/parser errors: an untrusted service may reflect the Bearer value.
     target.textContent = dispatched
       ? `${label}未确认；请求可能已生效。请刷新接入列表并核对原请求，不要重放。HTTP中断不证明外部服务未收到请求或进程已停止。`

@@ -6,7 +6,8 @@ const { config } = require('../config');
 const eventBus = require('../utils/eventBus');
 const { stopProcess } = require('./stopProcess');
 const { observeTunnel } = require('./tunnelRegistry');
-const { canonicalNamedUrl, createTokenRedactor } = require('./cloudflared');
+const { canonicalNamedUrl, createTokenRedactor, exitFailure } = require('./cloudflared');
+const { tunnelFailure } = require('./startFailure');
 
 const NGROK_URL_RE = /https:\/\/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+/i;
 const NGROK_READY_RE = /started tunnel|Forwarding\s+https:\/\//i;
@@ -119,25 +120,19 @@ function stopNgrok() {
 async function startNgrokTunnel({ hostname, token, port = config.port, timeoutMs = 25000 } = {}) {
   const tok = resolveNgrokToken(token);
   if (!tok) {
-    const err = new Error('ngrok 需要 Authtoken（dashboard.ngrok.com 复制，或设环境变量 NGROK_AUTHTOKEN）。');
-    err.code = 'E_NGROK_TOKEN';
-    return Promise.reject(err);
+    return Promise.reject(tunnelFailure('E_NGROK_TOKEN', 'ngrok 需要 Authtoken（dashboard.ngrok.com 复制，或设环境变量 NGROK_AUTHTOKEN）。'));
   }
   const named = hostname ? canonicalNamedUrl(hostname) : null;
   if (hostname && String(hostname).trim() && !named) {
-    const err = new Error('ngrok 域名无效。可留空用随机地址，或填 mcp.ngrok-free.app 这类主机名。');
-    err.code = 'E_NGROK_HOSTNAME';
-    return Promise.reject(err);
+    return Promise.reject(tunnelFailure('E_NGROK_HOSTNAME', 'ngrok 域名无效。可留空用随机地址，或填 mcp.ngrok-free.app 这类主机名。'));
   }
   const stopped = require('./cloudflared').stopTunnel();
   const ticket = generation;
   await stopped;
-  if (ticket !== generation) throw new Error('Tunnel start superseded');
+  if (ticket !== generation) throw tunnelFailure('E_TUNNEL_SUPERSEDED', 'Tunnel start superseded');
   const bin = findNgrok({ fresh: true });
   if (!bin) {
-    const err = new Error(installHint());
-    err.code = 'E_NO_NGROK';
-    return Promise.reject(err);
+    return Promise.reject(tunnelFailure('E_NO_NGROK', installHint()));
   }
   const target = `127.0.0.1:${port}`;
   return new Promise((resolve, reject) => {
@@ -162,7 +157,7 @@ async function startNgrokTunnel({ hostname, token, port = config.port, timeoutMs
       settled = true;
       if (child === proc && ticket === generation) stopNgrok().catch(() => {});
       const failure = ngrokFailure(buf);
-      reject(failure ? failureError(failure) : new Error('ngrok 已启动但 25 秒内没有给出公网地址。请确认 Authtoken、预留域名（若填了）以及本机网络。'));
+      reject(failure ? failureError(failure) : tunnelFailure('E_TUNNEL_TIMEOUT', 'ngrok 已启动但 25 秒内没有给出公网地址。请确认 Authtoken、预留域名（若填了）以及本机网络。'));
     }, timeoutMs);
 
     const finish = (url) => {
@@ -193,7 +188,7 @@ async function startNgrokTunnel({ hostname, token, port = config.port, timeoutMs
     };
 
     cancelPending = () => {
-      if (settled) return; settled = true; clearTimeout(timer); reject(new Error('Tunnel start cancelled'));
+      if (settled) return; settled = true; clearTimeout(timer); reject(tunnelFailure('E_TUNNEL_CANCELLED', 'Tunnel start cancelled'));
     };
     const clearActive = () => {
       if (child !== proc || ticket !== generation) return;
@@ -208,7 +203,7 @@ async function startNgrokTunnel({ hostname, token, port = config.port, timeoutMs
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      reject(new Error(`无法启动 ngrok: ${err.message}`));
+      reject(tunnelFailure('E_TUNNEL_SPAWN', `无法启动 ngrok: ${err.message}`));
     });
     proc.on('exit', (code) => {
       clearActive();
@@ -217,7 +212,7 @@ async function startNgrokTunnel({ hostname, token, port = config.port, timeoutMs
       clearTimeout(timer);
       // A process that ran and printed an ngrok error code is not an installation problem.
       const failure = ngrokFailure(buf);
-      reject(failure ? failureError(failure) : new Error(`ngrok 退出（code ${code}）。${installHint()}`));
+      reject(failure ? failureError(failure) : exitFailure('ngrok', code, installHint()));
     });
   });
 }

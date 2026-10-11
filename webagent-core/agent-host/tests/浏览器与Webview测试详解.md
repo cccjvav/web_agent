@@ -34,6 +34,8 @@ renderBrowser额外验证Arena是连接指引、不含arena-send伪按钮；java
 
 workbenchRuntime执行真实bind/settings：Test HTTP500即使JSON success:true也不能报OK；Add发现HTTP/业务/坏JSON/无效列表/网络/超时均不写，固定异常提示不含fixture Key。finishProbe控制在途请求，在此期间修改Endpoint/Key/vision，再重复Test/Add/模型选择不增加请求；实际保存只用原快照且不清新Key草稿。显式manualId只POST addProvider，不重跑发现、不携旧models/activeModelId；成功清未改动Key，409/坏JSON或旧服务器success:true但缺added则未确认且保留Key。Test有manualId也只读列表、不登记。provider-table用__proto__/constructor组名必须可渲染。
 
+第130组workbenchRuntime两段：①Bridge启动失败码——同provider、success/running严格false且码可识别（E_NO_CLOUDFLARED、ERR_NGROK_334、未登记的ERR_NGROK_9999）时返回false，结果区含“启动失败（码）”及对应固定文字（安装命令、占用说明、官方说明页链接），不含回包里的tunnelError原文，也不含“未确认”；畸形码、provider不符、running为true仍是“未确认”；TUNNEL_FAILURE_TEXT的键必须与agent-host startFailure.js的TUNNEL_START_CODES一致；成功回包带W_QUICK_TUNNEL_CONFIG时结果追加固定的config.yml提示而不回显message。②外部MCP登记——页面EXTERNAL_FAILURE_HINTS与externalClient的同名表逐字相同；400且category在表内（oauth-required）显示“失败”、固定提示和“主机已确认没有登记”，category为原型键toString或HTTP500仍是“登记未确认”，三种情况都不回显Token。
+
 ## editorRuntime.test.js
 
 [源码](editorRuntime.test.js)父进程15秒VM子模式（2026-09-26起把当前execArgv——含完成守卫——传给子进程，超时即spawn error也以1退出；此前子进程不带守卫，注入永久挂起后仍通过），加载state、api、dom、tabs四个真实模块（tabs经api.js请求，替身fetch在调用时被读取）。**element()**生成value/innerHTML/children/handlers，appendChild、querySelector、addEventListener等最小DOM；**get(id)**Map复用节点；window.confirm由布尔控制；fetch记录calls，从responses队列shift，没有计划响应直接assert失败，Error项抛错。

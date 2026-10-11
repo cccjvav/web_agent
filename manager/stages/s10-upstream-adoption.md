@@ -533,6 +533,22 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 
 **参考包处理。** 本组完成后按用户决定从仓库删除`shuncode-0.8.1-webagent.zip`（`git rm`，不改写历史；`cfe5166`里仍可取回）。
 
+### 第130组：外部MCP失败分类与隧道启动失败码（2026-10-11，会话01a0d084）
+
+用户同意的范围：参考包第5项（外部MCP网络错误分类，含401要求OAuth时的提示，不做代理类）加精简的第18项（只给真实会遇到的隧道启动失败配稳定码）。第22项核对后关闭（第71组已按凭据区分无会话调用者），第1项（OAuth客户端）等有具体只支持OAuth的服务时再单独做，第20项不做。
+
+1. **外部MCP失败分类（`mcp/externalClient.js`）。** 新增`EXTERNAL_FAILURE_HINTS`十类（dns、connect、timeout、certificate、oauth-required、auth、forbidden、not-found、not-mcp、http）各一句中文办法。`networkCategory`沿cause链最多5层找Node网络错误码；`httpCategory`把401按`WWW-Authenticate`是否带`resource_metadata`分成oauth-required或auth，403有Token时为forbidden、没Token时为auth，404/405为not-found；`externalFailure`生成`E_EXTERNAL_<类>`错误，带category/hint，原错误留在cause。登记路由`POST /external/servers`的400只在category属于这张表时附`category`字段。外部AI经external_request调用遇到分类过的传输失败时，结果仍是unknown（请求可能已到达对方），另加`diagnosis:{category,hint}`。工作台`operations.js`有一份逐字相同的表（测试核对），400且category在表内才显示“失败：固定说明，主机已确认没有登记”，其余仍是“登记未确认”；不回显服务器原文，因为不可信服务可能把Bearer反射回来。
+2. **隧道启动失败码（新`tunnel/startFailure.js`）。** `TUNNEL_START_CODES`十三个码，`tunnelFailure(code,message)`只接受已登记的码，`startFailureCode(err)`把错误归到已登记码或`ERR_NGROK_<1–5位数字>`，其余为E_TUNNEL_UNKNOWN。cloudflared.js/ngrok.js的每个启动拒绝都带码；`exitFailure`修正“进程启动后退出却提示没安装”：只有shell自己的“找不到命令”退出码（cmd 9009、sh 127，.cmd包装时会出现）才是E_NO_*，其余为E_TUNNEL_EXITED并提示Token/域名/版本/安全软件。stopProcess超时拒绝带E_TUNNEL_PREVIOUS。`/bridge/start`回包加`tunnelErrorCode`与`warnings`（Quick独立配置写不了时的W_QUICK_TUNNEL_CONFIG，原来只广播tunnel_log，实际没有页面显示它）。浏览器工作台按码显示自己的固定中文（`TUNNEL_FAILURE_TEXT`与主机码表由测试核对相同），仍不回显tunnelError；VS Code侧栏显示主机原文并括上码，提示接在“Bridge 已启动”后面。
+3. **文档更正。** 第129组在隧道使用指南写的“工作台Bridge日志会提示一行”不成立（`app.js`的WebSocket处理不显示tunnel_log），已更正；`src/tunnel/README.md`仍写“Named Token必须传给cloudflared命令行”，与F100起经`TUNNEL_TOKEN`环境变量传入不符，一并更正。使用指南加外部MCP登记失败说明表，隧道使用指南加启动失败码表。
+
+**自我复审（交付前）：**
+- 读完整diff与调用方：stopTunnel用Promise.all传出stopProcess的原错误，码不丢；路由在两处ticket过期时仍返回409（被取代的启动不会走到失败码）；operatorQueue的publicJob整体克隆result，diagnosis随之返回；extension.js的正则在源码里是单个反斜杠（工具输出的JSON转义一度让我误以为写成了两个，用od核对后确认无误）。
+- 发现并修正：①侧栏新测试第一次用了`a1n`作actionId，侧栏只接受`a数字`，消息被丢弃而断言看到上一条结果；改为`a11`，并在测试说明里写明这条约束；②扩展目录的`入口与Webview详解.md`有一份安装副本，改了原文忘记同步，全量测试extensionCopy红，已复制；③两处过时文档说法见上。
+- 逆向验证：20处变异（码归一总是UNKNOWN、不认ERR_NGROK、去掉9009/127判断、去掉E_TUNNEL_PREVIOUS、ngrok缺Token改码、路由不收集/不返回warnings、category不过白名单、oauth-required并入auth、cause只看一层、去掉403分支、去掉diagnosis、工作台不限400、不核对category、不核对provider/running、不接配置提示、不认其它ERR_NGROK、侧栏不校验码格式、侧栏不显示提示）全部让对应测试变红。
+- 未在沙箱验证：真实cloudflared/ngrok的错误输出与退出码（只用假进程）、真实25秒超时、真实外部服务的401头与证书错误（只用夹具）、VS Code桌面侧栏的实际显示；浏览器工作台新断言只在CI的workbench-browser任务运行。
+
+**验证：** 全量测试（110个文件）与lint通过，`check-docs --write`后重建docs-site，改过的文档逐份复读后刷新审查索引指纹。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。

@@ -11,6 +11,48 @@ const stdioTransport = require('./stdioTransport');
 const clients = new Map();
 const MAX_BYTES = 256 * 1024;
 
+// F130 (ShunCode item 5): name the failure layer by error code, not by message text (messages change with
+// Node/undici versions, codes do not). The hint is fixed product text: it never repeats the server's reply
+// or headers, which may reflect the Bearer value. Proxy categories are omitted: this client has no proxy.
+const NETWORK_CODES = Object.freeze({
+  dns: ['ENOTFOUND', 'EAI_AGAIN', 'EAI_FAIL', 'EAI_NONAME', 'EAI_NODATA'],
+  connect: ['ECONNREFUSED', 'ECONNRESET', 'EHOSTUNREACH', 'ENETUNREACH', 'EPIPE', 'ECONNABORTED', 'UND_ERR_SOCKET'],
+  timeout: ['ETIMEDOUT', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_HEADERS_TIMEOUT', 'UND_ERR_BODY_TIMEOUT'],
+  certificate: ['UNABLE_TO_VERIFY_LEAF_SIGNATURE', 'SELF_SIGNED_CERT_IN_CHAIN', 'DEPTH_ZERO_SELF_SIGNED_CERT', 'CERT_HAS_EXPIRED',
+    'UNABLE_TO_GET_ISSUER_CERT_LOCALLY', 'ERR_TLS_CERT_ALTNAME_INVALID', 'CERT_NOT_YET_VALID', 'UNABLE_TO_GET_ISSUER_CERT']
+});
+const EXTERNAL_FAILURE_HINTS = Object.freeze({
+  dns: '无法解析服务器地址：核对域名拼写和本机网络。',
+  connect: '连不上服务器：确认服务已经启动、端口正确，本机能访问该地址。',
+  timeout: '服务器30秒内没有响应：确认服务在运行、没有卡住，稍后重试。',
+  certificate: 'HTTPS证书校验失败：证书过期、域名不符或是自签证书；本产品不跳过证书校验。',
+  'oauth-required': '这个服务要求OAuth登录；目前只支持粘贴静态Token。服务若提供个人访问令牌，生成后填入Token再登记，否则暂时无法接入。',
+  auth: '服务拒绝了凭据：Token缺失、填错或已过期，重新生成后再登记。',
+  forbidden: '凭据被识别但没有权限：检查Token的权限范围。',
+  'not-found': '地址能连上，但这个路径不是MCP端点：核对URL路径（常见为/mcp）。',
+  'not-mcp': '地址能连上，但返回的不是MCP响应（例如网页）：核对URL是否指向MCP服务。',
+  http: '服务返回了错误状态：稍后重试，或查看该服务自己的日志。'
+});
+function networkCategory(error) {
+  for (let current = error, depth = 0; current && depth < 5; current = current.cause, depth++) {
+    const code = typeof current.code === 'string' ? current.code : '';
+    for (const [category, codes] of Object.entries(NETWORK_CODES)) if (codes.includes(code)) return category;
+  }
+  return null;
+}
+function httpCategory(status, authenticate, hasToken) {
+  if (status === 401) return /resource_metadata\s*=/i.test(authenticate || '') ? 'oauth-required' : 'auth';
+  if (status === 403) return hasToken ? 'forbidden' : 'auth';
+  if (status === 404 || status === 405) return 'not-found';
+  return 'http';
+}
+function externalFailure(category, detail, cause) {
+  const error = new Error(`External MCP ${detail}: ${EXTERNAL_FAILURE_HINTS[category]}`, cause ? { cause } : undefined);
+  error.code = 'E_EXTERNAL_' + category.toUpperCase().replace(/-/g, '_');
+  error.category = category; error.hint = EXTERNAL_FAILURE_HINTS[category];
+  return error;
+}
+
 function endpoint(value, publicHttps = false) {
   if (typeof value !== 'string' || value.length > 2048) throw new Error('Invalid endpoint length');
   const url = new URL(value);
@@ -68,7 +110,8 @@ async function rpc(client, method, params, notification = false) {
   const abort = () => controller.abort();
   parent?.addEventListener('abort', abort, { once: true });
   if (parent?.aborted) abort();
-  const timer = setTimeout(abort, 30000);
+  let timedOut = false;
+  const timer = setTimeout(() => { timedOut = true; abort(); }, 30000);
   client.controllers.add(controller);
   const id = randomUUID();
   try {
@@ -80,7 +123,11 @@ async function rpc(client, method, params, notification = false) {
     const response = client.publicHttps
       ? await require('./publicHttps').post(client.url, {signal:controller.signal,headers,body})
       : await fetch(client.url, {method:'POST',redirect:'error',signal:controller.signal,headers,body});
-    if (!response.ok) { await response.body?.cancel(); throw new Error(`External MCP HTTP ${response.status}`); }
+    if (!response.ok) {
+      const authenticate = response.headers.get('www-authenticate');
+      await response.body?.cancel();
+      throw externalFailure(httpCategory(response.status, authenticate, Boolean(client.token)), `HTTP ${response.status}`);
+    }
     const session = response.headers.get('mcp-session-id');
     if (session !== null) {
       // fetch合并重复响应头为"a, b"；本项目采用1–512可见ASCII且无逗号的会话策略（比协议更窄）。
@@ -92,12 +139,21 @@ async function rpc(client, method, params, notification = false) {
       if (session !== null) client.session = session;
       return {};
     }
-    const message = await responseMessage(response, id);
+    let message;
+    try { message = await responseMessage(response, id); }
+    catch (error) { if (error instanceof SyntaxError) throw externalFailure('not-mcp', 'response is not JSON-RPC', error); throw error; }
     if (message.jsonrpc !== '2.0' || Object.hasOwn(message, 'error') || !message.result || typeof message.result !== 'object' || Array.isArray(message.result)) throw new Error('External MCP protocol error');
     // Commit the candidate header only after this RPC response has been accepted.
     // A rejected response must not silently retarget the next approved call's session.
     if (session !== null) client.session = session;
     return message.result;
+  } catch (error) {
+    if (error.category) throw error;
+    // Only our own 30 s timer is a timeout; a parent cancel or a removed server keeps its original error.
+    if (timedOut && !parent?.aborted) throw externalFailure('timeout', 'no response within 30 s', error);
+    const category = controller.signal.aborted ? null : networkCategory(error);
+    if (category) throw externalFailure(category, 'network failure', error);
+    throw error;
   } finally {
     controller.abort();
     clearTimeout(timer); parent?.removeEventListener('abort', abort); client.controllers.delete(controller);
@@ -209,4 +265,4 @@ async function closeAll() {
   for (const id of [...clients.keys()]) remove(id);
   await stdioTransport.closeAll();
 }
-module.exports = { endpoint, responseMessage, add, remove, list, request, startStdio, previewStdio: stdioLaunch.preview, closeAll };
+module.exports = { EXTERNAL_FAILURE_HINTS, networkCategory, httpCategory, endpoint, responseMessage, add, remove, list, request, startStdio, previewStdio: stdioLaunch.preview, closeAll };

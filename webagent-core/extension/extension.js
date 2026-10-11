@@ -534,7 +534,10 @@ function activate(context) {
       if (snap.state === 'external' && !quiet) vscode.window.showInformationMessage('已接管同一文件夹上正在运行的主机（外部启动，插件停止时不会关闭它）。');
       if (context.globalState?.get('webagent.startBridgeWithHost') === true) {
         const status = await requestJson('GET', `${agentHostUrl()}/api/status`);
-        if (status.json && !status.json.bridgeRunning) await bridge.startBridge(status.json.tunnelProvider || 'cloudflare');
+        if (status.json && !status.json.bridgeRunning) {
+          const warnings = await bridge.startBridge(status.json.tunnelProvider || 'cloudflare');
+          for (const warning of warnings || []) hostOutput.appendLine('[bridge] ' + warning);
+        }
       }
       return snap;
     } catch (error) {
@@ -785,8 +788,15 @@ class BridgeView {
   async startBridge(tunnelProvider) {
     const binding = await workspaceBinding();
     const result = await requestJson('POST', `${agentHostUrl()}/api/bridge/start`, { tunnelProvider: tunnelProvider || 'cloudflare', ...binding });
-    if(result.status >= 400 || !result.json?.success) throw new Error(result.json?.error || 'Bridge 启动被拒绝');
-    return this.refresh();
+    if(result.status >= 400 || !result.json?.success) {
+      // F130: a tunnel failure arrives as success:false + tunnelError (the host's own Chinese text) + a stable code.
+      const tunnel = typeof result.json?.tunnelError === 'string' && result.json.tunnelError ? result.json.tunnelError : '';
+      const code = typeof result.json?.tunnelErrorCode === 'string' && /^(E_[A-Z_]{1,40}|ERR_NGROK_\d{1,5})$/.test(result.json.tunnelErrorCode) ? `（${result.json.tunnelErrorCode}）` : '';
+      throw new Error(tunnel ? `${tunnel.slice(0, 600)}${code}` : (result.json?.error || 'Bridge 启动被拒绝'));
+    }
+    const warnings = Array.isArray(result.json.warnings) ? result.json.warnings.filter(item => typeof item?.message === 'string').map(item => item.message.slice(0, 300)) : [];
+    await this.refresh();
+    return warnings;
   }
 
   resolveWebviewView(webviewView) {
@@ -825,7 +835,7 @@ class BridgeView {
       return { ok: true, text: '已由主机应用' };
     }
     // Await here (never return the bare promise): a rejected start must reach the listener's modal error.
-    if (msg.type === 'start') { await this.startBridge(msg.tunnelProvider); return { ok: true, text: 'Bridge 已启动' }; }
+    if (msg.type === 'start') { const warnings = await this.startBridge(msg.tunnelProvider); return { ok: true, text: ['Bridge 已启动', ...(warnings || [])].join('；') }; }
     if (msg.type === 'hostStart') {
       const snap = await this.hostCommands?.start();
       // startHost already reported any error; judge by the host's actual state, not the return value,

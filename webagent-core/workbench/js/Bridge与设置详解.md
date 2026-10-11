@@ -29,6 +29,8 @@
 
 **startBridge()**页内单飞，不在停止在途时启动。同步捕获workspaceRoot/hostInstanceId、provider及所选domain/token，预读后复查页面绑定及实时核心状态；实时已运行则不重启，不混入await期间改过的新草稿。当前ticket才允许POST。回包必须HTTP成功、success/running严格true、provider匹配、完整密钥/路径/URL合同（复用validRotatedSecret并以空旧值只验证地址），不据此认证公网可达。
 
+**启动失败的稳定码（第130组）**：回包HTTP成功、success与running严格false、provider与本次相同，且`tunnelErrorCode`能被**tunnelFailureText(code)**认出时，这是主机确认的失败而不是“未确认”：结果区写“启动失败（码）：固定中文。远程 Bridge 没有运行，也没有自动重试。”，再只读刷新一次状态，返回false。常量`TUNNEL_FAILURE_TEXT`（导出，冻结）给agent-host startFailure.js的13个码各一句中文（workbenchRuntime测试核对两边的码集合相同）；NGROK_FAILURE_TEXT给ERR_NGROK_334/108/105/4018各一句；其它1–5位数字的ERR_NGROK码给ngrok官方说明页链接；认不出的码返回空串，仍按“未确认”处理。页面只显示这些固定文字和通过校验的码，不回显主机的tunnelError字符串，延续本页不回显原始错误的约定。启动确认成功且回包warnings里有W_QUICK_TUNNEL_CONFIG时，结果后面接一句固定的QUICK_CONFIG_WARNING，提醒地址全部404时检查`%USERPROFILE%\.cloudflared\config.yml`。
+
 确认写后读取失败、被更新读取取代、当前主机/地址/密钥/运行标记不符，保留“原主机启动已确认，当前未核对”，返回true；仅刷新确认的同目标地址才点灯并切右栏。**不再自动复制或自动显示已复制banner**，用户核对后手动复制。发送前失败明确未启动POST；发出后失败保守未确认，固定文案不回显原始错误或Token；同绑定时尝试一次只读刷新，不重复POST。停止递增代次后，旧预读不再POST、旧启动回包不覆盖结果/点灯/复制；已确认写而后读途中被停止取代仍返回写确认true，但不覆盖新结果。
 
 **stopBridge()**独立停止guard，立即取代本页启动ticket，不等待启动回包或密钥轮换锁。捕获当前绑定直接POST，不增加可能挂住停止的GET；没有绑定就不发送。HTTP成功且success严格true/running严格false才确认；后读异常/不匹配仍保留确认true，只有同绑定、bridgeRunning=false才灭灯。失败明确停止未确认，不自动重试/强杀。finally释放自己的guard，旧启动finally不能释放较新的启动ticket。

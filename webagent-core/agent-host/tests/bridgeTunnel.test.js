@@ -166,6 +166,7 @@ async function main() {
     assert.ok(String(started.json.mcpUrl).includes('random-words-ab12.trycloudflare.com'));
     assert.ok(String(started.json.note).includes('Quick Tunnel 已就绪'));
     assert.strictEqual(started.json.tunnelError, null);
+    assert.strictEqual(started.json.tunnelErrorCode, null); assert.deepStrictEqual(started.json.warnings, []);
 
     const status = await request(server, 'GET', '/api/status');
     assert.ok(String(status.json.mcpUrl).includes('trycloudflare.com'));
@@ -190,8 +191,19 @@ async function main() {
     assert.ok(fallback.json.mcpUrl.startsWith(`http://127.0.0.1:${config.port}/mcp/`));
     assert.strictEqual(startCalls, 1);
     assert.ok(fallback.json.tunnelError);
+    assert.strictEqual(fallback.json.tunnelErrorCode, 'E_NO_CLOUDFLARED', 'the stable code travels with the message');
     assert.ok(String(fallback.json.note).includes('MCP仅可通过本机'));
     assert.ok(!String(fallback.json.mcpUrl).includes('trycloudflare.com'));
+    // F130: an error without a registered code is reported as E_TUNNEL_UNKNOWN; a Quick Tunnel warning reaches the reply.
+    tunnel.startQuickTunnel = async () => { throw Object.assign(new Error('odd'), { code: 'E_SOMETHING_ELSE' }); };
+    assert.strictEqual((await request(server, 'POST', '/api/bridge/start', { tunnelProvider: 'cloudflare' })).json.tunnelErrorCode, 'E_TUNNEL_UNKNOWN');
+    tunnel.startQuickTunnel = async () => { config.publicTunnelUrl = 'https://warned-ab12.trycloudflare.com';
+      return { url: config.publicTunnelUrl, warning: { code: 'W_QUICK_TUNNEL_CONFIG', message: '未能为 Quick Tunnel 使用独立配置（fixture）' } }; };
+    const warned = await request(server, 'POST', '/api/bridge/start', { tunnelProvider: 'cloudflare' });
+    assert.strictEqual(warned.json.success, true);
+    assert.deepStrictEqual(warned.json.warnings, [{ code: 'W_QUICK_TUNNEL_CONFIG', message: '未能为 Quick Tunnel 使用独立配置（fixture）' }]);
+    assert.ok(String(warned.json.note).includes('未能为 Quick Tunnel 使用独立配置'));
+    await request(server, 'POST', '/api/bridge/stop');
 
     startCalls = 0;
     namedCalls = 0;
@@ -201,6 +213,7 @@ async function main() {
     assert.ok(namedCalls >= 1);
     assert.ok(namedMissing.json.tunnelError);
     assert.ok(/主机名|Token|Named/.test(String(namedMissing.json.tunnelError)));
+    assert.ok(['E_NAMED_HOSTNAME', 'E_NAMED_TOKEN'].includes(namedMissing.json.tunnelErrorCode), namedMissing.json.tunnelErrorCode);
     assert.ok(!String(namedMissing.json.mcpUrl).includes('trycloudflare.com'));
 
     // Review F-11: a token whose tunnel fails to come up is not persisted.
@@ -251,6 +264,7 @@ async function main() {
     assert.ok(ngrokCalls >= 1);
     assert.ok(ngrokMissing.json.tunnelError);
     assert.ok(/Authtoken|ngrok|Token/i.test(String(ngrokMissing.json.tunnelError)));
+    assert.ok(/^E_N/.test(ngrokMissing.json.tunnelErrorCode), ngrokMissing.json.tunnelErrorCode);
     assert.ok(!String(ngrokMissing.json.mcpUrl).includes('trycloudflare.com'));
 
     ngrokCalls = 0;

@@ -9,7 +9,7 @@ function stopProcess(proc, graceMs = 1500) {
     const errored = () => { if (!proc.pid && !proc.killed) exited(); };
     proc.once('exit', exited); proc.once('error', errored);
     force = setTimeout(() => { try { proc.kill('SIGKILL'); } catch (_) {} }, graceMs);
-    deadline = setTimeout(() => { cleanup(); reject(new Error('Previous tunnel did not exit; refusing to start a replacement')); }, graceMs * 2);
+    deadline = setTimeout(() => { cleanup(); reject(Object.assign(new Error('隧道进程在限定时间内没有退出，不会再启动新的隧道：在任务管理器（或 ps/kill）结束 cloudflared / ngrok 后再操作。(Previous tunnel did not exit; refusing to start a replacement)'), { code: 'E_TUNNEL_PREVIOUS' })); }, graceMs * 2);
     if (force.unref) force.unref(); if (deadline.unref) deadline.unref();
     try {
       if (process.platform === 'win32' && proc.pid) {

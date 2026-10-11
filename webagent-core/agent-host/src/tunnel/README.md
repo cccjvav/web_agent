@@ -13,6 +13,7 @@
 | `cloudflared.js` | Quick/Named Tunnel的二进制发现、参数校验、启动就绪检测、合并状态与停止协调 |
 | `ngrok.js` | ngrok二进制、Authtoken与域名选项、日志就绪检测；复用Cloudflare模块停止旧提供商 |
 | `stopProcess.js` | 对捕获的旧ChildProcess引用发信号并等待退出；不以killed标志充当退出证明 |
+| `startFailure.js` | 启动失败的稳定码（第130组）：码表、带码的错误、把任意错误归到码 |
 
 ## 执行流程
 1. 校验选项并寻找二进制。Quick不需要用户Token；Named需要合法主机名和Token；ngrok需要参数或环境中的Authtoken，域名可选。
@@ -24,9 +25,11 @@
 ## 停止、超时和失败
 默认就绪等待25秒。共享停止辅助在非Windows先TERM，1.5秒后尝试KILL，3秒未退出则reject；Windows先用taskkill结束树，启动失败时尝试TERM。signal发送失败不能直接标记退出。
 
+第130组起每个启动失败都带稳定码（E_NO_CLOUDFLARED、E_TUNNEL_TIMEOUT、E_TUNNEL_EXITED、ERR_NGROK_334等），`/api/bridge/start`以`tunnelErrorCode`返回，浏览器工作台按码显示固定中文，VS Code侧栏显示主机原文并括上码；码表见[startFailure.js](隧道生命周期详解.md#startfailurejs启动失败的稳定码第130组参考shuncode第18项)。
+
 已有pid的error仍走停止等待；没有成功spawn的error可以清理失败状态。替换必须等旧进程确认退出。停止失败会阻止后续替换，需要人工核对残留进程或重启主机，不能因为URL字段已清空就断言公网连接必然关闭。
 
-Named Token必须传给cloudflared命令行，因此可能对有本机进程查看权限的人可见；日志在逐pipe增量遮盖完整Token后再裁剪，分块前缀暂扣；结束时不输出未完成前缀。ngrok Authtoken放在子进程环境，不放argv。两者都不是秘密存储系统，勿将完整进程信息或凭据粘贴到公开日志。
+Named Token与ngrok Authtoken一样经子进程环境传入（`TUNNEL_TOKEN`，F100起；此前在命令行，有本机进程查看权限的人可见），不放argv；日志在逐pipe增量遮盖完整Token后再裁剪，分块前缀暂扣；结束时不输出未完成前缀。两者都不是秘密存储系统，勿将完整进程信息或凭据粘贴到公开日志。
 
 ## 验证与排查
 `tunnel`、`tunnelLifecycle`和`bridgeTunnel`测试覆盖解析、进程引用/代次、停止失败及API结果；进程事件fixture不等于Windows进程树或真实公网验收。
@@ -57,13 +60,14 @@ R5第六包：Windows安装器增加本机“隧道残留回收（需确认）�
 | 源码 | 定位证据 |
 |---|---|
 | [binaryLookup.js](binaryLookup.js) | 2 个函数/类节点 |
-| [cloudflared.js](cloudflared.js) | 42 个函数/类节点 |
+| [cloudflared.js](cloudflared.js) | 43 个函数/类节点 |
 | [helperDiagnostics.js](helperDiagnostics.js) | 6 个函数/类节点 |
 | [ngrok.js](ngrok.js) | 30 个函数/类节点 |
 | [processIdentity.js](processIdentity.js) | 15 个函数/类节点 |
 | [receiptProtection.js](receiptProtection.js) | 14 个函数/类节点 |
 | [receiptProtection.ps1](receiptProtection.ps1) | 文件级登记；未做符号完整性证明 |
 | [residueNotice.js](residueNotice.js) | 11 个函数/类节点 |
+| [startFailure.js](startFailure.js) | 2 个函数/类节点 |
 | [stopProcess.js](stopProcess.js) | 8 个函数/类节点 |
 | [tunnelCleanup.cs](tunnelCleanup.cs) | 文件级登记；未做符号完整性证明 |
 | [tunnelCleanup.js](tunnelCleanup.js) | 28 个函数/类节点 |
