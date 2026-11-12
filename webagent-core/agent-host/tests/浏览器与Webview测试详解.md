@@ -36,6 +36,8 @@ workbenchRuntime执行真实bind/settings：Test HTTP500即使JSON success:true�
 
 第131组：先deepEqual页面settings.js导出的PROBE_FAILURE_HINTS与后台providers.js的同名常量（两份必须逐字相同）。再给Add五种失败回复，error字段都含`fixture-key reflected`：400+E_BAD_PROVIDER+endpoint、400+E_BAD_PROVIDER+dns→状态以“模型发现失败，未写入：”开头并含页面自己的对应提示；category为`constructor`（不在表里的原型键）、code为E_PROVIDER_PROBE、HTTP 500→仍是原来的“模型发现或输入校验失败”通用句。五种都不得出现fixture-key。
 
+第132组（已保存的外部接入）：在operations段末尾，先让登记分别回saved:true/false，结果框分别说明已保存并会自动重连、没能写入配置。再给列表四行：unavailable+auth、unavailable+不在表里的category（toString）、公网saved、已连上且saved，并带savedRestore.skipped=2。断言状态行提到2个无效或重复；第一行第三个子节点是“重新连接”、第四个是含auth固定提示的说明；未知类别只写“连接失败。”；公网行说明不会自动连接；已连上那行只有三个子节点（没有重新连接按钮）。重连回复挂起时连点两次，第二次返回false且只发出一次请求；放行后请求体为空对象、结果框写已重新连接。局部**reconnectReply**决定重连回复：改成400+auth且error含fixture令牌时，结果框只有固定提示和“仍保留在列表里”，不含令牌。公网行在confirm返回false时不发请求；确认后请求体带confirmedPublic:true及workspaceRoot/hostInstanceId。最后DELETE回forgotten:false时，移除结果追加“没能从工作区配置文件删除，主机重启后它会再出现”。
+
 第130组workbenchRuntime两段：①Bridge启动失败码——同provider、success/running严格false且码可识别（E_NO_CLOUDFLARED、ERR_NGROK_334、未登记的ERR_NGROK_9999）时返回false，结果区含“启动失败（码）”及对应固定文字（安装命令、占用说明、官方说明页链接），不含回包里的tunnelError原文，也不含“未确认”；畸形码、provider不符、running为true仍是“未确认”；TUNNEL_FAILURE_TEXT的键必须与agent-host startFailure.js的TUNNEL_START_CODES一致；成功回包带W_QUICK_TUNNEL_CONFIG时结果追加固定的config.yml提示而不回显message。②外部MCP登记——页面EXTERNAL_FAILURE_HINTS与externalClient的同名表逐字相同；400且category在表内（oauth-required）显示“失败”、固定提示和“主机已确认没有登记”，category为原型键toString或HTTP500仍是“登记未确认”，三种情况都不回显Token。
 
 ## editorRuntime.test.js
@@ -72,7 +74,7 @@ paintTasks带HTML样式文本和null：仅一个li、textContent保留尖括号�
 
 [源码](settingsRelay.test.js)三部分，最后process.exit隔离真实主机。**loadRelayModule()**读取浏览器ES模块vscodeRelay.js，断言恰好导出createRelayTransport与createHostServices（第3批加入后者）后去掉export、在本realm以脚本求值；**loadRelayTransport()**取其中的转发函数工厂（CI含Node 18/20，无法直接import无package.json目录下的ESM），使Response/DOMException为真实全局。**tick()**等一次setImmediate。
 
-**partA()**只测extension/apiRelay.js：假send记录参数，**behaviour**可切换为成功、网络失败、非法状态码、409或挂起；**post**收集回复，**ask(message)**发一条并等两轮。覆盖：放行路径与原样正文（含ID路由、唯一查询路由、PUT/DELETE、/health，以及第4批按D4迁入的外部MCP登记四个接口：POST servers、DELETE servers/<UUID>、POST stdio/preview与stdio/start）；默认拒绝23条（chat、tool/call、files、pty、tasks、external/request、consensus、probe、logs、错方法——含GET servers、PUT stdio/start、不带ID的DELETE servers、不存在的stdio/stop、带斜杠的ID——、尾斜杠、大小写）和15种路径花招（绝对/协议相对URL、点段及编码点、#、反斜杠、换行、多余查询、编码斜杠ID、超长），均断言send未被调用；正文规则；非法编号不回复、非转发消息不消费；失败不编造状态码、409原样转回；并发16满时重复编号与超限各得确切错误；abort只回一次失败；迟到的有效结果照常回复；dispose后不再发任何消息。
+**partA()**只测extension/apiRelay.js：假send记录参数，**behaviour**可切换为成功、网络失败、非法状态码、409或挂起；**post**收集回复，**ask(message)**发一条并等两轮。覆盖：放行路径与原样正文（含ID路由、唯一查询路由、PUT/DELETE、/health，以及第4批按D4迁入的外部MCP登记四个接口：POST servers、DELETE servers/<UUID>、POST stdio/preview与stdio/start，第132组加POST servers/<UUID>/reconnect）；默认拒绝25条（第132组加GET reconnect与reconnect后多一段路径；chat、tool/call、files、pty、tasks、external/request、consensus、probe、logs、错方法——含GET servers、PUT stdio/start、不带ID的DELETE servers、不存在的stdio/stop、带斜杠的ID——、尾斜杠、大小写）和15种路径花招（绝对/协议相对URL、点段及编码点、#、反斜杠、换行、多余查询、编码斜杠ID、超长），均断言send未被调用；正文规则；非法编号不回复、非转发消息不消费；失败不编造状态码、409原样转回；并发16满时重复编号与超限各得确切错误；abort只回一次失败；迟到的有效结果照常回复；dispose后不再发任何消息。
 
 **partB()**只测vscodeRelay.js：**postMessage**与**onMessage**替身，**answer(index,reply)**按编号回复。只外传method/path/body；409解析为ok=false的Response并可读JSON与content-type；204无正文；拒绝为TypeError；取消得AbortError、发出abort消息、迟到回复被丢弃；已取消信号不发送；缺少ok的回复被拒绝；postMessage抛错被拒绝。
 

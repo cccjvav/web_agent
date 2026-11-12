@@ -1660,6 +1660,60 @@ process.on('exit', code => {
   finishLateRemoval(opsResponse({removed:true}));assert.equal(await slowRemoval,true);
   assert.match(opsNodes.get('#ops-servers-result').textContent,/登记记录已移除/,'a later registration does not silence the pending removal result');
   assert.equal(addExternal.disabled,false);
+  // F132: saved registrations. The page says whether a registration was saved, explains unavailable/saved rows only
+  // by status and whitelisted category, reconnects through its own route, and reports a removal that was not forgotten.
+  for (const [saved,pattern] of [[true,/已保存到当前工作区配置[\s\S]*自动重新连接/],[false,/没能写入工作区配置文件/]]) {
+    context.fetch=async(url,options={})=>{
+      if(options.method==='POST') return opsResponse({...externalServer,saved});
+      if(url==='/api/checkpoints') return opsResponse([]);
+      return opsResponse({servers:[],requests:[]});
+    };
+    opsNodes.get('#ops-url').value='http://127.0.0.1:9000/mcp';
+    assert.equal(await addExternal.onclick(),true);assert.match(opsNodes.get('#ops-external-result').textContent,pattern);
+  }
+  const unavailableServer={...externalServer,serverId:'saved-down',status:'unavailable',saved:true,category:'auth',hasToken:true};
+  const spoofedServer={...unavailableServer,serverId:'saved-spoof',category:'toString'};
+  const publicSaved={...externalServer,serverId:'saved-public',status:'saved',saved:true,publicHttps:true,endpoint:'https://mcp.example.test/mcp'};
+  const reconnectBodies=[];let reconnectReply=()=>opsResponse({...unavailableServer,status:'discovered',category:undefined});
+  context.fetch=async(url,options={})=>{
+    if(options.method==='POST'&&/\/reconnect$/.test(url)) {reconnectBodies.push([url,JSON.parse(options.body)]);return reconnectReply();}
+    if(options.method==='DELETE') return opsResponse({removed:true,forgotten:false});
+    if(url==='/api/checkpoints') return opsResponse([]);
+    if(url==='/api/operations') return opsResponse({servers:[unavailableServer,spoofedServer,publicSaved,{...externalServer,saved:true}],requests:[],savedRestore:{restored:3,skipped:2}});
+    throw new Error(url);
+  };
+  await state.namespace.ui.refreshOperations();
+  const savedRows=opsNodes.get('#ops-servers').children;
+  assert.match(opsNodes.get('#ops-status').textContent,/2 个已保存接入无效或重复/);
+  assert.equal(savedRows[0].children[2].textContent,'重新连接');
+  assert.ok(savedRows[0].children[3].textContent.includes(operations.namespace.EXTERNAL_FAILURE_HINTS.auth),savedRows[0].children[3].textContent);
+  assert.ok(savedRows[1].children[3].textContent.includes('连接失败。')&&!savedRows[1].children[3].textContent.includes('function'),'an unknown category gets the generic line');
+  assert.match(savedRows[2].children[3].textContent,/不会自动连接/);
+  assert.equal(savedRows[3].children.length,3,'a connected server has no reconnect button');
+  assert.match(savedRows[3].children[2].textContent,/自动重新连接/);
+  let finishReconnect;const okReply=reconnectReply;reconnectReply=()=>new Promise(resolve=>{finishReconnect=resolve;});
+  const firstReconnect=savedRows[0].children[2].onclick();
+  assert.equal(await savedRows[0].children[2].onclick(),false,'a double click sends one reconnect');
+  assert.equal(reconnectBodies.length,1);
+  finishReconnect(okReply());assert.equal(await firstReconnect,true);reconnectReply=okReply;
+  assert.deepStrictEqual(reconnectBodies.at(-1),['/api/external/servers/saved-down/reconnect',{}]);
+  assert.match(opsNodes.get('#ops-servers-result').textContent,/已重新连接/);
+  reconnectReply=()=>({ok:false,status:400,json:async()=>({ok:false,error:'private-fixture-token',category:'auth'})});
+  await state.namespace.ui.refreshOperations();
+  assert.equal(await opsNodes.get('#ops-servers').children[0].children[2].onclick(),false);
+  const reconnectFailure=opsNodes.get('#ops-servers-result').textContent;
+  assert.ok(reconnectFailure.includes(operations.namespace.EXTERNAL_FAILURE_HINTS.auth)&&reconnectFailure.includes('仍保留在列表里')&&!reconnectFailure.includes('private-fixture-token'),reconnectFailure);
+  const postsBeforePublic=reconnectBodies.length;context.confirm=()=>false;
+  await state.namespace.ui.refreshOperations();
+  assert.equal(await opsNodes.get('#ops-servers').children[2].children[2].onclick(),false);assert.equal(reconnectBodies.length,postsBeforePublic,'public reconnect needs confirmation');
+  context.confirm=()=>true;reconnectReply=()=>opsResponse({...publicSaved,status:'discovered'});
+  await state.namespace.ui.refreshOperations();
+  assert.equal(await opsNodes.get('#ops-servers').children[2].children[2].onclick(),true);
+  const publicBody=reconnectBodies.at(-1)[1];
+  assert.ok(publicBody.confirmedPublic===true&&typeof publicBody.workspaceRoot==='string'&&typeof publicBody.hostInstanceId==='string',JSON.stringify(publicBody));
+  await state.namespace.ui.refreshOperations();
+  assert.equal(await opsNodes.get('#ops-servers').children[3].children[1].onclick(),true);
+  assert.match(opsNodes.get('#ops-servers-result').textContent,/没能从工作区配置文件删除，主机重启后它会再出现/);
   const stdioConfig=context.document.querySelector('#ops-stdio-config');
   stdioConfig.value=JSON.stringify({program:'/fixture/node',args:['server.js'],env:{FIXTURE_SECRET:'SECRET STDIO VALUE'}});
   const launchPreview={previewId:'stdio-preview',transport:'stdio',expiresAt:Date.now()+120000,requiresConfirmation:true,

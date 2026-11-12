@@ -309,11 +309,11 @@
         <div class="page hidden" id="page-operations">
           <h2>工具接入与审批</h2>
           <p class="lead">仅本机操作者登记及批准。支持已启动的回环 HTTP(S)，或经本机预览/确认后启动的 stdio MCP；或显式确认的公网HTTPS MCP；不自动安装程序。公网需DNS/实际连接地址检查、不跟随跳转，登记会发送初始化及可选凭据，后续参数须逐次审批。发现工具不等于授权，每次调用分别审批。</p>
-          <p>配置、令牌、审批参数/结果只在本次进程内存保留；请求最多保留15分钟且可能更早淘汰。重启需重新登记/配对；丢失记录绝不是允许重放。外部结果仅为外部自报，不是独立验收。</p>
+          <p>登记成功的HTTP接入（含Token）保存在当前工作区的 <code>.webagent\config.json</code>（与模型Key、隧道Token同一文件，已被Git忽略），列表和状态里不显示Token；主机重启后回环接入自动重新连接，公网HTTPS接入须点“重新连接”并确认。stdio接入不保存，重启后要重新预览、确认启动。审批参数/结果只在本次进程内存保留；请求最多保留15分钟且可能更早淘汰，丢失记录绝不是允许重放。外部结果仅为外部自报，不是独立验收。</p>
           <label for="ops-name">接入名称</label><input id="ops-name" class="ms-input" value="Local MCP" />
           <label><input type="checkbox" id="ops-public-https">明确启用公网HTTPS（默认关闭）</label>
           <label for="ops-url">已启动的 MCP 地址</label><input id="ops-url" class="ms-input" placeholder="http://127.0.0.1:9000/mcp" />
-          <label for="ops-token">可选 Bearer Token（不保存）</label><input id="ops-token" class="ms-input" type="password" autocomplete="off" />
+          <label for="ops-token">可选 Bearer Token（登记成功后保存到工作区配置，不在页面显示）</label><input id="ops-token" class="ms-input" type="password" autocomplete="off" />
           <button id="btn-ops-add" type="button" class="vs-btn">登记并初始化 / 发现工具</button>
           <pre id="ops-external-result" class="url-box" aria-live="polite">登记会发送初始化及可选凭据；未知结果先查列表，不重复登记。移除接入的结果显示在下方“已登记的接入”处。</pre>
           <h3>stdio MCP（启动本机程序）</h3>

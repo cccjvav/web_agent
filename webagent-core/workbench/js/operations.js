@@ -21,7 +21,8 @@ async function api(path, method = 'GET', body, signal) {
   const onAbort = () => controller.abort();
   if (signal?.aborted) onAbort(); else signal?.addEventListener('abort', onAbort, {once:true});
   // Approval has a 60s server cancellation budget; transport abort never rolls back effects.
-  const timeout = path.endsWith('/approve') ? 70000 : method === 'POST' && ['/external/servers','/external/stdio/start'].includes(path) ? 40000 : 10000;
+  const reconnectPath = /^\/external\/servers\/[^/]+\/reconnect$/.test(path);
+  const timeout = path.endsWith('/approve') ? 70000 : method === 'POST' && (['/external/servers','/external/stdio/start'].includes(path) || reconnectPath) ? 40000 : 10000;
   const timer = setTimeout(onAbort, timeout);
   try {
     const response = await apiFetch(`/api${path}`, {method,signal:controller.signal,headers:{'Content-Type':'application/json'},...(body ? {body:JSON.stringify(body)} : {})});
@@ -29,8 +30,8 @@ async function api(path, method = 'GET', body, signal) {
     if (controller.signal.aborted) throw new Error('请求中断，结果未确认；请查询原请求，不要重放。');
     if (!response.ok || result?.ok === false || result?.success === false) {
       const error = new Error(result?.error || '请求失败');
-      // Only the registration route's 400 with a known category is a host-confirmed "not registered".
-      if (response.status === 400 && path === '/external/servers' && method === 'POST'
+      // Only the registration (or F132 reconnect) route's 400 with a known category is a host-confirmed failure.
+      if (response.status === 400 && (path === '/external/servers' || reconnectPath) && method === 'POST'
         && typeof result?.category === 'string' && Object.hasOwn(EXTERNAL_FAILURE_HINTS, result.category)) error.externalCategory = result.category;
       throw error;
     }
@@ -228,12 +229,26 @@ async function refreshOperationList() {
         if (externalPending.has('remove:' + server.serverId)) { ui.toast('此接入正在移除，请等待并核对原请求。'); return false; }
         removalUsed = true; removeButton.disabled = true;
         return removeExternalServer(server.serverId);
-      }, false); row.append(text, removeButton); return row;
+      }, false); row.append(text, removeButton);
+      // F132 (after the remove button, so its position is unchanged): fixed text by status/category only.
+      if (server.transport === 'http' && ['unavailable','saved'].includes(server.status)) {
+        let reconnectUsed = false;
+        const reconnectButton = button('重新连接', () => {
+          if (generation !== operationsListGeneration || reconnectUsed) return false;
+          reconnectUsed = true; reconnectButton.disabled = true;
+          return reconnectExternalServer(server.serverId, server.publicHttps === true);
+        }, false); row.append(reconnectButton);
+      }
+      const note = savedServerNote(server);
+      if (note) { const hint = document.createElement('p'); hint.className = 'hint'; hint.textContent = note; row.append(hint); }
+      return row;
     });
     // F114: the operator judges by who submitted; the host only sends submitter on these local routes.
     const buttons = data.requests.map(job => button(`${submitterLabel(job)} · ${job.kind} · ${job.status} · ${job.requestId}`, () => generation === operationsListGeneration ? review(job.requestId) : false));
     servers.replaceChildren(...rows); requests.replaceChildren(...buttons);
-    $('#ops-status').textContent = `${data.servers.length} 个接入；${data.requests.length} 条进程内请求。waiting-approval 不代表执行成功。`;
+    const skipped = Number.isInteger(data.savedRestore?.skipped) && data.savedRestore.skipped > 0 ? data.savedRestore.skipped : 0;
+    $('#ops-status').textContent = `${data.servers.length} 个接入；${data.requests.length} 条进程内请求。waiting-approval 不代表执行成功。`
+      + (data.savedRestore?.unreadable === true ? ' 配置文件读不出来，已保存的接入没有恢复。' : skipped ? ` 配置里有 ${skipped} 个已保存接入无效或重复，未恢复（文件原样保留）。` : '');
     return true;
   } catch (error) {
     if (generation !== operationsListGeneration) return false;
@@ -297,7 +312,9 @@ async function externalMutation(label, callback, key = 'register', selector = '#
   } catch (error) {
     if (!current()) return false;
     if (dispatched && error?.externalCategory) {
-      target.textContent = `${label}失败：${EXTERNAL_FAILURE_HINTS[error.externalCategory]}主机已确认没有登记这个接入，修正后可重新登记。`;
+      target.textContent = key.startsWith('reconnect:')
+        ? `${label}失败：${EXTERNAL_FAILURE_HINTS[error.externalCategory]}接入仍保留在列表里（未连接），修正后可再点“重新连接”。`
+        : `${label}失败：${EXTERNAL_FAILURE_HINTS[error.externalCategory]}主机已确认没有登记这个接入，修正后可重新登记。`;
       return false;
     }
     // Never echo transport/parser errors: an untrusted service may reflect the Bearer value.
@@ -306,6 +323,25 @@ async function externalMutation(label, callback, key = 'register', selector = '#
       : `${label}未发送；请核对地址、令牌格式及当前工作区绑定。`;
     return false;
   } finally {externalPending.delete(key);$('#btn-ops-add').disabled = externalPending.has('register');}
+}
+function savedServerNote(server) {
+  if (server.transport !== 'http') return '';
+  if (server.status === 'saved') return '已保存的公网HTTPS接入：主机启动时不会自动连接，点“重新连接”并确认后才连接并发送Token。';
+  if (server.status === 'unavailable') {
+    const hint = typeof server.category === 'string' && Object.hasOwn(EXTERNAL_FAILURE_HINTS, server.category) ? EXTERNAL_FAILURE_HINTS[server.category] : '连接失败。';
+    return `已保存的接入没有连上：${hint}确认服务已启动后点“重新连接”；不再需要就移除。`;
+  }
+  return server.saved === true ? '已保存（含Token），主机重启后自动重新连接。' : '';
+}
+function reconnectExternalServer(id, publicHttps) {
+  return externalMutation(`接入 ${id} 重新连接`, async send => {
+    const binding = checkpointBinding();
+    if (publicHttps && !(await confirmAction('将连接这个已保存的公网HTTPS主机并发送初始化信息和保存的Bearer凭据。后续批准的工具参数也会离开本机。确认信任该服务？'))) return false;
+    if (publicHttps && !sameCheckpointBinding(binding)) throw new Error('Binding changed');
+    const record = await send(`/external/servers/${encodeURIComponent(id)}/reconnect`,'POST', publicHttps ? {confirmedPublic:true,...binding} : {});
+    if (!record || record.serverId !== id || record.status !== 'discovered' || !validExternalTools(record.tools)) throw new Error('Unconfirmed reconnect');
+    return `接入 ${id} 已重新连接，发现 ${record.tools.length} 个工具。每次调用仍须独立审批。`;
+  }, 'reconnect:' + id, '#ops-servers-result');
 }
 function addExternalServer() {
   return externalMutation('HTTP接入登记', async send => {
@@ -319,16 +355,20 @@ function addExternalServer() {
     if ($('#ops-token').value === input.token) $('#ops-token').value = '';
     const record = await send('/external/servers','POST',{...input,confirmedPublic:input.publicHttps});
     if ((input.publicHttps && !sameCheckpointBinding(binding)) || !validExternalRegistration(record,endpoint,input.publicHttps)) throw new Error('Unconfirmed registration');
-    return `接入 ${record.serverId} 已确认登记，发现 ${record.tools.length} 个工具。仅说明本次发现完成，每次调用仍须独立审批；不代表工具效果已验证。`;
+    const persisted = record.saved === true ? '已保存到当前工作区配置（含Token，状态里不显示），主机重启后' + (input.publicHttps ? '列出但须确认后才重新连接。' : '自动重新连接。')
+      : record.saved === false ? '没能写入工作区配置文件，主机重启后不会恢复。' : '';
+    return `接入 ${record.serverId} 已确认登记，发现 ${record.tools.length} 个工具。仅说明本次发现完成，每次调用仍须独立审批；不代表工具效果已验证。${persisted}`;
   });
 }
 function removeExternalServer(id) {
   return externalMutation(`接入 ${id} 移除`, async send => {
     const result = await send(`/external/servers/${encodeURIComponent(id)}`,'DELETE');
     if (result?.removed !== true || (result.stopping !== undefined && result.stopping !== true)) throw new Error('Unconfirmed removal');
-    return result.stopping === true
+    // F132: a saved registration is also deleted from the workspace config; say so when that write failed.
+    const forgotten = result.forgotten === false ? '\n注意：没能从工作区配置文件删除，主机重启后它会再出现；请检查 .webagent\\config.json 是否可写后再移除一次。' : '';
+    return (result.stopping === true
       ? `接入 ${id} 的登记记录已移除，已请求停止stdio进程；尚未确认进程退出，不代表副作用已撤回。`
-      : `接入 ${id} 的登记记录已移除，已请求中止宿主连接；不代表外部服务已停止或副作用已撤回。`;
+      : `接入 ${id} 的登记记录已移除，已请求中止宿主连接；不代表外部服务已停止或副作用已撤回。`) + forgotten;
   }, 'remove:' + id, '#ops-servers-result');
 }
 let checkpointCreating = false;

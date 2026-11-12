@@ -95,7 +95,7 @@ R2/R3会话提交时序：HTTP/SSE响应SID先校验但不立即保存，RPC响�
 | [budget.js](budget.js) | 6 个函数/类节点 |
 | [clients.js](clients.js) | 5 个函数/类节点 |
 | [errors.js](errors.js) | 6 个函数/类节点 |
-| [externalClient.js](externalClient.js) | 27 个函数/类节点 |
+| [externalClient.js](externalClient.js) | 40 个函数/类节点 |
 | [instructions.js](instructions.js) | 3 个函数/类节点 |
 | [oauth.js](oauth.js) | 54 个函数/类节点 |
 | [publicHttps.js](publicHttps.js) | 17 个函数/类节点 |
@@ -111,6 +111,6 @@ R2/R3会话提交时序：HTTP/SSE响应SID先校验但不立即保存，RPC响�
 <!-- docs-inventory:end -->
 
 
-受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。默认回环HTTP(S)，另支持本机显式确认的公网HTTPS及stdio启动；工具仍逐次本机批准，不自动安装或重试。
+受控外部MCP与固定工作流新增模块、审批页面和真实HTTP回归的逐函数解释见 `webagent-core/agent-host/src/utils/受控工具与工作流详解.md`。默认回环HTTP(S)，另支持本机显式确认的公网HTTPS及stdio启动；工具仍逐次本机批准，不自动安装或重试。第132组起HTTP登记（含令牌）保存在工作区`.webagent/config.json`，主机启动时回环项自动重连、公网HTTPS项须确认后重连；stdio不保存。
 
 [公网出站详解](公网出站详解.md)：逐函数解释publicHttps、明确外发确认、DNS/socket/TLS边界与隔离TLS测试。

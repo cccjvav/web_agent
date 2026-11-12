@@ -4,6 +4,15 @@ const http = require('http');
 const external = require('../src/mcp/externalClient');
 const queue = require('../src/utils/operatorQueue');
 const { runWithSignal } = require('../src/utils/requestScope');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { config } = require('../src/config');
+// F132: successful registrations are saved in <workspace>/.webagent/config.json; keep that in a temp workspace.
+const workspaceBefore = config.workspaceRoot;
+const tmpWorkspace = fs.mkdtempSync(path.join(os.tmpdir(), 'external-discovery-'));
+config.workspaceRoot = tmpWorkspace;
+process.on('exit', () => { config.workspaceRoot = workspaceBefore; fs.rmSync(tmpWorkspace, { recursive: true, force: true }); });
 function fragmentedResponse(text) {
   const bytes = new TextEncoder().encode(text); let offset = 0;
   return new Response(new ReadableStream({ pull(controller) {

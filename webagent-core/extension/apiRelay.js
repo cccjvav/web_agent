@@ -31,7 +31,7 @@ const RULES = [
   ['GET', '/api/checkpoints'], ['POST', '/api/checkpoints'],
   ['POST', `/api/checkpoints/${ID}/preview`], ['POST', `/api/checkpoints/${ID}/restore`], ['POST', `/api/checkpoints/${ID}/remove`],
   ['POST', '/api/connection-checks'], ['GET', `/api/connection-checks/${ID}`], ['DELETE', '/api/connection-checks'],
-  ['POST', '/api/external/servers'], ['DELETE', `/api/external/servers/${ID}`],
+  ['POST', '/api/external/servers'], ['DELETE', `/api/external/servers/${ID}`], ['POST', `/api/external/servers/${ID}/reconnect`],
   ['POST', '/api/external/stdio/preview'], ['POST', '/api/external/stdio/start']
 ].map(([method, pattern, options = {}]) => ({ method, pattern: new RegExp(`^${pattern}$`), query: Boolean(options.query) }));
 

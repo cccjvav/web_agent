@@ -239,6 +239,12 @@ listenOrExit(mcpServer, config.port, 'MCP');
 mcpServer.on('listening', () => {
   console.log(`agent-host MCP listening on ${config.host}:${config.port}`);
 });
+// F132: saved external MCP registrations. Loopback ones reconnect now (discovery only; every tool call still
+// needs approval); public HTTPS ones wait for a confirmed reconnect. A failure leaves them listed as unavailable.
+require('./mcp/externalClient').restoreSaved().then(({ restored, skipped, unreadable }) => {
+  if (unreadable) console.warn('  外部MCP  配置文件读不出来，已保存的接入没有恢复。');
+  else if (restored || skipped) console.log(`  外部MCP  恢复已保存的接入 ${restored} 个${skipped ? `，${skipped} 个无效或重复，未恢复（配置文件原样保留）` : ''}`);
+}).catch(() => {});
 // R5 (F123): one read-only look for tunnels an earlier, killed host left running. Never cleans up.
 const residueNotice = require('./tunnel/residueNotice');
 residueNotice.check().then(found => {

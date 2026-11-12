@@ -43,6 +43,8 @@ async function partA() {
     ['PUT', '/api/customizations', '{}'], ['DELETE', '/api/connection-checks'], ['GET', '/health'], ['POST', '/api/checkpoints/x1/restore', '{}'],
     // D4 (2026-09-26): external MCP registration moved into the settings tab.
     ['POST', '/api/external/servers', '{"name":"x"}'], ['DELETE', '/api/external/servers/0b2e0c1a-1111-4222-8333-444455556666'],
+    // F132: reconnecting a saved registration.
+    ['POST', '/api/external/servers/0b2e0c1a-1111-4222-8333-444455556666/reconnect', '{}'],
     ['POST', '/api/external/stdio/preview', '{}'], ['POST', '/api/external/stdio/start', '{"confirmed":true}']]) {
     const before = sent.length;
     [reply] = await ask({ id: 'ok' + before, method, path: p, body });
@@ -56,7 +58,7 @@ async function partA() {
   const denied = [['POST', '/api/tool/call'], ['POST', '/api/chat'], ['GET', '/api/files/tree'], ['PUT', '/api/files/content'],
     ['POST', '/api/files/undo/x'], ['GET', '/api/pty/jobs'], ['POST', '/api/pty/hello'], ['POST', '/api/tasks/reset'],
     ['POST', '/api/external/request'], ['POST', '/api/consensus/run'], ['GET', '/api/external/servers'], ['PUT', '/api/external/stdio/start'],
-    ['DELETE', '/api/external/servers'], ['DELETE', '/api/external/servers/a/b'], ['POST', '/api/external/stdio/stop'],
+    ['DELETE', '/api/external/servers'], ['DELETE', '/api/external/servers/a/b'], ['GET', '/api/external/servers/0b2e0c1a-1111-4222-8333-444455556666/reconnect'], ['POST', '/api/external/servers/0b2e0c1a-1111-4222-8333-444455556666/reconnect/x'], ['POST', '/api/external/stdio/stop'],
     ['POST', '/api/probe/links'], ['GET', '/api/logs'], ['POST', '/api/status'], ['DELETE', '/api/models'], ['PATCH', '/api/models'], ['GET', '/mcp'],
     ['GET', '/api/status/'], ['GET', '/API/status']];
   // Path tricks: absolute or protocol-relative URLs, dot segments (plain or encoded), fragments, backslashes,

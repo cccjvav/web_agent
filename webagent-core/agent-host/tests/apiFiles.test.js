@@ -141,6 +141,7 @@ async function main() {
     const originalExternalPreview = externalClient.previewStdio;
     const originalExternalStart = externalClient.startStdio;
     const originalExternalRemove = externalClient.remove;
+    const originalExternalReconnect = externalClient.reconnect;
     const originalExternalRequest = externalClient.request;
     const workflowService = require('../src/tools/workflows');
     const originalWorkflowPreview = workflowService.previewRequest;
@@ -203,6 +204,24 @@ async function main() {
       assert.equal(externalRemovals, 0);
       assert.equal((await request(server, 'DELETE', `/api/external/servers/${externalId}`, {})).status, 200);
       assert.equal(externalRemovals, 1);
+      // F132: reconnect a saved registration. Wrappers fail before any connection; failures keep only a known category.
+      let reconnects = 0, reconnectArgs;
+      externalClient.reconnect = async (id, body) => { reconnects++; reconnectArgs = [id, body]; return { serverId: id, status: 'discovered', tools: [] }; };
+      for (const [urlPath, body] of [[`/api/external/servers/${externalId}/reconnect?x=1`, {}], [`/api/external/servers/${externalId}/reconnect`, { token: 'x' }],
+        ['/api/external/servers/not-a-uuid/reconnect', {}], [`/api/external/servers/${externalId}/reconnect`, { confirmedPublic: 'yes' }],
+        [`/api/external/servers/${externalId}/reconnect`, { confirmedPublic: true, workspaceRoot: tmp }]]) {
+        assert.equal((await request(server, 'POST', urlPath, body)).status, 400, urlPath + JSON.stringify(body));
+      }
+      assert.equal(reconnects, 0);
+      const reconnected = await request(server, 'POST', `/api/external/servers/${externalId}/reconnect`, { confirmedPublic: true, workspaceRoot: tmp, hostInstanceId: config.hostInstanceId });
+      assert.deepEqual([reconnected.status, reconnects, reconnectArgs[0], reconnectArgs[1].confirmedPublic], [200, 1, externalId, true]);
+      for (const [category, expected] of [['auth', 'auth'], ['made-up', undefined]]) {
+        externalClient.reconnect = async () => { throw Object.assign(new Error('External MCP HTTP 401: fixture'), { category }); };
+        const failed = await request(server, 'POST', `/api/external/servers/${externalId}/reconnect`, {});
+        assert.deepEqual([failed.status, failed.json.category], [400, expected]);
+      }
+      const operations = await request(server, 'GET', '/api/operations');
+      assert.ok(operations.json.savedRestore && Number.isInteger(operations.json.savedRestore.restored), JSON.stringify(operations.json.savedRestore));
 
       const externalCall = { serverId: externalId, tool: 'fixture', arguments: {}, requestKey: 'external-route-001' };
       for (const [urlPath, body] of [
@@ -245,7 +264,7 @@ async function main() {
       externalClient.add = originalExternalAdd;
       externalClient.previewStdio = originalExternalPreview;
       externalClient.startStdio = originalExternalStart;
-      externalClient.remove = originalExternalRemove;
+      externalClient.remove = originalExternalRemove; externalClient.reconnect = originalExternalReconnect;
       externalClient.request = originalExternalRequest;
       workflowService.previewRequest = originalWorkflowPreview;
       workflowService.request = originalWorkflowRequest;

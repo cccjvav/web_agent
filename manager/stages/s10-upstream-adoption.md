@@ -569,6 +569,24 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 
 **CI返工（`d638cfe`）：** 四个agent-host任务都停在“生产依赖高危审计”：推送当天新公布的body-parser 2.0.0–2.3.0高危通告（GHSA-27r3-jxmh-p828，压缩请求体后附带多余字节可致拒绝服务），与本组改动无关。`npm audit fix`只改lockfile：body-parser 2.3.0→2.4.0、qs 6.16.0→6.17.1（中危通告GHSA-6pq8-jhm2-2vcw）、开发依赖eslint 10.11.0→10.14.0；生产依赖审计归零。剩余4个中危都在eslint的minimatch链上，只影响开发环境，修复要降到eslint 9，不做。
 
+### 第132组：外部MCP登记持久化（2026-10-19，会话01a0d084）
+
+收尾计划路线D（用户2026-10-19同意，Token也保存：“保存吧”）。
+
+1. **保存与恢复（`mcp/externalClient.js`）。** HTTP登记成功后连同Bearer令牌写进工作区`.webagent/config.json`顶层`externalServers`（每项id/name/url/token/publicHttps），与模型Key、隧道Token同一文件（Git忽略、0600、损坏时不覆盖）；列表和状态从不返回令牌，本机列表只多一个`hasToken`布尔，远程`external_servers`工具只多`saved`和可选`category`。stdio不保存，重启后仍需重新预览、确认启动。主机启动时`restoreSaved()`：回环项自动重连（只做握手和工具发现，调用照旧逐次审批）；公网HTTPS项只列为`saved`，必须本机点“重新连接”、再次确认外发并绑定当前工作区/hostInstanceId才连接；连不上的列为`unavailable`并带固定类别，不能被调用。无效、重复或超过8个上限的保存项只跳过计数，不改写文件。同一地址不能重复登记（提示先移除或重新连接）。`remove`同时删保存项并回`forgotten`；`closeAll`（退出）只断开不删除。
+2. **路由与转发。** 新POST `/api/external/servers/:id/reconnect`（UUID、body只收confirmedPublic与成对绑定，失败只带白名单category）；GET `/api/operations`多回`savedRestore`。VS Code设置页签的转发白名单（`extension/apiRelay.js`及已安装副本）加这条路由。`index.js`启动时调用恢复并在控制台用中文报告恢复/跳过数。
+3. **页面（`workbench/js/operations.js`、`index.html`）。** 登记成功说明是否已保存；unavailable/saved行显示固定中文说明（类别提示取自EXTERNAL_FAILURE_HINTS，不显示服务端文字）和“重新连接”按钮（公网项先确认）；重连失败写“仍保留在列表里”；移除时配置没删掉会提示重启后会再出现；状态行报告无效或读不出的保存项。页面上“令牌不保存、重启需重新登记”的旧说明已改。主机诊断的外部MCP说明同步。
+4. **测试。** 新`externalSaved.test.js`（八节，见[受控工具与工作流详解](../../webagent-core/agent-host/src/utils/受控工具与工作流详解.md#externalsavedtestjs)）；apiFiles加重连路由包装与白名单；settingsRelay加放行1条、拒绝2条；workbenchRuntime加已保存接入的显示、重连、公网确认与forgotten:false；externalDiscovery改用临时工作区（否则登记成功会在仓库根写出含令牌的配置）。
+5. **文档。** 受控工具与工作流详解（externalClient新函数逐个说明、operations.js新函数、新测试一节）、公网出站详解、mcp/README、路由逐项详解、使用指南、SECURITY.md、扩展入口与Webview详解（两份）、两份测试说明。
+
+**自我复审（交付前）：**
+- 读完整diff与调用方：`store.load`保留未知顶层键；`store.save`的两个调用方（modelSettings、providers）都是读出全量再改，会带着externalServers写回；`/status`、`/models`、`/bridge/start`只取各自字段，没有接口原样返回配置。`external_servers`、主机诊断（只看discovered）、工作台列表校验（不限制server.status）都兼容新状态；VS Code设置页签复用同一operations.js，经relay转发。
+- 发现并修正：①`closeAll`原来逐个调`remove`，持久化后会在每次退出时删掉保存项，已改为只断开；②externalDiscovery原来登记成功后会在仓库根写出`.webagent/config.json`（含夹具令牌），改用临时工作区；③重新连接失败沿用登记失败的文字会说“主机已确认没有登记”，与事实相反（接入仍在列表里），已分开；④测试里多个无效项与有效项同一地址，被“重复”规则先跳过，令牌含换行的校验其实没被测到（变异存活），已给每个无效项单独地址。
+- 逆向验证：30处变异（保存/列表/恢复/上限/去重/地址复检/令牌校验/公网确认与绑定/重连状态/keep/类别白名单/forgotten/closeAll/损坏配置、路由两处、页面八处），补测试后29处被杀死。首轮存活的令牌校验见发现④。仍存活1处：页面“重新连接”按钮自己的reconnectUsed——externalMutation的reconnect:ID键已挡住连点，属防御性重复，与移除按钮的removalUsed相同。
+- 未在沙箱验证：真实Windows主机重启后的恢复、页面与VS Code设置页签的实际显示、公网HTTPS服务的实际重连确认流程（只有DOM夹具与回环夹具）。
+
+**验证：** 全量测试与lint通过，`check-docs --write`后重建docs-site，改过的文档逐份复读后刷新审查索引指纹。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。

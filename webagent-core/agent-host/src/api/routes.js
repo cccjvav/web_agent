@@ -309,7 +309,7 @@ router.post('/checkpoints/:id/remove', (req, res) => {
 });
 router.get('/operations', (req, res) => {
   if (!apiRequestQuery(req, res, [])) return;
-  res.json({ requests: operatorQueue.list(true), servers: externalClient.list(true) });
+  res.json({ requests: operatorQueue.list(true), servers: externalClient.list(true), savedRestore: externalClient.lastRestore() });
 });
 router.get('/operations/:id', async (req, res) => {
   if (!apiRequestQuery(req, res, [])) return;
@@ -358,6 +358,20 @@ router.delete('/external/servers/:id', (req, res) => {
   if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(req.params.id)) return rejectApiRequest(res);
   try { res.json(externalClient.remove(req.params.id)); }
   catch (error) { res.status(400).json({ ok: false, error: error.message }); }
+});
+// F132: reconnect a saved HTTP registration that is not connected (failed at start, or a public HTTPS one that
+// waits for confirmation). Same fixed-category failure reply as registration; the token stays in the host.
+router.post('/external/servers/:id/reconnect', async (req, res) => {
+  if (!apiRequestQuery(req, res, [])) return;
+  const body = apiRequestBody(req, res, ['confirmedPublic', 'workspaceRoot', 'hostInstanceId']);
+  if (!body) return;
+  if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(req.params.id)
+    || (Object.hasOwn(body, 'confirmedPublic') && typeof body.confirmedPublic !== 'boolean')
+    || (Object.hasOwn(body, 'workspaceRoot') && !apiString(body.workspaceRoot, 4096, { nonEmpty: true, singleLine: true }))
+    || (Object.hasOwn(body, 'hostInstanceId') && !apiString(body.hostInstanceId, 256, { nonEmpty: true, singleLine: true }))
+    || Object.hasOwn(body, 'workspaceRoot') !== Object.hasOwn(body, 'hostInstanceId')) return rejectApiRequest(res);
+  try { res.json(await clientScopedRequest(req, res, () => externalClient.reconnect(req.params.id, body))); }
+  catch (error) { res.status(400).json({ ok: false, error: error.message, ...(Object.hasOwn(externalClient.EXTERNAL_FAILURE_HINTS, error.category || '') ? { category: error.category } : {}) }); }
 });
 router.post('/external/request', async (req, res) => {
   const body = apiRequestBody(req, res, ['serverId', 'tool', 'arguments', 'requestKey']);

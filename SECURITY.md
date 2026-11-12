@@ -144,7 +144,7 @@ git_status/git_diff以及workspace_info中的Git概览使用字面pathspec，禁
 
 ## 公网MCP出站
 
-公网出站仅本机明确publicHttps/confirmedPublic并绑定工作区与hostInstanceId后登记；Bearer只在Authorization头且只存内存。每次HTTPS POST解析所有DNS结果，拒绝任一私网/特殊地址，固定socket lookup到已检查地址，保留域名Host/TLS验证、禁连接复用和重定向。响应/分页/总时间继续受预算。DNS取消拒绝迟到结果，不保证中止系统DNS本身。
+公网出站仅本机明确publicHttps/confirmedPublic并绑定工作区与hostInstanceId后登记；Bearer只在Authorization头；第132组起登记成功后连同令牌保存在工作区`.webagent/config.json`（与模型Key同一文件，Git忽略、0600、状态与列表不返回），主机重启后公网项不自动连接，须再次确认并绑定后重连。每次HTTPS POST解析所有DNS结果，拒绝任一私网/特殊地址，固定socket lookup到已检查地址，保留域名Host/TLS验证、禁连接复用和重定向。响应/分页/总时间继续受预算。DNS取消拒绝迟到结果，不保证中止系统DNS本身。
 
 IPv6采取保守公网范围；不支持代理环境自动出站、重定向/OAuth刷新/客户端证书或任意头。系统路由/信任CA和操作者选择的公网服务属于信任边界，不阻止对方在其服务端内部代理访问别处。外发初始化、可选凭据以及批准参数都可能敏感；撤销不撤回已外发数据/效果。工具审批/Bridge所有者权限继续生效，不是任意网络访问授权。
 

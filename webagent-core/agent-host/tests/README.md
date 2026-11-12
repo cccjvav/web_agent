@@ -151,7 +151,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 |---|---|
 | [adminHost.test.js](adminHost.test.js) | 17 个函数/类节点 |
 | [adminIntegrity.test.js](adminIntegrity.test.js) | 63 个函数/类节点 |
-| [apiFiles.test.js](apiFiles.test.js) | 75 个函数/类节点 |
+| [apiFiles.test.js](apiFiles.test.js) | 77 个函数/类节点 |
 | [appWindowLifecycle.test.js](appWindowLifecycle.test.js) | 101 个函数/类节点 |
 | [approvedOperations.test.js](approvedOperations.test.js) | 21 个函数/类节点 |
 | [auditControl.test.js](auditControl.test.js) | 40 个函数/类节点 |
@@ -187,7 +187,8 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [executorEnv.test.js](executorEnv.test.js) | 7 个函数/类节点 |
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
 | [extensionHostSafety.test.js](extensionHostSafety.test.js) | 32 个函数/类节点 |
-| [externalDiscovery.test.js](externalDiscovery.test.js) | 26 个函数/类节点 |
+| [externalDiscovery.test.js](externalDiscovery.test.js) | 27 个函数/类节点 |
+| [externalSaved.test.js](externalSaved.test.js) | 17 个函数/类节点 |
 | [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
 | [fileReadSafety.test.js](fileReadSafety.test.js) | 22 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
@@ -261,7 +262,7 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [webviewRuntime.test.js](webviewRuntime.test.js) | 28 个函数/类节点 |
 | [workbench.browser.js](workbench.browser.js) | 373 个函数/类节点 |
 | [workbenchHtml.test.js](workbenchHtml.test.js) | 1 个函数/类节点 |
-| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 542 个函数/类节点 |
+| [workbenchRuntime.test.js](workbenchRuntime.test.js) | 552 个函数/类节点 |
 | [workflowPreconditions.test.js](workflowPreconditions.test.js) | 15 个函数/类节点 |
 | [workspaceEntry.test.js](workspaceEntry.test.js) | 24 个函数/类节点 |
 | [workspaceTools.test.js](workspaceTools.test.js) | 21 个函数/类节点 |

@@ -1,6 +1,9 @@
 'use strict';
-// Operator-configured, memory-only loopback HTTP, explicitly confirmed public HTTPS or stdio.
+// Operator-configured loopback HTTP, explicitly confirmed public HTTPS or stdio.
 // No package installation, arbitrary remote launch configuration, or auto-retry.
+// F132: a successful HTTP registration (including its Bearer token) is saved in the workspace
+// .webagent/config.json, which already holds model keys and tunnel tokens (Git-ignored, mode 0600);
+// no status or list ever returns the token. stdio launches are never saved or restarted automatically.
 const { randomUUID } = require('crypto');
 const { config } = require('../config');
 const { currentSignal, checkCancelled, runWithSignal } = require('../utils/requestScope');
@@ -9,8 +12,11 @@ const { networkCategory } = require('../utils/networkErrors');
 const approvals = require('../utils/operatorQueue');
 const stdioLaunch = require('./stdioLaunch');
 const stdioTransport = require('./stdioTransport');
+const store = require('../models/store');
 const clients = new Map();
 const MAX_BYTES = 256 * 1024;
+const MAX_SERVERS = 8;
+const SERVER_ID = /^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
 
 // F130 (ShunCode item 5): the network layer comes from utils/networkErrors.js (by error code, not message text).
 // The hint is fixed product text: it never repeats the server's reply or headers, which may reflect the Bearer value.
@@ -147,7 +153,65 @@ async function rpc(client, method, params, notification = false) {
 }
 function list(local = false) {
   return [...clients.values()].map(client => ({ serverId: client.id, name: client.name, status: client.status, transport: client.transport ? 'stdio' : 'http', publicHttps: Boolean(client.publicHttps),
-    tools: JSON.parse(JSON.stringify(client.tools)), ...(local ? client.transport ? { launch: JSON.parse(JSON.stringify(client.launch)), process: client.transport.status() } : { endpoint: client.url } : {}) }));
+    saved: Boolean(client.saved), ...(client.category ? { category: client.category } : {}),
+    tools: JSON.parse(JSON.stringify(client.tools)), ...(local ? client.transport ? { launch: JSON.parse(JSON.stringify(client.launch)), process: client.transport.status() } : { endpoint: client.url, hasToken: Boolean(client.token) } : {}) }));
+}
+
+// --- F132: saved HTTP registrations ---------------------------------------------------------
+// Entry shape in config.json: { id, name, url, token, publicHttps }. Entries that fail validation are left
+// in the file untouched (never rewritten or deleted behind the user's back) and simply not restored.
+function savedEntries() {
+  const value = store.load().externalServers;
+  return Array.isArray(value) ? value : [];
+}
+function saveEntry(client) {
+  const entries = savedEntries().filter(entry => !entry || entry.id !== client.id);
+  entries.push({ id: client.id, name: client.name, url: client.url, token: client.token, publicHttps: client.publicHttps });
+  store.patch({ externalServers: entries });
+}
+function forgetEntry(id) {
+  const entries = savedEntries();
+  if (!entries.some(entry => entry && entry.id === id)) return true;
+  store.patch({ externalServers: entries.filter(entry => !entry || entry.id !== id) });
+  return true;
+}
+function savedClient(entry) {
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry) || typeof entry.id !== 'string' || !SERVER_ID.test(entry.id)) return null;
+  if (typeof entry.publicHttps !== 'boolean' || typeof entry.name !== 'string' || entry.name.length > 120) return null;
+  if (typeof entry.token !== 'string' || entry.token.length > 4096 || /[\r\n\0]/.test(entry.token)) return null;
+  let url;
+  try { url = endpoint(entry.url, entry.publicHttps); } catch (_) { return null; }
+  // Loopback servers reconnect on start; a public HTTPS one waits for an explicit, confirmed reconnect.
+  return { id: entry.id, name: entry.name || 'Local MCP', url, token: entry.token, publicHttps: entry.publicHttps, saved: true,
+    controllers: new Set(), tools: [], status: entry.publicHttps ? 'saved' : 'connecting', session: '', protocol: '' };
+}
+let lastRestore = { restored: 0, skipped: 0 };
+async function restoreSaved() {
+  let entries;
+  try { entries = savedEntries(); } catch (_) { lastRestore = { restored: 0, skipped: 0, unreadable: true }; return lastRestore; }
+  const loopback = []; let restored = 0, skipped = 0;
+  for (const entry of entries) {
+    const client = savedClient(entry);
+    if (!client || clients.size >= MAX_SERVERS || clients.has(client.id) || duplicateOf(client.url)) { skipped++; continue; }
+    clients.set(client.id, client); restored++;
+    if (!client.publicHttps) loopback.push(client);
+  }
+  lastRestore = { restored, skipped };
+  await Promise.allSettled(loopback.map(client => establish(client, { keep: true })));
+  return lastRestore;
+}
+function duplicateOf(url) {
+  return [...clients.values()].find(client => !client.transport && client.url === url);
+}
+async function reconnect(id, input = {}) {
+  const client = clients.get(id);
+  if (!client || client.transport || !['unavailable', 'saved'].includes(client.status)) throw new Error('Only a saved HTTP server that is not connected can be reconnected');
+  if (client.publicHttps) {
+    if (input.confirmedPublic !== true) throw new Error('Explicit public HTTPS disclosure confirmation required');
+    require('../utils/workspaceBinding').assertWorkspaceBinding(input, config);
+  }
+  client.status = 'connecting'; delete client.category;
+  return establish(client, { keep: true });
 }
 async function discoverTools(client) {
   const tools = [], names = new Set(), cursors = new Set();
@@ -179,21 +243,28 @@ async function add(input) {
     if (confirmedPublic !== true) throw new Error('Explicit public HTTPS disclosure confirmation required');
     require('../utils/workspaceBinding').assertWorkspaceBinding(input, config);
   }
-  if (clients.size >= 8) throw new Error('At most eight external servers');
+  if (clients.size >= MAX_SERVERS) throw new Error('At most eight external servers');
   if (typeof token !== 'string' || token.length > 4096 || /[\r\n]/.test(token)) throw new Error('Invalid bearer token');
   const client = { id: randomUUID(), name: String(name || 'Local MCP').slice(0, 120), url: endpoint(url, publicHttps), token, publicHttps,
     controllers: new Set(), tools: [], status: 'connecting', session: '', protocol: '' };
-  return establish(client);
+  // Saved registrations come back after a restart; registering the same endpoint again would only pile up copies.
+  const existing = duplicateOf(client.url);
+  if (existing) throw new Error(`This endpoint is already registered as ${existing.id}; remove it first (or reconnect it)`);
+  const record = await establish(client);
+  try { saveEntry(client); client.saved = true; }
+  catch (_) { client.saved = false; } // Still usable now; the reply says it will not come back after a restart.
+  return { ...record, saved: client.saved };
 }
 async function startStdio(input) {
-  if (clients.size >= 8) throw new Error('At most eight external servers');
+  if (clients.size >= MAX_SERVERS) throw new Error('At most eight external servers');
   const launch = stdioLaunch.consume(input);
   const client = { id: randomUUID(), name: launch.name, controllers: new Set(), tools: [], status: 'connecting', protocol: '',
     launch: { program: launch.program, args: [...launch.args], cwd: launch.cwd, envKeys: Object.keys(launch.env) } };
   client.transport = stdioTransport.open(launch, () => { client.status = 'stopped'; });
   return establish(client);
 }
-async function establish(client) {
+// keep: a saved registration stays listed after a failed (re)connect, as 'unavailable' with a fixed category.
+async function establish(client, { keep = false } = {}) {
   clients.set(client.id, client);
   const registration = new AbortController(), parent = currentSignal();
   const abort = () => registration.abort();
@@ -212,7 +283,16 @@ async function establish(client) {
       client.status = 'discovered';
       return list(true).find(item => item.serverId === client.id);
     });
-  } catch (error) { remove(client.id); if (client.transport) await client.transport.closed; throw error; }
+  } catch (error) {
+    if (keep) {
+      if (clients.get(client.id) === client) {
+        client.status = 'unavailable'; client.tools = []; client.session = ''; client.protocol = '';
+        if (Object.hasOwn(EXTERNAL_FAILURE_HINTS, error.category || '')) client.category = error.category;
+      }
+      throw error;
+    }
+    remove(client.id); if (client.transport) await client.transport.closed; throw error;
+  }
   finally { clearTimeout(timer); parent?.removeEventListener('abort', abort); client.controllers.delete(registration); }
 }
 function remove(id) {
@@ -220,7 +300,9 @@ function remove(id) {
   if (client) for (const controller of client.controllers) controller.abort();
   if (client?.transport) client.transport.stop('Server removed');
   clients.delete(id);
-  return { removed: Boolean(client), ...(client?.transport ? { stopping: true } : {}) };
+  let forgotten;
+  if (client?.saved) { try { forgotten = forgetEntry(id); } catch (_) { forgotten = false; } }
+  return { removed: Boolean(client), ...(client?.transport ? { stopping: true } : {}), ...(forgotten === undefined ? {} : { forgotten }) };
 }
 function request(input = {}, options = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)
@@ -246,9 +328,15 @@ async function execute(input) {
   return reported;
 }
 approvals.register('external-mcp', execute);
+// Shutdown: disconnect everything but keep saved registrations in config.json (that is the point of saving).
 async function closeAll() {
   stdioLaunch.clear();
-  for (const id of [...clients.keys()]) remove(id);
+  for (const [id, client] of [...clients]) {
+    for (const controller of client.controllers) controller.abort();
+    if (client.transport) client.transport.stop('Server removed');
+    clients.delete(id);
+  }
   await stdioTransport.closeAll();
 }
-module.exports = { EXTERNAL_FAILURE_HINTS, networkCategory, httpCategory, endpoint, responseMessage, add, remove, list, request, startStdio, previewStdio: stdioLaunch.preview, closeAll };
+module.exports = { EXTERNAL_FAILURE_HINTS, networkCategory, httpCategory, endpoint, responseMessage, add, remove, list, request, startStdio, previewStdio: stdioLaunch.preview, closeAll,
+  restoreSaved, reconnect, lastRestore: () => ({ ...lastRestore }) };
