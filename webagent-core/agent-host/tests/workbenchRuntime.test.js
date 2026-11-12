@@ -1183,6 +1183,20 @@ process.on('exit', code => {
   context.fetch=async()=>{throw new Error('network SECRET fixture-key')};
   assert.strictEqual(await providerNodes.get('#btn-save-model').onclick(),false);
   assert.ok(!providerNodes.get('#model-status').textContent.includes('fixture-key'));
+  // F131: the probe route's 400 with a whitelisted word says why, from the page's own text; nothing else does.
+  assert.deepStrictEqual({...settings.namespace.PROBE_FAILURE_HINTS},{...require('../src/agent/providers').PROBE_FAILURE_HINTS},'page and host probe hints are the same text');
+  for (const [reply,word] of [[{ok:false,status:400,json:async()=>({success:false,error:'fixture-key reflected',code:'E_BAD_PROVIDER',category:'endpoint'})},'endpoint'],
+    [{ok:false,status:400,json:async()=>({success:false,error:'fixture-key reflected',code:'E_BAD_PROVIDER',category:'dns'})},'dns'],
+    [{ok:false,status:400,json:async()=>({success:false,error:'fixture-key reflected',code:'E_BAD_PROVIDER',category:'constructor'})},null],
+    [{ok:false,status:400,json:async()=>({success:false,error:'fixture-key reflected',code:'E_PROVIDER_PROBE',category:'dns'})},null],
+    [{ok:false,status:500,json:async()=>({success:false,error:'fixture-key reflected',code:'E_BAD_PROVIDER',category:'dns'})},null]]) {
+    context.fetch=async()=>reply;
+    assert.strictEqual(await providerNodes.get('#btn-test-api').onclick(),false);
+    const text=providerNodes.get('#model-status').textContent;
+    assert.ok(!text.includes('fixture-key'),text);
+    if (word) assert.ok(text.startsWith('模型发现失败，未写入：') && text.includes(settings.namespace.PROBE_FAILURE_HINTS[word]),text);
+    else assert.ok(text.startsWith('模型发现或输入校验失败'),'unknown word, other code or non-400 stays generic: '+text);
+  }
   const providerTimers=new Set(timers.keys());
   context.fetch=(url,options)=>new Promise((resolve,reject)=>options.signal.addEventListener('abort',()=>reject(new Error('timeout'))));
   const providerTimeout=providerNodes.get('#btn-save-model').onclick();

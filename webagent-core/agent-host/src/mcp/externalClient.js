@@ -5,22 +5,15 @@ const { randomUUID } = require('crypto');
 const { config } = require('../config');
 const { currentSignal, checkCancelled, runWithSignal } = require('../utils/requestScope');
 const { isToolFailure } = require('../utils/toolTrace');
+const { networkCategory } = require('../utils/networkErrors');
 const approvals = require('../utils/operatorQueue');
 const stdioLaunch = require('./stdioLaunch');
 const stdioTransport = require('./stdioTransport');
 const clients = new Map();
 const MAX_BYTES = 256 * 1024;
 
-// F130 (ShunCode item 5): name the failure layer by error code, not by message text (messages change with
-// Node/undici versions, codes do not). The hint is fixed product text: it never repeats the server's reply
-// or headers, which may reflect the Bearer value. Proxy categories are omitted: this client has no proxy.
-const NETWORK_CODES = Object.freeze({
-  dns: ['ENOTFOUND', 'EAI_AGAIN', 'EAI_FAIL', 'EAI_NONAME', 'EAI_NODATA'],
-  connect: ['ECONNREFUSED', 'ECONNRESET', 'EHOSTUNREACH', 'ENETUNREACH', 'EPIPE', 'ECONNABORTED', 'UND_ERR_SOCKET'],
-  timeout: ['ETIMEDOUT', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_HEADERS_TIMEOUT', 'UND_ERR_BODY_TIMEOUT'],
-  certificate: ['UNABLE_TO_VERIFY_LEAF_SIGNATURE', 'SELF_SIGNED_CERT_IN_CHAIN', 'DEPTH_ZERO_SELF_SIGNED_CERT', 'CERT_HAS_EXPIRED',
-    'UNABLE_TO_GET_ISSUER_CERT_LOCALLY', 'ERR_TLS_CERT_ALTNAME_INVALID', 'CERT_NOT_YET_VALID', 'UNABLE_TO_GET_ISSUER_CERT']
-});
+// F130 (ShunCode item 5): the network layer comes from utils/networkErrors.js (by error code, not message text).
+// The hint is fixed product text: it never repeats the server's reply or headers, which may reflect the Bearer value.
 const EXTERNAL_FAILURE_HINTS = Object.freeze({
   dns: '无法解析服务器地址：核对域名拼写和本机网络。',
   connect: '连不上服务器：确认服务已经启动、端口正确，本机能访问该地址。',
@@ -33,13 +26,6 @@ const EXTERNAL_FAILURE_HINTS = Object.freeze({
   'not-mcp': '地址能连上，但返回的不是MCP响应（例如网页）：核对URL是否指向MCP服务。',
   http: '服务返回了错误状态：稍后重试，或查看该服务自己的日志。'
 });
-function networkCategory(error) {
-  for (let current = error, depth = 0; current && depth < 5; current = current.cause, depth++) {
-    const code = typeof current.code === 'string' ? current.code : '';
-    for (const [category, codes] of Object.entries(NETWORK_CODES)) if (codes.includes(code)) return category;
-  }
-  return null;
-}
 function httpCategory(status, authenticate, hasToken) {
   if (status === 401) return /resource_metadata\s*=/i.test(authenticate || '') ? 'oauth-required' : 'auth';
   if (status === 403) return hasToken ? 'forbidden' : 'auth';

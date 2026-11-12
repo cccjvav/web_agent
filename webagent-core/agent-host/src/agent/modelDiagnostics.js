@@ -7,6 +7,8 @@
 // body for an error *code*, matches a few well-known message shapes, and maps the result onto a
 // fixed set of categories whose wording is written here. No fragment of the body is copied out.
 
+const { networkCategory } = require('../utils/networkErrors');
+
 const CATEGORIES = Object.freeze({
   context: '对话超出模型上下文长度，请清空历史、缩短消息或换上下文更大的模型',
   stream: '该模型不接受流式请求',
@@ -133,4 +135,27 @@ function modelFailure(input) {
   return error;
 }
 
-module.exports = { CATEGORIES, describeModelFailure, modelFailure, estimateTokens, parseContextSize };
+// F131: the request never reached the model (DNS, refused, socket timeout, certificate). Until now the chat
+// showed fetch's bare "fetch failed". Classified by error code only; the original error stays as cause.
+const NETWORK_HINTS = Object.freeze({
+  dns: '无法解析模型端点的域名，请核对设置里的 Base URL 拼写和本机网络',
+  connect: '连不上模型端点，请确认地址和端口正确、服务在运行，本机网络能访问它',
+  timeout: '连接模型端点超时，请检查本机网络，或稍后重试',
+  certificate: '模型端点的 HTTPS 证书校验失败（证书过期、域名不符或是自签证书），本产品不跳过证书校验'
+});
+
+// After the first response byte the endpoint *was* reached: a reset or socket timeout then means the reply was
+// cut off, so it gets its own wording instead of "never reached" (`received` is set by the caller).
+const NETWORK_MID_RESPONSE = '模型响应中途断开（网络中断或端点关闭了连接），已显示的部分可能不完整，请重试';
+
+function modelNetworkFailure(error, { received = false } = {}) {
+  const category = networkCategory(error);
+  if (!category) return null;
+  const failure = new Error(received ? NETWORK_MID_RESPONSE : `模型请求没有到达端点：${NETWORK_HINTS[category]}`, { cause: error });
+  failure.code = 'E_MODEL_NETWORK';
+  failure.category = category;
+  if (received) failure.midResponse = true;
+  return failure;
+}
+
+module.exports = { CATEGORIES, NETWORK_HINTS, NETWORK_MID_RESPONSE, describeModelFailure, modelFailure, modelNetworkFailure, estimateTokens, parseContextSize };

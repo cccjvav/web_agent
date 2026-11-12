@@ -4,12 +4,16 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { config } = require('../src/config');
-const { loadSkill, listSkills, discoverSkills, SKILL_LOAD_REASONS } = require('../src/tools/skills');
+const { loadSkill, listSkills, discoverSkills, userSkillsRoot, SKILL_LOAD_REASONS } = require('../src/tools/skills');
 const { clipJson } = require('../src/mcp/budget');
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'webagent-skills-'));
 const before = config.workspaceRoot;
 config.workspaceRoot = path.join(root, 'workspace');
 fs.mkdirSync(config.workspaceRoot);
+// The global skill folder lives under the OS home; keep it on a temp dir for the whole file (F131).
+const homeBefore = { HOME: process.env.HOME, USERPROFILE: process.env.USERPROFILE };
+const home = path.join(root, 'home');
+fs.mkdirSync(home); process.env.HOME = home; process.env.USERPROFILE = home;
 function put(relative, text) {
   const file = path.join(config.workspaceRoot, relative);
   fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, text); return file;
@@ -72,6 +76,48 @@ try {
   const first = loadSkill({ pageSize: 2 });
   const second = loadSkill({ pageSize: 2, cursor: first.nextCursor });
   assert.strictEqual(new Set([...first.skills, ...second.skills].map(s => s.id)).size, 4);
+  // F131: <home>/.webagent/skills is a global source after the workspace ones, with its own containment rules.
+  assert.strictEqual(userSkillsRoot(), path.join(home, '.webagent', 'skills'));
+  assert.ok(!listSkills().some(s => s.source === 'user'), 'no global folder, no global skills');
+  const putHome = (relative, text) => { const file = path.join(home, '.webagent', 'skills', relative); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, text); return file; };
+  putHome('translate/SKILL.md', '---\ndescription: Global helper\n---\n# Translate');
+  putHome('translate/references/terms.md', 'GLOBAL-TERMS');
+  putHome('translate/references/.env.md', 'SECRET');
+  putHome('review/SKILL.md', '# Global review');
+  putHome('.hidden/SKILL.md', '# hidden');
+  const globalCatalog = listSkills();
+  const translate = globalCatalog.find(s => s.id === 'user:translate');
+  assert.ok(translate && translate.ready && translate.description === 'Global helper', JSON.stringify(translate));
+  assert.strictEqual(translate.path, '~/.webagent/skills/translate'); assert.strictEqual(translate.skillFile, '~/.webagent/skills/translate/SKILL.md');
+  assert.ok(!JSON.stringify(discoverSkills()).includes(home) && !JSON.stringify(loadSkill({ pageSize: 50 })).includes(home), 'the home path is never serialized');
+  assert.ok(!JSON.stringify(loadSkill({ name: 'user:translate' })).includes(home) && translate.skillFileAbs === undefined);
+  assert.strictEqual(globalCatalog.find(s => s.id === 'user:review').shadowedBy, 'workspace:review', 'a project skill overrides a global one by name');
+  assert.ok(!globalCatalog.some(s => s.id.includes('hidden')), 'hidden folders are skipped');
+  assert.ok(globalCatalog.findIndex(s => s.id === 'user:translate') < globalCatalog.findIndex(s => s.source === 'bundled'), 'global skills come before bundled ones');
+  assert.strictEqual(loadSkill({ name: 'translate' }).content.includes('# Translate'), true);
+  assert.strictEqual(loadSkill({ name: 'user:translate', resource: 'references/terms.md' }).content, 'GLOBAL-TERMS');
+  assert.ok(!loadSkill({ name: 'user:translate' }).resources.some(r => r.path.includes('.env')));
+  for (const resource of ['references/.env.md', '../review/SKILL.md', '../../../workspace/outside.md']) {
+    assert.throws(() => loadSkill({ name: 'user:translate', resource }), /resource|path/i, resource);
+  }
+  const elsewhere = path.join(root, 'elsewhere'); fs.mkdirSync(path.join(elsewhere, 'linked'), { recursive: true });
+  fs.writeFileSync(path.join(elsewhere, 'linked', 'SKILL.md'), '# linked');
+  fs.symlinkSync(path.join(elsewhere, 'linked'), path.join(home, '.webagent', 'skills', 'linked'), process.platform === 'win32' ? 'junction' : 'dir');
+  assert.ok(!listSkills().some(s => s.id === 'user:linked'), 'a linked or junctioned global skill folder is not followed');
+  if (process.platform !== 'win32' && process.getuid && process.getuid() !== 0) {
+    // An unreadable global skill: the system error names the path, the catalog shows it as ~.
+    const locked = putHome('locked/SKILL.md', '# locked'); fs.chmodSync(locked, 0o000);
+    try {
+      const entry = listSkills().find(s => s.id === 'user:locked');
+      assert.ok(entry && entry.ready === false && entry.reason === 'unreadable' && !entry.preview.includes(home) && entry.preview.includes('~/.webagent/skills'), JSON.stringify(entry));
+    } finally { fs.chmodSync(locked, 0o600); }
+  }
+  const workspaceBefore = config.workspaceRoot; config.workspaceRoot = home;
+  try {
+    const atHome = listSkills();
+    assert.ok(atHome.some(s => s.id === 'workspace:translate') && !atHome.some(s => s.source === 'user'), 'a workspace at the home folder lists the folder once');
+  } finally { config.workspaceRoot = workspaceBefore; }
+  fs.rmSync(path.join(home, '.webagent'), { recursive: true, force: true });
   put('.webagent/skills/huge/SKILL.md', 'a'.repeat(129 * 1024));
   const huge = listSkills().find(s => s.id === 'workspace:huge');
   assert.strictEqual(huge.ready, false); assert.strictEqual(huge.reason, 'too-large'); assert.strictEqual(huge.fix, SKILL_LOAD_REASONS['too-large']);
@@ -107,4 +153,8 @@ try {
   assert.ok(bounded.skills.length <= 131);
   assert.ok(bounded.skills.some(s => s.id === 'bundled:computer-use'));
   console.log('Skill lifecycle: discovery, origins, progressive/hash-bound reads, resources, bounds and no execution passed');
-} finally { config.workspaceRoot = before; fs.rmSync(root, { recursive: true, force: true }); }
+} finally {
+  config.workspaceRoot = before;
+  for (const [key, value] of Object.entries(homeBefore)) { if (value === undefined) delete process.env[key]; else process.env[key] = value; }
+  fs.rmSync(root, { recursive: true, force: true });
+}

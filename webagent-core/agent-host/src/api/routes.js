@@ -16,7 +16,7 @@ const { getTaskState, getBridgeTaskStates, resetTaskState } = require('../tools/
 const { resolveSafePath, computeHash } = require('../tools/patchEngine');
 const { runChat } = require('../agent/runChat');
 const planRound = require('../tools/planRound');
-const { listRemoteModels, addProvider } = require('../agent/providers');
+const { listRemoteModels, addProvider, PROBE_FAILURE_HINTS } = require('../agent/providers');
 const store = require('../models/store');
 const { publicModel, publicMultiModel, updateModelSettings } = require('../models/modelSettings');
 const { loadCustom, patchCustom } = require('../models/customizations');
@@ -898,7 +898,9 @@ router.post('/providers/probe', async (req, res) => {
   } catch (err) {
     if (!res.destroyed) res.status(400).json({ success: false,
       error: err.code === 'E_BAD_PROVIDER' ? err.message : '模型发现失败或超时，请核对Endpoint与凭据',
-      code: err.code === 'E_BAD_PROVIDER' ? err.code : 'E_PROVIDER_PROBE' });
+      code: err.code === 'E_BAD_PROVIDER' ? err.code : 'E_PROVIDER_PROBE',
+      // F131: a fixed word from PROBE_FAILURE_HINTS, so the settings page can say why without echoing anything.
+      ...(err.code === 'E_BAD_PROVIDER' && Object.hasOwn(PROBE_FAILURE_HINTS, err.category || '') ? { category: err.category } : {}) });
   } finally { req.removeListener('aborted', abort); res.removeListener('close', disconnected); }
 });
 

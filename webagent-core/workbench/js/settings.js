@@ -2,6 +2,20 @@ import { $, state, ui } from './state.js';
 import { apiFetch } from './api.js';
 import { escapeHtml } from './dom.js';
 
+// F131: same words and text as agent-host providers.js PROBE_FAILURE_HINTS (a test keeps them equal). The page
+// shows only this fixed text for a whitelisted word, never the response text (it can contain the supplied key).
+export const PROBE_FAILURE_HINTS = Object.freeze({
+  dns: '无法解析模型端点的域名：核对 Base URL 拼写和本机网络。',
+  connect: '连不上模型端点：确认地址和端口正确、服务在运行，本机网络能访问它。',
+  timeout: '模型端点15秒内没有返回模型列表：检查本机网络和地址，或稍后重试。',
+  certificate: '模型端点的 HTTPS 证书校验失败：证书过期、域名不符或是自签证书；本产品不跳过证书校验。',
+  auth: '端点拒绝了 API Key（HTTP 401）：核对 Key 是否填对、是否过期。',
+  forbidden: '这个 Key 无权读取模型列表（HTTP 403）：核对 Key 的权限，或明确填写模型ID后手动添加。',
+  endpoint: '端点地址不存在（HTTP 404）：核对 Base URL；多数 OpenAI 兼容服务以 /v1 结尾（OpenRouter 为 /api/v1），不要带 /chat/completions。',
+  http: '端点返回了错误状态：稍后重试，或明确填写模型ID后手动添加。',
+  format: '端点返回的不是可用的 OpenAI 兼容模型列表：核对 Base URL；也可以明确填写模型ID后手动添加。'
+});
+
 export function rowList(items, render, empty) {
   if (!items || !items.length) return `<p class="hint">${empty}</p>`;
   return items.map(render).join('');
@@ -178,7 +192,13 @@ async function probeProvider(input) {
     });
     const data = await res.json();
     if (controller.signal.aborted) throw new Error('模型发现超时');
-    if (!res.ok || data?.success !== true) throw new Error(data?.error || `HTTP ${res.status}`);
+    if (!res.ok || data?.success !== true) {
+      const error = new Error(data?.error || `HTTP ${res.status}`);
+      // Only the probe route's own 400 with a known word explains the failure; anything else stays generic.
+      if (res.status === 400 && data?.code === 'E_BAD_PROVIDER' && typeof data.category === 'string'
+        && Object.hasOwn(PROBE_FAILURE_HINTS, data.category)) error.probeCategory = data.category;
+      throw error;
+    }
     if (!Array.isArray(data.models) || !data.models.length || data.models.length > 100
       || data.models.some(model => !model || typeof model.id !== 'string' || !model.id.trim())) {
       throw new Error('模型发现响应无效，未写入');
@@ -209,9 +229,11 @@ export async function configureProvider(input, testOnly = false) {
       if ($('#m-key').value.trim() === draft.apiKey) $('#m-key').value = '';
       note.textContent = `已登记 ${models.length} 个模型，保留原模型/密钥，未切换当前模型。${manual ? '手动登记未做模型发现。' : ''}请明确选择模型后再使用；若刷新失败，请核对主机，不要重复保存。`;
       return true;
-    } catch (_) {
+    } catch (error) {
       // No fallback or echoed request/response text (it can contain the supplied key).
-      note.textContent = '模型发现或输入校验失败，未写入；请核对Endpoint、Key和模型列表。需要手动登记时，请明确填写模型ID后再点Add API。';
+      note.textContent = error?.probeCategory
+        ? `模型发现失败，未写入：${PROBE_FAILURE_HINTS[error.probeCategory]}需要手动登记时，请明确填写模型ID后再点Add API。`
+        : '模型发现或输入校验失败，未写入；请核对Endpoint、Key和模型列表。需要手动登记时，请明确填写模型ID后再点Add API。';
       return false;
     }
   });

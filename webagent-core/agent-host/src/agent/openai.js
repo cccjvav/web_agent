@@ -9,7 +9,7 @@ const { collectShot } = require('./computerUse');
 const { fetchText, checkCancelled, responseTooLarge } = require('../utils/requestScope');
 const { isToolFailure } = require('../utils/toolTrace');
 const { isEventStream, createCompletionAssembler } = require('./completionStream');
-const { modelFailure, estimateTokens, parseContextSize } = require('./modelDiagnostics');
+const { modelFailure, modelNetworkFailure, estimateTokens, parseContextSize } = require('./modelDiagnostics');
 const { normalizeBase } = require('./providers');
 
 const MODEL_REQUEST_MAX_BYTES = 12 * 1024 * 1024;
@@ -271,8 +271,9 @@ async function runOpenAI({
         }
       }
       const assembler = createCompletionAssembler({ onContent });
-      let eventStream = null, bufferedBytes = 0;
+      let eventStream = null, bufferedBytes = 0, received = false;
       const onChunk = (piece, response) => {
+        received = true;
         if (eventStream === null) eventStream = streaming && isEventStream(response);
         if (eventStream) { assembler.push(piece); return; }
         // The provider answered with a plain JSON body: the buffered budget applies to it.
@@ -296,7 +297,7 @@ async function runOpenAI({
         if (error && error.code === 'E_MODEL_STREAM' && error.upstream !== undefined) {
           throw modelFailure({ status: 200, body: error.upstream, requestBody, prefix: '模型在流式响应中报告错误' });
         }
-        throw error;
+        throw modelNetworkFailure(error, { received }) || error;
       }
       if (!resp.ok) {
         // Some OpenAI-compatible gateways reject `stream` (or stream + tools) with 400; retry the

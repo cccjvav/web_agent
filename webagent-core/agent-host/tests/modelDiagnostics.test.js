@@ -109,4 +109,19 @@ for (const [input, expected] of [
   ['-5', null], [Infinity, null], ['gpt-4 128K', null], ['0.5', null], ['1e6', null]
 ]) assert.strictEqual(parseContextSize(input), expected, `parseContextSize(${JSON.stringify(input)})`);
 
-console.log('modelDiagnostics: fixed-text failure categories, retry decision, estimate and context-size parsing passed');
+// --- F131 modelNetworkFailure: by error code along the cause chain; anything else is not a network failure. ---
+{
+  const { modelNetworkFailure, NETWORK_HINTS } = require('../src/agent/modelDiagnostics');
+  const wrapped = modelNetworkFailure(new TypeError('fetch failed', { cause: { code: 'EAI_AGAIN' } }));
+  assert.strictEqual(wrapped.code, 'E_MODEL_NETWORK'); assert.strictEqual(wrapped.category, 'dns');
+  assert.strictEqual(wrapped.message, `模型请求没有到达端点：${NETWORK_HINTS.dns}`);
+  assert.strictEqual(modelNetworkFailure(new Error('connect ECONNREFUSED')), null, 'message text alone is never matched');
+  assert.strictEqual(modelNetworkFailure(Object.assign(new Error('x'), { code: 'E_TIMEOUT' })), null, 'our own deadline stays E_TIMEOUT');
+  assert.ok(Object.isFrozen(NETWORK_HINTS));
+  const { NETWORK_MID_RESPONSE } = require('../src/agent/modelDiagnostics');
+  const cut = modelNetworkFailure(new TypeError('terminated', { cause: { code: 'UND_ERR_SOCKET' } }), { received: true });
+  assert.strictEqual(cut.message, NETWORK_MID_RESPONSE); assert.strictEqual(cut.category, 'connect'); assert.strictEqual(cut.midResponse, true);
+  assert.strictEqual(wrapped.midResponse, undefined, 'only a reply that had started is mid-response');
+}
+
+console.log('modelDiagnostics: fixed-text failure categories, retry decision, estimate and context-size parsing, network layer passed');

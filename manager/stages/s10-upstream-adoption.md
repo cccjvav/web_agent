@@ -549,6 +549,24 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 
 **验证：** 全量测试（110个文件）与lint通过，`check-docs --write`后重建docs-site，改过的文档逐份复读后刷新审查索引指纹。
 
+### 第131组：模型请求网络失败分类与全局Skill目录（2026-10-19，会话01a0d084）
+
+用户2026-10-19同意收尾计划（回复“可以”）：F131做B+C，F132做D（外部MCP登记持久化，HTTP的Token也保存），最后一批做A（实机验收手册）+F（CONTEXT状态压缩）；E（界面汉化）不做。
+
+1. **网络层分类共用（新`utils/networkErrors.js`）。** 第130组写在externalClient里的`NETWORK_CODES`和`networkCategory`搬出来，外部MCP、模型发现、Chat模型请求共用一张错误码表；externalClient继续转出networkCategory，旧测试不变。
+2. **模型发现失败说明原因（B，`agent/providers.js`、`api/routes.js`、`workbench/js/settings.js`）。** `PROBE_FAILURE_HINTS`九类（dns、connect、timeout、certificate、auth、forbidden、endpoint、http、format）。fetchProviderText给每种失败带category：网络层按错误码，HTTP按状态（401/403/404/其它），缺正文、超512KiB、非JSON、条目数不对、目录校验失败为format；只有本函数自己的15秒期限算timeout，调用方取消不带分类。`/api/providers/probe`只在E_BAD_PROVIDER且category在表里时多回`category`。设置页存一份逐字相同的表（测试deepEqual），只在HTTP 400+E_BAD_PROVIDER+表内键时显示“模型发现失败，未写入：<本页提示>…”，其它仍是原来的通用句，从不显示端点或路由给的文字。VS Code设置页签用同一个settings.js，relay原样转发状态和正文。
+3. **Chat请求没到端点（B，`agent/modelDiagnostics.js`、`agent/openai.js`）。** 原来只显示fetch的“fetch failed”。`modelNetworkFailure(error,{received})`按错误码归四类，消息“模型请求没有到达端点：<固定提示>”，`E_MODEL_NETWORK`，原异常作cause；收到第一块响应后才断的（received）统一为“模型响应中途断开…已显示的部分可能不完整，请重试”，带midResponse——这一点是自我复审时补的：第一版对中途ECONNRESET也说“没有到达端点”，与事实相反。不认识的异常、自己的E_TIMEOUT和取消原样抛出。
+4. **全局Skill目录（C，`tools/skills.js`）。** 新来源`user`：`os.homedir()`下的`.webagent/skills`（Windows `%USERPROFILE%\.webagent\skills`），排在workspace、shared之后、bundled之前，同名时工作区胜出，被遮住的一项沿用第129组的shadowedBy提示。全局目录在工作区外，walk和safeSkillFile对它不走resolveSafePath，改用本来源自己的规则（目录内不跟随链接/junction、跳过隐藏与敏感名、资源realpath不出该Skill目录）；与工作区共享512条目/128项扫描预算，工作区先扫。显示位置写成`~/.webagent/skills/<名字>`；absDir设为不可枚举、不带skillFileAbs，系统错误消息里的主目录路径换成`~`——目录会经Bridge发给远端Agent，主目录路径含Windows账户名（这两点也是自我复审时补的）。工作区就是主目录时不重复扫描（Windows比较不分大小写）。给模型的提示（profile.js、load_skill的name说明）和工作台技能页说明同步改；技能页新建仍写当前工作区。
+5. **文档。** 技能使用指南新增第6b节（CMD建全局Skill、复制演示Skill、规则），故障排除两条改写；使用指南的技能与API Provider两段；逐函数说明：模型调用详解、技能与隐藏规则详解、utils函数详解（新增networkErrors一节并登记文档学习测试）、受控工具与工作流详解（externalClient那段指向新文件）、utils README、Bridge与设置详解；四份测试说明。
+
+**自我复审（交付前）：**
+- 读完整diff与调用方：runChat把E_MODEL_NETWORK的message原样发error事件（与E_MODEL_HTTP相同路径，都是固定文字）；listSkills的消费者（openai/instructions/resources的formatWorkspaceContext、workspaceInfo只取name、routes的/skills与/skills/load、技能页卡片只显示id）都不依赖path是工作区相对；skillFileAbs只有apiFiles与workspaceTools对工作区Skill断言，全局来源不受影响。
+- 发现并修正：①中途断开被说成“没有到达端点”（见第3项）；②全局Skill的目录与正文页会把含账户名的主目录绝对路径经Bridge送出（absDir/skillFileAbs/系统错误消息），已隐藏；③工作区=主目录时Windows大小写不同会重复列出；④skillsLifecycle原有“共4项”的精确断言在装了全局Skill的机器上会变红，测试全程把HOME/USERPROFILE指向临时目录；⑤技能使用指南原来写“源码没有用户级Skill库”“工作台曾写不必拷进工作区——源码做不到”，已改。
+- 逆向验证：22处变异全部被测试杀死（cause只看一层、取消也算timeout、网络异常不分类、404归http、非JSON/缺正文/超512KiB/目录校验失败不标format、路由不回category、页面不查400/不查code/不查自有键、openai不包装、received被忽略、不扫全局目录、全局来源仍走工作区约束、同目录不去重、absDir可枚举、不隐藏主目录、path改回工作区相对、保留skillFileAbs）。路由那句“category必须在表里”的白名单目前是等价变异：providers只会产出表内的词，这是防御性检查，不另造测试入口。
+- 未在沙箱验证：真实DNS失败、证书错误和Windows上undici的实际错误码（用夹具码和真实回环端口的ECONNREFUSED/中途UND_ERR_SOCKET）；Windows上`os.homedir()`与junction在全局目录里的实际表现（junction用例在Windows CI跑）；工作台与VS Code设置页签的实际显示（只有DOM夹具，浏览器CI不含新断言）。
+
+**验证：** 全量测试（110个文件）与lint通过，`check-docs --write`后重建docs-site，改过的文档逐份复读后刷新审查索引指纹。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。

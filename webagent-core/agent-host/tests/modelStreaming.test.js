@@ -324,7 +324,44 @@ const texts = (events, type) => events.filter(event => event.type === type).map(
     assert.ok(!texts(unknown, 'status').some(text => /声明的上下文/.test(text)), 'no advisory when the catalogue size is not a number');
   }
 
-  console.log('modelStreaming: streamed deltas/final message, streamed tool calls, 400 fallback, mid-stream errors, budgets, cancellation, Plan capture, failure classification and context advisory passed');
+  // 13. F131: a request that never reached the endpoint says which layer failed instead of "fetch failed".
+  {
+    const { NETWORK_HINTS } = require('../src/agent/modelDiagnostics');
+    for (const [code, category] of [['ENOTFOUND', 'dns'], ['CERT_HAS_EXPIRED', 'certificate'], ['UND_ERR_CONNECT_TIMEOUT', 'timeout']]) {
+      global.fetch = async () => { throw new TypeError('fetch failed', { cause: Object.assign(new Error(SECRET), { code }) }); };
+      const error = await runOpenAI({ mode: 'ask', message: code, history: [], model, emit: () => {}, allowTools: false }).then(() => null, e => e);
+      assert.ok(error && error.code === 'E_MODEL_NETWORK' && error.category === category, code);
+      assert.ok(error.message.includes(NETWORK_HINTS[category]) && !error.message.includes(SECRET), error.message);
+      assert.ok(error.cause, 'the original error stays as cause');
+    }
+    global.fetch = async () => { throw new Error('unclassified ' + SECRET); };
+    const plain = await runOpenAI({ mode: 'ask', message: 'plain', history: [], model, emit: () => {}, allowTools: false }).then(() => null, e => e);
+    assert.ok(plain && plain.code !== 'E_MODEL_NETWORK', 'an unknown failure is passed through unchanged');
+    // Real transport: a loopback port that was just released refuses the connection.
+    const http = require('http');
+    const closed = http.createServer(); await new Promise(resolve => closed.listen(0, '127.0.0.1', resolve));
+    const port = closed.address().port; await new Promise(resolve => closed.close(resolve));
+    global.fetch = priorFetch;
+    const refused = await runOpenAI({ mode: 'ask', message: 'refused', history: [], model: { ...model, baseUrl: `http://127.0.0.1:${port}/v1` }, emit: () => {}, allowTools: false })
+      .then(() => null, e => e);
+    assert.strictEqual(refused && refused.category, 'connect', refused && refused.message);
+    assert.ok(refused.message.startsWith('模型请求没有到达端点：') && !refused.midResponse);
+    // Real transport, cut off after the first streamed frame: the endpoint was reached, so the wording differs.
+    const cut = http.createServer((req, res) => {
+      res.writeHead(200, { 'content-type': 'text/event-stream' });
+      res.write(frame(delta({ role: 'assistant', content: '半句' })), () => setTimeout(() => res.socket.destroy(), 20));
+    });
+    await new Promise(resolve => cut.listen(0, '127.0.0.1', resolve));
+    try {
+      const partial = collect();
+      const dropped = await runOpenAI({ mode: 'ask', message: 'cut', history: [], model: { ...model, baseUrl: `http://127.0.0.1:${cut.address().port}/v1` }, emit: partial.emit, allowTools: false })
+        .then(() => null, e => e);
+      assert.ok(dropped && dropped.code === 'E_MODEL_NETWORK' && dropped.midResponse === true, dropped && dropped.message);
+      assert.strictEqual(dropped.message, require('../src/agent/modelDiagnostics').NETWORK_MID_RESPONSE);
+    } finally { cut.closeAllConnections(); await new Promise(resolve => cut.close(resolve)); }
+  }
+
+  console.log('modelStreaming: streamed deltas/final message, streamed tool calls, 400 fallback, mid-stream errors, budgets, cancellation, Plan capture, failure classification, network layer and context advisory passed');
 })().catch(err => { console.error(err); process.exitCode = 1; }).finally(() => {
   config.workspaceRoot = priorWorkspace; global.fetch = priorFetch; planRound.reset(); STREAM_UNSUPPORTED.clear();
   fs.rmSync(tmp, { recursive: true, force: true });

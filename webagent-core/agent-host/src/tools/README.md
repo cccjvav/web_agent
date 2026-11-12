@@ -114,7 +114,7 @@ R4：executor/fileOps复用WEBAGENT_DEBUG_PROCESS=1输出有界生命周期元�
 | [readCache.js](readCache.js) | 13 个函数/类节点 |
 | [searchWorker.js](searchWorker.js) | 1 个函数/类节点 |
 | [sensitive.js](sensitive.js) | 18 个函数/类节点 |
-| [skills.js](skills.js) | 22 个函数/类节点 |
+| [skills.js](skills.js) | 25 个函数/类节点 |
 | [workflows.js](workflows.js) | 23 个函数/类节点 |
 | [workspaceInfo.js](workspaceInfo.js) | 3 个函数/类节点 |
 <!-- docs-inventory:end -->

@@ -14,7 +14,9 @@
 
 [源码](providers.test.js)的**run()**先验证能力只依赖声明、上下文数字格式。第129组起逐项核对normalizeBase：带`/chat/completions`（含大写和尾斜杠）、`/responses`、`/models`的地址回到`…/v1`，`/v1/v1`和三连`/v1`合成一个，`api.deepseek.com`与无路径地址不补`/v1`，`/openai/v1`、`/v10`、`/x/v1x`不动；missingVersionHint只对无路径和`/api`给提示，`/v1`与非URL为空串。用局部fetch记录地址并回404：无路径地址的错误含`https://主机/v1`提示，带`/v1/chat/completions`的不含，两次实际请求是`https://model.test/models`和`https://model.test/v1/models`，证明只请求归一后的地址、不偷偷补`/v1`。保存global.fetch，替换为真实Response/ReadableStream形状的两模型fixture，检查未声明者caps/context空、有声明者vision/128K；finally恢复fetch。
 
-负例：null/空/坏项/重复ID/数字ID/101项、非JSON、HTTP401不回显含Key错误正文、URL凭据/query/非HTTP/脱敏Key在fetch前拒绝。流fixture用**start(controller)**一次发512KiB+1，**cancel()**记取消；必须拒绝并取消而不是继续读。fetch替身检查redirect:error；另用信号监听和20ms期限验证headers等待中止，keepAlive维持事件循环并清理。
+负例：null/空/坏项/重复ID/数字ID/101项、非JSON、HTTP401不回显含Key错误正文、URL凭据/query/非HTTP/脱敏Key在fetch前拒绝。流fixture用**start(controller)**一次发512KiB+1，**cancel()**记取消；必须拒绝并取消而不是继续读。fetch替身检查redirect:error；另用信号监听和20ms期限验证headers等待中止（第131组起断言失败的category为timeout，而不是只匹配英文aborted），keepAlive维持事件循环并清理。
+
+第131组新增失败分类：**categoryOf(promise)**把成功变成`resolved`、失败变成error.category。HTTP 401→auth、403→forbidden、404→endpoint、500和429→http；非JSON、空对象、重复ID、200但没有正文（body为null）→format，原有512KiB超限用例也改为同时断言category为format；fetch抛出的cause.code为ENOTFOUND→dns、ECONNREFUSED→connect、UND_ERR_CONNECT_TIMEOUT→timeout、CERT_HAS_EXPIRED→certificate，且消息含PROBE_FAILURE_HINTS里对应中文、不含fixture里的SECRET；不认识的异常没有category；调用方信号在请求途中中止（在fetch替身里挂好abort监听后再abort）也没有category——这是取消不是超时；PROBE_FAILURE_HINTS已冻结。本地真实服务器段再开一个端口、立即关掉，用真实fetch连它，断言category为connect。
 
 恢复fetch后创建真实回环HTTP server，验证分片UTF8模型ID不损坏、302不访问target、200头和部分正文后停顿由500ms期限中止（bodyStarted证实已开始正文）；finally closeAllConnections再关server。固定fixture凭据只去临时回环端点，不访问真实提供商。这不证明供应商兼容、全部网络威胁或用户本机环境。
 

@@ -1,6 +1,7 @@
 const assert = require('assert');
 const http = require('http');
-const { listRemoteModels, normalizeBase, missingVersionHint, probeCaps, probeContext } = require('../src/agent/providers');
+const { listRemoteModels, normalizeBase, missingVersionHint, probeCaps, probeContext, PROBE_FAILURE_HINTS } = require('../src/agent/providers');
+const { runWithSignal } = require('../src/utils/requestScope');
 
 async function run() {
   assert.deepStrictEqual(probeCaps({ id: 'gpt-4o' }), []);
@@ -55,7 +56,7 @@ async function run() {
         cancel() {cancelled=true;}
       }));
     };
-    await assert.rejects(()=>listRemoteModels('https://model.test/v1','test'),/512KiB/);
+    await assert.rejects(()=>listRemoteModels('https://model.test/v1','test'),error => /512KiB/.test(error.message) && error.category === 'format');
     assert.ok(cancelled,'oversized response is cancelled, not drained');
     global.fetch=()=>{throw new Error('invalid input must not reach fetch')};
     for (const [url,key] of [['https://a.test/?key=secret','x'],['https://user:pass@a.test','x'],['file:///tmp/x','x'],['https://a.test','••••']]) {
@@ -65,8 +66,36 @@ async function run() {
       opts.signal.addEventListener('abort', () => reject(new Error('probe aborted')), { once: true });
     });
     const keepAlive = setTimeout(() => {}, 1000);
-    try { await assert.rejects(() => listRemoteModels('https://model.invalid', 'test', { timeoutMs: 20 }), /aborted/); }
+    try { await assert.rejects(() => listRemoteModels('https://model.invalid', 'test', { timeoutMs: 20 }), error => error.category === 'timeout'); }
     finally { clearTimeout(keepAlive); }
+    // F131: each discovery failure carries a fixed category word the settings page renders from its own text.
+    const categoryOf = promise => promise.then(() => 'resolved', error => error.category);
+    for (const [status, expected] of [[401, 'auth'], [403, 'forbidden'], [404, 'endpoint'], [500, 'http'], [429, 'http']]) {
+      global.fetch = async () => new Response('reflected-SECRET', { status });
+      assert.strictEqual(await categoryOf(listRemoteModels('https://model.test/v1', 'SECRET')), expected, String(status));
+    }
+    for (const body of ['not JSON', JSON.stringify({}), JSON.stringify({ data: [{ id: 'x' }, { id: 'x' }] })]) {
+      global.fetch = async () => new Response(body);
+      assert.strictEqual(await categoryOf(listRemoteModels('https://model.test/v1', 'test')), 'format', body);
+    }
+    for (const [code, expected] of [['ENOTFOUND', 'dns'], ['ECONNREFUSED', 'connect'], ['UND_ERR_CONNECT_TIMEOUT', 'timeout'], ['CERT_HAS_EXPIRED', 'certificate']]) {
+      global.fetch = async () => { throw new TypeError('fetch failed', { cause: Object.assign(new Error('fixture SECRET'), { code }) }); };
+      const failure = await listRemoteModels('https://model.test/v1', 'SECRET').catch(error => error);
+      assert.strictEqual(failure.category, expected, code);
+      assert.ok(failure.message.includes(PROBE_FAILURE_HINTS[expected]) && !failure.message.includes('SECRET'), failure.message);
+    }
+    global.fetch = async () => ({ ok: true, status: 200, body: null });
+    assert.strictEqual(await categoryOf(listRemoteModels('https://model.test/v1', 'test')), 'format', 'a reply without a body');
+    global.fetch = async () => { throw new Error('unclassified fixture'); };
+    assert.strictEqual(await categoryOf(listRemoteModels('https://model.test/v1', 'test')), undefined, 'an unknown failure gets no category');
+    const gone = new AbortController();
+    global.fetch = (_, opts) => new Promise((_resolve, reject) => {
+      opts.signal.addEventListener('abort', () => reject(new Error('aborted')), { once: true });
+      gone.abort(); // the caller leaves while the request is in flight
+    });
+    assert.strictEqual(await categoryOf(runWithSignal(gone.signal, () => listRemoteModels('https://model.test/v1', 'test'))), undefined,
+      'a caller that went away is a cancellation, not a timeout');
+    assert.ok(Object.isFrozen(PROBE_FAILURE_HINTS));
   } finally {
     global.fetch = orig;
   }
@@ -88,6 +117,10 @@ async function run() {
     assert.equal(redirected,0);
     await assert.rejects(()=>listRemoteModels(local+'/slow','local-fixture',{timeoutMs:500}));
     assert.ok(bodyStarted,'deadline covers response body, not only headers');
+    // A real refused connection (a port that was just released) is classified by the real fetch's cause code.
+    const closed = http.createServer(); await new Promise(resolve => closed.listen(0, '127.0.0.1', resolve));
+    const closedPort = closed.address().port; await new Promise(resolve => closed.close(resolve));
+    assert.strictEqual(await listRemoteModels(`http://127.0.0.1:${closedPort}`, 'local-fixture').then(() => 'resolved', error => error.category), 'connect');
   } finally { server.closeAllConnections(); await new Promise(resolve=>server.close(resolve)); }
   console.log('providers.test.js ok');
 }

@@ -1,6 +1,22 @@
 const { currentSignal, checkCancelled } = require('../utils/requestScope');
 const { createHash } = require('crypto');
 const store = require('../models/store');
+const { networkCategory } = require('../utils/networkErrors');
+
+// F131: why model discovery failed, as a fixed word. The route passes only a word from this table and the
+// settings page (workbench/js/settings.js keeps the same table, a test compares them) shows its own text,
+// so nothing the endpoint sent back is ever displayed.
+const PROBE_FAILURE_HINTS = Object.freeze({
+  dns: '无法解析模型端点的域名：核对 Base URL 拼写和本机网络。',
+  connect: '连不上模型端点：确认地址和端口正确、服务在运行，本机网络能访问它。',
+  timeout: '模型端点15秒内没有返回模型列表：检查本机网络和地址，或稍后重试。',
+  certificate: '模型端点的 HTTPS 证书校验失败：证书过期、域名不符或是自签证书；本产品不跳过证书校验。',
+  auth: '端点拒绝了 API Key（HTTP 401）：核对 Key 是否填对、是否过期。',
+  forbidden: '这个 Key 无权读取模型列表（HTTP 403）：核对 Key 的权限，或明确填写模型ID后手动添加。',
+  endpoint: '端点地址不存在（HTTP 404）：核对 Base URL；多数 OpenAI 兼容服务以 /v1 结尾（OpenRouter 为 /api/v1），不要带 /chat/completions。',
+  http: '端点返回了错误状态：稍后重试，或明确填写模型ID后手动添加。',
+  format: '端点返回的不是可用的 OpenAI 兼容模型列表：核对 Base URL；也可以明确填写模型ID后手动添加。'
+});
 
 // A pasted endpoint is not a prefix: strip a trailing /chat/completions, /responses or /models and collapse a
 // repeated /v1, so the request goes to exactly one `${base}/chat/completions` (or `/models`). A version path is
@@ -40,10 +56,14 @@ function probeContext(m) {
   return String(n);
 }
 
-function providerError(message, status = 400) {
+function providerError(message, status = 400, category) {
   const error = new Error(message); error.status = status;
   error.code = status === 409 ? 'E_PROVIDER_EXISTS' : 'E_BAD_PROVIDER';
+  if (category) error.category = category;
   return error;
+}
+function probeHttpCategory(status) {
+  return status === 401 ? 'auth' : status === 403 ? 'forbidden' : status === 404 ? 'endpoint' : 'http';
 }
 
 function providerEndpoint(value) {
@@ -118,21 +138,31 @@ async function fetchProviderText(base, key, timeoutMs) {
   let reader;
   try {
     if (parent?.aborted) abort();
-    const response = await fetch(`${base}/models`, {
-      redirect:'error', signal:controller.signal,
-      headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'}
-    });
+    // Only our own timer is a timeout; a client that went away is a cancellation and gets no category.
+    const stopped = () => providerError('模型发现已取消或超时', 400, parent?.aborted ? undefined : 'timeout');
+    let response;
+    try {
+      response = await fetch(`${base}/models`, {
+        redirect:'error', signal:controller.signal,
+        headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'}
+      });
+    } catch (error) {
+      if (controller.signal.aborted) throw stopped();
+      const category = networkCategory(error);
+      if (category) throw providerError(`模型发现失败：${PROBE_FAILURE_HINTS[category]}`, 400, category);
+      throw error;
+    }
     reader = response.body?.getReader();
-    if (!response.ok) throw providerError(`模型发现失败 HTTP ${response.status}${response.status === 404 ? missingVersionHint(base) : ''}`);
-    if (!reader) throw providerError('模型列表响应正文缺失');
+    if (!response.ok) throw providerError(`模型发现失败 HTTP ${response.status}${response.status === 404 ? missingVersionHint(base) : ''}`, 400, probeHttpCategory(response.status));
+    if (!reader) throw providerError('模型列表响应正文缺失', 400, 'format');
     const chunks = []; let size = 0;
     while (true) {
-      if (controller.signal.aborted) throw providerError('模型发现已取消或超时');
+      if (controller.signal.aborted) throw stopped();
       const {done,value} = await reader.read();
-      if (controller.signal.aborted) throw providerError('模型发现已取消或超时');
+      if (controller.signal.aborted) throw stopped();
       if (done) break;
       size += value.byteLength;
-      if (size > 512 * 1024) throw providerError('模型列表正文超过512KiB');
+      if (size > 512 * 1024) throw providerError('模型列表正文超过512KiB', 400, 'format');
       chunks.push(Buffer.from(value));
     }
     return Buffer.concat(chunks).toString('utf8');
@@ -148,15 +178,20 @@ async function listRemoteModels(baseUrl, apiKey, { timeoutMs = 15000 } = {}) {
   const raw = await fetchProviderText(base, key, timeoutMs);
   let data;
   try { data = JSON.parse(raw); }
-  catch (_) { throw providerError('模型列表不是JSON，请核对OpenAI兼容Endpoint'); }
+  catch (_) { throw providerError('模型列表不是JSON，请核对OpenAI兼容Endpoint', 400, 'format'); }
   const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
-  if (!list.length || list.length > 100) throw providerError('模型列表须包含1–100项；可明确填写手动模型ID后添加');
-  return providerCatalog(list.map(model => ({
-    id:model?.id || model?.name,
-    name:model?.name || model?.id,
-    contextSize:probeContext(model), caps:probeCaps(model),
-    pricing:typeof model?.pricing === 'string' ? model.pricing : ''
-  })));
+  if (!list.length || list.length > 100) throw providerError('模型列表须包含1–100项；可明确填写手动模型ID后添加', 400, 'format');
+  try {
+    return providerCatalog(list.map(model => ({
+      id:model?.id || model?.name,
+      name:model?.name || model?.id,
+      contextSize:probeContext(model), caps:probeCaps(model),
+      pricing:typeof model?.pricing === 'string' ? model.pricing : ''
+    })));
+  } catch (error) {
+    if (error.code === 'E_BAD_PROVIDER' && !error.category) error.category = 'format';
+    throw error;
+  }
 }
 
-module.exports = { listRemoteModels, normalizeBase, missingVersionHint, probeCaps, probeContext, addProvider };
+module.exports = { PROBE_FAILURE_HINTS, listRemoteModels, normalizeBase, missingVersionHint, probeCaps, probeContext, addProvider };

@@ -75,9 +75,9 @@
 
 **saveModelSettings(partial)**供表格、多模型、聊天和内置选择使用，只通过withModelSettings委托内部postModelSettings。**postModelSettings(partial)**POST本次字段，10秒AbortController；HTTP成功且success严格true才确认，addProvider另要求added与提交数相等，防旧主机忽略新字段仍报成功。失败false、未知写入需核对，不自动重试；Provider失败仅用固定提示（冲突码单独解释），不回显响应错误/解析异常里的Key；确认后调用refreshStatus，reject/返回false单独提示“已保存但刷新失败”，仍返回保存true。finally清timer，不在此提前释放整个Provider动作的guard。
 
-**probeProvider(input)**位于settings.js，取已捕获的baseUrl/apiKey，POST providers/probe，20秒客户端等待（后台默认15秒）；检查HTTP、success和非空≤100项/非空字符串ID核心形状；完整记录schema由后台检查。超时/解析/网络失败throw，finally清timer。没有自动保存或失败后的隐式manual回退。
+**probeProvider(input)**位于settings.js，取已捕获的baseUrl/apiKey，POST providers/probe，20秒客户端等待（后台默认15秒）；检查HTTP、success和非空≤100项/非空字符串ID核心形状；完整记录schema由后台检查。超时/解析/网络失败throw，finally清timer。没有自动保存或失败后的隐式manual回退。第131组起：只有HTTP 400、code为E_BAD_PROVIDER、category是本文件PROBE_FAILURE_HINTS自有键（Object.hasOwn，挡住constructor之类原型名）三项都成立时，抛出的错误才带probeCategory；error字段的文字仍不用于显示。PROBE_FAILURE_HINTS是后台providers.js同名常量的逐字副本，九个词：dns、connect、timeout、certificate、auth、forbidden、endpoint、http、format。
 
-**configureProvider(input,testOnly=false)**进入guard前浅拷贝四个原始字段，避免请求期间编辑串入本次保存；捕获输入只含字符串和vision布尔。Test总是发现，只报“模型列表读取成功，未保存/未验兼容”；Add有显式manualId时只登记该ID、不联网发现，无manualId才发现后登记。通过postModelSettings发送单独addProvider，后端从磁盘追加，不用status或脱敏models重建旧Key。不自动改当前模型、不覆盖重复模型/Key；失败只显示未确认/未写入的对应阶段，不重试。确认后仅当Key输入仍等于本次快照才清空，保留新草稿；发现异常用固定提示，不回显含Key的异常正文。新增模型需要操作者另行选择。
+**configureProvider(input,testOnly=false)**进入guard前浅拷贝四个原始字段，避免请求期间编辑串入本次保存；捕获输入只含字符串和vision布尔。Test总是发现，只报“模型列表读取成功，未保存/未验兼容”；Add有显式manualId时只登记该ID、不联网发现，无manualId才发现后登记。通过postModelSettings发送单独addProvider，后端从磁盘追加，不用status或脱敏models重建旧Key。不自动改当前模型、不覆盖重复模型/Key；失败只显示未确认/未写入的对应阶段，不重试。确认后仅当Key输入仍等于本次快照才清空，保留新草稿；发现异常用固定提示，不回显含Key的异常正文：带probeCategory时显示“模型发现失败，未写入：<本页对应提示>需要手动登记时，请明确填写模型ID后再点Add API。”，否则仍是“模型发现或输入校验失败，未写入；请核对Endpoint、Key和模型列表…”。VS Code设置页签用同一个settings.js，经relay原样转发状态码和正文，所以显示相同。新增模型需要操作者另行选择。
 
 **isCustomSnapshot(value)**检查用于渲染的顶层对象、指令/偏好字符串、环境/技术栈对象和六类列表；列表项须非数组对象，plugins另允许字符串。不是后台所有字段的完整schema或业务真实性校验。
 

@@ -846,6 +846,15 @@ async function main() {
       assert.strictEqual(rejectedProbe.json.code, 'E_BAD_PROVIDER');
       assert.strictEqual(rejectedProbeCalls, 0);
       assert.ok(!JSON.stringify(rejectedProbe.json).includes('strict-probe-key'));
+      // F131: a classified discovery failure passes its fixed word; an unclassified one stays E_PROVIDER_PROBE without it.
+      global.fetch = async () => { throw new TypeError('fetch failed', { cause: Object.assign(new Error('x'), { code: 'ENOTFOUND' }) }); };
+      const dnsProbe = await request(server, 'POST', '/api/providers/probe', { baseUrl: 'https://strict-probe.test/v1', apiKey: 'strict-probe-key' });
+      assert.deepStrictEqual([dnsProbe.status, dnsProbe.json.code, dnsProbe.json.category], [400, 'E_BAD_PROVIDER', 'dns']);
+      global.fetch = async () => new Response('strict-probe-key', { status: 404 });
+      assert.strictEqual((await request(server, 'POST', '/api/providers/probe', { baseUrl: 'https://strict-probe.test', apiKey: 'strict-probe-key' })).json.category, 'endpoint');
+      global.fetch = async () => { throw new Error('unclassified'); };
+      const plainProbe = await request(server, 'POST', '/api/providers/probe', { baseUrl: 'https://strict-probe.test/v1', apiKey: 'strict-probe-key' });
+      assert.deepStrictEqual([plainProbe.json.code, Object.hasOwn(plainProbe.json, 'category')], ['E_PROVIDER_PROBE', false]);
     } finally { global.fetch = strictProbeFetch; }
 
     // Disconnecting the local discovery request aborts its upstream signal.

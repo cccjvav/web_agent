@@ -289,7 +289,7 @@ const TOOLS = [
     inputSchema: {
       type: 'object',
       properties: {
-        name: { type: 'string', description: 'Prefer the exact catalog id, e.g. workspace:review or bundled:computer-use' },
+        name: { type: 'string', description: 'Prefer the exact catalog id, e.g. workspace:review, user:translate (global ~/.webagent/skills) or bundled:computer-use' },
         resource: { type: 'string', description: 'Relative text resource; defaults to SKILL.md. Scripts are read-only source.' },
         offset: { type: 'integer', minimum: 0 }, limit: { type: 'integer', minimum: 1, maximum: 8000 },
         expectedHash: { type: 'string', description: 'Required with offset > 0; use the preceding page hash.' },
