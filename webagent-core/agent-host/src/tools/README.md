@@ -75,7 +75,7 @@ read_files返回带行号的content和hash；offset从1开始，不是字节位�
 ## 协作、Skill与缓存
 board从调用上下文获取当前peer，不相信参数任意指定owner；先认领再更新受保护任务状态。Plan轮次仍有本机共享状态；progress的本机计划与各远程peer隔离，get_task_status也只返回调用者计划，但这仍不是OS用户级多租户事务库。
 
-用户Skill限定在工作区允许路径，普通UTF8文件128KiB上限；每页最多8000 UTF16字符，用nextOffset/expectedHash续读。来源ID区分工作区根与内置产品目录，引用/脚本资源只读。Skill是说明文本，不等于后台插件执行器；详见技能与隐藏规则详解。
+工作区Skill限定在工作区允许路径（第131组的用户全局目录`~/.webagent/skills`在工作区外，改用不许链接/隐藏/敏感名、资源不出Skill文件夹的同bundled检查），普通UTF8文件128KiB上限；每页最多8000 UTF16字符，用nextOffset/expectedHash续读。来源ID区分工作区根、用户全局目录（`user:`）与内置产品目录，引用/脚本资源只读。Skill是说明文本，不等于后台插件执行器；详见技能与隐藏规则详解。
 
 readCache的read-hashes.json是辅助记录，读/保存异常可能被忽略（落盘已改为临时文件+rename，避免半截JSON被当成"没有任何hash"），但仍不具备models/store那样的损坏拒绝策略；不要把缓存当完整事务日志。
 

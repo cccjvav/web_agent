@@ -587,6 +587,23 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 
 **验证：** 全量测试与lint通过，`check-docs --write`后重建docs-site，改过的文档逐份复读后刷新审查索引指纹。
 
+### 第133组：最终实机验收手册、CONTEXT压缩与文档时效复查（2026-10-19，会话01a0d084）
+
+收尾计划最后一批A+F（用户2026-10-19同意），外加用户要求的“最后把文档实时性检查一遍”。界面汉化（E）按用户决定不做。
+
+1. **A：最终实机验收手册（[最终实机验收](../../docs/guides/最终实机验收.md)）。** 按用户环境（Windows桌面VS Code、集成CMD、仓库根工作区）把还没实机验过的项目串成一份：续跑4（R6第二期第11步与两个缺口）、全局Skill目录、模型端点网络失败提示、外部MCP登记重启后保留/重新连接/移除、Quick Tunnel隔离与失败码、遗留隧道提示与RECYCLE回收（R5）、可选的PTY确认框与退出码（R8 M5的9.2、第129组shell契约）、F124收尾（重置MCP地址、删除`MCP_URL`仓库密钥——沙箱`gh secret list`返回403，只能由用户删）。每步写操作和判定，第10节是回贴模板。登记到文档站配置、`docs/guides/README.md`、使用指南开头、review/README与CHECKLIST_WINDOWS（F1–F7），插件设置页手册的续跑说明与验证范围指过去，延后复审清单两条续跑4项补了去向。
+2. **本机测试服务（`tests/httpMcpFixture.js`）。** 手册第5步需要一个要求Token的本机HTTP MCP服务：`node httpMcpFixture.js [端口=48390] [Token]`，只听127.0.0.1，工具`echo`，Token错回401，通知回202，日志不打印Token。`externalSaved.test.js`新第9节真实启动它，核对401、登记成功和日志不含Token；说明见[受控工具与工作流详解](../../webagent-core/agent-host/src/utils/受控工具与工作流详解.md)。
+3. **F：压缩CONTEXT“当前状态”。** F62–F132各条（含F99–F121长段）逐字搬到[archive/context-status-2026-10.md](archive/context-status-2026-10.md)（只把相对链接改成从归档目录出发），CONTEXT换成收尾摘要、分工、验证边界与固定分支；同时改掉两处过时说法：“当前会话固定分支01a0e8ea”（本会话是01a0d084）与“第二期设置页未开始”（两期都已通过）。CONTEXT由78行减到56行。
+4. **文档时效复查。** 以审查索引里非历史状态的149份为范围，按F122以来变过的事实逐类检索（测试文件数、CI项数、Node版本、探针删除、ShunCode参考包、Skill来源与全局目录、外部MCP持久化、模型/隧道失败码、续跑4去向、`.md`总数），再对照源码改正：SECURITY与tools/README“用户Skill必须在工作区内”补全局目录的单独规则；技能使用指南开头与第1节、组件说明、计算器示例README补全局目录；使用指南外部MCP一节补登记保存与重启行为；组件说明“CI九项”改六项；installer函数详解删去已不存在的“探针入口范围”与arena-model-probe；agents.md探针暂停一条注明已删除；返工方案状态行与插件设置页手册验证范围指向最终手册；README、docs/README、review/README的“200份.md”改为说明当时与现在的份数。历史保留文档（含阶段10第132组“八节”）不改写。
+5. **手册逐条核对。** 所有界面文字、日志行、按钮与回收脚本提示都对照了源码；外部MCP登记→重启恢复→断开→重连→移除、模型探测dns/connect、全局Skill列表另在沙箱端到端跑过（临时目录已删）。核对中发现并改正：第7步强杀主机后侧栏显示的是“启动失败”与“主机进程意外退出（…）”（`hostManager`在运行中收到退出事件转入error），原稿写成“未启动”；第7步回收输出原稿按旧印象写，已改为`tunnel-cleanup.js`的真实提示、`candidate`/`terminated`与取消文字。PTY按钮组用`ptyPolicy.shouldAutoAllow`实测：`& "…node.exe" --version`与两行命令为compound总要确认，带引号的路径命令无“同类都允许”，`node --version`有。
+
+**自我复审（交付前）：**
+- 读完整diff；手册每条预期都能在源码里找到对应文字或状态（见上第5条）。CONTEXT搬出的原文与`fe1a614`逐行一致（只改链接前缀），新链接由check-docs核对。
+- 未在沙箱验证：手册全部步骤在Windows桌面的实际结果（Chat参与者、设置页显示、强杀后cloudflared是否留下、RECYCLE回收、PTY确认框），这正是手册交给用户执行的内容。已知限制：外部MCP登记地址用浏览器禁止的端口（如9）时Node fetch报“fetch failed”（cause为“bad port”，没有错误码），`networkCategory`归不进任何类别，界面只显示通用的失败说明，没有专门提示；不常见，暂不处理。
+- 文档复查是按事实类别检索后逐处核对，不是149份逐句重读；历史保留、生成和第三方文档不在范围内。
+
+**验证：** 全量测试与lint通过，`check-docs --write`后重建docs-site，改过的文档逐份复读后刷新审查索引指纹。
+
 ### 延后复审清单
 
 用户2026-09-25同意：复审（交付前自我复审、下一轮开头复审上一轮、以及审计余下范围）可以延后，但要在这里登记，最后回头处理。处理后填结论，不删行。
@@ -598,6 +615,6 @@ RUN_ID需替换实际编号。核对headSha及每个job，不只看最后一行�
 | 2026-09-25 | 第74组测试 | 完整测试首跑1次失败未保留输出，之后6轮未复现 | 待再观察 |
 | 2026-09-26 | 第80组开头复审 | 第79组转发层（`apiRelay.js`、`vscodeRelay.js`、`requestJson`选项）：第3批接入设置页时连同调用方、面板关闭时dispose与白名单逐页覆盖一起复审 | 已处理（第82组）：调用方send与rawBody/信号/期限经真实activate验证；面板关闭取消在途与停止回复有单元测试；白名单对四个共享模块可触达的全部请求逐一核对，无漏放行、无误拒；发现第9节措辞缺陷已更正 |
 | 2026-09-26 | 第80组发现 | `FULL_REVIEW_INDEX`6行指纹与现文件不符（名单见第80组），文件自`4a868ae`未改；逐份复读后决定刷新或改状态。第84组：`src/agent/README.md`生成区计数随runChat变化，一度被误刷、已恢复旧指纹 | 已处理（第86组）：逐份对照源码复读。GitHub身份详解第1节与第2节首段是旧实现（githubJson、15秒、1MiB、超时为AbortError、缺字段按400），已改为现行githubRequest；用量两份补10秒期限/256KiB/networkBudget并改正自相矛盾的一句；agent/README改正内置循环跑测试条件；交互绑定详解补apiFetch转发、copyText与OAuth开关；缓存与进度详解未见不符。6份均刷新指纹，索引159行指纹现全部与文件一致 |
-| 2026-09-26 | 第80组4.7观察 | 用户侧`search_files`失败原因（沙箱未复现；插件不显示错误原文）；用户那次为何走code模式 | 第81组起Chat显示失败原因；待用户重装插件后复测。第86组：“为何走code模式”——侧栏按下拉框选模式，用户2026-09-26决定保留，不解析开头的`/ask`，此问题了结；`search_files`部分仍待复测 |
+| 2026-09-26 | 第80组4.7观察 | 用户侧`search_files`失败原因（沙箱未复现；插件不显示错误原文）；用户那次为何走code模式 | 第81组起Chat显示失败原因；待用户重装插件后复测。第86组：“为何走code模式”——侧栏按下拉框选模式，用户2026-09-26决定保留，不解析开头的`/ask`，此问题了结；`search_files`部分仍待复测。第133组：并入[最终实机验收](../../docs/guides/最终实机验收.md)第2步，待用户执行 |
 | 2026-09-26 | 第82组发现 | 永不结算的Promise会让Node以退出码0提前结束、测试被误判通过；已给workbenchRuntime、settingsPanel、sidebarFeedback加守卫。其他异步测试文件（尤其靠`main().catch`收尾、不在最后显式退出的）是否有同样隐患，逐个检查或在run-tests.js统一要求结尾标记 | 已处理（第86组）：run-tests.js统一预加载`scripts/testCompletionGuard.js`，测试文件同步执行期间由主文件顶层创建的Promise（即挂在`main()`后的`.catch/.then`）在事件循环耗尽时仍未结算就判失败；全量116个文件中81个有被监视的顶层Promise、20个纯同步，其余以`main().then(exit)`收尾、同样覆盖。在14个真实测试文件结尾注入永久挂起：12个被守卫拦下，2个挂到超时判失败。顺带发现并修复：①runner只看status，接住SIGTERM以0退出的超时测试被记为通过（mcpInterop注入后即如此）；②editorRuntime/workbenchRuntime自我重启的子进程不带守卫。已知不覆盖：顶层只写`main();`、发射后不管的异步回调、中途显式退出 |
-| 2026-09-28 | 第89组第11步 | VS Code Chat把`@webagent`交给默认模型（gpt5.6）：可能是Agent模式不列扩展参与者，或`chatParticipants`的`isDefault: true`需提案API而被忽略；沙箱无法验证 | 已处理（第90组）：续跑3在Ask模式同样失败，否定“Agent模式不列”；VS Code源码确认`isDefault`缺提议API时整个参与者被跳过，已删去并加清单测试；待用户续跑4实测 |
+| 2026-09-28 | 第89组第11步 | VS Code Chat把`@webagent`交给默认模型（gpt5.6）：可能是Agent模式不列扩展参与者，或`chatParticipants`的`isDefault: true`需提案API而被忽略；沙箱无法验证 | 已处理（第90组）：续跑3在Ask模式同样失败，否定“Agent模式不列”；VS Code源码确认`isDefault`缺提议API时整个参与者被跳过，已删去并加清单测试；待用户续跑4实测。第133组：并入[最终实机验收](../../docs/guides/最终实机验收.md)第2步，待用户执行 |

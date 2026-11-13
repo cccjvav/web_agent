@@ -188,13 +188,14 @@ F70新增`hostShutdown.test.js`（POSIX；Windows明确跳过，因Node无法给
 | [extensionCopy.test.js](extensionCopy.test.js) | 2 个函数/类节点 |
 | [extensionHostSafety.test.js](extensionHostSafety.test.js) | 32 个函数/类节点 |
 | [externalDiscovery.test.js](externalDiscovery.test.js) | 27 个函数/类节点 |
-| [externalSaved.test.js](externalSaved.test.js) | 17 个函数/类节点 |
+| [externalSaved.test.js](externalSaved.test.js) | 22 个函数/类节点 |
 | [fileCheckpoints.test.js](fileCheckpoints.test.js) | 25 个函数/类节点 |
 | [fileReadSafety.test.js](fileReadSafety.test.js) | 22 个函数/类节点 |
 | [hostDiagnostics.test.js](hostDiagnostics.test.js) | 9 个函数/类节点 |
 | [hostLaunch.test.js](hostLaunch.test.js) | 64 个函数/类节点 |
 | [hostPersist.test.js](hostPersist.test.js) | 6 个函数/类节点 |
 | [hostShutdown.test.js](hostShutdown.test.js) | 13 个函数/类节点 |
+| [httpMcpFixture.js](httpMcpFixture.js) | 7 个函数/类节点 |
 | [httpSmoke.test.js](httpSmoke.test.js) | 46 个函数/类节点 |
 | [installerPackaging.test.js](installerPackaging.test.js) | 27 个函数/类节点 |
 | [installerPreparation.test.js](installerPreparation.test.js) | 61 个函数/类节点 |

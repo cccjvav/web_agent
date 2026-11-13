@@ -6,6 +6,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const http = require('http');
+const { spawn } = require('child_process');
 const { config } = require('../src/config');
 
 const workspaceBefore = config.workspaceRoot;
@@ -117,7 +118,27 @@ async function main() {
     assert.strictEqual(fs.readFileSync(configFile, 'utf8'), '{ broken', 'a corrupt config is never overwritten');
     assert.deepStrictEqual(external.remove(unsaved.serverId), { removed: true });
     await external.closeAll();
-    console.log('external saved registrations: save with token, never listed, restore on start, unavailable/reconnect, public waits for confirmation, invalid entries skipped, corrupt config untouched passed');
+    // 9. The acceptance fixture (tests/httpMcpFixture.js) run as a real child process: it needs its token, our client
+    // discovers its one tool with it, a wrong token is a confirmed auth failure, and the fixture never prints the token.
+    const child = spawn(process.execPath, [path.join(__dirname, 'httpMcpFixture.js'), '0', 'fixture-TOKEN-value'], { stdio: ['ignore', 'pipe', 'pipe'] });
+    let printed = '';
+    child.stdout.on('data', chunk => { printed += chunk; });
+    try {
+      const deadline = Date.now() + 10000;
+      while (!/127\.0\.0\.1:(\d+)\/mcp/.test(printed)) {
+        if (Date.now() > deadline || child.exitCode !== null) throw new Error('fixture did not start: ' + printed);
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      const fixtureUrl = `http://127.0.0.1:${printed.match(/127\.0\.0\.1:(\d+)\/mcp/)[1]}/mcp`;
+      await assert.rejects(() => external.add({ name: 'fixture-wrong', url: fixtureUrl, token: 'wrong' }), error => error.category === 'auth');
+      fs.writeFileSync(configFile, '{}');
+      const fixtureAdded = await external.add({ name: 'fixture-process', url: fixtureUrl, token: 'fixture-TOKEN-value' });
+      assert.deepStrictEqual([fixtureAdded.status, fixtureAdded.saved, fixtureAdded.tools.map(tool => tool.name)], ['discovered', true, ['echo']]);
+      external.remove(fixtureAdded.serverId);
+      assert.match(printed, /initialize（Token正确）/); assert.match(printed, /Token缺失或错误，回401/);
+      assert.ok(!printed.includes('fixture-TOKEN-value'), 'the fixture never prints the token');
+    } finally { child.kill(); }
+    console.log('external saved registrations: save with token, never listed, restore on start, unavailable/reconnect, public waits for confirmation, invalid entries skipped, corrupt config untouched, acceptance fixture process passed');
   } finally {
     await external.closeAll();
     server.closeAllConnections(); await new Promise(resolve => server.close(resolve));

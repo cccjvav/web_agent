@@ -63,6 +63,7 @@ const pairs = [
   ["webagent-core/agent-host/tests/workflowPreconditions.test.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
   ["webagent-core/agent-host/tests/externalDiscovery.test.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
   ["webagent-core/agent-host/tests/externalSaved.test.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
+  ["webagent-core/agent-host/tests/httpMcpFixture.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],
   ["webagent-core/agent-host/tests/memoryRecall.test.js", "webagent-core/agent-host/src/models/画像与记忆详解.md"],
   ["webagent-core/agent-host/tests/skillsLifecycle.test.js", "webagent-core/agent-host/src/tools/技能与隐藏规则详解.md"],
   ["webagent-core/agent-host/src/utils/operatorQueue.js", "webagent-core/agent-host/src/utils/受控工具与工作流详解.md"],

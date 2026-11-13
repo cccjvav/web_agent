@@ -103,7 +103,7 @@
 1. 显式传入examples/calculator时 `workspaceRoot` 才是本目录。
 2. MCP / Chat 工具的相对路径都相对这里：`src/calculator.js`、`tests/`、`.webagent/`。
 3. 用户或 Agent 执行 `npm test` → `tests/calculator.test.js` 调 `src/calculator.js`。
-4. `load_skill`读取所选工作区Skills并保留三个固定bundled Skill例外；不会自动带入产品根`.webagent/skills`里的示例Skill。`getInstructions`拼本示例的customizations.instructions。
+4. `load_skill`读取所选工作区Skills、用户全局目录`%USERPROFILE%\.webagent\skills`（ID前缀`user:`，第131组）并保留三个固定bundled Skill例外；不会自动带入产品根`.webagent/skills`里的示例Skill。`getInstructions`拼本示例的customizations.instructions。
 5. 换工作区：`run-webagent.cmd D:\code\my-repo`，就不再用本演示树。
 
 ## 运行数据迁移

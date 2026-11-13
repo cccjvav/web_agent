@@ -8,6 +8,7 @@
 - [R8本轮Arena实机验收](R8本轮Arena实机验收.md)（第七批、F71、F72的逐步操作）
 - [插件一键启动实机验收](插件一键启动实机验收.md)（R6第一期：不开CMD和浏览器，侧栏点【启动】；关闭VS Code释放端口与cloudflared；接管run-webagent.cmd）
 - [插件设置页实机验收](插件设置页实机验收.md)（R6第二期：侧栏齿轮打开“Web Agent 设置”标签页；VS Code确认框与剪贴板；外部MCP在标签页登记/启动/移除；第一期验收四项跟进）
+- [最终实机验收](最终实机验收.md)（项目收尾：续跑4、全局Skill、模型端点失败提示、外部MCP登记重启后保留、Quick Tunnel隔离与失败码、遗留隧道回收、PTY确认框、F124收尾，一次做完）
 - [Bridge统计与刷新排查](Bridge统计与刷新排查.md)
 - [Windows新手逐步验收](Windows新手逐步验收.md)
 - [内置探索Agent使用指南](内置探索Agent使用指南.md)
